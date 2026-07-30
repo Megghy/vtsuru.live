@@ -1,8 +1,9 @@
-import { ref } from 'vue'
 import { useMessage } from 'naive-ui'
+import { ref } from 'vue'
+
 import { unwrapOk } from '@/api/query'
 
-type ApiResponse<T> = { code: number, message?: string, data: T }
+type ApiResponse<T> = { code: number; message?: string; data: T }
 
 interface RunOptions {
   success?: string // 成功提示文案，不传则不提示

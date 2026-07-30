@@ -1,13 +1,15 @@
-import { createPinia } from 'pinia'
-import Particles from '@tsparticles/vue3'
 import { loadSlim } from '@tsparticles/slim'
+import Particles from '@tsparticles/vue3'
+import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 // @ts-expect-error vue3-konva types
 import VueKonva from 'vue3-konva'
+
+import { initPersistedStorage } from '@/shared/storage/persist'
+
 import App from './App.vue'
 import emitter from './mitt'
 import router from './router'
-import { initPersistedStorage } from '@/shared/storage/persist'
 
 // Monaco 的 worker 在编辑器组件中懒加载配置
 
@@ -30,9 +32,10 @@ async function bootstrapApp() {
     .mount('#app')
 
   // 将初始化逻辑改为异步按需加载，避免把其依赖打入入口
-  void import('@/app/bootstrap').then(m => m.InitVTsuru())
+  void import('@/app/bootstrap').then((m) => m.InitVTsuru())
   // 本地化 isTauri，避免在入口引入大量常量与模板映射
-  const isTauri = () => (window as any).__TAURI__ !== undefined || (window as any).__TAURI_INTERNAL__ !== undefined || '__TAURI__' in window
+  const isTauri = () =>
+    (window as any).__TAURI__ !== undefined || (window as any).__TAURI_INTERNAL__ !== undefined || '__TAURI__' in window
   if (isTauri()) {
     void import('@/apps/client/data/initialize').then((m) => {
       import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {

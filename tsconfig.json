@@ -14,7 +14,7 @@
     },
     "incremental": true,
     "resolveJsonModule": true,
-    "types": ["node", "vue-vine/macros", "jszip"],
+    "types": ["node", "jszip"],
     "allowJs": false,
     "strict": false,
     "noImplicitAny": false,

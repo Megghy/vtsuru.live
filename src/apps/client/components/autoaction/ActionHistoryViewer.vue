@@ -1,13 +1,37 @@
 <script setup lang="ts">
-import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
-
-import { ArrowClockwise16Filled, CheckmarkCircle16Filled, Delete16Filled, DismissCircle16Filled, History16Regular } from '@vicons/fluent'
 import {
-  NButton, NCard, NDataTable, NEmpty, NIcon, NPopconfirm, NFlex, NSpin, NTabPane, NTabs, NTag, NTime, NTooltip, useMessage } from 'naive-ui';
+  ArrowClockwise16Filled,
+  CheckmarkCircle16Filled,
+  Delete16Filled,
+  DismissCircle16Filled,
+  History16Regular,
+} from '@vicons/fluent'
+import {
+  NButton,
+  NCard,
+  NDataTable,
+  NEmpty,
+  NIcon,
+  NPopconfirm,
+  NFlex,
+  NSpin,
+  NTabPane,
+  NTabs,
+  NTag,
+  NTime,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
-
 import { h, onMounted, onUnmounted, ref } from 'vue'
-import { clearAllHistory, clearHistory, getHistoryByType, HistoryType } from '../../store/autoAction/utils/historyLogger'
+
+import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
+import {
+  clearAllHistory,
+  clearHistory,
+  getHistoryByType,
+  HistoryType,
+} from '../../store/autoAction/utils/historyLogger'
 
 const message = useMessage()
 const loading = ref(true)
@@ -36,14 +60,18 @@ const columns: DataTableColumns<HistoryItem> = [
     width: 160,
     sorter: (a: HistoryItem, b: HistoryItem) => a.timestamp - b.timestamp,
     render: (row: HistoryItem) => {
-      return h(NTooltip, {
-      }, {
-        trigger: () => h(NTime, {
-          time: row.timestamp,
-          type: 'relative',
-        }),
-        default: () => new Date(row.timestamp).toLocaleString(),
-      })
+      return h(
+        NTooltip,
+        {},
+        {
+          trigger: () =>
+            h(NTime, {
+              time: row.timestamp,
+              type: 'relative',
+            }),
+          default: () => new Date(row.timestamp).toLocaleString(),
+        },
+      )
     },
   },
   {
@@ -51,7 +79,8 @@ const columns: DataTableColumns<HistoryItem> = [
     key: 'actionName',
     width: 140,
     ellipsis: { tooltip: true },
-    render: (row: HistoryItem) => h(NTag, { size: 'small', bordered: false }, { default: () => row.actionName || '未命名' })
+    render: (row: HistoryItem) =>
+      h(NTag, { size: 'small', bordered: false }, { default: () => row.actionName || '未命名' }),
   },
   {
     title: '内容',
@@ -65,7 +94,8 @@ const columns: DataTableColumns<HistoryItem> = [
     key: 'target',
     width: 120,
     ellipsis: { tooltip: true },
-    render: (row: HistoryItem) => row.target ? h(NTag, { size: 'small', type: 'info', bordered: false }, { default: () => row.target }) : '-'
+    render: (row: HistoryItem) =>
+      row.target ? h(NTag, { size: 'small', type: 'info', bordered: false }, { default: () => row.target }) : '-',
   },
   {
     title: '状态',
@@ -78,11 +108,8 @@ const columns: DataTableColumns<HistoryItem> = [
           NTooltip,
           { trigger: 'hover' },
           {
-            trigger: () => h(
-              NIcon,
-              { color: 'var(--vtsuru-success)', size: 20 },
-              { default: () => h(CheckmarkCircle16Filled) }
-            ),
+            trigger: () =>
+              h(NIcon, { color: 'var(--vtsuru-success)', size: 20 }, { default: () => h(CheckmarkCircle16Filled) }),
             default: () => '执行成功',
           },
         )
@@ -91,11 +118,8 @@ const columns: DataTableColumns<HistoryItem> = [
           NTooltip,
           { trigger: 'hover' },
           {
-            trigger: () => h(
-              NIcon,
-              { color: 'var(--vtsuru-error)', size: 20 },
-              { default: () => h(DismissCircle16Filled) }
-            ),
+            trigger: () =>
+              h(NIcon, { color: 'var(--vtsuru-error)', size: 20 }, { default: () => h(DismissCircle16Filled) }),
             default: () => row.error || '执行失败',
           },
         )
@@ -193,7 +217,7 @@ onUnmounted(() => {
         <span>执行历史记录</span>
       </NFlex>
     </template>
-    
+
     <template #header-extra>
       <NFlex size="small">
         <NButton
@@ -241,7 +265,10 @@ onUnmounted(() => {
         :tab="label"
       >
         <NSpin :show="loading">
-          <NFlex vertical :size="12">
+          <NFlex
+            vertical
+            :size="12"
+          >
             <NDataTable
               :columns="columns"
               :data="historyData[type as HistoryType]"
@@ -251,7 +278,7 @@ onUnmounted(() => {
                 showSizePicker: true,
                 pageSizes: [10, 20, 50],
               }"
-              :row-key="row => row.id"
+              :row-key="(row) => row.id"
               default-sort-order="descend"
               size="small"
               scroll-x="800"
@@ -260,8 +287,11 @@ onUnmounted(() => {
                 <NEmpty description="暂无历史记录" />
               </template>
             </NDataTable>
-            
-            <NFlex v-if="historyData[type as HistoryType].length > 0" justify="end">
+
+            <NFlex
+              v-if="historyData[type as HistoryType].length > 0"
+              justify="end"
+            >
               <NPopconfirm
                 placement="bottom"
                 @positive-click="() => handleClearHistory(type as HistoryType)"
@@ -314,7 +344,8 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-:deep(.n-spin-container), :deep(.n-spin-content) {
+:deep(.n-spin-container),
+:deep(.n-spin-content) {
   height: 100%;
   display: flex;
   flex-direction: column;

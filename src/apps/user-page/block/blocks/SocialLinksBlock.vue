@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { NFlex, NIcon } from 'naive-ui';
+import { GlobeOutline, LinkOutline } from '@vicons/ionicons5'
+import { NFlex, NIcon } from 'naive-ui'
 import type { Component } from 'vue'
 import { computed } from 'vue'
-import BlockCard from '../BlockCard.vue'
-import { GlobeOutline, LinkOutline } from '@vicons/ionicons5'
+
 import NeteaseIcon from '@/svgs/netease.svg?component'
 import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
-import DouyinIcon from '@/svgs/social/douyin.svg?component'
 import DiscordIcon from '@/svgs/social/discord.svg?component'
+import DouyinIcon from '@/svgs/social/douyin.svg?component'
 import GithubIcon from '@/svgs/social/github.svg?component'
 import KuaishouIcon from '@/svgs/social/kuaishou.svg?component'
 import QqIcon from '@/svgs/social/qq.svg?component'
@@ -19,6 +19,8 @@ import XIcon from '@/svgs/social/x.svg?component'
 import XiaohongshuIcon from '@/svgs/social/xiaohongshu.svg?component'
 import YoutubeIcon from '@/svgs/social/youtube.svg?component'
 import ZhihuIcon from '@/svgs/social/zhihu.svg?component'
+
+import BlockCard from '../BlockCard.vue'
 import { SOCIAL_PLATFORM_NAMES } from '../socialPlatforms'
 import type { SocialPlatform } from '../socialPlatforms'
 
@@ -37,15 +39,16 @@ interface BlockConfig {
   backgrounded?: boolean
 }
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
   return {
-    size: (o.size === 'sm' || o.size === 'md' || o.size === 'lg') ? o.size : 'md',
-    variant: (o.variant === 'round' || o.variant === 'square') ? o.variant : 'round',
+    size: o.size === 'sm' || o.size === 'md' || o.size === 'lg' ? o.size : 'md',
+    variant: o.variant === 'round' || o.variant === 'square' ? o.variant : 'round',
     showLabel: typeof o.showLabel === 'boolean' ? o.showLabel : false,
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : true,
@@ -84,23 +87,23 @@ function inferPlatform(url: string): SocialPlatform {
 
 function normalize(items: SocialItem[]) {
   return items
-    .filter(it => it && typeof it.url === 'string' && it.url.trim().length)
+    .filter((it) => it && typeof it.url === 'string' && it.url.trim().length)
     .map((it) => {
       const url = it.url.trim()
-      const platform = (it.platform && String(it.platform).length) ? it.platform : inferPlatform(url)
-      const label = (typeof it.label === 'string' && it.label.trim().length) ? it.label.trim() : ''
+      const platform = it.platform && String(it.platform).length ? it.platform : inferPlatform(url)
+      const label = typeof it.label === 'string' && it.label.trim().length ? it.label.trim() : ''
       return { platform, url, label }
     })
 }
 
 const items = computed(() => normalize(cfg.value.items ?? []))
 
-function getAccessibleName(item: { platform: SocialPlatform, label: string }) {
+function getAccessibleName(item: { platform: SocialPlatform; label: string }) {
   return `${item.label || SOCIAL_PLATFORM_NAMES[item.platform]}（新窗口打开）`
 }
 
 function getStyle(platform: SocialPlatform) {
-  const presets: Record<SocialPlatform, { bg: string, fg: string }> = {
+  const presets: Record<SocialPlatform, { bg: string; fg: string }> = {
     bilibili: { bg: '#fb7299', fg: '#ffffff' },
     weibo: { bg: '#e6162d', fg: '#ffffff' },
     xiaohongshu: { bg: '#ff2442', fg: '#ffffff' },
@@ -156,7 +159,10 @@ const iconSize = computed(() => {
 </script>
 
 <template>
-  <BlockCard :framed="cfg.framed" :backgrounded="cfg.backgrounded">
+  <BlockCard
+    :framed="cfg.framed"
+    :backgrounded="cfg.backgrounded"
+  >
     <NFlex
       justify="center"
       wrap
@@ -178,10 +184,17 @@ const iconSize = computed(() => {
           '--social-radius': cfg.variant === 'round' ? '999px' : '12px',
         }"
       >
-        <NIcon :size="iconSize" class="social-icon" aria-hidden="true">
+        <NIcon
+          :size="iconSize"
+          class="social-icon"
+          aria-hidden="true"
+        >
           <component :is="platformIcons[it.platform]" />
         </NIcon>
-        <span v-if="cfg.showLabel" class="social-label">
+        <span
+          v-if="cfg.showLabel"
+          class="social-label"
+        >
           {{ it.label || SOCIAL_PLATFORM_NAMES[it.platform] }}
         </span>
       </a>
@@ -203,7 +216,10 @@ const iconSize = computed(() => {
   color: var(--social-fg);
   text-decoration: none;
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-card-border-color);
-  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    filter 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   box-shadow: var(--vtsuru-page-shadow);
 }
 .social:hover {
@@ -228,5 +244,4 @@ const iconSize = computed(() => {
   outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
   outline-offset: 3px;
 }
-
 </style>

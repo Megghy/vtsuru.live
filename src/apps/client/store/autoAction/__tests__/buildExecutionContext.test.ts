@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+
 import { TriggerType } from '../types'
 import { buildExecutionContext } from '../utils'
 

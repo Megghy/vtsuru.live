@@ -1,12 +1,13 @@
-import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import type { EventModel } from '@/api/api-models'
 import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
+import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
+
+import type { EventModel } from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface DanmakuWindowSettings {
   width: number
@@ -41,20 +42,25 @@ export interface DanmakuWindowSettings {
 }
 
 export const DANMAKU_WINDOW_BROADCAST_CHANNEL = 'channel.danmaku.window'
-export type DanmakuWindowBCData = {
-  type: 'danmaku'
-  data: EventModel
-} | {
-  type: 'update-setting'
-  data: DanmakuWindowSettings
-} | {
-  type: 'window-ready'
-} | {
-  type: 'clear-danmaku' // 新增：清空弹幕消息
-} | {
-  type: 'test-danmaku' // 新增：测试弹幕消息
-  data: EventModel
-}
+export type DanmakuWindowBCData =
+  | {
+      type: 'danmaku'
+      data: EventModel
+    }
+  | {
+      type: 'update-setting'
+      data: DanmakuWindowSettings
+    }
+  | {
+      type: 'window-ready'
+    }
+  | {
+      type: 'clear-danmaku' // 新增：清空弹幕消息
+    }
+  | {
+      type: 'test-danmaku' // 新增：测试弹幕消息
+      data: EventModel
+    }
 
 // Helper function to generate random test data
 function generateTestDanmaku(): EventModel {
@@ -241,7 +247,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
 
   async function init() {
     if (isInited) return
-    danmakuWindow.value = (await getAllWebviewWindows()).find(win => win.label === 'danmaku-window')
+    danmakuWindow.value = (await getAllWebviewWindows()).find((win) => win.label === 'danmaku-window')
     if (!danmakuWindow.value) {
       window.$message.error('弹幕窗口不存在，请先打开弹幕窗口。')
       return
@@ -253,9 +259,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       closeWindow()
       console.log('弹幕窗口关闭')
     })
-    danmakuWindow.value.onMoved(({
-      payload: position,
-    }) => {
+    danmakuWindow.value.onMoved(({ payload: position }) => {
       danmakuWindowSetting.value.x = position.x
       danmakuWindowSetting.value.y = position.y
     })
@@ -286,22 +290,26 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       } as Partial<EventModel>,
     })
 
-    danmakuClient.onEvent('danmaku', event => onGetDanmakus(event))
-    danmakuClient.onEvent('gift', event => onGetDanmakus(event))
-    danmakuClient.onEvent('sc', event => onGetDanmakus(event))
-    danmakuClient.onEvent('guard', event => onGetDanmakus(event))
-    danmakuClient.onEvent('enter', event => onGetDanmakus(event))
-    danmakuClient.onEvent('scDel', event => onGetDanmakus(event))
+    danmakuClient.onEvent('danmaku', (event) => onGetDanmakus(event))
+    danmakuClient.onEvent('gift', (event) => onGetDanmakus(event))
+    danmakuClient.onEvent('sc', (event) => onGetDanmakus(event))
+    danmakuClient.onEvent('guard', (event) => onGetDanmakus(event))
+    danmakuClient.onEvent('enter', (event) => onGetDanmakus(event))
+    danmakuClient.onEvent('scDel', (event) => onGetDanmakus(event))
 
-    watch(() => danmakuWindowSetting, async (newValue) => {
-      if (danmakuWindow.value) {
-        bc?.postMessage({
-          type: 'update-setting',
-          data: toRaw(newValue.value),
-        })
-        await checkAndUseSetting(newValue.value)
-      }
-    }, { deep: true })
+    watch(
+      () => danmakuWindowSetting,
+      async (newValue) => {
+        if (danmakuWindow.value) {
+          bc?.postMessage({
+            type: 'update-setting',
+            data: toRaw(newValue.value),
+          })
+          await checkAndUseSetting(newValue.value)
+        }
+      },
+      { deep: true },
+    )
 
     console.log('[danmaku-window] 初始化完成')
 
@@ -331,7 +339,10 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
           updateAt: Date.now(),
           data: resp.data,
         }
-        console.log(`已获取表情数据, 共 ${Object.keys(resp.data.inline).length + Object.keys(resp.data.plain).length} 条`, resp.data)
+        console.log(
+          `已获取表情数据, 共 ${Object.keys(resp.data.inline).length + Object.keys(resp.data.plain).length} 条`,
+          resp.data,
+        )
       } else {
         console.error('获取表情数据失败:', resp.message)
       }

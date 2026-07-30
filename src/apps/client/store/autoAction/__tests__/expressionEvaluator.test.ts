@@ -1,6 +1,7 @@
-import type { ExecutionContext } from '../types'
 import { describe, expect, it } from 'vitest'
+
 import { evaluateTemplateExpressions, extractJsExpressions } from '../expressionEvaluator'
+import type { ExecutionContext } from '../types'
 
 function makeContext(variables: Record<string, any> = {}): ExecutionContext {
   return {
@@ -43,8 +44,7 @@ describe('evaluateTemplateExpressions', () => {
     const ctx = makeContext({
       gift: { name: '小心心', count: 5, totalPrice: 0 },
     })
-    expect(evaluateTemplateExpressions('感谢 {{gift.name}} x{{gift.count}}', ctx))
-      .toBe('感谢 小心心 x5')
+    expect(evaluateTemplateExpressions('感谢 {{gift.name}} x{{gift.count}}', ctx)).toBe('感谢 小心心 x5')
   })
 
   it('keeps unknown placeholders as-is', () => {
@@ -54,18 +54,12 @@ describe('evaluateTemplateExpressions', () => {
 
   it('evaluates simple js expressions with implicit return', () => {
     const ctx = makeContext({ user: { name: 'Bob', uid: 1, guardLevel: 1 } })
-    const result = evaluateTemplateExpressions(
-      '{{js: user.guardLevel > 0 ? "舰长" : "普通"}}',
-      ctx,
-    )
+    const result = evaluateTemplateExpressions('{{js: user.guardLevel > 0 ? "舰长" : "普通"}}', ctx)
     expect(result).toBe('舰长')
   })
 
   it('evaluates js+ code blocks with explicit return', () => {
-    const result = evaluateTemplateExpressions(
-      '{{js+: const x = 2 + 3; return x * 2; }}',
-      makeContext(),
-    )
+    const result = evaluateTemplateExpressions('{{js+: const x = 2 + 3; return x * 2; }}', makeContext())
     expect(result).toBe('10')
   })
 
@@ -75,10 +69,7 @@ describe('evaluateTemplateExpressions', () => {
   })
 
   it('catches js+ block errors', () => {
-    const result = evaluateTemplateExpressions(
-      '{{js+: throw new Error("boom") }}',
-      makeContext(),
-    )
+    const result = evaluateTemplateExpressions('{{js+: throw new Error("boom") }}', makeContext())
     expect(result).toContain('[代码块错误:')
     expect(result).toContain('boom')
   })
@@ -87,7 +78,9 @@ describe('evaluateTemplateExpressions', () => {
     const store: Record<string, any> = {}
     const ctx = makeContext()
     ctx.getData = (key: string) => store[key]
-    ctx.setData = (key: string, value: any) => { store[key] = value }
+    ctx.setData = (key: string, value: any) => {
+      store[key] = value
+    }
 
     const result = evaluateTemplateExpressions(
       '{{js+: const c = (getData("count") || 0) + 1; setData("count", c); return c; }}',
@@ -99,10 +92,7 @@ describe('evaluateTemplateExpressions', () => {
 
   it('mixes simple placeholders with js expressions', () => {
     const ctx = makeContext({ user: { name: 'Carol', uid: 1, guardLevel: 0 } })
-    const result = evaluateTemplateExpressions(
-      'Hi {{user.name}}, you said: {{js: message.toUpperCase()}}',
-      ctx,
-    )
+    const result = evaluateTemplateExpressions('Hi {{user.name}}, you said: {{js: message.toUpperCase()}}', ctx)
     expect(result).toBe('Hi Carol, you said: HELLO')
   })
 })

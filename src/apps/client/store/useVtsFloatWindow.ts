@@ -1,8 +1,9 @@
+import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { WebviewWindow as WebviewWindowClass } from '@tauri-apps/api/webviewWindow'
-import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref, toRaw } from 'vue'
+
 import type { StoreTarget } from '@/apps/client/store/useTauriStore'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
 import { isTauri } from '@/shared/config'
@@ -21,9 +22,7 @@ export const VTS_FLOAT_WINDOW_LABEL = 'vts-float-window'
 export const VTS_FLOAT_WINDOW_ROUTE = '/vts-float-window'
 export const VTS_FLOAT_WINDOW_BROADCAST_CHANNEL = 'channel.vts.floatWindow'
 
-export type VtsFloatWindowBCData =
-  | { type: 'window-ready' }
-  | { type: 'update-setting', data: VtsFloatWindowSettings }
+export type VtsFloatWindowBCData = { type: 'window-ready' } | { type: 'update-setting'; data: VtsFloatWindowSettings }
 
 const FLOAT_WINDOW_KEY = 'vts.floatWindow'
 

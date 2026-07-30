@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
+
 import { QueryRequestError } from '@/api/query'
+
 import type {
   AssistantContext,
   AssistantConversation,
@@ -43,9 +45,7 @@ export interface AssistantAction {
  * 答复前"工作过程"的有序片段: 思考文本与只读工具调用按到达时序交错。
  * reasoning 片段可累积 (连续思考并入同一段), tool 片段引用工具事件 (按 id 原地更新)。
  */
-export type AssistantProcessStep =
-  | { kind: 'reasoning'; text: string }
-  | { kind: 'tool'; tool: AssistantToolEvent }
+export type AssistantProcessStep = { kind: 'reasoning'; text: string } | { kind: 'tool'; tool: AssistantToolEvent }
 
 /** 单条聊天消息 */
 export interface AssistantMessage {
@@ -134,8 +134,8 @@ export const useAssistantStore = defineStore('assistant', () => {
       const next = conversationsPage.value + 1
       const list = await listConversations(next, CONV_PAGE_SIZE)
       // 去重追加 (并发刷新时可能重叠)
-      const existing = new Set(conversations.value.map(c => c.id))
-      conversations.value.push(...list.filter(c => !existing.has(c.id)))
+      const existing = new Set(conversations.value.map((c) => c.id))
+      conversations.value.push(...list.filter((c) => !existing.has(c.id)))
       conversationsPage.value = next
       conversationsHasMore.value = list.length >= CONV_PAGE_SIZE
     } catch (e) {
@@ -147,7 +147,7 @@ export const useAssistantStore = defineStore('assistant', () => {
 
   /** 把后端历史消息映射为本地消息结构 */
   function mapHistory(history: AssistantHistoryMessage[]): AssistantMessage[] {
-    return history.map(h => ({
+    return history.map((h) => ({
       id: `s_${h.id}`,
       role: h.role,
       text: h.text,
@@ -192,14 +192,14 @@ export const useAssistantStore = defineStore('assistant', () => {
   /** 重命名会话 */
   async function renameConversationById(id: number, title: string) {
     await renameConversation(id, title)
-    const target = conversations.value.find(c => c.id === id)
+    const target = conversations.value.find((c) => c.id === id)
     if (target) target.title = title
   }
 
   /** 删除会话; 若删的是当前会话则回到新对话 */
   async function deleteConversationById(id: number) {
     await deleteConversation(id)
-    conversations.value = conversations.value.filter(c => c.id !== id)
+    conversations.value = conversations.value.filter((c) => c.id !== id)
     if (id === currentConversationId.value) newConversation()
   }
 
@@ -222,28 +222,34 @@ export const useAssistantStore = defineStore('assistant', () => {
     try {
       let gotDone = false
       await streamMessage(
-        prompt, context.value, currentConversationId.value, images, options.editMessageId,
+        prompt,
+        context.value,
+        currentConversationId.value,
+        images,
+        options.editMessageId,
         {
-          onReasoning: d => {
+          onReasoning: (d) => {
             // 并入最后一个 reasoning 片段; 若末尾是工具调用则新开一段, 保留交错时序
             const last = assistantMsg.process[assistantMsg.process.length - 1]
             if (last?.kind === 'reasoning') last.text += d
             else assistantMsg.process.push({ kind: 'reasoning', text: d })
           },
-          onText: d => {
+          onText: (d) => {
             // 首个正文增量到达 => 思考结束, UI 收起思考文本
             if (!assistantMsg.reasoningDone) assistantMsg.reasoningDone = true
             assistantMsg.text += d
           },
-          onTool: tool => {
+          onTool: (tool) => {
             const existing = assistantMsg.process.find(
               (s): s is Extract<AssistantProcessStep, { kind: 'tool' }> => s.kind === 'tool' && s.tool.id === tool.id,
             )
             if (existing) Object.assign(existing.tool, tool)
             else assistantMsg.process.push({ kind: 'tool', tool })
           },
-          onProposal: p => { assistantMsg.actions.push({ id: nextId(), proposal: p }) },
-          onDone: e => {
+          onProposal: (p) => {
+            assistantMsg.actions.push({ id: nextId(), proposal: p })
+          },
+          onDone: (e) => {
             gotDone = true
             currentConversationId.value = e.conversationId
             if (e.userMessageId && options.sourceUserMsg) {
@@ -262,7 +268,10 @@ export const useAssistantStore = defineStore('assistant', () => {
       // 刷新列表: 新会话需补入, 已有会话需更新顺序/标题
       void loadConversations()
     } catch (e) {
-      if ((e instanceof QueryRequestError && e.kind === 'aborted') || (e instanceof DOMException && e.name === 'AbortError')) {
+      if (
+        (e instanceof QueryRequestError && e.kind === 'aborted') ||
+        (e instanceof DOMException && e.name === 'AbortError')
+      ) {
         assistantMsg.status = 'done'
         assistantMsg.text = assistantMsg.text || '已取消'
       } else {
@@ -282,11 +291,23 @@ export const useAssistantStore = defineStore('assistant', () => {
     if ((!trimmed && !imgs) || sending.value) return
 
     const userMsg: AssistantMessage = reactive({
-      id: nextId(), role: 'user', text: trimmed, status: 'done', process: [], actions: [], images: imgs,
+      id: nextId(),
+      role: 'user',
+      text: trimmed,
+      status: 'done',
+      process: [],
+      actions: [],
+      images: imgs,
     })
     const assistantMsg: AssistantMessage = reactive({
-      id: nextId(), role: 'assistant', text: '', status: 'sending', process: [], actions: [],
-      sourcePrompt: trimmed, sourceImages: imgs,
+      id: nextId(),
+      role: 'assistant',
+      text: '',
+      status: 'sending',
+      process: [],
+      actions: [],
+      sourcePrompt: trimmed,
+      sourceImages: imgs,
     })
     messages.value.push(userMsg, assistantMsg)
     await runReply(assistantMsg, trimmed, imgs, { sourceUserMsg: userMsg })
@@ -294,24 +315,26 @@ export const useAssistantStore = defineStore('assistant', () => {
 
   /** 重试某条失败的 AI 消息 */
   async function retry(messageId: string) {
-    const msg = messages.value.find(m => m.id === messageId)
+    const msg = messages.value.find((m) => m.id === messageId)
     if (!msg || msg.role !== 'assistant' || (!msg.sourcePrompt && !msg.sourceImages?.length)) return
     await runReply(msg, msg.sourcePrompt ?? '', msg.sourceImages)
   }
 
   async function rerun(messageId: string) {
     if (sending.value) return
-    const index = messages.value.findIndex(m => m.id === messageId)
+    const index = messages.value.findIndex((m) => m.id === messageId)
     if (index < 0) return
-    const source = messages.value.slice(0, index).toReversed()
-      .find(m => m.role === 'user' && (m.text || m.images?.length || m.hasImage))
+    const source = messages.value
+      .slice(0, index)
+      .toReversed()
+      .find((m) => m.role === 'user' && (m.text || m.images?.length || m.hasImage))
     if (!source) return
     await editAndRerun(source.id, source.text)
   }
 
   async function editAndRerun(messageId: string, nextText: string) {
     if (sending.value) return
-    const index = messages.value.findIndex(m => m.id === messageId)
+    const index = messages.value.findIndex((m) => m.id === messageId)
     const msg = messages.value[index]
     const editMessageId = serverMessageId(messageId)
     if (!msg || msg.role !== 'user' || !editMessageId) return
@@ -340,7 +363,7 @@ export const useAssistantStore = defineStore('assistant', () => {
   }
 
   function findAction(messageId: string, actionId: string): AssistantAction | undefined {
-    return messages.value.find(m => m.id === messageId)?.actions.find(a => a.id === actionId)
+    return messages.value.find((m) => m.id === messageId)?.actions.find((a) => a.id === actionId)
   }
 
   /** 确认执行操作: 仅凭 proposalId 调后端 */

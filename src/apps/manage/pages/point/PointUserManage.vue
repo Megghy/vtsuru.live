@@ -1,26 +1,56 @@
 <script setup lang="ts">
-import type {
-  DataTableColumns,
-} from 'naive-ui'
-
-import type { ResponsePointGoodModel, ResponsePointUserModel, Setting_Point } from '@/api/api-models'
-import { AddSquare24Regular, ArrowDownload24Regular, ArrowSync24Regular, Delete24Regular, Info24Filled, Search24Regular, Settings24Regular, Warning24Regular } from '@vicons/fluent'
+import {
+  AddSquare24Regular,
+  ArrowDownload24Regular,
+  ArrowSync24Regular,
+  Delete24Regular,
+  Info24Filled,
+  Search24Regular,
+  Settings24Regular,
+  Warning24Regular,
+} from '@vicons/fluent'
 import { useDebounceFn } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
+import type { DataTableColumns } from 'naive-ui'
 import {
-  NAlert, NButton, NCheckbox, NDataTable, NDivider, NEmpty, NFlex, NGrid, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NScrollbar, NSpin, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCheckbox,
+  NDataTable,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NGrid,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NModal,
+  NPopconfirm,
+  NScrollbar,
+  NSpin,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { ResponsePointGoodModel, ResponsePointUserModel, Setting_Point } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { formatNumber } from '@/apps/manage/composables/formatters'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
-import { POINT_API_URL } from '@/shared/config'
-import { objectsToCSV } from '@/shared/utils'
-import { usePersistedStorage } from '@/shared/storage/persist'
-import PointUserDetailCard from './PointUserDetailCard.vue'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
+import { POINT_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
+import { objectsToCSV } from '@/shared/utils'
+
+import PointUserDetailCard from './PointUserDetailCard.vue'
 
 // 用户积分设置类型定义
 interface PointUserSettings {
@@ -45,7 +75,10 @@ const defaultSettings: PointUserSettings = {
 }
 
 // 使用持久化存储保存筛选设置
-const settings = usePersistedStorage<PointUserSettings>('Settings.Point.Users', JSON.parse(JSON.stringify(defaultSettings)))
+const settings = usePersistedStorage<PointUserSettings>(
+  'Settings.Point.Users',
+  JSON.parse(JSON.stringify(defaultSettings)),
+)
 
 // 分页参数
 const pn = ref(1)
@@ -79,10 +112,7 @@ const pointSourceOptions = [
 
 const emptyOpenId = '00000000-0000-0000-0000-000000000000'
 
-type PointUserTargetParams =
-  | { authId: number }
-  | { uId: number }
-  | { oId: string }
+type PointUserTargetParams = { authId: number } | { uId: number } | { oId: string }
 
 function getPointUserTargetParams(user: ResponsePointUserModel): PointUserTargetParams | null {
   const info = user.info
@@ -103,9 +133,7 @@ function getPointUserTargetParams(user: ResponsePointUserModel): PointUserTarget
 
 const enabledPointSources = computed(() => {
   const allowType = props.pointSetting?.allowType ?? []
-  return pointSourceOptions
-    .filter(source => allowType.includes(source.type))
-    .map(source => source.label)
+  return pointSourceOptions.filter((source) => allowType.includes(source.type)).map((source) => source.label)
 })
 
 const pointSourceText = computed(() => {
@@ -154,10 +182,7 @@ const filteredUsers = computed(() => {
       // 根据关键词搜索
       if (debouncedSearchKeyword.value) {
         const keyword = debouncedSearchKeyword.value.toLowerCase()
-        return (
-          user.info.name?.toLowerCase().includes(keyword) === true
-          || user.info.userId?.toString() === keyword
-        )
+        return user.info.name?.toLowerCase().includes(keyword) === true || user.info.userId?.toString() === keyword
       }
 
       return true
@@ -171,9 +196,9 @@ const userStats = computed(() => {
   const avgPoints = users.value.length > 0 ? users.value.reduce((sum, u) => sum + u.point, 0) / users.value.length : 0
   return {
     total: users.value.length,
-    authed: users.value.filter(u => u.isAuthed).length,
+    authed: users.value.filter((u) => u.isAuthed).length,
     totalPoints: Number(totalPoints.toFixed(1)),
-    totalOrders: users.value.reduce((sum, u) => sum + ((u.orderCount || 0) > 0 ? (u.orderCount || 0) : 0), 0),
+    totalOrders: users.value.reduce((sum, u) => sum + ((u.orderCount || 0) > 0 ? u.orderCount || 0 : 0), 0),
     avgPoints: Number(avgPoints.toFixed(1)),
     filtered: filteredUsers.value.length,
   }
@@ -197,7 +222,9 @@ function renderUsername(user: ResponsePointUserModel) {
 // 渲染订单数量，更友好的显示方式
 function renderOrderCount(user: ResponsePointUserModel) {
   if (!user.isAuthed) return h(NText, { depth: 3 }, { default: () => '未认证' })
-  return user.orderCount > 0 ? h(NText, {}, { default: () => formatNumber(user.orderCount) }) : h(NText, { depth: 3 }, { default: () => '无订单' })
+  return user.orderCount > 0
+    ? h(NText, {}, { default: () => formatNumber(user.orderCount) })
+    : h(NText, { depth: 3 }, { default: () => '无订单' })
 }
 
 // 渲染时间戳为相对时间和绝对时间
@@ -288,7 +315,11 @@ const column: DataTableColumns<ResponsePointUserModel> = [
 
 // 获取所有用户
 async function getUsers() {
-  return await run(() => QueryGetAPI<ResponsePointUserModel[]>(`${POINT_API_URL}get-all-users`), { fail: '获取用户失败' }) ?? []
+  return (
+    (await run(() => QueryGetAPI<ResponsePointUserModel[]>(`${POINT_API_URL}get-all-users`), {
+      fail: '获取用户失败',
+    })) ?? []
+  )
 }
 
 // 刷新用户数据
@@ -309,11 +340,15 @@ async function givePoint() {
     return
   }
 
-  const data = await run(() => QueryGetAPI<{ totalPoint: number, userName?: string, uId?: number }>(`${POINT_API_URL}give-point`, {
-    uId: addPointTarget.value,
-    count: addPointCount.value,
-    reason: addPointReason.value || '',
-  }), { fail: '添加失败' })
+  const data = await run(
+    () =>
+      QueryGetAPI<{ totalPoint: number; userName?: string; uId?: number }>(`${POINT_API_URL}give-point`, {
+        uId: addPointTarget.value,
+        count: addPointCount.value,
+        reason: addPointReason.value || '',
+      }),
+    { fail: '添加失败' },
+  )
 
   if (data) {
     const userName = data?.userName || selectedTargetUserName.value || `UID: ${addPointTarget.value}`
@@ -337,7 +372,7 @@ async function deleteUser(user: ResponsePointUserModel) {
   }
 
   if (await run(() => QueryGetAPI(`${POINT_API_URL}delete-user`, params), { success: '已删除', fail: '删除失败' }))
-    users.value = users.value.filter(u => u != user)
+    users.value = users.value.filter((u) => u != user)
 }
 
 // 重置所有用户积分
@@ -371,7 +406,7 @@ function exportData() {
     )
 
     // 添加BOM标记，确保Excel正确识别UTF-8编码
-    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF])
+    const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
     const utf8encoder = new TextEncoder()
     const utf8array = utf8encoder.encode(text)
 
@@ -406,41 +441,31 @@ onMounted(async () => {
       style="margin-bottom: 16px"
     >
       <div class="stat-card">
-        <div class="stat-label">
-          总用户
-        </div>
+        <div class="stat-label">总用户</div>
         <div class="stat-value">
           {{ userStats.total }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          已认证
-        </div>
+        <div class="stat-label">已认证</div>
         <div class="stat-value success">
           {{ userStats.authed }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          总积分
-        </div>
+        <div class="stat-label">总积分</div>
         <div class="stat-value primary">
           {{ userStats.totalPoints }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          总订单
-        </div>
+        <div class="stat-label">总订单</div>
         <div class="stat-value info">
           {{ userStats.totalOrders }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          平均积分
-        </div>
+        <div class="stat-label">平均积分</div>
         <div class="stat-value">
           {{ userStats.avgPoints }}
         </div>
@@ -462,9 +487,7 @@ onMounted(async () => {
           vertical
           :gap="2"
         >
-          <NText strong>
-            当前积分来源：{{ pointSourceText }}
-          </NText>
+          <NText strong> 当前积分来源：{{ pointSourceText }} </NText>
           <NText
             depth="3"
             style="font-size: 13px"
@@ -487,9 +510,18 @@ onMounted(async () => {
 
     <!-- 工具栏 -->
     <div class="toolbar-section">
-      <NFlex justify="space-between" align="center" wrap :gap="12">
+      <NFlex
+        justify="space-between"
+        align="center"
+        wrap
+        :gap="12"
+      >
         <!-- 左侧：筛选与搜索 -->
-        <NFlex align="center" :gap="12" wrap>
+        <NFlex
+          align="center"
+          :gap="12"
+          wrap
+        >
           <NInput
             v-model:value="searchKeyword"
             placeholder="搜索用户 (用户名或UID)"
@@ -501,48 +533,73 @@ onMounted(async () => {
               <NIcon :component="Search24Regular" />
             </template>
           </NInput>
-          
-          <NCheckbox v-model:checked="settings.onlyAuthed">
-            只显示已认证用户
-          </NCheckbox>
+
+          <NCheckbox v-model:checked="settings.onlyAuthed"> 只显示已认证用户 </NCheckbox>
 
           <NTooltip>
             <template #trigger>
-              <NIcon :component="Info24Filled" class="info-icon" />
+              <NIcon
+                :component="Info24Filled"
+                class="info-icon"
+              />
             </template>
             <div class="tooltip-content">
-              <p>1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户 (OpenID不通用)</p>
+              <p>
+                1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户 (OpenID不通用)
+              </p>
               <p>2. 用户名只会保持在首条记录出现时的用户名</p>
             </div>
           </NTooltip>
         </NFlex>
 
         <!-- 右侧：操作按钮 -->
-        <NFlex align="center" :gap="8" wrap>
-          <NButton secondary size="medium" @click="refresh">
+        <NFlex
+          align="center"
+          :gap="8"
+          wrap
+        >
+          <NButton
+            secondary
+            size="medium"
+            @click="refresh"
+          >
             <template #icon>
               <NIcon :component="ArrowSync24Regular" />
             </template>
             刷新
           </NButton>
-          
-          <NButton secondary type="info" size="medium" @click="showGivePointModal = true">
+
+          <NButton
+            secondary
+            type="info"
+            size="medium"
+            @click="showGivePointModal = true"
+          >
             <template #icon>
               <NIcon :component="AddSquare24Regular" />
             </template>
             积分调整
           </NButton>
 
-          <NButton secondary type="info" size="medium" @click="exportData">
+          <NButton
+            secondary
+            type="info"
+            size="medium"
+            @click="exportData"
+          >
             <template #icon>
               <NIcon :component="ArrowDownload24Regular" />
             </template>
             导出
           </NButton>
-          
+
           <NPopconfirm @positive-click="showResetAllPointsModal = true">
             <template #trigger>
-              <NButton secondary type="error" size="medium">
+              <NButton
+                secondary
+                type="error"
+                size="medium"
+              >
                 <template #icon>
                   <NIcon :component="Delete24Regular" />
                 </template>
@@ -555,12 +612,12 @@ onMounted(async () => {
       </NFlex>
     </div>
 
-    <NDivider style="margin: 16px 0;" />
+    <NDivider style="margin: 16px 0" />
 
     <!-- 无数据提示 -->
     <NEmpty
       v-if="filteredUsers.length === 0"
-      :description="isLoading ? '加载中...' : (settings.onlyAuthed ? '没有已认证的用户' : '没有用户')"
+      :description="isLoading ? '加载中...' : settings.onlyAuthed ? '没有已认证的用户' : '没有用户'"
     />
 
     <!-- 用户数据表格 -->
@@ -586,7 +643,7 @@ onMounted(async () => {
   <NModal
     v-model:show="showModal"
     preset="card"
-    style="max-width: 90vw; min-width: 400px; width: 1600px;"
+    style="max-width: 90vw; min-width: 400px; width: 1600px"
     title="用户详情"
     content-style="padding: 0"
   >
@@ -620,13 +677,11 @@ onMounted(async () => {
           :gap="4"
           style="flex: 1"
         >
-          <NText depth="3">
-            目标用户
-          </NText>
+          <NText depth="3"> 目标用户 </NText>
           <BiliUserSelector
             v-model:value="addPointTarget"
             placeholder="请输入B站用户UID"
-            @user-info-loaded="(userInfo) => selectedTargetUserName = userInfo?.name"
+            @user-info-loaded="(userInfo) => (selectedTargetUserName = userInfo?.name)"
           />
         </NFlex>
         <NTooltip>
@@ -675,7 +730,7 @@ onMounted(async () => {
         :disabled="!addPointCount || addPointCount === 0"
         @click="givePoint"
       >
-        {{ !addPointCount || addPointCount === 0 ? '确定' : (addPointCount > 0 ? '给予' : '扣除') }}
+        {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '给予' : '扣除' }}
       </NButton>
     </NFlex>
   </NModal>
@@ -699,11 +754,11 @@ onMounted(async () => {
           :component="Warning24Regular"
           color="red"
         />
-        <NText type="error">
-          警告：此操作将删除所有用户积分记录，不可恢复！
-        </NText>
+        <NText type="error"> 警告：此操作将删除所有用户积分记录，不可恢复！ </NText>
       </NFlex>
-      <NText>请输入 <b>"{{ RESET_CONFIRM_TEXT }}"</b> 以确认操作</NText>
+      <NText
+        >请输入 <b>"{{ RESET_CONFIRM_TEXT }}"</b> 以确认操作</NText
+      >
       <NInput
         v-model:value="resetConfirmText"
         placeholder="请输入确认文本"
@@ -720,7 +775,6 @@ onMounted(async () => {
     </NFlex>
   </NModal>
 </template>
-
 
 <style scoped>
 .user-manage-container {
@@ -760,9 +814,15 @@ onMounted(async () => {
   color: var(--vtsuru-fg-muted);
 }
 
-.stat-value.primary { color: var(--vtsuru-primary); }
-.stat-value.success { color: var(--vtsuru-success); }
-.stat-value.info { color: var(--vtsuru-info); }
+.stat-value.primary {
+  color: var(--vtsuru-primary);
+}
+.stat-value.success {
+  color: var(--vtsuru-success);
+}
+.stat-value.info {
+  color: var(--vtsuru-info);
+}
 
 .point-source-alert {
   margin-bottom: 16px;

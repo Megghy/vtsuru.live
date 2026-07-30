@@ -3,6 +3,7 @@ import { AlertCircleOutline, CheckmarkCircleOutline, TimeOutline, TimerOutline, 
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+
 import { useWebFetcher } from '@/store/useWebFetcher'
 
 const webfetcher = useWebFetcher()
@@ -14,45 +15,66 @@ let uptimeTimer: number | undefined
 const isConnected = computed(() => webfetcher.state === 'connected')
 const connectionStatusType = computed(() => {
   switch (webfetcher.state) {
-    case 'connected': return 'success'
-    case 'connecting': return 'info'
-    case 'disconnected': return 'error'
-    default: return 'default'
+    case 'connected':
+      return 'success'
+    case 'connecting':
+      return 'info'
+    case 'disconnected':
+      return 'error'
+    default:
+      return 'default'
   }
 })
 const connectionStatusText = computed(() => {
   switch (webfetcher.state) {
-    case 'connected': return '运行中'
-    case 'connecting': return '连接中'
-    case 'disconnected': return '已停止'
-    default: return '未知'
+    case 'connected':
+      return '运行中'
+    case 'connecting':
+      return '连接中'
+    case 'disconnected':
+      return '已停止'
+    default:
+      return '未知'
   }
 })
 const formattedStartedAt = computed(() =>
-  webfetcher.startedAt ? new Date(webfetcher.startedAt).toLocaleString() : 'N/A')
+  webfetcher.startedAt ? new Date(webfetcher.startedAt).toLocaleString() : 'N/A',
+)
 
 const danmakuClientStateText = computed(() => {
   switch (webfetcher.danmakuClientState) {
-    case 'connected': return '已连接'
-    case 'connecting': return '连接中'
-    case 'stopped': return '已停止'
-    default: return '未知'
+    case 'connected':
+      return '已连接'
+    case 'connecting':
+      return '连接中'
+    case 'stopped':
+      return '已停止'
+    default:
+      return '未知'
   }
 })
 const danmakuClientStateType = computed(() => {
   switch (webfetcher.danmakuClientState) {
-    case 'connected': return 'success'
-    case 'connecting': return 'info'
-    case 'stopped': return 'error'
-    default: return 'default'
+    case 'connected':
+      return 'success'
+    case 'connecting':
+      return 'info'
+    case 'stopped':
+      return 'error'
+    default:
+      return 'default'
   }
 })
 const signalRStateText = computed(() => {
   switch (webfetcher.state) {
-    case 'connected': return '已连接'
-    case 'connecting': return '连接中'
-    case 'disconnected': return '已断开'
-    default: return '未知'
+    case 'connected':
+      return '已连接'
+    case 'connecting':
+      return '连接中'
+    case 'disconnected':
+      return '已断开'
+    default:
+      return '未知'
   }
 })
 
@@ -88,10 +110,13 @@ onUnmounted(() => {
     title="运行状态 & 连接"
     size="small"
     bordered
-    style="width: 100%;"
+    style="width: 100%"
   >
     <template #header-extra>
-      <NTag :type="connectionStatusType" size="small">
+      <NTag
+        :type="connectionStatusType"
+        size="small"
+      >
         <template #icon>
           <NIcon :component="isConnected ? CheckmarkCircleOutline : AlertCircleOutline" />
         </template>
@@ -103,37 +128,55 @@ onUnmounted(() => {
       bordered
       :columns="2"
       size="small"
-      style="overflow-x: auto;"
+      style="overflow-x: auto"
     >
       <NDescriptionsItem label="启动时间">
         <NIcon :component="TimeOutline" /> {{ formattedStartedAt }}
       </NDescriptionsItem>
-      <NDescriptionsItem label="运行时长">
-        <NIcon :component="TimerOutline" /> {{ uptime }}
-      </NDescriptionsItem>
+      <NDescriptionsItem label="运行时长"> <NIcon :component="TimerOutline" /> {{ uptime }} </NDescriptionsItem>
       <NDescriptionsItem label="SignalR 服务">
-        <NFlex align="center" size="small" :wrap="false">
-          <NTag :type="connectionStatusType" size="tiny">
+        <NFlex
+          align="center"
+          size="small"
+          :wrap="false"
+        >
+          <NTag
+            :type="connectionStatusType"
+            size="tiny"
+          >
             {{ signalRStateText }}
           </NTag>
-          <NEllipsis style="max-width: 150px;">
+          <NEllipsis style="max-width: 150px">
             {{ webfetcher.signalRId ?? 'N/A' }}
           </NEllipsis>
         </NFlex>
       </NDescriptionsItem>
       <NDescriptionsItem label="弹幕服务器">
-        <NFlex align="center" size="small" :wrap="false">
-          <NTag :type="danmakuClientStateType" size="tiny">
+        <NFlex
+          align="center"
+          size="small"
+          :wrap="false"
+        >
+          <NTag
+            :type="danmakuClientStateType"
+            size="tiny"
+          >
             {{ danmakuClientStateText }}
           </NTag>
-          <NEllipsis style="max-width: 150px;">
+          <NEllipsis style="max-width: 150px">
             {{ webfetcher.danmakuServerUrl ?? 'N/A' }}
           </NEllipsis>
         </NFlex>
       </NDescriptionsItem>
       <NDescriptionsItem label="网络状态">
-        <NFlex align="center" size="small">
-          <NTag :type="networkStatus === 'online' ? 'success' : 'error'" size="tiny">
+        <NFlex
+          align="center"
+          size="small"
+        >
+          <NTag
+            :type="networkStatus === 'online' ? 'success' : 'error'"
+            size="tiny"
+          >
             <template #icon>
               <NIcon :component="WifiOutline" />
             </template>

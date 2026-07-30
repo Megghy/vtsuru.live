@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import type { ResponseUserIndexModel, UserInfo } from '@/api/api-models'
-import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
-import { NAvatar, NButton, NCard, NDivider, NFlex, NText, useMessage } from 'naive-ui';
+import { NAvatar, NButton, NCard, NDivider, NFlex, NText, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { ResponseUserIndexModel, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { USER_INDEX_API_URL } from '@/shared/config'
+import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
 import { isDarkMode } from '@/shared/utils'
 
@@ -29,12 +30,14 @@ const orderedLinks = computed(() => {
   if (!indexInfo.value) return [] as [string, string][]
   const entries = Object.entries(indexInfo.value.links || {})
   if (!indexInfo.value.links) return []
-  const order = (accountInfo.value?.settings?.index?.linkOrder?.length
-    ? accountInfo.value.settings.index.linkOrder
-    : (indexInfo.value as any)?.linkOrder) as string[] | undefined
+  const order = (
+    accountInfo.value?.settings?.index?.linkOrder?.length
+      ? accountInfo.value.settings.index.linkOrder
+      : (indexInfo.value as any)?.linkOrder
+  ) as string[] | undefined
   if (order && order.length) {
     const map = new Map(entries)
-    return order.filter(k => map.has(k)).map(k => [k, map.get(k)!]) as [string, string][]
+    return order.filter((k) => map.has(k)).map((k) => [k, map.get(k)!]) as [string, string][]
   }
   return entries
 })
@@ -98,7 +101,7 @@ export const Config = defineTemplateConfig([
       >
         {{ indexInfo?.notification }}
       </NCard>
-      <br>
+      <br />
     </template>
 
     <NFlex
@@ -184,7 +187,7 @@ export const Config = defineTemplateConfig([
           tag="a"
           :href="link[1]"
           target="_blank"
-          style="margin:4px"
+          style="margin: 4px"
         >
           {{ link[0] }}
         </NButton>
@@ -192,9 +195,7 @@ export const Config = defineTemplateConfig([
     </template>
     <template v-if="indexInfo.videos?.length || 0 > 0">
       <NDivider>
-        <NText style="font-size:18px">
-          相关视频
-        </NText>
+        <NText style="font-size: 18px"> 相关视频 </NText>
       </NDivider>
       <NFlex justify="center">
         <SimpleVideoCard

@@ -1,11 +1,25 @@
 <script setup lang="ts">
+import {
+  NAlert,
+  NButton,
+  NColorPicker,
+  NForm,
+  NFormItem,
+  NInput,
+  NInputNumber,
+  NSelect,
+  NFlex,
+  NSwitch,
+  NText,
+  useMessage,
+} from 'naive-ui'
+import { computed, ref } from 'vue'
+
 import type { UploadFileResponse, UserFileTypes } from '@/api/api-models'
 import { UserFileLocation, UserFileTypes as UserFileTypesEnum } from '@/api/api-models'
+import { uploadFiles } from '@/shared/services/fileUpload'
 import type { ConfigItemDefinition, RGBAColor, TemplateConfigFileItem } from '@/shared/types/VTsuruConfigTypes'
 import { isValidRGBAColor, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
-import { NAlert, NButton, NColorPicker, NForm, NFormItem, NInput, NInputNumber, NSelect, NFlex, NSwitch, NText, useMessage } from 'naive-ui';
-import { computed, ref } from 'vue'
-import { uploadFiles } from '@/shared/services/fileUpload'
 
 const props = defineProps<{
   config: ConfigItemDefinition[]
@@ -72,7 +86,9 @@ async function onUploadChange(e: Event) {
   if (!key) return
   if (!files.length) return
 
-  const limit = props.config.find((x): x is TemplateConfigFileItem<any> => x.key === key && x.type === 'file')?.fileLimit
+  const limit = props.config.find(
+    (x): x is TemplateConfigFileItem<any> => x.key === key && x.type === 'file',
+  )?.fileLimit
   if (typeof limit === 'number' && limit > 0) {
     const existing = ensureArrayValue(key)
     const left = limit - existing.length
@@ -104,11 +120,20 @@ function removeUploadedFile(key: string, idx: number) {
 </script>
 
 <template>
-  <NAlert type="info" :show-icon="true">
+  <NAlert
+    type="info"
+    :show-icon="true"
+  >
     此处仅编辑 `contrib.config`（跟随“保存草稿/发布”写入 user-pages），不会单独提交到其他配置接口。
   </NAlert>
-  <NForm label-placement="top" style="margin-top: 12px">
-    <template v-for="item in visibleItems" :key="item.key">
+  <NForm
+    label-placement="top"
+    style="margin-top: 12px"
+  >
+    <template
+      v-for="item in visibleItems"
+      :key="item.key"
+    >
       <NFormItem :label="item.name.toString()">
         <template v-if="item.type === 'string'">
           <NInput
@@ -152,50 +177,57 @@ function removeUploadedFile(key: string, idx: number) {
           />
         </template>
         <template v-else-if="item.type === 'file'">
-          <NFlex vertical style="width: 100%">
+          <NFlex
+            vertical
+            style="width: 100%"
+          >
             <NFlex>
-              <NButton size="small" @click="triggerUpload(item.key)">
+              <NButton
+                size="small"
+                @click="triggerUpload(item.key)"
+              >
                 上传
               </NButton>
               <NText depth="3">
-                {{ (typeof item.fileLimit === 'number' && item.fileLimit > 0) ? `限制 ${item.fileLimit} 个` : '' }}
+                {{ typeof item.fileLimit === 'number' && item.fileLimit > 0 ? `限制 ${item.fileLimit} 个` : '' }}
               </NText>
             </NFlex>
             <div v-if="ensureArrayValue(item.key).length === 0">
-              <NText depth="3">
-                暂无文件
-              </NText>
+              <NText depth="3"> 暂无文件 </NText>
             </div>
             <div
               v-for="(f, idx) in ensureArrayValue(item.key)"
               :key="`${f.id}-${idx}`"
-              style="display:flex; gap: 8px; align-items: center"
+              style="display: flex; gap: 8px; align-items: center"
             >
-              <NText>
-                #{{ f.id }}
-              </NText>
-              <NText depth="3" style="flex: 1">
+              <NText> #{{ f.id }} </NText>
+              <NText
+                depth="3"
+                style="flex: 1"
+              >
                 {{ f.path }}
               </NText>
-              <NButton size="tiny" type="error" @click="removeUploadedFile(item.key, idx)">
+              <NButton
+                size="tiny"
+                type="error"
+                @click="removeUploadedFile(item.key, idx)"
+              >
                 删除
               </NButton>
             </div>
           </NFlex>
         </template>
         <template v-else>
-          <NText depth="3">
-            不支持的配置项类型：{{ item.type }}
-          </NText>
+          <NText depth="3"> 不支持的配置项类型：{{ item.type }} </NText>
         </template>
       </NFormItem>
     </template>
     <input
       ref="uploadInput"
       type="file"
-      style="display:none"
+      style="display: none"
       multiple
       @change="onUploadChange"
-    >
+    />
   </NForm>
 </template>

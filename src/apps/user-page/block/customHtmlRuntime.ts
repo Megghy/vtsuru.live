@@ -1,13 +1,56 @@
-import DOMPurify from 'dompurify'
 import { generate, parse, walk } from 'css-tree'
 import type { CssNode } from 'css-tree'
+import DOMPurify from 'dompurify'
+
 import type { CustomHtmlAsset, CustomHtmlProps } from './customHtmlContract'
 
 const ALLOWED_TAGS = [
-  'a', 'article', 'b', 'blockquote', 'br', 'caption', 'code', 'dd', 'div', 'dl', 'dt', 'em',
-  'figcaption', 'figure', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'i',
-  'img', 'li', 'main', 'mark', 'nav', 'ol', 'p', 'pre', 's', 'section', 'small', 'span', 'strong',
-  'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'u', 'ul',
+  'a',
+  'article',
+  'b',
+  'blockquote',
+  'br',
+  'caption',
+  'code',
+  'dd',
+  'div',
+  'dl',
+  'dt',
+  'em',
+  'figcaption',
+  'figure',
+  'footer',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'header',
+  'hr',
+  'i',
+  'img',
+  'li',
+  'main',
+  'mark',
+  'nav',
+  'ol',
+  'p',
+  'pre',
+  's',
+  'section',
+  'small',
+  'span',
+  'strong',
+  'table',
+  'tbody',
+  'td',
+  'tfoot',
+  'th',
+  'thead',
+  'tr',
+  'u',
+  'ul',
 ] as const
 const ALLOWED_TAG_SET = new Set<string>(ALLOWED_TAGS)
 const GLOBAL_ATTRIBUTES = new Set(['aria-describedby', 'aria-label', 'aria-labelledby', 'class', 'id', 'role', 'title'])
@@ -75,7 +118,7 @@ function isSafeAssetPath(value: string) {
 }
 
 function assetMap(assets: CustomHtmlAsset[]) {
-  return new Map(assets.filter(asset => isSafeAssetPath(asset.file.path)).map(asset => [asset.key, asset.file]))
+  return new Map(assets.filter((asset) => isSafeAssetPath(asset.file.path)).map((asset) => [asset.key, asset.file]))
 }
 
 export function inspectCustomHtml(html: string, assets: CustomHtmlAsset[]): CustomCodeIssue[] {
@@ -94,7 +137,11 @@ export function inspectCustomHtml(html: string, assets: CustomHtmlAsset[]): Cust
       if (!allowed) issues.push(issue('html', `<${tag}> 不允许使用属性 ${name}`))
     }
 
-    if (element instanceof HTMLAnchorElement && element.hasAttribute('href') && !isSafeLink(element.getAttribute('href') ?? '')) {
+    if (
+      element instanceof HTMLAnchorElement &&
+      element.hasAttribute('href') &&
+      !isSafeLink(element.getAttribute('href') ?? '')
+    ) {
       issues.push(issue('html', '链接只允许 HTTPS、站内相对地址或当前组件锚点'))
     }
     if (element instanceof HTMLImageElement) {
@@ -121,7 +168,7 @@ export function inspectCustomCss(css: string, assets?: CustomHtmlAsset[]) {
       },
     })
   } catch (error) {
-    const syntaxError = error as SyntaxError & { line?: number, column?: number }
+    const syntaxError = error as SyntaxError & { line?: number; column?: number }
     return { css: '', issues: [issue('css', syntaxError.message, syntaxError.line, syntaxError.column)] }
   }
 
@@ -130,7 +177,8 @@ export function inspectCustomCss(css: string, assets?: CustomHtmlAsset[]) {
   walk(ast, (node) => {
     const position = locationOf(node)
     if (node.type === 'Raw') issues.push(issue('css', '包含无法解析的 CSS', position.line, position.column))
-    if (node.type === 'Url') issues.push(issue('css', 'CSS 不允许直接加载 URL，请使用资源变量', position.line, position.column))
+    if (node.type === 'Url')
+      issues.push(issue('css', 'CSS 不允许直接加载 URL，请使用资源变量', position.line, position.column))
     if (node.type === 'Atrule' && !ALLOWED_AT_RULES.has(node.name.toLowerCase())) {
       issues.push(issue('css', `不允许使用 @${node.name}`, position.line, position.column))
     }
@@ -187,7 +235,23 @@ function sanitizeHtml(html: string, assets: CustomHtmlAsset[]) {
   const files = assetMap(assets)
   const fragment = DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [...ALLOWED_TAGS],
-    ALLOWED_ATTR: ['alt', 'aria-label', 'aria-labelledby', 'aria-describedby', 'class', 'colspan', 'data-vtsuru-asset', 'height', 'href', 'id', 'role', 'rowspan', 'scope', 'title', 'width'],
+    ALLOWED_ATTR: [
+      'alt',
+      'aria-label',
+      'aria-labelledby',
+      'aria-describedby',
+      'class',
+      'colspan',
+      'data-vtsuru-asset',
+      'height',
+      'href',
+      'id',
+      'role',
+      'rowspan',
+      'scope',
+      'title',
+      'width',
+    ],
     ALLOW_ARIA_ATTR: true,
     ALLOW_DATA_ATTR: false,
     RETURN_DOM_FRAGMENT: true,
@@ -223,7 +287,10 @@ function escapeStyleText(value: string) {
 }
 
 function escapeCssString(value: string) {
-  return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replace(/[\r\n\f]/g, '')
+  return value
+    .replaceAll('\\', '\\\\')
+    .replaceAll('"', '\\"')
+    .replace(/[\r\n\f]/g, '')
 }
 
 function createNonce() {
@@ -249,7 +316,9 @@ export function buildCustomHtmlDocument(props: CustomHtmlProps, theme: CustomHtm
     `--vtsuru-border-style:${theme.borderStyle ?? 'solid'}`,
     `--vtsuru-shadow:${theme.shadow ?? 'none'}`,
     assetVariables,
-  ].filter(Boolean).join(';')
+  ]
+    .filter(Boolean)
+    .join(';')
   const nonce = createNonce()
   const bridge = `(()=>{let frame=0;const send=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>parent.postMessage({type:'vtsuru-custom-html-height',height:Math.ceil(Math.max(document.body.scrollHeight,document.body.getBoundingClientRect().height))},'*'))};new ResizeObserver(send).observe(document.body);addEventListener('load',send);send()})()`
   const baseCss = `:root{${themeVariables};color-scheme:${theme.colorScheme}}*{box-sizing:border-box}html,body{min-width:0;margin:0;padding:0}body{color:var(--vtsuru-fg);background:transparent;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-wrap:anywhere}img{max-width:100%;height:auto}a{color:var(--vtsuru-primary)}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}`

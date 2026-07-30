@@ -1,14 +1,30 @@
 <script setup lang="ts">
-import { NButton, NCard, NEmpty, NGrid, NGridItem, NIcon, NProgress, NRadioButton, NRadioGroup, NSkeleton, NFlex, NStatistic, NTag, useThemeVars } from 'naive-ui'
 import { DownloadOutline, TrendingDown, TrendingUp } from '@vicons/ionicons5'
+import {
+  NButton,
+  NCard,
+  NEmpty,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NProgress,
+  NRadioButton,
+  NRadioGroup,
+  NSkeleton,
+  NFlex,
+  NStatistic,
+  NTag,
+  useThemeVars,
+} from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useOrgContext } from '../../composables/useOrgContext'
+
 import { useOrgAnalyze } from '../../composables/useOrgAnalyze'
+import { useOrgContext } from '../../composables/useOrgContext'
 import { injectOrgLives } from '../../composables/useOrgLives'
-import { useOrgAnalyzeChart } from '../useOrgAnalyzeChart'
-import type { OrgAnalyzeChartMetric } from '../useOrgAnalyzeChart'
 import { exportCsv, formatDate } from '../../utils'
 import OrgUserAvatar from '../OrgUserAvatar.vue'
+import { useOrgAnalyzeChart } from '../useOrgAnalyzeChart'
+import type { OrgAnalyzeChartMetric } from '../useOrgAnalyzeChart'
 
 const ctx = useOrgContext()
 const { data, loading, range, summary, hasChartData, load } = useOrgAnalyze(ctx)
@@ -27,7 +43,12 @@ const chartMetrics: OrgAnalyzeChartMetric[] = [
 ]
 
 const { initChart, updateChartOption, disposeChart } = useOrgAnalyzeChart({
-  chartRef, analyzeData: data, formatDate, themeVars, selectedMetrics, chartMetrics,
+  chartRef,
+  analyzeData: data,
+  formatDate,
+  themeVars,
+  selectedMetrics,
+  chartMetrics,
 })
 
 const summaryCards = computed(() => {
@@ -48,7 +69,7 @@ const rankUnit: Record<RankMetric, string> = { income: '¥', danmaku: '弹幕', 
 const topStreamers = computed(() => {
   const list = [...ranking.value].toSorted((a, b) => b[rankMetric.value] - a[rankMetric.value]).slice(0, 10)
   const max = list[0]?.[rankMetric.value] || 1
-  return list.map(s => ({ ...s, pct: Math.round((s[rankMetric.value] / max) * 100) }))
+  return list.map((s) => ({ ...s, pct: Math.round((s[rankMetric.value] / max) * 100) }))
 })
 
 function trendType(v: number): 'success' | 'error' | 'default' {
@@ -59,7 +80,7 @@ function trendType(v: number): 'success' | 'error' | 'default' {
 
 function toggleMetric(value: string) {
   selectedMetrics.value = selectedMetrics.value.includes(value)
-    ? selectedMetrics.value.filter(x => x !== value)
+    ? selectedMetrics.value.filter((x) => x !== value)
     : [...selectedMetrics.value, value]
 }
 
@@ -69,7 +90,7 @@ function exportRanking() {
     ['主播', 'ID', '收入', '弹幕', '互动', '场次'],
     [...ranking.value]
       .toSorted((a, b) => b[rankMetric.value] - a[rankMetric.value])
-      .map(s => [s.name, s.id, s.income.toFixed(2), s.danmaku, s.interaction, s.liveCount]),
+      .map((s) => [s.name, s.id, s.income.toFixed(2), s.danmaku, s.interaction, s.liveCount]),
   )
 }
 
@@ -89,30 +110,66 @@ onUnmounted(disposeChart)
 </script>
 
 <template>
-  <NFlex justify="end" style="margin-bottom: 12px;">
-    <NRadioGroup v-model:value="range" size="small">
-      <NRadioButton value="last7Days">
-        近7日
-      </NRadioButton>
-      <NRadioButton value="last30Days">
-        近30日
-      </NRadioButton>
+  <NFlex
+    justify="end"
+    style="margin-bottom: 12px"
+  >
+    <NRadioGroup
+      v-model:value="range"
+      size="small"
+    >
+      <NRadioButton value="last7Days"> 近7日 </NRadioButton>
+      <NRadioButton value="last30Days"> 近30日 </NRadioButton>
     </NRadioGroup>
   </NFlex>
 
-  <NSkeleton v-if="loading" text :repeat="4" />
-  <NEmpty v-else-if="!summary" description="暂无分析数据" />
+  <NSkeleton
+    v-if="loading"
+    text
+    :repeat="4"
+  />
+  <NEmpty
+    v-else-if="!summary"
+    description="暂无分析数据"
+  />
   <template v-else>
-    <NGrid :x-gap="12" :y-gap="12" :cols="4" item-responsive responsive="screen">
-      <NGridItem v-for="card in summaryCards" :key="card.label" span="4 m:2 l:1">
-        <NCard size="small" :bordered="false" class="stat-card">
-          <NStatistic :label="card.label" :value="card.value" :precision="card.precision">
-            <template v-if="card.money" #prefix>
+    <NGrid
+      :x-gap="12"
+      :y-gap="12"
+      :cols="4"
+      item-responsive
+      responsive="screen"
+    >
+      <NGridItem
+        v-for="card in summaryCards"
+        :key="card.label"
+        span="4 m:2 l:1"
+      >
+        <NCard
+          size="small"
+          :bordered="false"
+          class="stat-card"
+        >
+          <NStatistic
+            :label="card.label"
+            :value="card.value"
+            :precision="card.precision"
+          >
+            <template
+              v-if="card.money"
+              #prefix
+            >
               ¥
             </template>
             <template #suffix>
               <span v-if="card.suffix">{{ card.suffix }}</span>
-              <NTag v-else-if="card.trend != null" :type="trendType(card.trend)" :bordered="false" size="tiny" style="vertical-align: middle; margin-left: 4px;">
+              <NTag
+                v-else-if="card.trend != null"
+                :type="trendType(card.trend)"
+                :bordered="false"
+                size="tiny"
+                style="vertical-align: middle; margin-left: 4px"
+              >
                 <template #icon>
                   <NIcon :component="card.trend >= 0 ? TrendingUp : TrendingDown" />
                 </template>
@@ -124,7 +181,12 @@ onUnmounted(disposeChart)
       </NGridItem>
     </NGrid>
 
-    <NCard title="趋势图表" size="small" :segmented="{ content: true }" style="margin-top: 16px;">
+    <NCard
+      title="趋势图表"
+      size="small"
+      :segmented="{ content: true }"
+      style="margin-top: 16px"
+    >
       <template #header-extra>
         <NFlex>
           <NTag
@@ -138,28 +200,40 @@ onUnmounted(disposeChart)
           </NTag>
         </NFlex>
       </template>
-      <NEmpty v-if="!hasChartData" description="暂无图表数据" style="padding: 12px;" />
-      <div v-else ref="chartRef" style="height: 420px; width: 100%;" />
+      <NEmpty
+        v-if="!hasChartData"
+        description="暂无图表数据"
+        style="padding: 12px"
+      />
+      <div
+        v-else
+        ref="chartRef"
+        style="height: 420px; width: 100%"
+      />
     </NCard>
 
-    <NCard size="small" :segmented="{ content: true }" style="margin-top: 16px;">
-      <template #header>
-        主播排行榜 Top 10
-      </template>
+    <NCard
+      size="small"
+      :segmented="{ content: true }"
+      style="margin-top: 16px"
+    >
+      <template #header> 主播排行榜 Top 10 </template>
       <template #header-extra>
         <NFlex align="center">
-          <NRadioGroup v-model:value="rankMetric" size="small">
-            <NRadioButton value="income">
-              收入
-            </NRadioButton>
-            <NRadioButton value="danmaku">
-              弹幕
-            </NRadioButton>
-            <NRadioButton value="interaction">
-              互动
-            </NRadioButton>
+          <NRadioGroup
+            v-model:value="rankMetric"
+            size="small"
+          >
+            <NRadioButton value="income"> 收入 </NRadioButton>
+            <NRadioButton value="danmaku"> 弹幕 </NRadioButton>
+            <NRadioButton value="interaction"> 互动 </NRadioButton>
           </NRadioGroup>
-          <NButton size="small" secondary :disabled="ranking.length === 0" @click="exportRanking">
+          <NButton
+            size="small"
+            secondary
+            :disabled="ranking.length === 0"
+            @click="exportRanking"
+          >
             <template #icon>
               <NIcon :component="DownloadOutline" />
             </template>
@@ -167,18 +241,49 @@ onUnmounted(disposeChart)
           </NButton>
         </NFlex>
       </template>
-      <NEmpty v-if="topStreamers.length === 0" description="暂无主播数据" />
-      <NFlex v-else vertical :size="10">
-        <NFlex v-for="(s, i) in topStreamers" :key="s.id" align="center" :wrap="false" style="gap: 10px;">
-          <span class="rank-no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
-          <OrgUserAvatar :face-url="s.faceUrl" :size="28" />
-          <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;">
+      <NEmpty
+        v-if="topStreamers.length === 0"
+        description="暂无主播数据"
+      />
+      <NFlex
+        v-else
+        vertical
+        :size="10"
+      >
+        <NFlex
+          v-for="(s, i) in topStreamers"
+          :key="s.id"
+          align="center"
+          :wrap="false"
+          style="gap: 10px"
+        >
+          <span
+            class="rank-no"
+            :class="{ top: i < 3 }"
+            >{{ i + 1 }}</span
+          >
+          <OrgUserAvatar
+            :face-url="s.faceUrl"
+            :size="28"
+          />
+          <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px">
             {{ s.name }}
           </div>
-          <NProgress type="line" :percentage="s.pct" :show-indicator="false" :height="8" style="flex: 1;" />
-          <span style="width: 90px; text-align: right; font-size: 13px; font-weight: 600;">
+          <NProgress
+            type="line"
+            :percentage="s.pct"
+            :show-indicator="false"
+            :height="8"
+            style="flex: 1"
+          />
+          <span style="width: 90px; text-align: right; font-size: 13px; font-weight: 600">
             {{ rankMetric === 'income' ? rankUnit.income + s.income.toFixed(0) : s[rankMetric] }}
-            <span v-if="rankMetric !== 'income'" style="opacity: .6; font-weight: 400;"> {{ rankUnit[rankMetric] }}</span>
+            <span
+              v-if="rankMetric !== 'income'"
+              style="opacity: 0.6; font-weight: 400"
+            >
+              {{ rankUnit[rankMetric] }}</span
+            >
           </span>
         </NFlex>
       </NFlex>
@@ -194,7 +299,7 @@ onUnmounted(disposeChart)
   width: 22px;
   text-align: center;
   font-weight: 600;
-  opacity: .5;
+  opacity: 0.5;
   flex: 0 0 auto;
 }
 .rank-no.top {

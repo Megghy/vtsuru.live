@@ -1,7 +1,4 @@
 <script lang="ts" setup>
-import type { DataTableColumns } from 'naive-ui'
-import type { CheckInRankingInfo, CheckInResult, Setting_Point } from '@/api/api-models'
-
 import {
   ArrowClockwise16Filled,
   Delete16Filled,
@@ -9,19 +6,48 @@ import {
   Info24Filled,
   People24Regular,
   Search24Regular,
-  Settings24Regular
+  Settings24Regular,
 } from '@vicons/fluent'
-import { NAlert, NButton, NCard, NDataTable, NDivider, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NPopconfirm, NSelect, NFlex, NSpin, NSwitch, NTabPane, NTabs, NText, NTime, NTooltip, NTag, NGi, NGrid } from 'naive-ui';
+import type { DataTableColumns } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDataTable,
+  NDivider,
+  NForm,
+  NFormItem,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputNumber,
+  NPopconfirm,
+  NSelect,
+  NFlex,
+  NSpin,
+  NSwitch,
+  NTabPane,
+  NTabs,
+  NText,
+  NTime,
+  NTooltip,
+  NTag,
+  NGi,
+  NGrid,
+} from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
+
 import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
+import type { CheckInRankingInfo, CheckInResult, Setting_Point } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
-import { CHECKIN_API_URL } from '@/shared/config'
-import AutoActionEditor from '../AutoActionEditor.vue'
-import TemplateHelper from '../TemplateHelper.vue'
-import { CHECKIN_PLACEHOLDERS } from '../placeholders'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
+import { CHECKIN_API_URL } from '@/shared/config'
+
+import AutoActionEditor from '../AutoActionEditor.vue'
+import { CHECKIN_PLACEHOLDERS } from '../placeholders'
+import TemplateHelper from '../TemplateHelper.vue'
 
 const icons = {
   Search: Search24Regular,
@@ -30,7 +56,7 @@ const icons = {
   Settings: Settings24Regular,
   Refresh: ArrowClockwise16Filled,
   Delete: Delete16Filled,
-  Info: Info24Filled
+  Info: Info24Filled,
 }
 
 const autoActionStore = useAutoAction()
@@ -80,7 +106,7 @@ const defaultPointSetting: Setting_Point = {
   checkInOnlyOnStreaming: false,
 }
 const serverSetting = computed<Setting_Point>(() => {
-  return (accountInfo.value?.settings?.point ?? defaultPointSetting)
+  return accountInfo.value?.settings?.point ?? defaultPointSetting
 })
 
 // 是否可以编辑设置
@@ -202,9 +228,7 @@ const filteredRankingData = computed(() => {
   // 按用户名筛选
   if (userFilter.value) {
     const keyword = userFilter.value.toLowerCase()
-    filtered = filtered.filter(user =>
-      user.name.toLowerCase().includes(keyword),
-    )
+    filtered = filtered.filter((user) => user.name.toLowerCase().includes(keyword))
   }
 
   return filtered
@@ -228,7 +252,7 @@ const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
   {
     title: '用户名',
     key: 'name',
-    render: (row) => h(NText, { strong: true }, { default: () => row.name })
+    render: (row) => h(NText, { strong: true }, { default: () => row.name }),
   },
   {
     title: '连续签到',
@@ -236,7 +260,12 @@ const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
     width: 120,
     align: 'center',
     sorter: (a, b) => a.consecutiveDays - b.consecutiveDays,
-    render: (row) => h(NText, { type: row.consecutiveDays > 0 ? 'success' : 'default' }, { default: () => `${row.consecutiveDays} 天` })
+    render: (row) =>
+      h(
+        NText,
+        { type: row.consecutiveDays > 0 ? 'success' : 'default' },
+        { default: () => `${row.consecutiveDays} 天` },
+      ),
   },
   {
     title: '总积分',
@@ -244,21 +273,25 @@ const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
     width: 120,
     align: 'center',
     sorter: (a, b) => a.points - b.points,
-    render: (row) => h(NText, { strong: true, type: 'info' }, { default: () => row.points })
+    render: (row) => h(NText, { strong: true, type: 'info' }, { default: () => row.points }),
   },
   {
     title: '最近签到',
     key: 'lastCheckInTime',
     width: 180,
     render(row: CheckInRankingInfo) {
-      return h(NTooltip, {
-      }, {
-        trigger: () => h(NTime, {
-          time: row.lastCheckInTime,
-          type: 'relative',
-        }),
-        default: () => new Date(row.lastCheckInTime).toLocaleString(),
-      })
+      return h(
+        NTooltip,
+        {},
+        {
+          trigger: () =>
+            h(NTime, {
+              time: row.lastCheckInTime,
+              type: 'relative',
+            }),
+          default: () => new Date(row.lastCheckInTime).toLocaleString(),
+        },
+      )
     },
     sorter: (a, b) => a.lastCheckInTime - b.lastCheckInTime,
   },
@@ -268,7 +301,9 @@ const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
     width: 80,
     align: 'center',
     render(row: CheckInRankingInfo) {
-      return row.isAuthed ? h(NTag, { size: 'tiny', type: 'success', bordered: false }, { default: () => '已认证' }) : h(NText, { depth: 3 }, { default: () => '否' })
+      return row.isAuthed
+        ? h(NTag, { size: 'tiny', type: 'success', bordered: false }, { default: () => '已认证' })
+        : h(NText, { depth: 3 }, { default: () => '否' })
     },
   },
   {
@@ -283,18 +318,19 @@ const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
           onPositiveClick: () => resetUserCheckInByGuid(row.ouId),
         },
         {
-          trigger: () => h(
-            NButton,
-            {
-              size: 'tiny',
-              type: 'error',
-              quaternary: true,
-              disabled: isResetting.value,
-              loading: isResetting.value && resetTargetId.value === row.ouId,
-              onClick: e => e.stopPropagation(),
-            },
-            { icon: () => h(NIcon, { component: icons.Delete }) },
-          ),
+          trigger: () =>
+            h(
+              NButton,
+              {
+                size: 'tiny',
+                type: 'error',
+                quaternary: true,
+                disabled: isResetting.value,
+                loading: isResetting.value && resetTargetId.value === row.ouId,
+                onClick: (e) => e.stopPropagation(),
+              },
+              { icon: () => h(NIcon, { component: icons.Delete }) },
+            ),
           default: () => `确定要重置用户 "${row.name}" 的签到数据吗？`,
         },
       )
@@ -414,7 +450,7 @@ async function resetAllCheckIn() {
 // 测试签到功能
 const testUid = ref<number>()
 const testUsername = ref<string>('测试用户')
-const testResult = ref<{ success: boolean, message: string }>()
+const testResult = ref<{ success: boolean; message: string }>()
 
 // 处理测试签到
 async function handleTestCheckIn() {
@@ -470,7 +506,9 @@ async function handleTestCheckIn() {
   }
 }
 function updateCheckInRanking(value: boolean) {
-  accountInfo.value.settings.enableFunctions = value ? [...accountInfo.value.settings.enableFunctions, FunctionTypes.CheckInRanking] : accountInfo.value.settings.enableFunctions.filter(f => f !== FunctionTypes.CheckInRanking)
+  accountInfo.value.settings.enableFunctions = value
+    ? [...accountInfo.value.settings.enableFunctions, FunctionTypes.CheckInRanking]
+    : accountInfo.value.settings.enableFunctions.filter((f) => f !== FunctionTypes.CheckInRanking)
   SaveEnableFunctions(accountInfo.value.settings.enableFunctions)
 }
 
@@ -490,58 +528,119 @@ onMounted(() => {
     class="checkin-settings-card"
   >
     <NScrollbar class="checkin-scrollbar">
-      <NTabs type="segment" animated>
-        <NTabPane name="settings" tab="功能设置">
+      <NTabs
+        type="segment"
+        animated
+      >
+        <NTabPane
+          name="settings"
+          tab="功能设置"
+        >
           <template #tab>
-            <NFlex align="center" :size="4">
+            <NFlex
+              align="center"
+              :size="4"
+            >
               <NIcon :component="icons.Settings" />
               <span>功能设置</span>
             </NFlex>
           </template>
-          
+
           <NSpin :show="isLoading">
-            <NFlex vertical :size="16" style="padding-top: 16px;">
-              <NAlert v-if="!canEdit" type="warning" size="small" :bordered="false">
+            <NFlex
+              vertical
+              :size="16"
+              style="padding-top: 16px"
+            >
+              <NAlert
+                v-if="!canEdit"
+                type="warning"
+                size="small"
+                :bordered="false"
+              >
                 加载中或无法编辑设置，请稍后再试
               </NAlert>
 
-              <NGrid cols="1 m:2" :x-gap="16" :y-gap="16" responsive="screen">
+              <NGrid
+                cols="1 m:2"
+                :x-gap="16"
+                :y-gap="16"
+                responsive="screen"
+              >
                 <!-- 基本开关 -->
                 <NGi span="1 m:2">
-                  <NCard title="基础设置" size="small" embedded bordered>
-                    <NForm label-placement="left" :label-width="120" size="small" :show-feedback="false">
+                  <NCard
+                    title="基础设置"
+                    size="small"
+                    embedded
+                    bordered
+                  >
+                    <NForm
+                      label-placement="left"
+                      :label-width="120"
+                      size="small"
+                      :show-feedback="false"
+                    >
                       <NFormItem label="启用签到功能">
-                        <NSwitch v-model:value="serverSetting.enableCheckIn" @update:value="updateServerSettings" />
-                        <template #feedback>
-                          观众发送签到命令可获得积分
-                        </template>
+                        <NSwitch
+                          v-model:value="serverSetting.enableCheckIn"
+                          @update:value="updateServerSettings"
+                        />
+                        <template #feedback> 观众发送签到命令可获得积分 </template>
                       </NFormItem>
-                      
+
                       <transition name="fade">
-                        <div v-if="serverSetting.enableCheckIn" style="margin-top: 12px;">
-                          <NFormItem label="签到命令" required>
+                        <div
+                          v-if="serverSetting.enableCheckIn"
+                          style="margin-top: 12px"
+                        >
+                          <NFormItem
+                            label="签到命令"
+                            required
+                          >
                             <NInputGroup>
                               <NInput
                                 :value="serverSetting.checkInKeyword"
                                 placeholder="例如：签到"
-                                @update:value="(v: string) => serverSetting.checkInKeyword = v"
+                                @update:value="(v: string) => (serverSetting.checkInKeyword = v)"
                               />
-                              <NButton type="primary" @click="updateServerSettings">
+                              <NButton
+                                type="primary"
+                                @click="updateServerSettings"
+                              >
                                 保存
                               </NButton>
                             </NInputGroup>
                           </NFormItem>
-                          
-                          <NFlex :size="12" style="margin-top: 12px;">
-                            <NFormItem label="要求已认证" style="flex: 1">
-                              <NSwitch v-model:value="serverSetting.requireAuth" @update:value="updateServerSettings" />
+
+                          <NFlex
+                            :size="12"
+                            style="margin-top: 12px"
+                          >
+                            <NFormItem
+                              label="要求已认证"
+                              style="flex: 1"
+                            >
+                              <NSwitch
+                                v-model:value="serverSetting.requireAuth"
+                                @update:value="updateServerSettings"
+                              />
                             </NFormItem>
-                            <NFormItem label="允许自己签到" style="flex: 1">
-                              <NSwitch v-model:value="serverSetting.allowSelfCheckIn" @update:value="updateServerSettings" />
+                            <NFormItem
+                              label="允许自己签到"
+                              style="flex: 1"
+                            >
+                              <NSwitch
+                                v-model:value="serverSetting.allowSelfCheckIn"
+                                @update:value="updateServerSettings"
+                              />
                             </NFormItem>
                           </NFlex>
-                          
-                          <NFormItem label="允许查看排行" style="margin-top: 12px;">
+
+                          <NFormItem
+                            label="允许查看排行"
+                            style="margin-top: 12px"
+                          >
                             <NSwitch
                               :value="accountInfo.settings.enableFunctions.includes(FunctionTypes.CheckInRanking)"
                               @update:value="updateCheckInRanking"
@@ -556,31 +655,72 @@ onMounted(() => {
                 <!-- 积分奖励 -->
                 <NGi span="1 m:2">
                   <transition name="fade">
-                    <NCard v-if="serverSetting.enableCheckIn" title="积分奖励配置" size="small" embedded bordered>
-                      <NForm label-placement="left" :label-width="120" size="small" :show-feedback="false">
+                    <NCard
+                      v-if="serverSetting.enableCheckIn"
+                      title="积分奖励配置"
+                      size="small"
+                      embedded
+                      bordered
+                    >
+                      <NForm
+                        label-placement="left"
+                        :label-width="120"
+                        size="small"
+                        :show-feedback="false"
+                      >
                         <NFormItem label="启用积分奖励">
-                          <NSwitch v-model:value="serverSetting.givePointsForCheckIn" @update:value="updateServerSettings" />
+                          <NSwitch
+                            v-model:value="serverSetting.givePointsForCheckIn"
+                            @update:value="updateServerSettings"
+                          />
                         </NFormItem>
-                        
+
                         <transition name="fade">
-                          <NFlex v-if="serverSetting.givePointsForCheckIn" vertical :size="12" style="margin-top: 12px;">
+                          <NFlex
+                            v-if="serverSetting.givePointsForCheckIn"
+                            vertical
+                            :size="12"
+                            style="margin-top: 12px"
+                          >
                             <NFormItem label="基础签到积分">
-                              <NInputNumber v-model:value="serverSetting.baseCheckInPoints" :min="0" style="width: 100%" @update:value="updateServerSettings" />
+                              <NInputNumber
+                                v-model:value="serverSetting.baseCheckInPoints"
+                                :min="0"
+                                style="width: 100%"
+                                @update:value="updateServerSettings"
+                              />
                             </NFormItem>
-                            
-                            <NDivider style="margin: 4px 0;" />
-                            
+
+                            <NDivider style="margin: 4px 0" />
+
                             <NFormItem label="连续签到奖励">
-                              <NSwitch v-model:value="serverSetting.enableConsecutiveBonus" @update:value="updateServerSettings" />
+                              <NSwitch
+                                v-model:value="serverSetting.enableConsecutiveBonus"
+                                @update:value="updateServerSettings"
+                              />
                             </NFormItem>
-                            
+
                             <transition name="fade">
-                              <NFlex v-if="serverSetting.enableConsecutiveBonus" vertical :size="8">
+                              <NFlex
+                                v-if="serverSetting.enableConsecutiveBonus"
+                                vertical
+                                :size="8"
+                              >
                                 <NFormItem label="每日额外奖励">
-                                  <NInputNumber v-model:value="serverSetting.bonusPointsPerDay" :min="0" style="width: 100%" @update:value="updateServerSettings" />
+                                  <NInputNumber
+                                    v-model:value="serverSetting.bonusPointsPerDay"
+                                    :min="0"
+                                    style="width: 100%"
+                                    @update:value="updateServerSettings"
+                                  />
                                 </NFormItem>
                                 <NFormItem label="奖励积分上限">
-                                  <NInputNumber v-model:value="serverSetting.maxBonusPoints" :min="0" style="width: 100%" @update:value="updateServerSettings" />
+                                  <NInputNumber
+                                    v-model:value="serverSetting.maxBonusPoints"
+                                    :min="0"
+                                    style="width: 100%"
+                                    @update:value="updateServerSettings"
+                                  />
                                 </NFormItem>
                               </NFlex>
                             </transition>
@@ -594,20 +734,42 @@ onMounted(() => {
                 <!-- 回复消息 -->
                 <NGi span="1 m:2">
                   <transition name="fade">
-                    <NCard v-if="serverSetting.enableCheckIn" title="自动回复消息" size="small" embedded bordered>
-                      <NFlex vertical :size="12">
-                        <NForm label-placement="left" :label-width="120" size="small" :show-feedback="false">
+                    <NCard
+                      v-if="serverSetting.enableCheckIn"
+                      title="自动回复消息"
+                      size="small"
+                      embedded
+                      bordered
+                    >
+                      <NFlex
+                        vertical
+                        :size="12"
+                      >
+                        <NForm
+                          label-placement="left"
+                          :label-width="120"
+                          size="small"
+                          :show-feedback="false"
+                        >
                           <NFormItem label="发送签到回复">
                             <NSwitch v-model:value="config.sendReply" />
                           </NFormItem>
                         </NForm>
-                        
+
                         <transition name="fade">
-                          <NFlex v-if="config.sendReply" vertical :size="16" style="margin-top: 8px;">
+                          <NFlex
+                            v-if="config.sendReply"
+                            vertical
+                            :size="16"
+                            style="margin-top: 8px"
+                          >
                             <TemplateHelper :placeholders="checkInPlaceholders" />
-                            
+
                             <div class="reply-editor-section">
-                              <NText strong class="section-label">
+                              <NText
+                                strong
+                                class="section-label"
+                              >
                                 签到成功回复
                               </NText>
                               <AutoActionEditor
@@ -620,7 +782,10 @@ onMounted(() => {
                             </div>
 
                             <div class="reply-editor-section">
-                              <NText strong class="section-label">
+                              <NText
+                                strong
+                                class="section-label"
+                              >
                                 重复签到回复
                               </NText>
                               <AutoActionEditor
@@ -639,8 +804,18 @@ onMounted(() => {
                 </NGi>
               </NGrid>
 
-              <NFlex justify="center" style="margin-top: 8px; padding-bottom: 32px;">
-                <NButton type="primary" size="large" :disabled="!canEdit" :loading="isLoading" style="width: 200px;" @click="updateSettings">
+              <NFlex
+                justify="center"
+                style="margin-top: 8px; padding-bottom: 32px"
+              >
+                <NButton
+                  type="primary"
+                  size="large"
+                  :disabled="!canEdit"
+                  :loading="isLoading"
+                  style="width: 200px"
+                  @click="updateSettings"
+                >
                   保存所有更改
                 </NButton>
               </NFlex>
@@ -648,31 +823,69 @@ onMounted(() => {
           </NSpin>
         </NTabPane>
 
-        <NTabPane name="ranking" tab="签到排行榜">
+        <NTabPane
+          name="ranking"
+          tab="签到排行榜"
+        >
           <template #tab>
-            <NFlex align="center" :size="4">
+            <NFlex
+              align="center"
+              :size="4"
+            >
               <NIcon :component="icons.People" />
               <span>签到排行榜</span>
             </NFlex>
           </template>
-          
-          <NFlex vertical :size="16" style="padding-top: 16px;">
-            <NAlert type="info" size="small" :bordered="false">
+
+          <NFlex
+            vertical
+            :size="16"
+            style="padding-top: 16px"
+          >
+            <NAlert
+              type="info"
+              size="small"
+              :bordered="false"
+            >
               显示用户签到排行榜。选择时间段可查看不同期间的签到数据。
             </NAlert>
 
-            <NFlex justify="space-between" align="center" class="ranking-toolbar">
-              <NFlex align="center" :size="12">
-                <NSelect v-model:value="timeRange" :options="timeRangeOptions" style="width: 140px" size="small" @update:value="loadCheckInRanking" />
-                <NInput v-model:value="userFilter" placeholder="搜索用户名..." size="small" clearable style="width: 180px">
+            <NFlex
+              justify="space-between"
+              align="center"
+              class="ranking-toolbar"
+            >
+              <NFlex
+                align="center"
+                :size="12"
+              >
+                <NSelect
+                  v-model:value="timeRange"
+                  :options="timeRangeOptions"
+                  style="width: 140px"
+                  size="small"
+                  @update:value="loadCheckInRanking"
+                />
+                <NInput
+                  v-model:value="userFilter"
+                  placeholder="搜索用户名..."
+                  size="small"
+                  clearable
+                  style="width: 180px"
+                >
                   <template #prefix>
                     <NIcon :component="icons.Search" />
                   </template>
                 </NInput>
               </NFlex>
-              
+
               <NFlex :size="8">
-                <NButton size="small" secondary :loading="isLoadingRanking" @click="loadCheckInRanking">
+                <NButton
+                  size="small"
+                  secondary
+                  :loading="isLoadingRanking"
+                  @click="loadCheckInRanking"
+                >
                   <template #icon>
                     <NIcon :component="icons.Refresh" />
                   </template>
@@ -680,7 +893,11 @@ onMounted(() => {
                 </NButton>
                 <NPopconfirm @positive-click="resetAllCheckIn">
                   <template #trigger>
-                    <NButton size="small" type="error" quaternary>
+                    <NButton
+                      size="small"
+                      type="error"
+                      quaternary
+                    >
                       重置全部
                     </NButton>
                   </template>
@@ -705,33 +922,65 @@ onMounted(() => {
           </NFlex>
         </NTabPane>
 
-        <NTabPane name="test" tab="模拟测试">
+        <NTabPane
+          name="test"
+          tab="模拟测试"
+        >
           <template #tab>
-            <NFlex align="center" :size="4">
+            <NFlex
+              align="center"
+              :size="4"
+            >
               <NIcon :component="icons.Flash" />
               <span>模拟测试</span>
             </NFlex>
           </template>
-          
-          <NFlex vertical :size="16" style="padding-top: 16px; max-width: 600px;">
-            <NAlert type="info" size="small" :bordered="false">
+
+          <NFlex
+            vertical
+            :size="16"
+            style="padding-top: 16px; max-width: 600px"
+          >
+            <NAlert
+              type="info"
+              size="small"
+              :bordered="false"
+            >
               在此可以模拟用户发送签到命令，验证逻辑和回复消息是否正确。
             </NAlert>
 
-            <NCard size="small" embedded bordered>
-              <NForm label-placement="top" size="small">
+            <NCard
+              size="small"
+              embedded
+              bordered
+            >
+              <NForm
+                label-placement="top"
+                size="small"
+              >
                 <NFormItem label="模拟用户 UID">
                   <BiliUserSelector
                     v-model:value="testUid"
                     placeholder="请输入或选择B站用户"
-                    @user-info-loaded="(u) => { if (u?.name && (!testUsername || testUsername === '测试用户')) testUsername = u.name }"
+                    @user-info-loaded="
+                      (u) => {
+                        if (u?.name && (!testUsername || testUsername === '测试用户')) testUsername = u.name
+                      }
+                    "
                   />
                 </NFormItem>
                 <NFormItem label="模拟用户名称">
-                  <NInput v-model:value="testUsername" placeholder="默认为'测试用户'" />
+                  <NInput
+                    v-model:value="testUsername"
+                    placeholder="默认为'测试用户'"
+                  />
                 </NFormItem>
                 <NFlex justify="end">
-                  <NButton type="primary" :disabled="!testUid || !serverSetting.enableCheckIn" @click="handleTestCheckIn">
+                  <NButton
+                    type="primary"
+                    :disabled="!testUid || !serverSetting.enableCheckIn"
+                    @click="handleTestCheckIn"
+                  >
                     开始模拟签到
                   </NButton>
                 </NFlex>
@@ -740,10 +989,12 @@ onMounted(() => {
 
             <transition name="fade">
               <div v-if="testResult">
-                <NDivider title-placement="left">
-                  测试结果
-                </NDivider>
-                <NAlert :type="testResult.success ? 'success' : 'warning'" :title="testResult.success ? '模拟签到成功' : '模拟签到失败'" :bordered="false">
+                <NDivider title-placement="left"> 测试结果 </NDivider>
+                <NAlert
+                  :type="testResult.success ? 'success' : 'warning'"
+                  :title="testResult.success ? '模拟签到成功' : '模拟签到失败'"
+                  :bordered="false"
+                >
                   {{ testResult.message }}
                 </NAlert>
               </div>
@@ -755,15 +1006,30 @@ onMounted(() => {
 
     <template #footer>
       <div class="checkin-footer">
-        <NIcon :component="icons.Info" size="14" />
+        <NIcon
+          :component="icons.Info"
+          size="14"
+        />
         <span>提示：签到回复消息会遵循全局弹幕设置（频率限制、长度等）。</span>
       </div>
     </template>
   </NCard>
-  
-  <NCard v-else size="small" bordered embedded>
-    <NFlex justify="center" align="center" style="padding: 40px;">
-      <NSpin size="large" description="正在加载设置..." />
+
+  <NCard
+    v-else
+    size="small"
+    bordered
+    embedded
+  >
+    <NFlex
+      justify="center"
+      align="center"
+      style="padding: 40px"
+    >
+      <NSpin
+        size="large"
+        description="正在加载设置..."
+      />
     </NFlex>
   </NCard>
 </template>
@@ -804,7 +1070,9 @@ onMounted(() => {
 /* Transitions */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
 .fade-enter-from,

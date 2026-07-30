@@ -29,7 +29,6 @@
   bottom: 0;
   right: 0;
 
-
   transform: translateX(100px);
 }
 
@@ -60,17 +59,18 @@ yt-live-chat-membership-item-renderer:focus-within #menu.yt-live-chat-membership
   justify-content: var(--layout-center-center_-_justify-content);
 }
 
-yt-live-chat-membership-item-renderer[has-inline-action-buttons]:hover #inline-action-button-container.yt-live-chat-membership-item-renderer {
+yt-live-chat-membership-item-renderer[has-inline-action-buttons]:hover
+  #inline-action-button-container.yt-live-chat-membership-item-renderer {
   display: var(--layout-horizontal_-_display);
   -ms-flex-direction: var(--layout-horizontal_-_-ms-flex-direction);
   -webkit-flex-direction: var(--layout-horizontal_-_-webkit-flex-direction);
   flex-direction: var(--layout-horizontal_-_flex-direction);
 
-
   display: var(--yt-live-chat-inline-action-button-container-display, none);
 }
 
-yt-live-chat-membership-item-renderer[has-inline-action-buttons][hide-inline-action-buttons]:hover #inline-action-button-container.yt-live-chat-membership-item-renderer {
+yt-live-chat-membership-item-renderer[has-inline-action-buttons][hide-inline-action-buttons]:hover
+  #inline-action-button-container.yt-live-chat-membership-item-renderer {
   display: none;
 }
 
@@ -78,8 +78,8 @@ yt-live-chat-membership-item-renderer[has-inline-action-buttons]:hover #menu.yt-
   display: var(--yt-live-chat-item-with-inline-actions-context-menu-display, block);
 }
 
-#inline-action-buttons.yt-live-chat-membership-item-renderer>*.yt-live-chat-membership-item-renderer,
-#additional-inline-action-buttons.yt-live-chat-membership-item-renderer>*.yt-live-chat-membership-item-renderer {
+#inline-action-buttons.yt-live-chat-membership-item-renderer > *.yt-live-chat-membership-item-renderer,
+#additional-inline-action-buttons.yt-live-chat-membership-item-renderer > *.yt-live-chat-membership-item-renderer {
   --yt-button-icon-size: 36px;
   --yt-button-icon-padding: 6px;
 
@@ -87,20 +87,20 @@ yt-live-chat-membership-item-renderer[has-inline-action-buttons]:hover #menu.yt-
   border-radius: 2px;
 }
 
-#inline-action-buttons.yt-live-chat-membership-item-renderer>*.yt-live-chat-membership-item-renderer {
+#inline-action-buttons.yt-live-chat-membership-item-renderer > *.yt-live-chat-membership-item-renderer {
   background: var(--yt-luna-black-opacity-lighten-1);
 }
 
-#inline-action-buttons.yt-live-chat-membership-item-renderer>.yt-live-chat-membership-item-renderer:hover {
+#inline-action-buttons.yt-live-chat-membership-item-renderer > .yt-live-chat-membership-item-renderer:hover {
   background: var(--yt-luna-black);
 }
 
-#additional-inline-action-buttons.yt-live-chat-membership-item-renderer>*.yt-live-chat-membership-item-renderer {
+#additional-inline-action-buttons.yt-live-chat-membership-item-renderer > *.yt-live-chat-membership-item-renderer {
   color: var(--yt-live-chat-additional-inline-action-button-color);
   background: var(--yt-live-chat-additional-inline-action-button-background-color);
 }
 
-#additional-inline-action-buttons.yt-live-chat-membership-item-renderer>.yt-live-chat-membership-item-renderer:hover {
+#additional-inline-action-buttons.yt-live-chat-membership-item-renderer > .yt-live-chat-membership-item-renderer:hover {
   background: var(--yt-live-chat-additional-inline-action-button-background-color-hover);
 }
 
@@ -108,8 +108,10 @@ yt-live-chat-membership-item-renderer[has-inline-action-buttons]:hover #menu.yt-
   margin-left: 32px;
 }
 
-#inline-action-buttons.yt-live-chat-membership-item-renderer>*.yt-live-chat-membership-item-renderer:not(:first-child),
-#additional-inline-action-buttons.yt-live-chat-membership-item-renderer>*.yt-live-chat-membership-item-renderer:not(:first-child) {
+#inline-action-buttons.yt-live-chat-membership-item-renderer
+  > *.yt-live-chat-membership-item-renderer:not(:first-child),
+#additional-inline-action-buttons.yt-live-chat-membership-item-renderer
+  > *.yt-live-chat-membership-item-renderer:not(:first-child) {
   margin-left: 8px;
 }
 
@@ -202,7 +204,8 @@ yt-live-chat-membership-item-renderer[dashboard-money-feed] #header-content.yt-l
   flex-direction: var(--layout-vertical_-_flex-direction);
 }
 
-yt-live-chat-membership-item-renderer[dashboard-money-feed] #header-content-inner-column.yt-live-chat-membership-item-renderer {
+yt-live-chat-membership-item-renderer[dashboard-money-feed]
+  #header-content-inner-column.yt-live-chat-membership-item-renderer {
   margin-bottom: 4px;
 
   display: var(--layout-horizontal_-_display);
@@ -230,12 +233,14 @@ yt-live-chat-membership-item-renderer[dashboard-money-feed] yt-icon#author-photo
   display: block;
 }
 
-yt-live-chat-membership-item-renderer:not([dashboard-money-feed]) yt-live-chat-author-chip.yt-live-chat-membership-item-renderer {
+yt-live-chat-membership-item-renderer:not([dashboard-money-feed])
+  yt-live-chat-author-chip.yt-live-chat-membership-item-renderer {
   --yt-live-chat-sponsor-color: var(--yt-live-chat-sponsor-text-color);
   --yt-live-chat-secondary-text-color: var(--yt-live-chat-sponsor-text-color);
 }
 
-yt-live-chat-membership-item-renderer[dashboard-money-feed] yt-live-chat-author-chip.yt-live-chat-membership-item-renderer {
+yt-live-chat-membership-item-renderer[dashboard-money-feed]
+  yt-live-chat-author-chip.yt-live-chat-membership-item-renderer {
   margin-right: 8px;
   font-weight: 500;
   --yt-live-chat-sponsor-color: var(--yt-live-chat-secondary-text-color);
@@ -270,8 +275,10 @@ yt-live-chat-membership-item-renderer[dashboard-money-feed] #header-subtext.yt-l
   display: none;
 }
 
-yt-live-chat-membership-item-renderer[has-primary-header-text]:not([dashboard-money-feed]) yt-live-chat-author-chip.yt-live-chat-membership-item-renderer,
-yt-live-chat-membership-item-renderer[has-primary-header-text]:not([dashboard-money-feed]) #header-subtext.yt-live-chat-membership-item-renderer {
+yt-live-chat-membership-item-renderer[has-primary-header-text]:not([dashboard-money-feed])
+  yt-live-chat-author-chip.yt-live-chat-membership-item-renderer,
+yt-live-chat-membership-item-renderer[has-primary-header-text]:not([dashboard-money-feed])
+  #header-subtext.yt-live-chat-membership-item-renderer {
   font-size: 12px;
 }
 
@@ -343,7 +350,9 @@ a.yt-live-chat-membership-item-renderer {
   word-break: break-all;
 }
 
-#message.yt-live-chat-membership-item-renderer a.yt-live-chat-membership-item-renderer .mention.yt-live-chat-membership-item-renderer {
+#message.yt-live-chat-membership-item-renderer
+  a.yt-live-chat-membership-item-renderer
+  .mention.yt-live-chat-membership-item-renderer {
   text-decoration: underline;
 }
 

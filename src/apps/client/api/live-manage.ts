@@ -1,7 +1,8 @@
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
+import CryptoJS from 'crypto-js'
+
 import { QueryBiliAPI } from '../data/utils'
 import { useBiliCookie } from '../store/useBiliCookie'
-import CryptoJS from 'crypto-js'
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 
 /**
  * 直播姬版本信息
@@ -37,13 +38,13 @@ function appSign(params: AppSignParams, appsec: string): SignedParams {
   // 按 key 排序参数
   const sortedKeys = Object.keys(params).toSorted()
   const sortedParams: AppSignParams = {}
-  sortedKeys.forEach(key => {
+  sortedKeys.forEach((key) => {
     sortedParams[key] = params[key]
   })
-  
+
   // 序列化参数为 key=value&key=value 格式
-  const queryString = sortedKeys.map(key => `${key}=${String(params[key])}`).join('&')
-  
+  const queryString = sortedKeys.map((key) => `${key}=${String(params[key])}`).join('&')
+
   // 计算 MD5 签名
   const signString = queryString + appsec
   const sign = md5(signString)
@@ -71,18 +72,12 @@ function extractUidFromCookie(cookie: string): string {
  */
 async function getTimestamp(): Promise<number> {
   try {
-    const resp = await QueryBiliAPI(
-      'https://api.bilibili.com/x/report/click/now',
-      'GET',
-      '',
-      false,
-    )
-    const json = await resp.json() as { code: number, data?: { now?: number } }
+    const resp = await QueryBiliAPI('https://api.bilibili.com/x/report/click/now', 'GET', '', false)
+    const json = (await resp.json()) as { code: number; data?: { now?: number } }
     if (json.code === 0 && json.data?.now) {
       return json.data.now
     }
-  }
-  catch (err) {
+  } catch (err) {
     console.error('获取服务器时间戳失败，使用本地时间:', err)
   }
   return Math.floor(Date.now() / 1000)
@@ -99,11 +94,14 @@ export async function getLiveVersion(): Promise<LiveVersionInfo | null> {
     const ts = await getTimestamp()
 
     // 准备参数并签名
-    const params = appSign({
-      appkey,
-      system_version: 2,
-      ts,
-    }, appsec)
+    const params = appSign(
+      {
+        appkey,
+        system_version: 2,
+        ts,
+      },
+      appsec,
+    )
 
     const query = new URLSearchParams()
     Object.entries(params).forEach(([key, value]) => {
@@ -116,15 +114,14 @@ export async function getLiveVersion(): Promise<LiveVersionInfo | null> {
       '',
       false,
     )
-    const json = await resp.json() as { code: number, data?: LiveVersionInfo }
+    const json = (await resp.json()) as { code: number; data?: LiveVersionInfo }
 
     if (json.code === 0 && json.data) {
       return json.data
     }
 
     return null
-  }
-  catch (err) {
+  } catch (err) {
     console.error('获取直播姬版本失败:', err)
     return null
   }
@@ -273,7 +270,7 @@ export interface StopLiveResponse {
 export async function stopLive(params: StopLiveParams): Promise<StopLiveResponse> {
   const biliCookieStore = useBiliCookie()
   const cookie = await biliCookieStore.getBiliCookie()
-  
+
   if (!cookie) {
     throw new Error('未登录或Cookie无效')
   }
@@ -289,13 +286,7 @@ export async function stopLive(params: StopLiveParams): Promise<StopLiveResponse
   formData.append('room_id', params.roomId.toString())
   formData.append('csrf', csrf)
 
-  const resp = await QueryBiliAPI(
-    'https://api.live.bilibili.com/room/v1/Room/stopLive',
-    'POST',
-    cookie,
-    true,
-    formData,
-  )
+  const resp = await QueryBiliAPI('https://api.live.bilibili.com/room/v1/Room/stopLive', 'POST', cookie, true, formData)
 
   const json = await resp.json()
   return json as StopLiveResponse
@@ -333,7 +324,7 @@ export interface UpdateRoomResponse {
 export async function updateRoom(params: UpdateRoomParams): Promise<UpdateRoomResponse> {
   const biliCookieStore = useBiliCookie()
   const cookie = await biliCookieStore.getBiliCookie()
-  
+
   if (!cookie) {
     throw new Error('未登录或Cookie无效')
   }
@@ -348,7 +339,7 @@ export async function updateRoom(params: UpdateRoomParams): Promise<UpdateRoomRe
   formData.append('room_id', params.roomId.toString())
   formData.append('csrf', csrf)
   formData.append('csrf_token', csrf)
-  
+
   if (params.title !== undefined) {
     formData.append('title', params.title)
   }
@@ -362,13 +353,7 @@ export async function updateRoom(params: UpdateRoomParams): Promise<UpdateRoomRe
     formData.append('del_tag', params.delTag)
   }
 
-  const resp = await QueryBiliAPI(
-    'https://api.live.bilibili.com/room/v1/Room/update',
-    'POST',
-    cookie,
-    true,
-    formData,
-  )
+  const resp = await QueryBiliAPI('https://api.live.bilibili.com/room/v1/Room/update', 'POST', cookie, true, formData)
 
   const json = await resp.json()
   return json as UpdateRoomResponse
@@ -387,7 +372,7 @@ export interface LiveArea {
 export async function getLiveAreas(): Promise<LiveArea[]> {
   const resp = await QueryBiliAPI('https://api.live.bilibili.com/room/v1/Area/getList', 'GET', '', false)
   const json = await resp.json()
-  
+
   if (json.code === 0 && json.data) {
     const areas: LiveArea[] = []
     for (const parent of json.data) {
@@ -402,7 +387,7 @@ export async function getLiveAreas(): Promise<LiveArea[]> {
     }
     return areas
   }
-  
+
   throw new Error('获取直播分区失败')
 }
 
@@ -484,25 +469,11 @@ export async function uploadCover(file: File): Promise<UploadCoverResponse> {
   const encoder = new TextEncoder()
 
   const parts: string[] = []
+  parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="bucket"\r\n\r\nlive\r\n`)
+  parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="dir"\r\n\r\nnew_room_cover\r\n`)
+  parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="csrf"\r\n\r\n${csrf}\r\n`)
   parts.push(
-    `--${boundary}\r\n` +
-    'Content-Disposition: form-data; name="bucket"\r\n\r\n' +
-    'live\r\n',
-  )
-  parts.push(
-    `--${boundary}\r\n` +
-    'Content-Disposition: form-data; name="dir"\r\n\r\n' +
-    'new_room_cover\r\n',
-  )
-  parts.push(
-    `--${boundary}\r\n` +
-    'Content-Disposition: form-data; name="csrf"\r\n\r\n' +
-    `${csrf}\r\n`,
-  )
-  parts.push(
-    `--${boundary}\r\n` +
-    `Content-Disposition: form-data; name="file"; filename="${file.name || 'blob'}"\r\n` +
-    `Content-Type: ${file.type || 'image/jpeg'}\r\n\r\n`,
+    `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${file.name || 'blob'}"\r\nContent-Type: ${file.type || 'image/jpeg'}\r\n\r\n`,
   )
 
   const headBytes = encoder.encode(parts.join(''))
@@ -516,9 +487,9 @@ export async function uploadCover(file: File): Promise<UploadCoverResponse> {
 
   const headers: Record<string, string> = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0',
-    'Origin': 'https://www.bilibili.com',
-    'Referer': 'https://live.bilibili.com/',
-    'Cookie': cookie,
+    Origin: 'https://www.bilibili.com',
+    Referer: 'https://live.bilibili.com/',
+    Cookie: cookie,
     'Content-Type': `multipart/form-data; boundary=${boundary}`,
   }
 

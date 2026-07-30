@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
+import FaceAuthModal from '@/apps/client/components/live-manage/FaceAuthModal.vue'
 import LiveControlPanel from '@/apps/client/components/live-manage/LiveControlPanel.vue'
 import LiveStreamInfo from '@/apps/client/components/live-manage/LiveStreamInfo.vue'
 import ObsControlPanel from '@/apps/client/components/live-manage/ObsControlPanel.vue'
-import FaceAuthModal from '@/apps/client/components/live-manage/FaceAuthModal.vue'
 import { useLiveControl } from '@/apps/client/composables/useLiveControl'
 
 const control = useLiveControl()
@@ -61,7 +61,7 @@ const control = useLiveControl()
 </template>
 
 <style scoped>
-  .live-manage-page {
-    width: 100%;
-  }
+.live-manage-page {
+  width: 100%;
+}
 </style>

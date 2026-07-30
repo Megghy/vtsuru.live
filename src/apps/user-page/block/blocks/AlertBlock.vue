@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { NAlert } from 'naive-ui';
+import { NAlert } from 'naive-ui'
 import { computed } from 'vue'
+
 import BlockCard from '../BlockCard.vue'
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 function asObject(v: unknown): Record<string, any> | null {
   if (!v || typeof v !== 'object') return null
@@ -24,11 +25,17 @@ const text = computed(() => (typeof propsObj.value.text === 'string' ? propsObj.
 const showIcon = computed(() => (typeof propsObj.value.showIcon === 'boolean' ? propsObj.value.showIcon : true))
 const bordered = computed(() => (typeof propsObj.value.bordered === 'boolean' ? propsObj.value.bordered : false))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : true))
-const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : true))
+const backgrounded = computed(() =>
+  typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : true,
+)
 </script>
 
 <template>
-  <BlockCard :framed="framed" :backgrounded="backgrounded" :content-style="{ padding: 0 }">
+  <BlockCard
+    :framed="framed"
+    :backgrounded="backgrounded"
+    :content-style="{ padding: 0 }"
+  >
     <NAlert
       :type="type"
       :title="title || undefined"

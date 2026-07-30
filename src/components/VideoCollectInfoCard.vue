@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import type {
-  CountdownProps,
-} from 'naive-ui'
-import type { VideoCollectTable } from '@/api/api-models'
 import { Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
-import {
-  NCard, NCountdown, NDivider, NEllipsis, NIcon, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui';
-import { CURRENT_HOST } from '@/shared/config'
+import type { CountdownProps } from 'naive-ui'
+import { NCard, NCountdown, NDivider, NEllipsis, NIcon, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui'
+
+import type { VideoCollectTable } from '@/api/api-models'
 import router from '@/app/router'
+import { CURRENT_HOST } from '@/shared/config'
 
 const props = defineProps<{
   item: VideoCollectTable
@@ -15,7 +13,7 @@ const props = defineProps<{
   from: 'user' | 'owner'
   bordered?: boolean
 }>()
-const renderCountdown: CountdownProps['render'] = (info: { hours: number, minutes: number, seconds: number }) => {
+const renderCountdown: CountdownProps['render'] = (info: { hours: number; minutes: number; seconds: number }) => {
   return `${String(info.hours).padStart(2, '0')}时 ${String(info.minutes).padStart(2, '0')}分 ${String(info.seconds).padStart(2, '0')}秒`
 }
 function onClick() {
@@ -66,7 +64,7 @@ function onClick() {
     >
       <NTime :time="item.createAt" />
     </NText>
-    <br>
+    <br />
     <NText
       depth="3"
       style="font-size: 13px"
@@ -74,7 +72,7 @@ function onClick() {
       结束:
       <NTime :time="item.endAt" />
     </NText>
-    <br>
+    <br />
     <NText depth="3">
       <NEllipsis>
         {{ item.description }}
@@ -101,7 +99,8 @@ function onClick() {
             <NTooltip>
               <template #trigger>
                 <NText depth="3">
-                  剩余 <NCountdown
+                  剩余
+                  <NCountdown
                     :duration="item.endAt - Date.now()"
                     :render="renderCountdown"
                   />

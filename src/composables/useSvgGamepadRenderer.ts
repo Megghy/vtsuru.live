@@ -1,9 +1,10 @@
 import type { ComponentPublicInstance, Ref } from 'vue'
-import type { ControllerComponentStructure } from '@/apps/obs-store/data/gamepadConfigs'
-import type { LogicalButton } from '@/types/gamepad'
 import { shallowRef, watchEffect } from 'vue'
-import { LogicalButtonsList } from '@/types/gamepad'
+
+import type { ControllerComponentStructure } from '@/apps/obs-store/data/gamepadConfigs'
 import { useGamepadStore } from '@/store/useGamepadStore'
+import type { LogicalButton } from '@/types/gamepad'
+import { LogicalButtonsList } from '@/types/gamepad'
 
 export interface SvgRendererOptions {
   bodySvgRef: Ref<ComponentPublicInstance | null>
@@ -23,9 +24,7 @@ export function useSvgGamepadRenderer(options: SvgRendererOptions) {
   function findElementByPath(svgEl: Element, path: string): Element | null {
     if (!path || !svgEl) return null
     // 精确匹配 inkscape:label
-    let el = Array.from(svgEl.querySelectorAll('*')).find(
-      e => e.getAttribute('inkscape:label') === path,
-    )
+    let el = Array.from(svgEl.querySelectorAll('*')).find((e) => e.getAttribute('inkscape:label') === path)
     // 回退到 ID 匹配
     if (!el && /^[a-z][\w:.-]*$/i.test(path)) {
       try {
@@ -36,8 +35,8 @@ export function useSvgGamepadRenderer(options: SvgRendererOptions) {
   }
 
   function findColorTarget(element: Element): Element {
-    const colorEl = Array.from(element.querySelectorAll('*')).find(
-      el => el.getAttribute('inkscape:label')?.toLowerCase().includes('color'),
+    const colorEl = Array.from(element.querySelectorAll('*')).find((el) =>
+      el.getAttribute('inkscape:label')?.toLowerCase().includes('color'),
     )
     return colorEl ?? element.children[0] ?? element
   }
@@ -94,7 +93,10 @@ export function useSvgGamepadRenderer(options: SvgRendererOptions) {
         const el = findElementByPath(svgEl, comp.path)
         if (el) {
           const target = findColorTarget(el)
-          originalFills.value.set(comp.path, target.getAttribute('fill') || window.getComputedStyle(target).fill || 'none')
+          originalFills.value.set(
+            comp.path,
+            target.getAttribute('fill') || window.getComputedStyle(target).fill || 'none',
+          )
           if (comp.type === 'stick') {
             originalTransforms.value.set(comp.path, el.getAttribute('transform') || '')
           }
@@ -113,8 +115,7 @@ export function useSvgGamepadRenderer(options: SvgRendererOptions) {
     if (!originalFills.value.has(pathId)) {
       originalFills.value.set(pathId, currentFill === 'none' ? null : currentFill)
     }
-    const color = pressedColor.value
-      || (currentFill?.startsWith('#') ? invertColor(currentFill) : '#FFFFFF80')
+    const color = pressedColor.value || (currentFill?.startsWith('#') ? invertColor(currentFill) : '#FFFFFF80')
     target.setAttribute('fill', color)
   }
 
@@ -129,9 +130,15 @@ export function useSvgGamepadRenderer(options: SvgRendererOptions) {
     const svgEl = bodySvgRef.value?.$el as Element | undefined
     if (!svgEl) return
     function walk(comp: ControllerComponentStructure) {
-      if (!comp.path) { comp.childComponents?.forEach(walk); return }
+      if (!comp.path) {
+        comp.childComponents?.forEach(walk)
+        return
+      }
       const el = findElementByPath(svgEl, comp.path)
-      if (!el) { comp.childComponents?.forEach(walk); return }
+      if (!el) {
+        comp.childComponents?.forEach(walk)
+        return
+      }
       if (comp.type === 'stick') {
         const t = originalTransforms.value.get(comp.path)
         if (t !== undefined) el.setAttribute('transform', t)
@@ -180,7 +187,10 @@ export function useSvgGamepadRenderer(options: SvgRendererOptions) {
       const target = findColorTarget(el)
 
       if (!originalFills.value.has(comp.path)) {
-        originalFills.value.set(comp.path, target.getAttribute('fill') || window.getComputedStyle(target).fill || 'none')
+        originalFills.value.set(
+          comp.path,
+          target.getAttribute('fill') || window.getComputedStyle(target).fill || 'none',
+        )
       }
       if (!originalTransforms.value.has(comp.path)) {
         originalTransforms.value.set(comp.path, el.getAttribute('transform') || '')
@@ -251,4 +261,3 @@ export function useSvgGamepadRenderer(options: SvgRendererOptions) {
 
   return { analyzeSvg, resetAll, findElementByPath }
 }
-

@@ -286,4 +286,3 @@ yt-live-chat-paid-message-renderer {
   animation-fill-mode: both;
 }
 `
-

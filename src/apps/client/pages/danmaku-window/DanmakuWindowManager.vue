@@ -1,9 +1,31 @@
 <script setup lang="ts">
 import { ResizeTable24Filled } from '@vicons/fluent'
-import { NButton, NCard, NCheckbox, NCheckboxGroup, NColorPicker, NFlex, NFormItem, NGi, NGrid, NIcon, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSlider, NSwitch, NTabPane, NTabs, NText, useMessage } from 'naive-ui'
-import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
+import {
+  NButton,
+  NCard,
+  NCheckbox,
+  NCheckboxGroup,
+  NColorPicker,
+  NFlex,
+  NFormItem,
+  NGi,
+  NGrid,
+  NIcon,
+  NInputNumber,
+  NRadioButton,
+  NRadioGroup,
+  NSelect,
+  NSlider,
+  NSwitch,
+  NTabPane,
+  NTabs,
+  NText,
+  useMessage,
+} from 'naive-ui'
+
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
+import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 
 const danmakuWindow = useDanmakuWindow()
 const message = useMessage()
@@ -43,9 +65,33 @@ const separatorOptions = [
 ]
 
 const presets = {
-  dark: { backgroundColor: 'rgba(0,0,0,0.8)', windowBackgroundColor: 'rgba(0,0,0,0)', textColor: '#ffffff', shadowColor: 'rgba(0,0,0,0.7)', enableShadow: true, borderRadius: 8, opacity: 0.95 },
-  light: { backgroundColor: 'rgba(255,255,255,0.8)', windowBackgroundColor: 'rgba(0,0,0,0)', textColor: '#333333', shadowColor: 'rgba(0,0,0,0.2)', enableShadow: true, borderRadius: 8, opacity: 0.95 },
-  transparent: { backgroundColor: 'rgba(0,0,0,0.3)', windowBackgroundColor: 'rgba(0,0,0,0)', textColor: '#ffffff', shadowColor: 'rgba(0,0,0,0.0)', enableShadow: false, borderRadius: 8, opacity: 0.9 },
+  dark: {
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    windowBackgroundColor: 'rgba(0,0,0,0)',
+    textColor: '#ffffff',
+    shadowColor: 'rgba(0,0,0,0.7)',
+    enableShadow: true,
+    borderRadius: 8,
+    opacity: 0.95,
+  },
+  light: {
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    windowBackgroundColor: 'rgba(0,0,0,0)',
+    textColor: '#333333',
+    shadowColor: 'rgba(0,0,0,0.2)',
+    enableShadow: true,
+    borderRadius: 8,
+    opacity: 0.95,
+  },
+  transparent: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    windowBackgroundColor: 'rgba(0,0,0,0)',
+    textColor: '#ffffff',
+    shadowColor: 'rgba(0,0,0,0.0)',
+    enableShadow: false,
+    borderRadius: 8,
+    opacity: 0.9,
+  },
 }
 
 function applyPreset(preset: keyof typeof presets) {
@@ -54,11 +100,23 @@ function applyPreset(preset: keyof typeof presets) {
   const names = { dark: '暗黑', light: '明亮', transparent: '透明' } as const
   message.success(`已应用${names[preset]}主题预设`)
 }
+
+function resetWindowPosition() {
+  danmakuWindow.setDanmakuWindowPosition(0, 0)
+  message.success('窗口位置已重置')
+}
 </script>
 
 <template>
-  <NFlex vertical :size="12" class="client-readable">
-    <NCard size="small" bordered>
+  <NFlex
+    vertical
+    :size="12"
+    class="client-readable"
+  >
+    <NCard
+      size="small"
+      bordered
+    >
       <ClientPageHeader
         title="弹幕窗口管理"
         description="管理弹幕窗口的布局、外观、过滤与高级设置"
@@ -75,33 +133,70 @@ function applyPreset(preset: keyof typeof presets) {
       </ClientPageHeader>
     </NCard>
 
-    <NCard size="small" bordered>
-      <NTabs type="line" animated>
+    <NCard
+      size="small"
+      bordered
+    >
+      <NTabs
+        type="line"
+        animated
+      >
         <!-- 布局与位置 -->
-        <NTabPane name="layout" tab="布局">
-          <NFlex vertical :size="12">
-            <NCard title="窗口尺寸与位置" size="small" embedded>
-              <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
+        <NTabPane
+          name="layout"
+          tab="布局"
+        >
+          <NFlex
+            vertical
+            :size="12"
+          >
+            <NCard
+              title="窗口尺寸与位置"
+              size="small"
+              embedded
+            >
+              <NGrid
+                cols="1 m:2"
+                responsive="screen"
+                :x-gap="12"
+                :y-gap="4"
+              >
                 <NGi>
-                  <NFormItem label="宽度" label-placement="left">
+                  <NFormItem
+                    label="宽度"
+                    label-placement="left"
+                  >
                     <NInputNumber
                       v-model:value="danmakuWindow.danmakuWindowSetting.width"
-                      :min="200" :max="2000"
-                      @update:value="(v) => danmakuWindow.setDanmakuWindowSize(v as number, danmakuWindow.danmakuWindowSetting.height)"
+                      :min="200"
+                      :max="2000"
+                      @update:value="
+                        (v) =>
+                          danmakuWindow.setDanmakuWindowSize(v as number, danmakuWindow.danmakuWindowSetting.height)
+                      "
                     />
                   </NFormItem>
                 </NGi>
                 <NGi>
-                  <NFormItem label="高度" label-placement="left">
+                  <NFormItem
+                    label="高度"
+                    label-placement="left"
+                  >
                     <NInputNumber
                       v-model:value="danmakuWindow.danmakuWindowSetting.height"
-                      :min="200" :max="2000"
-                      @update:value="(v) => danmakuWindow.setDanmakuWindowSize(danmakuWindow.danmakuWindowSetting.width, v as number)"
+                      :min="200"
+                      :max="2000"
+                      @update:value="
+                        (v) => danmakuWindow.setDanmakuWindowSize(danmakuWindow.danmakuWindowSetting.width, v as number)
+                      "
                     />
                   </NFormItem>
                 </NGi>
                 <NGi>
-                  <NFormItem label="X" label-placement="left">
+                  <NFormItem
+                    label="X"
+                    label-placement="left"
+                  >
                     <NInputNumber
                       v-model:value="danmakuWindow.danmakuWindowSetting.x"
                       :min="0"
@@ -110,7 +205,10 @@ function applyPreset(preset: keyof typeof presets) {
                   </NFormItem>
                 </NGi>
                 <NGi>
-                  <NFormItem label="Y" label-placement="left">
+                  <NFormItem
+                    label="Y"
+                    label-placement="left"
+                  >
                     <NInputNumber
                       v-model:value="danmakuWindow.danmakuWindowSetting.y"
                       :min="0"
@@ -119,8 +217,15 @@ function applyPreset(preset: keyof typeof presets) {
                   </NFormItem>
                 </NGi>
               </NGrid>
-              <NFlex justify="end" style="margin-top: 8px">
-                <NButton secondary size="small" @click="danmakuWindow.setDanmakuWindowPosition(0, 0); message.success('窗口位置已重置')">
+              <NFlex
+                justify="end"
+                style="margin-top: 8px"
+              >
+                <NButton
+                  secondary
+                  size="small"
+                  @click="resetWindowPosition"
+                >
                   <template #icon>
                     <NIcon :component="ResizeTable24Filled" />
                   </template>
@@ -129,8 +234,15 @@ function applyPreset(preset: keyof typeof presets) {
               </NFlex>
             </NCard>
 
-            <NCard title="窗口行为" size="small" embedded>
-              <NFlex vertical :size="4">
+            <NCard
+              title="窗口行为"
+              size="small"
+              embedded
+            >
+              <NFlex
+                vertical
+                :size="4"
+              >
                 <LabelItem label="总是置顶">
                   <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.alwaysOnTop" />
                 </LabelItem>
@@ -143,27 +255,63 @@ function applyPreset(preset: keyof typeof presets) {
         </NTabPane>
 
         <!-- 外观 -->
-        <NTabPane name="appearance" tab="外观">
-          <NFlex vertical :size="12">
-            <NCard title="颜色" size="small" embedded>
-              <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
+        <NTabPane
+          name="appearance"
+          tab="外观"
+        >
+          <NFlex
+            vertical
+            :size="12"
+          >
+            <NCard
+              title="颜色"
+              size="small"
+              embedded
+            >
+              <NGrid
+                cols="1 m:2"
+                responsive="screen"
+                :x-gap="12"
+                :y-gap="4"
+              >
                 <NGi>
-                  <NFormItem label="弹幕背景" label-placement="left">
-                    <NColorPicker v-model:value="danmakuWindow.danmakuWindowSetting.backgroundColor" :show-alpha="true" />
+                  <NFormItem
+                    label="弹幕背景"
+                    label-placement="left"
+                  >
+                    <NColorPicker
+                      v-model:value="danmakuWindow.danmakuWindowSetting.backgroundColor"
+                      :show-alpha="true"
+                    />
                   </NFormItem>
                 </NGi>
                 <NGi>
-                  <NFormItem label="窗口背景" label-placement="left">
-                    <NColorPicker v-model:value="danmakuWindow.danmakuWindowSetting.windowBackgroundColor" :show-alpha="true" />
+                  <NFormItem
+                    label="窗口背景"
+                    label-placement="left"
+                  >
+                    <NColorPicker
+                      v-model:value="danmakuWindow.danmakuWindowSetting.windowBackgroundColor"
+                      :show-alpha="true"
+                    />
                   </NFormItem>
                 </NGi>
                 <NGi>
-                  <NFormItem label="文字颜色" label-placement="left">
-                    <NColorPicker v-model:value="danmakuWindow.danmakuWindowSetting.textColor" :show-alpha="true" />
+                  <NFormItem
+                    label="文字颜色"
+                    label-placement="left"
+                  >
+                    <NColorPicker
+                      v-model:value="danmakuWindow.danmakuWindowSetting.textColor"
+                      :show-alpha="true"
+                    />
                   </NFormItem>
                 </NGi>
                 <NGi>
-                  <NFormItem label="阴影颜色" label-placement="left">
+                  <NFormItem
+                    label="阴影颜色"
+                    label-placement="left"
+                  >
                     <NColorPicker
                       v-model:value="danmakuWindow.danmakuWindowSetting.shadowColor"
                       :show-alpha="true"
@@ -172,32 +320,87 @@ function applyPreset(preset: keyof typeof presets) {
                   </NFormItem>
                 </NGi>
               </NGrid>
-              <NFlex style="margin-top: 8px" :size="8">
-                <NButton size="small" @click="applyPreset('dark')">
+              <NFlex
+                style="margin-top: 8px"
+                :size="8"
+              >
+                <NButton
+                  size="small"
+                  @click="applyPreset('dark')"
+                >
                   暗色预设
                 </NButton>
-                <NButton size="small" @click="applyPreset('light')">
+                <NButton
+                  size="small"
+                  @click="applyPreset('light')"
+                >
                   亮色预设
                 </NButton>
-                <NButton size="small" @click="applyPreset('transparent')">
+                <NButton
+                  size="small"
+                  @click="applyPreset('transparent')"
+                >
                   透明预设
                 </NButton>
               </NFlex>
             </NCard>
 
-            <NCard title="样式" size="small" embedded>
-              <NFlex vertical :size="4">
-                <NFormItem label="透明度" label-placement="left">
-                  <NSlider v-model:value="danmakuWindow.danmakuWindowSetting.opacity" :min="0" :max="1" :step="0.05" style="max-width: 300px" />
+            <NCard
+              title="样式"
+              size="small"
+              embedded
+            >
+              <NFlex
+                vertical
+                :size="4"
+              >
+                <NFormItem
+                  label="透明度"
+                  label-placement="left"
+                >
+                  <NSlider
+                    v-model:value="danmakuWindow.danmakuWindowSetting.opacity"
+                    :min="0"
+                    :max="1"
+                    :step="0.05"
+                    style="max-width: 300px"
+                  />
                 </NFormItem>
-                <NFormItem label="字体大小" label-placement="left">
-                  <NSlider v-model:value="danmakuWindow.danmakuWindowSetting.fontSize" :min="10" :max="24" :step="1" style="max-width: 300px" />
+                <NFormItem
+                  label="字体大小"
+                  label-placement="left"
+                >
+                  <NSlider
+                    v-model:value="danmakuWindow.danmakuWindowSetting.fontSize"
+                    :min="10"
+                    :max="24"
+                    :step="1"
+                    style="max-width: 300px"
+                  />
                 </NFormItem>
-                <NFormItem label="圆角" label-placement="left">
-                  <NSlider v-model:value="danmakuWindow.danmakuWindowSetting.borderRadius" :min="0" :max="20" :step="1" style="max-width: 300px" />
+                <NFormItem
+                  label="圆角"
+                  label-placement="left"
+                >
+                  <NSlider
+                    v-model:value="danmakuWindow.danmakuWindowSetting.borderRadius"
+                    :min="0"
+                    :max="20"
+                    :step="1"
+                    style="max-width: 300px"
+                  />
                 </NFormItem>
-                <NFormItem label="项目间距" label-placement="left">
-                  <NSlider v-model:value="danmakuWindow.danmakuWindowSetting.itemSpacing" :min="0" :max="20" :step="1" style="max-width: 300px" />
+                <NFormItem
+                  label="项目间距"
+                  label-placement="left"
+                >
+                  <NSlider
+                    v-model:value="danmakuWindow.danmakuWindowSetting.itemSpacing"
+                    :min="0"
+                    :max="20"
+                    :step="1"
+                    style="max-width: 300px"
+                  />
                 </NFormItem>
                 <LabelItem label="启用阴影">
                   <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.enableShadow" />
@@ -208,26 +411,47 @@ function applyPreset(preset: keyof typeof presets) {
         </NTabPane>
 
         <!-- 内容 -->
-        <NTabPane name="content" tab="内容">
-          <NFlex vertical :size="12">
-            <NCard title="展示风格" size="small" embedded>
+        <NTabPane
+          name="content"
+          tab="内容"
+        >
+          <NFlex
+            vertical
+            :size="12"
+          >
+            <NCard
+              title="展示风格"
+              size="small"
+              embedded
+            >
               <NRadioGroup v-model:value="danmakuWindow.danmakuWindowSetting.displayStyle">
                 <NFlex>
-                  <NRadioButton v-for="opt in displayStyleOptions" :key="opt.value" :value="opt.value">
+                  <NRadioButton
+                    v-for="opt in displayStyleOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
                     {{ opt.label }}
                   </NRadioButton>
                 </NFlex>
               </NRadioGroup>
 
               <template v-if="danmakuWindow.danmakuWindowSetting.displayStyle === 'text'">
-                <NFlex vertical :size="4" style="margin-top: 12px">
+                <NFlex
+                  vertical
+                  :size="4"
+                  style="margin-top: 12px"
+                >
                   <LabelItem label="紧凑布局">
                     <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.textStyleCompact" />
                   </LabelItem>
                   <LabelItem label="显示消息类型标签">
                     <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.textStyleShowType" />
                   </LabelItem>
-                  <NFormItem label="用户名分隔符" label-placement="left">
+                  <NFormItem
+                    label="用户名分隔符"
+                    label-placement="left"
+                  >
                     <NSelect
                       v-model:value="danmakuWindow.danmakuWindowSetting.textStyleNameSeparator"
                       :options="separatorOptions"
@@ -238,16 +462,35 @@ function applyPreset(preset: keyof typeof presets) {
               </template>
             </NCard>
 
-            <NCard title="信息过滤" size="small" embedded>
+            <NCard
+              title="信息过滤"
+              size="small"
+              embedded
+            >
               <NCheckboxGroup v-model:value="danmakuWindow.danmakuWindowSetting.filterTypes">
-                <NFlex :size="[16, 8]" wrap>
-                  <NCheckbox v-for="opt in filterTypeOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
+                <NFlex
+                  :size="[16, 8]"
+                  wrap
+                >
+                  <NCheckbox
+                    v-for="opt in filterTypeOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                    :label="opt.label"
+                  />
                 </NFlex>
               </NCheckboxGroup>
             </NCard>
 
-            <NCard title="显示元素" size="small" embedded>
-              <NFlex vertical :size="4">
+            <NCard
+              title="显示元素"
+              size="small"
+              embedded
+            >
+              <NFlex
+                vertical
+                :size="4"
+              >
                 <LabelItem label="显示头像">
                   <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.showAvatar" />
                 </LabelItem>
@@ -266,57 +509,94 @@ function applyPreset(preset: keyof typeof presets) {
         </NTabPane>
 
         <!-- 行为 -->
-        <NTabPane name="behavior" tab="行为">
-          <NFlex vertical :size="12">
-            <NCard title="弹幕方向与动画" size="small" embedded>
-              <NFlex vertical :size="4">
+        <NTabPane
+          name="behavior"
+          tab="行为"
+        >
+          <NFlex
+            vertical
+            :size="12"
+          >
+            <NCard
+              title="弹幕方向与动画"
+              size="small"
+              embedded
+            >
+              <NFlex
+                vertical
+                :size="4"
+              >
                 <LabelItem label="弹幕方向">
-                  <NFlex align="center" :size="8">
-                    <NText depth="3">
-                      从上往下
-                    </NText>
+                  <NFlex
+                    align="center"
+                    :size="8"
+                  >
+                    <NText depth="3"> 从上往下 </NText>
                     <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.reverseOrder" />
-                    <NText depth="3">
-                      从下往上
-                    </NText>
+                    <NText depth="3"> 从下往上 </NText>
                   </NFlex>
                 </LabelItem>
                 <LabelItem label="启用动画">
                   <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.enableAnimation" />
                 </LabelItem>
-                <NFormItem v-if="danmakuWindow.danmakuWindowSetting.enableAnimation" label="动画时长" label-placement="left">
+                <NFormItem
+                  v-if="danmakuWindow.danmakuWindowSetting.enableAnimation"
+                  label="动画时长"
+                  label-placement="left"
+                >
                   <NInputNumber
                     v-model:value="danmakuWindow.danmakuWindowSetting.animationDuration"
-                    :min="0" :max="1000" :step="50"
+                    :min="0"
+                    :max="1000"
+                    :step="50"
                   >
-                    <template #suffix>
-                      ms
-                    </template>
+                    <template #suffix> ms </template>
                   </NInputNumber>
                 </NFormItem>
               </NFlex>
             </NCard>
 
-            <NCard title="数量与消失" size="small" embedded>
-              <NFlex vertical :size="4">
-                <NFormItem label="最大弹幕数量" label-placement="left">
+            <NCard
+              title="数量与消失"
+              size="small"
+              embedded
+            >
+              <NFlex
+                vertical
+                :size="4"
+              >
+                <NFormItem
+                  label="最大弹幕数量"
+                  label-placement="left"
+                >
                   <NInputNumber
                     v-model:value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount"
-                    :min="10" :max="200"
+                    :min="10"
+                    :max="200"
                   />
                 </NFormItem>
-                <NFormItem label="自动消失时间" label-placement="left">
+                <NFormItem
+                  label="自动消失时间"
+                  label-placement="left"
+                >
                   <NInputNumber
                     v-model:value="danmakuWindow.danmakuWindowSetting.autoDisappearTime"
-                    :min="0" :max="600" :step="5"
+                    :min="0"
+                    :max="600"
+                    :step="5"
                   >
-                    <template #suffix>
-                      秒
-                    </template>
+                    <template #suffix> 秒 </template>
                   </NInputNumber>
                 </NFormItem>
-                <NText depth="3" style="font-size: 12px">
-                  {{ danmakuWindow.danmakuWindowSetting.autoDisappearTime > 0 ? `弹幕将在 ${danmakuWindow.danmakuWindowSetting.autoDisappearTime} 秒后自动消失` : '设为 0 则弹幕不会自动消失' }}
+                <NText
+                  depth="3"
+                  style="font-size: 12px"
+                >
+                  {{
+                    danmakuWindow.danmakuWindowSetting.autoDisappearTime > 0
+                      ? `弹幕将在 ${danmakuWindow.danmakuWindowSetting.autoDisappearTime} 秒后自动消失`
+                      : '设为 0 则弹幕不会自动消失'
+                  }}
                 </NText>
               </NFlex>
             </NCard>
@@ -324,24 +604,55 @@ function applyPreset(preset: keyof typeof presets) {
         </NTabPane>
 
         <!-- 高级 -->
-        <NTabPane name="advanced" tab="高级">
-          <NFlex vertical :size="12">
-            <NCard title="调试" size="small" embedded>
-              <NFlex :size="8" wrap>
-                <NButton size="small" type="info" @click="danmakuWindow.sendTestDanmaku()">
+        <NTabPane
+          name="advanced"
+          tab="高级"
+        >
+          <NFlex
+            vertical
+            :size="12"
+          >
+            <NCard
+              title="调试"
+              size="small"
+              embedded
+            >
+              <NFlex
+                :size="8"
+                wrap
+              >
+                <NButton
+                  size="small"
+                  type="info"
+                  @click="danmakuWindow.sendTestDanmaku()"
+                >
                   发送测试弹幕
                 </NButton>
-                <NButton size="small" type="warning" @click="danmakuWindow.clearAllDanmaku()">
+                <NButton
+                  size="small"
+                  type="warning"
+                  @click="danmakuWindow.clearAllDanmaku()"
+                >
                   清空弹幕
                 </NButton>
               </NFlex>
             </NCard>
 
-            <NCard title="表情数据" size="small" embedded>
-              <NFlex align="center" justify="space-between">
-                <NText depth="3" style="font-size: 12px">
-                  Inline: {{ Object.keys(danmakuWindow.emojiData.data.inline).length }} 个 /
-                  Plain: {{ Object.keys(danmakuWindow.emojiData.data.plain).length }} 个
+            <NCard
+              title="表情数据"
+              size="small"
+              embedded
+            >
+              <NFlex
+                align="center"
+                justify="space-between"
+              >
+                <NText
+                  depth="3"
+                  style="font-size: 12px"
+                >
+                  Inline: {{ Object.keys(danmakuWindow.emojiData.data.inline).length }} 个 / Plain:
+                  {{ Object.keys(danmakuWindow.emojiData.data.plain).length }} 个
                 </NText>
                 <NButton
                   size="small"

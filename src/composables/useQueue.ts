@@ -1,13 +1,9 @@
-import type {
-  DanmakuUserInfo,
-  EventModel,
-  ResponseQueueModel,
-  Setting_Queue,
-} from '@/api/api-models'
 import { List } from 'linqts'
-import { NTime } from 'naive-ui';
+import { NTime } from 'naive-ui'
 import { computed, h, ref } from 'vue'
+
 import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
+import type { DanmakuUserInfo, EventModel, ResponseQueueModel, Setting_Queue } from '@/api/api-models'
 import {
   EventDataTypes,
   FunctionTypes,
@@ -61,7 +57,9 @@ export const STATUS_MAP = {
   [QueueStatus.Cancel]: '已取消',
 }
 
-export function getQueuePaymentMeta(item: Pick<ResponseQueueModel, 'giftPrice' | 'mysteryBoxName' | 'mysteryBoxPrice'>) {
+export function getQueuePaymentMeta(
+  item: Pick<ResponseQueueModel, 'giftPrice' | 'mysteryBoxName' | 'mysteryBoxPrice'>,
+) {
   return getGiftPaymentDisplayMeta({
     giftPrice: item.giftPrice,
     mysteryBoxName: item.mysteryBoxName,
@@ -128,28 +126,28 @@ export const useQueue = defineStore('queue', () => {
     const source = isLoggedIn.value ? originQueue.value : localQueues.value
     const keyword = activeFilterName.value.trim().toLowerCase()
     const filtered = source
-      .filter(q => !keyword || q?.user?.name?.toLowerCase().includes(keyword) === true)
-      .filter(q => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish)
+      .filter((q) => !keyword || q?.user?.name?.toLowerCase().includes(keyword) === true)
+      .filter((q) => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish)
 
     const reverse = configCanEdit.value ? settings.value.isReverse : localIsReverse.value
     const sorted = sortByQueueType(filtered, settings.value.sortType, reverse, {
-      createAt: q => q.createAt,
-      guardLevel: q => q.user?.guard_level,
-      price: q => q.giftPrice,
-      fansMedalLevel: q => q.user?.fans_medal_level,
-      fansMedalWearing: q => q.user?.fans_medal_wearing_status,
+      createAt: (q) => q.createAt,
+      guardLevel: (q) => q.user?.guard_level,
+      price: (q) => q.giftPrice,
+      fansMedalLevel: (q) => q.user?.fans_medal_level,
+      fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
     })
-    return new List(sorted).OrderByDescending(q => (q.status === QueueStatus.Progressing ? 1 : 0)).ToArray()
+    return new List(sorted).OrderByDescending((q) => (q.status === QueueStatus.Progressing ? 1 : 0)).ToArray()
   })
 
   const historySongs = computed(() => {
     return (isLoggedIn.value ? originQueue.value : localQueues.value)
-      .filter(s => s.status === QueueStatus.Finish || s.status === QueueStatus.Cancel)
+      .filter((s) => s.status === QueueStatus.Finish || s.status === QueueStatus.Cancel)
       .toSorted((a, b) => (b.finishAt ?? b.createAt) - (a.finishAt ?? a.createAt))
   })
 
   function nextLocalId() {
-    return localQueues.value.length === 0 ? 1 : (new List(localQueues.value).Max(s => s.id) ?? 0) + 1
+    return localQueues.value.length === 0 ? 1 : (new List(localQueues.value).Max((s) => s.id) ?? 0) + 1
   }
 
   function checkMatch(word: string) {
@@ -157,7 +155,10 @@ export const useQueue = defineStore('queue', () => {
   }
 
   function checkMessage(eventData: EventModel): boolean {
-    if (!isLoggedIn.value && localQueues.value.some(q => q.user?.uid === eventData.uid && q.status < QueueStatus.Finish)) {
+    if (
+      !isLoggedIn.value &&
+      localQueues.value.some((q) => q.user?.uid === eventData.uid && q.status < QueueStatus.Finish)
+    ) {
       return false
     }
 
@@ -171,8 +172,9 @@ export const useQueue = defineStore('queue', () => {
         return false
       }
       if (settings.value.allowGift) {
-        const nameMatch = (settings.value.giftNames?.length ?? 0) === 0
-          || settings.value.giftNames?.some(n => eventData.msg.toLowerCase() === n.toLowerCase()) === true
+        const nameMatch =
+          (settings.value.giftNames?.length ?? 0) === 0 ||
+          settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) === true
         const priceMatch = !settings.value.minGiftPrice || eventData.price >= settings.value.minGiftPrice
 
         if (settings.value.giftFilterType === QueueGiftFilterType.Or) {
@@ -182,8 +184,10 @@ export const useQueue = defineStore('queue', () => {
         }
         return settings.value.sendGiftDirectJoin
       }
-      return settings.value.allowIncreaseByAnyPayment
-        || settings.value.giftNames?.some(n => eventData.msg.toLowerCase() === n.toLowerCase()) === true
+      return (
+        settings.value.allowIncreaseByAnyPayment ||
+        settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) === true
+      )
     }
 
     return true
@@ -220,16 +224,22 @@ export const useQueue = defineStore('queue', () => {
         const data = await QueryPostAPI<ResponseQueueModel>(`${QUEUE_API_URL}try-add`, danmaku)
         if (data.code === 200) {
           if (data.message === 'EventFetcher') return
-          const existingIndex = originQueue.value.findIndex(q => q.id === data.data.id)
+          const existingIndex = originQueue.value.findIndex((q) => q.id === data.data.id)
           if (existingIndex > -1) {
             const oldPrice = originQueue.value[existingIndex]?.giftPrice ?? 0
             const newPrice = data.data?.giftPrice ?? 0
             if (newPrice > oldPrice) {
-              window.$message.info(buildPaymentIncreaseMessage(
-                data.data.user?.name,
-                { giftPrice: newPrice - oldPrice, mysteryBoxName: danmaku.mystery_box_name, mysteryBoxPrice: danmaku.mystery_box_price },
-                newPrice,
-              ))
+              window.$message.info(
+                buildPaymentIncreaseMessage(
+                  data.data.user?.name,
+                  {
+                    giftPrice: newPrice - oldPrice,
+                    mysteryBoxName: danmaku.mystery_box_name,
+                    mysteryBoxPrice: danmaku.mystery_box_price,
+                  },
+                  newPrice,
+                ),
+              )
             }
             originQueue.value.splice(existingIndex, 1, data.data)
           } else {
@@ -281,7 +291,9 @@ export const useQueue = defineStore('queue', () => {
     }
     if (isLoggedIn.value) {
       try {
-        const data = await QueryPostAPIWithParams<ResponseQueueModel>(`${QUEUE_API_URL}add`, { name: newQueueName.value })
+        const data = await QueryPostAPIWithParams<ResponseQueueModel>(`${QUEUE_API_URL}add`, {
+          name: newQueueName.value,
+        })
         if (data.code === 200) {
           window.$message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
           originQueue.value.unshift(data.data)
@@ -309,7 +321,7 @@ export const useQueue = defineStore('queue', () => {
 
   async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus) {
     if (!configCanEdit.value) {
-      const localItem = localQueues.value.find(q => q.id === queueData.id)
+      const localItem = localQueues.value.find((q) => q.id === queueData.id)
       if (localItem) {
         localItem.status = status
         if (status > QueueStatus.Progressing) localItem.finishAt = Date.now()
@@ -321,7 +333,7 @@ export const useQueue = defineStore('queue', () => {
     try {
       const data = await QueryGetAPI(`${QUEUE_API_URL}set-status`, { id: queueData.id, status })
       if (data.code === 200) {
-        const item = originQueue.value.find(q => q.id === queueData.id)
+        const item = originQueue.value.find((q) => q.id === queueData.id)
         if (item) {
           item.status = status
           if (status > QueueStatus.Progressing) item.finishAt = Date.now()
@@ -343,11 +355,11 @@ export const useQueue = defineStore('queue', () => {
     if (isLoggedIn.value) {
       isLoading.value = true
       try {
-        const ids = values.map(s => s.id)
+        const ids = values.map((s) => s.id)
         const data = await QueryPostAPI(`${QUEUE_API_URL}del`, ids)
         if (data.code === 200) {
           window.$message.success(`成功删除 ${values.length} 条记录`)
-          originQueue.value = originQueue.value.filter(s => !ids.includes(s.id))
+          originQueue.value = originQueue.value.filter((s) => !ids.includes(s.id))
         } else {
           window.$message.error(`删除失败: ${data.message}`)
         }
@@ -357,8 +369,8 @@ export const useQueue = defineStore('queue', () => {
         isLoading.value = false
       }
     } else {
-      const ids = new Set(values.map(v => v.id))
-      localQueues.value = localQueues.value.filter(q => !ids.has(q.id))
+      const ids = new Set(values.map((v) => v.id))
+      localQueues.value = localQueues.value.filter((q) => !ids.has(q.id))
       window.$message.success(`成功删除 ${values.length} 条本地记录`)
     }
   }
@@ -402,21 +414,28 @@ export const useQueue = defineStore('queue', () => {
         return
       }
       ;(data.data ?? []).forEach((item) => {
-        const existing = originQueue.value.find(s => s.id === item.id)
+        const existing = originQueue.value.find((s) => s.id === item.id)
         if (existing) {
           if (existing.status !== item.status) existing.status = item.status
-          const paymentChanged = existing.giftPrice !== item.giftPrice
-            || existing.mysteryBoxName !== item.mysteryBoxName
-            || existing.mysteryBoxPrice !== item.mysteryBoxPrice
+          const paymentChanged =
+            existing.giftPrice !== item.giftPrice ||
+            existing.mysteryBoxName !== item.mysteryBoxName ||
+            existing.mysteryBoxPrice !== item.mysteryBoxPrice
           if (paymentChanged) {
             const oldPrice = existing.giftPrice ?? 0
             const newPrice = item.giftPrice ?? 0
             if (newPrice > oldPrice) {
-              window.$message.info(buildPaymentIncreaseMessage(
-                existing.user?.name,
-                { giftPrice: newPrice - oldPrice, mysteryBoxName: item.mysteryBoxName, mysteryBoxPrice: item.mysteryBoxPrice },
-                newPrice,
-              ))
+              window.$message.info(
+                buildPaymentIncreaseMessage(
+                  existing.user?.name,
+                  {
+                    giftPrice: newPrice - oldPrice,
+                    mysteryBoxName: item.mysteryBoxName,
+                    mysteryBoxPrice: item.mysteryBoxPrice,
+                  },
+                  newPrice,
+                ),
+              )
             }
             existing.giftPrice = item.giftPrice
             existing.mysteryBoxName = item.mysteryBoxName
@@ -475,7 +494,7 @@ export const useQueue = defineStore('queue', () => {
         await saveSettings()
       }
     } else {
-      accountInfo.value.settings.enableFunctions = old.filter(f => f !== FunctionTypes.Queue)
+      accountInfo.value.settings.enableFunctions = old.filter((f) => f !== FunctionTypes.Queue)
     }
 
     try {
@@ -524,8 +543,12 @@ export const useQueue = defineStore('queue', () => {
     if (isLoggedIn.value) {
       originQueue.value = await getAll()
     }
-    timer = setInterval(() => { updateKey.value++ }, 1000)
-    updateActiveTimer = setInterval(() => { updateActive() }, 5000)
+    timer = setInterval(() => {
+      updateKey.value++
+    }, 1000)
+    updateActiveTimer = setInterval(() => {
+      updateActive()
+    }, 5000)
   }
 
   function dispose() {

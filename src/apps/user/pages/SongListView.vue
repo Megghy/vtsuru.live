@@ -1,15 +1,17 @@
 <script lang="ts" setup>
-import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
-import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { addSeconds } from 'date-fns'
-import { NButton, NModal, NSpin, useMessage } from 'naive-ui';
+import { NButton, NModal, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+
 import { DownloadConfig, useAccount } from '@/api/account'
+import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/shared/config'
 import { SongListTemplateMap } from '@/shared/config/templates'
-import { useBiliAuth } from '@/store/useBiliAuth'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
+import { useBiliAuth } from '@/store/useBiliAuth'
+
 import { canRequestSong } from './songListTemplate/utils/songRequestUtils'
 
 // 组件属性
@@ -37,7 +39,8 @@ const componentType = computed(() => {
 const currentData = ref<SongsInfo[]>([]) // 歌单数据
 const dynamicConfigRef = ref() // 动态配置引用
 const songsActive = ref<SongRequestInfo[]>([]) // 当前点歌列表
-const settings = ref<Setting_LiveRequest>({ // 点歌设置
+const settings = ref<Setting_LiveRequest>({
+  // 点歌设置
   allowFromWeb: false,
   allowAnonymousFromWeb: false,
   orderPrefix: '',
@@ -74,7 +77,7 @@ async function getSongRequestInfo() {
   if (!props.userInfo?.id) return { songs: [], setting: settings.value }
 
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[], setting: Setting_LiveRequest }>(
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
       `${SONG_REQUEST_API_URL}get-active-and-settings`,
       {
         id: props.userInfo.id,
@@ -141,10 +144,7 @@ async function getConfig() {
   isConfigLoading.value = true
 
   try {
-    const data = await DownloadConfig(
-      selectedTemplate.value.settingName,
-      props.userInfo?.id,
-    )
+    const data = await DownloadConfig(selectedTemplate.value.settingName, props.userInfo?.id)
 
     if (data.msg) {
       currentConfig.value = dynamicConfigRef.value?.DefaultConfig ?? {}
@@ -164,7 +164,8 @@ async function getConfig() {
  * 复制文本到剪贴板
  */
 function copyToClipboard(text: string, sendMessage: boolean = true) {
-  navigator.clipboard.writeText(text)
+  navigator.clipboard
+    .writeText(text)
     .then(() => {
       if (sendMessage) {
         message.success('复制成功')
@@ -309,7 +310,7 @@ onMounted(async () => {
       v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id"
       type="info"
       size="small"
-      style="position: absolute; right: 32px; top: 20px; z-index: 1000;"
+      style="position: absolute; right: 32px; top: 20px; z-index: 1000"
       @click="showSettingModal = true"
     >
       自定义
@@ -318,7 +319,7 @@ onMounted(async () => {
     <!-- 设置弹窗 -->
     <NModal
       v-model:show="showSettingModal"
-      style="max-width: 90vw; width: 800px;"
+      style="max-width: 90vw; width: 800px"
       preset="card"
       title="设置"
     >

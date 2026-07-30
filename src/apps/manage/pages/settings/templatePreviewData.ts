@@ -1,8 +1,4 @@
-import type {
-  ScheduleWeekInfo,
-  SongRequestOption,
-  SongsInfo,
-} from '@/api/api-models'
+import type { ScheduleWeekInfo, SongRequestOption, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 
 // 模板预览用的假数据 (仅用于设置页实时预览, 不参与实际展示)

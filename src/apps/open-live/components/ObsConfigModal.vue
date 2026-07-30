@@ -1,29 +1,52 @@
 <script setup lang="ts">
 import { Info24Filled } from '@vicons/fluent'
-import { NAlert, NButton, NCollapse, NCollapseItem, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NRadioButton, NRadioGroup, NTooltip, NUl } from 'naive-ui';
+import {
+  NAlert,
+  NButton,
+  NCollapse,
+  NCollapseItem,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NLi,
+  NModal,
+  NRadioButton,
+  NRadioGroup,
+  NTooltip,
+  NUl,
+} from 'naive-ui'
 import { computed } from 'vue'
+
 import { useAccount } from '@/api/account'
 import { CURRENT_HOST } from '@/shared/config'
 import { copyToClipboard } from '@/shared/utils'
 
 type ObsStyle = 'classic' | 'fresh' | 'minimal'
 
-const props = withDefaults(defineProps<{
-  show: boolean
-  /** OBS 页面相对路径, 如 obs/queue、obs/live-request、obs/music-request */
-  obsPath: string
-  userId?: number
-  /** 是否显示样式与滚动速度配置 (音乐点歌等无需) */
-  showStyleOptions?: boolean
-  speed?: number
-  styleType?: ObsStyle
-  description?: string
-}>(), {
-  showStyleOptions: true,
-  speed: 1,
-  styleType: 'classic',
-  description: '将等待队列以及结果显示在 OBS 中。',
-})
+const props = withDefaults(
+  defineProps<{
+    show: boolean
+    /** OBS 页面相对路径, 如 obs/queue、obs/live-request、obs/music-request */
+    obsPath: string
+    userId?: number
+    /** 是否显示样式与滚动速度配置 (音乐点歌等无需) */
+    showStyleOptions?: boolean
+    speed?: number
+    styleType?: ObsStyle
+    description?: string
+  }>(),
+  {
+    showStyleOptions: true,
+    speed: 1,
+    styleType: 'classic',
+    description: '将等待队列以及结果显示在 OBS 中。',
+  },
+)
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
@@ -35,15 +58,15 @@ const accountInfo = useAccount()
 
 const showModel = computed({
   get: () => props.show,
-  set: value => emit('update:show', value),
+  set: (value) => emit('update:show', value),
 })
 const speedModel = computed({
   get: () => props.speed,
-  set: value => emit('update:speed', value),
+  set: (value) => emit('update:speed', value),
 })
 const styleModel = computed({
   get: () => props.styleType,
-  set: value => emit('update:styleType', value),
+  set: (value) => emit('update:styleType', value),
 })
 
 const obsUrl = computed(() => {
@@ -78,27 +101,34 @@ const obsUrl = computed(() => {
         浏览
       </NButton>
     </template>
-    <NFlex vertical :size="12">
-      <NAlert title="这是什么？" type="info" size="small" :bordered="false">
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NAlert
+        title="这是什么？"
+        type="info"
+        size="small"
+        :bordered="false"
+      >
         {{ description }}
       </NAlert>
 
       <template v-if="showStyleOptions">
-        <NDivider style="margin: 0">
-          样式与速度
-        </NDivider>
-        <NFlex align="center" :wrap="true" :size="12">
-          <NRadioGroup v-model:value="styleModel" name="obsStyle">
+        <NDivider style="margin: 0"> 样式与速度 </NDivider>
+        <NFlex
+          align="center"
+          :wrap="true"
+          :size="12"
+        >
+          <NRadioGroup
+            v-model:value="styleModel"
+            name="obsStyle"
+          >
             <NFlex :wrap="true">
-              <NRadioButton value="classic">
-                经典黑色风格
-              </NRadioButton>
-              <NRadioButton value="fresh">
-                清新明亮风格
-              </NRadioButton>
-              <NRadioButton value="minimal">
-                极简无背景
-              </NRadioButton>
+              <NRadioButton value="classic"> 经典黑色风格 </NRadioButton>
+              <NRadioButton value="fresh"> 清新明亮风格 </NRadioButton>
+              <NRadioButton value="minimal"> 极简无背景 </NRadioButton>
             </NFlex>
           </NRadioGroup>
           <NInputGroup class="obs-config-modal__speed-group">
@@ -120,9 +150,7 @@ const obsUrl = computed(() => {
         </NFlex>
       </template>
 
-      <NDivider style="margin: 0">
-        预览
-      </NDivider>
+      <NDivider style="margin: 0"> 预览 </NDivider>
       <div class="obs-config-modal__preview">
         <slot
           v-if="userId"
@@ -139,7 +167,11 @@ const obsUrl = computed(() => {
       </div>
 
       <NInputGroup>
-        <NInput :value="obsUrl" readonly size="small" />
+        <NInput
+          :value="obsUrl"
+          readonly
+          size="small"
+        />
         <NButton
           type="primary"
           secondary

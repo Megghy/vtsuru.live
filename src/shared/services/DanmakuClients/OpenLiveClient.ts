@@ -1,9 +1,11 @@
-import type { OpenLiveInfo } from '@/api/api-models'
 import { clearTimeout, setTimeout } from 'worker-timers'
+
+import type { OpenLiveInfo } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { GuidUtils } from '@/shared/utils'
 import { OPEN_LIVE_API_URL } from '@/shared/config'
+import { GuidUtils } from '@/shared/utils'
+
 import BaseDanmakuClient, { DanmakuKeepLiveWS } from './BaseDanmakuClient'
 
 export default class OpenLiveClient extends BaseDanmakuClient {
@@ -23,7 +25,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
   public authInfo: AuthInfo | undefined
   public roomAuthInfo: OpenLiveInfo | undefined
 
-  public async Start(): Promise<{ success: boolean, message: string }> {
+  public async Start(): Promise<{ success: boolean; message: string }> {
     const wasConnected = this.state === 'connected'
     const result = await super.Start()
     if (result.success && !wasConnected && this.state === 'connected') {
@@ -41,7 +43,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     this.roomAuthInfo = undefined
   }
 
-  protected async initClient(signal: AbortSignal): Promise<{ success: boolean, message: string }> {
+  protected async initClient(signal: AbortSignal): Promise<{ success: boolean; message: string }> {
     const auth = await this.getAuthInfo(signal)
     if (signal.aborted) return { success: false, message: '弹幕客户端启动已取消' }
 
@@ -73,9 +75,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         }
       })
       chatClient.addEventListener('live', () => {
-        console.log(
-          `[${this.type}] 已连接房间: ${auth.data?.anchor_info.room_id}`,
-        )
+        console.log(`[${this.type}] 已连接房间: ${auth.data?.anchor_info.room_id}`)
       })
 
       this.roomAuthInfo = auth.data
@@ -160,19 +160,14 @@ export default class OpenLiveClient extends BaseDanmakuClient {
 
     try {
       const data = await (this.authInfo
-        ? QueryPostAPI<string>(
-            `${OPEN_LIVE_API_URL}heartbeat`,
-            this.authInfo,
-            undefined,
-            undefined,
-            { signal: controller.signal, timeoutMs: 15_000 },
-          )
-        : QueryGetAPI<string>(
-            `${OPEN_LIVE_API_URL}heartbeat-internal`,
-            undefined,
-            undefined,
-            { signal: controller.signal, timeoutMs: 15_000 },
-          ))
+        ? QueryPostAPI<string>(`${OPEN_LIVE_API_URL}heartbeat`, this.authInfo, undefined, undefined, {
+            signal: controller.signal,
+            timeoutMs: 15_000,
+          })
+        : QueryGetAPI<string>(`${OPEN_LIVE_API_URL}heartbeat-internal`, undefined, undefined, {
+            signal: controller.signal,
+            timeoutMs: 15_000,
+          }))
 
       if (this.isHeartbeatActive(generation) && data.code !== 200) {
         this.reportConnectionLoss(`心跳失败: ${data.message}`)
@@ -289,14 +284,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
           type: EventDataTypes.Guard,
           uname: data.user_info.uname,
           uid: data.user_info.uid,
-          msg:
-            data.guard_level == 1
-              ? '总督'
-              : data.guard_level == 2
-                ? '提督'
-                : data.guard_level == 3
-                  ? '舰长'
-                  : '',
+          msg: data.guard_level == 1 ? '总督' : data.guard_level == 2 ? '提督' : data.guard_level == 3 ? '舰长' : '',
           price: data.price / 1000,
           num: data.guard_num,
           time: data.timestamp,
@@ -306,8 +294,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           uface: data.user_info.uface,
           open_id: data.user_info.open_id,
-          ouid:
-            data.user_info.open_id ?? GuidUtils.numToGuid(data.user_info.uid),
+          ouid: data.user_info.open_id ?? GuidUtils.numToGuid(data.user_info.uid),
         },
         command,
       )

@@ -2,7 +2,17 @@ type HyperDXClient = {
   recordException: (error: Error, attributes?: Record<string, string>) => void
 }
 
-export type UserPageErrorPhase = 'user' | 'settings' | 'bili-profile' | 'render' | 'save-draft' | 'clear-draft' | 'discard-local-changes' | 'publish' | 'rollback' | 'upload'
+export type UserPageErrorPhase =
+  | 'user'
+  | 'settings'
+  | 'bili-profile'
+  | 'render'
+  | 'save-draft'
+  | 'clear-draft'
+  | 'discard-local-changes'
+  | 'publish'
+  | 'rollback'
+  | 'upload'
 
 function reportError(cause: unknown, phase: UserPageErrorPhase, feature: 'public-user-page' | 'user-page-builder') {
   const sourceName = cause instanceof Error ? cause.name : typeof cause
@@ -17,10 +27,19 @@ function reportError(cause: unknown, phase: UserPageErrorPhase, feature: 'public
   })
 }
 
-export function reportPublicPageError(cause: unknown, phase: Extract<UserPageErrorPhase, 'user' | 'settings' | 'bili-profile' | 'render'>) {
+export function reportPublicPageError(
+  cause: unknown,
+  phase: Extract<UserPageErrorPhase, 'user' | 'settings' | 'bili-profile' | 'render'>,
+) {
   reportError(cause, phase, 'public-user-page')
 }
 
-export function reportUserPageError(cause: unknown, phase: Extract<UserPageErrorPhase, 'save-draft' | 'clear-draft' | 'discard-local-changes' | 'publish' | 'rollback' | 'upload'>) {
+export function reportUserPageError(
+  cause: unknown,
+  phase: Extract<
+    UserPageErrorPhase,
+    'save-draft' | 'clear-draft' | 'discard-local-changes' | 'publish' | 'rollback' | 'upload'
+  >,
+) {
   reportError(cause, phase, 'user-page-builder')
 }

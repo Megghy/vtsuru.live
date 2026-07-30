@@ -33,7 +33,7 @@ export const LogicalButtonsList = [
 ] as const
 
 // 从上面的数组生成联合类型
-export type LogicalButton = typeof LogicalButtonsList[number]
+export type LogicalButton = (typeof LogicalButtonsList)[number]
 
 // 用于摇杆的特定逻辑名 (区别于按键的 LogicalButton)
 export type LogicalStickName = 'LEFT_STICK' | 'RIGHT_STICK'

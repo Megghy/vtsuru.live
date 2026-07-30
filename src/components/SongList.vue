@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { VNodeChild } from 'vue'
+import { ref } from 'vue'
+
 import type { SongRequestInfo, SongsInfo } from '@/api/api-models'
 import SongListTable from '@/components/song-list/SongListTable.vue'
-import { ref } from 'vue'
 
 defineProps<{
   songs: SongsInfo[]
@@ -22,5 +23,12 @@ defineExpose({
 </script>
 
 <template>
-  <SongListTable ref="tableRef" :songs="songs" :can-edit="canEdit" :is-self="isSelf" :extra-button="extraButton" :live-request-active="liveRequestActive" />
+  <SongListTable
+    ref="tableRef"
+    :songs="songs"
+    :can-edit="canEdit"
+    :is-self="isSelf"
+    :extra-button="extraButton"
+    :live-request-active="liveRequestActive"
+  />
 </template>

@@ -59,11 +59,12 @@ function parseYoutube(url: URL): EmbedRenderModel | null {
   const host = url.hostname.toLowerCase()
   if (!['youtube.com', 'www.youtube.com', 'youtu.be'].includes(host)) return null
 
-  const id = host === 'youtu.be'
-    ? url.pathname.slice(1)
-    : url.pathname === '/watch'
-      ? url.searchParams.get('v') ?? ''
-      : url.pathname.match(/^\/embed\/([^/]+)\/?$/)?.[1] ?? ''
+  const id =
+    host === 'youtu.be'
+      ? url.pathname.slice(1)
+      : url.pathname === '/watch'
+        ? (url.searchParams.get('v') ?? '')
+        : (url.pathname.match(/^\/embed\/([^/]+)\/?$/)?.[1] ?? '')
   if (!VIDEO_ID.test(id)) throw new Error('仅支持 YouTube watch/youtu.be/embed 视频链接')
 
   return {
@@ -92,7 +93,7 @@ const FEEDBACK_PROVIDERS = [
 
 export function parseFeedbackEmbedUrl(rawUrl: string): IframeRenderModel {
   const url = parseHttpsUrl(rawUrl, 'feedback.url')
-  const provider = FEEDBACK_PROVIDERS.find(it => it.host === url.hostname.toLowerCase() && it.path.test(url.pathname))
+  const provider = FEEDBACK_PROVIDERS.find((it) => it.host === url.hostname.toLowerCase() && it.path.test(url.pathname))
   if (!provider) throw new Error(`不支持的 feedback iframe provider: ${url.hostname}`)
   for (const key of url.searchParams.keys()) {
     if (!provider.query.test(key)) throw new Error(`feedback.url 不支持查询参数: ${key}`)
@@ -111,12 +112,21 @@ function parseNetease(url: URL, height: number): MusicEmbedRenderModel {
   const routeUrl = new URL(route, 'https://music.163.com')
   const type = isOutchain
     ? Number(url.searchParams.get('type'))
-    : routeUrl.pathname.includes('/song') ? 2 : routeUrl.pathname.includes('/playlist') ? 0 : routeUrl.pathname.includes('/album') ? 1 : -1
-  const id = isOutchain ? url.searchParams.get('id') : routeUrl.searchParams.get('id') ?? url.searchParams.get('id')
+    : routeUrl.pathname.includes('/song')
+      ? 2
+      : routeUrl.pathname.includes('/playlist')
+        ? 0
+        : routeUrl.pathname.includes('/album')
+          ? 1
+          : -1
+  const id = isOutchain ? url.searchParams.get('id') : (routeUrl.searchParams.get('id') ?? url.searchParams.get('id'))
   if (![0, 1, 2].includes(type)) throw new Error('仅支持网易云歌曲、歌单或专辑链接')
   if (!/^\d+$/.test(id ?? '')) throw new Error('仅支持网易云歌曲、歌单或专辑链接')
   const params = new URLSearchParams({ type: String(type), id, auto: '0', height: String(Math.max(60, height - 20)) })
-  return { provider: 'netease', ...iframe(`https://music.163.com/outchain/player?${params}`, '网易云音乐播放器', 'autoplay') }
+  return {
+    provider: 'netease',
+    ...iframe(`https://music.163.com/outchain/player?${params}`, '网易云音乐播放器', 'autoplay'),
+  }
 }
 
 function parseSpotify(url: URL): MusicEmbedRenderModel {
@@ -125,14 +135,19 @@ function parseSpotify(url: URL): MusicEmbedRenderModel {
   if (!match) throw new Error('Spotify 链接类型不受支持')
   return {
     provider: 'spotify',
-    ...iframe(`https://open.spotify.com/embed/${match[1]}/${match[2]}`, 'Spotify 播放器', 'autoplay; encrypted-media; fullscreen; picture-in-picture'),
+    ...iframe(
+      `https://open.spotify.com/embed/${match[1]}/${match[2]}`,
+      'Spotify 播放器',
+      'autoplay; encrypted-media; fullscreen; picture-in-picture',
+    ),
   }
 }
 
 function parseCustomMusic(url: URL): MusicEmbedRenderModel {
   const host = url.hostname.toLowerCase()
   if (host === 'w.soundcloud.com' && url.pathname === '/player/') {
-    const allowedQuery = /^(?:url|color|auto_play|hide_related|show_comments|show_user|show_reposts|show_teaser|visual|buying|sharing|download|start_track_id)$/
+    const allowedQuery =
+      /^(?:url|color|auto_play|hide_related|show_comments|show_user|show_reposts|show_teaser|visual|buying|sharing|download|start_track_id)$/
     for (const key of url.searchParams.keys()) {
       if (!allowedQuery.test(key)) throw new Error(`SoundCloud 播放器不支持查询参数: ${key}`)
     }
@@ -151,7 +166,11 @@ function parseCustomMusic(url: URL): MusicEmbedRenderModel {
   throw new Error(`不支持的自定义音乐 provider: ${url.hostname}`)
 }
 
-export function parseMusicEmbedUrl(provider: 'netease' | 'spotify' | 'custom', rawUrl: string, height = 300): MusicEmbedRenderModel {
+export function parseMusicEmbedUrl(
+  provider: 'netease' | 'spotify' | 'custom',
+  rawUrl: string,
+  height = 300,
+): MusicEmbedRenderModel {
   const url = parseHttpsUrl(rawUrl, 'musicPlayer.url')
   url.hash = provider === 'netease' ? url.hash : ''
   if (provider === 'netease') return parseNetease(url, height)

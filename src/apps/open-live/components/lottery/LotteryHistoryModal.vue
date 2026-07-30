@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { LotteryHistory } from '@/apps/open-live/components/lottery/lotteryTypes'
-import { NButton, NCard, NEmpty, NList, NListItem, NModal, NScrollbar, NFlex, NTime, NAvatar } from 'naive-ui';
+import { NButton, NCard, NEmpty, NList, NListItem, NModal, NScrollbar, NFlex, NTime, NAvatar } from 'naive-ui'
 import { computed } from 'vue'
+
+import type { LotteryHistory } from '@/apps/open-live/components/lottery/lotteryTypes'
 
 const props = defineProps<{
   show: boolean
@@ -16,7 +17,7 @@ const emit = defineEmits<{
 
 const showModel = computed({
   get: () => props.show,
-  set: value => emit('update:show', value),
+  set: (value) => emit('update:show', value),
 })
 </script>
 
@@ -29,24 +30,54 @@ const showModel = computed({
     closable
   >
     <template #header-extra>
-      <NButton type="error" secondary size="small" @click="emit('clear')">
+      <NButton
+        type="error"
+        secondary
+        size="small"
+        @click="emit('clear')"
+      >
         清空
       </NButton>
     </template>
-    <NScrollbar v-if="history.length > 0" style="max-height: 80vh">
-      <NList size="small" bordered>
-        <NListItem v-for="item in history" :key="item.time">
-          <NCard size="small" bordered>
+    <NScrollbar
+      v-if="history.length > 0"
+      style="max-height: 80vh"
+    >
+      <NList
+        size="small"
+        bordered
+      >
+        <NListItem
+          v-for="item in history"
+          :key="item.time"
+        >
+          <NCard
+            size="small"
+            bordered
+          >
             <template #header>
               <NTime :time="item.time" />
             </template>
             <template #header-extra>
-              <NButton type="error" secondary size="small" @click="emit('remove', item.time)">
+              <NButton
+                type="error"
+                secondary
+                size="small"
+                @click="emit('remove', item.time)"
+              >
                 删除
               </NButton>
             </template>
-            <NFlex vertical :size="10">
-              <NFlex v-for="user in item.users" :key="user.openId" align="center" :size="10">
+            <NFlex
+              vertical
+              :size="10"
+            >
+              <NFlex
+                v-for="user in item.users"
+                :key="user.openId"
+                align="center"
+                :size="10"
+              >
                 <NAvatar
                   round
                   lazy
@@ -60,6 +91,10 @@ const showModel = computed({
         </NListItem>
       </NList>
     </NScrollbar>
-    <NEmpty v-else description="暂无记录" size="small" />
+    <NEmpty
+      v-else
+      description="暂无记录"
+      size="small"
+    />
   </NModal>
 </template>

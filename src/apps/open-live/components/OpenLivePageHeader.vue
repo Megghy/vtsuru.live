@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NFlex, NText } from 'naive-ui';
+import { NFlex, NText } from 'naive-ui'
 defineProps<{
   title?: string
   description?: string
@@ -56,4 +56,3 @@ defineProps<{
   justify-content: flex-end;
 }
 </style>
-

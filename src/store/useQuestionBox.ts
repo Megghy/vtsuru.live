@@ -1,7 +1,8 @@
-import type { QAInfo } from '@/api/api-models'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { QAInfo } from '@/api/api-models'
 import { ViolationTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/shared/config'
@@ -45,7 +46,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   let isSendGetted = false
 
   const trashQuestions = computed(() =>
-    recieveQuestions.value.filter(q => q.reviewResult && q.reviewResult.isApproved === false),
+    recieveQuestions.value.filter((q) => q.reviewResult && q.reviewResult.isApproved === false),
   )
 
   function applySorting(list: QAInfo[]): QAInfo[] {
@@ -76,13 +77,14 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   const recieveQuestionsFiltered = computed(() => {
     const keyword = searchKeyword.value.toLowerCase()
-    const filtered = recieveQuestions.value.filter(q =>
-      (!q.reviewResult || q.reviewResult.isApproved === true)
-      && (!onlyFavorite.value || q.isFavorite)
-      && (!onlyPublic.value || q.isPublic)
-      && (!onlyUnread.value || !q.isReaded)
-      && (!displayTag.value || q.tag === displayTag.value)
-      && (!keyword || q.question?.message?.toLowerCase().includes(keyword)),
+    const filtered = recieveQuestions.value.filter(
+      (q) =>
+        (!q.reviewResult || q.reviewResult.isApproved === true) &&
+        (!onlyFavorite.value || q.isFavorite) &&
+        (!onlyPublic.value || q.isPublic) &&
+        (!onlyUnread.value || !q.isReaded) &&
+        (!displayTag.value || q.tag === displayTag.value) &&
+        (!keyword || q.question?.message?.toLowerCase().includes(keyword)),
     )
     return applySorting(filtered)
   })
@@ -92,7 +94,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function GetRecieveQAInfo() {
     isLoading.value = true
     try {
-      const resp = await QueryGetAPI<{ questions: QAInfo[], reviewCount: number }>(`${QUESTION_API_URL}get-recieve`)
+      const resp = await QueryGetAPI<{ questions: QAInfo[]; reviewCount: number }>(`${QUESTION_API_URL}get-recieve`)
       if (resp.code === 200) {
         recieveQuestions.value = [...resp.data.questions].toSorted((a, b) => {
           if (a.isReaded !== b.isReaded) return a.isReaded ? 1 : -1
@@ -101,7 +103,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         reviewing.value = resp.data.reviewCount
         const displayId = accountInfo.value?.settings.questionDisplay.currentQuestion
         if (displayId && displayQuestion.value?.id !== displayId) {
-          displayQuestion.value = recieveQuestions.value.find(q => q.id === displayId)
+          displayQuestion.value = recieveQuestions.value.find((q) => q.id === displayId)
         }
         isRecieveGetted = true
       } else {
@@ -136,8 +138,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}del`, { id })
       if (resp.code === 200) {
         message.success('删除成功')
-        recieveQuestions.value = recieveQuestions.value.filter(q => q.id !== id)
-        selectedIds.value = selectedIds.value.filter(sid => sid !== id)
+        recieveQuestions.value = recieveQuestions.value.filter((q) => q.id !== id)
+        selectedIds.value = selectedIds.value.filter((sid) => sid !== id)
       } else {
         message.error(resp.message)
       }
@@ -163,8 +165,14 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
 
   async function addTag(tag: string) {
-    if (!tag) { message.warning('请输入标签'); return }
-    if (tags.value.find(t => t.name === tag)) { message.warning('标签已存在'); return }
+    if (!tag) {
+      message.warning('请输入标签')
+      return
+    }
+    if (tags.value.find((t) => t.name === tag)) {
+      message.warning('标签已存在')
+      return
+    }
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}add-tag`, { tag })
       if (resp.code === 200) {
@@ -179,7 +187,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
 
   async function delTag(tag: string) {
-    if (!tag) { message.warning('请输入标签'); return }
+    if (!tag) {
+      message.warning('请输入标签')
+      return
+    }
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}del-tag`, { tag })
       if (resp.code === 200) {
@@ -194,7 +205,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
 
   async function updateTagVisiable(tag: string, visiable: boolean) {
-    if (!tag) { message.warning('请输入标签'); return }
+    if (!tag) {
+      message.warning('请输入标签')
+      return
+    }
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}update-tag-visiable`, { tag, visiable })
       if (resp.code === 200) {
@@ -213,7 +227,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     try {
       const resp = await QueryPostAPI<QAInfo>(`${QUESTION_API_URL}reply`, { Id: id, Message: msg })
       if (resp.code === 200) {
-        const index = recieveQuestions.value.findIndex(q => q.id === id)
+        const index = recieveQuestions.value.findIndex((q) => q.id === id)
         if (index > -1) recieveQuestions.value[index] = resp.data
         message.success('回复成功')
         currentQuestion.value = undefined
@@ -280,7 +294,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         const delResp = await QueryGetAPI(`${QUESTION_API_URL}del`, { id: question.id })
         if (delResp.code === 200) {
           message.success(`已拉黑 ${question.sender.name}`)
-          recieveQuestions.value = recieveQuestions.value.filter(q => q.id !== question.id)
+          recieveQuestions.value = recieveQuestions.value.filter((q) => q.id !== question.id)
         } else {
           message.error(`删除失败: ${delResp.message}`)
         }
@@ -325,7 +339,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   function selectAll(ids: number[]) {
     const current = new Set(selectedIds.value)
-    ids.forEach(id => current.add(id))
+    ids.forEach((id) => current.add(id))
     selectedIds.value = [...current]
   }
 
@@ -337,10 +351,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     const ids = [...selectedIds.value]
     if (!ids.length) return
     await Promise.allSettled(
-      ids.map(async id => QueryGetAPI(`${QUESTION_API_URL}read`, { id, read: isRead ? 'true' : 'false' })),
+      ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}read`, { id, read: isRead ? 'true' : 'false' })),
     )
-    ids.forEach(id => {
-      const q = recieveQuestions.value.find(item => item.id === id)
+    ids.forEach((id) => {
+      const q = recieveQuestions.value.find((item) => item.id === id)
       if (q) q.isReaded = isRead
     })
     clearSelection()
@@ -350,10 +364,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function batchDelete() {
     const ids = [...selectedIds.value]
     if (!ids.length) return
-    await Promise.allSettled(
-      ids.map(async id => QueryGetAPI(`${QUESTION_API_URL}del`, { id })),
-    )
-    recieveQuestions.value = recieveQuestions.value.filter(q => !ids.includes(q.id))
+    await Promise.allSettled(ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}del`, { id })))
+    recieveQuestions.value = recieveQuestions.value.filter((q) => !ids.includes(q.id))
     clearSelection()
     message.success('已批量删除')
   }
@@ -361,11 +373,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function batchSetPublic(pub: boolean) {
     const ids = [...selectedIds.value]
     if (!ids.length) return
-    await Promise.allSettled(
-      ids.map(async id => QueryGetAPI(`${QUESTION_API_URL}public`, { id, public: pub })),
-    )
-    ids.forEach(id => {
-      const q = recieveQuestions.value.find(item => item.id === id)
+    await Promise.allSettled(ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}public`, { id, public: pub })))
+    ids.forEach((id) => {
+      const q = recieveQuestions.value.find((item) => item.id === id)
       if (q) q.isPublic = pub
     })
     clearSelection()

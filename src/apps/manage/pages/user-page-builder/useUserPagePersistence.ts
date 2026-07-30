@@ -1,12 +1,19 @@
-import { clearMyUserPagesDraft, publishMyUserPagesSettings, rollbackMyUserPagesPublished, saveMyUserPagesDraft } from '@/apps/user-page/api'
-import { reportUserPageError } from '@/apps/user-page/runtime/observability'
+import type { Ref } from 'vue'
+import { ref } from 'vue'
+
+import {
+  clearMyUserPagesDraft,
+  publishMyUserPagesSettings,
+  rollbackMyUserPagesPublished,
+  saveMyUserPagesDraft,
+} from '@/apps/user-page/api'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
+import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { deepCloneJson, estimateUtf8Bytes, pruneHiddenEmptyBlocks } from './editorHelpers'
 import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
 import type { UserPageValidationIssue } from './validateUserPagesSettings'
-import type { Ref } from 'vue'
-import { ref } from 'vue'
 
 export interface UseUserPagePersistenceOptions {
   settings: Ref<UserPagesSettingsV1>
@@ -67,7 +74,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
         blocks.forEach((b: any) => {
           if (!b || typeof b !== 'object') return
           if (b.hidden) return
-          const propsObj = (b.props && typeof b.props === 'object' && !Array.isArray(b.props)) ? (b.props) : {}
+          const propsObj = b.props && typeof b.props === 'object' && !Array.isArray(b.props) ? b.props : {}
 
           if (b.type === 'layout' && Array.isArray(propsObj.children)) {
             walk(propsObj.children)
@@ -76,14 +83,18 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
 
           if (b.type === 'embed' && typeof propsObj.url === 'string' && propsObj.url.length) embedCount++
 
-          if ((b.type === 'links' || b.type === 'buttons' || b.type === 'socialLinks') && Array.isArray(propsObj.items)) {
+          if (
+            (b.type === 'links' || b.type === 'buttons' || b.type === 'socialLinks') &&
+            Array.isArray(propsObj.items)
+          ) {
             externalLinkCount += propsObj.items.filter((it: any) => {
               const url = typeof it?.url === 'string' ? (it.url as string) : ''
               return url.startsWith('https://')
             }).length
           }
 
-          if (b.type === 'button' && typeof propsObj.url === 'string' && propsObj.url.startsWith('https://')) externalLinkCount++
+          if (b.type === 'button' && typeof propsObj.url === 'string' && propsObj.url.startsWith('https://'))
+            externalLinkCount++
         })
       }
       walk(project.blocks as any[])
@@ -142,7 +153,10 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
           prunedCount = pruneHiddenEmptyBlocks(opts.settings.value)
         })
         if (!silent) opts.notify.success(`配置超过上限，已自动清理隐藏空区块：${prunedCount} 个`)
-        else console.warn(`[user-page-builder] Auto save pruned hidden empty blocks due to size limit (${bytes}/${opts.maxConfigBytes})`)
+        else
+          console.warn(
+            `[user-page-builder] Auto save pruned hidden empty blocks due to size limit (${bytes}/${opts.maxConfigBytes})`,
+          )
       }
       const savedSettings = deepCloneJson(opts.settings.value)
       const savedSnapshot = JSON.stringify(savedSettings)

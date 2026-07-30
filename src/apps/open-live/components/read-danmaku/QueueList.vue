@@ -2,7 +2,9 @@
 import { Dismiss20Filled } from '@vicons/fluent'
 import { NButton, NEmpty, NIcon, NScrollbar, NText } from 'naive-ui'
 import { ref } from 'vue'
+
 import { useSpeechService } from '@/store/useSpeechService'
+
 import QueueItem from './QueueItem.vue'
 
 const speechService = useSpeechService()
@@ -38,15 +40,23 @@ function onDragEnd() {
 <template>
   <div class="queue-list">
     <div class="header">
-      <NText strong style="font-size: 13px">
+      <NText
+        strong
+        style="font-size: 13px"
+      >
         播报队列
       </NText>
-      <NText depth="3" style="font-size: 11px">
+      <NText
+        depth="3"
+        style="font-size: 11px"
+      >
         {{ speakQueue.length }} 项
       </NText>
       <NButton
         v-if="speakQueue.length > 0"
-        size="tiny" tertiary type="error"
+        size="tiny"
+        tertiary
+        type="error"
         style="margin-left: auto"
         @click="speakQueue.splice(0)"
       >
@@ -57,10 +67,20 @@ function onDragEnd() {
       </NButton>
     </div>
 
-    <NEmpty v-if="speakQueue.length === 0" description="队列为空" size="small" />
+    <NEmpty
+      v-if="speakQueue.length === 0"
+      description="队列为空"
+      size="small"
+    />
 
-    <NScrollbar v-else style="max-height: 400px">
-      <div class="items" @dragend="onDragEnd">
+    <NScrollbar
+      v-else
+      style="max-height: 400px"
+    >
+      <div
+        class="items"
+        @dragend="onDragEnd"
+      >
         <div
           v-for="(item, index) in speakQueue"
           :key="`${item.data.time}-${index}`"

@@ -1,7 +1,17 @@
 <script setup lang="ts">
+import {
+  ArrowForwardOutline,
+  CafeOutline,
+  CardOutline,
+  CashOutline,
+  FlashOutline,
+  Heart as HeartIcon,
+  LogoTwitch,
+  LogoYoutube,
+} from '@vicons/ionicons5'
 import { NIcon } from 'naive-ui'
 import { computed } from 'vue'
-import { ArrowForwardOutline, CafeOutline, CardOutline, CashOutline, FlashOutline, Heart as HeartIcon, LogoTwitch, LogoYoutube } from '@vicons/ionicons5'
+
 import BlockCard from '../BlockCard.vue'
 
 type Platform = 'afdian' | 'kofi' | 'patreon' | 'paypal' | 'twitch' | 'youtube' | 'fanbox' | 'other'
@@ -20,12 +30,13 @@ interface BlockConfig {
   backgrounded?: boolean
 }
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
   return {
     title: typeof o.title === 'string' ? o.title : '支持',
     description: typeof o.description === 'string' ? o.description : '',
@@ -37,11 +48,11 @@ const cfg = computed<BlockConfig>(() => {
 
 function normalize(items: SupportItem[]) {
   return items
-    .filter(it => it && typeof it.url === 'string' && it.url.trim().length)
+    .filter((it) => it && typeof it.url === 'string' && it.url.trim().length)
     .map((it) => {
       const url = it.url.trim()
       const platform = (it.platform || 'other').toLowerCase() as Platform
-      const label = (typeof it.label === 'string' && it.label.trim().length) ? it.label.trim() : ''
+      const label = typeof it.label === 'string' && it.label.trim().length ? it.label.trim() : ''
       return { url, platform, label }
     })
 }
@@ -71,7 +82,7 @@ function platformLabel(p: Platform) {
 }
 
 function getStyle(p: Platform) {
-  const presets: Record<Platform, { bg: string, fg: string }> = {
+  const presets: Record<Platform, { bg: string; fg: string }> = {
     afdian: { bg: '#946ce6', fg: '#ffffff' },
     kofi: { bg: '#ff5f5f', fg: '#ffffff' },
     patreon: { bg: '#ff424d', fg: '#ffffff' },
@@ -86,7 +97,12 @@ function getStyle(p: Platform) {
 </script>
 
 <template>
-  <BlockCard class="supporter-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded" :content-style="{ padding: 0 }">
+  <BlockCard
+    class="supporter-card"
+    :framed="cfg.framed"
+    :backgrounded="cfg.backgrounded"
+    :content-style="{ padding: 0 }"
+  >
     <div class="supporter-block">
       <div class="block-header">
         <div class="header-icon">
@@ -95,11 +111,17 @@ function getStyle(p: Platform) {
         <span class="header-title">{{ cfg.title }}</span>
       </div>
 
-      <div v-if="cfg.description" class="block-desc">
+      <div
+        v-if="cfg.description"
+        class="block-desc"
+      >
         {{ cfg.description }}
       </div>
 
-      <div v-if="items.length > 0" class="links-grid">
+      <div
+        v-if="items.length > 0"
+        class="links-grid"
+      >
         <a
           v-for="(it, idx) in items"
           :key="idx"
@@ -110,7 +132,7 @@ function getStyle(p: Platform) {
           :aria-label="`${it.label || platformLabel(it.platform)}（新窗口打开）`"
           :style="{
             '--accent-color': getStyle(it.platform).bg,
-            '--accent-text': getStyle(it.platform).fg
+            '--accent-text': getStyle(it.platform).fg,
           }"
         >
           <div class="card-glow" />
@@ -126,7 +148,10 @@ function getStyle(p: Platform) {
           </div>
         </a>
       </div>
-      <div v-else class="empty-state">
+      <div
+        v-else
+        class="empty-state"
+      >
         暂无支持链接
       </div>
     </div>
@@ -192,7 +217,10 @@ function getStyle(p: Platform) {
   border-radius: var(--vtsuru-page-radius);
   text-decoration: none;
   color: var(--vtsuru-block-fg);
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) transparent;
   position: relative;
   overflow: hidden;
@@ -235,7 +263,10 @@ function getStyle(p: Platform) {
   transition: transform 0.3s;
 }
 
-.support-card:focus-visible { outline: 2px solid var(--vtsuru-page-primary); outline-offset: 2px; }
+.support-card:focus-visible {
+  outline: 2px solid var(--vtsuru-page-primary);
+  outline-offset: 2px;
+}
 
 .support-card:hover .icon-box {
   transform: scale(1.1);
@@ -268,7 +299,10 @@ function getStyle(p: Platform) {
   opacity: 0.3;
   position: relative;
   z-index: 1;
-  transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .support-card:hover .arrow-icon {
@@ -284,7 +318,16 @@ function getStyle(p: Platform) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .support-card, .card-glow, .icon-box, .arrow-icon { transition: none; }
-  .support-card:hover, .support-card:hover .icon-box, .support-card:hover .arrow-icon { transform: none; }
+  .support-card,
+  .card-glow,
+  .icon-box,
+  .arrow-icon {
+    transition: none;
+  }
+  .support-card:hover,
+  .support-card:hover .icon-box,
+  .support-card:hover .arrow-icon {
+    transform: none;
+  }
 }
 </style>

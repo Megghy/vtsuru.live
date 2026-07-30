@@ -1,8 +1,24 @@
 <script setup lang="ts">
-import { NButton, NCard, NColorPicker, NDivider, NEmpty, NFlex, NGi, NGrid, NInput, NModal, NSelect, NSwitch, NText } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NColorPicker,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NGi,
+  NGrid,
+  NInput,
+  NModal,
+  NSelect,
+  NSwitch,
+  NText,
+} from 'naive-ui'
 import { computed, onUnmounted, reactive, ref } from 'vue'
+
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+
 import { useVtsAction } from './useVtsAction'
 import VtsHotkeyButton from './VtsHotkeyButton.vue'
 
@@ -46,9 +62,7 @@ const editForm = reactive({
   iconDataUrl: '',
 })
 
-const customMap = computed(() =>
-  new Map(vts.hotkeyCustomizations.map(h => [h.hotkeyID, h])),
-)
+const customMap = computed(() => new Map(vts.hotkeyCustomizations.map((h) => [h.hotkeyID, h])))
 
 function getCustom(hotkeyID: string) {
   return customMap.value.get(hotkeyID)
@@ -67,15 +81,19 @@ function openEdit(hk: VtsHotkeyInfo) {
 }
 
 function saveEdit() {
-  run(() => vts.setHotkeyCustomization({
-    hotkeyID: editForm.hotkeyID,
-    favorite: editForm.favorite,
-    pinned: editForm.pinned || undefined,
-    group: editForm.group?.trim() || undefined,
-    color: editForm.color || undefined,
-    displayName: editForm.displayName || undefined,
-    iconDataUrl: editForm.iconDataUrl || undefined,
-  }), '已保存')
+  run(
+    () =>
+      vts.setHotkeyCustomization({
+        hotkeyID: editForm.hotkeyID,
+        favorite: editForm.favorite,
+        pinned: editForm.pinned || undefined,
+        group: editForm.group?.trim() || undefined,
+        color: editForm.color || undefined,
+        displayName: editForm.displayName || undefined,
+        iconDataUrl: editForm.iconDataUrl || undefined,
+      }),
+    '已保存',
+  )
   showEdit.value = false
 }
 
@@ -108,28 +126,32 @@ async function onIconFileChange(ev: Event) {
 
 function toggleFavorite(hk: VtsHotkeyInfo) {
   const c = getCustom(hk.hotkeyID)
-  run(() => vts.setHotkeyCustomization({
-    hotkeyID: hk.hotkeyID,
-    favorite: !(c?.favorite ?? false),
-    pinned: c?.pinned,
-    group: c?.group,
-    color: c?.color,
-    iconDataUrl: c?.iconDataUrl,
-    displayName: c?.displayName,
-  }))
+  run(() =>
+    vts.setHotkeyCustomization({
+      hotkeyID: hk.hotkeyID,
+      favorite: !(c?.favorite ?? false),
+      pinned: c?.pinned,
+      group: c?.group,
+      color: c?.color,
+      iconDataUrl: c?.iconDataUrl,
+      displayName: c?.displayName,
+    }),
+  )
 }
 
 function togglePinned(hk: VtsHotkeyInfo) {
   const c = getCustom(hk.hotkeyID)
-  run(() => vts.setHotkeyCustomization({
-    hotkeyID: hk.hotkeyID,
-    favorite: c?.favorite ?? false,
-    pinned: !(c?.pinned ?? false),
-    group: c?.group,
-    color: c?.color,
-    iconDataUrl: c?.iconDataUrl,
-    displayName: c?.displayName,
-  }))
+  run(() =>
+    vts.setHotkeyCustomization({
+      hotkeyID: hk.hotkeyID,
+      favorite: c?.favorite ?? false,
+      pinned: !(c?.pinned ?? false),
+      group: c?.group,
+      color: c?.color,
+      iconDataUrl: c?.iconDataUrl,
+      displayName: c?.displayName,
+    }),
+  )
 }
 
 function disarm() {
@@ -166,14 +188,15 @@ const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
   let list = props.hotkeys
   if (q) {
-    list = list.filter(h =>
-      h.name?.toLowerCase().includes(q)
-      || h.description?.toLowerCase().includes(q)
-      || h.type?.toLowerCase().includes(q),
+    list = list.filter(
+      (h) =>
+        h.name?.toLowerCase().includes(q) ||
+        h.description?.toLowerCase().includes(q) ||
+        h.type?.toLowerCase().includes(q),
     )
   }
-  if (onlyFavorites.value) list = list.filter(h => getCustom(h.hotkeyID)?.favorite)
-  if (onlyPinned.value) list = list.filter(h => getCustom(h.hotkeyID)?.pinned)
+  if (onlyFavorites.value) list = list.filter((h) => getCustom(h.hotkeyID)?.favorite)
+  if (onlyPinned.value) list = list.filter((h) => getCustom(h.hotkeyID)?.pinned)
   return list.slice().toSorted((a, b) => {
     const ap = getCustom(a.hotkeyID)?.pinned ? 1 : 0
     const bp = getCustom(b.hotkeyID)?.pinned ? 1 : 0
@@ -199,9 +222,7 @@ const grouped = computed(() => {
   if (groupMode.value === 'flat') return []
   const map = new Map<string, VtsHotkeyInfo[]>()
   for (const hk of filtered.value) {
-    const key = groupMode.value === 'type'
-      ? (hk.type || '未知')
-      : (getCustom(hk.hotkeyID)?.group?.trim() || '未分组')
+    const key = groupMode.value === 'type' ? hk.type || '未知' : getCustom(hk.hotkeyID)?.group?.trim() || '未分组'
     const arr = map.get(key) ?? []
     arr.push(hk)
     map.set(key, arr)
@@ -211,58 +232,98 @@ const grouped = computed(() => {
 </script>
 
 <template>
-  <component :is="props.embedded ? 'div' : NCard" v-bind="props.embedded ? {} : { size: 'small', bordered: true, title: '表情与动作' }">
-    <NFlex vertical :size="12">
-      <NFlex v-if="isSearchVisible || (isModelNameVisible && modelName)" justify="space-between" align="center" :wrap="true" :size="8">
-        <NFlex v-if="isSearchVisible" align="center" :wrap="true" :size="8">
-          <NInput v-model:value="query" placeholder="搜索名称 / 描述 / 类型" style="min-width: 260px" />
-          <NSwitch v-model:value="onlyFavorites" size="small">
-            <template #checked>
-              收藏
-            </template>
-            <template #unchecked>
-              收藏
-            </template>
+  <component
+    :is="props.embedded ? 'div' : NCard"
+    v-bind="props.embedded ? {} : { size: 'small', bordered: true, title: '表情与动作' }"
+  >
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NFlex
+        v-if="isSearchVisible || (isModelNameVisible && modelName)"
+        justify="space-between"
+        align="center"
+        :wrap="true"
+        :size="8"
+      >
+        <NFlex
+          v-if="isSearchVisible"
+          align="center"
+          :wrap="true"
+          :size="8"
+        >
+          <NInput
+            v-model:value="query"
+            placeholder="搜索名称 / 描述 / 类型"
+            style="min-width: 260px"
+          />
+          <NSwitch
+            v-model:value="onlyFavorites"
+            size="small"
+          >
+            <template #checked> 收藏 </template>
+            <template #unchecked> 收藏 </template>
           </NSwitch>
-          <NSwitch v-model:value="onlyPinned" size="small">
-            <template #checked>
-              置顶
-            </template>
-            <template #unchecked>
-              置顶
-            </template>
+          <NSwitch
+            v-model:value="onlyPinned"
+            size="small"
+          >
+            <template #checked> 置顶 </template>
+            <template #unchecked> 置顶 </template>
           </NSwitch>
-          <NSwitch v-model:value="safeClick" size="small" @update:value="disarm">
-            <template #checked>
-              防误触
-            </template>
-            <template #unchecked>
-              防误触
-            </template>
+          <NSwitch
+            v-model:value="safeClick"
+            size="small"
+            @update:value="disarm"
+          >
+            <template #checked> 防误触 </template>
+            <template #unchecked> 防误触 </template>
           </NSwitch>
-          <NSelect v-model:value="groupMode" size="small" style="width: 130px" :options="groupModeOptions as any" />
-          <NSwitch v-if="!props.embedded" v-model:value="deckMode" size="small">
-            <template #checked>
-              大图标
-            </template>
-            <template #unchecked>
-              大图标
-            </template>
+          <NSelect
+            v-model:value="groupMode"
+            size="small"
+            style="width: 130px"
+            :options="groupModeOptions as any"
+          />
+          <NSwitch
+            v-if="!props.embedded"
+            v-model:value="deckMode"
+            size="small"
+          >
+            <template #checked> 大图标 </template>
+            <template #unchecked> 大图标 </template>
           </NSwitch>
-          <NButton size="small" @click="emit('refresh')">
+          <NButton
+            size="small"
+            @click="emit('refresh')"
+          >
             刷新
           </NButton>
         </NFlex>
-        <NText v-if="isModelNameVisible && modelName" depth="3">
+        <NText
+          v-if="isModelNameVisible && modelName"
+          depth="3"
+        >
           当前模型: {{ modelName }}
         </NText>
       </NFlex>
 
-      <NEmpty v-if="filtered.length === 0" description="暂无可用表情/动作" />
+      <NEmpty
+        v-if="filtered.length === 0"
+        description="暂无可用表情/动作"
+      />
 
       <template v-else-if="groupMode === 'flat'">
-        <NGrid x-gap="8" y-gap="8" :cols="deckMode ? Math.min(cols, 4) : cols">
-          <NGi v-for="hk in filtered" :key="hk.hotkeyID">
+        <NGrid
+          x-gap="8"
+          y-gap="8"
+          :cols="deckMode ? Math.min(cols, 4) : cols"
+        >
+          <NGi
+            v-for="hk in filtered"
+            :key="hk.hotkeyID"
+          >
             <VtsHotkeyButton
               :hk="hk"
               :custom="getCustom(hk.hotkeyID)"
@@ -280,8 +341,15 @@ const grouped = computed(() => {
       </template>
 
       <template v-else>
-        <div v-for="[key, list] in grouped" :key="key">
-          <NFlex align="center" justify="space-between" :size="8">
+        <div
+          v-for="[key, list] in grouped"
+          :key="key"
+        >
+          <NFlex
+            align="center"
+            justify="space-between"
+            :size="8"
+          >
             <NText strong>
               {{ key }}
             </NText>
@@ -290,8 +358,15 @@ const grouped = computed(() => {
             </NText>
           </NFlex>
           <NDivider style="margin: 6px 0" />
-          <NGrid x-gap="8" y-gap="8" :cols="deckMode ? Math.min(cols, 4) : cols">
-            <NGi v-for="hk in list" :key="hk.hotkeyID">
+          <NGrid
+            x-gap="8"
+            y-gap="8"
+            :cols="deckMode ? Math.min(cols, 4) : cols"
+          >
+            <NGi
+              v-for="hk in list"
+              :key="hk.hotkeyID"
+            >
               <VtsHotkeyButton
                 :hk="hk"
                 :custom="getCustom(hk.hotkeyID)"
@@ -311,53 +386,102 @@ const grouped = computed(() => {
     </NFlex>
   </component>
 
-  <NModal v-model:show="showEdit" preset="card" title="自定义 Hotkey" style="width: 600px">
-    <NFlex vertical :size="12">
-      <NText depth="3">
-        ID: {{ editForm.hotkeyID }}
-      </NText>
+  <NModal
+    v-model:show="showEdit"
+    preset="card"
+    title="自定义 Hotkey"
+    style="width: 600px"
+  >
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NText depth="3"> ID: {{ editForm.hotkeyID }} </NText>
 
-      <NFlex align="center" :wrap="true" :size="12">
-        <NSwitch v-model:value="editForm.favorite" size="small">
-          <template #checked>
-            收藏
-          </template>
-          <template #unchecked>
-            收藏
-          </template>
+      <NFlex
+        align="center"
+        :wrap="true"
+        :size="12"
+      >
+        <NSwitch
+          v-model:value="editForm.favorite"
+          size="small"
+        >
+          <template #checked> 收藏 </template>
+          <template #unchecked> 收藏 </template>
         </NSwitch>
-        <NSwitch v-model:value="editForm.pinned" size="small">
-          <template #checked>
-            置顶
-          </template>
-          <template #unchecked>
-            置顶
-          </template>
+        <NSwitch
+          v-model:value="editForm.pinned"
+          size="small"
+        >
+          <template #checked> 置顶 </template>
+          <template #unchecked> 置顶 </template>
         </NSwitch>
-        <NInput v-model:value="editForm.group" placeholder="分组" style="width: 140px" />
-        <NInput v-model:value="editForm.displayName" placeholder="显示名称" style="width: 200px" />
-        <NColorPicker v-model:value="editForm.color" :modes="['hex']" :show-alpha="false" style="width: 180px" />
+        <NInput
+          v-model:value="editForm.group"
+          placeholder="分组"
+          style="width: 140px"
+        />
+        <NInput
+          v-model:value="editForm.displayName"
+          placeholder="显示名称"
+          style="width: 200px"
+        />
+        <NColorPicker
+          v-model:value="editForm.color"
+          :modes="['hex']"
+          :show-alpha="false"
+          style="width: 180px"
+        />
       </NFlex>
 
-      <NFlex align="center" :wrap="true" :size="12">
-        <NButton size="small" tag="label">
+      <NFlex
+        align="center"
+        :wrap="true"
+        :size="12"
+      >
+        <NButton
+          size="small"
+          tag="label"
+        >
           选择图标
-          <input type="file" accept="image/*" style="display:none" @change="onIconFileChange">
+          <input
+            type="file"
+            accept="image/*"
+            style="display: none"
+            @change="onIconFileChange"
+          />
         </NButton>
-        <NButton size="small" :disabled="!editForm.iconDataUrl" @click="editForm.iconDataUrl = ''">
+        <NButton
+          size="small"
+          :disabled="!editForm.iconDataUrl"
+          @click="editForm.iconDataUrl = ''"
+        >
           清除图标
         </NButton>
-        <img v-if="editForm.iconDataUrl" class="hotkey-icon-preview" :src="editForm.iconDataUrl" alt="">
+        <img
+          v-if="editForm.iconDataUrl"
+          class="hotkey-icon-preview"
+          :src="editForm.iconDataUrl"
+          alt=""
+        />
       </NFlex>
 
-      <NFlex justify="end" :size="8">
-        <NButton @click="showEdit = false">
-          取消
-        </NButton>
-        <NButton type="error" @click="clearCustomization">
+      <NFlex
+        justify="end"
+        :size="8"
+      >
+        <NButton @click="showEdit = false"> 取消 </NButton>
+        <NButton
+          type="error"
+          @click="clearCustomization"
+        >
           重置
         </NButton>
-        <NButton type="primary" @click="saveEdit">
+        <NButton
+          type="primary"
+          @click="saveEdit"
+        >
           保存
         </NButton>
       </NFlex>

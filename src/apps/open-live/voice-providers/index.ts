@@ -1,10 +1,10 @@
-import type { ConfigSource, VoiceProvider } from './types'
-import { LocalVoiceProvider } from './local'
 import { AzureVoiceProvider } from './azure'
-import { CustomApiVoiceProvider } from './custom-api'
 import { CosyVoiceProvider, DEFAULT_COSYVOICE_MODEL, DEFAULT_COSYVOICE_VOICE } from './cosyvoice'
+import { CustomApiVoiceProvider } from './custom-api'
+import { LocalVoiceProvider } from './local'
 import { DEFAULT_MIMO_VOICE, MimoVoiceProvider } from './mimo'
 import { OpenAICompatibleVoiceProvider } from './openai'
+import type { ConfigSource, VoiceProvider } from './types'
 
 type ProviderFactory = (getConfig: ConfigSource) => VoiceProvider
 

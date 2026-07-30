@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+
 import type {
   OpenAITranscriptionProfile,
   TencentTranscriptionProfile,
@@ -6,6 +7,7 @@ import type {
   TranscriptionProvider,
   TranscriptionSettings,
 } from '@/shared/models/transcription'
+
 import { useTauriStore } from './useTauriStore'
 
 const STORE_KEY = 'transcription.settings'
@@ -51,7 +53,7 @@ export const useTranscriptionSettings = defineStore('transcription-settings', ()
   const initialized = ref(false)
 
   const activeProfile = computed(() =>
-    settings.value.profiles.find(profile => profile.id === settings.value.activeProfileId),
+    settings.value.profiles.find((profile) => profile.id === settings.value.activeProfileId),
   )
 
   async function init() {
@@ -59,7 +61,7 @@ export const useTranscriptionSettings = defineStore('transcription-settings', ()
     const saved = await target.get()
     if (saved?.profiles.length) {
       settings.value = saved
-      if (!saved.profiles.some(profile => profile.id === saved.activeProfileId)) {
+      if (!saved.profiles.some((profile) => profile.id === saved.activeProfileId)) {
         settings.value.activeProfileId = saved.profiles[0].id
       }
     }
@@ -79,7 +81,7 @@ export const useTranscriptionSettings = defineStore('transcription-settings', ()
 
   function removeActiveProfile() {
     if (settings.value.profiles.length === 1) return
-    const index = settings.value.profiles.findIndex(profile => profile.id === settings.value.activeProfileId)
+    const index = settings.value.profiles.findIndex((profile) => profile.id === settings.value.activeProfileId)
     settings.value.profiles.splice(index, 1)
     settings.value.activeProfileId = settings.value.profiles[Math.max(0, index - 1)].id
   }

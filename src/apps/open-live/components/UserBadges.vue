@@ -1,16 +1,20 @@
 <script setup lang="ts">
+import { NTag } from 'naive-ui'
+
 import type { DanmakuUserInfo } from '@/api/api-models'
-import { NTag } from 'naive-ui';
 import { getGuardColor } from '@/shared/utils/queue'
 
-withDefaults(defineProps<{
-  user?: DanmakuUserInfo
-  showFanMedal?: boolean
-  size?: 'tiny' | 'small'
-}>(), {
-  showFanMedal: true,
-  size: 'tiny',
-})
+withDefaults(
+  defineProps<{
+    user?: DanmakuUserInfo
+    showFanMedal?: boolean
+    size?: 'tiny' | 'small'
+  }>(),
+  {
+    showFanMedal: true,
+    size: 'tiny',
+  },
+)
 
 const GUARD_NAME: Record<number, string> = { 1: '总督', 2: '提督', 3: '舰长' }
 </script>
@@ -21,9 +25,15 @@ const GUARD_NAME: Record<number, string> = { 1: '总督', 2: '提督', 3: '舰�
     :size="size"
     round
     :bordered="false"
-    style="padding: 0 6px 0 0;"
+    style="padding: 0 6px 0 0"
   >
-    <NTag :size="size" round :bordered="false" type="info" style="margin-right: 4px;">
+    <NTag
+      :size="size"
+      round
+      :bordered="false"
+      type="info"
+      style="margin-right: 4px"
+    >
       {{ user?.fans_medal_level }}
     </NTag>
     <span style="color: var(--vtsuru-info)">{{ user?.fans_medal_name }}</span>

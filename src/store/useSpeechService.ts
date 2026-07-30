@@ -2,6 +2,10 @@ import EasySpeech from 'easy-speech'
 import { useMessage } from 'naive-ui'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { clearInterval, clearTimeout, setInterval, setTimeout } from 'worker-timers'
+
+import { DownloadConfig, isLoggedIn, UploadConfig, useAccount } from '@/api/account'
+import type { EventModel } from '@/api/api-models'
+import { EventDataTypes } from '@/api/api-models'
 import {
   createVoiceProvider,
   DEFAULT_COSYVOICE_MODEL,
@@ -9,10 +13,8 @@ import {
   DEFAULT_MIMO_VOICE,
   hasVoiceProvider,
 } from '@/apps/open-live/voice-providers'
-import type { EventModel } from '@/api/api-models'
-import { DownloadConfig, isLoggedIn, UploadConfig, useAccount } from '@/api/account'
-import { EventDataTypes } from '@/api/api-models'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface SpeechInfo {
   volume: number
@@ -36,7 +38,14 @@ export interface QueueItem {
   data: EventModel
 }
 
-export type ConditionField = 'price' | 'count' | 'guard_level' | 'fans_medal_level' | 'message_length' | 'message' | 'gift_name'
+export type ConditionField =
+  | 'price'
+  | 'count'
+  | 'guard_level'
+  | 'fans_medal_level'
+  | 'message_length'
+  | 'message'
+  | 'gift_name'
 export type ConditionOp = '>=' | '<=' | '==' | 'contains' | 'regex'
 
 export interface TemplateCondition {
@@ -95,7 +104,6 @@ export interface SpeechSettings {
   maxQueueSize: number
 }
 
-
 export function makeDefaultTemplate(template: string): EventTemplateConfig {
   return { rules: [{ template, conditions: [] }] }
 }
@@ -146,6 +154,10 @@ const DEFAULT_SETTINGS: SpeechSettings = {
     },
   },
 }
+
+const PAID_EVENT_TYPES = new Set([EventDataTypes.Gift, EventDataTypes.SC, EventDataTypes.Guard])
+const CONTENT_EVENT_TYPES = new Set([EventDataTypes.Message, EventDataTypes.SC])
+const SPEECH_EVENT_NAMES = ['danmaku', 'gift', 'sc', 'guard', 'enter', 'follow'] as const
 
 export const templateConstants = {
   name: {
@@ -259,7 +271,12 @@ function migrateLegacySettings(raw: any): SpeechSettings {
     templates,
     providers: raw.providers ?? {
       azure: { azureVoice: raw.azureVoice ?? 'zh-CN-XiaoxiaoNeural', azureLanguage: raw.azureLanguage ?? 'zh-CN' },
-      api: { voiceAPI: raw.voiceAPI ?? DEFAULT_SETTINGS.providers.api.voiceAPI, voiceAPISchemeType: raw.voiceAPISchemeType ?? 'https', useAPIDirectly: raw.useAPIDirectly ?? false, splitText: raw.splitText ?? false },
+      api: {
+        voiceAPI: raw.voiceAPI ?? DEFAULT_SETTINGS.providers.api.voiceAPI,
+        voiceAPISchemeType: raw.voiceAPISchemeType ?? 'https',
+        useAPIDirectly: raw.useAPIDirectly ?? false,
+        splitText: raw.splitText ?? false,
+      },
       mimo: { mimoVoice: DEFAULT_MIMO_VOICE, mimoStyleTag: '', mimoApiKey: '' },
       cosyvoice: { ...DEFAULT_SETTINGS.providers.cosyvoice },
     },
@@ -321,7 +338,9 @@ function ensureProviderDefaults(settings: SpeechSettings) {
 
   // 新增字段迁移
   settings.enabledEvents ??= { ...DEFAULT_SETTINGS.enabledEvents }
-  settings.enabledEvents.follow ??= true
+  for (const key of Object.keys(DEFAULT_SETTINGS.enabledEvents) as Array<keyof SpeechSettings['enabledEvents']>) {
+    settings.enabledEvents[key] ??= DEFAULT_SETTINGS.enabledEvents[key]
+  }
   settings.templates ??= structuredClone(DEFAULT_TEMPLATES)
   for (const key of Object.keys(DEFAULT_TEMPLATES)) {
     settings.templates[key] ??= structuredClone(DEFAULT_TEMPLATES[key])
@@ -344,13 +363,18 @@ let speechServiceInstance: ReturnType<typeof createSpeechService> | null = null
 function createSpeechService() {
   const message = useMessage()
   const accountInfo = useAccount()
+  const danmakuClient = useDanmakuClient()
   const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 
   const settings = usePersistedStorage<SpeechSettings>('Setting.Speech', DEFAULT_SETTINGS)
-  watch(settings, (value) => {
-    const normalized = normalizeSettings(value)
-    if (normalized !== value) settings.value = normalized
-  }, { immediate: true, flush: 'sync' })
+  watch(
+    settings,
+    (value) => {
+      const normalized = normalizeSettings(value)
+      if (normalized !== value) settings.value = normalized
+    },
+    { immediate: true, flush: 'sync' },
+  )
 
   // 云端自动同步
   let _cloudSyncSuppressed = false
@@ -392,7 +416,7 @@ function createSpeechService() {
   })
 
   const speakQueue = ref<QueueItem[]>([])
-  const giftCombineMap = new Map<string, number>()
+  const pendingGifts = new Map<string, QueueItem>()
   const readedDanmaku = ref(0)
   const spokenHistory = ref<Array<{ text: string; uname: string; type: string; time: number }>>([])
   const rejectedHistory = ref<Array<{ uname: string; type: string; reason: string; time: number }>>([])
@@ -470,10 +494,12 @@ function createSpeechService() {
     () => [
       settings.value.timedBroadcast.enabled,
       settings.value.timedBroadcast.intervalMinutes,
-      settings.value.timedBroadcast.texts.filter(t => t.trim()).join('\n'),
+      settings.value.timedBroadcast.texts.filter((t) => t.trim()).join('\n'),
       speechState.canSpeech,
     ],
-    () => { startTimedBroadcast() },
+    () => {
+      startTimedBroadcast()
+    },
   )
 
   function destroy() {
@@ -491,7 +517,7 @@ function createSpeechService() {
     }
     stopTimedBroadcast()
     cancelSpeech()
-    giftCombineMap.clear()
+    pendingGifts.clear()
     speakQueue.value = []
     speechState.isInitialized = false
     console.log('[TTS] 语音服务已销毁')
@@ -499,36 +525,63 @@ function createSpeechService() {
 
   function getGuardLevelName(guardLevel: number): string {
     switch (guardLevel) {
-      case 1: return '总督'
-      case 2: return '提督'
-      case 3: return '舰长'
-      default: return ''
+      case 1:
+        return '总督'
+      case 2:
+        return '提督'
+      case 3:
+        return '舰长'
+      default:
+        return ''
     }
   }
 
   function evaluateCondition(cond: TemplateCondition, data: EventModel): boolean {
     let fieldValue: number | string
     switch (cond.field) {
-      case 'price': fieldValue = data.price ?? 0; break
-      case 'count': fieldValue = data.num ?? 0; break
-      case 'guard_level': fieldValue = data.guard_level ?? 0; break
-      case 'fans_medal_level': fieldValue = data.fans_medal_level ?? 0; break
-      case 'message_length': fieldValue = (data.msg ?? '').length; break
-      case 'message': fieldValue = data.msg ?? ''; break
-      case 'gift_name': fieldValue = data.msg ?? ''; break
-      default: return false
+      case 'price':
+        fieldValue = data.price ?? 0
+        break
+      case 'count':
+        fieldValue = data.num ?? 0
+        break
+      case 'guard_level':
+        fieldValue = data.guard_level ?? 0
+        break
+      case 'fans_medal_level':
+        fieldValue = data.fans_medal_level ?? 0
+        break
+      case 'message_length':
+        fieldValue = (data.msg ?? '').length
+        break
+      case 'message':
+        fieldValue = data.msg ?? ''
+        break
+      case 'gift_name':
+        fieldValue = data.msg ?? ''
+        break
+      default:
+        return false
     }
     const numVal = typeof fieldValue === 'number' ? fieldValue : Number.parseFloat(fieldValue)
     const condNum = typeof cond.value === 'number' ? cond.value : Number.parseFloat(String(cond.value))
     switch (cond.op) {
-      case '>=': return numVal >= condNum
-      case '<=': return numVal <= condNum
-      case '==': return numVal === condNum
-      case 'contains': return String(fieldValue).includes(String(cond.value))
+      case '>=':
+        return numVal >= condNum
+      case '<=':
+        return numVal <= condNum
+      case '==':
+        return numVal === condNum
+      case 'contains':
+        return String(fieldValue).includes(String(cond.value))
       case 'regex':
-        try { return new RegExp(String(cond.value), 'i').test(String(fieldValue)) }
-        catch { return false }
-      default: return false
+        try {
+          return new RegExp(String(cond.value), 'i').test(String(fieldValue))
+        } catch {
+          return false
+        }
+      default:
+        return false
     }
   }
 
@@ -542,7 +595,7 @@ function createSpeechService() {
       else unconditional.push(rule)
     }
     for (const rule of conditional) {
-      if (rule.conditions.every(c => evaluateCondition(c, data))) return rule.template
+      if (rule.conditions.every((c) => evaluateCondition(c, data))) return rule.template
     }
     if (unconditional.length > 0) {
       return unconditional[Math.floor(Math.random() * unconditional.length)].template
@@ -559,11 +612,10 @@ function createSpeechService() {
     const template = selectTemplate(config, data)
     if (!template) return
 
-    const isApiWithSplit = settings.value.provider === 'api'
-      && (settings.value.providers.api?.splitText as boolean)
+    const isApiWithSplit = settings.value.provider === 'api' && (settings.value.providers.api?.splitText as boolean)
 
     let text = template
-      .replace(templateConstants.name.regex, isApiWithSplit ? `'${data.uname || ''}'` : (data.uname || ''))
+      .replace(templateConstants.name.regex, isApiWithSplit ? `'${data.uname || ''}'` : data.uname || '')
       .replace(templateConstants.count.regex, (data.num ?? 0).toString())
       .replace(templateConstants.price.regex, (data.price ?? 0).toString())
       .replace(templateConstants.message.regex, data.msg || '')
@@ -588,7 +640,9 @@ function createSpeechService() {
           } else {
             text = text.replaceAll(rule.pattern, rule.replacement)
           }
-        } catch { /* invalid regex, skip */ }
+        } catch {
+          /* invalid regex, skip */
+        }
       }
     }
 
@@ -726,9 +780,7 @@ function createSpeechService() {
       let targetIndex = -1
       for (let i = 0; i < speakQueue.value.length; i++) {
         const item = speakQueue.value[i]
-        if (item.data.type === EventDataTypes.Gift
-          && combineDelay > 0
-          && item.updateAt > now - combineDelay) {
+        if (item.data.type === EventDataTypes.Gift && combineDelay > 0 && item.updateAt > now - combineDelay) {
           continue
         }
         targetIndex = i
@@ -739,13 +791,9 @@ function createSpeechService() {
 
       const targetItem = speakQueue.value.splice(targetIndex, 1)[0]
 
-      if (targetItem.data.type !== EventDataTypes.Gift) {
-        giftCombineMap.clear()
-        speakQueue.value.forEach((item, index) => {
-          if (item.data.type === EventDataTypes.Gift) {
-            giftCombineMap.set(`${item.data.uid}-${item.data.msg}`, index)
-          }
-        })
+      if (targetItem.data.type === EventDataTypes.Gift) {
+        const giftKey = `${targetItem.data.uid}-${targetItem.data.msg}`
+        if (pendingGifts.get(giftKey) === targetItem) pendingGifts.delete(giftKey)
       }
 
       let text = getTextFromDanmaku(targetItem.data)
@@ -763,9 +811,11 @@ function createSpeechService() {
 
       // 提示音
       const eventKey = getEventKey(targetItem.data.type)
-      if (settings.value.notificationSound.enabled
-        && eventKey
-        && settings.value.notificationSound.events.includes(eventKey)) {
+      if (
+        settings.value.notificationSound.enabled &&
+        eventKey &&
+        settings.value.notificationSound.events.includes(eventKey)
+      ) {
         await playNotificationSound()
       }
 
@@ -793,8 +843,13 @@ function createSpeechService() {
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
         osc.start()
         osc.stop(ctx.currentTime + 0.3)
-        osc.onended = () => { ctx.close(); resolve() }
-      } catch { resolve() }
+        osc.onended = () => {
+          ctx.close()
+          resolve()
+        }
+      } catch {
+        resolve()
+      }
     })
   }
 
@@ -851,21 +906,21 @@ function createSpeechService() {
 
     if (settings.value.blacklistUsers.length > 0) {
       const lowerName = data.uname.toLowerCase()
-      if (settings.value.blacklistUsers.some(u => lowerName === u.toLowerCase())) {
+      if (settings.value.blacklistUsers.some((u) => lowerName === u.toLowerCase())) {
         reject(data, '用户黑名单')
         return
       }
     }
 
-    if (settings.value.blacklistKeywords.length > 0 && data.msg) {
+    if (CONTENT_EVENT_TYPES.has(data.type) && settings.value.blacklistKeywords.length > 0 && data.msg) {
       const lowerMsg = data.msg.toLowerCase()
-      if (settings.value.blacklistKeywords.some(kw => lowerMsg.includes(kw.toLowerCase()))) {
+      if (settings.value.blacklistKeywords.some((kw) => lowerMsg.includes(kw.toLowerCase()))) {
         reject(data, '关键词黑名单')
         return
       }
     }
 
-    if (settings.value.antiSpamInterval > 0) {
+    if (!PAID_EVENT_TYPES.has(data.type) && settings.value.antiSpamInterval > 0) {
       const userKey = String(data.uid)
       const lastTime = lastSpeakTimeByUser.get(userKey)
       const now = Date.now()
@@ -876,7 +931,7 @@ function createSpeechService() {
       lastSpeakTimeByUser.set(userKey, now)
     }
 
-    if (settings.value.deduplicateIdentical) {
+    if (!PAID_EVENT_TYPES.has(data.type) && settings.value.deduplicateIdentical) {
       // enter 等事件 msg 为空且 uid 恒为 0, 用 ouid/uname 作为稳定身份标识; 平台会对入场事件重复推送, 必须去重
       const identity = data.uid || data.ouid || data.uname
       const dedupKey = `${data.type}:${identity}:${data.msg}`
@@ -907,35 +962,28 @@ function createSpeechService() {
       speakQueue.value.splice(0, speakQueue.value.length - maxSize + 1)
     }
 
-    // 礼物合并
+    let giftKey: string | undefined
     if (data.type === EventDataTypes.Gift && settings.value.combineGiftDelay) {
-      const giftKey = `${data.uid}-${data.msg}`
-      const existIndex = giftCombineMap.get(giftKey)
-
-      if (existIndex !== undefined && existIndex < speakQueue.value.length) {
-        const exist = speakQueue.value[existIndex]
-        if (exist
-          && exist.data.type === EventDataTypes.Gift
-          && exist.updateAt > Date.now() - (settings.value.combineGiftDelay * 1000)) {
-          exist.updateAt = Date.now()
-          exist.data.num += data.num
-          exist.data.price += data.price
-          exist.combineCount = (exist.combineCount ?? 0) + data.num
-          return
-        }
+      giftKey = `${data.uid}-${data.msg}`
+      const pending = pendingGifts.get(giftKey)
+      if (
+        pending &&
+        speakQueue.value.includes(pending) &&
+        pending.updateAt > Date.now() - settings.value.combineGiftDelay * 1000
+      ) {
+        pending.updateAt = Date.now()
+        pending.data.num += data.num
+        pending.data.price += data.price
+        pending.combineCount = (pending.combineCount ?? 0) + data.num
+        return
       }
-
-      const newIndex = speakQueue.value.length
-      giftCombineMap.set(giftKey, newIndex)
-      setTimeout(() => {
-        if (giftCombineMap.get(giftKey) === newIndex) giftCombineMap.delete(giftKey)
-      }, (settings.value.combineGiftDelay + 1) * 1000)
     }
 
     const item: QueueItem = {
       data,
       updateAt: data.type === EventDataTypes.Gift ? Date.now() : 0,
     }
+    if (giftKey) pendingGifts.set(giftKey, item)
 
     // 优先级插队
     const isPriority = settings.value.priorityEvents.includes(eventKey ?? '')
@@ -948,14 +996,25 @@ function createSpeechService() {
 
   function getEventKey(type: EventDataTypes): keyof SpeechSettings['enabledEvents'] | null {
     switch (type) {
-      case EventDataTypes.Message: return 'message'
-      case EventDataTypes.Gift: return 'gift'
-      case EventDataTypes.SC: return 'sc'
-      case EventDataTypes.Guard: return 'guard'
-      case EventDataTypes.Enter: return 'enter'
-      case EventDataTypes.Follow: return 'follow'
-      default: return null
+      case EventDataTypes.Message:
+        return 'message'
+      case EventDataTypes.Gift:
+        return 'gift'
+      case EventDataTypes.SC:
+        return 'sc'
+      case EventDataTypes.Guard:
+        return 'guard'
+      case EventDataTypes.Enter:
+        return 'enter'
+      case EventDataTypes.Follow:
+        return 'follow'
+      default:
+        return null
     }
+  }
+
+  for (const eventName of SPEECH_EVENT_NAMES) {
+    danmakuClient.onEvent(eventName, addToQueue)
   }
 
   function forceSpeak(data: EventModel) {
@@ -974,6 +1033,10 @@ function createSpeechService() {
     const index = speakQueue.value.indexOf(item)
     if (index !== -1) {
       speakQueue.value.splice(index, 1)
+      if (item.data.type === EventDataTypes.Gift) {
+        const giftKey = `${item.data.uid}-${item.data.msg}`
+        if (pendingGifts.get(giftKey) === item) pendingGifts.delete(giftKey)
+      }
     }
   }
 
@@ -1001,15 +1064,18 @@ function createSpeechService() {
     stopTimedBroadcast()
     if (!speechState.canSpeech) return
     const { enabled, intervalMinutes, texts } = settings.value.timedBroadcast
-    const validTexts = texts.filter(t => t.trim())
+    const validTexts = texts.filter((t) => t.trim())
     if (!enabled || validTexts.length === 0 || intervalMinutes <= 0) return
-    timedBroadcastTimer = setInterval(() => {
-      if (!speechState.canSpeech || isPaused.value) return
-      if (isProcessingQueue || speechState.isSpeaking || speechState.isApiAudioLoading) return
-      const text = validTexts[timedBroadcastIndex % validTexts.length]
-      timedBroadcastIndex++
-      doSpeak(text.trim())
-    }, intervalMinutes * 60 * 1000)
+    timedBroadcastTimer = setInterval(
+      () => {
+        if (!speechState.canSpeech || isPaused.value) return
+        if (isProcessingQueue || speechState.isSpeaking || speechState.isApiAudioLoading) return
+        const text = validTexts[timedBroadcastIndex % validTexts.length]
+        timedBroadcastIndex++
+        doSpeak(text.trim())
+      },
+      intervalMinutes * 60 * 1000,
+    )
   }
 
   function stopTimedBroadcast() {
@@ -1022,6 +1088,7 @@ function createSpeechService() {
   function stopSpeech() {
     speechState.canSpeech = false
     speakQueue.value = []
+    pendingGifts.clear()
     cancelSpeech()
     stopTimedBroadcast()
     message.success('已停止监听')
@@ -1116,7 +1183,7 @@ function createSpeechService() {
     pinToTop,
     clearQueue: () => {
       speakQueue.value = []
-      giftCombineMap.clear()
+      pendingGifts.clear()
     },
     startSpeech,
     stopSpeech,
@@ -1128,8 +1195,12 @@ function createSpeechService() {
     previewVoice,
     buildApiUrl,
     getCurrentProvider,
-    togglePause: () => { isPaused.value = !isPaused.value },
-    skipCurrent: () => { cancelSpeech() },
+    togglePause: () => {
+      isPaused.value = !isPaused.value
+    },
+    skipCurrent: () => {
+      cancelSpeech()
+    },
   }
 }
 

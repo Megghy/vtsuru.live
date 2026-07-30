@@ -3,16 +3,37 @@ import { Info24Filled } from '@vicons/fluent'
 import { addDays, endOfDay, format, startOfDay } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
-  DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent, } from 'echarts/components'
+  DataZoomComponent,
+  GridComponent,
+  LegendComponent,
+  TitleComponent,
+  ToolboxComponent,
+  TooltipComponent,
+} from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NButton, NCard, NDatePicker, NDivider, NIcon, NFlex, NSpin, NText, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui';
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDatePicker,
+  NDivider,
+  NIcon,
+  NFlex,
+  NSpin,
+  NText,
+  NTime,
+  NTooltip,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
+
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
-import { HISTORY_API_URL } from '@/shared/config'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { HISTORY_API_URL } from '@/shared/config'
 
 // 初始化ECharts组件
 use([
@@ -183,7 +204,7 @@ function generateTimeSeries(
   initialTimeIndex: number,
   initialCount: number,
 ) {
-  const timeSeries: { time: Date, count: number, change: boolean, exist: boolean }[] = []
+  const timeSeries: { time: Date; count: number; change: boolean; exist: boolean }[] = []
   let lastDayCount = initialCount
   let lastTimeIndex = initialTimeIndex
   let currentTime = startTime
@@ -236,12 +257,12 @@ function processFansChartOptions() {
     return
   }
 
-  const initialIndex = fansHistory.value.findIndex(entry => entry.time >= statisticStartDateTime)
+  const initialIndex = fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
   const initialCount = initialIndex >= 0 ? fansHistory.value[initialIndex].count : 0
 
   const completeTimeSeries = generateTimeSeries(fansHistory.value, startTime, endTime, initialIndex, initialCount)
 
-  const fansIncreacement: { time: Date, count: number }[] = []
+  const fansIncreacement: { time: Date; count: number }[] = []
   let previousDayCount = completeTimeSeries[0]?.count ?? 0
   completeTimeSeries.forEach((entry, index) => {
     if (index > 0) {
@@ -252,9 +273,9 @@ function processFansChartOptions() {
   })
 
   const chartData = {
-    xAxisData: completeTimeSeries.map(entry => format(entry.time, 'yyyy-MM-dd')),
-    seriesData: completeTimeSeries.map(entry => entry.count),
-    incrementData: fansIncreacement.map(entry => entry.count),
+    xAxisData: completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd')),
+    seriesData: completeTimeSeries.map((entry) => entry.count),
+    incrementData: fansIncreacement.map((entry) => entry.count),
   }
 
   fansOption.value = {
@@ -265,9 +286,10 @@ function processFansChartOptions() {
         const name = `${param[0].name}<br>`
         let str = ''
         for (let i = 0; i < param.length; i++) {
-          const status
-            = param[i].seriesName === '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
-          const statusHtml = status === '' ? '' : `&nbsp;<span style="color:${themeVars.value.textColor3}">${status}</span>`
+          const status =
+            param[i].seriesName === '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
+          const statusHtml =
+            status === '' ? '' : `&nbsp;<span style="color:${themeVars.value.textColor3}">${status}</span>`
           str += `${param[i].marker + param[i].seriesName}：${param[i].data}${statusHtml}<br>`
         }
         return name + str
@@ -289,7 +311,11 @@ function processFansChartOptions() {
         itemStyle: {
           color: (data: any) => {
             const item = completeTimeSeries[data.dataIndex]
-            return !item.exist ? themeVars.value.textColor3 : item.change ? themeVars.value.successColor : themeVars.value.primaryColor
+            return !item.exist
+              ? themeVars.value.textColor3
+              : item.change
+                ? themeVars.value.successColor
+                : themeVars.value.primaryColor
           },
         },
       },
@@ -299,7 +325,9 @@ function processFansChartOptions() {
         yAxisIndex: 1,
         xAxisIndex: 1,
         data: chartData.incrementData,
-        itemStyle: { color: (params: any) => (params.value < 0 ? themeVars.value.errorColor : themeVars.value.infoColor) },
+        itemStyle: {
+          color: (params: any) => (params.value < 0 ? themeVars.value.errorColor : themeVars.value.infoColor),
+        },
       },
     ],
   }
@@ -321,7 +349,7 @@ function processGuardsChartOptions() {
     return
   }
 
-  const initialIndex = guardHistory.value.findIndex(entry => entry.time >= startTime.getTime())
+  const initialIndex = guardHistory.value.findIndex((entry) => entry.time >= startTime.getTime())
   const initialCount = initialIndex >= 0 ? guardHistory.value[initialIndex].count : 0
 
   const completeTimeSeries = generateTimeSeries(guardHistory.value, startTime, endTime, initialIndex, initialCount)
@@ -335,7 +363,7 @@ function processGuardsChartOptions() {
     previousDayCount = entry.count
   })
 
-  const xAxisData = completeTimeSeries.map(entry => format(entry.time, 'yyyy-MM-dd'))
+  const xAxisData = completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd'))
 
   guardsOption.value = {
     ...getBaseChartOptions(),
@@ -352,9 +380,10 @@ function processGuardsChartOptions() {
         name: '舰长数',
         type: 'line',
         step: 'middle',
-        data: completeTimeSeries.map(item => item.count),
+        data: completeTimeSeries.map((item) => item.count),
         itemStyle: {
-          color: (data: any) => completeTimeSeries[data.dataIndex].exist ? themeVars.value.primaryColor : themeVars.value.textColor3,
+          color: (data: any) =>
+            completeTimeSeries[data.dataIndex].exist ? themeVars.value.primaryColor : themeVars.value.textColor3,
         },
       },
       {
@@ -363,7 +392,9 @@ function processGuardsChartOptions() {
         yAxisIndex: 1,
         xAxisIndex: 1,
         data: guardIncrements,
-        itemStyle: { color: (params: any) => (params.value < 0 ? themeVars.value.errorColor : themeVars.value.infoColor) },
+        itemStyle: {
+          color: (params: any) => (params.value < 0 ? themeVars.value.errorColor : themeVars.value.infoColor),
+        },
       },
     ],
   }
@@ -389,7 +420,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
 
   const rangeStart = dateRange.value ? dateRange.value[0] : -Infinity
   const rangeEnd = dateRange.value ? dateRange.value[1] : Infinity
-  const filtered = upstatHistory.value.filter(u => u.time >= rangeStart && u.time <= rangeEnd)
+  const filtered = upstatHistory.value.filter((u) => u.time >= rangeStart && u.time <= rangeEnd)
 
   if (filtered.length === 0) {
     return {
@@ -403,7 +434,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
     }
   }
 
-  const increments: { time: number, value: number }[] = []
+  const increments: { time: number; value: number }[] = []
   let lastValue = filtered[0].stats[dataType]
 
   filtered.forEach((u) => {
@@ -417,16 +448,13 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
 
   return {
     ...getBaseChartOptions(),
-    yAxis: [
-      { type: 'value', min: 'dataMin' },
-      { type: 'value' },
-    ],
+    yAxis: [{ type: 'value', min: 'dataMin' }, { type: 'value' }],
     xAxis: [
       {
         type: 'category',
         axisTick: { alignWithLabel: true },
         axisLine: { onZero: false, lineStyle: { color: themeVars.value.errorColor } },
-        data: filtered.map(f => format(f.time, 'yyyy-MM-dd')),
+        data: filtered.map((f) => format(f.time, 'yyyy-MM-dd')),
       },
     ],
     series: [
@@ -434,7 +462,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
         name: title,
         type: 'line',
         emphasis: { focus: 'series' },
-        data: filtered.map(f => f.stats[dataType]),
+        data: filtered.map((f) => f.stats[dataType]),
         itemStyle: {
           color(data: any) {
             return increments[data.dataIndex].value !== 0 ? themeVars.value.primaryColor : themeVars.value.textColor3
@@ -446,7 +474,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
         type: 'bar',
         yAxisIndex: 1,
         emphasis: { focus: 'series' },
-        data: increments.map(f => f.value),
+        data: increments.map((f) => f.value),
       },
     ],
   }
@@ -495,7 +523,10 @@ watch(
 
 <template>
   <div class="history-view">
-    <ManagePageHeader title="数据跟踪" subtitle="粉丝/舰长趋势（需 EventFetcher 提供数据）" />
+    <ManagePageHeader
+      title="数据跟踪"
+      subtitle="粉丝/舰长趋势（需 EventFetcher 提供数据）"
+    />
     <NAlert
       v-if="accountInfo?.isBiliVerified !== true"
       type="info"
@@ -513,7 +544,10 @@ watch(
       :bordered="true"
       class="history-card"
     >
-      <NAlert type="warning" :bordered="false">
+      <NAlert
+        type="warning"
+        :bordered="false"
+      >
         由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
         <NButton
           text
@@ -526,7 +560,7 @@ watch(
         </NButton>
         来帮助本站获取你的数据记录
       </NAlert>
-      <br>
+      <br />
       <NTooltip
         trigger="click"
         placement="bottom"
@@ -540,9 +574,7 @@ watch(
           </NButton>
         </template>
         <NFlex vertical>
-          <NText strong>
-            所有数据改为每天更新一次
-          </NText>
+          <NText strong> 所有数据改为每天更新一次 </NText>
           <NDivider style="margin: 0" />
           <NText
             delete
@@ -564,12 +596,10 @@ watch(
           </NText>
         </NFlex>
       </NTooltip>
-      <br>
-      <br>
+      <br />
+      <br />
       <NFlex align="center">
-        <NText depth="3">
-          日期范围：
-        </NText>
+        <NText depth="3"> 日期范围： </NText>
         <NDatePicker
           v-model:value="dateRange"
           type="daterange"
@@ -578,7 +608,7 @@ watch(
           :shortcuts="dateShortcuts"
         />
       </NFlex>
-      <br>
+      <br />
       <NFlex
         vertical
         class="charts-container"
@@ -627,7 +657,7 @@ watch(
         />
 
         <NDivider />
-      <!-- <NDivider>
+        <!-- <NDivider>
         投稿播放量
         <NDivider vertical />
         <NTooltip>

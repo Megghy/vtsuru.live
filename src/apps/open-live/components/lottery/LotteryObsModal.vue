@@ -1,6 +1,19 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCollapse, NCollapseItem, NDivider, NFlex, NInput, NInputGroup, NLi, NModal, NUl } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCollapse,
+  NCollapseItem,
+  NDivider,
+  NFlex,
+  NInput,
+  NInputGroup,
+  NLi,
+  NModal,
+  NUl,
+} from 'naive-ui'
 import { computed } from 'vue'
+
 import LiveLotteryOBS from '@/apps/obs/pages/LiveLotteryOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { copyToClipboard } from '@/shared/utils'
@@ -16,7 +29,7 @@ const emit = defineEmits<{
 
 const showModel = computed({
   get: () => props.show,
-  set: value => emit('update:show', value),
+  set: (value) => emit('update:show', value),
 })
 
 const url = computed(() => {
@@ -47,20 +60,30 @@ const url = computed(() => {
         浏览
       </NButton>
     </template>
-    <NFlex vertical :size="12">
-      <NAlert title="这是什么？" type="info" size="small" :bordered="false">
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NAlert
+        title="这是什么？"
+        type="info"
+        size="small"
+        :bordered="false"
+      >
         将抽奖等待队列与结果显示在 OBS 的浏览器源中。
       </NAlert>
 
-      <NDivider style="margin: 0">
-        预览
-      </NDivider>
+      <NDivider style="margin: 0"> 预览 </NDivider>
       <div class="lottery-obs-modal__preview">
         <LiveLotteryOBS :code="code" />
       </div>
 
       <NInputGroup>
-        <NInput :value="url" size="small" readonly />
+        <NInput
+          :value="url"
+          size="small"
+          readonly
+        />
         <NButton
           type="primary"
           secondary

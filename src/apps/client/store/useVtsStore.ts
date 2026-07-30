@@ -1,10 +1,9 @@
-import { acceptHMRUpdate, defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { isTauri } from '@/shared/config'
-import type { StoreTarget } from '@/apps/client/store/useTauriStore'
-import { useTauriStore } from '@/apps/client/store/useTauriStore'
-import { ApiClient, VTubeStudioError } from 'vtubestudio'
 import { nanoid } from 'nanoid'
+import { acceptHMRUpdate, defineStore } from 'pinia'
+import { ApiClient, VTubeStudioError } from 'vtubestudio'
+import { computed, ref } from 'vue'
+
+import { svgUrlToPngBase64 } from '@/apps/client/api/vts/icon'
 import type {
   VtsHotkeyInfo,
   VtsStatisticsResponseData,
@@ -14,8 +13,9 @@ import type {
   VtsItemInstance,
   VtsItemListResponseData,
 } from '@/apps/client/api/vts/messages'
-import { svgUrlToPngBase64 } from '@/apps/client/api/vts/icon'
-
+import type { StoreTarget } from '@/apps/client/store/useTauriStore'
+import { useTauriStore } from '@/apps/client/store/useTauriStore'
+import { isTauri } from '@/shared/config'
 import pluginSvgUrl from '@/svgs/ic_vtuber.svg?url'
 
 const PLUGIN_NAME = 'vtsuru'
@@ -135,13 +135,13 @@ export interface VtsPreset {
 }
 
 export type VtsMacroStep =
-  | { type: 'hotkey', hotkeyID: string }
-  | { type: 'preset', presetId: string }
-  | { type: 'wait', seconds: number }
-  | { type: 'injectParam', parameterId: string, value: number, weight?: number }
-  | { type: 'accessory', accessoryId: string, visible: boolean }
-  | { type: 'prank', prankId: string }
-  | { type: 'playAudio', url: string, volume?: number, waitForEnd?: boolean }
+  | { type: 'hotkey'; hotkeyID: string }
+  | { type: 'preset'; presetId: string }
+  | { type: 'wait'; seconds: number }
+  | { type: 'injectParam'; parameterId: string; value: number; weight?: number }
+  | { type: 'accessory'; accessoryId: string; visible: boolean }
+  | { type: 'prank'; prankId: string }
+  | { type: 'playAudio'; url: string; volume?: number; waitForEnd?: boolean }
 
 export interface VtsMacro {
   id: string
@@ -187,16 +187,74 @@ export const useVtsStore = defineStore('vts', () => {
   const authTokenTarget: StoreTarget<string> = tauriStore.getTarget(AUTH_TOKEN_KEY, '')
   const presetsTarget: StoreTarget<VtsPreset[]> = tauriStore.getTarget(PRESETS_KEY, [
     { id: 'preset-talk', name: '杂谈模式', timeInSeconds: 0.2, positionX: 0, positionY: 0, rotation: 0, size: 0 },
-    { id: 'preset-game', name: '游戏模式', timeInSeconds: 0.2, positionX: 0.7, positionY: -0.6, rotation: 0, size: -20 },
+    {
+      id: 'preset-game',
+      name: '游戏模式',
+      timeInSeconds: 0.2,
+      positionX: 0.7,
+      positionY: -0.6,
+      rotation: 0,
+      size: -20,
+    },
     { id: 'preset-closeup', name: '特写模式', timeInSeconds: 0.2, positionX: 0, positionY: 0, rotation: 0, size: 30 },
   ])
   const macrosTarget: StoreTarget<VtsMacro[]> = tauriStore.getTarget(MACROS_KEY, [])
   const paramSlotsTarget: StoreTarget<VtsParamSlot[]> = tauriStore.getTarget(PARAM_SLOTS_KEY, [
-    { id: 'slot-blush', name: 'Blush', parameterId: 'Blush', min: 0, max: 1, step: 0.01, weight: 1, value: 0, hold: false },
-    { id: 'slot-pale', name: 'Pale', parameterId: 'Pale', min: 0, max: 1, step: 0.01, weight: 1, value: 0, hold: false },
-    { id: 'slot-bodyy', name: 'Body_Y', parameterId: 'Body_Y', min: -1, max: 1, step: 0.01, weight: 1, value: 0, hold: false },
-    { id: 'slot-eyeopen', name: 'EyeOpen', parameterId: 'EyeOpen', min: 0, max: 1, step: 0.01, weight: 1, value: 0, hold: false },
-    { id: 'slot-mouthopen', name: 'MouthOpen', parameterId: 'MouthOpen', min: 0, max: 1, step: 0.01, weight: 1, value: 0, hold: false },
+    {
+      id: 'slot-blush',
+      name: 'Blush',
+      parameterId: 'Blush',
+      min: 0,
+      max: 1,
+      step: 0.01,
+      weight: 1,
+      value: 0,
+      hold: false,
+    },
+    {
+      id: 'slot-pale',
+      name: 'Pale',
+      parameterId: 'Pale',
+      min: 0,
+      max: 1,
+      step: 0.01,
+      weight: 1,
+      value: 0,
+      hold: false,
+    },
+    {
+      id: 'slot-bodyy',
+      name: 'Body_Y',
+      parameterId: 'Body_Y',
+      min: -1,
+      max: 1,
+      step: 0.01,
+      weight: 1,
+      value: 0,
+      hold: false,
+    },
+    {
+      id: 'slot-eyeopen',
+      name: 'EyeOpen',
+      parameterId: 'EyeOpen',
+      min: 0,
+      max: 1,
+      step: 0.01,
+      weight: 1,
+      value: 0,
+      hold: false,
+    },
+    {
+      id: 'slot-mouthopen',
+      name: 'MouthOpen',
+      parameterId: 'MouthOpen',
+      min: 0,
+      max: 1,
+      step: 0.01,
+      weight: 1,
+      value: 0,
+      hold: false,
+    },
   ])
   const panicTarget: StoreTarget<VtsPanicConfig> = tauriStore.getTarget(PANIC_KEY, {
     calibrateHotkeyId: '',
@@ -233,7 +291,7 @@ export const useVtsStore = defineStore('vts', () => {
   const subscribedEvents = ref<string[]>([])
   const currentModelTransform = ref<VtsModelMovedEventData['modelPosition'] | null>(null)
   const lastItemEvent = ref<VtsItemEventData | null>(null)
-  const itemEventWaiters = new Map<string, { resolve: (data: VtsItemEventData) => void, acceptTypes?: Set<string> }>()
+  const itemEventWaiters = new Map<string, { resolve: (data: VtsItemEventData) => void; acceptTypes?: Set<string> }>()
   let monitorTimer: number | null = null
 
   const currentModelLoaded = ref<boolean | null>(null)
@@ -247,7 +305,7 @@ export const useVtsStore = defineStore('vts', () => {
   const holdTimerBySlotId = new Map<string, number>()
   const panicConfig = ref<VtsPanicConfig>({ calibrateHotkeyId: '', resetPhysicsHotkeyId: '' })
 
-  const macroRunning = ref<{ macroId: string, stepIndex: number, totalSteps: number } | null>(null)
+  const macroRunning = ref<{ macroId: string; stepIndex: number; totalSteps: number } | null>(null)
 
   const hotkeyCustomizations = ref<VtsHotkeyCustomization[]>([])
   const accessories = ref<VtsAccessoryBinding[]>([])
@@ -366,10 +424,14 @@ export const useVtsStore = defineStore('vts', () => {
       assertString(c.hotkeyID, `hotkeyCustomizations[${i}].hotkeyID`)
       assertBoolean(c.favorite, `hotkeyCustomizations[${i}].favorite`)
       if (c.pinned !== undefined) assertBoolean(c.pinned, `hotkeyCustomizations[${i}].pinned`)
-      if (c.group !== undefined && typeof c.group !== 'string') throw new Error(`导入失败：hotkeyCustomizations[${i}].group 无效`)
-      if (c.color !== undefined && typeof c.color !== 'string') throw new Error(`导入失败：hotkeyCustomizations[${i}].color 无效`)
-      if (c.iconDataUrl !== undefined && typeof c.iconDataUrl !== 'string') throw new Error(`导入失败：hotkeyCustomizations[${i}].iconDataUrl 无效`)
-      if (c.displayName !== undefined && typeof c.displayName !== 'string') throw new Error(`导入失败：hotkeyCustomizations[${i}].displayName 无效`)
+      if (c.group !== undefined && typeof c.group !== 'string')
+        throw new Error(`导入失败：hotkeyCustomizations[${i}].group 无效`)
+      if (c.color !== undefined && typeof c.color !== 'string')
+        throw new Error(`导入失败：hotkeyCustomizations[${i}].color 无效`)
+      if (c.iconDataUrl !== undefined && typeof c.iconDataUrl !== 'string')
+        throw new Error(`导入失败：hotkeyCustomizations[${i}].iconDataUrl 无效`)
+      if (c.displayName !== undefined && typeof c.displayName !== 'string')
+        throw new Error(`导入失败：hotkeyCustomizations[${i}].displayName 无效`)
     }
 
     for (let i = 0; i < p.presets.length; i++) {
@@ -450,8 +512,10 @@ export const useVtsStore = defineStore('vts', () => {
     }
 
     assertRecord(p.panic, 'panic')
-    if (typeof (p.panic as any).calibrateHotkeyId !== 'string') throw new Error('导入失败：panic.calibrateHotkeyId 无效')
-    if (typeof (p.panic as any).resetPhysicsHotkeyId !== 'string') throw new Error('导入失败：panic.resetPhysicsHotkeyId 无效')
+    if (typeof (p.panic as any).calibrateHotkeyId !== 'string')
+      throw new Error('导入失败：panic.calibrateHotkeyId 无效')
+    if (typeof (p.panic as any).resetPhysicsHotkeyId !== 'string')
+      throw new Error('导入失败：panic.resetPhysicsHotkeyId 无效')
 
     if (p.obsLink) {
       assertRecord(p.obsLink, 'obsLink')
@@ -478,7 +542,8 @@ export const useVtsStore = defineStore('vts', () => {
       assertString(pr.id, `pranks[${i}].id`)
       assertString(pr.name, `pranks[${i}].name`)
       if (typeof pr.fileName !== 'string') throw new Error(`导入失败：pranks[${i}].fileName 无效`)
-      if (pr.hotkeyID !== undefined && typeof pr.hotkeyID !== 'string') throw new Error(`导入失败：pranks[${i}].hotkeyID 无效`)
+      if (pr.hotkeyID !== undefined && typeof pr.hotkeyID !== 'string')
+        throw new Error(`导入失败：pranks[${i}].hotkeyID 无效`)
     }
 
     await wsUrlTarget.set(p.wsUrl.trim())
@@ -521,7 +586,7 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function updateProfile(next: VtsProfile) {
     const list = profiles.value.slice()
-    const idx = list.findIndex(p => p.id === next.id)
+    const idx = list.findIndex((p) => p.id === next.id)
     if (idx < 0) throw new Error('Profile 不存在')
     list[idx] = next
     profiles.value = list
@@ -529,7 +594,7 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function deleteProfile(id: string) {
-    const list = profiles.value.filter(p => p.id !== id)
+    const list = profiles.value.filter((p) => p.id !== id)
     profiles.value = list
     await profilesTarget.set(list)
     if (currentProfileId.value === id) {
@@ -539,7 +604,7 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function applyProfile(id: string) {
-    const profile = profiles.value.find(p => p.id === id)
+    const profile = profiles.value.find((p) => p.id === id)
     if (!profile) throw new Error('Profile 不存在')
 
     await hotkeyCustomTarget.set(profile.data.hotkeyCustomizations)
@@ -557,13 +622,13 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function captureCurrentToProfile(id: string) {
-    const profile = profiles.value.find(p => p.id === id)
+    const profile = profiles.value.find((p) => p.id === id)
     if (!profile) throw new Error('Profile 不存在')
     await updateProfile({ ...profile, data: snapshotProfileData() })
   }
 
   function exportProfile(id: string): VtsProfileExportV1 {
-    const profile = profiles.value.find(p => p.id === id)
+    const profile = profiles.value.find((p) => p.id === id)
     if (!profile) throw new Error('Profile 不存在')
     return {
       version: 1,
@@ -610,7 +675,7 @@ export const useVtsStore = defineStore('vts', () => {
     assertArray(data.pranks, 'pranks')
 
     const name = p.name.trim()
-    if (profiles.value.some(pr => pr.name === name)) {
+    if (profiles.value.some((pr) => pr.name === name)) {
       throw new Error('导入失败：已存在同名 Profile（请先重命名或删除）')
     }
 
@@ -625,7 +690,7 @@ export const useVtsStore = defineStore('vts', () => {
     return profile
   }
 
-  function pushHistoryRecord(next: Omit<VtsOpRecord, 'id' | 'ts'> & { id?: string, ts?: number }) {
+  function pushHistoryRecord(next: Omit<VtsOpRecord, 'id' | 'ts'> & { id?: string; ts?: number }) {
     const record: VtsOpRecord = {
       id: next.id ?? `vtsop-${nanoid(10)}`,
       ts: next.ts ?? Date.now(),
@@ -642,7 +707,7 @@ export const useVtsStore = defineStore('vts', () => {
     void historyTarget.set(list)
   }
 
-  function normalizeOpError(err: unknown): { error: string, errorCode?: string } {
+  function normalizeOpError(err: unknown): { error: string; errorCode?: string } {
     if (err instanceof VTubeStudioError) {
       const errorID = (err.data as any)?.errorID
       if ((typeof errorID === 'number' || typeof errorID === 'string') && String(errorID)) {
@@ -689,7 +754,7 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function replayHistoryRecord(recordId: string) {
-    const record = history.value.find(r => r.id === recordId)
+    const record = history.value.find((r) => r.id === recordId)
     if (!record) throw new Error('历史记录不存在')
     if (!record.payload) throw new Error('该历史记录不支持回放（缺少 payload）')
 
@@ -708,7 +773,9 @@ export const useVtsStore = defineStore('vts', () => {
       const positionY = payload.positionY
       const rotation = payload.rotation
       const size = payload.size
-      if (![timeInSeconds, positionX, positionY, rotation, size].every(v => typeof v === 'number' && Number.isFinite(v))) {
+      if (
+        ![timeInSeconds, positionX, positionY, rotation, size].every((v) => typeof v === 'number' && Number.isFinite(v))
+      ) {
         throw new Error('回放数据无效：moveModel 数值')
       }
       await moveModel({
@@ -722,12 +789,14 @@ export const useVtsStore = defineStore('vts', () => {
     }
 
     if (record.kind === 'injectParam') {
-      if (!isRecordObject(payload) || !Array.isArray((payload as any).values)) throw new Error('回放数据无效：injectParam values')
-      const values = (payload as any).values as Array<{ id: unknown, value: unknown, weight?: unknown }>
+      if (!isRecordObject(payload) || !Array.isArray((payload as any).values))
+        throw new Error('回放数据无效：injectParam values')
+      const values = (payload as any).values as Array<{ id: unknown; value: unknown; weight?: unknown }>
       const normalized = values.map((v) => {
         if (typeof v.id !== 'string') throw new Error('回放数据无效：parameter id')
         if (typeof v.value !== 'number' || !Number.isFinite(v.value)) throw new Error('回放数据无效：parameter value')
-        if (v.weight != null && (typeof v.weight !== 'number' || !Number.isFinite(v.weight))) throw new Error('回放数据无效：parameter weight')
+        if (v.weight != null && (typeof v.weight !== 'number' || !Number.isFinite(v.weight)))
+          throw new Error('回放数据无效：parameter weight')
         return { id: v.id, value: v.value, weight: v.weight as number | undefined }
       })
       await injectParametersAdd(normalized)
@@ -741,8 +810,10 @@ export const useVtsStore = defineStore('vts', () => {
     }
 
     if (record.kind === 'itemOpacity') {
-      if (!isRecordObject(payload) || typeof payload.itemInstanceID !== 'string') throw new Error('回放数据无效：itemInstanceID')
-      if (typeof payload.opacity !== 'number' || !Number.isFinite(payload.opacity)) throw new Error('回放数据无效：opacity')
+      if (!isRecordObject(payload) || typeof payload.itemInstanceID !== 'string')
+        throw new Error('回放数据无效：itemInstanceID')
+      if (typeof payload.opacity !== 'number' || !Number.isFinite(payload.opacity))
+        throw new Error('回放数据无效：opacity')
       await setItemOpacity(payload.itemInstanceID, payload.opacity)
       return
     }
@@ -751,13 +822,15 @@ export const useVtsStore = defineStore('vts', () => {
       if (!isRecordObject(payload) || typeof payload.fileName !== 'string') throw new Error('回放数据无效：fileName')
       const x = payload.x
       const size = payload.size
-      if (![x, size].every(v => typeof v === 'number' && Number.isFinite(v))) throw new Error('回放数据无效：dropItem 数值')
+      if (![x, size].every((v) => typeof v === 'number' && Number.isFinite(v)))
+        throw new Error('回放数据无效：dropItem 数值')
       await dropItem(payload.fileName, { x: x as number, size: size as number })
       return
     }
 
     if (record.kind === 'panicCalibrate' || record.kind === 'panicResetPhysics') {
-      if (!isRecordObject(payload) || typeof payload.hotkeyID !== 'string') throw new Error('回放数据无效：panic hotkeyID')
+      if (!isRecordObject(payload) || typeof payload.hotkeyID !== 'string')
+        throw new Error('回放数据无效：panic hotkeyID')
       await triggerHotkey(payload.hotkeyID)
       return
     }
@@ -804,12 +877,7 @@ export const useVtsStore = defineStore('vts', () => {
       }
     }, {})
 
-    subscribedEvents.value = [
-      'TrackingStatusChangedEvent',
-      'ModelLoadedEvent',
-      'ModelMovedEvent',
-      'ItemEvent',
-    ]
+    subscribedEvents.value = ['TrackingStatusChangedEvent', 'ModelLoadedEvent', 'ModelMovedEvent', 'ItemEvent']
   }
 
   async function waitForItemEvent(itemInstanceID: string, acceptTypes: string[], timeoutMs: number) {
@@ -847,7 +915,7 @@ export const useVtsStore = defineStore('vts', () => {
     const started = performance.now()
     const data = await client.value.faceFound()
     lastRttMs.value = Math.round(performance.now() - started)
-    faceFound.value = (data).found
+    faceFound.value = data.found
   }
 
   async function pollMonitorOnce() {
@@ -925,10 +993,13 @@ export const useVtsStore = defineStore('vts', () => {
       await withHistory('connect', wsUrl.value, async () => {
         if (apiClient.isConnected) return
         await new Promise<void>((resolve, reject) => {
-          const timeout = window.setTimeout(() => {
-            cleanup()
-            reject(new Error('连接 VTS 超时（等待 connect 事件）'))
-          }, 6 * 60 * 1000)
+          const timeout = window.setTimeout(
+            () => {
+              cleanup()
+              reject(new Error('连接 VTS 超时（等待 connect 事件）'))
+            },
+            6 * 60 * 1000,
+          )
 
           const onConnect = () => {
             cleanup()
@@ -995,11 +1066,13 @@ export const useVtsStore = defineStore('vts', () => {
     }
     const c = client.value
     const iconBase64 = await svgUrlToPngBase64(pluginSvgUrl, 128)
-    const data = await withHistory('authToken', PLUGIN_NAME, async () => c.authenticationToken({
-      pluginName: PLUGIN_NAME,
-      pluginDeveloper: PLUGIN_DEVELOPER,
-      pluginIcon: iconBase64,
-    }))
+    const data = await withHistory('authToken', PLUGIN_NAME, async () =>
+      c.authenticationToken({
+        pluginName: PLUGIN_NAME,
+        pluginDeveloper: PLUGIN_DEVELOPER,
+        pluginIcon: iconBase64,
+      }),
+    )
     const token = data.authenticationToken
 
     authToken.value = token
@@ -1017,11 +1090,13 @@ export const useVtsStore = defineStore('vts', () => {
     }
 
     const started = performance.now()
-    const data = await withHistory('authenticate', undefined, async () => c.authentication({
-      pluginName: PLUGIN_NAME,
-      pluginDeveloper: PLUGIN_DEVELOPER,
-      authenticationToken: authToken.value,
-    }))
+    const data = await withHistory('authenticate', undefined, async () =>
+      c.authentication({
+        pluginName: PLUGIN_NAME,
+        pluginDeveloper: PLUGIN_DEVELOPER,
+        authenticationToken: authToken.value,
+      }),
+    )
     lastRttMs.value = Math.round(performance.now() - started)
     if (!data.authenticated) throw new Error(`鉴权失败：${data.reason}`)
 
@@ -1092,20 +1167,26 @@ export const useVtsStore = defineStore('vts', () => {
       size: preset.size,
     }
     const started = performance.now()
-    await withHistory('moveModel', undefined, async () => c.moveModel({
-      timeInSeconds: preset.timeInSeconds,
-      valuesAreRelativeToModel: false,
-      positionX: preset.positionX,
-      positionY: preset.positionY,
-      rotation: preset.rotation,
-      size: preset.size,
-    }), payload)
+    await withHistory(
+      'moveModel',
+      undefined,
+      async () =>
+        c.moveModel({
+          timeInSeconds: preset.timeInSeconds,
+          valuesAreRelativeToModel: false,
+          positionX: preset.positionX,
+          positionY: preset.positionY,
+          rotation: preset.rotation,
+          size: preset.size,
+        }),
+      payload,
+    )
     lastRttMs.value = Math.round(performance.now() - started)
   }
 
   async function upsertPreset(next: VtsPreset) {
     const list = presets.value.slice()
-    const idx = list.findIndex(p => p.id === next.id)
+    const idx = list.findIndex((p) => p.id === next.id)
     if (idx >= 0) list[idx] = next
     else list.push(next)
     presets.value = list
@@ -1113,20 +1194,20 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function removePreset(id: string) {
-    const list = presets.value.filter(p => p.id !== id)
+    const list = presets.value.filter((p) => p.id !== id)
     presets.value = list
     await presetsTarget.set(list)
   }
 
   async function applyPreset(presetId: string) {
-    const preset = presets.value.find(p => p.id === presetId)
+    const preset = presets.value.find((p) => p.id === presetId)
     if (!preset) throw new Error('预设不存在')
     await moveModel(preset)
   }
 
   async function upsertMacro(next: VtsMacro) {
     const list = macros.value.slice()
-    const idx = list.findIndex(m => m.id === next.id)
+    const idx = list.findIndex((m) => m.id === next.id)
     if (idx >= 0) list[idx] = next
     else list.push(next)
     macros.value = list
@@ -1134,112 +1215,123 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function removeMacro(id: string) {
-    const list = macros.value.filter(m => m.id !== id)
+    const list = macros.value.filter((m) => m.id !== id)
     macros.value = list
     await macrosTarget.set(list)
   }
 
   async function runMacro(macroId: string) {
-    const macro = macros.value.find(m => m.id === macroId)
+    const macro = macros.value.find((m) => m.id === macroId)
     if (!macro) throw new Error('宏不存在')
     if (!client.value) throw new Error('未连接到 VTS')
     if (!authenticated.value) throw new Error('未完成鉴权')
 
     macroRunning.value = { macroId, stepIndex: 0, totalSteps: macro.steps.length }
     try {
-      await withHistory('macroRun', macroId, async () => {
-        for (let i = 0; i < macro.steps.length; i++) {
-          macroRunning.value = { macroId, stepIndex: i, totalSteps: macro.steps.length }
-          const step = macro.steps[i]
-        if (step.type === 'hotkey') {
-          await triggerHotkey(step.hotkeyID)
-          continue
-        }
-        if (step.type === 'preset') {
-          await applyPreset(step.presetId)
-          continue
-        }
-        if (step.type === 'wait') {
-          if (!Number.isFinite(step.seconds) || step.seconds < 0) {
-            throw new TypeError('宏步骤 wait.seconds 无效')
+      await withHistory(
+        'macroRun',
+        macroId,
+        async () => {
+          for (let i = 0; i < macro.steps.length; i++) {
+            macroRunning.value = { macroId, stepIndex: i, totalSteps: macro.steps.length }
+            const step = macro.steps[i]
+            if (step.type === 'hotkey') {
+              await triggerHotkey(step.hotkeyID)
+              continue
+            }
+            if (step.type === 'preset') {
+              await applyPreset(step.presetId)
+              continue
+            }
+            if (step.type === 'wait') {
+              if (!Number.isFinite(step.seconds) || step.seconds < 0) {
+                throw new TypeError('宏步骤 wait.seconds 无效')
+              }
+              await new Promise<void>((r) => setTimeout(r, step.seconds * 1000))
+              continue
+            }
+            if (step.type === 'injectParam') {
+              await injectParametersAdd([{ id: step.parameterId, value: step.value, weight: step.weight }])
+              continue
+            }
+            if (step.type === 'accessory') {
+              if (typeof step.accessoryId !== 'string' || !step.accessoryId) {
+                throw new TypeError('宏步骤 accessory.accessoryId 无效')
+              }
+              if (typeof step.visible !== 'boolean') {
+                throw new TypeError('宏步骤 accessory.visible 无效')
+              }
+              await toggleAccessory(step.accessoryId, step.visible)
+              continue
+            }
+            if (step.type === 'prank') {
+              if (typeof step.prankId !== 'string' || !step.prankId) {
+                throw new TypeError('宏步骤 prank.prankId 无效')
+              }
+              const prank = pranks.value.find((p) => p.id === step.prankId)
+              if (!prank) throw new Error('宏步骤 prank.prankId 不存在')
+              if (prank.hotkeyID) {
+                await triggerHotkey(prank.hotkeyID)
+                continue
+              }
+              if (!prank.fileName) throw new Error('宏步骤 prank 未配置 fileName 或 hotkey')
+              await dropItem(prank.fileName, { x: 0, size: 0.32 })
+              continue
+            }
+            if (step.type === 'playAudio') {
+              if (typeof step.url !== 'string' || !step.url) {
+                throw new TypeError('宏步骤 playAudio.url 无效')
+              }
+              if (step.volume !== undefined && (!Number.isFinite(step.volume) || step.volume < 0 || step.volume > 1)) {
+                throw new TypeError('宏步骤 playAudio.volume 无效')
+              }
+              if (step.waitForEnd !== undefined && typeof step.waitForEnd !== 'boolean') {
+                throw new TypeError('宏步骤 playAudio.waitForEnd 无效')
+              }
+              const audio = new Audio(step.url)
+              if (step.volume !== undefined) audio.volume = step.volume
+              await audio.play()
+              if (step.waitForEnd) {
+                await new Promise<void>((resolve, reject) => {
+                  audio.onended = () => resolve()
+                  audio.onerror = () => reject(new Error('音效播放失败'))
+                })
+              }
+              continue
+            }
+            throw new Error(`未知宏步骤类型: ${(step as any).type}`)
           }
-          await new Promise<void>((r) => setTimeout(r, step.seconds * 1000))
-          continue
-        }
-        if (step.type === 'injectParam') {
-          await injectParametersAdd([{ id: step.parameterId, value: step.value, weight: step.weight }])
-          continue
-        }
-        if (step.type === 'accessory') {
-          if (typeof step.accessoryId !== 'string' || !step.accessoryId) {
-            throw new TypeError('宏步骤 accessory.accessoryId 无效')
-          }
-          if (typeof step.visible !== 'boolean') {
-            throw new TypeError('宏步骤 accessory.visible 无效')
-          }
-          await toggleAccessory(step.accessoryId, step.visible)
-          continue
-        }
-        if (step.type === 'prank') {
-          if (typeof step.prankId !== 'string' || !step.prankId) {
-            throw new TypeError('宏步骤 prank.prankId 无效')
-          }
-          const prank = pranks.value.find(p => p.id === step.prankId)
-          if (!prank) throw new Error('宏步骤 prank.prankId 不存在')
-          if (prank.hotkeyID) {
-            await triggerHotkey(prank.hotkeyID)
-            continue
-          }
-          if (!prank.fileName) throw new Error('宏步骤 prank 未配置 fileName 或 hotkey')
-          await dropItem(prank.fileName, { x: 0, size: 0.32 })
-          continue
-        }
-        if (step.type === 'playAudio') {
-          if (typeof step.url !== 'string' || !step.url) {
-            throw new TypeError('宏步骤 playAudio.url 无效')
-          }
-          if (step.volume !== undefined && (!Number.isFinite(step.volume) || step.volume < 0 || step.volume > 1)) {
-            throw new TypeError('宏步骤 playAudio.volume 无效')
-          }
-          if (step.waitForEnd !== undefined && typeof step.waitForEnd !== 'boolean') {
-            throw new TypeError('宏步骤 playAudio.waitForEnd 无效')
-          }
-          const audio = new Audio(step.url)
-          if (step.volume !== undefined) audio.volume = step.volume
-          await audio.play()
-          if (step.waitForEnd) {
-            await new Promise<void>((resolve, reject) => {
-              audio.onended = () => resolve()
-              audio.onerror = () => reject(new Error('音效播放失败'))
-            })
-          }
-          continue
-        }
-        throw new Error(`未知宏步骤类型: ${(step as any).type}`)
-      }
-    }, { macroId })
+        },
+        { macroId },
+      )
     } finally {
       macroRunning.value = null
     }
   }
 
-  async function injectParametersAdd(values: Array<{ id: string, value: number, weight?: number }>) {
+  async function injectParametersAdd(values: Array<{ id: string; value: number; weight?: number }>) {
     if (!client.value) throw new Error('未连接到 VTS')
     const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     if (values.length === 0) return
 
     const started = performance.now()
-    await withHistory('injectParam', values.map(v => v.id).join(','), async () => c.injectParameterData({
-      mode: 'add',
-      parameterValues: values,
-    }), { values })
+    await withHistory(
+      'injectParam',
+      values.map((v) => v.id).join(','),
+      async () =>
+        c.injectParameterData({
+          mode: 'add',
+          parameterValues: values,
+        }),
+      { values },
+    )
     lastRttMs.value = Math.round(performance.now() - started)
   }
 
   async function upsertParamSlot(next: VtsParamSlot) {
     const list = paramSlots.value.slice()
-    const idx = list.findIndex(s => s.id === next.id)
+    const idx = list.findIndex((s) => s.id === next.id)
     if (idx >= 0) list[idx] = next
     else list.push(next)
     paramSlots.value = list
@@ -1248,7 +1340,7 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function removeParamSlot(id: string) {
     stopParamHold(id)
-    const list = paramSlots.value.filter(s => s.id !== id)
+    const list = paramSlots.value.filter((s) => s.id !== id)
     paramSlots.value = list
     await paramSlotsTarget.set(list)
   }
@@ -1256,7 +1348,7 @@ export const useVtsStore = defineStore('vts', () => {
   function startParamHold(slotId: string) {
     if (holdTimerBySlotId.has(slotId)) return
     const timer = window.setInterval(async () => {
-      const slot = paramSlots.value.find(s => s.id === slotId)
+      const slot = paramSlots.value.find((s) => s.id === slotId)
       if (!slot) {
         stopParamHold(slotId)
         return
@@ -1341,17 +1433,27 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function panicCalibrate() {
     if (!panicConfig.value.calibrateHotkeyId) throw new Error('未配置“校准”热键')
-    await withHistory('panicCalibrate', panicConfig.value.calibrateHotkeyId, async () => triggerHotkey(panicConfig.value.calibrateHotkeyId), { hotkeyID: panicConfig.value.calibrateHotkeyId })
+    await withHistory(
+      'panicCalibrate',
+      panicConfig.value.calibrateHotkeyId,
+      async () => triggerHotkey(panicConfig.value.calibrateHotkeyId),
+      { hotkeyID: panicConfig.value.calibrateHotkeyId },
+    )
   }
 
   async function panicResetPhysics() {
     if (!panicConfig.value.resetPhysicsHotkeyId) throw new Error('未配置“重置物理”热键')
-    await withHistory('panicResetPhysics', panicConfig.value.resetPhysicsHotkeyId, async () => triggerHotkey(panicConfig.value.resetPhysicsHotkeyId), { hotkeyID: panicConfig.value.resetPhysicsHotkeyId })
+    await withHistory(
+      'panicResetPhysics',
+      panicConfig.value.resetPhysicsHotkeyId,
+      async () => triggerHotkey(panicConfig.value.resetPhysicsHotkeyId),
+      { hotkeyID: panicConfig.value.resetPhysicsHotkeyId },
+    )
   }
 
   async function setHotkeyCustomization(next: VtsHotkeyCustomization) {
     const list = hotkeyCustomizations.value.slice()
-    const idx = list.findIndex(h => h.hotkeyID === next.hotkeyID)
+    const idx = list.findIndex((h) => h.hotkeyID === next.hotkeyID)
     if (idx >= 0) list[idx] = next
     else list.push(next)
     hotkeyCustomizations.value = list
@@ -1359,7 +1461,7 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function removeHotkeyCustomization(hotkeyID: string) {
-    const list = hotkeyCustomizations.value.filter(h => h.hotkeyID !== hotkeyID)
+    const list = hotkeyCustomizations.value.filter((h) => h.hotkeyID !== hotkeyID)
     hotkeyCustomizations.value = list
     await hotkeyCustomTarget.set(list)
   }
@@ -1369,11 +1471,13 @@ export const useVtsStore = defineStore('vts', () => {
     const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const started = performance.now()
-    const data = await withHistory('itemList', undefined, async () => c.itemList({
-      includeAvailableSpots: false,
-      includeItemInstancesInScene: true,
-      includeAvailableItemFiles: options?.includeFiles ?? true,
-    }))
+    const data = await withHistory('itemList', undefined, async () =>
+      c.itemList({
+        includeAvailableSpots: false,
+        includeItemInstancesInScene: true,
+        includeAvailableItemFiles: options?.includeFiles ?? true,
+      }),
+    )
     lastRttMs.value = Math.round(performance.now() - started)
 
     canLoadItems.value = data.canLoadItemsRightNow
@@ -1381,28 +1485,37 @@ export const useVtsStore = defineStore('vts', () => {
     availableItemFiles.value = (data as any as VtsItemListResponseData).availableItemFiles ?? []
   }
 
-  async function loadItem(fileName: string, options?: { x?: number, y?: number, size?: number, rotation?: number, fadeTime?: number, order?: number }) {
+  async function loadItem(
+    fileName: string,
+    options?: { x?: number; y?: number; size?: number; rotation?: number; fadeTime?: number; order?: number },
+  ) {
     if (!client.value) throw new Error('未连接到 VTS')
     const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const started = performance.now()
-    const data = await withHistory('itemLoad', fileName, async () => c.itemLoad({
+    const data = await withHistory(
+      'itemLoad',
       fileName,
-      positionX: options?.x,
-      positionY: options?.y,
-      size: options?.size,
-      rotation: options?.rotation,
-      fadeTime: options?.fadeTime ?? 0.2,
-      order: options?.order,
-      failIfOrderTaken: false,
-      unloadWhenPluginDisconnects: true,
-    }), { fileName, ...options })
+      async () =>
+        c.itemLoad({
+          fileName,
+          positionX: options?.x,
+          positionY: options?.y,
+          size: options?.size,
+          rotation: options?.rotation,
+          fadeTime: options?.fadeTime ?? 0.2,
+          order: options?.order,
+          failIfOrderTaken: false,
+          unloadWhenPluginDisconnects: true,
+        }),
+      { fileName, ...options },
+    )
     lastRttMs.value = Math.round(performance.now() - started)
     if (!(data as any)?.instanceID) throw new Error('ItemLoadResponse 缺少 instanceID')
     return data
   }
 
-  async function unloadItems(payload: { instanceIDs?: string[], fileNames?: string[] }) {
+  async function unloadItems(payload: { instanceIDs?: string[]; fileNames?: string[] }) {
     if (!client.value) throw new Error('未连接到 VTS')
     const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
@@ -1412,13 +1525,19 @@ export const useVtsStore = defineStore('vts', () => {
       throw new Error('ItemUnload 失败：未指定 instanceIDs 或 fileNames')
     }
     const started = performance.now()
-    await withHistory('itemUnload', fileNames.join(',') || instanceIDs.join(',') || undefined, async () => c.itemUnload({
-      unloadAllInScene: false,
-      unloadAllLoadedByThisPlugin: false,
-      allowUnloadingItemsLoadedByUserOrOtherPlugins: true,
-      instanceIDs,
-      fileNames,
-    }), { instanceIDs, fileNames })
+    await withHistory(
+      'itemUnload',
+      fileNames.join(',') || instanceIDs.join(',') || undefined,
+      async () =>
+        c.itemUnload({
+          unloadAllInScene: false,
+          unloadAllLoadedByThisPlugin: false,
+          allowUnloadingItemsLoadedByUserOrOtherPlugins: true,
+          instanceIDs,
+          fileNames,
+        }),
+      { instanceIDs, fileNames },
+    )
     lastRttMs.value = Math.round(performance.now() - started)
   }
 
@@ -1427,46 +1546,59 @@ export const useVtsStore = defineStore('vts', () => {
     const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const started = performance.now()
-    await withHistory('itemOpacity', `${itemInstanceID}:${opacity}`, async () => c.itemAnimationControl({
-      itemInstanceID,
-      opacity,
-    } as any), { itemInstanceID, opacity })
+    await withHistory(
+      'itemOpacity',
+      `${itemInstanceID}:${opacity}`,
+      async () =>
+        c.itemAnimationControl({
+          itemInstanceID,
+          opacity,
+        } as any),
+      { itemInstanceID, opacity },
+    )
     lastRttMs.value = Math.round(performance.now() - started)
   }
 
-  async function dropItem(fileName: string, options?: { x?: number, size?: number }) {
+  async function dropItem(fileName: string, options?: { x?: number; size?: number }) {
     if (!client.value) throw new Error('未连接到 VTS')
     const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const x = options?.x ?? 0
     const size = options?.size ?? 0.32
-    await withHistory('dropItem', fileName, async () => {
-      const loaded = await loadItem(fileName, { x, y: 1.1, size, fadeTime: 0.1 })
-      try {
-        await c.itemMove({
-          itemsToMove: [{
-            itemInstanceID: loaded.instanceID,
-            timeInSeconds: 0.6,
-            fadeMode: 'easeIn',
-            positionX: x,
-            positionY: -0.2,
-          }],
-        })
-        const event = await waitForItemEvent(loaded.instanceID, ['DroppedPinned', 'DroppedUnpinned'], 1600)
-        const delay = event ? 300 : 1200
-        window.setTimeout(() => {
-          void unloadItems({ instanceIDs: [loaded.instanceID] })
-        }, delay)
-      } catch (err) {
-        await unloadItems({ instanceIDs: [loaded.instanceID] })
-        throw err
-      }
-    }, { fileName, x, size })
+    await withHistory(
+      'dropItem',
+      fileName,
+      async () => {
+        const loaded = await loadItem(fileName, { x, y: 1.1, size, fadeTime: 0.1 })
+        try {
+          await c.itemMove({
+            itemsToMove: [
+              {
+                itemInstanceID: loaded.instanceID,
+                timeInSeconds: 0.6,
+                fadeMode: 'easeIn',
+                positionX: x,
+                positionY: -0.2,
+              },
+            ],
+          })
+          const event = await waitForItemEvent(loaded.instanceID, ['DroppedPinned', 'DroppedUnpinned'], 1600)
+          const delay = event ? 300 : 1200
+          window.setTimeout(() => {
+            void unloadItems({ instanceIDs: [loaded.instanceID] })
+          }, delay)
+        } catch (err) {
+          await unloadItems({ instanceIDs: [loaded.instanceID] })
+          throw err
+        }
+      },
+      { fileName, x, size },
+    )
   }
 
   async function upsertAccessory(next: VtsAccessoryBinding) {
     const list = accessories.value.slice()
-    const idx = list.findIndex(a => a.id === next.id)
+    const idx = list.findIndex((a) => a.id === next.id)
     if (idx >= 0) list[idx] = next
     else list.push(next)
     accessories.value = list
@@ -1474,13 +1606,13 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function removeAccessory(id: string) {
-    const list = accessories.value.filter(a => a.id !== id)
+    const list = accessories.value.filter((a) => a.id !== id)
     accessories.value = list
     await accessoriesTarget.set(list)
   }
 
   async function toggleAccessory(id: string, visible: boolean) {
-    const acc = accessories.value.find(a => a.id === id)
+    const acc = accessories.value.find((a) => a.id === id)
     if (!acc) throw new Error('配饰不存在')
     if (!acc.itemInstanceID) throw new Error('配饰未绑定实例')
     await setItemOpacity(acc.itemInstanceID, visible ? 1 : 0)
@@ -1495,7 +1627,7 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function upsertPrank(next: VtsPrankBinding) {
     const list = pranks.value.slice()
-    const idx = list.findIndex(a => a.id === next.id)
+    const idx = list.findIndex((a) => a.id === next.id)
     if (idx >= 0) list[idx] = next
     else list.push(next)
     pranks.value = list
@@ -1503,7 +1635,7 @@ export const useVtsStore = defineStore('vts', () => {
   }
 
   async function removePrank(id: string) {
-    const list = pranks.value.filter(a => a.id !== id)
+    const list = pranks.value.filter((a) => a.id !== id)
     pranks.value = list
     await pranksTarget.set(list)
   }

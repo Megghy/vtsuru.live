@@ -1,15 +1,16 @@
 <script setup lang="ts">
+import { NAlert, NButton, NCard, NDivider, NFlex, NInput, NList, NListItem, NModal, NText, NTime } from 'naive-ui'
+import { onMounted, onUnmounted, ref } from 'vue'
+
+import { useAccount } from '@/api/account'
 import type { UserInfo } from '@/api/api-models'
 import type { ForumPostTopicModel, ForumTopicBaseModel } from '@/api/models/forum'
-import {
-  NAlert, NButton, NCard, NDivider, NFlex, NInput, NList, NListItem, NModal, NText, NTime } from 'naive-ui';
-import { onMounted, onUnmounted, ref } from 'vue'
-import { useAccount } from '@/api/account'
 import { ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'
 import TurnstileVerify from '@/apps/user/components/TurnstileVerify.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
-import { useForumStore } from '@/store/useForumStore'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useForumStore } from '@/store/useForumStore'
+
 import ForumPreviewItem from './ForumPreviewItem.vue'
 
 const { userInfo } = defineProps<{
@@ -31,7 +32,7 @@ const pn = ref(0)
 const sort = ref(ForumTopicSortTypes.Time)
 
 const forumInfo = ref(await useForum.GetForumInfo(userInfo?.id ?? -1))
-const topics = ref<{ data: ForumTopicBaseModel[], total: number, more: boolean } | undefined>({
+const topics = ref<{ data: ForumTopicBaseModel[]; total: number; more: boolean } | undefined>({
   data: [],
   total: 0,
   more: false,
@@ -85,23 +86,35 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard v-if="!forumInfo" size="small" bordered>
-    <NAlert type="error" size="small" :bordered="false">
+  <NCard
+    v-if="!forumInfo"
+    size="small"
+    bordered
+  >
+    <NAlert
+      type="error"
+      size="small"
+      :bordered="false"
+    >
       用户未创建粉丝讨论区
     </NAlert>
   </NCard>
   <NCard
     v-else-if="
-      (forumInfo.level < ForumUserLevels.Member && forumInfo.settings.requireApply)
-        || forumInfo.settings.allowedViewerLevel > forumInfo.level
+      (forumInfo.level < ForumUserLevels.Member && forumInfo.settings.requireApply) ||
+      forumInfo.settings.allowedViewerLevel > forumInfo.level
     "
     size="small"
     bordered
   >
-    <NAlert type="warning" size="small" :bordered="false">
+    <NAlert
+      type="warning"
+      size="small"
+      :bordered="false"
+    >
       你需要成为成员才能访问 {{ forumInfo.name }}
     </NAlert>
-    <div style="height: 12px;" />
+    <div style="height: 12px" />
     <NAlert
       v-if="forumInfo.isApplied"
       type="success"
@@ -152,12 +165,30 @@ onUnmounted(() => {
     </NCard>
   </NCard>
   <template v-else>
-    <NFlex vertical :size="12">
-      <NCard size="small" bordered :title="forumInfo.name" />
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NCard
+        size="small"
+        bordered
+        :title="forumInfo.name"
+      />
       <div class="forum-grid">
-        <NCard class="forum-sidebar" size="small" bordered>
-          <NFlex vertical :size="8">
-            <NButton type="primary" secondary @click="showPostTopicModal = true">
+        <NCard
+          class="forum-sidebar"
+          size="small"
+          bordered
+        >
+          <NFlex
+            vertical
+            :size="8"
+          >
+            <NButton
+              type="primary"
+              secondary
+              @click="showPostTopicModal = true"
+            >
               发布话题
             </NButton>
             <NAlert
@@ -170,9 +201,14 @@ onUnmounted(() => {
             </NAlert>
           </NFlex>
         </NCard>
-        <NCard class="forum-topics" size="small" bordered content-style="padding: 0;">
+        <NCard
+          class="forum-topics"
+          size="small"
+          bordered
+          content-style="padding: 0;"
+        >
           <NList
-            style="width: 100%;"
+            style="width: 100%"
             size="small"
             hoverable
             clickable
@@ -208,7 +244,8 @@ onUnmounted(() => {
           depth="3"
           style="font-size: small"
         >
-          保存于 <NTime
+          保存于
+          <NTime
             :time="lastBackupTopic"
             format="HH:mm:ss"
           />

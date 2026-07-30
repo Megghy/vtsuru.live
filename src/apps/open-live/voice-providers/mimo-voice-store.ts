@@ -20,7 +20,11 @@ export async function deleteVoiceAudio(voiceId: number | string) {
   await del(String(voiceId), STORE)
 }
 
-export async function ensureVoiceAudio(voiceId: number | string, audioUrl: string, name: string): Promise<StoredVoiceAudio> {
+export async function ensureVoiceAudio(
+  voiceId: number | string,
+  audioUrl: string,
+  name: string,
+): Promise<StoredVoiceAudio> {
   const cached = await getVoiceAudio(voiceId)
   if (cached) return cached
 

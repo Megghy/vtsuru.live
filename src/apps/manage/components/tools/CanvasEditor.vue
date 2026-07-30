@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { get as idbGet, set as idbSet } from 'idb-keyval'
 import type Konva from 'konva'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { get as idbGet, set as idbSet } from 'idb-keyval'
 
 export type LayerType = 'image' | 'text'
 
@@ -72,23 +72,34 @@ const stagePixelH = computed(() => props.height * stageScale.value)
 
 // --- Background ---
 const bgImageObj = ref<HTMLImageElement | null>(null)
-watch(() => props.backgroundImage, (src) => {
-  if (!src) { bgImageObj.value = null; return }
-  const img = new Image()
-  img.onload = () => { bgImageObj.value = img }
-  img.src = src
-}, { immediate: true })
+watch(
+  () => props.backgroundImage,
+  (src) => {
+    if (!src) {
+      bgImageObj.value = null
+      return
+    }
+    const img = new Image()
+    img.onload = () => {
+      bgImageObj.value = img
+    }
+    img.src = src
+  },
+  { immediate: true },
+)
 
 const bgFill = computed(() => {
   if (props.backgroundGradient) {
     const { from, to, angle } = props.backgroundGradient
     const rad = (angle * Math.PI) / 180
-    const cos = Math.cos(rad); const sin = Math.sin(rad)
-    const cx = props.width / 2; const cy = props.height / 2
+    const cos = Math.cos(rad)
+    const sin = Math.sin(rad)
+    const cx = props.width / 2
+    const cy = props.height / 2
     const len = Math.max(props.width, props.height)
     return {
-      fillLinearGradientStartPoint: { x: cx - cos * len / 2, y: cy - sin * len / 2 },
-      fillLinearGradientEndPoint: { x: cx + cos * len / 2, y: cy + sin * len / 2 },
+      fillLinearGradientStartPoint: { x: cx - (cos * len) / 2, y: cy - (sin * len) / 2 },
+      fillLinearGradientEndPoint: { x: cx + (cos * len) / 2, y: cy + (sin * len) / 2 },
       fillLinearGradientColorStops: [0, from, 1, to],
     }
   }
@@ -101,10 +112,12 @@ const historyIndex = ref(-1)
 const maxHistory = 50
 
 function snapshot() {
-  const serialized = JSON.stringify(layers.value.map(l => {
-    const { _img, ...rest } = l as any
-    return rest
-  }))
+  const serialized = JSON.stringify(
+    layers.value.map((l) => {
+      const { _img, ...rest } = l as any
+      return rest
+    }),
+  )
   if (historyIndex.value < history.value.length - 1) {
     history.value = history.value.slice(0, historyIndex.value + 1)
   }
@@ -118,7 +131,10 @@ async function restoreSnapshot(json: string) {
   for (const layer of parsed) {
     if (layer.type === 'image') {
       const img = new Image()
-      await new Promise<void>(r => { img.onload = () => r(); img.src = layer.src })
+      await new Promise<void>((r) => {
+        img.onload = () => r()
+        img.src = layer.src
+      })
       ;(layer as ImageLayer)._img = img
     }
   }
@@ -141,7 +157,8 @@ function redo() {
 function handleKeydown(e: KeyboardEvent) {
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
     e.preventDefault()
-    if (e.shiftKey) redo(); else undo()
+    if (e.shiftKey) redo()
+    else undo()
   }
   if (e.key === 'Delete' || e.key === 'Backspace') {
     if (selectedId.value && document.activeElement === document.body) {
@@ -151,18 +168,35 @@ function handleKeydown(e: KeyboardEvent) {
 }
 // --- Layer operations ---
 let idCounter = 0
-function genId() { return `layer_${++idCounter}_${Date.now()}` }
+function genId() {
+  return `layer_${++idCounter}_${Date.now()}`
+}
 
 async function addImageLayer(file: File) {
   const url = URL.createObjectURL(file)
   const img = new Image()
-  await new Promise<void>((resolve) => { img.onload = () => resolve(); img.src = url })
-  const scale = Math.min(props.width * 0.6 / img.width, props.height * 0.6 / img.height, 1)
+  await new Promise<void>((resolve) => {
+    img.onload = () => resolve()
+    img.src = url
+  })
+  const scale = Math.min((props.width * 0.6) / img.width, (props.height * 0.6) / img.height, 1)
   const layer: ImageLayer = {
-    id: genId(), type: 'image', name: file.name.replace(/\.[^.]+$/, ''),
-    x: (props.width - img.width * scale) / 2, y: (props.height - img.height * scale) / 2,
-    rotation: 0, scaleX: scale, scaleY: scale, visible: true,
-    src: url, width: img.width, height: img.height, opacity: 1, stroke: '', strokeWidth: 0, _img: img,
+    id: genId(),
+    type: 'image',
+    name: file.name.replace(/\.[^.]+$/, ''),
+    x: (props.width - img.width * scale) / 2,
+    y: (props.height - img.height * scale) / 2,
+    rotation: 0,
+    scaleX: scale,
+    scaleY: scale,
+    visible: true,
+    src: url,
+    width: img.width,
+    height: img.height,
+    opacity: 1,
+    stroke: '',
+    strokeWidth: 0,
+    _img: img,
   }
   layers.value.push(layer)
   selectedId.value = layer.id
@@ -171,12 +205,25 @@ async function addImageLayer(file: File) {
 
 function addTextLayer(text = '双击编辑文字') {
   const layer: TextLayer = {
-    id: genId(), type: 'text', name: `文字 ${layers.value.filter(l => l.type === 'text').length + 1}`,
-    x: props.width * 0.2, y: props.height * 0.4,
-    rotation: 0, scaleX: 1, scaleY: 1, visible: true,
-    text, fontSize: Math.round(props.height * 0.08), fontFamily: 'sans-serif',
-    fill: '#ffffff', stroke: '#000000', strokeWidth: 0,
-    align: 'left', bold: true, italic: false, underline: false,
+    id: genId(),
+    type: 'text',
+    name: `文字 ${layers.value.filter((l) => l.type === 'text').length + 1}`,
+    x: props.width * 0.2,
+    y: props.height * 0.4,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+    visible: true,
+    text,
+    fontSize: Math.round(props.height * 0.08),
+    fontFamily: 'sans-serif',
+    fill: '#ffffff',
+    stroke: '#000000',
+    strokeWidth: 0,
+    align: 'left',
+    bold: true,
+    italic: false,
+    underline: false,
   }
   layers.value.push(layer)
   selectedId.value = layer.id
@@ -184,7 +231,7 @@ function addTextLayer(text = '双击编辑文字') {
 }
 
 function removeLayer(id: string) {
-  const idx = layers.value.findIndex(l => l.id === id)
+  const idx = layers.value.findIndex((l) => l.id === id)
   if (idx < 0) return
   const layer = layers.value[idx]
   if (layer.type === 'image') URL.revokeObjectURL(layer.src)
@@ -194,11 +241,14 @@ function removeLayer(id: string) {
 }
 
 async function replaceLayerImage(id: string, blob: Blob) {
-  const layer = layers.value.find(l => l.id === id)
+  const layer = layers.value.find((l) => l.id === id)
   if (!layer || layer.type !== 'image') return
   const url = URL.createObjectURL(blob)
   const img = new Image()
-  await new Promise<void>(r => { img.onload = () => r(); img.src = url })
+  await new Promise<void>((r) => {
+    img.onload = () => r()
+    img.src = url
+  })
   URL.revokeObjectURL(layer.src)
   layer.src = url
   layer._img = img
@@ -206,7 +256,7 @@ async function replaceLayerImage(id: string, blob: Blob) {
 }
 
 function moveLayer(id: string, direction: 'up' | 'down') {
-  const idx = layers.value.findIndex(l => l.id === id)
+  const idx = layers.value.findIndex((l) => l.id === id)
   if (idx < 0) return
   const target = direction === 'up' ? idx + 1 : idx - 1
   if (target < 0 || target >= layers.value.length) return
@@ -218,8 +268,8 @@ function moveLayer(id: string, direction: 'up' | 'down') {
 }
 
 function reorderLayer(fromId: string, toId: string) {
-  const fromIdx = layers.value.findIndex(l => l.id === fromId)
-  const toIdx = layers.value.findIndex(l => l.id === toId)
+  const fromIdx = layers.value.findIndex((l) => l.id === fromId)
+  const toIdx = layers.value.findIndex((l) => l.id === toId)
   if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return
   const [item] = layers.value.splice(fromIdx, 1)
   layers.value.splice(toIdx, 0, item)
@@ -254,18 +304,23 @@ function handleNodeClick(id: string) {
 }
 
 function handleDragEnd(id: string, e: any) {
-  const layer = layers.value.find(l => l.id === id)
-  if (layer) { layer.x = e.target.x(); layer.y = e.target.y() }
+  const layer = layers.value.find((l) => l.id === id)
+  if (layer) {
+    layer.x = e.target.x()
+    layer.y = e.target.y()
+  }
   snapshot()
 }
 
 function handleTransformEnd(id: string, e: any) {
   const node = e.target
-  const layer = layers.value.find(l => l.id === id)
+  const layer = layers.value.find((l) => l.id === id)
   if (layer) {
-    layer.x = node.x(); layer.y = node.y()
+    layer.x = node.x()
+    layer.y = node.y()
     layer.rotation = node.rotation()
-    layer.scaleX = node.scaleX(); layer.scaleY = node.scaleY()
+    layer.scaleX = node.scaleX()
+    layer.scaleY = node.scaleY()
   }
   snapshot()
 }
@@ -275,7 +330,10 @@ function updateTransformer() {
   if (!tr) return
   const stage = stageRef.value?.getStage()
   if (!stage) return
-  if (!selectedId.value) { tr.nodes([]); return }
+  if (!selectedId.value) {
+    tr.nodes([])
+    return
+  }
   const node = stage.findOne(`#${selectedId.value}`)
   tr.nodes(node ? [node] : [])
 }
@@ -322,24 +380,42 @@ const canRedo = computed(() => historyIndex.value < history.value.length - 1)
 
 // --- Serialization (for IDB + export/import) ---
 interface SerializedLayer {
-  id: string; type: LayerType; x: number; y: number; rotation: number
-  scaleX: number; scaleY: number; visible: boolean; name: string
-  stroke?: string; strokeWidth?: number
+  id: string
+  type: LayerType
+  x: number
+  y: number
+  rotation: number
+  scaleX: number
+  scaleY: number
+  visible: boolean
+  name: string
+  stroke?: string
+  strokeWidth?: number
   // image
-  src?: string; width?: number; height?: number; opacity?: number; dataUrl?: string
+  src?: string
+  width?: number
+  height?: number
+  opacity?: number
+  dataUrl?: string
   // text
-  text?: string; fontSize?: number; fontFamily?: string; fill?: string
-  align?: string; bold?: boolean
-  italic?: boolean; underline?: boolean
+  text?: string
+  fontSize?: number
+  fontFamily?: string
+  fill?: string
+  align?: string
+  bold?: boolean
+  italic?: boolean
+  underline?: boolean
 }
 
 function serializeLayers(): SerializedLayer[] {
-  return layers.value.map(l => {
+  return layers.value.map((l) => {
     const { _img, ...rest } = l as any
     if (l.type === 'image') {
       // Convert blob URL to dataURL for persistence
       const canvas = document.createElement('canvas')
-      canvas.width = l.width; canvas.height = l.height
+      canvas.width = l.width
+      canvas.height = l.height
       const ctx = canvas.getContext('2d')!
       if (_img) ctx.drawImage(_img, 0, 0)
       return { ...rest, dataUrl: canvas.toDataURL() }
@@ -354,9 +430,23 @@ async function deserializeLayers(data: SerializedLayer[]): Promise<EditorLayer[]
     if (item.type === 'image') {
       const src = item.dataUrl || item.src || ''
       const img = new Image()
-      await new Promise<void>(r => { img.onload = () => r(); img.onerror = () => r(); img.src = src })
+      await new Promise<void>((r) => {
+        img.onload = () => r()
+        img.onerror = () => r()
+        img.src = src
+      })
       const url = item.dataUrl ? src : item.src!
-      result.push({ ...item, type: 'image', src: url, width: item.width!, height: item.height!, opacity: item.opacity ?? 1, stroke: item.stroke ?? '', strokeWidth: item.strokeWidth ?? 0, _img: img } as ImageLayer)
+      result.push({
+        ...item,
+        type: 'image',
+        src: url,
+        width: item.width!,
+        height: item.height!,
+        opacity: item.opacity ?? 1,
+        stroke: item.stroke ?? '',
+        strokeWidth: item.strokeWidth ?? 0,
+        _img: img,
+      } as ImageLayer)
     } else {
       result.push(item as unknown as TextLayer)
     }
@@ -397,33 +487,111 @@ async function importJSON(json: string) {
   }
 }
 
-defineExpose({ layers, selectedId, addImageLayer, addTextLayer, removeLayer, moveLayer, reorderLayer, exportImage, undo, redo, canUndo, canRedo, exportJSON, importJSON, replaceLayerImage })
+defineExpose({
+  layers,
+  selectedId,
+  addImageLayer,
+  addTextLayer,
+  removeLayer,
+  moveLayer,
+  reorderLayer,
+  exportImage,
+  undo,
+  redo,
+  canUndo,
+  canRedo,
+  exportJSON,
+  importJSON,
+  replaceLayerImage,
+})
 </script>
 
 <template>
-  <div ref="containerRef" class="canvas-editor manage-checkerboard">
-    <div class="canvas-stage-wrap" :style="{ width: `${stagePixelW }px`, height: `${stagePixelH }px` }">
-      <v-stage ref="stageRef" :config="{ width: stagePixelW, height: stagePixelH, scaleX: stageScale, scaleY: stageScale }" @click="handleStageClick" @tap="handleStageClick">
+  <div
+    ref="containerRef"
+    class="canvas-editor manage-checkerboard"
+  >
+    <div
+      class="canvas-stage-wrap"
+      :style="{ width: `${stagePixelW}px`, height: `${stagePixelH}px` }"
+    >
+      <v-stage
+        ref="stageRef"
+        :config="{ width: stagePixelW, height: stagePixelH, scaleX: stageScale, scaleY: stageScale }"
+        @click="handleStageClick"
+        @tap="handleStageClick"
+      >
         <v-layer>
-          <v-rect v-if="!bgImageObj" :config="{ x: 0, y: 0, width: props.width, height: props.height, listening: false, ...bgFill }" />
-          <v-image v-if="bgImageObj" :config="{ x: 0, y: 0, width: props.width, height: props.height, image: bgImageObj, listening: false }" />
+          <v-rect
+            v-if="!bgImageObj"
+            :config="{ x: 0, y: 0, width: props.width, height: props.height, listening: false, ...bgFill }"
+          />
+          <v-image
+            v-if="bgImageObj"
+            :config="{ x: 0, y: 0, width: props.width, height: props.height, image: bgImageObj, listening: false }"
+          />
         </v-layer>
         <v-layer>
-          <template v-for="(layer, idx) in layers" :key="layer.id">
+          <template
+            v-for="(layer, idx) in layers"
+            :key="layer.id"
+          >
             <v-image
               v-if="layer.type === 'image' && layer.visible"
-              :config="{ id: layer.id, x: layer.x, y: layer.y, width: layer.width, height: layer.height, image: layer._img, rotation: layer.rotation, scaleX: layer.scaleX, scaleY: layer.scaleY, opacity: layer.opacity, stroke: layer.stroke || undefined, strokeWidth: layer.strokeWidth, zIndex: idx, draggable: true }"
-              @click="handleNodeClick(layer.id)" @tap="handleNodeClick(layer.id)"
-              @dragend="handleDragEnd(layer.id, $event)" @transformend="handleTransformEnd(layer.id, $event)"
+              :config="{
+                id: layer.id,
+                x: layer.x,
+                y: layer.y,
+                width: layer.width,
+                height: layer.height,
+                image: layer._img,
+                rotation: layer.rotation,
+                scaleX: layer.scaleX,
+                scaleY: layer.scaleY,
+                opacity: layer.opacity,
+                stroke: layer.stroke || undefined,
+                strokeWidth: layer.strokeWidth,
+                zIndex: idx,
+                draggable: true,
+              }"
+              @click="handleNodeClick(layer.id)"
+              @tap="handleNodeClick(layer.id)"
+              @dragend="handleDragEnd(layer.id, $event)"
+              @transformend="handleTransformEnd(layer.id, $event)"
             />
             <v-text
               v-if="layer.type === 'text' && layer.visible"
-              :config="{ id: layer.id, x: layer.x, y: layer.y, text: layer.text, fontSize: layer.fontSize, fontFamily: layer.fontFamily, fontStyle: [layer.bold ? 'bold' : '', layer.italic ? 'italic' : ''].filter(Boolean).join(' ') || 'normal', textDecoration: layer.underline ? 'underline' : '', fill: layer.fill, stroke: layer.stroke, strokeWidth: layer.strokeWidth, fillAfterStrokeEnabled: true, align: layer.align, rotation: layer.rotation, scaleX: layer.scaleX, scaleY: layer.scaleY, zIndex: idx, draggable: true }"
-              @click="handleNodeClick(layer.id)" @tap="handleNodeClick(layer.id)"
-              @dragend="handleDragEnd(layer.id, $event)" @transformend="handleTransformEnd(layer.id, $event)"
+              :config="{
+                id: layer.id,
+                x: layer.x,
+                y: layer.y,
+                text: layer.text,
+                fontSize: layer.fontSize,
+                fontFamily: layer.fontFamily,
+                fontStyle:
+                  [layer.bold ? 'bold' : '', layer.italic ? 'italic' : ''].filter(Boolean).join(' ') || 'normal',
+                textDecoration: layer.underline ? 'underline' : '',
+                fill: layer.fill,
+                stroke: layer.stroke,
+                strokeWidth: layer.strokeWidth,
+                fillAfterStrokeEnabled: true,
+                align: layer.align,
+                rotation: layer.rotation,
+                scaleX: layer.scaleX,
+                scaleY: layer.scaleY,
+                zIndex: idx,
+                draggable: true,
+              }"
+              @click="handleNodeClick(layer.id)"
+              @tap="handleNodeClick(layer.id)"
+              @dragend="handleDragEnd(layer.id, $event)"
+              @transformend="handleTransformEnd(layer.id, $event)"
             />
           </template>
-          <v-transformer ref="transformerRef" :config="{ rotateEnabled: true, enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'] }" />
+          <v-transformer
+            ref="transformerRef"
+            :config="{ rotateEnabled: true, enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'] }"
+          />
         </v-layer>
       </v-stage>
     </div>
@@ -442,7 +610,7 @@ defineExpose({ layers, selectedId, addImageLayer, addTextLayer, removeLayer, mov
   padding: 12px;
 }
 .canvas-stage-wrap {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   overflow: hidden;
 }

@@ -1,6 +1,7 @@
 import type { InjectionKey, Ref } from 'vue'
-import type { UserPagesSettingsV1 } from '../types'
 import { inject, provide, shallowReadonly } from 'vue'
+
+import type { UserPagesSettingsV1 } from '../types'
 
 export type PublicUserPageStatus = 'idle' | 'loading' | 'not-found' | 'error' | 'ready'
 

@@ -1,7 +1,8 @@
-import type { EventModel } from '@/api/api-models'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
+
+import type { EventModel } from '@/api/api-models'
 
 const account = ref({ id: 1001 })
 const startMock = vi.fn(async () => ({ success: true, message: '' }))
@@ -10,7 +11,7 @@ const stopMock = vi.fn()
 const EVENT_NAMES = ['danmaku', 'gift', 'sc', 'guard', 'enter', 'scDel', 'all', 'follow', 'like'] as const
 
 function createListeners() {
-  return Object.fromEntries(EVENT_NAMES.map(name => [name, []]))
+  return Object.fromEntries(EVENT_NAMES.map((name) => [name, []]))
 }
 
 class MockDanmakuClient {

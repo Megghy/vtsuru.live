@@ -1,13 +1,14 @@
 <script setup lang="ts">
+import { Bot24Regular } from '@vicons/fluent'
+import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/ionicons5'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/ionicons5'
-import { Bot24Regular } from '@vicons/fluent'
+
 import { ThemeType } from '@/api/api-models'
-import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
-import { isDarkMode } from '@/shared/utils'
-import { usePersistedStorage } from '@/shared/storage/persist'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
+import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
+import { isDarkMode } from '@/shared/utils'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 defineProps<{
@@ -51,13 +52,22 @@ async function goToUserPage(accountName?: string) {
         :title="siderCollapsed ? '展开侧栏' : '收起侧栏'"
         @click="siderCollapsed = !siderCollapsed"
       >
-        <component :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline" class="manage-header__icon" />
+        <component
+          :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
+          class="manage-header__icon"
+        />
       </button>
-      <img class="manage-header__logo" :src="logoUrl" alt="VTSURU" decoding="async">
-      <div class="manage-header__brand">
-        VTSURU CENTER
-      </div>
-      <div v-if="accountName" class="manage-header__account">
+      <img
+        class="manage-header__logo"
+        :src="logoUrl"
+        alt="VTSURU"
+        decoding="async"
+      />
+      <div class="manage-header__brand">VTSURU CENTER</div>
+      <div
+        v-if="accountName"
+        class="manage-header__account"
+      >
         / {{ accountName }}
       </div>
     </div>
@@ -69,7 +79,10 @@ async function goToUserPage(accountName?: string) {
         title="VTsuru 助手"
         @click="openAssistant"
       >
-        <component :is="Bot24Regular" class="manage-header__icon" />
+        <component
+          :is="Bot24Regular"
+          class="manage-header__icon"
+        />
         <span class="manage-header__assistant-text">助手</span>
       </button>
 
@@ -81,7 +94,10 @@ async function goToUserPage(accountName?: string) {
         :title="themeToggleTitle"
         @click="toggleTheme"
       >
-        <component :is="themeToggleIcon" class="manage-header__icon" />
+        <component
+          :is="themeToggleIcon"
+          class="manage-header__icon"
+        />
       </button>
 
       <button
@@ -160,7 +176,9 @@ async function goToUserPage(accountName?: string) {
   align-items: center;
   gap: 5px;
   cursor: pointer;
-  transition: filter 120ms ease, transform 120ms ease;
+  transition:
+    filter 120ms ease,
+    transform 120ms ease;
 }
 
 .manage-header__assistant:hover {
@@ -188,7 +206,10 @@ async function goToUserPage(accountName?: string) {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
 }
 
 .manage-header__sider-toggle {
@@ -219,13 +240,16 @@ async function goToUserPage(accountName?: string) {
   height: 32px;
   padding: 0 10px;
   border-radius: 10px;
-  border: 1px solid var(--vtsuru-border);
-  background: transparent;
+  border: 1px solid var(--vtsuru-border-hover);
+  background: var(--vtsuru-bg-muted);
   color: var(--vtsuru-fg);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
 }
 
 .manage-header__button:hover {

@@ -1,12 +1,29 @@
 <script setup lang="ts">
-import type { VideoCollectDetail, VideoCollectVideo, VideoInfo } from '@/api/api-models'
 import { Clock24Regular, Person24Regular, Question24Regular } from '@vicons/fluent'
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
 import {
-  NAlert, NButton, NCard, NDivider, NEllipsis, NIcon, NImage, NLayoutContent, NList, NListItem, NProgress, NResult, NFlex, NText, NTooltip, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NDivider,
+  NEllipsis,
+  NIcon,
+  NImage,
+  NLayoutContent,
+  NList,
+  NListItem,
+  NProgress,
+  NResult,
+  NFlex,
+  NText,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+
+import type { VideoCollectDetail, VideoCollectVideo, VideoInfo } from '@/api/api-models'
 import { VideoStatus } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { VIDEO_COLLECT_API_URL } from '@/shared/config'
@@ -21,16 +38,16 @@ const { width } = useElementSize(card)
 
 const videoDetail = ref<VideoCollectDetail | null>(await get())
 const acceptVideos = computed(() => {
-  return videoDetail.value?.videos.filter(v => v.info.status == VideoStatus.Accepted)
+  return videoDetail.value?.videos.filter((v) => v.info.status == VideoStatus.Accepted)
 })
 const watchedVideos = computed(() => {
-  return videoDetail.value?.videos.filter(v => v.video.watched == true) ?? []
+  return videoDetail.value?.videos.filter((v) => v.video.watched == true) ?? []
 })
 const watchedTime = computed(() => {
-  return new List(watchedVideos.value).Sum(v => v?.video.length ?? 0)
+  return new List(watchedVideos.value).Sum((v) => v?.video.length ?? 0)
 })
 const totalTime = computed(() => {
-  return new List(videoDetail.value?.videos).Sum(v => v?.video.length ?? 0)
+  return new List(videoDetail.value?.videos).Sum((v) => v?.video.length ?? 0)
 })
 
 async function get() {
@@ -52,8 +69,8 @@ function onClick(video: VideoCollectVideo) {
     video.watched = true
   }
   // 将视频对象移动到数组的末尾
-  const index = videoDetail.value?.videos.findIndex(v => v.video == video) ?? -1
-  const tempVideo = videoDetail.value?.videos[index] ?? ({} as { info: VideoInfo, video: VideoCollectVideo })
+  const index = videoDetail.value?.videos.findIndex((v) => v.video == video) ?? -1
+  const tempVideo = videoDetail.value?.videos[index] ?? ({} as { info: VideoInfo; video: VideoCollectVideo })
   if (index > -1) {
     videoDetail.value?.videos.splice(index, 1)
     videoDetail.value?.videos.push(tempVideo)
@@ -103,9 +120,7 @@ function formatSecondsToTime(seconds: number): string {
       v-else
       style="width: 600px; max-width: 90vw; top: 30px; margin: 0 auto"
     >
-      <template #header>
-        视频征集表 | {{ videoDetail.table.name }}
-      </template>
+      <template #header> 视频征集表 | {{ videoDetail.table.name }} </template>
       <template #header-extra>
         <NTooltip>
           <template #trigger>
@@ -129,13 +144,9 @@ function formatSecondsToTime(seconds: number): string {
         justify="center"
         :size="5"
       >
-        共 [<NText depth="3">
-          {{ formatSecondsToTime(totalTime) }}
-        </NText>]
+        共 [<NText depth="3"> {{ formatSecondsToTime(totalTime) }} </NText>]
         <NDivider vertical />
-        已观看 [<NText type="success">
-          {{ formatSecondsToTime(watchedTime) }}
-        </NText>]
+        已观看 [<NText type="success"> {{ formatSecondsToTime(watchedTime) }} </NText>]
       </NFlex>
       <NDivider>
         共 {{ acceptVideos?.length }} 条

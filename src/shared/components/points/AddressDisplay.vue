@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { AddressInfo } from '@/api/api-models'
-import { NFlex, NTag, NText } from 'naive-ui';
+import { NFlex, NTag, NText } from 'naive-ui'
 import { ref } from 'vue'
+
+import type { AddressInfo } from '@/api/api-models'
 
 const { size = 'default' } = defineProps<{
   address: AddressInfo | undefined
@@ -29,17 +30,11 @@ const elementRef = ref()
     >
       <NText v-if="size !== 'small'">
         {{ address.province }}
-        <NText depth="3">
-          省
-        </NText>
+        <NText depth="3"> 省 </NText>
         {{ address.city }}
-        <NText depth="3">
-          市
-        </NText>
+        <NText depth="3"> 市 </NText>
         {{ address.district }}
-        <NText depth="3">
-          区
-        </NText>
+        <NText depth="3"> 区 </NText>
         {{ address.street }}
       </NText>
       <NText depth="3">

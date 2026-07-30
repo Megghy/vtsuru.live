@@ -1,6 +1,7 @@
-import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+
+import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
@@ -42,19 +43,11 @@ export interface MusicRequestSettings {
 }
 
 export const useMusicRequestProvider = defineStore('MusicRequest', () => {
-  const waitingMusics = usePersistedStorage<WaitMusicInfo[]>(
-    'Setting.MusicRequest.Waiting',
-    [],
-  )
+  const waitingMusics = usePersistedStorage<WaitMusicInfo[]>('Setting.MusicRequest.Waiting', [])
   /** 点歌历史 (本地记录, 最多保留 200 条) */
-  const history = usePersistedStorage<MusicHistoryEntry[]>(
-    'Setting.MusicRequest.History',
-    [],
-  )
+  const history = usePersistedStorage<MusicHistoryEntry[]>('Setting.MusicRequest.History', [])
   const originMusics = ref<SongsInfo[]>([])
-  const aplayerMusics = computed(() =>
-    originMusics.value.map(m => songToMusic(m)),
-  )
+  const aplayerMusics = computed(() => originMusics.value.map((m) => songToMusic(m)))
   const currentMusic = ref<Music>({
     id: -1,
     title: '',
@@ -111,24 +104,15 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   }
 
   function addWaitingMusic(info: WaitMusicInfo) {
-    if (
-      (settings.value.orderMusicFirst && !isPlayingOrderMusic.value)
-      || aplayerRef.value?.audio.paused == true
-    ) {
+    if ((settings.value.orderMusicFirst && !isPlayingOrderMusic.value) || aplayerRef.value?.audio.paused == true) {
       playMusic(info.music)
       isPlayingOrderMusic.value = true
       pushHistory(info, 'played')
-      console.log(
-        `正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`,
-      )
-      message.success(
-        `正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`,
-      )
+      console.log(`正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`)
+      message.success(`正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`)
     } else {
       waitingMusics.value.push(info)
-      message.success(
-        `[${info.from.name}] 点了一首 ${info.music.name} - ${info.music.author?.join('/')}`,
-      )
+      message.success(`[${info.from.name}] 点了一首 ${info.music.name} - ${info.music.author?.join('/')}`)
     }
   }
   function onMusicEnd() {
@@ -183,10 +167,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       id: s.id,
       title: s.name,
       artist: s.author?.join('/'),
-      src:
-        s.from == SongFrom.Netease
-          ? `https://music.163.com/song/media/outer/url?id=${s.id}.mp3`
-          : s.url,
+      src: s.from == SongFrom.Netease ? `https://music.163.com/song/media/outer/url?id=${s.id}.mp3` : s.url,
       pic: s.cover ?? '',
       lrc: '',
     }

@@ -1,5 +1,6 @@
 import { fetch } from '@tauri-apps/plugin-http'
 import { error } from '@tauri-apps/plugin-log'
+
 import { QueryBiliAPI } from './utils'
 
 export async function checkLoginStatusAsync(): Promise<boolean> {
@@ -13,7 +14,7 @@ export async function checkLoginStatusAsync(): Promise<boolean> {
 export async function getUidAsync(): Promise<number> {
   const url = 'https://api.live.bilibili.com/xlive/web-ucenter/user/get_user_info'
   const response = await fetch(url)
-  const json = await response.json() as { data?: { uid?: number } }
+  const json = (await response.json()) as { data?: { uid?: number } }
 
   if (json.data && typeof json.data.uid === 'number') {
     return json.data.uid
@@ -39,7 +40,7 @@ export async function getLoginUrlAsync(): Promise<LoginUrlMessage> {
     error(`无法获取B站登陆二维码: ${result}`)
     throw new Error('获取二维码地址失败')
   }
-  return await response.json() as LoginUrlMessage
+  return (await response.json()) as LoginUrlMessage
 }
 
 export async function getLoginUrlDataAsync(): Promise<{
@@ -52,12 +53,12 @@ export async function getLoginUrlDataAsync(): Promise<{
   }
   return message.data
 }
-type QRCodeLoginInfo
-  = | { status: 'expired' }
-    | { status: 'unknown' }
-    | { status: 'scanned' }
-    | { status: 'waiting' }
-    | { status: 'confirmed', cookie: string, refresh_token: string }
+type QRCodeLoginInfo =
+  | { status: 'expired' }
+  | { status: 'unknown' }
+  | { status: 'scanned' }
+  | { status: 'waiting' }
+  | { status: 'confirmed'; cookie: string; refresh_token: string }
 export async function getLoginInfoAsync(qrcodeKey: string): Promise<QRCodeLoginInfo> {
   const url = `https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key=${qrcodeKey}&source=main-fe-header`
   const response = await QueryBiliAPI(url)
@@ -90,7 +91,15 @@ export async function getLoginInfoAsync(qrcodeKey: string): Promise<QRCodeLoginI
 
 // Cookie 属性名 (非真实 Cookie 键值), 需在解析时跳过
 const COOKIE_ATTRIBUTES = new Set([
-  'expires', 'max-age', 'domain', 'path', 'secure', 'httponly', 'samesite', 'priority', 'partitioned',
+  'expires',
+  'max-age',
+  'domain',
+  'path',
+  'secure',
+  'httponly',
+  'samesite',
+  'priority',
+  'partitioned',
 ])
 
 // 从合并的 set-cookie 头中精确提取 name=value 对。

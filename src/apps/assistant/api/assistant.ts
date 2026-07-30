@@ -1,6 +1,7 @@
-import { QueryGetAPI, QueryGetPaginationAPI, QueryPostAPI } from '@/api/query'
 import { cookie } from '@/api/auth'
+import { QueryGetAPI, QueryGetPaginationAPI, QueryPostAPI } from '@/api/query'
 import { BASE_API_URL, mapToCurrentAPI } from '@/shared/config'
+
 import type { ActionStatus, ActionRisk } from '../schemas/assistant'
 
 const ASSISTANT_API_URL = `${BASE_API_URL}assistant/`
@@ -21,7 +22,7 @@ export interface EditableField {
   before?: string
   /** text(默认) / textarea / time / number / tags(逗号分隔) / select */
   type: 'text' | 'textarea' | 'time' | 'number' | 'tags' | 'select'
-  options?: Array<{ label: string, value: string }>
+  options?: Array<{ label: string; value: string }>
 }
 
 /** 单条操作预览项 (新增/修改/删除), 与后端 AssistantPreviewItem 对应 */
@@ -99,7 +100,13 @@ export interface StreamHandlers {
   onText?: (delta: string) => void
   onTool?: (tool: AssistantToolEvent) => void
   onProposal?: (p: AssistantProposal) => void
-  onDone?: (e: { conversationId: number; messageId: number; userMessageId?: number; title?: string; usage?: AssistantTokenUsage }) => void
+  onDone?: (e: {
+    conversationId: number
+    messageId: number
+    userMessageId?: number
+    title?: string
+    usage?: AssistantTokenUsage
+  }) => void
 }
 
 /** 会话列表项 */
@@ -175,16 +182,34 @@ export async function streamMessage(
 
   // SSE 帧以空行分隔, 每帧形如 "data: {json}"
   const handleFrame = (frame: string) => {
-    const line = frame.split('\n').find(l => l.startsWith('data:'))
+    const line = frame.split('\n').find((l) => l.startsWith('data:'))
     if (!line) return
     const ev = JSON.parse(line.slice(5).trim()) as AssistantStreamEvent
     switch (ev.type) {
-      case 'reasoning': if (ev.delta) handlers.onReasoning?.(ev.delta); break
-      case 'text': if (ev.delta) handlers.onText?.(ev.delta); break
-      case 'tool': if (ev.tool) handlers.onTool?.(ev.tool); break
-      case 'proposal': if (ev.proposal) handlers.onProposal?.(ev.proposal); break
-      case 'done': handlers.onDone?.({ conversationId: ev.conversationId ?? 0, messageId: ev.messageId ?? 0, userMessageId: ev.userMessageId, title: ev.title, usage: ev.usage }); break
-      case 'error': errorMsg = ev.message ?? 'AI 服务异常'; break
+      case 'reasoning':
+        if (ev.delta) handlers.onReasoning?.(ev.delta)
+        break
+      case 'text':
+        if (ev.delta) handlers.onText?.(ev.delta)
+        break
+      case 'tool':
+        if (ev.tool) handlers.onTool?.(ev.tool)
+        break
+      case 'proposal':
+        if (ev.proposal) handlers.onProposal?.(ev.proposal)
+        break
+      case 'done':
+        handlers.onDone?.({
+          conversationId: ev.conversationId ?? 0,
+          messageId: ev.messageId ?? 0,
+          userMessageId: ev.userMessageId,
+          title: ev.title,
+          usage: ev.usage,
+        })
+        break
+      case 'error':
+        errorMsg = ev.message ?? 'AI 服务异常'
+        break
     }
   }
 
@@ -251,7 +276,9 @@ export async function rejectAction(proposalId: string): Promise<AssistantProposa
 
 /** 设定提案定时执行 (scheduledTime: Unix 毫秒, UTC) */
 export async function scheduleAction(proposalId: string, scheduledTime: number): Promise<AssistantProposal> {
-  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/schedule`, { scheduledTime })
+  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/schedule`, {
+    scheduledTime,
+  })
   if (resp.code !== 200) throw new Error(resp.message || '定时设定失败')
   return resp.data
 }

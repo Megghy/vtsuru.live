@@ -1,12 +1,13 @@
-import { NButton, NFlex, NText } from 'naive-ui';
+import { NButton, NFlex, NText } from 'naive-ui'
 import { h } from 'vue'
+
 import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { useNotificationStore } from '@/store/useNotificationStore'
 import { apiFail, BASE_API_URL, isTauri } from '@/shared/config'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
 import { createNaiveUIApi } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
+import { useNotificationStore } from '@/store/useNotificationStore'
 
 let currentVersion: string
 let isHaveNewVersion = false
@@ -85,51 +86,46 @@ function InitVersionCheck() {
     if (isHaveNewVersion) {
       return
     }
-    QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`).then(
-      (keepCheckData) => {
-        if (
-          keepCheckData.code == 200
-          && keepCheckData.data != currentVersion
-        ) {
-          isHaveNewVersion = true
-          currentVersion = keepCheckData.data
-          void persistedSetItemRaw('Version', currentVersion)
-          console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
+    QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`).then((keepCheckData) => {
+      if (keepCheckData.code == 200 && keepCheckData.data != currentVersion) {
+        isHaveNewVersion = true
+        currentVersion = keepCheckData.data
+        void persistedSetItemRaw('Version', currentVersion)
+        console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
 
-          if (window.$route.meta.forceReload || isTauri()) {
-            location.reload()
-          } else {
-            const n = notification.info({
-              title: '发现新的版本更新',
-              content: '是否现在刷新?',
-              meta: () => h(NText, { depth: 3 }, () => currentVersion),
-              action: () =>
-                h(NFlex, null, () => [
-                  h(
-                    NButton,
-                    {
-                      text: true,
-                      type: 'primary',
-                      onClick: () => location.reload(),
-                      size: 'small',
-                    },
-                    { default: () => '刷新' },
-                  ),
-                  h(
-                    NButton,
-                    {
-                      text: true,
-                      onClick: () => n.destroy(),
-                      size: 'small',
-                    },
-                    { default: () => '稍后' },
-                  ),
-                ]),
-            })
-          }
+        if (window.$route.meta.forceReload || isTauri()) {
+          location.reload()
+        } else {
+          const n = notification.info({
+            title: '发现新的版本更新',
+            content: '是否现在刷新?',
+            meta: () => h(NText, { depth: 3 }, () => currentVersion),
+            action: () =>
+              h(NFlex, null, () => [
+                h(
+                  NButton,
+                  {
+                    text: true,
+                    type: 'primary',
+                    onClick: () => location.reload(),
+                    size: 'small',
+                  },
+                  { default: () => '刷新' },
+                ),
+                h(
+                  NButton,
+                  {
+                    text: true,
+                    onClick: () => n.destroy(),
+                    size: 'small',
+                  },
+                  { default: () => '稍后' },
+                ),
+              ]),
+          })
         }
-      },
-    )
+      }
+    })
   }, 60 * 1000)
 }
 async function InitTTS() {
@@ -140,7 +136,7 @@ async function InitTTS() {
     if (result.speechSynthesis) {
       EasySpeech.init({ maxTimeout: 5000, interval: 250 })
         .then(() => console.log('[SpeechSynthesis] 已加载tts服务'))
-        .catch(e => console.error(e))
+        .catch((e) => console.error(e))
     } else {
       console.log('[SpeechSynthesis] 当前浏览器不支持tts服务')
     }

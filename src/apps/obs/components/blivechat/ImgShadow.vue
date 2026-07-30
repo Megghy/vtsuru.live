@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
+
 import * as models from './models'
 
 const props = defineProps({
@@ -10,9 +11,12 @@ const props = defineProps({
 
 const showImgUrl = ref(props.imgUrl)
 
-watch(() => props.imgUrl, (val) => {
-  showImgUrl.value = val
-})
+watch(
+  () => props.imgUrl,
+  (val) => {
+    showImgUrl.value = val
+  },
+)
 
 function onLoadError() {
   if (showImgUrl.value !== models.DEFAULT_AVATAR_URL) {
@@ -26,7 +30,7 @@ function onLoadError() {
     class="no-transition"
     :height="height"
     :width="width"
-    style="background-color: transparent;"
+    style="background-color: transparent"
     loaded
   >
     <img
@@ -38,7 +42,7 @@ function onLoadError() {
       :src="showImgUrl"
       referrerpolicy="no-referrer"
       @error="onLoadError"
-    >
+    />
   </yt-img-shadow>
 </template>
 

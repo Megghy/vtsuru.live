@@ -1,5 +1,4 @@
 import antfu from '@antfu/eslint-config'
-import VueVine from '@vue-vine/eslint-config'
 import oxlint from 'eslint-plugin-oxlint'
 
 export default antfu(
@@ -56,6 +55,11 @@ export default antfu(
       'vue/no-v-html': 'off',
       'vue/require-default-prop': 'off',
       'vue/custom-event-name-casing': 'off',
+      'vue/html-closing-bracket-newline': 'off',
+      'vue/html-indent': 'off',
+      'vue/html-self-closing': 'off',
+      'vue/multiline-html-element-content-newline': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
       'ts/consistent-type-definitions': 'off',
 
       // TypeScript 相关规则
@@ -74,7 +78,7 @@ export default antfu(
       // 通用规则
       'no-console': 'off',
       'unused-imports/no-unused-vars': 'warn',
-      'eqeqeq': 'off', // 允许使用 == 和 !=
+      eqeqeq: 'off', // 允许使用 == 和 !=
       'no-eq-null': 'off', // 允许使用 == null
       '@typescript-eslint/strict-boolean-expressions': 'off', // 允许宽松的布尔表达式
       'prefer-template': 'off',
@@ -108,8 +112,6 @@ export default antfu(
       'jsonc/sort-keys': 'off', // 关闭 JSON key 排序要求
     },
   },
-  // 集成 VueVine 配置
-  ...VueVine(),
   // 集成 oxlint 配置 - 必须放在最后以禁用与 oxlint 冲突的 ESLint 规则
   oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 )

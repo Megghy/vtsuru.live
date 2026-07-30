@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
+import { MoreHorizontal24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { MoreHorizontal24Filled } from '@vicons/fluent'
-import {
-  NButton, NDropdown, NIcon,
-  NSpin, useMessage,
-} from 'naive-ui'
+import { NButton, NDropdown, NIcon, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+
 import { useAccount } from '@/api/account'
+import type { SongsInfo } from '@/api/api-models'
 import { FunctionTypes, SongFrom } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -26,7 +24,9 @@ const accountInfo = useAccount()
 const isLoading = ref(true)
 const showModal = ref(false)
 const songs = ref<SongsInfo[]>([])
-const songListUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/song-list` : '')
+const songListUrl = computed(() =>
+  accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/song-list` : '',
+)
 
 async function getSongs() {
   isLoading.value = true
@@ -48,13 +48,17 @@ function exportData() {
   const source = songs.value
   const from = (f: SongFrom) => {
     switch (f) {
-      case SongFrom.Custom: return '手动添加'
-      case SongFrom.Netease: return '网易云'
-      case SongFrom.FiveSing: return '5sing'
-      default: return '其他'
+      case SongFrom.Custom:
+        return '手动添加'
+      case SongFrom.Netease:
+        return '网易云'
+      case SongFrom.FiveSing:
+        return '5sing'
+      default:
+        return '其他'
     }
   }
-  const csvData = source.map(s => ({
+  const csvData = source.map((s) => ({
     id: s.id,
     名称: s.name,
     翻译名称: s.translateName,
@@ -68,7 +72,7 @@ function exportData() {
     链接: s.url,
   }))
   const text = objectsToCSV(csvData)
-  const BOM = new Uint8Array([0xEF, 0xBB, 0xBF])
+  const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
   const utf8array = new TextEncoder().encode(text)
   const fileName = `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`
   saveAs(new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }), fileName)
@@ -108,13 +112,24 @@ onMounted(getSongs)
     :links="[{ label: '展示页链接', value: songListUrl }]"
   >
     <template #action>
-      <NButton type="primary" @click="showModal = true">
+      <NButton
+        type="primary"
+        @click="showModal = true"
+      >
         添加歌曲
       </NButton>
-      <NButton :loading="isLoading" secondary @click="getSongs">
+      <NButton
+        :loading="isLoading"
+        secondary
+        @click="getSongs"
+      >
         刷新
       </NButton>
-      <NDropdown :options="moreActions" trigger="click" @select="handleMoreAction">
+      <NDropdown
+        :options="moreActions"
+        trigger="click"
+        @select="handleMoreAction"
+      >
         <NButton secondary>
           <template #icon>
             <NIcon :component="MoreHorizontal24Filled" />
@@ -125,8 +140,19 @@ onMounted(getSongs)
     </template>
   </ManagePageHeader>
 
-  <SongListAddSongModal v-model:show="showModal" :songs="songs" @added="onSongsAdded" />
+  <SongListAddSongModal
+    v-model:show="showModal"
+    :songs="songs"
+    @added="onSongsAdded"
+  />
 
-  <NSpin v-if="isLoading" show />
-  <SongList v-else :songs="songs" is-self />
+  <NSpin
+    v-if="isLoading"
+    show
+  />
+  <SongList
+    v-else
+    :songs="songs"
+    is-self
+  />
 </template>

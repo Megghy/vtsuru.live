@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NCollapse, NCollapseItem, NIcon } from 'naive-ui';
-import { computed } from 'vue'
 import { HelpCircleOutline, ChevronDownOutline } from '@vicons/ionicons5'
+import { NCollapse, NCollapseItem, NIcon } from 'naive-ui'
+import { computed } from 'vue'
+
 import BlockCard from '../BlockCard.vue'
 
 interface FAQItem {
@@ -17,12 +18,13 @@ interface BlockConfig {
   backgrounded?: boolean
 }
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
   return {
     accordion: typeof o.accordion === 'boolean' ? o.accordion : false,
     items: Array.isArray(o.items) ? o.items : [],
@@ -39,26 +41,44 @@ const items = computed(() => {
       q: typeof it?.q === 'string' ? it.q.trim() : '',
       a: typeof it?.a === 'string' ? it.a.trim() : '',
     }))
-    .filter(it => it.q.length > 0 || it.a.length > 0)
+    .filter((it) => it.q.length > 0 || it.a.length > 0)
 })
 </script>
 
 <template>
-  <BlockCard class="faq-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded">
+  <BlockCard
+    class="faq-card"
+    :framed="cfg.framed"
+    :backgrounded="cfg.backgrounded"
+  >
     <template #header>
-      <NFlex align="center" style="gap: 8px">
-        <NIcon size="18" depth="2">
+      <NFlex
+        align="center"
+        style="gap: 8px"
+      >
+        <NIcon
+          size="18"
+          depth="2"
+        >
           <HelpCircleOutline />
         </NIcon>
         <span>{{ cfg.title }}</span>
       </NFlex>
     </template>
 
-    <div v-if="items.length === 0" class="placeholder">
+    <div
+      v-if="items.length === 0"
+      class="placeholder"
+    >
       暂无内容
     </div>
 
-    <NCollapse v-else :accordion="cfg.accordion" class="faq-collapse" arrow-placement="right">
+    <NCollapse
+      v-else
+      :accordion="cfg.accordion"
+      class="faq-collapse"
+      arrow-placement="right"
+    >
       <template #arrow>
         <NIcon><ChevronDownOutline /></NIcon>
       </template>
@@ -122,6 +142,8 @@ const items = computed(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :deep(.faq-item) { transition: none; }
+  :deep(.faq-item) {
+    transition: none;
+  }
 }
 </style>

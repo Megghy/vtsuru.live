@@ -88,8 +88,7 @@ function removeImage(index: number) {
 }
 
 // 语音输入: Web Speech API, 把识别结果追加到输入框 (浏览器不支持则隐藏按钮)
-const SpeechRecognitionCtor =
-  (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 const speechSupported = !!SpeechRecognitionCtor
 const listening = ref(false)
 let recognition: any = null
@@ -114,23 +113,41 @@ function toggleSpeech() {
     for (let i = 0; i < e.results.length; i++) transcript += e.results[i][0].transcript
     text.value = speechBaseText + transcript
   }
-  recognition.onend = () => { listening.value = false }
-  recognition.onerror = () => { listening.value = false }
+  recognition.onend = () => {
+    listening.value = false
+  }
+  recognition.onerror = () => {
+    listening.value = false
+  }
 
   listening.value = true
   recognition.start()
 }
 
 onBeforeUnmount(() => recognition?.abort())
-
 </script>
 
 <template>
   <div class="composer">
-    <div v-if="images.length" class="composer__previews">
-      <div v-for="(img, i) in images" :key="i" class="composer__preview">
-        <img :src="img" alt="附件">
-        <button class="composer__preview-del" type="button" title="移除" @click="removeImage(i)">
+    <div
+      v-if="images.length"
+      class="composer__previews"
+    >
+      <div
+        v-for="(img, i) in images"
+        :key="i"
+        class="composer__preview"
+      >
+        <img
+          :src="img"
+          alt="附件"
+        />
+        <button
+          class="composer__preview-del"
+          type="button"
+          title="移除"
+          @click="removeImage(i)"
+        >
           <NIcon :component="Dismiss12Regular" />
         </button>
       </div>
@@ -160,7 +177,7 @@ onBeforeUnmount(() => recognition?.abort())
         multiple
         hidden
         @change="onPickFiles"
-      >
+      />
       <NTooltip v-if="speechSupported">
         <template #trigger>
           <NButton
@@ -218,29 +235,71 @@ onBeforeUnmount(() => recognition?.abort())
 </template>
 
 <style scoped>
-.composer { display: flex; flex-direction: column; gap: 8px; }
-.composer__row { display: flex; gap: 8px; align-items: flex-end; }
-.composer__input { flex: 1; min-width: 0; }
-.composer__btn, .composer__attach { flex: 0 0 auto; }
-.composer__mic--on { color: var(--vtsuru-brand, #23ade5); animation: composer-mic-pulse 1.4s ease-in-out infinite; }
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.composer__row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.composer__input {
+  flex: 1;
+  min-width: 0;
+}
+.composer__btn,
+.composer__attach {
+  flex: 0 0 auto;
+}
+.composer__mic--on {
+  color: var(--vtsuru-brand, #23ade5);
+  animation: composer-mic-pulse 1.4s ease-in-out infinite;
+}
 @keyframes composer-mic-pulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
-.composer__previews { display: flex; flex-wrap: wrap; gap: 8px; }
+.composer__previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .composer__preview {
-  position: relative; width: 56px; height: 56px;
-  border-radius: 8px; overflow: hidden;
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
   border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.2));
 }
-.composer__preview img { width: 100%; height: 100%; object-fit: cover; }
+.composer__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .composer__preview-del {
-  position: absolute; top: 0; right: 0;
-  width: 18px; height: 18px;
-  display: flex; align-items: center; justify-content: center;
-  border: none; border-bottom-left-radius: 6px;
-  background: rgba(0, 0, 0, 0.55); color: #fff;
-  font-size: 12px; cursor: pointer; padding: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-bottom-left-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
 }
 </style>

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { ForumModel, ForumTopicBaseModel } from '@/api/models/forum'
 import { ArrowReply24Filled, Chat24Regular, Delete24Filled, MoreVertical24Filled, Star24Filled } from '@vicons/fluent'
 import { SyncCircleSharp } from '@vicons/ionicons5'
-import { NButton, NDropdown, NFlex, NIcon, NTag, NText, NTime, NTooltip, useDialog, useThemeVars } from 'naive-ui';
+import { NButton, NDropdown, NFlex, NIcon, NTag, NText, NTime, NTooltip, useDialog, useThemeVars } from 'naive-ui'
 import { h } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { ForumModel, ForumTopicBaseModel } from '@/api/models/forum'
 import { useForumStore } from '@/store/useForumStore'
 
 const props = defineProps<{
@@ -96,9 +97,7 @@ function onDropdownSelect(key: string) {
           :color="themeVars.warningColor"
         />
       </NTag>
-      <NTag
-        size="small"
-      >
+      <NTag size="small">
         <template #icon>
           <NIcon :component="Chat24Regular" />
         </template>
@@ -125,9 +124,7 @@ function onDropdownSelect(key: string) {
           @{{ item.latestRepliedBy.name }}
         </span>
       </template>
-      <template v-else>
-        @{{ item.user?.name }} 发布于
-      </template>
+      <template v-else> @{{ item.user?.name }} 发布于 </template>
       <NTooltip>
         <template #trigger>
           <NTime

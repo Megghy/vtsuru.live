@@ -1,5 +1,3 @@
-import { asObject, optionalBoolean, optionalEnum, optionalFile, optionalNumber, optionalString } from './validationUtils'
-import type { ValidationErrors } from './validationUtils'
 import { isValidGoogleFontFamily } from '../googleFonts'
 import {
   isValidPageMaxWidth,
@@ -9,6 +7,15 @@ import {
   PAGE_SHADOW_LEVELS,
   PAGE_SPACING_LEVELS,
 } from '../themeConfig'
+import {
+  asObject,
+  optionalBoolean,
+  optionalEnum,
+  optionalFile,
+  optionalNumber,
+  optionalString,
+} from './validationUtils'
+import type { ValidationErrors } from './validationUtils'
 
 export function validateBlockPageTheme(theme: unknown, errors: ValidationErrors) {
   if (theme === undefined || theme === null) return
@@ -23,7 +30,15 @@ export function validateBlockPageTheme(theme: unknown, errors: ValidationErrors)
     return
   }
 
-  ;['primaryColor', 'backgroundColor', 'textColor', 'textColorLight', 'textColorDark', 'pageBackgroundColor', 'fontFamily'].forEach(key => optionalString(props, key, 'theme', themeErrors))
+  ;[
+    'primaryColor',
+    'backgroundColor',
+    'textColor',
+    'textColorLight',
+    'textColorDark',
+    'pageBackgroundColor',
+    'fontFamily',
+  ].forEach((key) => optionalString(props, key, 'theme', themeErrors))
   if (typeof props.fontFamily === 'string' && !isValidGoogleFontFamily(props.fontFamily)) {
     themeErrors.push('theme: fontFamily 格式不合法', 'fontFamily')
   }

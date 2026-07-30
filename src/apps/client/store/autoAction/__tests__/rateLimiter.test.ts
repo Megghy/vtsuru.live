@@ -1,6 +1,8 @@
-import type { AutoActionItem, RuntimeState } from '../types'
-import type { EventModel } from '@/api/api-models'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import type { EventModel } from '@/api/api-models'
+
+import type { AutoActionItem, RuntimeState } from '../types'
 
 vi.mock('@/apps/client/store/useBiliCookie', () => ({
   useBiliCookie: () => ({ isCookieValid: true }),
@@ -72,28 +74,18 @@ describe('rate limiter (via executeActions)', () => {
     const state = makeRuntimeState()
 
     for (let i = 0; i < 15; i++) {
-      executeActions(
-        [makeAction({ id: `a-${i}` })],
-        makeEvent(),
-        TriggerType.DANMAKU,
-        100,
-        state,
-        { sendLiveDanmaku: sendHandler },
-      )
+      executeActions([makeAction({ id: `a-${i}` })], makeEvent(), TriggerType.DANMAKU, 100, state, {
+        sendLiveDanmaku: sendHandler,
+      })
       await vi.advanceTimersByTimeAsync(0)
     }
     expect(sendCount).toBe(12)
 
     await vi.advanceTimersByTimeAsync(61_000)
 
-    executeActions(
-      [makeAction({ id: 'after' })],
-      makeEvent(),
-      TriggerType.DANMAKU,
-      100,
-      state,
-      { sendLiveDanmaku: sendHandler },
-    )
+    executeActions([makeAction({ id: 'after' })], makeEvent(), TriggerType.DANMAKU, 100, state, {
+      sendLiveDanmaku: sendHandler,
+    })
     await vi.advanceTimersByTimeAsync(0)
     expect(sendCount).toBe(13)
   })

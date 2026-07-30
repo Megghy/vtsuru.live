@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 120,
+  "semi": false,
+  "singleQuote": true,
+  "singleAttributePerLine": true,
+  "sortImports": true,
+  "ignorePatterns": ["public/**", "src/auto-imports.d.ts", "src/components.d.ts"]
+}

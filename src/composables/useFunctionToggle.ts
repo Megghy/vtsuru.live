@@ -1,5 +1,5 @@
-import type { FunctionTypes } from '@/api/api-models'
 import { SaveEnableFunctions, useAccount } from '@/api/account'
+import type { FunctionTypes } from '@/api/api-models'
 
 /**
  * 统一封装功能开关的启用/禁用: 乐观更新 + 失败回滚 + 成功/失败提示。
@@ -28,7 +28,7 @@ export function useFunctionToggle(
       await options?.onBeforeEnable?.()
       accountInfo.value.settings.enableFunctions.push(functionType)
     } else {
-      accountInfo.value.settings.enableFunctions = old.filter(f => f != functionType)
+      accountInfo.value.settings.enableFunctions = old.filter((f) => f != functionType)
     }
 
     try {

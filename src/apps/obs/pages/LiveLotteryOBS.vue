@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
 import { NDivider, NEmpty, NFlex, NText } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { Vue3Marquee } from 'vue3-marquee'
 import { useRoute } from 'vue-router'
+import { Vue3Marquee } from 'vue3-marquee'
+
+import type { UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { OpenLiveLotteryType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL } from '@/shared/config'
@@ -66,16 +67,12 @@ onUnmounted(() => {
     class="lottery-background"
     v-bind="$attrs"
   >
-    <p class="lottery-header">
-      抽奖
-    </p>
+    <p class="lottery-header">抽奖</p>
     <NDivider
       v-if="result.type === OpenLiveLotteryType.Waiting"
       class="lottery-divider"
     >
-      <p class="lottery-header-count">
-        已有 {{ users.length }} 人
-      </p>
+      <p class="lottery-header-count">已有 {{ users.length }} 人</p>
     </NDivider>
     <div
       ref="listContainerRef"
@@ -101,7 +98,7 @@ onUnmounted(() => {
               :src="`${user.avatar}@30h`"
               referrerpolicy="no-referrer"
               @error="handleImageError"
-            >
+            />
             <div>
               <p class="lottery-name">{{ user.name }}</p>
             </div>
@@ -115,9 +112,7 @@ onUnmounted(() => {
         <NEmpty description="暂无人参与" />
       </div>
       <template v-if="result.type === OpenLiveLotteryType.Result">
-        <p style="text-align: center; font-size: 20px; margin: 0; font-weight: bold; color: #eeabab">
-          结果
-        </p>
+        <p style="text-align: center; font-size: 20px; margin: 0; font-weight: bold; color: #eeabab">结果</p>
         <Vue3Marquee
           v-if="100 * result.resultUsers.length > width"
           justify="center"
@@ -147,7 +142,7 @@ onUnmounted(() => {
                 :src="`${user.avatar}@50h_50w`"
                 referrerpolicy="no-referrer"
                 @error="handleImageError"
-              >
+              />
               <NText style="font-size: large">
                 {{ user.name }}
               </NText>
@@ -181,7 +176,7 @@ onUnmounted(() => {
               :src="`${user.avatar}@50h_50w`"
               referrerpolicy="no-referrer"
               @error="handleImageError"
-            >
+            />
             <NText style="font-size: large; margin-top: 10px">
               {{ user.name }}
             </NText>

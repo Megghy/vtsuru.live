@@ -1,11 +1,27 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import {
-  NCard, NButton, NForm, NFormItem, NInputNumber, NInput, NSelect, NFlex, NAlert, NStatistic, NPopconfirm, useMessage, NSpin, NTag, NDivider } from 'naive-ui';
+  NCard,
+  NButton,
+  NForm,
+  NFormItem,
+  NInputNumber,
+  NInput,
+  NSelect,
+  NFlex,
+  NAlert,
+  NStatistic,
+  NPopconfirm,
+  useMessage,
+  NSpin,
+  NTag,
+  NDivider,
+} from 'naive-ui'
 import type { SelectOption } from 'naive-ui'
-import { EventDataTypes   } from '@/api/api-models'
-import type {ResponsePointGoodModel, ResponsePointUserModel} from '@/api/api-models';
+import { ref, computed } from 'vue'
+
 import { useAccount } from '@/api/account'
+import { EventDataTypes } from '@/api/api-models'
+import type { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
 import { QueryPostAPI as Post, QueryGetAPI as Get } from '@/api/query'
 import { POINT_API_URL } from '@/shared/config'
 
@@ -66,11 +82,7 @@ const userOptions = computed<SelectOption[]>(() => {
     }
 
     const userName = u?.info?.name || '未知用户'
-    const suffix = u.isAuthed && authId > 0
-      ? `AuthId: ${authId}`
-      : uid > 0
-        ? `UID: ${uid}`
-        : `OID: ${openId}`
+    const suffix = u.isAuthed && authId > 0 ? `AuthId: ${authId}` : uid > 0 ? `UID: ${uid}` : `OID: ${openId}`
 
     return {
       label: `${userName} (${suffix})`,
@@ -80,7 +92,7 @@ const userOptions = computed<SelectOption[]>(() => {
 })
 
 const goodsOptions = computed<SelectOption[]>(() => {
-  return allGoods.value.map(g => ({
+  return allGoods.value.map((g) => ({
     label: `${g.name} (#${g.id})`,
     value: g.id,
   }))
@@ -88,7 +100,7 @@ const goodsOptions = computed<SelectOption[]>(() => {
 
 const selectedGoods = computed(() => {
   if (!selectedGoodsId.value) return null
-  return allGoods.value.find(g => g.id === selectedGoodsId.value) ?? null
+  return allGoods.value.find((g) => g.id === selectedGoodsId.value) ?? null
 })
 
 const isCheckingEligibility = ref(false)
@@ -159,8 +171,9 @@ async function runTest() {
       payload.giftPrice = testForm.value.giftPrice
     }
 
-    const res = await Post<{ success: boolean; message: string; pointsAwarded?: number }>(POINT_API_URL + 'test-point',
-      payload
+    const res = await Post<{ success: boolean; message: string; pointsAwarded?: number }>(
+      POINT_API_URL + 'test-point',
+      payload,
     )
 
     if (res.code === 200 && res.data) {
@@ -284,9 +297,16 @@ async function checkEligibility() {
 </script>
 
 <template>
-  <NCard title="积分测试系统" size="small">
+  <NCard
+    title="积分测试系统"
+    size="small"
+  >
     <template #header-extra>
-      <NTag type="info" size="small" :bordered="false">
+      <NTag
+        type="info"
+        size="small"
+        :bordered="false"
+      >
         测试账户 OUId: 00000000-0000-0000-0000-000000000000
       </NTag>
     </template>
@@ -301,7 +321,8 @@ async function checkEligibility() {
           closable
           :bordered="false"
         >
-          此功能用于测试积分系统的配置，所有测试事件将记录到一个专用的 mock 账户（OUId=0）。你可以在这里测试不同类型事件的积分获取情况。
+          此功能用于测试积分系统的配置，所有测试事件将记录到一个专用的 mock
+          账户（OUId=0）。你可以在这里测试不同类型事件的积分获取情况。
         </NAlert>
 
         <!-- 测试账户积分显示 -->
@@ -320,9 +341,7 @@ async function checkEligibility() {
                 </template>
               </NStatistic>
             </div>
-            <NPopconfirm
-              @positive-click="resetTestAccount"
-            >
+            <NPopconfirm @positive-click="resetTestAccount">
               <template #trigger>
                 <NButton
                   type="error"
@@ -338,7 +357,10 @@ async function checkEligibility() {
           </NFlex>
         </div>
 
-        <NDivider title-placement="left" style="margin: 0">
+        <NDivider
+          title-placement="left"
+          style="margin: 0"
+        >
           测试事件模拟
         </NDivider>
 
@@ -447,7 +469,10 @@ async function checkEligibility() {
           请先配置积分设置
         </NAlert>
 
-        <NDivider title-placement="left" style="margin: 0">
+        <NDivider
+          title-placement="left"
+          style="margin: 0"
+        >
           兑换资格查询
         </NDivider>
 
@@ -458,7 +483,10 @@ async function checkEligibility() {
               label-width="100"
               style="max-width: 600px"
             >
-              <NFormItem label="目标用户" required>
+              <NFormItem
+                label="目标用户"
+                required
+              >
                 <NSelect
                   v-model:value="selectedUserKey"
                   :options="userOptions"
@@ -468,7 +496,10 @@ async function checkEligibility() {
                 />
               </NFormItem>
 
-              <NFormItem label="礼物" required>
+              <NFormItem
+                label="礼物"
+                required
+              >
                 <NSelect
                   v-model:value="selectedGoodsId"
                   :options="goodsOptions"
@@ -478,7 +509,10 @@ async function checkEligibility() {
                 />
               </NFormItem>
 
-              <NFormItem label="兑换数量" required>
+              <NFormItem
+                label="兑换数量"
+                required
+              >
                 <NInputNumber
                   v-model:value="eligibilityForm.count"
                   placeholder="兑换数量"
@@ -522,24 +556,34 @@ async function checkEligibility() {
               <template #header>
                 {{ eligibilityResult.eligible ? '可兑换' : '不可兑换' }}
               </template>
-              <div v-if="!eligibilityResult.eligible">
-                原因: {{ eligibilityResult.reason || '未知原因' }}
-              </div>
+              <div v-if="!eligibilityResult.eligible">原因: {{ eligibilityResult.reason || '未知原因' }}</div>
               <NFlex
                 :wrap="true"
                 :gap="12"
                 style="margin-top: 8px"
               >
-                <NTag :type="eligibilityResult.canFreeBuy ? 'success' : 'default'" :bordered="false">
+                <NTag
+                  :type="eligibilityResult.canFreeBuy ? 'success' : 'default'"
+                  :bordered="false"
+                >
                   {{ eligibilityResult.canFreeBuy ? '可免费兑换' : '非免费兑换' }}
                 </NTag>
-                <NTag type="info" :bordered="false">
+                <NTag
+                  type="info"
+                  :bordered="false"
+                >
                   当前积分: {{ eligibilityResult.userPoint }}
                 </NTag>
-                <NTag type="info" :bordered="false">
+                <NTag
+                  type="info"
+                  :bordered="false"
+                >
                   已兑换次数: {{ eligibilityResult.purchasedCount }}
                 </NTag>
-                <NTag type="warning" :bordered="false">
+                <NTag
+                  type="warning"
+                  :bordered="false"
+                >
                   需要积分: {{ eligibilityResult.needPoint }}
                 </NTag>
               </NFlex>

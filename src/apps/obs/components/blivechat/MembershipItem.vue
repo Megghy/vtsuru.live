@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+
 import AuthorChip from './AuthorChip.vue'
 import ImgShadow from './ImgShadow.vue'
 import * as utils from './utils'

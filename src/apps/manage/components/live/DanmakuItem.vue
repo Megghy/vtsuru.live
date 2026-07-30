@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { AccountInfo, DanmakuModel } from '@/api/api-models'
 import { Box24Regular, Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
-import { NButton, NCard, NDivider, NIcon, NTag, NTooltip } from 'naive-ui';
+import { NButton, NCard, NDivider, NIcon, NTag, NTooltip } from 'naive-ui'
+import { computed } from 'vue'
+
+import type { AccountInfo, DanmakuModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
-import { computed } from 'vue'
 
 const {
   danmaku,
@@ -67,14 +68,14 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
                 referrerpolicy="no-referrer"
                 style="border-radius: 50%"
                 loading="lazy"
-              >
+              />
             </template>
             <img
               :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`"
               alt="头像"
               referrerpolicy="no-referrer"
               loading="lazy"
-            >
+            />
           </NTooltip>
           <NTooltip>
             <template #trigger>
@@ -98,7 +99,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
               {{ danmaku.uName }}
             </NTag>
             <template v-else>
-              <span style="color: white; font-weight: bold;">
+              <span style="color: white; font-weight: bold">
                 {{ danmaku.uName }}
               </span>
             </template>
@@ -129,13 +130,13 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
             alt="头像"
             referrerpolicy="no-referrer"
             style="border-radius: 50%; margin-right: 5px"
-          >
+          />
         </template>
         <img
           :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`"
           alt="头像"
           referrerpolicy="no-referrer"
-        >
+        />
       </NTooltip>
       <NTooltip>
         <template #trigger>
@@ -182,12 +183,12 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
                 :src="`https://${danmaku.msg}@22h`"
                 referrerpolicy="no-referrer"
                 :style="`max-height: ${height}px;display:inline-flex;`"
-              >
+              />
             </template>
             <img
               :src="`https://${danmaku.msg}`"
               referrerpolicy="no-referrer"
-            >
+            />
           </NTooltip>
         </template>
         <template v-else>
@@ -210,9 +211,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
             </span>
           </template>
           <div class="mystery-box-tooltip-card">
-            <div class="mystery-box-tooltip-card__title">
-              盲盒礼物
-            </div>
+            <div class="mystery-box-tooltip-card__title">盲盒礼物</div>
             <div
               v-if="giftDisplay.mysteryBoxName"
               class="mystery-box-tooltip-card__row"
@@ -243,7 +242,9 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
           size="tiny"
           type="error"
           :bordered="false"
-        > <NIcon :component="Money24Regular" /> {{ giftDisplay.giftPriceText }} </NTag>
+        >
+          <NIcon :component="Money24Regular" /> {{ giftDisplay.giftPriceText }}
+        </NTag>
         <NDivider vertical />
         {{ danmaku.msg }}
         <NTag
@@ -262,7 +263,9 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
         <NTag
           size="small"
           :style="`color:${GetGuardColor(danmaku.price ?? 0)}`"
-        > <NIcon :component="VehicleShip24Filled" /> {{ danmaku.price }} </NTag>
+        >
+          <NIcon :component="VehicleShip24Filled" /> {{ danmaku.price }}
+        </NTag>
         <NDivider vertical />
         {{ danmaku.msg }}
       </span>

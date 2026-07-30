@@ -2,13 +2,15 @@
 import { Add20Filled, Delete20Filled, Edit20Filled, Mic20Filled, TextDescription20Filled } from '@vicons/fluent'
 import { NButton, NEmpty, NFlex, NIcon, NInput, NPopconfirm, NTag, NText, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
+
 import { useAccount } from '@/api/account'
 import { QueryGetAPI, GetHeaders } from '@/api/query'
-import { TTS_API_URL } from '@/shared/config'
-import { useSpeechService } from '@/store/useSpeechService'
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
 import { MimoVoiceProvider, type MimoCustomVoiceInfo } from '@/apps/open-live/voice-providers/mimo'
 import { deleteVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
+import { TTS_API_URL } from '@/shared/config'
+import { useSpeechService } from '@/store/useSpeechService'
+
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 import MimoCustomVoiceDialog from './MimoCustomVoiceDialog.vue'
@@ -41,8 +43,11 @@ async function loadVoices() {
   const result = provider.getVoices()
   if (result instanceof Promise) {
     voicesLoading.value = true
-    try { voices.value = await result }
-    finally { voicesLoading.value = false }
+    try {
+      voices.value = await result
+    } finally {
+      voicesLoading.value = false
+    }
   } else {
     voices.value = result
   }
@@ -82,25 +87,26 @@ async function deleteCustomVoice(id: number) {
     })
     const data = await resp.json().catch(() => null)
     if (data?.code === 200) {
-      customVoices.value = customVoices.value.filter(v => v.id !== id)
+      customVoices.value = customVoices.value.filter((v) => v.id !== id)
       if (settings.value.providers.mimo.mimoVoice === `custom:${id}`) {
         settings.value.providers.mimo.mimoVoice = '冰糖'
       }
       await deleteVoiceAudio(id)
       message.success('已删除')
     }
-  } catch { message.error('删除失败') }
+  } catch {
+    message.error('删除失败')
+  }
 }
 
 function useCustomVoice(voice: CustomVoice) {
   settings.value.providers.mimo.mimoVoice = `custom:${voice.id}`
 }
 
-const isCustomSelected = (v: CustomVoice) =>
-  settings.value.providers.mimo.mimoVoice === `custom:${v.id}`
+const isCustomSelected = (v: CustomVoice) => settings.value.providers.mimo.mimoVoice === `custom:${v.id}`
 
 const allVoiceOptions = computed<any[]>(() => {
-  const customOptions = customVoices.value.map(v => ({
+  const customOptions = customVoices.value.map((v) => ({
     label: `${v.name}（${v.type === 'clone' ? '克隆' : '描述'}）`,
     value: `custom:${v.id}`,
   }))
@@ -111,11 +117,15 @@ const allVoiceOptions = computed<any[]>(() => {
   ]
 })
 
-watch([() => settings.value.provider, () => account.value.id], ([provider, accountId]) => {
-  if (provider !== 'mimo') return
-  loadVoices()
-  if (accountId) loadCustomVoices()
-}, { immediate: true })
+watch(
+  [() => settings.value.provider, () => account.value.id],
+  ([provider, accountId]) => {
+    if (provider !== 'mimo') return
+    loadVoices()
+    if (accountId) loadCustomVoices()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -132,51 +142,31 @@ watch([() => settings.value.provider, () => account.value.id], ([provider, accou
     <SectionField label="风格标签">
       <template #hint>
         <div style="font-size: 12px; line-height: 1.7">
-          <p style="margin: 0 0 6px">
-            在文本开头用 <code>()</code> 或 <code>[]</code> 包裹风格词，可组合多个。
-          </p>
+          <p style="margin: 0 0 6px">在文本开头用 <code>()</code> 或 <code>[]</code> 包裹风格词，可组合多个。</p>
           <table style="border-collapse: collapse; width: 100%; font-size: 11px">
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
-                基础情绪
-              </td><td style="padding: 2px 6px">
-                开心 / 悲伤 / 愤怒 / 恐惧 / 惊讶 / 兴奋 / 委屈 / 冷漠
-              </td>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">基础情绪</td>
+              <td style="padding: 2px 6px">开心 / 悲伤 / 愤怒 / 恐惧 / 惊讶 / 兴奋 / 委屈 / 冷漠</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
-                复合情绪
-              </td><td style="padding: 2px 6px">
-                怅然 / 欣慰 / 无奈 / 愧疚 / 释然 / 忐忑 / 动情
-              </td>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">复合情绪</td>
+              <td style="padding: 2px 6px">怅然 / 欣慰 / 无奈 / 愧疚 / 释然 / 忐忑 / 动情</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
-                语调风格
-              </td><td style="padding: 2px 6px">
-                温柔 / 高冷 / 活泼 / 慵懒 / 俏皮 / 深沉 / 凌厉
-              </td>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">语调风格</td>
+              <td style="padding: 2px 6px">温柔 / 高冷 / 活泼 / 慵懒 / 俏皮 / 深沉 / 凌厉</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
-                音色定位
-              </td><td style="padding: 2px 6px">
-                磁性 / 醇厚 / 清亮 / 空灵 / 甜美 / 沙哑
-              </td>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">音色定位</td>
+              <td style="padding: 2px 6px">磁性 / 醇厚 / 清亮 / 空灵 / 甜美 / 沙哑</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
-                腔调方言
-              </td><td style="padding: 2px 6px">
-                夹子音 / 御姐音 / 正太音 / 台湾腔 / 东北话 / 粤语
-              </td>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">腔调方言</td>
+              <td style="padding: 2px 6px">夹子音 / 御姐音 / 正太音 / 台湾腔 / 东北话 / 粤语</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
-                特殊
-              </td><td style="padding: 2px 6px">
-                (唱歌) — 需放在最开头
-              </td>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">特殊</td>
+              <td style="padding: 2px 6px">(唱歌) — 需放在最开头</td>
             </tr>
           </table>
           <p style="margin: 6px 0 0; color: var(--vtsuru-fg-muted)">
@@ -192,7 +182,10 @@ watch([() => settings.value.provider, () => account.value.id], ([provider, accou
       />
     </SectionField>
 
-    <SectionField label="自定义 API Key (可选)" hint="填写后将直接从浏览器调用 MiMo API, 不经过本站服务器, 速度更快">
+    <SectionField
+      label="自定义 API Key (可选)"
+      hint="填写后将直接从浏览器调用 MiMo API, 不经过本站服务器, 速度更快"
+    >
       <NInput
         v-model:value="settings.providers.mimo.mimoApiKey"
         type="password"
@@ -201,8 +194,16 @@ watch([() => settings.value.provider, () => account.value.id], ([provider, accou
         size="small"
         :input-props="{ autocomplete: 'new-password' }"
       />
-      <NText depth="3" style="font-size: 11px">
-        <a href="https://platform.xiaomimimo.com" target="_blank" rel="noopener" style="color: var(--vtsuru-fg-muted)">
+      <NText
+        depth="3"
+        style="font-size: 11px"
+      >
+        <a
+          href="https://platform.xiaomimimo.com"
+          target="_blank"
+          rel="noopener"
+          style="color: var(--vtsuru-fg-muted)"
+        >
           前往 MiMo 开放平台获取 API Key →
         </a>
       </NText>
@@ -210,12 +211,21 @@ watch([() => settings.value.provider, () => account.value.id], ([provider, accou
 
     <!-- 自定义音色 -->
     <SectionField label="自定义音色">
-      <NFlex justify="space-between" align="center" style="margin-bottom: 6px">
-        <NText depth="3" style="font-size: 11px">
+      <NFlex
+        justify="space-between"
+        align="center"
+        style="margin-bottom: 6px"
+      >
+        <NText
+          depth="3"
+          style="font-size: 11px"
+        >
           {{ account.id ? `${customVoices.length} 个自定义音色` : '登录后可用' }}
         </NText>
         <NButton
-          size="tiny" type="primary" tertiary
+          size="tiny"
+          type="primary"
+          tertiary
           :disabled="!account.id"
           @click="showCreateDialog = true"
         >
@@ -226,9 +236,16 @@ watch([() => settings.value.provider, () => account.value.id], ([provider, accou
         </NButton>
       </NFlex>
 
-      <NEmpty v-if="customVoices.length === 0 && account.id" description="暂无自定义音色" size="small" />
+      <NEmpty
+        v-if="customVoices.length === 0 && account.id"
+        description="暂无自定义音色"
+        size="small"
+      />
 
-      <div v-else class="voice-list">
+      <div
+        v-else
+        class="voice-list"
+      >
         <div
           v-for="v in customVoices"
           :key="v.id"
@@ -241,24 +258,38 @@ watch([() => settings.value.provider, () => account.value.id], ([provider, accou
             style="flex-shrink: 0"
           />
           <span class="voice-name">{{ v.name }}</span>
-          <NTag size="tiny" :bordered="false" :type="v.type === 'clone' ? 'info' : 'success'">
+          <NTag
+            size="tiny"
+            :bordered="false"
+            :type="v.type === 'clone' ? 'info' : 'success'"
+          >
             {{ v.type === 'clone' ? '克隆' : '描述' }}
           </NTag>
           <div class="voice-actions">
             <NButton
-              size="tiny" :type="isCustomSelected(v) ? 'primary' : 'default'" tertiary
+              size="tiny"
+              :type="isCustomSelected(v) ? 'primary' : 'default'"
+              tertiary
               @click="useCustomVoice(v)"
             >
               {{ isCustomSelected(v) ? '使用中' : '使用' }}
             </NButton>
-            <NButton size="tiny" tertiary @click="editCustomVoice(v)">
+            <NButton
+              size="tiny"
+              tertiary
+              @click="editCustomVoice(v)"
+            >
               <template #icon>
                 <NIcon :component="Edit20Filled" />
               </template>
             </NButton>
             <NPopconfirm @positive-click="deleteCustomVoice(v.id)">
               <template #trigger>
-                <NButton size="tiny" tertiary type="error">
+                <NButton
+                  size="tiny"
+                  tertiary
+                  type="error"
+                >
                   <template #icon>
                     <NIcon :component="Delete20Filled" />
                   </template>
@@ -275,7 +306,11 @@ watch([() => settings.value.provider, () => account.value.id], ([provider, accou
       v-model:show="showCreateDialog"
       :edit-voice="editingVoice"
       @created="loadCustomVoices"
-      @update:show="(v: boolean) => { if (!v) editingVoice = null }"
+      @update:show="
+        (v: boolean) => {
+          if (!v) editingVoice = null
+        }
+      "
     />
   </div>
 </template>

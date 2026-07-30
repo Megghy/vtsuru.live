@@ -16,8 +16,7 @@ export function getDefaultMsgHandler() {
   }
 }
 
-export const DEFAULT_AVATAR_URL
-  = 'https://i0.hdslb.com/bfs/face/member/noface.jpg@64w_64h'
+export const DEFAULT_AVATAR_URL = 'https://i0.hdslb.com/bfs/face/member/noface.jpg@64w_64h'
 
 export class AddTextMsg {
   constructor({

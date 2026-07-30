@@ -1,14 +1,21 @@
-import type { GlobalThemeOverrides } from 'naive-ui'
 import { formatRgb } from 'culori'
-import type { PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundScrimMode, PageBackgroundType } from './block/schema'
-import { getGoogleFontFamilyCss } from './googleFonts'
-import { resolveUserPageAppearance } from './themeConfig'
-import { resolveUserPageControlOverlay, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
+import type { GlobalThemeOverrides } from 'naive-ui'
+
 import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
 import { parseRgb } from '@/shared/config/theme/contrast'
 import { getThemeOverrides } from '@/shared/config/theme/overrides'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { hexToRgba } from '@/shared/utils'
+
+import type {
+  PageBackgroundBlurMode,
+  PageBackgroundImageFit,
+  PageBackgroundScrimMode,
+  PageBackgroundType,
+} from './block/schema'
+import { getGoogleFontFamilyCss } from './googleFonts'
+import { resolveUserPageControlOverlay, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
+import { resolveUserPageAppearance } from './themeConfig'
 
 export interface ResolvedPageBackground {
   type: PageBackgroundType
@@ -39,23 +46,28 @@ export function resolvePageBackground(raw: unknown): ResolvedPageBackground | nu
   if (!obj) return null
 
   const typeRaw = obj.pageBackgroundType
-  const type: PageBackgroundType = (typeRaw === 'color' || typeRaw === 'image') ? typeRaw : 'none'
+  const type: PageBackgroundType = typeRaw === 'color' || typeRaw === 'image' ? typeRaw : 'none'
   if (type === 'none') return null
 
   const coverSidebar = obj.pageBackgroundCoverSidebar !== false
   const blurModeRaw = obj.pageBackgroundBlurMode
-  const blurMode: PageBackgroundBlurMode = (blurModeRaw === 'background' || blurModeRaw === 'glass') ? blurModeRaw : 'none'
+  const blurMode: PageBackgroundBlurMode =
+    blurModeRaw === 'background' || blurModeRaw === 'glass' ? blurModeRaw : 'none'
   const fitRaw = obj.pageBackgroundImageFit
-  const fit: PageBackgroundImageFit = (fitRaw === 'contain' || fitRaw === 'fill' || fitRaw === 'none') ? fitRaw : 'cover'
+  const fit: PageBackgroundImageFit = fitRaw === 'contain' || fitRaw === 'fill' || fitRaw === 'none' ? fitRaw : 'cover'
 
   const scrimModeRaw = obj.pageBackgroundScrimMode
-  const scrimMode: PageBackgroundScrimMode = (scrimModeRaw === 'black' || scrimModeRaw === 'white') ? scrimModeRaw : 'auto'
+  const scrimMode: PageBackgroundScrimMode =
+    scrimModeRaw === 'black' || scrimModeRaw === 'white' ? scrimModeRaw : 'auto'
 
   const hasScrimStrength = Object.prototype.hasOwnProperty.call(obj, 'pageBackgroundScrimStrength')
   const scrimStrengthRaw = Number(obj.pageBackgroundScrimStrength)
-  const scrimStrength = hasScrimStrength && Number.isFinite(scrimStrengthRaw)
-    ? Math.min(100, Math.max(0, Math.round(scrimStrengthRaw)))
-    : (blurMode === 'none' ? 0 : 100)
+  const scrimStrength =
+    hasScrimStrength && Number.isFinite(scrimStrengthRaw)
+      ? Math.min(100, Math.max(0, Math.round(scrimStrengthRaw)))
+      : blurMode === 'none'
+        ? 0
+        : 100
 
   const blur = Number(obj.pageBackgroundBlur)
   const blurPx = Number.isFinite(blur) ? Math.min(40, Math.max(0, Math.round(blur))) : 14
@@ -79,16 +91,22 @@ export function resolvePageBackground(raw: unknown): ResolvedPageBackground | nu
 
 export function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unknown) {
   const appearance = resolveUserPageAppearance(theme)
-  const surfaceAlpha = appearance.surfaceOpacity === undefined
-    ? (effectiveIsDark ? 0.70 : 0.62)
-    : appearance.surfaceOpacity / 100
-  const borderAlpha = appearance.borderStrength === 'none'
-    ? 0
-    : appearance.borderStrength === 'subtle'
-      ? (effectiveIsDark ? 0.10 : 0.14)
-      : appearance.borderStrength === 'strong'
-        ? (effectiveIsDark ? 0.32 : 0.42)
-        : (effectiveIsDark ? 0.20 : 0.26)
+  const surfaceAlpha =
+    appearance.surfaceOpacity === undefined ? (effectiveIsDark ? 0.7 : 0.62) : appearance.surfaceOpacity / 100
+  const borderAlpha =
+    appearance.borderStrength === 'none'
+      ? 0
+      : appearance.borderStrength === 'subtle'
+        ? effectiveIsDark
+          ? 0.1
+          : 0.14
+        : appearance.borderStrength === 'strong'
+          ? effectiveIsDark
+            ? 0.32
+            : 0.42
+          : effectiveIsDark
+            ? 0.2
+            : 0.26
 
   return {
     '--user-page-ui-surface-bg': effectiveIsDark
@@ -96,7 +114,7 @@ export function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unkn
       : `rgba(255, 255, 255, ${surfaceAlpha})`,
     '--user-page-ui-surface-bg-hover': effectiveIsDark
       ? `rgba(39, 39, 42, ${Math.min(1, surfaceAlpha + 0.16)})`
-      : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.10)})`,
+      : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.1)})`,
     '--user-page-ui-surface-bg-pressed': effectiveIsDark
       ? `rgba(39, 39, 42, ${Math.min(1, surfaceAlpha + 0.22)})`
       : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.18)})`,
@@ -124,28 +142,24 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
   const surfaceVars = getUserPageSurfaceCssVars(effectiveIsDark, theme)
   const siteTokens = buildSiteTokens(effectiveIsDark)
   const pagePrimary = primaryColor || siteTokens.primary
-  const customSurface = backgroundColor && appearance.surfaceOpacity !== undefined
-    ? applyColorOpacity(backgroundColor, appearance.surfaceOpacity)
-    : ''
-  const contrastSurface = customSurface || (appearance.surfaceOpacity !== undefined
-    ? surfaceVars['--user-page-ui-surface-bg']
-    : undefined)
-  const textPalette = resolveUserPageTextPalette(
-    asObject(theme) ?? undefined,
-    effectiveIsDark,
-    contrastSurface,
-  )
+  const customSurface =
+    backgroundColor && appearance.surfaceOpacity !== undefined
+      ? applyColorOpacity(backgroundColor, appearance.surfaceOpacity)
+      : ''
+  const contrastSurface =
+    customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars['--user-page-ui-surface-bg'] : undefined)
+  const textPalette = resolveUserPageTextPalette(asObject(theme) ?? undefined, effectiveIsDark, contrastSurface)
   const pageText = textPalette.color
-  const readablePrimary = resolveUserPageReadableAccent(primaryColor, backgroundColor, effectiveIsDark, contrastSurface) || pageText
+  const readablePrimary =
+    resolveUserPageReadableAccent(primaryColor, backgroundColor, effectiveIsDark, contrastSurface) || pageText
 
   const contentColor = customSurface || backgroundColor || surfaceVars['--user-page-ui-surface-bg']
   const defaultCardSurface = applyColorOpacity(
     siteTokens.surfaceHover,
     appearance.surfaceOpacity ?? (effectiveIsDark ? 70 : 62),
   )
-  const surfaceColor = customSurface || (backgroundColor
-    ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)`
-    : defaultCardSurface)
+  const surfaceColor =
+    customSurface || (backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : defaultCardSurface)
   const surfaceHover = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
     : surfaceVars['--user-page-ui-surface-bg-hover']
@@ -302,9 +316,7 @@ export function getUserPageNaiveThemeOverrides(
         borderColor,
         borderWidth: appearance.borderWidth,
         borderStyle: appearance.borderStyle,
-        ...(primaryColor
-          ? { primary: { color: primaryColor } }
-          : {}),
+        ...(primaryColor ? { primary: { color: primaryColor } } : {}),
       }),
       heightSmall: appearance.controlHeights.small,
       heightMedium: appearance.controlHeights.medium,
@@ -328,25 +340,30 @@ export function getUserPageNaiveThemeOverrides(
 
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {
   const img = bg.type === 'image' ? bg.imagePath.trim() : ''
-  const safeUrl = img ? img.replaceAll('"', "\\\"") : ''
+  const safeUrl = img ? img.replaceAll('"', '\\"') : ''
 
   const blurPx = bg.blurMode === 'none' ? 0 : bg.blurPx
 
-  const scrimBaseAlpha = bg.blurMode === 'glass'
-    ? (effectiveIsDark ? 0.24 : 0.14)
-    : (bg.blurMode === 'background'
-        ? (effectiveIsDark ? 0.42 : 0.20)
-        : (effectiveIsDark ? 0.32 : 0.12))
-  const scrimRgb = bg.scrimMode === 'white' || (bg.scrimMode === 'auto' && !effectiveIsDark)
-    ? '255, 255, 255'
-    : '0, 0, 0'
+  const scrimBaseAlpha =
+    bg.blurMode === 'glass'
+      ? effectiveIsDark
+        ? 0.24
+        : 0.14
+      : bg.blurMode === 'background'
+        ? effectiveIsDark
+          ? 0.42
+          : 0.2
+        : effectiveIsDark
+          ? 0.32
+          : 0.12
+  const scrimRgb =
+    bg.scrimMode === 'white' || (bg.scrimMode === 'auto' && !effectiveIsDark) ? '255, 255, 255' : '0, 0, 0'
   const darkImageScrimFloor = effectiveIsDark && bg.type === 'image' && scrimRgb === '0, 0, 0' ? 0.12 : 0
   const scrimAlpha = Math.min(0.9, Math.max(darkImageScrimFloor, scrimBaseAlpha * (bg.scrimStrength / 100)))
   const scrim = scrimAlpha > 0 ? `rgba(${scrimRgb}, ${scrimAlpha})` : 'transparent'
 
-  const glassColor = bg.type === 'color' && bg.color
-    ? hexToRgba(bg.color, 0.55)
-    : (bg.type === 'image' ? 'transparent' : null)
+  const glassColor =
+    bg.type === 'color' && bg.color ? hexToRgba(bg.color, 0.55) : bg.type === 'image' ? 'transparent' : null
 
   // 玻璃底色默认值：降低不透明度，避免浅色模式下出现大块白色遮罩
   const defaultGlassSurfaceBg = effectiveIsDark ? 'rgba(0, 0, 0, 0.22)' : 'rgba(255, 255, 255, 0.18)'
@@ -354,7 +371,7 @@ export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIs
   return {
     '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
     '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
-    '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
+    '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : bg.fit === 'none' ? 'auto' : bg.fit,
     '--user-page-bg-blur': `${blurPx}px`,
     '--user-page-bg-scrim': scrim,
     '--glass-surface-bg': glassColor || defaultGlassSurfaceBg,

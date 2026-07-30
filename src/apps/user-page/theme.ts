@@ -1,19 +1,23 @@
 import type { Rgb } from 'culori'
 import { formatRgb, interpolate, wcagContrast } from 'culori'
+
+import { compositeOpaque, ensureTextContrast, parseRgb, resolveOpaqueColor } from '@/shared/config/theme/contrast'
+
 import type { PageThemeMode } from './block/schema'
 import type { UserPageThemeConfig } from './themeConfig'
-import { compositeOpaque, ensureTextContrast, parseRgb, resolveOpaqueColor } from '@/shared/config/theme/contrast'
 
 const MIN_TEXT_CONTRAST = 4.5
 
-export type UserPageTextTheme = Pick<UserPageThemeConfig,
-  'fontFamily'
+export type UserPageTextTheme = Pick<
+  UserPageThemeConfig,
+  | 'fontFamily'
   | 'textColor'
   | 'textColorLight'
   | 'textColorDark'
   | 'autoTextContrast'
   | 'backgroundColor'
-  | 'pageThemeMode'>
+  | 'pageThemeMode'
+>
 
 export interface ResolvedUserPageTextColor {
   color: string
@@ -35,10 +39,12 @@ export function resolvePageThemeIsDark(mode: PageThemeMode | undefined, fallback
 
 function resolveSurface(isDark: boolean, surfaceColor?: string) {
   const worstCaseBackdrop = parseRgb(isDark ? '#ffffff' : '#000000')
-  return resolveOpaqueColor(
-    surfaceColor ?? (isDark ? 'rgba(24, 24, 27, 0.70)' : 'rgba(255, 255, 255, 0.62)'),
-    worstCaseBackdrop,
-  ) ?? worstCaseBackdrop
+  return (
+    resolveOpaqueColor(
+      surfaceColor ?? (isDark ? 'rgba(24, 24, 27, 0.70)' : 'rgba(255, 255, 255, 0.62)'),
+      worstCaseBackdrop,
+    ) ?? worstCaseBackdrop
+  )
 }
 
 export function resolveUserPageSurfaceReference(backgroundColor: string | undefined, isDark: boolean) {
@@ -50,7 +56,7 @@ export function resolveUserPageSurfaceReference(backgroundColor: string | undefi
 
 function selectTextColor(theme: UserPageTextTheme | undefined, isDark: boolean) {
   const modeColor = isDark ? theme?.textColorDark : theme?.textColorLight
-  const source = isDark ? 'dark' as const : 'light' as const
+  const source = isDark ? ('dark' as const) : ('light' as const)
   if (modeColor?.trim()) return { value: modeColor, source }
   if (theme?.textColor?.trim()) return { value: theme.textColor, source: 'base' as const }
   return { value: isDark ? '#fafafa' : '#09090b', source: 'default' as const }
@@ -81,9 +87,7 @@ export function resolveUserPageReadableAccent(
   if (!primaryColor?.trim()) return ''
   const surface = resolveSurface(isDark, surfaceColor ?? resolveUserPageSurfaceReference(backgroundColor, isDark))
   const accent = parseRgb(primaryColor)
-  const activeSurface = accent
-    ? compositeOpaque({ ...accent, alpha: (accent.alpha ?? 1) * 0.14 }, surface)
-    : surface
+  const activeSurface = accent ? compositeOpaque({ ...accent, alpha: (accent.alpha ?? 1) * 0.14 }, surface) : surface
   return ensureTextContrast(primaryColor, activeSurface, isDark).color
 }
 

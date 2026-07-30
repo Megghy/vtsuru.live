@@ -1,17 +1,10 @@
 import type { Ref } from 'vue'
-import type {
-  AutoActionItem,
-  RuntimeState,
-} from '../types'
+
 import type { EventModel } from '@/api/api-models'
 
-import {
-  executeActions,
-  filterValidActions,
-} from '../actionUtils'
-import {
-  TriggerType,
-} from '../types'
+import { executeActions, filterValidActions } from '../actionUtils'
+import type { AutoActionItem, RuntimeState } from '../types'
+import { TriggerType } from '../types'
 
 /**
  * 礼物感谢模块
@@ -32,12 +25,7 @@ export function useGiftThank(
    * @param actions 自动操作列表
    * @param runtimeState 运行时状态
    */
-  function processGift(
-    event: EventModel,
-    actions: AutoActionItem[],
-    runtimeState: RuntimeState,
-    isTest = false,
-  ) {
+  function processGift(event: EventModel, actions: AutoActionItem[], runtimeState: RuntimeState, isTest = false) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的礼物感谢操作
@@ -63,14 +51,18 @@ export function useGiftThank(
             // 礼物过滤逻辑
             (action, _context) => {
               // 黑名单模式
-              if (action.triggerConfig.filterMode === 'blacklist'
-                && action.triggerConfig.filterGiftNames?.includes(giftName)) {
+              if (
+                action.triggerConfig.filterMode === 'blacklist' &&
+                action.triggerConfig.filterGiftNames?.includes(giftName)
+              ) {
                 return false
               }
 
               // 白名单模式
-              if (action.triggerConfig.filterMode === 'whitelist'
-                && !action.triggerConfig.filterGiftNames?.includes(giftName)) {
+              if (
+                action.triggerConfig.filterMode === 'whitelist' &&
+                !action.triggerConfig.filterGiftNames?.includes(giftName)
+              ) {
                 return false
               }
 

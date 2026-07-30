@@ -16,7 +16,7 @@ let echartsRegistered = false
 function ensureEchartsRegistered() {
   if (echartsRegistered) return
   echartsRegistered = true
-   
+
   ;(echarts as any).use([
     TitleComponent,
     TooltipComponent,
@@ -39,13 +39,13 @@ export interface OrgAnalyzeChartMetric {
   yAxisIndex?: number
 }
 
-type OrgChartDataItem = { timestamp: number, date: string } & Record<string, unknown>
+type OrgChartDataItem = { timestamp: number; date: string } & Record<string, unknown>
 
 export function useOrgAnalyzeChart(options: {
   chartRef: Ref<HTMLElement | null>
   analyzeData: Ref<{ chartData?: Record<string, any> } | null>
   formatDate: (timestamp: number) => string
-  themeVars: Ref<{ textColor2: string, borderColor: string, dividerColor: string }>
+  themeVars: Ref<{ textColor2: string; borderColor: string; dividerColor: string }>
   selectedMetrics: Ref<string[]>
   chartMetrics: OrgAnalyzeChartMetric[]
 }) {
@@ -83,27 +83,25 @@ export function useOrgAnalyzeChart(options: {
   function updateChartOption() {
     if (!mainChart) return
     const chartData = getChartDataArray()
-    const dates = chartData.map(item => item.date)
+    const dates = chartData.map((item) => item.date)
     const themeColors = getThemeColors()
 
     const showRightAxis = options.selectedMetrics.value.includes('income')
-    const showLeftAxis = options.selectedMetrics.value.some(m => m !== 'income')
+    const showLeftAxis = options.selectedMetrics.value.some((m) => m !== 'income')
 
     const series = options.selectedMetrics.value
       .map((metricKey) => {
-        const metricConfig = options.chartMetrics.find(m => m.value === metricKey)
+        const metricConfig = options.chartMetrics.find((m) => m.value === metricKey)
         if (!metricConfig) return null
 
         return {
           name: metricConfig.label,
           type: metricConfig.type,
-          data: chartData.map(item => item[metricKey]),
+          data: chartData.map((item) => item[metricKey]),
           smooth: true,
-          yAxisIndex: (metricKey === 'income' && showLeftAxis) ? 1 : 0,
+          yAxisIndex: metricKey === 'income' && showLeftAxis ? 1 : 0,
           itemStyle: { color: metricConfig.color },
-          areaStyle: metricConfig.type === 'line'
-            ? { opacity: 0.1, color: metricConfig.color }
-            : undefined,
+          areaStyle: metricConfig.type === 'line' ? { opacity: 0.1, color: metricConfig.color } : undefined,
           barMaxWidth: metricConfig.type === 'bar' ? '20%' : undefined,
         }
       })
@@ -148,7 +146,7 @@ export function useOrgAnalyzeChart(options: {
       tooltip: { trigger: 'axis' },
       legend: {
         data: options.selectedMetrics.value
-          .map(m => options.chartMetrics.find(x => x.value === m)?.label)
+          .map((m) => options.chartMetrics.find((x) => x.value === m)?.label)
           .filter(Boolean),
         textStyle: { color: themeColors.textColor },
       },
@@ -181,4 +179,3 @@ export function useOrgAnalyzeChart(options: {
     disposeChart,
   }
 }
-

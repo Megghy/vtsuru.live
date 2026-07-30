@@ -1,12 +1,29 @@
 <script setup lang="ts">
-import type { SelectOption } from 'naive-ui'
-import type { VNode } from 'vue'
-import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
+import type { SelectOption } from 'naive-ui'
 import {
-  NAlert, NBadge, NButton, NCard, NColorPicker, NDivider, NFlex, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NText, NTimePicker, useMessage } from 'naive-ui';
+  NAlert,
+  NBadge,
+  NButton,
+  NCard,
+  NColorPicker,
+  NDivider,
+  NFlex,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NModal,
+  NSelect,
+  NSpin,
+  NText,
+  NTimePicker,
+  useMessage,
+} from 'naive-ui'
+import type { VNode } from 'vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -28,8 +45,8 @@ const weekOptions = computed(() => {
   const weeks = [] as SelectOption[]
   const all = getAllWeeks(selectedScheduleYear.value)
   all.forEach((week) => {
-    const isExist
-      = (schedules.value?.findIndex(s => s.year == selectedScheduleYear.value && s.week == week[0] + 1) ?? -1) > -1
+    const isExist =
+      (schedules.value?.findIndex((s) => s.year == selectedScheduleYear.value && s.week == week[0] + 1) ?? -1) > -1
     weeks.push({
       label: `${isExist ? '(已安排)' : ''} 第${week[0] + 1}周 (${week[1]})`,
       value: week[0] + 1,
@@ -80,7 +97,7 @@ function normalizeColor(color: any): string | null {
 
   // 将 HSL 转 RGB，返回 #RRGGBB
   const hslToHex = (hue360: number, s: number, l: number) => {
-    const hue = ((hue360 % 360) + 360) % 360 / 360 // 归一化到 [0, 1)
+    const hue = (((hue360 % 360) + 360) % 360) / 360 // 归一化到 [0, 1)
     const saturation = Math.min(Math.max(s / 100, 0), 1)
     const lightness = Math.min(Math.max(l / 100, 0), 1)
 
@@ -123,16 +140,18 @@ function normalizeColor(color: any): string | null {
         const r = hex[0]
         const g = hex[1]
         const b = hex[2]
-        return (`#${r}${r}${g}${g}${b}${b}`).toUpperCase()
+        return `#${r}${r}${g}${g}${b}${b}`.toUpperCase()
       }
       if (hex.length >= 6) {
-        return (`#${hex.substring(0, 6)}`).toUpperCase()
+        return `#${hex.substring(0, 6)}`.toUpperCase()
       }
       return str.toUpperCase()
     }
 
     // 2) 处理 hsla/hsl 字符串
-    const hslMatch = str.match(/^hsla?\(\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)%\s*,\s*([+-]?\d+(?:\.\d+)?)%(?:\s*,\s*([+-]?\d+(?:\.\d+)?))?\s*\)$/i)
+    const hslMatch = str.match(
+      /^hsla?\(\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)%\s*,\s*([+-]?\d+(?:\.\d+)?)%(?:\s*,\s*([+-]?\d+(?:\.\d+)?))?\s*\)$/i,
+    )
     if (hslMatch) {
       const hue = Number.parseFloat(hslMatch[1])
       const s = Number.parseFloat(hslMatch[2])
@@ -181,15 +200,13 @@ function normalizeWeek(week?: ScheduleWeekInfo): ScheduleWeekInfo {
   const normalizedDays = Array.from({ length: 7 }, (_, index) => {
     const list = week?.days?.[index]
     if (!Array.isArray(list)) return [] as ScheduleDayInfo[]
-    return list
-      .filter(Boolean)
-      .map(item => ({
-        title: item?.title ?? null,
-        tag: item?.tag ?? null,
-        tagColor: normalizeColor(item?.tagColor),
-        time: item?.time ?? null,
-        id: item?.id ?? null,
-      }))
+    return list.filter(Boolean).map((item) => ({
+      title: item?.title ?? null,
+      tag: item?.tag ?? null,
+      tagColor: normalizeColor(item?.tagColor),
+      time: item?.time ?? null,
+      id: item?.id ?? null,
+    }))
   })
 
   return {
@@ -206,13 +223,13 @@ function cloneWeek(week: ScheduleWeekInfo, options: { resetIds?: boolean } = {})
   return {
     year: normalized.year,
     week: normalized.week,
-    days: normalized.days.map(dayList =>
-      dayList.map(item => ({
+    days: normalized.days.map((dayList) =>
+      dayList.map((item) => ({
         title: item.title ?? null,
         tag: item.tag ?? null,
         tagColor: normalizeColor(item.tagColor),
         time: item.time ?? null,
-        id: options.resetIds ? null : item.id ?? null,
+        id: options.resetIds ? null : (item.id ?? null),
       })),
     ),
   }
@@ -242,8 +259,8 @@ function sanitizeDays(days?: ScheduleDayInfo[][]): ScheduleDayInfo[][] {
   return Array.from({ length: 7 }, (_, index) => {
     const list = days?.[index] ?? []
     return list
-      .filter(item => !!item && (item.title?.trim() || item.tag?.trim() || item.time?.trim()))
-      .map(item => ({
+      .filter((item) => !!item && (item.title?.trim() || item.tag?.trim() || item.time?.trim()))
+      .map((item) => ({
         title: item.title?.trim() || null,
         tag: item.tag?.trim() || null,
         tagColor: normalizeColor(item.tagColor),
@@ -278,11 +295,15 @@ const schedules = ref<ScheduleWeekInfo[]>([])
 const message = useMessage()
 
 const isLoading = ref(true)
-const schedulePageUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/schedule` : '')
-const scheduleSubscribeUrl = computed(() => accountInfo.value?.id ? `${SCHEDULE_API_URL}${accountInfo.value.id}.ics` : '')
+const schedulePageUrl = computed(() =>
+  accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/schedule` : '',
+)
+const scheduleSubscribeUrl = computed(() =>
+  accountInfo.value?.id ? `${SCHEDULE_API_URL}${accountInfo.value.id}.ics` : '',
+)
 
 function sortSchedules(list: ScheduleWeekInfo[]) {
-  return [...list].toSorted((a, b) => (b.year - a.year) || (b.week - a.week))
+  return [...list].toSorted((a, b) => b.year - a.year || b.week - a.week)
 }
 
 const showUpdateModal = ref(false)
@@ -302,16 +323,22 @@ const batchAddDay = ref(0)
 const batchAddItem = ref<ScheduleDayInfo>(createEmptyDay())
 const batchWeekOptions = computed(() => {
   const all = getAllWeeks(batchAddYear.value)
-  return all.map(week => ({
-    label: `第${week[0] + 1}周 (${week[1]})`,
-    value: week[0] + 1,
-  }) satisfies SelectOption)
+  return all.map(
+    (week) =>
+      ({
+        label: `第${week[0] + 1}周 (${week[1]})`,
+        value: week[0] + 1,
+      }) satisfies SelectOption,
+  )
 })
 const batchDayOptions = computed(() => {
-  return weekdays.map((label, index) => ({
-    label,
-    value: index,
-  }) satisfies SelectOption)
+  return weekdays.map(
+    (label, index) =>
+      ({
+        label,
+        value: index,
+      }) satisfies SelectOption,
+  )
 })
 
 const showItemTransferModal = ref(false)
@@ -359,7 +386,7 @@ async function get() {
   })
     .then((data) => {
       if (data.code == 200) {
-        schedules.value = sortSchedules((data.data ?? []).map(week => normalizeWeek(week)))
+        schedules.value = sortSchedules((data.data ?? []).map((week) => normalizeWeek(week)))
       } else {
         message.error(`加载失败: ${data.message}`)
       }
@@ -392,7 +419,7 @@ async function addSchedule() {
     })
 }
 async function onCopySchedule() {
-  if (schedules.value?.find(s => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)) {
+  if (schedules.value?.find((s) => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)) {
     message.error('想要复制到的周已存在')
   } else {
     updateScheduleModel.value.year = selectedScheduleYear.value
@@ -431,7 +458,7 @@ async function saveSchedule(day: number | null) {
         })
 
         const index = schedules.value.findIndex(
-          s => s.year == updateScheduleModel.value.year && s.week == updateScheduleModel.value.week,
+          (s) => s.year == updateScheduleModel.value.year && s.week == updateScheduleModel.value.week,
         )
 
         if (index >= 0) {
@@ -495,11 +522,11 @@ function onEditScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number, _item:
   showUpdateModal.value = true
 }
 async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo) {
-  const targetSchedule = schedules.value.find(s => s.year === schedule.year && s.week === schedule.week)
+  const targetSchedule = schedules.value.find((s) => s.year === schedule.year && s.week === schedule.week)
   if (!targetSchedule) return
 
-  const itemIndex = targetSchedule.days[dayIndex].findIndex(i =>
-    i.id === item.id || (i.title === item.title && i.time === item.time && i.tag === item.tag),
+  const itemIndex = targetSchedule.days[dayIndex].findIndex(
+    (i) => i.id === item.id || (i.title === item.title && i.time === item.time && i.tag === item.tag),
   )
 
   if (itemIndex === -1) return
@@ -518,7 +545,7 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
   }).then((data) => {
     if (data.code == 200) {
       message.success('已删除')
-      const index = schedules.value.findIndex(s => s.year === schedule.year && s.week === schedule.week)
+      const index = schedules.value.findIndex((s) => s.year === schedule.year && s.week === schedule.week)
       if (index >= 0) {
         schedules.value[index] = normalizeWeek({
           year: schedule.year,
@@ -583,7 +610,7 @@ async function onBatchAddSchedule() {
   isFetching.value = true
   try {
     for (let week = weekFrom; week <= weekTo; week++) {
-      const existing = schedules.value.find(s => s.year === year && s.week === week)
+      const existing = schedules.value.find((s) => s.year === year && s.week === week)
       const targetWeek = existing ? cloneWeek(existing) : createEmptyWeek(year, week)
       ensureDayInitialized(targetWeek, dayIndex)
       targetWeek.days[dayIndex].push({ ...fixedItem, id: null })
@@ -601,7 +628,7 @@ async function onBatchAddSchedule() {
       }
 
       const normalizedWeek = normalizeWeek({ year, week, days: sanitizedDays })
-      const index = schedules.value.findIndex(s => s.year === year && s.week === week)
+      const index = schedules.value.findIndex((s) => s.year === year && s.week === week)
       if (index >= 0) {
         schedules.value.splice(index, 1, normalizedWeek)
       } else {
@@ -692,7 +719,7 @@ function moveScheduleItem(index: number, direction: 'up' | 'down') {
   dayList[index] = dayList[targetIndex]
   dayList[targetIndex] = temp
 }
-function renderOption({ node, option }: { node: VNode, option: SelectOption }) {
+function renderOption({ node, option }: { node: VNode; option: SelectOption }) {
   return h(NFlex, { align: 'center', size: 3, style: 'margin-left: 5px' }, () => [
     option.value ? h(NBadge, { dot: true, color: option.value?.toString() }) : null,
     node,
@@ -726,7 +753,11 @@ onMounted(() => {
       >
         批量添加
       </NButton>
-      <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'schedule' } })">
+      <NButton
+        @click="
+          $router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'schedule' } })
+        "
+      >
         修改模板
       </NButton>
     </template>
@@ -764,9 +795,7 @@ onMounted(() => {
     preset="card"
     title="复制周程"
   >
-    <NAlert type="info">
-      复制为
-    </NAlert>
+    <NAlert type="info"> 复制为 </NAlert>
     <NFlex vertical>
       年份
       <NSelect
@@ -793,29 +822,33 @@ onMounted(() => {
     preset="card"
     title="批量添加固定行程"
   >
-    <NAlert type="info">
-      一次性把同一条行程添加到连续周的同一天（不存在的周程会自动创建）。
-    </NAlert>
-    <NFlex vertical :size="12" style="margin-top: 12px;">
+    <NAlert type="info"> 一次性把同一条行程添加到连续周的同一天（不存在的周程会自动创建）。 </NAlert>
+    <NFlex
+      vertical
+      :size="12"
+      style="margin-top: 12px"
+    >
       年份
       <NSelect
         v-model:value="batchAddYear"
         :options="yearOptions"
       />
       周范围
-      <NFlex align="center" wrap :size="8">
+      <NFlex
+        align="center"
+        wrap
+        :size="8"
+      >
         <NSelect
           v-model:value="batchAddWeekFrom"
           :options="batchWeekOptions"
-          style="min-width: 220px;"
+          style="min-width: 220px"
         />
-        <NText depth="3">
-          到
-        </NText>
+        <NText depth="3"> 到 </NText>
         <NSelect
           v-model:value="batchAddWeekTo"
           :options="batchWeekOptions"
-          style="min-width: 220px;"
+          style="min-width: 220px"
         />
       </NFlex>
       星期
@@ -824,15 +857,22 @@ onMounted(() => {
         :options="batchDayOptions"
       />
       <NDivider />
-      <NFlex align="center" :size="8" style="flex-wrap: wrap;">
-        <NInputGroup style="width: auto; min-width: 200px;">
-          <NInputGroupLabel type="primary" style="min-width: 50px;">
+      <NFlex
+        align="center"
+        :size="8"
+        style="flex-wrap: wrap"
+      >
+        <NInputGroup style="width: auto; min-width: 200px">
+          <NInputGroupLabel
+            type="primary"
+            style="min-width: 50px"
+          >
             标签
           </NInputGroupLabel>
           <NInput
             v-model:value="batchAddItem.tag"
             placeholder="标签名称"
-            style="width: 150px;"
+            style="width: 150px"
             maxlength="10"
             show-count
           />
@@ -843,15 +883,13 @@ onMounted(() => {
           filterable
           clearable
           placeholder="选择已用标签"
-          style="width: 160px;"
+          style="width: 160px"
           :render-option="renderOption"
           @update:value="(val, opt) => onBatchSelectChange(val, opt)"
         />
       </NFlex>
       <NInputGroup>
-        <NInputGroupLabel style="min-width: 50px;">
-          内容
-        </NInputGroupLabel>
+        <NInputGroupLabel style="min-width: 50px"> 内容 </NInputGroupLabel>
         <NInput
           v-model:value="batchAddItem.title"
           placeholder="事件内容描述"
@@ -859,11 +897,12 @@ onMounted(() => {
           show-count
         />
       </NInputGroup>
-      <NFlex align="center" :size="8">
-        <NInputGroup style="width: auto;">
-          <NInputGroupLabel style="min-width: 50px;">
-            时间
-          </NInputGroupLabel>
+      <NFlex
+        align="center"
+        :size="8"
+      >
+        <NInputGroup style="width: auto">
+          <NInputGroupLabel style="min-width: 50px"> 时间 </NInputGroupLabel>
           <NTimePicker
             v-model:formatted-value="batchAddItem.time"
             default-formatted-value="20:00"
@@ -872,18 +911,16 @@ onMounted(() => {
             clearable
           />
         </NInputGroup>
-        <NInputGroup style="width: auto;">
-          <NInputGroupLabel style="min-width: 50px;">
-            颜色
-          </NInputGroupLabel>
+        <NInputGroup style="width: auto">
+          <NInputGroupLabel style="min-width: 50px"> 颜色 </NInputGroupLabel>
           <NColorPicker
             :value="normalizeColor(batchAddItem.tagColor)"
             :swatches="['#18A058', '#2080F0', '#F0A020', '#D03050', '#9333EA', '#14B8A6']"
             default-value="#2080F0"
             :show-alpha="false"
             :modes="['hex']"
-            style="width: 140px;"
-            @update:value="(val) => batchAddItem.tagColor = normalizeColor(val)"
+            style="width: 140px"
+            @update:value="(val) => (batchAddItem.tagColor = normalizeColor(val))"
           />
         </NInputGroup>
       </NFlex>
@@ -899,7 +936,7 @@ onMounted(() => {
   </NModal>
   <NModal
     v-model:show="showUpdateModal"
-    style="width: 800px; max-width: 95vw; max-height: 90vh;"
+    style="width: 800px; max-width: 95vw; max-height: 90vh"
     preset="card"
     title="编辑周程"
   >
@@ -940,8 +977,14 @@ onMounted(() => {
             }"
           >
             <template #header>
-              <NFlex align="center" :size="8">
-                <NText strong style="font-size: 14px;">
+              <NFlex
+                align="center"
+                :size="8"
+              >
+                <NText
+                  strong
+                  style="font-size: 14px"
+                >
                   行程 {{ itemIndex + 1 }}
                 </NText>
                 <NButton
@@ -992,15 +1035,22 @@ onMounted(() => {
               vertical
               :size="12"
             >
-              <NFlex align="center" :size="8" style="flex-wrap: wrap;">
-                <NInputGroup style="width: auto; min-width: 200px;">
-                  <NInputGroupLabel type="primary" style="min-width: 50px;">
+              <NFlex
+                align="center"
+                :size="8"
+                style="flex-wrap: wrap"
+              >
+                <NInputGroup style="width: auto; min-width: 200px">
+                  <NInputGroupLabel
+                    type="primary"
+                    style="min-width: 50px"
+                  >
                     标签
                   </NInputGroupLabel>
                   <NInput
                     v-model:value="item.tag"
                     placeholder="标签名称"
-                    style="width: 150px;"
+                    style="width: 150px"
                     maxlength="10"
                     show-count
                   />
@@ -1011,15 +1061,13 @@ onMounted(() => {
                   filterable
                   clearable
                   placeholder="选择已用标签"
-                  style="width: 140px;"
+                  style="width: 140px"
                   :render-option="renderOption"
                   @update:value="(val, opt) => onSelectChange(val, opt, itemIndex)"
                 />
               </NFlex>
               <NInputGroup>
-                <NInputGroupLabel style="min-width: 50px;">
-                  内容
-                </NInputGroupLabel>
+                <NInputGroupLabel style="min-width: 50px"> 内容 </NInputGroupLabel>
                 <NInput
                   v-model:value="item.title"
                   placeholder="事件内容描述"
@@ -1027,11 +1075,12 @@ onMounted(() => {
                   show-count
                 />
               </NInputGroup>
-              <NFlex align="center" :size="8">
-                <NInputGroup style="width: auto;">
-                  <NInputGroupLabel style="min-width: 50px;">
-                    时间
-                  </NInputGroupLabel>
+              <NFlex
+                align="center"
+                :size="8"
+              >
+                <NInputGroup style="width: auto">
+                  <NInputGroupLabel style="min-width: 50px"> 时间 </NInputGroupLabel>
                   <NTimePicker
                     v-model:formatted-value="item.time"
                     default-formatted-value="20:00"
@@ -1040,10 +1089,8 @@ onMounted(() => {
                     clearable
                   />
                 </NInputGroup>
-                <NInputGroup style="width: auto;">
-                  <NInputGroupLabel style="min-width: 50px;">
-                    颜色
-                  </NInputGroupLabel>
+                <NInputGroup style="width: auto">
+                  <NInputGroupLabel style="min-width: 50px"> 颜色 </NInputGroupLabel>
                   <NColorPicker
                     :key="`color-${selectedDay}-${itemIndex}-${item.id || 'new'}`"
                     :value="normalizeColor(item.tagColor)"
@@ -1051,8 +1098,8 @@ onMounted(() => {
                     default-value="#2080F0"
                     :show-alpha="false"
                     :modes="['hex']"
-                    style="width: 120px;"
-                    @update:value="(val) => item.tagColor = normalizeColor(val)"
+                    style="width: 120px"
+                    @update:value="(val) => (item.tagColor = normalizeColor(val))"
                   />
                 </NInputGroup>
               </NFlex>
@@ -1077,13 +1124,23 @@ onMounted(() => {
     preset="card"
     title="复制/移动行程项"
   >
-    <NAlert v-if="itemTransferMode === 'copy'" type="info">
+    <NAlert
+      v-if="itemTransferMode === 'copy'"
+      type="info"
+    >
       复制会在目标星期新增一条行程项（不会影响当前行程项）。
     </NAlert>
-    <NAlert v-else type="warning">
+    <NAlert
+      v-else
+      type="warning"
+    >
       移动会把当前行程项从本星期移到目标星期。
     </NAlert>
-    <NFlex vertical :size="12" style="margin-top: 12px;">
+    <NFlex
+      vertical
+      :size="12"
+      style="margin-top: 12px"
+    >
       目标星期
       <NSelect
         v-model:value="itemTransferTargetDay"

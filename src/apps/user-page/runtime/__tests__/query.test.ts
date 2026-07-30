@@ -1,10 +1,13 @@
-import { effectScope } from 'vue'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { effectScope } from 'vue'
+
 import { clearUserPageRuntimeCache, useUserPageRuntimeQuery } from '../query'
 
 function deferred<T>() {
   let resolve!: (value: T) => void
-  const promise = new Promise<T>((accept) => { resolve = accept })
+  const promise = new Promise<T>((accept) => {
+    resolve = accept
+  })
   return { promise, resolve }
 }
 
@@ -41,10 +44,12 @@ describe('useUserPageRuntimeQuery', () => {
     const secondResult = deferred<string>()
     let key = 'first'
     const scope = effectScope()
-    const query = scope.run(() => useUserPageRuntimeQuery({
-      key: () => key,
-      loader: async () => key === 'first' ? firstResult.promise : secondResult.promise,
-    }))
+    const query = scope.run(() =>
+      useUserPageRuntimeQuery({
+        key: () => key,
+        loader: async () => (key === 'first' ? firstResult.promise : secondResult.promise),
+      }),
+    )
 
     const oldRequest = query.execute()
     key = 'second'

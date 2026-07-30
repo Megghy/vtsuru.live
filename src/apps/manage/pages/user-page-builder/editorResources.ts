@@ -1,10 +1,15 @@
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 
-export interface FileRefEntry { id: number, path?: string, name?: string, locations: string[] }
+export interface FileRefEntry {
+  id: number
+  path?: string
+  name?: string
+  locations: string[]
+}
 
 export function collectFileRefsFromSettings(settings: UserPagesSettingsV1): FileRefEntry[] {
-  const map = new Map<number, { id: number, path?: string, name?: string, locations: Set<string> }>()
+  const map = new Map<number, { id: number; path?: string; name?: string; locations: Set<string> }>()
 
   const add = (obj: any, loc: string) => {
     if (!obj || typeof obj !== 'object') return
@@ -38,7 +43,7 @@ export function collectFileRefsFromSettings(settings: UserPagesSettingsV1): File
   walk(settings as any, 'settings')
 
   return Array.from(map.values())
-    .map(x => ({ id: x.id, path: x.path, name: x.name, locations: Array.from(x.locations).toSorted() }))
+    .map((x) => ({ id: x.id, path: x.path, name: x.name, locations: Array.from(x.locations).toSorted() }))
     .toSorted((a, b) => a.id - b.id)
 }
 

@@ -1,16 +1,35 @@
 <script setup lang="ts">
-import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { darkTheme, NAlert, NButton, NCard, NConfigProvider, NDivider, NFlex, NInput, NInputNumber, NResult, NText, useMessage } from 'naive-ui'
+import {
+  darkTheme,
+  NAlert,
+  NButton,
+  NCard,
+  NConfigProvider,
+  NDivider,
+  NFlex,
+  NInput,
+  NInputNumber,
+  NResult,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
+
+import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import { getPageBackgroundCssVars, getUserPageNaiveThemeOverrides, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import {
+  getPageBackgroundCssVars,
+  getUserPageNaiveThemeOverrides,
+  getUserPageThemeCssVars,
+  resolvePageBackground,
+} from '@/apps/user-page/background'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserCustomCss } from '@/apps/user-page/runtime/customCss'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { TURNSTILE_KEY, VIDEO_COLLECT_API_URL } from '@/shared/config'
 import { isDarkMode } from '@/shared/utils'
@@ -36,20 +55,20 @@ const ownerSettings = ref<UserPagesSettingsV1 | null>(await loadOwnerSettings(ta
 const isBiliAuthed = computed(() => biliAuth.isAuthed && !!biliAuth.biliAuth?.userId)
 const appearanceTheme = computed(() => ownerSettings.value?.theme)
 const effectiveIsDark = computed(() => resolvePageThemeIsDark(appearanceTheme.value?.pageThemeMode, isDarkMode.value))
-const pageNaiveTheme = computed(() => effectiveIsDark.value ? darkTheme : null)
+const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
 const pageThemeVars = computed(() => getUserPageThemeCssVars(appearanceTheme.value, effectiveIsDark.value))
 const pageBackground = computed(() => resolvePageBackground(ownerSettings.value?.background))
-const pageBackgroundVars = computed(() => pageBackground.value
-  ? getPageBackgroundCssVars(pageBackground.value, effectiveIsDark.value)
-  : {})
+const pageBackgroundVars = computed(() =>
+  pageBackground.value ? getPageBackgroundCssVars(pageBackground.value, effectiveIsDark.value) : {},
+)
 const pageBackgroundClass = computed(() => ({
   'has-background': !!pageBackground.value,
   'background-blur': pageBackground.value?.blurMode === 'background',
   'background-glass': pageBackground.value?.blurMode === 'glass',
 }))
 const pageThemeOverrides = computed(() => ({
-    ...getUserPageNaiveThemeOverrides(appearanceTheme.value, pageThemeVars.value, effectiveIsDark.value),
-    Layout: { color: 'transparent' },
+  ...getUserPageNaiveThemeOverrides(appearanceTheme.value, pageThemeVars.value, effectiveIsDark.value),
+  Layout: { color: 'transparent' },
 }))
 
 useGoogleFont(computed(() => appearanceTheme.value?.fontFamily))
@@ -123,7 +142,10 @@ onUnmounted(() => turnstile.value?.remove())
 </script>
 
 <template>
-  <NConfigProvider :theme="pageNaiveTheme" :theme-overrides="pageThemeOverrides">
+  <NConfigProvider
+    :theme="pageNaiveTheme"
+    :theme-overrides="pageThemeOverrides"
+  >
     <div
       class="video-collect-public page-root"
       :class="pageBackgroundClass"
@@ -136,7 +158,10 @@ onUnmounted(() => turnstile.value?.remove())
           title="指定收集表不存在"
           description="检查一下你输入的链接吧"
         />
-        <NCard v-else class="video-collect-public__card">
+        <NCard
+          v-else
+          class="video-collect-public__card"
+        >
           <template #header>
             视频征集
             <NDivider vertical />
@@ -144,16 +169,33 @@ onUnmounted(() => turnstile.value?.remove())
               text
               @click="$router.push({ name: 'user-index', params: { id: table.owner.name } })"
             >
-              <NText depth="3" class="video-collect-public__owner">
+              <NText
+                depth="3"
+                class="video-collect-public__owner"
+              >
                 {{ table.owner.name }}
               </NText>
             </NButton>
           </template>
-          <VideoCollectInfoCard :item="table" :can-click="false" from="user" />
+          <VideoCollectInfoCard
+            :item="table"
+            :can-click="false"
+            from="user"
+          />
           <NDivider />
-          <NAlert v-if="table.isFinish" type="error" title="该征集表已截止" />
-          <NFlex v-else vertical>
-            <NInput v-model:value="addModel.video" placeholder="B站视频链接或BVID" />
+          <NAlert
+            v-if="table.isFinish"
+            type="error"
+            title="该征集表已截止"
+          />
+          <NFlex
+            v-else
+            vertical
+          >
+            <NInput
+              v-model:value="addModel.video"
+              placeholder="B站视频链接或BVID"
+            />
             <NInput
               v-model:value="addModel.name"
               placeholder="(选填) 推荐人"
@@ -165,8 +207,15 @@ onUnmounted(() => turnstile.value?.remove())
               :show-button="false"
               :disabled="isBiliAuthed"
             />
-            <NInput v-model:value="addModel.description" placeholder="(选填) 推荐理由" />
-            <NButton type="primary" :loading="isLoading || !token" @click="add">
+            <NInput
+              v-model:value="addModel.description"
+              placeholder="(选填) 推荐理由"
+            />
+            <NButton
+              type="primary"
+              :loading="isLoading || !token"
+              @click="add"
+            >
               推荐视频
             </NButton>
             <VueTurnstile
@@ -200,7 +249,7 @@ onUnmounted(() => turnstile.value?.remove())
 
 .video-collect-public.has-background::before,
 .video-collect-public.has-background::after {
-  content: "";
+  content: '';
   position: absolute;
   pointer-events: none;
 }
@@ -226,9 +275,7 @@ onUnmounted(() => turnstile.value?.remove())
 }
 
 .video-collect-public.background-glass::after {
-  background:
-    linear-gradient(var(--glass-surface-bg), var(--glass-surface-bg)),
-    var(--user-page-bg-scrim, transparent);
+  background: linear-gradient(var(--glass-surface-bg), var(--glass-surface-bg)), var(--user-page-bg-scrim, transparent);
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
 }

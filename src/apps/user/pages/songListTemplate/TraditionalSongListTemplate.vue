@@ -1,21 +1,28 @@
 <script setup lang="ts">
+import {
+  ArrowCounterclockwise20Filled,
+  ArrowSortDown20Filled,
+  ArrowSortUp20Filled,
+  SquareArrowForward24Filled,
+} from '@vicons/fluent'
+import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NSelect, NTag, NTooltip } from 'naive-ui'
 import type { VNode } from 'vue'
+import { computed, h, ref, watch } from 'vue'
+
+import { useAccount } from '@/api/account'
 import type { SongRequestOption, SongsInfo } from '@/api/api-models'
+import { SongFrom } from '@/api/api-models'
 import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
-import { ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled, SquareArrowForward24Filled } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NSelect, NTag, NTooltip } from 'naive-ui';
-import { computed, h, ref, watch } from 'vue'
-import { SongFrom } from '@/api/api-models'
-import { useAccount } from '@/api/account'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
+import { isDarkMode } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import bilibili from '@/svgs/bilibili.svg'
 import douyin from '@/svgs/douyin.svg'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import neteaseMusic from '@/svgs/neteaseMusic.svg'
 import qqMusic from '@/svgs/qqMusic.svg'
-import { isDarkMode } from '@/shared/utils'
+
 import { getSongRequestConfirmText, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -52,12 +59,12 @@ const sortKey = ref<SortKey>(null) // 当前排序列
 const sortOrder = ref<'asc' | 'desc'>('asc') // 当前排序顺序
 
 const optionFilters: Record<string, (song: SongsInfo) => boolean> = {
-  未设定: song => !song.options,
-  舰长: song => song.options?.needJianzhang === true,
-  提督: song => song.options?.needTidu === true,
-  总督: song => song.options?.needZongdu === true,
-  粉丝牌: song => (song.options?.fanMedalMinLevel ?? 0) > 0,
-  SC: song => (song.options?.scMinPrice ?? 0) > 0,
+  未设定: (song) => !song.options,
+  舰长: (song) => song.options?.needJianzhang === true,
+  提督: (song) => song.options?.needTidu === true,
+  总督: (song) => song.options?.needZongdu === true,
+  粉丝牌: (song) => (song.options?.fanMedalMinLevel ?? 0) > 0,
+  SC: (song) => (song.options?.scMinPrice ?? 0) > 0,
 }
 
 // --- Computed Properties for Filter Buttons ---
@@ -102,9 +109,7 @@ const allUniqueTags = computed<string[]>(() => {
 })
 
 // Create structure for tag buttons (reuse FilterButton interface)
-const tagButtons = computed<FilterButton[]>(() =>
-  allUniqueTags.value.map((tag, index) => ({ id: index, name: tag })),
-)
+const tagButtons = computed<FilterButton[]>(() => allUniqueTags.value.map((tag, index) => ({ id: index, name: tag })))
 
 // --- 添加点歌条件筛选按钮 ---
 // 提取所有唯一的点歌条件类型
@@ -132,17 +137,19 @@ const allArtists = computed(() => {
 
 // Format artists for NSelect options (unchanged)
 const artistOptions = computed(() => {
-  return allArtists.value.map(artist => ({ label: artist, value: artist }))
+  return allArtists.value.map((artist) => ({ label: artist, value: artist }))
 })
 
 const filteredAndSortedSongs = computed(() => {
   const lowerSearch = searchQuery.value.trim().toLowerCase()
   const songs = (props.data ?? []).filter((song) => {
-    return matchesArrayFilter(song.language, selectedLanguage.value)
-      && matchesArrayFilter(song.tags, selectedTag.value)
-      && (!selectedArtist.value || song.author?.includes(selectedArtist.value))
-      && (!selectedOption.value || optionFilters[selectedOption.value]?.(song))
-      && (!lowerSearch || getSearchText(song).includes(lowerSearch))
+    return (
+      matchesArrayFilter(song.language, selectedLanguage.value) &&
+      matchesArrayFilter(song.tags, selectedTag.value) &&
+      (!selectedArtist.value || song.author?.includes(selectedArtist.value)) &&
+      (!selectedOption.value || optionFilters[selectedOption.value]?.(song)) &&
+      (!lowerSearch || getSearchText(song).includes(lowerSearch))
+    )
   })
 
   if (!sortKey.value) return songs
@@ -162,20 +169,17 @@ function matchesArrayFilter(values: string[] | undefined, selected: string | und
 }
 
 function getSearchText(song: SongsInfo) {
-  return [
-    song.name,
-    song.author?.join(' '),
-    song.language?.join(' '),
-    song.tags?.join(' '),
-    song.description,
-  ].filter(Boolean).join(' ').toLowerCase()
+  return [song.name, song.author?.join(' '), song.language?.join(' '), song.tags?.join(' '), song.description]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
 }
 
 function getSortValue(song: SongsInfo, key: Exclude<SortKey, null>) {
   if (key === 'options') return song.options ? 1 : 0
   const value = song[key]
   if (Array.isArray(value)) return value.join('').toLowerCase()
-  return typeof value === 'string' ? value.toLowerCase() : value ?? ''
+  return typeof value === 'string' ? value.toLowerCase() : (value ?? '')
 }
 
 function getStableSortValue(song: SongsInfo) {
@@ -265,10 +269,16 @@ function handleSort(key: SortKey) {
 function getSortIcon(key: SortKey) {
   if (sortKey.value !== key) {
     // Show inactive sort icon (down arrow as placeholder)
-    return h(NIcon, { component: ArrowSortDown20Filled, style: { opacity: 0.3, marginLeft: '4px', verticalAlign: 'middle' } })
+    return h(NIcon, {
+      component: ArrowSortDown20Filled,
+      style: { opacity: 0.3, marginLeft: '4px', verticalAlign: 'middle' },
+    })
   }
   // Show active sort icon (up or down)
-  return h(NIcon, { component: sortOrder.value === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled, style: { marginLeft: '4px', verticalAlign: 'middle' } })
+  return h(NIcon, {
+    component: sortOrder.value === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled,
+    style: { marginLeft: '4px', verticalAlign: 'middle' },
+  })
   // Note: We don't need a specific 'clear' icon here, as clicking 'desc' clears the sort and the icon reverts to inactive.
 }
 
@@ -280,7 +290,7 @@ watch(allArtists, (newArtists) => {
 })
 
 function randomOrder() {
-  const songsToChooseFrom = filteredAndSortedSongs.value.length > 0 ? filteredAndSortedSongs.value : props.data ?? []
+  const songsToChooseFrom = filteredAndSortedSongs.value.length > 0 ? filteredAndSortedSongs.value : (props.data ?? [])
   if (songsToChooseFrom.length === 0) {
     window.$message?.warning('歌单为空或当前筛选无结果，无法随机点歌')
     return
@@ -396,19 +406,41 @@ function getOptionDisplay(options?: SongRequestOption) {
   const conditions: VNode[] = []
 
   if (options.needJianzhang) {
-    conditions.push(h(NTag, { size: 'small', type: 'info', style: { marginRight: '4px', marginBottom: '2px' } }, () => '舰长'))
+    conditions.push(
+      h(NTag, { size: 'small', type: 'info', style: { marginRight: '4px', marginBottom: '2px' } }, () => '舰长'),
+    )
   }
   if (options.needTidu) {
-    conditions.push(h(NTag, { size: 'small', type: 'warning', style: { marginRight: '4px', marginBottom: '2px' } }, () => '提督'))
+    conditions.push(
+      h(NTag, { size: 'small', type: 'warning', style: { marginRight: '4px', marginBottom: '2px' } }, () => '提督'),
+    )
   }
   if (options.needZongdu) {
-    conditions.push(h(NTag, { size: 'small', type: 'error', style: { marginRight: '4px', marginBottom: '2px' } }, () => '总督'))
+    conditions.push(
+      h(NTag, { size: 'small', type: 'error', style: { marginRight: '4px', marginBottom: '2px' } }, () => '总督'),
+    )
   }
   if (options.fanMedalMinLevel && options.fanMedalMinLevel > 0) {
-    conditions.push(h(NTag, { size: 'small', type: 'success', style: { marginRight: '4px', marginBottom: '2px' } }, () => `粉丝牌 ${options.fanMedalMinLevel}级`))
+    conditions.push(
+      h(
+        NTag,
+        { size: 'small', type: 'success', style: { marginRight: '4px', marginBottom: '2px' } },
+        () => `粉丝牌 ${options.fanMedalMinLevel}级`,
+      ),
+    )
   }
   if (options.scMinPrice && options.scMinPrice > 0) {
-    conditions.push(h(NTag, { size: 'small', color: { color: '#E85A4F', textColor: '#fff' }, style: { marginRight: '4px', marginBottom: '2px' } }, () => `SC ¥${options.scMinPrice}`))
+    conditions.push(
+      h(
+        NTag,
+        {
+          size: 'small',
+          color: { color: '#E85A4F', textColor: '#fff' },
+          style: { marginRight: '4px', marginBottom: '2px' },
+        },
+        () => `SC ¥${options.scMinPrice}`,
+      ),
+    )
   }
 
   if (conditions.length === 0) {
@@ -423,7 +455,7 @@ function getOptionDisplay(options?: SongRequestOption) {
 
 <script lang="ts">
 // --- Config section remains the same ---
-const tempLinks = ref<{ name: string, url: string }>({
+const tempLinks = ref<{ name: string; url: string }>({
   name: '',
   url: '',
 })
@@ -513,7 +545,7 @@ export const Config = defineTemplateConfig([
           },
         },
         () => [
-          config.links?.map((link: { name: string, url: string }) => {
+          config.links?.map((link: { name: string; url: string }) => {
             return h(
               NTag,
               {
@@ -526,13 +558,14 @@ export const Config = defineTemplateConfig([
                 },
                 closable: true,
                 onClose: () => {
-                  config.links = config.links.filter((l: { name: string, url: string }) => l.name !== link.name)
+                  config.links = config.links.filter((l: { name: string; url: string }) => l.name !== link.name)
                 },
               },
               () => link.name,
             )
           }),
-          h(NFlex, { style: { marginTop: '5px', flexGrow: 1, minWidth: '300px' }, align: 'center' }, () => [ // Wrap inputs and button
+          h(NFlex, { style: { marginTop: '5px', flexGrow: 1, minWidth: '300px' }, align: 'center' }, () => [
+            // Wrap inputs and button
             h(NInputGroup, { size: 'small', style: { marginRight: '5px' } }, () => [
               h(NInputGroupLabel, { style: { width: 'auto' } }, () => '名称'), // Auto width
               h(NInput, {
@@ -553,25 +586,30 @@ export const Config = defineTemplateConfig([
                 },
               }),
             ]),
-            h(NButton, {
-              type: 'primary',
-              size: 'small',
-              onClick: () => {
-                if (tempLinks.value.name && tempLinks.value.url) { // Basic validation
-                  config.links = config.links || []
-                  config.links.push({ ...tempLinks.value }) // Push a copy
-                  tempLinks.value = { // Reset
-                    name: '',
-                    url: '',
+            h(
+              NButton,
+              {
+                type: 'primary',
+                size: 'small',
+                onClick: () => {
+                  if (tempLinks.value.name && tempLinks.value.url) {
+                    // Basic validation
+                    config.links = config.links || []
+                    config.links.push({ ...tempLinks.value }) // Push a copy
+                    tempLinks.value = {
+                      // Reset
+                      name: '',
+                      url: '',
+                    }
+                  } else {
+                    window.$message?.warning('请输入链接名称和地址')
                   }
-                } else {
-                  window.$message?.warning('请输入链接名称和地址')
-                }
+                },
+                disabled: !tempLinks.value.name || !tempLinks.value.url, // Disable if fields are empty
               },
-              disabled: !tempLinks.value.name || !tempLinks.value.url, // Disable if fields are empty
-            }, () => '添加'),
+              () => '添加',
+            ),
           ]),
-
         ],
       )
     },
@@ -591,7 +629,10 @@ export const Config = defineTemplateConfig([
   <div
     class="song-list-background-wrapper"
     :style="{
-      backgroundImage: props.config?.backgroundFile && props.config.backgroundFile.length > 0 ? `url(${props.config.backgroundFile[0].path})` : 'none',
+      backgroundImage:
+        props.config?.backgroundFile && props.config.backgroundFile.length > 0
+          ? `url(${props.config.backgroundFile[0].path})`
+          : 'none',
     }"
   >
     <!-- 原始: 滚动和内容容器 -->
@@ -610,7 +651,7 @@ export const Config = defineTemplateConfig([
             alt="Avatar"
             class="profile-avatar"
             referrerpolicy="no-referrer"
-          >
+          />
 
           <!-- Basic Info (Always Visible) -->
           <div class="profile-info">
@@ -625,9 +666,7 @@ export const Config = defineTemplateConfig([
 
           <!-- Social Links (Visible on Hover) -->
           <div class="social-links">
-            <p class="social-links-title">
-              关于我
-            </p>
+            <p class="social-links-title">关于我</p>
             <p class="social-links-subtitle">
               {{ props.config?.longDescription ?? '暂时没有填写介绍' }}
             </p>
@@ -754,7 +793,7 @@ export const Config = defineTemplateConfig([
             <NFlex
               align="center"
               :wrap="true"
-              style="flex-grow: 1;"
+              style="flex-grow: 1"
             >
               <!-- Artist Filter Dropdown -->
               <NSelect
@@ -762,14 +801,14 @@ export const Config = defineTemplateConfig([
                 :options="artistOptions"
                 placeholder="筛选歌手"
                 clearable
-                style="max-width: 160px; margin-right: 10px; margin-bottom: 5px;"
+                style="max-width: 160px; margin-right: 10px; margin-bottom: 5px"
                 size="small"
               />
 
               <!-- Search Input -->
               <div
                 class="search-wrapper"
-                style="margin-right: 10px; margin-bottom: 5px;"
+                style="margin-right: 10px; margin-bottom: 5px"
               >
                 <span class="search-icon">🔍</span>
                 <input
@@ -777,8 +816,8 @@ export const Config = defineTemplateConfig([
                   type="text"
                   placeholder="筛选歌名/歌手/语言/标签/备注"
                   class="filter-input"
-                  style="min-width: 220px;"
-                >
+                  style="min-width: 220px"
+                />
               </div>
 
               <!-- Clear Filters Button -->
@@ -817,37 +856,37 @@ export const Config = defineTemplateConfig([
               <thead>
                 <tr>
                   <th
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                     @click="handleSort('name')"
                   >
                     歌名 <component :is="getSortIcon('name')" />
                   </th>
                   <th
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                     @click="handleSort('author')"
                   >
                     歌手 <component :is="getSortIcon('author')" />
                   </th>
                   <th
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                     @click="handleSort('language')"
                   >
                     语言 <component :is="getSortIcon('language')" />
                   </th>
                   <th
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                     @click="handleSort('tags')"
                   >
                     标签 <component :is="getSortIcon('tags')" />
                   </th>
                   <th
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                     @click="handleSort('options')"
                   >
                     点歌条件 <component :is="getSortIcon('options')" />
                   </th>
                   <th
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                     @click="handleSort('description')"
                   >
                     备注 <component :is="getSortIcon('description')" />
@@ -873,7 +912,7 @@ export const Config = defineTemplateConfig([
                 </tr>
                 <tr
                   v-for="song in filteredAndSortedSongs"
-                  :key="song.key || (`${song.name}-${song.author?.join('/')}`)"
+                  :key="song.key || `${song.name}-${song.author?.join('/')}`"
                   :style="{
                     textShadow: isDarkMode ? '0px 1px 2px rgba(0, 0, 0, 0.4)' : '0px 1px 2px rgba(255, 255, 255, 0.4)',
                   }"
@@ -884,16 +923,18 @@ export const Config = defineTemplateConfig([
                       <span
                         v-if="singingSongKeySet.has(song.key)"
                         class="status-badge singing"
-                      >演唱中</span>
+                        >演唱中</span
+                      >
                       <span
                         v-else-if="queuedSongKeySet.has(song.key)"
                         class="status-badge queued"
-                      >排队中</span>
+                        >排队中</span
+                      >
                       <component :is="GetPlayButton(song)" />
                       <NTooltip>
                         <template #trigger>
                           <span
-                            style="cursor: pointer;"
+                            style="cursor: pointer"
                             @click="onSongClick(song)"
                           >
                             {{ song.name }}
@@ -949,7 +990,7 @@ export const Config = defineTemplateConfig([
                       v-if="song.tags && song.tags.length > 0"
                       :size="4"
                       :wrap="true"
-                      style="gap: 4px;"
+                      style="gap: 4px"
                     >
                       <!-- Use NFlex for tag wrapping -->
                       <NTag
@@ -1008,7 +1049,10 @@ html.dark .filter-label {
   background-color: rgba(0, 0, 0, 0.04);
   font-size: 0.85em;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
   color: var(--text-color-2);
   line-height: 1.4;
 }
@@ -1075,7 +1119,9 @@ html.dark .search-icon {
   border-radius: 15px;
   font-size: 0.9em;
   line-height: normal;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   border: 1px solid rgba(0, 0, 0, 0.15);
   background-color: rgba(255, 255, 255, 0.8);
   color: var(--text-color-base);
@@ -1141,9 +1187,12 @@ html.dark .filter-input::placeholder {
 }
 
 .song-list-background-wrapper::before {
-  content: "";
+  content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   background-color: rgba(80, 80, 80, 0.1);
@@ -1164,17 +1213,33 @@ html.dark .song-list-background-wrapper::before {
   background: transparent !important;
   border-radius: inherit;
   min-width: 400px;
-  
-  &::-webkit-scrollbar { width: 8px; }
-  &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 4px; }
-  &::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
-  &::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
 }
 
 html.dark .song-list-template {
-  &::-webkit-scrollbar-track { background: var(--scrollbar-color); }
-  &::-webkit-scrollbar-thumb { background: var(--scrollbar-color-hover); }
-  &::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-color-active); }
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-color);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-color-hover);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-color-active);
+  }
 }
 
 .profile-card-container {
@@ -1192,10 +1257,16 @@ html.dark .profile-card-container {
 
 /* Profile Hover Area */
 .profile-hover-area {
-  position: relative; display: flex; align-items: flex-start;
-  width: fit-content; min-width: 300px; margin: 0 auto 20px auto;
-  padding: 15px; border-radius: 15px;
-  transition: transform 0.4s ease-in-out; z-index: 100;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  width: fit-content;
+  min-width: 300px;
+  margin: 0 auto 20px auto;
+  padding: 15px;
+  border-radius: 15px;
+  transition: transform 0.4s ease-in-out;
+  z-index: 100;
   box-shadow: var(--box-shadow-1);
   background-color: rgba(255, 255, 255, 0.65);
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -1207,11 +1278,17 @@ html.dark .profile-hover-area {
 }
 
 .profile-avatar {
-  width: 100px; height: 100px; border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
   border: 3px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  margin-right: 20px; position: relative; z-index: 10;
-  transition: transform 0.4s ease-in-out; cursor: pointer; flex-shrink: 0;
+  margin-right: 20px;
+  position: relative;
+  z-index: 10;
+  transition: transform 0.4s ease-in-out;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 html.dark .profile-avatar {
@@ -1219,11 +1296,16 @@ html.dark .profile-avatar {
 }
 
 .profile-info {
-  flex-grow: 1; min-width: 180px; text-align: left;
+  flex-grow: 1;
+  min-width: 180px;
+  text-align: left;
 }
 
 .profile-name {
-  margin-top: 5px; margin-bottom: 8px; font-size: 1.8em; font-weight: bold;
+  margin-top: 5px;
+  margin-bottom: 8px;
+  font-size: 1.8em;
+  font-weight: bold;
   color: var(--text-color-1);
 }
 
@@ -1232,7 +1314,9 @@ html.dark .profile-name {
 }
 
 .profile-description {
-  margin-bottom: 10px; font-size: 0.95em; line-height: 1.4;
+  margin-bottom: 10px;
+  font-size: 0.95em;
+  line-height: 1.4;
   color: var(--text-color-2);
 }
 
@@ -1241,7 +1325,8 @@ html.dark .profile-description {
 }
 
 .profile-extra-info {
-  font-size: 0.8em; color: var(--text-color-3);
+  font-size: 0.8em;
+  color: var(--text-color-3);
 }
 
 html.dark .profile-extra-info {
@@ -1249,13 +1334,24 @@ html.dark .profile-extra-info {
 }
 
 .social-links {
-  position: absolute; top: 5px; left: calc(100px + 20px + 10px);
-  width: 380px; padding: 15px 20px; border-radius: 10px;
-  box-shadow: var(--box-shadow-2); z-index: 20;
+  position: absolute;
+  top: 5px;
+  left: calc(100px + 20px + 10px);
+  width: 380px;
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: var(--box-shadow-2);
+  z-index: 20;
   background-color: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  opacity: 0; visibility: hidden; transform: translateX(20px);
-  transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out, transform 0.4s ease-in-out, left 0.4s ease-in-out;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(20px);
+  transition:
+    opacity 0.4s ease-in-out,
+    visibility 0.4s ease-in-out,
+    transform 0.4s ease-in-out,
+    left 0.4s ease-in-out;
 }
 
 html.dark .social-links {
@@ -1279,12 +1375,22 @@ html.dark .social-links-subtitle {
 }
 
 .social-icons-bar {
-  position: absolute; top: 15px; right: 20px; display: flex; gap: 8px;
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
 }
 
 .social-icons-bar .icon {
-  display: inline-block; width: 24px; height: 24px; border-radius: 4px;
-  font-size: 1em; cursor: pointer; color: var(--text-color-2); transition: color 0.2s;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  font-size: 1em;
+  cursor: pointer;
+  color: var(--text-color-2);
+  transition: color 0.2s;
 }
 
 html.dark .social-icons-bar .icon {
@@ -1319,7 +1425,9 @@ html.dark .social-icons-bar .icon {
   text-decoration: none;
   color: var(--primary-color);
   background-color: rgba(0, 102, 204, 0.1);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 html.dark .social-link {
@@ -1366,7 +1474,7 @@ html.dark .social-link .arrow {
   border-radius: 15px;
   font-family: sans-serif;
   box-shadow: var(--box-shadow-1);
-  background-color: rgba(255, 255, 255, 0.50);
+  background-color: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -1409,12 +1517,24 @@ html.dark .song-list-table thead th {
   color: var(--text-color-2);
 }
 
-.song-list-table th:nth-child(1) { width: 22%; }
-.song-list-table th:nth-child(2) { width: 15%; }
-.song-list-table th:nth-child(3) { width: 10%; }
-.song-list-table th:nth-child(4) { width: 13%; }
-.song-list-table th:nth-child(5) { width: 15%; }
-.song-list-table th:nth-child(6) { width: 25%; }
+.song-list-table th:nth-child(1) {
+  width: 22%;
+}
+.song-list-table th:nth-child(2) {
+  width: 15%;
+}
+.song-list-table th:nth-child(3) {
+  width: 10%;
+}
+.song-list-table th:nth-child(4) {
+  width: 13%;
+}
+.song-list-table th:nth-child(5) {
+  width: 15%;
+}
+.song-list-table th:nth-child(6) {
+  width: 25%;
+}
 
 .song-list-table tbody tr {
   transition: background-color 0.15s ease;
@@ -1467,7 +1587,9 @@ html.dark .song-name {
   cursor: pointer;
   text-decoration: none;
   color: var(--text-color-2);
-  transition: color 0.2s ease, text-decoration 0.2s ease;
+  transition:
+    color 0.2s ease,
+    text-decoration 0.2s ease;
 }
 
 .artist-link:hover {
@@ -1531,7 +1653,9 @@ html.dark .no-results td {
   cursor: pointer;
   text-decoration: none;
   color: var(--text-color-2);
-  transition: color 0.2s ease, text-decoration 0.2s ease;
+  transition:
+    color 0.2s ease,
+    text-decoration 0.2s ease;
 }
 
 .language-link:hover {
@@ -1555,5 +1679,4 @@ html.dark .language-link.selected-language {
   border: 1px solid var(--primary-color-a8);
   color: var(--primary-color-light);
 }
-
 </style>

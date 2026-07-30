@@ -1,9 +1,25 @@
 <script setup lang="ts">
 import { NotificationsOutline } from '@vicons/ionicons5'
 import {
-  NBadge, NButton, NCard, NEmpty, NIcon, NList, NListItem, NPopover, NScrollbar, NFlex, NSpin, NTag, NTime, NTooltip, useMessage } from 'naive-ui';
+  NBadge,
+  NButton,
+  NCard,
+  NEmpty,
+  NIcon,
+  NList,
+  NListItem,
+  NPopover,
+  NScrollbar,
+  NFlex,
+  NSpin,
+  NTag,
+  NTime,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+
 import { useAccount } from '@/api/account'
 import { QueryPostAPIWithParams } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
@@ -45,7 +61,7 @@ async function onPopoverUpdate(show: boolean) {
 
 async function markAllRead() {
   try {
-    const ids = notificationStore.unread.map(n => n.id)
+    const ids = notificationStore.unread.map((n) => n.id)
     if (!ids.length) return
     await notificationStore.markRead(ids)
   } catch (err) {
@@ -65,11 +81,9 @@ async function acceptOrgInvite(item: any) {
   try {
     const type = getOrgInviteType(item)
     const token = getOrgInviteToken(item)
-    const url = type === 'member'
-      ? `${ORG_API_URL}invite/member/accept`
-      : `${ORG_API_URL}invite/streamer/accept`
+    const url = type === 'member' ? `${ORG_API_URL}invite/member/accept` : `${ORG_API_URL}invite/streamer/accept`
 
-    const resp = await QueryPostAPIWithParams<{ orgId: number, orgName: string }>(url, { token }, undefined)
+    const resp = await QueryPostAPIWithParams<{ orgId: number; orgName: string }>(url, { token }, undefined)
     if (resp.code !== 200) {
       message.error(resp.message)
       return
@@ -88,11 +102,9 @@ async function rejectOrgInvite(item: any) {
   try {
     const type = getOrgInviteType(item)
     const token = getOrgInviteToken(item)
-    const url = type === 'member'
-      ? `${ORG_API_URL}invite/member/reject`
-      : `${ORG_API_URL}invite/streamer/reject`
+    const url = type === 'member' ? `${ORG_API_URL}invite/member/reject` : `${ORG_API_URL}invite/streamer/reject`
 
-    const resp = await QueryPostAPIWithParams<{ orgId: number, orgName: string }>(url, { token }, undefined)
+    const resp = await QueryPostAPIWithParams<{ orgId: number; orgName: string }>(url, { token }, undefined)
     if (resp.code !== 200) {
       message.error(resp.message)
       return
@@ -131,7 +143,7 @@ async function openNotif(item: any) {
 
 onMounted(() => {
   if (accountInfo.value?.id) {
-    void notificationStore.refreshUnread().catch(err => console.warn('[notification] refreshUnread failed', err))
+    void notificationStore.refreshUnread().catch((err) => console.warn('[notification] refreshUnread failed', err))
   }
 })
 
@@ -155,8 +167,15 @@ watch(
         @update:show="onPopoverUpdate"
       >
         <template #trigger>
-          <NBadge :value="notificationStore.unreadCount" :max="99" :show="notificationStore.unreadCount > 0">
-            <NButton circle tertiary>
+          <NBadge
+            :value="notificationStore.unreadCount"
+            :max="99"
+            :show="notificationStore.unreadCount > 0"
+          >
+            <NButton
+              circle
+              tertiary
+            >
               <template #icon>
                 <NIcon :component="NotificationsOutline" />
               </template>
@@ -164,12 +183,20 @@ watch(
           </NBadge>
         </template>
 
-        <NCard size="small" style="width: 420px" :bordered="false" :segmented="{ content: true }">
-          <template #header>
-            通知
-          </template>
+        <NCard
+          size="small"
+          style="width: 420px"
+          :bordered="false"
+          :segmented="{ content: true }"
+        >
+          <template #header> 通知 </template>
           <template #header-extra>
-            <NButton size="small" secondary :disabled="notificationStore.unreadCount === 0" @click.stop="markAllRead">
+            <NButton
+              size="small"
+              secondary
+              :disabled="notificationStore.unreadCount === 0"
+              @click.stop="markAllRead"
+            >
               全部已读
             </NButton>
           </template>
@@ -179,37 +206,70 @@ watch(
               <NEmpty description="暂无通知" />
             </template>
 
-            <NScrollbar v-else style="max-height: 420px">
+            <NScrollbar
+              v-else
+              style="max-height: 420px"
+            >
               <NList>
-                <NListItem v-for="item in notificationStore.latest" :key="item.id">
-                  <div style="display:flex; flex-direction: column; gap: 6px; width: 100%;">
-                    <div style="display:flex; justify-content: space-between; align-items: center; gap: 8px;">
-                      <div style="font-weight: 600;">
-                        <NTag v-if="!item.isReaded" size="small" type="info" :bordered="false">
+                <NListItem
+                  v-for="item in notificationStore.latest"
+                  :key="item.id"
+                >
+                  <div style="display: flex; flex-direction: column; gap: 6px; width: 100%">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+                      <div style="font-weight: 600">
+                        <NTag
+                          v-if="!item.isReaded"
+                          size="small"
+                          type="info"
+                          :bordered="false"
+                        >
                           未读
                         </NTag>
                         {{ item.title }}
                       </div>
-                      <NTime :time="item.createTime" format="yyyy-MM-dd HH:mm" />
+                      <NTime
+                        :time="item.createTime"
+                        format="yyyy-MM-dd HH:mm"
+                      />
                     </div>
 
-                    <div style="white-space: pre-wrap; opacity: .85;">
+                    <div style="white-space: pre-wrap; opacity: 0.85">
                       {{ item.message }}
                     </div>
 
                     <NFlex>
                       <template v-if="isOrgInviteNotification(item)">
-                        <NButton size="small" type="primary" @click.stop="acceptOrgInvite(item)">
+                        <NButton
+                          size="small"
+                          type="primary"
+                          @click.stop="acceptOrgInvite(item)"
+                        >
                           接受
                         </NButton>
-                        <NButton size="small" tertiary @click.stop="rejectOrgInvite(item)">
+                        <NButton
+                          size="small"
+                          tertiary
+                          @click.stop="rejectOrgInvite(item)"
+                        >
                           拒绝
                         </NButton>
                       </template>
-                      <NButton v-if="resolveOpenUrl(item)" size="small" tertiary type="primary" @click.stop="openNotif(item)">
+                      <NButton
+                        v-if="resolveOpenUrl(item)"
+                        size="small"
+                        tertiary
+                        type="primary"
+                        @click.stop="openNotif(item)"
+                      >
                         打开
                       </NButton>
-                      <NButton v-if="!item.isReaded" size="small" tertiary @click.stop="markRead(item.id)">
+                      <NButton
+                        v-if="!item.isReaded"
+                        size="small"
+                        tertiary
+                        @click.stop="markRead(item.id)"
+                      >
                         标记已读
                       </NButton>
                     </NFlex>

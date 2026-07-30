@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { AVATAR_URL } from '@/shared/config'
+
 import { useDanmakuWindow } from '../../store/useDanmakuWindow'
+import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { useDanmakuUtils } from './danmakuUtils'
 
 // 继承基础属性
@@ -37,14 +38,15 @@ const {
       alt="avatar"
       class="avatar-text-mode"
       referrerpolicy="no-referrer"
-    >
+    />
 
     <!-- 消息类型标签 -->
     <span
       v-if="setting.textStyleShowType && typeLabel"
       class="text-mode-type"
       :style="{ color: textModeColor }"
-    >{{ typeLabel }}</span>
+      >{{ typeLabel }}</span
+    >
 
     <!-- 舰长标识 -->
     <span
@@ -58,20 +60,23 @@ const {
       v-if="setting.showUsername"
       class="username-text-mode"
       :style="{ color: textModeColor }"
-    >{{ displayName }}</span>
+      >{{ displayName }}</span
+    >
 
     <!-- 分隔符 -->
     <span
       v-if="setting.showUsername && displayContent"
       class="separator-text-mode"
-    >{{ setting.textStyleNameSeparator }}</span>
+      >{{ setting.textStyleNameSeparator }}</span
+    >
 
     <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
       <template #trigger>
         <span
           class="mystery-box-text-mode"
           :style="{ color: textModeColor }"
-        >盲盒 ￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+          >盲盒 ￥{{ giftDisplay.mysteryBoxPriceText }}</span
+        >
       </template>
       <div class="mystery-box-text-tooltip">
         <div
@@ -103,7 +108,8 @@ const {
       v-if="priceText"
       class="price-text-mode"
       :style="{ color: textModeColor }"
-    >{{ priceText }} </span>
+      >{{ priceText }}
+    </span>
 
     <!-- 消息内容 -->
     <template v-if="item.type === 0">
@@ -122,7 +128,7 @@ const {
             :alt="segment.name"
             class="inline-emoji-text-mode"
             referrerpolicy="no-referrer"
-          >
+          />
         </template>
       </span>
       <span
@@ -134,17 +140,19 @@ const {
           alt="emoji"
           class="emoji-image-text-mode"
           referrerpolicy="no-referrer"
-        >
+        />
       </span>
       <span
         v-else
         class="content-text-mode"
-      >{{ displayContent }}</span>
+        >{{ displayContent }}</span
+      >
     </template>
     <span
       v-else
       class="content-text-mode"
-    >{{ displayContent }}</span>
+      >{{ displayContent }}</span
+    >
   </div>
 </template>
 

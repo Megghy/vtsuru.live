@@ -393,7 +393,7 @@ export interface QAInfo {
   senderBiliAuthInfo?: BiliAuthBaseModel
   target: UserBasicInfo
   question: { message: string }
-  answer?: { message: string, createdAt: number }
+  answer?: { message: string; createdAt: number }
   isReaded?: boolean
   isSenderRegisted: boolean
   isPublic: boolean
@@ -505,7 +505,7 @@ export interface VideoInfo {
 }
 export interface VideoCollectDetail {
   table: VideoCollectTable
-  videos: { info: VideoInfo, video: VideoCollectVideo }[]
+  videos: { info: VideoInfo; video: VideoCollectVideo }[]
 }
 export interface GameInfo {
   game_id: string
@@ -761,10 +761,10 @@ export enum KeySelectionMode {
 }
 
 export interface PointGoodsSetting {
-  guardFree?: { year: number, month: number }
-  guardFreeMonths?: { year: number, month: number }[]
+  guardFree?: { year: number; month: number }
+  guardFreeMonths?: { year: number; month: number }[]
   allowGuardFreeMinLevel?: GuardLevel
-  guardLevelMonths?: { year: number, month: number }[]
+  guardLevelMonths?: { year: number; month: number }[]
   allowGuardLevel?: GuardLevel
 }
 
@@ -1244,4 +1244,3 @@ export interface VoteOBSData {
   displayPosition: string
   endTime?: number
 }
-

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import html2canvas from 'html2canvas'
 import { saveAs } from 'file-saver'
+import html2canvas from 'html2canvas'
 import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NText } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
-import { canvasToBlob } from '@/shared/utils'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { canvasToBlob } from '@/shared/utils'
 
 const message = useMessage()
 const account = useAccount()
@@ -43,7 +44,7 @@ const stylePresets = [
   { label: '暗金', fg: '#d4a843', bg: '#1c1c1cff' },
 ]
 
-function applyStyle(preset: typeof stylePresets[number]) {
+function applyStyle(preset: (typeof stylePresets)[number]) {
   foreground.value = preset.fg
   background.value = preset.bg
 }
@@ -63,62 +64,119 @@ async function download() {
       transparent: isTransparent.value,
     })
     message.success('已下载')
-  } catch { message.error('导出失败') }
+  } catch {
+    message.error('导出失败')
+  }
 }
 </script>
 
 <template>
   <NCard title="二维码生成器">
-    <NFlex vertical :size="16">
-      <NInput v-model:value="text" placeholder="输入链接或文本" clearable />
+    <NFlex
+      vertical
+      :size="16"
+    >
+      <NInput
+        v-model:value="text"
+        placeholder="输入链接或文本"
+        clearable
+      />
 
       <div>
-        <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block">
+        <NText
+          depth="3"
+          style="font-size: 12px; margin-bottom: 6px; display: block"
+        >
           链接预设
         </NText>
         <NFlex :size="8">
-          <NButton v-for="p in linkPresets" :key="p.label" size="small" secondary @click="text = p.value">
+          <NButton
+            v-for="p in linkPresets"
+            :key="p.label"
+            size="small"
+            secondary
+            @click="text = p.value"
+          >
             {{ p.label }}
           </NButton>
         </NFlex>
       </div>
 
       <div>
-        <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block">
+        <NText
+          depth="3"
+          style="font-size: 12px; margin-bottom: 6px; display: block"
+        >
           配色预设
         </NText>
-        <NFlex :size="8" wrap>
-          <NButton v-for="s in stylePresets" :key="s.label" size="small" secondary @click="applyStyle(s)">
+        <NFlex
+          :size="8"
+          wrap
+        >
+          <NButton
+            v-for="s in stylePresets"
+            :key="s.label"
+            size="small"
+            secondary
+            @click="applyStyle(s)"
+          >
             <template #icon>
-              <span class="color-dot" :style="{ background: s.fg, boxShadow: `0 0 0 2px ${s.bg}` }" />
+              <span
+                class="color-dot"
+                :style="{ background: s.fg, boxShadow: `0 0 0 2px ${s.bg}` }"
+              />
             </template>
             {{ s.label }}
           </NButton>
         </NFlex>
       </div>
 
-      <NFlex :size="16" align="center" wrap>
-        <NFlex vertical :size="8">
-          <NText depth="3">
-            尺寸
-          </NText>
-          <NInputNumber v-model:value="size" :min="128" :max="1024" :step="64" style="width: 100px" />
+      <NFlex
+        :size="16"
+        align="center"
+        wrap
+      >
+        <NFlex
+          vertical
+          :size="8"
+        >
+          <NText depth="3"> 尺寸 </NText>
+          <NInputNumber
+            v-model:value="size"
+            :min="128"
+            :max="1024"
+            :step="64"
+            style="width: 100px"
+          />
         </NFlex>
-        <NFlex vertical :size="8" class="color-picker-wrap">
-          <NText depth="3">
-            前景色
-          </NText>
-          <NColorPicker v-model:value="foreground" :show-alpha="false" />
+        <NFlex
+          vertical
+          :size="8"
+          class="color-picker-wrap"
+        >
+          <NText depth="3"> 前景色 </NText>
+          <NColorPicker
+            v-model:value="foreground"
+            :show-alpha="false"
+          />
         </NFlex>
-        <NFlex vertical :size="8" class="color-picker-wrap">
-          <NText depth="3">
-            背景色
-          </NText>
-          <NColorPicker v-model:value="background" :show-alpha="true" />
+        <NFlex
+          vertical
+          :size="8"
+          class="color-picker-wrap"
+        >
+          <NText depth="3"> 背景色 </NText>
+          <NColorPicker
+            v-model:value="background"
+            :show-alpha="true"
+          />
         </NFlex>
       </NFlex>
 
-      <div ref="qrContainer" class="qr-preview manage-checkerboard">
+      <div
+        ref="qrContainer"
+        class="qr-preview manage-checkerboard"
+      >
         <QrcodeVue
           v-if="text"
           :value="text"
@@ -128,12 +186,19 @@ async function download() {
           :background="isTransparent ? 'transparent' : background"
           render-as="canvas"
         />
-        <NText v-else depth="3">
+        <NText
+          v-else
+          depth="3"
+        >
           请输入内容
         </NText>
       </div>
 
-      <NButton type="primary" :disabled="!text" @click="download">
+      <NButton
+        type="primary"
+        :disabled="!text"
+        @click="download"
+      >
         下载 PNG
       </NButton>
     </NFlex>

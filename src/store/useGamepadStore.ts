@@ -1,13 +1,9 @@
-import type {
-  ButtonInputState,
-  GamepadConnectionInfo,
-  LogicalButton,
-  NormalizedGamepadState,
-} from '@/types/gamepad' // 使用 @ 指向 src 目录
 import { useGamepad } from '@vueuse/core'
 import { defineStore } from 'pinia'
 // src/composables/useGamepad.ts
 import { computed, reactive, readonly, ref, watch } from 'vue'
+
+import type { ButtonInputState, GamepadConnectionInfo, LogicalButton, NormalizedGamepadState } from '@/types/gamepad' // 使用 @ 指向 src 目录
 import { LogicalButtonsList } from '@/types/gamepad'
 
 // 定义事件处理函数类型
@@ -48,10 +44,13 @@ export const useGamepadStore = defineStore('gamepad', () => {
   const disconnectedHandlers: Set<GamepadEventHandler> = new Set()
 
   // 初始化所有按钮状态
-  const initialButtonStates = LogicalButtonsList.reduce((acc, key) => {
-    acc[key] = { pressed: false, value: 0 }
-    return acc
-  }, {} as Record<LogicalButton, ButtonInputState>)
+  const initialButtonStates = LogicalButtonsList.reduce(
+    (acc, key) => {
+      acc[key] = { pressed: false, value: 0 }
+      return acc
+    },
+    {} as Record<LogicalButton, ButtonInputState>,
+  )
 
   // 手柄状态，包含按钮和摇杆
   const normalizedGamepadState = reactive<NormalizedGamepadState>({
@@ -63,7 +62,9 @@ export const useGamepadStore = defineStore('gamepad', () => {
   })
 
   // 计算属性：手柄是否已连接
-  const isGamepadConnected = computed(() => activeGamepadIndex.value !== null && !!gamepads.value[activeGamepadIndex.value]?.connected)
+  const isGamepadConnected = computed(
+    () => activeGamepadIndex.value !== null && !!gamepads.value[activeGamepadIndex.value]?.connected,
+  )
 
   // 重置手柄状态
   const resetNormalizedState = () => {
@@ -158,7 +159,7 @@ export const useGamepadStore = defineStore('gamepad', () => {
       }
 
       // 尝试连接其他已连接的手柄 (VueUse 的 gamepads 数组会自动更新)
-      const nextGamepad = gamepads.value.find(gp => gp && gp.connected)
+      const nextGamepad = gamepads.value.find((gp) => gp && gp.connected)
       if (nextGamepad) {
         activeGamepadIndex.value = nextGamepad.index
         connectedGamepadInfo.value = {

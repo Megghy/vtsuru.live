@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { EnergyRankBCData, EnergyRankSettings, RankEntry } from '@/apps/client/store/useEnergyRank'
 import { NSpin } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import type { EnergyRankBCData, EnergyRankSettings, RankEntry } from '@/apps/client/store/useEnergyRank'
 import { ENERGY_RANK_BROADCAST_CHANNEL } from '@/apps/client/store/useEnergyRank'
 
 let bc: BroadcastChannel | undefined
@@ -45,24 +46,42 @@ onMounted(() => {
     }
   }
   updateCssVariables()
-  onUnmounted(() => { bc?.close(); bc = undefined })
+  onUnmounted(() => {
+    bc?.close()
+    bc = undefined
+  })
 })
 
-watch(() => setting.value, () => updateCssVariables(), { deep: true })
+watch(
+  () => setting.value,
+  () => updateCssVariables(),
+  { deep: true },
+)
 </script>
 
 <template>
-  <NSpin v-if="!setting" show />
-  <div v-else class="rank-window has-items">
+  <NSpin
+    v-if="!setting"
+    show
+  />
+  <div
+    v-else
+    class="rank-window has-items"
+  >
     <div class="rank-window-bg" />
     <div class="rank-list">
-      <div class="rank-header">
-        高能排行榜
-      </div>
-      <div v-if="!hasItems" class="rank-empty">
+      <div class="rank-header">高能排行榜</div>
+      <div
+        v-if="!hasItems"
+        class="rank-empty"
+      >
         等待中...
       </div>
-      <TransitionGroup name="rank-list" tag="div" class="rank-list-container">
+      <TransitionGroup
+        name="rank-list"
+        tag="div"
+        class="rank-list-container"
+      >
         <div
           v-for="(item, index) in rankList"
           :key="item.uid"
@@ -70,7 +89,11 @@ watch(() => setting.value, () => updateCssVariables(), { deep: true })
           :class="{ 'rank-top-1': index === 0, 'rank-top-2': index === 1, 'rank-top-3': index === 2 }"
         >
           <span class="rank-index">{{ index + 1 }}</span>
-          <img class="rank-avatar" :src="item.uface" alt="">
+          <img
+            class="rank-avatar"
+            :src="item.uface"
+            alt=""
+          />
           <span class="rank-name">{{ item.uname }}</span>
           <span class="rank-score">{{ formatScore(item.score) }}</span>
         </div>
@@ -80,13 +103,20 @@ watch(() => setting.value, () => updateCssVariables(), { deep: true })
 </template>
 
 <style>
-html, body { background: transparent; overflow: hidden; }
-.n-layout { background: transparent; }
+html,
+body {
+  background: transparent;
+  overflow: hidden;
+}
+.n-layout {
+  background: transparent;
+}
 
 .rank-window {
   position: relative;
   -webkit-app-region: drag;
-  width: 100%; height: 100%;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border-radius: var(--er-border-radius);
   color: var(--er-text-color);
@@ -94,42 +124,127 @@ html, body { background: transparent; overflow: hidden; }
   opacity: var(--er-opacity);
   transition: opacity 0.3s ease;
 }
-.rank-window:not(.has-items) { opacity: 0; }
+.rank-window:not(.has-items) {
+  opacity: 0;
+}
 .rank-window-bg {
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: 0;
   background-color: var(--er-window-bg-color);
   border-radius: var(--er-border-radius);
   pointer-events: none;
 }
-.rank-list { padding: 8px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
-.rank-header { text-align: center; font-weight: 600; font-size: 1.1em; padding: 4px 0 8px; opacity: 0.9; }
-.rank-empty { text-align: center; opacity: 0.3; padding: 20px 0; font-size: 0.9em; }
-.rank-list-container { display: flex; flex-direction: column; gap: 4px; }
+.rank-list {
+  padding: 8px;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.rank-header {
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1em;
+  padding: 4px 0 8px;
+  opacity: 0.9;
+}
+.rank-empty {
+  text-align: center;
+  opacity: 0.3;
+  padding: 20px 0;
+  font-size: 0.9em;
+}
+.rank-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
 .rank-item {
-  display: flex; align-items: center; gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 5px 10px;
   background: var(--er-bg-color);
   border-radius: var(--er-border-radius);
 }
-.rank-top-1 { background: linear-gradient(135deg, rgba(255,215,0,0.3), var(--er-bg-color)); }
-.rank-top-2 { background: linear-gradient(135deg, rgba(192,192,192,0.25), var(--er-bg-color)); }
-.rank-top-3 { background: linear-gradient(135deg, rgba(205,127,50,0.2), var(--er-bg-color)); }
-.rank-top-1 .rank-index { color: #ffd700; font-weight: 700; }
-.rank-top-2 .rank-index { color: #c0c0c0; font-weight: 700; }
-.rank-top-3 .rank-index { color: #cd7f32; font-weight: 700; }
+.rank-top-1 {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), var(--er-bg-color));
+}
+.rank-top-2 {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.25), var(--er-bg-color));
+}
+.rank-top-3 {
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), var(--er-bg-color));
+}
+.rank-top-1 .rank-index {
+  color: #ffd700;
+  font-weight: 700;
+}
+.rank-top-2 .rank-index {
+  color: #c0c0c0;
+  font-weight: 700;
+}
+.rank-top-3 .rank-index {
+  color: #cd7f32;
+  font-weight: 700;
+}
 
-.rank-index { min-width: 24px; padding: 0 2px; text-align: center; font-weight: 500; flex-shrink: 0; box-sizing: content-box; }
-.rank-avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; }
-.rank-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rank-score { font-weight: 600; color: #fbbf24; flex-shrink: 0; }
+.rank-index {
+  min-width: 24px;
+  padding: 0 2px;
+  text-align: center;
+  font-weight: 500;
+  flex-shrink: 0;
+  box-sizing: content-box;
+}
+.rank-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.rank-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rank-score {
+  font-weight: 600;
+  color: #fbbf24;
+  flex-shrink: 0;
+}
 
-.rank-list::-webkit-scrollbar { width: 3px; }
-.rank-list::-webkit-scrollbar-track { background: transparent; }
-.rank-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+.rank-list::-webkit-scrollbar {
+  width: 3px;
+}
+.rank-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.rank-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
 
-.rank-list-move { transition: transform 300ms ease; }
-.rank-list-enter-active { transition: transform 300ms ease, opacity 250ms ease; }
-.rank-list-leave-active { transition: transform 300ms ease, opacity 250ms ease; position: absolute; width: 100%; }
-.rank-list-enter-from, .rank-list-leave-to { opacity: 0; transform: translateY(-8px); }
+.rank-list-move {
+  transition: transform 300ms ease;
+}
+.rank-list-enter-active {
+  transition:
+    transform 300ms ease,
+    opacity 250ms ease;
+}
+.rank-list-leave-active {
+  transition:
+    transform 300ms ease,
+    opacity 250ms ease;
+  position: absolute;
+  width: 100%;
+}
+.rank-list-enter-from,
+.rank-list-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
 </style>

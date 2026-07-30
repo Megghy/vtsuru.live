@@ -1,6 +1,7 @@
 <script setup>
-import { NBadge } from 'naive-ui';
+import { NBadge } from 'naive-ui'
 import { computed } from 'vue'
+
 import AuthorChip from './AuthorChip.vue'
 import * as constants from './constants'
 import ImgShadow from './ImgShadow.vue'
@@ -40,7 +41,7 @@ const repeatedMarkColor = computed(() => {
     color = [0, 0, 0]
     const t = (props.repeated - 2) / (10 - 2)
     for (let i = 0; i < 3; i++) {
-      color[i] = REPEATED_MARK_COLOR_START[i] + ((REPEATED_MARK_COLOR_END[i] - REPEATED_MARK_COLOR_START[i]) * t)
+      color[i] = REPEATED_MARK_COLOR_START[i] + (REPEATED_MARK_COLOR_END[i] - REPEATED_MARK_COLOR_START[i]) * t
     }
   }
   return `hsl(${color[0]}, ${color[1]}%, ${color[2]}%)`
@@ -66,7 +67,8 @@ const repeatedMarkColor = computed(() => {
       <span
         id="timestamp"
         class="style-scope yt-live-chat-text-message-renderer"
-      >{{ timeText }}</span>
+        >{{ timeText }}</span
+      >
       <AuthorChip
         class="style-scope yt-live-chat-text-message-renderer"
         :is-in-member-message="false"
@@ -82,7 +84,8 @@ const repeatedMarkColor = computed(() => {
           <span
             v-if="content.type === CONTENT_TYPE_TEXT"
             :key="index"
-          >{{ content.text }}</span>
+            >{{ content.text }}</span
+          >
           <!-- 如果CSS设置的尺寸比属性设置的尺寸还大，在图片加载完后布局会变化，可能导致滚动卡住，没什么好的解决方法 -->
           <img
             v-else-if="content.type === CONTENT_TYPE_IMAGE"
@@ -96,7 +99,7 @@ const repeatedMarkColor = computed(() => {
             :height="content.height"
             :class="{ 'blc-large-emoji': content.height >= 100 }"
             referrerpolicy="no-referrer"
-          >
+          />
         </template>
         <NBadge
           v-if="repeated > 1"
@@ -111,16 +114,16 @@ const repeatedMarkColor = computed(() => {
 </template>
 
 <style>
-yt-live-chat-text-message-renderer>#content>#message>.el-badge {
+yt-live-chat-text-message-renderer > #content > #message > .el-badge {
   margin-left: 10px;
 }
 
-yt-live-chat-text-message-renderer>#content>#message>.el-badge .el-badge__content {
+yt-live-chat-text-message-renderer > #content > #message > .el-badge .el-badge__content {
   font-size: 12px !important;
   line-height: 18px !important;
   text-shadow: none !important;
   font-family: sans-serif !important;
-  color: #FFF !important;
+  color: #fff !important;
   background-color: var(--repeated-mark-color) !important;
   border: none;
 }

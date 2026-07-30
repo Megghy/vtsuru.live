@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { NButton, NDivider, NInput, NPagination, NFlex, NTable, NTag, useMessage } from 'naive-ui'
+import { ref } from 'vue'
+
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { FETCH_API } from '@/shared/config'
-import { NButton, NDivider, NInput, NPagination, NFlex, NTable, NTag, useMessage } from 'naive-ui';
-import { ref } from 'vue'
 
 defineProps<{
   existingSongs: SongsInfo[]
@@ -61,7 +62,7 @@ async function getFivesingSearchList(isRestart = false) {
     if (isRestart) fivesingCurrentPage.value = 1
 
     const searchUrl = `http://search.5sing.kugou.com/home/json?keyword=${fivesingSearchInput.value}&sort=1&page=${fivesingCurrentPage.value}&filter=3`
-    const json = await fetch(FETCH_API + searchUrl).then(data => data.json())
+    const json = await fetch(FETCH_API + searchUrl).then((data) => data.json())
     if (json.list.length === 0) message.error('搜索结果为空')
 
     fivesingResults.value = []
@@ -120,13 +121,20 @@ async function addFivesingSongs(song: SongsInfo) {
     maxlength="15"
   />
   <NDivider style="margin: 10px" />
-  <NButton type="primary" :disabled="!fivesingSearchInput" @click="getFivesingSearchList(true)">
+  <NButton
+    type="primary"
+    :disabled="!fivesingSearchInput"
+    @click="getFivesingSearchList(true)"
+  >
     搜索
   </NButton>
   <template v-if="fivesingResults.length > 0">
     <NDivider style="margin: 10px" />
     <div style="overflow-x: auto">
-      <NTable size="small" style="overflow-x: auto">
+      <NTable
+        size="small"
+        style="overflow-x: auto"
+      >
         <thead>
           <tr>
             <th>名称</th>
@@ -136,11 +144,18 @@ async function addFivesingSongs(song: SongsInfo) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="song in fivesingResults" :key="song.id">
+          <tr
+            v-for="song in fivesingResults"
+            :key="song.id"
+          >
             <td>{{ song.name }}</td>
             <td>
               <NFlex>
-                <NTag v-for="author in song.author" :key="author" size="small">
+                <NTag
+                  v-for="author in song.author"
+                  :key="author"
+                  size="small"
+                >
                   {{ author }}
                 </NTag>
               </NFlex>
@@ -154,8 +169,12 @@ async function addFivesingSongs(song: SongsInfo) {
               >
                 试听
               </NButton>
-              <audio v-else controls style="max-height: 30px">
-                <source :src="song.url">
+              <audio
+                v-else
+                controls
+                style="max-height: 30px"
+              >
+                <source :src="song.url" />
               </audio>
             </td>
             <td>
@@ -172,7 +191,7 @@ async function addFivesingSongs(song: SongsInfo) {
         </tbody>
       </NTable>
     </div>
-    <br>
+    <br />
     <NPagination
       v-model:page="fivesingCurrentPage"
       :page-count="fivesingTotalPageCount"

@@ -1,8 +1,10 @@
+import type { ComputedRef } from 'vue'
+import { computed, ref } from 'vue'
+
 import type { APIFileModel } from '@/api/api-models'
 import { QueryDeleteAPI, QueryGetPaginationAPI, unwrapOk } from '@/api/query'
 import { FILE_API_URL } from '@/shared/config'
-import type { ComputedRef } from 'vue'
-import { computed, ref } from 'vue'
+
 import type { FileRefEntry } from './editorResources'
 
 export type ResourceView = 'all' | 'used' | 'unused'
@@ -31,16 +33,16 @@ async function fetchAllFiles() {
 }
 
 export function mergeBuilderResources(filesToMerge: APIFileModel[], references: FileRefEntry[]): BuilderResource[] {
-  const refs = new Map(references.map(item => [item.id, item]))
+  const refs = new Map(references.map((item) => [item.id, item]))
   const files = filesToMerge.map((file) => ({
     ...file,
     locations: refs.get(file.id)?.locations ?? [],
     missing: false,
   }))
-  const fileIds = new Set(files.map(file => file.id))
+  const fileIds = new Set(files.map((file) => file.id))
   const missing = references
-    .filter(file => !fileIds.has(file.id))
-    .map(file => ({
+    .filter((file) => !fileIds.has(file.id))
+    .map((file) => ({
       id: file.id,
       path: file.path ?? '',
       name: file.name ?? `资源 #${file.id}`,
@@ -61,14 +63,16 @@ export function useBuilderResources(options: UseBuilderResourcesOptions) {
 
   const resources = computed(() => mergeBuilderResources(allFiles.value, options.fileRefs.value))
 
-  const visibleResources = computed(() => resources.value.filter((resource) => {
-    if (currentView.value === 'used') return resource.locations.length > 0
-    if (currentView.value === 'unused') return resource.locations.length === 0
-    return true
-  }))
-  const usedCount = computed(() => resources.value.filter(resource => resource.locations.length > 0).length)
-  const unusedCount = computed(() => resources.value.filter(resource => resource.locations.length === 0).length)
-  const missingCount = computed(() => resources.value.filter(resource => resource.missing).length)
+  const visibleResources = computed(() =>
+    resources.value.filter((resource) => {
+      if (currentView.value === 'used') return resource.locations.length > 0
+      if (currentView.value === 'unused') return resource.locations.length === 0
+      return true
+    }),
+  )
+  const usedCount = computed(() => resources.value.filter((resource) => resource.locations.length > 0).length)
+  const unusedCount = computed(() => resources.value.filter((resource) => resource.locations.length === 0).length)
+  const missingCount = computed(() => resources.value.filter((resource) => resource.missing).length)
 
   async function loadResources() {
     isLoading.value = true
@@ -84,8 +88,8 @@ export function useBuilderResources(options: UseBuilderResourcesOptions) {
   }
 
   function addResources(files: APIFileModel[]) {
-    const next = new Map(allFiles.value.map(file => [file.id, file]))
-    files.forEach(file => next.set(file.id, file))
+    const next = new Map(allFiles.value.map((file) => [file.id, file]))
+    files.forEach((file) => next.set(file.id, file))
     allFiles.value = [...next.values()]
   }
 
@@ -94,7 +98,7 @@ export function useBuilderResources(options: UseBuilderResourcesOptions) {
     try {
       const response = await QueryDeleteAPI<unknown>(`${FILE_API_URL}delete/${resource.id}`)
       unwrapOk(response, '删除资源失败')
-      allFiles.value = allFiles.value.filter(file => file.id !== resource.id)
+      allFiles.value = allFiles.value.filter((file) => file.id !== resource.id)
       options.notifySuccess('资源已删除')
     } catch (error) {
       options.notifyError((error as Error).message || String(error))

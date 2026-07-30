@@ -1,12 +1,27 @@
 <script setup lang="ts">
-import { saveAs } from 'file-saver'
-import { NAlert, NButton, NCard, NColorPicker, NFlex, NGrid, NGridItem, NInputNumber, NSelect, NSlider, NSwitch, NTag, NText } from 'naive-ui'
-import { VueDraggable } from 'vue-draggable-plus'
-import { computed, onBeforeUnmount, reactive, ref, watchEffect } from 'vue'
 import { useDropZone, useFileDialog } from '@vueuse/core'
+import { saveAs } from 'file-saver'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NColorPicker,
+  NFlex,
+  NGrid,
+  NGridItem,
+  NInputNumber,
+  NSelect,
+  NSlider,
+  NSwitch,
+  NTag,
+  NText,
+} from 'naive-ui'
+import { computed, onBeforeUnmount, reactive, ref, watchEffect } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
+
 import { formatFileSize } from '@/apps/manage/composables/formatters'
-import { canvasToBlob } from '@/shared/utils'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { canvasToBlob } from '@/shared/utils'
 
 type LayoutMode = 'vertical' | 'horizontal' | 'grid'
 type FitMode = 'contain' | 'cover' | 'stretch'
@@ -76,19 +91,21 @@ const layoutPresets = [
   { key: 'grid3', label: '三列网格', desc: '动态配图', layout: 'grid' as LayoutMode, columns: 3 },
 ]
 
-const { isOverDropZone } = useDropZone(dropZoneRef, { onDrop: files => files && addFiles(files) })
+const { isOverDropZone } = useDropZone(dropZoneRef, { onDrop: (files) => files && addFiles(files) })
 const { open: openFilePicker, onChange } = useFileDialog({ accept: 'image/*', multiple: true })
-onChange(files => files && addFiles(Array.from(files)))
+onChange((files) => files && addFiles(Array.from(files)))
 
-const selectedItem = computed(() => items.value.find(item => item.id === selectedId.value) ?? null)
-const selectedIndex = computed(() => items.value.findIndex(item => item.id === selectedId.value))
+const selectedItem = computed(() => items.value.find((item) => item.id === selectedId.value) ?? null)
+const selectedIndex = computed(() => items.value.findIndex((item) => item.id === selectedId.value))
 const canMoveSelectedUp = computed(() => selectedIndex.value > 0)
 const canMoveSelectedDown = computed(() => selectedIndex.value >= 0 && selectedIndex.value < items.value.length - 1)
 const layout = computed(calculateLayout)
 const outputPixels = computed(() => layout.value.width * layout.value.height)
 const outputTooLarge = computed(() => outputPixels.value > 80_000_000)
-const outputSizeText = computed(() => `${layout.value.width} x ${layout.value.height} (${(outputPixels.value / 1_000_000).toFixed(1)} MP)`)
-const exportExt = computed(() => settings.format === 'jpeg' ? 'jpg' : settings.format)
+const outputSizeText = computed(
+  () => `${layout.value.width} x ${layout.value.height} (${(outputPixels.value / 1_000_000).toFixed(1)} MP)`,
+)
+const exportExt = computed(() => (settings.format === 'jpeg' ? 'jpg' : settings.format))
 
 let nextId = 0
 let renderTicket = 0
@@ -103,7 +120,7 @@ watchEffect(() => {
     settings.format,
     settings.radius,
     settings.fit,
-    items.value.map(item => item.id).join(','),
+    items.value.map((item) => item.id).join(','),
   ].join('|')
   void signature
   const ticket = ++renderTicket
@@ -113,7 +130,7 @@ watchEffect(() => {
 })
 
 async function addFiles(files: File[]) {
-  const imageFiles = files.filter(file => file.type.startsWith('image/'))
+  const imageFiles = files.filter((file) => file.type.startsWith('image/'))
   if (!imageFiles.length) {
     message.warning('未检测到图片文件')
     return
@@ -138,7 +155,7 @@ async function addFiles(files: File[]) {
   }
 }
 
-function applyPreset(preset: typeof layoutPresets[number]) {
+function applyPreset(preset: (typeof layoutPresets)[number]) {
   settings.layout = preset.layout
   if (preset.layout === 'vertical') {
     settings.outputWidth = 1080
@@ -171,7 +188,7 @@ function calculateLayout() {
     const contentWidth = Math.max(1, width - padding * 2)
     let y = padding
     for (const item of items.value) {
-      const height = Math.round(contentWidth * item.height / item.width)
+      const height = Math.round((contentWidth * item.height) / item.width)
       frames.push({ item, x: padding, y, width: contentWidth, height })
       y += height + gap
     }
@@ -182,7 +199,7 @@ function calculateLayout() {
     const contentHeight = settings.stripHeight
     let x = padding
     for (const item of items.value) {
-      const width = Math.round(contentHeight * item.width / item.height)
+      const width = Math.round((contentHeight * item.width) / item.height)
       frames.push({ item, x, y: padding, width, height: contentHeight })
       x += width + gap
     }
@@ -256,15 +273,23 @@ function drawImageFit(ctx: CanvasRenderingContext2D, image: ImageBitmap, frame: 
     return
   }
 
-  const scale = fit === 'cover'
-    ? Math.max(frame.width / image.width, frame.height / image.height)
-    : Math.min(frame.width / image.width, frame.height / image.height)
+  const scale =
+    fit === 'cover'
+      ? Math.max(frame.width / image.width, frame.height / image.height)
+      : Math.min(frame.width / image.width, frame.height / image.height)
   const width = image.width * scale
   const height = image.height * scale
   ctx.drawImage(image, frame.x + (frame.width - width) / 2, frame.y + (frame.height - height) / 2, width, height)
 }
 
-function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
   ctx.beginPath()
   ctx.moveTo(x + radius, y)
   ctx.lineTo(x + width - radius, y)
@@ -322,7 +347,7 @@ function sortByName() {
 }
 
 function removeItem(id: string) {
-  const index = items.value.findIndex(item => item.id === id)
+  const index = items.value.findIndex((item) => item.id === id)
   if (index < 0) return
   releaseItem(items.value[index])
   items.value.splice(index, 1)
@@ -348,66 +373,106 @@ onBeforeUnmount(clearAll)
   <div class="stitch-page">
     <NCard title="图片拼接">
       <template #header-extra>
-        <NFlex align="center" :size="8">
-          <NText v-if="lastExportSize" depth="3">
+        <NFlex
+          align="center"
+          :size="8"
+        >
+          <NText
+            v-if="lastExportSize"
+            depth="3"
+          >
             上次导出 {{ formatFileSize(lastExportSize) }}
           </NText>
-          <NButton type="primary" :loading="exporting" :disabled="!items.length || outputTooLarge" @click="exportImage">
+          <NButton
+            type="primary"
+            :loading="exporting"
+            :disabled="!items.length || outputTooLarge"
+            @click="exportImage"
+          >
             导出图片
           </NButton>
         </NFlex>
       </template>
 
-      <div v-if="!items.length" ref="dropZoneRef" class="empty-drop" :class="{ active: isOverDropZone }" @click="openFilePicker()">
-        <NText style="font-size: 16px">
-          拖拽图片到这里，或点击选择
-        </NText>
-        <NText depth="3">
-          支持长图、横向对比图和多列网格拼图
-        </NText>
+      <div
+        v-if="!items.length"
+        ref="dropZoneRef"
+        class="empty-drop"
+        :class="{ active: isOverDropZone }"
+        @click="openFilePicker()"
+      >
+        <NText style="font-size: 16px"> 拖拽图片到这里，或点击选择 </NText>
+        <NText depth="3"> 支持长图、横向对比图和多列网格拼图 </NText>
       </div>
 
-      <div v-else class="workspace">
+      <div
+        v-else
+        class="workspace"
+      >
         <section class="preview-panel">
           <div class="preview-toolbar">
             <div>
-              <NText strong>
-                实时预览
-              </NText>
-              <NText depth="3" class="preview-meta">
+              <NText strong> 实时预览 </NText>
+              <NText
+                depth="3"
+                class="preview-meta"
+              >
                 {{ outputSizeText }}，预览 {{ Math.round(previewScale * 100) }}%
               </NText>
             </div>
-            <NButton size="small" secondary @click="openFilePicker()">
+            <NButton
+              size="small"
+              secondary
+              @click="openFilePicker()"
+            >
               添加图片
             </NButton>
           </div>
 
-          <NAlert v-if="outputTooLarge" type="warning" :show-icon="false">
+          <NAlert
+            v-if="outputTooLarge"
+            type="warning"
+            :show-icon="false"
+          >
             当前画布超过 80MP，导出可能导致浏览器卡死，请降低尺寸或图片数量。
           </NAlert>
 
-          <div ref="dropZoneRef" class="preview-shell manage-checkerboard" :class="{ active: isOverDropZone }" @click.self="openFilePicker()">
-            <canvas ref="previewCanvas" class="preview-canvas" />
+          <div
+            ref="dropZoneRef"
+            class="preview-shell manage-checkerboard"
+            :class="{ active: isOverDropZone }"
+            @click.self="openFilePicker()"
+          >
+            <canvas
+              ref="previewCanvas"
+              class="preview-canvas"
+            />
           </div>
         </section>
 
         <aside class="control-panel">
           <div class="panel-block">
-            <NText strong>
-              布局预设
-            </NText>
+            <NText strong> 布局预设 </NText>
             <div class="preset-grid">
               <button
                 v-for="preset in layoutPresets"
                 :key="preset.key"
                 class="preset-card"
-                :class="{ active: settings.layout === preset.layout && (preset.columns ? settings.columns === preset.columns : true) }"
+                :class="{
+                  active:
+                    settings.layout === preset.layout && (preset.columns ? settings.columns === preset.columns : true),
+                }"
                 type="button"
                 @click="applyPreset(preset)"
               >
-                <span class="preset-visual" :class="preset.key">
-                  <i v-for="n in 4" :key="n" />
+                <span
+                  class="preset-visual"
+                  :class="preset.key"
+                >
+                  <i
+                    v-for="n in 4"
+                    :key="n"
+                  />
                 </span>
                 <span>{{ preset.label }}</span>
                 <small>{{ preset.desc }}</small>
@@ -416,107 +481,187 @@ onBeforeUnmount(clearAll)
           </div>
 
           <div class="panel-block">
-            <NText strong>
-              画布参数
-            </NText>
-            <NGrid cols="2" :x-gap="10" :y-gap="10">
+            <NText strong> 画布参数 </NText>
+            <NGrid
+              cols="2"
+              :x-gap="10"
+              :y-gap="10"
+            >
               <NGridItem>
                 <label class="field">
                   <span>布局</span>
-                  <NSelect v-model:value="settings.layout" :options="layoutOptions" size="small" />
+                  <NSelect
+                    v-model:value="settings.layout"
+                    :options="layoutOptions"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem>
                 <label class="field">
                   <span>格式</span>
-                  <NSelect v-model:value="settings.format" :options="formatOptions" size="small" />
+                  <NSelect
+                    v-model:value="settings.format"
+                    :options="formatOptions"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem v-if="settings.layout === 'vertical'">
                 <label class="field">
                   <span>输出宽度</span>
-                  <NInputNumber v-model:value="settings.outputWidth" :min="320" :max="6000" :step="20" size="small" />
+                  <NInputNumber
+                    v-model:value="settings.outputWidth"
+                    :min="320"
+                    :max="6000"
+                    :step="20"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem v-if="settings.layout === 'horizontal'">
                 <label class="field">
                   <span>图片高度</span>
-                  <NInputNumber v-model:value="settings.stripHeight" :min="120" :max="4000" :step="20" size="small" />
+                  <NInputNumber
+                    v-model:value="settings.stripHeight"
+                    :min="120"
+                    :max="4000"
+                    :step="20"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem v-if="settings.layout === 'grid'">
                 <label class="field">
                   <span>列数</span>
-                  <NInputNumber v-model:value="settings.columns" :min="1" :max="8" size="small" />
+                  <NInputNumber
+                    v-model:value="settings.columns"
+                    :min="1"
+                    :max="8"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem v-if="settings.layout === 'grid'">
                 <label class="field">
                   <span>单格尺寸</span>
-                  <NInputNumber v-model:value="settings.cellSize" :min="120" :max="2400" :step="20" size="small" />
+                  <NInputNumber
+                    v-model:value="settings.cellSize"
+                    :min="120"
+                    :max="2400"
+                    :step="20"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem>
                 <label class="field">
                   <span>间距</span>
-                  <NInputNumber v-model:value="settings.gap" :min="0" :max="200" size="small" />
+                  <NInputNumber
+                    v-model:value="settings.gap"
+                    :min="0"
+                    :max="200"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem>
                 <label class="field">
                   <span>边距</span>
-                  <NInputNumber v-model:value="settings.padding" :min="0" :max="300" size="small" />
+                  <NInputNumber
+                    v-model:value="settings.padding"
+                    :min="0"
+                    :max="300"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem v-if="settings.layout === 'grid'">
                 <label class="field">
                   <span>填充方式</span>
-                  <NSelect v-model:value="settings.fit" :options="fitOptions" size="small" />
+                  <NSelect
+                    v-model:value="settings.fit"
+                    :options="fitOptions"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
               <NGridItem>
                 <label class="field">
                   <span>圆角</span>
-                  <NInputNumber v-model:value="settings.radius" :min="0" :max="300" size="small" />
+                  <NInputNumber
+                    v-model:value="settings.radius"
+                    :min="0"
+                    :max="300"
+                    size="small"
+                  />
                 </label>
               </NGridItem>
             </NGrid>
 
             <div class="field quality-field">
               <span>导出质量 {{ Math.round(settings.quality * 100) }}%</span>
-              <NSlider v-model:value="settings.quality" :disabled="settings.format === 'png'" :min="0.2" :max="1" :step="0.02" />
+              <NSlider
+                v-model:value="settings.quality"
+                :disabled="settings.format === 'png'"
+                :min="0.2"
+                :max="1"
+                :step="0.02"
+              />
             </div>
 
             <div class="color-row">
               <label class="field color-field">
                 <span>背景色</span>
-                <NColorPicker v-model:value="settings.background" size="small" :disabled="settings.transparent && settings.format !== 'jpeg'" />
+                <NColorPicker
+                  v-model:value="settings.background"
+                  size="small"
+                  :disabled="settings.transparent && settings.format !== 'jpeg'"
+                />
               </label>
-              <NFlex align="center" :size="8">
-                <NSwitch v-model:value="settings.transparent" size="small" :disabled="settings.format === 'jpeg'" />
-                <NText depth="3">
-                  透明背景
-                </NText>
+              <NFlex
+                align="center"
+                :size="8"
+              >
+                <NSwitch
+                  v-model:value="settings.transparent"
+                  size="small"
+                  :disabled="settings.format === 'jpeg'"
+                />
+                <NText depth="3"> 透明背景 </NText>
               </NFlex>
             </div>
           </div>
 
           <div class="panel-block">
-            <NFlex justify="space-between" align="center">
-              <NText strong>
-                图片顺序
-              </NText>
+            <NFlex
+              justify="space-between"
+              align="center"
+            >
+              <NText strong> 图片顺序 </NText>
               <NFlex :size="6">
-                <NButton size="tiny" @click="sortByName">
+                <NButton
+                  size="tiny"
+                  @click="sortByName"
+                >
                   按文件名
                 </NButton>
-                <NButton size="tiny" tertiary @click="clearAll">
+                <NButton
+                  size="tiny"
+                  tertiary
+                  @click="clearAll"
+                >
                   清空
                 </NButton>
               </NFlex>
             </NFlex>
 
-            <VueDraggable v-model="items" handle=".drag-handle" :animation="150" class="image-list">
+            <VueDraggable
+              v-model="items"
+              handle=".drag-handle"
+              :animation="150"
+              class="image-list"
+            >
               <div
                 v-for="(element, index) in items"
                 :key="element.id"
@@ -524,37 +669,76 @@ onBeforeUnmount(clearAll)
                 :class="{ active: selectedId === element.id }"
                 @click="selectedId = element.id"
               >
-                <span class="drag-handle" title="拖拽排序">{{ index + 1 }}</span>
-                <img :src="element.url" alt="" class="thumb">
+                <span
+                  class="drag-handle"
+                  title="拖拽排序"
+                  >{{ index + 1 }}</span
+                >
+                <img
+                  :src="element.url"
+                  alt=""
+                  class="thumb"
+                />
                 <div class="image-row__body">
-                  <NText class="image-name" :title="element.file.name">
+                  <NText
+                    class="image-name"
+                    :title="element.file.name"
+                  >
                     {{ element.file.name }}
                   </NText>
-                  <NText depth="3" class="image-meta">
+                  <NText
+                    depth="3"
+                    class="image-meta"
+                  >
                     {{ element.width }} x {{ element.height }} · {{ formatFileSize(element.file.size) }}
                   </NText>
                 </div>
-                <NButton size="tiny" quaternary type="error" @click.stop="removeItem(element.id)">
+                <NButton
+                  size="tiny"
+                  quaternary
+                  type="error"
+                  @click.stop="removeItem(element.id)"
+                >
                   删除
                 </NButton>
               </div>
             </VueDraggable>
 
-            <div v-if="selectedItem" class="selected-box">
-              <NFlex align="center" justify="space-between">
-                <NTag size="small" :bordered="false">
+            <div
+              v-if="selectedItem"
+              class="selected-box"
+            >
+              <NFlex
+                align="center"
+                justify="space-between"
+              >
+                <NTag
+                  size="small"
+                  :bordered="false"
+                >
                   已选中
                 </NTag>
                 <NFlex :size="6">
-                  <NButton size="tiny" :disabled="!canMoveSelectedUp" @click="moveSelected(-1)">
+                  <NButton
+                    size="tiny"
+                    :disabled="!canMoveSelectedUp"
+                    @click="moveSelected(-1)"
+                  >
                     上移
                   </NButton>
-                  <NButton size="tiny" :disabled="!canMoveSelectedDown" @click="moveSelected(1)">
+                  <NButton
+                    size="tiny"
+                    :disabled="!canMoveSelectedDown"
+                    @click="moveSelected(1)"
+                  >
                     下移
                   </NButton>
                 </NFlex>
               </NFlex>
-              <NText depth="3" class="selected-name">
+              <NText
+                depth="3"
+                class="selected-name"
+              >
                 {{ selectedItem.file.name }}
               </NText>
             </div>
@@ -581,7 +765,9 @@ onBeforeUnmount(clearAll)
   border: 2px dashed var(--vtsuru-border);
   border-radius: 14px;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .empty-drop:hover,
@@ -693,10 +879,18 @@ onBeforeUnmount(clearAll)
   opacity: 0.78;
 }
 
-.preset-visual.vertical { grid-template-rows: repeat(4, 1fr); }
-.preset-visual.horizontal { grid-template-columns: repeat(4, 1fr); }
-.preset-visual.grid2 { grid-template-columns: repeat(2, 1fr); }
-.preset-visual.grid3 { grid-template-columns: repeat(2, 1fr); }
+.preset-visual.vertical {
+  grid-template-rows: repeat(4, 1fr);
+}
+.preset-visual.horizontal {
+  grid-template-columns: repeat(4, 1fr);
+}
+.preset-visual.grid2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.preset-visual.grid3 {
+  grid-template-columns: repeat(2, 1fr);
+}
 
 .field {
   display: flex;

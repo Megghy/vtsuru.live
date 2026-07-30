@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { NButton, NCard, NDataTable, NFlex, NTag } from 'naive-ui'
 import { computed, h } from 'vue'
+
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsOpRecord } from '@/apps/client/store/useVtsStore'
+
 import { useVtsAction } from './useVtsAction'
 
 const vts = useVtsStore()
 const { run } = useVtsAction()
 
 const replayableKinds = new Set([
-  'hotkeyTrigger', 'moveModel', 'injectParam', 'macroRun',
-  'itemOpacity', 'dropItem', 'panicCalibrate', 'panicResetPhysics',
+  'hotkeyTrigger',
+  'moveModel',
+  'injectParam',
+  'macroRun',
+  'itemOpacity',
+  'dropItem',
+  'panicCalibrate',
+  'panicResetPhysics',
 ])
 
 const columns = computed(() => [
@@ -30,13 +38,13 @@ const columns = computed(() => [
     key: 'ok',
     width: 80,
     render: (row: VtsOpRecord) =>
-      h(NTag, { type: row.ok ? 'success' : 'error', size: 'small' }, { default: () => row.ok ? 'OK' : '失败' }),
+      h(NTag, { type: row.ok ? 'success' : 'error', size: 'small' }, { default: () => (row.ok ? 'OK' : '失败') }),
   },
   {
     title: '耗时',
     key: 'durationMs',
     width: 80,
-    render: (row: VtsOpRecord) => row.durationMs != null ? `${row.durationMs}ms` : '-',
+    render: (row: VtsOpRecord) => (row.durationMs != null ? `${row.durationMs}ms` : '-'),
   },
   {
     title: '详情',
@@ -56,21 +64,36 @@ const columns = computed(() => [
     width: 80,
     render: (row: VtsOpRecord) => {
       if (!row.payload || !replayableKinds.has(row.kind)) return ''
-      return h(NButton, {
-        size: 'tiny',
-        disabled: !vts.canOperate,
-        onClick: () => run(() => vts.replayHistoryRecord(row.id), '已回放'),
-      }, { default: () => '回放' })
+      return h(
+        NButton,
+        {
+          size: 'tiny',
+          disabled: !vts.canOperate,
+          onClick: () => run(() => vts.replayHistoryRecord(row.id), '已回放'),
+        },
+        { default: () => '回放' },
+      )
     },
   },
 ])
 </script>
 
 <template>
-  <NCard size="small" bordered title="操作记录">
-    <NFlex vertical :size="12">
+  <NCard
+    size="small"
+    bordered
+    title="操作记录"
+  >
+    <NFlex
+      vertical
+      :size="12"
+    >
       <NFlex justify="end">
-        <NButton size="small" type="error" @click="run(() => vts.clearHistory(), '已清空')">
+        <NButton
+          size="small"
+          type="error"
+          @click="run(() => vts.clearHistory(), '已清空')"
+        >
           清空
         </NButton>
       </NFlex>

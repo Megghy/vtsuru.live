@@ -1,5 +1,6 @@
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { createId } from './editorHelpers'
 
 export function createDefaultProject(): BlockPageProject {
@@ -29,7 +30,7 @@ export function isValidPageConfig(config: unknown): boolean {
 
 export function isEmptyDraftPlaceholder(settings: UserPagesSettingsV1 | null): boolean {
   if (!settings || settings.version !== 1 || Object.keys(settings.pages ?? {}).length !== 0) return false
-  if (Object.keys(settings).some(key => !['version', 'home', 'pages'].includes(key))) return false
+  if (Object.keys(settings).some((key) => !['version', 'home', 'pages'].includes(key))) return false
   if (!settings.home || settings.home.mode !== 'legacy') return false
   const homeKeys = Object.keys(settings.home)
   return homeKeys.length === 1 && homeKeys[0] === 'mode'

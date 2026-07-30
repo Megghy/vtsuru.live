@@ -1,7 +1,8 @@
-import type { FunctionTypes } from '@/api/api-models'
-import { ref } from 'vue'
 import { useMessage } from 'naive-ui'
+import { ref } from 'vue'
+
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import type { FunctionTypes } from '@/api/api-models'
 
 /**
  * 统一封装「启用/禁用某个功能开关」的逻辑：调接口 + 本地 enableFunctions 列表同步 + toast。

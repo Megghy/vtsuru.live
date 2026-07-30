@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { ManualUserFormModel } from '@/apps/open-live/components/lottery/lotteryTypes'
-import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal, NFlex } from 'naive-ui';
+import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal, NFlex } from 'naive-ui'
 import { computed, reactive, watch } from 'vue'
+
+import type { ManualUserFormModel } from '@/apps/open-live/components/lottery/lotteryTypes'
 
 const props = defineProps<{
   show: boolean
@@ -15,7 +16,7 @@ const emit = defineEmits<{
 
 const showModel = computed({
   get: () => props.show,
-  set: value => emit('update:show', value),
+  set: (value) => emit('update:show', value),
 })
 
 const form = reactive<ManualUserFormModel>({
@@ -51,32 +52,81 @@ function submit() {
     style="width: 520px; max-width: 90vw"
     closable
   >
-    <NForm size="small" label-placement="left" label-width="80">
-      <NFormItem label="用户名" required>
-        <NInput v-model:value="form.name" size="small" :disabled="disabled" placeholder="请输入用户名" />
+    <NForm
+      size="small"
+      label-placement="left"
+      label-width="80"
+    >
+      <NFormItem
+        label="用户名"
+        required
+      >
+        <NInput
+          v-model:value="form.name"
+          size="small"
+          :disabled="disabled"
+          placeholder="请输入用户名"
+        />
       </NFormItem>
       <NFormItem label="头像链接">
-        <NInput v-model:value="form.avatar" size="small" :disabled="disabled" placeholder="请输入头像链接" />
+        <NInput
+          v-model:value="form.avatar"
+          size="small"
+          :disabled="disabled"
+          placeholder="请输入头像链接"
+        />
       </NFormItem>
-      <NFlex :wrap="true" :size="12">
+      <NFlex
+        :wrap="true"
+        :size="12"
+      >
         <NFormItem label="粉丝牌等级">
-          <NInputNumber v-model:value="form.fans_medal_level" size="small" :disabled="disabled" :min="0" :max="50" class="lottery-add-user__narrow" />
+          <NInputNumber
+            v-model:value="form.fans_medal_level"
+            size="small"
+            :disabled="disabled"
+            :min="0"
+            :max="50"
+            class="lottery-add-user__narrow"
+          />
         </NFormItem>
         <NFormItem label="粉丝牌名称">
-          <NInput v-model:value="form.fans_medal_name" size="small" :disabled="disabled" placeholder="粉丝牌名称" class="lottery-add-user__medium" />
+          <NInput
+            v-model:value="form.fans_medal_name"
+            size="small"
+            :disabled="disabled"
+            placeholder="粉丝牌名称"
+            class="lottery-add-user__medium"
+          />
         </NFormItem>
       </NFlex>
       <NFormItem label="舰长等级">
-        <NInputNumber v-model:value="form.guard_level" size="small" :disabled="disabled" :min="0" :max="3" class="lottery-add-user__narrow" />
+        <NInputNumber
+          v-model:value="form.guard_level"
+          size="small"
+          :disabled="disabled"
+          :min="0"
+          :max="3"
+          class="lottery-add-user__narrow"
+        />
       </NFormItem>
     </NForm>
 
     <template #footer>
       <NFlex justify="end">
-        <NButton size="small" :disabled="disabled" @click="showModel = false">
+        <NButton
+          size="small"
+          :disabled="disabled"
+          @click="showModel = false"
+        >
           取消
         </NButton>
-        <NButton type="primary" size="small" :disabled="disabled" @click="submit">
+        <NButton
+          type="primary"
+          size="small"
+          :disabled="disabled"
+          @click="submit"
+        >
           添加用户
         </NButton>
       </NFlex>

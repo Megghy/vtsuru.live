@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { NIcon } from 'naive-ui';
-import { computed, nextTick, ref, watch } from 'vue'
 import { MegaphoneOutline } from '@vicons/ionicons5'
-import { Vue3Marquee } from 'vue3-marquee'
 import { useResizeObserver } from '@vueuse/core'
+import { NIcon } from 'naive-ui'
+import { computed, nextTick, ref, watch } from 'vue'
+import { Vue3Marquee } from 'vue3-marquee'
+
 import BlockCard from '../BlockCard.vue'
 
 type ScrollDirection = 'left' | 'right' | 'up' | 'down'
@@ -17,12 +18,13 @@ interface BlockConfig {
   backgrounded?: boolean
 }
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
   const durationSec = Number(o.durationSec)
   return {
     text: typeof o.text === 'string' ? o.text : '',
@@ -36,7 +38,9 @@ const cfg = computed<BlockConfig>(() => {
 
 const displayText = computed(() => cfg.value.text || '公告内容未设置')
 const vertical = computed(() => cfg.value.direction === 'up' || cfg.value.direction === 'down')
-const animationDirection = computed(() => (cfg.value.direction === 'left' || cfg.value.direction === 'up' ? 'normal' : 'reverse'))
+const animationDirection = computed(() =>
+  cfg.value.direction === 'left' || cfg.value.direction === 'up' ? 'normal' : 'reverse',
+)
 
 const hostRef = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLElement | null>(null)
@@ -56,20 +60,43 @@ function recomputeOverflow() {
 
 useResizeObserver(hostRef, () => recomputeOverflow())
 useResizeObserver(measureRef, () => recomputeOverflow())
-watch([displayText, vertical], async () => {
-  await nextTick()
-  recomputeOverflow()
-}, { immediate: true })
+watch(
+  [displayText, vertical],
+  async () => {
+    await nextTick()
+    recomputeOverflow()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <BlockCard :framed="cfg.framed" :backgrounded="cfg.backgrounded">
-    <div class="row" :class="{ 'row--bare': !cfg.backgrounded }">
-      <NIcon size="18" depth="2" class="icon">
+  <BlockCard
+    :framed="cfg.framed"
+    :backgrounded="cfg.backgrounded"
+  >
+    <div
+      class="row"
+      :class="{ 'row--bare': !cfg.backgrounded }"
+    >
+      <NIcon
+        size="18"
+        depth="2"
+        class="icon"
+      >
         <MegaphoneOutline />
       </NIcon>
-      <div ref="hostRef" class="marquee-host" :class="{ 'marquee-host--vertical': vertical }">
-        <span ref="measureRef" class="text measure" :class="{ 'text--vertical': vertical }" aria-hidden="true">
+      <div
+        ref="hostRef"
+        class="marquee-host"
+        :class="{ 'marquee-host--vertical': vertical }"
+      >
+        <span
+          ref="measureRef"
+          class="text measure"
+          :class="{ 'text--vertical': vertical }"
+          aria-hidden="true"
+        >
           {{ displayText }}
         </span>
         <Vue3Marquee
@@ -83,9 +110,18 @@ watch([displayText, vertical], async () => {
           :style="vertical ? { width: '100%', height: '100%' } : undefined"
           clone
         >
-          <span class="text" :class="{ 'text--vertical': vertical }">{{ displayText }}</span>
+          <span
+            class="text"
+            :class="{ 'text--vertical': vertical }"
+            >{{ displayText }}</span
+          >
         </Vue3Marquee>
-        <span v-else class="text" :class="{ 'text--vertical': vertical }">{{ displayText }}</span>
+        <span
+          v-else
+          class="text"
+          :class="{ 'text--vertical': vertical }"
+          >{{ displayText }}</span
+        >
       </div>
     </div>
   </BlockCard>

@@ -1,12 +1,17 @@
 <script setup lang="ts">
+import { NDivider, NGrid } from 'naive-ui'
 import type { VNode } from 'vue'
+
 import type { updateNoteItemContentType } from '@/shared/services/UpdateNote'
-import { NDivider, NGrid } from 'naive-ui';
 import { updateNotes } from '@/shared/services/UpdateNote'
 
 function renderContent(content: updateNoteItemContentType): VNode | string | undefined {
   if (Array.isArray(content)) {
-    return h('div', { style: { whiteSpace: 'pre-wrap' } }, content.map(item => renderContent(item)))
+    return h(
+      'div',
+      { style: { whiteSpace: 'pre-wrap' } },
+      content.map((item) => renderContent(item)),
+    )
   }
   const getContent = (c: unknown) => {
     if (typeof c === 'string') {
@@ -22,7 +27,7 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
 
 <template>
   <NScrollbar
-    style="max-height: 80vh;padding-right: 16px;"
+    style="max-height: 80vh; padding-right: 16px"
     trigger="none"
   >
     <NFlex vertical>

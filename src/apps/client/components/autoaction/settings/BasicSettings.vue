@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCard, NFlex, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch, NText, NTooltip, NIcon } from 'naive-ui';
-import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
 import { Info16Regular } from '@vicons/fluent'
+import { NCard, NFlex, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch, NText, NTooltip, NIcon } from 'naive-ui'
+
+import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
+import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
@@ -20,15 +21,13 @@ const props = defineProps({
 })
 
 // 需要模板内容的动作类型(发送弹幕/私信/执行命令)
-const requiresTemplate = computed(() => [
-  ActionType.SEND_DANMAKU,
-  ActionType.SEND_PRIVATE_MSG,
-  ActionType.EXECUTE_COMMAND,
-].includes(props.action.actionType))
+const requiresTemplate = computed(() =>
+  [ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG, ActionType.EXECUTE_COMMAND].includes(props.action.actionType),
+)
 
 const nameInvalid = computed(() => !props.action.name?.trim())
-const templateInvalid = computed(() =>
-  requiresTemplate.value && (typeof props.action.template !== 'string' || !props.action.template.trim())
+const templateInvalid = computed(
+  () => requiresTemplate.value && (typeof props.action.template !== 'string' || !props.action.template.trim()),
 )
 
 // 触发类型选项
@@ -85,19 +84,34 @@ const priorityOptions = [
         :x-gap="16"
         :y-gap="12"
       >
-        <NGi v-if="!hideName" span="1 m:2">
+        <NGi
+          v-if="!hideName"
+          span="1 m:2"
+        >
           <NFormItem label="操作名称">
-            <NFlex vertical :size="2" style="width: 100%">
+            <NFlex
+              vertical
+              :size="2"
+              style="width: 100%"
+            >
               <NInput
                 v-model:value="action.name"
                 placeholder="例如：给礼物老板点赞"
                 :status="nameInvalid ? 'error' : undefined"
                 clearable
               />
-              <NText v-if="nameInvalid" type="error" style="font-size: 12px">
+              <NText
+                v-if="nameInvalid"
+                type="error"
+                style="font-size: 12px"
+              >
                 操作名称不能为空
               </NText>
-              <NText v-else-if="templateInvalid" type="warning" style="font-size: 12px">
+              <NText
+                v-else-if="templateInvalid"
+                type="warning"
+                style="font-size: 12px"
+              >
                 当前动作需要设置模板内容，否则不会生效
               </NText>
             </NFlex>
@@ -106,7 +120,10 @@ const priorityOptions = [
 
         <NGi v-if="!hideEnabled">
           <NFormItem label="是否启用">
-            <NSwitch v-model:value="action.enabled" size="small" />
+            <NSwitch
+              v-model:value="action.enabled"
+              size="small"
+            />
           </NFormItem>
         </NGi>
 
@@ -115,12 +132,20 @@ const priorityOptions = [
             <template #label>
               <NTooltip trigger="hover">
                 <template #trigger>
-                  <span>仅直播时 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                  <span
+                    >仅直播时
+                    <NIcon
+                      :component="Info16Regular"
+                      style="vertical-align: -2px"
+                  /></span>
                 </template>
                 关闭直播后将不会触发此操作
               </NTooltip>
             </template>
-            <NSwitch v-model:value="action.triggerConfig.onlyDuringLive" size="small" />
+            <NSwitch
+              v-model:value="action.triggerConfig.onlyDuringLive"
+              size="small"
+            />
           </NFormItem>
         </NGi>
 
@@ -129,12 +154,20 @@ const priorityOptions = [
             <template #label>
               <NTooltip trigger="hover">
                 <template #trigger>
-                  <span>忽略天选 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                  <span
+                    >忽略天选
+                    <NIcon
+                      :component="Info16Regular"
+                      style="vertical-align: -2px"
+                  /></span>
                 </template>
                 开启天选时刻期间暂停触发（防止被风控）
               </NTooltip>
             </template>
-            <NSwitch v-model:value="action.triggerConfig.ignoreTianXuan" size="small" />
+            <NSwitch
+              v-model:value="action.triggerConfig.ignoreTianXuan"
+              size="small"
+            />
           </NFormItem>
         </NGi>
 

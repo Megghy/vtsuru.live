@@ -3,6 +3,7 @@ import { PeopleOutline, PersonCircleOutline, TimeOutline, TvOutline } from '@vic
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
+
 import { useAccount } from '@/api/account'
 import { streamingInfo } from '@/apps/client/data/info'
 
@@ -18,19 +19,35 @@ const streamingDuration = computed(() => {
 </script>
 
 <template>
-  <NCard title="直播间信息" size="small" bordered style="width: 100%;">
+  <NCard
+    title="直播间信息"
+    size="small"
+    bordered
+    style="width: 100%"
+  >
     <template #header-extra>
-      <NTag v-if="isStreaming" type="success" size="small">
+      <NTag
+        v-if="isStreaming"
+        type="success"
+        size="small"
+      >
         <template #icon>
           <NIcon :component="TvOutline" />
         </template>
         直播中
       </NTag>
-      <NTag v-else type="default" size="small">
+      <NTag
+        v-else
+        type="default"
+        size="small"
+      >
         未开播
       </NTag>
     </template>
-    <NSpin :show="!streamingInfo" description="正在获取直播间信息...">
+    <NSpin
+      :show="!streamingInfo"
+      description="正在获取直播间信息..."
+    >
       <NDescriptions
         v-if="streamingInfo"
         label-placement="top"
@@ -56,7 +73,7 @@ const streamingDuration = computed(() => {
       <NEmpty
         v-else
         description="暂无直播间信息"
-        style="padding: 16px 0;"
+        style="padding: 16px 0"
       />
     </NSpin>
   </NCard>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { GoogleFontCatalogItem } from '@/apps/user-page/googleFonts'
 import { computed, ref, watch } from 'vue'
+
+import type { GoogleFontCatalogItem } from '@/apps/user-page/googleFonts'
 import { getGoogleFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 
 const props = defineProps<{
@@ -15,14 +16,18 @@ const emit = defineEmits<{
 }>()
 
 const previewedFamily = ref<string | null>(null)
-watch([() => props.font.family, () => props.loadPreview], ([family, loadPreview]) => {
-  if (loadPreview) previewedFamily.value = family
-  else if (previewedFamily.value !== family) previewedFamily.value = null
-}, { immediate: true })
+watch(
+  [() => props.font.family, () => props.loadPreview],
+  ([family, loadPreview]) => {
+    if (loadPreview) previewedFamily.value = family
+    else if (previewedFamily.value !== family) previewedFamily.value = null
+  },
+  { immediate: true },
+)
 const fontFamily = computed(() => previewedFamily.value ?? undefined)
-const fontStyle = computed(() => previewedFamily.value
-  ? { fontFamily: getGoogleFontFamilyCss(props.font.family) }
-  : undefined)
+const fontStyle = computed(() =>
+  previewedFamily.value ? { fontFamily: getGoogleFontFamilyCss(props.font.family) } : undefined,
+)
 useGoogleFont(fontFamily)
 </script>
 
@@ -33,7 +38,11 @@ useGoogleFont(fontFamily)
     :class="{ active }"
     @click="emit('select', font.family)"
   >
-    <span class="font-row__name" :style="fontStyle">{{ font.family }}</span>
+    <span
+      class="font-row__name"
+      :style="fontStyle"
+      >{{ font.family }}</span
+    >
     <span class="font-row__category">{{ categoryLabel }}</span>
   </button>
 </template>

@@ -1,4 +1,5 @@
 import path from 'node:path'
+
 // vite.config.ts
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
@@ -6,10 +7,8 @@ import AutoImport from 'unplugin-auto-import/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import Markdown from 'unplugin-vue-markdown/vite'
-import { createLogger, defineConfig } from 'vite'
+import { defineConfig } from 'vite'
 import svgLoader from 'vite-svg-loader'
-import { VineVitePlugin } from 'vue-vine/vite'
-// import MonacoEditorNlsPlugin, { esbuildPluginMonacoEditorNls, Languages } from 'vite-plugin-monaco-editor-nls'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
 const removeSodipodiInkscape = {
@@ -30,18 +29,8 @@ const removeSodipodiInkscape = {
   },
 }
 
-const logger = createLogger()
-const loggerWarn = logger.warn.bind(logger)
-logger.warn = (msg, options) => {
-  if (msg.includes('Both esbuild and oxc options were set.')) {
-    return
-  }
-  loggerWarn(msg, options)
-}
-
 export default defineConfig({
   appType: 'spa',
-  customLogger: logger,
   plugins: [
     {
       name: 'drop-ort-wasm',
@@ -88,45 +77,37 @@ export default defineConfig({
         ],
       },
     }),
-    Markdown({
-      /* options */
-    }),
+    Markdown(),
     AutoImport({
-      imports: ['vue', 'vue-router', '@vueuse/core', 'pinia', 'date-fns', {
-        'naive-ui': [
-          'useDialog',
-          'useMessage',
-          'useNotification',
-          'useLoadingBar',
-        ],
-      }],
+      imports: [
+        'vue',
+        'vue-router',
+        '@vueuse/core',
+        'pinia',
+        'date-fns',
+        {
+          'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'],
+        },
+      ],
       dts: 'src/auto-imports.d.ts',
     }),
     Components({
       resolvers: [NaiveUiResolver()],
       dts: 'src/components.d.ts',
       extensions: ['vue', 'md'],
-      include: [/\.vue$/, /\.vue\?vue/, /\.md$/, /\.vine$/],
+      include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
     }),
-    VineVitePlugin(),
-    // Monaco 中文本地化
-    // MonacoEditorNlsPlugin({ locale: Languages.zh_hans }),
   ],
   server: { port: 51000 },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   define: {
     'process.env': {},
     // 用 globalThis 而非 window：主线程/Web Worker/Node 均存在，避免 worker 内 window 未定义报错
-    'global': 'globalThis',
-    '__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
+    global: 'globalThis',
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router'],
-    esbuildOptions: {
-      // plugins: [
-      //   esbuildPluginMonacoEditorNls({ locale: Languages.zh_hans }),
-      // ],
-    },
   },
   build: {
     manifest: true,
@@ -144,7 +125,8 @@ export default defineConfig({
         }
         defaultHandler(level, log)
       },
-      output: { // @ts-ignore
+      output: {
+        // @ts-ignore
         codeSplitting: {
           groups: [
             {

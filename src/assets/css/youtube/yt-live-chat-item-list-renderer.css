@@ -1,4 +1,59 @@
-canvas.yt-live-chat-item-list-renderer, caption.yt-live-chat-item-list-renderer, center.yt-live-chat-item-list-renderer, cite.yt-live-chat-item-list-renderer, code.yt-live-chat-item-list-renderer, dd.yt-live-chat-item-list-renderer, del.yt-live-chat-item-list-renderer, dfn.yt-live-chat-item-list-renderer, div.yt-live-chat-item-list-renderer, dl.yt-live-chat-item-list-renderer, dt.yt-live-chat-item-list-renderer, em.yt-live-chat-item-list-renderer, embed.yt-live-chat-item-list-renderer, fieldset.yt-live-chat-item-list-renderer, font.yt-live-chat-item-list-renderer, form.yt-live-chat-item-list-renderer, h1.yt-live-chat-item-list-renderer, h2.yt-live-chat-item-list-renderer, h3.yt-live-chat-item-list-renderer, h4.yt-live-chat-item-list-renderer, h5.yt-live-chat-item-list-renderer, h6.yt-live-chat-item-list-renderer, hr.yt-live-chat-item-list-renderer, i.yt-live-chat-item-list-renderer, iframe.yt-live-chat-item-list-renderer, img.yt-live-chat-item-list-renderer, ins.yt-live-chat-item-list-renderer, kbd.yt-live-chat-item-list-renderer, label.yt-live-chat-item-list-renderer, legend.yt-live-chat-item-list-renderer, li.yt-live-chat-item-list-renderer, menu.yt-live-chat-item-list-renderer, object.yt-live-chat-item-list-renderer, ol.yt-live-chat-item-list-renderer, p.yt-live-chat-item-list-renderer, pre.yt-live-chat-item-list-renderer, q.yt-live-chat-item-list-renderer, s.yt-live-chat-item-list-renderer, samp.yt-live-chat-item-list-renderer, small.yt-live-chat-item-list-renderer, span.yt-live-chat-item-list-renderer, strike.yt-live-chat-item-list-renderer, strong.yt-live-chat-item-list-renderer, sub.yt-live-chat-item-list-renderer, sup.yt-live-chat-item-list-renderer, table.yt-live-chat-item-list-renderer, tbody.yt-live-chat-item-list-renderer, td.yt-live-chat-item-list-renderer, tfoot.yt-live-chat-item-list-renderer, th.yt-live-chat-item-list-renderer, thead.yt-live-chat-item-list-renderer, tr.yt-live-chat-item-list-renderer, tt.yt-live-chat-item-list-renderer, u.yt-live-chat-item-list-renderer, ul.yt-live-chat-item-list-renderer, var.yt-live-chat-item-list-renderer {
+canvas.yt-live-chat-item-list-renderer,
+caption.yt-live-chat-item-list-renderer,
+center.yt-live-chat-item-list-renderer,
+cite.yt-live-chat-item-list-renderer,
+code.yt-live-chat-item-list-renderer,
+dd.yt-live-chat-item-list-renderer,
+del.yt-live-chat-item-list-renderer,
+dfn.yt-live-chat-item-list-renderer,
+div.yt-live-chat-item-list-renderer,
+dl.yt-live-chat-item-list-renderer,
+dt.yt-live-chat-item-list-renderer,
+em.yt-live-chat-item-list-renderer,
+embed.yt-live-chat-item-list-renderer,
+fieldset.yt-live-chat-item-list-renderer,
+font.yt-live-chat-item-list-renderer,
+form.yt-live-chat-item-list-renderer,
+h1.yt-live-chat-item-list-renderer,
+h2.yt-live-chat-item-list-renderer,
+h3.yt-live-chat-item-list-renderer,
+h4.yt-live-chat-item-list-renderer,
+h5.yt-live-chat-item-list-renderer,
+h6.yt-live-chat-item-list-renderer,
+hr.yt-live-chat-item-list-renderer,
+i.yt-live-chat-item-list-renderer,
+iframe.yt-live-chat-item-list-renderer,
+img.yt-live-chat-item-list-renderer,
+ins.yt-live-chat-item-list-renderer,
+kbd.yt-live-chat-item-list-renderer,
+label.yt-live-chat-item-list-renderer,
+legend.yt-live-chat-item-list-renderer,
+li.yt-live-chat-item-list-renderer,
+menu.yt-live-chat-item-list-renderer,
+object.yt-live-chat-item-list-renderer,
+ol.yt-live-chat-item-list-renderer,
+p.yt-live-chat-item-list-renderer,
+pre.yt-live-chat-item-list-renderer,
+q.yt-live-chat-item-list-renderer,
+s.yt-live-chat-item-list-renderer,
+samp.yt-live-chat-item-list-renderer,
+small.yt-live-chat-item-list-renderer,
+span.yt-live-chat-item-list-renderer,
+strike.yt-live-chat-item-list-renderer,
+strong.yt-live-chat-item-list-renderer,
+sub.yt-live-chat-item-list-renderer,
+sup.yt-live-chat-item-list-renderer,
+table.yt-live-chat-item-list-renderer,
+tbody.yt-live-chat-item-list-renderer,
+td.yt-live-chat-item-list-renderer,
+tfoot.yt-live-chat-item-list-renderer,
+th.yt-live-chat-item-list-renderer,
+thead.yt-live-chat-item-list-renderer,
+tr.yt-live-chat-item-list-renderer,
+tt.yt-live-chat-item-list-renderer,
+u.yt-live-chat-item-list-renderer,
+ul.yt-live-chat-item-list-renderer,
+var.yt-live-chat-item-list-renderer {
   margin: 0;
   padding: 0;
   border: 0;
@@ -48,7 +103,7 @@ yt-live-chat-item-list-renderer[moderation-mode-enabled] {
   justify-content: center;
 }
 
-#empty-state-message.yt-live-chat-item-list-renderer>yt-live-chat-message-renderer.yt-live-chat-item-list-renderer {
+#empty-state-message.yt-live-chat-item-list-renderer > yt-live-chat-message-renderer.yt-live-chat-item-list-renderer {
   color: var(--yt-live-chat-tertiary-text-color);
   background: transparent;
   font-size: 18px;
@@ -67,15 +122,18 @@ yt-icon-button.yt-live-chat-item-list-renderer {
   padding: 4px;
   position: absolute;
   transition-property: bottom;
-  transition-timing-function: cubic-bezier(0.0, 0.0, 0.2, 1);
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
   transition-duration: 0.15s;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 2px 2px 0 rgba(0, 0, 0, 0.14),
+    0 1px 5px 0 rgba(0, 0, 0, 0.12),
+    0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
 
 yt-icon-button.yt-live-chat-item-list-renderer[disabled] {
   bottom: -42px;
   color: #fff;
-  transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
+  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
 }
 
 #item-scroller.yt-live-chat-item-list-renderer {
@@ -111,7 +169,7 @@ yt-live-chat-item-list-renderer[allow-scroll] #item-scroller.yt-live-chat-item-l
   padding: var(--yt-live-chat-item-list-renderer-padding, 4px 0);
 }
 
-#items.yt-live-chat-item-list-renderer>*.yt-live-chat-item-list-renderer:not(:first-child) {
+#items.yt-live-chat-item-list-renderer > *.yt-live-chat-item-list-renderer:not(:first-child) {
   border-top: var(--yt-live-chat-item-list-item-border, none);
 }
 

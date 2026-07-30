@@ -1,10 +1,34 @@
 <script setup lang="ts">
-import type { Setting_Point } from '@/api/api-models'
 import { Delete24Regular, Info24Filled } from '@vicons/fluent'
 import {
-  NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NFlex, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSpin, NTag, NText, NTooltip, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NCheckboxGroup,
+  NDivider,
+  NFlex,
+  NForm,
+  NFormItem,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NModal,
+  NPopconfirm,
+  NRadioButton,
+  NRadioGroup,
+  NSpin,
+  NTag,
+  NText,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+
 import { SaveSetting, useAccount } from '@/api/account'
+import type { Setting_Point } from '@/api/api-models'
 import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
@@ -54,7 +78,9 @@ async function loadOrgSetting() {
   isLoading.value = true
   try {
     orgSetting.value = unwrapOk(
-      await QueryGetAPI<Setting_Point>(`${ORG_API_URL}${props.orgId}/points/settings/detail`, { streamerId: props.streamerId }),
+      await QueryGetAPI<Setting_Point>(`${ORG_API_URL}${props.orgId}/points/settings/detail`, {
+        streamerId: props.streamerId,
+      }),
       '加载积分规则失败',
     )
   } catch (err) {
@@ -87,7 +113,7 @@ const setting = computed({
 })
 
 // 添加礼物表单模型
-const addGiftModel = ref<{ name: string, point: number, nameError: string, pointError: string }>({
+const addGiftModel = ref<{ name: string; point: number; nameError: string; pointError: string }>({
   name: '',
   point: 1,
   nameError: '',
@@ -265,7 +291,7 @@ watch(
     if (props.orgId) {
       loadOrgSetting()
     }
-  }
+  },
 )
 </script>
 
@@ -527,15 +553,9 @@ watch(
             :disabled="!canEdit"
             @update:value="updateSettings"
           >
-            <NCheckbox :value="EventDataTypes.Guard">
-              上舰
-            </NCheckbox>
-            <NCheckbox :value="EventDataTypes.SC">
-              Superchat
-            </NCheckbox>
-            <NCheckbox :value="EventDataTypes.Gift">
-              礼物
-            </NCheckbox>
+            <NCheckbox :value="EventDataTypes.Guard"> 上舰 </NCheckbox>
+            <NCheckbox :value="EventDataTypes.SC"> Superchat </NCheckbox>
+            <NCheckbox :value="EventDataTypes.Gift"> 礼物 </NCheckbox>
           </NCheckboxGroup>
         </NFlex>
       </NCard>
@@ -550,9 +570,7 @@ watch(
           vertical
           :gap="12"
         >
-          <NText depth="3">
-            配置不同等级舰长获得的固定积分
-          </NText>
+          <NText depth="3"> 配置不同等级舰长获得的固定积分 </NText>
           <NFlex
             :wrap="true"
             :gap="16"
@@ -696,7 +714,10 @@ watch(
         >
           <!-- 每日首次弹幕奖励 -->
           <div class="setting-row-group">
-            <NFlex align="center" style="margin-bottom: 12px">
+            <NFlex
+              align="center"
+              style="margin-bottom: 12px"
+            >
               <NCheckbox
                 v-model:checked="setting.enableDailyFirstDanmaku"
                 :disabled="!canEdit"
@@ -706,7 +727,10 @@ watch(
               </NCheckbox>
             </NFlex>
 
-            <NFlex v-if="setting.enableDailyFirstDanmaku" style="padding-left: 28px">
+            <NFlex
+              v-if="setting.enableDailyFirstDanmaku"
+              style="padding-left: 28px"
+            >
               <NInputGroup
                 class="input-group-wide"
                 :disabled="!canEdit"
@@ -735,7 +759,10 @@ watch(
 
           <!-- 每日首次礼物奖励 -->
           <div class="setting-row-group">
-            <NFlex align="center" style="margin-bottom: 12px">
+            <NFlex
+              align="center"
+              style="margin-bottom: 12px"
+            >
               <NCheckbox
                 v-model:checked="setting.enableDailyFirstGift"
                 :disabled="!canEdit"
@@ -756,12 +783,8 @@ watch(
                 size="small"
                 @update:value="updateSettings"
               >
-                <NRadioButton :value="false">
-                  固定积分
-                </NRadioButton>
-                <NRadioButton :value="true">
-                  按礼物价值比例
-                </NRadioButton>
+                <NRadioButton :value="false"> 固定积分 </NRadioButton>
+                <NRadioButton :value="true"> 按礼物价值比例 </NRadioButton>
               </NRadioGroup>
 
               <NFlex>
@@ -847,12 +870,8 @@ watch(
             v-model:value="setting.giftAllowType"
             @update:value="updateSettings"
           >
-            <NRadioButton :value="SettingPointGiftAllowType.WhiteList">
-              仅包含自定义列表中的礼物
-            </NRadioButton>
-            <NRadioButton :value="SettingPointGiftAllowType.All">
-              包含所有礼物
-            </NRadioButton>
+            <NRadioButton :value="SettingPointGiftAllowType.WhiteList"> 仅包含自定义列表中的礼物 </NRadioButton>
+            <NRadioButton :value="SettingPointGiftAllowType.All"> 包含所有礼物 </NRadioButton>
           </NRadioGroup>
 
           <!-- 所有礼物转换比例 -->
@@ -953,12 +972,18 @@ watch(
                     <div class="gift-name">
                       {{ item[0] }}
                     </div>
-                    <NText depth="3" style="font-size: 12px">
+                    <NText
+                      depth="3"
+                      style="font-size: 12px"
+                    >
                       固定赠送 {{ setting.giftPercentMap[item[0]] }} 积分
                     </NText>
                   </NFlex>
 
-                  <NFlex align="center" :gap="8">
+                  <NFlex
+                    align="center"
+                    :gap="8"
+                  >
                     <NInputNumber
                       :value="setting.giftPercentMap[item[0]]"
                       :disabled="!canEdit"
@@ -1051,11 +1076,7 @@ watch(
               :gap="12"
               style="margin-top: 24px"
             >
-              <NButton
-                @click="showAddGiftModal = false"
-              >
-                取消
-              </NButton>
+              <NButton @click="showAddGiftModal = false"> 取消 </NButton>
               <NButton
                 type="primary"
                 :loading="isLoading"
@@ -1153,7 +1174,8 @@ watch(
 
 /* 响应式布局优化 */
 @media (max-width: 768px) {
-  .input-group, .input-group-wide {
+  .input-group,
+  .input-group-wide {
     width: 100%;
     margin-bottom: 8px;
   }

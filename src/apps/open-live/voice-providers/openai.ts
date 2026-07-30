@@ -1,5 +1,5 @@
-import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 import { createOpenAIClient, synthesizeSpeech } from './ai-client'
+import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
 interface OpenAIProviderConfig {
   baseUrl?: string

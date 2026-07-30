@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { CookieCloudConfig } from '@/apps/client/store/useBiliCookie'
-import { CloudDownloadOutline, RefreshOutline } from '@vicons/ionicons5'
 import { error as logError } from '@tauri-apps/plugin-log'
+import { CloudDownloadOutline, RefreshOutline } from '@vicons/ionicons5'
 import { useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
+
 import { useCooldown } from '@/apps/client/composables/useCooldown'
+import type { CookieCloudConfig } from '@/apps/client/store/useBiliCookie'
 import { COOKIE_CLOUD_KEY, useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
 
@@ -92,33 +93,45 @@ async function manualCheckCookie() {
     title="Cookie Cloud 配置"
     size="small"
     bordered
-    style="width: 100%;"
+    style="width: 100%"
   >
     <template #header-extra>
       <NTag
-        :type="biliCookie.cookieCloudState === 'valid' ? 'success' : biliCookie.cookieCloudState === 'syncing' ? 'info' : biliCookie.cookieCloudState === 'invalid' ? 'error' : 'default'"
+        :type="
+          biliCookie.cookieCloudState === 'valid'
+            ? 'success'
+            : biliCookie.cookieCloudState === 'syncing'
+              ? 'info'
+              : biliCookie.cookieCloudState === 'invalid'
+                ? 'error'
+                : 'default'
+        "
       >
         {{
-          biliCookie.cookieCloudState === 'valid' ? '已配置'
-          : biliCookie.cookieCloudState === 'syncing' ? '同步中'
-            : biliCookie.cookieCloudState === 'invalid' ? '配置无效' : '未配置'
+          biliCookie.cookieCloudState === 'valid'
+            ? '已配置'
+            : biliCookie.cookieCloudState === 'syncing'
+              ? '同步中'
+              : biliCookie.cookieCloudState === 'invalid'
+                ? '配置无效'
+                : '未配置'
         }}
       </NTag>
     </template>
-    <NFlex vertical :size="8">
-      <NAlert type="info">
-        设置 CookieCloud 后扫码登陆的登陆信息将被覆盖
-      </NAlert>
+    <NFlex
+      vertical
+      :size="8"
+    >
+      <NAlert type="info"> 设置 CookieCloud 后扫码登陆的登陆信息将被覆盖 </NAlert>
       <NInputGroup>
-        <NInputGroupLabel>
-          Key
-        </NInputGroupLabel>
-        <NInput v-model:value="cookieCloudData.key" placeholder="请输入 Key" />
+        <NInputGroupLabel> Key </NInputGroupLabel>
+        <NInput
+          v-model:value="cookieCloudData.key"
+          placeholder="请输入 Key"
+        />
       </NInputGroup>
       <NInputGroup>
-        <NInputGroupLabel>
-          Password
-        </NInputGroupLabel>
+        <NInputGroupLabel> Password </NInputGroupLabel>
         <NInput
           v-model:value="cookieCloudData.password"
           placeholder="请输入 Password"
@@ -127,9 +140,7 @@ async function manualCheckCookie() {
         />
       </NInputGroup>
       <NInputGroup>
-        <NInputGroupLabel>
-          Host (可选)
-        </NInputGroupLabel>
+        <NInputGroupLabel> Host (可选) </NInputGroupLabel>
         <NInput
           v-model:value="cookieCloudData.host"
           default-value="https://cookie.vtsuru.live"
@@ -149,25 +160,23 @@ async function manualCheckCookie() {
         <NPopconfirm
           v-else
           type="error"
-          @positive-click="async () => {
-            await biliCookie.clearCookieCloudConfig();
-            cookieCloudData.key = '';
-            cookieCloudData.password = '';
-            cookieCloudData.host = 'https://cookie.vtsuru.live';
-            message.success('配置已清除');
-          }"
+          @positive-click="
+            async () => {
+              await biliCookie.clearCookieCloudConfig()
+              cookieCloudData.key = ''
+              cookieCloudData.password = ''
+              cookieCloudData.host = 'https://cookie.vtsuru.live'
+              message.success('配置已清除')
+            }
+          "
         >
           <template #trigger>
-            <NButton type="error">
-              清除配置
-            </NButton>
+            <NButton type="error"> 清除配置 </NButton>
           </template>
           确定要清除配置吗？
         </NPopconfirm>
       </NFlex>
-      <NDivider style="margin: 0;">
-        手动操作
-      </NDivider>
+      <NDivider style="margin: 0"> 手动操作 </NDivider>
       <NFlex :size="8">
         <NTooltip>
           <template #trigger>
@@ -179,10 +188,20 @@ async function manualCheckCookie() {
               <template #icon>
                 <NIcon :component="CloudDownloadOutline" />
               </template>
-              {{ syncCooldown.remaining.value > 0 ? `同步 Cookie (${syncCooldown.remaining.value}s)` : '从云端同步 Cookie' }}
+              {{
+                syncCooldown.remaining.value > 0
+                  ? `同步 Cookie (${syncCooldown.remaining.value}s)`
+                  : '从云端同步 Cookie'
+              }}
             </NButton>
           </template>
-          {{ biliCookie.cookieCloudState !== 'valid' ? '请先配置有效的 Cookie Cloud' : syncCooldown.remaining.value > 0 ? `请等待 ${syncCooldown.remaining.value} 秒` : '手动从 Cookie Cloud 拉取最新的 Cookie' }}
+          {{
+            biliCookie.cookieCloudState !== 'valid'
+              ? '请先配置有效的 Cookie Cloud'
+              : syncCooldown.remaining.value > 0
+                ? `请等待 ${syncCooldown.remaining.value} 秒`
+                : '手动从 Cookie Cloud 拉取最新的 Cookie'
+          }}
         </NTooltip>
         <NTooltip>
           <template #trigger>
@@ -194,10 +213,18 @@ async function manualCheckCookie() {
               <template #icon>
                 <NIcon :component="RefreshOutline" />
               </template>
-              {{ checkCooldown.remaining.value > 0 ? `检查状态 (${checkCooldown.remaining.value}s)` : '检查 Cookie 状态' }}
+              {{
+                checkCooldown.remaining.value > 0 ? `检查状态 (${checkCooldown.remaining.value}s)` : '检查 Cookie 状态'
+              }}
             </NButton>
           </template>
-          {{ !biliCookie.hasBiliCookie ? '当前没有 Cookie' : checkCooldown.remaining.value > 0 ? `请等待 ${checkCooldown.remaining.value} 秒` : '手动检查当前 Cookie 的有效性' }}
+          {{
+            !biliCookie.hasBiliCookie
+              ? '当前没有 Cookie'
+              : checkCooldown.remaining.value > 0
+                ? `请等待 ${checkCooldown.remaining.value} 秒`
+                : '手动检查当前 Cookie 的有效性'
+          }}
         </NTooltip>
       </NFlex>
     </NFlex>

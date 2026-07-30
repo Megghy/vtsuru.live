@@ -1,23 +1,26 @@
 <script setup lang="ts">
 import type { GlobalThemeOverrides } from 'naive-ui'
-import { NCard, NConfigProvider } from 'naive-ui';
+import { NCard, NConfigProvider } from 'naive-ui'
 import type { CSSProperties } from 'vue'
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{
-  contentStyle?: string | CSSProperties
-  headerStyle?: string | CSSProperties
-  footerStyle?: string | CSSProperties
-  wrapStyle?: string | CSSProperties
-  framed?: boolean
-  backgrounded?: boolean
-  borderTitle?: string
-  borderTitleAlign?: 'left' | 'center' | 'right'
-}>(), {
-  framed: true,
-  backgrounded: true,
-  borderTitleAlign: 'left',
-})
+const props = withDefaults(
+  defineProps<{
+    contentStyle?: string | CSSProperties
+    headerStyle?: string | CSSProperties
+    footerStyle?: string | CSSProperties
+    wrapStyle?: string | CSSProperties
+    framed?: boolean
+    backgrounded?: boolean
+    borderTitle?: string
+    borderTitleAlign?: 'left' | 'center' | 'right'
+  }>(),
+  {
+    framed: true,
+    backgrounded: true,
+    borderTitleAlign: 'left',
+  },
+)
 
 const resolvedContentStyle = computed<string | CSSProperties>(() => {
   return props.contentStyle ?? { padding: 'var(--vtsuru-page-spacing)' }
@@ -102,7 +105,11 @@ const borderTitleAlignClass = computed(() => {
       :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded, 'has-border-title': showBorderTitle }"
       :style="props.wrapStyle"
     >
-      <div v-if="showBorderTitle" class="border-title" :class="borderTitleAlignClass">
+      <div
+        v-if="showBorderTitle"
+        class="border-title"
+        :class="borderTitleAlignClass"
+      >
         <span class="border-title__text">
           {{ borderTitleText }}
         </span>
@@ -117,16 +124,25 @@ const borderTitleAlignClass = computed(() => {
         :footer-style="props.footerStyle"
         :style="cardStyle"
       >
-        <template v-if="$slots.header" #header>
+        <template
+          v-if="$slots.header"
+          #header
+        >
           <slot name="header" />
         </template>
-        <template v-if="$slots['header-extra']" #header-extra>
+        <template
+          v-if="$slots['header-extra']"
+          #header-extra
+        >
           <slot name="header-extra" />
         </template>
         <template v-if="$slots.default">
           <slot />
         </template>
-        <template v-if="$slots.footer" #footer>
+        <template
+          v-if="$slots.footer"
+          #footer
+        >
           <slot name="footer" />
         </template>
       </NCard>

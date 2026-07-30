@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { NButton, NCard, NFlex, NInputNumber, NSelect, NSlider, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
-import { useDropZone, useFileDialog } from '@vueuse/core'
+
 import { formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 
@@ -32,16 +33,23 @@ const formatOptions = [
 const isLossy = computed(() => format.value !== 'png')
 
 const dropZoneRef = ref<HTMLElement>()
-const { isOverDropZone } = useDropZone(dropZoneRef, { onDrop: files => files && addFiles(files) })
+const { isOverDropZone } = useDropZone(dropZoneRef, { onDrop: (files) => files && addFiles(files) })
 const { open: openFilePicker, onChange } = useFileDialog({ accept: 'image/*', multiple: true })
-onChange(files => files && addFiles(Array.from(files)))
+onChange((files) => files && addFiles(Array.from(files)))
 
 function addFiles(files: File[]) {
-  const imgs = files.filter(f => f.type.startsWith('image/'))
+  const imgs = files.filter((f) => f.type.startsWith('image/'))
   if (!imgs.length) return message.warning('未检测到图片文件')
   for (const file of imgs) {
     const thumb = URL.createObjectURL(file)
-    items.value.push({ file, originalSize: file.size, compressedBlob: null, compressedSize: 0, thumbUrl: thumb, processing: false })
+    items.value.push({
+      file,
+      originalSize: file.size,
+      compressedBlob: null,
+      compressedSize: 0,
+      thumbUrl: thumb,
+      processing: false,
+    })
   }
   processAll()
 }
@@ -50,9 +58,16 @@ async function compressOne(item: ImageItem) {
   item.processing = true
   try {
     const bmp = await createImageBitmap(item.file)
-    let w = bmp.width; let h = bmp.height
-    if (maxWidth.value && w > maxWidth.value) { h = Math.round(h * (maxWidth.value / w)); w = maxWidth.value }
-    if (maxHeight.value && h > maxHeight.value) { w = Math.round(w * (maxHeight.value / h)); h = maxHeight.value }
+    let w = bmp.width
+    let h = bmp.height
+    if (maxWidth.value && w > maxWidth.value) {
+      h = Math.round(h * (maxWidth.value / w))
+      w = maxWidth.value
+    }
+    if (maxHeight.value && h > maxHeight.value) {
+      w = Math.round(w * (maxHeight.value / h))
+      h = maxHeight.value
+    }
     const canvas = new OffscreenCanvas(w, h)
     const ctx = canvas.getContext('2d')!
     ctx.drawImage(bmp, 0, 0, w, h)
@@ -70,17 +85,20 @@ async function compressOne(item: ImageItem) {
 }
 
 async function processAll() {
-  await compressItems(items.value.filter(i => !i.compressedBlob))
+  await compressItems(items.value.filter((i) => !i.compressedBlob))
 }
 
 async function reprocessAll() {
-  items.value.forEach(i => { i.compressedBlob = null; i.compressedSize = 0 })
+  items.value.forEach((i) => {
+    i.compressedBlob = null
+    i.compressedSize = 0
+  })
   await compressItems(items.value)
 }
 
 async function compressItems(targetItems: ImageItem[]) {
   await Promise.all(targetItems.map(compressOne))
-  const succeeded = targetItems.filter(i => i.compressedBlob).length
+  const succeeded = targetItems.filter((i) => i.compressedBlob).length
   if (succeeded > 0) {
     trackManageToolSuccess('ImageCompress', 'compress', {
       format: format.value,
@@ -97,7 +115,7 @@ function downloadOne(item: ImageItem) {
 }
 
 async function downloadAll() {
-  const ready = items.value.filter(i => i.compressedBlob)
+  const ready = items.value.filter((i) => i.compressedBlob)
   if (!ready.length) return message.warning('没有可下载的文件')
   const zip = new JSZip()
   for (const item of ready) {
@@ -115,103 +133,184 @@ function removeItem(idx: number) {
 }
 
 function clearAll() {
-  items.value.forEach(i => URL.revokeObjectURL(i.thumbUrl))
+  items.value.forEach((i) => URL.revokeObjectURL(i.thumbUrl))
   items.value = []
 }
-
 </script>
 
 <template>
   <div class="compress-page">
     <NCard title="图片压缩与格式转换">
       <template #header-extra>
-        <NText depth="3">
-          批量压缩、调整尺寸、转换格式
-        </NText>
+        <NText depth="3"> 批量压缩、调整尺寸、转换格式 </NText>
       </template>
 
       <!-- Controls -->
-      <NFlex align="center" :wrap="true" :size="16" style="margin-bottom: 16px">
-        <NFlex align="center" :size="8">
-          <NText depth="3">
-            格式
-          </NText>
-          <NSelect v-model:value="format" :options="formatOptions" style="width: 140px" />
+      <NFlex
+        align="center"
+        :wrap="true"
+        :size="16"
+        style="margin-bottom: 16px"
+      >
+        <NFlex
+          align="center"
+          :size="8"
+        >
+          <NText depth="3"> 格式 </NText>
+          <NSelect
+            v-model:value="format"
+            :options="formatOptions"
+            style="width: 140px"
+          />
         </NFlex>
-        <NFlex v-if="isLossy" align="center" :size="8">
-          <NText depth="3">
-            质量
-          </NText>
-          <NSlider v-model:value="quality" :min="10" :max="100" :step="5" style="width: 120px" />
-          <NText style="width: 36px; text-align: right">
-            {{ quality }}%
-          </NText>
+        <NFlex
+          v-if="isLossy"
+          align="center"
+          :size="8"
+        >
+          <NText depth="3"> 质量 </NText>
+          <NSlider
+            v-model:value="quality"
+            :min="10"
+            :max="100"
+            :step="5"
+            style="width: 120px"
+          />
+          <NText style="width: 36px; text-align: right"> {{ quality }}% </NText>
         </NFlex>
-        <NFlex align="center" :size="8">
-          <NText depth="3">
-            最大宽度
-          </NText>
-          <NInputNumber v-model:value="maxWidth" :min="0" placeholder="不限" clearable style="width: 110px" />
+        <NFlex
+          align="center"
+          :size="8"
+        >
+          <NText depth="3"> 最大宽度 </NText>
+          <NInputNumber
+            v-model:value="maxWidth"
+            :min="0"
+            placeholder="不限"
+            clearable
+            style="width: 110px"
+          />
         </NFlex>
-        <NFlex align="center" :size="8">
-          <NText depth="3">
-            最大高度
-          </NText>
-          <NInputNumber v-model:value="maxHeight" :min="0" placeholder="不限" clearable style="width: 110px" />
+        <NFlex
+          align="center"
+          :size="8"
+        >
+          <NText depth="3"> 最大高度 </NText>
+          <NInputNumber
+            v-model:value="maxHeight"
+            :min="0"
+            placeholder="不限"
+            clearable
+            style="width: 110px"
+          />
         </NFlex>
-        <NButton v-if="items.length" size="small" @click="reprocessAll">
+        <NButton
+          v-if="items.length"
+          size="small"
+          @click="reprocessAll"
+        >
           重新压缩
         </NButton>
       </NFlex>
 
       <!-- Drop zone -->
-      <div ref="dropZoneRef" class="drop-zone" :class="{ active: isOverDropZone }" @click="() => openFilePicker()">
-        <NText style="font-size: 15px">
-          拖拽图片到此处，或点击选择
-        </NText>
-        <NText depth="3" style="font-size: 13px">
+      <div
+        ref="dropZoneRef"
+        class="drop-zone"
+        :class="{ active: isOverDropZone }"
+        @click="() => openFilePicker()"
+      >
+        <NText style="font-size: 15px"> 拖拽图片到此处，或点击选择 </NText>
+        <NText
+          depth="3"
+          style="font-size: 13px"
+        >
           支持多张图片同时上传
         </NText>
       </div>
 
       <!-- Results -->
       <template v-if="items.length">
-        <NFlex justify="space-between" align="center" style="margin: 16px 0 8px">
-          <NText depth="3">
-            共 {{ items.length }} 张图片
-          </NText>
+        <NFlex
+          justify="space-between"
+          align="center"
+          style="margin: 16px 0 8px"
+        >
+          <NText depth="3"> 共 {{ items.length }} 张图片 </NText>
           <NFlex :size="8">
-            <NButton size="small" type="primary" @click="downloadAll">
+            <NButton
+              size="small"
+              type="primary"
+              @click="downloadAll"
+            >
               打包下载 ZIP
             </NButton>
-            <NButton size="small" tertiary @click="clearAll">
+            <NButton
+              size="small"
+              tertiary
+              @click="clearAll"
+            >
               清空
             </NButton>
           </NFlex>
         </NFlex>
 
         <div class="image-grid">
-          <div v-for="(item, idx) in items" :key="idx" class="image-card">
-            <img :src="item.thumbUrl" class="thumb" alt="">
+          <div
+            v-for="(item, idx) in items"
+            :key="idx"
+            class="image-card"
+          >
+            <img
+              :src="item.thumbUrl"
+              class="thumb"
+              alt=""
+            />
             <div class="info">
-              <NText class="filename" :title="item.file.name">
+              <NText
+                class="filename"
+                :title="item.file.name"
+              >
                 {{ item.file.name }}
               </NText>
-              <NText v-if="item.compressedBlob" depth="3" style="font-size: 12px">
+              <NText
+                v-if="item.compressedBlob"
+                depth="3"
+                style="font-size: 12px"
+              >
                 {{ formatFileSize(item.originalSize) }} → {{ formatFileSize(item.compressedSize) }}
-                <NText :type="item.compressedSize < item.originalSize ? 'success' : 'warning'" style="font-size: 12px">
-                  ({{ item.compressedSize < item.originalSize ? '-' : '+' }}{{ Math.abs(Math.round((1 - item.compressedSize / item.originalSize) * 100)) }}%)
+                <NText
+                  :type="item.compressedSize < item.originalSize ? 'success' : 'warning'"
+                  style="font-size: 12px"
+                >
+                  ({{ item.compressedSize < item.originalSize ? '-' : '+'
+                  }}{{ Math.abs(Math.round((1 - item.compressedSize / item.originalSize) * 100)) }}%)
                 </NText>
               </NText>
-              <NText v-else-if="item.processing" depth="3" style="font-size: 12px">
+              <NText
+                v-else-if="item.processing"
+                depth="3"
+                style="font-size: 12px"
+              >
                 处理中...
               </NText>
             </div>
-            <NFlex :size="4" class="actions">
-              <NButton size="tiny" :disabled="!item.compressedBlob" @click="downloadOne(item)">
+            <NFlex
+              :size="4"
+              class="actions"
+            >
+              <NButton
+                size="tiny"
+                :disabled="!item.compressedBlob"
+                @click="downloadOne(item)"
+              >
                 下载
               </NButton>
-              <NButton size="tiny" tertiary @click="removeItem(idx)">
+              <NButton
+                size="tiny"
+                tertiary
+                @click="removeItem(idx)"
+              >
                 移除
               </NButton>
             </NFlex>
@@ -237,7 +336,9 @@ function clearAll() {
   border: 2px dashed var(--vtsuru-border, #e0e0e0);
   border-radius: 8px;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 .drop-zone:hover,
 .drop-zone.active {
@@ -264,7 +365,19 @@ function clearAll() {
   border-radius: 4px;
   background: #f5f5f5;
 }
-.info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.filename { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.actions { margin-top: auto; }
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.filename {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.actions {
+  margin-top: auto;
+}
 </style>

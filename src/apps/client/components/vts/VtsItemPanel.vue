@@ -1,29 +1,31 @@
 <script setup lang="ts">
 import { NButton, NCard, NDivider, NFlex, NInput, NSelect, NSwitch, NTabPane, NTabs, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsAccessoryBinding, VtsPrankBinding } from '@/apps/client/store/useVtsStore'
+
 import { useVtsAction } from './useVtsAction'
 
 const vts = useVtsStore()
 const { run } = useVtsAction()
 
 const instanceOptions = computed(() =>
-  vts.itemInstancesInScene.map(i => ({
+  vts.itemInstancesInScene.map((i) => ({
     label: `${i.fileName} (${i.instanceID.slice(0, 8)})${i.pinnedToModel ? ' [固定]' : ''}`,
     value: i.instanceID,
   })),
 )
 
 const fileOptions = computed(() =>
-  vts.availableItemFiles.map(f => ({
+  vts.availableItemFiles.map((f) => ({
     label: `${f.fileName} (已加载: ${f.loadedCount})`,
     value: f.fileName,
   })),
 )
 
 const hotkeyOptions = computed(() =>
-  vts.hotkeys.map(h => ({
+  vts.hotkeys.map((h) => ({
     label: `${h.name} (${h.hotkeyID.slice(0, 8)})`,
     value: h.hotkeyID,
   })),
@@ -96,32 +98,78 @@ function dropPrank(p: VtsPrankBinding) {
 </script>
 
 <template>
-  <NCard size="small" bordered title="道具管理">
-    <NFlex vertical :size="12">
-      <NFlex align="center" :wrap="true" :size="8">
-        <NButton size="small" :loading="refreshing" :disabled="!vts.canOperate || refreshing" @click="refresh">
+  <NCard
+    size="small"
+    bordered
+    title="道具管理"
+  >
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NFlex
+        align="center"
+        :wrap="true"
+        :size="8"
+      >
+        <NButton
+          size="small"
+          :loading="refreshing"
+          :disabled="!vts.canOperate || refreshing"
+          @click="refresh"
+        >
           刷新列表
         </NButton>
         <NText depth="3">
-          {{ vts.canLoadItems == null ? '状态未知' : (vts.canLoadItems ? '可操作' : '当前不可操作 (VTS 有弹窗)') }}
+          {{ vts.canLoadItems == null ? '状态未知' : vts.canLoadItems ? '可操作' : '当前不可操作 (VTS 有弹窗)' }}
         </NText>
       </NFlex>
 
-      <NTabs type="line" animated>
-        <NTabPane name="accessories" tab="配饰">
-          <NFlex vertical :size="8">
-            <NFlex align="center" :wrap="true" :size="8">
-              <NButton size="small" @click="addAccessory">
+      <NTabs
+        type="line"
+        animated
+      >
+        <NTabPane
+          name="accessories"
+          tab="配饰"
+        >
+          <NFlex
+            vertical
+            :size="8"
+          >
+            <NFlex
+              align="center"
+              :wrap="true"
+              :size="8"
+            >
+              <NButton
+                size="small"
+                @click="addAccessory"
+              >
                 添加配饰
               </NButton>
-              <NText depth="3">
-                绑定场景中的道具实例，通过透明度切换显隐
-              </NText>
+              <NText depth="3"> 绑定场景中的道具实例，通过透明度切换显隐 </NText>
             </NFlex>
             <NDivider style="margin: 4px 0" />
-            <NFlex v-for="acc in vts.accessories" :key="acc.id" align="center" justify="space-between" :wrap="true" :size="12">
-              <NFlex align="center" :wrap="true" :size="12">
-                <NInput v-model:value="acc.name" placeholder="名称" style="width: 140px" @blur="saveAccessory({ ...acc })" />
+            <NFlex
+              v-for="acc in vts.accessories"
+              :key="acc.id"
+              align="center"
+              justify="space-between"
+              :wrap="true"
+              :size="12"
+            >
+              <NFlex
+                align="center"
+                :wrap="true"
+                :size="12"
+              >
+                <NInput
+                  v-model:value="acc.name"
+                  placeholder="名称"
+                  style="width: 140px"
+                  @blur="saveAccessory({ ...acc })"
+                />
                 <NSelect
                   style="width: 380px"
                   :options="instanceOptions"
@@ -129,36 +177,67 @@ function dropPrank(p: VtsPrankBinding) {
                   placeholder="选择场景中的道具实例"
                   @update:value="(val) => saveAccessory({ ...acc, itemInstanceID: val as string })"
                 />
-                <NSwitch :value="acc.visible" :disabled="!vts.canOperate" @update:value="(val) => toggleAccessory(acc, val)">
-                  <template #checked>
-                    显示
-                  </template>
-                  <template #unchecked>
-                    隐藏
-                  </template>
+                <NSwitch
+                  :value="acc.visible"
+                  :disabled="!vts.canOperate"
+                  @update:value="(val) => toggleAccessory(acc, val)"
+                >
+                  <template #checked> 显示 </template>
+                  <template #unchecked> 隐藏 </template>
                 </NSwitch>
               </NFlex>
-              <NButton size="small" type="error" @click="vts.removeAccessory(acc.id)">
+              <NButton
+                size="small"
+                type="error"
+                @click="vts.removeAccessory(acc.id)"
+              >
                 删除
               </NButton>
             </NFlex>
           </NFlex>
         </NTabPane>
 
-        <NTabPane name="pranks" tab="整活">
-          <NFlex vertical :size="8">
-            <NFlex align="center" :wrap="true" :size="8">
-              <NButton size="small" @click="addPrank">
+        <NTabPane
+          name="pranks"
+          tab="整活"
+        >
+          <NFlex
+            vertical
+            :size="8"
+          >
+            <NFlex
+              align="center"
+              :wrap="true"
+              :size="8"
+            >
+              <NButton
+                size="small"
+                @click="addPrank"
+              >
                 添加整活
               </NButton>
-              <NText depth="3">
-                通过文件掉落或触发热键来丢道具
-              </NText>
+              <NText depth="3"> 通过文件掉落或触发热键来丢道具 </NText>
             </NFlex>
             <NDivider style="margin: 4px 0" />
-            <NFlex v-for="p in vts.pranks" :key="p.id" align="center" justify="space-between" :wrap="true" :size="12">
-              <NFlex align="center" :wrap="true" :size="12">
-                <NInput v-model:value="p.name" placeholder="名称" style="width: 140px" @blur="savePrank({ ...p })" />
+            <NFlex
+              v-for="p in vts.pranks"
+              :key="p.id"
+              align="center"
+              justify="space-between"
+              :wrap="true"
+              :size="12"
+            >
+              <NFlex
+                align="center"
+                :wrap="true"
+                :size="12"
+              >
+                <NInput
+                  v-model:value="p.name"
+                  placeholder="名称"
+                  style="width: 140px"
+                  @blur="savePrank({ ...p })"
+                />
                 <NSelect
                   style="width: 360px"
                   :options="fileOptions"
@@ -172,20 +251,42 @@ function dropPrank(p: VtsPrankBinding) {
                   :value="p.hotkeyID"
                   placeholder="或绑定热键 (可选)"
                   clearable
-                  @update:value="(val) => savePrank({ ...p, hotkeyID: typeof val === 'string' && val ? val : undefined })"
+                  @update:value="
+                    (val) => savePrank({ ...p, hotkeyID: typeof val === 'string' && val ? val : undefined })
+                  "
                 />
               </NFlex>
-              <NFlex :wrap="true" :size="8">
-                <NButton size="small" :disabled="!vts.canOperate || !p.fileName" @click="loadPrank(p)">
+              <NFlex
+                :wrap="true"
+                :size="8"
+              >
+                <NButton
+                  size="small"
+                  :disabled="!vts.canOperate || !p.fileName"
+                  @click="loadPrank(p)"
+                >
                   加载
                 </NButton>
-                <NButton size="small" :disabled="!vts.canOperate || !p.fileName" @click="unloadPrank(p)">
+                <NButton
+                  size="small"
+                  :disabled="!vts.canOperate || !p.fileName"
+                  @click="unloadPrank(p)"
+                >
                   卸载
                 </NButton>
-                <NButton size="small" type="primary" :disabled="!vts.canOperate" @click="dropPrank(p)">
+                <NButton
+                  size="small"
+                  type="primary"
+                  :disabled="!vts.canOperate"
+                  @click="dropPrank(p)"
+                >
                   掉落
                 </NButton>
-                <NButton size="small" type="error" @click="vts.removePrank(p.id)">
+                <NButton
+                  size="small"
+                  type="error"
+                  @click="vts.removePrank(p.id)"
+                >
                   删除
                 </NButton>
               </NFlex>

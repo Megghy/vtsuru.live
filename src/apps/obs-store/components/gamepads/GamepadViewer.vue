@@ -1,14 +1,26 @@
 <script setup lang="ts">
-import type { GamepadType } from '@/types/gamepad'
-import { usePersistedStorage } from '@/shared/storage/persist'
 import {
-  NAlert, NButton, NCard, NCheckbox, NCollapse, NCollapseItem,
-  NColorPicker, NDivider, NFlex, NInput, NInputNumber, NSelect,
-  NSlider, NText,
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NCollapse,
+  NCollapseItem,
+  NColorPicker,
+  NDivider,
+  NFlex,
+  NInput,
+  NInputNumber,
+  NSelect,
+  NSlider,
+  NText,
 } from 'naive-ui'
 import { computed, defineAsyncComponent, ref } from 'vue'
+
 import { controllerBodies, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { useGamepadStore } from '@/store/useGamepadStore'
+import type { GamepadType } from '@/types/gamepad'
 
 const GamepadDisplay = defineAsyncComponent(() => import('./GamepadDisplay.vue'))
 
@@ -22,7 +34,7 @@ const gamepadTypeOptions = [
 
 const config = computed(() => gamepadConfigs[selectedType.value])
 const bodies = computed(() => controllerBodies[selectedType.value] || [])
-const bodyOptions = computed(() => bodies.value.map(b => ({ label: b.name, value: b.name })))
+const bodyOptions = computed(() => bodies.value.map((b) => ({ label: b.name, value: b.name })))
 
 // --- 持久化设置 ---
 const bodyKey = computed(() => `gamepad-body-${selectedType.value}`)
@@ -39,7 +51,9 @@ const pressedColorKey = computed(() => `gamepad-pressed-color-${selectedType.val
 const customPressedColor = usePersistedStorage<string | null>(pressedColorKey, null)
 const enableCustomColor = computed({
   get: () => customPressedColor.value != null && customPressedColor.value !== 'null',
-  set: (v) => { customPressedColor.value = v ? '#FF0000FF' : null },
+  set: (v) => {
+    customPressedColor.value = v ? '#FF0000FF' : null
+  },
 })
 
 // --- 预览 ---
@@ -51,13 +65,13 @@ const gamepad = useGamepadStore()
 // 确保 body 选择有效
 const validBodyId = computed(() => {
   if (bodies.value.length === 0) return ''
-  if (bodies.value.some(b => b.name === selectedBodyId.value)) return selectedBodyId.value
+  if (bodies.value.some((b) => b.name === selectedBodyId.value)) return selectedBodyId.value
   return bodies.value[0].name
 })
 
 // 默认 viewBox
 const defaultViewBox = computed(() => {
-  const body = bodies.value.find(b => b.name === validBodyId.value)
+  const body = bodies.value.find((b) => b.name === validBodyId.value)
   return body?.defaultViewBox || config.value?.defaultViewBox || '0 0 1000 1000'
 })
 
@@ -75,12 +89,31 @@ const displayUrl = computed(() => {
 </script>
 
 <template>
-  <NCard v-if="config" size="small" style="max-width: 720px; margin: 20px auto;">
+  <NCard
+    v-if="config"
+    size="small"
+    style="max-width: 720px; margin: 20px auto"
+  >
     <!-- 类型选择 + 独立窗口 -->
-    <NFlex align="center" size="small" :wrap="true">
+    <NFlex
+      align="center"
+      size="small"
+      :wrap="true"
+    >
       <NText>控制器类型:</NText>
-      <NSelect v-model:value="selectedType" :options="gamepadTypeOptions" size="small" style="min-width: 140px" />
-      <NButton size="small" type="primary" tag="a" :href="displayUrl" target="_blank">
+      <NSelect
+        v-model:value="selectedType"
+        :options="gamepadTypeOptions"
+        size="small"
+        style="min-width: 140px"
+      />
+      <NButton
+        size="small"
+        type="primary"
+        tag="a"
+        :href="displayUrl"
+        target="_blank"
+      >
         独立显示窗口
       </NButton>
     </NFlex>
@@ -88,34 +121,58 @@ const displayUrl = computed(() => {
     <NDivider style="margin: 12px 0" />
 
     <!-- 连接状态 -->
-    <NAlert v-if="!gamepad.isGamepadConnected" type="warning" :bordered="false" style="margin-bottom: 12px">
+    <NAlert
+      v-if="!gamepad.isGamepadConnected"
+      type="warning"
+      :bordered="false"
+      style="margin-bottom: 12px"
+    >
       未检测到游戏手柄连接
     </NAlert>
-    <NAlert v-else type="success" :bordered="false" style="margin-bottom: 12px">
+    <NAlert
+      v-else
+      type="success"
+      :bordered="false"
+      style="margin-bottom: 12px"
+    >
       已连接: {{ gamepad.connectedGamepadInfo?.id }}
     </NAlert>
 
     <!-- 设置区域 -->
-    <NFlex vertical size="small">
+    <NFlex
+      vertical
+      size="small"
+    >
       <!-- 主体样式 -->
-      <NFlex v-if="bodyOptions.length > 1" align="center" size="small">
+      <NFlex
+        v-if="bodyOptions.length > 1"
+        align="center"
+        size="small"
+      >
         <NText>手柄样式:</NText>
-        <NSelect v-model:value="selectedBodyId" :options="bodyOptions" size="small" style="min-width: 200px" />
+        <NSelect
+          v-model:value="selectedBodyId"
+          :options="bodyOptions"
+          size="small"
+          style="min-width: 200px"
+        />
       </NFlex>
 
       <!-- 渲染模式 -->
-      <NCheckbox v-model:checked="useOverlayButtons">
-        叠加式按钮 (更好的交互效果)
-      </NCheckbox>
+      <NCheckbox v-model:checked="useOverlayButtons"> 叠加式按钮 (更好的交互效果) </NCheckbox>
 
       <!-- 按下颜色 -->
-      <NDivider title-placement="left" style="margin: 8px 0">
+      <NDivider
+        title-placement="left"
+        style="margin: 8px 0"
+      >
         按键按下效果
       </NDivider>
-      <NFlex align="center" size="small">
-        <NCheckbox v-model:checked="enableCustomColor">
-          自定义按下颜色
-        </NCheckbox>
+      <NFlex
+        align="center"
+        size="small"
+      >
+        <NCheckbox v-model:checked="enableCustomColor"> 自定义按下颜色 </NCheckbox>
         <NColorPicker
           v-if="enableCustomColor"
           v-model:value="customPressedColor"
@@ -123,32 +180,67 @@ const displayUrl = computed(() => {
           size="small"
           style="width: 120px"
         />
-        <NText v-else depth="3">
+        <NText
+          v-else
+          depth="3"
+        >
           (默认反色)
         </NText>
       </NFlex>
 
       <!-- 摇杆灵敏度 -->
-      <NDivider title-placement="left" style="margin: 8px 0">
+      <NDivider
+        title-placement="left"
+        style="margin: 8px 0"
+      >
         摇杆灵敏度
       </NDivider>
-      <NFlex align="center" size="small" :wrap="true">
-        <NSlider v-model:value="stickSensitivity" :min="1" :max="20" :step="1" style="min-width: 180px; max-width: 280px" />
-        <NInputNumber v-model:value="stickSensitivity" :min="1" :max="40" size="small" style="width: 72px" />
-        <NButton size="small" @click="stickSensitivity = 5">
+      <NFlex
+        align="center"
+        size="small"
+        :wrap="true"
+      >
+        <NSlider
+          v-model:value="stickSensitivity"
+          :min="1"
+          :max="20"
+          :step="1"
+          style="min-width: 180px; max-width: 280px"
+        />
+        <NInputNumber
+          v-model:value="stickSensitivity"
+          :min="1"
+          :max="40"
+          size="small"
+          style="width: 72px"
+        />
+        <NButton
+          size="small"
+          @click="stickSensitivity = 5"
+        >
           重置
         </NButton>
       </NFlex>
-      <NText depth="3" style="font-size: 12px">
+      <NText
+        depth="3"
+        style="font-size: 12px"
+      >
         数值越大移动幅度越大，默认 5
       </NText>
 
       <!-- 实时预览 -->
       <NDivider style="margin: 8px 0" />
-      <NButton size="small" type="info" @click="showPreview = !showPreview">
+      <NButton
+        size="small"
+        type="info"
+        @click="showPreview = !showPreview"
+      >
         {{ showPreview ? '隐藏预览' : '显示预览' }}
       </NButton>
-      <div v-if="showPreview" class="preview-box">
+      <div
+        v-if="showPreview"
+        class="preview-box"
+      >
         <GamepadDisplay
           :key="selectedType"
           :type="selectedType"
@@ -165,10 +257,21 @@ const displayUrl = computed(() => {
       <!-- 高级设置 -->
       <NCollapse>
         <NCollapseItem title="高级布局设置 (独立显示窗口)">
-          <NFlex align="center" size="small">
+          <NFlex
+            align="center"
+            size="small"
+          >
             <NText>ViewBox:</NText>
-            <NInput v-model:value="customViewBox" :placeholder="defaultViewBox" size="small" style="width: 180px" />
-            <NButton size="small" @click="customViewBox = ''">
+            <NInput
+              v-model:value="customViewBox"
+              :placeholder="defaultViewBox"
+              size="small"
+              style="width: 180px"
+            />
+            <NButton
+              size="small"
+              @click="customViewBox = ''"
+            >
               重置
             </NButton>
           </NFlex>
@@ -176,9 +279,7 @@ const displayUrl = computed(() => {
       </NCollapse>
     </NFlex>
   </NCard>
-  <NCard v-else>
-    无效的游戏手柄类型
-  </NCard>
+  <NCard v-else> 无效的游戏手柄类型 </NCard>
 </template>
 
 <style scoped>
@@ -192,4 +293,3 @@ const displayUrl = computed(() => {
   overflow: hidden;
 }
 </style>
-

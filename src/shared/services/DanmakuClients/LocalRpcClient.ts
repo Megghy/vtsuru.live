@@ -6,13 +6,14 @@
 import type { RpcClient } from '@/shared/rpc/client'
 import { connectLocalFetcher, probeLocalFetcher } from '@/shared/rpc/client'
 import { DANMAKU_EVENT_NAMES } from '@/shared/rpc/contract'
+
 import DanmakuEventEmitter from './DanmakuEventEmitter'
 
 export default class LocalRpcClient extends DanmakuEventEmitter {
   public type = 'local' as const
   private rpcClient: RpcClient | undefined
 
-  public async Start(): Promise<{ success: boolean, message: string }> {
+  public async Start(): Promise<{ success: boolean; message: string }> {
     if (this.state === 'connected') return { success: true, message: '已连接' }
     this.state = 'connecting'
 

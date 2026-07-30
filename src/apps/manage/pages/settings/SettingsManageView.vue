@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { NCard, NCheckbox, NCheckboxGroup, NDivider, NFlex, NSpin, NTabPane, NTabs, useMessage } from 'naive-ui'
 import { ref, watch } from 'vue'
+
 import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
+
 import BlackListPane from './BlackListPane.vue'
 
 const accountInfo = useAccount()
@@ -23,7 +25,7 @@ watch(
 /** 保存功能启用状态 */
 async function SaveComboGroupSetting(
   _value: (string | number)[],
-  meta: { actionType: 'check' | 'uncheck', value: string | number },
+  meta: { actionType: 'check' | 'uncheck'; value: string | number },
 ) {
   if (!accountInfo.value) return
   isSaving.value = true
@@ -32,7 +34,7 @@ async function SaveComboGroupSetting(
     if (response.code !== 200) {
       message.error('修改失败')
       accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
-        f => f !== (meta.value as FunctionTypes),
+        (f) => f !== (meta.value as FunctionTypes),
       )
     }
   } catch (err) {
@@ -79,31 +81,17 @@ async function SaveComboSetting() {
           name="general"
           display-directive="show:lazy"
         >
-          <NDivider style="margin: 0">
-            启用功能
-          </NDivider>
+          <NDivider style="margin: 0"> 启用功能 </NDivider>
           <NCheckboxGroup
             v-model:value="accountInfo.settings.enableFunctions"
             @update:value="SaveComboGroupSetting"
           >
-            <NCheckbox :value="FunctionTypes.SongList">
-              歌单
-            </NCheckbox>
-            <NCheckbox :value="FunctionTypes.QuestionBox">
-              提问箱(棉花糖
-            </NCheckbox>
-            <NCheckbox :value="FunctionTypes.Schedule">
-              日程
-            </NCheckbox>
-            <NCheckbox :value="FunctionTypes.LiveRequest">
-              点歌
-            </NCheckbox>
-            <NCheckbox :value="FunctionTypes.Queue">
-              排队
-            </NCheckbox>
-            <NCheckbox :value="FunctionTypes.CheckInRanking">
-              签到排行
-            </NCheckbox>
+            <NCheckbox :value="FunctionTypes.SongList"> 歌单 </NCheckbox>
+            <NCheckbox :value="FunctionTypes.QuestionBox"> 提问箱(棉花糖 </NCheckbox>
+            <NCheckbox :value="FunctionTypes.Schedule"> 日程 </NCheckbox>
+            <NCheckbox :value="FunctionTypes.LiveRequest"> 点歌 </NCheckbox>
+            <NCheckbox :value="FunctionTypes.Queue"> 排队 </NCheckbox>
+            <NCheckbox :value="FunctionTypes.CheckInRanking"> 签到排行 </NCheckbox>
           </NCheckboxGroup>
 
           <NDivider> 通知 </NDivider>

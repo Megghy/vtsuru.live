@@ -1,12 +1,26 @@
 <script setup lang="ts">
-import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
 import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
-import { NAvatar, NButton, NCard, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip, useThemeVars } from 'naive-ui';
+import {
+  NAvatar,
+  NButton,
+  NCard,
+  NFlex,
+  NIcon,
+  NPopconfirm,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+  useThemeVars,
+} from 'naive-ui'
 import { computed } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import { VTSURU_API_URL } from '@/shared/config'
 import { useForumStore } from '@/store/useForumStore'
+
 import ForumReplyItem from './ForumReplyItem.vue'
 
 const props = defineProps<{
@@ -45,7 +59,7 @@ function restoreComment(id: number) {
 function delReply(id: number) {
   useForum.DelReply(id).then((success) => {
     if (success) {
-      props.item.replies = props.item.replies.filter(reply => reply.id !== id)
+      props.item.replies = props.item.replies.filter((reply) => reply.id !== id)
     }
   })
 }

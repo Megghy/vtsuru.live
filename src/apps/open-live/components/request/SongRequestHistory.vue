@@ -1,9 +1,24 @@
 <script setup lang="ts">
-import type { DataTableColumns } from 'naive-ui'
-import type { SongRequestInfo } from '@/api/api-models'
 import { ArrowCounterclockwise24Regular, Delete24Filled } from '@vicons/fluent'
-import { NButton, NCheckbox, NDataTable, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui';
+import type { DataTableColumns } from 'naive-ui'
+import {
+  NButton,
+  NCheckbox,
+  NDataTable,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NPopconfirm,
+  NFlex,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+} from 'naive-ui'
 import { computed, h, ref } from 'vue'
+
+import type { SongRequestInfo } from '@/api/api-models'
 import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 
@@ -14,7 +29,7 @@ const table = ref()
 
 const statusFilterOptions = computed(() => {
   return Object.values(SongRequestStatus)
-    .filter(t => /^\d+$/.test(t.toString()))
+    .filter((t) => /^\d+$/.test(t.toString()))
     .map((t) => {
       return {
         label: songRequest.STATUS_MAP[t as SongRequestStatus],
@@ -55,19 +70,23 @@ const columns: DataTableColumns<SongRequestInfo> = [
     render(row: SongRequestInfo) {
       let fromType: 'info' | 'success' | 'default' | 'error' = 'info'
       switch (row.from) {
-        case SongRequestFrom.Danmaku: { // Danmaku
+        case SongRequestFrom.Danmaku: {
+          // Danmaku
           fromType = 'info'
           break
         }
-        case SongRequestFrom.SC: { // SC
+        case SongRequestFrom.SC: {
+          // SC
           fromType = 'error'
           break
         }
-        case SongRequestFrom.Web: { // Web
+        case SongRequestFrom.Web: {
+          // Web
           fromType = 'success'
           break
         }
-        case SongRequestFrom.Manual: { // Manual
+        case SongRequestFrom.Manual: {
+          // Manual
           fromType = 'default'
           break
         }
@@ -146,7 +165,8 @@ const columns: DataTableColumns<SongRequestInfo> = [
     key: 'manage',
     width: 100,
     render(row: SongRequestInfo) {
-      return h(NFlex,
+      return h(
+        NFlex,
         {
           justify: 'center',
           size: 10,
@@ -205,7 +225,10 @@ const columns: DataTableColumns<SongRequestInfo> = [
 </script>
 
 <template>
-  <NFlex vertical :size="12">
+  <NFlex
+    vertical
+    :size="12"
+  >
     <NFlex>
       <NInputGroup style="width: 250px">
         <NInputGroupLabel> 筛选曲名 </NInputGroupLabel>
@@ -252,7 +275,10 @@ const columns: DataTableColumns<SongRequestInfo> = [
       :bordered="false"
       :loading="songRequest.isLoading"
       :pagination="{ pageSize: 10 }"
-      :row-class-name="(row, index) => (row.status === SongRequestStatus.Singing || row.status === SongRequestStatus.Waiting ? 'song-active' : '')"
+      :row-class-name="
+        (row, index) =>
+          row.status === SongRequestStatus.Singing || row.status === SongRequestStatus.Waiting ? 'song-active' : ''
+      "
     />
   </NFlex>
 </template>

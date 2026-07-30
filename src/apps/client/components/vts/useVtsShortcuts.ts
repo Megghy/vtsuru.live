@@ -1,7 +1,8 @@
 import { ref } from 'vue'
-import { isTauri } from '@/shared/config'
+
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
 import type { StoreTarget } from '@/apps/client/store/useTauriStore'
+import { isTauri } from '@/shared/config'
 
 export interface VtsShortcutBinding {
   id: string
@@ -68,12 +69,12 @@ export function useVtsShortcuts() {
   }
 
   async function updateBinding(id: string, patch: Partial<VtsShortcutBinding>) {
-    const list = bindings.value.map(b => b.id === id ? { ...b, ...patch } : b)
+    const list = bindings.value.map((b) => (b.id === id ? { ...b, ...patch } : b))
     await save(list)
   }
 
   async function removeBinding(id: string) {
-    await save(bindings.value.filter(b => b.id !== id))
+    await save(bindings.value.filter((b) => b.id !== id))
   }
 
   async function cleanup() {

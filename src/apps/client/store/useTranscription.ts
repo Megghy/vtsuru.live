@@ -7,17 +7,11 @@ import {
   type FfmpegAudioJob,
 } from '@/apps/client/services/transcription/ffmpeg'
 import { createProvider } from '@/apps/client/services/transcription/providers'
-import type {
-  ProviderTranscript,
-  TranscriptionProviderClient,
-} from '@/apps/client/services/transcription/types'
-import type {
-  TranscriptSegment,
-  TranscriptionProfile,
-  TranscriptionStatus,
-} from '@/shared/models/transcription'
+import type { ProviderTranscript, TranscriptionProviderClient } from '@/apps/client/services/transcription/types'
 import { clientSupportsTranscription, TRANSCRIPTION_MIN_CLIENT_VERSION } from '@/shared/config/clientVersion'
+import type { TranscriptSegment, TranscriptionProfile, TranscriptionStatus } from '@/shared/models/transcription'
 import { useWebFetcher } from '@/store/useWebFetcher'
+
 import { useTranscriptionSettings } from './useTranscriptionSettings'
 
 const UPLOAD_INTERVAL_MS = 2_000
@@ -68,7 +62,7 @@ export const useTranscription = defineStore('transcription', () => {
     initialized = true
     await settingsStore.init()
     if (clientSupportsTranscription()) {
-      await stopStaleTranscriptionJobs().catch(error => console.warn(`清理遗留 FFmpeg 任务失败: ${error}`))
+      await stopStaleTranscriptionJobs().catch((error) => console.warn(`清理遗留 FFmpeg 任务失败: ${error}`))
     }
   }
 
@@ -118,9 +112,9 @@ export const useTranscription = defineStore('transcription', () => {
       }
 
       provider = createProvider(profile, {
-        onPartial: result => partialText.value = result.text,
+        onPartial: (result) => (partialText.value = result.text),
         onFinal: enqueueFinal,
-        onError: error => void failRuntime(error),
+        onError: (error) => void failRuntime(error),
       })
       await provider.connect()
 
@@ -135,7 +129,7 @@ export const useTranscription = defineStore('transcription', () => {
       ffmpegJob = await startAudioExtraction(
         source,
         provider.sampleRate,
-        chunk => frameBuffer?.append(chunk),
+        (chunk) => frameBuffer?.append(chunk),
         () => undefined,
         () => {
           if (!stopping) void failRuntime(new Error('FFmpeg 音频提取进程已结束'))
@@ -288,7 +282,8 @@ export const useTranscription = defineStore('transcription', () => {
 
     const batch = pendingSegments.slice(0, UPLOAD_BATCH_SIZE)
     let uploaded = false
-    flushTask = connection.invoke<HubResult>('UploadTranscriptSegments', sessionId.value, batch)
+    flushTask = connection
+      .invoke<HubResult>('UploadTranscriptSegments', sessionId.value, batch)
       .then((result) => {
         if (!result.Success) throw new Error(result.Message)
         pendingSegments.splice(0, batch.length)
@@ -301,7 +296,7 @@ export const useTranscription = defineStore('transcription', () => {
         uploadError.value = String(error)
         console.error(`上传转写字幕失败: ${error}`)
       })
-      .finally(() => flushTask = undefined)
+      .finally(() => (flushTask = undefined))
     await flushTask
     if (all && uploaded && pendingSegments.length) await flush(true)
   }
@@ -309,7 +304,7 @@ export const useTranscription = defineStore('transcription', () => {
   async function finishSession() {
     if (finishTask) return finishTask
     if (!sessionId.value) return
-    finishTask = closeArchiveSession().finally(() => finishTask = undefined)
+    finishTask = closeArchiveSession().finally(() => (finishTask = undefined))
     return finishTask
   }
 
@@ -329,7 +324,7 @@ export const useTranscription = defineStore('transcription', () => {
   async function dispose() {
     stopUploadTimer()
     if (status.value.running || sessionId.value) {
-      await stop().catch(error => console.error(`停止转写失败: ${error}`))
+      await stop().catch((error) => console.error(`停止转写失败: ${error}`))
     }
     initialized = false
   }

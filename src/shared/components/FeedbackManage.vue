@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import type { CreateSupportTicketRequest, SupportTicketDetail, SupportTicketSummary } from '@/api/api-models'
-import type { UploadFileInfo } from 'naive-ui'
-import { SupportTicketStatus, SupportTicketType, UserFileLocation, UserFileTypes } from '@/api/api-models'
-import { isLoggedIn } from '@/api/account'
 import { Add24Regular, ArrowClockwise24Regular, Image24Regular } from '@vicons/fluent'
+import type { UploadFileInfo } from 'naive-ui'
 import {
   NButton,
   NCheckbox,
@@ -22,6 +19,10 @@ import {
 } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
+import { isLoggedIn } from '@/api/account'
+import type { CreateSupportTicketRequest, SupportTicketDetail, SupportTicketSummary } from '@/api/api-models'
+import { SupportTicketStatus, SupportTicketType, UserFileLocation, UserFileTypes } from '@/api/api-models'
 import { uploadFiles } from '@/shared/services/fileUpload'
 import {
   createSupportTicket,
@@ -29,9 +30,10 @@ import {
   getPublicSupportTickets,
   getSupportTicket,
 } from '@/shared/services/supportTickets'
+
+import PublicTicketCard from './support-ticket/PublicTicketCard.vue'
 import SupportTicketDetailView from './support-ticket/SupportTicketDetail.vue'
 import SupportTicketListItem from './support-ticket/SupportTicketListItem.vue'
-import PublicTicketCard from './support-ticket/PublicTicketCard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,9 +60,9 @@ const selectedId = computed(() => {
   const value = Number(route.params.id)
   return Number.isSafeInteger(value) && value > 0 ? value : undefined
 })
-const editable = computed(() => view.value === 'mine'
-  && isLoggedIn.value
-  && tickets.value.some(ticket => ticket.id === selectedId.value))
+const editable = computed(
+  () => view.value === 'mine' && isLoggedIn.value && tickets.value.some((ticket) => ticket.id === selectedId.value),
+)
 const isDetailRoute = computed(() => selectedId.value !== undefined)
 const showPublicCards = computed(() => view.value === 'public' && !isDetailRoute.value)
 
@@ -74,14 +76,13 @@ const typeOptions = [
 async function loadTickets() {
   loadingList.value = true
   try {
-    tickets.value = (view.value === 'mine'
-      ? await getMySupportTickets()
-      : await getPublicSupportTickets())
-      .toSorted((a, b) => {
+    tickets.value = (view.value === 'mine' ? await getMySupportTickets() : await getPublicSupportTickets()).toSorted(
+      (a, b) => {
         if (a.status === SupportTicketStatus.Resolved && b.status !== SupportTicketStatus.Resolved) return 1
         if (a.status !== SupportTicketStatus.Resolved && b.status === SupportTicketStatus.Resolved) return -1
         return b.lastMessageTime - a.lastMessageTime
-      })
+      },
+    )
   } catch (error) {
     tickets.value = []
     message.error((error as Error).message)
@@ -143,15 +144,13 @@ async function submitTicket() {
   }
   creating.value = true
   try {
-    const files = fileList.value.map(item => item.file).filter((file): file is File => Boolean(file))
-    const uploaded = files.length
-      ? await uploadFiles(files, UserFileTypes.Image, UserFileLocation.Local)
-      : []
+    const files = fileList.value.map((item) => item.file).filter((file): file is File => Boolean(file))
+    const uploaded = files.length ? await uploadFiles(files, UserFileTypes.Image, UserFileLocation.Local) : []
     const ticket = await createSupportTicket({
       ...draft.value,
       title,
       content,
-      imageFileIds: uploaded.map(file => file.id),
+      imageFileIds: uploaded.map((file) => file.id),
     })
     resetDraft()
     showCreate.value = false
@@ -170,50 +169,100 @@ async function refreshDetail() {
   await Promise.all([loadTickets(), loadDetail()])
 }
 
-watch(view, async (nextView, previousView) => {
-  if (previousView && nextView !== previousView && isDetailRoute.value) {
-    await router.push({ name: 'feedback', query: nextView === 'public' ? { view: 'public' } : undefined })
-  }
-  if (route.name === 'feedback-detail' && route.query.view !== nextView) {
-    await router.replace({ query: { ...route.query, view: nextView } })
-  }
-  await loadTickets()
-}, { immediate: true })
+watch(
+  view,
+  async (nextView, previousView) => {
+    if (previousView && nextView !== previousView && isDetailRoute.value) {
+      await router.push({ name: 'feedback', query: nextView === 'public' ? { view: 'public' } : undefined })
+    }
+    if (route.name === 'feedback-detail' && route.query.view !== nextView) {
+      await router.replace({ query: { ...route.query, view: nextView } })
+    }
+    await loadTickets()
+  },
+  { immediate: true },
+)
 watch(selectedId, loadDetail, { immediate: true })
-watch(() => route.query.view, (routeView) => {
-  if (routeView === 'public' || (routeView === 'mine' && isLoggedIn.value)) {
-    view.value = routeView
-  }
-}, { immediate: true })
+watch(
+  () => route.query.view,
+  (routeView) => {
+    if (routeView === 'public' || (routeView === 'mine' && isLoggedIn.value)) {
+      view.value = routeView
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <div class="ticket-page">
     <header class="ticket-page__toolbar">
-      <NTabs v-if="isLoggedIn" v-model:value="view" type="segment" size="small" class="ticket-page__tabs">
-        <NTabPane name="mine" tab="我的工单" />
-        <NTabPane name="public" tab="公开工单" />
+      <NTabs
+        v-if="isLoggedIn"
+        v-model:value="view"
+        type="segment"
+        size="small"
+        class="ticket-page__tabs"
+      >
+        <NTabPane
+          name="mine"
+          tab="我的工单"
+        />
+        <NTabPane
+          name="public"
+          tab="公开工单"
+        />
       </NTabs>
-      <strong v-else class="ticket-page__title">公开工单</strong>
-      <NButton v-if="isLoggedIn" type="primary" size="small" @click="showCreate = true">
+      <strong
+        v-else
+        class="ticket-page__title"
+        >公开工单</strong
+      >
+      <NButton
+        v-if="isLoggedIn"
+        type="primary"
+        size="small"
+        @click="showCreate = true"
+      >
         <template #icon>
           <NIcon :component="Add24Regular" />
         </template>
         新建工单
       </NButton>
-      <NButton v-else quaternary circle size="small" title="刷新" :loading="loadingList" @click="loadTickets">
+      <NButton
+        v-else
+        quaternary
+        circle
+        size="small"
+        title="刷新"
+        :loading="loadingList"
+        @click="loadTickets"
+      >
         <template #icon>
           <NIcon :component="ArrowClockwise24Regular" />
         </template>
       </NButton>
     </header>
 
-    <div v-if="showPublicCards" class="public-ticket-list">
-      <div v-if="loadingList && !tickets.length" class="public-ticket-list__state">
+    <div
+      v-if="showPublicCards"
+      class="public-ticket-list"
+    >
+      <div
+        v-if="loadingList && !tickets.length"
+        class="public-ticket-list__state"
+      >
         <NSpin size="small" />
       </div>
-      <NEmpty v-else-if="!tickets.length" class="public-ticket-list__state" description="暂无公开工单" />
-      <div v-else class="public-ticket-list__grid">
+      <NEmpty
+        v-else-if="!tickets.length"
+        class="public-ticket-list__state"
+        description="暂无公开工单"
+      />
+      <div
+        v-else
+        class="public-ticket-list__grid"
+      >
         <PublicTicketCard
           v-for="ticket in tickets"
           :key="ticket.id"
@@ -223,17 +272,31 @@ watch(() => route.query.view, (routeView) => {
       </div>
     </div>
 
-    <div v-else-if="view === 'mine'" class="ticket-workspace" :class="{ 'ticket-workspace--detail': isDetailRoute }">
+    <div
+      v-else-if="view === 'mine'"
+      class="ticket-workspace"
+      :class="{ 'ticket-workspace--detail': isDetailRoute }"
+    >
       <aside class="ticket-list">
         <div class="ticket-list__header">
           <span>{{ view === 'mine' ? '我的工单' : '公开工单' }}</span>
-          <NButton quaternary circle size="small" title="刷新" :loading="loadingList" @click="loadTickets">
+          <NButton
+            quaternary
+            circle
+            size="small"
+            title="刷新"
+            :loading="loadingList"
+            @click="loadTickets"
+          >
             <template #icon>
               <NIcon :component="ArrowClockwise24Regular" />
             </template>
           </NButton>
         </div>
-        <div v-if="loadingList && !tickets.length" class="ticket-list__state">
+        <div
+          v-if="loadingList && !tickets.length"
+          class="ticket-list__state"
+        >
           <NSpin size="small" />
         </div>
         <NEmpty
@@ -279,14 +342,34 @@ watch(() => route.query.view, (routeView) => {
       :mask-closable="!creating"
       @after-leave="resetDraft"
     >
-      <NForm label-placement="top" size="small">
-        <NFormItem label="类型" required>
-          <NSelect v-model:value="draft.type" :options="typeOptions" />
+      <NForm
+        label-placement="top"
+        size="small"
+      >
+        <NFormItem
+          label="类型"
+          required
+        >
+          <NSelect
+            v-model:value="draft.type"
+            :options="typeOptions"
+          />
         </NFormItem>
-        <NFormItem label="标题" required>
-          <NInput v-model:value="draft.title" maxlength="160" show-count placeholder="用一句话概括问题" />
+        <NFormItem
+          label="标题"
+          required
+        >
+          <NInput
+            v-model:value="draft.title"
+            maxlength="160"
+            show-count
+            placeholder="用一句话概括问题"
+          />
         </NFormItem>
-        <NFormItem label="详细内容" required>
+        <NFormItem
+          label="详细内容"
+          required
+        >
           <NInput
             v-model:value="draft.content"
             type="textarea"
@@ -306,21 +389,23 @@ watch(() => route.query.view, (routeView) => {
             multiple
             :on-before-upload="beforeUpload"
           >
-            <NIcon :component="Image24Regular" size="24" />
+            <NIcon
+              :component="Image24Regular"
+              size="24"
+            />
           </NUpload>
         </NFormItem>
         <div class="ticket-create__preferences">
-          <NCheckbox v-model:checked="draft.isPublic">
-            公开此工单
-          </NCheckbox>
-          <NCheckbox v-model:checked="draft.emailOnStaffReply">
-            站长回复时发送邮件
-          </NCheckbox>
+          <NCheckbox v-model:checked="draft.isPublic"> 公开此工单 </NCheckbox>
+          <NCheckbox v-model:checked="draft.emailOnStaffReply"> 站长回复时发送邮件 </NCheckbox>
         </div>
       </NForm>
       <template #footer>
         <div class="ticket-create__footer">
-          <NButton :disabled="creating" @click="showCreate = false">
+          <NButton
+            :disabled="creating"
+            @click="showCreate = false"
+          >
             取消
           </NButton>
           <NButton
@@ -338,30 +423,119 @@ watch(() => route.query.view, (routeView) => {
 </template>
 
 <style scoped>
-.ticket-page { display: grid; gap: 12px; }
-.ticket-page__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.ticket-page__title { color: var(--vtsuru-fg); font-size: 15px; }
-.ticket-page__tabs { width: 220px; }
-.public-ticket-list { min-height: 320px; }
-.public-ticket-list__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 12px; }
-.public-ticket-list__state { display: grid; min-height: 320px; place-content: center; }
-.public-ticket-detail { overflow: hidden; border: 1px solid var(--vtsuru-border); border-radius: 8px; background: var(--vtsuru-bg); }
-.ticket-workspace { display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); overflow: hidden; border: 1px solid var(--vtsuru-border); border-radius: 8px; background: var(--vtsuru-bg); }
-.ticket-list { min-width: 0; height: min(720px, calc(100vh - 150px)); overflow-y: auto; border-right: 1px solid var(--vtsuru-border); }
-.ticket-list__header { position: sticky; z-index: 1; top: 0; display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 12px 0 14px; border-bottom: 1px solid var(--vtsuru-border); color: var(--vtsuru-fg); background: var(--vtsuru-bg); font-size: 13px; font-weight: 600; }
-.ticket-list__state { display: grid; min-height: 240px; place-content: center; }
-.ticket-create__preferences { display: grid; gap: 10px; }
-.ticket-create__footer { display: flex; justify-content: flex-end; gap: 8px; }
-:global(.ticket-create-modal) { width: min(620px, calc(100vw - 32px)); }
+.ticket-page {
+  display: grid;
+  gap: 12px;
+}
+.ticket-page__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ticket-page__title {
+  color: var(--vtsuru-fg);
+  font-size: 15px;
+}
+.ticket-page__tabs {
+  width: 220px;
+}
+.public-ticket-list {
+  min-height: 320px;
+}
+.public-ticket-list__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+.public-ticket-list__state {
+  display: grid;
+  min-height: 320px;
+  place-content: center;
+}
+.public-ticket-detail {
+  overflow: hidden;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  background: var(--vtsuru-bg);
+}
+.ticket-workspace {
+  display: grid;
+  grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  background: var(--vtsuru-bg);
+}
+.ticket-list {
+  min-width: 0;
+  height: min(720px, calc(100vh - 150px));
+  overflow-y: auto;
+  border-right: 1px solid var(--vtsuru-border);
+}
+.ticket-list__header {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 12px 0 14px;
+  border-bottom: 1px solid var(--vtsuru-border);
+  color: var(--vtsuru-fg);
+  background: var(--vtsuru-bg);
+  font-size: 13px;
+  font-weight: 600;
+}
+.ticket-list__state {
+  display: grid;
+  min-height: 240px;
+  place-content: center;
+}
+.ticket-create__preferences {
+  display: grid;
+  gap: 10px;
+}
+.ticket-create__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+:global(.ticket-create-modal) {
+  width: min(620px, calc(100vw - 32px));
+}
 
 @media (max-width: 760px) {
-  .ticket-page__tabs { width: 190px; }
-  .public-ticket-list__grid { grid-template-columns: 1fr; }
-  .public-ticket-detail { border-right: 0; border-left: 0; border-radius: 0; }
-  .ticket-workspace { display: block; border-right: 0; border-left: 0; border-radius: 0; }
-  .ticket-list { height: calc(100dvh - 150px); border-right: 0; }
-  .ticket-workspace__detail { display: none; }
-  .ticket-workspace--detail .ticket-list { display: none; }
-  .ticket-workspace--detail .ticket-workspace__detail { display: flex; }
+  .ticket-page__tabs {
+    width: 190px;
+  }
+  .public-ticket-list__grid {
+    grid-template-columns: 1fr;
+  }
+  .public-ticket-detail {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+  .ticket-workspace {
+    display: block;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+  .ticket-list {
+    height: calc(100dvh - 150px);
+    border-right: 0;
+  }
+  .ticket-workspace__detail {
+    display: none;
+  }
+  .ticket-workspace--detail .ticket-list {
+    display: none;
+  }
+  .ticket-workspace--detail .ticket-workspace__detail {
+    display: flex;
+  }
 }
 </style>

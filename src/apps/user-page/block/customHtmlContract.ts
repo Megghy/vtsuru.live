@@ -36,7 +36,7 @@ export const DEFAULT_CUSTOM_HTML_PROPS: Readonly<CustomHtmlProps> = {
 }
 
 function asObject(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null
 }
 
 function boundedInteger(value: unknown, fallback: number, min: number, max: number) {
@@ -49,7 +49,14 @@ export function normalizeCustomHtmlProps(value: unknown): CustomHtmlProps {
     ? source.assets.flatMap((item) => {
         const asset = asObject(item)
         const file = asObject(asset?.file)
-        if (!asset || typeof asset.key !== 'string' || !file || typeof file.id !== 'number' || typeof file.path !== 'string') return []
+        if (
+          !asset ||
+          typeof asset.key !== 'string' ||
+          !file ||
+          typeof file.id !== 'number' ||
+          typeof file.path !== 'string'
+        )
+          return []
         return [{ key: asset.key, file: file as unknown as UploadFileResponse }]
       })
     : []
@@ -58,8 +65,18 @@ export function normalizeCustomHtmlProps(value: unknown): CustomHtmlProps {
     html: typeof source.html === 'string' ? source.html : '',
     css: typeof source.css === 'string' ? source.css : '',
     heightMode: source.heightMode === 'fixed' ? 'fixed' : 'auto',
-    height: boundedInteger(source.height, DEFAULT_CUSTOM_HTML_PROPS.height, CUSTOM_HTML_MIN_HEIGHT, CUSTOM_HTML_MAX_HEIGHT),
-    maxHeight: boundedInteger(source.maxHeight, DEFAULT_CUSTOM_HTML_PROPS.maxHeight, CUSTOM_HTML_MIN_AUTO_HEIGHT, CUSTOM_HTML_MAX_HEIGHT),
+    height: boundedInteger(
+      source.height,
+      DEFAULT_CUSTOM_HTML_PROPS.height,
+      CUSTOM_HTML_MIN_HEIGHT,
+      CUSTOM_HTML_MAX_HEIGHT,
+    ),
+    maxHeight: boundedInteger(
+      source.maxHeight,
+      DEFAULT_CUSTOM_HTML_PROPS.maxHeight,
+      CUSTOM_HTML_MIN_AUTO_HEIGHT,
+      CUSTOM_HTML_MAX_HEIGHT,
+    ),
     assets,
     framed: typeof source.framed === 'boolean' ? source.framed : false,
     backgrounded: typeof source.backgrounded === 'boolean' ? source.backgrounded : false,

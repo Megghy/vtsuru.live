@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { NAlert } from 'naive-ui'
+
 import { useOrgContext } from '../composables/useOrgContext'
 
 withDefaults(defineProps<{ message?: string }>(), {
@@ -10,7 +11,11 @@ const { isOrgAdmin } = useOrgContext()
 </script>
 
 <template>
-  <NAlert v-if="!isOrgAdmin" type="warning" :bordered="false">
+  <NAlert
+    v-if="!isOrgAdmin"
+    type="warning"
+    :bordered="false"
+  >
     {{ message }}
   </NAlert>
   <slot v-else />

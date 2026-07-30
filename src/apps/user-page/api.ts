@@ -1,7 +1,26 @@
+import type {
+  CheckInRankingInfo,
+  ResponsePointGoodModel,
+  Setting_LiveRequest,
+  SongRequestInfo,
+  SongsInfo,
+  UserInfo,
+  VideoCollectTable,
+} from '@/api/api-models'
 import type { QueryRequestOptions } from '@/api/query'
-import type { CheckInRankingInfo, ResponsePointGoodModel, Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
-import { CHECKIN_API_URL, FORUM_API_URL, POINT_API_URL, SONG_API_URL, SONG_REQUEST_API_URL, USER_API_URL, USER_PAGES_API_URL, VIDEO_COLLECT_API_URL, VTSURU_API_URL } from '@/shared/config'
+import {
+  CHECKIN_API_URL,
+  FORUM_API_URL,
+  POINT_API_URL,
+  SONG_API_URL,
+  SONG_REQUEST_API_URL,
+  USER_API_URL,
+  USER_PAGES_API_URL,
+  VIDEO_COLLECT_API_URL,
+  VTSURU_API_URL,
+} from '@/shared/config'
+
 import { migrateUserPagesSettings } from './normalize'
 import type { BiliProfile, UserPagesMyStateResponse, UserPagesSettingsV1 } from './types'
 
@@ -16,10 +35,7 @@ function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
   return migrateUserPagesSettings(parsed)
 }
 
-export async function fetchPublicUserInfo(
-  routeId: string,
-  options?: QueryRequestOptions,
-): Promise<UserInfo | null> {
+export async function fetchPublicUserInfo(routeId: string, options?: QueryRequestOptions): Promise<UserInfo | null> {
   const resp = await QueryGetAPI<UserInfo>(`${USER_API_URL}info`, { id: routeId }, undefined, options)
   if (resp.code === 404) return null
   return unwrapOk(resp, '无法获取用户信息')
@@ -28,11 +44,11 @@ export async function fetchPublicUserInfo(
 export async function fetchBiliProfile(biliId: number, signal?: AbortSignal): Promise<BiliProfile | null> {
   const response = await fetch(`${VTSURU_API_URL}bili-user-info/${biliId}`, { signal })
   if (!response.ok) throw new Error(`B站资料请求失败：HTTP ${response.status}`)
-  const payload = await response.json() as {
+  const payload = (await response.json()) as {
     code?: number
     data?: { card?: BiliProfile }
   }
-  return payload.code === 0 ? payload.data?.card ?? null : null
+  return payload.code === 0 ? (payload.data?.card ?? null) : null
 }
 
 export async function fetchPublicForumExists(owner: number, options?: QueryRequestOptions) {
@@ -52,7 +68,7 @@ export async function fetchPublicSongRequestSettings(userId: number, options?: Q
 }
 
 export async function fetchPublicSongRequestState(userId: number, options?: QueryRequestOptions) {
-  const response = await QueryGetAPI<{ songs: SongRequestInfo[], setting: Setting_LiveRequest }>(
+  const response = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
     `${SONG_REQUEST_API_URL}get-active-and-settings`,
     { id: userId },
     undefined,
@@ -62,17 +78,32 @@ export async function fetchPublicSongRequestState(userId: number, options?: Quer
 }
 
 export async function fetchPublicCheckInRanking(userId: number, count: 3 | 10, options?: QueryRequestOptions) {
-  const response = await QueryGetAPI<CheckInRankingInfo[]>(`${CHECKIN_API_URL}ranking`, { vId: userId, count }, undefined, options)
+  const response = await QueryGetAPI<CheckInRankingInfo[]>(
+    `${CHECKIN_API_URL}ranking`,
+    { vId: userId, count },
+    undefined,
+    options,
+  )
   return unwrapOk(response, '无法获取签到排行') ?? []
 }
 
 export async function fetchPublicPointGoods(userId: number, options?: QueryRequestOptions) {
-  const response = await QueryGetAPI<ResponsePointGoodModel[]>(`${POINT_API_URL}get-goods`, { id: userId }, undefined, options)
+  const response = await QueryGetAPI<ResponsePointGoodModel[]>(
+    `${POINT_API_URL}get-goods`,
+    { id: userId },
+    undefined,
+    options,
+  )
   return unwrapOk(response, '无法获取积分商品') ?? []
 }
 
 export async function fetchPublicActiveVideoCollect(userId: number, options?: QueryRequestOptions) {
-  const response = await QueryGetAPI<VideoCollectTable[]>(`${VIDEO_COLLECT_API_URL}get-active`, { id: userId }, undefined, options)
+  const response = await QueryGetAPI<VideoCollectTable[]>(
+    `${VIDEO_COLLECT_API_URL}get-active`,
+    { id: userId },
+    undefined,
+    options,
+  )
   return unwrapOk(response, '无法获取视频征集活动') ?? []
 }
 
@@ -80,7 +111,12 @@ export async function fetchUserPagesSettingsByUserId(
   userId: number,
   options?: QueryRequestOptions,
 ): Promise<UserPagesSettingsV1 | null> {
-  const resp = await QueryGetAPI<string>(`${USER_PAGES_API_URL}get-user`, { id: userId, _ts: Date.now() }, undefined, options)
+  const resp = await QueryGetAPI<string>(
+    `${USER_PAGES_API_URL}get-user`,
+    { id: userId, _ts: Date.now() },
+    undefined,
+    options,
+  )
   if (resp.code === 404) return null
   const raw = unwrapOk(resp, '无法获取用户页面配置')
   return parseUserPagesSettings(raw)

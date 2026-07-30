@@ -1,8 +1,10 @@
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import type { UserPageValidationIssue } from './validateUserPagesSettings'
 import type { Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
+
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { deepCloneJson } from './editorHelpers'
+import type { UserPageValidationIssue } from './validateUserPagesSettings'
 
 interface UseUserPageAutoSaveOptions {
   settings: Ref<UserPagesSettingsV1>
@@ -82,19 +84,23 @@ export function useUserPageAutoSave(options: UseUserPageAutoSaveOptions) {
     }, delay)
   }
 
-  watch(options.settings, () => {
-    const snapshot = serializeSettings(options, isSanitizingJson)
-    if (snapshot === null) return
-    options.isDirty.value = snapshot !== options.lastSavedSnapshot.value
-    retryCount = 0
-    hasSyncError.value = false
+  watch(
+    options.settings,
+    () => {
+      const snapshot = serializeSettings(options, isSanitizingJson)
+      if (snapshot === null) return
+      options.isDirty.value = snapshot !== options.lastSavedSnapshot.value
+      retryCount = 0
+      hasSyncError.value = false
 
-    if (!(options.isLoading.value || options.isSaving.value || isAutoSaving.value)) {
-      if (validationTimer) clearTimeout(validationTimer)
-      validationTimer = setTimeout(validateLive, 1600)
-    }
-    scheduleAutoSave()
-  }, { deep: true })
+      if (!(options.isLoading.value || options.isSaving.value || isAutoSaving.value)) {
+        if (validationTimer) clearTimeout(validationTimer)
+        validationTimer = setTimeout(validateLive, 1600)
+      }
+      scheduleAutoSave()
+    },
+    { deep: true },
+  )
 
   watch([options.isLoading, options.isSaving], ([loading, saving]) => {
     if (!loading && !saving) scheduleAutoSave()

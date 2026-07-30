@@ -8,7 +8,7 @@ type JsonObject = Record<string, unknown>
 type Migration = (input: JsonObject) => JsonObject
 
 function asObject(value: unknown): JsonObject | null {
-  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as JsonObject : null
+  return value !== null && typeof value === 'object' && !Array.isArray(value) ? (value as JsonObject) : null
 }
 
 function migrateLegacyToV1(input: JsonObject): JsonObject {
@@ -81,7 +81,12 @@ export function migrateUserPagesSettings(input: unknown): UserPagesSettingsV1 {
 
   let current = structuredClone(source)
   const rawVersion = current.version === undefined ? 0 : current.version
-  if (typeof rawVersion !== 'number' || !Number.isInteger(rawVersion) || rawVersion < 0 || rawVersion > USER_PAGES_SETTINGS_VERSION) {
+  if (
+    typeof rawVersion !== 'number' ||
+    !Number.isInteger(rawVersion) ||
+    rawVersion < 0 ||
+    rawVersion > USER_PAGES_SETTINGS_VERSION
+  ) {
     throw new Error(`用户页面配置 version 不支持: ${String(current.version)}`)
   }
   let version = rawVersion
@@ -108,7 +113,8 @@ export function migrateBlockPageProject(project: unknown) {
   if (!object) throw new Error('BlockPageProject 必须是 object')
   const output = structuredClone(object)
   if (output.version === undefined) output.version = BLOCK_PAGE_VERSION
-  if (output.version !== BLOCK_PAGE_VERSION) throw new Error(`BlockPageProject.version 不支持: ${String(output.version)}`)
+  if (output.version !== BLOCK_PAGE_VERSION)
+    throw new Error(`BlockPageProject.version 不支持: ${String(output.version)}`)
   normalizeCountdownTargets(output.blocks)
   return output
 }

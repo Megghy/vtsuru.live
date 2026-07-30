@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'vue'
 import { computed, ref, watch, watchEffect } from 'vue'
+
 import { usePersistedStorage } from '@/shared/storage/persist'
+
 import {
   USER_PAGE_BUILDER_COLUMNS_ORDER_KEY,
   USER_PAGE_BUILDER_COLUMNS_WIDTHS_KEY,
@@ -12,7 +14,7 @@ export type BuilderLayoutPreset = 'content' | 'preview' | 'compact'
 export type BuilderWorkspaceMode = 'wide' | 'medium' | 'compact'
 
 export const DEFAULT_COLUMNS_ORDER: BuilderColumnId[] = ['pages', 'blocks', 'preview', 'props']
-export const COLUMN_META: Record<BuilderColumnId, { label: string, minPx: number, maxPx: number }> = {
+export const COLUMN_META: Record<BuilderColumnId, { label: string; minPx: number; maxPx: number }> = {
   pages: { label: '页面', minPx: 150, maxPx: 360 },
   blocks: { label: '区块', minPx: 210, maxPx: 520 },
   preview: { label: '预览', minPx: 320, maxPx: 1200 },
@@ -30,9 +32,10 @@ const PAGES_COLLAPSED_WIDTH_PX = 56
 
 function normalizeColumnsOrder(value: unknown) {
   const requested = Array.isArray(value) ? value : []
-  const result = requested.filter((id, index): id is BuilderColumnId => (
-    typeof id === 'string' && id in COLUMN_META && requested.indexOf(id) === index
-  ))
+  const result = requested.filter(
+    (id, index): id is BuilderColumnId =>
+      typeof id === 'string' && id in COLUMN_META && requested.indexOf(id) === index,
+  )
   DEFAULT_COLUMNS_ORDER.forEach((id) => {
     if (!result.includes(id)) result.push(id)
   })
@@ -48,8 +51,12 @@ function clampWidth(id: BuilderColumnId, value: unknown) {
 export function useBuilderLayout() {
   const bodyElement = ref<HTMLElement | null>(null)
   const bodyWidth = ref(0)
-  const columnsOrder = usePersistedStorage<BuilderColumnId[]>(USER_PAGE_BUILDER_COLUMNS_ORDER_KEY, [...DEFAULT_COLUMNS_ORDER])
-  const columnWidths = usePersistedStorage<Record<BuilderColumnId, number>>(USER_PAGE_BUILDER_COLUMNS_WIDTHS_KEY, { ...DEFAULT_WIDTHS })
+  const columnsOrder = usePersistedStorage<BuilderColumnId[]>(USER_PAGE_BUILDER_COLUMNS_ORDER_KEY, [
+    ...DEFAULT_COLUMNS_ORDER,
+  ])
+  const columnWidths = usePersistedStorage<Record<BuilderColumnId, number>>(USER_PAGE_BUILDER_COLUMNS_WIDTHS_KEY, {
+    ...DEFAULT_WIDTHS,
+  })
   const isPagesCollapsed = usePersistedStorage(USER_PAGE_BUILDER_PAGES_COLLAPSED_KEY, false)
   const mediumPane = ref<'pages' | 'blocks'>('blocks')
   const compactPane = ref<BuilderColumnId>('preview')
@@ -68,32 +75,43 @@ export function useBuilderLayout() {
   const activeColumnsOrder = computed(() => columnsOrder.value)
   const layoutColumnsModel = computed<BuilderColumnId[]>({
     get: () => [...columnsOrder.value],
-    set: value => { columnsOrder.value = normalizeColumnsOrder(value) },
+    set: (value) => {
+      columnsOrder.value = normalizeColumnsOrder(value)
+    },
   })
   const wideGridColumns = computed(() => {
     const ids = activeColumnsOrder.value
-    const fixedTracks = ids.filter(id => id !== 'preview').map(id => ({
-      id,
-      min: id === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : COLUMN_META[id].minPx,
-      width: id === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : columnWidths.value[id],
-    }))
+    const fixedTracks = ids
+      .filter((id) => id !== 'preview')
+      .map((id) => ({
+        id,
+        min: id === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : COLUMN_META[id].minPx,
+        width: id === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : columnWidths.value[id],
+      }))
     const availableWidth = bodyWidth.value - COLUMN_META.preview.minPx - GRID_GAP_PX * (ids.length - 1)
     const desiredTotal = fixedTracks.reduce((sum, track) => sum + track.width, 0)
     const minTotal = fixedTracks.reduce((sum, track) => sum + track.min, 0)
     const overflow = Math.max(0, desiredTotal - availableWidth)
     const shrinkable = desiredTotal - minTotal
-    const widths = Object.fromEntries(fixedTracks.map(track => [track.id, (
-      overflow > 0 && shrinkable > 0
-        ? Math.max(track.min, track.width - overflow * (track.width - track.min) / shrinkable)
-        : track.width
-    )])) as Partial<Record<BuilderColumnId, number>>
+    const widths = Object.fromEntries(
+      fixedTracks.map((track) => [
+        track.id,
+        overflow > 0 && shrinkable > 0
+          ? Math.max(track.min, track.width - (overflow * (track.width - track.min)) / shrinkable)
+          : track.width,
+      ]),
+    ) as Partial<Record<BuilderColumnId, number>>
 
-    return ids.map(id => id === 'preview' ? `minmax(${COLUMN_META.preview.minPx}px, 1fr)` : `${widths[id]}px`).join(' ')
+    return ids
+      .map((id) => (id === 'preview' ? `minmax(${COLUMN_META.preview.minPx}px, 1fr)` : `${widths[id]}px`))
+      .join(' ')
   })
   const mediumGridColumns = computed(() => {
     const primaryId = mediumPane.value
-    const primaryMin = primaryId === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : COLUMN_META[primaryId].minPx
-    const primaryWidth = primaryId === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : columnWidths.value[primaryId]
+    const primaryMin =
+      primaryId === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : COLUMN_META[primaryId].minPx
+    const primaryWidth =
+      primaryId === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : columnWidths.value[primaryId]
     return `minmax(${primaryMin}px, ${primaryWidth}px) minmax(280px, 1fr) minmax(240px, ${columnWidths.value.props}px)`
   })
   const legacyGridColumns = computed(() => `minmax(320px, 1fr) minmax(280px, ${columnWidths.value.props}px)`)
@@ -133,10 +151,14 @@ export function useBuilderLayout() {
     observer = new ResizeObserver(([entry]) => {
       bodyWidth.value = Math.floor(entry.contentRect.width)
     })
-    stopObservingBody = watch(bodyElement, (element, previous) => {
-      if (previous) observer?.unobserve(previous)
-      if (element) observer?.observe(element)
-    }, { immediate: true })
+    stopObservingBody = watch(
+      bodyElement,
+      (element, previous) => {
+        if (previous) observer?.unobserve(previous)
+        if (element) observer?.observe(element)
+      },
+      { immediate: true },
+    )
   }
 
   function destroy() {

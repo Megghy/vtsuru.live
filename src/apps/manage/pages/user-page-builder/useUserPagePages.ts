@@ -1,7 +1,9 @@
+import type { Ref } from 'vue'
+
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { cloneBlockNode, deepCloneJson } from './editorHelpers'
-import type { Ref } from 'vue'
 
 export interface UseUserPagePagesOptions {
   settings: Ref<UserPagesSettingsV1>
@@ -25,7 +27,7 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
 
   function cloneProjectWithNewIds(project: BlockPageProject): BlockPageProject {
     const copied = deepCloneJson(project)
-    copied.blocks = copied.blocks.map(b => cloneBlockNode(b))
+    copied.blocks = copied.blocks.map((b) => cloneBlockNode(b))
     return copied
   }
 
@@ -33,7 +35,8 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
     const slug = slugInput.trim()
     if (!slugOk(slug)) throw new Error('slug 仅支持小写字母/数字/短横线，长度 1~40，且不能以 - 开头或结尾')
     opts.settings.value.pages ??= {}
-    if (Object.keys(opts.settings.value.pages).length >= opts.maxPagesCount) throw new Error(`子页面最多只能创建 ${opts.maxPagesCount} 个`)
+    if (Object.keys(opts.settings.value.pages).length >= opts.maxPagesCount)
+      throw new Error(`子页面最多只能创建 ${opts.maxPagesCount} 个`)
     if (opts.settings.value.pages[slug]) throw new Error('该 slug 已存在')
     opts.history.batch(() => {
       opts.settings.value.pages[slug] = { mode: 'block', block: opts.createDefaultProject() }
@@ -74,7 +77,8 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
     if (!slugOk(to)) throw new Error('slug 仅支持小写字母/数字/短横线，长度 1~40，且不能以 - 开头或结尾')
     if (from === to) throw new Error('新 slug 不能与原 slug 相同')
     opts.settings.value.pages ??= {}
-    if (Object.keys(opts.settings.value.pages).length >= opts.maxPagesCount) throw new Error(`子页面最多只能创建 ${opts.maxPagesCount} 个`)
+    if (Object.keys(opts.settings.value.pages).length >= opts.maxPagesCount)
+      throw new Error(`子页面最多只能创建 ${opts.maxPagesCount} 个`)
     const src = opts.settings.value.pages[from]
     if (!src) return
     if (opts.settings.value.pages[to]) throw new Error('该 slug 已存在')

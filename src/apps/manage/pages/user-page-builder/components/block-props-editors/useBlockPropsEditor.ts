@@ -1,7 +1,13 @@
-import type { BlockNode } from '@/apps/user-page/block/schema'
-import { getBlockPropertyNumberRange, getBlockPropertyValues, isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabilities'
 import { computed, inject, toValue } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
+
+import {
+  getBlockPropertyNumberRange,
+  getBlockPropertyValues,
+  isBlockPropertyAvailable,
+} from '@/apps/user-page/block/propertyCapabilities'
+import type { BlockNode } from '@/apps/user-page/block/schema'
+
 import { UserPageEditorKey } from '../../context'
 
 export function useBlockPropsEditor(blockSource: MaybeRefOrGetter<BlockNode>) {
@@ -40,16 +46,25 @@ export function useBlockPropsEditor(blockSource: MaybeRefOrGetter<BlockNode>) {
         navOrder: config.navOrder ?? 0,
         title: config.title?.trim() || `/${slug}`,
       }))
-      .toSorted((a, b) => (a.navOrder - b.navOrder) || a.slug.localeCompare(b.slug))
+      .toSorted((a, b) => a.navOrder - b.navOrder || a.slug.localeCompare(b.slug))
 
     return [
       { label: '主页', value: 'home' },
-      ...entries.map(page => ({
+      ...entries.map((page) => ({
         label: `${page.title}${page.navVisible ? '' : ' · 隐藏'}`,
         value: page.slug,
       })),
     ]
   })
 
-  return { editor, block, blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange, propertyValues, internalPageOptions }
+  return {
+    editor,
+    block,
+    blockProps,
+    ensureArrayProp,
+    propertyAvailable,
+    propertyNumberRange,
+    propertyValues,
+    internalPageOptions,
+  }
 }

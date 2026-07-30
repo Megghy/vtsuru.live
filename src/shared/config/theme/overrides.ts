@@ -7,8 +7,9 @@
  * - 组件只消费传入的语义 token，不自行决定页面场景
  */
 import type { GlobalThemeOverrides } from 'naive-ui'
-import { brand, error, info, neutral, pickByMode, rgba, success, warning } from './colors'
+
 import { getAdaptiveButtonColors } from './buttons'
+import { brand, error, info, neutral, pickByMode, rgba, success, warning } from './colors'
 import type { ThemeTokens } from './tokens'
 
 export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
@@ -140,7 +141,6 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
       paddingSmall: '0 10px',
       paddingLarge: '0 16px',
       fontWeight: '500',
-
     },
     Input: {
       heightMedium: '30px',
@@ -195,7 +195,7 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
       colorEmbeddedPopover: t.inset,
       textColor: t.foreground,
       titleTextColor: t.foreground,
-      borderColor: t.borderColor,
+      borderColor: t.cardBorderColor,
       paddingSmall: '12px 16px',
       paddingMedium: '16px 20px',
       paddingLarge: '20px 24px',

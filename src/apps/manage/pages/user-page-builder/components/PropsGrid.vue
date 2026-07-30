@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{
-  minItemWidth?: number
-  gap?: number
-  rowGap?: number
-  colGap?: number
-}>(), {
-  minItemWidth: 150,
-  gap: 8,
-  rowGap: 0,
-  colGap: 8,
-})
+const props = withDefaults(
+  defineProps<{
+    minItemWidth?: number
+    gap?: number
+    rowGap?: number
+    colGap?: number
+  }>(),
+  {
+    minItemWidth: 150,
+    gap: 8,
+    rowGap: 0,
+    colGap: 8,
+  },
+)
 
 const style = computed(() => ({
   gridTemplateColumns: `repeat(auto-fit, minmax(${props.minItemWidth}px, 1fr))`,
@@ -21,7 +24,10 @@ const style = computed(() => ({
 </script>
 
 <template>
-  <div class="props-grid" :style="style">
+  <div
+    class="props-grid"
+    :style="style"
+  >
     <slot />
   </div>
 </template>

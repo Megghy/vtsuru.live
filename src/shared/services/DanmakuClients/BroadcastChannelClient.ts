@@ -4,6 +4,7 @@
 // 当同一浏览器的另一个标签页已握有上游连接 (openlive/direct/local) 时, 本标签页无需重复连接,
 // 只要通过共享的 DanmakuChannel 被动接收事件即可。数据已是 EventModel, 直接分发。
 import type { DanmakuChannel } from '@/shared/services/danmakuChannel'
+
 import DanmakuEventEmitter from './DanmakuEventEmitter'
 
 export default class BroadcastChannelClient extends DanmakuEventEmitter {
@@ -19,7 +20,7 @@ export default class BroadcastChannelClient extends DanmakuEventEmitter {
     super()
   }
 
-  public async Start(): Promise<{ success: boolean, message: string }> {
+  public async Start(): Promise<{ success: boolean; message: string }> {
     if (this.state === 'connected') return { success: true, message: '已连接' }
     this.unsubscribe = this.channel.onEvent((sourceId, scope, eventName, data) => {
       if (scope === this.scope && (!this.ownerSourceId || sourceId === this.ownerSourceId)) {

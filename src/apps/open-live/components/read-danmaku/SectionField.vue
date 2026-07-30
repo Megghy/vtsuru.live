@@ -13,15 +13,28 @@ defineProps<{
   <div class="section-field">
     <div class="head">
       <span class="label">{{ label }}</span>
-      <NPopover v-if="hint || $slots.hint" trigger="hover" placement="top" style="max-width: 360px">
+      <NPopover
+        v-if="hint || $slots.hint"
+        trigger="hover"
+        placement="top"
+        style="max-width: 360px"
+      >
         <template #trigger>
-          <NIcon :component="Info24Filled" :size="14" class="icon" />
+          <NIcon
+            :component="Info24Filled"
+            :size="14"
+            class="icon"
+          />
         </template>
         <slot name="hint">
           <span style="font-size: 12px; line-height: 1.6; white-space: pre-wrap">{{ hint }}</span>
         </slot>
       </NPopover>
-      <span v-if="value !== undefined" class="value">{{ value }}</span>
+      <span
+        v-if="value !== undefined"
+        class="value"
+        >{{ value }}</span
+      >
     </div>
     <div class="body">
       <slot />

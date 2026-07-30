@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { UserBasicInfo } from '@/api/api-models'
 import { useDebounceFn } from '@vueuse/core'
-import { NAvatar, NCard, NDivider, NEmpty, NFlex, NSpin, NText } from 'naive-ui';
+import { NAvatar, NCard, NDivider, NEmpty, NFlex, NSpin, NText } from 'naive-ui'
 import { onMounted, ref, watch } from 'vue'
+
+import type { UserBasicInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { USER_API_URL } from '@/shared/config'
 import { getUserAvatarUrl } from '@/shared/utils'

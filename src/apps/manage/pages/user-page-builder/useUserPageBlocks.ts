@@ -1,11 +1,13 @@
-import type { BlockNode, BlockPageProject, BlockType } from '@/apps/user-page/block/schema'
-import { createBlockNode } from '@/apps/user-page/block/registry'
-import { cloneBlockNode, createId, deepCloneJson } from './editorHelpers'
+import { useStorage } from '@vueuse/core'
 import type { ComputedRef, Ref } from 'vue'
 import { computed } from 'vue'
-import { useStorage } from '@vueuse/core'
-import { USER_PAGE_BLOCK_CLIPBOARD_KEY } from './storageKeys'
+
+import { createBlockNode } from '@/apps/user-page/block/registry'
+import type { BlockNode, BlockPageProject, BlockType } from '@/apps/user-page/block/schema'
 import { usePersistedStorage } from '@/shared/storage/persist'
+
+import { cloneBlockNode, createId, deepCloneJson } from './editorHelpers'
+import { USER_PAGE_BLOCK_CLIPBOARD_KEY } from './storageKeys'
 import {
   asBlockProps,
   blockContainsId,
@@ -26,16 +28,17 @@ export interface UseUserPageBlocksOptions {
 }
 
 export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
-  const clipboardBlocks = typeof window === 'undefined'
-    ? useStorage<BlockNode[]>(USER_PAGE_BLOCK_CLIPBOARD_KEY, [], undefined, { writeDefaults: false })
-    : usePersistedStorage<BlockNode[]>(USER_PAGE_BLOCK_CLIPBOARD_KEY, [], { writeDefaults: false })
+  const clipboardBlocks =
+    typeof window === 'undefined'
+      ? useStorage<BlockNode[]>(USER_PAGE_BLOCK_CLIPBOARD_KEY, [], undefined, { writeDefaults: false })
+      : usePersistedStorage<BlockNode[]>(USER_PAGE_BLOCK_CLIPBOARD_KEY, [], { writeDefaults: false })
 
   const selectedBlocks = computed<BlockNode[]>(() => {
     const p = opts.currentProject.value
     if (!p) return []
     if (!opts.selectedBlockIds.value.length) return []
     const set = new Set(opts.selectedBlockIds.value)
-    return flattenBlocks(p.blocks).filter(b => set.has(b.id))
+    return flattenBlocks(p.blocks).filter((b) => set.has(b.id))
   })
 
   const selectedBlock = computed<BlockNode | null>(() => {
@@ -60,7 +63,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
   function ensureItems(block: BlockNode) {
     const propsObj = ensurePropsObject(block)
     if (!Array.isArray(propsObj.items)) propsObj.items = []
-    return propsObj.items as Array<{ label: string, url?: string, page?: string }>
+    return propsObj.items as Array<{ label: string; url?: string; page?: string }>
   }
 
   function ensureRichTextProps(block: BlockNode) {
@@ -79,7 +82,8 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     if (typeof propsObj.maxHeight !== 'string') propsObj.maxHeight = ''
     if (!['cover', 'contain'].includes(String(propsObj.fit))) propsObj.fit = 'cover'
     if (propsObj.autoplay !== undefined && typeof propsObj.autoplay !== 'boolean') propsObj.autoplay = false
-    if (!Number.isFinite(propsObj.interval) || propsObj.interval < 1000 || propsObj.interval > 20000) propsObj.interval = 5000
+    if (!Number.isFinite(propsObj.interval) || propsObj.interval < 1000 || propsObj.interval > 20000)
+      propsObj.interval = 5000
     if (propsObj.intervalMs !== undefined && propsObj.interval === 5000) {
       const v = Number(propsObj.intervalMs)
       if (Number.isFinite(v) && v >= 1000 && v <= 20000) propsObj.interval = v
@@ -103,9 +107,16 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     if (propsObj.layout !== 'row' && propsObj.layout !== 'column' && propsObj.layout !== 'grid') propsObj.layout = 'row'
     if (typeof propsObj.wrap !== 'boolean') propsObj.wrap = true
     if (typeof propsObj.gap !== 'number' || !Number.isFinite(propsObj.gap) || propsObj.gap < 0) propsObj.gap = 12
-    if (typeof propsObj.columns !== 'number' || !Number.isFinite(propsObj.columns) || !Number.isInteger(propsObj.columns) || propsObj.columns < 1) propsObj.columns = 2
+    if (
+      typeof propsObj.columns !== 'number' ||
+      !Number.isFinite(propsObj.columns) ||
+      !Number.isInteger(propsObj.columns) ||
+      propsObj.columns < 1
+    )
+      propsObj.columns = 2
     if (typeof propsObj.maxWidth !== 'string') propsObj.maxWidth = ''
-    if (!['start', 'center', 'end', 'between', 'around', 'evenly'].includes(String(propsObj.justify))) propsObj.justify = 'start'
+    if (!['start', 'center', 'end', 'between', 'around', 'evenly'].includes(String(propsObj.justify)))
+      propsObj.justify = 'start'
     if (!['start', 'center', 'end', 'stretch'].includes(String(propsObj.align))) propsObj.align = 'stretch'
     if (!Array.isArray(propsObj.children)) propsObj.children = []
     return propsObj as {
@@ -207,7 +218,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     opts.history.batch(() => {
       const loc = findBlockLocation(p, blockId)
       if (loc) loc.list.splice(loc.index, 1)
-      opts.selectedBlockIds.value = opts.selectedBlockIds.value.filter(id => id !== blockId)
+      opts.selectedBlockIds.value = opts.selectedBlockIds.value.filter((id) => id !== blockId)
     })
   }
 
@@ -254,7 +265,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
         return out
       }
       p.blocks = prune(p.blocks)
-      opts.selectedBlockIds.value = opts.selectedBlockIds.value.filter(id => !set.has(id))
+      opts.selectedBlockIds.value = opts.selectedBlockIds.value.filter((id) => !set.has(id))
     })
   }
 
@@ -302,7 +313,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
       const list = loc ? loc.list : p.blocks
       const insertAt = loc ? loc.index + 1 : list.length
       list.splice(insertAt, 0, ...copied)
-      opts.selectedBlockIds.value = copied.map(b => b.id)
+      opts.selectedBlockIds.value = copied.map((b) => b.id)
     })
     opts.notify.success(`已粘贴 ${blocks.length} 个区块`)
   }
@@ -371,7 +382,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
 
       if (movedNodes.length > 0) {
         layoutProps.children.push(...movedNodes)
-        opts.selectedBlockIds.value = movedNodes.map(n => n.id)
+        opts.selectedBlockIds.value = movedNodes.map((n) => n.id)
       }
 
       // 自动清理变空的父容器
@@ -447,7 +458,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     opts.history.batch(() => {
       // 移除 layout 本身，并在其位置插入所有子元素
       loc.list.splice(loc.index, 1, ...children)
-      opts.selectedBlockIds.value = children.map(c => c.id)
+      opts.selectedBlockIds.value = children.map((c) => c.id)
     })
   }
 

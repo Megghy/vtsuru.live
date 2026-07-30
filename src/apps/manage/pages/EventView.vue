@@ -1,23 +1,57 @@
 <script setup lang="ts">
-import type { DataTableColumns } from 'naive-ui'
-import type { EventModel } from '@/api/api-models'
-import { useAccount } from '@/api/account'
-import { EventDataTypes } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { useApiAction } from '@/apps/manage/composables/useApiAction'
-import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
-import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
-import { AVATAR_URL, EVENT_API_URL, HISTORY_API_URL } from '@/shared/config'
-import { GuidUtils } from '@/shared/utils'
-import {
-  ArrowDownload24Regular, ArrowSync24Filled, Delete24Regular, Grid28Filled, List16Filled, } from '@vicons/fluent'
+import { ArrowDownload24Regular, ArrowSync24Filled, Delete24Regular, Grid28Filled, List16Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
+import type { DataTableColumns } from 'naive-ui'
 import {
-  NAlert, NAvatar, NButton, NCard, NCollapse, NCollapseItem, NDataTable, NDatePicker, NDivider, NEllipsis, NGrid, NGridItem, NH3, NIcon, NInfiniteScroll, NInput, NInputNumber, NLi, NPopconfirm, NRadioButton, NRadioGroup, NSelect, NFlex, NSpin, NStatistic, NTabPane, NTabs, NTag, NTable, NText, NTime, NUl, useMessage, useThemeVars } from 'naive-ui';
+  NAlert,
+  NAvatar,
+  NButton,
+  NCard,
+  NCollapse,
+  NCollapseItem,
+  NDataTable,
+  NDatePicker,
+  NDivider,
+  NEllipsis,
+  NGrid,
+  NGridItem,
+  NH3,
+  NIcon,
+  NInfiniteScroll,
+  NInput,
+  NInputNumber,
+  NLi,
+  NPopconfirm,
+  NRadioButton,
+  NRadioGroup,
+  NSelect,
+  NFlex,
+  NSpin,
+  NStatistic,
+  NTabPane,
+  NTabs,
+  NTag,
+  NTable,
+  NText,
+  NTime,
+  NUl,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { computed, h, ref, watch } from 'vue'
+
+import { useAccount } from '@/api/account'
+import type { EventModel } from '@/api/api-models'
+import { EventDataTypes } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
+import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { useApiAction } from '@/apps/manage/composables/useApiAction'
+import { AVATAR_URL, EVENT_API_URL, HISTORY_API_URL } from '@/shared/config'
+import { GuidUtils } from '@/shared/utils'
 
 // 定义数据模型类型 (从 HistoryView 迁移)
 interface GuardMemberModel {
@@ -73,7 +107,7 @@ const limit = ref(20) // 每次加载数量
 const hasMore = ref(true) // 是否还有更多数据
 
 const userFilterInput = ref('')
-const userFilterApplied = ref<{ uid?: number, ouid?: string, uname?: string }>({})
+const userFilterApplied = ref<{ uid?: number; ouid?: string; uname?: string }>({})
 
 function isGuidText(text: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(text)
@@ -101,8 +135,7 @@ async function applyUserFilter() {
   try {
     userFilterApplied.value = parseUserFilter(userFilterInput.value)
     await fetchData(true)
-  }
-  catch (e) {
+  } catch (e) {
     message.error((e as Error).message)
   }
 }
@@ -115,7 +148,7 @@ async function clearUserFilter() {
 
 // 根据类型过滤事件
 const selectedEvents = computed(() => {
-  return events.value.filter(e => e.type == selectedType.value)
+  return events.value.filter((e) => e.type == selectedType.value)
 })
 
 // API请求获取数据
@@ -135,13 +168,11 @@ async function get(currentOffset: number, currentLimit: number) {
         message.success(`成功获取 ${data.data.length} 条数据`)
       }
       return data.data
-    }
-    else {
+    } else {
       message.error(`获取数据失败: ${data.message}`)
       return []
     }
-  }
-  catch (err) {
+  } catch (err) {
     message.error(`获取数据失败: ${(err as Error).message}`)
     return []
   }
@@ -149,16 +180,14 @@ async function get(currentOffset: number, currentLimit: number) {
 
 // 封装的数据获取函数
 async function fetchData(isInitialLoad = false) {
-  if (isLoading.value || isLoadingMore.value)
-    return
+  if (isLoading.value || isLoadingMore.value) return
 
   if (isInitialLoad) {
     isLoading.value = true
     offset.value = 0
     events.value = []
     hasMore.value = true
-  }
-  else {
+  } else {
     isLoadingMore.value = true
   }
 
@@ -166,19 +195,17 @@ async function fetchData(isInitialLoad = false) {
   const fetchedData = await get(currentOffset, limit.value)
 
   if (fetchedData.length > 0) {
-    const sortedData = new List(fetchedData).OrderByDescending(d => d.time).ToArray()
+    const sortedData = new List(fetchedData).OrderByDescending((d) => d.time).ToArray()
     events.value = isInitialLoad ? sortedData : [...events.value, ...sortedData]
     offset.value += fetchedData.length
     hasMore.value = fetchedData.length === limit.value
-  }
-  else {
+  } else {
     hasMore.value = false
   }
 
   if (isInitialLoad) {
     isLoading.value = false
-  }
-  else {
+  } else {
     isLoadingMore.value = false
   }
 }
@@ -190,8 +217,7 @@ async function onFilterChange() {
 
 // 无限滚动加载更多
 async function loadMore() {
-  if (!hasMore.value || isLoadingMore.value || isLoading.value)
-    return
+  if (!hasMore.value || isLoadingMore.value || isLoading.value) return
   await fetchData(false)
 }
 
@@ -213,8 +239,7 @@ const manualGuardMsgOptions = [
 ]
 
 async function addManualGuard() {
-  if (manualGuardLoading.value)
-    return
+  if (manualGuardLoading.value) return
 
   const uname = manualGuardUname.value.trim()
   if (!uname) {
@@ -232,12 +257,9 @@ async function addManualGuard() {
   let ouid: string | undefined
   try {
     const parsed = parseUserFilter(userKey)
-    if ('uid' in parsed)
-      uid = parsed.uid
-    if ('ouid' in parsed)
-      ouid = parsed.ouid
-  }
-  catch (e) {
+    if ('uid' in parsed) uid = parsed.uid
+    if ('ouid' in parsed) ouid = parsed.ouid
+  } catch (e) {
     message.error((e as Error).message)
     return
   }
@@ -271,11 +293,9 @@ async function addManualGuard() {
 
     message.success('已添加')
     await fetchData(true)
-  }
-  catch (e) {
+  } catch (e) {
     message.error(`添加失败: ${(e as Error).message}`)
-  }
-  finally {
+  } finally {
     manualGuardLoading.value = false
   }
 }
@@ -285,41 +305,32 @@ async function deleteGuardEvent(item: EventModel) {
     message.error('无法删除：缺少 id')
     return
   }
-  const ok = await run(() => QueryPostAPI<string>(`${EVENT_API_URL}guard/delete`, { id: item.id }), { success: '已删除', fail: '删除失败' })
-  if (ok !== undefined)
-    events.value = events.value.filter(e => e.id !== item.id)
+  const ok = await run(() => QueryPostAPI<string>(`${EVENT_API_URL}guard/delete`, { id: item.id }), {
+    success: '已删除',
+    fail: '删除失败',
+  })
+  if (ok !== undefined) events.value = events.value.filter((e) => e.id !== item.id)
 }
 
 // 获取SC颜色
 function GetSCColor(price: number): string {
-  if (price === 0)
-    return `#2a60b2`
-  if (price > 0 && price < 30)
-    return `#2a60b2`
-  if (price >= 30 && price < 50)
-    return `#427d9e`
-  if (price >= 50 && price < 100)
-    return `#c99801`
-  if (price >= 500 && price < 1000)
-    return `#e09443`
-  if (price >= 1000 && price < 2000)
-    return `#e54d4d`
-  if (price >= 2000)
-    return `#ab1a32`
+  if (price === 0) return `#2a60b2`
+  if (price > 0 && price < 30) return `#2a60b2`
+  if (price >= 30 && price < 50) return `#427d9e`
+  if (price >= 50 && price < 100) return `#c99801`
+  if (price >= 500 && price < 1000) return `#e09443`
+  if (price >= 1000 && price < 2000) return `#e54d4d`
+  if (price >= 2000) return `#ab1a32`
   return ''
 }
 
 // 获取舰长颜色
 function GetGuardColor(price: number | null | undefined): string {
   if (price) {
-    if (price < 138)
-      return ''
-    if (price >= 138 && price < 1598)
-      return 'rgb(104, 136, 241)'
-    if (price >= 1598 && price < 15998)
-      return 'rgb(157, 155, 255)'
-    if (price >= 15998)
-      return 'rgb(122, 4, 35)'
+    if (price < 138) return ''
+    if (price >= 138 && price < 1598) return 'rgb(104, 136, 241)'
+    if (price >= 1598 && price < 15998) return 'rgb(157, 155, 255)'
+    if (price >= 15998) return 'rgb(122, 4, 35)'
   }
   return ''
 }
@@ -339,7 +350,7 @@ function exportData() {
     }
     case 'csv': {
       text = objectsToCSV(
-        selectedEvents.value.map(v => ({
+        selectedEvents.value.map((v) => ({
           type: v.type,
           time: format(v.time, 'yyyy-MM-dd HH:mm:ss'),
           name: v.uname,
@@ -353,10 +364,7 @@ function exportData() {
     }
   }
 
-  saveAs(
-    new Blob([text], { type: 'text/plain;charset=utf-8' }),
-    fileName,
-  )
+  saveAs(new Blob([text], { type: 'text/plain;charset=utf-8' }), fileName)
 }
 
 // 生成导出文件名
@@ -366,8 +374,7 @@ function generateExportFileName() {
 
 // 将对象数组转换为CSV格式
 function objectsToCSV(arr: any[]) {
-  if (arr.length === 0)
-    return ''
+  if (arr.length === 0) return ''
 
   const array = [Object.keys(arr[0])].concat(arr)
   return array
@@ -412,7 +419,11 @@ const guardColumns: DataTableColumns<GuardMemberModel> = [
       tooltip: true,
     },
     render: (row) => {
-      return h('span', { style: { fontWeight: 'bold' } }, GuidUtils.isGuidFromUserId(row.guardOUId) ? GuidUtils.guidToLong(row.guardOUId) : row.guardOUId)
+      return h(
+        'span',
+        { style: { fontWeight: 'bold' } },
+        GuidUtils.isGuidFromUserId(row.guardOUId) ? GuidUtils.guidToLong(row.guardOUId) : row.guardOUId,
+      )
     },
   },
   {
@@ -451,31 +462,25 @@ async function loadGuardList() {
   guardListLoading.value = true
   try {
     const [listResponse, statsResponse] = await Promise.all([
-      QueryGetAPI<GuardMemberModel[]>(
-        `${HISTORY_API_URL}guards-list?activeOnly=true`,
-      ),
+      QueryGetAPI<GuardMemberModel[]>(`${HISTORY_API_URL}guards-list?activeOnly=true`),
       QueryGetAPI<GuardStatsModel>(`${HISTORY_API_URL}guards/stats`),
     ])
 
     if (listResponse.code === 200) {
       guardList.value = listResponse.data
-    }
-    else {
+    } else {
       message.error(`加载舰长列表失败: ${listResponse.message}`)
     }
 
     if (statsResponse.code === 200) {
       guardStats.value = statsResponse.data
-    }
-    else {
+    } else {
       message.error(`加载舰长统计失败: ${statsResponse.message}`)
     }
-  }
-  catch (err) {
+  } catch (err) {
     message.error('加载舰长数据失败')
     console.error(err)
-  }
-  finally {
+  } finally {
     guardListLoading.value = false
   }
 }
@@ -491,7 +496,10 @@ async function onTabChange(value: string) {
 
 <template>
   <div class="event-view">
-    <ManagePageHeader title="舰长和SC" subtitle="事件记录与导出" />
+    <ManagePageHeader
+      title="舰长和SC"
+      subtitle="事件记录与导出"
+    />
 
     <div class="event-alerts">
       <EventFetcherAlert />
@@ -542,12 +550,8 @@ async function onTabChange(value: string) {
                       v-model:value="selectedType"
                       :disabled="isLoading || isLoadingMore"
                     >
-                      <NRadioButton :value="EventDataTypes.Guard">
-                        舰长
-                      </NRadioButton>
-                      <NRadioButton :value="EventDataTypes.SC">
-                        Superchat
-                      </NRadioButton>
+                      <NRadioButton :value="EventDataTypes.Guard"> 舰长 </NRadioButton>
+                      <NRadioButton :value="EventDataTypes.SC"> Superchat </NRadioButton>
                     </NRadioGroup>
                     <NInput
                       v-model:value="userFilterInput"
@@ -588,12 +592,8 @@ async function onTabChange(value: string) {
                           v-model:value="exportType"
                           size="small"
                         >
-                          <NRadioButton value="csv">
-                            CSV
-                          </NRadioButton>
-                          <NRadioButton value="json">
-                            Json
-                          </NRadioButton>
+                          <NRadioButton value="csv"> CSV </NRadioButton>
+                          <NRadioButton value="json"> Json </NRadioButton>
                         </NRadioGroup>
                         <NButton
                           size="small"
@@ -701,7 +701,7 @@ async function onTabChange(value: string) {
                     <NInfiniteScroll
                       :distance="100"
                       :disabled="isLoadingMore || !hasMore || isLoading"
-                      style="height: 600px; padding-right: 10px;"
+                      style="height: 600px; padding-right: 10px"
                       @load="loadMore"
                     >
                       <NGrid
@@ -771,7 +771,10 @@ async function onTabChange(value: string) {
                                   round
                                   :bordered="false"
                                   :color="{
-                                    color: selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                                    color:
+                                      selectedType === EventDataTypes.Guard
+                                        ? GetGuardColor(item.price)
+                                        : GetSCColor(item.price),
                                     textColor: 'white',
                                   }"
                                 >
@@ -795,7 +798,7 @@ async function onTabChange(value: string) {
                               <NEllipsis
                                 v-if="selectedType === EventDataTypes.SC"
                                 :line-clamp="2"
-                                style="font-size: 12px; text-align: center;"
+                                style="font-size: 12px; text-align: center"
                               >
                                 {{ item.msg }}
                               </NEllipsis>
@@ -811,7 +814,7 @@ async function onTabChange(value: string) {
                         <NSpin size="small" />
                         <NText
                           depth="3"
-                          style="margin-left: 5px;"
+                          style="margin-left: 5px"
                         >
                           加载中...
                         </NText>
@@ -820,9 +823,7 @@ async function onTabChange(value: string) {
                         v-if="!hasMore && !isLoading && selectedEvents.length > 0"
                         class="no-more"
                       >
-                        <NText depth="3">
-                          没有更多数据了
-                        </NText>
+                        <NText depth="3"> 没有更多数据了 </NText>
                       </div>
                     </NInfiniteScroll>
                   </div>
@@ -837,16 +838,10 @@ async function onTabChange(value: string) {
                         <th>用户名</th>
                         <th>OUID</th>
                         <th>时间</th>
-                        <th v-if="selectedType === EventDataTypes.Guard">
-                          类型
-                        </th>
+                        <th v-if="selectedType === EventDataTypes.Guard">类型</th>
                         <th>价格</th>
-                        <th v-if="selectedType === EventDataTypes.SC">
-                          内容
-                        </th>
-                        <th v-if="selectedType === EventDataTypes.Guard">
-                          操作
-                        </th>
+                        <th v-if="selectedType === EventDataTypes.SC">内容</th>
+                        <th v-if="selectedType === EventDataTypes.Guard">操作</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -855,7 +850,9 @@ async function onTabChange(value: string) {
                         :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
                       >
                         <td>{{ item.uname }}</td>
-                        <td>{{ GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid }}</td>
+                        <td>
+                          {{ GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid }}
+                        </td>
                         <td>
                           <NTime
                             :time="item.time"
@@ -870,7 +867,10 @@ async function onTabChange(value: string) {
                             size="small"
                             :bordered="false"
                             :color="{
-                              color: selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                              color:
+                                selectedType === EventDataTypes.Guard
+                                  ? GetGuardColor(item.price)
+                                  : GetSCColor(item.price),
                               textColor: 'white',
                             }"
                           >
@@ -911,7 +911,7 @@ async function onTabChange(value: string) {
                     v-else-if="!isLoading && selectedEvents.length === 0"
                     title="无数据"
                     type="info"
-                    style="margin-top: 20px;"
+                    style="margin-top: 20px"
                   >
                     在选定的时间范围和类型内没有找到数据。
                   </NAlert>
@@ -959,7 +959,7 @@ async function onTabChange(value: string) {
                       :value="guardStats.governorCount"
                     >
                       <template #prefix>
-                        <span style="color: #FF6B9D">●</span>
+                        <span style="color: #ff6b9d">●</span>
                       </template>
                     </NStatistic>
                   </NCard>
@@ -974,7 +974,7 @@ async function onTabChange(value: string) {
                       :value="guardStats.admiralCount"
                     >
                       <template #prefix>
-                        <span style="color: #C59AFF">●</span>
+                        <span style="color: #c59aff">●</span>
                       </template>
                     </NStatistic>
                   </NCard>
@@ -989,7 +989,7 @@ async function onTabChange(value: string) {
                       :value="guardStats.captainCount"
                     >
                       <template #prefix>
-                        <span style="color: #00D1FF">●</span>
+                        <span style="color: #00d1ff">●</span>
                       </template>
                     </NStatistic>
                   </NCard>
@@ -1048,7 +1048,7 @@ async function onTabChange(value: string) {
           </NCollapseItem>
           <NCollapseItem title="有没有什么要求?">
             关于环境的话理论上能够运行 Docker 或者 Node.js 的环境都能可以
-            <br><br>
+            <br /><br />
             此外, 你至少需要以下技能之一:
             <NUl>
               <NLi>了解并能够使用 Docker 容器</NLi>
@@ -1079,7 +1079,6 @@ async function onTabChange(value: string) {
     </NCard>
   </div>
 </template>
-
 
 <style scoped>
 .event-view {

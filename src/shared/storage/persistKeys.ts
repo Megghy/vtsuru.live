@@ -104,5 +104,6 @@ export const PERSIST_LEGACY_KEY_MAP = {
   'vtsuru.user-page-builder.columns.order.v1': 'vtsuru:user-page-builder:columns:order:v1',
   'vtsuru.user-page-builder.columns.widths.v1': 'vtsuru:user-page-builder:columns:widths:v1',
   'vtsuru.user-page-builder.merge-props-in-blocks.v1': 'vtsuru:user-page-builder:merge-props-in-blocks:v1',
-  'vtsuru.user-page-builder.split.blocks-merged-top-size.v1': 'vtsuru:user-page-builder:split:blocks-merged-top-size:v1',
+  'vtsuru.user-page-builder.split.blocks-merged-top-size.v1':
+    'vtsuru:user-page-builder:split:blocks-merged-top-size:v1',
 } as const

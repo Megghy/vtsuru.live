@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
-import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { ChevronLeft24Filled, ChevronRight24Filled, CloudAdd20Filled } from '@vicons/fluent'
-import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip } from 'naive-ui';
+import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip } from 'naive-ui'
 import { h, onMounted, onUnmounted, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
-import SongList from '@/components/SongList.vue'
+import type { SongsInfo } from '@/api/api-models'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
+import SongList from '@/components/SongList.vue'
+import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { useBiliAuth } from '@/store/useBiliAuth'
+
 import { getSongRequestTooltip } from './utils/songRequestUtils'
 
 // 所有模板都应该有这些
@@ -35,9 +37,11 @@ function handleNextPage() {
 // 键盘快捷键处理函数
 function handleKeyDown(event: KeyboardEvent) {
   // 忽略在输入框内的按键
-  if (event.target instanceof HTMLInputElement
-    || event.target instanceof HTMLTextAreaElement
-    || event.target instanceof HTMLSelectElement) {
+  if (
+    event.target instanceof HTMLInputElement ||
+    event.target instanceof HTMLTextAreaElement ||
+    event.target instanceof HTMLSelectElement
+  ) {
     return
   }
 
@@ -81,17 +85,20 @@ function buttons(song: SongsInfo) {
                   onClick: () => {
                     isLoading.value = song.key
                     emits('requestSong', song)
-                    window.setTimeout(() => { isLoading.value = '' }, 2000)
+                    window.setTimeout(() => {
+                      isLoading.value = ''
+                    }, 2000)
                   },
                 },
                 {
                   icon: () => h(NIcon, { component: CloudAdd20Filled }),
                 },
               ),
-            default: () => getSongRequestTooltip(song, props.liveRequestSettings, {
-              isLoggedIn: !!accountInfo.value.id,
-              isBiliAuthed: biliAuth.isAuthed,
-            }),
+            default: () =>
+              getSongRequestTooltip(song, props.liveRequestSettings, {
+                isLoggedIn: !!accountInfo.value.id,
+                isBiliAuthed: biliAuth.isAuthed,
+              }),
           },
         )
       : undefined,

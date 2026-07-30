@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+
+import { useQueueObsView } from '@/apps/obs/components/queue/useQueueObsView'
 import ObsClassicPanel from '@/apps/obs/components/shared/ObsClassicPanel.vue'
 import ObsFreshPanel from '@/apps/obs/components/shared/ObsFreshPanel.vue'
 import ObsMinimalPanel from '@/apps/obs/components/shared/ObsMinimalPanel.vue'
-import { useQueueObsView } from '@/apps/obs/components/queue/useQueueObsView'
 import { useOBSNotification } from '@/store/useOBSNotification'
 
 const props = defineProps<{
@@ -46,14 +47,7 @@ const panelComponent = computed(() => {
   }
 })
 
-const {
-  title,
-  countText,
-  current,
-  items,
-  footerTags,
-  update,
-} = useQueueObsView(currentId.value)
+const { title, countText, current, items, footerTags, update } = useQueueObsView(currentId.value)
 
 const obsNotification = useOBSNotification()
 

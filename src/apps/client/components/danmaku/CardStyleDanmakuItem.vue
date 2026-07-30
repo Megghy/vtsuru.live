@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { Box24Regular, VehicleShip24Filled } from '@vicons/fluent'
+
 import { EventDataTypes } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
+
 import { useDanmakuWindow } from '../../store/useDanmakuWindow'
+import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { useDanmakuUtils } from './danmakuUtils'
 
 // 继承基础属性
@@ -14,16 +16,8 @@ const emojiData = useDanmakuWindow().emojiData
 const danmakuUtils = useDanmakuUtils(props, emojiData)
 
 // 直接从工具函数获取计算属性，不再需要getBaseProp方法
-const {
-  typeClass,
-  guardLevelClass,
-  showAvatar,
-  guardColor,
-  scColorClass,
-  parsedMessage,
-  medalColor,
-  giftDisplay,
-} = danmakuUtils
+const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsedMessage, medalColor, giftDisplay } =
+  danmakuUtils
 </script>
 
 <template>
@@ -42,7 +36,7 @@ const {
           alt="avatar"
           class="avatar"
           referrerpolicy="no-referrer"
-        >
+        />
         <span
           class="username"
           :style="{ color: item.type === EventDataTypes.SC ? '#222' : '#fff' }"
@@ -101,7 +95,8 @@ const {
             <span
               v-if="giftDisplay.giftPriceText"
               class="gift-price"
-            >￥{{ giftDisplay.giftPriceText }}</span>
+              >￥{{ giftDisplay.giftPriceText }}</span
+            >
           </span>
         </template>
         <template v-else-if="item.type === EventDataTypes.Guard">
@@ -113,7 +108,8 @@ const {
             <span
               v-if="item?.num && item?.num > 1"
               class="guard-num"
-            >x{{ item?.num }}</span>
+              >x{{ item?.num }}</span
+            >
           </span>
         </template>
       </div>
@@ -136,7 +132,7 @@ const {
           alt="avatar"
           class="avatar"
           referrerpolicy="no-referrer"
-        >
+        />
         <span
           class="username"
           :style="{ color: '#fff' }"
@@ -163,7 +159,8 @@ const {
           <span
             class="medal-level"
             :style="{ backgroundColor: `${medalColor}CC` }"
-          >{{ item.fans_medal_level }}</span>
+            >{{ item.fans_medal_level }}</span
+          >
         </span>
         <template v-if="item.type === EventDataTypes.Enter">
           <span class="enter-badge">进入了直播间</span>
@@ -191,7 +188,7 @@ const {
               :alt="segment.name"
               class="inline-emoji"
               referrerpolicy="no-referrer"
-            >
+            />
           </template>
         </span>
         <span
@@ -203,12 +200,13 @@ const {
             alt="emoji"
             class="emoji-image"
             referrerpolicy="no-referrer"
-          >
+          />
         </span>
         <span
           v-else
           class="message-text"
-        >{{ item?.msg }}</span>
+          >{{ item?.msg }}</span
+        >
       </div>
     </div>
   </template>
@@ -216,325 +214,325 @@ const {
 
 <style scoped>
 /* 头像 */
-  .avatar {
-    flex-shrink: 0;
-    border-radius: 50%;
-    margin-right: 6px;
-    width: var(--dw-avatar-size);
-    height: var(--dw-avatar-size);
-    object-fit: cover;
-    vertical-align: middle;
-  }
+.avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  margin-right: 6px;
+  width: var(--dw-avatar-size);
+  height: var(--dw-avatar-size);
+  object-fit: cover;
+  vertical-align: middle;
+}
 
-  /* 用户名 */
-  .username {
-    font-weight: bold;
-    margin-right: 6px;
-    word-break: keep-all;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
-    flex-shrink: 0;
-    vertical-align: middle;
-  }
+/* 用户名 */
+.username {
+  font-weight: bold;
+  margin-right: 6px;
+  word-break: keep-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
 
-  /* 内联表情 */
-  .inline-emoji {
-    vertical-align: middle;
-    height: calc(var(--dw-font-size) * 1.4);
-    margin: 0 1px;
-  }
+/* 内联表情 */
+.inline-emoji {
+  vertical-align: middle;
+  height: calc(var(--dw-font-size) * 1.4);
+  margin: 0 1px;
+}
 
-  /* 纯表情消息 */
-  .emoji-image {
-    vertical-align: middle;
-    height: var(--dw-emoji-size, 32px);
-  }
+/* 纯表情消息 */
+.emoji-image {
+  vertical-align: middle;
+  height: var(--dw-emoji-size, 32px);
+}
 
-  /* --- 卡片样式 --- */
-  .danmaku-card {
-    border-radius: var(--dw-border-radius, 8px);
-    padding: 6px 10px;
-    margin: 2px 0;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    border-left: 3px solid transparent;
-    background-color: rgba(0, 0, 0, calc(0.6 * var(--dw-opacity, 1)));
-    transition: background-color 0.2s;
-    box-sizing: border-box; /* 确保padding不会增加元素的实际尺寸 */
-  }
+/* --- 卡片样式 --- */
+.danmaku-card {
+  border-radius: var(--dw-border-radius, 8px);
+  padding: 6px 10px;
+  margin: 2px 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-left: 3px solid transparent;
+  background-color: rgba(0, 0, 0, calc(0.6 * var(--dw-opacity, 1)));
+  transition: background-color 0.2s;
+  box-sizing: border-box; /* 确保padding不会增加元素的实际尺寸 */
+}
 
-  /* SC 卡片 */
-  .sc-item .danmaku-card {
-    border-left-color: #E6A23C;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 243, 224, calc(0.85 * var(--dw-opacity, 1))) 0%,
-      rgba(255, 224, 178, calc(0.85 * var(--dw-opacity, 1))) 100%
-    );
-  }
+/* SC 卡片 */
+.sc-item .danmaku-card {
+  border-left-color: #e6a23c;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 243, 224, calc(0.85 * var(--dw-opacity, 1))) 0%,
+    rgba(255, 224, 178, calc(0.85 * var(--dw-opacity, 1))) 100%
+  );
+}
 
-  .sc-item .username {
-    color: #A0522D;
-  }
+.sc-item .username {
+  color: #a0522d;
+}
 
-  .sc-item .card-content {
-    color: #A0522D;
-  }
+.sc-item .card-content {
+  color: #a0522d;
+}
 
-  /* 礼物 卡片 */
-  .gift-item .danmaku-card {
-    border-left-color: #F56C6C;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 234, 234, calc(0.85 * var(--dw-opacity, 1))) 0%,
-      rgba(255, 240, 240, calc(0.85 * var(--dw-opacity, 1))) 100%
-    );
-    /* 礼物卡片垂直居中 */
-    justify-content: center;
-    min-height: 40px;
-  }
+/* 礼物 卡片 */
+.gift-item .danmaku-card {
+  border-left-color: #f56c6c;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 234, 234, calc(0.85 * var(--dw-opacity, 1))) 0%,
+    rgba(255, 240, 240, calc(0.85 * var(--dw-opacity, 1))) 100%
+  );
+  /* 礼物卡片垂直居中 */
+  justify-content: center;
+  min-height: 40px;
+}
 
-  .gift-item .username {
-    color: #C04848;
-  }
+.gift-item .username {
+  color: #c04848;
+}
 
-  /* 上舰 卡片 */
-  .guard-item .danmaku-card {
-    border-left-color: var(--guard-color, #673AB7);
-    background: linear-gradient(
-      90deg,
-      rgba(243, 234, 255, calc(0.85 * var(--dw-opacity, 1))) 0%,
-      rgba(237, 231, 246, calc(0.85 * var(--dw-opacity, 1))) 100%
-    );
-  }
+/* 上舰 卡片 */
+.guard-item .danmaku-card {
+  border-left-color: var(--guard-color, #673ab7);
+  background: linear-gradient(
+    90deg,
+    rgba(243, 234, 255, calc(0.85 * var(--dw-opacity, 1))) 0%,
+    rgba(237, 231, 246, calc(0.85 * var(--dw-opacity, 1))) 100%
+  );
+}
 
-  .guard-item .username {
-    color: var(--guard-color, #673AB7);
-  }
+.guard-item .username {
+  color: var(--guard-color, #673ab7);
+}
 
-  .card-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 4px;
-    min-height: var(--dw-avatar-size);
-  }
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  min-height: var(--dw-avatar-size);
+}
 
-  /* 礼物卡片头部特殊处理 */
-  .gift-item .card-header {
-    margin-bottom: 0;
-  }
+/* 礼物卡片头部特殊处理 */
+.gift-item .card-header {
+  margin-bottom: 0;
+}
 
-  .card-content {
-    font-size: 0.95em;
-    word-break: break-word;
-    margin-left: calc(var(--dw-avatar-size) + 6px);
-    line-height: 1.4;
-  }
+.card-content {
+  font-size: 0.95em;
+  word-break: break-word;
+  margin-left: calc(var(--dw-avatar-size) + 6px);
+  line-height: 1.4;
+}
 
-  /* SC 徽章 */
-  .sc-badge {
-    font-weight: bold;
-    font-size: 0.85em;
-    border-radius: 4px;
-    padding: 1px 6px;
-    color: #fff;
-    margin-left: auto;
-    background: #E6A23C;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    white-space: nowrap;
-  }
+/* SC 徽章 */
+.sc-badge {
+  font-weight: bold;
+  font-size: 0.85em;
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: #fff;
+  margin-left: auto;
+  background: #e6a23c;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
 
-  /* SC 不同价格颜色 */
-  .sc-50 {
-    background: #E6A23C;
-  }
+/* SC 不同价格颜色 */
+.sc-50 {
+  background: #e6a23c;
+}
 
-  .sc-100 {
-    background: #F56C6C;
-  }
+.sc-100 {
+  background: #f56c6c;
+}
 
-  .sc-500 {
-    background: #f56c6c;
-  }
+.sc-500 {
+  background: #f56c6c;
+}
 
-  .sc-1000 {
-    background: #d32f2f;
-  }
+.sc-1000 {
+  background: #d32f2f;
+}
 
-  .sc-2000 {
-    background: #7b1fa2;
-  }
+.sc-2000 {
+  background: #7b1fa2;
+}
 
-  .sc-max {
-    background: #212121;
-  }
+.sc-max {
+  background: #212121;
+}
 
-  /* 礼物 徽章 */
-  .gift-badge {
-    background: #6aa8a3;
-    color: #fff;
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-weight: bold;
-    font-size: 0.85em;
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-  }
-  .gift-badge[isPay="true"] {
-    background: #F56C6C;
-  }
+/* 礼物 徽章 */
+.gift-badge {
+  background: #6aa8a3;
+  color: #fff;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: bold;
+  font-size: 0.85em;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.gift-badge[isPay='true'] {
+  background: #f56c6c;
+}
 
-  .gift-price {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-    padding: 0 4px;
-    font-size: 0.9em;
-    margin-left: 4px;
-  }
+.gift-price {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
 
-  .gift-box-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-right: 6px;
-    padding: 1px 6px;
-    border-radius: 999px;
-    background: rgba(192, 120, 16, 0.14);
-    color: #8a5a00;
-    font-size: 0.78em;
-    font-weight: 700;
-    cursor: help;
-    white-space: nowrap;
-  }
+.gift-box-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(192, 120, 16, 0.14);
+  color: #8a5a00;
+  font-size: 0.78em;
+  font-weight: 700;
+  cursor: help;
+  white-space: nowrap;
+}
 
-  .gift-box-tooltip {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 160px;
-  }
+.gift-box-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
 
-  .gift-box-tooltip__row {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-  }
+.gift-box-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
 
-  .gift-box-tooltip__label {
-    color: var(--vtsuru-fg-muted);
-  }
+.gift-box-tooltip__label {
+  color: var(--vtsuru-fg-muted);
+}
 
-  .gift-box-tooltip__value {
-    text-align: right;
-    font-weight: 600;
-    word-break: break-all;
-  }
+.gift-box-tooltip__value {
+  text-align: right;
+  font-weight: 600;
+  word-break: break-all;
+}
 
-  /* 上舰 徽章 */
-  .guard-badge {
-    color: #fff;
-    font-weight: bold;
-    border-radius: 4px;
-    padding: 1px 6px;
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.85em;
-    white-space: nowrap;
-  }
+/* 上舰 徽章 */
+.guard-badge {
+  color: #fff;
+  font-weight: bold;
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
 
-  .guard-num {
-    font-size: 0.9em;
-    opacity: 0.8;
-    margin-left: 2px;
-  }
+.guard-num {
+  font-size: 0.9em;
+  opacity: 0.8;
+  margin-left: 2px;
+}
 
-  /* --- 极简单行弹幕 --- */
-  .danmaku-simple-row {
-    display: none;
-  }
+/* --- 极简单行弹幕 --- */
+.danmaku-simple-row {
+  display: none;
+}
 
-  /* --- 普通消息卡片样式 --- */
-  .message-card {
-    border-left-color: #409EFF;
-    background: linear-gradient(
-      90deg,
-      rgba(40, 40, 40, calc(0.85 * var(--dw-opacity, 1))) 0%,
-      rgba(30, 30, 30, calc(0.85 * var(--dw-opacity, 1))) 100%
-    );
-  }
+/* --- 普通消息卡片样式 --- */
+.message-card {
+  border-left-color: #409eff;
+  background: linear-gradient(
+    90deg,
+    rgba(40, 40, 40, calc(0.85 * var(--dw-opacity, 1))) 0%,
+    rgba(30, 30, 30, calc(0.85 * var(--dw-opacity, 1))) 100%
+  );
+}
 
-  .guard-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    margin-left: 4px;
-    flex-shrink: 0;
-  }
+.guard-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
 
-  /* 粉丝勋章样式 */
-  .fans-medal {
-    display: flex;
-    align-items: center;
-    border-radius: 4px;
-    margin-left: 4px;
-    font-size: 0.75em;
-    height: 16px;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
+/* 粉丝勋章样式 */
+.fans-medal {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  margin-left: 4px;
+  font-size: 0.75em;
+  height: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
 
-  .medal-name {
-    padding: 0 3px;
-    color: #fff;
-    max-width: 40px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    background-color: rgba(255, 255, 255, 0.2);
-  }
+.medal-name {
+  padding: 0 3px;
+  color: #fff;
+  max-width: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-color: rgba(255, 255, 255, 0.2);
+}
 
-  .medal-level {
-    padding: 0 3px;
-    color: #fff;
-    font-weight: bold;
-  }
+.medal-level {
+  padding: 0 3px;
+  color: #fff;
+  font-weight: bold;
+}
 
-  .enter-badge {
-    color: #67C23A;
-    font-size: 0.85em;
-    font-weight: 500;
-    padding: 1px 6px;
-    background-color: rgba(103, 194, 58, 0.1);
-    border-radius: 4px;
-    margin-left: auto;
-    white-space: nowrap;
-  }
+.enter-badge {
+  color: #67c23a;
+  font-size: 0.85em;
+  font-weight: 500;
+  padding: 1px 6px;
+  background-color: rgba(103, 194, 58, 0.1);
+  border-radius: 4px;
+  margin-left: auto;
+  white-space: nowrap;
+}
 
-  .message-text {
-    color: var(--dw-text-color);
-    word-break: break-all;
-    white-space: normal;
-  }
+.message-text {
+  color: var(--dw-text-color);
+  word-break: break-all;
+  white-space: normal;
+}
 
-  .like-badge {
-    color: #F56C6C;
-    font-size: 0.85em;
-    font-weight: 500;
-    padding: 1px 6px;
-    background-color: rgba(245, 108, 108, 0.1);
-    border-radius: 4px;
-    margin-left: auto;
-    white-space: nowrap;
-  }
+.like-badge {
+  color: #f56c6c;
+  font-size: 0.85em;
+  font-weight: 500;
+  padding: 1px 6px;
+  background-color: rgba(245, 108, 108, 0.1);
+  border-radius: 4px;
+  margin-left: auto;
+  white-space: nowrap;
+}
 </style>

@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import {
-  ArrowUp20Filled, Copy20Filled, Delete20Filled, Play20Filled, ReOrder24Filled,
-} from '@vicons/fluent'
-import {
-  NButton, NDropdown, NIcon, NTag, NText, NTooltip,
-} from 'naive-ui'
-import { computed, h  } from 'vue'
+import { ArrowUp20Filled, Copy20Filled, Delete20Filled, Play20Filled, ReOrder24Filled } from '@vicons/fluent'
 import { useTimeAgo } from '@vueuse/core'
+import { NButton, NDropdown, NIcon, NTag, NText, NTooltip } from 'naive-ui'
+import { computed, h } from 'vue'
+
 import { EventDataTypes } from '@/api/api-models'
 import { copyToClipboard } from '@/shared/utils'
 import { useSpeechService } from '@/store/useSpeechService'
 import type { QueueItem } from '@/store/useSpeechService'
-
 
 const props = defineProps<{
   item: QueueItem
@@ -24,12 +20,18 @@ const { settings } = speechService
 
 const tag = computed(() => {
   switch (props.item.data.type) {
-    case EventDataTypes.Message: return { text: '弹幕', type: 'info' as const }
-    case EventDataTypes.Gift: return { text: '礼物', type: 'success' as const }
-    case EventDataTypes.Guard: return { text: '舰长', type: 'warning' as const }
-    case EventDataTypes.SC: return { text: 'SC', type: 'error' as const }
-    case EventDataTypes.Enter: return { text: '进入', type: 'default' as const }
-    default: return { text: '未知', type: 'default' as const }
+    case EventDataTypes.Message:
+      return { text: '弹幕', type: 'info' as const }
+    case EventDataTypes.Gift:
+      return { text: '礼物', type: 'success' as const }
+    case EventDataTypes.Guard:
+      return { text: '舰长', type: 'warning' as const }
+    case EventDataTypes.SC:
+      return { text: 'SC', type: 'error' as const }
+    case EventDataTypes.Enter:
+      return { text: '进入', type: 'default' as const }
+    default:
+      return { text: '未知', type: 'default' as const }
   }
 })
 
@@ -37,15 +39,15 @@ const timeAgo = useTimeAgo(() => props.item.data.time, {
   showSecond: true,
   messages: {
     justNow: '刚刚',
-    past: n => n.match(/\d/) ? `${n} 前` : n,
-    future: n => n.match(/\d/) ? `${n} 后` : n,
-    month: (n, p) => p ? '上个月' : `${n} 个月`,
-    year: (n, p) => p ? '去年' : `${n} 年`,
-    day: (n, p) => p ? '昨天' : `${n} 天`,
-    week: (n, p) => p ? '上周' : `${n} 周`,
-    hour: n => `${n} 小时`,
-    minute: n => `${n} 分钟`,
-    second: n => `${n} 秒`,
+    past: (n) => (n.match(/\d/) ? `${n} 前` : n),
+    future: (n) => (n.match(/\d/) ? `${n} 后` : n),
+    month: (n, p) => (p ? '上个月' : `${n} 个月`),
+    year: (n, p) => (p ? '去年' : `${n} 年`),
+    day: (n, p) => (p ? '昨天' : `${n} 天`),
+    week: (n, p) => (p ? '上周' : `${n} 周`),
+    hour: (n) => `${n} 小时`,
+    minute: (n) => `${n} 分钟`,
+    second: (n) => `${n} 秒`,
     invalid: '',
   },
 })
@@ -90,30 +92,52 @@ function handleSelect(key: string) {
     :options="dropdownOptions"
     @select="handleSelect"
   >
-    <div class="queue-item" :draggable="true" @dragstart="$emit('dragstart', index)">
-      <div class="drag-handle" @click.stop>
-        <NIcon :component="ReOrder24Filled" :size="14" />
+    <div
+      class="queue-item"
+      :draggable="true"
+      @dragstart="$emit('dragstart', index)"
+    >
+      <div
+        class="drag-handle"
+        @click.stop
+      >
+        <NIcon
+          :component="ReOrder24Filled"
+          :size="14"
+        />
       </div>
 
-      <NTag :type="tag.type" size="small" :bordered="false" class="type-tag">
+      <NTag
+        :type="tag.type"
+        size="small"
+        :bordered="false"
+        class="type-tag"
+      >
         {{ tag.text }}
       </NTag>
 
       <span class="uname">{{ item.data.uname }}</span>
 
-      <NText depth="3" class="content">
+      <NText
+        depth="3"
+        class="content"
+      >
         {{ speechText }}
       </NText>
 
       <NTag
         v-if="item.data.type === EventDataTypes.Gift && item.combineCount"
-        type="info" size="tiny" :bordered="false"
+        type="info"
+        size="tiny"
+        :bordered="false"
       >
         ×{{ item.combineCount }}
       </NTag>
       <NTag
         v-else-if="item.data.type === EventDataTypes.Gift && settings.combineGiftDelay"
-        type="success" size="tiny" :bordered="false"
+        type="success"
+        size="tiny"
+        :bordered="false"
       >
         合并中
       </NTag>
@@ -125,13 +149,26 @@ function handleSelect(key: string) {
         {{ absoluteTime }}
       </NTooltip>
 
-      <div class="actions" @click.stop>
-        <NButton size="tiny" tertiary circle @click="speechService.forceSpeak(item.data)">
+      <div
+        class="actions"
+        @click.stop
+      >
+        <NButton
+          size="tiny"
+          tertiary
+          circle
+          @click="speechService.forceSpeak(item.data)"
+        >
           <template #icon>
             <NIcon :component="Play20Filled" />
           </template>
         </NButton>
-        <NButton size="tiny" tertiary circle @click="speechService.removeFromQueue(item)">
+        <NButton
+          size="tiny"
+          tertiary
+          circle
+          @click="speechService.removeFromQueue(item)"
+        >
           <template #icon>
             <NIcon :component="Delete20Filled" />
           </template>
@@ -153,7 +190,9 @@ function handleSelect(key: string) {
   font-size: 12px;
   cursor: grab;
   user-select: none;
-  transition: border-color 120ms ease, background 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
 }
 .queue-item:hover {
   border-color: var(--vtsuru-primary);

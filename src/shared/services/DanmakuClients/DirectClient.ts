@@ -1,8 +1,10 @@
-import { EventDataTypes, GuardLevel } from '@/api/api-models'
-import { GuidUtils } from '@/shared/utils'
-import { AVATAR_URL } from '@/shared/config'
-import BaseDanmakuClient, { DanmakuKeepLiveWS } from './BaseDanmakuClient'
 import Long from 'long'
+
+import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { AVATAR_URL } from '@/shared/config'
+import { GuidUtils } from '@/shared/utils'
+
+import BaseDanmakuClient, { DanmakuKeepLiveWS } from './BaseDanmakuClient'
 
 export interface DirectClientAuthInfo {
   token: string
@@ -26,7 +28,7 @@ export default class DirectClient extends BaseDanmakuClient {
 
   public readonly authInfo: DirectClientAuthInfo
 
-  protected async initClient(signal: AbortSignal): Promise<{ success: boolean, message: string }> {
+  protected async initClient(signal: AbortSignal): Promise<{ success: boolean; message: string }> {
     if (this.authInfo) {
       const chatClient = new DanmakuKeepLiveWS(this.authInfo.roomId, {
         key: this.authInfo.token,
@@ -201,7 +203,9 @@ export default class DirectClient extends BaseDanmakuClient {
             fans_medal_level: this.convertToNumber(data?.fansMedal?.medalLevel) || 0,
             fans_medal_name: data?.fansMedal?.medalName || '',
             fans_medal_wearing_status: data?.fansMedal?.isLighted === 1,
-            uface: data?.uinfo?.uheadFrame?.frameImg?.replace('http://', 'https://') || (AVATAR_URL + this.convertToNumber(data?.uid)),
+            uface:
+              data?.uinfo?.uheadFrame?.frameImg?.replace('http://', 'https://') ||
+              AVATAR_URL + this.convertToNumber(data?.uid),
             open_id: '',
             ouid: GuidUtils.numToGuid(this.convertToNumber(data?.uid)),
           },
@@ -226,7 +230,9 @@ export default class DirectClient extends BaseDanmakuClient {
             fans_medal_level: this.convertToNumber(data?.fansMedal?.medalLevel) || 0,
             fans_medal_name: data?.fansMedal?.medalName || '',
             fans_medal_wearing_status: data?.fansMedal?.isLighted === 1,
-            uface: data?.uinfo?.uheadFrame?.frameImg?.replace('http://', 'https://') || `${AVATAR_URL}${this.convertToNumber(data?.uid)}`,
+            uface:
+              data?.uinfo?.uheadFrame?.frameImg?.replace('http://', 'https://') ||
+              `${AVATAR_URL}${this.convertToNumber(data?.uid)}`,
             open_id: '',
             ouid: GuidUtils.numToGuid(this.convertToNumber(data?.uid)),
           },

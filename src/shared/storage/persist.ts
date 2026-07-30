@@ -2,6 +2,7 @@ import type { RemovableRef, StorageLikeAsync, UseStorageAsyncOptions } from '@vu
 import { useStorageAsync } from '@vueuse/core'
 import { createStore, del, get, set } from 'idb-keyval'
 import { computed, ref, toValue, watch, type Ref } from 'vue'
+
 import { PERSIST_LEGACY_KEY_MAP } from '@/shared/storage/persistKeys'
 
 type PersistBackend = 'idb' | 'local'
@@ -174,12 +175,7 @@ export function usePersistedStorage<T>(
     stopFromStorage = null
     stopToStorage = null
 
-    const storageRef = useStorageAsync<T>(
-      nextCanonicalKey,
-      initialValue,
-      persistedAsyncStorage,
-      options,
-    ) as any
+    const storageRef = useStorageAsync<T>(nextCanonicalKey, initialValue, persistedAsyncStorage, options) as any
 
     active = storageRef
 
@@ -204,9 +200,13 @@ export function usePersistedStorage<T>(
     )
   }
 
-  watch(canonicalKey, (k) => {
-    bind(k)
-  }, { immediate: true })
+  watch(
+    canonicalKey,
+    (k) => {
+      bind(k)
+    },
+    { immediate: true },
+  )
 
   ;(state as any).remove = () => {
     const storageRef = active

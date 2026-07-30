@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
+
 import LiveCoverUpload from './LiveCoverUpload.vue'
 
 const props = defineProps<{ control: LiveControl }>()
@@ -24,24 +25,16 @@ const obsStore = c.obsStore
           :size="12"
           align="center"
           wrap
-          style="margin-bottom: 16px;"
+          style="margin-bottom: 16px"
         >
           <NTag
             :type="c.isLiving.value ? 'success' : 'default'"
             size="large"
             :bordered="false"
-            style="padding: 8px 16px;"
+            style="padding: 8px 16px"
           >
             <template #icon>
-              <div
-                style="
-                  width: 8px;
-                  height: 8px;
-                  border-radius: 50%;
-                  background: currentColor;
-                  margin-right: 8px;
-                "
-              />
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 8px" />
             </template>
             {{ c.isLiving.value ? '直播中' : '未开播' }}
           </NTag>
@@ -115,13 +108,13 @@ const obsStore = c.obsStore
         </NFlex>
       </div>
 
-      <NDivider style="margin: 0;" />
+      <NDivider style="margin: 0" />
 
       <!-- 直播间设置 -->
       <div>
         <NText
           strong
-          style="font-size: 16px; display: block; margin-bottom: 12px;"
+          style="font-size: 16px; display: block; margin-bottom: 12px"
         >
           直播间设置
         </NText>
@@ -130,9 +123,7 @@ const obsStore = c.obsStore
           :size="12"
         >
           <div>
-            <NText strong>
-              直播间标题
-            </NText>
+            <NText strong> 直播间标题 </NText>
             <NInput
               v-model:value="c.liveTitle.value"
               :status="c.titleChanged.value ? 'warning' : undefined"
@@ -140,15 +131,13 @@ const obsStore = c.obsStore
               maxlength="40"
               show-count
               size="large"
-              style="margin-top: 8px;"
+              style="margin-top: 8px"
               @update:value="c.markTitleEdited"
             />
           </div>
 
           <div>
-            <NText strong>
-              直播分区
-            </NText>
+            <NText strong> 直播分区 </NText>
             <NCascader
               v-model:value="c.liveAreaId.value"
               :status="c.areaChanged.value ? 'warning' : undefined"
@@ -157,20 +146,18 @@ const obsStore = c.obsStore
               filterable
               check-strategy="child"
               size="large"
-              style="margin-top: 8px;"
+              style="margin-top: 8px"
               @update:value="c.markAreaEdited"
             />
           </div>
         </NFlex>
       </div>
 
-      <NDivider style="margin: 0;" />
+      <NDivider style="margin: 0" />
 
       <!-- 直播间公告 -->
       <div>
-        <NText strong>
-          直播间公告
-        </NText>
+        <NText strong> 直播间公告 </NText>
         <NInput
           v-model:value="c.roomAnnouncement.value"
           type="textarea"
@@ -178,11 +165,11 @@ const obsStore = c.obsStore
           maxlength="60"
           show-count
           size="large"
-          style="margin-top: 8px;"
+          style="margin-top: 8px"
           :autosize="{ minRows: 2, maxRows: 4 }"
         />
         <NButton
-          style="margin-top: 8px;"
+          style="margin-top: 8px"
           type="primary"
           :loading="c.isUpdatingAnnouncement.value"
           @click="c.handleUpdateAnnouncement"
@@ -191,7 +178,7 @@ const obsStore = c.obsStore
         </NButton>
       </div>
 
-      <NDivider style="margin: 0;" />
+      <NDivider style="margin: 0" />
 
       <LiveCoverUpload :control="c" />
     </NFlex>

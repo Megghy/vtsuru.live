@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui';
+import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const propsObj = computed<Record<string, any>>(() => {
   if (!props.blockProps || typeof props.blockProps !== 'object' || Array.isArray(props.blockProps)) return {}
@@ -50,7 +51,8 @@ const backgrounded = computed(() => {
 
 const buttonType = computed(() => {
   const v = propsObj.value.type
-  if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default') return v
+  if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default')
+    return v
   return 'primary'
 })
 
@@ -100,8 +102,15 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
 </script>
 
 <template>
-  <BlockCard :framed="framed" :backgrounded="backgrounded">
-    <NFlex :justify="justify" align="center" style="width: 100%">
+  <BlockCard
+    :framed="framed"
+    :backgrounded="backgrounded"
+  >
+    <NFlex
+      :justify="justify"
+      align="center"
+      style="width: 100%"
+    >
       <NButton
         v-if="isBack || internalTarget"
         :type="buttonType as any"
@@ -147,7 +156,11 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vtsuru-btn { transition: none; }
-  .vtsuru-btn:active { transform: none; }
+  .vtsuru-btn {
+    transition: none;
+  }
+  .vtsuru-btn:active {
+    transform: none;
+  }
 }
 </style>

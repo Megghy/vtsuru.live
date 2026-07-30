@@ -1,12 +1,33 @@
 <script setup lang="ts">
-import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { Code24Regular, Info24Filled, LiveOff24Regular, AppsListDetail24Regular } from '@vicons/fluent'
-import { NAlert, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NHighlight, NIcon, NInput, NModal, NScrollbar, NTabPane, NTabs, NText, useMessage, NGrid, NGi } from 'naive-ui';
-import { computed, ref, nextTick, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NCollapse,
+  NCollapseItem,
+  NDivider,
+  NFlex,
+  NHighlight,
+  NIcon,
+  NInput,
+  NModal,
+  NScrollbar,
+  NTabPane,
+  NTabs,
+  NText,
+  useMessage,
+  NGrid,
+  NGi,
+} from 'naive-ui'
+import { computed, ref, nextTick, watch } from 'vue'
+
 import { EventDataTypes } from '@/api/api-models'
 import { evaluateTemplateExpressions, extractJsExpressions } from '@/apps/client/store/autoAction/expressionEvaluator'
+import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { buildExecutionContext } from '@/apps/client/store/autoAction/utils'
+
 import { getMergedPlaceholders } from './placeholders'
 import TemplateHelper from './TemplateHelper.vue'
 
@@ -33,12 +54,12 @@ const props = defineProps({
   },
   templateIndex: {
     type: Number,
-    default: 0
-  }
+    default: 0,
+  },
 })
 
 const emit = defineEmits<{
-  (e: 'update:template', payload: { index: number, value: string }): void
+  (e: 'update:template', payload: { index: number; value: string }): void
 }>()
 
 const mergedPlaceholders = computed(() => getMergedPlaceholders(props.template.triggerType))
@@ -51,7 +72,12 @@ function deepMerge(target: any, source: any): any {
   const result = { ...target }
 
   Object.keys(source).forEach((key) => {
-    if (typeof source[key] === 'object' && source[key] !== null && typeof target[key] === 'object' && target[key] !== null) {
+    if (
+      typeof source[key] === 'object' &&
+      source[key] !== null &&
+      typeof target[key] === 'object' &&
+      target[key] !== null
+    ) {
       result[key] = deepMerge(target[key], source[key])
     } else if (source[key] !== undefined) {
       result[key] = source[key]
@@ -63,24 +89,28 @@ function deepMerge(target: any, source: any): any {
 
 const testContext = computed(() => {
   // 创建默认上下文
-  const defaultContext = buildExecutionContext({
-    msg: '测试',
-    time: 1713542400,
-    num: 1,
-    price: 100,
-    guard_level: 1,
-    uname: '测试用户',
-    uface: 'https://example.com/test.jpg',
-    uid: 12345,
-    ouid: '1234567890',
-    type: EventDataTypes.Message,
-    open_id: '1234567890',
-    fans_medal_level: 1,
-    fans_medal_name: '测试粉丝勋章',
-    fans_medal_wearing_status: true,
-    guard_level_name: '测试舰队',
-    guard_level_price: 100,
-  }, undefined, props.template.triggerType)
+  const defaultContext = buildExecutionContext(
+    {
+      msg: '测试',
+      time: 1713542400,
+      num: 1,
+      price: 100,
+      guard_level: 1,
+      uname: '测试用户',
+      uface: 'https://example.com/test.jpg',
+      uid: 12345,
+      ouid: '1234567890',
+      type: EventDataTypes.Message,
+      open_id: '1234567890',
+      fans_medal_level: 1,
+      fans_medal_name: '测试粉丝勋章',
+      fans_medal_wearing_status: true,
+      guard_level_name: '测试舰队',
+      guard_level_price: 100,
+    },
+    undefined,
+    props.template.triggerType,
+  )
 
   // 如果有自定义上下文，将其与默认上下文合并
   if (props.customTestContext) {
@@ -102,7 +132,7 @@ function countGraphemes(value: string) {
 }
 
 const highlightPatterns = computed(() => {
-  const simplePlaceholders = mergedPlaceholders.value.map(p => p.name)
+  const simplePlaceholders = mergedPlaceholders.value.map((p) => p.name)
   const jsExpressionsInTemplate = extractJsExpressions(props.template.template || '')
   const allPatterns = [...new Set([...simplePlaceholders, ...jsExpressionsInTemplate])]
   return allPatterns
@@ -186,26 +216,33 @@ const templateExamples = [
       { label: '日期时间', template: '{{js: new Date().toLocaleTimeString()}}，{{timeOfDay}}好！' },
       {
         label: '运行时计数',
-        template: '{{js+: const count = (getData(\'messageCount\') || 0) + 1; setData(\'messageCount\', count); return \'这是你本次对话的第 \' + count + \' 条消息。\'; }}',
+        template:
+          "{{js+: const count = (getData('messageCount') || 0) + 1; setData('messageCount', count); return '这是你本次对话的第 ' + count + ' 条消息。'; }}",
       },
       {
         label: '运行时频率检查',
-        template: '{{js+: const warns = (getData(\'warnings\') || 0) + 1; setData(\'warnings\', warns); return warns > 3 ? "发言太频繁啦！" : "收到你的消息~"; }}',
+        template:
+          '{{js+: const warns = (getData(\'warnings\') || 0) + 1; setData(\'warnings\', warns); return warns > 3 ? "发言太频繁啦！" : "收到你的消息~"; }}',
       },
       {
         label: '触发持久化计数 (异步)',
-        template: '{{js+: const key = \'user:\' + user.uid + \':totalMessages\'; getStorageData(key, 0).then(c => setStorageData(key, (c || 0) + 1)); return \'正在为你累计总发言数...\'; }}',
+        template:
+          "{{js+: const key = 'user:' + user.uid + ':totalMessages'; getStorageData(key, 0).then(c => setStorageData(key, (c || 0) + 1)); return '正在为你累计总发言数...'; }}",
       },
       {
         label: '问候一次 (持久化)',
-        template: '{{js+: const key = \'greeted:\' + user.uid; hasStorageData(key).then(exists => { if (!exists) { setStorageData(key, true); /* 这里可以接发送欢迎消息的逻辑 */ } }); return \'检查问候状态...\'; }}',
+        template:
+          "{{js+: const key = 'greeted:' + user.uid; hasStorageData(key).then(exists => { if (!exists) { setStorageData(key, true); /* 这里可以接发送欢迎消息的逻辑 */ } }); return '检查问候状态...'; }}",
       },
     ],
   },
   {
     title: '弹幕功能',
     examples: [
-      { label: '提取内容', template: '你说的是 "{{js: message.substring(0, 5)}}{{js: message.length > 5 ? "..." : ""}}" 吗？' },
+      {
+        label: '提取内容',
+        template: '你说的是 "{{js: message.substring(0, 5)}}{{js: message.length > 5 ? "..." : ""}}" 吗？',
+      },
       { label: '回复问候', template: '{{js: message.includes("早上好") ? "早安" : "你好"}}，{{user.name}}！' },
     ],
   },
@@ -220,16 +257,16 @@ function insertExample(template: string) {
 function handleVariableInsert(text: string) {
   const inputEl = inputInst.value?.textareaElRef
   let newTemplate = props.template.template || ''
-  
+
   if (inputEl) {
     const start = inputEl.selectionStart
     const end = inputEl.selectionEnd
     newTemplate = newTemplate.substring(0, start) + text + newTemplate.substring(end)
-    
+
     // Update value
     props.template.template = newTemplate
     emit('update:template', { index: props.templateIndex, value: newTemplate })
-    
+
     // Restore cursor position
     nextTick(() => {
       inputEl.focus()
@@ -263,7 +300,7 @@ function handleVariableInsert(text: string) {
       >
         <NIcon
           :component="Info24Filled"
-          style="margin-right: 4px;"
+          style="margin-right: 4px"
         />
         变量与语法说明
       </NButton>
@@ -287,16 +324,24 @@ function handleVariableInsert(text: string) {
         name="editor"
         tab="编辑"
       >
-        <NGrid :x-gap="16" :cols="5" item-responsive responsive="screen">
+        <NGrid
+          :x-gap="16"
+          :cols="5"
+          item-responsive
+          responsive="screen"
+        >
           <NGi span="5 m:3">
-            <NFlex vertical :size="8">
+            <NFlex
+              vertical
+              :size="8"
+            >
               <!-- 长度检查警告 -->
               <NAlert
                 v-if="checkLength && lengthStatus.message && lengthStatus.status !== 'normal'"
                 :type="lengthStatus.status === 'error' ? 'error' : 'warning'"
                 class="length-alert"
                 :show-icon="false"
-                style="margin-bottom: 4px;"
+                style="margin-bottom: 4px"
               >
                 {{ lengthStatus.message }}
               </NAlert>
@@ -310,7 +355,13 @@ function handleVariableInsert(text: string) {
                 :autosize="{ minRows: 6, maxRows: 12 }"
                 :show-count="checkLength"
                 :count-graphemes="countGraphemes"
-                :status="checkLength && lengthStatus.status !== 'normal' ? (lengthStatus.status === 'error' ? 'error' : 'warning') : undefined"
+                :status="
+                  checkLength && lengthStatus.status !== 'normal'
+                    ? lengthStatus.status === 'error'
+                      ? 'error'
+                      : 'warning'
+                    : undefined
+                "
                 class="template-input"
                 @update:value="(val) => emit('update:template', { index: templateIndex, value: val })"
               />
@@ -331,7 +382,7 @@ function handleVariableInsert(text: string) {
                   </template>
                   {{ showLivePreview ? '隐藏预览' : '显示预览' }}
                 </NButton>
-                  
+
                 <div style="flex: 1" />
               </NFlex>
 
@@ -340,16 +391,18 @@ function handleVariableInsert(text: string) {
                   v-if="showLivePreview"
                   class="live-preview-container"
                 >
-                  <div class="live-preview-label">
-                    <NIcon :component="AppsListDetail24Regular" /> 效果预览
-                  </div>
+                  <div class="live-preview-label"><NIcon :component="AppsListDetail24Regular" /> 效果预览</div>
                   <div class="live-preview-content">
                     <NHighlight
                       v-if="previewResult"
                       :text="previewResult"
                       :patterns="highlightPatterns"
                     />
-                    <NText v-else depth="3" italic>
+                    <NText
+                      v-else
+                      depth="3"
+                      italic
+                    >
                       等待输入...
                     </NText>
                   </div>
@@ -357,35 +410,60 @@ function handleVariableInsert(text: string) {
               </transition>
             </NFlex>
           </NGi>
-          
+
           <NGi span="5 m:2">
             <div class="helper-container">
-              <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block;">
+              <NText
+                depth="3"
+                style="font-size: 12px; margin-bottom: 6px; display: block"
+              >
                 可用变量 (点击插入)
               </NText>
-              <TemplateHelper :placeholders="mergedPlaceholders" @insert="handleVariableInsert" />
+              <TemplateHelper
+                :placeholders="mergedPlaceholders"
+                @insert="handleVariableInsert"
+              />
             </div>
           </NGi>
         </NGrid>
       </NTabPane>
-      
+
       <NTabPane
         name="examples"
         tab="示例库"
       >
         <div class="examples-container">
-          <NFlex vertical :size="16">
+          <NFlex
+            vertical
+            :size="16"
+          >
             <div
               v-for="(category, idx) in templateExamples"
               :key="idx"
               class="example-category"
             >
-              <NText strong class="category-title">
+              <NText
+                strong
+                class="category-title"
+              >
                 {{ category.title }}
               </NText>
-              <NGrid :x-gap="12" :y-gap="12" cols="1 s:2" responsive="screen">
-                <NGi v-for="(example, i) in category.examples" :key="i">
-                  <NCard size="small" hoverable class="example-card" @click="insertExample(example.template)">
+              <NGrid
+                :x-gap="12"
+                :y-gap="12"
+                cols="1 s:2"
+                responsive="screen"
+              >
+                <NGi
+                  v-for="(example, i) in category.examples"
+                  :key="i"
+                >
+                  <NCard
+                    size="small"
+                    hoverable
+                    class="example-card"
+                    @click="insertExample(example.template)"
+                  >
                     <div class="example-header">
                       <NText strong>
                         {{ example.label }}
@@ -410,33 +488,37 @@ function handleVariableInsert(text: string) {
       title="模板语法与变量说明"
       :bordered="false"
       size="huge"
-      style="width: 600px; max-width: 90vw;"
+      style="width: 600px; max-width: 90vw"
       :close-on-esc="true"
       :mask-closable="true"
     >
-      <NScrollbar style="max-height: 80vh;">
+      <NScrollbar style="max-height: 80vh">
         <NAlert
           title="模板语法说明"
           type="info"
           :show-icon="false"
-          style="margin-bottom: 16px;"
+          style="margin-bottom: 16px"
         >
           模板支持插入变量和执行 JavaScript。
-          <NDivider style="margin: 8px 0;" />
-          <strong>1. 简单变量替换:</strong><br>
-          直接使用 <code>{{ '\{\{变量名.属性\}\}' }}</code> 插入值。<br>
+          <NDivider style="margin: 8px 0" />
+          <strong>1. 简单变量替换:</strong><br />
+          直接使用 <code>{{ '\{\{变量名.属性\}\}' }}</code> 插入值。<br />
           示例: <code>{{ '\{\{user.name\}\}' }}</code> → 显示用户名
-          <NDivider style="margin: 8px 0;" />
-          <strong>2. JS 表达式求值 (<code>js:</code>):</strong><br>
-          使用 <code>{{ '\{\{js: 表达式\}\}' }}</code> 执行单个 JS 表达式并插入结果 (隐式返回)。<br>
-          适合简单计算、字符串操作、三元运算等。<br>
-          示例: <code>{{ '\{\{js: user.guardLevel > 0 ? "舰长" : "非舰长\}\}' }}</code><br>
+          <NDivider style="margin: 8px 0" />
+          <strong>2. JS 表达式求值 (<code>js:</code>):</strong><br />
+          使用 <code>{{ '\{\{js: 表达式\}\}' }}</code> 执行单个 JS 表达式并插入结果 (隐式返回)。<br />
+          适合简单计算、字符串操作、三元运算等。<br />
+          示例: <code>{{ '\{\{js: user.guardLevel > 0 ? "舰长" : "非舰长\}\}' }}</code
+          ><br />
           示例: <code>{{ '\{\{js: gift.price * gift.count\}\}' }}</code>
-          <NDivider style="margin: 8px 0;" />
-          <strong>3. JS 代码块执行 (<code>js+:</code> 或 <code>js-run:</code>):</strong><br>
-          使用 <code>{{ '\{\{js+: 代码...\}\}' }}</code> 或 <code>{{ '\{\{js-run: 代码...\}\}' }}</code> 执行多行 JS 代码。<br>
-          <strong style="color: var(--warning-color);">需要显式使用 <code>return</code> 语句来指定输出到模板的值。</strong><br>
-          适合需要临时变量、多步逻辑或调用 <code>getData/setData</code> 等函数的场景。<br>
+          <NDivider style="margin: 8px 0" />
+          <strong>3. JS 代码块执行 (<code>js+:</code> 或 <code>js-run:</code>):</strong><br />
+          使用 <code>{{ '\{\{js+: 代码...\}\}' }}</code> 或 <code>{{ '\{\{js-run: 代码...\}\}' }}</code> 执行多行 JS
+          代码。<br />
+          <strong style="color: var(--warning-color)"
+            >需要显式使用 <code>return</code> 语句来指定输出到模板的值。</strong
+          ><br />
+          适合需要临时变量、多步逻辑或调用 <code>getData/setData</code> 等函数的场景。<br />
           <NScrollbar x-scrollable>
             <pre><code>{{ '\{\{js+:\n  const count = (getData(\'greetCount\') || 0) + 1;\n  setData(\'greetCount\', count);\n  return \`这是第 ${count} 次问候！\`;\n\}\}' }}</code></pre>
           </NScrollbar>
@@ -451,7 +533,7 @@ function handleVariableInsert(text: string) {
               type="warning"
               :bordered="false"
               size="small"
-              style="margin-bottom: 8px;"
+              style="margin-bottom: 8px"
             >
               <strong>运行时数据</strong>仅在本次运行有效, 重启后就没了，且操作是<strong>同步</strong>的。
             </NAlert>
@@ -462,15 +544,15 @@ function handleVariableInsert(text: string) {
               <li><code>removeData(key)</code>: 移除运行时数据。</li>
             </ul>
 
-            <NDivider style="margin: 12px 0;" />
+            <NDivider style="margin: 12px 0" />
 
             <NAlert
               type="info"
               :bordered="false"
               size="small"
-              style="margin-bottom: 8px;"
+              style="margin-bottom: 8px"
             >
-              <strong>持久化数据</strong>会长期保留，但操作是<strong>异步</strong>的 (返回 Promise)。<br>
+              <strong>持久化数据</strong>会长期保留，但操作是<strong>异步</strong>的 (返回 Promise)。<br />
               在 <code>js+</code> 或 <code>js-run</code> 中使用 <code>await</code> 处理或使用 <code>.then()</code>。
             </NAlert>
             <ul class="function-list">
@@ -485,7 +567,7 @@ function handleVariableInsert(text: string) {
             </NScrollbar>
           </NCollapseItem>
         </NCollapse>
-        <br>
+        <br />
         <strong>可用变量 (基础):</strong>
 
         <div
@@ -493,9 +575,7 @@ function handleVariableInsert(text: string) {
           :key="idx"
           class="placeholder-item"
         >
-          <NText code>
-            {{ ph.name }}
-          </NText>: {{ ph.description }}
+          <NText code> {{ ph.name }} </NText>: {{ ph.description }}
         </div>
       </NScrollbar>
     </NModal>
@@ -611,11 +691,11 @@ function handleVariableInsert(text: string) {
   margin-bottom: 5px;
 }
 .function-list code {
-   background-color: var(--vtsuru-bg-inset);
-   padding: 1px 4px;
-   border-radius: var(--vtsuru-radius);
-   font-family: monospace;
-   margin-right: 4px;
+  background-color: var(--vtsuru-bg-inset);
+  padding: 1px 4px;
+  border-radius: var(--vtsuru-radius);
+  font-family: monospace;
+  margin-right: 4px;
 }
 .n-collapse {
   margin-top: 16px;
@@ -629,10 +709,10 @@ function handleVariableInsert(text: string) {
   line-height: 1.4;
 }
 .n-alert code {
-   background-color: transparent;
-   padding: 0;
-   font-family: monospace;
-   font-size: inherit;
+  background-color: transparent;
+  padding: 0;
+  font-family: monospace;
+  font-size: inherit;
 }
 .n-alert pre code {
   background-color: transparent;

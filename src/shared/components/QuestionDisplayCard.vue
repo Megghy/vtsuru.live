@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { useDebounceFn, useScroll } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { QuestionDisplayAlign } from '@/api/api-models'
 
 const props = defineProps<{
@@ -11,7 +12,7 @@ const props = defineProps<{
   showGreenBorder?: boolean
   css?: string
 }>()
-const emit = defineEmits<{ scroll: [value: { clientHeight: number, scrollHeight: number, scrollTop: number }] }>()
+const emit = defineEmits<{ scroll: [value: { clientHeight: number; scrollHeight: number; scrollTop: number }] }>()
 defineExpose({ setScroll, setScrollTop })
 let styleElement: HTMLStyleElement
 const cssDebounce = useDebounceFn(() => {
@@ -42,7 +43,7 @@ function setScrollTop(top: number) {
     behavior: 'smooth',
   })
 }
-function setScroll(value: { clientHeight: number, scrollHeight: number, scrollTop: number }) {
+function setScroll(value: { clientHeight: number; scrollHeight: number; scrollTop: number }) {
   if (contentRef.value.clientHeight == contentRef.value.scrollHeight) {
     setScrollTop(value.scrollTop)
   } else {
@@ -127,13 +128,16 @@ onUnmounted(() => {
             <div class="question-display-text">
               {{ question?.question.message }}
             </div>
-            <div v-if="setting.showImage && question?.questionImages && question.questionImages.length > 0" class="question-display-images">
+            <div
+              v-if="setting.showImage && question?.questionImages && question.questionImages.length > 0"
+              class="question-display-images"
+            >
               <img
                 v-for="(img, index) in question.questionImages"
                 :key="index"
                 class="question-display-image"
                 :src="img.path"
-              >
+              />
             </div>
           </div>
         </template>
@@ -234,7 +238,7 @@ onUnmounted(() => {
 
 <style scoped>
 .loading,
-.loading>div {
+.loading > div {
   position: relative;
   box-sizing: border-box;
 }
@@ -249,7 +253,7 @@ onUnmounted(() => {
   color: #333;
 }
 
-.loading>div {
+.loading > div {
   display: inline-block;
   float: none;
   background-color: currentColor;
@@ -261,18 +265,18 @@ onUnmounted(() => {
   height: 10px;
 }
 
-.loading>div {
+.loading > div {
   width: 10px;
   height: 10px;
   border-radius: 100%;
 }
 
-.loading>div:first-child {
+.loading > div:first-child {
   transform: translateX(0%);
   animation: ball-newton-cradle-left 1.5s 0s ease-out infinite;
 }
 
-.loading>div:last-child {
+.loading > div:last-child {
   transform: translateX(0%);
   animation: ball-newton-cradle-right 1.5s 0s ease-out infinite;
 }
@@ -282,7 +286,7 @@ onUnmounted(() => {
   height: 4px;
 }
 
-.loading.la-sm>div {
+.loading.la-sm > div {
   width: 4px;
   height: 4px;
 }
@@ -292,7 +296,7 @@ onUnmounted(() => {
   height: 20px;
 }
 
-.loading.la-2x>div {
+.loading.la-2x > div {
   width: 20px;
   height: 20px;
 }
@@ -302,7 +306,7 @@ onUnmounted(() => {
   height: 30px;
 }
 
-.loading.la-3x>div {
+.loading.la-3x > div {
   width: 30px;
   height: 30px;
 }
@@ -333,11 +337,11 @@ onUnmounted(() => {
   }
 }
 
-.loading>div:first-child {
+.loading > div:first-child {
   animation: ball-newton-cradle-left 1.5s 0s ease-in-out infinite;
 }
 
-.loading>div:last-child {
+.loading > div:last-child {
   animation: ball-newton-cradle-right 1.5s 0s ease-in-out infinite;
 }
 </style>

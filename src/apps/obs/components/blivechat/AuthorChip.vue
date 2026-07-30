@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+
 import AuthorBadge from './AuthorBadge.vue'
 import * as constants from './constants'
 

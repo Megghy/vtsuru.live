@@ -1,4 +1,5 @@
 import type { ComputedRef, InjectionKey } from 'vue'
+
 import type { BlockNode, BlockVisibilityContext } from './schemaTypes'
 import { isBlockVisible } from './visibility'
 
@@ -21,13 +22,14 @@ export function collectPageSections(blocks: BlockNode[], context: BlockVisibilit
   function visit(nodes: BlockNode[]) {
     for (const block of nodes) {
       if (block.hidden || !isBlockVisible(block, context)) continue
-      const props = block.props && typeof block.props === 'object' && !Array.isArray(block.props)
-        ? block.props as Record<string, unknown>
-        : {}
+      const props =
+        block.props && typeof block.props === 'object' && !Array.isArray(block.props)
+          ? (block.props as Record<string, unknown>)
+          : {}
 
       if (block.type === 'heading') {
         const text = typeof props.text === 'string' ? props.text.trim() : ''
-        const level = [1, 2, 3].includes(Number(props.level)) ? Number(props.level) as 1 | 2 | 3 : 2
+        const level = [1, 2, 3].includes(Number(props.level)) ? (Number(props.level) as 1 | 2 | 3) : 2
         if (text) sections.push({ blockId: block.id, anchorId: getHeadingAnchorId(block.id), text, level })
       }
 

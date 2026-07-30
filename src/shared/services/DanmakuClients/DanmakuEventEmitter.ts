@@ -65,15 +65,15 @@ export default abstract class DanmakuEventEmitter {
   }
 
   /** 启动连接 (子类实现) */
-  public abstract Start(): Promise<{ success: boolean, message: string }>
+  public abstract Start(): Promise<{ success: boolean; message: string }>
   /** 停止连接 (子类实现) */
   public abstract Stop(): void
 
   /** 触发 'all' 事件监听器 (两套系统都触发) */
   public onRawMessage = (command: any) => {
     try {
-      this.eventsAsModel.all?.forEach(listener => listener(command))
-      this.eventsRaw.all?.forEach(listener => listener(command))
+      this.eventsAsModel.all?.forEach((listener) => listener(command))
+      this.eventsRaw.all?.forEach((listener) => listener(command))
     } catch (err) {
       console.error(`[${this.type}] 处理 'all' 事件监听器时出错:`, err, command)
     }
@@ -85,9 +85,9 @@ export default abstract class DanmakuEventEmitter {
    * 无需像 B站 client 那样解析原始命令。
    */
   protected emitModel(eventName: Exclude<keyof ModelEventListeners, 'all'>, data: EventModel) {
-    (this.eventsRaw[eventName] as ((d: EventModel) => void)[]).forEach(fn => fn(data));
-    (this.eventsAsModel[eventName] as ((d: EventModel) => void)[]).forEach(fn => fn(data))
-    this.eventsAsModel.all?.forEach(fn => fn(data))
+    ;(this.eventsRaw[eventName] as ((d: EventModel) => void)[]).forEach((fn) => fn(data))
+    ;(this.eventsAsModel[eventName] as ((d: EventModel) => void)[]).forEach((fn) => fn(data))
+    this.eventsAsModel.all?.forEach((fn) => fn(data))
   }
 
   // --- 事件系统 1: onEvent/offEvent (EventModel) ---
@@ -101,7 +101,7 @@ export default abstract class DanmakuEventEmitter {
   public onEvent(eventName: 'follow', listener: (arg1: EventModel, arg2?: any) => void): this
   public onEvent(eventName: 'like', listener: (arg1: EventModel, arg2?: any) => void): this
   public onEvent(eventName: keyof ModelEventListeners, listener: (...args: any[]) => void): this {
-    (this.eventsAsModel[eventName] as ((...args: any[]) => void)[]).push(listener)
+    ;(this.eventsAsModel[eventName] as ((...args: any[]) => void)[]).push(listener)
     return this
   }
 
@@ -123,7 +123,7 @@ export default abstract class DanmakuEventEmitter {
   public on(eventName: 'follow', listener: (arg1: any, arg2?: any) => void): this
   public on(eventName: 'like', listener: (arg1: any, arg2?: any) => void): this
   public on(eventName: keyof RawEventListeners, listener: (...args: any[]) => void): this {
-    (this.eventsRaw[eventName] as ((...args: any[]) => void)[]).push(listener)
+    ;(this.eventsRaw[eventName] as ((...args: any[]) => void)[]).push(listener)
     return this
   }
 

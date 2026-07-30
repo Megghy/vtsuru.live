@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { NAlert, NInput, NSelect, NText } from 'naive-ui'
-import { useSpeechService } from '@/store/useSpeechService'
+
 import { OPENAI_PRESET_VOICES } from '@/apps/open-live/voice-providers/openai'
+import { useSpeechService } from '@/store/useSpeechService'
+
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 
@@ -19,13 +21,18 @@ const formatOptions = [
 
 <template>
   <div class="form">
-    <NAlert type="info" :bordered="false" size="small">
-      <NText style="font-size: 12px">
-        请求由浏览器直连 API 服务方, 不经过 VTsuru 后端 (避免 IP 暴露和延迟)
-      </NText>
+    <NAlert
+      type="info"
+      :bordered="false"
+      size="small"
+    >
+      <NText style="font-size: 12px"> 请求由浏览器直连 API 服务方, 不经过 VTsuru 后端 (避免 IP 暴露和延迟) </NText>
     </NAlert>
 
-    <SectionField label="Base URL" hint="OpenAI 兼容服务的根路径，会自动追加 /v1/audio/speech">
+    <SectionField
+      label="Base URL"
+      hint="OpenAI 兼容服务的根路径，会自动追加 /v1/audio/speech"
+    >
       <NInput
         v-model:value="settings.providers.openai.baseUrl"
         placeholder="https://api.openai.com"

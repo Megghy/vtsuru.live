@@ -1,18 +1,38 @@
 <script setup lang="ts">
-import type { SelectGroupOption, SelectOption } from 'naive-ui'
-import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
-import type { TemplateMapType } from '@/shared/config/templates'
-import type { TemplateCapability } from '@/shared/config/templateCapabilities'
 import { ChevronDown20Regular, PanelLeftContract20Filled, PanelLeftExpand20Filled } from '@vicons/fluent'
 import { useElementBounding, useWindowSize } from '@vueuse/core'
-import { NAlert, NButton, NCollapseTransition, NDivider, NFlex, NIcon, NSelect, NSpin, NTag, NText, NTooltip, useMessage } from 'naive-ui'
+import type { SelectGroupOption, SelectOption } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCollapseTransition,
+  NDivider,
+  NFlex,
+  NIcon,
+  NSelect,
+  NSpin,
+  NTag,
+  NText,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, h, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
+
 import { downloadConfigDirect, SaveAccountSettings, useAccount } from '@/api/account'
 import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
-import { FETCH_API } from '@/shared/config'
-import { CapabilityCategories, getCategoryTagColor, groupCapabilities, TemplateCapabilities } from '@/shared/config/templateCapabilities'
-import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templates'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
+import { FETCH_API } from '@/shared/config'
+import type { TemplateCapability } from '@/shared/config/templateCapabilities'
+import {
+  CapabilityCategories,
+  getCategoryTagColor,
+  groupCapabilities,
+  TemplateCapabilities,
+} from '@/shared/config/templateCapabilities'
+import type { TemplateMapType } from '@/shared/config/templates'
+import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templates'
+import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
+
 import { schedulePreviewData, songListPreviewData } from './templatePreviewData'
 
 interface TemplateOption extends SelectOption {
@@ -52,7 +72,9 @@ const biliUserInfo = ref()
 onMounted(async () => {
   if (!accountInfo.value?.biliId) return
   try {
-    const response = await fetch(`${FETCH_API}https://workers.vrp.moe/api/bilibili/user-info/${accountInfo.value.biliId}`)
+    const response = await fetch(
+      `${FETCH_API}https://workers.vrp.moe/api/bilibili/user-info/${accountInfo.value.biliId}`,
+    )
     const data = await response.json()
     if (data.code === 0) biliUserInfo.value = data.card
   } catch (err) {
@@ -103,13 +125,12 @@ watch(
   { immediate: true },
 )
 
-const pageKey = computed<'schedule' | 'songlist'>(() =>
-  selectedPage.value === 'schedule' ? 'schedule' : 'songlist')
+const pageKey = computed<'schedule' | 'songlist'>(() => (selectedPage.value === 'schedule' ? 'schedule' : 'songlist'))
 const group = computed(() => groups[pageKey.value])
 // 当前分组选中的模板 key (可读写, 供下拉 v-model)
 const selectedKey = computed({
   get: () => selectedTemplateKey.value[pageKey.value],
-  set: v => selectedTemplateKey.value[pageKey.value] = v,
+  set: (v) => (selectedTemplateKey.value[pageKey.value] = v),
 })
 const currentTemplate = computed(() => group.value.TemplateMap[selectedKey.value])
 const previewComponent = computed(() => currentTemplate.value?.component)
@@ -124,16 +145,18 @@ const capabilityCount = computed(() => currentTemplate.value?.capabilities?.leng
 // 选中的能力 (与关系: 模板需同时具备全部所选能力才显示)
 const capabilityFilter = ref<TemplateCapability[]>([])
 // 切换页面时重置筛选, 避免歌单的能力残留到日程表
-watch(pageKey, () => { capabilityFilter.value = [] })
+watch(pageKey, () => {
+  capabilityFilter.value = []
+})
 
 // 能力多选下拉: 按分类分组
 const capabilityFilterOptions = computed<SelectGroupOption[]>(() => {
   const byCategory = groupCapabilities(Object.keys(TemplateCapabilities) as TemplateCapability[])
-  return byCategory.map(g => ({
+  return byCategory.map((g) => ({
     type: 'group',
     label: CapabilityCategories[g.category].name,
     key: g.category,
-    children: g.items.map(it => ({ label: it.name, value: it.id })),
+    children: g.items.map((it) => ({ label: it.name, value: it.id })),
   }))
 })
 
@@ -141,8 +164,7 @@ const capabilityFilterOptions = computed<SelectGroupOption[]>(() => {
 const filteredTemplateOptions = computed<TemplateOption[]>(() => {
   const need = capabilityFilter.value
   if (!need.length) return group.value.Options
-  return group.value.Options.filter(opt =>
-    need.every(cap => opt.capabilities.includes(cap)))
+  return group.value.Options.filter((opt) => need.every((cap) => opt.capabilities.includes(cap)))
 })
 
 // 模板下拉自定义渲染: 名称 + 能力数量徽标
@@ -151,9 +173,13 @@ function renderTemplateLabel(option: SelectOption) {
   return h('div', { style: 'display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%' }, [
     h('span', option.label as string),
     caps.length
-      ? h('span', {
-          style: 'font-size:11px;color:var(--vtsuru-fg-muted);flex-shrink:0',
-        }, `${caps.length} 项能力`)
+      ? h(
+          'span',
+          {
+            style: 'font-size:11px;color:var(--vtsuru-fg-muted);flex-shrink:0',
+          },
+          `${caps.length} 项能力`,
+        )
       : null,
   ])
 }
@@ -162,41 +188,59 @@ function renderTemplateLabel(option: SelectOption) {
 function renderCapabilityPanel(caps: readonly TemplateCapability[]) {
   const grouped = groupCapabilities(caps)
   if (!grouped.length) return h('span', { style: 'font-size:12px' }, '该模板暂无能力标记')
-  return h('div', { style: 'display:flex;flex-direction:column;gap:6px;max-width:320px' },
-    grouped.map(g => h('div', { key: g.category, style: 'display:flex;align-items:center;gap:6px;flex-wrap:wrap' }, [
-      h('span', {
-        style: `display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:${CapabilityCategories[g.category].color}`,
-      }, [
-        h(NIcon, { component: CapabilityCategories[g.category].icon, size: 14 }),
-        CapabilityCategories[g.category].name,
+  return h(
+    'div',
+    { style: 'display:flex;flex-direction:column;gap:6px;max-width:320px' },
+    grouped.map((g) =>
+      h('div', { key: g.category, style: 'display:flex;align-items:center;gap:6px;flex-wrap:wrap' }, [
+        h(
+          'span',
+          {
+            style: `display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:${CapabilityCategories[g.category].color}`,
+          },
+          [
+            h(NIcon, { component: CapabilityCategories[g.category].icon, size: 14 }),
+            CapabilityCategories[g.category].name,
+          ],
+        ),
+        ...g.items.map((it) =>
+          h(
+            NTag,
+            {
+              key: it.id,
+              size: 'small',
+              bordered: true,
+              color: getCategoryTagColor(g.category),
+            },
+            { default: () => it.name },
+          ),
+        ),
       ]),
-      ...g.items.map(it => h(NTag, {
-        key: it.id,
-        size: 'small',
-        bordered: true,
-        color: getCategoryTagColor(g.category),
-      }, { default: () => it.name })),
-    ])),
+    ),
   )
 }
 
 // 下拉项整体: 用 tooltip 包裹, hover 弹出该模板能力表
-function renderTemplateOption({ node, option }: { node: any, option: SelectOption }) {
+function renderTemplateOption({ node, option }: { node: any; option: SelectOption }) {
   const caps = (option as TemplateOption).capabilities ?? []
-  return h(NTooltip, { placement: 'right', delay: 200 }, {
-    trigger: () => node,
-    default: () => renderCapabilityPanel(caps),
-  })
+  return h(
+    NTooltip,
+    { placement: 'right', delay: 200 },
+    {
+      trigger: () => node,
+      default: () => renderCapabilityPanel(caps),
+    },
+  )
 }
 
 // 预览组件实例: 通过 defineExpose 暴露 Config(schema 定义) 和 DefaultConfig
-const previewRef = shallowRef<{ Config?: ConfigItemDefinition[], DefaultConfig?: unknown }>()
+const previewRef = shallowRef<{ Config?: ConfigItemDefinition[]; DefaultConfig?: unknown }>()
 const configSchema = computed<ConfigItemDefinition[] | undefined>(() => previewRef.value?.Config)
 
 // 用户已保存的配置数据, 按 settingName 缓存 (修复同一页面下多个可配置模板串味的 bug)
 const configDataCache = ref<Record<string, unknown>>({})
 const loadingConfig = ref(false)
-const currentConfigData = computed(() => settingName.value ? configDataCache.value[settingName.value] : undefined)
+const currentConfigData = computed(() => (settingName.value ? configDataCache.value[settingName.value] : undefined))
 
 // 加载当前模板配置 (按 settingName 缓存, 命中则跳过)
 async function loadConfig() {
@@ -253,24 +297,31 @@ async function setAsDisplayTemplate() {
 
 <template>
   <NSpin :show="isSaving">
-    <NFlex vertical :size="12">
-      <NAlert type="success" size="small" :bordered="false">
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NAlert
+        type="success"
+        size="small"
+        :bordered="false"
+      >
         如果有合适的设计稿或者想法可以给我说然后做成模板捏
       </NAlert>
 
-      <NFlex align="center" :wrap="true" :size="12">
-        <NText depth="2">
-          页面
-        </NText>
+      <NFlex
+        align="center"
+        :wrap="true"
+        :size="12"
+      >
+        <NText depth="2"> 页面 </NText>
         <NSelect
           v-model:value="selectedPage"
           size="small"
           :options="pageOptions"
           style="width: 140px"
         />
-        <NText depth="2">
-          模板
-        </NText>
+        <NText depth="2"> 模板 </NText>
         <NTooltip>
           <template #trigger>
             <NSelect
@@ -294,15 +345,27 @@ async function setAsDisplayTemplate() {
           :options="capabilityFilterOptions"
           :max-tag-count="2"
         />
-        <NText v-if="capabilityFilter.length" depth="3" style="font-size: 12px">
+        <NText
+          v-if="capabilityFilter.length"
+          depth="3"
+          style="font-size: 12px"
+        >
           匹配 {{ filteredTemplateOptions.length }} 个模板
         </NText>
-        <NButton type="primary" size="small" @click="setAsDisplayTemplate">
+        <NButton
+          type="primary"
+          size="small"
+          @click="setAsDisplayTemplate"
+        >
           设为展示模板
         </NButton>
         <NTooltip v-if="settingName">
           <template #trigger>
-            <NButton size="small" tertiary @click="configCollapsed = !configCollapsed">
+            <NButton
+              size="small"
+              tertiary
+              @click="configCollapsed = !configCollapsed"
+            >
               <template #icon>
                 <NIcon :component="configCollapsed ? PanelLeftExpand20Filled : PanelLeftContract20Filled" />
               </template>
@@ -314,7 +377,10 @@ async function setAsDisplayTemplate() {
       </NFlex>
 
       <!-- 当前模板能力标签 (默认收起, 点击标题展开; 按分类分组, 每类带图标) -->
-      <div v-if="capabilityGroups.length" class="capability-bar">
+      <div
+        v-if="capabilityGroups.length"
+        class="capability-bar"
+      >
         <div
           class="capability-bar__title"
           role="button"
@@ -327,15 +393,27 @@ async function setAsDisplayTemplate() {
             class="capability-bar__chevron"
             :class="{ 'is-expanded': capabilityExpanded }"
           />
-          <NText depth="2" strong style="font-size: 13px">
+          <NText
+            depth="2"
+            strong
+            style="font-size: 13px"
+          >
             模板能力
           </NText>
-          <NText depth="3" style="font-size: 12px">
+          <NText
+            depth="3"
+            style="font-size: 12px"
+          >
             共 {{ capabilityCount }} 项{{ capabilityExpanded ? '' : ' · 点击展开' }}
           </NText>
         </div>
         <NCollapseTransition :show="capabilityExpanded">
-          <NFlex align="flex-start" :wrap="true" :size="14" style="margin-top: 10px">
+          <NFlex
+            align="flex-start"
+            :wrap="true"
+            :size="14"
+            style="margin-top: 10px"
+          >
             <div
               v-for="g in capabilityGroups"
               :key="g.category"
@@ -345,10 +423,16 @@ async function setAsDisplayTemplate() {
                 class="capability-group__head"
                 :style="{ color: CapabilityCategories[g.category].color }"
               >
-                <NIcon :component="CapabilityCategories[g.category].icon" :size="15" />
+                <NIcon
+                  :component="CapabilityCategories[g.category].icon"
+                  :size="15"
+                />
                 {{ CapabilityCategories[g.category].name }}
               </span>
-              <NTooltip v-for="cap in g.items" :key="cap.id">
+              <NTooltip
+                v-for="cap in g.items"
+                :key="cap.id"
+              >
                 <template #trigger>
                   <NTag
                     size="small"
@@ -381,7 +465,11 @@ async function setAsDisplayTemplate() {
             v-if="settingName && !configCollapsed"
             class="template-config-pane"
           >
-            <NSpin v-if="loadingConfig || !configSchema" show style="min-height: 200px" />
+            <NSpin
+              v-if="loadingConfig || !configSchema"
+              show
+              style="min-height: 200px"
+            />
             <DynamicForm
               v-else
               :key="settingName"
@@ -499,7 +587,11 @@ async function setAsDisplayTemplate() {
 /* 折叠/展开过渡 */
 .config-slide-enter-active,
 .config-slide-leave-active {
-  transition: flex-basis 0.25s ease, max-width 0.25s ease, opacity 0.25s ease, margin 0.25s ease;
+  transition:
+    flex-basis 0.25s ease,
+    max-width 0.25s ease,
+    opacity 0.25s ease,
+    margin 0.25s ease;
 }
 
 .config-slide-enter-from,

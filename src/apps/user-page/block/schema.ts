@@ -26,7 +26,12 @@ function cleanMessage(message: string, path: string) {
   return message.startsWith(`${path}: `) ? message.slice(path.length + 2) : message
 }
 
-function createReporter(state: ValidationState, path: string, blockId: string | null, ancestorLayoutIds: string[]): ValidationErrors {
+function createReporter(
+  state: ValidationState,
+  path: string,
+  blockId: string | null,
+  ancestorLayoutIds: string[],
+): ValidationErrors {
   return {
     push(message, fieldPath = null) {
       state.issues.push({
@@ -62,12 +67,22 @@ function validateNodeVisibility(node: Record<string, unknown>, path: string, err
   optionalEnum(visibility, 'device', ['desktop', 'mobile'], visibilityPath, visibilityErrors)
   optionalNumber(visibility, 'startsAt', 0, 9_999_999_999, visibilityPath, visibilityErrors, true)
   optionalNumber(visibility, 'endsAt', 0, 9_999_999_999, visibilityPath, visibilityErrors, true)
-  if (typeof visibility.startsAt === 'number' && typeof visibility.endsAt === 'number' && visibility.startsAt >= visibility.endsAt) {
+  if (
+    typeof visibility.startsAt === 'number' &&
+    typeof visibility.endsAt === 'number' &&
+    visibility.startsAt >= visibility.endsAt
+  ) {
     errors.push('开始时间必须早于结束时间', 'visibility.startsAt')
   }
 }
 
-function validateNode(value: unknown, path: string, depth: number, ancestorLayoutIds: string[], state: ValidationState) {
+function validateNode(
+  value: unknown,
+  path: string,
+  depth: number,
+  ancestorLayoutIds: string[],
+  state: ValidationState,
+) {
   const node = asObject(value)
   if (!node) {
     createReporter(state, path, null, ancestorLayoutIds).push('区块必须是 object')
@@ -103,7 +118,8 @@ function validateNode(value: unknown, path: string, depth: number, ancestorLayou
   if (definition.requiresProps && !props) errors.push('缺少 props', 'props')
   if (props) {
     if (isBlockPropertyAvailable(type as BlockType, props, 'framed')) optionalBoolean(props, 'framed', path, errors)
-    if (isBlockPropertyAvailable(type as BlockType, props, 'backgrounded')) optionalBoolean(props, 'backgrounded', path, errors)
+    if (isBlockPropertyAvailable(type as BlockType, props, 'backgrounded'))
+      optionalBoolean(props, 'backgrounded', path, errors)
   }
   definition.validate(props, path, errors, { hidden: node.hidden === true })
 
@@ -118,14 +134,28 @@ function validateNode(value: unknown, path: string, depth: number, ancestorLayou
     return
   }
   const childAncestors = blockId ? [...ancestorLayoutIds, blockId] : ancestorLayoutIds
-  props.children.forEach((child, index) => validateNode(child, `${path}.children[${index}]`, depth + 1, childAncestors, state))
+  props.children.forEach((child, index) =>
+    validateNode(child, `${path}.children[${index}]`, depth + 1, childAncestors, state),
+  )
 }
 
-export function validateBlockPageProject(project: unknown):
-  | { ok: true, project: BlockPageProject, issues: [] }
-  | { ok: false, issues: BlockValidationIssue[] } {
+export function validateBlockPageProject(
+  project: unknown,
+): { ok: true; project: BlockPageProject; issues: [] } | { ok: false; issues: BlockValidationIssue[] } {
   const object = asObject(project)
-  if (!object) return { ok: false, issues: [{ message: '页面区块配置必须是 object', severity: 'error', blockId: null, ancestorLayoutIds: [], fieldPath: null }] }
+  if (!object)
+    return {
+      ok: false,
+      issues: [
+        {
+          message: '页面区块配置必须是 object',
+          severity: 'error',
+          blockId: null,
+          ancestorLayoutIds: [],
+          fieldPath: null,
+        },
+      ],
+    }
 
   const state: ValidationState = { issues: [], ids: new Map() }
   const projectErrors = createReporter(state, 'BlockPageProject', null, [])
@@ -137,7 +167,8 @@ export function validateBlockPageProject(project: unknown):
     object.blocks.forEach((node, index) => validateNode(node, `blocks[${index}]`, 0, [], state))
     if (!state.issues.length) {
       const imageCount = countImagesInBlocks(object.blocks as BlockNode[])
-      if (imageCount > MAX_PAGE_IMAGES) projectErrors.push(`图片数量超出上限：${imageCount}/${MAX_PAGE_IMAGES}`, 'blocks')
+      if (imageCount > MAX_PAGE_IMAGES)
+        projectErrors.push(`图片数量超出上限：${imageCount}/${MAX_PAGE_IMAGES}`, 'blocks')
     }
   }
 
@@ -178,9 +209,9 @@ export function countImagesInBlocks(blocks: BlockNode[], includeHidden = false):
         return Boolean(object?.imageFile) || isNonEmptyString(object?.url)
       }).length
     } else if (block.type === 'cardList' && Array.isArray(props?.items)) {
-      count += props.items.filter(item => Boolean(asObject(item)?.imageFile)).length
+      count += props.items.filter((item) => Boolean(asObject(item)?.imageFile)).length
     } else if (block.type === 'customHtml' && Array.isArray(props?.assets)) {
-      count += props.assets.filter(item => Boolean(asObject(item)?.file)).length
+      count += props.assets.filter((item) => Boolean(asObject(item)?.file)).length
     }
   }
   return count

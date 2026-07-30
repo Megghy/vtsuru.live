@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { NButton, NCard, NInput, NSpin } from 'naive-ui'
 import { onMounted, ref } from 'vue'
+
 import { QueryGetAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
+
 import { useOrgContext } from '../composables/useOrgContext'
 import OrgAuditList from './OrgAuditList.vue'
 
@@ -41,15 +43,22 @@ onMounted(loadLogs)
 </script>
 
 <template>
-  <NCard title="操作审计" size="small">
-    <div style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px;">
+  <NCard
+    title="操作审计"
+    size="small"
+  >
+    <div style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px">
       <NInput
         v-model:value="actionPrefix"
         placeholder="按 action 前缀过滤（可选）"
-        style="min-width: 220px; flex: 1;"
+        style="min-width: 220px; flex: 1"
         @keydown.enter="loadLogs"
       />
-      <NButton type="primary" :loading="isLoading" @click="loadLogs">
+      <NButton
+        type="primary"
+        :loading="isLoading"
+        @click="loadLogs"
+      >
         查询
       </NButton>
     </div>

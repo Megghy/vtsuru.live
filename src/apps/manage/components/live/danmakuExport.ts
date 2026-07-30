@@ -1,6 +1,7 @@
-import type { AccountInfo, DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { XMLBuilder } from 'fast-xml-parser'
 import { List } from 'linqts'
+
+import type { AccountInfo, DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 
 const builder = new XMLBuilder({

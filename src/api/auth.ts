@@ -1,4 +1,5 @@
 import { StorageSerializers } from '@vueuse/core'
+
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export interface AuthCookie {

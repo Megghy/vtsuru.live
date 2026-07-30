@@ -1,18 +1,15 @@
-import type {
-  ConfigProviderProps,
-  UploadFileInfo,
-} from 'naive-ui'
-import type { DiscreteApiType } from 'naive-ui/es/discrete/src/interface'
-import type { SongsInfo } from '@/api/api-models'
 import { SquareArrowForward24Filled } from '@vicons/fluent'
-import { usePersistedStorage } from '@/shared/storage/persist'
-import {
-  createDiscreteApi, darkTheme, dateZhCN, NButton, NIcon, NTooltip, useOsTheme, zhCN } from 'naive-ui';
+import type { ConfigProviderProps, UploadFileInfo } from 'naive-ui'
+import { createDiscreteApi, darkTheme, dateZhCN, NButton, NIcon, NTooltip, useOsTheme, zhCN } from 'naive-ui'
+import type { DiscreteApiType } from 'naive-ui/es/discrete/src/interface'
 import { computed, h } from 'vue'
-import FiveSingIcon from '@/svgs/fivesing.svg'
-import NeteaseIcon from '@/svgs/netease.svg'
+
+import type { SongsInfo } from '@/api/api-models'
 import { SongFrom, ThemeType } from '@/api/api-models'
 import { buildSiteTokens, getThemeOverrides, VTSURU_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
+import FiveSingIcon from '@/svgs/fivesing.svg'
+import NeteaseIcon from '@/svgs/netease.svg'
 
 const osThemeRef = useOsTheme() // 获取当前系统主题
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
@@ -66,14 +63,14 @@ export function hexToRgba(hex: string, alpha: number): string | null {
     const r = Number.parseInt(raw[0] + raw[0], 16)
     const g = Number.parseInt(raw[1] + raw[1], 16)
     const b = Number.parseInt(raw[2] + raw[2], 16)
-    if ([r, g, b].some(x => Number.isNaN(x))) return null
+    if ([r, g, b].some((x) => Number.isNaN(x))) return null
     return `rgba(${r}, ${g}, ${b}, ${alpha})`
   }
   if (raw.length === 6) {
     const r = Number.parseInt(raw.slice(0, 2), 16)
     const g = Number.parseInt(raw.slice(2, 4), 16)
     const b = Number.parseInt(raw.slice(4, 6), 16)
-    if ([r, g, b].some(x => Number.isNaN(x))) return null
+    if ([r, g, b].some((x) => Number.isNaN(x))) return null
     return `rgba(${r}, ${g}, ${b}, ${alpha})`
   }
   return null
@@ -107,14 +104,8 @@ export function GetGuardColor(level: number | null | undefined): string {
   return ''
 }
 /** canvas.toBlob 的 Promise 封装 */
-export async function canvasToBlob(
-  canvas: HTMLCanvasElement,
-  type = 'image/png',
-  quality?: number,
-): Promise<Blob> {
-  const blob = await new Promise<Blob | null>(resolve =>
-    canvas.toBlob(b => resolve(b), type, quality),
-  )
+export async function canvasToBlob(canvas: HTMLCanvasElement, type = 'image/png', quality?: number): Promise<Blob> {
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), type, quality))
   if (!blob) throw new Error('canvas toBlob 失败')
   return blob
 }
@@ -141,16 +132,13 @@ export function downloadImage(imageSrc: string, filename: string) {
   }
   image.src = imageSrc
 }
-export async function getBase64(
-  file: File | undefined | null,
-): Promise<string | undefined> {
-  if (!file) return new Promise(resolve => resolve(undefined))
+export async function getBase64(file: File | undefined | null): Promise<string | undefined> {
+  if (!file) return new Promise((resolve) => resolve(undefined))
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.readAsDataURL(file)
-    reader.onload = () =>
-      resolve(reader.result?.toString().split(',')[1] || undefined)
-    reader.onerror = error => reject(error)
+    reader.onload = () => resolve(reader.result?.toString().split(',')[1] || undefined)
+    reader.onerror = (error) => reject(error)
   })
 }
 export async function getImageUploadModel(
@@ -160,7 +148,7 @@ export async function getImageUploadModel(
   const result = {
     existImages: [],
     newImagesBase64: [],
-  } as { existImages: string[], newImagesBase64: string[] }
+  } as { existImages: string[]; newImagesBase64: string[] }
   if (!files) return result
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
@@ -234,11 +222,10 @@ export class GuidUtils {
     }
 
     // 标准GUID格式：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    return `${hex.substring(0, 8)}-${
-      hex.substring(8, 12)}-${
-      hex.substring(12, 16)}-${
-      hex.substring(16, 20)}-${
-      hex.substring(20)}`
+    return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(
+      16,
+      20,
+    )}-${hex.substring(20)}`
   }
 
   // 辅助方法：将GUID字符串转换为ArrayBuffer

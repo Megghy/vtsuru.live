@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
-import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { CloudAdd20Filled, Play24Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
 import { NButton, NEmpty, NIcon, NInput, NSelect, NTag, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
+import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { useBiliAuth } from '@/store/useBiliAuth'
+
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -54,12 +56,9 @@ const filteredSongs = computed<SongsInfo[]>(() => {
     if (tag && !song.tags?.includes(tag)) return false
     if (author && !song.author?.includes(author)) return false
     if (!keyword) return true
-    const haystack = [
-      song.name,
-      song.translateName ?? '',
-      song.author?.join(' ') ?? '',
-      song.tags?.join(' ') ?? '',
-    ].join(' ').toLowerCase()
+    const haystack = [song.name, song.translateName ?? '', song.author?.join(' ') ?? '', song.tags?.join(' ') ?? '']
+      .join(' ')
+      .toLowerCase()
     return haystack.includes(keyword)
   })
 })
@@ -73,7 +72,9 @@ function requestSong(song: SongsInfo) {
   if (isSelf.value) return
   requestingKey.value = song.key
   emits('requestSong', song)
-  window.setTimeout(() => { requestingKey.value = '' }, 2000)
+  window.setTimeout(() => {
+    requestingKey.value = ''
+  }, 2000)
 }
 </script>
 
@@ -148,22 +149,25 @@ function requestSong(song: SongsInfo) {
               :alt="song.name"
               loading="lazy"
               referrerpolicy="no-referrer"
-            >
+            />
             <span
               v-else
               class="row-cover-fallback"
-            >{{ song.name.charAt(0) }}</span>
+              >{{ song.name.charAt(0) }}</span
+            >
           </div>
           <div class="row-main">
             <div class="row-title">
               <span
                 class="name"
                 :title="song.name"
-              >{{ song.name }}</span>
+                >{{ song.name }}</span
+              >
               <span
                 v-if="song.translateName"
                 class="translate"
-              >{{ song.translateName }}</span>
+                >{{ song.translateName }}</span
+              >
               <NTag
                 v-if="singingSongKeySet.has(song.key)"
                 size="tiny"

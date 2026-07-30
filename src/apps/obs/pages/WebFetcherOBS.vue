@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 import { RPC } from '@mixer/postmessage-rpc'
 import { onMounted, onUnmounted } from 'vue'
+
+import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 import DirectClient from '@/shared/services/DanmakuClients/DirectClient'
 import OpenLiveClient from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -15,7 +16,8 @@ function onGetDanmaku(data: any) {
 
 let timer: any
 onMounted(async () => {
-  if (window.frameElement) { // 当是客户端组件时不自动启动, 需要客户端来启动以获取启动响应
+  if (window.frameElement) {
+    // 当是客户端组件时不自动启动, 需要客户端来启动以获取启动响应
     console.log('[web-fetcher-iframe] 当前为客户端组件')
 
     rpc = new RPC({
@@ -28,34 +30,34 @@ onMounted(async () => {
       return {
         status: webFetcher.state,
         type: webFetcher.webfetcherType,
-        roomId: webFetcher.client instanceof OpenLiveClient
-          ? webFetcher.client.roomAuthInfo?.anchor_info.room_id
-          : webFetcher.client instanceof DirectClient
-            ? webFetcher.client.authInfo.roomId
-            : -1,
+        roomId:
+          webFetcher.client instanceof OpenLiveClient
+            ? webFetcher.client.roomAuthInfo?.anchor_info.room_id
+            : webFetcher.client instanceof DirectClient
+              ? webFetcher.client.authInfo.roomId
+              : -1,
         startedAt: webFetcher.startedAt,
-
       }
     })
 
-    rpc.expose('start', async (data: { type: 'openlive' | 'direct', directAuthInfo?: DirectClientAuthInfo, force: boolean }) => {
-      console.log(`[web-fetcher-iframe] 接收到 ${data.force ? '强制' : ''}启动请求`)
-      if (data.force && webFetcher.state === 'connected') {
-        console.log('[web-fetcher-iframe] 强制启动, 停止当前实例')
-        webFetcher.Stop()
-      }
-      const result = await webFetcher.Start(data.type, data.directAuthInfo, true)
-      webFetcher.client?.on('all', onGetDanmaku)
-      return result
-    })
+    rpc.expose(
+      'start',
+      async (data: { type: 'openlive' | 'direct'; directAuthInfo?: DirectClientAuthInfo; force: boolean }) => {
+        console.log(`[web-fetcher-iframe] 接收到 ${data.force ? '强制' : ''}启动请求`)
+        if (data.force && webFetcher.state === 'connected') {
+          console.log('[web-fetcher-iframe] 强制启动, 停止当前实例')
+          webFetcher.Stop()
+        }
+        const result = await webFetcher.Start(data.type, data.directAuthInfo, true)
+        webFetcher.client?.on('all', onGetDanmaku)
+        return result
+      },
+    )
     rpc.expose('stop', () => {
       console.log('[web-fetcher-iframe] 接收到停止请求')
       webFetcher.Stop()
     })
-    rpc.expose('call-hub', (data: {
-      name: string
-      args: any[]
-    }) => {
+    rpc.expose('call-hub', (data: { name: string; args: any[] }) => {
       return webFetcher.signalRClient?.invoke(data.name, ...data.args)
     })
 

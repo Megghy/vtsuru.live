@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/api-models'
-import type { BlockNode, BlockVisibilityContext } from '../schema'
-import type { BiliProfileStatus } from '../../types'
-import { BLOCK_COMPONENTS } from '../registry'
 import { computed } from 'vue'
+
+import type { UserInfo } from '@/api/api-models'
+
+import type { BiliProfileStatus } from '../../types'
 import BlockCard from '../BlockCard.vue'
+import { BLOCK_COMPONENTS } from '../registry'
+import type { BlockNode, BlockVisibilityContext } from '../schema'
 import { isBlockVisible } from '../visibility'
 
 const props = defineProps<{
@@ -121,12 +123,16 @@ const gridJustifyItems = computed<'start' | 'center' | 'end' | 'stretch'>(() => 
 })
 
 const children = computed(() => asBlocks(propsObj.value.children))
-const renderedChildren = computed(() => props.editorMode
-  ? children.value
-  : children.value.filter(child => !child.hidden && isBlockVisible(child, props.visibilityContext)))
+const renderedChildren = computed(() =>
+  props.editorMode
+    ? children.value
+    : children.value.filter((child) => !child.hidden && isBlockVisible(child, props.visibilityContext)),
+)
 const selectedBlockIdSet = computed(() => new Set(props.selectedBlockIds ?? []))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : false))
-const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : false))
+const backgrounded = computed(() =>
+  typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : false,
+)
 const containerStyle = computed(() => ({
   maxWidth: maxWidth.value ?? undefined,
   margin: maxWidth.value ? '0 auto' : undefined,
@@ -136,9 +142,8 @@ const layoutStyle = computed(() => ({
   '--vtsuru-layout-columns': String(columns.value),
   justifyContent: layout.value === 'grid' ? justify.value.grid : justify.value.flex,
   alignItems: layout.value === 'grid' ? align.value.grid : align.value.flex,
-  alignContent: layout.value === 'grid'
-    ? align.value.grid
-    : (wrap.value && layout.value === 'row' ? align.value.flex : undefined),
+  alignContent:
+    layout.value === 'grid' ? align.value.grid : wrap.value && layout.value === 'row' ? align.value.flex : undefined,
   justifyItems: layout.value === 'grid' ? gridJustifyItems.value : undefined,
 }))
 
@@ -153,8 +158,15 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 </script>
 
 <template>
-  <BlockCard :framed="framed" :backgrounded="backgrounded" :content-style="{ padding: 0 }">
-    <div class="layout-container" :style="containerStyle">
+  <BlockCard
+    :framed="framed"
+    :backgrounded="backgrounded"
+    :content-style="{ padding: 0 }"
+  >
+    <div
+      class="layout-container"
+      :style="containerStyle"
+    >
       <div
         class="layout"
         :class="{
@@ -191,14 +203,18 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
             :bili-info="biliInfo"
             :bili-status="biliStatus"
             :block-id="child.type === 'heading' ? child.id : undefined"
-            v-bind="child.type === 'layout' ? {
-              highlightBlockId: props.highlightBlockId,
-              selectedBlockIds: props.selectedBlockIds,
-              editorMode: props.editorMode,
-              visibilityContext: props.visibilityContext,
-              onSelectBlock: (id: string) => emit('select-block', id),
-              onHoverBlock: (id: string | null) => emit('hover-block', id),
-            } : {}"
+            v-bind="
+              child.type === 'layout'
+                ? {
+                    highlightBlockId: props.highlightBlockId,
+                    selectedBlockIds: props.selectedBlockIds,
+                    editorMode: props.editorMode,
+                    visibilityContext: props.visibilityContext,
+                    onSelectBlock: (id: string) => emit('select-block', id),
+                    onHoverBlock: (id: string | null) => emit('hover-block', id),
+                  }
+                : {}
+            "
           />
         </div>
       </div>
@@ -297,7 +313,7 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 }
 
 .item.highlight::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: -2px;
   border-radius: calc(var(--vtsuru-page-radius) + 2px);

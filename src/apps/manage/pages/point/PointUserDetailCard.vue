@@ -1,15 +1,34 @@
 <script setup lang="ts">
+import { AddSquare24Regular, Info24Filled } from '@vicons/fluent'
+import {
+  NAvatar,
+  NButton,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NModal,
+  NSpin,
+  NStatistic,
+  NTabPane,
+  NTabs,
+  NTag,
+  NTime,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
+
 import type {
   ResponsePointGoodModel,
   ResponsePointHisrotyModel,
   ResponsePointOrder2OwnerModel,
   ResponsePointUserModel,
 } from '@/api/api-models'
-import { AddSquare24Regular, Info24Filled } from '@vicons/fluent'
-import {
-  NAvatar, NButton, NDivider, NEmpty, NFlex, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NSpin, NStatistic, NTabPane, NTabs, NTag, NTime, NTooltip, useMessage,
-} from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
@@ -92,17 +111,14 @@ async function getOrders() {
 
     if (data.code == 200) {
       return data.data
-    }
-    else {
+    } else {
       message.error(`获取订单失败: ${data.message}`)
       console.error(data)
     }
-  }
-  catch (err) {
+  } catch (err) {
     message.error(`获取订单失败: ${err}`)
     console.error(err)
-  }
-  finally {
+  } finally {
     isLoading.value = false
   }
 
@@ -125,17 +141,14 @@ async function getPointHistory() {
 
     if (data.code == 200) {
       return data.data
-    }
-    else {
+    } else {
       message.error(`获取积分历史失败: ${data.message}`)
       console.error(data)
     }
-  }
-  catch (err) {
+  } catch (err) {
     message.error(`获取积分历史失败: ${err}`)
     console.error(err)
-  }
-  finally {
+  } finally {
     isLoading.value = false
   }
 
@@ -173,17 +186,14 @@ async function givePoint() {
 
       addPointCount.value = 0
       addPointReason.value = ''
-    }
-    else {
+    } else {
       message.error(`添加积分失败: ${data.message}`)
       console.error(data)
     }
-  }
-  catch (err) {
+  } catch (err) {
     message.error(`添加积分失败: ${err}`)
     console.error(err)
-  }
-  finally {
+  } finally {
     isLoading.value = false
   }
 }
@@ -215,13 +225,13 @@ onMounted(async () => {
             round
             :size="64"
             fallback-src="/img/no-face.png"
-            style="border: 1px solid var(--vtsuru-border);"
+            style="border: 1px solid var(--vtsuru-border)"
           />
           <div class="user-basic-info">
             <NFlex
               align="center"
               :gap="8"
-              style="margin-bottom: 4px;"
+              style="margin-bottom: 4px"
             >
               <span class="user-name">{{ user.info.name || '未知用户' }}</span>
               <NTag
@@ -279,9 +289,7 @@ onMounted(async () => {
         </NGridItem>
         <NGridItem>
           <div class="info-item-static">
-            <div class="info-label">
-              认证时间
-            </div>
+            <div class="info-label">认证时间</div>
             <div class="info-value">
               <NTime
                 v-if="user.isAuthed"
@@ -342,7 +350,7 @@ onMounted(async () => {
     <NModal
       v-model:show="showAddPointModal"
       preset="card"
-      style="width: 480px; max-width: 90vw;"
+      style="width: 480px; max-width: 90vw"
       title="给予/扣除积分"
       :bordered="false"
       size="small"
@@ -388,14 +396,14 @@ onMounted(async () => {
           :autosize="{ minRows: 2, maxRows: 4 }"
         />
 
-        <div style="display: flex; justify-content: flex-end;">
+        <div style="display: flex; justify-content: flex-end">
           <NButton
             type="primary"
             :loading="isLoading"
             :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0"
             @click="givePoint"
           >
-            {{ !addPointCount || addPointCount === 0 ? '确定' : (addPointCount > 0 ? '确认给予' : '确认扣除') }}
+            {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '确认给予' : '确认扣除' }}
           </NButton>
         </div>
       </NFlex>

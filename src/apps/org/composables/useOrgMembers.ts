@@ -1,9 +1,11 @@
-import { computed, ref } from 'vue'
 import { useMessage } from 'naive-ui'
+import { computed, ref } from 'vue'
+
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
-import type { OrgContext } from './useOrgContext'
+
 import type { OrgMemberItem } from '../types'
+import type { OrgContext } from './useOrgContext'
 
 export function useOrgMembers(ctx: OrgContext) {
   const message = useMessage()
@@ -14,9 +16,7 @@ export function useOrgMembers(ctx: OrgContext) {
   const filtered = computed(() => {
     if (!search.value) return members.value
     const q = search.value.toLowerCase()
-    return members.value.filter(m =>
-      m.user.name.toLowerCase().includes(q) || String(m.user.id).includes(q),
-    )
+    return members.value.filter((m) => m.user.name.toLowerCase().includes(q) || String(m.user.id).includes(q))
   })
 
   async function load() {

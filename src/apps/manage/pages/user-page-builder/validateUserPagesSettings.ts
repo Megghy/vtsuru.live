@@ -1,6 +1,6 @@
-import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
+import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { isValidGoogleFontFamily } from '@/apps/user-page/googleFonts'
 import {
   isValidPageMaxWidth,
@@ -27,7 +27,7 @@ type IssueTarget = Pick<UserPageValidationIssue, 'scope' | 'pageKey' | 'blockId'
 type UnknownObject = Record<string, unknown>
 
 function asObject(value: unknown): UnknownObject | null {
-  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as UnknownObject : null
+  return value !== null && typeof value === 'object' && !Array.isArray(value) ? (value as UnknownObject) : null
 }
 
 function report(issues: UserPageValidationIssue[], target: IssueTarget, fieldPath: string | null, message: string) {
@@ -43,19 +43,31 @@ function validateTheme(value: unknown, fieldRoot: string, target: IssueTarget, i
   }
   const colors = ['primaryColor', 'textColor', 'textColorLight', 'textColorDark', 'backgroundColor']
   colors.forEach((key) => {
-    if (theme[key] !== undefined && typeof theme[key] !== 'string') report(issues, target, `${fieldRoot}.${key}`, `${key} 必须是 string`)
+    if (theme[key] !== undefined && typeof theme[key] !== 'string')
+      report(issues, target, `${fieldRoot}.${key}`, `${key} 必须是 string`)
   })
   if (theme.fontFamily !== undefined) {
-    if (typeof theme.fontFamily !== 'string') report(issues, target, `${fieldRoot}.fontFamily`, 'fontFamily 必须是 string')
-    else if (!isValidGoogleFontFamily(theme.fontFamily)) report(issues, target, `${fieldRoot}.fontFamily`, 'fontFamily 格式不合法')
+    if (typeof theme.fontFamily !== 'string')
+      report(issues, target, `${fieldRoot}.fontFamily`, 'fontFamily 必须是 string')
+    else if (!isValidGoogleFontFamily(theme.fontFamily))
+      report(issues, target, `${fieldRoot}.fontFamily`, 'fontFamily 格式不合法')
   }
   if (theme.autoTextContrast !== undefined && typeof theme.autoTextContrast !== 'boolean') {
     report(issues, target, `${fieldRoot}.autoTextContrast`, 'autoTextContrast 必须是 boolean')
   }
-  if (theme.radius !== undefined && (typeof theme.radius !== 'number' || !Number.isFinite(theme.radius) || theme.radius < 0 || theme.radius > 32)) {
+  if (
+    theme.radius !== undefined &&
+    (typeof theme.radius !== 'number' || !Number.isFinite(theme.radius) || theme.radius < 0 || theme.radius > 32)
+  ) {
     report(issues, target, `${fieldRoot}.radius`, 'radius 必须是 0~32 的数字')
   }
-  if (theme.surfaceOpacity !== undefined && (typeof theme.surfaceOpacity !== 'number' || !Number.isFinite(theme.surfaceOpacity) || theme.surfaceOpacity < 15 || theme.surfaceOpacity > 100)) {
+  if (
+    theme.surfaceOpacity !== undefined &&
+    (typeof theme.surfaceOpacity !== 'number' ||
+      !Number.isFinite(theme.surfaceOpacity) ||
+      theme.surfaceOpacity < 15 ||
+      theme.surfaceOpacity > 100)
+  ) {
     report(issues, target, `${fieldRoot}.surfaceOpacity`, 'surfaceOpacity 必须是 15~100 的数字')
   }
   const enumFields = [
@@ -70,7 +82,10 @@ function validateTheme(value: unknown, fieldRoot: string, target: IssueTarget, i
       report(issues, target, `${fieldRoot}.${key}`, `${key} 不合法`)
     }
   })
-  if (theme.pageMaxWidth !== undefined && (typeof theme.pageMaxWidth !== 'string' || !isValidPageMaxWidth(theme.pageMaxWidth))) {
+  if (
+    theme.pageMaxWidth !== undefined &&
+    (typeof theme.pageMaxWidth !== 'string' || !isValidPageMaxWidth(theme.pageMaxWidth))
+  ) {
     report(issues, target, `${fieldRoot}.pageMaxWidth`, 'pageMaxWidth 仅支持 none / 100% / 1200px 这类格式')
   }
   const mode = theme.pageThemeMode
@@ -87,18 +102,62 @@ function validateBackground(value: unknown, fieldRoot: string, target: IssueTarg
     return
   }
   const type = background.pageBackgroundType ?? 'none'
-  if (!['none', 'color', 'image'].includes(String(type))) report(issues, target, `${fieldRoot}.pageBackgroundType`, `背景类型不合法：${String(type)}`)
-  if (background.pageBackgroundCoverSidebar !== undefined && typeof background.pageBackgroundCoverSidebar !== 'boolean') report(issues, target, `${fieldRoot}.pageBackgroundCoverSidebar`, '侧栏背景设置必须是 boolean')
-  if (background.pageBackgroundImageFit !== undefined && !['cover', 'contain', 'fill', 'none'].includes(String(background.pageBackgroundImageFit))) report(issues, target, `${fieldRoot}.pageBackgroundImageFit`, `图片填充方式不合法：${String(background.pageBackgroundImageFit)}`)
-  if (background.pageBackgroundBlurMode !== undefined && !['none', 'background', 'glass'].includes(String(background.pageBackgroundBlurMode))) report(issues, target, `${fieldRoot}.pageBackgroundBlurMode`, `模糊模式不合法：${String(background.pageBackgroundBlurMode)}`)
-  if (background.pageBackgroundBlur !== undefined && typeof background.pageBackgroundBlur !== 'number') report(issues, target, `${fieldRoot}.pageBackgroundBlur`, '模糊强度必须是 number')
-  if (background.pageBackgroundScrimMode !== undefined && !['auto', 'black', 'white'].includes(String(background.pageBackgroundScrimMode))) report(issues, target, `${fieldRoot}.pageBackgroundScrimMode`, `遮罩模式不合法：${String(background.pageBackgroundScrimMode)}`)
+  if (!['none', 'color', 'image'].includes(String(type)))
+    report(issues, target, `${fieldRoot}.pageBackgroundType`, `背景类型不合法：${String(type)}`)
+  if (background.pageBackgroundCoverSidebar !== undefined && typeof background.pageBackgroundCoverSidebar !== 'boolean')
+    report(issues, target, `${fieldRoot}.pageBackgroundCoverSidebar`, '侧栏背景设置必须是 boolean')
+  if (
+    background.pageBackgroundImageFit !== undefined &&
+    !['cover', 'contain', 'fill', 'none'].includes(String(background.pageBackgroundImageFit))
+  )
+    report(
+      issues,
+      target,
+      `${fieldRoot}.pageBackgroundImageFit`,
+      `图片填充方式不合法：${String(background.pageBackgroundImageFit)}`,
+    )
+  if (
+    background.pageBackgroundBlurMode !== undefined &&
+    !['none', 'background', 'glass'].includes(String(background.pageBackgroundBlurMode))
+  )
+    report(
+      issues,
+      target,
+      `${fieldRoot}.pageBackgroundBlurMode`,
+      `模糊模式不合法：${String(background.pageBackgroundBlurMode)}`,
+    )
+  if (background.pageBackgroundBlur !== undefined && typeof background.pageBackgroundBlur !== 'number')
+    report(issues, target, `${fieldRoot}.pageBackgroundBlur`, '模糊强度必须是 number')
+  if (
+    background.pageBackgroundScrimMode !== undefined &&
+    !['auto', 'black', 'white'].includes(String(background.pageBackgroundScrimMode))
+  )
+    report(
+      issues,
+      target,
+      `${fieldRoot}.pageBackgroundScrimMode`,
+      `遮罩模式不合法：${String(background.pageBackgroundScrimMode)}`,
+    )
   const strength = background.pageBackgroundScrimStrength
-  if (strength !== undefined && (typeof strength !== 'number' || !Number.isFinite(strength) || strength < 0 || strength > 100)) report(issues, target, `${fieldRoot}.pageBackgroundScrimStrength`, '遮罩强度必须是 0~100 的数字')
-  if (type === 'color' && background.pageBackgroundColor !== undefined && typeof background.pageBackgroundColor !== 'string') report(issues, target, `${fieldRoot}.pageBackgroundColor`, '背景颜色必须是 string')
+  if (
+    strength !== undefined &&
+    (typeof strength !== 'number' || !Number.isFinite(strength) || strength < 0 || strength > 100)
+  )
+    report(issues, target, `${fieldRoot}.pageBackgroundScrimStrength`, '遮罩强度必须是 0~100 的数字')
+  if (
+    type === 'color' &&
+    background.pageBackgroundColor !== undefined &&
+    typeof background.pageBackgroundColor !== 'string'
+  )
+    report(issues, target, `${fieldRoot}.pageBackgroundColor`, '背景颜色必须是 string')
   const file = background.pageBackgroundImageFile
-  if (file !== undefined && (!asObject(file) || !Number.isInteger(asObject(file)?.id) || Number(asObject(file)?.id) <= 0)) report(issues, target, `${fieldRoot}.pageBackgroundImageFile`, '背景图片文件无效')
-  if (type === 'image' && file === undefined) report(issues, target, `${fieldRoot}.pageBackgroundImageFile`, '图片背景必须选择图片文件')
+  if (
+    file !== undefined &&
+    (!asObject(file) || !Number.isInteger(asObject(file)?.id) || Number(asObject(file)?.id) <= 0)
+  )
+    report(issues, target, `${fieldRoot}.pageBackgroundImageFile`, '背景图片文件无效')
+  if (type === 'image' && file === undefined)
+    report(issues, target, `${fieldRoot}.pageBackgroundImageFile`, '图片背景必须选择图片文件')
 }
 
 type BlockProjectValidator = typeof validateBlockPageProject
@@ -120,20 +179,23 @@ function validatePage(
   if (page.mode === 'block') {
     const result = validateBlockProject(page.block)
     if (result.ok === false) {
-      result.issues.forEach(issue => issues.push({
-        message: issue.message,
-        severity: issue.severity,
-        scope: 'block',
-        pageKey,
-        blockId: issue.blockId,
-        fieldPath: issue.fieldPath,
-      }))
+      result.issues.forEach((issue) =>
+        issues.push({
+          message: issue.message,
+          severity: issue.severity,
+          scope: 'block',
+          pageKey,
+          blockId: issue.blockId,
+          fieldPath: issue.fieldPath,
+        }),
+      )
     }
   } else if (page.mode === 'contrib') {
     if (!page.contrib) report(issues, pageTarget, 'contrib', '缺少贡献页配置')
     else {
       if (!page.contrib.pageId) report(issues, pageTarget, 'contrib.pageId', '贡献页 ID 不能为空')
-      if (page.contrib.scope === 'streamer' && !page.contrib.streamerId) report(issues, pageTarget, 'contrib.streamerId', '主播 ID 不能为空')
+      if (page.contrib.scope === 'streamer' && !page.contrib.streamerId)
+        report(issues, pageTarget, 'contrib.streamerId', '主播 ID 不能为空')
     }
   }
 }
@@ -145,14 +207,19 @@ function validateSettings(settings: UserPagesSettingsV1, validateBlockProject: B
   if (customCss !== undefined) {
     if (typeof customCss !== 'string') report(issues, settingsTarget, 'customCss', '全局 CSS 必须是 string')
     else {
-      if (utf8ByteLength(customCss) > CUSTOM_CSS_MAX_BYTES) report(issues, settingsTarget, 'customCss', `全局 CSS 不能超过 ${CUSTOM_CSS_MAX_BYTES / 1024} KiB`)
-      inspectCustomCss(customCss).issues.forEach(item => report(issues, settingsTarget, `customCss:${item.line}:${item.column}`, item.message))
+      if (utf8ByteLength(customCss) > CUSTOM_CSS_MAX_BYTES)
+        report(issues, settingsTarget, 'customCss', `全局 CSS 不能超过 ${CUSTOM_CSS_MAX_BYTES / 1024} KiB`)
+      inspectCustomCss(customCss).issues.forEach((item) =>
+        report(issues, settingsTarget, `customCss:${item.line}:${item.column}`, item.message),
+      )
     }
   }
   validateTheme((settings as unknown as UnknownObject).theme, 'theme', settingsTarget, issues)
   validateBackground(settings.background, 'background', settingsTarget, issues)
   validatePage('home', settings.home, issues, validateBlockProject)
-  Object.entries(settings.pages ?? {}).forEach(([pageKey, page]) => validatePage(pageKey, page, issues, validateBlockProject))
+  Object.entries(settings.pages ?? {}).forEach(([pageKey, page]) =>
+    validatePage(pageKey, page, issues, validateBlockProject),
+  )
   return issues
 }
 

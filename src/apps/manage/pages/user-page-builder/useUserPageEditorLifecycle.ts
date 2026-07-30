@@ -1,16 +1,18 @@
-import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'
-import { deepCloneJson, estimateUtf8Bytes, stableStringify } from './editorHelpers'
-import { validateRenderableUserPagesSettings, validateUserPagesSettings } from './validateUserPagesSettings'
-import { useUserPageAutoSave } from './useUserPageAutoSave'
-import type { UserPageEditorCore } from './useUserPageEditorCore'
-import { useUserPagePersistence } from './useUserPagePersistence'
-import { useUserPageStateLoader } from './useUserPageStateLoader'
-import { readUserPagesLocalDraft, useUserPagesLocalDraftStorage } from './useUserPagesLocalDraftStorage'
-import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import type { ComputedRef } from 'vue'
 import { computed, ref, watch } from 'vue'
+
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+
+import { deepCloneJson, estimateUtf8Bytes, stableStringify } from './editorHelpers'
+import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'
+import { useUserPageAutoSave } from './useUserPageAutoSave'
+import type { UserPageEditorCore } from './useUserPageEditorCore'
+import { useUserPagePersistence } from './useUserPagePersistence'
+import { readUserPagesLocalDraft, useUserPagesLocalDraftStorage } from './useUserPagesLocalDraftStorage'
+import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
+import { useUserPageStateLoader } from './useUserPageStateLoader'
+import { validateRenderableUserPagesSettings, validateUserPagesSettings } from './validateUserPagesSettings'
 
 interface UseUserPageEditorLifecycleOptions {
   core: UserPageEditorCore
@@ -52,13 +54,17 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
   const localDraftStorage = useUserPagesLocalDraftStorage(options.accountId)
   const localDraftConflict = ref<UserPagesLocalDraftSnapshot | null>(null)
   const localDraftBaseSnapshot = ref('')
-  watch(core.settings, settings => {
-    if (localDraftConflict.value) return
-    localDraftStorage.value = {
-      settings: deepCloneJson(settings),
-      baseSnapshot: localDraftBaseSnapshot.value,
-    }
-  }, { deep: true })
+  watch(
+    core.settings,
+    (settings) => {
+      if (localDraftConflict.value) return
+      localDraftStorage.value = {
+        settings: deepCloneJson(settings),
+        baseSnapshot: localDraftBaseSnapshot.value,
+      }
+    },
+    { deep: true },
+  )
   const loader = useUserPageStateLoader({
     settings: core.settings,
     loadedDraft: core.loadedDraft,
@@ -157,7 +163,16 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
   }
 
   return {
-    ...createLifecycleResult(core, persistence, autoSave, resources, configBytes, configBytesPercent, hasUnpublishedChanges, createInitializer(core, loader.loadState)),
+    ...createLifecycleResult(
+      core,
+      persistence,
+      autoSave,
+      resources,
+      configBytes,
+      configBytesPercent,
+      hasUnpublishedChanges,
+      createInitializer(core, loader.loadState),
+    ),
     localDraftConflict,
     restoreConflictingLocalDraft,
     discardConflictingLocalDraft,

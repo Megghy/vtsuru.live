@@ -1,12 +1,27 @@
 <script setup lang="ts">
-import type {
-  FormRules,
-} from 'naive-ui'
-import type { VideoCollectTable } from '@/api/api-models'
-import { NButton, NCard, NDatePicker, NEmpty, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NSpin, NText, useMessage } from 'naive-ui';
 import { Add20Regular } from '@vicons/fluent'
+import type { FormRules } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NDatePicker,
+  NEmpty,
+  NForm,
+  NFormItem,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NModal,
+  NSpin,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { VideoCollectTable } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -23,7 +38,9 @@ const defaultModel = { maxVideoCount: 50 } as VideoCollectTable
 const createVideoModel = ref<VideoCollectTable>(JSON.parse(JSON.stringify(defaultModel)))
 
 const videoTables = ref<VideoCollectTable[]>(await get())
-const videoCollectUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/video-collect` : '')
+const videoCollectUrl = computed(() =>
+  accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/video-collect` : '',
+)
 
 const createRules: FormRules = {
   name: [
@@ -139,16 +156,24 @@ function createTable() {
     </ManagePageHeader>
 
     <NSpin :show="isLoading">
-      <NCard v-if="videoTables.length === 0 && !isLoading" size="small" :bordered="true" class="empty-card">
+      <NCard
+        v-if="videoTables.length === 0 && !isLoading"
+        size="small"
+        :bordered="true"
+        class="empty-card"
+      >
         <NEmpty description="暂无征集表">
           <template #extra>
-            <NButton type="primary" @click="createModalVisible = true">
+            <NButton
+              type="primary"
+              @click="createModalVisible = true"
+            >
               创建第一个征集表
             </NButton>
           </template>
         </NEmpty>
       </NCard>
-      
+
       <div
         v-else
         class="grid-container"
@@ -246,7 +271,7 @@ function createTable() {
             </NFormItem>
           </NGridItem>
         </NGrid>
-        
+
         <div class="modal-footer">
           <NText
             depth="3"

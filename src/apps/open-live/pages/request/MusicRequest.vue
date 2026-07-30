@@ -1,30 +1,55 @@
 <script setup lang="ts">
-import type {
-  SelectOption,
-} from 'naive-ui'
-import type { EventModel, OpenLiveInfo, SongsInfo } from '@/api/api-models'
-import type { Music, MusicRequestSettings, WaitMusicInfo } from '@/store/useMusicRequest'
-import { List } from 'linqts'
 import { Copy24Regular, Search24Regular } from '@vicons/fluent'
+import { List } from 'linqts'
+import type { SelectOption } from 'naive-ui'
 import {
-  NAlert, NButton, NCheckbox, NDivider, NEmpty, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NList, NListItem, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSelect, NFlex, NTabPane, NTabs, NTag, NText, NTooltip, NTransfer, NVirtualList, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NList,
+  NListItem,
+  NModal,
+  NPopconfirm,
+  NRadioButton,
+  NRadioGroup,
+  NSelect,
+  NFlex,
+  NTabPane,
+  NTabs,
+  NTag,
+  NText,
+  NTooltip,
+  NTransfer,
+  NVirtualList,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
+
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
+import type { EventModel, OpenLiveInfo, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
+import ObsConfigModal from '@/apps/open-live/components/ObsConfigModal.vue'
+import OpenLivePageLayout from '@/apps/open-live/components/OpenLivePageLayout.vue'
+import MusicRequestItem from '@/apps/open-live/components/request/MusicRequestItem.vue'
 import { MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
 import { formatListForCopy } from '@/shared/utils/queue'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
+import type { Music, MusicRequestSettings, WaitMusicInfo } from '@/store/useMusicRequest'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import { useOBSNotification } from '@/store/useOBSNotification'
-import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
-import MusicRequestItem from '@/apps/open-live/components/request/MusicRequestItem.vue'
-import ObsConfigModal from '@/apps/open-live/components/ObsConfigModal.vue'
-import OpenLivePageLayout from '@/apps/open-live/components/OpenLivePageLayout.vue'
-import { usePersistedStorage } from '@/shared/storage/persist'
 
 defineProps<{
   roomInfo?: OpenLiveInfo
@@ -62,10 +87,10 @@ const neteaseIdInput = ref('')
 const neteaseSongListId = computed(() => parseNeteaseSongListId(neteaseIdInput.value))
 const neteaseSongs = ref<SongsInfo[]>([])
 const neteaseSongsOptions = computed(() => {
-  return neteaseSongs.value.map(s => ({
+  return neteaseSongs.value.map((s) => ({
     label: `${s.name} - ${s.author.join('/')}`,
     value: s.key,
-    disabled: originMusics.value.findIndex(exist => exist.id == s.id) > -1,
+    disabled: originMusics.value.findIndex((exist) => exist.id == s.id) > -1,
   }))
 })
 const selectedNeteaseSongs = ref<string[]>([])
@@ -94,7 +119,7 @@ const activeCooldowns = computed(() => {
         total: cd,
       }
     })
-    .filter(c => c.remain > 0)
+    .filter((c) => c.remain > 0)
     .toSorted((a, b) => a.remain - b.remain)
 })
 const filteredWaitingMusics = computed(() => {
@@ -102,17 +127,16 @@ const filteredWaitingMusics = computed(() => {
   if (!keyword) {
     return musicRquestStore.waitingMusics
   }
-  return musicRquestStore.waitingMusics.filter(item =>
-    item.music.name?.toLowerCase().includes(keyword)
-    || item.from?.name?.toLowerCase().includes(keyword),
+  return musicRquestStore.waitingMusics.filter(
+    (item) => item.music.name?.toLowerCase().includes(keyword) || item.from?.name?.toLowerCase().includes(keyword),
   )
 })
 
 function copyWaitingList() {
   const text = formatListForCopy(
     musicRquestStore.waitingMusics,
-    item => item.music.name,
-    item => item.from?.name,
+    (item) => item.music.name,
+    (item) => item.from?.name,
   )
   if (!text) {
     return
@@ -131,7 +155,7 @@ async function get() {
     const data = await QueryGetAPI<SongsInfo[]>(`${MUSIC_REQUEST_API_URL}get`)
     if (data.code == 200) {
       console.log('[OPEN-LIVE-Music-Request] 已获取所有数据')
-      return new List(data.data).OrderByDescending(s => s.createTime).ToArray()
+      return new List(data.data).OrderByDescending((s) => s.createTime).ToArray()
     } else {
       message.error(`无法获取数据: ${data.message}`)
       return []
@@ -143,7 +167,7 @@ async function get() {
   return []
 }
 async function searchMusic(keyword: string) {
-  const inSongList = originMusics.value.find(m => m.name.toLowerCase().trim() == keyword.toLowerCase().trim())
+  const inSongList = originMusics.value.find((m) => m.name.toLowerCase().trim() == keyword.toLowerCase().trim())
   if (inSongList) {
     return {
       song: inSongList,
@@ -161,9 +185,7 @@ async function searchMusic(keyword: string) {
       }
     }
 
-    const reason = data.code === 404
-      ? `未找到包含关键词“${keyword}”的歌曲`
-      : `搜索失败: ${data.message}`
+    const reason = data.code === 404 ? `未找到包含关键词“${keyword}”的歌曲` : `搜索失败: ${data.message}`
     message.error(reason)
     return {
       song: undefined,
@@ -183,15 +205,17 @@ function publishMusicRequestResult(success: boolean, userName: string, content: 
   if (!accountInfo.value.id) {
     return
   }
-  void obsNotification.publish({
-    Type: success ? 'success' : 'failed',
-    Title: '点歌',
-    Message: content,
-    Source: 'music-request',
-    UserName: userName,
-  }).catch((err) => {
-    console.warn('[OBS] 发布点歌通知失败', err)
-  })
+  void obsNotification
+    .publish({
+      Type: success ? 'success' : 'failed',
+      Title: '点歌',
+      Message: content,
+      Source: 'music-request',
+      UserName: userName,
+    })
+    .catch((err) => {
+      console.warn('[OBS] 发布点歌通知失败', err)
+    })
 }
 async function getNeteaseSongList() {
   isLoading.value = true
@@ -202,7 +226,7 @@ async function getNeteaseSongList() {
       if (data.code == 200) {
         neteaseSongs.value = data.data
         message.success(
-          `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter(s => s.disabled).length} 首`,
+          `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
         )
       } else {
         message.error(`获取歌单失败: ${data.message}`)
@@ -217,7 +241,7 @@ async function getNeteaseSongList() {
 }
 async function addNeteaseSongs() {
   isLoading.value = true
-  const selected = neteaseSongs.value.filter(s => selectedNeteaseSongs.value.find(select => s.key == select))
+  const selected = neteaseSongs.value.filter((s) => selectedNeteaseSongs.value.find((select) => s.key == select))
   await addSongs(selected, SongFrom.Netease)
     .then((data) => {
       if (data.code == 200) {
@@ -238,7 +262,7 @@ async function addNeteaseSongs() {
 async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
   return QueryPostAPI<SongsInfo[]>(
     `${MUSIC_REQUEST_API_URL}add`,
-    songsShoudAdd.map(s => ({
+    songsShoudAdd.map((s) => ({
       Name: s.name,
       Id: from == SongFrom.Custom ? -1 : s.id,
       From: from,
@@ -254,7 +278,7 @@ function delMusic(song: SongsInfo) {
     .then((data) => {
       if (data.code == 200) {
         message.success('已删除')
-        musicRquestStore.originMusics = originMusics.value.filter(s => s.key != song.key)
+        musicRquestStore.originMusics = originMusics.value.filter((s) => s.key != song.key)
       } else {
         message.error(`删除失败: ${data.message}`)
       }
@@ -389,8 +413,8 @@ async function getOutputDevice() {
     const list = await navigator.mediaDevices.enumerateDevices()
 
     deviceList.value = list
-      .filter(device => device.kind === 'audiooutput')
-      .map(d => ({ label: d.label, value: d.deviceId }))
+      .filter((device) => device.kind === 'audiooutput')
+      .map((d) => ({ label: d.label, value: d.deviceId }))
   } catch (err) {
     console.error(err)
     message.error(`获取音频输出设备失败, 获取你需要授予网页读取麦克风权限: ${err}`)
@@ -399,7 +423,7 @@ async function getOutputDevice() {
 function blockMusic(song: SongsInfo) {
   settings.value.blacklist.push(song.name)
   musicRquestStore.waitingMusics.splice(
-    musicRquestStore.waitingMusics.findIndex(m => m.music == song),
+    musicRquestStore.waitingMusics.findIndex((m) => m.music == song),
     1,
   )
   message.success(`[${song.name}] 已添加到黑名单`)
@@ -422,7 +446,7 @@ onMounted(async () => {
   }
   await getOutputDevice()
   if (deviceList.value.length > 0) {
-    if (!deviceList.value.find(d => d.value == settings.value.deviceId)) {
+    if (!deviceList.value.find((d) => d.value == settings.value.deviceId)) {
       settings.value.deviceId = undefined
     } else {
       musicRquestStore.setSinkId()
@@ -499,12 +523,23 @@ onUnmounted(() => {
       </NPopconfirm>
     </template>
 
-    <NAlert type="info" size="small" :bordered="false">
+    <NAlert
+      type="info"
+      size="small"
+      :bordered="false"
+    >
       搜索时会优先选择非VIP歌曲，所以点到付费曲目时可能会是猴版或者各种奇怪的歌。
     </NAlert>
 
-    <NCard size="small" bordered>
-      <NTabs type="line" animated size="small">
+    <NCard
+      size="small"
+      bordered
+    >
+      <NTabs
+        type="line"
+        animated
+        size="small"
+      >
         <NTabPane
           name="queue"
           tab="当前点歌"
@@ -515,9 +550,9 @@ onUnmounted(() => {
             justify="space-between"
             wrap
             :size="10"
-            style="margin-bottom: 10px;"
+            style="margin-bottom: 10px"
           >
-            <NInputGroup style="max-width: 260px;">
+            <NInputGroup style="max-width: 260px">
               <NInput
                 v-model:value="waitingFilter"
                 placeholder="搜索歌名 / 点歌人"
@@ -531,7 +566,11 @@ onUnmounted(() => {
             </NInputGroup>
             <NTooltip>
               <template #trigger>
-                <NButton size="small" ghost @click="copyWaitingList">
+                <NButton
+                  size="small"
+                  ghost
+                  @click="copyWaitingList"
+                >
                   <template #icon>
                     <NIcon :component="Copy24Regular" />
                   </template>
@@ -548,15 +587,30 @@ onUnmounted(() => {
             embedded
             :bordered="false"
             content-style="padding: 8px 12px;"
-            style="margin-bottom: 10px;"
+            style="margin-bottom: 10px"
           >
-            <NFlex align="center" :size="6" wrap>
-              <NText depth="3" style="font-size: 12px; margin-right: 4px;">
+            <NFlex
+              align="center"
+              :size="6"
+              wrap
+            >
+              <NText
+                depth="3"
+                style="font-size: 12px; margin-right: 4px"
+              >
                 冷却中:
               </NText>
-              <NTooltip v-for="c in activeCooldowns" :key="c.uid">
+              <NTooltip
+                v-for="c in activeCooldowns"
+                :key="c.uid"
+              >
                 <template #trigger>
-                  <NTag size="small" type="warning" :bordered="false" round>
+                  <NTag
+                    size="small"
+                    type="warning"
+                    :bordered="false"
+                    round
+                  >
                     {{ c.name }} · {{ c.remain }}s
                   </NTag>
                 </template>
@@ -575,7 +629,11 @@ onUnmounted(() => {
             description="没有匹配的点歌"
             style="margin-top: 40px"
           />
-          <NFlex v-else vertical :size="0">
+          <NFlex
+            v-else
+            vertical
+            :size="0"
+          >
             <template
               v-for="item in filteredWaitingMusics"
               :key="item.music.name"
@@ -603,14 +661,21 @@ onUnmounted(() => {
             justify="space-between"
             wrap
             :size="10"
-            style="margin-bottom: 10px;"
+            style="margin-bottom: 10px"
           >
-            <NText depth="3" style="font-size: 12px;">
+            <NText
+              depth="3"
+              style="font-size: 12px"
+            >
               本地记录最近 {{ musicRquestStore.history.length }} 条 (已播放 / 已取消)
             </NText>
             <NPopconfirm @positive-click="musicRquestStore.clearHistory">
               <template #trigger>
-                <NButton size="small" ghost type="error">
+                <NButton
+                  size="small"
+                  ghost
+                  type="error"
+                >
                   清空历史
                 </NButton>
               </template>
@@ -623,13 +688,27 @@ onUnmounted(() => {
             description="暂无点歌历史"
             style="margin-top: 40px"
           />
-          <NFlex v-else vertical :size="0">
+          <NFlex
+            v-else
+            vertical
+            :size="0"
+          >
             <template
               v-for="(entry, index) in musicRquestStore.history"
               :key="`${entry.time}-${index}`"
             >
-              <NFlex align="center" justify="space-between" :wrap="false" style="padding: 6px 4px;">
-                <NFlex align="center" :size="8" :wrap="false" style="min-width: 0;">
+              <NFlex
+                align="center"
+                justify="space-between"
+                :wrap="false"
+                style="padding: 6px 4px"
+              >
+                <NFlex
+                  align="center"
+                  :size="8"
+                  :wrap="false"
+                  style="min-width: 0"
+                >
                   <NTag
                     size="tiny"
                     :type="entry.status === 'played' ? 'success' : 'error'"
@@ -637,17 +716,26 @@ onUnmounted(() => {
                   >
                     {{ entry.status === 'played' ? '已播放' : '已取消' }}
                   </NTag>
-                  <NText style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  <NText style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
                     {{ entry.music.name }}
                   </NText>
-                  <NText depth="3" style="font-size: 12px; white-space: nowrap;">
+                  <NText
+                    depth="3"
+                    style="font-size: 12px; white-space: nowrap"
+                  >
                     {{ entry.music.author?.join('/') }}
                   </NText>
-                  <NText depth="2" style="font-size: 12px; white-space: nowrap;">
+                  <NText
+                    depth="2"
+                    style="font-size: 12px; white-space: nowrap"
+                  >
                     点歌人: {{ entry.from?.name ?? '主播添加' }}
                   </NText>
                 </NFlex>
-                <NText depth="3" style="font-size: 12px; white-space: nowrap; flex-shrink: 0;">
+                <NText
+                  depth="3"
+                  style="font-size: 12px; white-space: nowrap; flex-shrink: 0"
+                >
                   {{ formatHistoryTime(entry.time) }}
                 </NText>
               </NFlex>
@@ -660,23 +748,35 @@ onUnmounted(() => {
           name="list"
           tab="闲置歌单"
         >
-          <NFlex align="center" :wrap="true" :size="10" class="music-request__tab-actions">
+          <NFlex
+            align="center"
+            :wrap="true"
+            :size="10"
+            class="music-request__tab-actions"
+          >
             <NPopconfirm @positive-click="clearMusic">
               <template #trigger>
-                <NButton type="error" secondary size="small" class="open-live-action-btn">
+                <NButton
+                  type="error"
+                  secondary
+                  size="small"
+                  class="open-live-action-btn"
+                >
                   清空
                 </NButton>
               </template>
               确定清空吗?
             </NPopconfirm>
-            <NButton size="small" class="open-live-action-btn" @click="showNeteaseModal = true">
+            <NButton
+              size="small"
+              class="open-live-action-btn"
+              @click="showNeteaseModal = true"
+            >
               从网易云歌单导入
             </NButton>
           </NFlex>
 
-          <NEmpty v-if="musicRquestStore.originMusics.length === 0">
-            暂无
-          </NEmpty>
+          <NEmpty v-if="musicRquestStore.originMusics.length === 0"> 暂无 </NEmpty>
           <NVirtualList
             v-else
             class="music-request__list"
@@ -686,7 +786,13 @@ onUnmounted(() => {
           >
             <template #default="{ item }">
               <div class="music-request__list-row">
-                <NFlex align="center" justify="space-between" style="width: 100%" :wrap="true" :size="10">
+                <NFlex
+                  align="center"
+                  justify="space-between"
+                  style="width: 100%"
+                  :wrap="true"
+                  :size="10"
+                >
                   <NPopconfirm @positive-click="delMusic(item)">
                     <template #trigger>
                       <NButton
@@ -719,7 +825,10 @@ onUnmounted(() => {
           name="blacklist"
           tab="黑名单"
         >
-          <NList size="small" bordered>
+          <NList
+            size="small"
+            bordered
+          >
             <NListItem
               v-for="item in settings.blacklist"
               :key="item"
@@ -746,25 +855,36 @@ onUnmounted(() => {
           name="settings"
           tab="设置"
         >
-          <NFlex vertical :size="12">
-            <NFlex align="center" :wrap="true" :size="12">
-              <NRadioGroup v-model:value="settings.platform" size="small">
-                <NRadioButton value="netease">
-                  网易云
-                </NRadioButton>
-                <NRadioButton value="kugou">
-                  酷狗
-                </NRadioButton>
+          <NFlex
+            vertical
+            :size="12"
+          >
+            <NFlex
+              align="center"
+              :wrap="true"
+              :size="12"
+            >
+              <NRadioGroup
+                v-model:value="settings.platform"
+                size="small"
+              >
+                <NRadioButton value="netease"> 网易云 </NRadioButton>
+                <NRadioButton value="kugou"> 酷狗 </NRadioButton>
               </NRadioGroup>
               <NInputGroup class="music-request__field--prefix">
                 <NInputGroupLabel> 点歌弹幕前缀 </NInputGroupLabel>
-                <NInput v-model:value="settings.orderPrefix" size="small" />
+                <NInput
+                  v-model:value="settings.orderPrefix"
+                  size="small"
+                />
               </NInputGroup>
               <NCheckbox
                 :checked="settings.orderCooldown != null"
-                @update:checked="(checked: boolean) => {
-                  settings.orderCooldown = checked ? 300 : undefined
-                }"
+                @update:checked="
+                  (checked: boolean) => {
+                    settings.orderCooldown = checked ? 300 : undefined
+                  }
+                "
               >
                 是否启用点歌冷却
               </NCheckbox>
@@ -776,21 +896,26 @@ onUnmounted(() => {
                 <NInputNumber
                   v-model:value="settings.orderCooldown"
                   size="small"
-                  @update:value="(value) => {
-                    if (!value || value <= 0) settings.orderCooldown = undefined
-                  }"
+                  @update:value="
+                    (value) => {
+                      if (!value || value <= 0) settings.orderCooldown = undefined
+                    }
+                  "
                 />
               </NInputGroup>
             </NFlex>
-            <NFlex :wrap="true" :size="12">
-              <NCheckbox v-model:checked="settings.playMusicWhenFree">
-                空闲时播放空闲歌单
-              </NCheckbox>
-              <NCheckbox v-model:checked="settings.orderMusicFirst">
-                优先播放点歌
-              </NCheckbox>
+            <NFlex
+              :wrap="true"
+              :size="12"
+            >
+              <NCheckbox v-model:checked="settings.playMusicWhenFree"> 空闲时播放空闲歌单 </NCheckbox>
+              <NCheckbox v-model:checked="settings.orderMusicFirst"> 优先播放点歌 </NCheckbox>
             </NFlex>
-            <NFlex align="center" :wrap="true" :size="12">
+            <NFlex
+              align="center"
+              :wrap="true"
+              :size="12"
+            >
               <NTooltip>
                 <template #trigger>
                   <NButton

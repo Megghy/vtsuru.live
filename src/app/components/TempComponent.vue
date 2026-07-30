@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { NSpin, useDialog, useLoadingBar, useMessage, useModal, useNotification } from 'naive-ui';
+import { NSpin, useDialog, useLoadingBar, useMessage, useModal, useNotification } from 'naive-ui'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
-
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
 const accountInfo = useAccount()
@@ -25,7 +25,7 @@ onMounted(() => {
 <template>
   <NSpin
     v-if="($route.query.token || cookie) && accountInfo.id < 1"
-    style="margin: 0 auto;"
+    style="margin: 0 auto"
   />
   <div
     v-else

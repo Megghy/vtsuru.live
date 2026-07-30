@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NIcon } from 'naive-ui';
-import { computed } from 'vue'
 import { ChatbubbleEllipsesOutline } from '@vicons/ionicons5'
+import { NIcon } from 'naive-ui'
+import { computed } from 'vue'
+
 import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
@@ -12,13 +13,14 @@ interface BlockConfig {
   backgrounded?: boolean
 }
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
-  const align = (o.align === 'left' || o.align === 'center' || o.align === 'right') ? o.align : 'center'
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
+  const align = o.align === 'left' || o.align === 'center' || o.align === 'right' ? o.align : 'center'
   return {
     text: typeof o.text === 'string' ? o.text : '',
     author: typeof o.author === 'string' ? o.author : '',
@@ -30,18 +32,35 @@ const cfg = computed<BlockConfig>(() => {
 </script>
 
 <template>
-  <BlockCard class="quote-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded" :content-style="{ padding: 0 }">
+  <BlockCard
+    class="quote-card"
+    :framed="cfg.framed"
+    :backgrounded="cfg.backgrounded"
+    :content-style="{ padding: 0 }"
+  >
     <div class="quote-bg-icon">
       <NIcon><ChatbubbleEllipsesOutline /></NIcon>
     </div>
-    <div class="quote" :style="{ textAlign: cfg.align }">
-      <div v-if="cfg.text" class="quote-text">
+    <div
+      class="quote"
+      :style="{ textAlign: cfg.align }"
+    >
+      <div
+        v-if="cfg.text"
+        class="quote-text"
+      >
         “{{ cfg.text }}”
       </div>
-      <div v-else class="quote-text placeholder">
+      <div
+        v-else
+        class="quote-text placeholder"
+      >
         未设置内容
       </div>
-      <div v-if="cfg.author" class="quote-author">
+      <div
+        v-if="cfg.author"
+        class="quote-author"
+      >
         —— {{ cfg.author }}
       </div>
     </div>

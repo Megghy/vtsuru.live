@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import type { BlockNode } from '@/apps/user-page/block/schema'
 import { NCheckboxGroup, NFlex, NForm, NFormItem, NSelect, NSwitch } from 'naive-ui'
+
+import type { BlockNode } from '@/apps/user-page/block/schema'
+
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
@@ -9,7 +11,10 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
-  <NForm label-placement="top" size="small">
+  <NForm
+    label-placement="top"
+    size="small"
+  >
     <PropsGrid>
       <NFormItem label="排列方式">
         <NSelect
@@ -32,7 +37,10 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
       </NFormItem>
       <NFormItem label="显示序号">
         <NFlex justify="end">
-          <NSwitch v-model:value="blockProps.showNumbers" size="small" />
+          <NSwitch
+            v-model:value="blockProps.showNumbers"
+            size="small"
+          />
         </NFlex>
       </NFormItem>
     </PropsGrid>

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
-import { NEmpty } from 'naive-ui';
+import { NEmpty } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
+
+import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SONG_API_URL } from '@/shared/config'
@@ -45,7 +46,7 @@ function OnPlayMusic(song: SongsInfo) {
 }
 async function GetLyric(song: SongsInfo) {
   emits('update:isLrcLoading', song.key)
-  QueryGetAPI<{ lyric: string, tlyric: string }>(`${SONG_API_URL}get-netease-lyric`, { id: song.id })
+  QueryGetAPI<{ lyric: string; tlyric: string }>(`${SONG_API_URL}get-netease-lyric`, { id: song.id })
     .then((data) => {
       console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
       if (data.code == 200) {
@@ -87,7 +88,7 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
 
     if (originalTimeMatch) {
       const originalTime = originalTimeMatch[1]
-      const translatedLineIndex = translatedLines.findIndex(line => line.includes(originalTime))
+      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
 
       if (translatedLineIndex !== -1) {
         const translatedLine = translatedLines[translatedLineIndex]

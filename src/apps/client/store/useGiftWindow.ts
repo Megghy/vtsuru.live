@@ -1,10 +1,11 @@
-import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import type { EventModel } from '@/api/api-models'
 import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
+import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
+
+import type { EventModel } from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export type GiftSortBy = 'time' | 'price' | 'num'
 export type GiftFilterType = 'Gift' | 'SC' | 'Guard'
@@ -166,11 +167,16 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     const mergeMs = settings.value.mergeWindowSeconds * 1000
 
     // 仅礼物按礼物名合并；SC/Guard 每条都是独立内容，不合并
-    const existing = data.type === EventDataTypes.Gift
-      ? giftList.value.find(
-          e => e.uid === data.uid && e.type === EventDataTypes.Gift && e.giftName === data.msg && (now - e.lastUpdateTime) < mergeMs,
-        )
-      : undefined
+    const existing =
+      data.type === EventDataTypes.Gift
+        ? giftList.value.find(
+            (e) =>
+              e.uid === data.uid &&
+              e.type === EventDataTypes.Gift &&
+              e.giftName === data.msg &&
+              now - e.lastUpdateTime < mergeMs,
+          )
+        : undefined
 
     if (existing) {
       existing.totalNum += data.num || 1
@@ -207,9 +213,15 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   function getSortedList(): GiftEntry[] {
     const list = [...giftList.value]
     switch (settings.value.sortBy) {
-      case 'price': list.sort((a, b) => b.totalPrice - a.totalPrice); break
-      case 'num': list.sort((a, b) => b.totalNum - a.totalNum); break
-      default: list.sort((a, b) => b.lastUpdateTime - a.lastUpdateTime); break
+      case 'price':
+        list.sort((a, b) => b.totalPrice - a.totalPrice)
+        break
+      case 'num':
+        list.sort((a, b) => b.totalNum - a.totalNum)
+        break
+      default:
+        list.sort((a, b) => b.lastUpdateTime - a.lastUpdateTime)
+        break
     }
     if (settings.value.reverseOrder) list.reverse()
     return list
@@ -267,13 +279,13 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     if (settings.value.autoDisappearTime <= 0 || giftList.value.length === 0) return
     const now = Date.now()
     const before = giftList.value.length
-    giftList.value = giftList.value.filter(e => !e.disappearAt || e.disappearAt > now)
+    giftList.value = giftList.value.filter((e) => !e.disappearAt || e.disappearAt > now)
     if (giftList.value.length !== before) sendGiftList()
   }
 
   async function init() {
     if (isInited) return
-    giftWindow.value = (await getAllWebviewWindows()).find(w => w.label === 'gift-window')
+    giftWindow.value = (await getAllWebviewWindows()).find((w) => w.label === 'gift-window')
     if (!giftWindow.value) return
 
     giftWindow.value.onCloseRequested((event) => {
@@ -300,16 +312,29 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     bc.postMessage({ type: 'window-ready' })
     bc.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
 
-    danmakuClient.onEvent('gift', e => { onGiftEvent(e); updateRank(e) })
-    danmakuClient.onEvent('sc', e => { onGiftEvent(e); updateRank(e) })
-    danmakuClient.onEvent('guard', e => { onGiftEvent(e); updateRank(e) })
-    danmakuClient.onEvent('danmaku', e => updateRank(e))
+    danmakuClient.onEvent('gift', (e) => {
+      onGiftEvent(e)
+      updateRank(e)
+    })
+    danmakuClient.onEvent('sc', (e) => {
+      onGiftEvent(e)
+      updateRank(e)
+    })
+    danmakuClient.onEvent('guard', (e) => {
+      onGiftEvent(e)
+      updateRank(e)
+    })
+    danmakuClient.onEvent('danmaku', (e) => updateRank(e))
 
-    watch(() => settings, (v) => {
-      bc?.postMessage({ type: 'update-setting', data: toRaw(v.value) })
-      applyWindowSettings()
-      sendGiftList()
-    }, { deep: true })
+    watch(
+      () => settings,
+      (v) => {
+        bc?.postMessage({ type: 'update-setting', data: toRaw(v.value) })
+        applyWindowSettings()
+        sendGiftList()
+      },
+      { deep: true },
+    )
 
     setInterval(cleanupExpired, 1000)
     isInited = true
@@ -324,18 +349,44 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       uid: Math.floor(Math.random() * 100000),
       uname: `测试用户${Math.floor(Math.random() * 100)}`,
       uface: 'https://i0.hdslb.com/bfs/face/member/noface.jpg',
-      msg: t === EventDataTypes.Guard ? '开通了舰长' : t === EventDataTypes.SC ? '感谢主播！' : gifts[Math.floor(Math.random() * gifts.length)],
+      msg:
+        t === EventDataTypes.Guard
+          ? '开通了舰长'
+          : t === EventDataTypes.SC
+            ? '感谢主播！'
+            : gifts[Math.floor(Math.random() * gifts.length)],
       num: t === EventDataTypes.Gift ? Math.floor(Math.random() * 20) + 1 : 1,
-      price: t === EventDataTypes.SC ? [30, 50, 100, 500][Math.floor(Math.random() * 4)] : t === EventDataTypes.Guard ? 198 : [100, 1000, 5000][Math.floor(Math.random() * 3)],
+      price:
+        t === EventDataTypes.SC
+          ? [30, 50, 100, 500][Math.floor(Math.random() * 4)]
+          : t === EventDataTypes.Guard
+            ? 198
+            : [100, 1000, 5000][Math.floor(Math.random() * 3)],
       guard_level: t === EventDataTypes.Guard ? GuardLevel.Jianzhang : GuardLevel.None,
-      open_id: '', time: Date.now(), fans_medal_level: 0, fans_medal_name: '', fans_medal_wearing_status: false, ouid: '',
+      open_id: '',
+      time: Date.now(),
+      fans_medal_level: 0,
+      fans_medal_name: '',
+      fans_medal_wearing_status: false,
+      ouid: '',
     })
   }
 
   return {
-    giftWindow, settings, isGiftWindowOpen: isWindowOpened, giftList, rankMap,
-    openWindow, closeWindow, setSize, setPosition, updateWindowPosition,
-    clearGifts, clearRank, sendTestGift, init,
+    giftWindow,
+    settings,
+    isGiftWindowOpen: isWindowOpened,
+    giftList,
+    rankMap,
+    openWindow,
+    closeWindow,
+    setSize,
+    setPosition,
+    updateWindowPosition,
+    clearGifts,
+    clearRank,
+    sendTestGift,
+    init,
   }
 })
 

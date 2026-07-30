@@ -1,19 +1,23 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import type { Position } from '@/types/gamepad'
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{
-  name?: string
-  svg?: Component
-  position?: Position
-  isPressed?: boolean
-}>(), {
-  name: 'Button',
-  svg: undefined,
-  isPressed: false,
-  position: () => ({ top: '0', left: '0', width: '5%' }),
-})
+import type { Position } from '@/types/gamepad'
+
+const props = withDefaults(
+  defineProps<{
+    name?: string
+    svg?: Component
+    position?: Position
+    isPressed?: boolean
+  }>(),
+  {
+    name: 'Button',
+    svg: undefined,
+    isPressed: false,
+    position: () => ({ top: '0', left: '0', width: '5%' }),
+  },
+)
 
 const style = computed(() => ({
   top: props.position.top,
@@ -37,7 +41,9 @@ const style = computed(() => ({
 .gamepad-btn {
   position: absolute;
   user-select: none;
-  transition: transform 0.05s ease-out, opacity 0.05s ease-out;
+  transition:
+    transform 0.05s ease-out,
+    opacity 0.05s ease-out;
 }
 .gamepad-btn.pressed {
   transform: scale(0.92);

@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/api-models'
-import type { BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
 import { NButton, NResult, NText } from 'naive-ui'
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
+
+import type { UserInfo } from '@/api/api-models'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import ContribPageRenderer from '@/apps/user-page/contrib/ContribPageRenderer.vue'
+import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
-import { useGoogleFont } from '@/apps/user-page/googleFonts'
+import type { BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
+import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
 import { isDarkMode } from '@/shared/utils'
 
 defineProps<{
@@ -30,7 +31,7 @@ const pageSlug = computed(() => {
 
 const pageConfig = computed<UserPageConfig | null>(() => {
   if (!settings.value) return null
-  return pageSlug.value ? settings.value.pages?.[pageSlug.value] ?? null : settings.value.home ?? null
+  return pageSlug.value ? (settings.value.pages?.[pageSlug.value] ?? null) : (settings.value.home ?? null)
 })
 
 const renderMode = computed(() => {
@@ -45,7 +46,7 @@ const blockValidation = computed(() => {
 
 watch(blockValidation, (validation) => {
   if (validation?.ok === false) {
-    reportPublicPageError(new Error(validation.issues.map(issue => issue.message).join('; ')), 'render')
+    reportPublicPageError(new Error(validation.issues.map((issue) => issue.message).join('; ')), 'render')
   }
 })
 
@@ -64,9 +65,10 @@ const mergedBlockProject = computed(() => {
 })
 
 const contentMaxWidth = computed(() => {
-  const value = mergedBlockProject.value?.theme?.pageMaxWidth
-    ?? pageConfig.value?.theme?.pageMaxWidth
-    ?? settings.value?.theme?.pageMaxWidth
+  const value =
+    mergedBlockProject.value?.theme?.pageMaxWidth ??
+    pageConfig.value?.theme?.pageMaxWidth ??
+    settings.value?.theme?.pageMaxWidth
   return typeof value === 'string' && value.trim() ? value.trim() : '820px'
 })
 
@@ -76,14 +78,17 @@ const effectiveIsDark = computed(() => {
     pageConfig.value?.theme?.pageThemeMode,
     settings.value?.theme?.pageThemeMode,
   ]
-  const mode = modes.find(value => value === 'light' || value === 'dark')
+  const mode = modes.find((value) => value === 'light' || value === 'dark')
   return resolvePageThemeIsDark(mode, isDarkMode.value)
 })
 
-const contentTheme = computed(() => mergedBlockProject.value?.theme ?? {
-    ...settings.value?.theme,
-    ...pageConfig.value?.theme,
-})
+const contentTheme = computed(
+  () =>
+    mergedBlockProject.value?.theme ?? {
+      ...settings.value?.theme,
+      ...pageConfig.value?.theme,
+    },
+)
 
 useGoogleFont(computed(() => contentTheme.value.fontFamily))
 
@@ -97,9 +102,7 @@ const contentBackground = computed(() => {
   return background?.coverSidebar ? null : background
 })
 const contentBackgroundVars = computed(() => {
-  return contentBackground.value
-    ? getPageBackgroundCssVars(contentBackground.value, effectiveIsDark.value)
-    : {}
+  return contentBackground.value ? getPageBackgroundCssVars(contentBackground.value, effectiveIsDark.value) : {}
 })
 const contentBackgroundClass = computed(() => ({
   'bg-host': !!contentBackground.value,
@@ -111,18 +114,35 @@ const contentClass = computed(() => ({
 </script>
 
 <template>
-  <div class="root" :style="contentThemeVars">
-    <div :class="contentBackgroundClass" :style="contentBackgroundVars">
-      <main class="content" :class="contentClass">
+  <div
+    class="root"
+    :style="contentThemeVars"
+  >
+    <div
+      :class="contentBackgroundClass"
+      :style="contentBackgroundVars"
+    >
+      <main
+        class="content"
+        :class="contentClass"
+      >
         <header
           v-if="pageSlug && pageConfig && (pageConfig.title || pageConfig.description)"
           class="page-heading"
           :style="{ maxWidth: contentMaxWidth }"
         >
-          <NText v-if="pageConfig.title" tag="h1" class="page-heading__title">
+          <NText
+            v-if="pageConfig.title"
+            tag="h1"
+            class="page-heading__title"
+          >
             {{ pageConfig.title }}
           </NText>
-          <NText v-if="pageConfig.description" depth="3" class="page-heading__summary">
+          <NText
+            v-if="pageConfig.description"
+            depth="3"
+            class="page-heading__summary"
+          >
             {{ pageConfig.description }}
           </NText>
         </header>
@@ -215,7 +235,7 @@ const contentClass = computed(() => ({
 }
 
 .bg-host::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: calc(-24px - var(--user-page-bg-blur, 0px));
   z-index: 0;
@@ -228,7 +248,7 @@ const contentClass = computed(() => ({
 }
 
 .bg-host::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 0;

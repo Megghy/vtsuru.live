@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCard, NCollapse, NCollapseItem, NDivider, NFlex, NText } from 'naive-ui';
-import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
+import { NCard, NCollapse, NCollapseItem, NDivider, NFlex, NText } from 'naive-ui'
 import { computed } from 'vue'
+
+import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
+import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 
 import AdvancedSettings from './settings/AdvancedSettings.vue'
 // 引入拆分的子组件
@@ -41,11 +42,9 @@ const props = defineProps({
 })
 
 const showTemplate = computed(() => {
-  return [
-    ActionType.SEND_DANMAKU,
-    ActionType.SEND_PRIVATE_MSG,
-    ActionType.EXECUTE_COMMAND,
-  ].includes(props.action.actionType)
+  return [ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG, ActionType.EXECUTE_COMMAND].includes(
+    props.action.actionType,
+  )
 })
 
 const showVtsSettings = computed(() => {
@@ -89,7 +88,8 @@ function getAdvancedSummary() {
   const { triggerConfig, ignoreCooldown, actionConfig, logicalExpression, executeCommand } = props.action
 
   if (!props.hideUserFilter && triggerConfig.userFilterEnabled) summaries.push('用户过滤')
-  if (!ignoreCooldown && (actionConfig.cooldownSeconds > 0 || actionConfig.delaySeconds > 0)) summaries.push('冷却/延迟')
+  if (!ignoreCooldown && (actionConfig.cooldownSeconds > 0 || actionConfig.delaySeconds > 0))
+    summaries.push('冷却/延迟')
   if (logicalExpression) summaries.push('逻辑条件')
   if (executeCommand) summaries.push('自定义JS')
 
@@ -99,7 +99,11 @@ function getAdvancedSummary() {
 </script>
 
 <template>
-  <NFlex class="auto-action-editor" vertical :size="16">
+  <NFlex
+    class="auto-action-editor"
+    vertical
+    :size="16"
+  >
     <!-- 1. 基础设置 -->
     <BasicSettings
       :action="action"
@@ -116,19 +120,36 @@ function getAdvancedSummary() {
       content-style="padding: 0;"
       class="content-settings-card"
     >
-      <TemplateSettings v-if="showTemplate" :action="action" :custom-test-context="customTestContext" />
-      <VtsSettings v-if="showVtsSettings" :action="action" />
+      <TemplateSettings
+        v-if="showTemplate"
+        :action="action"
+        :custom-test-context="customTestContext"
+      />
+      <VtsSettings
+        v-if="showVtsSettings"
+        :action="action"
+      />
     </NCard>
 
     <!-- 3. 高级设置 (触发器特定 & 通用高级) -->
     <NCollapse>
-      <NCollapseItem title="高级规则与触发条件" name="advanced">
+      <NCollapseItem
+        title="高级规则与触发条件"
+        name="advanced"
+      >
         <template #header-extra>
-          <NText depth="3" style="font-size: 12px">
+          <NText
+            depth="3"
+            style="font-size: 12px"
+          >
             {{ getAdvancedSummary() }}
           </NText>
         </template>
-        <NFlex vertical :size="16" style="padding-top: 8px">
+        <NFlex
+          vertical
+          :size="16"
+          style="padding-top: 8px"
+        >
           <!-- 触发器特定设置 -->
           <component
             :is="TriggerSettings"
@@ -137,7 +158,10 @@ function getAdvancedSummary() {
             class="trigger-settings"
           />
 
-          <NDivider v-if="TriggerSettings" style="margin: 0;">
+          <NDivider
+            v-if="TriggerSettings"
+            style="margin: 0"
+          >
             通用高级设置
           </NDivider>
 

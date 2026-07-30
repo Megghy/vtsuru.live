@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { FlashCheckmark16Filled, Info24Filled } from '@vicons/fluent'
-import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui';
+import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
+
 import { useAccount } from '@/api/account'
 import { EventFetcherType } from '@/api/api-models'
 
@@ -49,9 +50,9 @@ const status = computed(() => {
           <NIcon :component="Info24Filled" />
         </template>
         这是一个可以持续监听直播间内的 Superchat 和上舰事件并上传到本站进行记录的 .Net 程序
-        <br>
+        <br />
         事件上传到本站后允许按照自定义范围进行查询, 并导出为 CSV 之类的表格
-        <br>
+        <br />
         <NButton
           type="info"
           size="small"
@@ -66,9 +67,7 @@ const status = computed(() => {
     <template v-if="status !== 'info' && !accountInfo?.isServerFetcherOnline">
       <NTooltip>
         <template #trigger>
-          <NTag
-            size="small"
-          >
+          <NTag size="small">
             <NIcon :component="FlashCheckmark16Filled" />
             {{ eventFetcherVersionName }}
           </NTag>
@@ -99,21 +98,15 @@ const status = computed(() => {
             {{ accountInfo?.isServerFetcherOnline ? '正在由本站提供监听服务' : '运行中' }}
           </NText>
           | 今日已接收
-          <NText
-            strong
-          >
+          <NText strong>
             {{ state.todayReceive }}
           </NText>
           条
         </template>
         <template v-else-if="status === 'warning'">
-          <template v-if="state.status">
-            异常: {{ Object.values(state.status).join('; ') }}
-          </template>
+          <template v-if="state.status"> 异常: {{ Object.values(state.status).join('; ') }} </template>
         </template>
-        <template v-else-if="status === 'info'">
-          未连接
-        </template>
+        <template v-else-if="status === 'info'"> 未连接 </template>
       </template>
     </NTag>
     <template v-if="!state.online">

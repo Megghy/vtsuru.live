@@ -1,4 +1,10 @@
-import type { DialogProviderInst, LoadingBarProviderInst, MessageProviderInst, ModalProviderInst, NotificationProviderInst } from 'naive-ui'
+import type {
+  DialogProviderInst,
+  LoadingBarProviderInst,
+  MessageProviderInst,
+  ModalProviderInst,
+  NotificationProviderInst,
+} from 'naive-ui'
 import type { useRoute } from 'vue-router'
 
 declare module 'vue3-aplayer' {
@@ -34,7 +40,7 @@ declare global {
 
 // Vite worker 与样式类型声明
 declare module '*?worker' {
-  const workerConstructor: { new(): Worker }
+  const workerConstructor: { new (): Worker }
   export default workerConstructor
 }
 declare module '*.css' {

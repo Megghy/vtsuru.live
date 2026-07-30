@@ -1,16 +1,10 @@
 import type { Ref } from 'vue'
-import type {
-  AutoActionItem,
-  RuntimeState,
-} from '../types'
+
 import type { EventModel } from '@/api/api-models'
-import {
-  executeActions,
-  filterValidActions,
-} from '../actionUtils'
-import {
-  TriggerType,
-} from '../types'
+
+import { executeActions, filterValidActions } from '../actionUtils'
+import type { AutoActionItem, RuntimeState } from '../types'
+import { TriggerType } from '../types'
 
 /**
  * 醒目留言感谢模块
@@ -31,12 +25,7 @@ export function useSuperChatThank(
    * @param actions 自动操作列表
    * @param runtimeState 运行时状态
    */
-  function processSuperChat(
-    event: EventModel,
-    actions: AutoActionItem[],
-    runtimeState: RuntimeState,
-    isTest = false,
-  ) {
+  function processSuperChat(event: EventModel, actions: AutoActionItem[], runtimeState: RuntimeState, isTest = false) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的SC感谢操作
@@ -62,9 +51,11 @@ export function useSuperChatThank(
               }
 
               // 价格过滤模式
-              if (action.triggerConfig.scFilterMode === 'price'
-                && action.triggerConfig.scMinPrice
-                && (event.price || 0) < action.triggerConfig.scMinPrice) {
+              if (
+                action.triggerConfig.scFilterMode === 'price' &&
+                action.triggerConfig.scMinPrice &&
+                (event.price || 0) < action.triggerConfig.scMinPrice
+              ) {
                 return false
               }
 

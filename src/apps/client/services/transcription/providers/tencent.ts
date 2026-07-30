@@ -1,4 +1,5 @@
 import type { TencentTranscriptionProfile } from '@/shared/models/transcription'
+
 import type { TranscriptionProviderCallbacks, TranscriptionProviderClient } from '../types'
 
 const HOST = 'asr.cloud.tencent.com'
@@ -41,15 +42,19 @@ export class TencentTranscriptionClient implements TranscriptionProviderClient {
         reject(error)
       }
       socket.addEventListener('error', () => fail(new Error('连接腾讯云实时语音识别失败')), { once: true })
-      socket.addEventListener('message', (event) => {
-        const payload = JSON.parse(String(event.data)) as TencentEvent
-        if (payload.code !== 0) return fail(new Error(payload.message || `腾讯云返回 ${payload.code}`))
-        clearTimeout(timeout)
-        resolve()
-      }, { once: true })
+      socket.addEventListener(
+        'message',
+        (event) => {
+          const payload = JSON.parse(String(event.data)) as TencentEvent
+          if (payload.code !== 0) return fail(new Error(payload.message || `腾讯云返回 ${payload.code}`))
+          clearTimeout(timeout)
+          resolve()
+        },
+        { once: true },
+      )
     })
 
-    socket.addEventListener('message', event => this.handleMessage(JSON.parse(String(event.data))))
+    socket.addEventListener('message', (event) => this.handleMessage(JSON.parse(String(event.data))))
     socket.addEventListener('error', () => {
       if (!this.closing) this.callbacks.onError(new Error('腾讯云实时语音识别连接异常'))
     })

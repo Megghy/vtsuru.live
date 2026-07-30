@@ -1,13 +1,13 @@
 <script lang="ts" setup>
+import { NAlert, NButton, NCard, NGrid, NGridItem, NModal, NPageHeader, NFlex, NSpin, NTag, useMessage } from 'naive-ui'
 import type { ComponentPublicInstance } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+
+import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import type { UserInfo } from '@/api/api-models'
 import type { OBSComponentDefinition } from '@/apps/obs-store/data/obsConstants'
-
-import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
-import { NAlert, NButton, NCard, NGrid, NGridItem, NModal, NPageHeader, NFlex, NSpin, NTag, useMessage } from 'naive-ui';
-import { computed, onMounted, ref, watch } from 'vue'
-import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { OBSComponentMap } from '@/apps/obs-store/data/obsConstants'
+import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 
 // --- 静态导入所有可能的组件，以便 DynamicForm 能获取到 Config 定义 ---
 // 如果组件过多，考虑更动态的注册方式，但 DynamicForm 需要直接访问 Config
@@ -24,11 +24,15 @@ defineProps<{
 const accountInfo = useAccount()
 const message = useMessage()
 
-const userInfo = ref<UserInfo | undefined>(accountInfo.value.id ? { id: accountInfo.value.id, name: accountInfo.value.name } as UserInfo : undefined) // 模拟
+const userInfo = ref<UserInfo | undefined>(
+  accountInfo.value.id ? ({ id: accountInfo.value.id, name: accountInfo.value.name } as UserInfo) : undefined,
+) // 模拟
 
 const availableComponents = ref<OBSComponentDefinition[]>([])
 const currentSelectedComponentId = ref<string | null>(null)
-const dynamicComponentRef = ref<ComponentPublicInstance & { Config?: ConfigItemDefinition[], DefaultConfig?: any } | null>(null)
+const dynamicComponentRef = ref<
+  (ComponentPublicInstance & { Config?: ConfigItemDefinition[]; DefaultConfig?: any }) | null
+>(null)
 
 const componentConfig = ref<any>({}) // 当前选中组件的运行时配置
 const componentConfigForEditing = ref<any>({}) // 模态框中编辑的配置副本
@@ -62,7 +66,8 @@ const selectedComponentDefinitionForModal = computed(() => {
 })
 
 async function selectComponent(componentId: string) {
-  if (currentSelectedComponentId.value === componentId) { // 如果已经是当前选中的，则尝试刷新
+  if (currentSelectedComponentId.value === componentId) {
+    // 如果已经是当前选中的，则尝试刷新
     refreshSelectedComponent()
     return
   }
@@ -72,8 +77,10 @@ async function selectComponent(componentId: string) {
   componentConfig.value = {} // 重置配置
 
   // 等待下一个 tick 确保 dynamicComponentRef 更新
-  await new Promise(resolve => setTimeout(resolve, 0))
-  currentSelectedComponent.value!.settingName = dynamicComponentRef.value?.Config ? `OBSStore.Config.${currentSelectedComponent.value!.id}` : undefined
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  currentSelectedComponent.value!.settingName = dynamicComponentRef.value?.Config
+    ? `OBSStore.Config.${currentSelectedComponent.value!.id}`
+    : undefined
 
   if (currentSelectedComponent.value?.settingName) {
     await loadComponentConfig(currentSelectedComponent.value.settingName)
@@ -128,8 +135,11 @@ async function saveComponentConfig() {
   }
   isLoading.value = true
   try {
-    await UploadConfig(currentSelectedComponent.value.settingName, JSON.stringify(componentConfigForEditing.value), // 保存编辑后的配置
-      false) // 或根据需要设置为 true);
+    await UploadConfig(
+      currentSelectedComponent.value.settingName,
+      JSON.stringify(componentConfigForEditing.value), // 保存编辑后的配置
+      false,
+    ) // 或根据需要设置为 true);
     message.success('配置保存成功！')
     componentConfig.value = JSON.parse(JSON.stringify(componentConfigForEditing.value)) // 更新运行时配置
     showSettingModal.value = false
@@ -170,32 +180,41 @@ function refreshSelectedComponent() {
 }
 
 // 当 dynamicComponentRef 变化时 (组件加载完成)，尝试加载/设置配置
-watch(dynamicComponentRef, (newRef) => {
-  if (newRef) { // 组件已挂载
-    const compDef = currentSelectedComponent.value
-    if (compDef) {
-      currentSelectedComponent.value!.settingName = newRef.Config ? `OBSStore.Config.${currentSelectedComponent.value!.id}` : undefined
-      if (compDef.settingName) {
-        // 如果有 settingName，则 loadComponentConfig 会处理（包括默认配置）
-        // 这里确保在 selectComponent 中已经调用了 loadComponentConfig
-      } else if (newRef.DefaultConfig) {
-        // 没有 settingName，但子组件有 DefaultConfig
-        componentConfig.value = { ...newRef.DefaultConfig }
-        componentConfigForEditing.value = JSON.parse(JSON.stringify(componentConfig.value))
+watch(
+  dynamicComponentRef,
+  (newRef) => {
+    if (newRef) {
+      // 组件已挂载
+      const compDef = currentSelectedComponent.value
+      if (compDef) {
+        currentSelectedComponent.value!.settingName = newRef.Config
+          ? `OBSStore.Config.${currentSelectedComponent.value!.id}`
+          : undefined
+        if (compDef.settingName) {
+          // 如果有 settingName，则 loadComponentConfig 会处理（包括默认配置）
+          // 这里确保在 selectComponent 中已经调用了 loadComponentConfig
+        } else if (newRef.DefaultConfig) {
+          // 没有 settingName，但子组件有 DefaultConfig
+          componentConfig.value = { ...newRef.DefaultConfig }
+          componentConfigForEditing.value = JSON.parse(JSON.stringify(componentConfig.value))
+        }
       }
     }
-  }
-}, { immediate: false }) // immediate: false 因为 selectComponent 会处理首次加载
+  },
+  { immediate: false },
+) // immediate: false 因为 selectComponent 会处理首次加载
 
 watch(showSettingModal, (isShown) => {
   if (isShown && currentSelectedComponent.value) {
     // 打开模态框时，确保编辑的是当前运行时配置的深拷贝
     // 同时，确保 DefaultConfig 能够正确合并，以防远程配置不完整
     const defaultConfig = dynamicComponentRef.value?.DefaultConfig || {}
-    componentConfigForEditing.value = JSON.parse(JSON.stringify({
-      ...defaultConfig,
-      ...componentConfig.value, // 当前运行时配置优先
-    }))
+    componentConfigForEditing.value = JSON.parse(
+      JSON.stringify({
+        ...defaultConfig,
+        ...componentConfig.value, // 当前运行时配置优先
+      }),
+    )
   }
 })
 
@@ -205,10 +224,12 @@ function openSettingsForCurrentComponent() {
     // 确保 componentConfigForEditing 是最新的，基于 componentConfig
     // watch(showSettingModal) 已经处理了更复杂的默认配置合并逻辑，这里仅确保基于当前运行时配置的深拷贝
     const defaultConfig = dynamicComponentRef.value?.DefaultConfig || {}
-    componentConfigForEditing.value = JSON.parse(JSON.stringify({
-      ...defaultConfig,
-      ...componentConfig.value,
-    }))
+    componentConfigForEditing.value = JSON.parse(
+      JSON.stringify({
+        ...defaultConfig,
+        ...componentConfig.value,
+      }),
+    )
     showSettingModal.value = true
   } else {
     message.error('无法打开配置：组件无设置项或用户不匹配。')
@@ -248,7 +269,7 @@ onMounted(() => {
       responsive="screen"
       :x-gap="12"
       :y-gap="12"
-      style="padding: 16px;"
+      style="padding: 16px"
     >
       <NGridItem
         v-for="compDef in availableComponents"
@@ -287,7 +308,7 @@ onMounted(() => {
       v-model:show="showPreviewModal"
       preset="card"
       :title="`组件预览：${currentSelectedComponent?.name || ''}`"
-      style="max-width: 95vw; width: 1000px; max-height: 95vh; height: 1000px;"
+      style="max-width: 95vw; width: 1000px; max-height: 95vh; height: 1000px"
       @update:show="handlePreviewModalUpdateShow"
     >
       <template #header-extra>
@@ -314,16 +335,14 @@ onMounted(() => {
           v-if="isLoading"
           title="加载中..."
           type="info"
-          style="margin-bottom: 16px;"
+          style="margin-bottom: 16px"
         >
           正在加载组件配置和资源...
         </NAlert>
         <NSpin :show="isLoading">
           <NFlex vertical>
             <NFlex>
-              <NButton style="display: none;">
-                占位
-              </NButton>
+              <NButton style="display: none"> 占位 </NButton>
             </NFlex>
             <component
               :is="currentSelectedComponent!.component"
@@ -341,9 +360,7 @@ onMounted(() => {
       </div>
       <template #footer>
         <NFlex justify="end">
-          <NButton @click="showPreviewModal = false">
-            关闭
-          </NButton>
+          <NButton @click="showPreviewModal = false"> 关闭 </NButton>
         </NFlex>
       </template>
     </NModal>
@@ -351,13 +368,15 @@ onMounted(() => {
     <!-- 组件配置 Modal -->
     <NModal
       v-model:show="showSettingModal"
-      style="max-width: 90vw; width: 800px;"
+      style="max-width: 90vw; width: 800px"
       preset="card"
       title="组件配置"
       :mask-closable="false"
     >
       <DynamicForm
-        v-if="selectedComponentDefinitionForModal?.settingName && selectedComponentDefinitionForModal?.componentRef?.Config"
+        v-if="
+          selectedComponentDefinitionForModal?.settingName && selectedComponentDefinitionForModal?.componentRef?.Config
+        "
         :name="selectedComponentDefinitionForModal.settingName"
         :config-data="componentConfigForEditing"
         :config="selectedComponentDefinitionForModal.componentRef.Config"
@@ -365,9 +384,7 @@ onMounted(() => {
       />
       <template #footer>
         <NFlex justify="end">
-          <NButton @click="showSettingModal = false">
-            取消
-          </NButton>
+          <NButton @click="showSettingModal = false"> 取消 </NButton>
           <NButton
             type="primary"
             @click="saveComponentConfig"
@@ -381,34 +398,34 @@ onMounted(() => {
 </template>
 
 <style scoped>
-  .obs-component-store-view {
-    padding: 0px;
-    /* 改为0，由 PageHeader 控制内边距 */
-  }
+.obs-component-store-view {
+  padding: 0px;
+  /* 改为0，由 PageHeader 控制内边距 */
+}
 
-  .component-card {
-    cursor: pointer;
-    border: 1px solid var(--vtsuru-border);
-    border-radius: var(--vtsuru-radius);
-  }
+.component-card {
+  cursor: pointer;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+}
 
-  .component-card:hover {
-    border-color: var(--vtsuru-primary);
-  }
+.component-card:hover {
+  border-color: var(--vtsuru-primary);
+}
 
-  .component-card p {
-    min-height: 40px;
-    /* 防止描述为空时卡片高度不一致 */
-    font-size: 0.9em;
-    color: var(--vtsuru-fg-disabled);
-  }
+.component-card p {
+  min-height: 40px;
+  /* 防止描述为空时卡片高度不一致 */
+  font-size: 0.9em;
+  color: var(--vtsuru-fg-disabled);
+}
 
-  .component-preview-area {
-    min-height: 300px; /* 预览区域最小高度 */
-    /* padding: 16px; /* 由 NModal card preset 提供内边距 */
-    /* margin-top: 16px; /* NModal 会处理间距 */
-    /* border: 1px solid var(--vtsuru-border); /* NModal card preset 提供边框 */
-    /* border-radius: var(--vtsuru-radius); /* NModal card preset 提供圆角 */
-    /* background-color: var(--vtsuru-bg-surface); /* NModal card preset 提供背景 */
-  }
+.component-preview-area {
+  min-height: 300px; /* 预览区域最小高度 */
+  /* padding: 16px; /* 由 NModal card preset 提供内边距 */
+  /* margin-top: 16px; /* NModal 会处理间距 */
+  /* border: 1px solid var(--vtsuru-border); /* NModal card preset 提供边框 */
+  /* border-radius: var(--vtsuru-radius); /* NModal card preset 提供圆角 */
+  /* background-color: var(--vtsuru-bg-surface); /* NModal card preset 提供背景 */
+}
 </style>

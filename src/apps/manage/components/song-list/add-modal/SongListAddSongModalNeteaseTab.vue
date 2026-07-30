@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
+import { NButton, NDivider, NInput, NTag, NTransfer, useMessage } from 'naive-ui'
 import type { Option } from 'naive-ui/es/transfer/src/interface'
-import { QueryGetAPI } from '@/api/query'
-import { SONG_API_URL } from '@/shared/config'
 import { computed, ref } from 'vue'
-import { NButton, NDivider, NInput, NTag, NTransfer, useMessage } from 'naive-ui';
+
+import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
+import { SONG_API_URL } from '@/shared/config'
 
 const props = defineProps<{
   existingSongs: SongsInfo[]
@@ -44,12 +45,12 @@ const neteaseSongListId = computed<number | null>(() => {
 })
 
 function updateNeteaseSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
-  neteaseSongsOptions.value = neteaseSongs.value.map(s => ({
+  neteaseSongsOptions.value = neteaseSongs.value.map((s) => ({
     label: `${s.name} - ${s.author.join('/')}`,
     value: s.key,
     disabled:
-      props.existingSongs.findIndex(exist => exist.id === s.id) > -1
-      || newlyAddedSongs.findIndex(add => add.id === s.id) > -1,
+      props.existingSongs.findIndex((exist) => exist.id === s.id) > -1 ||
+      newlyAddedSongs.findIndex((add) => add.id === s.id) > -1,
   }))
 }
 
@@ -70,7 +71,7 @@ async function getNeteaseSongList() {
     neteaseSongs.value = data.data
     updateNeteaseSongsOptions()
     message.success(
-      `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter(s => s.disabled).length} 首`,
+      `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
     )
   } catch (err) {
     message.error(`获取歌单失败: ${err}`)
@@ -82,7 +83,7 @@ async function getNeteaseSongList() {
 async function addNeteaseSongs() {
   emit('loadingChange', true)
   try {
-    const selected = neteaseSongs.value.filter(s => selectedNeteaseSongs.value.find(select => s.key === select))
+    const selected = neteaseSongs.value.filter((s) => selectedNeteaseSongs.value.find((select) => s.key === select))
     const data = await addSongsToSongList(selected, SongFrom.Netease)
     if (data.code !== 200) {
       message.error(`添加失败: ${data.message}`)
@@ -111,22 +112,37 @@ async function addNeteaseSongs() {
     placeholder="直接输入歌单Id或者网页链接"
   >
     <template #suffix>
-      <NTag v-if="neteaseSongListId" type="success" size="small">
+      <NTag
+        v-if="neteaseSongListId"
+        type="success"
+        size="small"
+      >
         歌单Id: {{ neteaseSongListId }}
       </NTag>
     </template>
   </NInput>
   <NDivider style="margin: 10px" />
-  <NButton type="primary" :disabled="!neteaseSongListId" @click="getNeteaseSongList">
+  <NButton
+    type="primary"
+    :disabled="!neteaseSongListId"
+    @click="getNeteaseSongList"
+  >
     获取
   </NButton>
   <template v-if="neteaseSongsOptions.length > 0">
     <NDivider style="margin: 10px" />
-    <NTransfer v-model:value="selectedNeteaseSongs" style="height: 500px" :options="neteaseSongsOptions" source-filterable />
+    <NTransfer
+      v-model:value="selectedNeteaseSongs"
+      style="height: 500px"
+      :options="neteaseSongsOptions"
+      source-filterable
+    />
     <NDivider style="margin: 10px" />
-    <NButton type="primary" @click="addNeteaseSongs">
+    <NButton
+      type="primary"
+      @click="addNeteaseSongs"
+    >
       添加到歌单 | {{ selectedNeteaseSongs.length }} 首
     </NButton>
   </template>
 </template>
-

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { NTooltip, NTag, NIcon } from 'naive-ui';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { Clock16Regular } from '@vicons/fluent'
+import { NTooltip, NTag, NIcon } from 'naive-ui'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 
 const props = defineProps({
   actionId: {
@@ -13,11 +14,11 @@ const props = defineProps({
 
 const autoActionStore = useAutoAction()
 
-const remainingSecondsDisplay = ref<string>('...') 
+const remainingSecondsDisplay = ref<string>('...')
 const intervalId = ref<any | null>(null)
 
 // 获取目标 action 的基本信息
-const targetAction = computed(() => autoActionStore.autoActions.find(a => a.id === props.actionId))
+const targetAction = computed(() => autoActionStore.autoActions.find((a) => a.id === props.actionId))
 
 // 获取当前计时器信息
 function getTimerInfo() {
@@ -95,7 +96,7 @@ watch(
     }
 
     const newTimerInfo = newValues[2] as any
-    const oldTimerInfo = oldValues ? oldValues[2] as any : null
+    const oldTimerInfo = oldValues ? (oldValues[2] as any) : null
 
     const isActiveNow = newTimerInfo !== null && newTimerInfo.remainingMs > 0
     const wasActiveBefore = oldTimerInfo !== null && oldTimerInfo.remainingMs > 0
@@ -130,10 +131,10 @@ const isCountingDown = computed(() => {
   <div class="timer-countdown">
     <NTooltip trigger="hover">
       <template #trigger>
-        <NTag 
-          :type="isCountingDown ? 'primary' : 'default'" 
-          size="small" 
-          round 
+        <NTag
+          :type="isCountingDown ? 'primary' : 'default'"
+          size="small"
+          round
           :bordered="false"
           class="countdown-tag"
         >
@@ -143,9 +144,7 @@ const isCountingDown = computed(() => {
           <span class="timer-text">{{ remainingSecondsDisplay }}</span>
         </NTag>
       </template>
-      <div v-if="isCountingDown">
-        距离下次触发还剩 {{ remainingSecondsDisplay }}
-      </div>
+      <div v-if="isCountingDown">距离下次触发还剩 {{ remainingSecondsDisplay }}</div>
       <div v-else>
         {{ targetAction?.triggerConfig.useGlobalTimer ? '正在等待全局计时器触发' : '独立计时器未启动或已停止' }}
       </div>

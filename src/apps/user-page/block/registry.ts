@@ -1,5 +1,3 @@
-import type { AsyncComponentLoader, Component } from 'vue'
-import { defineAsyncComponent, h } from 'vue'
 import {
   AlertCircleOutline,
   AppsOutline,
@@ -32,6 +30,9 @@ import {
   TimerOutline,
   VideocamOutline,
 } from '@vicons/ionicons5'
+import type { AsyncComponentLoader, Component } from 'vue'
+import { defineAsyncComponent, h } from 'vue'
+
 import { SHARED_BLOCK_DEFINITIONS } from './definitions'
 import type { SharedBlockDefinition } from './definitions'
 import { BLOCK_TYPES } from './schemaTypes'
@@ -135,16 +136,26 @@ const VIEWERS: Record<BlockType, AsyncComponentLoader> = {
   supporter: async () => import('./blocks/SupporterBlock.vue'),
 }
 
-const AsyncBlockLoading = () => h('div', {
-  class: 'block-load-state',
-  style: 'min-height:48px;display:grid;place-items:center;color:var(--vtsuru-fg-muted)',
-}, '正在加载区块')
+const AsyncBlockLoading = () =>
+  h(
+    'div',
+    {
+      class: 'block-load-state',
+      style: 'min-height:48px;display:grid;place-items:center;color:var(--vtsuru-fg-muted)',
+    },
+    '正在加载区块',
+  )
 
-const AsyncBlockError = () => h('div', {
-  class: 'block-load-state block-load-state--error',
-  role: 'alert',
-  style: 'min-height:48px;display:grid;place-items:center;color:var(--vtsuru-error)',
-}, '区块加载失败')
+const AsyncBlockError = () =>
+  h(
+    'div',
+    {
+      class: 'block-load-state block-load-state--error',
+      role: 'alert',
+      style: 'min-height:48px;display:grid;place-items:center;color:var(--vtsuru-error)',
+    },
+    '区块加载失败',
+  )
 
 function createViewer(loader: AsyncComponentLoader): Component {
   return defineAsyncComponent({
@@ -156,15 +167,17 @@ function createViewer(loader: AsyncComponentLoader): Component {
   })
 }
 
-export const BLOCK_DEFINITIONS = SHARED_BLOCK_DEFINITIONS.map((definition): BlockDefinition => ({
-  ...definition,
-  icon: ICONS[definition.type],
-  editor: { kind: 'shared-properties-form' },
-  viewer: createViewer(VIEWERS[definition.type]),
-}))
+export const BLOCK_DEFINITIONS = SHARED_BLOCK_DEFINITIONS.map(
+  (definition): BlockDefinition => ({
+    ...definition,
+    icon: ICONS[definition.type],
+    editor: { kind: 'shared-properties-form' },
+    viewer: createViewer(VIEWERS[definition.type]),
+  }),
+)
 
 export const BLOCK_DEFINITION_MAP = Object.fromEntries(
-  BLOCK_DEFINITIONS.map(definition => [definition.type, definition]),
+  BLOCK_DEFINITIONS.map((definition) => [definition.type, definition]),
 ) as Record<BlockType, BlockDefinition>
 
 export const BLOCK_LIBRARY: BlockLibraryItem[] = BLOCK_DEFINITIONS.map(({ type, label, icon, category, keywords }) => ({
@@ -176,7 +189,7 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = BLOCK_DEFINITIONS.map(({ type, 
 }))
 
 export const BLOCK_COMPONENTS = Object.fromEntries(
-  BLOCK_DEFINITIONS.map(definition => [definition.type, definition.viewer]),
+  BLOCK_DEFINITIONS.map((definition) => [definition.type, definition.viewer]),
 ) as Record<BlockType, Component>
 
 export function getBlockLabel(type: string): string {
@@ -191,6 +204,6 @@ export function createBlockNode(type: BlockType, id: string): BlockNode {
   }
 }
 
-if (BLOCK_DEFINITIONS.length !== BLOCK_TYPES.length || BLOCK_TYPES.some(type => !BLOCK_DEFINITION_MAP[type])) {
+if (BLOCK_DEFINITIONS.length !== BLOCK_TYPES.length || BLOCK_TYPES.some((type) => !BLOCK_DEFINITION_MAP[type])) {
   throw new Error('区块 registry 定义不完整')
 }

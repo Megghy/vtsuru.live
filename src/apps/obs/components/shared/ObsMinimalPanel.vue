@@ -1,33 +1,28 @@
 <script setup lang="ts">
-import { NEmpty } from 'naive-ui';
+import { NEmpty } from 'naive-ui'
 import { computed, toRef } from 'vue'
-import type {
-  ObsDisplayCurrent,
-  ObsDisplayFooterTag,
-  ObsDisplayItem,
-} from './obsDisplay'
+
+import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
 import { useObsListAnimation } from './useObsListAnimation'
 
-const props = withDefaults(defineProps<{
-  title: string
-  countText: string
-  current: ObsDisplayCurrent
-  items: ObsDisplayItem[]
-  footerTags?: ObsDisplayFooterTag[]
-  speedMultiplier?: number
-  emptyText: string
-}>(), {
-  footerTags: () => [],
-  speedMultiplier: 1,
-})
+const props = withDefaults(
+  defineProps<{
+    title: string
+    countText: string
+    current: ObsDisplayCurrent
+    items: ObsDisplayItem[]
+    footerTags?: ObsDisplayFooterTag[]
+    speedMultiplier?: number
+    emptyText: string
+  }>(),
+  {
+    footerTags: () => [],
+    speedMultiplier: 1,
+  },
+)
 
-const {
-  listContainerRef,
-  listInnerRef,
-  isMoreThanContainer,
-  animationTranslateYCss,
-  animationDurationCss,
-} = useObsListAnimation(toRef(props, 'items'), toRef(props, 'speedMultiplier'))
+const { listContainerRef, listInnerRef, isMoreThanContainer, animationTranslateYCss, animationDurationCss } =
+  useObsListAnimation(toRef(props, 'items'), toRef(props, 'speedMultiplier'))
 
 const topSubtitle = computed(() => {
   if (props.current.active) {
@@ -178,8 +173,15 @@ const topSubtitle = computed(() => {
 }
 
 @keyframes obs-minimal-breathe {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.35); opacity: 0.85; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.85;
+  }
 }
 
 .obs-minimal-current-title {
@@ -308,7 +310,9 @@ const topSubtitle = computed(() => {
 
 .obs-minimal-transition-enter-active,
 .obs-minimal-transition-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
 }
 
 .obs-minimal-transition-enter-from,
@@ -318,8 +322,12 @@ const topSubtitle = computed(() => {
 }
 
 @keyframes obs-minimal-vertical-ping-pong {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(v-bind(animationTranslateYCss)); }
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(v-bind(animationTranslateYCss));
+  }
 }
 
 .obs-minimal-list-inner {

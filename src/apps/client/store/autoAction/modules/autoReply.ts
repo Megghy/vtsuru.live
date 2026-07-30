@@ -1,18 +1,10 @@
 import type { Ref } from 'vue'
-import type {
-  AutoActionItem,
-  RuntimeState,
-} from '../types'
-import type { EventModel } from '@/api/api-models'
-import {
-  executeActions,
-  filterValidActions,
-} from '../actionUtils'
-import {
-  KeywordMatchType,
-  TriggerType,
-} from '../types'
 
+import type { EventModel } from '@/api/api-models'
+
+import { executeActions, filterValidActions } from '../actionUtils'
+import type { AutoActionItem, RuntimeState } from '../types'
+import { KeywordMatchType, TriggerType } from '../types'
 
 /**
  * 自动回复模块
@@ -32,7 +24,11 @@ export function useAutoReply(
    * @param matchType 匹配类型
    * @returns 是否匹配
    */
-  function isKeywordMatch(text: string, keyword: string, matchType: KeywordMatchType = KeywordMatchType.Contains): boolean {
+  function isKeywordMatch(
+    text: string,
+    keyword: string,
+    matchType: KeywordMatchType = KeywordMatchType.Contains,
+  ): boolean {
     switch (matchType) {
       case KeywordMatchType.Full:
         return text === keyword
@@ -57,12 +53,7 @@ export function useAutoReply(
    * @param actions 自动操作列表
    * @param runtimeState 运行时状态
    */
-  function onDanmaku(
-    event: EventModel,
-    actions: AutoActionItem[],
-    runtimeState: RuntimeState,
-    isTest = false,
-  ) {
+  function onDanmaku(event: EventModel, actions: AutoActionItem[], runtimeState: RuntimeState, isTest = false) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的自动回复操作
@@ -84,19 +75,18 @@ export function useAutoReply(
             // 关键词和屏蔽词检查
             (action, _context) => {
               const keywordMatchType = action.triggerConfig.keywordMatchType || KeywordMatchType.Contains
-              const keywordMatch = action.triggerConfig.keywords?.some(kw =>
+              const keywordMatch = action.triggerConfig.keywords?.some((kw) =>
                 isKeywordMatch(message, kw, keywordMatchType),
               )
               if (!keywordMatch) return false
 
               const blockwordMatchType = action.triggerConfig.blockwordMatchType || KeywordMatchType.Contains
-              const blockwordMatch = action.triggerConfig.blockwords?.some(bw =>
+              const blockwordMatch = action.triggerConfig.blockwords?.some((bw) =>
                 isKeywordMatch(message, bw, blockwordMatchType),
               )
               return !blockwordMatch // 如果匹配屏蔽词返回false，否则返回true
             },
           ],
-
         },
       )
     }

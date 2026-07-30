@@ -1,26 +1,13 @@
-import type {
-  EventModel,
-  Setting_LiveRequest,
-  SongRequestInfo,
-  SongsInfo,
-} from '@/api/api-models'
 import { List } from 'linqts'
-import { NTime } from 'naive-ui';
+import { NTime } from 'naive-ui'
 import { computed, h, ref } from 'vue'
+
 import { AddBiliBlackList, useAccount } from '@/api/account'
-import { usePersistedStorage } from '@/shared/storage/persist'
-import {
-  EventDataTypes,
-  FunctionTypes,
-  SongRequestFrom,
-  SongRequestStatus,
-} from '@/api/api-models'
-import {
-  QueryGetAPI,
-  QueryPostAPI,
-  QueryPostAPIWithParams,
-} from '@/api/query'
+import type { EventModel, Setting_LiveRequest, SongRequestInfo, SongsInfo } from '@/api/api-models'
+import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { sortByQueueType } from '@/shared/utils/queue'
 
 export const useLiveRequest = defineStore('songRequest', () => {
@@ -51,35 +38,37 @@ export const useLiveRequest = defineStore('songRequest', () => {
   })
 
   const songs = computed<SongRequestInfo[]>(() => {
-    const filtered = new List(originSongs.value).Where((s) => {
-      if (filterName.value) {
-        if (filterNameContains.value) {
-          if (!s?.user?.name.toLowerCase().includes(filterName.value.toLowerCase())) {
+    const filtered = new List(originSongs.value)
+      .Where((s) => {
+        if (filterName.value) {
+          if (filterNameContains.value) {
+            if (!s?.user?.name.toLowerCase().includes(filterName.value.toLowerCase())) {
+              return false
+            }
+          } else if (s?.user?.name.toLowerCase() !== filterName.value.toLowerCase()) {
             return false
           }
-        } else if (s?.user?.name.toLowerCase() !== filterName.value.toLowerCase()) {
-          return false
-        }
-      } else if (filterSongName.value) {
-        if (filterSongNameContains.value) {
-          if (!s?.songName.toLowerCase().includes(filterSongName.value.toLowerCase())) {
+        } else if (filterSongName.value) {
+          if (filterSongNameContains.value) {
+            if (!s?.songName.toLowerCase().includes(filterSongName.value.toLowerCase())) {
+              return false
+            }
+          } else if (s?.songName.toLowerCase() !== filterSongName.value.toLowerCase()) {
             return false
           }
-        } else if (s?.songName.toLowerCase() !== filterSongName.value.toLowerCase()) {
-          return false
         }
-      }
-      return true
-    }).ToArray()
+        return true
+      })
+      .ToArray()
 
     const settings: Setting_LiveRequest = accountInfo.value?.settings?.songRequest
     const reverse = configCanEdit.value ? settings.isReverse : isReverse.value
 
     return sortByQueueType(filtered, settings.sortType, reverse, {
-      createAt: q => q.createAt,
-      guardLevel: q => q.user?.guard_level,
-      price: q => q.price,
-      fansMedalLevel: q => q.user?.fans_medal_level,
+      createAt: (q) => q.createAt,
+      guardLevel: (q) => q.user?.guard_level,
+      price: (q) => q.price,
+      fansMedalLevel: (q) => q.user?.fans_medal_level,
     })
   })
 
@@ -114,7 +103,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
         })
         if (data.code == 200) {
           console.log('[SONG-REQUEST] 已获取所有数据')
-          return new List(data.data).OrderByDescending(s => s.createAt).ToArray()
+          return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
         } else {
           window.$message.error(`无法获取数据: ${data.message}`)
           return []
@@ -184,7 +173,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
         },
         createAt: Date.now(),
         isInLocal: true,
-        id: songs.value.length == 0 ? 1 : (new List(songs.value).Max(s => s.id) ?? 0) + 1,
+        id: songs.value.length == 0 ? 1 : (new List(songs.value).Max((s) => s.id) ?? 0) + 1,
       } as SongRequestInfo
 
       localActiveSongs.value.unshift(songData)
@@ -221,7 +210,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
         user: undefined,
         createAt: Date.now(),
         isInLocal: true,
-        id: songs.value.length == 0 ? 1 : (new List(songs.value).Max(s => s.id) ?? 0) + 1,
+        id: songs.value.length == 0 ? 1 : (new List(songs.value).Max((s) => s.id) ?? 0) + 1,
       } as SongRequestInfo
 
       localActiveSongs.value.unshift(songData)
@@ -289,12 +278,12 @@ export const useLiveRequest = defineStore('songRequest', () => {
     try {
       const data = await QueryPostAPI(
         `${SONG_REQUEST_API_URL}del`,
-        values.map(s => s.id),
+        values.map((s) => s.id),
       )
 
       if (data.code == 200) {
         window.$message.success('删除成功')
-        originSongs.value = originSongs.value.filter(s => !values.includes(s))
+        originSongs.value = originSongs.value.filter((s) => !values.includes(s))
       } else {
         window.$message.error(`删除失败: ${data.message}`)
       }
@@ -340,7 +329,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
 
       if (data.code == 200) {
         data.data.forEach((item) => {
-          const song = originSongs.value.find(s => s.id == item.id)
+          const song = originSongs.value.find((s) => s.id == item.id)
           if (song) {
             if (song.status != item.status) song.status = item.status
           } else {
@@ -404,9 +393,12 @@ export const useLiveRequest = defineStore('songRequest', () => {
   function getGuardColor(level: number | null | undefined): string {
     if (level) {
       switch (level) {
-        case 1: return 'rgb(122, 4, 35)'
-        case 2: return 'rgb(157, 155, 255)'
-        case 3: return 'rgb(104, 136, 241)'
+        case 1:
+          return 'rgb(122, 4, 35)'
+        case 2:
+          return 'rgb(157, 155, 255)'
+        case 3:
+          return 'rgb(104, 136, 241)'
       }
     }
     return ''

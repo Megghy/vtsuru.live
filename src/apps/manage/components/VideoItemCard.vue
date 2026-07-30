@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { Clock24Filled, Person24Filled } from '@vicons/fluent'
+import { NButton, NCard, NEllipsis, NIcon, NPopconfirm, NScrollbar, NFlex, NTag, NText } from 'naive-ui'
+
 import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
 import { VideoStatus } from '@/api/api-models'
-import { Clock24Filled, Person24Filled } from '@vicons/fluent'
-import {
-  NButton, NCard, NEllipsis, NIcon, NPopconfirm, NScrollbar, NFlex, NTag, NText } from 'naive-ui';
 const props = defineProps<{
   videoInfo: VideoInfo
   videoData: VideoCollectVideo
@@ -30,7 +30,6 @@ function formatSeconds(seconds: number): string {
 function openVideo() {
   window.open(`https://www.bilibili.com/video/${props.videoInfo.bvid}`, '_blank')
 }
-
 </script>
 
 <template>
@@ -50,7 +49,7 @@ function openVideo() {
           :src="videoData.cover.replace('http://', 'https://')"
           referrerpolicy="no-referrer"
           class="cover-img"
-        >
+        />
         <div class="cover-info">
           <span class="info-item">
             <NIcon
@@ -78,7 +77,7 @@ function openVideo() {
       <div class="title-row">
         <NButton
           text
-          style="width: 100%; justify-content: flex-start; text-align: left;"
+          style="width: 100%; justify-content: flex-start; text-align: left"
           @click="openVideo"
         >
           <NEllipsis style="max-width: 100%">
@@ -87,7 +86,7 @@ function openVideo() {
                 {{ videoData.title }}
               </div>
             </template>
-            <span style="font-weight: 500; font-size: 15px;">{{ videoData.title }}</span>
+            <span style="font-weight: 500; font-size: 15px">{{ videoData.title }}</span>
           </NEllipsis>
         </NButton>
       </div>
@@ -104,7 +103,7 @@ function openVideo() {
                 size="small"
                 :bordered="false"
                 round
-                style="margin-right: 6px; transform: scale(0.85); transform-origin: left center;"
+                style="margin-right: 6px; transform: scale(0.85); transform-origin: left center"
               >
                 推荐人
               </NTag>
@@ -257,7 +256,7 @@ function openVideo() {
   left: 0;
   right: 0;
   padding: 6px 8px;
-  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -2,8 +2,10 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http' // 引入 Body
 import md5 from 'md5'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, h, onUnmounted, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
 import { isDev } from '@/shared/config'
+
 import { onSendPrivateMessageFailed } from '../data/notification'
 import { QueryBiliAPI } from '../data/utils'
 import { useBiliCookie } from './useBiliCookie'
@@ -11,70 +13,9 @@ import { useSettings } from './useSettings'
 
 // WBI 混合密钥编码表
 const mixinKeyEncTab = [
-  46,
-  47,
-  18,
-  2,
-  53,
-  8,
-  23,
-  32,
-  15,
-  50,
-  10,
-  31,
-  58,
-  3,
-  45,
-  35,
-  27,
-  43,
-  5,
-  49,
-  33,
-  9,
-  42,
-  19,
-  29,
-  28,
-  14,
-  39,
-  12,
-  38,
-  41,
-  13,
-  37,
-  48,
-  7,
-  16,
-  24,
-  55,
-  40,
-  61,
-  26,
-  17,
-  0,
-  1,
-  60,
-  51,
-  30,
-  4,
-  22,
-  25,
-  54,
-  21,
-  56,
-  59,
-  6,
-  63,
-  57,
-  62,
-  11,
-  36,
-  20,
-  34,
-  44,
-  52,
+  46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41,
+  13, 37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 34,
+  44, 52,
 ]
 
 interface DanmakuQueueItem {
@@ -96,7 +37,10 @@ interface PrivateMessageQueueItem {
 
 // 对 imgKey 和 subKey 进行字符顺序打乱编码
 function getMixinKey(orig: string): string {
-  return mixinKeyEncTab.map(n => orig[n]).join('').slice(0, 32)
+  return mixinKeyEncTab
+    .map((n) => orig[n])
+    .join('')
+    .slice(0, 32)
 }
 
 export const useBiliFunction = defineStore('biliFunction', () => {
@@ -106,7 +50,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
   const cookie = computed(() => biliCookieStore.cookie)
   const uid = computed(() => account.value.biliId)
   // 存储WBI密钥
-  const wbiKeys = ref<{ img_key: string, sub_key: string } | null>(null)
+  const wbiKeys = ref<{ img_key: string; sub_key: string } | null>(null)
   const wbiKeysTimestamp = ref<number | null>(null)
 
   // 队列相关状态
@@ -209,7 +153,13 @@ export const useBiliFunction = defineStore('biliFunction', () => {
   }
 
   // 原始发送弹幕方法（重命名为_sendLiveDanmaku）
-  async function _sendLiveDanmaku(roomId: number, message: string, color: string = 'ffffff', fontsize: number = 25, mode: number = 1): Promise<boolean> {
+  async function _sendLiveDanmaku(
+    roomId: number,
+    message: string,
+    color: string = 'ffffff',
+    fontsize: number = 25,
+    mode: number = 1,
+  ): Promise<boolean> {
     if (!csrf.value || !cookie.value) {
       console.error('发送弹幕失败：缺少 cookie 或 csrf token')
       return false
@@ -249,9 +199,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Cookie': cookie.value,
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
-          'Referer': `https://live.bilibili.com/${roomId}`,
+          Cookie: cookie.value,
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
+          Referer: `https://live.bilibili.com/${roomId}`,
         },
         body: params,
       })
@@ -265,17 +216,24 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         window.$notification.error({
           title: '发送弹幕失败',
           description: `内容: ${message}`,
-          meta: () => h('div', {
-            style: {
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-            },
-          }, `错误: ${json.code} - ${json.message || json.msg}`),
+          meta: () =>
+            h(
+              'div',
+              {
+                style: {
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                },
+              },
+              `错误: ${json.code} - ${json.message || json.msg}`,
+            ),
           duration: 0,
         })
-        console.error(`发送弹幕API失败 to: ${roomId} ${uid.value} [${message}] - ${json.code} - ${json.message || json.msg}`)
+        console.error(
+          `发送弹幕API失败 to: ${roomId} ${uid.value} [${message}] - ${json.code} - ${json.message || json.msg}`,
+        )
         return false
       }
 
@@ -288,9 +246,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
   }
 
   // 为请求参数进行 wbi 签名
-  async function encWbi(
-    params: { [key: string]: string | number },
-  ): Promise<string> {
+  async function encWbi(params: { [key: string]: string | number }): Promise<string> {
     const keys = await getWbiKeys()
     const { img_key, sub_key } = keys
     const mixin_key = getMixinKey(img_key + sub_key)
@@ -314,7 +270,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
   }
 
   // 获取最新的 img_key 和 sub_key
-  async function _fetchWbiKeys(): Promise<{ img_key: string, sub_key: string }> {
+  async function _fetchWbiKeys(): Promise<{ img_key: string; sub_key: string }> {
     try {
       const response = await QueryBiliAPI('https://api.bilibili.com/x/web-interface/nav')
 
@@ -329,14 +285,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       console.log(`获取WBI秘钥: img_key: ${wbi_img.img_url}, sub_key: ${wbi_img.sub_url}`)
 
       return {
-        img_key: wbi_img.img_url.slice(
-          wbi_img.img_url.lastIndexOf('/') + 1,
-          wbi_img.img_url.lastIndexOf('.'),
-        ),
-        sub_key: wbi_img.sub_url.slice(
-          wbi_img.sub_url.lastIndexOf('/') + 1,
-          wbi_img.sub_url.lastIndexOf('.'),
-        ),
+        img_key: wbi_img.img_url.slice(wbi_img.img_url.lastIndexOf('/') + 1, wbi_img.img_url.lastIndexOf('.')),
+        sub_key: wbi_img.sub_url.slice(wbi_img.sub_url.lastIndexOf('/') + 1, wbi_img.sub_url.lastIndexOf('.')),
       }
     } catch (error) {
       console.error('获取WBI密钥时发生错误:', error)
@@ -344,9 +294,9 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     }
   }
 
-  async function getWbiKeys(): Promise<{ img_key: string, sub_key: string }> {
+  async function getWbiKeys(): Promise<{ img_key: string; sub_key: string }> {
     const now = Date.now()
-    if (wbiKeys.value && wbiKeysTimestamp.value && (now - wbiKeysTimestamp.value < 10 * 60 * 1000)) {
+    if (wbiKeys.value && wbiKeysTimestamp.value && now - wbiKeysTimestamp.value < 10 * 60 * 1000) {
       console.log('使用缓存的WBI密钥')
       return wbiKeys.value
     }
@@ -390,7 +340,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
     try {
       const dev_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = Math.random() * 16 | 0; const v = c == 'x' ? r : (r & 0x3 | 0x8)
+        const r = (Math.random() * 16) | 0
+        const v = c == 'x' ? r : (r & 0x3) | 0x8
         return v.toString(16).toUpperCase()
       })
 
@@ -421,10 +372,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         'msg[timestamp]': timestamp.toString(),
         'msg[new_face_version]': '0',
         'msg[dev_id]': dev_id,
-        'build': '0',
-        'mobi_app': 'web',
-        'csrf': csrf.value,
-        'csrf_token': csrf.value,
+        build: '0',
+        mobi_app: 'web',
+        csrf: csrf.value,
+        csrf_token: csrf.value,
       }
 
       const params = new URLSearchParams(formData)
@@ -432,9 +383,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Cookie': cookie.value,
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
-          'Origin': '',
+          Cookie: cookie.value,
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
+          Origin: '',
         },
         body: params,
       })
@@ -468,7 +420,13 @@ export const useBiliFunction = defineStore('biliFunction', () => {
   }
 
   // 新的队列发送方法
-  async function sendLiveDanmaku(roomId: number, message: string, color: string = 'ffffff', fontsize: number = 25, mode: number = 1): Promise<boolean> {
+  async function sendLiveDanmaku(
+    roomId: number,
+    message: string,
+    color: string = 'ffffff',
+    fontsize: number = 25,
+    mode: number = 1,
+  ): Promise<boolean> {
     return new Promise((resolve, reject) => {
       danmakuQueue.value.push({ roomId, message, color, fontsize, mode, resolve, reject })
       processDanmakuQueue()
@@ -512,9 +470,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Cookie': cookie.value, // 使用计算属性的值
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
-          'Referer': `https://live.bilibili.com/p/html/live-room-setting/#/room-manager/black-list?room_id=${roomId}`, // 模拟来源
+          Cookie: cookie.value, // 使用计算属性的值
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
+          Referer: `https://live.bilibili.com/p/html/live-room-setting/#/room-manager/black-list?room_id=${roomId}`, // 模拟来源
         },
         body: params, // 发送 URLSearchParams 数据
       })
@@ -522,7 +481,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         console.error('封禁用户失败:', response.status, await response.text())
         return response.statusText
       }
-      const json = await response.json() as { code: number, message?: string, msg?: string, data: unknown }
+      const json = (await response.json()) as { code: number; message?: string; msg?: string; data: unknown }
       if (json.code !== 0) {
         console.error('封禁用户API失败:', json.code, json.message || json.msg)
         return json.data

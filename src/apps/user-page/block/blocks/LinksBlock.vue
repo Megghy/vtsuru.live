@@ -1,23 +1,30 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui';
+import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
+
 import BlockCard from '../BlockCard.vue'
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const propsObj = computed<Record<string, any>>(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
   return o
 })
 const items = computed(() => (Array.isArray(propsObj.value.items) ? propsObj.value.items : []))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : true))
-const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : true))
+const backgrounded = computed(() =>
+  typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : true,
+)
 </script>
 
 <template>
-  <BlockCard :framed="framed" :backgrounded="backgrounded">
+  <BlockCard
+    :framed="framed"
+    :backgrounded="backgrounded"
+  >
     <NFlex
       justify="center"
       wrap
@@ -49,7 +56,10 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
   background: var(--vtsuru-bg-elevated);
   color: var(--vtsuru-page-text, var(--vtsuru-fg));
-  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .vtsuru-link-tag:hover {
@@ -59,7 +69,11 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vtsuru-link-tag { transition: none; }
-  .vtsuru-link-tag:hover { transform: none; }
+  .vtsuru-link-tag {
+    transition: none;
+  }
+  .vtsuru-link-tag:hover {
+    transform: none;
+  }
 }
 </style>

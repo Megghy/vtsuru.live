@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NIcon, NScrollbar, NText, NTooltip } from 'naive-ui';
-import { computed, inject } from 'vue'
 import { ChevronBackOutline, ChevronForwardOutline, HomeOutline } from '@vicons/ionicons5'
-import PageManager from './PageManager.vue'
+import { NButton, NCard, NFlex, NIcon, NScrollbar, NText, NTooltip } from 'naive-ui'
+import { computed, inject } from 'vue'
+
 import { UserPageEditorKey } from '../context'
 import { usePageEntries } from '../usePageEntries'
+import PageManager from './PageManager.vue'
 
 defineOptions({ name: 'BuilderPagesPane' })
 
@@ -21,10 +22,12 @@ const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const { pageEntries } = usePageEntries(editor)
-const compactPages = computed(() => pageEntries.value.map(page => ({
-  ...page,
-  shortLabel: page.title.replace(/^[/@]/, '').trim().slice(0, 1).toLocaleUpperCase() || '#',
-})))
+const compactPages = computed(() =>
+  pageEntries.value.map((page) => ({
+    ...page,
+    shortLabel: page.title.replace(/^[/@]/, '').trim().slice(0, 1).toLocaleUpperCase() || '#',
+  })),
+)
 </script>
 
 <template>
@@ -34,13 +37,24 @@ const compactPages = computed(() => pageEntries.value.map(page => ({
     content-style="padding: 0; height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; position: relative"
   >
     <template #header>
-      <NFlex justify="space-between" align="center" :wrap="false" style="gap: 6px">
+      <NFlex
+        justify="space-between"
+        align="center"
+        :wrap="false"
+        style="gap: 6px"
+      >
         <Transition name="fade">
-          <NText v-if="!props.collapsed" strong>
+          <NText
+            v-if="!props.collapsed"
+            strong
+          >
             页面
           </NText>
         </Transition>
-        <NTooltip v-if="props.collapsible" placement="right">
+        <NTooltip
+          v-if="props.collapsible"
+          placement="right"
+        >
           <template #trigger>
             <NButton
               quaternary
@@ -81,7 +95,12 @@ const compactPages = computed(() => pageEntries.value.map(page => ({
         :aria-hidden="!props.collapsed"
       >
         <NScrollbar class="compact-page-scroll">
-          <NFlex class="compact-page-nav" vertical align="center" :wrap="false">
+          <NFlex
+            class="compact-page-nav"
+            vertical
+            align="center"
+            :wrap="false"
+          >
             <NTooltip placement="right">
               <template #trigger>
                 <NButton
@@ -155,7 +174,10 @@ const compactPages = computed(() => pageEntries.value.map(page => ({
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 150ms ease, transform 180ms ease, visibility 0s linear 180ms;
+  transition:
+    opacity 150ms ease,
+    transform 180ms ease,
+    visibility 0s linear 180ms;
 }
 
 .pages-pane__view.is-active {
@@ -193,7 +215,10 @@ const compactPages = computed(() => pageEntries.value.map(page => ({
 
 .compact-page-nav :deep(.n-button) {
   flex: 0 0 auto;
-  transition: transform 140ms ease, color 140ms ease, background-color 140ms ease;
+  transition:
+    transform 140ms ease,
+    color 140ms ease,
+    background-color 140ms ease;
 }
 
 .compact-page-nav :deep(.n-button:hover) {

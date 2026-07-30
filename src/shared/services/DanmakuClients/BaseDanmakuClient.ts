@@ -1,7 +1,8 @@
 import { KeepLiveWS } from '@laplace.live/ws/client'
+
 import DanmakuEventEmitter from './DanmakuEventEmitter'
 
-type StartResult = { success: boolean, message: string }
+type StartResult = { success: boolean; message: string }
 type ConnectOutcome = 'connected' | 'error' | 'timeout' | 'cancelled'
 
 const CONNECT_TIMEOUT_MS = 30_000
@@ -120,7 +121,7 @@ export default abstract class BaseDanmakuClient extends DanmakuEventEmitter {
     chatClient.addEventListener('live', onLive)
     chatClient.addEventListener('close', onClose)
     chatClient.addEventListener('error', onError)
-    chatClient.addEventListener('msg', event => {
+    chatClient.addEventListener('msg', (event) => {
       if (this.client === chatClient && !signal.aborted) this.onRawMessage(event.data)
     })
     signal.addEventListener('abort', onAbort, { once: true })
@@ -141,9 +142,7 @@ export default abstract class BaseDanmakuClient extends DanmakuEventEmitter {
   }
 
   private isCurrentLifecycle(generation: number, controller: AbortController) {
-    return generation === this.lifecycle
-      && controller === this.lifecycleController
-      && !controller.signal.aborted
+    return generation === this.lifecycle && controller === this.lifecycleController && !controller.signal.aborted
   }
 
   private closeCurrentClient() {

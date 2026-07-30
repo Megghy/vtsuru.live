@@ -1,12 +1,14 @@
-import type { BiliUserProfile } from '../data/models'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { debug, error, info, warn } from '@tauri-apps/plugin-log'
 import { AES, enc, MD5 } from 'crypto-js'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
+
+import { usePersistedStorage } from '@/shared/storage/persist'
+
+import type { BiliUserProfile } from '../data/models'
 import { QueryBiliAPI } from '../data/utils'
 import { useTauriStore } from './useTauriStore'
-import { usePersistedStorage } from '@/shared/storage/persist'
 
 // --- 常量定义 ---
 // Tauri Store 存储键名
@@ -155,7 +157,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
    * @param cookie 要验证的 Cookie 字符串
    * @returns Promise<{ valid: boolean; data?: BiliUserProfile }> 验证结果和用户信息 (如果有效)
    */
-  const _checkCookieValidity = async (cookie: string): Promise<{ valid: boolean, data?: BiliUserProfile }> => {
+  const _checkCookieValidity = async (cookie: string): Promise<{ valid: boolean; data?: BiliUserProfile }> => {
     if (!cookie) {
       return { valid: false }
     }
@@ -186,7 +188,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
    * @throws 如果配置缺失、网络请求失败、解密失败或未找到 Bilibili Cookie，则抛出错误
    */
   const _fetchAndDecryptFromCloud = async (config?: CookieCloudConfig): Promise<string> => {
-    const cloudConfig = config ?? await cookieCloudStore.get() // 获取配置
+    const cloudConfig = config ?? (await cookieCloudStore.get()) // 获取配置
 
     if (!cloudConfig?.key || !cloudConfig?.password) {
       throw new Error('CookieCloud 配置不完整 (缺少 Key 或 Password)')
@@ -231,30 +233,28 @@ export const useBiliCookie = defineStore('biliCookie', () => {
           // 提取 bilibili.com 的 Cookie
           const biliCookies = cookieData.cookie_data?.['bilibili.com']
           if (!biliCookies || biliCookies.length === 0) {
-            throw new Error('在 CookieCloud 数据中未找到 \'bilibili.com\' 的 Cookie')
+            throw new Error("在 CookieCloud 数据中未找到 'bilibili.com' 的 Cookie")
           }
 
           // 拼接 Cookie 字符串
-          const cookieString = biliCookies
-            .map(c => `${c.name}=${c.value}`)
-            .join('; ')
+          const cookieString = biliCookies.map((c) => `${c.name}=${c.value}`).join('; ')
 
           info('[BiliCookie] CookieCloud Cookie 获取并解密成功')
           return cookieString
         } catch (decryptErr) {
           error(`[BiliCookie] CookieCloud Cookie 解密失败: ${String(decryptErr)}`)
-          throw new Error(`Cookie 解密失败: ${decryptErr instanceof Error ? decryptErr.message : String(decryptErr)}`, { cause: decryptErr })
+          throw new Error(`Cookie 解密失败: ${decryptErr instanceof Error ? decryptErr.message : String(decryptErr)}`, {
+            cause: decryptErr,
+          })
         }
       } else if (json.cookie_data) {
         // 处理未加密的情况 (如果 CookieCloud 支持)
         warn('[BiliCookie] 从 CookieCloud 收到未加密的 Cookie 数据')
         const biliCookies = (json as CookieCloudExportData).cookie_data?.['bilibili.com']
         if (!biliCookies || biliCookies.length === 0) {
-          throw new Error('在 CookieCloud 数据中未找到 \'bilibili.com\' 的 Cookie')
+          throw new Error("在 CookieCloud 数据中未找到 'bilibili.com' 的 Cookie")
         }
-        const cookieString = biliCookies
-          .map(c => `${c.name}=${c.value}`)
-          .join('; ')
+        const cookieString = biliCookies.map((c) => `${c.name}=${c.value}`).join('; ')
         return cookieString
       } else {
         // API 返回了非预期的数据结构
@@ -262,7 +262,10 @@ export const useBiliCookie = defineStore('biliCookie', () => {
       }
     } catch (networkErr) {
       error(`[BiliCookie] 请求 CookieCloud 时出错: ${String(networkErr)}`)
-      throw new Error(`请求 CookieCloud 时出错: ${networkErr instanceof Error ? networkErr.message : String(networkErr)}`, { cause: networkErr })
+      throw new Error(
+        `请求 CookieCloud 时出错: ${networkErr instanceof Error ? networkErr.message : String(networkErr)}`,
+        { cause: networkErr },
+      )
     }
   }
 
@@ -329,10 +332,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
 
     // 1. 加载持久化数据
     const storedCookieData = biliCookieStore.value
-    const [storedCloudConfig, storedUserInfo] = await Promise.all([
-      cookieCloudStore.get(),
-      userInfoCacheStore.get(),
-    ])
+    const [storedCloudConfig, storedUserInfo] = await Promise.all([cookieCloudStore.get(), userInfoCacheStore.get()])
 
     // 2. 处理 CookieCloud 配置
     if (storedCloudConfig?.key && storedCloudConfig?.password) {
@@ -345,7 +345,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
     }
 
     // 3. 处理用户信息缓存
-    if (storedUserInfo && (Date.now() - storedUserInfo.accessedAt < USER_INFO_CACHE_DURATION)) {
+    if (storedUserInfo && Date.now() - storedUserInfo.accessedAt < USER_INFO_CACHE_DURATION) {
       _cachedUserInfo.value = storedUserInfo
       uId.value = storedUserInfo.userInfo.mid
       info(`[BiliCookie] 从缓存加载有效用户信息: UID=${uId.value}`)
@@ -365,7 +365,8 @@ export const useBiliCookie = defineStore('biliCookie', () => {
       hasBiliCookie.value = true // 标记存在 Cookie
       info('[BiliCookie] 检测到已存储的 Bilibili Cookie')
       // 检查 Cookie 有效性，除非用户信息缓存有效且未过期
-      if (!_cachedUserInfo.value) { // 只有在没有有效缓存时才立即检查
+      if (!_cachedUserInfo.value) {
+        // 只有在没有有效缓存时才立即检查
         info('[BiliCookie] 无有效缓存，立即检查 Cookie 有效性...')
         const { valid } = await _checkCookieValidity(storedCookieData.cookie)
         _updateCookieState(true, valid) // 更新状态
@@ -400,7 +401,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
     let cloudSyncSuccess = false
 
     // 检查是否需要从 CookieCloud 同步
-    const shouldSyncCloud = forceCheckCloud || (_checkCounter % CLOUD_SYNC_INTERVAL_CHECKS === 0)
+    const shouldSyncCloud = forceCheckCloud || _checkCounter % CLOUD_SYNC_INTERVAL_CHECKS === 0
 
     if (shouldSyncCloud && cookieCloudState.value !== 'unset' && cookieCloudState.value !== 'syncing') {
       info(`[BiliCookie] 触发 CookieCloud 同步 (计数: ${_checkCounter}, 强制: ${forceCheckCloud})`)

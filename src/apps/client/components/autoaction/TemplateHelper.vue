@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Copy16Regular, Add16Regular, Search16Regular } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NInput, NScrollbar, useMessage } from 'naive-ui';
+import { NButton, NFlex, NIcon, NInput, NScrollbar, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 const props = defineProps({
   placeholders: {
-    type: Array as () => { name: string, description: string }[],
+    type: Array as () => { name: string; description: string }[],
     required: true,
   },
 })
@@ -20,14 +20,14 @@ const searchText = ref('')
 const filteredPlaceholders = computed(() => {
   if (!searchText.value) return props.placeholders
   const lower = searchText.value.toLowerCase()
-  return props.placeholders.filter(p => 
-    p.name.toLowerCase().includes(lower) || 
-    p.description.toLowerCase().includes(lower)
+  return props.placeholders.filter(
+    (p) => p.name.toLowerCase().includes(lower) || p.description.toLowerCase().includes(lower),
   )
 })
 
 function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text)
+  navigator.clipboard
+    .writeText(text)
     .then(() => {
       message.success('已复制')
     })
@@ -43,22 +43,36 @@ function handleInsert(text: string) {
 
 <template>
   <div class="template-helper">
-    <NFlex vertical :size="8">
-      <NInput v-model:value="searchText" placeholder="搜索变量..." size="small" clearable>
+    <NFlex
+      vertical
+      :size="8"
+    >
+      <NInput
+        v-model:value="searchText"
+        placeholder="搜索变量..."
+        size="small"
+        clearable
+      >
         <template #prefix>
           <NIcon :component="Search16Regular" />
         </template>
       </NInput>
-      
+
       <NScrollbar style="max-height: 200px">
-        <NFlex vertical :size="4">
+        <NFlex
+          vertical
+          :size="4"
+        >
           <div
             v-for="item in filteredPlaceholders"
             :key="item.name"
             class="variable-item"
             @click="handleInsert(item.name)"
           >
-            <NFlex justify="space-between" align="center">
+            <NFlex
+              justify="space-between"
+              align="center"
+            >
               <div class="variable-info">
                 <div class="variable-code">
                   {{ item.name }}
@@ -68,12 +82,24 @@ function handleInsert(text: string) {
                 </div>
               </div>
               <div class="variable-actions">
-                <NButton size="tiny" quaternary circle title="复制" @click.stop="copyToClipboard(item.name)">
+                <NButton
+                  size="tiny"
+                  quaternary
+                  circle
+                  title="复制"
+                  @click.stop="copyToClipboard(item.name)"
+                >
                   <template #icon>
                     <NIcon :component="Copy16Regular" />
                   </template>
                 </NButton>
-                <NButton size="tiny" quaternary circle title="插入" @click.stop="handleInsert(item.name)">
+                <NButton
+                  size="tiny"
+                  quaternary
+                  circle
+                  title="插入"
+                  @click.stop="handleInsert(item.name)"
+                >
                   <template #icon>
                     <NIcon :component="Add16Regular" />
                   </template>
@@ -81,7 +107,10 @@ function handleInsert(text: string) {
               </div>
             </NFlex>
           </div>
-          <div v-if="filteredPlaceholders.length === 0" class="no-results">
+          <div
+            v-if="filteredPlaceholders.length === 0"
+            class="no-results"
+          >
             无匹配变量
           </div>
         </NFlex>

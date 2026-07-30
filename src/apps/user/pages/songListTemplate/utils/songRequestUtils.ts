@@ -27,10 +27,9 @@ function isAnonymousWebRequestBlocked(
   liveRequestSettings: Setting_LiveRequest | undefined,
   { isLoggedIn, isBiliAuthed }: SongRequestAuthState,
 ) {
-  return !!liveRequestSettings?.allowFromWeb
-    && !liveRequestSettings.allowAnonymousFromWeb
-    && !isLoggedIn
-    && !isBiliAuthed
+  return (
+    !!liveRequestSettings?.allowFromWeb && !liveRequestSettings.allowAnonymousFromWeb && !isLoggedIn && !isBiliAuthed
+  )
 }
 
 function getCopyOnlyReason(

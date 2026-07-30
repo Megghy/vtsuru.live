@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import type { EventModel } from '@/api/api-models'
-import { NAlert } from 'naive-ui';
+import { NAlert } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
 // @ts-ignore
 import { DownloadConfig, GetConfigHash, useAccount } from '@/api/account'
+import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
-import { VTSURU_API_URL } from '@/shared/config'
-import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
-import { usePersistedStorage } from '@/shared/storage/persist'
 // @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
@@ -17,6 +14,10 @@ import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
 import * as pronunciation from '@/apps/obs/components/blivechat/utils/pronunciation'
 // @ts-ignore
 import * as trie from '@/apps/obs/components/blivechat/utils/trie'
+import { VTSURU_API_URL } from '@/shared/config'
+import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
+import { usePersistedStorage } from '@/shared/storage/persist'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface DanmujiConfig {
   minGiftPrice: number
@@ -83,7 +84,7 @@ const accountInfo = useAccount()
 
 const config = computed(() => props.config ?? defaultConfig)
 
-let textEmoticons: { keyword: string, url: string }[] = []
+let textEmoticons: { keyword: string; url: string }[] = []
 
 // 表情词典树计算
 const emoticonsTrie = computed(() => {
@@ -238,7 +239,7 @@ function onDelSuperChat(event: EventModel, command: unknown) {
     const commandData = command.data
     if (commandData && typeof commandData === 'object') {
       if ('message_ids' in commandData && Array.isArray(commandData.message_ids)) {
-        messageIdsToDelete = commandData.message_ids.map(id => String(id))
+        messageIdsToDelete = commandData.message_ids.map((id) => String(id))
       } else if ('message_id' in commandData) {
         messageIdsToDelete.push(String(commandData.message_id))
       }
@@ -251,7 +252,7 @@ function onDelSuperChat(event: EventModel, command: unknown) {
 
   if (messageIdsToDelete.length > 0) {
     console.log(`正在删除SC，ID: ${messageIdsToDelete.join(', ')}`)
-    messageIdsToDelete.forEach(id => messageRender.value.deleteMessage(id))
+    messageIdsToDelete.forEach((id) => messageRender.value.deleteMessage(id))
   } else {
     console.warn('收到删除SC事件但无法确定要删除的消息ID', event, command)
   }
@@ -368,20 +369,22 @@ async function fillImageContentSizes(richContent: RichContentType[]) {
   // 并行加载所有图片获取尺寸
   const promises = []
   for (const url of urlSizeMap.keys()) {
-    promises.push(new Promise<void>((resolve) => {
-      const img = document.createElement('img')
-      img.onload = () => {
-        const size = urlSizeMap.get(url)
-        size.width = img.naturalWidth
-        size.height = img.naturalHeight
-        resolve()
-      }
-      // 获取失败了默认为0
-      img.onerror = () => resolve()
-      // 超时保底
-      window.setTimeout(() => resolve(), 5000)
-      img.src = url
-    }))
+    promises.push(
+      new Promise<void>((resolve) => {
+        const img = document.createElement('img')
+        img.onload = () => {
+          const size = urlSizeMap.get(url)
+          size.width = img.naturalWidth
+          size.height = img.naturalHeight
+          resolve()
+        }
+        // 获取失败了默认为0
+        img.onerror = () => resolve()
+        // 超时保底
+        window.setTimeout(() => resolve(), 5000)
+        img.src = url
+      }),
+    )
   }
 
   await Promise.all(promises)
@@ -468,7 +471,13 @@ function mergeSimilarText(content: string): boolean {
 /**
  * 合并相似礼物
  */
-function mergeSimilarGift(authorName: string, price: number, freePrice: number, giftName: string, num: number): boolean {
+function mergeSimilarGift(
+  authorName: string,
+  price: number,
+  freePrice: number,
+  giftName: string,
+  num: number,
+): boolean {
   if (!config.value.mergeGift) {
     return false
   }
@@ -480,7 +489,7 @@ function mergeSimilarGift(authorName: string, price: number, freePrice: number, 
  * 用于测试，手动触发消息添加
  * @param rawEventData 测试用的 EventModel 部分数据和可选的 data 负载
  */
-async function testAddMessage(rawEventData: Partial<EventModel> & { type: EventDataTypes, data?: any }) {
+async function testAddMessage(rawEventData: Partial<EventModel> & { type: EventDataTypes; data?: any }) {
   const event: EventModel = {
     type: rawEventData.type,
     uname: rawEventData.uname ?? '测试用户',
@@ -536,10 +545,12 @@ function addSystemNotice(message: string) {
     authorName: '系统通知',
     authorType: 2, // 使用特殊类型标识系统消息
     content: message,
-    richContent: [{
-      type: constants.CONTENT_TYPE_TEXT,
-      text: message,
-    }],
+    richContent: [
+      {
+        type: constants.CONTENT_TYPE_TEXT,
+        text: message,
+      },
+    ],
     privilegeType: 0,
     repeated: 1,
     translation: '',
@@ -609,7 +620,7 @@ onMounted(async () => {
   client.onEvent('scDel', onDelSuperChat)
 
   try {
-    const result = await QueryGetAPI<{ keyword: string, url: string }[]>(`${VTSURU_API_URL}blivechat/emoticon`)
+    const result = await QueryGetAPI<{ keyword: string; url: string }[]>(`${VTSURU_API_URL}blivechat/emoticon`)
     if (result.code === 200) {
       textEmoticons = result.data
     }

@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import type { DropdownOption } from 'naive-ui'
-import { NButton, NDropdown, NFlex, NIcon, NText, NTooltip, useDialog } from 'naive-ui'
-import { computed, h, inject } from 'vue'
 import {
   ArrowRedoOutline,
   ArrowUndoOutline,
@@ -16,6 +13,10 @@ import {
   SettingsOutline,
   TrashOutline,
 } from '@vicons/ionicons5'
+import type { DropdownOption } from 'naive-ui'
+import { NButton, NDropdown, NFlex, NIcon, NText, NTooltip, useDialog } from 'naive-ui'
+import { computed, h, inject } from 'vue'
+
 import { UserPageEditorKey } from '../context'
 
 const emit = defineEmits<{
@@ -27,17 +28,21 @@ const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const dialog = useDialog()
-const statusText = computed(() => editor.hasUnpublishedChanges.value && !editor.isDirty.value
-  ? `${editor.saveStatusText.value} · 未发布`
-  : editor.saveStatusText.value)
+const statusText = computed(() =>
+  editor.hasUnpublishedChanges.value && !editor.isDirty.value
+    ? `${editor.saveStatusText.value} · 未发布`
+    : editor.saveStatusText.value,
+)
 const problemCount = computed(() => editor.liveValidationIssues.value.length)
 
 const moreOptions = computed<DropdownOption[]>(() => {
-  const options: DropdownOption[] = [{
-    label: `编辑来源：${editor.loadedFromLabel.value}`,
-    key: 'version-state',
-    disabled: true,
-  }]
+  const options: DropdownOption[] = [
+    {
+      label: `编辑来源：${editor.loadedFromLabel.value}`,
+      key: 'version-state',
+      disabled: true,
+    },
+  ]
   if (editor.currentPage.value.mode === 'block') {
     options.push(
       { label: '资源管理', key: 'resources', icon: () => h(NIcon, null, { default: () => h(FolderOpenOutline) }) },
@@ -45,30 +50,36 @@ const moreOptions = computed<DropdownOption[]>(() => {
       { type: 'divider', key: 'divider-block' },
     )
   }
-  options.push({
-    label: editor.autoSaveEnabled.value ? '关闭自动保存' : '开启自动保存',
-    key: 'auto-save',
-    icon: () => h(NIcon, null, { default: () => h(SettingsOutline) }),
-  }, {
-    type: 'divider',
-    key: 'divider-history',
-  }, {
-    label: '预览可回滚版本',
-    key: 'preview-rollback',
-    disabled: !editor.rollbackAvailable.value,
-    icon: () => h(NIcon, null, { default: () => h(EyeOutline) }),
-  }, {
-    label: '回滚已发布版本',
-    key: 'rollback',
-    disabled: !editor.rollbackAvailable.value || editor.isSaving.value,
-    icon: () => h(NIcon, null, { default: () => h(RefreshOutline) }),
-  }, {
-    label: '清空草稿',
-    key: 'clear',
-    disabled: editor.isSaving.value,
-    props: { style: 'color: #d03050' },
-    icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
-  })
+  options.push(
+    {
+      label: editor.autoSaveEnabled.value ? '关闭自动保存' : '开启自动保存',
+      key: 'auto-save',
+      icon: () => h(NIcon, null, { default: () => h(SettingsOutline) }),
+    },
+    {
+      type: 'divider',
+      key: 'divider-history',
+    },
+    {
+      label: '预览可回滚版本',
+      key: 'preview-rollback',
+      disabled: !editor.rollbackAvailable.value,
+      icon: () => h(NIcon, null, { default: () => h(EyeOutline) }),
+    },
+    {
+      label: '回滚已发布版本',
+      key: 'rollback',
+      disabled: !editor.rollbackAvailable.value || editor.isSaving.value,
+      icon: () => h(NIcon, null, { default: () => h(RefreshOutline) }),
+    },
+    {
+      label: '清空草稿',
+      key: 'clear',
+      disabled: editor.isSaving.value,
+      props: { style: 'color: #d03050' },
+      icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
+    },
+  )
   return options
 })
 
@@ -114,10 +125,23 @@ function handleMoreAction(key: string) {
 </script>
 
 <template>
-  <NFlex class="builder-toolbar" justify="end" align="center" :wrap="false" size="small">
+  <NFlex
+    class="builder-toolbar"
+    justify="end"
+    align="center"
+    :wrap="false"
+    size="small"
+  >
     <NTooltip>
       <template #trigger>
-        <NButton quaternary circle size="small" :disabled="!editor.canUndo.value" aria-label="撤销" @click="editor.undo">
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :disabled="!editor.canUndo.value"
+          aria-label="撤销"
+          @click="editor.undo"
+        >
           <template #icon>
             <NIcon><ArrowUndoOutline /></NIcon>
           </template>
@@ -127,7 +151,14 @@ function handleMoreAction(key: string) {
     </NTooltip>
     <NTooltip>
       <template #trigger>
-        <NButton quaternary circle size="small" :disabled="!editor.canRedo.value" aria-label="重做" @click="editor.redo">
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :disabled="!editor.canRedo.value"
+          aria-label="重做"
+          @click="editor.redo"
+        >
           <template #icon>
             <NIcon><ArrowRedoOutline /></NIcon>
           </template>
@@ -135,7 +166,11 @@ function handleMoreAction(key: string) {
       </template>
       重做
     </NTooltip>
-    <NButton size="small" secondary @click="emit('open-global-style')">
+    <NButton
+      size="small"
+      secondary
+      @click="emit('open-global-style')"
+    >
       <template #icon>
         <NIcon><ColorPaletteOutline /></NIcon>
       </template>
@@ -159,25 +194,49 @@ function handleMoreAction(key: string) {
       </template>
       放弃本地修改
     </NTooltip>
-    <NButton size="small" :loading="editor.isSaving.value" @click="editor.saveDraft">
+    <NButton
+      size="small"
+      :loading="editor.isSaving.value"
+      @click="editor.saveDraft"
+    >
       <template #icon>
         <NIcon><SaveOutline /></NIcon>
       </template>
       保存
     </NButton>
-    <NButton v-if="problemCount" size="small" type="error" secondary @click="editor.openPublishModal">
+    <NButton
+      v-if="problemCount"
+      size="small"
+      type="error"
+      secondary
+      @click="editor.openPublishModal"
+    >
       <template #icon>
         <NIcon><AlertCircleOutline /></NIcon>
       </template>
       {{ problemCount }} 个问题
     </NButton>
-    <NButton type="primary" size="small" :loading="editor.isSaving.value" @click="editor.openPublishModal">
+    <NButton
+      type="primary"
+      size="small"
+      :loading="editor.isSaving.value"
+      @click="editor.openPublishModal"
+    >
       发布
     </NButton>
     <NTooltip>
       <template #trigger>
-        <NDropdown :options="moreOptions" trigger="click" @select="(key) => handleMoreAction(String(key))">
-          <NButton quaternary circle size="small" aria-label="更多操作">
+        <NDropdown
+          :options="moreOptions"
+          trigger="click"
+          @select="(key) => handleMoreAction(String(key))"
+        >
+          <NButton
+            quaternary
+            circle
+            size="small"
+            aria-label="更多操作"
+          >
             <template #icon>
               <NIcon><EllipsisHorizontalOutline /></NIcon>
             </template>

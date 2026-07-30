@@ -1,18 +1,37 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
-import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { throttle } from 'lodash'
 import {
-  NButton, NCard, NCollapseTransition, NDivider, NEllipsis, NEmpty, NGrid, NGridItem, NIcon, NInput, NPopover, NScrollbar, NSelect, NFlex, NTag, NText, NTooltip } from 'naive-ui';
+  NButton,
+  NCard,
+  NCollapseTransition,
+  NDivider,
+  NEllipsis,
+  NEmpty,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NInput,
+  NPopover,
+  NScrollbar,
+  NSelect,
+  NFlex,
+  NTag,
+  NText,
+  NTooltip,
+} from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { SongsInfo } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
-import SongPlayer from '@/components/SongPlayer.vue'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { GetGuardColor } from '@/shared/utils'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
+import SongPlayer from '@/components/SongPlayer.vue'
+import type { SongListConfigType } from '@/shared/types/TemplateTypes'
+import { GetGuardColor } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
+
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -73,9 +92,9 @@ const songs = computed(() => {
       .filter((item) => {
         const kw = searchKeyword.value.toLowerCase()
         return (
-          (!selectedTag.value || item.tags?.includes(selectedTag.value))
-          && (!kw || item.name.toLowerCase().includes(kw) || (item.translateName?.toLowerCase().includes(kw) ?? false))
-          && (!selectedAuthor.value || item.author?.includes(selectedAuthor.value) == true)
+          (!selectedTag.value || item.tags?.includes(selectedTag.value)) &&
+          (!kw || item.name.toLowerCase().includes(kw) || (item.translateName?.toLowerCase().includes(kw) ?? false)) &&
+          (!selectedAuthor.value || item.author?.includes(selectedAuthor.value) == true)
         )
       })
       .slice(0, index.value)
@@ -96,7 +115,9 @@ function loadMore() {
 function handleRequestSong(song: SongsInfo) {
   isLoading.value = song.key
   emits('requestSong', song)
-  window.setTimeout(() => { isLoading.value = '' }, 2000)
+  window.setTimeout(() => {
+    isLoading.value = ''
+  }, 2000)
 }
 </script>
 
@@ -143,9 +164,10 @@ function handleRequestSong(song: SongsInfo) {
         />
         <NSelect
           v-model:value="selectedAuthor"
-          :options="authors.map((a) => {
-            return { label: a, value: a }
-          })
+          :options="
+            authors.map((a) => {
+              return { label: a, value: a }
+            })
           "
           placeholder="选择歌手"
           clearable
@@ -197,13 +219,13 @@ function handleRequestSong(song: SongsInfo) {
                 </NEllipsis>
                 <span
                   v-if="singingSongKeySet.has(item.key)"
-                  style="flex-shrink: 0; font-size: 11px; color: #f0a040; font-weight: 600;"
+                  style="flex-shrink: 0; font-size: 11px; color: #f0a040; font-weight: 600"
                 >
                   正在演唱
                 </span>
                 <span
                   v-else-if="queuedSongKeySet.has(item.key)"
-                  style="flex-shrink: 0; font-size: 11px; color: #52c41a; font-weight: 600;"
+                  style="flex-shrink: 0; font-size: 11px; color: #52c41a; font-weight: 600"
                 >
                   排队中
                 </span>
@@ -213,7 +235,7 @@ function handleRequestSong(song: SongsInfo) {
               <NText
                 v-if="item.translateName"
                 depth="3"
-                style="font-size: 13px; margin-bottom: 2px;"
+                style="font-size: 13px; margin-bottom: 2px"
               >
                 <NEllipsis>
                   {{ item.translateName }}

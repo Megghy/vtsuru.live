@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { NDivider } from 'naive-ui';
+import { NDivider } from 'naive-ui'
 import { computed } from 'vue'
+
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 const propsObj = computed<Record<string, any>>(() => {
   if (!props.blockProps || typeof props.blockProps !== 'object' || Array.isArray(props.blockProps)) return {}
   return props.blockProps as any
@@ -37,8 +38,15 @@ const dividerStyle = computed(() => {
 </script>
 
 <template>
-  <NDivider v-if="text" :title-placement="titlePlacement" :style="dividerStyle">
+  <NDivider
+    v-if="text"
+    :title-placement="titlePlacement"
+    :style="dividerStyle"
+  >
     {{ text }}
   </NDivider>
-  <NDivider v-else :style="dividerStyle" />
+  <NDivider
+    v-else
+    :style="dividerStyle"
+  />
 </template>

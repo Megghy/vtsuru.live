@@ -6,11 +6,18 @@
 import type { EventModel } from '@/api/api-models'
 
 /** 事件订阅时可选的事件名 (与 useDanmakuClient 的 MODEL_EVENT_NAMES 对齐) */
-export type DanmakuEventName
-  = 'danmaku' | 'gift' | 'sc' | 'guard' | 'enter' | 'scDel' | 'follow' | 'like'
+export type DanmakuEventName = 'danmaku' | 'gift' | 'sc' | 'guard' | 'enter' | 'scDel' | 'follow' | 'like'
 
-export const DANMAKU_EVENT_NAMES: readonly DanmakuEventName[]
-  = ['danmaku', 'gift', 'sc', 'guard', 'enter', 'scDel', 'follow', 'like']
+export const DANMAKU_EVENT_NAMES: readonly DanmakuEventName[] = [
+  'danmaku',
+  'gift',
+  'sc',
+  'guard',
+  'enter',
+  'scDel',
+  'follow',
+  'like',
+]
 
 /** 发送类结果 (0 表示成功, 与 B 站 API code 语义一致) */
 export interface SendResult {
@@ -24,7 +31,7 @@ export interface SendResult {
  */
 export interface ServerFunctions {
   /** 探测/握手: 返回客户端信息与当前登录账号, 供外部页面确认可用性 */
-  hello: () => Promise<{ version: string, accountId?: number, uid?: number }>
+  hello: () => Promise<{ version: string; accountId?: number; uid?: number }>
 
   /** 订阅弹幕事件流。订阅后服务端通过 ClientFunctions.onDanmakuEvent 持续推送 */
   danmakuSubscribe: (events: DanmakuEventName[]) => Promise<{ ok: true }>

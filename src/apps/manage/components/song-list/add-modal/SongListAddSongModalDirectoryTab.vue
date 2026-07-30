@@ -1,13 +1,25 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
+import { ArchiveOutline } from '@vicons/ionicons5'
 import type { SelectOption } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCollapse,
+  NCollapseItem,
+  NDivider,
+  NIcon,
+  NSelect,
+  NFlex,
+  NText,
+  NTransfer,
+  useMessage,
+} from 'naive-ui'
 import type { Option } from 'naive-ui/es/transfer/src/interface'
+import { ref } from 'vue'
+
+import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
-import { ArchiveOutline } from '@vicons/ionicons5'
-import {
-  NAlert, NButton, NCollapse, NCollapseItem, NDivider, NIcon, NSelect, NFlex, NText, NTransfer, useMessage } from 'naive-ui';
-import { ref } from 'vue'
 
 const props = defineProps<{
   existingSongs: SongsInfo[]
@@ -32,7 +44,7 @@ const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac
 
 async function scanDirectory(
   directoryHandle: any,
-  audioFiles: { name: string, file: File, path: string }[],
+  audioFiles: { name: string; file: File; path: string }[],
   currentPath: string,
 ) {
   for await (const entry of directoryHandle.values()) {
@@ -57,32 +69,49 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Son
   let author: string[] = []
 
   if (nameWithoutExt.includes(' - ')) {
-    const parts = nameWithoutExt.split(' - ').map(p => p.trim())
+    const parts = nameWithoutExt.split(' - ').map((p) => p.trim())
     if (parts.length >= 2) {
-      author = parts[0].split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      author = parts[0]
+        .split(/[/、&]/)
+        .map((a) => a.trim())
+        .filter((a) => a)
       name = parts.slice(1).join(' - ')
 
       if (parts[1].match(/[/、&]/)) {
         name = parts[0]
-        author = parts.slice(1).join(' - ').split(/[/、&]/).map(a => a.trim()).filter(a => a)
+        author = parts
+          .slice(1)
+          .join(' - ')
+          .split(/[/、&]/)
+          .map((a) => a.trim())
+          .filter((a) => a)
       }
     }
   } else if (nameWithoutExt.includes('-') && !nameWithoutExt.startsWith('-')) {
-    const parts = nameWithoutExt.split('-').map(p => p.trim())
+    const parts = nameWithoutExt.split('-').map((p) => p.trim())
     if (parts.length >= 2) {
-      author = parts[0].split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      author = parts[0]
+        .split(/[/、&]/)
+        .map((a) => a.trim())
+        .filter((a) => a)
       name = parts.slice(1).join('-')
     }
   } else if (nameWithoutExt.match(/^(?:\[|【)([^\]】]+)(?:\]|】)(.+)$/)) {
     const match = nameWithoutExt.match(/^(?:\[|【)([^\]】]+)(?:\]|】)(.+)$/)
     if (match) {
-      author = match[1].split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      author = match[1]
+        .split(/[/、&]/)
+        .map((a) => a.trim())
+        .filter((a) => a)
       name = match[2].trim()
     }
   } else if (nameWithoutExt.match(/^([^《<]+)[《<]([^》>]+)[》>]$/)) {
     const match = nameWithoutExt.match(/^([^《<]+)[《<]([^》>]+)[》>]$/)
     if (match) {
-      author = match[1].split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      author = match[1]
+        .split(/[/、&]/)
+        .map((a) => a.trim())
+        .filter((a) => a)
       name = match[2].trim()
     }
   } else {
@@ -113,18 +142,18 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Son
 }
 
 function updateFolderSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
-  folderSongsOptions.value = folderSongs.value.map(s => ({
+  folderSongsOptions.value = folderSongs.value.map((s) => ({
     label: `${s.name} - ${s.author?.join('/') || '未知'}`,
     value: `${s.name}_${(s as any)._filePath}`,
     disabled:
-      props.existingSongs.findIndex(exist => exist.name === s.name) > -1
-      || newlyAddedSongs.findIndex(add => add.name === s.name) > -1,
+      props.existingSongs.findIndex((exist) => exist.name === s.name) > -1 ||
+      newlyAddedSongs.findIndex((add) => add.name === s.name) > -1,
   }))
 }
 
 function batchEditFolderSongs(field: 'author' | 'language' | 'tags', value: string[]) {
-  const selectedSongs = folderSongs.value.filter(s =>
-    selectedFolderSongs.value.find(select => select === (`${s.name}_${(s as any)._filePath}`)),
+  const selectedSongs = folderSongs.value.filter((s) =>
+    selectedFolderSongs.value.find((select) => select === `${s.name}_${(s as any)._filePath}`),
   )
 
   selectedSongs.forEach((song) => {
@@ -138,7 +167,9 @@ function batchEditFolderSongs(field: 'author' | 'language' | 'tags', value: stri
   })
 
   updateFolderSongsOptions()
-  message.success(`已更新 ${selectedSongs.length} 首歌曲的${field === 'author' ? '作者' : field === 'language' ? '语言' : '标签'}信息`)
+  message.success(
+    `已更新 ${selectedSongs.length} 首歌曲的${field === 'author' ? '作者' : field === 'language' ? '语言' : '标签'}信息`,
+  )
 }
 
 async function addFolderSongs() {
@@ -149,12 +180,12 @@ async function addFolderSongs() {
 
   emit('loadingChange', true)
   try {
-    const songsToAdd = folderSongs.value.filter(s =>
-      selectedFolderSongs.value.find(select => select === (`${s.name}_${(s as any)._filePath}`)),
+    const songsToAdd = folderSongs.value.filter((s) =>
+      selectedFolderSongs.value.find((select) => select === `${s.name}_${(s as any)._filePath}`),
     )
 
     const result = await addSongsToSongList(
-      songsToAdd.map(s => ({
+      songsToAdd.map((s) => ({
         ...s,
         description: `${s.description || ''} [注意: 链接为本地文件，刷新页面后可能失效]`,
       })),
@@ -191,7 +222,7 @@ async function selectFolder() {
     const directoryHandle = await window.showDirectoryPicker({ mode: 'read' })
     message.info('正在扫描文件夹...')
 
-    const audioFiles: { name: string, file: File, path: string }[] = []
+    const audioFiles: { name: string; file: File; path: string }[] = []
     await scanDirectory(directoryHandle, audioFiles, '')
 
     if (audioFiles.length === 0) {
@@ -221,10 +252,11 @@ async function selectFolder() {
 </script>
 
 <template>
-  <NAlert type="info" style="margin-bottom: 16px">
-    <template #header>
-      功能说明
-    </template>
+  <NAlert
+    type="info"
+    style="margin-bottom: 16px"
+  >
+    <template #header> 功能说明 </template>
     <NFlex vertical>
       <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>
       <div>支持的文件名格式：</div>
@@ -241,7 +273,11 @@ async function selectFolder() {
     </NFlex>
   </NAlert>
 
-  <NButton type="primary" :loading="isScanningFolder" @click="selectFolder">
+  <NButton
+    type="primary"
+    :loading="isScanningFolder"
+    @click="selectFolder"
+  >
     <template #icon>
       <NIcon :component="ArchiveOutline" />
     </template>
@@ -252,11 +288,15 @@ async function selectFolder() {
     <NDivider style="margin: 16px 0" />
 
     <NCollapse>
-      <NCollapseItem title="批量编辑工具" name="batch-edit">
-        <NFlex vertical style="width: 100%">
-          <NAlert type="info">
-            选中歌曲后，可以批量设置作者、语言或标签信息
-          </NAlert>
+      <NCollapseItem
+        title="批量编辑工具"
+        name="batch-edit"
+      >
+        <NFlex
+          vertical
+          style="width: 100%"
+        >
+          <NAlert type="info"> 选中歌曲后，可以批量设置作者、语言或标签信息 </NAlert>
           <NFlex align="center">
             <span>批量设置作者：</span>
             <NSelect
@@ -299,7 +339,10 @@ async function selectFolder() {
 
     <NDivider style="margin: 16px 0" />
 
-    <NButton type="primary" @click="addFolderSongs">
+    <NButton
+      type="primary"
+      @click="addFolderSongs"
+    >
       添加到歌单 | {{ selectedFolderSongs.length }} 首
     </NButton>
 

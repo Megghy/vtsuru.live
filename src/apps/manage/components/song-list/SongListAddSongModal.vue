@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
+import { NModal, NScrollbar, NSpin, NTabPane, NTabs } from 'naive-ui'
 import { computed, ref } from 'vue'
-import { NModal, NScrollbar, NSpin, NTabPane, NTabs } from 'naive-ui';
+
+import type { SongsInfo } from '@/api/api-models'
 import SongListAddSongModalCustomTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalCustomTab.vue'
 import SongListAddSongModalDirectoryTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalDirectoryTab.vue'
 import SongListAddSongModalFileTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalFileTab.vue'
@@ -20,7 +21,7 @@ const emit = defineEmits<{
 
 const showModel = computed({
   get: () => props.show,
-  set: value => emit('update:show', value),
+  set: (value) => emit('update:show', value),
 })
 
 const modalRenderKey = ref(0)
@@ -39,25 +40,25 @@ const songSelectOption = [
 const authors = computed(() => {
   const items = new Set<string>()
   props.songs.forEach((s) => {
-    s?.author?.forEach(a => items.add(a))
+    s?.author?.forEach((a) => items.add(a))
   })
-  return [...items].map(t => ({ label: t, value: t }))
+  return [...items].map((t) => ({ label: t, value: t }))
 })
 
 const tags = computed(() => {
   const items = new Set<string>()
   props.songs.forEach((s) => {
-    s?.tags?.forEach(t => items.add(t))
+    s?.tags?.forEach((t) => items.add(t))
   })
-  return [...items].map(t => ({ label: t, value: t }))
+  return [...items].map((t) => ({ label: t, value: t }))
 })
 
 const languageSelectOption = computed(() => {
-  const items = new Set<string>(songSelectOption.map(s => s.label))
+  const items = new Set<string>(songSelectOption.map((s) => s.label))
   props.songs.forEach((s) => {
-    s?.language?.forEach(l => items.add(l))
+    s?.language?.forEach((l) => items.add(l))
   })
-  return [...items].map(t => ({ label: t, value: t }))
+  return [...items].map((t) => ({ label: t, value: t }))
 })
 
 function onAdded(songs: SongsInfo[]) {
@@ -80,13 +81,17 @@ function bumpRenderKey() {
     style="max-width: 1000px"
     preset="card"
   >
-    <template #header>
-      添加歌曲
-    </template>
+    <template #header> 添加歌曲 </template>
     <NScrollbar style="max-height: 80vh">
       <NSpin :show="isModalLoading">
-        <NTabs default-value="custom" animated>
-          <NTabPane name="custom" tab="手动录入">
+        <NTabs
+          default-value="custom"
+          animated
+        >
+          <NTabPane
+            name="custom"
+            tab="手动录入"
+          >
             <SongListAddSongModalCustomTab
               :existing-songs="songs"
               :authors="authors"
@@ -97,28 +102,40 @@ function bumpRenderKey() {
               @reset-render="bumpRenderKey"
             />
           </NTabPane>
-          <NTabPane name="netease" tab="从网易云歌单导入">
+          <NTabPane
+            name="netease"
+            tab="从网易云歌单导入"
+          >
             <SongListAddSongModalNeteaseTab
               :existing-songs="songs"
               @added="onAdded"
               @loading-change="onLoadingChange"
             />
           </NTabPane>
-          <NTabPane name="5sing" tab="从5sing搜索">
+          <NTabPane
+            name="5sing"
+            tab="从5sing搜索"
+          >
             <SongListAddSongModalFivesingTab
               :existing-songs="songs"
               @added="onAdded"
               @loading-change="onLoadingChange"
             />
           </NTabPane>
-          <NTabPane name="file" tab="从文件导入">
+          <NTabPane
+            name="file"
+            tab="从文件导入"
+          >
             <SongListAddSongModalFileTab
               :existing-songs="songs"
               @added="onAdded"
               @loading-change="onLoadingChange"
             />
           </NTabPane>
-          <NTabPane name="directory" tab="从文件夹读取">
+          <NTabPane
+            name="directory"
+            tab="从文件夹读取"
+          >
             <SongListAddSongModalDirectoryTab
               :existing-songs="songs"
               :authors="authors"

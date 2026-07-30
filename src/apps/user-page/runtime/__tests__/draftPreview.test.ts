@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { consumeDraftPreview, createDraftPreview } from '../draftPreview'
 
 describe('draft preview token', () => {

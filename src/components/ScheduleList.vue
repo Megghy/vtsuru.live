@@ -1,8 +1,25 @@
 <script setup lang="ts">
-import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { Bed20Regular, Clock20Regular } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
-import { NBadge, NButton, NCard, NEllipsis, NEmpty, NGrid, NGridItem, NIcon, NList, NListItem, NPopconfirm, NFlex, NText, NTime, useThemeVars } from 'naive-ui';
+import {
+  NBadge,
+  NButton,
+  NCard,
+  NEllipsis,
+  NEmpty,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NList,
+  NListItem,
+  NPopconfirm,
+  NFlex,
+  NText,
+  NTime,
+  useThemeVars,
+} from 'naive-ui'
+
+import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 defineProps<{
   schedules: ScheduleWeekInfo[]
   isSelf: boolean
@@ -71,7 +88,13 @@ function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
 }
 
 // 样式工具函数
-function getDayHeaderStyle(year: number, week: number, dayIndex: number, primaryColor: string, primaryColorSuppl: string) {
+function getDayHeaderStyle(
+  year: number,
+  week: number,
+  dayIndex: number,
+  primaryColor: string,
+  primaryColorSuppl: string,
+) {
   const isToday = isCurrentDay(year, week, dayIndex)
 
   return {
@@ -110,15 +133,15 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
         :style="
           isCurrentWeek(item.year, item.week)
             ? {
-              boxShadow: `0 0 0 1px ${themeVars.primaryColorSuppl}99 inset`,
-              borderRadius: '8px',
-              transition: 'box-shadow 0.2s ease',
-            }
+                boxShadow: `0 0 0 1px ${themeVars.primaryColorSuppl}99 inset`,
+                borderRadius: '8px',
+                transition: 'box-shadow 0.2s ease',
+              }
             : undefined
         "
       >
         <template #header>
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px">
             <NText> {{ item.year }}年第{{ item.week }}周 </NText>
             <NBadge
               v-if="isCurrentWeek(item.year, item.week)"
@@ -179,22 +202,26 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
           x-gap="8"
           y-gap="8"
           cols="1 1200:7"
-          style="align-items: stretch;"
+          style="align-items: stretch"
         >
           <NGridItem
             v-for="(daySchedules, index) in item.days"
             :key="index"
-            style="display: flex;"
+            style="display: flex"
           >
-            <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+            <div style="display: flex; flex-direction: column; height: 100%; width: 100%">
               <div
-                :style="getDayHeaderStyle(item.year, item.week, index, themeVars.primaryColor, themeVars.primaryColorSuppl)"
+                :style="
+                  getDayHeaderStyle(item.year, item.week, index, themeVars.primaryColor, themeVars.primaryColorSuppl)
+                "
               >
                 <NTime
                   :time="getDateFromWeek(item.year, item.week, index)"
                   format="MM/dd"
                   :style="{
-                    color: isCurrentDay(item.year, item.week, index) ? themeVars.primaryColor : themeVars.primaryColorSuppl,
+                    color: isCurrentDay(item.year, item.week, index)
+                      ? themeVars.primaryColor
+                      : themeVars.primaryColorSuppl,
                     fontWeight: isCurrentDay(item.year, item.week, index) ? '700' : '600',
                   }"
                 />
@@ -208,7 +235,7 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                   :style="{ marginLeft: 'auto' }"
                 />
               </div>
-              <div style="flex: 1; display: flex; flex-direction: column; min-height: 65px;">
+              <div style="flex: 1; display: flex; flex-direction: column; min-height: 65px">
                 <NCard
                   v-if="daySchedules.length === 0"
                   size="small"
@@ -225,10 +252,14 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                   content-style="display: flex; align-items: center; justify-content: center; gap: 4px;"
                   @click="isSelf && $emit('onUpdate', item)"
                 >
-                  <NIcon :size="14" :component="Bed20Regular" :color="themeVars.textColor3" />
+                  <NIcon
+                    :size="14"
+                    :component="Bed20Regular"
+                    :color="themeVars.textColor3"
+                  />
                   <NText
                     depth="3"
-                    style="font-size: 11px; font-style: italic;"
+                    style="font-size: 11px; font-style: italic"
                     :style="{ opacity: isSelf ? 0.5 : 0.6 }"
                   >
                     休息
@@ -245,7 +276,9 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                     size="small"
                     :style="{
                       backgroundColor: schedule.tagColor ? `${schedule.tagColor}12` : themeVars.cardColor,
-                      borderLeft: schedule.tagColor ? `3px solid ${schedule.tagColor}` : `3px solid ${themeVars.dividerColor}`,
+                      borderLeft: schedule.tagColor
+                        ? `3px solid ${schedule.tagColor}`
+                        : `3px solid ${themeVars.dividerColor}`,
                       cursor: isSelf ? 'pointer' : 'default',
                       transition: 'all 0.2s ease',
                       padding: '0',
@@ -255,17 +288,11 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                     content-style="padding: 3px; padding-left: 5px;padding-bottom: 1px;"
                     @click="isSelf && $emit('onEditItem', item, index, schedule)"
                   >
-                    <div style="padding: 4px 6px;">
+                    <div style="padding: 4px 6px">
                       <!-- 标签和时间行 (仅当有标签或时间时显示) -->
                       <div
                         v-if="schedule.tag || schedule.time"
-                        style="
-                        display: flex;
-                        align-items: center;
-                        gap: 4px;
-                        margin-bottom: 3px;
-                        flex-wrap: nowrap;
-                      "
+                        style="display: flex; align-items: center; gap: 4px; margin-bottom: 3px; flex-wrap: nowrap"
                       >
                         <!-- 标签 -->
                         <div
@@ -276,7 +303,9 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                             gap: '3px',
                             padding: '1px 5px',
                             borderRadius: '3px',
-                            backgroundColor: schedule.tagColor ? `${schedule.tagColor}22` : `${themeVars.primaryColorSuppl}22`,
+                            backgroundColor: schedule.tagColor
+                              ? `${schedule.tagColor}22`
+                              : `${themeVars.primaryColorSuppl}22`,
                             flexShrink: 0,
                           }"
                         >
@@ -308,7 +337,11 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                             flexShrink: 0,
                           }"
                         >
-                          <NIcon :size="12" :component="Clock20Regular" :color="themeVars.textColor3" />
+                          <NIcon
+                            :size="12"
+                            :component="Clock20Regular"
+                            :color="themeVars.textColor3"
+                          />
                           <NText
                             depth="2"
                             :style="{
@@ -328,11 +361,11 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                           type="error"
                           quaternary
                           circle
-                          style="margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; padding: 0;"
+                          style="margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; padding: 0"
                           @click.stop="$emit('onDeleteItem', item, index, schedule)"
                         >
                           <template #icon>
-                            <span style="font-size: 14px; line-height: 1;">×</span>
+                            <span style="font-size: 14px; line-height: 1">×</span>
                           </template>
                         </NButton>
                       </div>
@@ -353,18 +386,18 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                       <!-- 如果既没有标签也没有时间，但有删除按钮 -->
                       <div
                         v-if="!schedule.tag && !schedule.time && isSelf && !schedule?.title"
-                        style="display: flex; justify-content: flex-end;"
+                        style="display: flex; justify-content: flex-end"
                       >
                         <NButton
                           size="tiny"
                           type="error"
                           quaternary
                           circle
-                          style="width: 18px; height: 18px; padding: 0;"
+                          style="width: 18px; height: 18px; padding: 0"
                           @click.stop="$emit('onDeleteItem', item, index, schedule)"
                         >
                           <template #icon>
-                            <span style="font-size: 14px; line-height: 1;">×</span>
+                            <span style="font-size: 14px; line-height: 1">×</span>
                           </template>
                         </NButton>
                       </div>

@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/api-models'
-import type { GlobalThemeOverrides } from 'naive-ui'
-import { darkTheme, NConfigProvider } from 'naive-ui';
-import { computed, provide } from 'vue'
 import { useMediaQuery, useNow } from '@vueuse/core'
-import type { BlockPageProject, BlockVisibilityContext } from './schema'
+import type { GlobalThemeOverrides } from 'naive-ui'
+import { darkTheme, NConfigProvider } from 'naive-ui'
+import { computed, provide } from 'vue'
+
+import type { UserInfo } from '@/api/api-models'
+import { getUserPageNaiveThemeOverrides, getUserPageThemeCssVars } from '@/apps/user-page/background'
+
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'
-import { getUserPageNaiveThemeOverrides, getUserPageThemeCssVars } from '@/apps/user-page/background'
-import { isBlockVisible } from './visibility'
+import type { BlockPageProject, BlockVisibilityContext } from './schema'
 import { collectPageSections, PageSectionsKey } from './sectionNavigation'
+import { isBlockVisible } from './visibility'
 
 const props = defineProps<{
   project: BlockPageProject
@@ -37,9 +39,9 @@ const naiveTheme = computed(() => {
 })
 
 // Specific overrides from the "Builder" UI
-const userOverrides = computed<GlobalThemeOverrides>(() => (
-  getUserPageNaiveThemeOverrides(props.project.theme, userThemeVars.value, props.isDark)
-))
+const userOverrides = computed<GlobalThemeOverrides>(() =>
+  getUserPageNaiveThemeOverrides(props.project.theme, userThemeVars.value, props.isDark),
+)
 
 // 展示页主题是完整基底，外部只允许追加预览态覆盖。
 const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
@@ -53,9 +55,9 @@ const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
     for (const key of Object.keys(source)) {
       const val = (source as any)[key]
       if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-         result[key] = { ...result[key], ...val }
+        result[key] = { ...result[key], ...val }
       } else {
-         result[key] = val
+        result[key] = val
       }
     }
   }
@@ -66,14 +68,19 @@ const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
 const blockComponents = BLOCK_COMPONENTS
 const isMobile = useMediaQuery('(max-width: 767px)')
 const now = useNow({ interval: 30_000 })
-const activeVisibilityContext = computed<BlockVisibilityContext>(() => props.visibilityContext ?? ({
-  isLive: props.userInfo?.streamerInfo?.isStreaming ?? false,
-  device: isMobile.value ? 'mobile' : 'desktop',
-  now: Math.floor(now.value.getTime() / 1000),
-}))
-const renderedBlocks = computed(() => props.editorMode
-  ? props.project.blocks
-  : props.project.blocks.filter(block => !block.hidden && isBlockVisible(block, activeVisibilityContext.value)))
+const activeVisibilityContext = computed<BlockVisibilityContext>(
+  () =>
+    props.visibilityContext ?? {
+      isLive: props.userInfo?.streamerInfo?.isStreaming ?? false,
+      device: isMobile.value ? 'mobile' : 'desktop',
+      now: Math.floor(now.value.getTime() / 1000),
+    },
+)
+const renderedBlocks = computed(() =>
+  props.editorMode
+    ? props.project.blocks
+    : props.project.blocks.filter((block) => !block.hidden && isBlockVisible(block, activeVisibilityContext.value)),
+)
 const selectedBlockIdSet = computed(() => new Set(props.selectedBlockIds ?? []))
 const pageSections = computed(() => collectPageSections(props.project.blocks, activeVisibilityContext.value))
 provide(PageSectionsKey, pageSections)
@@ -87,7 +94,10 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 </script>
 
 <template>
-  <NConfigProvider :theme="naiveTheme" :theme-overrides="mergedThemeOverrides">
+  <NConfigProvider
+    :theme="naiveTheme"
+    :theme-overrides="mergedThemeOverrides"
+  >
     <div
       class="page"
       :style="userThemeVars"
@@ -118,14 +128,18 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
           :bili-info="biliInfo"
           :bili-status="biliStatus"
           :block-id="block.type === 'heading' ? block.id : undefined"
-          v-bind="block.type === 'layout' ? {
-            highlightBlockId: props.highlightBlockId,
-            selectedBlockIds: props.selectedBlockIds,
-            editorMode: props.editorMode,
-            visibilityContext: activeVisibilityContext,
-            onSelectBlock: (id: string) => emit('select-block', id),
-            onHoverBlock: (id: string | null) => emit('hover-block', id),
-          } : {}"
+          v-bind="
+            block.type === 'layout'
+              ? {
+                  highlightBlockId: props.highlightBlockId,
+                  selectedBlockIds: props.selectedBlockIds,
+                  editorMode: props.editorMode,
+                  visibilityContext: activeVisibilityContext,
+                  onSelectBlock: (id: string) => emit('select-block', id),
+                  onHoverBlock: (id: string | null) => emit('hover-block', id),
+                }
+              : {}
+          "
         />
       </div>
     </div>

@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
-import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { CloudAdd20Filled, Play24Filled, Search24Regular } from '@vicons/fluent'
 import { NButton, NEmpty, NIcon, NInput, NSelect, NTag, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
-import { useBiliAuth } from '@/store/useBiliAuth'
+import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { GetGuardColor } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
+
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -52,7 +54,9 @@ const filteredSongs = computed<SongsInfo[]>(() => {
       song.author?.join(' ') ?? '',
       song.language?.join(' ') ?? '',
       song.tags?.join(' ') ?? '',
-    ].join(' ').toLowerCase()
+    ]
+      .join(' ')
+      .toLowerCase()
     return haystack.includes(keyword)
   })
 })
@@ -79,7 +83,9 @@ function requestSong(song: SongsInfo) {
   if (isSelf.value) return
   requestingKey.value = song.key
   emits('requestSong', song)
-  window.setTimeout(() => { requestingKey.value = '' }, 2000)
+  window.setTimeout(() => {
+    requestingKey.value = ''
+  }, 2000)
 }
 </script>
 
@@ -139,7 +145,7 @@ function requestSong(song: SongsInfo) {
             :alt="song.name"
             loading="lazy"
             referrerpolicy="no-referrer"
-          >
+          />
           <div
             v-else
             class="cover-placeholder"
@@ -151,15 +157,18 @@ function requestSong(song: SongsInfo) {
           <span
             v-if="singingSongKeySet.has(song.key)"
             class="status-flag flag-singing"
-          >正在演唱</span>
+            >正在演唱</span
+          >
           <span
             v-else-if="queuedSongKeySet.has(song.key)"
             class="status-flag flag-queued"
-          >排队中</span>
+            >排队中</span
+          >
           <span
             v-if="song.options?.scMinPrice"
             class="status-flag flag-sc"
-          >SC ¥{{ song.options.scMinPrice }}</span>
+            >SC ¥{{ song.options.scMinPrice }}</span
+          >
 
           <div class="cover-overlay">
             <NTooltip v-if="song.url">
@@ -218,7 +227,12 @@ function requestSong(song: SongsInfo) {
             {{ song.author.join(' / ') }}
           </div>
           <div
-            v-if="song.options?.needZongdu || song.options?.needTidu || song.options?.needJianzhang || song.options?.fanMedalMinLevel"
+            v-if="
+              song.options?.needZongdu ||
+              song.options?.needTidu ||
+              song.options?.needJianzhang ||
+              song.options?.fanMedalMinLevel
+            "
             class="guard-row"
           >
             <NTag
@@ -307,7 +321,9 @@ function requestSong(song: SongsInfo) {
   flex-direction: column;
   border-radius: 14px;
   overflow: hidden;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .cover-card:hover {
@@ -377,8 +393,13 @@ function requestSong(song: SongsInfo) {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.65; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
 }
 
 .cover-overlay {

@@ -1,6 +1,8 @@
-import type { OpenLiveLotteryUserInfo } from '@/api/api-models'
-import type { LotteryOption } from '../lotteryTypes'
 import { describe, expect, it } from 'vitest'
+
+import type { OpenLiveLotteryUserInfo } from '@/api/api-models'
+
+import type { LotteryOption } from '../lotteryTypes'
 import { getAvatarUrl, getRandomInt, isUserValid, shuffleArray } from '../lotteryUtils'
 
 function makeUser(overrides: Partial<OpenLiveLotteryUserInfo> = {}): OpenLiveLotteryUserInfo {
@@ -152,17 +154,18 @@ describe('getAvatarUrl', () => {
   })
 
   it('returns noface for default noface url', () => {
-    expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/member/noface.jpg'))
-      .toBe('https://i2.hdslb.com/bfs/face/member/noface.jpg')
+    expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/member/noface.jpg')).toBe(
+      'https://i2.hdslb.com/bfs/face/member/noface.jpg',
+    )
   })
 
   it('replaces existing size parameter', () => {
-    expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/abc.jpg@48w_48h'))
-      .toBe('https://i2.hdslb.com/bfs/face/abc.jpg@96w_96h')
+    expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/abc.jpg@48w_48h')).toBe(
+      'https://i2.hdslb.com/bfs/face/abc.jpg@96w_96h',
+    )
   })
 
   it('appends size parameter when missing', () => {
-    expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/abc.jpg'))
-      .toBe('https://i2.hdslb.com/bfs/face/abc.jpg@96w_96h')
+    expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/abc.jpg')).toBe('https://i2.hdslb.com/bfs/face/abc.jpg@96w_96h')
   })
 })

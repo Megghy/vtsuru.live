@@ -1,12 +1,3 @@
-/**
- * 模板能力 (Capability) 通用注册表
- *
- * 设计目标: 作为「所有模板」的通用能力标记体系, 而非仅服务于歌单.
- * - 任意类型的模板 (歌单 / 日程表 / 未来新增) 都可以从这里挑选能力标签.
- * - 新增能力 = 往 TemplateCapabilities 里加一项; 给模板打标 = 在 templates.ts 的
- *   capabilities 数组里填能力 id. 两处都有类型约束, 拼错即报错.
- */
-import type { Component } from 'vue'
 import {
   CursorClick20Regular,
   Eye20Regular,
@@ -16,6 +7,15 @@ import {
   MusicNote220Regular,
   Options20Regular,
 } from '@vicons/fluent'
+/**
+ * 模板能力 (Capability) 通用注册表
+ *
+ * 设计目标: 作为「所有模板」的通用能力标记体系, 而非仅服务于歌单.
+ * - 任意类型的模板 (歌单 / 日程表 / 未来新增) 都可以从这里挑选能力标签.
+ * - 新增能力 = 往 TemplateCapabilities 里加一项; 给模板打标 = 在 templates.ts 的
+ *   capabilities 数组里填能力 id. 两处都有类型约束, 拼错即报错.
+ */
+import type { Component } from 'vue'
 import { markRaw } from 'vue'
 
 /** 能力分类: 用于在 UI 上分组展示, 每类一个主题色与图标 */
@@ -27,7 +27,7 @@ export const CapabilityCategories = {
   threshold: { name: '门槛', color: '#7c3aed', icon: markRaw(LockClosed20Regular) },
   performance: { name: '性能', color: '#909399', icon: markRaw(Flash20Regular) },
   config: { name: '配置', color: '#0891b2', icon: markRaw(Options20Regular) },
-} as const satisfies Record<string, { name: string, color: string, icon: Component }>
+} as const satisfies Record<string, { name: string; color: string; icon: Component }>
 
 export type CapabilityCategory = keyof typeof CapabilityCategories
 
@@ -108,14 +108,14 @@ export function getCategoryTagColor(category: CapabilityCategory) {
 /** 把能力 id 列表按分类分组, 返回 [分类, 该分类下的能力项[]] 的有序数组 (空分类省略) */
 export function groupCapabilities(
   ids: readonly TemplateCapability[] = [],
-): Array<{ category: CapabilityCategory, items: Array<{ id: TemplateCapability } & TemplateCapabilityMeta> }> {
+): Array<{ category: CapabilityCategory; items: Array<{ id: TemplateCapability } & TemplateCapabilityMeta> }> {
   const order = Object.keys(CapabilityCategories) as CapabilityCategory[]
   return order
-    .map(category => ({
+    .map((category) => ({
       category,
       items: ids
-        .filter(id => TemplateCapabilities[id].category === category)
-        .map(id => ({ id, ...TemplateCapabilities[id] })),
+        .filter((id) => TemplateCapabilities[id].category === category)
+        .map((id) => ({ id, ...TemplateCapabilities[id] })),
     }))
-    .filter(g => g.items.length > 0)
+    .filter((g) => g.items.length > 0)
 }

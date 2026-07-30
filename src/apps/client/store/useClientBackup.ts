@@ -1,15 +1,17 @@
-import type { ClientBackupSettings } from './useSettings'
-import type { DirEntry } from '@tauri-apps/plugin-fs'
 import { getVersion } from '@tauri-apps/api/app'
 import { join } from '@tauri-apps/api/path'
 import { open } from '@tauri-apps/plugin-dialog'
+import type { DirEntry } from '@tauri-apps/plugin-fs'
 import { exists, mkdir, readDir, readFile, remove, writeFile } from '@tauri-apps/plugin-fs'
 import { clear, createStore, delMany, entries, keys, setMany } from 'idb-keyval'
 import JSZip from 'jszip'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { parse, stringify } from 'superjson'
 import { ref, watch } from 'vue'
+
 import { isTauri } from '@/shared/config'
+
+import type { ClientBackupSettings } from './useSettings'
 import { useSettings } from './useSettings'
 import { useTauriStore } from './useTauriStore'
 
@@ -90,8 +92,8 @@ const MODULE_FILES: Record<ClientBackupModule, string> = {
 }
 
 function compareVersions(left: string, right: string): number {
-  const leftParts = left.split('.').map(part => Number.parseInt(part, 10) || 0)
-  const rightParts = right.split('.').map(part => Number.parseInt(part, 10) || 0)
+  const leftParts = left.split('.').map((part) => Number.parseInt(part, 10) || 0)
+  const rightParts = right.split('.').map((part) => Number.parseInt(part, 10) || 0)
   const maxLength = Math.max(leftParts.length, rightParts.length)
   for (let i = 0; i < maxLength; i++) {
     const diff = (leftParts[i] || 0) - (rightParts[i] || 0)
@@ -149,7 +151,11 @@ async function readManifestFromZip(zip: JSZip): Promise<ClientBackupManifest> {
   return manifest
 }
 
-async function readModulePayload<T>(zip: JSZip, manifest: ClientBackupManifest, module: ClientBackupModule): Promise<T> {
+async function readModulePayload<T>(
+  zip: JSZip,
+  manifest: ClientBackupManifest,
+  module: ClientBackupModule,
+): Promise<T> {
   const moduleFile = zip.file(manifest.modules[module].file)
   if (!moduleFile) {
     throw new Error(`备份文件缺少模块: ${module}`)
@@ -224,11 +230,14 @@ export const useClientBackup = defineStore('clientBackup', () => {
 
     if (!config.scheduleEnabled || !config.directory.trim() || !hours) return
 
-    scheduler.value = window.setInterval(() => {
-      void createBackup('scheduled').catch((error) => {
-        console.error('[ClientBackup] 自动备份失败:', error)
-      })
-    }, hours * 60 * 60 * 1000)
+    scheduler.value = window.setInterval(
+      () => {
+        void createBackup('scheduled').catch((error) => {
+          console.error('[ClientBackup] 自动备份失败:', error)
+        })
+      },
+      hours * 60 * 60 * 1000,
+    )
   }
 
   async function pickBackupDirectory() {
@@ -321,7 +330,10 @@ export const useClientBackup = defineStore('clientBackup', () => {
   async function pruneOldBackups(directory: string, keepCount: number) {
     const dirEntries = await readDir(directory)
     const backupEntries = dirEntries
-      .filter((entry: DirEntry) => entry.isFile && entry.name.startsWith(BACKUP_FILE_PREFIX) && entry.name.endsWith(BACKUP_FILE_SUFFIX))
+      .filter(
+        (entry: DirEntry) =>
+          entry.isFile && entry.name.startsWith(BACKUP_FILE_PREFIX) && entry.name.endsWith(BACKUP_FILE_SUFFIX),
+      )
       .toSorted((left, right) => right.name.localeCompare(left.name))
 
     for (const staleEntry of backupEntries.slice(Math.max(keepCount, 1))) {
@@ -340,7 +352,7 @@ export const useClientBackup = defineStore('clientBackup', () => {
 
     busy.value = true
     try {
-      if (!await exists(directory)) {
+      if (!(await exists(directory))) {
         await mkdir(directory, { recursive: true })
       }
 
@@ -382,7 +394,7 @@ export const useClientBackup = defineStore('clientBackup', () => {
 
   async function restoreAutoActionConfig(moduleEntries: Array<[string, unknown]>) {
     const allKeys = await keys<string>(AUTO_ACTION_STORE)
-    const targetKeys = allKeys.filter(key => isAutoActionConfigKey(String(key)))
+    const targetKeys = allKeys.filter((key) => isAutoActionConfigKey(String(key)))
     if (targetKeys.length > 0) {
       await delMany(targetKeys, AUTO_ACTION_STORE)
     }
@@ -400,7 +412,7 @@ export const useClientBackup = defineStore('clientBackup', () => {
 
   async function restoreAutoActionHistory(moduleEntries: Array<[string, unknown]>) {
     const allKeys = await keys<string>(AUTO_ACTION_STORE)
-    const targetKeys = allKeys.filter(key => isAutoActionHistoryKey(String(key)))
+    const targetKeys = allKeys.filter((key) => isAutoActionHistoryKey(String(key)))
     if (targetKeys.length > 0) {
       await delMany(targetKeys, AUTO_ACTION_STORE)
     }

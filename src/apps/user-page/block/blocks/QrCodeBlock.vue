@@ -3,6 +3,7 @@ import { DownloadOutline, OpenOutline } from '@vicons/ionicons5'
 import { NButton, NFlex, NIcon } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
+
 import BlockCard from '../BlockCard.vue'
 import { hasQrCodeCapacity } from '../qrcode'
 import type { QrCodeLevel } from '../qrcode'
@@ -41,8 +42,7 @@ const linkUrl = computed(() => {
   try {
     const url = new URL(config.value.content)
     return url.protocol === 'https:' && !url.username && !url.password ? url.href : ''
-  }
-  catch {
+  } catch {
     return ''
   }
 })
@@ -65,10 +65,16 @@ function downloadPng() {
     :content-style="{ padding: 'var(--vtsuru-page-spacing)' }"
   >
     <div class="qrcode-block">
-      <h3 v-if="config.title" class="qrcode-title">
+      <h3
+        v-if="config.title"
+        class="qrcode-title"
+      >
         {{ config.title }}
       </h3>
-      <div ref="qrRoot" class="qrcode-canvas-wrap">
+      <div
+        ref="qrRoot"
+        class="qrcode-canvas-wrap"
+      >
         <QrcodeVue
           v-if="canRender"
           :value="config.content"
@@ -80,11 +86,18 @@ function downloadPng() {
           render-as="canvas"
           class="qrcode-canvas"
         />
-        <span v-else class="qrcode-state">
+        <span
+          v-else
+          class="qrcode-state"
+        >
           {{ config.content ? '内容超出当前纠错等级容量' : '请填写二维码内容' }}
         </span>
       </div>
-      <NFlex justify="center" :wrap="true" :size="8">
+      <NFlex
+        justify="center"
+        :wrap="true"
+        :size="8"
+      >
         <NButton
           v-if="linkUrl"
           tag="a"
@@ -98,7 +111,11 @@ function downloadPng() {
           </template>
           打开链接
         </NButton>
-        <NButton secondary :disabled="!canRender" @click="downloadPng">
+        <NButton
+          secondary
+          :disabled="!canRender"
+          @click="downloadPng"
+        >
           <template #icon>
             <NIcon><DownloadOutline /></NIcon>
           </template>

@@ -1,18 +1,9 @@
 import type { Ref } from 'vue'
-import type {
-  AutoActionItem,
-  ExecutionContext,
-  RuntimeState,
-} from '../types'
 import { computed } from 'vue'
-import {
-  executeActions,
-  filterValidActions,
-} from '../actionUtils'
-import {
-  ActionType,
-  TriggerType,
-} from '../types'
+
+import { executeActions, filterValidActions } from '../actionUtils'
+import type { AutoActionItem, ExecutionContext, RuntimeState } from '../types'
+import { ActionType, TriggerType } from '../types'
 import { buildExecutionContext } from '../utils'
 
 /**
@@ -32,12 +23,7 @@ export function useGuardPm(
    * @param event 舰长购买事件
    * @param runtimeState 运行时状态
    */
-  function handleGuardBuy(
-    actions: AutoActionItem[],
-    event: any,
-    runtimeState: RuntimeState,
-    isTest = false,
-  ) {
+  function handleGuardBuy(actions: AutoActionItem[], event: any, runtimeState: RuntimeState, isTest = false) {
     if (!roomId.value) return
 
     // 使用通用函数过滤舰长事件的操作
@@ -86,11 +72,11 @@ export function useGuardPm(
                 // 找到对应等级的礼品码
                 if (action.triggerConfig.giftCodes && action.triggerConfig.giftCodes.length > 0) {
                   // 优先查找特定等级的礼品码
-                  let levelCodesEntry = action.triggerConfig.giftCodes.find(gc => gc.level === guardLevel)
+                  let levelCodesEntry = action.triggerConfig.giftCodes.find((gc) => gc.level === guardLevel)
 
                   // 如果没有找到特定等级的礼品码，尝试查找通用礼品码（level为0）
                   if (!levelCodesEntry) {
-                    levelCodesEntry = action.triggerConfig.giftCodes.find(gc => gc.level === 0)
+                    levelCodesEntry = action.triggerConfig.giftCodes.find((gc) => gc.level === 0)
                   }
 
                   if (levelCodesEntry && levelCodesEntry.codes && levelCodesEntry.codes.length > 0) {
@@ -116,18 +102,20 @@ export function useGuardPm(
           onSuccess: (action: AutoActionItem, context: ExecutionContext) => {
             // 检查是否需要消耗礼品码
             if (
-              action.actionType === ActionType.SEND_PRIVATE_MSG
-              && action.triggerConfig.consumeGiftCode
-              && context.variables.guard?.selectedGiftCode
+              action.actionType === ActionType.SEND_PRIVATE_MSG &&
+              action.triggerConfig.consumeGiftCode &&
+              context.variables.guard?.selectedGiftCode
             ) {
               const { code: selectedCode, level: selectedLevel } = context.variables.guard.selectedGiftCode
 
-              console.log(`[AutoAction] 尝试消耗礼品码: ActionID=${action.id}, Level=${selectedLevel}, Code=${selectedCode}`)
+              console.log(
+                `[AutoAction] 尝试消耗礼品码: ActionID=${action.id}, Level=${selectedLevel}, Code=${selectedCode}`,
+              )
 
               // 确保 giftCodes 存在且为数组
               if (Array.isArray(action.triggerConfig.giftCodes)) {
                 // 找到对应等级的礼品码条目
-                const levelCodesEntry = action.triggerConfig.giftCodes.find(gc => gc.level === selectedLevel)
+                const levelCodesEntry = action.triggerConfig.giftCodes.find((gc) => gc.level === selectedLevel)
 
                 if (levelCodesEntry && Array.isArray(levelCodesEntry.codes)) {
                   // 找到要删除的礼品码的索引
@@ -136,15 +124,21 @@ export function useGuardPm(
                   if (codeIndex > -1) {
                     // 从数组中移除礼品码
                     levelCodesEntry.codes.splice(codeIndex, 1)
-                    console.log(`[AutoAction] 成功消耗礼品码: ActionID=${action.id}, Level=${selectedLevel}, Code=${selectedCode}. 剩余 ${levelCodesEntry.codes.length} 个。`)
+                    console.log(
+                      `[AutoAction] 成功消耗礼品码: ActionID=${action.id}, Level=${selectedLevel}, Code=${selectedCode}. 剩余 ${levelCodesEntry.codes.length} 个。`,
+                    )
                     // !!! 重要提示: 此处直接修改了 action 对象。
                     // !!! 请确保你的状态管理允许这种修改，或者调用 store action 来持久化更新。
                     // 例如: store.updateActionGiftCodes(action.id, selectedLevel, levelCodesEntry.codes);
                   } else {
-                    console.warn(`[AutoAction] 未能在等级 ${selectedLevel} 中找到要消耗的礼品码: ${selectedCode}, ActionID=${action.id}`)
+                    console.warn(
+                      `[AutoAction] 未能在等级 ${selectedLevel} 中找到要消耗的礼品码: ${selectedCode}, ActionID=${action.id}`,
+                    )
                   }
                 } else {
-                  console.warn(`[AutoAction] 未找到等级 ${selectedLevel} 的礼品码列表或列表格式不正确, ActionID=${action.id}`)
+                  console.warn(
+                    `[AutoAction] 未找到等级 ${selectedLevel} 的礼品码列表或列表格式不正确, ActionID=${action.id}`,
+                  )
                 }
               } else {
                 console.warn(`[AutoAction] Action ${action.id} 的 giftCodes 配置不存在或不是数组。`)

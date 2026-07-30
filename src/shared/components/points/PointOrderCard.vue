@@ -1,21 +1,39 @@
 <script setup lang="ts">
-import type {
-  DataTableColumns,
-  DataTableRowKey,
-} from 'naive-ui'
-import type {
-  ResponsePointOrder2OwnerModel,
-  ResponsePointOrder2UserModel,
-} from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
+import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import {
-  NAlert, NAutoComplete, NButton, NCard, NDataTable, NDivider, NEllipsis, NEmpty, NFlex, NGrid, NGi, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NScrollbar, NStep, NSteps, NTag, NText, NTime, NTooltip, useDialog, useMessage } from 'naive-ui';
+  NAlert,
+  NAutoComplete,
+  NButton,
+  NCard,
+  NDataTable,
+  NDivider,
+  NEllipsis,
+  NEmpty,
+  NFlex,
+  NGrid,
+  NGi,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NModal,
+  NScrollbar,
+  NStep,
+  NSteps,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+  useDialog,
+  useMessage,
+} from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
-import {
-  GoodsTypes,
-  PointOrderStatus,
-} from '@/api/api-models'
+
+import type { ResponsePointOrder2OwnerModel, ResponsePointOrder2UserModel } from '@/api/api-models'
+import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
 import { updateOrderExpress, updateOrdersStatus } from '@/api/point-orders'
+
 import AddressDisplay from './AddressDisplay.vue'
 import PointGoodsItem from './PointGoodsItem.vue'
 
@@ -43,9 +61,12 @@ const selectedSubItems = computed(() => {
 })
 
 // 监听加载状态
-watch(() => props.loading, (val) => {
-  isLoading.value = !!val
-})
+watch(
+  () => props.loading,
+  (val) => {
+    isLoading.value = !!val
+  },
+)
 
 // 计算属性
 const orderAsOwner = computed(() => props.order as ResponsePointOrder2OwnerModel[])
@@ -60,13 +81,9 @@ const expressOptions = computed(() => {
   if (props.type !== 'owner' || !orderAsOwner.value) return []
 
   // 过滤掉空值并去重
-  const companies = [...new Set(
-    orderAsOwner.value
-      .map(o => o.expressCompany)
-      .filter(Boolean),
-  )]
+  const companies = [...new Set(orderAsOwner.value.map((o) => o.expressCompany).filter(Boolean))]
 
-  return companies.map(company => ({
+  return companies.map((company) => ({
     label: company,
     value: company,
   }))
@@ -83,8 +100,8 @@ const statusMap = {
     prevStatusText: '',
   },
   [PointOrderStatus.Shipped]: {
-    text: (hasExpress: boolean) => hasExpress ? '已发货 | 已填写单号' : '已发货 | 未填写单号',
-    type: (hasExpress: boolean) => hasExpress ? 'info' : 'warning',
+    text: (hasExpress: boolean) => (hasExpress ? '已发货 | 已填写单号' : '已发货 | 未填写单号'),
+    type: (hasExpress: boolean) => (hasExpress ? 'info' : 'warning'),
     description: '订单已发货，可以添加快递信息',
     action: '完成订单',
     nextStatusText: '确认后将可以进行发货信息填写',
@@ -112,9 +129,7 @@ const orderColumn: DataTableColumns<OrderType> = [
         label: '选中未发货的',
         key: 'f2',
         onSelect: (pageData) => {
-          selectedItem.value = pageData
-            .filter(row => row.status === PointOrderStatus.Pending)
-            .map(row => row.id)
+          selectedItem.value = pageData.filter((row) => row.status === PointOrderStatus.Pending).map((row) => row.id)
         },
       },
     ],
@@ -156,15 +171,20 @@ const orderColumn: DataTableColumns<OrderType> = [
     render: (row: OrderType) => {
       const name = row.goods?.name || '未知礼物'
       const subs = row.selectedSubItems || []
-      
+
       if (subs.length === 0) return name
 
       return h(NFlex, { vertical: true, gap: 4 }, () => [
         h(NText, { strong: true }, () => name),
-        h(NFlex, { gap: 4, wrap: true }, () => 
-          subs.map(s => h(NTag, { size: 'tiny', type: 'info', bordered: false, key: s.subItemId }, 
-            () => `${s.nameSnapshot} x ${s.quantity}`))
-        )
+        h(NFlex, { gap: 4, wrap: true }, () =>
+          subs.map((s) =>
+            h(
+              NTag,
+              { size: 'tiny', type: 'info', bordered: false, key: s.subItemId },
+              () => `${s.nameSnapshot} x ${s.quantity}`,
+            ),
+          ),
+        ),
       ])
     },
   },
@@ -195,9 +215,10 @@ const orderColumn: DataTableColumns<OrderType> = [
   {
     title: '订单状态',
     key: 'status',
-    filter: props.type === 'owner'
-      ? undefined
-      : (filterOptionValue: unknown, row: OrderType) => row.status === filterOptionValue,
+    filter:
+      props.type === 'owner'
+        ? undefined
+        : (filterOptionValue: unknown, row: OrderType) => row.status === filterOptionValue,
     filterOptions: [
       { label: '等待发货', value: PointOrderStatus.Pending },
       { label: '已发货', value: PointOrderStatus.Shipped },
@@ -210,29 +231,38 @@ const orderColumn: DataTableColumns<OrderType> = [
       const text = typeof status.text === 'function' ? status.text(hasExpress) : status.text
       const type = typeof status.type === 'function' ? status.type(hasExpress) : status.type
 
-      return h(NTag, {
-        size: 'small',
-        type: type as any,
-        bordered: false,
-      }, () => text)
+      return h(
+        NTag,
+        {
+          size: 'small',
+          type: type as any,
+          bordered: false,
+        },
+        () => text,
+      )
     },
   },
   {
     title: '订单类型',
     key: 'type',
-    filter: props.type === 'owner'
-      ? undefined
-      : (filterOptionValue: unknown, row: OrderType) => row.type === filterOptionValue,
+    filter:
+      props.type === 'owner'
+        ? undefined
+        : (filterOptionValue: unknown, row: OrderType) => row.type === filterOptionValue,
     filterOptions: [
       { label: '实体礼物', value: GoodsTypes.Physical },
       { label: '虚拟礼物', value: GoodsTypes.Virtual },
     ],
     render: (row: OrderType) => {
-      return h(NTag, {
-        type: 'success',
-        bordered: false,
-        size: 'small',
-      }, () => row.type === GoodsTypes.Physical ? '实体礼物' : '虚拟礼物')
+      return h(
+        NTag,
+        {
+          type: 'success',
+          bordered: false,
+          size: 'small',
+        },
+        () => (row.type === GoodsTypes.Physical ? '实体礼物' : '虚拟礼物'),
+      )
     },
   },
   {
@@ -255,13 +285,17 @@ const orderColumn: DataTableColumns<OrderType> = [
 
       if (row.type === GoodsTypes.Physical) {
         return goodsCollectUrl
-          ? h(NButton, {
-              tag: 'a',
-              href: goodsCollectUrl,
-              target: '_blank',
-              text: true,
-              type: 'info',
-            }, () => h(NText, { italic: true }, () => '通过站外链接收集'))
+          ? h(
+              NButton,
+              {
+                tag: 'a',
+                href: goodsCollectUrl,
+                target: '_blank',
+                text: true,
+                type: 'info',
+              },
+              () => h(NText, { italic: true }, () => '通过站外链接收集'),
+            )
           : h(AddressDisplay, { address: row.address, size: 'small' })
       } else {
         return h(NText, { depth: 3, italic: true }, () => '无需发货')
@@ -337,14 +371,12 @@ function onChangeStatus(id: number, status: PointOrderStatus) {
   const statusInfo = statusMap[status]
   const currentStatusInfo = orderDetail.value ? statusMap[orderDetail.value.status] : null
   const currentStatusText = currentStatusInfo
-    ? (typeof currentStatusInfo.text === 'function'
-        ? currentStatusInfo.text(!!orderDetail.value?.expressCompany)
-        : currentStatusInfo.text)
+    ? typeof currentStatusInfo.text === 'function'
+      ? currentStatusInfo.text(!!orderDetail.value?.expressCompany)
+      : currentStatusInfo.text
     : '当前状态'
 
-  const newStatusText = typeof statusInfo.text === 'function'
-    ? statusInfo.text(false)
-    : statusInfo.text
+  const newStatusText = typeof statusInfo.text === 'function' ? statusInfo.text(false) : statusInfo.text
 
   let tipText = ''
   if (status > (orderDetail.value?.status || 0)) {
@@ -360,10 +392,11 @@ function onChangeStatus(id: number, status: PointOrderStatus) {
 
   dialog.info({
     title: '修改订单状态',
-    content: () => h('div', null, [
-      h('p', null, `确认将订单状态从「${currentStatusText}」修改为「${newStatusText}」吗？`),
-      tipText ? h('p', { style: 'color: #f90; margin-top: 8px;' }, tipText) : null,
-    ]),
+    content: () =>
+      h('div', null, [
+        h('p', null, `确认将订单状态从「${currentStatusText}」修改为「${newStatusText}」吗？`),
+        tipText ? h('p', { style: 'color: #f90; margin-top: 8px;' }, tipText) : null,
+      ]),
     positiveText: '确认',
     negativeText: '取消',
     onPositiveClick: () => {
@@ -435,7 +468,7 @@ onMounted(() => {
         size: 'small',
       }"
       size="small"
-      @update:checked-row-keys="keys => emit('selectedItem', keys)"
+      @update:checked-row-keys="(keys) => emit('selectedItem', keys)"
     >
       <template #empty>
         <NEmpty description="暂无订单" />
@@ -448,10 +481,10 @@ onMounted(() => {
       v-model:show="showDetailModal"
       preset="card"
       title="订单详情"
-      style="max-width: 90vw; min-width: 400px; width: 800px;"
+      style="max-width: 90vw; min-width: 400px; width: 800px"
     >
       <NScrollbar
-        style="max-height: 80vh; padding-right: 12px;"
+        style="max-height: 80vh; padding-right: 12px"
         trigger="none"
       >
         <div class="order-detail-content">
@@ -476,24 +509,51 @@ onMounted(() => {
           <!-- 已选款式详情 -->
           <template v-if="selectedSubItems.length > 0">
             <NDivider>已选款式</NDivider>
-            <NGrid cols="1 400:2" :x-gap="12" :y-gap="12">
-              <NGi v-for="sub in selectedSubItems" :key="sub.subItemId">
+            <NGrid
+              cols="1 400:2"
+              :x-gap="12"
+              :y-gap="12"
+            >
+              <NGi
+                v-for="sub in selectedSubItems"
+                :key="sub.subItemId"
+              >
                 <div class="selected-sub-item-display">
-                  <NFlex align="center" :gap="12">
-                    <div class="sub-info" style="flex: 1">
-                      <NFlex align="center" justify="space-between">
+                  <NFlex
+                    align="center"
+                    :gap="12"
+                  >
+                    <div
+                      class="sub-info"
+                      style="flex: 1"
+                    >
+                      <NFlex
+                        align="center"
+                        justify="space-between"
+                      >
                         <NText strong>
                           {{ sub.nameSnapshot }}
                         </NText>
-                        <NText depth="3">
-                          x {{ sub.quantity }}
-                        </NText>
+                        <NText depth="3"> x {{ sub.quantity }} </NText>
                       </NFlex>
-                      <NFlex justify="space-between" align="center" style="margin-top: 4px">
-                        <NTag size="tiny" :bordered="false" type="primary" secondary>
+                      <NFlex
+                        justify="space-between"
+                        align="center"
+                        style="margin-top: 4px"
+                      >
+                        <NTag
+                          size="tiny"
+                          :bordered="false"
+                          type="primary"
+                          secondary
+                        >
                           {{ sub.priceSnapshot }} 积分
                         </NTag>
-                        <NText v-if="sub.assignedVirtualKeys && sub.assignedVirtualKeys.length > 0" type="success" style="font-size: 12px">
+                        <NText
+                          v-if="sub.assignedVirtualKeys && sub.assignedVirtualKeys.length > 0"
+                          type="success"
+                          style="font-size: 12px"
+                        >
                           已分配 {{ sub.assignedVirtualKeys.length }} 个密钥
                         </NText>
                       </NFlex>
@@ -509,7 +569,7 @@ onMounted(() => {
             <NAlert
               title="备注信息"
               type="info"
-              style="margin-top: 16px; margin-bottom: 16px;"
+              style="margin-top: 16px; margin-bottom: 16px"
               closable
             >
               <template #icon>
@@ -536,10 +596,10 @@ onMounted(() => {
             <!-- 实体礼物地址收集 -->
             <template
               v-if="
-                orderDetail.type === GoodsTypes.Physical
-                  && orderDetail.status === PointOrderStatus.Pending
-                  && (orderDetail as ResponsePointOrder2UserModel).goods.embedCollectUrl
-                  && (orderDetail as ResponsePointOrder2UserModel).goods.collectUrl
+                orderDetail.type === GoodsTypes.Physical &&
+                orderDetail.status === PointOrderStatus.Pending &&
+                (orderDetail as ResponsePointOrder2UserModel).goods.embedCollectUrl &&
+                (orderDetail as ResponsePointOrder2UserModel).goods.collectUrl
               "
             >
               <NDivider>填写收货地址</NDivider>
@@ -576,7 +636,7 @@ onMounted(() => {
             <NAlert
               v-if="orderDetail.type === GoodsTypes.Virtual"
               type="success"
-              style="margin-bottom: 16px;"
+              style="margin-bottom: 16px"
             >
               <template #icon>
                 <NIcon>
@@ -618,7 +678,7 @@ onMounted(() => {
             <NAlert
               v-if="orderDetail.status === PointOrderStatus.Completed"
               type="info"
-              style="margin-bottom: 16px;"
+              style="margin-bottom: 16px"
             >
               <template #icon>
                 <NIcon>
@@ -660,9 +720,7 @@ onMounted(() => {
                     :type="orderDetail.expressCompany ? 'info' : 'warning'"
                     size="medium"
                   >
-                    {{ orderDetail.expressCompany
-                      ? '已发货 | 已填写单号'
-                      : '已发货 | 未填写单号' }}
+                    {{ orderDetail.expressCompany ? '已发货 | 已填写单号' : '已发货 | 未填写单号' }}
                   </NTag>
                   <NTag
                     v-else-if="orderDetail.status === PointOrderStatus.Completed"
@@ -704,9 +762,7 @@ onMounted(() => {
                       </svg>
                     </NIcon>
                     <div class="action-text">
-                      <div class="action-title">
-                        下一状态操作
-                      </div>
+                      <div class="action-title">下一状态操作</div>
                       <div class="action-desc">
                         {{ statusMap[orderDetail.status].nextStatusText }}
                       </div>
@@ -737,9 +793,7 @@ onMounted(() => {
                       </svg>
                     </NIcon>
                     <div class="action-text">
-                      <div class="action-title">
-                        回退操作
-                      </div>
+                      <div class="action-title">回退操作</div>
                       <div class="action-desc">
                         {{ statusMap[orderDetail.status].prevStatusText }}
                       </div>
@@ -764,7 +818,13 @@ onMounted(() => {
             </template>
 
             <!-- 快递信息 -->
-            <template v-if="orderDetail.status === PointOrderStatus.Shipped && orderDetail.instanceOf === 'owner' && orderDetail.type === GoodsTypes.Physical">
+            <template
+              v-if="
+                orderDetail.status === PointOrderStatus.Shipped &&
+                orderDetail.instanceOf === 'owner' &&
+                orderDetail.type === GoodsTypes.Physical
+              "
+            >
               <NDivider>快递</NDivider>
               <NCard
                 size="small"
@@ -800,9 +860,7 @@ onMounted(() => {
               </NCard>
             </template>
 
-            <NDivider>
-              状态更新
-            </NDivider>
+            <NDivider> 状态更新 </NDivider>
 
             <!-- 状态修改指引 -->
             <NText
@@ -813,8 +871,7 @@ onMounted(() => {
               <NIcon
                 :component="Info24Filled"
                 style="margin-right: 4px"
-              />订
-              点击步骤条可直接修改订单状态，或使用下方按钮进行更改
+              />订 点击步骤条可直接修改订单状态，或使用下方按钮进行更改
             </NText>
 
             <NFlex
@@ -862,9 +919,11 @@ onMounted(() => {
                 type="primary"
                 @click="onChangeStatus(orderDetail.id, getNextStatus(orderDetail.status)!)"
               >
-                {{ orderDetail.type === GoodsTypes.Virtual && orderDetail.status === PointOrderStatus.Pending
-                  ? '完成订单'
-                  : statusMap[orderDetail.status].action }}
+                {{
+                  orderDetail.type === GoodsTypes.Virtual && orderDetail.status === PointOrderStatus.Pending
+                    ? '完成订单'
+                    : statusMap[orderDetail.status].action
+                }}
               </NButton>
             </NFlex>
           </template>

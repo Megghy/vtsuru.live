@@ -1,4 +1,5 @@
 import { TTS_API_URL } from '@/shared/config'
+
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
 const DASH_SCOPE_TTS_ENDPOINT = 'https://dashscope.aliyuncs.com/api/v1/services/audio/tts/SpeechSynthesizer'
@@ -54,16 +55,56 @@ export const COSYVOICE_LANGUAGE_HINTS = [
 ]
 
 export const COSYVOICE_SYSTEM_VOICES: VoiceOption[] = [
-  { label: '龙安洋 - 阳光大男孩 (中/英)', value: 'longanyang', meta: { language: 'zh,en', gender: 'Male', type: 'system' } },
-  { label: '龙安莉 - 利落从容女 (中/英)', value: 'longanli_v3', meta: { language: 'zh,en', gender: 'Female', type: 'system' } },
-  { label: '龙安朗 - 清爽利落男 (中/英)', value: 'longanlang_v3', meta: { language: 'zh,en', gender: 'Male', type: 'system' } },
-  { label: '龙安温 - 优雅知性女 (中/英)', value: 'longanwen_v3', meta: { language: 'zh,en', gender: 'Female', type: 'system' } },
-  { label: '龙安昀 - 居家暖男 (中/英)', value: 'longanyun_v3', meta: { language: 'zh,en', gender: 'Male', type: 'system' } },
-  { label: '龙安亲 - 亲和活泼女 (中/英)', value: 'longanqin_v3', meta: { language: 'zh,en', gender: 'Female', type: 'system' } },
-  { label: '龙安灵 - 思维灵动女 (中/英)', value: 'longanling_v3', meta: { language: 'zh,en', gender: 'Female', type: 'system' } },
-  { label: '龙安智 - 睿智轻熟男 (中/英)', value: 'longanzhi_v3', meta: { language: 'zh,en', gender: 'Male', type: 'system' } },
-  { label: '龙安燃 - 活泼质感女 (中/英)', value: 'longanran_v3', meta: { language: 'zh,en', gender: 'Female', type: 'system' } },
-  { label: '龙安宣 - 经典直播女 (中/英)', value: 'longanxuan_v3', meta: { language: 'zh,en', gender: 'Female', type: 'system' } },
+  {
+    label: '龙安洋 - 阳光大男孩 (中/英)',
+    value: 'longanyang',
+    meta: { language: 'zh,en', gender: 'Male', type: 'system' },
+  },
+  {
+    label: '龙安莉 - 利落从容女 (中/英)',
+    value: 'longanli_v3',
+    meta: { language: 'zh,en', gender: 'Female', type: 'system' },
+  },
+  {
+    label: '龙安朗 - 清爽利落男 (中/英)',
+    value: 'longanlang_v3',
+    meta: { language: 'zh,en', gender: 'Male', type: 'system' },
+  },
+  {
+    label: '龙安温 - 优雅知性女 (中/英)',
+    value: 'longanwen_v3',
+    meta: { language: 'zh,en', gender: 'Female', type: 'system' },
+  },
+  {
+    label: '龙安昀 - 居家暖男 (中/英)',
+    value: 'longanyun_v3',
+    meta: { language: 'zh,en', gender: 'Male', type: 'system' },
+  },
+  {
+    label: '龙安亲 - 亲和活泼女 (中/英)',
+    value: 'longanqin_v3',
+    meta: { language: 'zh,en', gender: 'Female', type: 'system' },
+  },
+  {
+    label: '龙安灵 - 思维灵动女 (中/英)',
+    value: 'longanling_v3',
+    meta: { language: 'zh,en', gender: 'Female', type: 'system' },
+  },
+  {
+    label: '龙安智 - 睿智轻熟男 (中/英)',
+    value: 'longanzhi_v3',
+    meta: { language: 'zh,en', gender: 'Male', type: 'system' },
+  },
+  {
+    label: '龙安燃 - 活泼质感女 (中/英)',
+    value: 'longanran_v3',
+    meta: { language: 'zh,en', gender: 'Female', type: 'system' },
+  },
+  {
+    label: '龙安宣 - 经典直播女 (中/英)',
+    value: 'longanxuan_v3',
+    meta: { language: 'zh,en', gender: 'Female', type: 'system' },
+  },
 ]
 
 interface CosyVoiceProviderConfig {
@@ -173,8 +214,8 @@ export async function listCosyVoiceCustomVoices(apiKey: string): Promise<VoiceOp
   const voices = payload?.output?.voice_list
   if (!Array.isArray(voices)) return []
   return voices
-    .filter(v => typeof v?.voice_id === 'string' && v.voice_id.length > 0 && (v.status == null || v.status === 'OK'))
-    .map(v => ({
+    .filter((v) => typeof v?.voice_id === 'string' && v.voice_id.length > 0 && (v.status == null || v.status === 'OK'))
+    .map((v) => ({
       label: `${v.voice_id}${v.target_model ? ` (${v.target_model})` : ''}`,
       value: v.voice_id,
       meta: { type: 'custom', status: v.status, targetModel: v.target_model },
@@ -215,8 +256,8 @@ async function synthesizeCosyVoiceDirect(text: string, req: CosyVoiceSynthesisRe
 function extractSseAudio(streamText: string): ArrayBuffer[] {
   return streamText
     .split('\n')
-    .filter(line => line.startsWith('data:'))
-    .map(line => line.slice(5).trim())
+    .filter((line) => line.startsWith('data:'))
+    .map((line) => line.slice(5).trim())
     .filter(Boolean)
     .flatMap((json) => {
       try {
@@ -229,7 +270,7 @@ function extractSseAudio(streamText: string): ArrayBuffer[] {
 }
 
 function readDashScopeError(streamText: string) {
-  const dataLine = streamText.split('\n').find(line => line.startsWith('data:'))
+  const dataLine = streamText.split('\n').find((line) => line.startsWith('data:'))
   if (!dataLine) return ''
   try {
     const payload = JSON.parse(dataLine.slice(5).trim())

@@ -6,7 +6,7 @@ import { SONG_API_URL } from '@/shared/config'
 export async function addSongsToSongList(songsShouldAdd: SongsInfo[], from: SongFrom) {
   return QueryPostAPI<SongsInfo[]>(
     `${SONG_API_URL}add`,
-    songsShouldAdd.map(s => ({
+    songsShouldAdd.map((s) => ({
       Name: s.name,
       Id: from === SongFrom.Custom ? -1 : s.id,
       From: from,
@@ -21,4 +21,3 @@ export async function addSongsToSongList(songsShouldAdd: SongsInfo[], from: Song
     })),
   )
 }
-

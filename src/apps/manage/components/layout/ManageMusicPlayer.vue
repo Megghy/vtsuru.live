@@ -1,13 +1,35 @@
 <script setup lang="ts">
-import { ChevronDown, ChevronUp, MusicalNote, Pause, Play, PlayBack, PlayForward, TrashBin, VolumeHigh } from '@vicons/ionicons5'
+import {
+  ChevronDown,
+  ChevronUp,
+  MusicalNote,
+  Pause,
+  Play,
+  PlayBack,
+  PlayForward,
+  TrashBin,
+  VolumeHigh,
+} from '@vicons/ionicons5'
 import { useElementSize } from '@vueuse/core'
 import {
-  NButton, NCard, NFlex, NIcon, NLayoutFooter, NSlider, NTag, NText, NTooltip, useMessage, useThemeVars } from 'naive-ui';
+  NButton,
+  NCard,
+  NFlex,
+  NIcon,
+  NLayoutFooter,
+  NSlider,
+  NTag,
+  NText,
+  NTooltip,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
-import { useMusicRequestProvider } from '@/store/useMusicRequest'
+
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
 const emit = defineEmits<{
   (e: 'heightChange', height: number): void
@@ -28,7 +50,7 @@ const isPlayerMinimized = usePersistedStorage('Settings.MusicPlayer.Minimized', 
 
 const playerVolume = computed({
   get: () => musicRquestStore.settings.volume,
-  set: value => musicRquestStore.settings.volume = value,
+  set: (value) => (musicRquestStore.settings.volume = value),
 })
 
 const aplayer = ref<any>()
@@ -56,11 +78,7 @@ const footerHeight = computed(() => {
   return musicPlayerCardHeight.value + 16
 })
 
-watch(
-  footerHeight,
-  (val) => emit('heightChange', val),
-  { immediate: true },
-)
+watch(footerHeight, (val) => emit('heightChange', val), { immediate: true })
 
 function onNextMusic() {
   musicRquestStore.nextMusic()
@@ -80,7 +98,7 @@ function onPreviousMusic() {
     return
   }
   const currentIndex = musicRquestStore.aplayerMusics.findIndex(
-    music => music.id === musicRquestStore.currentMusic.id,
+    (music) => music.id === musicRquestStore.currentMusic.id,
   )
   if (currentIndex > 0) {
     musicRquestStore.currentMusic = musicRquestStore.aplayerMusics[currentIndex - 1]
@@ -111,15 +129,27 @@ function togglePlayerMinimize() {
       :content-style="isPlayerMinimized ? 'padding: 0' : undefined"
       size="small"
       class="music-player-card"
-      style="
-        margin: 8px;
-      "
+      style="margin: 8px"
     >
       <template #header>
-        <NFlex justify="space-between" align="center" style="padding: 0;">
-          <NFlex align="center" size="small">
-            <NIcon :component="MusicalNote" size="16" :style="{ color: themeVars.primaryColor }" />
-            <NText :depth="2" style="font-size: 13px; font-weight: 500;">
+        <NFlex
+          justify="space-between"
+          align="center"
+          style="padding: 0"
+        >
+          <NFlex
+            align="center"
+            size="small"
+          >
+            <NIcon
+              :component="MusicalNote"
+              size="16"
+              :style="{ color: themeVars.primaryColor }"
+            />
+            <NText
+              :depth="2"
+              style="font-size: 13px; font-weight: 500"
+            >
               音乐播放器
             </NText>
             <NTag
@@ -128,7 +158,7 @@ function togglePlayerMinimize() {
               size="small"
               round
               :bordered="false"
-              style="font-size: 11px; padding: 2px 8px;"
+              style="font-size: 11px; padding: 2px 8px"
             >
               {{ currentPlayingInfo.info }}
             </NTag>
@@ -141,13 +171,20 @@ function togglePlayerMinimize() {
               >
                 {{ musicRquestStore.currentMusic.title }} - {{ musicRquestStore.currentMusic.artist }}
               </NText>
-              <NText v-else depth="3" style="font-size: 13px; margin-left: 12px">
+              <NText
+                v-else
+                depth="3"
+                style="font-size: 13px; margin-left: 12px"
+              >
                 暂无播放
               </NText>
             </template>
           </NFlex>
 
-          <NFlex align="center" size="small">
+          <NFlex
+            align="center"
+            size="small"
+          >
             <template v-if="isPlayerMinimized">
               <NTag
                 v-if="musicRquestStore.waitingMusics.length > 0"
@@ -167,7 +204,10 @@ function togglePlayerMinimize() {
                 @click.stop="togglePlay"
               >
                 <template #icon>
-                  <NIcon :component="aplayer?.audio?.paused !== false ? Play : Pause" size="14" />
+                  <NIcon
+                    :component="aplayer?.audio?.paused !== false ? Play : Pause"
+                    size="14"
+                  />
                 </template>
               </NButton>
 
@@ -179,7 +219,10 @@ function togglePlayerMinimize() {
                 @click.stop="onNextMusic"
               >
                 <template #icon>
-                  <NIcon :component="PlayForward" size="14" />
+                  <NIcon
+                    :component="PlayForward"
+                    size="14"
+                  />
                 </template>
               </NButton>
             </template>
@@ -205,8 +248,12 @@ function togglePlayerMinimize() {
       </template>
 
       <div v-show="!isPlayerMinimized">
-        <NFlex align="center" :wrap="false" style="gap: 12px;">
-          <div style="flex: 1; min-width: 280px;">
+        <NFlex
+          align="center"
+          :wrap="false"
+          style="gap: 12px"
+        >
+          <div style="flex: 1; min-width: 280px">
             <APlayer
               ref="aplayer"
               v-model:music="musicRquestStore.currentMusic"
@@ -224,11 +271,22 @@ function togglePlayerMinimize() {
           </div>
 
           <div class="music-control-panel">
-            <NFlex vertical size="small" align="center" style="min-width: 100px;">
-              <NText depth="3" style="font-size: 12px; margin-bottom: 4px;">
+            <NFlex
+              vertical
+              size="small"
+              align="center"
+              style="min-width: 100px"
+            >
+              <NText
+                depth="3"
+                style="font-size: 12px; margin-bottom: 4px"
+              >
                 播放控制
               </NText>
-              <NFlex size="small" justify="center">
+              <NFlex
+                size="small"
+                justify="center"
+              >
                 <NTooltip>
                   <template #trigger>
                     <NButton
@@ -269,7 +327,9 @@ function togglePlayerMinimize() {
                       circle
                       secondary
                       size="small"
-                      :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
+                      :disabled="
+                        musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1
+                      "
                       @click="onNextMusic"
                     >
                       <template #icon>
@@ -282,17 +342,29 @@ function togglePlayerMinimize() {
               </NFlex>
             </NFlex>
 
-            <NFlex vertical size="small" align="center" style="min-width: 100px;">
-              <NText depth="3" style="font-size: 12px; margin-bottom: 4px;">
+            <NFlex
+              vertical
+              size="small"
+              align="center"
+              style="min-width: 100px"
+            >
+              <NText
+                depth="3"
+                style="font-size: 12px; margin-bottom: 4px"
+              >
                 队列管理
               </NText>
-              <NFlex vertical size="small" align="center">
+              <NFlex
+                vertical
+                size="small"
+                align="center"
+              >
                 <NTag
                   :bordered="false"
                   :type="musicRquestStore.waitingMusics.length > 0 ? 'warning' : 'info'"
                   size="small"
                   round
-                  style="min-width: 80px; text-align: center;"
+                  style="min-width: 80px; text-align: center"
                 >
                   等待: {{ musicRquestStore.waitingMusics.length }}
                 </NTag>
@@ -302,16 +374,24 @@ function togglePlayerMinimize() {
                   type="success"
                   size="small"
                   round
-                  style="min-width: 80px; text-align: center;"
+                  style="min-width: 80px; text-align: center"
                 >
                   歌单: {{ musicRquestStore.originMusics.length }}
                 </NTag>
 
                 <NTooltip v-if="musicRquestStore.waitingMusics.length > 0">
                   <template #trigger>
-                    <NButton size="tiny" type="error" secondary @click="clearWaitingQueue">
+                    <NButton
+                      size="tiny"
+                      type="error"
+                      secondary
+                      @click="clearWaitingQueue"
+                    >
                       <template #icon>
-                        <NIcon :component="TrashBin" size="12" />
+                        <NIcon
+                          :component="TrashBin"
+                          size="12"
+                        />
                       </template>
                       清空队列
                     </NButton>
@@ -321,10 +401,25 @@ function togglePlayerMinimize() {
               </NFlex>
             </NFlex>
 
-            <NFlex vertical size="small" align="center" style="min-width: 100px;">
-              <NFlex align="center" size="small">
-                <NIcon :component="VolumeHigh" size="14" :depth="3" />
-                <NText depth="3" style="font-size: 12px;">
+            <NFlex
+              vertical
+              size="small"
+              align="center"
+              style="min-width: 100px"
+            >
+              <NFlex
+                align="center"
+                size="small"
+              >
+                <NIcon
+                  :component="VolumeHigh"
+                  size="14"
+                  :depth="3"
+                />
+                <NText
+                  depth="3"
+                  style="font-size: 12px"
+                >
                   音量
                 </NText>
               </NFlex>
@@ -333,11 +428,14 @@ function togglePlayerMinimize() {
                 :min="0"
                 :max="1"
                 :step="0.01"
-                style="width: 80px;"
+                style="width: 80px"
                 :tooltip="false"
                 size="small"
               />
-              <NText depth="3" style="font-size: 11px;">
+              <NText
+                depth="3"
+                style="font-size: 11px"
+              >
                 {{ Math.round(playerVolume * 100) }}%
               </NText>
             </NFlex>
@@ -367,7 +465,7 @@ function togglePlayerMinimize() {
     width: 100%;
   }
 
-  .music-control-panel>div {
+  .music-control-panel > div {
     min-width: auto !important;
     flex: 1;
   }
@@ -385,7 +483,7 @@ function togglePlayerMinimize() {
     width: 100%;
   }
 
-  .music-control-panel>div {
+  .music-control-panel > div {
     width: 100% !important;
     min-width: auto !important;
   }

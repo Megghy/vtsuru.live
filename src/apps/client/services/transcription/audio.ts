@@ -24,7 +24,7 @@ export class AudioFrameBuffer {
 }
 
 export function pcmFrameSize(sampleRate: number) {
-  return sampleRate * 2 / 5
+  return (sampleRate * 2) / 5
 }
 
 export function toBase64(bytes: Uint8Array) {

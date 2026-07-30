@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NAlert, NButton, NColorPicker, NDivider, NFlex, NForm, NFormItem, NModal, NScrollbar, NSelect } from 'naive-ui'
 import { computed, inject, ref } from 'vue'
+
 import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type { BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
@@ -78,28 +79,52 @@ function clearTheme() {
 </script>
 
 <template>
-  <NModal v-model:show="show" preset="card" title="全局主题" style="width: 720px; max-width: 95vw" :auto-focus="false">
+  <NModal
+    v-model:show="show"
+    preset="card"
+    title="全局主题"
+    style="width: 720px; max-width: 95vw"
+    :auto-focus="false"
+  >
     <NScrollbar style="max-height: min(78vh, 720px)">
       <div class="modal-content">
-        <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
+        <NAlert
+          type="info"
+          :show-icon="true"
+          style="margin-bottom: 12px"
+        >
           全局背景和主题会应用到主页、子页面及内置页面，页面级设置可以覆盖这里的值。
         </NAlert>
-        <NDivider style="margin: 10px 0">
-          背景
-        </NDivider>
-        <BackgroundSettingsEditor :target="backgroundTarget" none-hint="未设置时使用站点默认背景。" />
-        <NDivider style="margin: 10px 0">
-          主题
-        </NDivider>
-        <NForm label-placement="top" size="small">
-          <NFlex :wrap="true" style="gap: 12px">
-            <NFormItem label="主题色" class="color-field">
+        <NDivider style="margin: 10px 0"> 背景 </NDivider>
+        <BackgroundSettingsEditor
+          :target="backgroundTarget"
+          none-hint="未设置时使用站点默认背景。"
+        />
+        <NDivider style="margin: 10px 0"> 主题 </NDivider>
+        <NForm
+          label-placement="top"
+          size="small"
+        >
+          <NFlex
+            :wrap="true"
+            style="gap: 12px"
+          >
+            <NFormItem
+              label="主题色"
+              class="color-field"
+            >
               <NColorPicker v-model:value="primaryColor" />
             </NFormItem>
-            <NFormItem label="内容底色" class="color-field">
+            <NFormItem
+              label="内容底色"
+              class="color-field"
+            >
               <NColorPicker v-model:value="backgroundColor" />
             </NFormItem>
-            <NFormItem label="主题模式" class="color-field">
+            <NFormItem
+              label="主题模式"
+              class="color-field"
+            >
               <NSelect
                 v-model:value="themeMode"
                 :options="[
@@ -113,19 +138,30 @@ function clearTheme() {
           <ThemeTextColorEditor :target="textColorTarget" />
           <ThemeAdvancedOptions :target="appearanceTarget" />
           <NFlex justify="end">
-            <NButton size="small" secondary :disabled="!(editor.settings.value as any).theme" @click="clearTheme">
+            <NButton
+              size="small"
+              secondary
+              :disabled="!(editor.settings.value as any).theme"
+              @click="clearTheme"
+            >
               清除主题
             </NButton>
           </NFlex>
         </NForm>
-        <NDivider style="margin: 10px 0">
-          自定义 CSS
-        </NDivider>
-        <NFlex justify="space-between" align="center" :wrap="false">
+        <NDivider style="margin: 10px 0"> 自定义 CSS </NDivider>
+        <NFlex
+          justify="space-between"
+          align="center"
+          :wrap="false"
+        >
           <span class="css-status">
             {{ editor.settings.value.customCss ? '已设置全局 CSS' : '未设置全局 CSS' }}
           </span>
-          <NButton size="small" secondary @click="cssEditorVisible = true">
+          <NButton
+            size="small"
+            secondary
+            @click="cssEditorVisible = true"
+          >
             编辑全局 CSS
           </NButton>
         </NFlex>

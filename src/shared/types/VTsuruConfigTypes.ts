@@ -1,5 +1,6 @@
 import type { SelectOption } from 'naive-ui'
 import type { VNode } from 'vue'
+
 // 导入 Vue 的 VNode 类型和 h 函数（用于示例）
 import type { UploadFileResponse } from '@/api/api-models'
 
@@ -50,16 +51,16 @@ export function createDefaultRGBA(r = 0, g = 0, b = 0, a = 1): RGBAColor {
 // 添加类型守卫函数，用于检查上传文件信息
 export function isUploadFileInfo(obj: any): obj is UploadFileResponse {
   return (
-    obj
-    && typeof obj === 'object'
-    && 'id' in obj
-    && typeof obj.id === 'number'
-    && 'path' in obj
-    && typeof obj.path === 'string'
-    && 'name' in obj
-    && typeof obj.name === 'string'
-    && 'hash' in obj
-    && typeof obj.hash === 'string'
+    obj &&
+    typeof obj === 'object' &&
+    'id' in obj &&
+    typeof obj.id === 'number' &&
+    'path' in obj &&
+    typeof obj.path === 'string' &&
+    'name' in obj &&
+    typeof obj.name === 'string' &&
+    'hash' in obj &&
+    typeof obj.hash === 'string'
   )
 }
 
@@ -86,19 +87,29 @@ export type TemplateConfigItemWithType<T = unknown, V = unknown> = CommonProps &
 
 // --- Widen 工具类型 (保持不变) ---
 // 递归地将类型拓宽为其基础类型。
-type Widen<T>
-  = T extends string ? string
-    : T extends number ? number
-      : T extends boolean ? boolean
-        : T extends bigint ? bigint
-          : T extends symbol ? symbol
-            : T extends undefined ? undefined
-              : T extends null ? null
-                : T extends (...args: any[]) => any ? T
-                  : T extends Date ? Date
-                    : T extends readonly (infer U)[] ? Widen<U>[]
-                      : T extends object ? { -readonly [K in keyof T]: Widen<T[K]> }
-                        : T
+type Widen<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends boolean
+      ? boolean
+      : T extends bigint
+        ? bigint
+        : T extends symbol
+          ? symbol
+          : T extends undefined
+            ? undefined
+            : T extends null
+              ? null
+              : T extends (...args: any[]) => any
+                ? T
+                : T extends Date
+                  ? Date
+                  : T extends readonly (infer U)[]
+                    ? Widen<U>[]
+                    : T extends object
+                      ? { -readonly [K in keyof T]: Widen<T[K]> }
+                      : T
 
 // --- 具体配置项类型定义 ---
 // T 在所有具体类型中默认为 unknown
@@ -124,7 +135,6 @@ export type TemplateConfigNumberItem<T = unknown> = TemplateConfigItemWithType<T
   type: 'number'
   min?: number
   max?: number
-
 }
 
 // RGBA颜色对象接口
@@ -157,13 +167,12 @@ export type TemplateConfigBooleanItem<T = unknown> = TemplateConfigItemWithType<
 }
 
 // 将文件类型统一为数组，不再根据fileLimit区分
-export type TemplateConfigFileItem<T = unknown>
-  = TemplateConfigItemWithType<T, UploadFileResponse[]> & {
-    type: 'file'
-    fileLimit?: number // 变为可选参数，仅用于UI限制，不影响类型
-    fileType?: string[]
-    onUploaded?: (data: UploadFileResponse[], config: T) => void
-  }
+export type TemplateConfigFileItem<T = unknown> = TemplateConfigItemWithType<T, UploadFileResponse[]> & {
+  type: 'file'
+  fileLimit?: number // 变为可选参数，仅用于UI限制，不影响类型
+  fileType?: string[]
+  onUploaded?: (data: UploadFileResponse[], config: T) => void
+}
 
 // --- 新增：装饰性图片配置 ---
 
@@ -210,7 +219,8 @@ export interface TemplateConfigDecorativeImagesItem<T = unknown> extends Templat
  * @description 自定义渲染项的配置。使用 'this' 类型实现动态参数类型。
  * @template T - 完整配置对象的类型 (默认为 unknown)。
  */
-export interface TemplateConfigRenderItem<T = unknown> extends TemplateConfigBase { // 继承基础接口以获取 key, name, default 检查
+export interface TemplateConfigRenderItem<T = unknown> extends TemplateConfigBase {
+  // 继承基础接口以获取 key, name, default 检查
   type: 'render'
 
   /**
@@ -241,48 +251,53 @@ export interface TemplateConfigRenderItem<T = unknown> extends TemplateConfigBas
  * @description 所有可能的配置项定义类型的联合类型。
  * 使用 `<any>` 作为完整配置类型 T 的占位符。
  */
-export type ConfigItemDefinition
-  = | TemplateConfigStringItem<any>
-    | TemplateConfigNumberItem<any>
-    | TemplateConfigStringArrayItem<any>
-    | TemplateConfigNumberArrayItem<any>
-    | TemplateConfigFileItem<any>
-    | TemplateConfigRenderItem<any>
-    | TemplateConfigDecorativeImagesItem<any>
-    | TemplateConfigSliderNumberItem<any>
-    | TemplateConfigBooleanItem<any>
-    | TemplateConfigColorItem<any>
-    | TemplateConfigSelectItem<any>
+export type ConfigItemDefinition =
+  | TemplateConfigStringItem<any>
+  | TemplateConfigNumberItem<any>
+  | TemplateConfigStringArrayItem<any>
+  | TemplateConfigNumberArrayItem<any>
+  | TemplateConfigFileItem<any>
+  | TemplateConfigRenderItem<any>
+  | TemplateConfigDecorativeImagesItem<any>
+  | TemplateConfigSliderNumberItem<any>
+  | TemplateConfigBooleanItem<any>
+  | TemplateConfigColorItem<any>
+  | TemplateConfigSelectItem<any>
 
 /**
  * @description 从只读的配置项数组中提取最终的数据结构类型。
  * @template Items - 通过 `defineItems([...])` 推断出的只读元组类型。
  */
-export type ExtractConfigData<
-  Items extends readonly ConfigItemDefinition[],
-> = {
+export type ExtractConfigData<Items extends readonly ConfigItemDefinition[]> = {
   // 遍历联合类型 Items[number] 中所有项的 'key' 属性
-  [K in Extract<Items[number], { key: string }>['key']]:
-  // 找到与当前键 K 匹配的具体项定义
-  Extract<Items[number], { key: K }> extends infer ItemWithKeyK
-    // 检查匹配到的项是否有 'default' 属性
-    ? ItemWithKeyK extends { default: infer DefaultType }
-    // 如果有，使用 default 值的 Widen 处理后的类型
-      ? Widen<DefaultType>
-    // 如果没有 default，则根据 'type' 属性确定类型
-      : ItemWithKeyK extends { type: 'string' | 'select' } ? string
-        : ItemWithKeyK extends { type: 'stringArray' } ? string[]
-          : ItemWithKeyK extends { type: 'number' | 'sliderNumber' } ? number
-            : ItemWithKeyK extends { type: 'numberArray' } ? number[]
-            // 文件类型统一处理为数组
-              : ItemWithKeyK extends { type: 'file' } ? UploadFileResponse[]
-                : ItemWithKeyK extends { type: 'boolean' } ? boolean
-                  : ItemWithKeyK extends { type: 'color' } ? RGBAColor
-                    : ItemWithKeyK extends { type: 'decorativeImages' } ? DecorativeImageProperties[]
-                    // *** 优化应用：无 default 的 render 类型回退到 'unknown' ***
-                      : ItemWithKeyK extends { type: 'render' } ? unknown
-                      // 其他意外情况的回退类型
-                        : unknown
+  [K in Extract<Items[number], { key: string }>['key']]: Extract<Items[number], { key: K }> extends infer ItemWithKeyK // 找到与当前键 K 匹配的具体项定义
+    ? // 检查匹配到的项是否有 'default' 属性
+      ItemWithKeyK extends { default: infer DefaultType }
+      ? // 如果有，使用 default 值的 Widen 处理后的类型
+        Widen<DefaultType>
+      : // 如果没有 default，则根据 'type' 属性确定类型
+        ItemWithKeyK extends { type: 'string' | 'select' }
+        ? string
+        : ItemWithKeyK extends { type: 'stringArray' }
+          ? string[]
+          : ItemWithKeyK extends { type: 'number' | 'sliderNumber' }
+            ? number
+            : ItemWithKeyK extends { type: 'numberArray' }
+              ? number[]
+              : // 文件类型统一处理为数组
+                ItemWithKeyK extends { type: 'file' }
+                ? UploadFileResponse[]
+                : ItemWithKeyK extends { type: 'boolean' }
+                  ? boolean
+                  : ItemWithKeyK extends { type: 'color' }
+                    ? RGBAColor
+                    : ItemWithKeyK extends { type: 'decorativeImages' }
+                      ? DecorativeImageProperties[]
+                      : // *** 优化应用：无 default 的 render 类型回退到 'unknown' ***
+                        ItemWithKeyK extends { type: 'render' }
+                        ? unknown
+                        : // 其他意外情况的回退类型
+                          unknown
     : never // 如果 K 正确派生，则不应发生
 }
 
@@ -293,20 +308,20 @@ export type ExtractConfigData<
  * - 其他type的key禁止以'File'结尾。
  * @template Item - 待检查的配置项定义类型。
  */
-type ConstrainedKeyItem<Item extends ConfigItemDefinition>
-// 所有包含UploadFileInfo的类型必须以'File'结尾
-  = Item extends { type: 'file' } | { type: 'decorativeImages' }
-  // 强制key以'File'结尾
-    ? Omit<Item, 'key'> & { key: `${string}File` }
+type ConstrainedKeyItem<Item extends ConfigItemDefinition> =
+  // 所有包含UploadFileInfo的类型必须以'File'结尾
+  Item extends { type: 'file' } | { type: 'decorativeImages' }
+    ? // 强制key以'File'结尾
+      Omit<Item, 'key'> & { key: `${string}File` }
     : Item extends { key: infer K extends string }
-    // 对于其它类型，检查key是否以'File'结尾
-      ? K extends `${string}File`
-      // 如果以'File'结尾，则类型无效(never)，导致TypeScript报错
-        ? never
-      // 如果不以'File'结尾，则类型有效
-        : Item
-    // 如果Item没有key属性(理论上不应发生)，保持原样
-      : Item
+      ? // 对于其它类型，检查key是否以'File'结尾
+        K extends `${string}File`
+        ? // 如果以'File'结尾，则类型无效(never)，导致TypeScript报错
+          never
+        : // 如果不以'File'结尾，则类型有效
+          Item
+      : // 如果Item没有key属性(理论上不应发生)，保持原样
+        Item
 
 /**
  * @description 定义并验证配置项数组。
@@ -346,10 +361,11 @@ export function defineTemplateConfig<
 /**
  * 确保数值在指定范围内的工具类型
  */
-export type NumericRange<Min extends number, Max extends number>
-  = number extends Min ? number
-    : number extends Max ? number
-      : Min | Max | Exclude<number, Min | Max>
+export type NumericRange<Min extends number, Max extends number> = number extends Min
+  ? number
+  : number extends Max
+    ? number
+    : Min | Max | Exclude<number, Min | Max>
 
 /**
  * 非空数组工具类型
@@ -398,7 +414,7 @@ export function createTemplateConfigFactory<const Items extends readonly Constra
 /**
  * 模板配置校验函数类型
  */
-export type TemplateConfigValidator<T> = (config: T) => { valid: boolean, message?: string }
+export type TemplateConfigValidator<T> = (config: T) => { valid: boolean; message?: string }
 
 /**
  * 创建配置验证器
@@ -414,11 +430,15 @@ export function createConfigValidator<T>(validator: TemplateConfigValidator<T>) 
  */
 export function isValidRGBAColor(obj: any): obj is RGBAColor {
   return (
-    obj
-    && typeof obj === 'object'
-    && 'r' in obj && typeof obj.r === 'number'
-    && 'g' in obj && typeof obj.g === 'number'
-    && 'b' in obj && typeof obj.b === 'number'
-    && 'a' in obj && typeof obj.a === 'number'
+    obj &&
+    typeof obj === 'object' &&
+    'r' in obj &&
+    typeof obj.r === 'number' &&
+    'g' in obj &&
+    typeof obj.g === 'number' &&
+    'b' in obj &&
+    typeof obj.b === 'number' &&
+    'a' in obj &&
+    typeof obj.a === 'number'
   )
 }

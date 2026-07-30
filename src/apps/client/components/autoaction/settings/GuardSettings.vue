@@ -1,9 +1,24 @@
 <script setup lang="ts">
-import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NButton, NDivider, NInput, NSelect, NFlex, NSwitch, NTag, useMessage, NForm, NFormItem, NText, NTooltip, NIcon } from 'naive-ui';
-import { ref } from 'vue'
-import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 import { Info16Regular } from '@vicons/fluent'
+import {
+  NButton,
+  NDivider,
+  NInput,
+  NSelect,
+  NFlex,
+  NSwitch,
+  NTag,
+  useMessage,
+  NForm,
+  NFormItem,
+  NText,
+  NTooltip,
+  NIcon,
+} from 'naive-ui'
+import { ref } from 'vue'
+
+import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
+import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
@@ -28,7 +43,7 @@ function addGiftCode() {
   }
 
   // 查找对应等级的礼品码数组
-  let levelCodes = props.action.triggerConfig.giftCodes.find(gc => gc.level === tempGiftCodeLevel.value)
+  let levelCodes = props.action.triggerConfig.giftCodes.find((gc) => gc.level === tempGiftCodeLevel.value)
 
   if (!levelCodes) {
     // 如果没有此等级的礼品码数组，创建一个
@@ -47,9 +62,11 @@ function addGiftCode() {
 
 // 移除礼品码
 function removeGiftCode(levelIndex: number, codeIndex: number) {
-  if (props.action.triggerConfig.giftCodes
-    && props.action.triggerConfig.giftCodes[levelIndex]
-    && props.action.triggerConfig.giftCodes[levelIndex].codes) {
+  if (
+    props.action.triggerConfig.giftCodes &&
+    props.action.triggerConfig.giftCodes[levelIndex] &&
+    props.action.triggerConfig.giftCodes[levelIndex].codes
+  ) {
     props.action.triggerConfig.giftCodes[levelIndex].codes.splice(codeIndex, 1)
 
     // 如果该等级没有礼品码了，移除这个等级
@@ -62,40 +79,78 @@ function removeGiftCode(levelIndex: number, codeIndex: number) {
 // 舰长等级名称映射
 function getGuardLevelName(level: number): string {
   switch (level) {
-    case 1: return '总督'
-    case 2: return '提督'
-    case 3: return '舰长'
-    default: return '通用'
+    case 1:
+      return '总督'
+    case 2:
+      return '提督'
+    case 3:
+      return '舰长'
+    default:
+      return '通用'
   }
 }
 </script>
 
 <template>
-  <div v-if="action.triggerType === TriggerType.GUARD" class="guard-trigger-settings">
-    <NForm label-placement="left" :label-width="140" size="small" :show-feedback="false">
-      <NFlex vertical :size="16">
+  <div
+    v-if="action.triggerType === TriggerType.GUARD"
+    class="guard-trigger-settings"
+  >
+    <NForm
+      label-placement="left"
+      :label-width="140"
+      size="small"
+      :show-feedback="false"
+    >
+      <NFlex
+        vertical
+        :size="16"
+      >
         <NFormItem label="防止重复发送">
           <template #label>
             <NTooltip trigger="hover">
               <template #trigger>
-                <span>防止重复 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                <span
+                  >防止重复
+                  <NIcon
+                    :component="Info16Regular"
+                    style="vertical-align: -2px"
+                /></span>
               </template>
               同一用户在单次直播中多次上舰仅触发一次
             </NTooltip>
           </template>
-          <NSwitch v-model:value="action.triggerConfig.preventRepeat" size="small" />
+          <NSwitch
+            v-model:value="action.triggerConfig.preventRepeat"
+            size="small"
+          />
         </NFormItem>
 
         <transition name="fade">
-          <div v-if="action.actionType === ActionType.SEND_PRIVATE_MSG" class="gift-codes-section">
-            <NDivider title-placement="left" style="margin-top: 0;">
-              <NText strong depth="2">
+          <div
+            v-if="action.actionType === ActionType.SEND_PRIVATE_MSG"
+            class="gift-codes-section"
+          >
+            <NDivider
+              title-placement="left"
+              style="margin-top: 0"
+            >
+              <NText
+                strong
+                depth="2"
+              >
                 私信礼品码库
               </NText>
             </NDivider>
 
-            <NFlex vertical :size="12">
-              <NText depth="3" style="font-size: 12px;">
+            <NFlex
+              vertical
+              :size="12"
+            >
+              <NText
+                depth="3"
+                style="font-size: 12px"
+              >
                 当操作类型为“发送私信”时，可以设置在私信中发放礼品码。
               </NText>
 
@@ -117,24 +172,42 @@ function getGuardLevelName(level: number): string {
                   size="small"
                   @keyup.enter="addGiftCode"
                 />
-                <NButton size="small" type="primary" secondary @click="addGiftCode">
+                <NButton
+                  size="small"
+                  type="primary"
+                  secondary
+                  @click="addGiftCode"
+                >
                   添加
                 </NButton>
               </NFlex>
 
-              <div v-if="action.triggerConfig.giftCodes && action.triggerConfig.giftCodes.length > 0" class="codes-display">
-                <NFlex vertical :size="8">
+              <div
+                v-if="action.triggerConfig.giftCodes && action.triggerConfig.giftCodes.length > 0"
+                class="codes-display"
+              >
+                <NFlex
+                  vertical
+                  :size="8"
+                >
                   <div
                     v-for="(levelCodes, levelIndex) in action.triggerConfig.giftCodes"
                     :key="levelIndex"
                     class="level-group"
                   >
                     <div class="level-label">
-                      <NTag size="tiny" :type="levelCodes.level === 3 ? 'info' : (levelCodes.level === 0 ? 'default' : 'warning')" :bordered="false">
+                      <NTag
+                        size="tiny"
+                        :type="levelCodes.level === 3 ? 'info' : levelCodes.level === 0 ? 'default' : 'warning'"
+                        :bordered="false"
+                      >
                         {{ getGuardLevelName(levelCodes.level) }}
                       </NTag>
                     </div>
-                    <NFlex :size="6" style="flex: 1">
+                    <NFlex
+                      :size="6"
+                      style="flex: 1"
+                    >
                       <NTag
                         v-for="(code, codeIndex) in levelCodes.codes"
                         :key="codeIndex"
@@ -148,7 +221,12 @@ function getGuardLevelName(level: number): string {
                   </div>
                 </NFlex>
               </div>
-              <NText v-else depth="3" italic style="font-size: 12px; text-align: center; padding: 12px;">
+              <NText
+                v-else
+                depth="3"
+                italic
+                style="font-size: 12px; text-align: center; padding: 12px"
+              >
                 暂无库存礼品码
               </NText>
             </NFlex>

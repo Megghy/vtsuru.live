@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { UserPageThemeConfigV1 } from '@/apps/user-page/types'
 import { NButton, NCollapseItem, NColorPicker, NFlex, NForm, NFormItem, NSelect, NText } from 'naive-ui'
 import { computed, inject } from 'vue'
+
+import type { UserPageThemeConfigV1 } from '@/apps/user-page/types'
+
 import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type { BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
@@ -70,52 +72,98 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
 </script>
 
 <template>
-  <NCollapseItem v-if="page.mode !== 'block'" class="page-bg-section" title="页面背景" name="page-bg">
-    <NFlex justify="space-between" align="center" style="margin-bottom: 10px">
-      <NText depth="3">
-        不设置时将使用全局背景或默认背景。
-      </NText>
-      <NButton size="small" secondary :disabled="!page.background" @click="page.background = undefined">
+  <NCollapseItem
+    v-if="page.mode !== 'block'"
+    class="page-bg-section"
+    title="页面背景"
+    name="page-bg"
+  >
+    <NFlex
+      justify="space-between"
+      align="center"
+      style="margin-bottom: 10px"
+    >
+      <NText depth="3"> 不设置时将使用全局背景或默认背景。 </NText>
+      <NButton
+        size="small"
+        secondary
+        :disabled="!page.background"
+        @click="page.background = undefined"
+      >
         使用全局背景
       </NButton>
     </NFlex>
     <BackgroundSettingsEditor :target="backgroundTarget" />
   </NCollapseItem>
 
-  <NCollapseItem v-if="page.mode !== 'block'" class="page-theme-section" title="页面主题" name="page-theme">
-    <NFlex justify="space-between" align="center" style="margin-bottom: 10px">
-      <NText depth="3">
-        不设置时将使用全局主题或站点主题。
-      </NText>
-      <NButton size="small" secondary :disabled="!page.theme" @click="page.theme = undefined">
+  <NCollapseItem
+    v-if="page.mode !== 'block'"
+    class="page-theme-section"
+    title="页面主题"
+    name="page-theme"
+  >
+    <NFlex
+      justify="space-between"
+      align="center"
+      style="margin-bottom: 10px"
+    >
+      <NText depth="3"> 不设置时将使用全局主题或站点主题。 </NText>
+      <NButton
+        size="small"
+        secondary
+        :disabled="!page.theme"
+        @click="page.theme = undefined"
+      >
         清除页面主题
       </NButton>
     </NFlex>
-    <NForm label-placement="top" size="small">
+    <NForm
+      label-placement="top"
+      size="small"
+    >
       <PropsGrid>
         <NFormItem label="主题色 primary">
-          <NFlex align="center" :wrap="false" style="gap: 10px">
+          <NFlex
+            align="center"
+            :wrap="false"
+            style="gap: 10px"
+          >
             <div style="flex: 1; min-width: 0">
               <NColorPicker v-model:value="primaryColor" />
             </div>
-            <NButton size="tiny" secondary :disabled="primaryColor == null" @click="primaryColor = undefined">
+            <NButton
+              size="tiny"
+              secondary
+              :disabled="primaryColor == null"
+              @click="primaryColor = undefined"
+            >
               清除
             </NButton>
           </NFlex>
         </NFormItem>
         <NFormItem label="内容区域底色">
-          <NFlex align="center" :wrap="false" style="gap: 10px">
+          <NFlex
+            align="center"
+            :wrap="false"
+            style="gap: 10px"
+          >
             <div style="flex: 1; min-width: 0">
               <NColorPicker v-model:value="backgroundColor" />
             </div>
-            <NButton size="tiny" secondary :disabled="backgroundColor == null" @click="backgroundColor = undefined">
+            <NButton
+              size="tiny"
+              secondary
+              :disabled="backgroundColor == null"
+              @click="backgroundColor = undefined"
+            >
               清除
             </NButton>
           </NFlex>
         </NFormItem>
         <NFormItem label="页面主题模式">
           <NSelect
-            v-model:value="themeMode" :options="[
+            v-model:value="themeMode"
+            :options="[
               { label: '跟随站点', value: 'auto' },
               { label: '强制亮色', value: 'light' },
               { label: '强制暗色', value: 'dark' },

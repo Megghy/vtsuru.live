@@ -1,5 +1,6 @@
 import EasySpeech from 'easy-speech'
 import { clearInterval, setInterval } from 'worker-timers'
+
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
 const RESUME_CHECK_INTERVAL = 1000

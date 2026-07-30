@@ -1,21 +1,26 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { NDivider, NFlex, NSlider } from 'naive-ui'
+import { computed } from 'vue'
+
 import { useSpeechService } from '@/store/useSpeechService'
-import ProviderTile from './ProviderTile.vue'
-import SectionField from './SectionField.vue'
-import LocalForm from './providers/LocalForm.vue'
+
 import AzureForm from './providers/AzureForm.vue'
 import CosyVoiceForm from './providers/CosyVoiceForm.vue'
 import CustomApiForm from './providers/CustomApiForm.vue'
+import LocalForm from './providers/LocalForm.vue'
 import MimoForm from './providers/MimoForm.vue'
 import OpenAIForm from './providers/OpenAIForm.vue'
+import ProviderTile from './ProviderTile.vue'
+import SectionField from './SectionField.vue'
 
 const speechService = useSpeechService()
 const { settings } = speechService
 
-const supportsProsody = computed(() =>
-  settings.value.provider === 'local' || settings.value.provider === 'azure' || settings.value.provider === 'cosyvoice'
+const supportsProsody = computed(
+  () =>
+    settings.value.provider === 'local' ||
+    settings.value.provider === 'azure' ||
+    settings.value.provider === 'cosyvoice',
 )
 
 const providers = [
@@ -36,22 +41,34 @@ const providers = [
     >
       <NSlider
         v-model:value="settings.speechInfo.volume"
-        :min="0" :max="1" :step="0.01"
+        :min="0"
+        :max="1"
+        :step="0.01"
       />
     </SectionField>
 
     <template v-if="supportsProsody">
-      <SectionField label="音调" :value="settings.speechInfo.pitch.toFixed(2)">
+      <SectionField
+        label="音调"
+        :value="settings.speechInfo.pitch.toFixed(2)"
+      >
         <NSlider
           v-model:value="settings.speechInfo.pitch"
-          :min="0.5" :max="2" :step="0.01"
+          :min="0.5"
+          :max="2"
+          :step="0.01"
         />
       </SectionField>
 
-      <SectionField label="语速" :value="settings.speechInfo.rate.toFixed(2)">
+      <SectionField
+        label="语速"
+        :value="settings.speechInfo.rate.toFixed(2)"
+      >
         <NSlider
           v-model:value="settings.speechInfo.rate"
-          :min="0.5" :max="2" :step="0.01"
+          :min="0.5"
+          :max="2"
+          :step="0.01"
         />
       </SectionField>
     </template>
@@ -59,7 +76,10 @@ const providers = [
     <NDivider style="margin: 4px 0" />
 
     <SectionField label="语音引擎">
-      <NFlex :size="6" :wrap="true">
+      <NFlex
+        :size="6"
+        :wrap="true"
+      >
         <ProviderTile
           v-for="p in providers"
           :key="p.id"
@@ -73,7 +93,10 @@ const providers = [
       </NFlex>
     </SectionField>
 
-    <Transition name="fade" mode="out-in">
+    <Transition
+      name="fade"
+      mode="out-in"
+    >
       <LocalForm v-if="settings.provider === 'local'" />
       <AzureForm v-else-if="settings.provider === 'azure'" />
       <CosyVoiceForm v-else-if="settings.provider === 'cosyvoice'" />

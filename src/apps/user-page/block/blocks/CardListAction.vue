@@ -9,11 +9,13 @@ const props = defineProps<{
   secondary?: boolean
 }>()
 
-const values = computed<Record<string, unknown>>(() => props.action && typeof props.action === 'object' && !Array.isArray(props.action)
-  ? props.action as Record<string, unknown>
-  : {})
-const label = computed(() => typeof values.value.label === 'string' ? values.value.label.trim() : '')
-const page = computed(() => typeof values.value.page === 'string' ? values.value.page.trim() : '')
+const values = computed<Record<string, unknown>>(() =>
+  props.action && typeof props.action === 'object' && !Array.isArray(props.action)
+    ? (props.action as Record<string, unknown>)
+    : {},
+)
+const label = computed(() => (typeof values.value.label === 'string' ? values.value.label.trim() : ''))
+const page = computed(() => (typeof values.value.page === 'string' ? values.value.page.trim() : ''))
 const url = computed(() => {
   if (typeof values.value.url !== 'string') return ''
   try {

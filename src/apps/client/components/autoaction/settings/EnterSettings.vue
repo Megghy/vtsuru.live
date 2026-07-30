@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NInputNumber, NSelect, NFlex, NSwitch, NForm, NFormItem, NTooltip, NIcon, NDivider } from 'naive-ui';
-import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Info16Regular } from '@vicons/fluent'
+import { NInputNumber, NSelect, NFlex, NSwitch, NForm, NFormItem, NTooltip, NIcon, NDivider } from 'naive-ui'
+
+import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
+import { TriggerType } from '@/apps/client/store/useAutoAction'
 
 defineProps({
   action: {
@@ -22,9 +23,20 @@ const enterFilterModeOptions = [
 </script>
 
 <template>
-  <div v-if="action.triggerType === TriggerType.ENTER" class="enter-trigger-settings">
-    <NForm label-placement="left" :label-width="140" size="small" :show-feedback="false">
-      <NFlex vertical :size="16">
+  <div
+    v-if="action.triggerType === TriggerType.ENTER"
+    class="enter-trigger-settings"
+  >
+    <NForm
+      label-placement="left"
+      :label-width="140"
+      size="small"
+      :show-feedback="false"
+    >
+      <NFlex
+        vertical
+        :size="16"
+      >
         <NFormItem label="入场过滤模式">
           <NSelect
             v-model:value="action.triggerConfig.filterMode"
@@ -33,11 +45,19 @@ const enterFilterModeOptions = [
           />
         </NFormItem>
 
-        <NFormItem v-if="action.triggerConfig.filterMode === 'medal'" label="最低牌子等级">
+        <NFormItem
+          v-if="action.triggerConfig.filterMode === 'medal'"
+          label="最低牌子等级"
+        >
           <template #label>
             <NTooltip trigger="hover">
               <template #trigger>
-                <span>最低牌子等级 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                <span
+                  >最低牌子等级
+                  <NIcon
+                    :component="Info16Regular"
+                    style="vertical-align: -2px"
+                /></span>
               </template>
               仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级
             </NTooltip>
@@ -51,26 +71,42 @@ const enterFilterModeOptions = [
           />
         </NFormItem>
 
-        <NDivider style="margin: 0;" />
+        <NDivider style="margin: 0" />
 
-        <NFlex vertical :size="12">
+        <NFlex
+          vertical
+          :size="12"
+        >
           <NFormItem label="防止重复发送">
             <template #label>
               <NTooltip trigger="hover">
                 <template #trigger>
-                  <span>防止重复 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                  <span
+                    >防止重复
+                    <NIcon
+                      :component="Info16Regular"
+                      style="vertical-align: -2px"
+                  /></span>
                 </template>
                 同一用户在单次直播中多次进入仅触发一次欢迎
               </NTooltip>
             </template>
-            <NSwitch v-model:value="action.triggerConfig.preventRepeat" size="small" />
+            <NSwitch
+              v-model:value="action.triggerConfig.preventRepeat"
+              size="small"
+            />
           </NFormItem>
 
           <NFormItem label="单次合并上限">
             <template #label>
               <NTooltip trigger="hover">
                 <template #trigger>
-                  <span>单次合并上限 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                  <span
+                    >单次合并上限
+                    <NIcon
+                      :component="Info16Regular"
+                      style="vertical-align: -2px"
+                  /></span>
                 </template>
                 单条欢迎弹幕中最多合并展示的用户数量
               </NTooltip>

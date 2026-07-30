@@ -1,7 +1,9 @@
 <script setup>
-import { NTooltip } from 'naive-ui';
+import { NTooltip } from 'naive-ui'
 import { computed } from 'vue'
+
 import { FILE_BASE_URL } from '@/shared/config'
+
 import * as constants from './constants'
 
 const props = defineProps({
@@ -48,7 +50,7 @@ const fileServerUrl = computed(() => {
               class="style-scope yt-icon"
               preserveAspectRatio="xMidYMid meet"
               focusable="false"
-              style="pointer-events: none; display: block; width: 100%; height: 100%;"
+              style="pointer-events: none; display: block; width: 100%; height: 100%"
             >
               <g class="style-scope yt-icon">
                 <path
@@ -63,7 +65,7 @@ const fileServerUrl = computed(() => {
             :src="`${fileServerUrl}/blivechat/icons/guard-level-${privilegeType}.png`"
             class="style-scope yt-live-chat-author-badge-renderer"
             :alt="readableAuthorTypeText"
-          >
+          />
         </div>
       </template>
       {{ readableAuthorTypeText }}

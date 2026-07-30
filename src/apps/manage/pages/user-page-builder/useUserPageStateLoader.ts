@@ -1,6 +1,8 @@
+import type { Ref } from 'vue'
+
 import { fetchMyUserPagesState } from '@/apps/user-page/api'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import type { Ref } from 'vue'
+
 import { deepCloneJson, stableStringify } from './editorHelpers'
 import { createDefaultProject, isEmptyDraftPlaceholder, isMeaningfulSettings } from './editorPageConfig'
 import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
@@ -45,9 +47,10 @@ export function selectInitialSettings(
   state: Awaited<ReturnType<typeof fetchMyUserPagesState>>,
   localDraft: UserPagesLocalDraftSnapshot | null,
 ) {
-  const serverSettings = isMeaningfulSettings(state.draft) && !(state.published && isEmptyDraftPlaceholder(state.draft))
-    ? state.draft
-    : state.published
+  const serverSettings =
+    isMeaningfulSettings(state.draft) && !(state.published && isEmptyDraftPlaceholder(state.draft))
+      ? state.draft
+      : state.published
   const localSettings = localDraft?.settings ?? null
   const serverBaseSnapshot = serverSettings ? JSON.stringify(serverSettings) : ''
   const canRecoverLocal = serverSettings
@@ -70,12 +73,15 @@ export function selectInitialSettings(
       savedSettings: serverSettings,
       serverBaseSnapshot,
       dirty: false,
-      conflict: isMeaningfulSettings(localSettings) && !isSameSettings(localSettings, serverSettings)
-        ? localDraft
-        : null,
+      conflict:
+        isMeaningfulSettings(localSettings) && !isSameSettings(localSettings, serverSettings) ? localDraft : null,
     } as const
   }
-  const settings = { version: 1, home: { mode: 'block', block: createDefaultProject() }, pages: {} } as UserPagesSettingsV1
+  const settings = {
+    version: 1,
+    home: { mode: 'block', block: createDefaultProject() },
+    pages: {},
+  } as UserPagesSettingsV1
   return {
     settings,
     source: 'default',

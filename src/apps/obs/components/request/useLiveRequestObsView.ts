@@ -1,10 +1,8 @@
 import { computed } from 'vue'
+
 import { SongRequestFrom } from '@/api/api-models'
-import type {
-  ObsDisplayCurrent,
-  ObsDisplayFooterTag,
-  ObsDisplayItem,
-} from '@/apps/obs/components/shared/obsDisplay'
+import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
+
 import { useLiveRequestData } from './useLiveRequestData'
 
 export function useLiveRequestObsView(currentId: string) {
@@ -24,7 +22,8 @@ export function useLiveRequestObsView(currentId: string) {
     return {
       active: true,
       title: data.singing.value.songName || '未知歌曲',
-      subtitle: data.singing.value.from === SongRequestFrom.Manual ? '主播添加' : data.singing.value.user?.name || '未知用户',
+      subtitle:
+        data.singing.value.from === SongRequestFrom.Manual ? '主播添加' : data.singing.value.user?.name || '未知用户',
       avatarUrl: data.singing.value.user?.face,
       hideAvatar: data.singing.value.from === SongRequestFrom.Manual,
       emptyText: '暂无处理中项目',
@@ -32,7 +31,7 @@ export function useLiveRequestObsView(currentId: string) {
   })
 
   const items = computed<ObsDisplayItem[]>(() => {
-    return data.activeSongs.value.map(song => ({
+    return data.activeSongs.value.map((song) => ({
       id: song.id,
       primary: song.songName || '未知歌曲',
       badges: [
@@ -66,7 +65,11 @@ export function useLiveRequestObsView(currentId: string) {
       {
         type: 'allow',
         label: '允许',
-        value: data.settings.value.allowAllDanmaku ? '所有弹幕' : data.allowGuardTypes.value.length > 0 ? data.allowGuardTypes.value.join('/') : '无',
+        value: data.settings.value.allowAllDanmaku
+          ? '所有弹幕'
+          : data.allowGuardTypes.value.length > 0
+            ? data.allowGuardTypes.value.join('/')
+            : '无',
       },
       {
         type: 'sc',

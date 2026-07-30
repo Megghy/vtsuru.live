@@ -3,6 +3,7 @@ import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled 
 import { NButton, NFlex, NIcon, NText, NTooltip, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
 import { useSpeechService } from '@/store/useSpeechService'
 
 const router = useRouter()
@@ -26,39 +27,77 @@ function goToPage() {
 
 <template>
   <Teleport to="body">
-    <div v-if="isActive" class="speech-mini-controller" :style="containerStyle">
-      <NFlex align="center" :size="8" :wrap="false" style="flex: 1; overflow: hidden;">
+    <div
+      v-if="isActive"
+      class="speech-mini-controller"
+      :style="containerStyle"
+    >
+      <NFlex
+        align="center"
+        :size="8"
+        :wrap="false"
+        style="flex: 1; overflow: hidden"
+      >
         <NTooltip>
           <template #trigger>
-            <NButton size="tiny" quaternary @click="goToPage">
+            <NButton
+              size="tiny"
+              quaternary
+              @click="goToPage"
+            >
               <template #icon>
-                <NIcon :component="Mic24Filled" color="#18a058" />
+                <NIcon
+                  :component="Mic24Filled"
+                  color="#18a058"
+                />
               </template>
             </NButton>
           </template>
           前往读弹幕页面
         </NTooltip>
 
-        <NText class="status-text" :type="speechState.isSpeaking ? 'success' : isPaused ? 'warning' : 'default'">
+        <NText
+          class="status-text"
+          :type="speechState.isSpeaking ? 'success' : isPaused ? 'warning' : 'default'"
+        >
           {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停' : '待机' }}
         </NText>
 
-        <NText v-if="queueCount > 0" depth="3" class="queue-badge">
+        <NText
+          v-if="queueCount > 0"
+          depth="3"
+          class="queue-badge"
+        >
           {{ queueCount }}
         </NText>
       </NFlex>
-      <NFlex :size="4" :wrap="false">
-        <NButton size="tiny" :type="isPaused ? 'warning' : 'default'" @click="speechService.togglePause()">
+      <NFlex
+        :size="4"
+        :wrap="false"
+      >
+        <NButton
+          size="tiny"
+          :type="isPaused ? 'warning' : 'default'"
+          @click="speechService.togglePause()"
+        >
           <template #icon>
             <NIcon :component="isPaused ? Play20Filled : Pause20Filled" />
           </template>
         </NButton>
-        <NButton size="tiny" :disabled="!speechState.isSpeaking" @click="speechService.skipCurrent()">
+        <NButton
+          size="tiny"
+          :disabled="!speechState.isSpeaking"
+          @click="speechService.skipCurrent()"
+        >
           <template #icon>
             <NIcon :component="Next20Filled" />
           </template>
         </NButton>
-        <NButton size="tiny" type="error" @click="speechService.stopSpeech()">
+        <NButton
+          size="tiny"
+          type="error"
+          @click="speechService.stopSpeech()"
+        >
           <template #icon>
             <NIcon :component="MicOff24Filled" />
           </template>
@@ -101,7 +140,13 @@ function goToPage() {
   text-align: center;
 }
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

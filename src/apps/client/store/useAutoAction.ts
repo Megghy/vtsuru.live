@@ -1,33 +1,25 @@
-import type {
-  AutoActionItem,
-  RuntimeState,
-} from './autoAction/types.js'
-import type { EventModel } from '@/api/api-models.js'
-import type { CheckInHubEvent } from './autoAction/modules/checkin'
 import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+
 import { useAccount } from '@/api/account.js'
+import type { EventModel } from '@/api/api-models.js'
 import { EventDataTypes } from '@/api/api-models.js'
 import { isDev } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient.js'
 import { useVTsuruHub } from '@/store/useVTsuruHub'
-import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator'
 
+import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator'
 import { useAutoReply } from './autoAction/modules/autoReply'
+import type { CheckInHubEvent } from './autoAction/modules/checkin'
 import { useCheckIn } from './autoAction/modules/checkin'
 import { useEntryWelcome } from './autoAction/modules/entryWelcome'
 import { useFollowThank } from './autoAction/modules/followThank'
 import { useGiftThank } from './autoAction/modules/giftThank'
 import { useGuardPm } from './autoAction/modules/guardPm'
 import { useSuperChatThank } from './autoAction/modules/superChatThank'
-import {
-  ActionType,
-
-  KeywordMatchType,
-  Priority,
-  TriggerType,
-} from './autoAction/types.js'
+import type { AutoActionItem, RuntimeState } from './autoAction/types.js'
+import { ActionType, KeywordMatchType, Priority, TriggerType } from './autoAction/types.js'
 import {
   buildExecutionContext,
   createDefaultAutoAction,
@@ -44,7 +36,7 @@ export const useAutoAction = defineStore('autoAction', () => {
 
   // 共享状态
   const isLive = computed(() => account.value.streamerInfo?.isStreaming ?? false)
-  const roomId = computed(() => isDev ? 1294406 : account.value.streamerInfo?.roomId)
+  const roomId = computed(() => (isDev ? 1294406 : account.value.streamerInfo?.roomId))
   const isTianXuanActive = ref(false)
   const liveStartTime = ref<number | null>(null)
 
@@ -59,17 +51,21 @@ export const useAutoAction = defineStore('autoAction', () => {
   const runtimeState = ref<RuntimeState>(createDefaultRuntimeState())
 
   // 触发类型启用状态
-  const { data: enabledTriggerTypes, isFinished: isTriggersLoaded } = useIDBKeyval<Record<TriggerType, boolean>>('autoAction.enabledTriggers', {
-    [TriggerType.DANMAKU]: true,
-    [TriggerType.GIFT]: true,
-    [TriggerType.GUARD]: true,
-    [TriggerType.FOLLOW]: true,
-    [TriggerType.ENTER]: true,
-    [TriggerType.SCHEDULED]: true,
-    [TriggerType.SUPER_CHAT]: true,
-  }, {
-    onError: err => console.error('[AutoAction] IDB 错误 (触发类型):', err),
-  })
+  const { data: enabledTriggerTypes, isFinished: isTriggersLoaded } = useIDBKeyval<Record<TriggerType, boolean>>(
+    'autoAction.enabledTriggers',
+    {
+      [TriggerType.DANMAKU]: true,
+      [TriggerType.GIFT]: true,
+      [TriggerType.GUARD]: true,
+      [TriggerType.FOLLOW]: true,
+      [TriggerType.ENTER]: true,
+      [TriggerType.SCHEDULED]: true,
+      [TriggerType.SUPER_CHAT]: true,
+    },
+    {
+      onError: (err) => console.error('[AutoAction] IDB 错误 (触发类型):', err),
+    },
+  )
 
   /**
    * 设置触发类型启用状态
@@ -90,15 +86,27 @@ export const useAutoAction = defineStore('autoAction', () => {
   }
 
   // 全局定时器设置
-  const { data: globalIntervalSeconds, isFinished: isIntervalLoaded } = useIDBKeyval<number>('autoAction.globalInterval', 300, {
-    onError: err => console.error('[AutoAction] IDB 错误 (间隔):', err),
-  })
-  const { data: globalSchedulingMode, isFinished: isModeLoaded } = useIDBKeyval<'random' | 'sequential'>('autoAction.globalMode', 'random', {
-    onError: err => console.error('[AutoAction] IDB 错误 (模式):', err),
-  })
-  const { data: lastGlobalActionIndex, isFinished: isIndexLoaded } = useIDBKeyval<number>('autoAction.lastGlobalIndex', -1, {
-    onError: err => console.error('[AutoAction] IDB 错误 (上次索引):', err),
-  })
+  const { data: globalIntervalSeconds, isFinished: isIntervalLoaded } = useIDBKeyval<number>(
+    'autoAction.globalInterval',
+    300,
+    {
+      onError: (err) => console.error('[AutoAction] IDB 错误 (间隔):', err),
+    },
+  )
+  const { data: globalSchedulingMode, isFinished: isModeLoaded } = useIDBKeyval<'random' | 'sequential'>(
+    'autoAction.globalMode',
+    'random',
+    {
+      onError: (err) => console.error('[AutoAction] IDB 错误 (模式):', err),
+    },
+  )
+  const { data: lastGlobalActionIndex, isFinished: isIndexLoaded } = useIDBKeyval<number>(
+    'autoAction.lastGlobalIndex',
+    -1,
+    {
+      onError: (err) => console.error('[AutoAction] IDB 错误 (上次索引):', err),
+    },
+  )
 
   const globalTimer = ref<any | null>(null)
 
@@ -115,12 +123,13 @@ export const useAutoAction = defineStore('autoAction', () => {
       return
     }
 
-    const eligibleActions = autoActions.value.filter(action =>
-      action.triggerType === TriggerType.SCHEDULED
-      && action.enabled
-      && action.triggerConfig.useGlobalTimer
-      && (!action.triggerConfig.onlyDuringLive || isLive.value)
-      && (!action.triggerConfig.ignoreTianXuan || !isTianXuanActive.value),
+    const eligibleActions = autoActions.value.filter(
+      (action) =>
+        action.triggerType === TriggerType.SCHEDULED &&
+        action.enabled &&
+        action.triggerConfig.useGlobalTimer &&
+        (!action.triggerConfig.onlyDuringLive || isLive.value) &&
+        (!action.triggerConfig.ignoreTianXuan || !isTianXuanActive.value),
     )
 
     if (eligibleActions.length > 0) {
@@ -141,10 +150,14 @@ export const useAutoAction = defineStore('autoAction', () => {
           runtimeState.value.lastExecutionTime[actionToExecute.id] = Date.now()
           if (actionToExecute.actionConfig.delaySeconds && actionToExecute.actionConfig.delaySeconds > 0) {
             setTimeout(() => {
-              biliFunc.sendLiveDanmaku(roomId.value, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
+              biliFunc
+                .sendLiveDanmaku(roomId.value, formattedContent)
+                .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
             }, actionToExecute.actionConfig.delaySeconds * 1000)
           } else {
-            biliFunc.sendLiveDanmaku(roomId.value, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
+            biliFunc
+              .sendLiveDanmaku(roomId.value, formattedContent)
+              .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
           }
         }
       }
@@ -171,9 +184,8 @@ export const useAutoAction = defineStore('autoAction', () => {
     if (globalTimer.value || !isActionsLoaded.value) return
     if (!enabledTriggerTypes.value || !enabledTriggerTypes.value[TriggerType.SCHEDULED]) return
 
-    const needsGlobalTimer = autoActions.value.some(action =>
-      action.triggerType === TriggerType.SCHEDULED
-      && action.triggerConfig.useGlobalTimer,
+    const needsGlobalTimer = autoActions.value.some(
+      (action) => action.triggerType === TriggerType.SCHEDULED && action.triggerConfig.useGlobalTimer,
     )
 
     if (needsGlobalTimer && globalIntervalSeconds.value > 0) {
@@ -233,15 +245,16 @@ export const useAutoAction = defineStore('autoAction', () => {
     const intervalMs = intervalSeconds * 1000
 
     const timerFunc = () => {
-      const currentAction = autoActions.value.find(a => a.id === action.id)
+      const currentAction = autoActions.value.find((a) => a.id === action.id)
       if (!currentAction) {
         stopIndividualTimer(action.id)
         return
       }
-      const shouldExecute = currentAction.enabled
-        && !currentAction.triggerConfig.useGlobalTimer
-        && (!currentAction.triggerConfig.onlyDuringLive || isLive.value)
-        && (!currentAction.triggerConfig.ignoreTianXuan || !isTianXuanActive.value)
+      const shouldExecute =
+        currentAction.enabled &&
+        !currentAction.triggerConfig.useGlobalTimer &&
+        (!currentAction.triggerConfig.onlyDuringLive || isLive.value) &&
+        (!currentAction.triggerConfig.ignoreTianXuan || !isTianXuanActive.value)
 
       if (shouldExecute) {
         const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED)
@@ -251,10 +264,14 @@ export const useAutoAction = defineStore('autoAction', () => {
           runtimeState.value.lastExecutionTime[currentAction.id] = Date.now()
           if (currentAction.actionConfig.delaySeconds && currentAction.actionConfig.delaySeconds > 0) {
             setTimeout(() => {
-              biliFunc.sendLiveDanmaku(roomId.value, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
+              biliFunc
+                .sendLiveDanmaku(roomId.value, formattedContent)
+                .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
             }, currentAction.actionConfig.delaySeconds * 1000)
           } else {
-            biliFunc.sendLiveDanmaku(roomId.value, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
+            biliFunc
+              .sendLiveDanmaku(roomId.value, formattedContent)
+              .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
           }
         }
       }
@@ -278,12 +295,11 @@ export const useAutoAction = defineStore('autoAction', () => {
     if (!roomId.value || !autoActions.value) return
     if (!enabledTriggerTypes.value[TriggerType.SCHEDULED]) return
 
-    const individualActions = autoActions.value.filter(action =>
-      action.triggerType === TriggerType.SCHEDULED
-      && action.enabled
-      && !action.triggerConfig.useGlobalTimer,
+    const individualActions = autoActions.value.filter(
+      (action) =>
+        action.triggerType === TriggerType.SCHEDULED && action.enabled && !action.triggerConfig.useGlobalTimer,
     )
-    individualActions.forEach(action => startIndividualTimer(action))
+    individualActions.forEach((action) => startIndividualTimer(action))
   }
 
   /**
@@ -304,58 +320,73 @@ export const useAutoAction = defineStore('autoAction', () => {
       return
     }
     isInited = true
-    const allLoaded = computed(() => isActionsLoaded.value && isIntervalLoaded.value && isModeLoaded.value && isIndexLoaded.value && isTriggersLoaded.value)
+    const allLoaded = computed(
+      () =>
+        isActionsLoaded.value &&
+        isIntervalLoaded.value &&
+        isModeLoaded.value &&
+        isIndexLoaded.value &&
+        isTriggersLoaded.value,
+    )
 
-    watch(allLoaded, (loaded) => {
-      if (loaded) {
-        console.log('[AutoAction] 所有设置已从 IDB 加载.')
-        autoActions.value.forEach((action) => {
-          if (!action.triggerConfig) action.triggerConfig = {}
-          if (action.triggerType === TriggerType.SCHEDULED) {
-            if (action.triggerConfig.useGlobalTimer === undefined) action.triggerConfig.useGlobalTimer = false
-            if (action.triggerConfig.intervalSeconds === undefined) action.triggerConfig.intervalSeconds = 300
-            if (action.triggerConfig.schedulingMode === undefined) action.triggerConfig.schedulingMode = 'random'
+    watch(
+      allLoaded,
+      (loaded) => {
+        if (loaded) {
+          console.log('[AutoAction] 所有设置已从 IDB 加载.')
+          autoActions.value.forEach((action) => {
+            if (!action.triggerConfig) action.triggerConfig = {}
+            if (action.triggerType === TriggerType.SCHEDULED) {
+              if (action.triggerConfig.useGlobalTimer === undefined) action.triggerConfig.useGlobalTimer = false
+              if (action.triggerConfig.intervalSeconds === undefined) action.triggerConfig.intervalSeconds = 300
+              if (action.triggerConfig.schedulingMode === undefined) action.triggerConfig.schedulingMode = 'random'
+            }
+          })
+
+          // 兼容旧版本：触发类型启用状态可能缺少新字段（例如 gift / super_chat）
+          const defaultEnabled: Record<TriggerType, boolean> = {
+            [TriggerType.DANMAKU]: true,
+            [TriggerType.GIFT]: true,
+            [TriggerType.GUARD]: true,
+            [TriggerType.FOLLOW]: true,
+            [TriggerType.ENTER]: true,
+            [TriggerType.SCHEDULED]: true,
+            [TriggerType.SUPER_CHAT]: true,
           }
-        })
-
-        // 兼容旧版本：触发类型启用状态可能缺少新字段（例如 gift / super_chat）
-        const defaultEnabled: Record<TriggerType, boolean> = {
-          [TriggerType.DANMAKU]: true,
-          [TriggerType.GIFT]: true,
-          [TriggerType.GUARD]: true,
-          [TriggerType.FOLLOW]: true,
-          [TriggerType.ENTER]: true,
-          [TriggerType.SCHEDULED]: true,
-          [TriggerType.SUPER_CHAT]: true,
-        }
-        let patched = false
-        for (const triggerType of Object.values(TriggerType)) {
-          const t = triggerType
-          if (enabledTriggerTypes.value[t] === undefined) {
-            enabledTriggerTypes.value[t] = defaultEnabled[t]
-            patched = true
+          let patched = false
+          for (const triggerType of Object.values(TriggerType)) {
+            const t = triggerType
+            if (enabledTriggerTypes.value[t] === undefined) {
+              enabledTriggerTypes.value[t] = defaultEnabled[t]
+              patched = true
+            }
           }
-        }
-        if (patched) {
-          enabledTriggerTypes.value = { ...enabledTriggerTypes.value }
-          console.log('[AutoAction] 已补全缺失的触发类型启用配置.')
-        }
+          if (patched) {
+            enabledTriggerTypes.value = { ...enabledTriggerTypes.value }
+            console.log('[AutoAction] 已补全缺失的触发类型启用配置.')
+          }
 
-        startGlobalTimer()
-        startIndividualScheduledActions()
-      }
-    }, { immediate: true })
+          startGlobalTimer()
+          startIndividualScheduledActions()
+        }
+      },
+      { immediate: true },
+    )
 
     // 监听直播状态变化
-    watch(isLive, (currentState, prevState) => {
-      if (currentState && !prevState) {
-        console.log('[AutoAction] 检测到直播开始，更新签到模块状态')
-        // checkInModule.onLiveStart();
-      } else if (!currentState && prevState) {
-        console.log('[AutoAction] 检测到直播结束，更新签到模块状态')
-        // checkInModule.onLiveEnd();
-      }
-    }, { immediate: true })
+    watch(
+      isLive,
+      (currentState, prevState) => {
+        if (currentState && !prevState) {
+          console.log('[AutoAction] 检测到直播开始，更新签到模块状态')
+          // checkInModule.onLiveStart();
+        } else if (!currentState && prevState) {
+          console.log('[AutoAction] 检测到直播结束，更新签到模块状态')
+          // checkInModule.onLiveEnd();
+        }
+      },
+      { immediate: true },
+    )
 
     registerEventListeners()
     void registerCheckInResultListener()
@@ -382,12 +413,12 @@ export const useAutoAction = defineStore('autoAction', () => {
       console.warn('[AutoAction] 弹幕客户端未就绪, 延迟注册监听器.')
     }
     try {
-      danmakuClient.onEvent('danmaku', event => processEvent(event, TriggerType.DANMAKU))
-      danmakuClient.onEvent('gift', event => processEvent(event, TriggerType.GIFT))
-      danmakuClient.onEvent('guard', event => processEvent(event, TriggerType.GUARD))
-      danmakuClient.onEvent('sc', event => processEvent(event, TriggerType.SUPER_CHAT))
-      danmakuClient.onEvent('enter', event => processEvent(event, TriggerType.ENTER))
-      danmakuClient.onEvent('follow', event => processEvent(event, TriggerType.FOLLOW))
+      danmakuClient.onEvent('danmaku', (event) => processEvent(event, TriggerType.DANMAKU))
+      danmakuClient.onEvent('gift', (event) => processEvent(event, TriggerType.GIFT))
+      danmakuClient.onEvent('guard', (event) => processEvent(event, TriggerType.GUARD))
+      danmakuClient.onEvent('sc', (event) => processEvent(event, TriggerType.SUPER_CHAT))
+      danmakuClient.onEvent('enter', (event) => processEvent(event, TriggerType.ENTER))
+      danmakuClient.onEvent('follow', (event) => processEvent(event, TriggerType.FOLLOW))
       console.log('[AutoAction] 事件监听器已注册.')
     } catch (err) {
       console.error('[AutoAction] 注册事件监听器时出错:', err)
@@ -429,7 +460,7 @@ export const useAutoAction = defineStore('autoAction', () => {
    * 移除一个自动操作项
    */
   function removeAutoAction(id: string) {
-    const index = autoActions.value.findIndex(action => action.id === id)
+    const index = autoActions.value.findIndex((action) => action.id === id)
     if (index !== -1) {
       const removedAction = autoActions.value[index]
 
@@ -449,7 +480,7 @@ export const useAutoAction = defineStore('autoAction', () => {
    * 切换自动操作项的启用/禁用状态
    */
   function toggleAutoAction(id: string, enabled: boolean) {
-    const action = autoActions.value.find(item => item.id === id)
+    const action = autoActions.value.find((item) => item.id === id)
     if (action) {
       action.enabled = enabled
 
@@ -466,8 +497,6 @@ export const useAutoAction = defineStore('autoAction', () => {
       }
     }
   }
-
-
 
   /**
    * 处理接收到的事件
@@ -504,8 +533,10 @@ export const useAutoAction = defineStore('autoAction', () => {
   /**
    * 获取定时任务的计时器信息
    */
-  function getScheduledTimerInfo(actionId: string): { actionId: string, intervalMs: number, remainingMs: number } | null {
-    const action = autoActions.value.find(a => a.id === actionId)
+  function getScheduledTimerInfo(
+    actionId: string,
+  ): { actionId: string; intervalMs: number; remainingMs: number } | null {
+    const action = autoActions.value.find((a) => a.id === actionId)
     if (!action || action.triggerType !== TriggerType.SCHEDULED || !action.enabled) {
       return null
     }
@@ -544,7 +575,7 @@ export const useAutoAction = defineStore('autoAction', () => {
    * 在列表中向上或向下移动一个操作项
    */
   function moveAction(id: string, direction: 'up' | 'down') {
-    const index = autoActions.value.findIndex(action => action.id === id)
+    const index = autoActions.value.findIndex((action) => action.id === id)
     if (index === -1) {
       console.warn(`[AutoAction] 无法移动操作: 未找到 ID ${id}.`)
       return
@@ -584,12 +615,13 @@ export const useAutoAction = defineStore('autoAction', () => {
       return null
     }
 
-    const eligibleActions = autoActions.value.filter(action =>
-      action.triggerType === TriggerType.SCHEDULED
-      && action.enabled
-      && action.triggerConfig.useGlobalTimer
-      && (!action.triggerConfig.onlyDuringLive || isLive.value)
-      && (!action.triggerConfig.ignoreTianXuan || !isTianXuanActive.value),
+    const eligibleActions = autoActions.value.filter(
+      (action) =>
+        action.triggerType === TriggerType.SCHEDULED &&
+        action.enabled &&
+        action.triggerConfig.useGlobalTimer &&
+        (!action.triggerConfig.onlyDuringLive || isLive.value) &&
+        (!action.triggerConfig.ignoreTianXuan || !isTianXuanActive.value),
     )
 
     if (eligibleActions.length === 0) {
@@ -604,25 +636,34 @@ export const useAutoAction = defineStore('autoAction', () => {
    * 手动设置下一个在全局顺序模式下执行的操作
    */
   function setNextGlobalAction(actionId: string) {
-    const targetAction = autoActions.value.find(a => a.id === actionId)
-    if (!targetAction || targetAction.triggerType !== TriggerType.SCHEDULED || !targetAction.triggerConfig.useGlobalTimer) {
-      console.warn(`[AutoAction] setNextGlobalAction: 无法设置 ID 为 ${actionId} 的操作为下一个全局操作 (不存在、类型错误或未使用全局定时器)`)
+    const targetAction = autoActions.value.find((a) => a.id === actionId)
+    if (
+      !targetAction ||
+      targetAction.triggerType !== TriggerType.SCHEDULED ||
+      !targetAction.triggerConfig.useGlobalTimer
+    ) {
+      console.warn(
+        `[AutoAction] setNextGlobalAction: 无法设置 ID 为 ${actionId} 的操作为下一个全局操作 (不存在、类型错误或未使用全局定时器)`,
+      )
       return
     }
     if (globalSchedulingMode.value !== 'sequential') {
-      console.warn(`[AutoAction] setNextGlobalAction: 只有在顺序模式下才能手动指定下一个操作。当前模式: ${globalSchedulingMode.value}`)
+      console.warn(
+        `[AutoAction] setNextGlobalAction: 只有在顺序模式下才能手动指定下一个操作。当前模式: ${globalSchedulingMode.value}`,
+      )
       return
     }
 
-    const eligibleActions = autoActions.value.filter(action =>
-      action.triggerType === TriggerType.SCHEDULED
-      && action.enabled
-      && action.triggerConfig.useGlobalTimer
-      && (!action.triggerConfig.onlyDuringLive || isLive.value)
-      && (!action.triggerConfig.ignoreTianXuan || !isTianXuanActive.value),
+    const eligibleActions = autoActions.value.filter(
+      (action) =>
+        action.triggerType === TriggerType.SCHEDULED &&
+        action.enabled &&
+        action.triggerConfig.useGlobalTimer &&
+        (!action.triggerConfig.onlyDuringLive || isLive.value) &&
+        (!action.triggerConfig.ignoreTianXuan || !isTianXuanActive.value),
     )
 
-    const targetIndex = eligibleActions.findIndex(a => a.id === actionId)
+    const targetIndex = eligibleActions.findIndex((a) => a.id === actionId)
 
     if (targetIndex === -1) {
       console.warn(`[AutoAction] setNextGlobalAction: 指定的操作 ID ${actionId} 当前不符合执行条件，无法设置为下一个。`)
@@ -639,10 +680,8 @@ export const useAutoAction = defineStore('autoAction', () => {
   function triggerTestActionByType(triggerType: TriggerType, testUid?: number) {
     console.log(`[AutoAction Test] 准备测试类型: ${triggerType}`)
 
-    const actionsToTest = autoActions.value.filter(a =>
-      a.triggerType === triggerType
-      && a.enabled
-      && enabledTriggerTypes.value[triggerType],
+    const actionsToTest = autoActions.value.filter(
+      (a) => a.triggerType === triggerType && a.enabled && enabledTriggerTypes.value[triggerType],
     )
 
     if (actionsToTest.length === 0) {
@@ -733,12 +772,14 @@ export const useAutoAction = defineStore('autoAction', () => {
             if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
               console.log(`[定时任务测试] 将在 ${action.actionConfig.delaySeconds} 秒后发送弹幕`)
               setTimeout(() => {
-                biliFunc.sendLiveDanmaku(roomId.value, formattedContent)
-                  .catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
+                biliFunc
+                  .sendLiveDanmaku(roomId.value, formattedContent)
+                  .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
               }, action.actionConfig.delaySeconds * 1000)
             } else {
-              biliFunc.sendLiveDanmaku(roomId.value, formattedContent)
-                .catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
+              biliFunc
+                .sendLiveDanmaku(roomId.value, formattedContent)
+                .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
             }
           }
         }

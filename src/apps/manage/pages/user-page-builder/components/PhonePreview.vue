@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
+
 import { applyThemeCssVars, buildSiteTokens } from '@/shared/config/theme'
 
 export type PreviewViewport = 'phone' | 'tablet' | 'desktop'
 
-const props = withDefaults(defineProps<{
-  isDark: boolean
-  transparent?: boolean
-  viewport?: PreviewViewport
-}>(), {
-  viewport: 'desktop',
-})
+const props = withDefaults(
+  defineProps<{
+    isDark: boolean
+    transparent?: boolean
+    viewport?: PreviewViewport
+  }>(),
+  {
+    viewport: 'desktop',
+  },
+)
 
 const previewRoot = ref<HTMLElement | null>(null)
 
@@ -21,10 +25,23 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div ref="previewRoot" class="responsive-preview" :class="`responsive-preview--${props.viewport}`">
-    <div class="device" :class="`device--${props.viewport}`">
-      <div v-if="props.viewport !== 'desktop'" class="device-bar" />
-      <div class="screen" :class="{ transparent: !!props.transparent }">
+  <div
+    ref="previewRoot"
+    class="responsive-preview"
+    :class="`responsive-preview--${props.viewport}`"
+  >
+    <div
+      class="device"
+      :class="`device--${props.viewport}`"
+    >
+      <div
+        v-if="props.viewport !== 'desktop'"
+        class="device-bar"
+      />
+      <div
+        class="screen"
+        :class="{ transparent: !!props.transparent }"
+      >
         <div class="screen-bg">
           <slot name="background" />
         </div>
@@ -101,7 +118,9 @@ watchEffect(() => {
   padding: 0;
   flex: 1;
   min-height: 0;
-  transition: border-radius 220ms ease, background-color 180ms ease;
+  transition:
+    border-radius 220ms ease,
+    background-color 180ms ease;
 }
 
 .device--desktop .screen {

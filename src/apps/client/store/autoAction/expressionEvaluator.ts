@@ -20,7 +20,11 @@ export const JS_EXPRESSION_REGEX = /\{\{\s*(js(?:\+|-run)?):([\s\S]*?)\}\}/g
 export function evaluateTemplateExpressions(template: string, context: ExecutionContext): string {
   // 增加严格的类型检查
   if (typeof template !== 'string') {
-    console.error('[evaluateTemplateExpressions] Error: Expected template to be a string, but received:', typeof template, template)
+    console.error(
+      '[evaluateTemplateExpressions] Error: Expected template to be a string, but received:',
+      typeof template,
+      template,
+    )
     return '' // 或者抛出错误，或者返回一个默认值
   }
 
@@ -84,7 +88,8 @@ export function evaluateTemplateExpressions(template: string, context: Execution
       if (type === 'js') {
         // 简单表达式: 隐式 return
         functionBody = `try { return (${code}); } catch (e) { console.error("表达式[js:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return "[表达式错误: " + e.message + "]"; }`
-      } else { // js+ 或 js-run
+      } else {
+        // js+ 或 js-run
         // 代码块: 需要显式 return
         functionBody = `try { ${code} } catch (e) { console.error("代码块[js+/js-run:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return "[代码块错误: " + e.message + "]"; }`
       }
@@ -95,7 +100,8 @@ export function evaluateTemplateExpressions(template: string, context: Execution
       const evalResult = evalInContext(...scopeValues)
 
       // 对结果进行处理，将 undefined/null 转换为空字符串，除非是错误消息
-      return typeof evalResult === 'string' && (evalResult.startsWith('[表达式错误:') || evalResult.startsWith('[代码块错误:'))
+      return typeof evalResult === 'string' &&
+        (evalResult.startsWith('[表达式错误:') || evalResult.startsWith('[代码块错误:'))
         ? evalResult
         : String(evalResult ?? '')
     } catch (error) {
@@ -131,7 +137,10 @@ export function escapeRegExp(string: string): string {
  * @param placeholders 占位符列表
  * @returns 转换后的模板
  */
-export function convertToJsExpressions(template: string, placeholders: { name: string, description: string }[]): string {
+export function convertToJsExpressions(
+  template: string,
+  placeholders: { name: string; description: string }[],
+): string {
   let result = template
 
   placeholders.forEach((p) => {
@@ -171,7 +180,10 @@ export function extractJsExpressions(template: string): string[] {
  * @param gift.price 礼物单价
  * @returns 上下文对象
  */
-export function createGiftThankContext(user: { uid: number, name: string }, gift: { name: string, count: number, price: number }): Record<string, any> {
+export function createGiftThankContext(
+  user: { uid: number; name: string },
+  gift: { name: string; count: number; price: number },
+): Record<string, any> {
   return {
     user: {
       uid: user.uid,
@@ -191,7 +203,7 @@ export function createGiftThankContext(user: { uid: number, name: string }, gift
     // 工具函数
     format: {
       currency: (value: number) => `¥${value.toFixed(2)}`,
-      pluralize: (count: number, singular: string, plural: string) => count === 1 ? singular : plural,
+      pluralize: (count: number, singular: string, plural: string) => (count === 1 ? singular : plural),
     },
     // 日期时间
     date: {

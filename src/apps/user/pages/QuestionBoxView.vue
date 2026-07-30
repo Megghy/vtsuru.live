@@ -1,16 +1,39 @@
 <script setup lang="ts">
-import type { QAInfo, UserInfo } from '@/api/api-models'
 import { AddCircle24Regular, DismissCircle24Regular, History24Regular } from '@vicons/fluent'
 import {
-  NAlert, NAvatar, NBadge, NButton, NCard, NCheckbox, NDivider, NDrawer, NDrawerContent, NEmpty, NIcon, NImage, NInput, NList, NListItem, NFlex, NPagination, NSpin, NTag, NText, NTime, useMessage } from 'naive-ui';
+  NAlert,
+  NAvatar,
+  NBadge,
+  NButton,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NDrawer,
+  NDrawerContent,
+  NEmpty,
+  NIcon,
+  NImage,
+  NInput,
+  NList,
+  NListItem,
+  NFlex,
+  NPagination,
+  NSpin,
+  NTag,
+  NText,
+  NTime,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
+
 import { useAccount } from '@/api/account'
+import type { QAInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { AVATAR_URL, QUESTION_API_URL, TURNSTILE_KEY } from '@/shared/config'
-import { useBiliAuth } from '@/store/useBiliAuth'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 const { userInfo } = defineProps<{
   userInfo: UserInfo | undefined
@@ -39,7 +62,7 @@ const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 // 本地提问历史
 const localQuestions = usePersistedStorage<LocalQuestion[]>('vtsuru-local-questions', [], {
   serializer: {
-    read: (v: any) => v ? JSON.parse(v) : [],
+    read: (v: any) => (v ? JSON.parse(v) : []),
     write: (v: any) => JSON.stringify(v),
   },
 })
@@ -51,7 +74,10 @@ const publicQuestions = ref<QAInfo[]>([])
 const publicPageSize = ref(10)
 const publicPageNum = ref(1)
 const pagedPublicQuestions = computed(() =>
-  publicQuestions.value.slice((publicPageNum.value - 1) * publicPageSize.value, publicPageNum.value * publicPageSize.value),
+  publicQuestions.value.slice(
+    (publicPageNum.value - 1) * publicPageSize.value,
+    publicPageNum.value * publicPageSize.value,
+  ),
 )
 const tags = ref<string[]>([])
 const selectedTag = ref<string | null>(null)
@@ -69,8 +95,15 @@ const anonymousEmail = ref('')
 const allowUploadImage = computed(() => userInfo?.extra?.allowQuestionBoxUploadImage ?? false)
 const selectedFiles = ref<File[]>([])
 const imagePreviewUrls = ref<string[]>([])
-const maxImages = computed(() => isIdentified.value ? 9 : 3)
-const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'image/x-icon'])
+const maxImages = computed(() => (isIdentified.value ? 9 : 3))
+const ALLOWED_IMAGE_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  'image/x-icon',
+])
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 // 计算属性
@@ -95,7 +128,7 @@ function isValidEmail(email: string): boolean {
 }
 
 // 图片处理
-function validateImageFile(file: File): { valid: boolean, message?: string } {
+function validateImageFile(file: File): { valid: boolean; message?: string } {
   if (file.size > MAX_FILE_SIZE) {
     return { valid: false, message: '文件大小不能超过10MB' }
   }
@@ -119,8 +152,8 @@ function handleFileSelect(event: Event) {
       message.warning(`最多只能上传${maxImages.value}张图片`)
       break
     }
-    const isDuplicate = selectedFiles.value.some(f =>
-      f.name === file.name && f.size === file.size && f.lastModified === file.lastModified,
+    const isDuplicate = selectedFiles.value.some(
+      (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified,
     )
     if (isDuplicate) {
       message.warning(`文件"${file.name}"已存在`)
@@ -139,7 +172,7 @@ function removeImage(index: number) {
 }
 
 function clearAllImages() {
-  imagePreviewUrls.value.forEach(url => URL.revokeObjectURL(url))
+  imagePreviewUrls.value.forEach((url) => URL.revokeObjectURL(url))
   imagePreviewUrls.value = []
   selectedFiles.value = []
 }
@@ -170,14 +203,17 @@ async function SendQuestion() {
 
   try {
     const formData = new FormData()
-    formData.append('Data', JSON.stringify({
-      Target: userInfo?.id,
-      IsAnonymous: !isIdentified.value || isAnonymous.value,
-      Message: questionMessage.value,
-      Tag: selectedTag.value,
-      AnonymousName: !isIdentified.value && anonymousName.value ? anonymousName.value : undefined,
-      AnonymousEmail: !isIdentified.value && anonymousEmail.value ? anonymousEmail.value : undefined,
-    }))
+    formData.append(
+      'Data',
+      JSON.stringify({
+        Target: userInfo?.id,
+        IsAnonymous: !isIdentified.value || isAnonymous.value,
+        Message: questionMessage.value,
+        Tag: selectedTag.value,
+        AnonymousName: !isIdentified.value && anonymousName.value ? anonymousName.value : undefined,
+        AnonymousEmail: !isIdentified.value && anonymousEmail.value ? anonymousEmail.value : undefined,
+      }),
+    )
     for (const file of selectedFiles.value) {
       formData.append('Files', file)
     }
@@ -251,9 +287,7 @@ async function getTagsAndSettings() {
 
     if (tagsData.code == 200) {
       if (userInfo?.id == accountInfo.value?.id) {
-        tags.value = tagsData.data.map((tag: any) =>
-          typeof tag === 'object' && tag !== null ? tag.name : tag,
-        )
+        tags.value = tagsData.data.map((tag: any) => (typeof tag === 'object' && tag !== null ? tag.name : tag))
       } else {
         tags.value = tagsData.data
       }
@@ -277,7 +311,7 @@ function onSelectTag(tag: string) {
 
 // 本地提问历史管理
 function deleteLocalQuestion(id: string) {
-  localQuestions.value = localQuestions.value.filter(q => q.id !== id)
+  localQuestions.value = localQuestions.value.filter((q) => q.id !== id)
   message.success('已删除')
 }
 
@@ -302,15 +336,14 @@ onUnmounted(() => {
   <div class="question-box-wrapper">
     <div class="question-box-container">
       <!-- 提问表单 -->
-      <NCard size="small" bordered>
+      <NCard
+        size="small"
+        bordered
+      >
         <template #header>
           <div class="header-main">
-            <h2 class="title">
-              向 {{ userInfo?.name || '主播' }} 提问
-            </h2>
-            <p class="subtitle">
-              分享你的想法、建议或是简单打个招呼
-            </p>
+            <h2 class="title">向 {{ userInfo?.name || '主播' }} 提问</h2>
+            <p class="subtitle">分享你的想法、建议或是简单打个招呼</p>
           </div>
         </template>
         <template #header-extra>
@@ -333,9 +366,15 @@ onUnmounted(() => {
           </NBadge>
         </template>
 
-        <NFlex vertical :size="16">
+        <NFlex
+          vertical
+          :size="16"
+        >
           <!-- 话题选择区域 -->
-          <div v-if="tags.length > 0" class="section">
+          <div
+            v-if="tags.length > 0"
+            class="section"
+          >
             <label class="section-label">投稿话题</label>
             <div class="tag-grid">
               <NTag
@@ -368,7 +407,10 @@ onUnmounted(() => {
           <!-- 附件与选项 -->
           <div class="section options-grid">
             <!-- 匿名模式选项 - 已登录用户 -->
-            <div v-if="isIdentified" class="option-item">
+            <div
+              v-if="isIdentified"
+              class="option-item"
+            >
               <NCheckbox
                 v-model:checked="isAnonymous"
                 :disabled="isSelf"
@@ -397,7 +439,10 @@ onUnmounted(() => {
           </div>
 
           <!-- 图片上传 -->
-          <div v-if="!isSelf && (isIdentified || allowUploadImage)" class="section">
+          <div
+            v-if="!isSelf && (isIdentified || allowUploadImage)"
+            class="section"
+          >
             <label class="section-label">图片附件</label>
             <div class="image-upload-area">
               <div class="upload-grid">
@@ -406,7 +451,10 @@ onUnmounted(() => {
                   :key="index"
                   class="upload-item"
                 >
-                  <NImage :src="url" object-fit="cover" />
+                  <NImage
+                    :src="url"
+                    object-fit="cover"
+                  />
                   <NButton
                     circle
                     size="tiny"
@@ -430,16 +478,16 @@ onUnmounted(() => {
               <input
                 ref="fileInput"
                 type="file"
-                style="display: none;"
+                style="display: none"
                 multiple
                 accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/x-icon"
                 @change="handleFileSelect"
-              >
+              />
             </div>
           </div>
 
           <!-- 底部操作 -->
-          <NDivider style="margin: 0;" />
+          <NDivider style="margin: 0" />
           <div class="shadcn-footer">
             <div class="turnstile-wrapper">
               <VueTurnstile
@@ -458,7 +506,7 @@ onUnmounted(() => {
                 :loading="isSending || !token"
                 @click="SendQuestion"
               >
-                {{ isSending && selectedFiles.length > 0 ? '正在上传图片...' : (!token ? '人机验证中...' : '提交问题') }}
+                {{ isSending && selectedFiles.length > 0 ? '正在上传图片...' : !token ? '人机验证中...' : '提交问题' }}
               </NButton>
               <NButton
                 v-if="isUserLoggedIn"
@@ -470,7 +518,11 @@ onUnmounted(() => {
               </NButton>
             </div>
 
-            <NAlert v-if="isSelf" type="warning" :bordered="false">
+            <NAlert
+              v-if="isSelf"
+              type="warning"
+              :bordered="false"
+            >
               您不能向自己发起提问
             </NAlert>
           </div>
@@ -494,8 +546,17 @@ onUnmounted(() => {
               content-style="padding: 0"
             >
               <div class="question-stack-header">
-                <NTime :time="item.sendAt" type="relative" class="time" />
-                <NTag v-if="item.tag" size="small" :bordered="false" class="tag">
+                <NTime
+                  :time="item.sendAt"
+                  type="relative"
+                  class="time"
+                />
+                <NTag
+                  v-if="item.tag"
+                  size="small"
+                  :bordered="false"
+                  class="tag"
+                >
                   {{ item.tag }}
                 </NTag>
               </div>
@@ -504,7 +565,10 @@ onUnmounted(() => {
                 <div class="message">
                   {{ item.question.message }}
                 </div>
-                <div v-if="item.questionImages?.length" class="images">
+                <div
+                  v-if="item.questionImages?.length"
+                  class="images"
+                >
                   <NImage
                     v-for="(img, idx) in item.questionImages"
                     :key="idx"
@@ -514,8 +578,11 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <div v-if="item.answer" class="answer-stack-body">
-                <NDivider style="margin: 0 0 15px 0;" />
+              <div
+                v-if="item.answer"
+                class="answer-stack-body"
+              >
+                <NDivider style="margin: 0 0 15px 0" />
                 <div class="answer-header">
                   <NAvatar
                     :src="`${AVATAR_URL + userInfo?.biliId}?size=64`"
@@ -539,12 +606,19 @@ onUnmounted(() => {
             v-model:page="publicPageNum"
             :item-count="publicQuestions.length"
             :page-size="publicPageSize"
-            style="margin-top: 16px; justify-content: center;"
+            style="margin-top: 16px; justify-content: center"
           />
         </template>
 
-        <NEmpty v-else-if="!isGetting" class="empty" description="暂无公开回复" />
-        <NSpin v-else class="loading" />
+        <NEmpty
+          v-else-if="!isGetting"
+          class="empty"
+          description="暂无公开回复"
+        />
+        <NSpin
+          v-else
+          class="loading"
+        />
       </div>
 
       <NDivider />
@@ -557,8 +631,15 @@ onUnmounted(() => {
       >
         <NDrawerContent closable>
           <template #header>
-            <NFlex justify="space-between" align="center" style="width: 100%;">
-              <NText strong style="font-size: 16px;">
+            <NFlex
+              justify="space-between"
+              align="center"
+              style="width: 100%"
+            >
+              <NText
+                strong
+                style="font-size: 16px"
+              >
                 本地提问记录
               </NText>
               <NButton
@@ -573,9 +654,15 @@ onUnmounted(() => {
             </NFlex>
           </template>
 
-          <div v-if="localQuestions.length === 0" class="empty-local-questions">
+          <div
+            v-if="localQuestions.length === 0"
+            class="empty-local-questions"
+          >
             <NEmpty description="还没有本地提问记录" />
-            <NText depth="3" style="text-align: center; display: block; margin-top: 12px;">
+            <NText
+              depth="3"
+              style="text-align: center; display: block; margin-top: 12px"
+            >
               未登录状态下发送的提问会保存到这里
             </NText>
           </div>
@@ -592,12 +679,21 @@ onUnmounted(() => {
                 hoverable
               >
                 <template #header>
-                  <NFlex :size="8" align="center" justify="space-between">
-                    <NFlex :size="8" align="center">
-                      <NText strong>
-                        提给：{{ item.targetUserName }}
-                      </NText>
-                      <NTag v-if="item.tag" size="small" type="info">
+                  <NFlex
+                    :size="8"
+                    align="center"
+                    justify="space-between"
+                  >
+                    <NFlex
+                      :size="8"
+                      align="center"
+                    >
+                      <NText strong> 提给：{{ item.targetUserName }} </NText>
+                      <NTag
+                        v-if="item.tag"
+                        size="small"
+                        type="info"
+                      >
                         {{ item.tag }}
                       </NTag>
                     </NFlex>
@@ -614,24 +710,48 @@ onUnmounted(() => {
                   </NFlex>
                 </template>
 
-                <NFlex vertical :size="8">
+                <NFlex
+                  vertical
+                  :size="8"
+                >
                   <div class="local-question-message">
                     {{ item.message }}
                   </div>
 
-                  <NDivider style="margin: 8px 0;" />
+                  <NDivider style="margin: 8px 0" />
 
-                  <NFlex :size="4" vertical>
-                    <NText depth="3" style="font-size: 12px;">
-                      <NTime :time="item.sendAt" format="yyyy-MM-dd HH:mm:ss" />
+                  <NFlex
+                    :size="4"
+                    vertical
+                  >
+                    <NText
+                      depth="3"
+                      style="font-size: 12px"
+                    >
+                      <NTime
+                        :time="item.sendAt"
+                        format="yyyy-MM-dd HH:mm:ss"
+                      />
                     </NText>
-                    <NText v-if="item.anonymousName" depth="3" style="font-size: 12px;">
+                    <NText
+                      v-if="item.anonymousName"
+                      depth="3"
+                      style="font-size: 12px"
+                    >
                       昵称：{{ item.anonymousName }}
                     </NText>
-                    <NText v-if="item.anonymousEmail" depth="3" style="font-size: 12px;">
+                    <NText
+                      v-if="item.anonymousEmail"
+                      depth="3"
+                      style="font-size: 12px"
+                    >
                       邮箱：{{ item.anonymousEmail }}
                     </NText>
-                    <NTag v-if="item.hasImage" size="tiny" type="success">
+                    <NTag
+                      v-if="item.hasImage"
+                      size="tiny"
+                      type="success"
+                    >
                       包含图片
                     </NTag>
                   </NFlex>
@@ -641,7 +761,10 @@ onUnmounted(() => {
           </NList>
 
           <template #footer>
-            <NAlert type="info" size="small">
+            <NAlert
+              type="info"
+              size="small"
+            >
               <template #icon>
                 <NIcon :component="History24Regular" />
               </template>
@@ -754,7 +877,10 @@ onUnmounted(() => {
   justify-content: center;
   cursor: pointer;
   color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
-  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
   gap: 2px;
 }
 
@@ -909,7 +1035,8 @@ onUnmounted(() => {
   color: var(--vtsuru-fg);
 }
 
-.empty, .loading {
+.empty,
+.loading {
   padding: 32px 0;
 }
 

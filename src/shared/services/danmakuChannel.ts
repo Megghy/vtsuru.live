@@ -1,5 +1,6 @@
-import type { EventModel } from '@/api/api-models'
 import { toRaw } from 'vue'
+
+import type { EventModel } from '@/api/api-models'
 
 const LOCAL_EVENT_CHANNEL = 'vtsuru.danmaku.model-events.v2'
 
@@ -13,16 +14,36 @@ export interface DanmakuSourceMeta {
 }
 
 type Payload =
-  | { kind: 'event', sourceId: string, scope: string, eventName: DanmakuEventName, data: EventModel }
-  | { kind: 'state', sourceId: string, scope: string, state: 'connected' | 'disconnected', clientType: ClientType, meta?: DanmakuSourceMeta }
-  | { kind: 'state-request', sourceId: string, scope: string }
+  | { kind: 'event'; sourceId: string; scope: string; eventName: DanmakuEventName; data: EventModel }
+  | {
+      kind: 'state'
+      sourceId: string
+      scope: string
+      state: 'connected' | 'disconnected'
+      clientType: ClientType
+      meta?: DanmakuSourceMeta
+    }
+  | { kind: 'state-request'; sourceId: string; scope: string }
 
 export interface DanmakuChannel {
   publishEvent: (scope: string, eventName: DanmakuEventName, data: EventModel) => void
-  publishState: (scope: string, state: 'connected' | 'disconnected', clientType: ClientType, meta?: DanmakuSourceMeta) => void
+  publishState: (
+    scope: string,
+    state: 'connected' | 'disconnected',
+    clientType: ClientType,
+    meta?: DanmakuSourceMeta,
+  ) => void
   requestState: (scope: string) => void
   onEvent: (cb: (sourceId: string, scope: string, eventName: DanmakuEventName, data: EventModel) => void) => () => void
-  onState: (cb: (sourceId: string, scope: string, state: 'connected' | 'disconnected', clientType: ClientType, meta?: DanmakuSourceMeta) => void) => () => void
+  onState: (
+    cb: (
+      sourceId: string,
+      scope: string,
+      state: 'connected' | 'disconnected',
+      clientType: ClientType,
+      meta?: DanmakuSourceMeta,
+    ) => void,
+  ) => () => void
   onStateRequest: (cb: (scope: string) => void) => () => void
   close: () => void
 }
@@ -50,12 +71,21 @@ export function createDanmakuChannel(sourceId: string): DanmakuChannel {
   }
 
   return {
-    publishEvent: (scope, eventName, data) => channel?.postMessage({ kind: 'event', sourceId, scope, eventName, data: toRaw(data) } satisfies Payload),
-    publishState: (scope, state, clientType, meta) => channel?.postMessage({ kind: 'state', sourceId, scope, state, clientType, meta: meta && toRaw(meta) } satisfies Payload),
-    requestState: scope => channel?.postMessage({ kind: 'state-request', sourceId, scope } satisfies Payload),
-    onEvent: listener => subscribe(eventListeners, listener),
-    onState: listener => subscribe(stateListeners, listener),
-    onStateRequest: listener => subscribe(requestListeners, listener),
+    publishEvent: (scope, eventName, data) =>
+      channel?.postMessage({ kind: 'event', sourceId, scope, eventName, data: toRaw(data) } satisfies Payload),
+    publishState: (scope, state, clientType, meta) =>
+      channel?.postMessage({
+        kind: 'state',
+        sourceId,
+        scope,
+        state,
+        clientType,
+        meta: meta && toRaw(meta),
+      } satisfies Payload),
+    requestState: (scope) => channel?.postMessage({ kind: 'state-request', sourceId, scope } satisfies Payload),
+    onEvent: (listener) => subscribe(eventListeners, listener),
+    onState: (listener) => subscribe(stateListeners, listener),
+    onStateRequest: (listener) => subscribe(requestListeners, listener),
     close: () => channel?.close(),
   }
 }

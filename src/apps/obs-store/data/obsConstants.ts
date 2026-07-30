@@ -1,7 +1,6 @@
 import { defineAsyncComponent } from 'vue'
 import type { Component } from 'vue'
 
-
 /**
  * OBS 组件定义接口
  */

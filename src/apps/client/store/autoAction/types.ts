@@ -160,7 +160,7 @@ export interface TriggerConfig {
   // Guard related
   guardLevels?: GuardLevel[]
   preventRepeat?: boolean
-  giftCodes?: { level: number, codes: string[] }[]
+  giftCodes?: { level: number; codes: string[] }[]
   consumeGiftCode?: boolean // 是否消耗礼品码
 
   // Confirm message options

@@ -1,9 +1,11 @@
+import type { ComputedRef, Ref } from 'vue'
+import { nextTick, ref } from 'vue'
+
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { validateBlockPageProject } from '@/apps/user-page/block/schema'
 import { createDraftPreview } from '@/apps/user-page/runtime/draftPreview'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
-import type { ComputedRef, Ref } from 'vue'
-import { nextTick, ref } from 'vue'
+
 import { deepCloneJson, estimateUtf8Bytes } from './editorHelpers'
 import type { UserPageValidationIssue } from './validateUserPagesSettings'
 
@@ -53,12 +55,15 @@ function parseImportedProject(raw: string) {
     throw new Error(`JSON 解析失败: ${(error as Error).message || String(error)}`, { cause: error })
   }
 
-  const candidate = parsed && typeof parsed === 'object'
-    ? (parsed.type === 'vtsuru-block-page' && parsed.version === 1 ? parsed.project : parsed)
-    : null
+  const candidate =
+    parsed && typeof parsed === 'object'
+      ? parsed.type === 'vtsuru-block-page' && parsed.version === 1
+        ? parsed.project
+        : parsed
+      : null
   if (!candidate) throw new Error('导入内容不是有效的 block page JSON')
   const validation = validateBlockPageProject(candidate)
-  if (validation.ok === false) throw new Error(validation.issues.map(issue => issue.message).join('；'))
+  if (validation.ok === false) throw new Error(validation.issues.map((issue) => issue.message).join('；'))
   return validation.project
 }
 
@@ -81,12 +86,11 @@ export function useUserPageEditorIO(options: UseUserPageEditorIOOptions) {
 
   function openSettingsPreview(settings: UserPagesSettingsV1) {
     if (!options.accountName.value) return
-    const pageKey = options.currentKey.value === 'home' || settings.pages?.[options.currentKey.value]
-      ? options.currentKey.value
-      : 'home'
-    const path = pageKey === 'home'
-      ? `/@${options.accountName.value}`
-      : `/@${options.accountName.value}/${pageKey}`
+    const pageKey =
+      options.currentKey.value === 'home' || settings.pages?.[options.currentKey.value]
+        ? options.currentKey.value
+        : 'home'
+    const path = pageKey === 'home' ? `/@${options.accountName.value}` : `/@${options.accountName.value}/${pageKey}`
     const url = new URL(path, window.location.origin)
     url.searchParams.set('draftPreview', createDraftPreview(options.accountId.value, settings))
     window.open(url, '_blank', 'noopener,noreferrer')
@@ -134,13 +138,17 @@ export function useUserPageEditorIO(options: UseUserPageEditorIOOptions) {
   function exportCurrentBlockPageJson() {
     if (options.currentPage.value.mode !== 'block') throw new Error('当前页面不是区块模式')
     if (!options.currentProject.value) throw new Error('当前页面缺少区块配置')
-    return JSON.stringify({
-      type: 'vtsuru-block-page' as const,
-      version: 1 as const,
-      exportedAt: new Date().toISOString(),
-      pageKey: options.currentKey.value,
-      project: deepCloneJson(options.currentProject.value),
-    }, null, 2)
+    return JSON.stringify(
+      {
+        type: 'vtsuru-block-page' as const,
+        version: 1 as const,
+        exportedAt: new Date().toISOString(),
+        pageKey: options.currentKey.value,
+        project: deepCloneJson(options.currentProject.value),
+      },
+      null,
+      2,
+    )
   }
 
   function importCurrentBlockPageJson(raw: string) {
@@ -160,5 +168,12 @@ export function useUserPageEditorIO(options: UseUserPageEditorIOOptions) {
     options.notifySuccess('已导入区块页面配置')
   }
 
-  return { validationFocusRequest, openPreview, openRollbackPreview, focusValidationIssue, exportCurrentBlockPageJson, importCurrentBlockPageJson }
+  return {
+    validationFocusRequest,
+    openPreview,
+    openRollbackPreview,
+    focusValidationIssue,
+    exportCurrentBlockPageJson,
+    importCurrentBlockPageJson,
+  }
 }

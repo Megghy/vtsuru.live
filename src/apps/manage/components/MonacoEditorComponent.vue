@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useThemeVars } from 'naive-ui'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
 import { configureMonacoEnvironment } from './monacoEnvironment'
-const { language, height = 400, theme = 'vs-dark', options, path } = defineProps<{
+const {
+  language,
+  height = 400,
+  theme = 'vs-dark',
+  options,
+  path,
+} = defineProps<{
   language: string
   height?: number
   theme?: string
@@ -63,18 +70,24 @@ watch(value, (nv) => {
 })
 
 // 语言切换
-watch(() => language, (lang) => {
-  if (model && lang) {
-    monaco.editor.setModelLanguage(model, lang)
-  }
-})
+watch(
+  () => language,
+  (lang) => {
+    if (model && lang) {
+      monaco.editor.setModelLanguage(model, lang)
+    }
+  },
+)
 
 // 主题切换
-watch(() => theme, (t) => {
-  if (editor && t) {
-    editor.updateOptions({ theme: t })
-  }
-})
+watch(
+  () => theme,
+  (t) => {
+    if (editor && t) {
+      editor.updateOptions({ theme: t })
+    }
+  },
+)
 
 onBeforeUnmount(() => {
   try {
@@ -104,11 +117,17 @@ onBeforeUnmount(() => {
     >
       <div>
         <div>正在加载编辑器…</div>
-        <div v-if="initError" :style="{ marginTop: '6px', color: themeVars.errorColor, fontSize: '12px' }">
+        <div
+          v-if="initError"
+          :style="{ marginTop: '6px', color: themeVars.errorColor, fontSize: '12px' }"
+        >
           {{ initError }}
         </div>
       </div>
     </div>
-    <div ref="containerRef" :style="`height: ${height}px; width: 100%;`" />
+    <div
+      ref="containerRef"
+      :style="`height: ${height}px; width: 100%;`"
+    />
   </div>
 </template>

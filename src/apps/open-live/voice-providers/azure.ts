@@ -1,4 +1,5 @@
 import { TTS_API_URL } from '@/shared/config'
+
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
 interface AzureProviderConfig {
@@ -51,8 +52,16 @@ export class AzureVoiceProvider implements VoiceProvider {
           const bMulti = String(b.value).toLowerCase().includes('multilingual')
           if (aMulti && !bMulti) return -1
           if (!aMulti && bMulti) return 1
-          const aScore = (a.meta?.locale as string)?.startsWith('zh-') ? 0 : (a.meta?.locale as string)?.startsWith('ja-') ? 1 : 2
-          const bScore = (b.meta?.locale as string)?.startsWith('zh-') ? 0 : (b.meta?.locale as string)?.startsWith('ja-') ? 1 : 2
+          const aScore = (a.meta?.locale as string)?.startsWith('zh-')
+            ? 0
+            : (a.meta?.locale as string)?.startsWith('ja-')
+              ? 1
+              : 2
+          const bScore = (b.meta?.locale as string)?.startsWith('zh-')
+            ? 0
+            : (b.meta?.locale as string)?.startsWith('ja-')
+              ? 1
+              : 2
           return aScore - bScore
         })
 

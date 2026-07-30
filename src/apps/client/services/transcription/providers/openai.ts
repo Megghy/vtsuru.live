@@ -1,11 +1,9 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
+
 import type { OpenAITranscriptionProfile } from '@/shared/models/transcription'
+
 import { toBase64 } from '../audio'
-import type {
-  ProviderTranscript,
-  TranscriptionProviderCallbacks,
-  TranscriptionProviderClient,
-} from '../types'
+import type { ProviderTranscript, TranscriptionProviderCallbacks, TranscriptionProviderClient } from '../types'
 
 interface ClientSecretResponse {
   value: string
@@ -28,7 +26,7 @@ export class OpenAITranscriptionClient implements TranscriptionProviderClient {
   private hasUncommittedAudio = false
   private activeStartMs?: number
   private readonly partials = new Map<string, string>()
-  private readonly times = new Map<string, { startMs?: number, endMs?: number }>()
+  private readonly times = new Map<string, { startMs?: number; endMs?: number }>()
   private readonly itemOrder: string[] = []
   private readonly completed = new Map<string, ProviderTranscript>()
 
@@ -45,16 +43,24 @@ export class OpenAITranscriptionClient implements TranscriptionProviderClient {
     this.socket = socket
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('连接 OpenAI Realtime 超时')), 10_000)
-      socket.addEventListener('open', () => {
-        clearTimeout(timeout)
-        resolve()
-      }, { once: true })
-      socket.addEventListener('error', () => {
-        clearTimeout(timeout)
-        reject(new Error('连接 OpenAI Realtime 失败'))
-      }, { once: true })
+      socket.addEventListener(
+        'open',
+        () => {
+          clearTimeout(timeout)
+          resolve()
+        },
+        { once: true },
+      )
+      socket.addEventListener(
+        'error',
+        () => {
+          clearTimeout(timeout)
+          reject(new Error('连接 OpenAI Realtime 失败'))
+        },
+        { once: true },
+      )
     })
-    socket.addEventListener('message', event => this.handleMessage(JSON.parse(String(event.data))))
+    socket.addEventListener('message', (event) => this.handleMessage(JSON.parse(String(event.data))))
     socket.addEventListener('error', () => {
       if (!this.closing) this.callbacks.onError(new Error('OpenAI Realtime 连接异常'))
     })
@@ -65,10 +71,12 @@ export class OpenAITranscriptionClient implements TranscriptionProviderClient {
 
   sendAudio(chunk: Uint8Array) {
     if (this.socket?.readyState !== WebSocket.OPEN) throw new Error('OpenAI Realtime 尚未连接')
-    this.socket.send(JSON.stringify({
-      type: 'input_audio_buffer.append',
-      audio: toBase64(chunk),
-    }))
+    this.socket.send(
+      JSON.stringify({
+        type: 'input_audio_buffer.append',
+        audio: toBase64(chunk),
+      }),
+    )
     this.hasUncommittedAudio = true
   }
 
@@ -84,7 +92,7 @@ export class OpenAITranscriptionClient implements TranscriptionProviderClient {
       socket.send(JSON.stringify({ type: 'input_audio_buffer.commit' }))
       this.hasUncommittedAudio = false
     }
-    await new Promise(resolve => setTimeout(resolve, 3_000))
+    await new Promise((resolve) => setTimeout(resolve, 3_000))
     socket.close()
   }
 
@@ -174,7 +182,7 @@ async function createClientSecret(profile: OpenAITranscriptionProfile) {
     }),
   })
   if (!response.ok) throw new Error(`创建 OpenAI Realtime 临时令牌失败: HTTP ${response.status}`)
-  const payload = await response.json() as ClientSecretResponse
+  const payload = (await response.json()) as ClientSecretResponse
   if (!payload.value) throw new Error('OpenAI Realtime 未返回临时令牌')
   return payload.value
 }

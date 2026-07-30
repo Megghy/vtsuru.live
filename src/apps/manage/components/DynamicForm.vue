@@ -1,13 +1,36 @@
 <script setup lang="ts">
-import type { SelectOption, UploadFileInfo } from 'naive-ui'
-import type { UploadFileResponse } from '@/api/api-models'
-import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Info24Filled } from '@vicons/fluent'
-import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NModal, NProgress, NScrollbar, NSelect, NSlider, NText, NTooltip, NUpload, useMessage, useThemeVars } from 'naive-ui';
+import type { SelectOption, UploadFileInfo } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NCheckbox,
+  NColorPicker,
+  NEmpty,
+  NFlex,
+  NForm,
+  NGrid,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NModal,
+  NProgress,
+  NScrollbar,
+  NSelect,
+  NSlider,
+  NText,
+  NTooltip,
+  NUpload,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
+
 import { UploadConfig } from '@/api/account'
+import type { UploadFileResponse } from '@/api/api-models'
 import { UserFileLocation } from '@/api/api-models'
 import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
+import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
 const props = defineProps<{
@@ -52,16 +75,14 @@ function isItemVisible(item: ConfigItemDefinition): boolean {
 // 计算属性：过滤出应该显示的配置项
 const visibleItems = computed(() => {
   if (!props.config) return []
-  return props.config.filter(item => isItemVisible(item))
+  return props.config.filter((item) => isItemVisible(item))
 })
 
 // 获取select组件的选项
 function getSelectOptions(item: ConfigItemDefinition): SelectOption[] {
   if (item.type !== 'select') return []
 
-  const options = typeof item.options === 'function'
-    ? item.options(props.configData)
-    : item.options
+  const options = typeof item.options === 'function' ? item.options(props.configData) : item.options
 
   return options || []
 }
@@ -97,12 +118,13 @@ function updateUploadProgress(stage: string, done?: number, total?: number) {
 
 async function uploadAllFiles() {
   // 收集所有待上传分组 (普通文件 + 装饰图片)
-  const uploadGroups: { key: string, files: File[], decorative: boolean }[] = []
+  const uploadGroups: { key: string; files: File[]; decorative: boolean }[] = []
   for (const key in pendingFiles.value) {
     if (pendingFiles.value[key]?.length) uploadGroups.push({ key, files: pendingFiles.value[key], decorative: false })
   }
   for (const key in pendingDecorativeImages.value) {
-    if (pendingDecorativeImages.value[key]?.length) uploadGroups.push({ key, files: pendingDecorativeImages.value[key], decorative: true })
+    if (pendingDecorativeImages.value[key]?.length)
+      uploadGroups.push({ key, files: pendingDecorativeImages.value[key], decorative: true })
   }
 
   const total = uploadGroups.reduce((n, g) => n + g.files.length, 0)
@@ -145,14 +167,18 @@ async function uploadAllFiles() {
       updateUploadProgress(UploadStage.Success, done, total)
     }
 
-    setTimeout(() => { showUploadModal.value = false }, 500)
+    setTimeout(() => {
+      showUploadModal.value = false
+    }, 500)
     pendingFiles.value = {}
     pendingDecorativeImages.value = {}
     return true
   } catch (error) {
     message.error(`文件上传失败: ${error instanceof Error ? error.message : String(error)}`)
     updateUploadProgress(UploadStage.Failed)
-    setTimeout(() => { showUploadModal.value = false }, 2000)
+    setTimeout(() => {
+      showUploadModal.value = false
+    }, 2000)
     return false
   }
 }
@@ -199,7 +225,7 @@ function stringToRgba(colorString: string | null | undefined): RGBAColor {
 
   // #RGB / #RGBA / #RRGGBB / #RRGGBBAA
   const hex = colorString.replace('#', '')
-  const expand = (s: string) => s.length <= 4 ? [...s].map(c => c + c).join('') : s
+  const expand = (s: string) => (s.length <= 4 ? [...s].map((c) => c + c).join('') : s)
   const full = expand(hex)
   if (/^[a-f\d]{6}(?:[a-f\d]{2})?$/i.test(full)) {
     return {
@@ -220,7 +246,7 @@ function safeRgbaToString(color: RGBAColor | null | undefined): string {
 // 装饰图片功能
 function updateImageProp(id: number, prop: keyof DecorativeImageProperties, value: any, key: string) {
   const images = props.configData[key] as DecorativeImageProperties[]
-  const index = images.findIndex(img => img.id === id)
+  const index = images.findIndex((img) => img.id === id)
   if (index !== -1) {
     const updatedImages = [...images]
     updatedImages[index] = { ...updatedImages[index], [prop]: value }
@@ -230,7 +256,7 @@ function updateImageProp(id: number, prop: keyof DecorativeImageProperties, valu
 
 function removeImage(id: number, key: string) {
   const images = props.configData[key] as DecorativeImageProperties[]
-  props.configData[key] = images.filter(img => img.id !== id)
+  props.configData[key] = images.filter((img) => img.id !== id)
   if (selectedImageId.value === id) {
     selectedImageId.value = null
   }
@@ -238,82 +264,211 @@ function removeImage(id: number, key: string) {
 
 function changeZIndex(id: number, direction: 'up' | 'down', key: string) {
   const images = props.configData[key] as DecorativeImageProperties[]
-  const index = images.findIndex(img => img.id === id)
+  const index = images.findIndex((img) => img.id === id)
   if (index === -1) return
   const newImages = [...images]
   if (direction === 'up' && index < newImages.length - 1) {
-    [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]]
+    ;[newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]]
   } else if (direction === 'down' && index > 0) {
-    [newImages[index], newImages[index - 1]] = [newImages[index - 1], newImages[index]]
+    ;[newImages[index], newImages[index - 1]] = [newImages[index - 1], newImages[index]]
   }
-  newImages.forEach((img, i) => img.zIndex = i + 1)
+  newImages.forEach((img, i) => (img.zIndex = i + 1))
   props.configData[key] = newImages
 }
 
 function renderDecorativeImages(key: string) {
   return h(NFlex, { vertical: true, size: 'large' }, () => [
     // 上传按钮
-    h(NUpload, {
-      'multiple': true,
-      'accept': 'image/*',
-      'showFileList': false,
-      'onUpdate:fileList': (uploadedFileList: UploadFileInfo[]) => {
-        if (uploadedFileList.length > 0) {
-          const filesToUpload = uploadedFileList.map(f => f.file).filter((f): f is File => f instanceof File)
-          if (filesToUpload.length > 0) {
-            // 不立即上传，而是存储起来等待提交时上传
-            if (!pendingDecorativeImages.value[key]) {
-              pendingDecorativeImages.value[key] = []
+    h(
+      NUpload,
+      {
+        multiple: true,
+        accept: 'image/*',
+        showFileList: false,
+        'onUpdate:fileList': (uploadedFileList: UploadFileInfo[]) => {
+          if (uploadedFileList.length > 0) {
+            const filesToUpload = uploadedFileList.map((f) => f.file).filter((f): f is File => f instanceof File)
+            if (filesToUpload.length > 0) {
+              // 不立即上传，而是存储起来等待提交时上传
+              if (!pendingDecorativeImages.value[key]) {
+                pendingDecorativeImages.value[key] = []
+              }
+              pendingDecorativeImages.value[key].push(...filesToUpload)
+              message.success(`已选择 ${filesToUpload.length} 个装饰图片，提交时会自动上传`)
             }
-            pendingDecorativeImages.value[key].push(...filesToUpload)
-            message.success(`已选择 ${filesToUpload.length} 个装饰图片，提交时会自动上传`)
           }
-        }
-        return []
+          return []
+        },
       },
-    }, { default: () => h(NButton, null, () => '添加装饰图片') }),
+      { default: () => h(NButton, null, () => '添加装饰图片') },
+    ),
 
     // 图片列表
     h(NScrollbar, { style: { maxHeight: '300px', marginTop: '10px' } }, () => {
-      const images = props.configData[key] as DecorativeImageProperties[] || []
-          return images.length > 0
+      const images = (props.configData[key] as DecorativeImageProperties[]) || []
+      return images.length > 0
         ? images.map((img: DecorativeImageProperties) => {
             const isSelected = selectedImageId.value === img.id
-            return h(NCard, {
-              key: img.id,
-              size: 'small',
-              hoverable: true,
-              style: { marginBottom: '10px', cursor: 'pointer', border: isSelected ? `2px solid ${themeVars.value.primaryColor}` : `1px solid ${themeVars.value.borderColor}` },
-              onClick: () => selectedImageId.value = img.id,
-            }, {
-              default: () => h(NFlex, { justify: 'space-between', align: 'center' }, () => [
-                h(NFlex, { align: 'center', size: 'small' }, () => [
-                  h('img', { src: img.path, style: { width: '40px', height: '40px', objectFit: 'contain', marginRight: '10px', backgroundColor: themeVars.value.inputColor } }),
-                  h('span', `ID: ${img.id}`),
-                ]),
-                h(NFlex, null, () => [
-                  h(NButton, { size: 'tiny', circle: true, secondary: true, title: '上移一层', onClick: (e: Event) => {
-                    e.stopPropagation(); changeZIndex(img.id, 'up', key)
-                  } }, { icon: () => h(NIcon, { component: ArrowUp20Filled }) }),
-                  h(NButton, { size: 'tiny', circle: true, secondary: true, title: '下移一层', onClick: (e: Event) => {
-                    e.stopPropagation(); changeZIndex(img.id, 'down', key)
-                  } }, { icon: () => h(NIcon, { component: ArrowDown20Filled }) }),
-                  h(NButton, { size: 'tiny', circle: true, type: 'error', ghost: true, title: '删除', onClick: (e: Event) => {
-                    e.stopPropagation(); removeImage(img.id, key)
-                  } }, { icon: () => h(NIcon, { component: Delete20Filled }) }),
-                ]),
-              ]),
-              footer: () => isSelected
-                ? h(NFlex, { vertical: true, size: 'small', style: { marginTop: '10px' } }, () => [
-                    h(NFlex, { align: 'center' }, () => [h('span', { style: { width: '50px' } }, 'X (%):'), h(NInputNumber, { 'value': img.x, 'size': 'small', 'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'x', v ?? 0, key), 'min': 0, 'max': 100, 'step': 1 })]),
-                    h(NFlex, { align: 'center' }, () => [h('span', { style: { width: '50px' } }, 'Y (%):'), h(NInputNumber, { 'value': img.y, 'size': 'small', 'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'y', v ?? 0, key), 'min': 0, 'max': 100, 'step': 1 })]),
-                    h(NFlex, { align: 'center' }, () => [h('span', { style: { width: '50px' } }, '宽度(%):'), h(NInputNumber, { 'value': img.width, 'size': 'small', 'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'width', v ?? 1, key), 'min': 1, 'step': 1 })]),
-                    h(NFlex, { align: 'center' }, () => [h('span', { style: { width: '50px' } }, '旋转(°):'), h(NInputNumber, { 'value': img.rotation, 'size': 'small', 'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'rotation', v ?? 0, key), 'min': -360, 'max': 360, 'step': 1 }), h(NSlider, { 'value': img.rotation, 'onUpdate:value': (v: number | number[]) => updateImageProp(img.id, 'rotation', Array.isArray(v) ? v[0] : v ?? 0, key), 'min': -180, 'max': 180, 'step': 1, 'style': { marginLeft: '10px', flexGrow: 1 } })]),
-                    h(NFlex, { align: 'center' }, () => [h('span', { style: { width: '50px' } }, '透明度:'), h(NInputNumber, { 'value': img.opacity, 'size': 'small', 'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'opacity', v ?? 0, key), 'min': 0, 'max': 1, 'step': 0.01 }), h(NSlider, { 'value': img.opacity, 'onUpdate:value': (v: number | number[]) => updateImageProp(img.id, 'opacity', Array.isArray(v) ? v[0] : v ?? 0, key), 'min': 0, 'max': 1, 'step': 0.01, 'style': { marginLeft: '10px', flexGrow: 1 } })]),
-                    h(NFlex, { align: 'center' }, () => [h('span', { style: { width: '50px' } }, '层级:'), h(NInputNumber, { value: img.zIndex, size: 'small', readonly: true })]),
-                  ])
-                : null,
-            })
+            return h(
+              NCard,
+              {
+                key: img.id,
+                size: 'small',
+                hoverable: true,
+                style: {
+                  marginBottom: '10px',
+                  cursor: 'pointer',
+                  border: isSelected
+                    ? `2px solid ${themeVars.value.primaryColor}`
+                    : `1px solid ${themeVars.value.borderColor}`,
+                },
+                onClick: () => (selectedImageId.value = img.id),
+              },
+              {
+                default: () =>
+                  h(NFlex, { justify: 'space-between', align: 'center' }, () => [
+                    h(NFlex, { align: 'center', size: 'small' }, () => [
+                      h('img', {
+                        src: img.path,
+                        style: {
+                          width: '40px',
+                          height: '40px',
+                          objectFit: 'contain',
+                          marginRight: '10px',
+                          backgroundColor: themeVars.value.inputColor,
+                        },
+                      }),
+                      h('span', `ID: ${img.id}`),
+                    ]),
+                    h(NFlex, null, () => [
+                      h(
+                        NButton,
+                        {
+                          size: 'tiny',
+                          circle: true,
+                          secondary: true,
+                          title: '上移一层',
+                          onClick: (e: Event) => {
+                            e.stopPropagation()
+                            changeZIndex(img.id, 'up', key)
+                          },
+                        },
+                        { icon: () => h(NIcon, { component: ArrowUp20Filled }) },
+                      ),
+                      h(
+                        NButton,
+                        {
+                          size: 'tiny',
+                          circle: true,
+                          secondary: true,
+                          title: '下移一层',
+                          onClick: (e: Event) => {
+                            e.stopPropagation()
+                            changeZIndex(img.id, 'down', key)
+                          },
+                        },
+                        { icon: () => h(NIcon, { component: ArrowDown20Filled }) },
+                      ),
+                      h(
+                        NButton,
+                        {
+                          size: 'tiny',
+                          circle: true,
+                          type: 'error',
+                          ghost: true,
+                          title: '删除',
+                          onClick: (e: Event) => {
+                            e.stopPropagation()
+                            removeImage(img.id, key)
+                          },
+                        },
+                        { icon: () => h(NIcon, { component: Delete20Filled }) },
+                      ),
+                    ]),
+                  ]),
+                footer: () =>
+                  isSelected
+                    ? h(NFlex, { vertical: true, size: 'small', style: { marginTop: '10px' } }, () => [
+                        h(NFlex, { align: 'center' }, () => [
+                          h('span', { style: { width: '50px' } }, 'X (%):'),
+                          h(NInputNumber, {
+                            value: img.x,
+                            size: 'small',
+                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'x', v ?? 0, key),
+                            min: 0,
+                            max: 100,
+                            step: 1,
+                          }),
+                        ]),
+                        h(NFlex, { align: 'center' }, () => [
+                          h('span', { style: { width: '50px' } }, 'Y (%):'),
+                          h(NInputNumber, {
+                            value: img.y,
+                            size: 'small',
+                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'y', v ?? 0, key),
+                            min: 0,
+                            max: 100,
+                            step: 1,
+                          }),
+                        ]),
+                        h(NFlex, { align: 'center' }, () => [
+                          h('span', { style: { width: '50px' } }, '宽度(%):'),
+                          h(NInputNumber, {
+                            value: img.width,
+                            size: 'small',
+                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'width', v ?? 1, key),
+                            min: 1,
+                            step: 1,
+                          }),
+                        ]),
+                        h(NFlex, { align: 'center' }, () => [
+                          h('span', { style: { width: '50px' } }, '旋转(°):'),
+                          h(NInputNumber, {
+                            value: img.rotation,
+                            size: 'small',
+                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'rotation', v ?? 0, key),
+                            min: -360,
+                            max: 360,
+                            step: 1,
+                          }),
+                          h(NSlider, {
+                            value: img.rotation,
+                            'onUpdate:value': (v: number | number[]) =>
+                              updateImageProp(img.id, 'rotation', Array.isArray(v) ? v[0] : (v ?? 0), key),
+                            min: -180,
+                            max: 180,
+                            step: 1,
+                            style: { marginLeft: '10px', flexGrow: 1 },
+                          }),
+                        ]),
+                        h(NFlex, { align: 'center' }, () => [
+                          h('span', { style: { width: '50px' } }, '透明度:'),
+                          h(NInputNumber, {
+                            value: img.opacity,
+                            size: 'small',
+                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'opacity', v ?? 0, key),
+                            min: 0,
+                            max: 1,
+                            step: 0.01,
+                          }),
+                          h(NSlider, {
+                            value: img.opacity,
+                            'onUpdate:value': (v: number | number[]) =>
+                              updateImageProp(img.id, 'opacity', Array.isArray(v) ? v[0] : (v ?? 0), key),
+                            min: 0,
+                            max: 1,
+                            step: 0.01,
+                            style: { marginLeft: '10px', flexGrow: 1 },
+                          }),
+                        ]),
+                        h(NFlex, { align: 'center' }, () => [
+                          h('span', { style: { width: '50px' } }, '层级:'),
+                          h(NInputNumber, { value: img.zIndex, size: 'small', readonly: true }),
+                        ]),
+                      ])
+                    : null,
+              },
+            )
           })
         : h(NEmpty, { description: '暂无装饰图片' })
     }),
@@ -347,7 +502,10 @@ onMounted(() => {
     v-if="!config || config.length === 0"
     description="此模板不支持配置"
   />
-  <NForm v-else :class="{ 'dynamic-form--fill': fillHeight }">
+  <NForm
+    v-else
+    :class="{ 'dynamic-form--fill': fillHeight }"
+  >
     <div class="dynamic-form__footer">
       <NButton
         type="primary"
@@ -414,7 +572,11 @@ onMounted(() => {
             :step="item.step"
             @update:value="configData[item.key] = $event"
           />
-          <NFlex v-else-if="item.type === 'boolean'" align="center" :size="6">
+          <NFlex
+            v-else-if="item.type === 'boolean'"
+            align="center"
+            :size="6"
+          >
             <NCheckbox
               :checked="configData[item.key]"
               @update:checked="configData[item.key] = $event"
@@ -426,7 +588,10 @@ onMounted(() => {
               placement="top"
             >
               <template #trigger>
-                <NIcon :component="Info24Filled" :depth="3" />
+                <NIcon
+                  :component="Info24Filled"
+                  :depth="3"
+                />
               </template>
               {{ item.description }}
             </NTooltip>
@@ -438,7 +603,7 @@ onMounted(() => {
             list-type="image-card"
             :default-upload="false"
             :max="item.fileLimit"
-            @update:file-list="file => OnFileListChange(item.key, file)"
+            @update:file-list="(file) => OnFileListChange(item.key, file)"
           >
             上传文件
           </NUpload>
@@ -466,9 +631,7 @@ onMounted(() => {
           indicator-placement="inside"
           :show-indicator="true"
         />
-        <NText v-if="totalFilesToUpload > 0">
-          {{ uploadedFilesCount }} / {{ totalFilesToUpload }} 个文件
-        </NText>
+        <NText v-if="totalFilesToUpload > 0"> {{ uploadedFilesCount }} / {{ totalFilesToUpload }} 个文件 </NText>
       </NFlex>
     </NModal>
   </NForm>

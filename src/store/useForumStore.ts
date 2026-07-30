@@ -1,4 +1,7 @@
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+
 import type {
   ForumCommentModel,
   ForumCommentSortTypes,
@@ -9,11 +12,9 @@ import type {
   ForumTopicModel,
   ForumTopicSortTypes,
 } from '@/api/models/forum'
-import { createNaiveUIApi } from '@/shared/utils'
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
 import { QueryGetAPI, QueryGetPaginationAPI, QueryPostAPI } from '@/api/query'
 import { FORUM_API_URL } from '@/shared/config'
+import { createNaiveUIApi } from '@/shared/utils'
 
 export const useForumStore = defineStore('forum', () => {
   const { message } = createNaiveUIApi(['message'])
@@ -179,7 +180,7 @@ export const useForumStore = defineStore('forum', () => {
       isLoading.value = false
     }
   }
-  async function PostComment(model: { topic: number, content: string }, token: string) {
+  async function PostComment(model: { topic: number; content: string }, token: string) {
     try {
       isLoading.value = true
       const data = await QueryPostAPI<ForumCommentModel>(`${FORUM_API_URL}post-comment`, model, [['Turnstile', token]])
@@ -199,7 +200,7 @@ export const useForumStore = defineStore('forum', () => {
       isLoading.value = false
     }
   }
-  async function PostReply(model: { comment: number, content: string, replyTo?: number }, token: string) {
+  async function PostReply(model: { comment: number; content: string; replyTo?: number }, token: string) {
     try {
       isLoading.value = true
       const data = await QueryPostAPI<ForumCommentModel>(`${FORUM_API_URL}post-reply`, model, [['Turnstile', token]])

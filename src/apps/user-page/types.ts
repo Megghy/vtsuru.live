@@ -1,4 +1,10 @@
-import type { BlockPageProject, PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundScrimMode, PageBackgroundType } from './block/schema'
+import type {
+  BlockPageProject,
+  PageBackgroundBlurMode,
+  PageBackgroundImageFit,
+  PageBackgroundScrimMode,
+  PageBackgroundType,
+} from './block/schema'
 import type { UserPageThemeConfig } from './themeConfig'
 
 export type UserPageRenderMode = 'legacy' | 'block' | 'contrib'

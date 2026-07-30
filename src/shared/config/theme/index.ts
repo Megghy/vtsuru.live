@@ -1,8 +1,8 @@
+import { brand, error, hexToRgb, info, pickByMode, rgba, success, warning } from './colors'
 /**
  * 主题入口：聚合 colors / tokens / overrides，并产出可在 .vue / .ts 中直接引用的 CSS 变量。
  */
 import type { ThemeTokens } from './tokens'
-import { brand, error, hexToRgb, info, pickByMode, rgba, success, warning } from './colors'
 
 export { brand, error, hexToRgb, info, neutral, pickByMode, rgba, success, warning } from './colors'
 export { getThemeOverrides } from './overrides'

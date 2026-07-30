@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
-import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { CloudAdd20Filled, MusicNote224Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
 import { NButton, NEmpty, NIcon, NInput, NTag, NTooltip } from 'naive-ui'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { GetGuardColor } from '@/shared/utils'
 import { useScopedGlobalStyle } from '@/composables/useScopedGlobalStyle'
+import type { SongListConfigType } from '@/shared/types/TemplateTypes'
+import { GetGuardColor } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
+
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -20,7 +22,8 @@ const accountInfo = useAccount()
 const biliAuth = useBiliAuth()
 
 // 沉浸式: 注入临时全局样式, 让站点侧栏与右侧内容融合, 并铺设贯穿整个内容区的模糊封面背景
-useScopedGlobalStyle(`
+useScopedGlobalStyle(
+  `
 html.vtsuru-immersive-songlist .main-layout-body { position: relative; }
 html.vtsuru-immersive-songlist .main-layout-body::before {
   content: '';
@@ -47,7 +50,9 @@ html.vtsuru-immersive-songlist .viewer-page-content {
   background: transparent !important;
   padding-top: 8px !important;
 }
-`, 'vtsuru-immersive-songlist')
+`,
+  'vtsuru-immersive-songlist',
+)
 
 const searchKeyword = ref('')
 const selectedSong = ref<SongsInfo>()
@@ -79,12 +84,9 @@ const filteredSongs = computed<SongsInfo[]>(() => {
   const keyword = searchKeyword.value.trim().toLowerCase()
   if (!keyword) return data
   return data.filter((song) => {
-    const haystack = [
-      song.name,
-      song.translateName ?? '',
-      song.author?.join(' ') ?? '',
-      song.tags?.join(' ') ?? '',
-    ].join(' ').toLowerCase()
+    const haystack = [song.name, song.translateName ?? '', song.author?.join(' ') ?? '', song.tags?.join(' ') ?? '']
+      .join(' ')
+      .toLowerCase()
     return haystack.includes(keyword)
   })
 })
@@ -95,9 +97,13 @@ const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
 })
 
 // 默认选中第一首
-watch(filteredSongs, (songs) => {
-  if (!selectedSong.value && songs.length) selectedSong.value = songs[0]
-}, { immediate: true })
+watch(
+  filteredSongs,
+  (songs) => {
+    if (!selectedSong.value && songs.length) selectedSong.value = songs[0]
+  },
+  { immediate: true },
+)
 
 function selectSong(song: SongsInfo) {
   selectedSong.value = song
@@ -107,7 +113,9 @@ function requestSong(song: SongsInfo) {
   if (isSelf.value) return
   requestingKey.value = song.key
   emits('requestSong', song)
-  window.setTimeout(() => { requestingKey.value = '' }, 2000)
+  window.setTimeout(() => {
+    requestingKey.value = ''
+  }, 2000)
 }
 </script>
 
@@ -124,7 +132,7 @@ function requestSong(song: SongsInfo) {
           :src="selectedSong.cover"
           :alt="selectedSong.name"
           referrerpolicy="no-referrer"
-        >
+        />
         <NIcon
           v-else
           :component="MusicNote224Filled"
@@ -284,27 +292,31 @@ function requestSong(song: SongsInfo) {
                 :alt="song.name"
                 loading="lazy"
                 referrerpolicy="no-referrer"
-              >
+              />
               <span v-else>{{ song.name.charAt(0) }}</span>
             </div>
             <div class="lib-main">
               <span
                 class="lib-name"
                 :title="song.name"
-              >{{ song.name }}</span>
+                >{{ song.name }}</span
+              >
               <span
                 v-if="song.author?.length"
                 class="lib-author"
-              >{{ song.author.join(' / ') }}</span>
+                >{{ song.author.join(' / ') }}</span
+              >
             </div>
             <span
               v-if="singingSongKeySet.has(song.key)"
               class="lib-flag singing"
-            >演唱中</span>
+              >演唱中</span
+            >
             <span
               v-else-if="queuedSongKeySet.has(song.key)"
               class="lib-flag queued"
-            >排队</span>
+              >排队</span
+            >
             <NTooltip v-if="!isSelf">
               <template #trigger>
                 <NButton

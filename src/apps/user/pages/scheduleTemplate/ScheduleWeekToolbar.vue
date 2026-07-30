@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { ScheduleWeekInfo } from '@/api/api-models'
-import type { SelectOption, SelectProps } from 'naive-ui'
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
+import type { SelectOption, SelectProps } from 'naive-ui'
 import { NButton, NSelect, useMessage } from 'naive-ui'
 import { computed } from 'vue'
+
+import type { ScheduleWeekInfo } from '@/api/api-models'
 
 const props = defineProps<{
   weeks: ScheduleWeekInfo[]
@@ -18,9 +19,9 @@ const message = useMessage()
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' })
 
 const options = computed<SelectOption[]>(() => {
-  const showYear = new Set(props.weeks.map(item => item.year)).size > 1
-  return [...props.weeks]
-    .sort((left, right) => left.year - right.year || left.week - right.week)
+  const showYear = new Set(props.weeks.map((item) => item.year)).size > 1
+  return props.weeks
+    .toSorted((left, right) => left.year - right.year || left.week - right.week)
     .map((item) => {
       const start = getISOWeekStart(item.year, item.week)
       const end = new Date(start)
@@ -37,7 +38,7 @@ const options = computed<SelectOption[]>(() => {
     })
 })
 
-const selectedIndex = computed(() => options.value.findIndex(option => option.value === selectedWeek.value))
+const selectedIndex = computed(() => options.value.findIndex((option) => option.value === selectedWeek.value))
 const hasPreviousWeek = computed(() => selectedIndex.value > 0)
 const hasNextWeek = computed(() => selectedIndex.value >= 0 && selectedIndex.value < options.value.length - 1)
 
@@ -59,7 +60,7 @@ async function saveScheduleImage() {
       allowTaint: true,
       scale: window.devicePixelRatio,
     })
-    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1))
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1))
     if (!blob) throw new Error('图片生成失败')
     saveAs(blob, `${props.fileName}.png`)
   } catch (error) {
@@ -131,7 +132,10 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       placeholder="选择周次"
       size="small"
     />
-    <span v-else class="schedule-week-toolbar__current">
+    <span
+      v-else
+      class="schedule-week-toolbar__current"
+    >
       暂无日程
     </span>
     <button
@@ -159,11 +163,27 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
 <style scoped>
 .schedule-week-toolbar {
   --schedule-toolbar-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
-  --schedule-toolbar-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted))));
-  --schedule-toolbar-bg: var(--vtsuru-block-bg-muted, var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted))));
-  --schedule-toolbar-control-bg: var(--user-page-theme-surface-bg-hover, color-mix(in srgb, var(--schedule-toolbar-bg) 86%, var(--schedule-toolbar-fg) 14%));
-  --schedule-toolbar-control-bg-hover: color-mix(in srgb, var(--schedule-toolbar-control-bg) 88%, var(--schedule-toolbar-accent) 12%);
-  --schedule-toolbar-border: var(--vtsuru-block-border, var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border))));
+  --schedule-toolbar-muted: var(
+    --vtsuru-block-fg-muted,
+    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)))
+  );
+  --schedule-toolbar-bg: var(
+    --vtsuru-block-bg-muted,
+    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted)))
+  );
+  --schedule-toolbar-control-bg: var(
+    --user-page-theme-surface-bg-hover,
+    color-mix(in srgb, var(--schedule-toolbar-bg) 86%, var(--schedule-toolbar-fg) 14%)
+  );
+  --schedule-toolbar-control-bg-hover: color-mix(
+    in srgb,
+    var(--schedule-toolbar-control-bg) 88%,
+    var(--schedule-toolbar-accent) 12%
+  );
+  --schedule-toolbar-border: var(
+    --vtsuru-block-border,
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+  );
   --schedule-toolbar-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
   --schedule-toolbar-focus: color-mix(in srgb, var(--schedule-toolbar-accent) 24%, transparent);
 
@@ -204,7 +224,10 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-border);
   border-radius: var(--vtsuru-page-radius);
   cursor: pointer;
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .schedule-week-toolbar__step:hover:not(:disabled) {

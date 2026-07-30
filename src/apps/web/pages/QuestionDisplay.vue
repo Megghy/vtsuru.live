@@ -1,21 +1,50 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
-import type { Setting_QuestionDisplay } from '@/api/api-models'
-import { ArrowCircleLeft12Filled, ArrowCircleRight12Filled, Info24Filled, TextAlignCenter16Filled, TextAlignLeft16Filled, TextAlignRight16Filled, } from '@vicons/fluent'
+import {
+  ArrowCircleLeft12Filled,
+  ArrowCircleRight12Filled,
+  Info24Filled,
+  TextAlignCenter16Filled,
+  TextAlignLeft16Filled,
+  TextAlignRight16Filled,
+} from '@vicons/fluent'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
 import { useDebounceFn, useElementSize } from '@vueuse/core'
 import {
-  NButton, NCard, NCheckbox, NColorPicker, NDivider, NDrawer, NDrawerContent, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NRadioButton, NRadioGroup, NScrollbar, NSelect, NTooltip, useMessage, useThemeVars } from 'naive-ui';
+  NButton,
+  NCard,
+  NCheckbox,
+  NColorPicker,
+  NDivider,
+  NDrawer,
+  NDrawerContent,
+  NFlex,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NModal,
+  NRadioButton,
+  NRadioGroup,
+  NScrollbar,
+  NSelect,
+  NTooltip,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+
 import { SaveSetting, useAccount } from '@/api/account'
+import type { Setting_QuestionDisplay } from '@/api/api-models'
 import { QuestionDisplayAlign } from '@/api/api-models'
 import QuestionItem from '@/components/QuestionItem.vue'
 import QuestionItems from '@/components/QuestionItems.vue'
+import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { CURRENT_HOST } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { useWebRTC } from '@/store/useRTC'
-import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
-import { usePersistedStorage } from '@/shared/storage/persist'
 
 const message = useMessage()
 const themeVars = useThemeVars()
@@ -32,7 +61,7 @@ const isLoading = ref(false)
 
 const cardRef = ref<HTMLElement>()
 const cardSize = useElementSize(cardRef)
-const savedCardSize = usePersistedStorage<{ width: number, height: number }>('Settings.QuestionDisplay.CardSize', {
+const savedCardSize = usePersistedStorage<{ width: number; height: number }>('Settings.QuestionDisplay.CardSize', {
   width: 400,
   height: 400,
 })
@@ -46,7 +75,7 @@ watch([cardSize.width, cardSize.height], () => {
     debouncedSize()
   }
 })
-const scrollInfo = ref<{ clientHeight: number, scrollHeight: number, scrollTop: number }>()
+const scrollInfo = ref<{ clientHeight: number; scrollHeight: number; scrollTop: number }>()
 const debouncedScroll = useDebounceFn(() => {
   rtc?.send('function.question.sync-scroll', scrollInfo.value)
 }, 200)
@@ -83,7 +112,7 @@ async function updateSettings() {
     message.success('完成')
   }
 }
-const fontsOptions = usePersistedStorage<{ label: string, value: string }[]>('Settings.Fonts', [])
+const fontsOptions = usePersistedStorage<{ label: string; value: string }[]>('Settings.Fonts', [])
 async function loadFonts() {
   if ('queryLocalFonts' in window) {
     // @ts-expect-error 不知道为啥不存在
@@ -106,7 +135,7 @@ async function loadFonts() {
     message.error('你的浏览器不支持获取字体列表')
   }
 }
-function syncScroll(value: { clientHeight: number, scrollHeight: number, scrollTop: number }) {
+function syncScroll(value: { clientHeight: number; scrollHeight: number; scrollTop: number }) {
   if (!setting.value.syncScroll) {
     return
   }
@@ -118,7 +147,7 @@ onMounted(() => {
   useQB.GetRecieveQAInfo()
 
   useQB.displayQuestion = useQB.recieveQuestions.find(
-    s => s.id == accountInfo.value?.settings.questionDisplay.currentQuestion,
+    (s) => s.id == accountInfo.value?.settings.questionDisplay.currentQuestion,
   )
 })
 </script>
@@ -161,12 +190,8 @@ onMounted(() => {
           >
             刷新
           </NButton>
-          <NCheckbox v-model:checked="useQB.onlyFavorite">
-            只显示收藏
-          </NCheckbox>
-          <NCheckbox v-model:checked="useQB.onlyUnread">
-            只显示未读
-          </NCheckbox>
+          <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
+          <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>
         </NFlex>
       </NCard>
       <template v-if="useQB.displayQuestion">
@@ -198,7 +223,7 @@ onMounted(() => {
           </template>
           <QuestionItem
             :item="useQB.displayQuestion"
-            style="max-height: 200px;overflow-y: auto"
+            style="max-height: 200px; overflow-y: auto"
           />
         </NCard>
         <NDivider style="margin: 10px 0 10px 0" />
@@ -218,7 +243,8 @@ onMounted(() => {
                   >
                     <template #icon>
                       <NIcon
-                        :component="item.id !== useQB.displayQuestion?.id ? ArrowCircleRight12Filled : ArrowCircleLeft12Filled
+                        :component="
+                          item.id !== useQB.displayQuestion?.id ? ArrowCircleRight12Filled : ArrowCircleLeft12Filled
                         "
                       />
                     </template>
@@ -261,7 +287,7 @@ onMounted(() => {
         </QuestionItems>
       </NScrollbar>
     </NFlex>
-    <NCard style="min-height: 600px; min-width: 50vw;">
+    <NCard style="min-height: 600px; min-width: 50vw">
       <NFlex
         vertical
         :size="0"
@@ -476,9 +502,10 @@ onMounted(() => {
                   :modes="['hex']"
                   :actions="['clear', 'confirm']"
                   :show-alpha="false"
-                  @update:value="(c: string | null | undefined) => {
-                    setting.fontColor = c?.replace('#', '')
-                  }
+                  @update:value="
+                    (c: string | null | undefined) => {
+                      setting.fontColor = c?.replace('#', '')
+                    }
                   "
                   @confirm="updateSettings"
                 />
@@ -491,9 +518,10 @@ onMounted(() => {
                   :modes="['hex']"
                   :actions="['clear', 'confirm']"
                   :show-alpha="false"
-                  @update:value="(c: string | null | undefined) => {
-                    setting.backgroundColor = c?.replace('#', '')
-                  }
+                  @update:value="
+                    (c: string | null | undefined) => {
+                      setting.backgroundColor = c?.replace('#', '')
+                    }
                   "
                   @confirm="updateSettings"
                 />
@@ -506,9 +534,10 @@ onMounted(() => {
                   :modes="['hex']"
                   :actions="['clear', 'confirm']"
                   :show-alpha="false"
-                  @update:value="(c: string | null | undefined) => {
-                    setting.borderColor = c?.replace('#', '')
-                  }
+                  @update:value="
+                    (c: string | null | undefined) => {
+                      setting.borderColor = c?.replace('#', '')
+                    }
                   "
                   @confirm="updateSettings"
                 />
@@ -580,9 +609,10 @@ onMounted(() => {
                 :modes="['hex']"
                 :actions="['clear', 'confirm']"
                 :show-alpha="false"
-                @update:value="(c: string | null | undefined) => {
-                  setting.nameFontColor = c?.replace('#', '')
-                }
+                @update:value="
+                  (c: string | null | undefined) => {
+                    setting.nameFontColor = c?.replace('#', '')
+                  }
                 "
                 @confirm="updateSettings"
               />

@@ -1,8 +1,25 @@
 <script setup lang="ts">
-import { UploadStage } from '@/shared/services/fileUpload'
 import { CopyOutline, RefreshOutline, TrashOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NEmpty, NFlex, NIcon, NModal, NScrollbar, NSpin, NTabPane, NTabs, NTag, NText, NTooltip, useDialog } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NEmpty,
+  NFlex,
+  NIcon,
+  NModal,
+  NScrollbar,
+  NSpin,
+  NTabPane,
+  NTabs,
+  NTag,
+  NText,
+  NTooltip,
+  useDialog,
+} from 'naive-ui'
 import { computed, inject, reactive, watch } from 'vue'
+
+import { UploadStage } from '@/shared/services/fileUpload'
+
 import { UserPageEditorKey } from '../context'
 import type { BuilderResource } from '../useBuilderResources'
 import { useBuilderResources } from '../useBuilderResources'
@@ -20,14 +37,18 @@ const resources = useBuilderResources({
 })
 
 const uploadAlertType = computed(() => {
-  if (editor.uploadQueue.value.some(item => item.stage === UploadStage.Failed)) return 'error'
+  if (editor.uploadQueue.value.some((item) => item.stage === UploadStage.Failed)) return 'error'
   if (editor.isUploading.value) return 'info'
   return 'success'
 })
 
-watch(show, (visible) => {
-  if (visible) void resources.loadResources()
-}, { immediate: true })
+watch(
+  show,
+  (visible) => {
+    if (visible) void resources.loadResources()
+  },
+  { immediate: true },
+)
 
 function isImagePath(path?: string) {
   const normalized = path?.toLowerCase().split(/[?#]/, 1)[0] ?? ''
@@ -83,26 +104,55 @@ function confirmDelete(resource: BuilderResource) {
     style="width: 900px; max-width: 95vw"
     :auto-focus="false"
   >
-    <NFlex vertical size="large">
-      <NAlert v-if="editor.uploadQueue.value.length" :type="uploadAlertType" :show-icon="true">
-        <NFlex vertical size="small">
-          <NFlex v-for="item in editor.uploadQueue.value" :key="item.name" align="center" justify="space-between">
+    <NFlex
+      vertical
+      size="large"
+    >
+      <NAlert
+        v-if="editor.uploadQueue.value.length"
+        :type="uploadAlertType"
+        :show-icon="true"
+      >
+        <NFlex
+          vertical
+          size="small"
+        >
+          <NFlex
+            v-for="item in editor.uploadQueue.value"
+            :key="item.name"
+            align="center"
+            justify="space-between"
+          >
             <NText>{{ item.name }}</NText>
-            <NTag :type="uploadStageType(item.stage)" size="small">
+            <NTag
+              :type="uploadStageType(item.stage)"
+              size="small"
+            >
               {{ item.stage }}
             </NTag>
           </NFlex>
         </NFlex>
       </NAlert>
 
-      <NFlex justify="space-between" align="center">
+      <NFlex
+        justify="space-between"
+        align="center"
+      >
         <NText depth="3">
-          服务器资源 {{ resources.resources.value.length - resources.missingCount.value }} 个，引用中 {{ resources.usedCount.value }} 个<template v-if="resources.missingCount.value">
+          服务器资源 {{ resources.resources.value.length - resources.missingCount.value }} 个，引用中
+          {{ resources.usedCount.value }} 个<template v-if="resources.missingCount.value">
             ，失效引用 {{ resources.missingCount.value }} 个
           </template>
         </NText>
-        <NFlex :wrap="false" size="small">
-          <NButton size="small" secondary @click="editor.normalizeRichTextImagesFile">
+        <NFlex
+          :wrap="false"
+          size="small"
+        >
+          <NButton
+            size="small"
+            secondary
+            @click="editor.normalizeRichTextImagesFile"
+          >
             整理富文本引用
           </NButton>
           <NTooltip>
@@ -125,22 +175,57 @@ function confirmDelete(resource: BuilderResource) {
         </NFlex>
       </NFlex>
 
-      <NTabs v-model:value="resources.currentView.value" type="segment" size="small" animated>
-        <NTabPane name="all" :tab="`全部 ${resources.resources.value.length}`" />
-        <NTabPane name="used" :tab="`引用中 ${resources.usedCount.value}`" />
-        <NTabPane name="unused" :tab="`未使用 ${resources.unusedCount.value}`" />
+      <NTabs
+        v-model:value="resources.currentView.value"
+        type="segment"
+        size="small"
+        animated
+      >
+        <NTabPane
+          name="all"
+          :tab="`全部 ${resources.resources.value.length}`"
+        />
+        <NTabPane
+          name="used"
+          :tab="`引用中 ${resources.usedCount.value}`"
+        />
+        <NTabPane
+          name="unused"
+          :tab="`未使用 ${resources.unusedCount.value}`"
+        />
       </NTabs>
 
-      <NAlert v-if="resources.loadError.value" type="error" :show-icon="true">
+      <NAlert
+        v-if="resources.loadError.value"
+        type="error"
+        :show-icon="true"
+      >
         {{ resources.loadError.value }}
       </NAlert>
 
       <NSpin :show="resources.isLoading.value">
         <NScrollbar style="max-height: 62vh">
-          <NFlex v-if="resources.visibleResources.value.length" vertical size="small">
-            <div v-for="file in resources.visibleResources.value" :key="file.id" class="resource-row">
-              <NFlex align="center" justify="space-between" :wrap="false" style="gap: 12px">
-                <NFlex align="center" :wrap="false" style="gap: 10px; min-width: 0">
+          <NFlex
+            v-if="resources.visibleResources.value.length"
+            vertical
+            size="small"
+          >
+            <div
+              v-for="file in resources.visibleResources.value"
+              :key="file.id"
+              class="resource-row"
+            >
+              <NFlex
+                align="center"
+                justify="space-between"
+                :wrap="false"
+                style="gap: 12px"
+              >
+                <NFlex
+                  align="center"
+                  :wrap="false"
+                  style="gap: 10px; min-width: 0"
+                >
                   <img
                     v-if="isImagePath(file.path) && !file.missing"
                     :src="file.path"
@@ -150,37 +235,66 @@ function confirmDelete(resource: BuilderResource) {
                     decoding="async"
                     class="resource-thumbnail"
                     @load="readImageDimensions(file.id, $event)"
+                  />
+                  <div
+                    v-else
+                    class="resource-thumbnail resource-placeholder"
                   >
-                  <div v-else class="resource-thumbnail resource-placeholder">
                     #{{ file.id }}
                   </div>
                   <div class="resource-main">
-                    <NFlex align="center" size="small">
+                    <NFlex
+                      align="center"
+                      size="small"
+                    >
                       <NText strong>
                         {{ file.name || `资源 #${file.id}` }}
                       </NText>
-                      <NTag v-if="file.missing" type="error" size="small">
+                      <NTag
+                        v-if="file.missing"
+                        type="error"
+                        size="small"
+                      >
                         文件已失效
                       </NTag>
-                      <NTag v-else :type="file.locations.length ? 'success' : 'default'" size="small">
+                      <NTag
+                        v-else
+                        :type="file.locations.length ? 'success' : 'default'"
+                        size="small"
+                      >
                         {{ file.locations.length ? `引用 ${file.locations.length} 处` : '未使用' }}
                       </NTag>
                     </NFlex>
-                    <NText depth="3" class="resource-meta">
-                      #{{ file.id }} · {{ formatBytes(file.size) }}<template v-if="imageDimensions[file.id]">
-                        · {{ imageDimensions[file.id] }}
-                      </template>
+                    <NText
+                      depth="3"
+                      class="resource-meta"
+                    >
+                      #{{ file.id }} · {{ formatBytes(file.size)
+                      }}<template v-if="imageDimensions[file.id]"> · {{ imageDimensions[file.id] }} </template>
                     </NText>
-                    <NText depth="3" class="resource-path">
+                    <NText
+                      depth="3"
+                      class="resource-path"
+                    >
                       {{ file.path || '无公开地址' }}
                     </NText>
                   </div>
                 </NFlex>
 
-                <NFlex v-if="!file.missing" :wrap="false" size="small">
+                <NFlex
+                  v-if="!file.missing"
+                  :wrap="false"
+                  size="small"
+                >
                   <NTooltip v-if="file.path">
                     <template #trigger>
-                      <NButton circle secondary size="small" aria-label="复制资源链接" @click="copyResourcePath(file.path)">
+                      <NButton
+                        circle
+                        secondary
+                        size="small"
+                        aria-label="复制资源链接"
+                        @click="copyResourcePath(file.path)"
+                      >
                         <template #icon>
                           <NIcon><CopyOutline /></NIcon>
                         </template>
@@ -209,12 +323,19 @@ function confirmDelete(resource: BuilderResource) {
                 </NFlex>
               </NFlex>
 
-              <NText v-if="file.locations.length" depth="3" class="resource-locations">
+              <NText
+                v-if="file.locations.length"
+                depth="3"
+                class="resource-locations"
+              >
                 {{ file.locations.join('；') }}
               </NText>
             </div>
           </NFlex>
-          <NEmpty v-else-if="!resources.isLoading.value" description="当前分类没有资源" />
+          <NEmpty
+            v-else-if="!resources.isLoading.value"
+            description="当前分类没有资源"
+          />
         </NScrollbar>
       </NSpin>
     </NFlex>

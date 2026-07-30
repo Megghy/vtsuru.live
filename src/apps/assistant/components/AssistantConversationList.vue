@@ -2,6 +2,7 @@
 import { Add16Regular, Edit16Regular, Delete16Regular, Search16Regular } from '@vicons/fluent'
 import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSpin, useDialog } from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useAssistantStore } from '../store/useAssistantStore'
 
 const store = useAssistantStore()
@@ -15,7 +16,7 @@ const keyword = ref('')
 const filteredConversations = computed(() => {
   const kw = keyword.value.trim().toLowerCase()
   if (!kw) return store.conversations
-  return store.conversations.filter(c => c.title.toLowerCase().includes(kw))
+  return store.conversations.filter((c) => c.title.toLowerCase().includes(kw))
 })
 
 function startRename(id: number, title: string) {
@@ -53,7 +54,12 @@ function onScroll(e: Event) {
 
 <template>
   <div class="conv-list">
-    <NButton class="conv-list__new" dashed block @click="store.newConversation">
+    <NButton
+      class="conv-list__new"
+      dashed
+      block
+      @click="store.newConversation"
+    >
       <template #icon>
         <NIcon :component="Add16Regular" />
       </template>
@@ -72,9 +78,21 @@ function onScroll(e: Event) {
       </template>
     </NInput>
 
-    <NScrollbar class="conv-list__scroll" @scroll="onScroll">
-      <NSpin v-if="store.conversationsLoading && !store.conversations.length" size="small" class="conv-list__spin" />
-      <NEmpty v-else-if="!filteredConversations.length" size="small" :description="keyword.trim() ? '无匹配会话' : '暂无历史'" class="conv-list__empty" />
+    <NScrollbar
+      class="conv-list__scroll"
+      @scroll="onScroll"
+    >
+      <NSpin
+        v-if="store.conversationsLoading && !store.conversations.length"
+        size="small"
+        class="conv-list__spin"
+      />
+      <NEmpty
+        v-else-if="!filteredConversations.length"
+        size="small"
+        :description="keyword.trim() ? '无匹配会话' : '暂无历史'"
+        class="conv-list__empty"
+      />
 
       <div
         v-for="conv in filteredConversations"
@@ -94,13 +112,29 @@ function onScroll(e: Event) {
         />
         <template v-else>
           <span class="conv-item__title">{{ conv.title }}</span>
-          <span class="conv-item__actions" @click.stop>
-            <NButton size="tiny" quaternary circle title="重命名" @click="startRename(conv.id, conv.title)">
+          <span
+            class="conv-item__actions"
+            @click.stop
+          >
+            <NButton
+              size="tiny"
+              quaternary
+              circle
+              title="重命名"
+              @click="startRename(conv.id, conv.title)"
+            >
               <template #icon>
                 <NIcon :component="Edit16Regular" />
               </template>
             </NButton>
-            <NButton size="tiny" quaternary circle type="error" title="删除" @click="confirmDelete(conv.id, conv.title)">
+            <NButton
+              size="tiny"
+              quaternary
+              circle
+              type="error"
+              title="删除"
+              @click="confirmDelete(conv.id, conv.title)"
+            >
               <template #icon>
                 <NIcon :component="Delete16Regular" />
               </template>
@@ -109,30 +143,62 @@ function onScroll(e: Event) {
         </template>
       </div>
 
-      <NSpin v-if="store.conversationsLoadingMore" size="small" class="conv-list__more-spin" />
+      <NSpin
+        v-if="store.conversationsLoadingMore"
+        size="small"
+        class="conv-list__more-spin"
+      />
     </NScrollbar>
   </div>
 </template>
 
 <style scoped>
-.conv-list { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 8px; }
-.conv-list__new { flex: 0 0 auto; }
-.conv-list__search { flex: 0 0 auto; }
-.conv-list__scroll { flex: 1 1 0; min-height: 0; }
-.conv-list__spin, .conv-list__empty { margin-top: 24px; }
-.conv-list__more-spin { display: flex; justify-content: center; padding: 8px 0; }
+.conv-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 8px;
+}
+.conv-list__new {
+  flex: 0 0 auto;
+}
+.conv-list__search {
+  flex: 0 0 auto;
+}
+.conv-list__scroll {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.conv-list__spin,
+.conv-list__empty {
+  margin-top: 24px;
+}
+.conv-list__more-spin {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
 .conv-item {
   --conv-item-bg: transparent;
   --conv-item-text: var(--vtsuru-fg, var(--vtsuru-fg));
   --conv-item-ring: transparent;
 
-  display: flex; align-items: center; gap: 4px;
-  padding: 7px 8px; margin-bottom: 2px; border-radius: 8px;
-  cursor: pointer; font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 8px;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
   background: var(--conv-item-bg);
   color: var(--conv-item-text);
   box-shadow: inset 0 0 0 1px var(--conv-item-ring);
-  transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    color 0.15s;
 }
 .conv-item:hover {
   --conv-item-bg: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.1));
@@ -142,10 +208,19 @@ function onScroll(e: Event) {
   --conv-item-ring: var(--vtsuru-brand-tint, rgba(35, 173, 229, 0.16));
 }
 .conv-item__title {
-  flex: 1 1 0; min-width: 0;
+  flex: 1 1 0;
+  min-width: 0;
   color: inherit;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.conv-item__actions { flex: 0 0 auto; display: none; align-items: center; }
-.conv-item:hover .conv-item__actions { display: flex; }
+.conv-item__actions {
+  flex: 0 0 auto;
+  display: none;
+  align-items: center;
+}
+.conv-item:hover .conv-item__actions {
+  display: flex;
+}
 </style>

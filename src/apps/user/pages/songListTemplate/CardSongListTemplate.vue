@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import type { SongsInfo } from '@/api/api-models'
-import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { CloudAdd20Filled } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
-import {
-  NButton, NEllipsis, NEmpty, NIcon, NInput, NFlex, NTag, NText, NTooltip } from 'naive-ui';
+import { NButton, NEllipsis, NEmpty, NIcon, NInput, NFlex, NTag, NText, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
-import { useBiliAuth } from '@/store/useBiliAuth'
+import type { SongsInfo } from '@/api/api-models'
+import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { GetGuardColor } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
+
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -94,9 +95,7 @@ function getMetaText(song: SongsInfo) {
       </NButton>
     </div>
 
-    <div class="count-row">
-      共 {{ filteredSongs.length }} 首歌曲
-    </div>
+    <div class="count-row">共 {{ filteredSongs.length }} 首歌曲</div>
 
     <NEmpty
       v-if="!data || filteredSongs.length === 0"
@@ -114,7 +113,7 @@ function getMetaText(song: SongsInfo) {
         class="song-card"
         :class="{
           'is-active': activeSongKeySet.has(song.key),
-          'is-singing': singingSongKeySet.has(song.key)
+          'is-singing': singingSongKeySet.has(song.key),
         }"
       >
         <div class="card-top">
@@ -513,8 +512,13 @@ html.dark .song-card:hover {
 }
 
 @keyframes pulse-singing {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .request-button {

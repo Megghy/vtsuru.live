@@ -1,21 +1,47 @@
 <script setup lang="ts">
-import type { LotteryUserInfo } from '@/api/api-models'
-import { usePersistedStorage } from '@/shared/storage/persist'
+import { Games24Filled, History24Filled, Trophy24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { List } from 'linqts'
 import {
-  NAvatar, NButton, NCard, NCheckbox, NCollapseTransition, NCountdown, NDivider,
-  NEmpty, NGrid, NGridItem, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber,
-  NList, NListItem, NModal, NRadioButton, NRadioGroup, NScrollbar, NFlex, NStatistic,
-  NTag, NText, NTime, NTooltip, useMessage, useNotification,
+  NAvatar,
+  NButton,
+  NCard,
+  NCheckbox,
+  NCollapseTransition,
+  NCountdown,
+  NDivider,
+  NEmpty,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NList,
+  NListItem,
+  NModal,
+  NRadioButton,
+  NRadioGroup,
+  NScrollbar,
+  NFlex,
+  NStatistic,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+  useMessage,
+  useNotification,
 } from 'naive-ui'
-import { Games24Filled, History24Filled, Trophy24Filled } from '@vicons/fluent'
 import { computed, h, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
+
+import type { LotteryUserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
-import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/shared/config'
-import { NavigateToNewTab } from '@/shared/utils'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
+import { NavigateToNewTab } from '@/shared/utils'
 
 interface TempLotteryResponseModel {
   users: LotteryUserInfo[]
@@ -88,12 +114,12 @@ const resultUsers = ref<LotteryUserInfo[]>()
 const eliminatedIds = ref<Set<number>>(new Set())
 // 当前高亮滚动的用户 uId, 营造"正在抽取"效果
 const rollingId = ref<number>()
-const winnerIds = computed(() => new Set(resultUsers.value?.map(u => u.uId) ?? []))
+const winnerIds = computed(() => new Set(resultUsers.value?.map((u) => u.uId) ?? []))
 
 const commentUsers = ref<TempLotteryResponseModel>()
 const forwardUsers = ref<TempLotteryResponseModel>()
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const currentUsers = computed(() => {
   return getCurrentUsers()
@@ -110,7 +136,7 @@ function getCurrentUsers() {
   return undefined
 }
 const validUsers = computed(() => {
-  return currentUsers.value?.users.filter(u => isUserValid(u))
+  return currentUsers.value?.users.filter((u) => isUserValid(u))
 })
 
 async function onGet() {
@@ -124,7 +150,7 @@ async function onGet() {
       break
     }
   }
-  currentUsers.value?.users.forEach(u => (u.visiable = true))
+  currentUsers.value?.users.forEach((u) => (u.visiable = true))
 }
 async function fetchLotteryUsers(type: 'comments' | 'forward') {
   const dynamicId = inputDynamicId.value
@@ -133,14 +159,12 @@ async function fetchLotteryUsers(type: 'comments' | 'forward') {
     return
   }
   isLoading.value = true
-  await QueryGetAPI<TempLotteryResponseModel>(
-    `${LOTTERY_API_URL}${type}`,
-    { id: dynamicId.toString() },
-    [['Turnstile', token.value]],
-  )
+  await QueryGetAPI<TempLotteryResponseModel>(`${LOTTERY_API_URL}${type}`, { id: dynamicId.toString() }, [
+    ['Turnstile', token.value],
+  ])
     .then((data) => {
       if (data.code == 200) {
-        data.data.users = new List(data.data.users).DistinctBy(u => u.uId).ToArray()
+        data.data.users = new List(data.data.users).DistinctBy((u) => u.uId).ToArray()
         data.data.total = data.data.users.length
         if (type === 'comments') {
           commentUsers.value = data.data
@@ -237,10 +261,15 @@ function onFinishLottery(winners: LotteryUserInfo[]) {
     description: `共 ${winners.length} 位中奖者`,
     duration: 4000,
     content: () =>
-      h(NFlex, { vertical: true, size: 6 },
-        () => winners.map(user =>
+      h(NFlex, { vertical: true, size: 6 }, () =>
+        winners.map((user) =>
           h(NFlex, { align: 'center', size: 8 }, () => [
-            h(NAvatar, { round: true, size: 'small', src: `${user.avatar}@48w_48h`, imgProps: { referrerpolicy: 'no-referrer' } }),
+            h(NAvatar, {
+              round: true,
+              size: 'small',
+              src: `${user.avatar}@48w_48h`,
+              imgProps: { referrerpolicy: 'no-referrer' },
+            }),
             h('span', user.name),
           ]),
         ),
@@ -251,7 +280,7 @@ function onFinishLottery(winners: LotteryUserInfo[]) {
     users: winners,
     time: Date.now(),
     type: currentType.value,
-    url: inputDynamicId.value ? `https://t.bilibili.com/${inputDynamicId.value}` : inputDynamic.value ?? '',
+    url: inputDynamicId.value ? `https://t.bilibili.com/${inputDynamicId.value}` : (inputDynamic.value ?? ''),
   })
   message.success('结果已保存至历史记录')
 }
@@ -294,21 +323,37 @@ onUnmounted(() => {
 
 <template>
   <div class="lottery-view">
-    <ManagePageHeader title="动态抽奖" subtitle="从 B 站动态的评论或转发中随机抽取幸运用户">
+    <ManagePageHeader
+      title="动态抽奖"
+      subtitle="从 B 站动态的评论或转发中随机抽取幸运用户"
+    >
       <template #action>
-        <NButton secondary size="small" @click="showModal = true">
+        <NButton
+          secondary
+          size="small"
+          @click="showModal = true"
+        >
           <template #icon>
             <NIcon :component="History24Filled" />
           </template>
           历史记录
-          <NTag v-if="lotteryHistory.length" size="tiny" round :bordered="false" style="margin-left: 6px">
+          <NTag
+            v-if="lotteryHistory.length"
+            size="tiny"
+            round
+            :bordered="false"
+            style="margin-left: 6px"
+          >
             {{ lotteryHistory.length }}
           </NTag>
         </NButton>
       </template>
     </ManagePageHeader>
 
-    <NCard size="small" :bordered="true">
+    <NCard
+      size="small"
+      :bordered="true"
+    >
       <NInputGroup>
         <NInputGroupLabel>动态</NInputGroupLabel>
         <NInput
@@ -319,30 +364,46 @@ onUnmounted(() => {
           :disabled="isLoading || isLottering"
         />
       </NInputGroup>
-      <NText v-if="inputDynamic && !inputDynamicId" depth="3" style="font-size: 12px">
+      <NText
+        v-if="inputDynamic && !inputDynamicId"
+        depth="3"
+        style="font-size: 12px"
+      >
         无法识别动态 ID, 请检查链接是否正确
       </NText>
 
       <NDivider style="margin: 12px 0" />
 
-      <NCard size="small" embedded title="抽奖选项">
+      <NCard
+        size="small"
+        embedded
+        title="抽奖选项"
+      >
         <template #header-extra>
-          <NButton size="tiny" secondary :disabled="isLottering" @click="lotteryOption = { ...defaultOption }">
+          <NButton
+            size="tiny"
+            secondary
+            :disabled="isLottering"
+            @click="lotteryOption = { ...defaultOption }"
+          >
             恢复默认
           </NButton>
         </template>
         <NFlex justify="center">
-          <NRadioGroup v-model:value="currentType" :disabled="isLottering">
-            <NRadioButton value="comment">
-              评论区
-            </NRadioButton>
-            <NRadioButton value="forward">
-              转发
-            </NRadioButton>
+          <NRadioGroup
+            v-model:value="currentType"
+            :disabled="isLottering"
+          >
+            <NRadioButton value="comment"> 评论区 </NRadioButton>
+            <NRadioButton value="forward"> 转发 </NRadioButton>
           </NRadioGroup>
         </NFlex>
         <NDivider style="margin: 12px 0" />
-        <NFlex align="center" :size="16" wrap>
+        <NFlex
+          align="center"
+          :size="16"
+          wrap
+        >
           <NInputGroup style="width: 180px">
             <NInputGroupLabel>抽取人数</NInputGroupLabel>
             <NInputNumber
@@ -351,41 +412,60 @@ onUnmounted(() => {
               :disabled="isLottering"
             />
           </NInputGroup>
-          <NRadioGroup v-model:value="lotteryOption.lotteryType" size="small" :disabled="isLottering">
+          <NRadioGroup
+            v-model:value="lotteryOption.lotteryType"
+            size="small"
+            :disabled="isLottering"
+          >
             <NRadioButton value="single">
               <NTooltip>
-                <template #trigger>
-                  逐个淘汰
-                </template>
+                <template #trigger> 逐个淘汰 </template>
                 每次随机淘汰一人, 紧张刺激
               </NTooltip>
             </NRadioButton>
             <NRadioButton value="half">
               <NTooltip>
-                <template #trigger>
-                  快速减半
-                </template>
+                <template #trigger> 快速减半 </template>
                 每轮淘汰约一半, 人数多时更快
               </NTooltip>
             </NRadioButton>
           </NRadioGroup>
         </NFlex>
         <NDivider style="margin: 12px 0" />
-        <NFlex align="center" :size="16" wrap>
-          <NText depth="3" style="font-size: 13px">
+        <NFlex
+          align="center"
+          :size="16"
+          wrap
+        >
+          <NText
+            depth="3"
+            style="font-size: 13px"
+          >
             参与条件
           </NText>
-          <NCheckbox v-model:checked="lotteryOption.needVIP" :disabled="isLottering">
+          <NCheckbox
+            v-model:checked="lotteryOption.needVIP"
+            :disabled="isLottering"
+          >
             大会员
           </NCheckbox>
           <template v-if="currentType === 'comment'">
-            <NCheckbox v-model:checked="lotteryOption.needCharge" :disabled="isLottering">
+            <NCheckbox
+              v-model:checked="lotteryOption.needCharge"
+              :disabled="isLottering"
+            >
               已充电
             </NCheckbox>
-            <NCheckbox v-model:checked="lotteryOption.needGuard" :disabled="isLottering">
+            <NCheckbox
+              v-model:checked="lotteryOption.needGuard"
+              :disabled="isLottering"
+            >
               舰长
             </NCheckbox>
-            <NCheckbox v-model:checked="lotteryOption.needFanCard" :disabled="isLottering">
+            <NCheckbox
+              v-model:checked="lotteryOption.needFanCard"
+              :disabled="isLottering"
+            >
               佩戴粉丝牌
             </NCheckbox>
             <NCollapseTransition :show="lotteryOption.needFanCard">
@@ -402,7 +482,12 @@ onUnmounted(() => {
           </template>
         </NFlex>
       </NCard>
-      <NFlex justify="center" align="center" :size="12" style="margin-top: 16px">
+      <NFlex
+        justify="center"
+        align="center"
+        :size="12"
+        style="margin-top: 16px"
+      >
         <NButton
           :disabled="!inputDynamicId || !isCommentCountDown || !token || isLottering"
           :loading="!token || isLoading"
@@ -411,8 +496,15 @@ onUnmounted(() => {
         >
           {{ currentUsers ? '重新加载用户' : '加载用户' }}
         </NButton>
-        <NFlex v-if="!isCommentCountDown" align="center" :size="6">
-          <NText depth="3" style="font-size: 13px">
+        <NFlex
+          v-if="!isCommentCountDown"
+          align="center"
+          :size="6"
+        >
+          <NText
+            depth="3"
+            style="font-size: 13px"
+          >
             冷却中
           </NText>
           <NCountdown
@@ -424,14 +516,32 @@ onUnmounted(() => {
     </NCard>
 
     <!-- 中奖结果展示 -->
-    <NCard v-if="isLotteried && resultUsers?.length" size="small" class="winner-card">
-      <NFlex align="center" :size="8" style="margin-bottom: 12px">
-        <NIcon :component="Trophy24Filled" :size="22" color="#f0a020" />
-        <NText strong style="font-size: 16px">
+    <NCard
+      v-if="isLotteried && resultUsers?.length"
+      size="small"
+      class="winner-card"
+    >
+      <NFlex
+        align="center"
+        :size="8"
+        style="margin-bottom: 12px"
+      >
+        <NIcon
+          :component="Trophy24Filled"
+          :size="22"
+          color="#f0a020"
+        />
+        <NText
+          strong
+          style="font-size: 16px"
+        >
           恭喜以下 {{ resultUsers.length }} 位中奖
         </NText>
       </NFlex>
-      <NFlex :size="16" wrap>
+      <NFlex
+        :size="16"
+        wrap
+      >
         <NFlex
           v-for="user in resultUsers"
           :key="user.uId"
@@ -452,12 +562,29 @@ onUnmounted(() => {
       </NFlex>
     </NCard>
 
-    <NCard v-if="currentUsers" size="small">
-      <NFlex justify="space-between" align="center" wrap :size="12">
-        <NFlex align="center" :size="8">
-          <NStatistic label="符合条件" :value="validUsers?.length ?? 0" />
+    <NCard
+      v-if="currentUsers"
+      size="small"
+    >
+      <NFlex
+        justify="space-between"
+        align="center"
+        wrap
+        :size="12"
+      >
+        <NFlex
+          align="center"
+          :size="8"
+        >
+          <NStatistic
+            label="符合条件"
+            :value="validUsers?.length ?? 0"
+          />
           <NDivider vertical />
-          <NStatistic label="总参与" :value="currentUsers.total" />
+          <NStatistic
+            label="总参与"
+            :value="currentUsers.total"
+          />
         </NFlex>
         <NFlex :size="12">
           <NButton
@@ -483,7 +610,10 @@ onUnmounted(() => {
         </NFlex>
       </NFlex>
       <NDivider style="margin: 12px 0" />
-      <NEmpty v-if="!validUsers?.length" description="没有符合条件的用户, 试试放宽参与条件" />
+      <NEmpty
+        v-if="!validUsers?.length"
+        description="没有符合条件的用户, 试试放宽参与条件"
+      />
       <NGrid
         v-else
         cols="2 500:3 800:5 1100:7"
@@ -509,11 +639,24 @@ onUnmounted(() => {
               :src="`${item.avatar}@104w_104h`"
               :img-props="{ referrerpolicy: 'no-referrer' }"
             />
-            <NText class="user-cell__name" :depth="eliminatedIds.has(item.uId) ? 3 : 1">
+            <NText
+              class="user-cell__name"
+              :depth="eliminatedIds.has(item.uId) ? 3 : 1"
+            >
               {{ item.name }}
             </NText>
-            <NFlex justify="center" :size="4" :wrap="false">
-              <NTag v-if="item.isVIP" size="tiny" round type="warning" :bordered="false">
+            <NFlex
+              justify="center"
+              :size="4"
+              :wrap="false"
+            >
+              <NTag
+                v-if="item.isVIP"
+                size="tiny"
+                round
+                type="warning"
+                :bordered="false"
+              >
                 会员
               </NTag>
               <NTag
@@ -527,7 +670,12 @@ onUnmounted(() => {
               </NTag>
               <NTooltip v-if="item.card">
                 <template #trigger>
-                  <NTag size="tiny" round :bordered="false" type="info">
+                  <NTag
+                    size="tiny"
+                    round
+                    :bordered="false"
+                    type="info"
+                  >
                     {{ item.card.name }} {{ item.card.level }}
                   </NTag>
                 </template>
@@ -567,21 +715,39 @@ onUnmounted(() => {
           >
             <NCard size="small">
               <template #header>
-                <NFlex align="center" :size="8">
-                  <NTag size="small" round :bordered="false" :type="item.type === 'comment' ? 'success' : 'info'">
+                <NFlex
+                  align="center"
+                  :size="8"
+                >
+                  <NTag
+                    size="small"
+                    round
+                    :bordered="false"
+                    :type="item.type === 'comment' ? 'success' : 'info'"
+                  >
                     {{ item.type === 'comment' ? '评论' : '转发' }}
                   </NTag>
-                  <NText depth="3" style="font-size: 13px">
+                  <NText
+                    depth="3"
+                    style="font-size: 13px"
+                  >
                     <NTime :time="item.time" />
                   </NText>
-                  <NText depth="3" style="font-size: 13px">
+                  <NText
+                    depth="3"
+                    style="font-size: 13px"
+                  >
                     · {{ item.users.length }} 人
                   </NText>
                 </NFlex>
               </template>
               <template #header-extra>
                 <NFlex :size="8">
-                  <NButton size="small" tertiary @click="NavigateToNewTab(item.url)">
+                  <NButton
+                    size="small"
+                    tertiary
+                    @click="NavigateToNewTab(item.url)"
+                  >
                     目标动态
                   </NButton>
                   <NButton
@@ -594,7 +760,10 @@ onUnmounted(() => {
                   </NButton>
                 </NFlex>
               </template>
-              <NFlex :size="16" wrap>
+              <NFlex
+                :size="16"
+                wrap
+              >
                 <NFlex
                   v-for="user in item.users"
                   :key="user.uId"
@@ -646,7 +815,11 @@ onUnmounted(() => {
   padding: 12px 8px;
   border-radius: 10px;
   border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
-  transition: opacity 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    filter 0.35s ease;
 }
 
 .user-cell__name {
@@ -681,9 +854,15 @@ onUnmounted(() => {
 }
 
 @keyframes winner-pop {
-  0% { transform: scale(0.85); }
-  60% { transform: scale(1.08); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* 中奖结果卡 */

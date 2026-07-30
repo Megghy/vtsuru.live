@@ -1,17 +1,40 @@
 <script setup lang="ts">
-import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient' // 引入开放平台认证信息类型
 import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent' // 引入 Fluent UI 图标
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5' // 引入 Ionicons 图标
 import { useElementSize } from '@vueuse/core' // 引入 VueUse 组合式函数
 import {
-  NAlert, NAvatar, NBackTop, NButton, NEllipsis, NIcon, NLayout, NLayoutContent, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NPageHeader, NResult, NScrollbar, NFlex, NSpin, NSwitch, NTag, NText, useMessage } from 'naive-ui';
+  NAlert,
+  NAvatar,
+  NBackTop,
+  NButton,
+  NEllipsis,
+  NIcon,
+  NLayout,
+  NLayoutContent,
+  NLayoutFooter,
+  NLayoutHeader,
+  NLayoutSider,
+  NMenu,
+  NPageHeader,
+  NResult,
+  NScrollbar,
+  NFlex,
+  NSpin,
+  NSwitch,
+  NTag,
+  NText,
+  useMessage,
+} from 'naive-ui'
 // 引入 Naive UI 组件
 import { computed, h, onMounted, ref } from 'vue' // 引入 Vue 相关 API
 import { RouterLink, useRoute, useRouter } from 'vue-router' // 引入 Vue Router 相关 API
+
 import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
-import { useDanmakuClient } from '@/store/useDanmakuClient' // 引入弹幕客户端状态管理
-import { isDarkMode } from '@/shared/utils' // 引入暗黑模式判断工具
+import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient' // 引入开放平台认证信息类型
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { isDarkMode } from '@/shared/utils' // 引入暗黑模式判断工具
+import { useDanmakuClient } from '@/store/useDanmakuClient' // 引入弹幕客户端状态管理
+
 import '@/apps/open-live/styles/open-live-page.css'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
@@ -32,7 +55,8 @@ const danmakuClientError = ref<string>() // 存储弹幕客户端初始化错误
 
 // -- 菜单配置 --
 // 定义菜单项, 使用 h 函数渲染 RouterLink 以实现路由跳转
-const menuOptions = computed(() => [ // 改为 computed 以便将来可能动态修改
+const menuOptions = computed(() => [
+  // 改为 computed 以便将来可能动态修改
   {
     label: () =>
       h(
@@ -148,7 +172,7 @@ onMounted(async () => {
   <!-- 情况一: 缺少认证信息, 显示错误提示页 -->
   <NLayoutContent
     v-if="!authInfo?.Code"
-    style="height: 100vh; display: flex; align-items: center; justify-content: center;"
+    style="height: 100vh; display: flex; align-items: center; justify-content: center"
     content-style="padding: 24px;"
   >
     <NResult
@@ -180,29 +204,30 @@ onMounted(async () => {
   >
     <!-- 顶部导航栏 -->
     <NLayoutHeader
-      style="height: 60px; display: flex; align-items: center; padding: 0 20px;"
+      style="height: 60px; display: flex; align-items: center; padding: 0 20px"
       bordered
     >
       <!-- 使用 NPageHeader 增强语义和结构 -->
-      <NPageHeader style="width: 100%;">
+      <NPageHeader style="width: 100%">
         <!-- 标题区域 -->
         <template #title>
           <NButton
             text
-            style="text-decoration: none;"
+            style="text-decoration: none"
             @click="router.push({ name: 'open-live-index', query: route.query })"
           >
             <NText
               strong
-              style="font-size: 1.5rem; line-height: 1;"
+              style="font-size: 1.5rem; line-height: 1"
               type="primary"
             >
               <!-- 网站/应用 Logo 或名称 -->
               <img
                 :src="logoUrl"
                 alt="VTsuru Logo"
-                style="height: 24px; vertical-align: middle; margin-right: 8px;"
-              > <!-- 可选: 添加 Logo -->
+                style="height: 24px; vertical-align: middle; margin-right: 8px"
+              />
+              <!-- 可选: 添加 Logo -->
               VTsuru 开放平台
             </NText>
           </NButton>
@@ -211,7 +236,7 @@ onMounted(async () => {
         <!-- 副标题/当前页面信息 -->
         <template #subtitle>
           <NText depth="3">
-            {{ $route.meta.title as string ?? '功能模块' }}
+            {{ ($route.meta.title as string) ?? '功能模块' }}
           </NText>
         </template>
 
@@ -228,7 +253,8 @@ onMounted(async () => {
               size="small"
             >
               <template #icon>
-                <NIcon :component="danmakuClient.connected ? Sunny : Moon" /> <!-- 示例图标 -->
+                <NIcon :component="danmakuClient.connected ? Sunny : Moon" />
+                <!-- 示例图标 -->
               </template>
               {{ danmakuClient.connectionStatus }}
             </NTag>
@@ -313,7 +339,7 @@ onMounted(async () => {
 
       <!-- 右侧主内容区域 -->
       <NLayoutContent
-        style="height: 100%;"
+        style="height: 100%"
         content-style="padding: 0; height: 100%;"
         :native-scrollbar="false"
       >
@@ -334,12 +360,10 @@ onMounted(async () => {
             <!-- 情况一: 认证信息加载中或连接中 -->
             <div
               v-if="!danmakuClient.authInfo && !danmakuClientError"
-              style="display: flex; justify-content: center; align-items: center; height: 80%;"
+              style="display: flex; justify-content: center; align-items: center; height: 80%"
             >
               <NSpin size="large">
-                <template #description>
-                  正在加载主播信息并连接服务...
-                </template>
+                <template #description> 正在加载主播信息并连接服务... </template>
               </NSpin>
             </div>
             <!-- 情况二: 加载/连接成功, 渲染对应页面 -->
@@ -390,21 +414,22 @@ onMounted(async () => {
 
     <!-- 底部信息栏 -->
     <NLayoutFooter
-      style="height: 40px; display: flex; align-items: center; justify-content: center; padding: 0 20px;"
+      style="height: 40px; display: flex; align-items: center; justify-content: center; padding: 0 20px"
       bordered
     >
       <NText
         depth="3"
-        style="font-size: 12px;"
+        style="font-size: 12px"
       >
-        © {{ new Date().getFullYear() }} <!-- 动态年份 -->
+        © {{ new Date().getFullYear() }}
+        <!-- 动态年份 -->
         <NButton
           text
           tag="a"
           href="https://vtsuru.live"
           target="_blank"
           type="primary"
-          style="margin-left: 5px;"
+          style="margin-left: 5px"
         >
           vtsuru.live
         </NButton>
@@ -434,7 +459,7 @@ onMounted(async () => {
 
 /* 确保 NLayoutContent 的内边距生效 */
 :deep(.n-layout-scroll-container) {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 </style>

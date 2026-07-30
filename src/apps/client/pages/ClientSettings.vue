@@ -1,21 +1,34 @@
 <script setup lang="ts">
-import type { MenuOption } from 'naive-ui'
-import type { NotificationType } from '@/apps/client/store/useSettings'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
+import type { MenuOption } from 'naive-ui'
 import {
-  NAlert, NCard, NCheckbox, NDivider, NFormItem, NGrid, NGridItem, NMenu, NRadio, NRadioGroup, NSpin, NSwitch } from 'naive-ui';
+  NAlert,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NFormItem,
+  NGrid,
+  NGridItem,
+  NMenu,
+  NRadio,
+  NRadioGroup,
+  NSpin,
+  NSwitch,
+} from 'naive-ui'
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+
 import { ThemeType } from '@/api/api-models'
-import { useSettings } from '@/apps/client/store/useSettings'
+import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
+import LabelItem from '@/apps/client/components/LabelItem.vue'
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
 import ClientTranscriptionPanel from '@/apps/client/components/settings/ClientTranscriptionPanel.vue'
-import LabelItem from '@/apps/client/components/LabelItem.vue'
-import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
-import { useWebFetcher } from '@/store/useWebFetcher'
+import type { NotificationType } from '@/apps/client/store/useSettings'
+import { useSettings } from '@/apps/client/store/useSettings'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useWebFetcher } from '@/store/useWebFetcher'
 
 // --- State ---
 
@@ -36,31 +49,30 @@ const handleCheckUpdate = async () => {
   try {
     const { check } = await import('@tauri-apps/plugin-updater')
     const update = await check()
-    
+
     if (update) {
       window.$message.info(`发现新版本 ${update.version}，正在下载更新...`)
-      
+
       // 下载并安装更新
       await update.downloadAndInstall()
-      
+
       window.$message.success('更新已下载，重启应用以完成更新')
-      
+
       // 询问是否立即重启
       const { relaunch } = await import('@tauri-apps/plugin-process')
       setTimeout(() => {
-        void useWebFetcher().Stop()
-          .catch(err => console.warn('重启前停止 EventFetcher 失败:', err))
+        void useWebFetcher()
+          .Stop()
+          .catch((err) => console.warn('重启前停止 EventFetcher 失败:', err))
           .then(() => relaunch())
       }, 2000)
     } else {
       window.$message.success('当前已是最新版本')
     }
-  }
-  catch (err: any) {
+  } catch (err: any) {
     console.error('检查更新失败:', err)
     window.$message.error(`检查更新失败: ${err}`)
-  }
-  finally {
+  } finally {
     isCheckingUpdate.value = false
   }
 }
@@ -122,18 +134,24 @@ watch(isStartOnBoot, async (newValue, oldValue) => {
 })
 
 function renderNotificationEnable(name: NotificationType) {
-  return h(NCheckbox, {
-    checked: setting.settings.notificationSettings?.enableTypes.includes(name),
-    onUpdateChecked: (value) => {
-      setting.settings.notificationSettings.enableTypes ??= []
-      if (value) {
-        setting.settings.notificationSettings.enableTypes.push(name)
-      } else {
-        setting.settings.notificationSettings.enableTypes = setting.settings.notificationSettings.enableTypes.filter(type => type !== name)
-      }
-      setting.save()
+  return h(
+    NCheckbox,
+    {
+      checked: setting.settings.notificationSettings?.enableTypes.includes(name),
+      onUpdateChecked: (value) => {
+        setting.settings.notificationSettings.enableTypes ??= []
+        if (value) {
+          setting.settings.notificationSettings.enableTypes.push(name)
+        } else {
+          setting.settings.notificationSettings.enableTypes = setting.settings.notificationSettings.enableTypes.filter(
+            (type) => type !== name,
+          )
+        }
+        setting.save()
+      },
     },
-  }, () => '启用')
+    () => '启用',
+  )
 }
 
 // --- 隐藏功能处理函数 ---
@@ -149,26 +167,33 @@ function handleTitleClick() {
   }, 3000) as unknown as number
 
   if (titleClickCount.value === 10) {
-    invoke('open_dev_tools')
-      .then(() => {
-        window.$message.success('已打开 Dev Tools')
-      })
+    invoke('open_dev_tools').then(() => {
+      window.$message.success('已打开 Dev Tools')
+    })
   }
 }
 </script>
 
 <template>
-  <NFlex vertical :size="12" class="client-readable">
-    <NCard size="small" bordered>
+  <NFlex
+    vertical
+    :size="12"
+    class="client-readable"
+  >
+    <NCard
+      size="small"
+      bordered
+    >
       <ClientPageHeader>
         <template #title>
-          <NText strong @click="handleTitleClick">
+          <NText
+            strong
+            @click="handleTitleClick"
+          >
             设置
           </NText>
         </template>
-        <template #description>
-          客户端行为、外观与通知偏好
-        </template>
+        <template #description> 客户端行为、外观与通知偏好 </template>
       </ClientPageHeader>
     </NCard>
 
@@ -180,7 +205,11 @@ function handleTitleClick() {
       :y-gap="12"
     >
       <NGridItem span="24 900:6">
-        <NCard size="small" bordered content-style="padding: 0;">
+        <NCard
+          size="small"
+          bordered
+          content-style="padding: 0;"
+        >
           <NMenu
             v-model:value="currentTab"
             :options="navOptions"
@@ -191,7 +220,10 @@ function handleTitleClick() {
 
       <NGridItem span="24 900:18">
         <NSpin :show="isLoading">
-          <NFlex vertical :size="12">
+          <NFlex
+            vertical
+            :size="12"
+          >
             <NAlert
               v-if="errorMsg"
               title="操作错误"
@@ -203,13 +235,30 @@ function handleTitleClick() {
               {{ errorMsg }}
             </NAlert>
 
-            <Transition name="fade" mode="out-in">
+            <Transition
+              name="fade"
+              mode="out-in"
+            >
               <div :key="currentTab">
                 <template v-if="currentTab === 'general'">
-                  <NFlex vertical :size="12">
-                    <NCard title="启动" size="small" bordered>
-                      <NFlex vertical :size="8" align="start">
-                        <LabelItem label="开机时启动应用" label-placement="left">
+                  <NFlex
+                    vertical
+                    :size="12"
+                  >
+                    <NCard
+                      title="启动"
+                      size="small"
+                      bordered
+                    >
+                      <NFlex
+                        vertical
+                        :size="8"
+                        align="start"
+                      >
+                        <LabelItem
+                          label="开机时启动应用"
+                          label-placement="left"
+                        >
                           <NSwitch
                             v-model:value="isStartOnBoot"
                             :disabled="isLoading || isUpdatingAutostart"
@@ -229,23 +278,24 @@ function handleTitleClick() {
                       </NFlex>
                     </NCard>
 
-                    <NCard title="外观" size="small" bordered>
-                      <NFormItem label="主题模式" label-placement="left">
+                    <NCard
+                      title="外观"
+                      size="small"
+                      bordered
+                    >
+                      <NFormItem
+                        label="主题模式"
+                        label-placement="left"
+                      >
                         <NRadioGroup
                           v-model:value="themeType"
                           name="theme-mode"
                           :segmented="true"
                           size="small"
                         >
-                          <NRadio :value="ThemeType.Light">
-                            亮色
-                          </NRadio>
-                          <NRadio :value="ThemeType.Dark">
-                            暗色
-                          </NRadio>
-                          <NRadio :value="ThemeType.Auto">
-                            跟随系统
-                          </NRadio>
+                          <NRadio :value="ThemeType.Light"> 亮色 </NRadio>
+                          <NRadio :value="ThemeType.Dark"> 暗色 </NRadio>
+                          <NRadio :value="ThemeType.Auto"> 跟随系统 </NRadio>
                         </NRadioGroup>
                       </NFormItem>
                     </NCard>
@@ -253,12 +303,23 @@ function handleTitleClick() {
                 </template>
 
                 <template v-else-if="currentTab === 'notification'">
-                  <NCard title="通知" size="small" bordered>
-                    <NAlert type="warning" size="small" :bordered="false">
+                  <NCard
+                    title="通知"
+                    size="small"
+                    bordered
+                  >
+                    <NAlert
+                      type="warning"
+                      size="small"
+                      :bordered="false"
+                    >
                       未完全完成
                     </NAlert>
                     <NDivider />
-                    <NFlex vertical :size="12">
+                    <NFlex
+                      vertical
+                      :size="12"
+                    >
                       <NCheckbox
                         v-model:checked="setting.settings.enableNotification"
                         @update:checked="() => setting.save()"
@@ -267,36 +328,52 @@ function handleTitleClick() {
                       </NCheckbox>
 
                       <template v-if="setting.settings.enableNotification">
-                        <NCard size="small" bordered title="提问箱通知">
+                        <NCard
+                          size="small"
+                          bordered
+                          title="提问箱通知"
+                        >
                           <template #header-extra>
                             <component :is="renderNotificationEnable('question-box')" />
                           </template>
                         </NCard>
-                        <NCard size="small" bordered title="积分兑换通知">
+                        <NCard
+                          size="small"
+                          bordered
+                          title="积分兑换通知"
+                        >
                           <template #header-extra>
                             <component :is="renderNotificationEnable('goods-buy')" />
                           </template>
                         </NCard>
-                        <NCard size="small" bordered title="弹幕相关">
+                        <NCard
+                          size="small"
+                          bordered
+                          title="弹幕相关"
+                        >
                           <template #header-extra>
                             <component :is="renderNotificationEnable('danmaku')" />
                           </template>
                         </NCard>
-                        <NCard size="small" bordered title="私信失败通知">
+                        <NCard
+                          size="small"
+                          bordered
+                          title="私信失败通知"
+                        >
                           <template #header-extra>
                             <component :is="renderNotificationEnable('message-failed')" />
                           </template>
-                          <NText depth="3">
-                            当 B 站私信发送失败时通知你
-                          </NText>
+                          <NText depth="3"> 当 B 站私信发送失败时通知你 </NText>
                         </NCard>
-                        <NCard size="small" bordered title="弹幕发送失败通知">
+                        <NCard
+                          size="small"
+                          bordered
+                          title="弹幕发送失败通知"
+                        >
                           <template #header-extra>
                             <component :is="renderNotificationEnable('live-danmaku-failed')" />
                           </template>
-                          <NText depth="3">
-                            当直播弹幕发送失败时通知你
-                          </NText>
+                          <NText depth="3"> 当直播弹幕发送失败时通知你 </NText>
                         </NCard>
                       </template>
                     </NFlex>
@@ -304,44 +381,55 @@ function handleTitleClick() {
                 </template>
 
                 <template v-else-if="currentTab === 'backup'">
-                  <NCard title="备份" size="small" bordered>
+                  <NCard
+                    title="备份"
+                    size="small"
+                    bordered
+                  >
                     <ClientBackupPanel />
                   </NCard>
                 </template>
 
                 <template v-else-if="currentTab === 'transcription'">
-                  <NCard title="语音转写" size="small" bordered>
+                  <NCard
+                    title="语音转写"
+                    size="small"
+                    bordered
+                  >
                     <ClientTranscriptionPanel />
                   </NCard>
                 </template>
 
                 <template v-else-if="currentTab === 'other'">
-                  <NCard title="其他" size="small" bordered>
-                    <NText depth="3">
-                      其他设置将显示在这里。
-                    </NText>
+                  <NCard
+                    title="其他"
+                    size="small"
+                    bordered
+                  >
+                    <NText depth="3"> 其他设置将显示在这里。 </NText>
                   </NCard>
                 </template>
 
                 <template v-else-if="currentTab === 'about'">
-                  <NCard title="关于" size="small" bordered>
+                  <NCard
+                    title="关于"
+                    size="small"
+                    bordered
+                  >
                     <template #header-extra>
                       <div
-                        style="width: 10px; height: 10px;"
+                        style="width: 10px; height: 10px"
                         @click="$router.push({ name: 'client-test' })"
                       />
                     </template>
-                    <NFlex vertical :size="8">
-                      <NText depth="3">
-                        VTsuruEventFetcher Tauri
-                      </NText>
-                      <NText depth="3">
-                        版本: {{ currentVersion }}
-                      </NText>
+                    <NFlex
+                      vertical
+                      :size="8"
+                    >
+                      <NText depth="3"> VTsuruEventFetcher Tauri </NText>
+                      <NText depth="3"> 版本: {{ currentVersion }} </NText>
                       <div>
-                        <NText depth="3">
-                          作者:
-                        </NText>
+                        <NText depth="3"> 作者: </NText>
                         <NButton
                           tag="a"
                           href="https://space.bilibili.com/10021741"
@@ -353,9 +441,7 @@ function handleTitleClick() {
                         </NButton>
                       </div>
                       <div>
-                        <NText depth="3">
-                          仓库:
-                        </NText>
+                        <NText depth="3"> 仓库: </NText>
                         <NButton
                           tag="a"
                           href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
@@ -376,11 +462,12 @@ function handleTitleClick() {
                           Tauri 客户端
                         </NButton>
                       </div>
-                      <NText depth="3">
-                        反馈: 🐧 873260337
-                      </NText>
+                      <NText depth="3"> 反馈: 🐧 873260337 </NText>
                       <NDivider />
-                      <NFlex align="center" justify="space-between">
+                      <NFlex
+                        align="center"
+                        justify="space-between"
+                      >
                         <NText>检查更新</NText>
                         <NButton
                           size="small"
@@ -396,9 +483,7 @@ function handleTitleClick() {
               </div>
             </Transition>
           </NFlex>
-          <template #description>
-            正在加载设置...
-          </template>
+          <template #description> 正在加载设置... </template>
         </NSpin>
       </NGridItem>
     </NGrid>

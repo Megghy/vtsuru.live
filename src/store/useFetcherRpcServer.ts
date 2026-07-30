@@ -1,18 +1,20 @@
+import { getVersion } from '@tauri-apps/api/app'
+import { info, warn } from '@tauri-apps/plugin-log'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+
+import { useAccount } from '@/api/account'
 // 开放 RPC 服务 (Tauri 客户端侧)
 //
 // 在 Tauri 客户端内启动: 把本地能力 (弹幕订阅、发送弹幕/私信) 通过 birpc 暴露给外部网页。
 // server/health 的传输由 Rust rpc_server.rs 负责, 本 store 只提供 ServerFunctions 实现。
 import type { EventModel } from '@/api/api-models'
-import type { RpcConnection } from '@/shared/rpc/server'
-import type { DanmakuEventName, ServerFunctions } from '@/shared/rpc/contract'
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { info, warn } from '@tauri-apps/plugin-log'
-import { useAccount } from '@/api/account'
-import { getVersion } from '@tauri-apps/api/app'
-import { DANMAKU_EVENT_NAMES } from '@/shared/rpc/contract'
-import { startRpcServer } from '@/shared/rpc/server'
 import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
+import type { DanmakuEventName, ServerFunctions } from '@/shared/rpc/contract'
+import { DANMAKU_EVENT_NAMES } from '@/shared/rpc/contract'
+import type { RpcConnection } from '@/shared/rpc/server'
+import { startRpcServer } from '@/shared/rpc/server'
+
 import { useDanmakuClient } from './useDanmakuClient'
 
 // 写操作 origin 白名单 (与 Rust 端保持一致; 读操作已由 Rust 层门禁)
@@ -62,7 +64,7 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
     danmakuClient.onEvent(name, (data: EventModel) => dispatch(name, data))
   }
 
-  function buildFunctions(conn: { connId: string, origin: string }): ServerFunctions {
+  function buildFunctions(conn: { connId: string; origin: string }): ServerFunctions {
     const account = useAccount()
     const biliFunc = useBiliFunction()
 
@@ -104,7 +106,7 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
   }
 
   function setSubscribed(connId: string, subscribed: boolean) {
-    const connInfo = connections.value.find(c => c.connId === connId)
+    const connInfo = connections.value.find((c) => c.connId === connId)
     if (connInfo) connInfo.subscribed = subscribed
   }
 
@@ -125,7 +127,7 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
       onClose: (connId) => {
         conns.delete(connId)
         subscriptions.delete(connId)
-        connections.value = connections.value.filter(c => c.connId !== connId)
+        connections.value = connections.value.filter((c) => c.connId !== connId)
         info(`[RPC] 外部连接断开: ${connId}`)
       },
     })

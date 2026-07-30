@@ -1,5 +1,6 @@
-import { ref } from 'vue'
 import type { UploadFileInfo } from 'naive-ui'
+import { ref } from 'vue'
+
 import { uploadCover, updateCover } from '@/apps/client/api/live-manage'
 
 // 封面上传校验配置
@@ -66,20 +67,16 @@ export function useLiveCover() {
         const updateResponse = await updateCover(uploadResponse.data.location)
         if (updateResponse.code === 0) {
           window.$message.success('封面上传并应用成功！')
-        }
-        else {
+        } else {
           window.$message.error(`封面上传成功但应用失败: ${updateResponse.message || '未知错误'}`)
         }
-      }
-      else {
+      } else {
         window.$message.error(`封面上传失败: ${uploadResponse.message || '未知错误'}`)
       }
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('封面上传或应用失败:', err)
       window.$message.error(`封面上传或应用失败: ${err.message || err}`)
-    }
-    finally {
+    } finally {
       isUploadingCover.value = false
     }
   }

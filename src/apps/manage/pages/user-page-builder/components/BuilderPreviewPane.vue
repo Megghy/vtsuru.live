@@ -1,20 +1,50 @@
 <script setup lang="ts">
-import type { GlobalThemeOverrides } from 'naive-ui'
-import { darkTheme, NAlert, NButton, NButtonGroup, NCard, NConfigProvider, NDatePicker, NFlex, NForm, NFormItem, NIcon, NPopover, NSelect, NTooltip } from 'naive-ui'
-import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
+import {
+  DesktopOutline,
+  HandLeftOutline,
+  NavigateOutline,
+  OpenOutline,
+  OptionsOutline,
+  PhonePortraitOutline,
+  TabletPortraitOutline,
+} from '@vicons/ionicons5'
 import { useNow } from '@vueuse/core'
-import { DesktopOutline, HandLeftOutline, NavigateOutline, OpenOutline, OptionsOutline, PhonePortraitOutline, TabletPortraitOutline } from '@vicons/ionicons5'
-import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
+import type { GlobalThemeOverrides } from 'naive-ui'
+import {
+  darkTheme,
+  NAlert,
+  NButton,
+  NButtonGroup,
+  NCard,
+  NConfigProvider,
+  NDatePicker,
+  NFlex,
+  NForm,
+  NFormItem,
+  NIcon,
+  NPopover,
+  NSelect,
+  NTooltip,
+} from 'naive-ui'
+import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
+
 import { fetchBiliProfile } from '@/apps/user-page/api'
-import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
-import { getPageBackgroundCssVars, getUserPageNaiveThemeOverrides, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
-import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import {
+  getPageBackgroundCssVars,
+  getUserPageNaiveThemeOverrides,
+  getUserPageThemeCssVars,
+  resolvePageBackground,
+} from '@/apps/user-page/background'
+import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
-import { isDarkMode } from '@/shared/utils'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
+import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
+import { isDarkMode } from '@/shared/utils'
+
+import { UserPageEditorKey } from '../context'
 import PhonePreview from './PhonePreview.vue'
 import type { PreviewViewport } from './PhonePreview.vue'
-import { UserPageEditorKey } from '../context'
 
 defineOptions({ name: 'BuilderPreviewPane' })
 
@@ -27,7 +57,7 @@ const previewMode = ref<'select' | 'interact'>('select')
 const simulatedLiveState = ref<'actual' | 'live' | 'offline'>('actual')
 const simulatedNow = ref<number | null>(null)
 const actualNow = useNow({ interval: 30_000 })
-const viewportOptions: Array<{ value: PreviewViewport, label: string, icon: typeof PhonePortraitOutline }> = [
+const viewportOptions: Array<{ value: PreviewViewport; label: string; icon: typeof PhonePortraitOutline }> = [
   { value: 'phone', label: '手机', icon: PhonePortraitOutline },
   { value: 'tablet', label: '平板', icon: TabletPortraitOutline },
   { value: 'desktop', label: '桌面', icon: DesktopOutline },
@@ -36,13 +66,13 @@ const viewportOptions: Array<{ value: PreviewViewport, label: string, icon: type
 const biliProfileQuery = useUserPageRuntimeQuery<any | null>({
   key: () => `bili-profile:${editor.account.value?.biliId ?? ''}`,
   ttlMs: 60_000,
-  loader: signal => fetchBiliProfile(editor.account.value!.biliId!, signal),
+  loader: (signal) => fetchBiliProfile(editor.account.value!.biliId!, signal),
 })
 const biliProfileStatus = computed(() => {
   if (!editor.account.value?.biliId) return 'empty' as const
   if (biliProfileQuery.status.value === 'loading' || biliProfileQuery.status.value === 'idle') return 'loading' as const
   if (biliProfileQuery.status.value === 'error') return 'error' as const
-  return biliProfileQuery.data.value ? 'ready' as const : 'empty' as const
+  return biliProfileQuery.data.value ? ('ready' as const) : ('empty' as const)
 })
 
 async function loadBiliProfile() {
@@ -57,8 +87,15 @@ async function loadBiliProfile() {
   }
 }
 
-onMounted(() => { void loadBiliProfile() })
-watch(() => editor.account.value?.biliId, () => { void loadBiliProfile() })
+onMounted(() => {
+  void loadBiliProfile()
+})
+watch(
+  () => editor.account.value?.biliId,
+  () => {
+    void loadBiliProfile()
+  },
+)
 
 const previewMergedTheme = computed(() => {
   const globalTheme = (editor.settings.value as any)?.theme ?? {}
@@ -67,7 +104,11 @@ const previewMergedTheme = computed(() => {
   return { ...globalTheme, ...pageTheme, ...projectTheme }
 })
 
-useGoogleFont(computed(() => typeof previewMergedTheme.value.fontFamily === 'string' ? previewMergedTheme.value.fontFamily : undefined))
+useGoogleFont(
+  computed(() =>
+    typeof previewMergedTheme.value.fontFamily === 'string' ? previewMergedTheme.value.fontFamily : undefined,
+  ),
+)
 
 const previewMergedProject = computed(() => {
   const p = editor.currentProject.value
@@ -99,11 +140,7 @@ const previewBgVars = computed(() => {
 const previewUiVars = computed(() => getUserPageThemeCssVars(previewMergedTheme.value, previewEffectiveIsDark.value))
 
 const previewUserThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  return getUserPageNaiveThemeOverrides(
-    previewMergedTheme.value,
-    previewUiVars.value,
-    previewEffectiveIsDark.value,
-  )
+  return getUserPageNaiveThemeOverrides(previewMergedTheme.value, previewUiVars.value, previewEffectiveIsDark.value)
 })
 
 const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
@@ -144,10 +181,11 @@ const previewBgClass = computed(() => ({
 }))
 const previewHighlightBlockId = computed(() => editor.hoveredBlockId.value ?? editor.selectedBlockIds.value[0] ?? null)
 const previewVisibilityContext = computed(() => ({
-  isLive: simulatedLiveState.value === 'actual'
-    ? (editor.account.value?.streamerInfo?.isStreaming ?? false)
-    : simulatedLiveState.value === 'live',
-  device: viewport.value === 'phone' ? 'mobile' as const : 'desktop' as const,
+  isLive:
+    simulatedLiveState.value === 'actual'
+      ? (editor.account.value?.streamerInfo?.isStreaming ?? false)
+      : simulatedLiveState.value === 'live',
+  device: viewport.value === 'phone' ? ('mobile' as const) : ('desktop' as const),
   now: Math.floor((simulatedNow.value ?? actualNow.value.getTime()) / 1000),
 }))
 
@@ -156,13 +194,17 @@ function selectPreviewBlock(blockId: string) {
   editor.hoveredBlockId.value = blockId
 }
 
-watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const, async ([, blockId]) => {
-  if (!blockId) return
-  await nextTick()
-  const target = Array.from(previewRoot.value?.querySelectorAll<HTMLElement>('[data-block-id]') ?? [])
-    .find(element => element.dataset.blockId === blockId)
-  target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-})
+watch(
+  () => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const,
+  async ([, blockId]) => {
+    if (!blockId) return
+    await nextTick()
+    const target = Array.from(previewRoot.value?.querySelectorAll<HTMLElement>('[data-block-id]') ?? []).find(
+      (element) => element.dataset.blockId === blockId,
+    )
+    target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  },
+)
 </script>
 
 <template>
@@ -172,7 +214,11 @@ watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const
     content-style="display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden"
   >
     <template #header-extra>
-      <NFlex align="center" :wrap="false" size="small">
+      <NFlex
+        align="center"
+        :wrap="false"
+        size="small"
+      >
         <NButtonGroup size="small">
           <NTooltip>
             <template #trigger>
@@ -206,7 +252,10 @@ watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const
           </NTooltip>
         </NButtonGroup>
         <NButtonGroup size="small">
-          <NTooltip v-for="option in viewportOptions" :key="option.value">
+          <NTooltip
+            v-for="option in viewportOptions"
+            :key="option.value"
+          >
             <template #trigger>
               <NButton
                 :type="viewport === option.value ? 'primary' : 'default'"
@@ -222,15 +271,27 @@ watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const
             {{ option.label }}预览
           </NTooltip>
         </NButtonGroup>
-        <NPopover trigger="click" placement="bottom-end">
+        <NPopover
+          trigger="click"
+          placement="bottom-end"
+        >
           <template #trigger>
-            <NButton quaternary circle size="small" aria-label="预览条件">
+            <NButton
+              quaternary
+              circle
+              size="small"
+              aria-label="预览条件"
+            >
               <template #icon>
                 <NIcon><OptionsOutline /></NIcon>
               </template>
             </NButton>
           </template>
-          <NForm label-placement="top" size="small" style="width: 260px">
+          <NForm
+            label-placement="top"
+            size="small"
+            style="width: 260px"
+          >
             <NFormItem label="直播状态">
               <NSelect
                 v-model:value="simulatedLiveState"
@@ -242,13 +303,24 @@ watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const
               />
             </NFormItem>
             <NFormItem label="预览时间">
-              <NDatePicker v-model:value="simulatedNow" type="datetime" clearable style="width: 100%" />
+              <NDatePicker
+                v-model:value="simulatedNow"
+                type="datetime"
+                clearable
+                style="width: 100%"
+              />
             </NFormItem>
           </NForm>
         </NPopover>
         <NTooltip>
           <template #trigger>
-            <NButton quaternary circle size="small" aria-label="在真实页面中预览草稿" @click="editor.openPreview">
+            <NButton
+              quaternary
+              circle
+              size="small"
+              aria-label="在真实页面中预览草稿"
+              @click="editor.openPreview"
+            >
               <template #icon>
                 <NIcon><OpenOutline /></NIcon>
               </template>
@@ -258,9 +330,20 @@ watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const
         </NTooltip>
       </NFlex>
     </template>
-    <div ref="previewRoot" class="preview-pane-content">
-      <NConfigProvider abstract :theme="null" :theme-overrides="null">
-        <NConfigProvider abstract :theme="previewNaiveTheme" :theme-overrides="previewThemeOverrides">
+    <div
+      ref="previewRoot"
+      class="preview-pane-content"
+    >
+      <NConfigProvider
+        abstract
+        :theme="null"
+        :theme-overrides="null"
+      >
+        <NConfigProvider
+          abstract
+          :theme="previewNaiveTheme"
+          :theme-overrides="previewThemeOverrides"
+        >
           <PhonePreview
             :style="[previewUiVars, previewBgVars]"
             :is-dark="previewEffectiveIsDark"
@@ -271,9 +354,16 @@ watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const
               <div :class="previewBgClass" />
             </template>
 
-            <Transition name="fade-slide" mode="out-in">
+            <Transition
+              name="fade-slide"
+              mode="out-in"
+            >
               <div
-                :key="editor.currentPage.value.mode === 'block' && editor.currentProject.value ? 'block' : editor.currentPage.value.mode"
+                :key="
+                  editor.currentPage.value.mode === 'block' && editor.currentProject.value
+                    ? 'block'
+                    : editor.currentPage.value.mode
+                "
                 class="preview-content"
               >
                 <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
@@ -295,7 +385,10 @@ watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const
                   </div>
                 </template>
                 <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                  <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="biliProfileQuery.data.value" />
+                  <DefaultIndexTemplate
+                    :user-info="editor.account.value as any"
+                    :bili-info="biliProfileQuery.data.value"
+                  />
                 </template>
                 <NAlert
                   v-else

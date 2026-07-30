@@ -2,8 +2,21 @@
 import { CodeOutline, HeartOutline, LogoGithub, ServerOutline } from '@vicons/ionicons5'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { NButton, NCard, NDivider, NIcon, NLayoutContent, NFlex, NTag, NText, NTimeline, NTimelineItem, useThemeVars } from 'naive-ui';
+import {
+  NButton,
+  NCard,
+  NDivider,
+  NIcon,
+  NLayoutContent,
+  NFlex,
+  NTag,
+  NText,
+  NTimeline,
+  NTimelineItem,
+  useThemeVars,
+} from 'naive-ui'
 import { computed } from 'vue'
+
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
 
 // 获取编译时间
@@ -25,7 +38,7 @@ const themeVars = useThemeVars()
 </script>
 
 <template>
-  <NLayoutContent style="height: 100vh; padding: 20px 0;">
+  <NLayoutContent style="height: 100vh; padding: 20px 0">
     <NFlex
       style="margin-top: 30px"
       justify="center"
@@ -33,20 +46,21 @@ const themeVars = useThemeVars()
       vertical
     >
       <NCard
-        style="max-width: 80vw; width: 700px;"
+        style="max-width: 80vw; width: 700px"
         embedded
       >
         <template #header>
-          <div style="font-size: 22px; font-weight: bold; padding: 8px 0;">
-            关于
-          </div>
-          <NText depth="3" style="font-size: 13px; margin-top: 4px; padding-bottom: 8px;">
+          <div style="font-size: 22px; font-weight: bold; padding: 8px 0">关于</div>
+          <NText
+            depth="3"
+            style="font-size: 13px; margin-top: 4px; padding-bottom: 8px"
+          >
             构建时间: {{ buildTime.date }} ({{ buildTime.relative }})
           </NText>
         </template>
         <NText>
           一个兴趣使然的网站
-          <br>
+          <br />
           反馈 | 建议 | 需求 | 闲聊: 🐧
           <NButton
             tag="a"
@@ -79,33 +93,38 @@ const themeVars = useThemeVars()
           <NFlex
             vertical
             align="center"
-            style="margin-bottom: 16px;"
+            style="margin-bottom: 16px"
           >
-            <NText depth="3" style="font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              MADE WITH <NIcon
+            <NText
+              depth="3"
+              style="font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px"
+            >
+              MADE WITH
+              <NIcon
                 size="18"
                 :color="themeVars.errorColor"
               >
                 <HeartOutline />
-              </NIcon> BY
+              </NIcon>
+              BY
               <NButton
                 type="primary"
                 tag="a"
                 href="https://space.bilibili.com/10021741"
                 target="_blank"
                 text
-                style="font-weight: bold;"
+                style="font-weight: bold"
               >
                 Megghy
               </NButton>
             </NText>
-            <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+            <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px">
               <NButton
                 tag="a"
                 href="https://github.com/Megghy/vtsuru.live"
                 target="_blank"
                 text
-                style="display: flex; align-items: center; gap: 4px;"
+                style="display: flex; align-items: center; gap: 4px"
               >
                 <NIcon size="16">
                   <LogoGithub />
@@ -117,7 +136,7 @@ const themeVars = useThemeVars()
                 href="https://stats.uptimerobot.com/vGKZv8uhVC"
                 target="_blank"
                 text
-                style="display: flex; align-items: center; gap: 4px;"
+                style="display: flex; align-items: center; gap: 4px"
               >
                 <NIcon size="16">
                   <ServerOutline />
@@ -128,26 +147,24 @@ const themeVars = useThemeVars()
           </NFlex>
           <NDivider
             title-placement="left"
-            style="margin-top: 12px;"
+            style="margin-top: 12px"
           >
-            <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px">
               <span>技术栈</span>
             </div>
           </NDivider>
           <NFlex
             vertical
-            style="padding: 0 12px; margin-bottom: 16px;"
+            style="padding: 0 12px; margin-bottom: 16px"
           >
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px">
               <NIcon
                 size="20"
                 :color="themeVars.successColor"
               >
                 <CodeOutline />
               </NIcon>
-              <NText style="font-weight: 500;">
-                前端:
-              </NText>
+              <NText style="font-weight: 500"> 前端: </NText>
               <NTag
                 type="success"
                 size="small"
@@ -159,7 +176,7 @@ const themeVars = useThemeVars()
                   href="https://vuejs.org/"
                   target="_blank"
                   text
-                  style="padding: 0;"
+                  style="padding: 0"
                 >
                   Vue.js
                 </NButton>
@@ -175,7 +192,7 @@ const themeVars = useThemeVars()
                   href="https://www.typescriptlang.org/"
                   target="_blank"
                   text
-                  style="padding: 0;"
+                  style="padding: 0"
                 >
                   TypeScript
                 </NButton>
@@ -191,22 +208,20 @@ const themeVars = useThemeVars()
                   href="https://www.naiveui.com/"
                   target="_blank"
                   text
-                  style="padding: 0;"
+                  style="padding: 0"
                 >
                   Naive UI
                 </NButton>
               </NTag>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px">
               <NIcon
                 size="20"
                 :color="themeVars.infoColor"
               >
                 <ServerOutline />
               </NIcon>
-              <NText style="font-weight: 500;">
-                后端:
-              </NText>
+              <NText style="font-weight: 500"> 后端: </NText>
               <NTag
                 type="primary"
                 size="small"
@@ -218,7 +233,7 @@ const themeVars = useThemeVars()
                   href="https://dotnet.microsoft.com/"
                   target="_blank"
                   text
-                  style="padding: 0;"
+                  style="padding: 0"
                 >
                   C# .NET 10
                 </NButton>
@@ -234,7 +249,7 @@ const themeVars = useThemeVars()
                   href="https://www.postgresql.org/"
                   target="_blank"
                   text
-                  style="padding: 0;"
+                  style="padding: 0"
                 >
                   PostgreSQL
                 </NButton>
@@ -250,7 +265,7 @@ const themeVars = useThemeVars()
                   href="https://microsoft.github.io/garnet/"
                   target="_blank"
                   text
-                  style="padding: 0;"
+                  style="padding: 0"
                 >
                   Garnet
                 </NButton>
@@ -258,7 +273,7 @@ const themeVars = useThemeVars()
             </div>
           </NFlex>
           <NDivider title-placement="left">
-            <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px">
               <span>赞助我</span>
             </div>
           </NDivider>
@@ -272,7 +287,7 @@ const themeVars = useThemeVars()
             :style="{ borderRadius: themeVars.borderRadius }"
           />
           <NDivider title-placement="left">
-            <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px">
               <span>更新日志</span>
             </div>
           </NDivider>
@@ -441,7 +456,7 @@ const themeVars = useThemeVars()
       <NButton
         type="primary"
         size="large"
-        style="margin-top: 20px;"
+        style="margin-top: 20px"
         @click="$router.push({ name: 'manage-index' })"
       >
         回到控制台

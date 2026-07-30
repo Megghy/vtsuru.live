@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import type { UserInfo } from '@/api/api-models'
-import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 // ConfigItemType is imported in the script block above
 // import { ConfigItemDefinition, ConfigItemType, ExtractConfigData, defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes';
 import { NAlert, NButton, NCard, NForm, NFormItem, NInput, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+
+import type { UserInfo } from '@/api/api-models'
+import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
 
 // --- Props ---
@@ -91,14 +92,17 @@ const localConfig = computed<ExampleConfigType>(() => {
 })
 
 // --- 监听刷新信号 ---
-watch(() => props.refreshSignal, (newValue, oldValue) => {
-  if (newValue !== undefined && newValue !== oldValue) {
-    refreshCount.value++
-    message.success(`'示例 OBS 组件' 已刷新 (信号: ${newValue})`)
-    // 在这里执行组件的刷新逻辑，例如重新获取数据、重置状态等
-    // fetchData();
-  }
-})
+watch(
+  () => props.refreshSignal,
+  (newValue, oldValue) => {
+    if (newValue !== undefined && newValue !== oldValue) {
+      refreshCount.value++
+      message.success(`'示例 OBS 组件' 已刷新 (信号: ${newValue})`)
+      // 在这里执行组件的刷新逻辑，例如重新获取数据、重置状态等
+      // fetchData();
+    }
+  },
+)
 
 // --- 方法 ---
 function updateTitle() {
@@ -125,9 +129,13 @@ onMounted(() => {
   dynamicTitle.value = localConfig.value.title
 })
 
-watch(() => props.config, (newConfig) => {
-  dynamicTitle.value = newConfig?.title || DefaultConfig.title
-}, { deep: true })
+watch(
+  () => props.config,
+  (newConfig) => {
+    dynamicTitle.value = newConfig?.title || DefaultConfig.title
+  },
+  { deep: true },
+)
 </script>
 
 <template>
@@ -136,48 +144,44 @@ watch(() => props.config, (newConfig) => {
     class="example-obs-component"
   >
     <NAlert
-      :type="localConfig.alertType as any || 'info'"
+      :type="(localConfig.alertType as any) || 'info'"
       :title="localConfig.alertTitle || '组件信息'"
     >
       <p>{{ localConfig.contentText || '这是示例 OBS 组件的内容。' }}</p>
-      <p v-if="userInfo">
-        当前用户: {{ userInfo.name }}
-      </p>
+      <p v-if="userInfo">当前用户: {{ userInfo.name }}</p>
       <p>刷新次数: {{ refreshCount }}</p>
-      <p>
+      <div>
         当前配置:
         <pre>{{ JSON.stringify(localConfig, null, 2) }}</pre>
-      </p>
+      </div>
     </NAlert>
 
-    <NForm style="margin-top: 20px;">
+    <NForm style="margin-top: 20px">
       <NFormItem label="动态修改组件标题 (仅限本地，不保存)">
         <NInput
           v-model:value="dynamicTitle"
           placeholder="输入新标题"
         />
       </NFormItem>
-      <NButton @click="updateTitle">
-        更新标题
-      </NButton>
+      <NButton @click="updateTitle"> 更新标题 </NButton>
     </NForm>
   </NCard>
 </template>
 
 <style scoped>
-  .example-obs-component {
-    border: 1px dashed var(--vtsuru-border);
-    padding: 16px;
-  }
+.example-obs-component {
+  border: 1px dashed var(--vtsuru-border);
+  padding: 16px;
+}
 
-  pre {
-    background-color: var(--vtsuru-bg-inset);
-    padding: 8px;
-    border-radius: var(--vtsuru-radius);
-    font-size: 0.85em;
-    white-space: pre-wrap;
-    /* 确保长内容能换行 */
-    word-break: break-all;
-    /* 强制断词，防止溢出 */
-  }
+pre {
+  background-color: var(--vtsuru-bg-inset);
+  padding: 8px;
+  border-radius: var(--vtsuru-radius);
+  font-size: 0.85em;
+  white-space: pre-wrap;
+  /* 确保长内容能换行 */
+  word-break: break-all;
+  /* 强制断词，防止溢出 */
+}
 </style>

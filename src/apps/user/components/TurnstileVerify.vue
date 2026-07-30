@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { onUnmounted, ref } from 'vue'
-
 import VueTurnstile from 'vue-turnstile'
-import { TURNSTILE_KEY } from '@/shared/config'
 
+import { TURNSTILE_KEY } from '@/shared/config'
 import { isDarkMode } from '@/shared/utils'
 
 const turnstile = ref()

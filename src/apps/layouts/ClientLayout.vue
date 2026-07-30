@@ -1,28 +1,54 @@
 <script setup lang="ts">
-// 引入 Naive UI 组件 和 图标
-import type { MenuOption } from 'naive-ui'
 // 引入 Tauri 插件
 import { openUrl } from '@tauri-apps/plugin-opener'
-
-import { Chat24Filled, CloudArchive24Filled, Cookies24Filled, FlashAuto24Filled, Live24Filled, Mic24Filled, PlugConnected24Filled, Settings24Filled, VideoPerson24Filled } from '@vicons/fluent'
+import {
+  Chat24Filled,
+  CloudArchive24Filled,
+  Cookies24Filled,
+  FlashAuto24Filled,
+  Live24Filled,
+  Mic24Filled,
+  PlugConnected24Filled,
+  Settings24Filled,
+  VideoPerson24Filled,
+} from '@vicons/fluent'
 import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
-import { NA, NButton, NCard, NEmpty, NIcon, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NFlex, NPopover, NSpin, NTag, NText, NTooltip } from 'naive-ui';
+// 引入 Naive UI 组件 和 图标
+import type { MenuOption } from 'naive-ui'
+import {
+  NA,
+  NButton,
+  NCard,
+  NEmpty,
+  NIcon,
+  NInput,
+  NLayout,
+  NLayoutContent,
+  NLayoutSider,
+  NMenu,
+  NFlex,
+  NPopover,
+  NSpin,
+  NTag,
+  NText,
+  NTooltip,
+} from 'naive-ui'
 import { computed, h, ref } from 'vue' // 引入 ref, h, computed
-
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router' // 引入 Vue Router 组件
+
 // 引入自定义 API 和状态管理
 import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
-
-import { useWebFetcher } from '@/store/useWebFetcher'
-import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
-import { initAll, OnClientUnmounted, clientInited, clientInitStage } from '@/apps/client/data/initialize'
-import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
-import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
-import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
+import SpeechMiniController from '@/apps/client/components/SpeechMiniController.vue'
 // 引入子组件
 import WindowBar from '@/apps/client/components/WindowBar.vue'
-import SpeechMiniController from '@/apps/client/components/SpeechMiniController.vue'
+import { initAll, OnClientUnmounted, clientInited, clientInitStage } from '@/apps/client/data/initialize'
+import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
+import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
+import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { BASE_URL } from '@/shared/config'
+import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
+import { useWebFetcher } from '@/store/useWebFetcher'
+
 import '@/apps/client/styles/client-page.css'
 
 // --- 响应式状态 ---
@@ -114,7 +140,8 @@ async function login() {
     // 处理 API 返回结果
     if (!result) {
       // 登录失败：无效 Token
-      window.$notification.error({ // 使用全局通知
+      window.$notification.error({
+        // 使用全局通知
         title: '登陆失败',
         content: '无效的Token',
         duration: 3000,
@@ -154,20 +181,17 @@ async function login() {
 const menuOptions = computed(() => {
   return [
     {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-index' } }, () => '主页'), // 使用 h 函数渲染 RouterLink
+      label: () => h(RouterLink, { to: { name: 'client-index' } }, () => '主页'), // 使用 h 函数渲染 RouterLink
       key: 'go-back-home',
       icon: () => h(Home),
     },
     {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-fetcher' } }, () => 'EventFetcher'),
+      label: () => h(RouterLink, { to: { name: 'client-fetcher' } }, () => 'EventFetcher'),
       key: 'fetcher',
       icon: () => h(CloudArchive24Filled),
     },
     {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-live-manage' } }, () => '直播管理'),
+      label: () => h(RouterLink, { to: { name: 'client-live-manage' } }, () => '直播管理'),
       key: 'live-manage',
       icon: () => h(Live24Filled),
     },
@@ -190,26 +214,22 @@ const menuOptions = computed(() => {
       ],
     },
     {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-auto-action-manage' } }, () => '自动操作'),
+      label: () => h(RouterLink, { to: { name: 'client-auto-action-manage' } }, () => '自动操作'),
       key: 'danmaku-auto-action-manage',
       icon: () => h(FlashAuto24Filled),
     },
     {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-vts' } }, () => 'VTS 控制'),
+      label: () => h(RouterLink, { to: { name: 'client-vts' } }, () => 'VTS 控制'),
       key: 'vts',
       icon: () => h(VideoPerson24Filled),
     },
     {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-read-danmaku' } }, () => '读弹幕'),
+      label: () => h(RouterLink, { to: { name: 'client-read-danmaku' } }, () => '读弹幕'),
       key: 'read-danmaku',
       icon: () => h(Mic24Filled),
     },
     {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-settings' } }, () => '设置'),
+      label: () => h(RouterLink, { to: { name: 'client-settings' } }, () => '设置'),
       key: 'settings',
       icon: () => h(Settings24Filled),
     },
@@ -252,12 +272,8 @@ onMounted(() => {
     >
       <template #header>
         <div class="login-header">
-          <div class="login-title">
-            登陆
-          </div>
-          <div class="login-subtitle">
-            输入你的 VTsuru Token
-          </div>
+          <div class="login-title">登陆</div>
+          <div class="login-subtitle">输入你的 VTsuru Token</div>
         </div>
       </template>
 
@@ -325,7 +341,10 @@ onMounted(() => {
       @expand="siderCollapsed = false"
     >
       <div class="sider-content">
-        <div class="sider-header" :class="{ 'sider-header--collapsed': siderCollapsed }">
+        <div
+          class="sider-header"
+          :class="{ 'sider-header--collapsed': siderCollapsed }"
+        >
           <NText
             v-if="!siderCollapsed"
             tag="div"
@@ -353,12 +372,8 @@ onMounted(() => {
             </template>
             <div>
               <div>EventFetcher 状态</div>
-              <div v-if="webfetcher.state === 'connected'">
-                运行中
-              </div>
-              <div v-else>
-                未运行 / 连接断开
-              </div>
+              <div v-if="webfetcher.state === 'connected'">运行中</div>
+              <div v-else>未运行 / 连接断开</div>
             </div>
           </NTooltip>
         </div>
@@ -391,9 +406,7 @@ onMounted(() => {
                   >
                     <PlugConnected24Filled />
                   </NIcon>
-                  <NText depth="2">
-                    本地接口
-                  </NText>
+                  <NText depth="2"> 本地接口 </NText>
                 </div>
                 <NTag
                   size="small"
@@ -454,7 +467,13 @@ onMounted(() => {
             <div class="status-row-label">
               <NIcon
                 :size="16"
-                :color="cookieStatusType === 'success' ? 'var(--vtsuru-success)' : cookieStatusType === 'error' ? 'var(--vtsuru-error)' : 'var(--vtsuru-warning)'"
+                :color="
+                  cookieStatusType === 'success'
+                    ? 'var(--vtsuru-success)'
+                    : cookieStatusType === 'error'
+                      ? 'var(--vtsuru-error)'
+                      : 'var(--vtsuru-warning)'
+                "
               >
                 <Cookies24Filled />
               </NIcon>
@@ -518,9 +537,7 @@ onMounted(() => {
                   <component :is="Component" />
                 </div>
                 <template #fallback>
-                  <div class="suspense-fallback">
-                    加载中...
-                  </div>
+                  <div class="suspense-fallback">加载中...</div>
                 </template>
               </Suspense>
             </Transition>
@@ -535,265 +552,265 @@ onMounted(() => {
 
 <style scoped>
 /* 登录容器样式 */
-  .login-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* 计算高度，减去 WindowBar 的高度 */
-    height: calc(100vh - var(--client-titlebar-height));
-    background-color: var(--vtsuru-bg-surface);
-    /* 可选：添加背景色 */
-  }
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 计算高度，减去 WindowBar 的高度 */
+  height: calc(100vh - var(--client-titlebar-height));
+  background-color: var(--vtsuru-bg-surface);
+  /* 可选：添加背景色 */
+}
 
-  /* 登录卡片样式 */
-  .login-card {
-    max-width: 90vw;
-    /* 限制最大宽度 */
-    width: 400px;
-    /* 固定或最大宽度，根据设计调整 */
-  }
+/* 登录卡片样式 */
+.login-card {
+  max-width: 90vw;
+  /* 限制最大宽度 */
+  width: 400px;
+  /* 固定或最大宽度，根据设计调整 */
+}
 
-  /* 登录卡片头部样式 */
-  .login-header {
-    padding-bottom: 1rem;
-  }
+/* 登录卡片头部样式 */
+.login-header {
+  padding-bottom: 1rem;
+}
 
-  /* 登录标题 */
-  .login-title {
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: 500;
-    text-align: center;
-    /* 居中标题 */
-    margin-bottom: 0.5rem;
-    /* 标题和副标题间距 */
-  }
+/* 登录标题 */
+.login-title {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 500;
+  text-align: center;
+  /* 居中标题 */
+  margin-bottom: 0.5rem;
+  /* 标题和副标题间距 */
+}
 
-  /* 登录副标题 */
-  .login-subtitle {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: var(--vtsuru-fg-muted);
-    text-align: center;
-    /* 居中副标题 */
-  }
+/* 登录副标题 */
+.login-subtitle {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--vtsuru-fg-muted);
+  text-align: center;
+  /* 居中副标题 */
+}
 
-  /* Token 输入框标签容器 */
-  .token-label-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    /* 让 "Token" 和 "前往获取" 分散对齐 */
-    margin-bottom: 0.5rem;
-    /* 标签和输入框间距 */
-  }
+/* Token 输入框标签容器 */
+.token-label-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 让 "Token" 和 "前往获取" 分散对齐 */
+  margin-bottom: 0.5rem;
+  /* 标签和输入框间距 */
+}
 
-  /* Token 标签 */
-  .token-label {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-  }
+/* Token 标签 */
+.token-label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
 
-  /* "前往获取" 链接样式 */
-  .token-get-link {
-    font-size: 0.875rem;
-    cursor: pointer;
-    margin-left: 8px;
-    /* 与左侧标签保持一点距离 */
-  }
+/* "前往获取" 链接样式 */
+.token-get-link {
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-left: 8px;
+  /* 与左侧标签保持一点距离 */
+}
 
-  /* 主布局样式 */
-  .main-layout {
-    /* 计算高度，减去 WindowBar 的高度 */
-    height: calc(100vh - var(--client-titlebar-height));
-  }
+/* 主布局样式 */
+.main-layout {
+  /* 计算高度，减去 WindowBar 的高度 */
+  height: calc(100vh - var(--client-titlebar-height));
+}
 
-  /* 侧边栏内容容器 (用于可能的滚动或内边距) */
-  .sider-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
+/* 侧边栏内容容器 (用于可能的滚动或内边距) */
+.sider-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 
-  /* 侧边栏头部样式 */
-  .sider-header {
-    height: 60px;
-    /* 固定高度 */
-    border-bottom: 1px solid var(--vtsuru-border);
-    /* 使用 Naive UI 的边框颜色变量 */
-    padding: 0 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    /* 让标题和图标分开 */
-    flex-shrink: 0;
-    /* 防止在 flex 布局中被压缩 */
-  }
+/* 侧边栏头部样式 */
+.sider-header {
+  height: 60px;
+  /* 固定高度 */
+  border-bottom: 1px solid var(--vtsuru-border);
+  /* 使用 Naive UI 的边框颜色变量 */
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 让标题和图标分开 */
+  flex-shrink: 0;
+  /* 防止在 flex 布局中被压缩 */
+}
 
-  /* 折叠时头部仅余状态按钮, 居中显示 */
-  .sider-header--collapsed {
-    padding: 0;
-    justify-content: center;
-  }
+/* 折叠时头部仅余状态按钮, 居中显示 */
+.sider-header--collapsed {
+  padding: 0;
+  justify-content: center;
+}
 
-  /* 应用标题样式 */
-  .app-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    font-size: 1.1rem;
-    /* 稍微调整字体大小 */
-  }
+/* 应用标题样式 */
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  /* 稍微调整字体大小 */
+}
 
-  /* Fetcher 状态按钮样式 */
-  .fetcher-status-button {
-    padding: 0 6px;
-    /* 调整按钮内边距 */
-  }
+/* Fetcher 状态按钮样式 */
+.fetcher-status-button {
+  padding: 0 6px;
+  /* 调整按钮内边距 */
+}
 
-  /* 底部状态区: 运行状态行列表 (开放接口连接数等) */
-  .sider-status-list {
-    margin: 0 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+/* 底部状态区: 运行状态行列表 (开放接口连接数等) */
+.sider-status-list {
+  margin: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-  .status-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 
-  .status-row--hoverable {
-    cursor: default;
-    padding: 4px 6px;
-    margin: 0 -6px;
-    border-radius: var(--vtsuru-radius);
-    transition: background-color 0.2s;
-  }
+.status-row--hoverable {
+  cursor: default;
+  padding: 4px 6px;
+  margin: 0 -6px;
+  border-radius: var(--vtsuru-radius);
+  transition: background-color 0.2s;
+}
 
-  .status-row--hoverable:hover {
-    background-color: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.1));
-  }
+.status-row--hoverable:hover {
+  background-color: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.1));
+}
 
-  .status-row-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-  }
+.status-row-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
 
-  /* RPC 连接详情弹层 */
-  .rpc-detail {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+/* RPC 连接详情弹层 */
+.rpc-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-  .rpc-detail-title {
-    font-size: 0.9rem;
-  }
+.rpc-detail-title {
+  font-size: 0.9rem;
+}
 
-  .rpc-detail-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 6px 8px;
-    border-radius: var(--vtsuru-radius);
-    background-color: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
-  }
+.rpc-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
+}
 
-  .rpc-detail-origin {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
+.rpc-detail-origin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 
-  .rpc-detail-time {
-    font-size: 0.78rem;
-  }
+.rpc-detail-time {
+  font-size: 0.78rem;
+}
 
-  /* Fetcher 状态图标通用样式 */
-  .fetcher-status-icon {
-    height: 1rem;
-    width: 1rem;
-    vertical-align: middle;
-    /* 图标垂直居中 */
-  }
+/* Fetcher 状态图标通用样式 */
+.fetcher-status-icon {
+  height: 1rem;
+  width: 1rem;
+  vertical-align: middle;
+  /* 图标垂直居中 */
+}
 
-  /* 连接成功图标颜色 */
-  .fetcher-status-icon.connected {
-    color: var(--vtsuru-success);
-  }
+/* 连接成功图标颜色 */
+.fetcher-status-icon.connected {
+  color: var(--vtsuru-success);
+}
 
-  /* 连接失败/断开图标颜色 */
-  .fetcher-status-icon.disconnected {
-    color: var(--vtsuru-error);
-  }
+/* 连接失败/断开图标颜色 */
+.fetcher-status-icon.disconnected {
+  color: var(--vtsuru-error);
+}
 
-  /* 侧边栏菜单样式 */
-  .sider-menu {
-    flex-grow: 1;
-    /* 让菜单占据剩余空间 */
-    padding-top: 1rem;
-    /* 菜单与顶部的间距 */
-  }
+/* 侧边栏菜单样式 */
+.sider-menu {
+  flex-grow: 1;
+  /* 让菜单占据剩余空间 */
+  padding-top: 1rem;
+  /* 菜单与顶部的间距 */
+}
 
-  .cookie-status-card {
-    margin-top: 12px;
-    padding: 12px;
-    border: 1px solid var(--vtsuru-border);
-    border-radius: var(--vtsuru-radius);
-    background-color: var(--vtsuru-bg-surface);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+.cookie-status-card {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-  .cookie-status-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
+.cookie-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 
-  .cookie-status-button {
-    margin-top: 4px;
-  }
+.cookie-status-button {
+  margin-top: 4px;
+}
 
-  /* Suspense 后备内容样式 */
-  .suspense-fallback {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: calc(100vh - var(--client-titlebar-height) - 2rem);
-    /* 大致计算高度 */
-    color: var(--vtsuru-fg-muted);
-  }
+/* Suspense 后备内容样式 */
+.suspense-fallback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - var(--client-titlebar-height) - 2rem);
+  /* 大致计算高度 */
+  color: var(--vtsuru-fg-muted);
+}
 
-  .init-overlay {
-    position: fixed;
-    top: var(--client-titlebar-height);
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--vtsuru-bg-surface);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-  }
-  .init-overlay-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-  .init-stage {
-    color: var(--vtsuru-fg-muted);
-  }
+.init-overlay {
+  position: fixed;
+  top: var(--client-titlebar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--vtsuru-bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.init-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.init-stage {
+  color: var(--vtsuru-fg-muted);
+}
 </style>

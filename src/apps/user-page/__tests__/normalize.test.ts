@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { migrateUserPagesSettings } from '../normalize'
 
 describe('migrateUserPagesSettings', () => {
@@ -31,7 +32,9 @@ describe('migrateUserPagesSettings', () => {
     expect(() => migrateUserPagesSettings({ version: '1', pages: {} })).toThrow('version 不支持')
     expect(() => migrateUserPagesSettings({ version: 1 })).toThrow('缺少 home 或 pages')
     expect(() => migrateUserPagesSettings({ version: 1, pages: [] })).toThrow('pages 必须是 object')
-    expect(() => migrateUserPagesSettings({ version: 1, pages: { broken: { mode: 'unknown' } } })).toThrow('mode 不支持')
+    expect(() => migrateUserPagesSettings({ version: 1, pages: { broken: { mode: 'unknown' } } })).toThrow(
+      'mode 不支持',
+    )
     expect(() => migrateUserPagesSettings([])).toThrow('必须是 object')
   })
 })

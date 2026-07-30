@@ -3,7 +3,7 @@ import type { UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent' // Maximize 和 Restore 图标
 import { Close, RemoveOutline as Minus } from '@vicons/ionicons5' // Close 和 Minimize 图标
-import { NButton, NFlex } from 'naive-ui';
+import { NButton, NFlex } from 'naive-ui'
 // 显式导入 Naive UI 组件（好习惯）
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -66,11 +66,9 @@ const closeWindow = () => appWindow.hide()
 </script>
 
 <template>
-  <NFlex
-    class="titlebar"
-  >
+  <NFlex class="titlebar">
     <NFlex
-      style="flex: 1; padding-left: 8px;"
+      style="flex: 1; padding-left: 8px"
       align="center"
       @mousedown="handleTitlebarMouseDown"
     >
@@ -111,7 +109,7 @@ const closeWindow = () => appWindow.hide()
         <component
           :is="isMaximized ? SquareMultiple24Regular : Maximize24Filled"
           class="icon"
-          style="width: 14px; height: 14px;"
+          style="width: 14px; height: 14px"
         />
       </NButton>
       <NButton

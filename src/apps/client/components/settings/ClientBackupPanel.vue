@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import type { ClientBackupModule, ClientBackupPreview } from '@/apps/client/store/useClientBackup'
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import {
   NAlert,
   NButton,
@@ -15,13 +12,17 @@ import {
   NSelect,
   NText,
 } from 'naive-ui'
-import { isTauri } from '@/shared/config'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+
+import type { ClientBackupModule, ClientBackupPreview } from '@/apps/client/store/useClientBackup'
 import {
   CLIENT_BACKUP_MIN_VERSION,
   CLIENT_BACKUP_MODULE_OPTIONS,
   useClientBackup,
 } from '@/apps/client/store/useClientBackup'
 import { useSettings } from '@/apps/client/store/useSettings'
+import { isTauri } from '@/shared/config'
 
 const settings = useSettings()
 const backup = useClientBackup()
@@ -49,11 +50,15 @@ const effectiveIntervalText = computed(() => {
   return `当前使用预设 ${backupSettings.value.presetHours} 小时`
 })
 
-watch(() => settings.settings.backup, () => {
-  if (!backup.initialized) return
-  void settings.save()
-  void backup.reschedule()
-}, { deep: true })
+watch(
+  () => settings.settings.backup,
+  () => {
+    if (!backup.initialized) return
+    void settings.save()
+    void backup.reschedule()
+  },
+  { deep: true },
+)
 
 onMounted(async () => {
   await backup.init()
@@ -85,7 +90,7 @@ async function handleSelectImportFile() {
     if (!preview) return
 
     importPreview.value = preview
-    importModules.value = CLIENT_BACKUP_MODULE_OPTIONS.map(option => option.value)
+    importModules.value = CLIENT_BACKUP_MODULE_OPTIONS.map((option) => option.value)
     showImportModal.value = true
   } catch (error) {
     window.$message.error(error instanceof Error ? error.message : String(error))
@@ -108,7 +113,10 @@ async function handleConfirmImport() {
 </script>
 
 <template>
-  <NFlex vertical :size="12">
+  <NFlex
+    vertical
+    :size="12"
+  >
     <NAlert
       v-if="!isTauri()"
       type="error"
@@ -122,39 +130,70 @@ async function handleConfirmImport() {
       type="warning"
       :bordered="false"
     >
-      <NFlex align="center" justify="space-between">
-        <span>当前客户端版本为 {{ backup.currentVersion || '未知' }}，备份功能要求版本 >= {{ CLIENT_BACKUP_MIN_VERSION }}，请先更新客户端。</span>
-        <NButton size="small" type="warning" @click="router.push({ name: 'client-settings', query: { tab: 'about' } })">
+      <NFlex
+        align="center"
+        justify="space-between"
+      >
+        <span
+          >当前客户端版本为 {{ backup.currentVersion || '未知' }}，备份功能要求版本 >=
+          {{ CLIENT_BACKUP_MIN_VERSION }}，请先更新客户端。</span
+        >
+        <NButton
+          size="small"
+          type="warning"
+          @click="router.push({ name: 'client-settings', query: { tab: 'about' } })"
+        >
           检查更新
         </NButton>
       </NFlex>
     </NAlert>
 
     <template v-else>
-      <NAlert type="info" :bordered="false">
+      <NAlert
+        type="info"
+        :bordered="false"
+      >
         备份会生成单个 ZIP 文件，覆盖 Tauri Store 与客户端 IndexedDB 数据。自动备份仅在客户端运行期间生效。
       </NAlert>
 
-      <NCard title="备份目录" size="small" bordered>
-        <NFlex vertical :size="8">
+      <NCard
+        title="备份目录"
+        size="small"
+        bordered
+      >
+        <NFlex
+          vertical
+          :size="8"
+        >
           <NInput
             :value="backupSettings.directory"
             readonly
             placeholder="尚未选择备份目录"
           />
-          <NFlex justify="space-between" align="center">
-            <NText depth="3">
-              目录由系统对话框选择，定时备份和手动备份都写入这里。
-            </NText>
-            <NButton size="small" @click="handlePickDirectory">
+          <NFlex
+            justify="space-between"
+            align="center"
+          >
+            <NText depth="3"> 目录由系统对话框选择，定时备份和手动备份都写入这里。 </NText>
+            <NButton
+              size="small"
+              @click="handlePickDirectory"
+            >
               选择目录
             </NButton>
           </NFlex>
         </NFlex>
       </NCard>
 
-      <NCard title="自动备份" size="small" bordered>
-        <NFlex vertical :size="12">
+      <NCard
+        title="自动备份"
+        size="small"
+        bordered
+      >
+        <NFlex
+          vertical
+          :size="12"
+        >
           <label class="setting-row">
             <span>启用定时备份</span>
             <NCheckbox v-model:checked="backupSettings.scheduleEnabled" />
@@ -195,14 +234,17 @@ async function handleConfirmImport() {
         </NFlex>
       </NCard>
 
-      <NCard title="操作" size="small" bordered>
-        <NFlex vertical :size="8">
-          <NText depth="3">
-            上次备份: {{ lastBackupText }}
-          </NText>
-          <NText depth="3">
-            最近文件: {{ backupSettings.lastBackupFile || '无' }}
-          </NText>
+      <NCard
+        title="操作"
+        size="small"
+        bordered
+      >
+        <NFlex
+          vertical
+          :size="8"
+        >
+          <NText depth="3"> 上次备份: {{ lastBackupText }} </NText>
+          <NText depth="3"> 最近文件: {{ backupSettings.lastBackupFile || '无' }} </NText>
           <NFlex>
             <NButton
               type="primary"
@@ -231,27 +273,36 @@ async function handleConfirmImport() {
       style="width: 680px; max-width: calc(100vw - 24px)"
       :mask-closable="false"
     >
-      <NFlex v-if="importPreview" vertical :size="12">
-        <NAlert type="warning" :bordered="false">
+      <NFlex
+        v-if="importPreview"
+        vertical
+        :size="12"
+      >
+        <NAlert
+          type="warning"
+          :bordered="false"
+        >
           导入会覆盖已勾选模块的当前数据，未勾选模块保持不变。
         </NAlert>
 
-        <NText depth="3">
-          备份时间: {{ new Date(importPreview.manifest.createdAt).toLocaleString() }}
-        </NText>
-        <NText depth="3">
-          备份客户端版本: {{ importPreview.manifest.clientVersion }}
-        </NText>
+        <NText depth="3"> 备份时间: {{ new Date(importPreview.manifest.createdAt).toLocaleString() }} </NText>
+        <NText depth="3"> 备份客户端版本: {{ importPreview.manifest.clientVersion }} </NText>
 
         <NCheckboxGroup v-model:value="importModules">
-          <NFlex vertical :size="8">
+          <NFlex
+            vertical
+            :size="8"
+          >
             <NCard
               v-for="option in CLIENT_BACKUP_MODULE_OPTIONS"
               :key="option.value"
               size="small"
               bordered
             >
-              <NFlex justify="space-between" align="center">
+              <NFlex
+                justify="space-between"
+                align="center"
+              >
                 <div>
                   <NCheckbox :value="option.value">
                     {{ option.label }}
@@ -260,18 +311,14 @@ async function handleConfirmImport() {
                     {{ option.description }}
                   </div>
                 </div>
-                <NText depth="3">
-                  {{ importPreview.manifest.modules[option.value].count }} 项
-                </NText>
+                <NText depth="3"> {{ importPreview.manifest.modules[option.value].count }} 项 </NText>
               </NFlex>
             </NCard>
           </NFlex>
         </NCheckboxGroup>
 
         <NFlex justify="end">
-          <NButton @click="showImportModal = false">
-            取消
-          </NButton>
+          <NButton @click="showImportModal = false"> 取消 </NButton>
           <NButton
             type="error"
             :loading="backup.busy"

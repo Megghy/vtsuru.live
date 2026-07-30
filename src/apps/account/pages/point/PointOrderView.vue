@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { ResponsePointOrder2UserModel } from '@/api/api-models'
 import { ArrowSync24Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NFlex, NGrid, NIcon, NSelect, NSpin, useMessage } from 'naive-ui';
+import { NButton, NEmpty, NFlex, NGrid, NIcon, NSelect, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
+
+import type { ResponsePointOrder2UserModel } from '@/api/api-models'
 import { PointOrderStatus } from '@/api/api-models'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
 import { POINT_API_URL } from '@/shared/config'
@@ -26,15 +27,14 @@ const filteredOrders = computed(() => {
 
   // 状态筛选
   if (statusFilter.value !== null) {
-    result = result.filter(order => order.status === statusFilter.value)
+    result = result.filter((order) => order.status === statusFilter.value)
   }
 
   // 搜索关键词筛选
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
-    result = result.filter(order =>
-      order.goods?.name.toLowerCase().includes(keyword)
-      || order.id.toString().includes(keyword),
+    result = result.filter(
+      (order) => order.goods?.name.toLowerCase().includes(keyword) || order.id.toString().includes(keyword),
     )
   }
 
@@ -46,9 +46,9 @@ const orderStats = computed(() => {
   const totalPoints = orders.value.reduce((sum, o) => sum + o.point, 0)
   return {
     total: orders.value.length,
-    pending: orders.value.filter(o => o.status === PointOrderStatus.Pending).length,
-    shipped: orders.value.filter(o => o.status === PointOrderStatus.Shipped).length,
-    completed: orders.value.filter(o => o.status === PointOrderStatus.Completed).length,
+    pending: orders.value.filter((o) => o.status === PointOrderStatus.Pending).length,
+    shipped: orders.value.filter((o) => o.status === PointOrderStatus.Shipped).length,
+    completed: orders.value.filter((o) => o.status === PointOrderStatus.Completed).length,
     totalPoints: Number(totalPoints.toFixed(1)),
   }
 })
@@ -100,41 +100,31 @@ onMounted(async () => {
       style="margin-bottom: 16px"
     >
       <div class="stat-card">
-        <div class="stat-label">
-          总订单
-        </div>
+        <div class="stat-label">总订单</div>
         <div class="stat-value">
           {{ orderStats.total }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          待发货
-        </div>
+        <div class="stat-label">待发货</div>
         <div class="stat-value warning">
           {{ orderStats.pending }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          已发货
-        </div>
+        <div class="stat-label">已发货</div>
         <div class="stat-value info">
           {{ orderStats.shipped }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          已完成
-        </div>
+        <div class="stat-label">已完成</div>
         <div class="stat-value success">
           {{ orderStats.completed }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          总消耗积分
-        </div>
+        <div class="stat-label">总消耗积分</div>
         <div class="stat-value primary">
           {{ orderStats.totalPoints }}
         </div>
@@ -143,8 +133,16 @@ onMounted(async () => {
 
     <!-- 工具栏 -->
     <div class="toolbar-section">
-      <NFlex justify="space-between" align="center" wrap :gap="12">
-        <NFlex align="center" :gap="12">
+      <NFlex
+        justify="space-between"
+        align="center"
+        wrap
+        :gap="12"
+      >
+        <NFlex
+          align="center"
+          :gap="12"
+        >
           <NSelect
             v-model:value="statusFilter"
             :options="[
@@ -160,8 +158,15 @@ onMounted(async () => {
           />
         </NFlex>
 
-        <NFlex align="center" :gap="8">
-          <NButton secondary size="medium" @click="getOrders">
+        <NFlex
+          align="center"
+          :gap="8"
+        >
+          <NButton
+            secondary
+            size="medium"
+            @click="getOrders"
+          >
             <template #icon>
               <NIcon :component="ArrowSync24Regular" />
             </template>
@@ -171,7 +176,7 @@ onMounted(async () => {
       </NFlex>
     </div>
 
-    <div style="margin-top: 16px;" />
+    <div style="margin-top: 16px" />
 
     <NEmpty
       v-if="filteredOrders.length === 0"
@@ -215,10 +220,18 @@ onMounted(async () => {
   color: var(--vtsuru-fg-muted);
 }
 
-.stat-value.primary { color: var(--vtsuru-primary); }
-.stat-value.success { color: var(--vtsuru-success); }
-.stat-value.info { color: var(--vtsuru-info); }
-.stat-value.warning { color: var(--vtsuru-warning); }
+.stat-value.primary {
+  color: var(--vtsuru-primary);
+}
+.stat-value.success {
+  color: var(--vtsuru-success);
+}
+.stat-value.info {
+  color: var(--vtsuru-info);
+}
+.stat-value.warning {
+  color: var(--vtsuru-warning);
+}
 
 .toolbar-section {
   background-color: var(--vtsuru-bg-surface);

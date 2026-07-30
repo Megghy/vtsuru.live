@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+
 import * as constants from './constants'
 import ImgShadow from './ImgShadow.vue'
 import * as utils from './utils'
@@ -84,7 +85,8 @@ const timeText = computed(() => {
           <span
             id="timestamp"
             class="style-scope yt-live-chat-paid-message-renderer"
-          >{{ timeText }}</span>
+            >{{ timeText }}</span
+          >
         </div>
       </div>
       <div

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { APIFileModel } from '@/api/api-models'
-import type { CustomCodeIssue } from '@/apps/user-page/block/customHtmlRuntime'
-import type { CustomHtmlAsset } from '@/apps/user-page/block/customHtmlContract'
-import { configureMonacoEnvironment } from '@/apps/manage/components/monacoEnvironment'
 import * as monaco from 'monaco-editor'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
+import type { APIFileModel } from '@/api/api-models'
+import { configureMonacoEnvironment } from '@/apps/manage/components/monacoEnvironment'
+import type { CustomHtmlAsset } from '@/apps/user-page/block/customHtmlContract'
+import type { CustomCodeIssue } from '@/apps/user-page/block/customHtmlRuntime'
 
 const props = defineProps<{
   html: string
@@ -44,8 +45,8 @@ const THEME_VARIABLES = [
 ]
 
 function currentAssetEntries() {
-  const entries = new Map(props.assets.map(asset => [asset.key, asset.file]))
-  props.resources.forEach(file => entries.set(`file-${file.id}`, file))
+  const entries = new Map(props.assets.map((asset) => [asset.key, asset.file]))
+  props.resources.forEach((file) => entries.set(`file-${file.id}`, file))
   return [...entries].map(([key, file]) => ({ key, file }))
 }
 
@@ -93,7 +94,7 @@ function registerCompletions() {
         const range = replaceRange(model, position)
         return {
           suggestions: [
-            ...THEME_VARIABLES.map(variable => ({
+            ...THEME_VARIABLES.map((variable) => ({
               label: variable,
               kind: monaco.languages.CompletionItemKind.Variable,
               insertText: `var(${variable})`,
@@ -129,16 +130,17 @@ function switchLanguage(language: 'html' | 'css') {
 
 function setMarkers() {
   if (!htmlModel || !cssModel) return
-  const mapMarkers = (field: 'html' | 'css') => props.issues
-    .filter(item => item.field === field || (field === 'html' && item.field === 'assets'))
-    .map(item => ({
-      severity: monaco.MarkerSeverity.Error,
-      message: item.message,
-      startLineNumber: Math.max(1, item.line),
-      startColumn: Math.max(1, item.column),
-      endLineNumber: Math.max(1, item.line),
-      endColumn: Math.max(2, item.column + 1),
-    }))
+  const mapMarkers = (field: 'html' | 'css') =>
+    props.issues
+      .filter((item) => item.field === field || (field === 'html' && item.field === 'assets'))
+      .map((item) => ({
+        severity: monaco.MarkerSeverity.Error,
+        message: item.message,
+        startLineNumber: Math.max(1, item.line),
+        startColumn: Math.max(1, item.column),
+        endLineNumber: Math.max(1, item.line),
+        endColumn: Math.max(2, item.column + 1),
+      }))
   monaco.editor.setModelMarkers(htmlModel, 'vtsuru-custom-html', mapMarkers('html'))
   monaco.editor.setModelMarkers(cssModel, 'vtsuru-custom-html', mapMarkers('css'))
 }
@@ -159,8 +161,16 @@ defineExpose({ insertText, formatDocument })
 
 onMounted(() => {
   const instance = crypto.randomUUID()
-  htmlModel = monaco.editor.createModel(props.html, 'html', monaco.Uri.parse(`user-page-custom://component/${instance}.html`))
-  cssModel = monaco.editor.createModel(props.css, 'css', monaco.Uri.parse(`user-page-custom://component/${instance}.css`))
+  htmlModel = monaco.editor.createModel(
+    props.html,
+    'html',
+    monaco.Uri.parse(`user-page-custom://component/${instance}.html`),
+  )
+  cssModel = monaco.editor.createModel(
+    props.css,
+    'css',
+    monaco.Uri.parse(`user-page-custom://component/${instance}.css`),
+  )
   editor = monaco.editor.create(container.value!, {
     model: modelFor(activeLanguage),
     theme: props.theme,
@@ -181,17 +191,26 @@ onMounted(() => {
 })
 
 watch(() => props.activeLanguage, switchLanguage)
-watch(() => props.theme, value => monaco.editor.setTheme(value))
-watch(() => props.html, value => {
-  if (htmlModel && value !== htmlModel.getValue()) htmlModel.setValue(value)
-})
-watch(() => props.css, value => {
-  if (cssModel && value !== cssModel.getValue()) cssModel.setValue(value)
-})
+watch(
+  () => props.theme,
+  (value) => monaco.editor.setTheme(value),
+)
+watch(
+  () => props.html,
+  (value) => {
+    if (htmlModel && value !== htmlModel.getValue()) htmlModel.setValue(value)
+  },
+)
+watch(
+  () => props.css,
+  (value) => {
+    if (cssModel && value !== cssModel.getValue()) cssModel.setValue(value)
+  },
+)
 watch(() => props.issues, setMarkers, { deep: true })
 
 onBeforeUnmount(() => {
-  completions.forEach(item => item.dispose())
+  completions.forEach((item) => item.dispose())
   editor?.dispose()
   htmlModel?.dispose()
   cssModel?.dispose()
@@ -199,7 +218,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="container" class="code-editor" />
+  <div
+    ref="container"
+    class="code-editor"
+  />
 </template>
 
 <style scoped>

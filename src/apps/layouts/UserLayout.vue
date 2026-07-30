@@ -1,31 +1,58 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/api-models'
 import { Person48Filled, WindowWrench20Filled } from '@vicons/fluent'
 import { BrowsersOutline, ChevronBackOutline, ChevronForwardOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
 import { useElementSize } from '@vueuse/core'
 import {
-  darkTheme, NAvatar, NBackTop, NButton, NConfigProvider, NDivider, NEllipsis, NIcon, NModal, NResult, NScrollbar, NFlex, NSpin, NSwitch, NText, NTooltip } from 'naive-ui';
+  darkTheme,
+  NAvatar,
+  NBackTop,
+  NButton,
+  NConfigProvider,
+  NDivider,
+  NEllipsis,
+  NIcon,
+  NModal,
+  NResult,
+  NScrollbar,
+  NFlex,
+  NSpin,
+  NSwitch,
+  NText,
+  NTooltip,
+} from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
+
 import { useAccount } from '@/api/account'
+import type { UserInfo } from '@/api/api-models'
 import { ThemeType } from '@/api/api-models'
-import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import { getPageBackgroundCssVars, getUserPageNaiveThemeOverrides, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import {
+  getPageBackgroundCssVars,
+  getUserPageNaiveThemeOverrides,
+  getUserPageThemeCssVars,
+  resolvePageBackground,
+} from '@/apps/user-page/background'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
-import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import {
+  getEnabledUserFunctions,
+  isUserFeatureEnabled,
+  USER_FEATURE_DEFINITIONS,
+} from '@/apps/user-page/featureNavigation'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { providePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
+import { consumeDraftPreview } from '@/apps/user-page/runtime/draftPreview'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { clearUserPageRuntimeCache } from '@/apps/user-page/runtime/query'
 import { usePublicPageSeo } from '@/apps/user-page/runtime/seo'
-import { consumeDraftPreview } from '@/apps/user-page/runtime/draftPreview'
-import { getEnabledUserFunctions, isUserFeatureEnabled, USER_FEATURE_DEFINITIONS } from '@/apps/user-page/featureNavigation'
+import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import type { BiliProfile, BiliProfileStatus, UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
+
 import '@/apps/user/styles/user-page.css'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
@@ -172,18 +199,18 @@ type PageThemeMode = 'auto' | 'light' | 'dark'
 
 const globalThemeMode = computed<PageThemeMode>(() => {
   const m = (userPagesSettings.value as any)?.theme?.pageThemeMode
-  return (m === 'auto' || m === 'light' || m === 'dark') ? m : 'auto'
+  return m === 'auto' || m === 'light' || m === 'dark' ? m : 'auto'
 })
 
 const pageOverrideThemeMode = computed<PageThemeMode>(() => {
   const m = (currentUserPageConfig.value as any)?.theme?.pageThemeMode
-  return (m === 'auto' || m === 'light' || m === 'dark') ? m : 'auto'
+  return m === 'auto' || m === 'light' || m === 'dark' ? m : 'auto'
 })
 
 const blockThemeMode = computed<PageThemeMode>(() => {
   const v = currentBlockValidation.value
   const m = v && v.ok ? (v.project.theme as any)?.pageThemeMode : undefined
-  return (m === 'auto' || m === 'light' || m === 'dark') ? m : 'auto'
+  return m === 'auto' || m === 'light' || m === 'dark' ? m : 'auto'
 })
 
 const pageThemeMode = computed<PageThemeMode>(() => {
@@ -194,11 +221,13 @@ const pageThemeMode = computed<PageThemeMode>(() => {
 })
 
 const layoutTheme = computed(() => ({
-  ...((userPagesSettings.value as any)?.theme),
-  ...((currentUserPageConfig.value as any)?.theme),
+  ...(userPagesSettings.value as any)?.theme,
+  ...(currentUserPageConfig.value as any)?.theme,
 }))
 
-useGoogleFont(computed(() => typeof layoutTheme.value.fontFamily === 'string' ? layoutTheme.value.fontFamily : undefined))
+useGoogleFont(
+  computed(() => (typeof layoutTheme.value.fontFamily === 'string' ? layoutTheme.value.fontFamily : undefined)),
+)
 
 const effectiveIsDark = computed(() => resolvePageThemeIsDark(pageThemeMode.value, isDarkMode.value))
 
@@ -253,8 +282,10 @@ const pageThemeOverrides = computed(() => {
 
 const themeSwitchTitle = computed(() => {
   if (pageThemeMode.value === 'auto') return '切换站点亮/暗色主题'
-  if (blockThemeMode.value !== 'auto') return pageThemeMode.value === 'dark' ? '该区块页已强制使用暗色主题' : '该区块页已强制使用亮色主题'
-  if (pageOverrideThemeMode.value !== 'auto') return pageThemeMode.value === 'dark' ? '该页面已强制使用暗色主题' : '该页面已强制使用亮色主题'
+  if (blockThemeMode.value !== 'auto')
+    return pageThemeMode.value === 'dark' ? '该区块页已强制使用暗色主题' : '该区块页已强制使用亮色主题'
+  if (pageOverrideThemeMode.value !== 'auto')
+    return pageThemeMode.value === 'dark' ? '该页面已强制使用暗色主题' : '该页面已强制使用亮色主题'
   return pageThemeMode.value === 'dark' ? '全局样式已强制使用暗色主题' : '全局样式已强制使用亮色主题'
 })
 
@@ -297,9 +328,9 @@ const layoutContentBg = computed(() => {
   return globalBg.value?.coverSidebar ? null : globalBg.value
 })
 
-const layoutContentBgVars = computed(() => layoutContentBg.value
-  ? getPageBackgroundCssVars(layoutContentBg.value, effectiveIsDark.value)
-  : {})
+const layoutContentBgVars = computed(() =>
+  layoutContentBg.value ? getPageBackgroundCssVars(layoutContentBg.value, effectiveIsDark.value) : {},
+)
 
 const layoutContentBgClass = computed(() => ({
   'content-bg-host': !!layoutContentBg.value,
@@ -324,25 +355,31 @@ function updateMenuOptions() {
     navGroups.value = []
     return
   }
-  const baseItems: UserNavItem[] = [
-    { label: '主页', key: 'user-index', icon: Home, to: { name: 'user-index' } },
-  ]
+  const baseItems: UserNavItem[] = [{ label: '主页', key: 'user-index', icon: Home, to: { name: 'user-index' } }]
 
   const enabledFunctions = getEnabledUserFunctions(userInfo.value)
-  baseItems.push(...USER_FEATURE_DEFINITIONS
-    .filter(feature => isUserFeatureEnabled(feature, enabledFunctions))
-    .map(feature => ({ label: feature.label, key: feature.routeName, icon: feature.icon, to: { name: feature.routeName } })))
+  baseItems.push(
+    ...USER_FEATURE_DEFINITIONS.filter((feature) => isUserFeatureEnabled(feature, enabledFunctions)).map((feature) => ({
+      label: feature.label,
+      key: feature.routeName,
+      icon: feature.icon,
+      to: { name: feature.routeName },
+    })),
+  )
 
   const pages = userPagesSettings.value?.pages ?? {}
   const pageItems = Object.entries(pages)
     .filter(([, cfg]) => (cfg as any)?.navVisible !== false)
     .map(([slug, cfg]) => ({
       slug,
-      title: ((cfg as any)?.title && String((cfg as any).title).trim().length) ? String((cfg as any).title).trim() : `/${slug}`,
+      title:
+        (cfg as any)?.title && String((cfg as any).title).trim().length
+          ? String((cfg as any).title).trim()
+          : `/${slug}`,
       order: typeof (cfg as any)?.navOrder === 'number' ? (cfg as any).navOrder : 0,
     }))
-    .toSorted((a, b) => (a.order - b.order) || a.slug.localeCompare(b.slug))
-    .map(it => ({
+    .toSorted((a, b) => a.order - b.order || a.slug.localeCompare(b.slug))
+    .map((it) => ({
       label: it.title,
       key: `user-page:${it.slug}`,
       icon: BrowsersOutline,
@@ -396,7 +433,7 @@ async function loadPublicUser(userId: string | string[] | undefined, signal: Abo
 
   let fetchedUserInfo: UserInfo | undefined
   try {
-    fetchedUserInfo = await fetchPublicUserInfo(userId, { signal }) ?? undefined
+    fetchedUserInfo = (await fetchPublicUserInfo(userId, { signal })) ?? undefined
   } catch (cause) {
     if (signal.aborted) return
     reportPublicPageError(cause, 'user')
@@ -412,8 +449,9 @@ async function loadPublicUser(userId: string | string[] | undefined, signal: Abo
 
   userInfo.value = fetchedUserInfo
   try {
-    userPagesSettings.value = consumeDraftPreview(route.query.draftPreview, fetchedUserInfo.id)
-      ?? await fetchUserPagesSettingsByUserId(fetchedUserInfo.id, { signal })
+    userPagesSettings.value =
+      consumeDraftPreview(route.query.draftPreview, fetchedUserInfo.id) ??
+      (await fetchUserPagesSettingsByUserId(fetchedUserInfo.id, { signal }))
   } catch (cause) {
     if (signal.aborted) return
     reportPublicPageError(cause, 'settings')
@@ -429,11 +467,7 @@ async function loadPublicUser(userId: string | string[] | undefined, signal: Abo
 }
 
 watch(
-  [
-    () => route.params.id,
-    () => route.query.draftPreview,
-    () => reloadVersion.value,
-  ],
+  [() => route.params.id, () => route.query.draftPreview, () => reloadVersion.value],
   ([newId], _previous, onCleanup) => {
     clearUserPageRuntimeCache()
     const controller = new AbortController()
@@ -467,7 +501,10 @@ watch(
       description="网络暂时不可用或服务发生异常，请稍后重试"
     >
       <template #footer>
-        <NButton type="primary" @click="retryPublicPage">
+        <NButton
+          type="primary"
+          @click="retryPublicPage"
+        >
           重新加载
         </NButton>
       </template>
@@ -488,11 +525,23 @@ watch(
       <header class="layout-header">
         <div class="layout-header__inner">
           <div class="layout-header__left">
-            <img class="layout-header__logo" :src="logoUrl" alt="VTSURU" decoding="async">
-            <NText strong class="site-title">
+            <img
+              class="layout-header__logo"
+              :src="logoUrl"
+              alt="VTSURU"
+              decoding="async"
+            />
+            <NText
+              strong
+              class="site-title"
+            >
               VTSURU
             </NText>
-            <NText v-if="headerSubtitle" depth="3" class="page-title">
+            <NText
+              v-if="headerSubtitle"
+              depth="3"
+              class="page-title"
+            >
               {{ headerSubtitle }}
             </NText>
           </div>
@@ -564,16 +613,25 @@ watch(
           :class="{ collapsed: siderCollapsed }"
           :style="{ width: siderCollapsed ? '56px' : '180px' }"
         >
-          <div class="sider-shell" :class="{ collapsed: siderCollapsed }">
+          <div
+            class="sider-shell"
+            :class="{ collapsed: siderCollapsed }"
+          >
             <div class="sider-top">
-              <NTooltip placement="right" :show-arrow="false">
+              <NTooltip
+                placement="right"
+                :show-arrow="false"
+              >
                 <template #trigger>
                   <button
                     class="sider-collapse-btn"
                     type="button"
                     @click="siderCollapsed = !siderCollapsed"
                   >
-                    <component :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline" class="sider-collapse-icon" />
+                    <component
+                      :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
+                      class="sider-collapse-icon"
+                    />
                   </button>
                 </template>
                 {{ siderCollapsed ? '展开侧栏' : '收起侧栏' }}
@@ -612,7 +670,7 @@ watch(
                     alt=""
                     aria-hidden="true"
                     referrerpolicy="no-referrer"
-                  >
+                  />
                 </button>
                 <NEllipsis
                   v-if="siderWidth > 100"
@@ -644,27 +702,50 @@ watch(
               <NSpin size="small" />
             </div>
 
-            <NDivider style="margin: 0; margin-top: 5px;" />
+            <NDivider style="margin: 0; margin-top: 5px" />
 
             <!-- 导航菜单 -->
-            <NScrollbar class="sider-scroll" :class="{ disabled: isLoading }">
-              <nav class="sider-nav" :class="{ collapsed: siderCollapsed }">
-                <template v-for="g in navGroups" :key="g.key">
+            <NScrollbar
+              class="sider-scroll"
+              :class="{ disabled: isLoading }"
+            >
+              <nav
+                class="sider-nav"
+                :class="{ collapsed: siderCollapsed }"
+              >
+                <template
+                  v-for="g in navGroups"
+                  :key="g.key"
+                >
                   <div class="nav-group">
-                    <div v-if="!siderCollapsed" class="nav-group__header">
+                    <div
+                      v-if="!siderCollapsed"
+                      class="nav-group__header"
+                    >
                       <span class="nav-group__label">{{ g.label }}</span>
                     </div>
                     <div class="nav-group__items">
-                      <div v-for="item in g.items" :key="item.key" class="nav-item-row">
+                      <div
+                        v-for="item in g.items"
+                        :key="item.key"
+                        class="nav-item-row"
+                      >
                         <template v-if="!item.disabled && item.to">
-                          <NTooltip v-if="siderCollapsed" placement="right" :show-arrow="false">
+                          <NTooltip
+                            v-if="siderCollapsed"
+                            placement="right"
+                            :show-arrow="false"
+                          >
                             <template #trigger>
                               <RouterLink
                                 :to="item.to"
                                 class="nav-item"
                                 :class="{ active: activeMenuKey === item.key }"
                               >
-                                <component :is="item.icon" class="nav-item__icon" />
+                                <component
+                                  :is="item.icon"
+                                  class="nav-item__icon"
+                                />
                               </RouterLink>
                             </template>
                             {{ item.label }}
@@ -676,16 +757,26 @@ watch(
                             class="nav-item"
                             :class="{ active: activeMenuKey === item.key }"
                           >
-                            <component :is="item.icon" class="nav-item__icon" />
+                            <component
+                              :is="item.icon"
+                              class="nav-item__icon"
+                            />
                             <span class="nav-item__label">{{ item.label }}</span>
                           </RouterLink>
                         </template>
 
                         <template v-else>
-                          <NTooltip v-if="siderCollapsed" placement="right" :show-arrow="false">
+                          <NTooltip
+                            v-if="siderCollapsed"
+                            placement="right"
+                            :show-arrow="false"
+                          >
                             <template #trigger>
                               <div class="nav-item nav-item--disabled">
-                                <component :is="item.icon" class="nav-item__icon" />
+                                <component
+                                  :is="item.icon"
+                                  class="nav-item__icon"
+                                />
                               </div>
                             </template>
                             {{ item.disabledReason || item.label }}
@@ -696,7 +787,10 @@ watch(
                             class="nav-item nav-item--disabled"
                             :title="item.disabledReason || item.label"
                           >
-                            <component :is="item.icon" class="nav-item__icon" />
+                            <component
+                              :is="item.icon"
+                              class="nav-item__icon"
+                            />
                             <span class="nav-item__label">{{ item.label }}</span>
                           </div>
                         </template>
@@ -708,19 +802,23 @@ watch(
             </NScrollbar>
 
             <!-- 侧边栏底部链接 -->
-            <div v-if="siderWidth > 150" class="sider-footer">
+            <div
+              v-if="siderWidth > 150"
+              class="sider-footer"
+            >
               <NFlex
                 justify="center"
                 align="center"
                 vertical
                 size="small"
-                style="width: 100%;"
+                style="width: 100%"
               >
                 <NText
                   depth="3"
                   class="footer-text"
                 >
-                  有更多功能建议请 <NButton
+                  有更多功能建议请
+                  <NButton
                     text
                     type="info"
                     tag="a"
@@ -766,7 +864,11 @@ watch(
             v-else-if="loadStatus === 'ready' && userInfo"
             class="viewer-scroll"
           >
-            <div class="viewer-page-content" :class="layoutContentBgClass" :style="layoutContentBgVars">
+            <div
+              class="viewer-page-content"
+              :class="layoutContentBgClass"
+              :style="layoutContentBgVars"
+            >
               <!-- 路由视图和动画 -->
               <RouterView v-slot="{ Component, route: viewRoute }">
                 <KeepAlive>
@@ -815,20 +917,16 @@ watch(
     :auto-focus="false"
     :mask-closable="false"
   >
-    <NAlert
-      type="info"
-    >
+    <NAlert type="info">
       <NFlex
         vertical
         align="center"
         size="small"
       >
-        <div style="text-align: center;">
-          如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录
-        </div>
+        <div style="text-align: center">如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录</div>
         <NFlex
           justify="center"
-          style="width: 100%; margin-top: 8px;"
+          style="width: 100%; margin-top: 8px"
         >
           <NButton
             type="primary"
@@ -843,7 +941,7 @@ watch(
         </NFlex>
       </NFlex>
     </NAlert>
-    <br>
+    <br />
     <!-- 异步加载注册登录组件，优化初始加载性能 -->
     <RegisterAndLogin
       closable

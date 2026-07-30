@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import {
-  NAlert, NButton, NInput, NModal, NRadioButton, NRadioGroup, NText, NUpload, useMessage,
-} from 'naive-ui'
+import { NAlert, NButton, NInput, NModal, NRadioButton, NRadioGroup, NText, NUpload, useMessage } from 'naive-ui'
 import type { UploadFileInfo } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
+
 import { useAccount } from '@/api/account'
 import { QueryPostAPI, GetHeaders } from '@/api/query'
-import { TTS_API_URL } from '@/shared/config'
-import { useSpeechService } from '@/store/useSpeechService'
 import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from '@/apps/open-live/voice-providers/ai-client'
 import { saveVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
+import { TTS_API_URL } from '@/shared/config'
+import { useSpeechService } from '@/store/useSpeechService'
 
 interface EditVoice {
   id: number
@@ -144,9 +143,7 @@ async function previewDirect(apiKey: string): Promise<Blob> {
     messages.push({ role: 'assistant', content: previewText.value })
     req = { model: 'mimo-v2.5-tts-voiceclone', messages, audio: { format: 'wav', voice: audioDataUrl } }
   } else {
-    const userContent = directorNote.value.trim()
-      ? `${description.value}\n${directorNote.value}`
-      : description.value
+    const userContent = directorNote.value.trim() ? `${description.value}\n${directorNote.value}` : description.value
     req = {
       model: 'mimo-v2.5-tts-voicedesign',
       messages: [
@@ -172,7 +169,9 @@ async function save() {
       }
       const headers = Object.fromEntries(GetHeaders())
       const resp = await fetch(`${TTS_API_URL}mimo/voices/custom/${props.editVoice!.id}`, {
-        method: 'PUT', body: fd, headers,
+        method: 'PUT',
+        body: fd,
+        headers,
       })
       const data = await resp.json().catch(() => null)
       if (!data || data.code !== 200) throw new Error(data?.message || '更新失败')
@@ -231,29 +230,45 @@ function reset() {
   >
     <div class="form">
       <div class="field">
-        <NText strong style="font-size: 12px">
+        <NText
+          strong
+          style="font-size: 12px"
+        >
           名称
         </NText>
-        <NInput v-model:value="name" placeholder="给音色起个名字" size="small" :disabled="isEdit" />
+        <NInput
+          v-model:value="name"
+          placeholder="给音色起个名字"
+          size="small"
+          :disabled="isEdit"
+        />
       </div>
 
-      <div v-if="!isEdit" class="field">
-        <NText strong style="font-size: 12px">
+      <div
+        v-if="!isEdit"
+        class="field"
+      >
+        <NText
+          strong
+          style="font-size: 12px"
+        >
           类型
         </NText>
-        <NRadioGroup v-model:value="type" size="small">
-          <NRadioButton value="clone">
-            音频克隆
-          </NRadioButton>
-          <NRadioButton value="design">
-            文字描述
-          </NRadioButton>
+        <NRadioGroup
+          v-model:value="type"
+          size="small"
+        >
+          <NRadioButton value="clone"> 音频克隆 </NRadioButton>
+          <NRadioButton value="design"> 文字描述 </NRadioButton>
         </NRadioGroup>
       </div>
 
       <template v-if="type === 'clone'">
         <div class="field">
-          <NText strong style="font-size: 12px">
+          <NText
+            strong
+            style="font-size: 12px"
+          >
             参考音频{{ isEdit ? '（留空保持不变）' : '' }}
           </NText>
           <NUpload
@@ -262,13 +277,20 @@ function reset() {
             :max="1"
             :default-upload="false"
           >
-            <NButton size="small" tertiary>
+            <NButton
+              size="small"
+              tertiary
+            >
               选择文件 (mp3/wav, 最大 10MB)
             </NButton>
           </NUpload>
-          <NText v-if="!isEdit" depth="3" style="font-size: 11px; line-height: 1.5">
+          <NText
+            v-if="!isEdit"
+            depth="3"
+            style="font-size: 11px; line-height: 1.5"
+          >
             要求：清晰的单人语音，时长 5~30 秒为佳，避免背景音乐/噪声/混响。
-            <br>
+            <br />
             建议用手机录音 App 在安静环境下录一段正常语速的朗读。
           </NText>
         </div>
@@ -276,7 +298,10 @@ function reset() {
 
       <template v-if="type === 'design'">
         <div class="field">
-          <NText strong style="font-size: 12px">
+          <NText
+            strong
+            style="font-size: 12px"
+          >
             音色描述
           </NText>
           <NInput
@@ -286,18 +311,24 @@ function reset() {
             placeholder="用自然语言描述想要的音色特征，1-4 句即可"
             size="small"
           />
-          <NText depth="3" style="font-size: 11px; line-height: 1.6">
+          <NText
+            depth="3"
+            style="font-size: 11px; line-height: 1.6"
+          >
             关键维度：性别/年龄、音色质感（磁性/醇厚/清亮/沙哑）、情绪语气、语速节奏。
-            <br>
+            <br />
             可选加入：角色人设、说话风格、场景描写。描述越具体越好，但避免矛盾特征。
-            <br>
+            <br />
             示例：一位年迈的老先生，带北方口音，语速缓慢沉稳，嗓音略带沙哑和沧桑感，仿佛饱经风霜的老爷爷在讲故事
           </NText>
         </div>
       </template>
 
       <div class="field">
-        <NText strong style="font-size: 12px">
+        <NText
+          strong
+          style="font-size: 12px"
+        >
           导演指令 (可选)
         </NText>
         <NInput
@@ -307,25 +338,37 @@ function reset() {
           placeholder="像给演员写指导：语速、气息、停顿、重音、情绪起伏"
           size="small"
         />
-        <NText depth="3" style="font-size: 11px; line-height: 1.6">
+        <NText
+          depth="3"
+          style="font-size: 11px; line-height: 1.6"
+        >
           用自然语言描述朗读方式，支持多风格切换、复合情绪、字粒度控制。
-          <br>
+          <br />
           简单示例：用轻快上扬的语调，语速稍快，带着压抑不住的激动与小骄傲
-          <br>
+          <br />
           导演模式：可从【角色】【场景】【指导】三个维度详细刻画，适合角色配音等高要求场景
         </NText>
       </div>
 
       <div class="field">
-        <NText strong style="font-size: 12px">
+        <NText
+          strong
+          style="font-size: 12px"
+        >
           试听文本
         </NText>
         <div style="display: flex; gap: 6px">
-          <NInput v-model:value="previewText" size="small" style="flex: 1" />
+          <NInput
+            v-model:value="previewText"
+            size="small"
+            style="flex: 1"
+          />
           <NButton
             :disabled="!canPreview"
             :loading="previewing"
-            type="primary" tertiary size="small"
+            type="primary"
+            tertiary
+            size="small"
             @click="preview"
           >
             试听
@@ -333,18 +376,27 @@ function reset() {
         </div>
       </div>
 
-      <NAlert v-if="!account" type="warning" :bordered="false" size="small">
+      <NAlert
+        v-if="!account"
+        type="warning"
+        :bordered="false"
+        size="small"
+      >
         需要登录才能保存自定义音色
       </NAlert>
     </div>
 
     <template #action>
       <div style="display: flex; justify-content: flex-end; gap: 8px">
-        <NButton size="small" @click="show = false">
+        <NButton
+          size="small"
+          @click="show = false"
+        >
           取消
         </NButton>
         <NButton
-          type="primary" size="small"
+          type="primary"
+          size="small"
           :disabled="!canSave || !account"
           :loading="saving"
           @click="save"

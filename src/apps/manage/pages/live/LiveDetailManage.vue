@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
-import { NButton, NEmpty, NSpin, NTabPane, NTabs, useMessage, useThemeVars } from 'naive-ui';
+import { NButton, NEmpty, NSpin, NTabPane, NTabs, useMessage, useThemeVars } from 'naive-ui'
 import { computed, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
+import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
+import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import DanmakuContainer from '@/apps/manage/components/live/DanmakuContainer.vue'
 import LiveTranscriptPanel from '@/apps/manage/components/live/LiveTranscriptPanel.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import { useVTsuruHub } from '@/store/useVTsuruHub'
 import { LIVE_API_URL } from '@/shared/config'
+import { useVTsuruHub } from '@/store/useVTsuruHub'
 
 interface ResponseLiveDetail {
   live: ResponseLiveInfoModel
@@ -131,9 +132,16 @@ onBeforeUnmount(async () => {
 <template>
   <NSpin :show="isLoading">
     <template v-if="!isLoading">
-      <ManagePageHeader :title="pageTitle" :subtitle="pageSubtitle">
+      <ManagePageHeader
+        :title="pageTitle"
+        :subtitle="pageSubtitle"
+      >
         <template #action>
-          <NButton secondary size="small" @click="router.push({ name: 'manage-live' })">
+          <NButton
+            secondary
+            size="small"
+            @click="router.push({ name: 'manage-live' })"
+          >
             返回
           </NButton>
           <span :style="receivingPillStyle">
@@ -150,7 +158,10 @@ onBeforeUnmount(async () => {
         animated
         @update:value="handleTabChange"
       >
-        <NTabPane name="danmaku" tab="弹幕记录">
+        <NTabPane
+          name="danmaku"
+          tab="弹幕记录"
+        >
           <DanmakuContainer
             ref="danmakuContainerRef"
             :current-live="liveInfo.live"
@@ -166,7 +177,10 @@ onBeforeUnmount(async () => {
             :item-height="25"
           />
         </NTabPane>
-        <NTabPane name="transcript" tab="语音转写">
+        <NTabPane
+          name="transcript"
+          tab="语音转写"
+        >
           <LiveTranscriptPanel
             ref="transcriptPanelRef"
             :live-id="liveInfo.live.liveId"
@@ -178,7 +192,10 @@ onBeforeUnmount(async () => {
         description="无数据"
       >
         <template #extra>
-          <NButton type="primary" @click="loadInitialData">
+          <NButton
+            type="primary"
+            @click="loadInitialData"
+          >
             重试
           </NButton>
         </template>
@@ -186,4 +203,3 @@ onBeforeUnmount(async () => {
     </template>
   </NSpin>
 </template>
-

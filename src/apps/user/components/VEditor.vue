@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
-import type { APIRoot } from '@/api/api-models'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage, useThemeVars } from 'naive-ui';
+import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef } from 'vue'
+
+import type { APIRoot } from '@/api/api-models'
 import { GetHeaders } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'
 import { isDarkMode } from '@/shared/utils'
+
 import '@/assets/editorDarkMode.css'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 

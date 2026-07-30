@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import type { CSSProperties } from 'vue'
-import type { SongRequestInfo } from '@/api/api-models'
-import { Checkmark12Regular, Dismiss16Filled, Mic24Filled, Play24Filled, PresenceBlocked16Regular, } from '@vicons/fluent'
 import {
-  NButton, NCard, NIcon, NPopconfirm, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui';
+  Checkmark12Regular,
+  Dismiss16Filled,
+  Mic24Filled,
+  Play24Filled,
+  PresenceBlocked16Regular,
+} from '@vicons/fluent'
+import { NButton, NCard, NIcon, NPopconfirm, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import type { CSSProperties } from 'vue'
 import { computed, inject } from 'vue'
+
+import type { SongRequestInfo } from '@/api/api-models'
 import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
-import { useLiveRequest } from '@/composables/useLiveRequest'
 import UserBadges from '@/apps/open-live/components/UserBadges.vue'
+import { useLiveRequest } from '@/composables/useLiveRequest'
 
 const props = defineProps<{
   song: SongRequestInfo
@@ -79,7 +85,9 @@ const activeSongs = inject<SongRequestInfo[]>('activeSongs', [])
 
 // 判断是否有其他正在演唱的歌曲
 const hasOtherSingSong = computed(() => {
-  return activeSongs.findIndex((s: SongRequestInfo) => s.id != props.song.id && s.status == SongRequestStatus.Singing) > -1
+  return (
+    activeSongs.findIndex((s: SongRequestInfo) => s.id != props.song.id && s.status == SongRequestStatus.Singing) > -1
+  )
 })
 </script>
 
@@ -91,29 +99,48 @@ const hasOtherSingSong = computed(() => {
     bordered
     :style="isSingingStatus ? 'border-left: 4px solid var(--vtsuru-success);' : undefined"
   >
-    <NFlex justify="space-between" align="center" :wrap="false">
+    <NFlex
+      justify="space-between"
+      align="center"
+      :wrap="false"
+    >
       <!-- 左侧信息 -->
-      <NFlex align="center" :size="8" :wrap="false">
+      <NFlex
+        align="center"
+        :size="8"
+        :wrap="false"
+      >
         <!-- 序号 -->
         <span :style="getIndexStyle(song.status)">
           {{ index }}
         </span>
 
         <!-- 歌曲名称 -->
-        <NText strong style="font-size: 16px">
+        <NText
+          strong
+          style="font-size: 16px"
+        >
           {{ song.songName }}
         </NText>
 
         <!-- 用户信息 -->
         <template v-if="song.from === SongRequestFrom.Manual">
-          <NTag size="tiny" :bordered="false">
+          <NTag
+            size="tiny"
+            :bordered="false"
+          >
             手动添加
           </NTag>
         </template>
         <template v-else>
           <NTooltip>
             <template #trigger>
-              <NTag size="tiny" :bordered="false" type="info" round>
+              <NTag
+                size="tiny"
+                :bordered="false"
+                type="info"
+                round
+              >
                 {{ song.user?.name || '未知用户' }}
               </NTag>
             </template>
@@ -147,8 +174,15 @@ const hasOtherSingSong = computed(() => {
         <!-- 时间 -->
         <NTooltip>
           <template #trigger>
-            <NText depth="3" style="font-size: 12px">
-              <NTime :key="updateKey" :time="song.createAt" type="relative" />
+            <NText
+              depth="3"
+              style="font-size: 12px"
+            >
+              <NTime
+                :key="updateKey"
+                :time="song.createAt"
+                type="relative"
+              />
             </NText>
           </template>
           <NTime :time="song.createAt" />
@@ -156,7 +190,12 @@ const hasOtherSingSong = computed(() => {
       </NFlex>
 
       <!-- 右侧操作按钮 -->
-      <NFlex justify="end" align="center" :size="6" :wrap="false">
+      <NFlex
+        justify="end"
+        align="center"
+        :size="6"
+        :wrap="false"
+      >
         <NTooltip v-if="hasSong">
           <template #trigger>
             <NButton
@@ -184,14 +223,20 @@ const hasOtherSingSong = computed(() => {
               :ghost="song.status === SongRequestStatus.Singing"
               :disabled="hasOtherSingSong"
               :loading="isLoading"
-              @click="onUpdateStatus(song.status === SongRequestStatus.Singing ? SongRequestStatus.Waiting : SongRequestStatus.Singing)"
+              @click="
+                onUpdateStatus(
+                  song.status === SongRequestStatus.Singing ? SongRequestStatus.Waiting : SongRequestStatus.Singing,
+                )
+              "
             >
               <template #icon>
                 <NIcon :component="Mic24Filled" />
               </template>
             </NButton>
           </template>
-          {{ hasOtherSingSong ? '还有其他正在演唱' : (song.status === SongRequestStatus.Waiting ? '开始演唱' : '暂停演唱') }}
+          {{
+            hasOtherSingSong ? '还有其他正在演唱' : song.status === SongRequestStatus.Waiting ? '开始演唱' : '暂停演唱'
+          }}
         </NTooltip>
 
         <NTooltip>
@@ -215,7 +260,12 @@ const hasOtherSingSong = computed(() => {
           <template #trigger>
             <NPopconfirm @positive-click="onUpdateStatus(SongRequestStatus.Cancel)">
               <template #trigger>
-                <NButton circle size="small" type="error" :loading="isLoading">
+                <NButton
+                  circle
+                  size="small"
+                  type="error"
+                  :loading="isLoading"
+                >
                   <template #icon>
                     <NIcon :component="Dismiss16Filled" />
                   </template>
@@ -231,7 +281,13 @@ const hasOtherSingSong = computed(() => {
           <template #trigger>
             <NPopconfirm @positive-click="onBlockUser">
               <template #trigger>
-                <NButton circle size="small" type="error" ghost :loading="isLoading">
+                <NButton
+                  circle
+                  size="small"
+                  type="error"
+                  ghost
+                  :loading="isLoading"
+                >
                   <template #icon>
                     <NIcon :component="PresenceBlocked16Regular" />
                   </template>

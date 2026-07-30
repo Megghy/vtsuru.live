@@ -1,9 +1,24 @@
 <script setup lang="ts">
-import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NButton, NInput, NInputNumber, NSelect, NFlex, NSwitch, NTag, useMessage, NForm, NFormItem, NText, NTooltip, NIcon } from 'naive-ui';
-import { ref } from 'vue'
-import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Info16Regular } from '@vicons/fluent'
+import {
+  NButton,
+  NInput,
+  NInputNumber,
+  NSelect,
+  NFlex,
+  NSwitch,
+  NTag,
+  useMessage,
+  NForm,
+  NFormItem,
+  NText,
+  NTooltip,
+  NIcon,
+} from 'naive-ui'
+import { ref } from 'vue'
+
+import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
+import { TriggerType } from '@/apps/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
@@ -52,9 +67,20 @@ function removeGiftName(index: number) {
 </script>
 
 <template>
-  <div v-if="action.triggerType === TriggerType.GIFT" class="gift-trigger-settings">
-    <NForm label-placement="left" :label-width="140" size="small" :show-feedback="false">
-      <NFlex vertical :size="16">
+  <div
+    v-if="action.triggerType === TriggerType.GIFT"
+    class="gift-trigger-settings"
+  >
+    <NForm
+      label-placement="left"
+      :label-width="140"
+      size="small"
+      :show-feedback="false"
+    >
+      <NFlex
+        vertical
+        :size="16"
+      >
         <NFormItem label="礼物过滤模式">
           <NSelect
             v-model:value="action.triggerConfig.filterMode"
@@ -64,11 +90,24 @@ function removeGiftName(index: number) {
         </NFormItem>
 
         <transition name="fade">
-          <div v-if="action.triggerConfig.filterMode === 'blacklist' || action.triggerConfig.filterMode === 'whitelist'" class="filter-group">
-            <NText depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">
-              {{ action.triggerConfig.filterMode === 'blacklist' ? '以下列表中的礼物将不会触发感谢' : '仅当礼物在以下列表中时才会触发感谢' }}
+          <div
+            v-if="action.triggerConfig.filterMode === 'blacklist' || action.triggerConfig.filterMode === 'whitelist'"
+            class="filter-group"
+          >
+            <NText
+              depth="3"
+              style="font-size: 12px; margin-bottom: 8px; display: block"
+            >
+              {{
+                action.triggerConfig.filterMode === 'blacklist'
+                  ? '以下列表中的礼物将不会触发感谢'
+                  : '仅当礼物在以下列表中时才会触发感谢'
+              }}
             </NText>
-            <NFlex vertical :size="12">
+            <NFlex
+              vertical
+              :size="12"
+            >
               <NFlex :wrap="false">
                 <NInput
                   v-model:value="tempGiftName"
@@ -76,13 +115,23 @@ function removeGiftName(index: number) {
                   size="small"
                   @keyup.enter="addGiftName"
                 />
-                <NButton size="small" type="primary" secondary @click="addGiftName">
+                <NButton
+                  size="small"
+                  type="primary"
+                  secondary
+                  @click="addGiftName"
+                >
                   添加
                 </NButton>
               </NFlex>
 
-              <NFlex :size="8" class="tag-container">
-                <template v-if="action.triggerConfig.filterGiftNames && action.triggerConfig.filterGiftNames.length > 0">
+              <NFlex
+                :size="8"
+                class="tag-container"
+              >
+                <template
+                  v-if="action.triggerConfig.filterGiftNames && action.triggerConfig.filterGiftNames.length > 0"
+                >
                   <NTag
                     v-for="(giftName, index) in action.triggerConfig.filterGiftNames"
                     :key="index"
@@ -93,7 +142,12 @@ function removeGiftName(index: number) {
                     {{ giftName }}
                   </NTag>
                 </template>
-                <NText v-else depth="3" italic style="font-size: 12px;">
+                <NText
+                  v-else
+                  depth="3"
+                  italic
+                  style="font-size: 12px"
+                >
                   列表为空
                 </NText>
               </NFlex>
@@ -102,42 +156,59 @@ function removeGiftName(index: number) {
         </transition>
 
         <transition name="fade">
-          <NFormItem v-if="action.triggerConfig.filterMode === 'value'" label="最低价值 (元)">
+          <NFormItem
+            v-if="action.triggerConfig.filterMode === 'value'"
+            label="最低价值 (元)"
+          >
             <NInputNumber
               v-model:value="action.triggerConfig.minValue"
               :min="0"
               style="width: 140px"
               placeholder="0"
             >
-              <template #suffix>
-                元
-              </template>
+              <template #suffix> 元 </template>
             </NInputNumber>
           </NFormItem>
         </transition>
 
-        <NDivider style="margin: 0;" />
+        <NDivider style="margin: 0" />
 
         <NFlex :size="24">
           <NFormItem>
             <template #label>
               <NTooltip trigger="hover">
                 <template #trigger>
-                  <span>包含数量 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                  <span
+                    >包含数量
+                    <NIcon
+                      :component="Info16Regular"
+                      style="vertical-align: -2px"
+                  /></span>
                 </template>
                 在感谢语中使用 {{ '\{\{gift.count\}\}' }} 变量显示礼物数量
               </NTooltip>
             </template>
-            <NSwitch v-model:value="action.triggerConfig.includeQuantity" size="small" />
+            <NSwitch
+              v-model:value="action.triggerConfig.includeQuantity"
+              size="small"
+            />
           </NFormItem>
         </NFlex>
 
-        <NFlex vertical :size="12">
+        <NFlex
+          vertical
+          :size="12"
+        >
           <NFormItem label="单次合并上限">
             <template #label>
               <NTooltip trigger="hover">
                 <template #trigger>
-                  <span>单次合并上限 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                  <span
+                    >单次合并上限
+                    <NIcon
+                      :component="Info16Regular"
+                      style="vertical-align: -2px"
+                  /></span>
                 </template>
                 单条感谢弹幕中最多合并展示的用户数量
               </NTooltip>
@@ -154,7 +225,12 @@ function removeGiftName(index: number) {
             <template #label>
               <NTooltip trigger="hover">
                 <template #trigger>
-                  <span>单人礼物上限 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                  <span
+                    >单人礼物上限
+                    <NIcon
+                      :component="Info16Regular"
+                      style="vertical-align: -2px"
+                  /></span>
                 </template>
                 单个用户在同一次感谢中最多显示的礼物种类数
               </NTooltip>

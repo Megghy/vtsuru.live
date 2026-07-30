@@ -4,6 +4,7 @@
 // client 本体加载。新前端可能依赖新 client 才有的原生能力 (如开放 RPC 接口 / CORS 需要 0.1.9)。
 // 这里在运行时拿到当前 client 版本, 与前端所需的最低版本比对, 供各处做能力门禁与升级提示。
 import { ref } from 'vue'
+
 import { isTauri } from './api'
 
 // 前端所需的最低 client 版本。提升某项原生能力的依赖时, 把这里抬到对应发布版本。

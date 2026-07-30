@@ -6,4 +6,3 @@ export const THINGS_URL = `${FILE_BASE_URL}/things/`
 
 export const FETCH_API = 'https://fetch.vtsuru.live/'
 export const TURNSTILE_KEY = '0x4AAAAAAAETUSAKbds019h0'
-

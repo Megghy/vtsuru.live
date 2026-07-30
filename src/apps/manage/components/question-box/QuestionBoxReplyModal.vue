@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NButton, NCard, NCheckbox, NDivider, NFlex, NInput, NModal, NSpin, NText } from 'naive-ui'
 import { ref, watch } from 'vue'
+
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const show = defineModel<boolean>('show', { required: true })
@@ -29,11 +30,19 @@ async function submitReply() {
     :mask-closable="false"
   >
     <template v-if="useQB.currentQuestion">
-      <NText>正在回复给: {{ useQB.currentQuestion.sender?.name || useQB.currentQuestion.anonymousName || '匿名用户' }}</NText>
-      <NCard size="small" embedded :bordered="false" style="margin-top: 5px;">
+      <NText
+        >正在回复给:
+        {{ useQB.currentQuestion.sender?.name || useQB.currentQuestion.anonymousName || '匿名用户' }}</NText
+      >
+      <NCard
+        size="small"
+        embedded
+        :bordered="false"
+        style="margin-top: 5px"
+      >
         {{ useQB.currentQuestion.question?.message }}
       </NCard>
-      <NDivider style="margin: 15px 0;" />
+      <NDivider style="margin: 15px 0" />
       <NFlex vertical>
         <NInput
           v-model:value="replyMessage"
@@ -53,11 +62,9 @@ async function submitReply() {
           </NCheckbox>
         </NSpin>
       </NFlex>
-      <NDivider style="margin: 15px 0;" />
+      <NDivider style="margin: 15px 0" />
       <NFlex justify="end">
-        <NButton @click="show = false">
-          取消
-        </NButton>
+        <NButton @click="show = false"> 取消 </NButton>
         <NButton
           :loading="useQB.isRepling"
           type="primary"

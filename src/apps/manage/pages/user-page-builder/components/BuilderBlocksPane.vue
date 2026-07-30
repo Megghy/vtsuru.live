@@ -1,9 +1,22 @@
 <script setup lang="ts">
-import { NButton, NCard, NDropdown, NEmpty, NFlex, NIcon, NInput, NMenu, NPopover, NScrollbar, NTooltip } from 'naive-ui'
 import { AddCircleOutline, BookmarkOutline, LayersOutline } from '@vicons/ionicons5'
+import {
+  NButton,
+  NCard,
+  NDropdown,
+  NEmpty,
+  NFlex,
+  NIcon,
+  NInput,
+  NMenu,
+  NPopover,
+  NScrollbar,
+  NTooltip,
+} from 'naive-ui'
 import { computed, inject } from 'vue'
-import BlockManager from './BlockManager.vue'
+
 import { UserPageEditorKey } from '../context'
+import BlockManager from './BlockManager.vue'
 import { useBlockManagerLibrary } from './useBlockManagerLibrary'
 
 defineOptions({ name: 'BuilderBlocksPane' })
@@ -31,7 +44,11 @@ const {
     content-style="padding: 0; height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden"
   >
     <template #header-extra>
-      <NFlex class="blocks-pane__actions" :wrap="false" size="small">
+      <NFlex
+        class="blocks-pane__actions"
+        :wrap="false"
+        size="small"
+      >
         <NTooltip v-if="selectionCount">
           <template #trigger>
             <NButton
@@ -49,10 +66,23 @@ const {
           保存所选区块为模板
         </NTooltip>
 
-        <NTooltip :delay="0" placement="bottom">
+        <NTooltip
+          :delay="0"
+          placement="bottom"
+        >
           <template #trigger>
-            <NDropdown :options="templateOptions" trigger="click" @select="key => insertTemplate(String(key))">
-              <NButton quaternary circle size="small" aria-label="应用起始模板" title="起始模板">
+            <NDropdown
+              :options="templateOptions"
+              trigger="click"
+              @select="(key) => insertTemplate(String(key))"
+            >
+              <NButton
+                quaternary
+                circle
+                size="small"
+                aria-label="应用起始模板"
+                title="起始模板"
+              >
                 <template #icon>
                   <NIcon><LayersOutline /></NIcon>
                 </template>
@@ -62,11 +92,21 @@ const {
           起始模板
         </NTooltip>
 
-        <NPopover v-model:show="showAddMenu" trigger="click" placement="bottom-end">
+        <NPopover
+          v-model:show="showAddMenu"
+          trigger="click"
+          placement="bottom-end"
+        >
           <template #trigger>
             <NTooltip>
               <template #trigger>
-                <NButton type="primary" secondary circle size="small" aria-label="添加区块">
+                <NButton
+                  type="primary"
+                  secondary
+                  circle
+                  size="small"
+                  aria-label="添加区块"
+                >
                   <template #icon>
                     <NIcon><AddCircleOutline /></NIcon>
                   </template>
@@ -76,7 +116,11 @@ const {
             </NTooltip>
           </template>
           <div class="blocks-pane__search">
-            <NInput v-model:value="blockSearch" clearable placeholder="搜索区块名称或关键词" />
+            <NInput
+              v-model:value="blockSearch"
+              clearable
+              placeholder="搜索区块名称或关键词"
+            />
           </div>
           <NScrollbar style="width: min(310px, calc(100vw - 32px)); max-height: min(360px, calc(100dvh - 160px))">
             <NMenu
@@ -84,10 +128,20 @@ const {
               :options="addBlockOptions"
               :indent="18"
               :root-indent="18"
-              :node-props="(option: any) => String(option?.key || '').startsWith('divider:') ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' } : {}"
-              @update:value="key => handleAddBlockMenuSelect(String(key))"
+              :node-props="
+                (option: any) =>
+                  String(option?.key || '').startsWith('divider:')
+                    ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' }
+                    : {}
+              "
+              @update:value="(key) => handleAddBlockMenuSelect(String(key))"
             />
-            <NEmpty v-else size="small" description="没有匹配的区块" style="padding: 24px" />
+            <NEmpty
+              v-else
+              size="small"
+              description="没有匹配的区块"
+              style="padding: 24px"
+            />
           </NScrollbar>
         </NPopover>
       </NFlex>
@@ -115,5 +169,4 @@ const {
   padding: 10px 10px 4px;
   box-sizing: border-box;
 }
-
 </style>

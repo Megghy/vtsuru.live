@@ -1,6 +1,7 @@
-import { chromium } from 'playwright-core'
 import path from 'node:path'
 import process from 'node:process'
+
+import { chromium } from 'playwright-core'
 
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
 const targetUrl = process.argv[2] ?? 'http://127.0.0.1:51001/@Megghy/test'
@@ -24,8 +25,8 @@ try {
       const page = await context.newPage()
       const pageErrors = []
       const consoleErrors = []
-      page.on('pageerror', error => pageErrors.push(error.message))
-      page.on('console', message => {
+      page.on('pageerror', (error) => pageErrors.push(error.message))
+      page.on('console', (message) => {
         if (message.type() === 'error') consoleErrors.push(message.text())
       })
       await page.route('**/api/user-pages/get-user**', async (route) => {
@@ -55,19 +56,23 @@ try {
   await browser.close()
 }
 
-console.table(results.map(({ viewport, colorScheme, scrollWidth, clientWidth, pageErrors, consoleErrors }) => ({
-  viewport,
-  colorScheme,
-  scrollWidth,
-  clientWidth,
-  pageErrors: pageErrors.length,
-  consoleErrors: consoleErrors.length,
-})))
+console.table(
+  results.map(({ viewport, colorScheme, scrollWidth, clientWidth, pageErrors, consoleErrors }) => ({
+    viewport,
+    colorScheme,
+    scrollWidth,
+    clientWidth,
+    pageErrors: pageErrors.length,
+    consoleErrors: consoleErrors.length,
+  })),
+)
 for (const result of results) {
   if (result.pageErrors.length || result.consoleErrors.length) {
     console.error(`[${result.colorScheme} ${result.viewport}]`, [...result.pageErrors, ...result.consoleErrors])
   }
-  console.log(`${result.colorScheme} ${result.viewport}: ${result.screenshotPath} | ${result.text.replaceAll('\n', ' / ')}`)
+  console.log(
+    `${result.colorScheme} ${result.viewport}: ${result.screenshotPath} | ${result.text.replaceAll('\n', ' / ')}`,
+  )
 }
 
-if (results.some(result => result.scrollWidth > result.clientWidth || result.pageErrors.length)) process.exitCode = 1
+if (results.some((result) => result.scrollWidth > result.clientWidth || result.pageErrors.length)) process.exitCode = 1

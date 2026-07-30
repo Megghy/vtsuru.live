@@ -1,6 +1,8 @@
-import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
+
+import { useLoadingBarStore } from '@/store/useLoadingBarStore'
+
 import client from './client'
 import manage from './manage'
 import obs from './obs'

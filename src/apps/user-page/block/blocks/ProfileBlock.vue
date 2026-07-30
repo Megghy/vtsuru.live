@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/api-models'
-import { NAvatar } from 'naive-ui';
+import { NAvatar } from 'naive-ui'
 import { computed } from 'vue'
+
+import type { UserInfo } from '@/api/api-models'
+
 import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{
@@ -11,16 +13,19 @@ const props = defineProps<{
 }>()
 
 const model = computed(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
 
-  const avatarFile = (o.avatarFile && typeof o.avatarFile === 'object' && !Array.isArray(o.avatarFile)) ? o.avatarFile : null
-  const avatarUrl = (avatarFile && typeof avatarFile.path === 'string' && avatarFile.path)
-    ? avatarFile.path
-    : props.userInfo?.streamerInfo?.faceUrl
-  const displayName = (typeof o.displayName === 'string' && o.displayName) ? o.displayName : props.userInfo?.name
-  const bio = (typeof o.bio === 'string' && o.bio) ? o.bio : props.biliInfo?.sign
+  const avatarFile =
+    o.avatarFile && typeof o.avatarFile === 'object' && !Array.isArray(o.avatarFile) ? o.avatarFile : null
+  const avatarUrl =
+    avatarFile && typeof avatarFile.path === 'string' && avatarFile.path
+      ? avatarFile.path
+      : props.userInfo?.streamerInfo?.faceUrl
+  const displayName = typeof o.displayName === 'string' && o.displayName ? o.displayName : props.userInfo?.name
+  const bio = typeof o.bio === 'string' && o.bio ? o.bio : props.biliInfo?.sign
 
   const framed = typeof o.framed === 'boolean' ? o.framed : true
   const backgrounded = typeof o.backgrounded === 'boolean' ? o.backgrounded : true
@@ -29,13 +34,22 @@ const model = computed(() => {
 </script>
 
 <template>
-  <BlockCard :framed="model.framed" :backgrounded="model.backgrounded" :content-style="{ padding: 0 }">
+  <BlockCard
+    :framed="model.framed"
+    :backgrounded="model.backgrounded"
+    :content-style="{ padding: 0 }"
+  >
     <div class="profile-hero">
       <div class="avatar-container">
         <NAvatar
           v-if="model.avatarUrl"
           :src="model.avatarUrl"
-          :img-props="{ referrerpolicy: 'no-referrer', loading: 'lazy', decoding: 'async', alt: model.displayName || '用户头像' }"
+          :img-props="{
+            referrerpolicy: 'no-referrer',
+            loading: 'lazy',
+            decoding: 'async',
+            alt: model.displayName || '用户头像',
+          }"
           round
           :size="120"
           class="profile-avatar"
@@ -43,10 +57,16 @@ const model = computed(() => {
       </div>
 
       <div class="profile-info">
-        <h1 v-if="model.displayName" class="profile-name">
+        <h1
+          v-if="model.displayName"
+          class="profile-name"
+        >
           {{ model.displayName }}
         </h1>
-        <p v-if="model.bio" class="profile-bio">
+        <p
+          v-if="model.bio"
+          class="profile-bio"
+        >
           {{ model.bio }}
         </p>
       </div>

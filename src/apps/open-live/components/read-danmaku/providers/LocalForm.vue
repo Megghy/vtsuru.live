@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import { useSpeechService } from '@/store/useSpeechService'
+
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 

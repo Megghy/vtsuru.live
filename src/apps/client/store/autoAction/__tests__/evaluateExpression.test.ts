@@ -1,6 +1,8 @@
-import type { ExecutionContext } from '../types'
-import type { EventModel } from '@/api/api-models'
 import { describe, expect, it } from 'vitest'
+
+import type { EventModel } from '@/api/api-models'
+
+import type { ExecutionContext } from '../types'
 import { evaluateExpression } from '../utils'
 
 function makeContext(event: Partial<EventModel> | null = null): ExecutionContext {
@@ -91,7 +93,6 @@ describe('evaluateExpression', () => {
       fans_medal_wearing_status: true,
       guard_level: 3,
     })
-    expect(evaluateExpression('inDanmaku("老板") && hasMedal() && isCaptain()', ctx))
-      .toBe(true)
+    expect(evaluateExpression('inDanmaku("老板") && hasMedal() && isCaptain()', ctx)).toBe(true)
   })
 })

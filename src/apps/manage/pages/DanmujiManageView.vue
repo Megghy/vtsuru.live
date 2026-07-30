@@ -1,16 +1,37 @@
 <script setup lang="ts">
-import type { DanmujiConfig } from '@/apps/obs/pages/DanmujiOBS.vue'
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { Copy16Regular } from '@vicons/fluent'
 import {
-  NButton, NCard, NCheckbox, NFlex, NForm, NFormItem, NGi, NGrid, NInput, NInputNumber, NPopconfirm, NSelect, NSplit, NSwitch, NTabPane, NTabs, useMessage } from 'naive-ui';
-import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NFlex,
+  NForm,
+  NFormItem,
+  NGi,
+  NGrid,
+  NInput,
+  NInputNumber,
+  NIcon,
+  NPopconfirm,
+  NSelect,
+  NSplit,
+  NSwitch,
+  NTabPane,
+  NTabs,
+  useMessage,
+} from 'naive-ui'
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
+import type { DanmujiConfig } from '@/apps/obs/pages/DanmujiOBS.vue'
+import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
-import { isDarkMode } from '@/shared/utils'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
+import { isDarkMode } from '@/shared/utils'
 
 const accountInfo = useAccount()
 const css = usePersistedStorage('danmuji-css', defaultDanmujiCss)
@@ -57,13 +78,7 @@ function generateTestUsername() {
 }
 
 function generateTestMessage() {
-  const templates = [
-    '测试消息',
-    '这是一条测试消息',
-    '测试弹幕内容',
-    '系统测试消息',
-    '模拟展示消息',
-  ]
+  const templates = ['测试消息', '这是一条测试消息', '测试弹幕内容', '系统测试消息', '模拟展示消息']
   const template = templates[Math.floor(Math.random() * templates.length)]
   return `${template}${randomDigits(4)}`
 }
@@ -181,7 +196,7 @@ function generateRandomContent() {
 
     case EventDataTypes.Guard: {
       // 随机舰长等级 (排除非舰长选项)
-      const guardOptions = guardLevelOptions.filter(option => option.value !== GuardLevel.None)
+      const guardOptions = guardLevelOptions.filter((option) => option.value !== GuardLevel.None)
       const guardIndex = Math.floor(Math.random() * guardOptions.length)
       testFormData.guard_level = guardOptions[guardIndex].value
       break
@@ -322,17 +337,11 @@ function startAutoGenerate() {
   if (!isAutoGenerating.value) return
 
   // 生成随机消息类型
-  const messageTypes = [
-    EventDataTypes.Message,
-    EventDataTypes.Gift,
-    EventDataTypes.Guard,
-    EventDataTypes.SC,
-  ]
+  const messageTypes = [EventDataTypes.Message, EventDataTypes.Gift, EventDataTypes.Guard, EventDataTypes.SC]
 
   // 50%概率为普通弹幕，50%概率为其他类型
-  autoGenData.type = Math.random() < 0.5
-    ? EventDataTypes.Message
-    : messageTypes[Math.floor(Math.random() * messageTypes.length)]
+  autoGenData.type =
+    Math.random() < 0.5 ? EventDataTypes.Message : messageTypes[Math.floor(Math.random() * messageTypes.length)]
 
   // 为自动生成数据随机生成内容
   generateAutoContent()
@@ -379,7 +388,7 @@ function generateAutoContent() {
 
     case EventDataTypes.Guard: {
       // 随机舰长等级 (排除非舰长选项)
-      const guardOptions = guardLevelOptions.filter(option => option.value !== GuardLevel.None)
+      const guardOptions = guardLevelOptions.filter((option) => option.value !== GuardLevel.None)
       const guardIndex = Math.floor(Math.random() * guardOptions.length)
       autoGenData.guard_level = guardOptions[guardIndex].value
       break
@@ -470,14 +479,18 @@ function sendAutoMessage() {
 }
 
 // 监听自动生成状态变化
-watch(isAutoGenerating, (newValue) => {
-  if (newValue) {
-    startAutoGenerate()
-  } else if (autoGenerateTimer) {
-    clearTimeout(autoGenerateTimer)
-    autoGenerateTimer = null
-  }
-}, { immediate: true })
+watch(
+  isAutoGenerating,
+  (newValue) => {
+    if (newValue) {
+      startAutoGenerate()
+    } else if (autoGenerateTimer) {
+      clearTimeout(autoGenerateTimer)
+      autoGenerateTimer = null
+    }
+  },
+  { immediate: true },
+)
 
 // 从服务器获取配置
 async function downloadConfigFromServer() {
@@ -529,13 +542,21 @@ async function uploadConfigToServer() {
   }
 }
 
-function copyObsUrl() {
-  const url = `${CURRENT_HOST}obs/danmuji?token=${accountInfo.value.token}`
-  navigator.clipboard.writeText(url).then(() => {
-    message.success('OBS 地址已复制到剪贴板')
-  }).catch(() => {
+async function copyText(text: string, successMessage: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    message.success(successMessage)
+  } catch {
     message.error('复制失败，请手动复制')
-  })
+  }
+}
+
+function copyObsUrl() {
+  return copyText(`${CURRENT_HOST}obs/danmuji?token=${accountInfo.value.token}`, 'OBS 地址已复制到剪贴板')
+}
+
+function copyCss() {
+  return copyText(css.value, '自定义 CSS 已复制到剪贴板')
 }
 </script>
 
@@ -552,12 +573,20 @@ function copyObsUrl() {
         <div class="left-panel-scroll-container">
           <NFlex
             vertical
-            style="padding: 16px; height: 100%; box-sizing: border-box;"
+            style="padding: 16px; height: 100%; box-sizing: border-box"
             :size="16"
           >
             <!-- 顶部连接信息，更加紧凑 -->
-            <NCard size="small" embedded class="obs-link-card">
-              <NFlex align="center" justify="space-between" :wrap="false">
+            <NCard
+              size="small"
+              embedded
+              class="obs-link-card"
+            >
+              <NFlex
+                align="center"
+                justify="space-between"
+                :wrap="false"
+              >
                 <div class="obs-label">
                   <span class="label-text">OBS Studio 地址</span>
                   <span class="label-desc">在 OBS 浏览器源中填入此地址</span>
@@ -567,15 +596,28 @@ function copyObsUrl() {
                   readonly
                   :allow-input="() => false"
                   :value="`${CURRENT_HOST}obs/danmuji?token=${accountInfo.token}`"
-                  style="flex: 1; max-width: 400px;"
+                  style="flex: 1; max-width: 400px"
                 >
                   <template #suffix>
-                    <NButton text type="primary" size="tiny" @click="copyObsUrl">
+                    <NButton
+                      text
+                      type="primary"
+                      size="tiny"
+                      @click="copyObsUrl"
+                    >
                       复制
                     </NButton>
                   </template>
                 </NInput>
               </NFlex>
+              <details class="obs-source-guide">
+                <summary>浏览器源添加说明</summary>
+                <ol>
+                  <li>在 OBS 的“来源”中点击“+”，选择“浏览器”并新建来源。</li>
+                  <li>将上方地址粘贴到浏览器源的“URL”中。</li>
+                  <li>将“样式定制”中的完整 CSS 粘贴到“自定义 CSS”中，然后点击“确定”。</li>
+                </ol>
+              </details>
             </NCard>
 
             <NTabs
@@ -583,7 +625,7 @@ function copyObsUrl() {
               type="segment"
               animated
               class="main-tabs"
-              style="flex: 1; display: flex; flex-direction: column;"
+              style="flex: 1; display: flex; flex-direction: column"
               pane-style="flex: 1; overflow: hidden; display: flex; flex-direction: column;"
             >
               <NTabPane
@@ -593,20 +635,45 @@ function copyObsUrl() {
                 <div class="tab-content-wrapper">
                   <div class="editor-header">
                     <span class="editor-title">自定义 CSS</span>
-                    <NPopconfirm @positive-click="resetCssToDefault">
-                      <template #trigger>
-                        <NButton size="small" type="warning" secondary>
-                          重设为默认
-                        </NButton>
-                      </template>
-                      确定要重设为默认CSS吗？这将清除所有自定义样式。
-                    </NPopconfirm>
+                    <NFlex :size="8">
+                      <NButton
+                        size="small"
+                        secondary
+                        @click="copyCss"
+                      >
+                        <template #icon>
+                          <NIcon :component="Copy16Regular" />
+                        </template>
+                        复制 CSS
+                      </NButton>
+                      <NPopconfirm @positive-click="resetCssToDefault">
+                        <template #trigger>
+                          <NButton
+                            size="small"
+                            type="warning"
+                            secondary
+                          >
+                            重设为默认
+                          </NButton>
+                        </template>
+                        确定要重设为默认CSS吗？这将清除所有自定义样式。
+                      </NPopconfirm>
+                    </NFlex>
                   </div>
+                  <NAlert
+                    class="css-transparency-alert"
+                    title="透明背景需要复制 CSS"
+                    type="warning"
+                    :bordered="false"
+                  >
+                    OBS 浏览器源的默认样式带有白色背景。创建浏览器源时，请将下方完整 CSS 复制到浏览器源属性的“自定义
+                    CSS”框中，应用后背景才会透明。
+                  </NAlert>
                   <div class="editor-container">
                     <MonacoEditorComponent
                       v-model:value="css"
                       language="css"
-                      style="height: 100%; width: 100%;"
+                      style="height: 100%; width: 100%"
                       :options="{
                         minimap: { enabled: false },
                         fontSize: 13,
@@ -635,17 +702,32 @@ function copyObsUrl() {
                 tab="功能配置"
               >
                 <div class="config-scroll-container">
-                  <NCard :bordered="false" size="small">
+                  <NCard
+                    :bordered="false"
+                    size="small"
+                  >
                     <template #header>
-                      <NFlex justify="space-between" align="center">
+                      <NFlex
+                        justify="space-between"
+                        align="center"
+                      >
                         <span>基本设置</span>
                         <NFlex>
-                          <NButton size="small" type="primary" secondary @click="uploadConfigToServer">
+                          <NButton
+                            size="small"
+                            type="primary"
+                            secondary
+                            @click="uploadConfigToServer"
+                          >
                             保存到云端
                           </NButton>
                           <NPopconfirm @positive-click="resetConfigToDefault">
                             <template #trigger>
-                              <NButton size="small" type="error" secondary>
+                              <NButton
+                                size="small"
+                                type="error"
+                                secondary
+                              >
                                 重置
                               </NButton>
                             </template>
@@ -654,7 +736,7 @@ function copyObsUrl() {
                         </NFlex>
                       </NFlex>
                     </template>
-                    
+
                     <NForm
                       :model="danmujiConfig"
                       label-placement="top"
@@ -662,92 +744,142 @@ function copyObsUrl() {
                       require-mark-placement="right-hanging"
                       size="small"
                     >
-                      <div class="form-section-title">
-                        显示设置
-                      </div>
-                      <NGrid :x-gap="12" :y-gap="8" :cols="3">
+                      <div class="form-section-title">显示设置</div>
+                      <NGrid
+                        :x-gap="12"
+                        :y-gap="8"
+                        :cols="3"
+                      >
                         <NGi>
-                          <NCard size="small" embedded class="checkbox-card">
-                            <NCheckbox v-model:checked="danmujiConfig.showDanmaku">
-                              显示弹幕消息
-                            </NCheckbox>
+                          <NCard
+                            size="small"
+                            embedded
+                            class="checkbox-card"
+                          >
+                            <NCheckbox v-model:checked="danmujiConfig.showDanmaku"> 显示弹幕消息 </NCheckbox>
                           </NCard>
                         </NGi>
                         <NGi>
-                          <NCard size="small" embedded class="checkbox-card">
-                            <NCheckbox v-model:checked="danmujiConfig.showGift">
-                              显示礼物消息
-                            </NCheckbox>
+                          <NCard
+                            size="small"
+                            embedded
+                            class="checkbox-card"
+                          >
+                            <NCheckbox v-model:checked="danmujiConfig.showGift"> 显示礼物消息 </NCheckbox>
                           </NCard>
                         </NGi>
                         <NGi>
-                          <NCard size="small" embedded class="checkbox-card">
-                            <NCheckbox v-model:checked="danmujiConfig.showGiftName">
-                              显示礼物名称
-                            </NCheckbox>
-                          </NCard>
-                        </NGi>
-                      </NGrid>
-
-                      <div class="form-section-title">
-                        合并策略
-                      </div>
-                      <NGrid :x-gap="12" :y-gap="8" :cols="2">
-                        <NGi>
-                          <NCard size="small" embedded class="checkbox-card">
-                            <NCheckbox v-model:checked="danmujiConfig.mergeSimilarDanmaku">
-                              合并相似弹幕
-                            </NCheckbox>
-                          </NCard>
-                        </NGi>
-                        <NGi>
-                          <NCard size="small" embedded class="checkbox-card">
-                            <NCheckbox v-model:checked="danmujiConfig.mergeGift">
-                              合并礼物消息
-                            </NCheckbox>
+                          <NCard
+                            size="small"
+                            embedded
+                            class="checkbox-card"
+                          >
+                            <NCheckbox v-model:checked="danmujiConfig.showGiftName"> 显示礼物名称 </NCheckbox>
                           </NCard>
                         </NGi>
                       </NGrid>
 
-                      <div class="form-section-title">
-                        阈值控制
-                      </div>
-                      <NGrid :x-gap="12" :y-gap="8" :cols="2">
+                      <div class="form-section-title">合并策略</div>
+                      <NGrid
+                        :x-gap="12"
+                        :y-gap="8"
+                        :cols="2"
+                      >
                         <NGi>
-                          <NFormItem label="最大消息积压数" path="maxNumber">
-                            <NInputNumber v-model:value="danmujiConfig.maxNumber" :min="10" :max="200" />
+                          <NCard
+                            size="small"
+                            embedded
+                            class="checkbox-card"
+                          >
+                            <NCheckbox v-model:checked="danmujiConfig.mergeSimilarDanmaku"> 合并相似弹幕 </NCheckbox>
+                          </NCard>
+                        </NGi>
+                        <NGi>
+                          <NCard
+                            size="small"
+                            embedded
+                            class="checkbox-card"
+                          >
+                            <NCheckbox v-model:checked="danmujiConfig.mergeGift"> 合并礼物消息 </NCheckbox>
+                          </NCard>
+                        </NGi>
+                      </NGrid>
+
+                      <div class="form-section-title">阈值控制</div>
+                      <NGrid
+                        :x-gap="12"
+                        :y-gap="8"
+                        :cols="2"
+                      >
+                        <NGi>
+                          <NFormItem
+                            label="最大消息积压数"
+                            path="maxNumber"
+                          >
+                            <NInputNumber
+                              v-model:value="danmujiConfig.maxNumber"
+                              :min="10"
+                              :max="200"
+                            />
                           </NFormItem>
                         </NGi>
                         <NGi>
-                          <NFormItem label="最低显示礼物价值" path="minGiftPrice">
-                            <NInputNumber v-model:value="danmujiConfig.minGiftPrice" :min="0" :step="0.1">
-                              <template #suffix>
-                                元
-                              </template>
+                          <NFormItem
+                            label="最低显示礼物价值"
+                            path="minGiftPrice"
+                          >
+                            <NInputNumber
+                              v-model:value="danmujiConfig.minGiftPrice"
+                              :min="0"
+                              :step="0.1"
+                            >
+                              <template #suffix> 元 </template>
                             </NInputNumber>
                           </NFormItem>
                         </NGi>
                       </NGrid>
 
-                      <div class="form-section-title">
-                        过滤规则
-                      </div>
-                      <NGrid :x-gap="12" :y-gap="8" :cols="2">
+                      <div class="form-section-title">过滤规则</div>
+                      <NGrid
+                        :x-gap="12"
+                        :y-gap="8"
+                        :cols="2"
+                      >
                         <NGi>
-                          <NFormItem label="屏蔽舰长等级低于" path="blockLevel">
-                            <NSelect v-model:value="danmujiConfig.blockLevel" :options="guardLevelOptions" />
+                          <NFormItem
+                            label="屏蔽舰长等级低于"
+                            path="blockLevel"
+                          >
+                            <NSelect
+                              v-model:value="danmujiConfig.blockLevel"
+                              :options="guardLevelOptions"
+                            />
                           </NFormItem>
                         </NGi>
                         <NGi>
-                          <NFormItem label="屏蔽粉丝牌等级低于" path="blockMedalLevel">
-                            <NInputNumber v-model:value="danmujiConfig.blockMedalLevel" :min="0" placeholder="0表示不过滤" />
+                          <NFormItem
+                            label="屏蔽粉丝牌等级低于"
+                            path="blockMedalLevel"
+                          >
+                            <NInputNumber
+                              v-model:value="danmujiConfig.blockMedalLevel"
+                              :min="0"
+                              placeholder="0表示不过滤"
+                            />
                           </NFormItem>
                         </NGi>
                       </NGrid>
-                      
-                      <NGrid :x-gap="12" :y-gap="8" :cols="2">
+
+                      <NGrid
+                        :x-gap="12"
+                        :y-gap="8"
+                        :cols="2"
+                      >
                         <NGi>
-                          <NFormItem label="屏蔽关键词 (每行一个)" path="blockKeywords">
+                          <NFormItem
+                            label="屏蔽关键词 (每行一个)"
+                            path="blockKeywords"
+                          >
                             <NInput
                               v-model:value="danmujiConfig.blockKeywords"
                               type="textarea"
@@ -757,7 +889,10 @@ function copyObsUrl() {
                           </NFormItem>
                         </NGi>
                         <NGi>
-                          <NFormItem label="屏蔽用户 (每行一个)" path="blockUsers">
+                          <NFormItem
+                            label="屏蔽用户 (每行一个)"
+                            path="blockUsers"
+                          >
                             <NInput
                               v-model:value="danmujiConfig.blockUsers"
                               type="textarea"
@@ -768,11 +903,15 @@ function copyObsUrl() {
                         </NGi>
                       </NGrid>
 
-                      <div class="form-section-title">
-                        高级设置
-                      </div>
-                      <NFormItem label="礼物用户名发音规则" path="giftUsernamePronunciation">
-                        <NInput v-model:value="danmujiConfig.giftUsernamePronunciation" placeholder="例如：{name} 送出了 {gift}" />
+                      <div class="form-section-title">高级设置</div>
+                      <NFormItem
+                        label="礼物用户名发音规则"
+                        path="giftUsernamePronunciation"
+                      >
+                        <NInput
+                          v-model:value="danmujiConfig.giftUsernamePronunciation"
+                          placeholder="例如：{name} 送出了 {gift}"
+                        />
                       </NFormItem>
                     </NForm>
                   </NCard>
@@ -784,120 +923,213 @@ function copyObsUrl() {
                 tab="消息调试"
               >
                 <div class="config-scroll-container">
-                  <NCard :bordered="false" size="small">
+                  <NCard
+                    :bordered="false"
+                    size="small"
+                  >
                     <NForm
                       :model="testFormData"
                       label-placement="top"
                       size="small"
                     >
-                      <NCard size="small" title="自动模拟" embedded style="margin-bottom: 16px;">
+                      <NCard
+                        size="small"
+                        title="自动模拟"
+                        embedded
+                        style="margin-bottom: 16px"
+                      >
                         <template #header-extra>
-                          <NSwitch v-model:value="isAutoGenerating" size="small">
-                            <template #checked>
-                              运行中
-                            </template>
-                            <template #unchecked>
-                              已停止
-                            </template>
+                          <NSwitch
+                            v-model:value="isAutoGenerating"
+                            size="small"
+                          >
+                            <template #checked> 运行中 </template>
+                            <template #unchecked> 已停止 </template>
                           </NSwitch>
                         </template>
                         <NFlex align="center">
-                          <span style="font-size: 12px; color: var(--vtsuru-fg-muted);">生成间隔:</span>
+                          <span style="font-size: 12px; color: var(--vtsuru-fg-muted)">生成间隔:</span>
                           <NInputNumber
                             v-model:value="autoGenerateInterval"
-                            :min="0.5" :max="10" :step="0.5"
+                            :min="0.5"
+                            :max="10"
+                            :step="0.5"
                             size="tiny"
-                            style="width: 100px;"
+                            style="width: 100px"
                             :disabled="!isAutoGenerating"
                           >
-                            <template #suffix>
-                              秒
-                            </template>
+                            <template #suffix> 秒 </template>
                           </NInputNumber>
                         </NFlex>
                       </NCard>
 
-                      <div class="form-section-title">
-                        手动发送
-                      </div>
-                      
-                      <NGrid :x-gap="12" :y-gap="12" :cols="2">
+                      <div class="form-section-title">手动发送</div>
+
+                      <NGrid
+                        :x-gap="12"
+                        :y-gap="12"
+                        :cols="2"
+                      >
                         <NGi :span="2">
-                          <NFormItem label="消息类型" path="type">
-                            <NSelect v-model:value="testFormData.type" :options="messageTypeOptions" />
+                          <NFormItem
+                            label="消息类型"
+                            path="type"
+                          >
+                            <NSelect
+                              v-model:value="testFormData.type"
+                              :options="messageTypeOptions"
+                            />
                           </NFormItem>
                         </NGi>
-                         
+
                         <NGi>
-                          <NFormItem label="用户名" path="uname">
-                            <NInput v-model:value="testFormData.uname" placeholder="测试用户" />
+                          <NFormItem
+                            label="用户名"
+                            path="uname"
+                          >
+                            <NInput
+                              v-model:value="testFormData.uname"
+                              placeholder="测试用户"
+                            />
                           </NFormItem>
                         </NGi>
                         <NGi>
-                          <NFormItem label="用户ID" path="uid">
-                            <NInputNumber v-model:value="testFormData.uid" :show-button="false" />
+                          <NFormItem
+                            label="用户ID"
+                            path="uid"
+                          >
+                            <NInputNumber
+                              v-model:value="testFormData.uid"
+                              :show-button="false"
+                            />
                           </NFormItem>
                         </NGi>
 
                         <!-- 动态内容区域 -->
-                        <NGi v-if="testFormData.type === EventDataTypes.Message || testFormData.type === EventDataTypes.SC" :span="2">
-                          <NFormItem label="消息内容" path="msg">
-                            <NInput v-model:value="testFormData.msg" type="textarea" :rows="2" placeholder="输入消息内容..." />
+                        <NGi
+                          v-if="testFormData.type === EventDataTypes.Message || testFormData.type === EventDataTypes.SC"
+                          :span="2"
+                        >
+                          <NFormItem
+                            label="消息内容"
+                            path="msg"
+                          >
+                            <NInput
+                              v-model:value="testFormData.msg"
+                              type="textarea"
+                              :rows="2"
+                              placeholder="输入消息内容..."
+                            />
                           </NFormItem>
                         </NGi>
 
                         <NGi v-if="testFormData.type === EventDataTypes.Gift">
-                          <NFormItem label="礼物名称" path="msg">
+                          <NFormItem
+                            label="礼物名称"
+                            path="msg"
+                          >
                             <NInput v-model:value="testFormData.msg" />
                           </NFormItem>
                         </NGi>
 
                         <NGi v-if="testFormData.type === EventDataTypes.Gift">
-                          <NFormItem label="数量" path="num">
-                            <NInputNumber v-model:value="testFormData.num" :min="1" />
+                          <NFormItem
+                            label="数量"
+                            path="num"
+                          >
+                            <NInputNumber
+                              v-model:value="testFormData.num"
+                              :min="1"
+                            />
                           </NFormItem>
                         </NGi>
 
-                        <NGi v-if="testFormData.type === EventDataTypes.Gift || testFormData.type === EventDataTypes.SC">
-                          <NFormItem label="价值 (元)" path="price">
-                            <NInputNumber v-model:value="testFormData.price" :min="0" :precision="1" />
+                        <NGi
+                          v-if="testFormData.type === EventDataTypes.Gift || testFormData.type === EventDataTypes.SC"
+                        >
+                          <NFormItem
+                            label="价值 (元)"
+                            path="price"
+                          >
+                            <NInputNumber
+                              v-model:value="testFormData.price"
+                              :min="0"
+                              :precision="1"
+                            />
                           </NFormItem>
                         </NGi>
 
-                        <NGi v-if="testFormData.type === EventDataTypes.Guard || testFormData.type === EventDataTypes.Message">
-                          <NFormItem label="舰长身份" path="guard_level">
-                            <NSelect v-model:value="testFormData.guard_level" :options="guardLevelOptions" />
+                        <NGi
+                          v-if="
+                            testFormData.type === EventDataTypes.Guard || testFormData.type === EventDataTypes.Message
+                          "
+                        >
+                          <NFormItem
+                            label="舰长身份"
+                            path="guard_level"
+                          >
+                            <NSelect
+                              v-model:value="testFormData.guard_level"
+                              :options="guardLevelOptions"
+                            />
                           </NFormItem>
                         </NGi>
 
                         <NGi v-if="testFormData.type === EventDataTypes.Message">
-                          <NFormItem label="粉丝牌等级" path="fans_medal_level">
-                            <NInputNumber v-model:value="testFormData.fans_medal_level" :min="0" />
+                          <NFormItem
+                            label="粉丝牌等级"
+                            path="fans_medal_level"
+                          >
+                            <NInputNumber
+                              v-model:value="testFormData.fans_medal_level"
+                              :min="0"
+                            />
                           </NFormItem>
                         </NGi>
 
                         <NGi v-if="testFormData.type === EventDataTypes.Message">
-                          <NFormItem label="粉丝牌名称" path="fans_medal_name">
+                          <NFormItem
+                            label="粉丝牌名称"
+                            path="fans_medal_name"
+                          >
                             <NInput v-model:value="testFormData.fans_medal_name" />
                           </NFormItem>
                         </NGi>
 
-                        <NGi v-if="testFormData.type === EventDataTypes.SCDel" :span="2">
-                          <NFormItem label="目标 SC ID" path="sc_id_to_delete">
+                        <NGi
+                          v-if="testFormData.type === EventDataTypes.SCDel"
+                          :span="2"
+                        >
+                          <NFormItem
+                            label="目标 SC ID"
+                            path="sc_id_to_delete"
+                          >
                             <NInput v-model:value="testFormData.sc_id_to_delete" />
                           </NFormItem>
                         </NGi>
                       </NGrid>
 
-                      <div style="margin-top: 24px;">
-                        <NGrid :x-gap="12" :cols="2">
+                      <div style="margin-top: 24px">
+                        <NGrid
+                          :x-gap="12"
+                          :cols="2"
+                        >
                           <NGi>
-                            <NButton block secondary type="info" @click="generateRandomContent">
+                            <NButton
+                              block
+                              secondary
+                              type="info"
+                              @click="generateRandomContent"
+                            >
                               🎲 随机填充
                             </NButton>
                           </NGi>
                           <NGi>
-                            <NButton block type="primary" @click="sendTestMessage">
+                            <NButton
+                              block
+                              type="primary"
+                              @click="sendTestMessage"
+                            >
                               📨 发送消息
                             </NButton>
                           </NGi>
@@ -921,19 +1153,17 @@ function copyObsUrl() {
                 <div class="dot yellow" />
                 <div class="dot green" />
               </div>
-              <div class="address-bar">
-                OBS Live Chat Preview
-              </div>
+              <div class="address-bar">OBS Live Chat Preview</div>
               <div class="toolbar-actions">
                 <!-- 可以在这里放一些快捷开关，比如透明背景切换等 -->
               </div>
             </div>
-            
+
             <div class="preview-content">
               <DanmujiOBS
                 ref="danmujiObsRef"
                 :is-o-b-s="false"
-                style="height: 100%; width: 100%;"
+                style="height: 100%; width: 100%"
                 :custom-css="css"
                 :config="danmujiConfig"
               />
@@ -983,6 +1213,27 @@ function copyObsUrl() {
   color: var(--vtsuru-fg-muted);
 }
 
+.obs-source-guide {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--vtsuru-border);
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+}
+
+.obs-source-guide summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
+  user-select: none;
+}
+
+.obs-source-guide ol {
+  margin: 4px 0 0;
+  padding-left: 20px;
+  line-height: 1.65;
+}
+
 .main-tabs {
   height: 100%;
 }
@@ -1003,6 +1254,11 @@ function copyObsUrl() {
 
 .editor-title {
   font-weight: 500;
+}
+
+.css-transparency-alert {
+  flex-shrink: 0;
+  margin-bottom: 8px;
 }
 
 .editor-container {
@@ -1070,7 +1326,7 @@ function copyObsUrl() {
   flex-direction: column;
   background: #1a1a1a; /* 默认深色背景，模拟OBS */
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   border: 1px solid var(--vtsuru-border);
 }
@@ -1096,9 +1352,15 @@ function copyObsUrl() {
   border-radius: 50%;
 }
 
-.dot.red { background: #ff5f56; }
-.dot.yellow { background: #ffbd2e; }
-.dot.green { background: #27c93f; }
+.dot.red {
+  background: #ff5f56;
+}
+.dot.yellow {
+  background: #ffbd2e;
+}
+.dot.green {
+  background: #27c93f;
+}
 
 .address-bar {
   flex: 1;
@@ -1120,12 +1382,14 @@ function copyObsUrl() {
   /* 棋盘格背景 */
   background-color: #1a1a1a;
   background-image:
-    linear-gradient(45deg, #222 25%, transparent 25%),
-    linear-gradient(-45deg, #222 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #222 75%),
-    linear-gradient(-45deg, transparent 75%, #222 75%);
+    linear-gradient(45deg, #222 25%, transparent 25%), linear-gradient(-45deg, #222 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #222 75%), linear-gradient(-45deg, transparent 75%, #222 75%);
   background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0;
 }
 
 :deep(.n-card-header) {

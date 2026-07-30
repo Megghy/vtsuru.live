@@ -1,8 +1,9 @@
-import { TTS_API_URL } from '@/shared/config'
 import { ACCOUNT } from '@/api/account'
-import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
+import { TTS_API_URL } from '@/shared/config'
+
 import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from './ai-client'
 import { ensureVoiceAudio } from './mimo-voice-store'
+import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
 export const DEFAULT_MIMO_VOICE = '冰糖'
 

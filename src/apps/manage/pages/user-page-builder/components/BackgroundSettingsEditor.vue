@@ -1,5 +1,17 @@
 <script setup lang="ts">
-import { NAlert, NButton, NColorPicker, NFlex, NForm, NFormItem, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSwitch } from 'naive-ui';
+import {
+  NAlert,
+  NButton,
+  NColorPicker,
+  NFlex,
+  NForm,
+  NFormItem,
+  NInputNumber,
+  NRadioButton,
+  NRadioGroup,
+  NSelect,
+  NSwitch,
+} from 'naive-ui'
 import { computed } from 'vue'
 
 type PageBackgroundType = 'none' | 'color' | 'image'
@@ -23,7 +35,7 @@ const type = computed<PageBackgroundType>({
   get() {
     const t = props.target.get()
     const v = t?.pageBackgroundType
-    return (v === 'color' || v === 'image') ? v : 'none'
+    return v === 'color' || v === 'image' ? v : 'none'
   },
   set(v) {
     const t = props.target.ensure()
@@ -62,7 +74,7 @@ const fit = computed<PageBackgroundImageFit>({
   get() {
     const t = props.target.get()
     const v = t?.pageBackgroundImageFit
-    return (v === 'contain' || v === 'fill' || v === 'none') ? v : 'cover'
+    return v === 'contain' || v === 'fill' || v === 'none' ? v : 'cover'
   },
   set(v) {
     const t = props.target.ensure()
@@ -75,13 +87,14 @@ const blurMode = computed<PageBackgroundBlurMode>({
   get() {
     const t = props.target.get()
     const v = t?.pageBackgroundBlurMode
-    return (v === 'background' || v === 'glass') ? v : 'none'
+    return v === 'background' || v === 'glass' ? v : 'none'
   },
   set(v) {
     const t = props.target.ensure()
     if (!t) return
     t.pageBackgroundBlurMode = v
-    if (v !== 'none' && (typeof t.pageBackgroundBlur !== 'number' || !Number.isFinite(t.pageBackgroundBlur))) t.pageBackgroundBlur = 14
+    if (v !== 'none' && (typeof t.pageBackgroundBlur !== 'number' || !Number.isFinite(t.pageBackgroundBlur)))
+      t.pageBackgroundBlur = 14
   },
 })
 
@@ -103,7 +116,7 @@ const scrimMode = computed<PageBackgroundScrimMode>({
   get() {
     const t = props.target.get()
     const v = t?.pageBackgroundScrimMode
-    return (v === 'black' || v === 'white') ? v : 'auto'
+    return v === 'black' || v === 'white' ? v : 'auto'
   },
   set(v) {
     const t = props.target.ensure()
@@ -116,7 +129,8 @@ const scrimMode = computed<PageBackgroundScrimMode>({
 const scrimStrength = computed<number>({
   get() {
     const t = props.target.get()
-    if (!t || !Object.prototype.hasOwnProperty.call(t, 'pageBackgroundScrimStrength')) return blurMode.value === 'none' ? 0 : 100
+    if (!t || !Object.prototype.hasOwnProperty.call(t, 'pageBackgroundScrimStrength'))
+      return blurMode.value === 'none' ? 0 : 100
     const v = Number(t?.pageBackgroundScrimStrength)
     if (!Number.isFinite(v)) return blurMode.value === 'none' ? 0 : 100
     return Math.min(100, Math.max(0, Math.round(v)))
@@ -155,31 +169,63 @@ function clearAll() {
 </script>
 
 <template>
-  <NForm label-placement="top" size="small">
+  <NForm
+    label-placement="top"
+    size="small"
+  >
     <NFormItem label="背景类型">
-      <NFlex justify="space-between" align="center" :wrap="false" style="gap: 10px">
-        <NRadioGroup v-model:value="type" size="small" style="flex: 1">
-          <NRadioButton value="none" style="width: 33.3%; text-align: center">
+      <NFlex
+        justify="space-between"
+        align="center"
+        :wrap="false"
+        style="gap: 10px"
+      >
+        <NRadioGroup
+          v-model:value="type"
+          size="small"
+          style="flex: 1"
+        >
+          <NRadioButton
+            value="none"
+            style="width: 33.3%; text-align: center"
+          >
             无
           </NRadioButton>
-          <NRadioButton value="color" style="width: 33.3%; text-align: center">
+          <NRadioButton
+            value="color"
+            style="width: 33.3%; text-align: center"
+          >
             纯色
           </NRadioButton>
-          <NRadioButton value="image" style="width: 33.4%; text-align: center">
+          <NRadioButton
+            value="image"
+            style="width: 33.4%; text-align: center"
+          >
             图片
           </NRadioButton>
         </NRadioGroup>
-        <NButton size="small" secondary @click="clearAll">
+        <NButton
+          size="small"
+          secondary
+          @click="clearAll"
+        >
           清空
         </NButton>
       </NFlex>
     </NFormItem>
 
-    <Transition name="fade-slide" mode="out-in">
+    <Transition
+      name="fade-slide"
+      mode="out-in"
+    >
       <div :key="type">
         <template v-if="type === 'color'">
           <NFormItem label="背景颜色">
-            <NColorPicker v-model:value="color" :modes="['rgb', 'hex']" :show-alpha="true" />
+            <NColorPicker
+              v-model:value="color"
+              :modes="['rgb', 'hex']"
+              :show-alpha="true"
+            />
           </NFormItem>
         </template>
 
@@ -208,8 +254,14 @@ function clearAll() {
                   :src="imagePath"
                   alt=""
                   referrerpolicy="no-referrer"
-                  style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--vtsuru-border);"
-                >
+                  style="
+                    width: 36px;
+                    height: 36px;
+                    object-fit: cover;
+                    border-radius: 6px;
+                    border: 1px solid var(--vtsuru-border);
+                  "
+                />
               </Transition>
             </NFlex>
           </NFormItem>
@@ -225,7 +277,12 @@ function clearAll() {
             />
           </NFormItem>
           <Transition name="fade">
-            <NAlert v-if="!imagePath" type="warning" :show-icon="true" style="margin-bottom: 12px">
+            <NAlert
+              v-if="!imagePath"
+              type="warning"
+              :show-icon="true"
+              style="margin-bottom: 12px"
+            >
               请选择并上传一张图片作为背景。
             </NAlert>
           </Transition>
@@ -234,47 +291,101 @@ function clearAll() {
     </Transition>
 
     <template v-if="type !== 'none'">
-      <NFlex justify="space-between" align="center" :wrap="false" style="margin-bottom: 10px">
-        <div style="font-size: 12px; color: var(--vtsuru-fg-muted)" title="建议开启以让内置页面也生效">
+      <NFlex
+        justify="space-between"
+        align="center"
+        :wrap="false"
+        style="margin-bottom: 10px"
+      >
+        <div
+          style="font-size: 12px; color: var(--vtsuru-fg-muted)"
+          title="建议开启以让内置页面也生效"
+        >
           覆盖导航区域
         </div>
-        <NSwitch v-model:value="coverSidebar" size="small" />
+        <NSwitch
+          v-model:value="coverSidebar"
+          size="small"
+        />
       </NFlex>
 
       <NFormItem label="遮罩颜色">
-        <NRadioGroup v-model:value="scrimMode" size="small" style="width: 100%">
-          <NRadioButton value="auto" style="width: 33.3%; text-align: center">
+        <NRadioGroup
+          v-model:value="scrimMode"
+          size="small"
+          style="width: 100%"
+        >
+          <NRadioButton
+            value="auto"
+            style="width: 33.3%; text-align: center"
+          >
             自动
           </NRadioButton>
-          <NRadioButton value="black" style="width: 33.3%; text-align: center">
+          <NRadioButton
+            value="black"
+            style="width: 33.3%; text-align: center"
+          >
             黑
           </NRadioButton>
-          <NRadioButton value="white" style="width: 33.4%; text-align: center">
+          <NRadioButton
+            value="white"
+            style="width: 33.4%; text-align: center"
+          >
             白
           </NRadioButton>
         </NRadioGroup>
       </NFormItem>
 
-      <NFormItem label="遮罩强度 %" :show-feedback="false">
-        <NInputNumber v-model:value="scrimStrength" :min="0" :max="100" style="width: 100%" />
+      <NFormItem
+        label="遮罩强度 %"
+        :show-feedback="false"
+      >
+        <NInputNumber
+          v-model:value="scrimStrength"
+          :min="0"
+          :max="100"
+          style="width: 100%"
+        />
       </NFormItem>
 
       <NFormItem label="背景效果">
-        <NRadioGroup v-model:value="blurMode" size="small" style="width: 100%">
-          <NRadioButton value="none" style="width: 33.3%; text-align: center">
+        <NRadioGroup
+          v-model:value="blurMode"
+          size="small"
+          style="width: 100%"
+        >
+          <NRadioButton
+            value="none"
+            style="width: 33.3%; text-align: center"
+          >
             无
           </NRadioButton>
-          <NRadioButton value="background" style="width: 33.3%; text-align: center">
+          <NRadioButton
+            value="background"
+            style="width: 33.3%; text-align: center"
+          >
             模糊背景
           </NRadioButton>
-          <NRadioButton value="glass" style="width: 33.4%; text-align: center">
+          <NRadioButton
+            value="glass"
+            style="width: 33.4%; text-align: center"
+          >
             磨砂玻璃
           </NRadioButton>
         </NRadioGroup>
       </NFormItem>
 
-      <NFormItem label="强度 px" :show-feedback="false">
-        <NInputNumber v-model:value="blur" :min="0" :max="40" style="width: 100%" :disabled="blurMode === 'none'" />
+      <NFormItem
+        label="强度 px"
+        :show-feedback="false"
+      >
+        <NInputNumber
+          v-model:value="blur"
+          :min="0"
+          :max="40"
+          style="width: 100%"
+          :disabled="blurMode === 'none'"
+        />
       </NFormItem>
     </template>
   </NForm>

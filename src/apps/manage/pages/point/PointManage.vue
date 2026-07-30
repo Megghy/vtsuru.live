@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import type {
-  UploadFileInfo,
-} from 'naive-ui'
-import type {
-  ResponsePointGoodModel,
-  UploadSubPointGoodsModel,
-  UploadPointGoodsModel,
-} from '@/api/api-models'
-import { Add24Filled, ArrowSync24Filled, Delete24Filled, Edit24Filled, Eye24Filled, Info24Filled, ShoppingBag24Filled, } from '@vicons/fluent'
+import {
+  Add24Filled,
+  ArrowSync24Filled,
+  Delete24Filled,
+  Edit24Filled,
+  Eye24Filled,
+  Info24Filled,
+  ShoppingBag24Filled,
+} from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
+import type { UploadFileInfo } from 'naive-ui'
 import {
   NAlert,
   NButton,
@@ -43,27 +44,24 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+
 import { useAccount } from '@/api/account'
-import {
-  FunctionTypes,
-  GoodsStatus,
-  GoodsTypes,
-  KeySelectionMode,
-  UserFileLocation,
-} from '@/api/api-models'
+import type { ResponsePointGoodModel, UploadSubPointGoodsModel, UploadPointGoodsModel } from '@/api/api-models'
+import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode, UserFileLocation } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
-import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
-import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
-import PointUserManage from './PointUserManage.vue'
+import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
+import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
+import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
+import { useBiliAuth } from '@/store/useBiliAuth'
+
 import PointGuardDuplicateManage from './PointGuardDuplicateManage.vue'
 import PointTestPanel from './PointTestPanel.vue'
+import PointUserManage from './PointUserManage.vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -92,7 +90,7 @@ const hash = computed({
   },
 })
 const currentPointSetting = computed(() => accountInfo.value?.settings.point)
-const goodsPageUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/goods` : '')
+const goodsPageUrl = computed(() => (accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/goods` : ''))
 
 function openPointSourceSettings() {
   hash.value = 'settings'
@@ -107,10 +105,20 @@ function sortGoods(a: ResponsePointGoodModel, b: ResponsePointGoodModel) {
   if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1
   return b.id - a.id
 }
-const onShelfGoods = computed(() => goods.value.filter(g => g.status !== GoodsStatus.Discontinued).slice().sort(sortGoods))
-const offShelfGoods = computed(() => goods.value.filter(g => g.status === GoodsStatus.Discontinued).slice().sort(sortGoods))
+const onShelfGoods = computed(() =>
+  goods.value
+    .filter((g) => g.status !== GoodsStatus.Discontinued)
+    .slice()
+    .sort(sortGoods),
+)
+const offShelfGoods = computed(() =>
+  goods.value
+    .filter((g) => g.status === GoodsStatus.Discontinued)
+    .slice()
+    .sort(sortGoods),
+)
 
-function defaultGoodsModel(): { goods: UploadPointGoodsModel, fileList: UploadFileInfo[] } {
+function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFileInfo[] } {
   return {
     goods: {
       type: GoodsTypes.Virtual,
@@ -135,9 +143,7 @@ function defaultGoodsModel(): { goods: UploadPointGoodsModel, fileList: UploadFi
     fileList: [],
   }
 }
-const currentGoodsModel = ref<{ goods: UploadPointGoodsModel, fileList: UploadFileInfo[] }>(
-  defaultGoodsModel(),
-)
+const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }>(defaultGoodsModel())
 const subItemFileLists = ref<Record<string, UploadFileInfo[]>>({})
 
 function getSubItemKey(sub: UploadSubPointGoodsModel) {
@@ -177,7 +183,7 @@ function addSubItem() {
 function removeSubItemByKey(subKey: string) {
   ensureSubItems()
   const list = currentGoodsModel.value.goods.subItems!
-  const index = list.findIndex(s => getSubItemKey(s) === subKey)
+  const index = list.findIndex((s) => getSubItemKey(s) === subKey)
   if (index < 0) return
   const sub = list[index]
   if (sub) {
@@ -194,7 +200,7 @@ function moveSubItemByKey(subKey: string, direction: -1 | 1) {
   if (subItemsSortMode.value !== 'manual') return
   ensureSubItems()
   const list = currentGoodsModel.value.goods.subItems!
-  const index = list.findIndex(s => getSubItemKey(s) === subKey)
+  const index = list.findIndex((s) => getSubItemKey(s) === subKey)
   if (index < 0) return
   const nextIndex = index + direction
   if (nextIndex < 0 || nextIndex >= list.length) return
@@ -207,24 +213,28 @@ function resolveSubType(sub: UploadSubPointGoodsModel) {
 }
 
 // 监听 fileList 变化，确保 cover 和 fileList 同步
-watch(() => currentGoodsModel.value.fileList, (newFileList, oldFileList) => {
-  if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
-    if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
-      currentGoodsModel.value.goods.cover = undefined
+watch(
+  () => currentGoodsModel.value.fileList,
+  (newFileList, oldFileList) => {
+    if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
+      if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
+        currentGoodsModel.value.goods.cover = undefined
+      }
     }
-  }
-}, { deep: true })
+  },
+  { deep: true },
+)
 
 // 计算属性
 const allowedYearOptions = computed(() => {
-  return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map(item => ({
+  return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((item) => ({
     label: `${item.toString()}年`,
     value: item,
   }))
 })
 
 const allowedMonthOptions = computed(() => {
-  return Array.from({ length: 12 }, (_, i) => i + 1).map(item => ({
+  return Array.from({ length: 12 }, (_, i) => i + 1).map((item) => ({
     label: `${item.toString()}月`,
     value: item,
   }))
@@ -236,10 +246,10 @@ const existTags = computed(() => {
   const tempSet = new Set<string>()
   for (const good of goods.value) {
     if (!good.tags || good.tags.length === 0) continue
-    good.tags.forEach(tag => tempSet.add(tag))
+    good.tags.forEach((tag) => tempSet.add(tag))
   }
 
-  return Array.from(tempSet).map(tag => ({ label: tag, value: tag }))
+  return Array.from(tempSet).map((tag) => ({ label: tag, value: tag }))
 })
 
 const subItemsForDisplay = computed(() => {
@@ -249,7 +259,7 @@ const subItemsForDisplay = computed(() => {
   if (subItemsSortMode.value === 'name') {
     cloned.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
   } else if (subItemsSortMode.value === 'price') {
-    cloned.sort((a, b) => (Number(a.price ?? 0) - Number(b.price ?? 0)))
+    cloned.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0))
   } else if (subItemsSortMode.value === 'stock') {
     const toStock = (v: number | undefined) => (v === undefined ? Number.POSITIVE_INFINITY : Number(v))
     cloned.sort((a, b) => toStock(a.stock) - toStock(b.stock))
@@ -259,34 +269,27 @@ const subItemsForDisplay = computed(() => {
 
 // 表单验证规则
 const rules = {
-  'name': {
+  name: {
     required: true,
     message: '请输入礼物名称',
   },
-  'price': {
+  price: {
     required: true,
     message: '请输入礼物价格',
   },
-  'type': {
+  type: {
     required: true,
     message: '请选择是虚拟礼物或实物',
   },
 }
 
 async function uploadCover(file: File) {
-  const uploadFile = shouldWatermarkCover.value
-    ? await addVtsuruLiveWatermark(file)
-    : file
-  return uploadFiles(
-    [uploadFile],
-    undefined,
-    UserFileLocation.Local,
-    (stage: string) => {
-      if (stage === UploadStage.Uploading) {
-        uploadProgress.value = 0
-      }
-    },
-  )
+  const uploadFile = shouldWatermarkCover.value ? await addVtsuruLiveWatermark(file) : file
+  return uploadFiles([uploadFile], undefined, UserFileLocation.Local, (stage: string) => {
+    if (stage === UploadStage.Uploading) {
+      uploadProgress.value = 0
+    }
+  })
 }
 
 async function updateGoods(e: MouseEvent) {
@@ -348,7 +351,7 @@ async function updateGoods(e: MouseEvent) {
     // 款式校验与“默认继承父商品”归一化（尽量不下发与父商品相同的字段）
     ensureSubItems()
     const parent = currentGoodsModel.value.goods
-    for (const sub of (currentGoodsModel.value.goods.subItems ?? [])) {
+    for (const sub of currentGoodsModel.value.goods.subItems ?? []) {
       const name = (sub.name ?? '').trim()
       if (!name) throw new Error('款式名称不能为空')
       sub.name = name
@@ -366,7 +369,12 @@ async function updateGoods(e: MouseEvent) {
       }
 
       // 外部收集链接：如果启用站外收集，则必须填写链接（\"\" 表示本站收集）
-      if (sub.collectUrl !== undefined && sub.collectUrl !== null && sub.collectUrl !== '' && !String(sub.collectUrl).trim()) {
+      if (
+        sub.collectUrl !== undefined &&
+        sub.collectUrl !== null &&
+        sub.collectUrl !== '' &&
+        !String(sub.collectUrl).trim()
+      ) {
         throw new Error(`款式 ${name} 的收集链接不能为空`)
       }
 
@@ -389,7 +397,7 @@ async function updateGoods(e: MouseEvent) {
       if (sub.embedCollectUrl === parent.embedCollectUrl) sub.embedCollectUrl = undefined
     }
 
-    const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished')
+    const newFilesToUpload = currentGoodsModel.value.fileList.filter((f) => f.file && f.status !== 'finished')
     if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
       isUploadingCover.value = true
       message.info(shouldWatermarkCover.value ? '正在添加封面水印并上传...' : '正在上传封面...')
@@ -398,7 +406,7 @@ async function updateGoods(e: MouseEvent) {
       if (uploadResults && uploadResults.length > 0) {
         currentGoodsModel.value.goods.cover = uploadResults[0]
         message.success('封面上传成功')
-        const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex(f => f.id === newFilesToUpload[0].id)
+        const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex((f) => f.id === newFilesToUpload[0].id)
         if (uploadedFileIndex > -1) {
           currentGoodsModel.value.fileList[uploadedFileIndex] = {
             ...currentGoodsModel.value.fileList[uploadedFileIndex],
@@ -417,10 +425,10 @@ async function updateGoods(e: MouseEvent) {
 
     // 上传款式封面（如有）
     ensureSubItems()
-    for (const sub of (currentGoodsModel.value.goods.subItems ?? [])) {
+    for (const sub of currentGoodsModel.value.goods.subItems ?? []) {
       const key = getSubItemKey(sub)
       const fileList = subItemFileLists.value[key] ?? []
-      const subFilesToUpload = fileList.filter(f => f.file && f.status !== 'finished')
+      const subFilesToUpload = fileList.filter((f) => f.file && f.status !== 'finished')
       if (subFilesToUpload.length > 0 && subFilesToUpload[0].file) {
         isUploadingCover.value = true
         const uploadAction = shouldWatermarkCover.value ? '添加水印并上传' : '上传'
@@ -449,17 +457,18 @@ async function updateGoods(e: MouseEvent) {
       }
     }
 
-    const { code, data, message: errMsg } = await QueryPostAPI<ResponsePointGoodModel>(
-      `${POINT_API_URL}update-goods`,
-      currentGoodsModel.value.goods,
-    )
+    const {
+      code,
+      data,
+      message: errMsg,
+    } = await QueryPostAPI<ResponsePointGoodModel>(`${POINT_API_URL}update-goods`, currentGoodsModel.value.goods)
 
     if (code === 200) {
       message.success('商品信息保存成功')
       showAddGoodsModal.value = false
       currentGoodsModel.value = defaultGoodsModel()
 
-      const index = goods.value.findIndex(g => g.id === data.id)
+      const index = goods.value.findIndex((g) => g.id === data.id)
       if (index >= 0) {
         goods.value[index] = data
       } else {
@@ -527,16 +536,21 @@ function onUpdateClick(item: ResponsePointGoodModel) {
       description: (s.description ?? undefined) === parentDescription ? undefined : (s.description ?? undefined),
       type: s.type === parentType ? undefined : s.type,
       tags: JSON.stringify(s.tags ?? []) === JSON.stringify(copiedItem.tags ?? []) ? undefined : s.tags,
-      cover: (s.cover && parentCoverId && s.cover.id === parentCoverId) ? undefined : s.cover,
-      collectUrl: ((s.collectUrl ?? undefined) === parentCollectUrl) ? undefined : (s.collectUrl ?? undefined),
+      cover: s.cover && parentCoverId && s.cover.id === parentCoverId ? undefined : s.cover,
+      collectUrl: (s.collectUrl ?? undefined) === parentCollectUrl ? undefined : (s.collectUrl ?? undefined),
       embedCollectUrl:
-        ((s.collectUrl ?? undefined) === parentCollectUrl)
+        (s.collectUrl ?? undefined) === parentCollectUrl
           ? undefined
-          : ((s.embedCollectUrl ?? undefined) === parentEmbedCollectUrl ? undefined : (s.embedCollectUrl ?? undefined)),
+          : (s.embedCollectUrl ?? undefined) === parentEmbedCollectUrl
+            ? undefined
+            : (s.embedCollectUrl ?? undefined),
       isAllowRebuy: s.isAllowRebuy === parentIsAllowRebuy ? undefined : s.isAllowRebuy,
       maxBuyCount: s.maxBuyCount === parentMaxBuyCount ? undefined : s.maxBuyCount,
       content: (s.content ?? undefined) === (copiedItem.content ?? undefined) ? undefined : (s.content ?? undefined),
-      virtualKeys: JSON.stringify(s.virtualKeys ?? []) === JSON.stringify(copiedItem.virtualKeys ?? []) ? undefined : s.virtualKeys,
+      virtualKeys:
+        JSON.stringify(s.virtualKeys ?? []) === JSON.stringify(copiedItem.virtualKeys ?? [])
+          ? undefined
+          : s.virtualKeys,
       keySelectionMode: s.keySelectionMode === copiedItem.keySelectionMode ? undefined : s.keySelectionMode,
       setting: JSON.stringify(s.setting ?? {}) === JSON.stringify(copiedItem.setting ?? {}) ? undefined : s.setting,
     })) as UploadSubPointGoodsModel[]
@@ -546,7 +560,7 @@ function onUpdateClick(item: ResponsePointGoodModel) {
 
   // 初始化款式封面上传列表
   subItemFileLists.value = {}
-  for (const s of (copiedItem.subItems as UploadSubPointGoodsModel[])) {
+  for (const s of copiedItem.subItems as UploadSubPointGoodsModel[]) {
     const key = getSubItemKey(s)
     subItemFileLists.value[key] = s.cover
       ? [
@@ -599,7 +613,7 @@ async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus
 
         if (code === 200) {
           message.success('成功')
-          const index = goods.value.findIndex(g => g.id === item.id)
+          const index = goods.value.findIndex((g) => g.id === item.id)
           if (index > -1) {
             goods.value[index].status = status
           }
@@ -635,7 +649,7 @@ function onDeleteClick(item: ResponsePointGoodModel) {
 
         if (code === 200) {
           message.success('成功')
-          goods.value = goods.value.filter(g => g.id !== item.id)
+          goods.value = goods.value.filter((g) => g.id !== item.id)
         } else {
           message.error(`失败: ${errMsg}`)
           console.error(errMsg)
@@ -668,7 +682,7 @@ function resetGoods() {
   subItemsSortMode.value = 'manual'
 }
 
-onMounted(() => { })
+onMounted(() => {})
 </script>
 
 <template>
@@ -680,18 +694,33 @@ onMounted(() => { })
     :links="[{ label: '礼物展示页链接', value: goodsPageUrl }]"
   />
 
-  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
-    <NFlex justify="space-between" align="center" wrap :gap="12">
+  <NCard
+    size="small"
+    :bordered="true"
+    content-style="padding: 12px;"
+    style="max-width: 800px"
+  >
+    <NFlex
+      justify="space-between"
+      align="center"
+      wrap
+      :gap="12"
+    >
       <NAlert
         v-if="!accountInfo.eventFetcherState.online"
-        :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
-          ? 'success'
-          : 'warning'
+        :type="
+          accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
+            ? 'success'
+            : 'warning'
         "
         :bordered="false"
         style="flex: 1; min-width: 300px"
       >
-        <NFlex align="center" :gap="8" wrap>
+        <NFlex
+          align="center"
+          :gap="8"
+          wrap
+        >
           <NText>
             此功能依赖
             <NButton
@@ -784,7 +813,7 @@ onMounted(() => { })
                 :gap="8"
                 style="width: 100%"
               >
-                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500;">
+                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500">
                   <NIcon
                     :component="ShoppingBag24Filled"
                     style="vertical-align: -0.15em; margin-right: 4px"
@@ -836,9 +865,7 @@ onMounted(() => { })
       </NGrid>
 
       <!-- 下架礼物列表 -->
-      <NDivider style="margin: 24px 0 16px">
-        已下架
-      </NDivider>
+      <NDivider style="margin: 24px 0 16px"> 已下架 </NDivider>
       <NEmpty
         v-if="offShelfGoods.length === 0"
         description="暂无已下架的礼物"
@@ -864,7 +891,7 @@ onMounted(() => { })
                 :gap="8"
                 style="width: 100%"
               >
-                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500;">
+                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500">
                   <NIcon
                     :component="ShoppingBag24Filled"
                     style="vertical-align: -0.15em; margin-right: 4px"
@@ -976,7 +1003,7 @@ onMounted(() => { })
     :close-on-esc="!isUpdating && !isUploadingCover"
     :segmented="{
       content: 'soft',
-      footer: 'soft'
+      footer: 'soft',
     }"
   >
     <template #header-extra>
@@ -997,7 +1024,7 @@ onMounted(() => { })
     </template>
     <div class="scrollable-container">
       <NScrollbar
-        style="max-height: 70vh; padding-right: 12px;"
+        style="max-height: 70vh; padding-right: 12px"
         class="goods-scrollbar"
       >
         <NForm
@@ -1006,8 +1033,15 @@ onMounted(() => { })
           :rules="rules"
           style="width: 100%"
         >
-          <NTabs v-model:value="goodsModalTab" type="segment" animated>
-            <NTabPane name="basic" tab="基础">
+          <NTabs
+            v-model:value="goodsModalTab"
+            type="segment"
+            animated
+          >
+            <NTabPane
+              name="basic"
+              tab="基础"
+            >
               <!-- 基本信息分组 -->
               <NDivider
                 title-placement="left"
@@ -1066,15 +1100,13 @@ onMounted(() => { })
                 path="isPinned"
                 label="置顶显示"
               >
-                <NCheckbox v-model:checked="currentGoodsModel.goods.isPinned">
-                  在礼物列表中置顶显示
-                </NCheckbox>
+                <NCheckbox v-model:checked="currentGoodsModel.goods.isPinned"> 在礼物列表中置顶显示 </NCheckbox>
               </NFormItem>
 
               <!-- 详细描述分组 -->
               <NDivider
                 title-placement="left"
-                style="margin-top: 0;"
+                style="margin-top: 0"
               >
                 详细描述
               </NDivider>
@@ -1108,7 +1140,7 @@ onMounted(() => { })
               <NFormItem
                 path="cover"
                 label="封面"
-                style="margin-bottom: 16px;"
+                style="margin-bottom: 16px"
               >
                 <NFlex
                   vertical
@@ -1127,7 +1159,7 @@ onMounted(() => { })
                       vertical
                       align="center"
                       justify="center"
-                      style="width: 100%; height: 100%;"
+                      style="width: 100%; height: 100%"
                     >
                       <NIcon
                         size="24"
@@ -1137,11 +1169,12 @@ onMounted(() => { })
                       <span style="font-size: 12px; color: grey">(小于10MB)</span>
                     </NFlex>
                   </NUpload>
-                  <NFlex align="center" :gap="8">
+                  <NFlex
+                    align="center"
+                    :gap="8"
+                  >
                     <NSwitch v-model:value="shouldWatermarkCover" />
-                    <NText depth="3">
-                      添加 vtsuru.live 水印（同时应用于款式封面）
-                    </NText>
+                    <NText depth="3"> 添加 vtsuru.live 水印（同时应用于款式封面） </NText>
                   </NFlex>
                   <NProgress
                     v-if="isUploadingCover"
@@ -1153,7 +1186,10 @@ onMounted(() => { })
                 </NFlex>
               </NFormItem>
             </NTabPane>
-            <NTabPane name="subItems" tab="款式配置">
+            <NTabPane
+              name="subItems"
+              tab="款式配置"
+            >
               <!-- 款式/规格 -->
               <NDivider
                 title-placement="left"
@@ -1162,33 +1198,50 @@ onMounted(() => { })
                 款式 / 规格
               </NDivider>
 
-              <NAlert type="info" :bordered="false" style="margin-bottom: 12px;">
+              <NAlert
+                type="info"
+                :bordered="false"
+                style="margin-bottom: 12px"
+              >
                 前台兑换时可多选款式；款式价格为最终价；库存按款式独立计算。未上传款式封面时默认沿用父商品封面。
               </NAlert>
 
-              <NFormItem label="最多可选款式数" style="margin-bottom: 16px;">
-                <NFlex align="center" :gap="12">
+              <NFormItem
+                label="最多可选款式数"
+                style="margin-bottom: 16px"
+              >
+                <NFlex
+                  align="center"
+                  :gap="12"
+                >
                   <NInputNumber
                     v-model:value="currentGoodsModel.goods.maxSubItemSelections"
                     :min="0"
                     placeholder="0表示不限制"
                     style="width: 200px"
                   >
-                    <template #suffix>
-                      种
-                    </template>
+                    <template #suffix> 种 </template>
                   </NInputNumber>
-                  <NText depth="3" style="font-size: 12px;">
+                  <NText
+                    depth="3"
+                    style="font-size: 12px"
+                  >
                     限制用户最多可以选择多少种不同的款式，0或留空表示不限制
                   </NText>
                 </NFlex>
               </NFormItem>
 
-              <NFlex justify="space-between" align="center" style="margin-bottom: 8px;">
-                <NText depth="2">
-                  已配置 {{ (currentGoodsModel.goods.subItems ?? []).length }} 个款式
-                </NText>
-                <NFlex align="center" :gap="12" wrap>
+              <NFlex
+                justify="space-between"
+                align="center"
+                style="margin-bottom: 8px"
+              >
+                <NText depth="2"> 已配置 {{ (currentGoodsModel.goods.subItems ?? []).length }} 个款式 </NText>
+                <NFlex
+                  align="center"
+                  :gap="12"
+                  wrap
+                >
                   <NSelect
                     v-model:value="subItemsSortMode"
                     size="small"
@@ -1200,7 +1253,12 @@ onMounted(() => { })
                       { label: '按库存', value: 'stock' },
                     ]"
                   />
-                  <NButton type="primary" secondary size="small" @click="addSubItem">
+                  <NButton
+                    type="primary"
+                    secondary
+                    size="small"
+                    @click="addSubItem"
+                  >
                     <template #icon>
                       <NIcon :component="Add24Filled" />
                     </template>
@@ -1212,7 +1270,7 @@ onMounted(() => { })
               <NEmpty
                 v-if="!(currentGoodsModel.goods.subItems ?? []).length"
                 description="暂无款式（不影响父商品直接兑换）"
-                style="margin-bottom: 12px;"
+                style="margin-bottom: 12px"
               />
 
               <template v-else>
@@ -1221,11 +1279,16 @@ onMounted(() => { })
                   :key="getSubItemKey(sub)"
                   class="manage-sub-item-card"
                 >
-                  <NFlex justify="space-between" align="center" style="margin-bottom: 8px;">
-                    <NText strong>
-                      款式 #{{ idx + 1 }}
-                    </NText>
-                    <NFlex :gap="8" align="center">
+                  <NFlex
+                    justify="space-between"
+                    align="center"
+                    style="margin-bottom: 8px"
+                  >
+                    <NText strong> 款式 #{{ idx + 1 }} </NText>
+                    <NFlex
+                      :gap="8"
+                      align="center"
+                    >
                       <NButton
                         quaternary
                         size="small"
@@ -1242,7 +1305,12 @@ onMounted(() => { })
                       >
                         下移
                       </NButton>
-                      <NButton type="error" secondary size="small" @click="removeSubItemByKey(getSubItemKey(sub))">
+                      <NButton
+                        type="error"
+                        secondary
+                        size="small"
+                        @click="removeSubItemByKey(getSubItemKey(sub))"
+                      >
                         <template #icon>
                           <NIcon :component="Delete24Filled" />
                         </template>
@@ -1251,16 +1319,42 @@ onMounted(() => { })
                     </NFlex>
                   </NFlex>
 
-                  <NFormItem label="名称" required style="margin-bottom: 10px;">
-                    <NInput v-model:value="sub.name" placeholder="如：吧唧 / 立牌 / 抱枕套" />
+                  <NFormItem
+                    label="名称"
+                    required
+                    style="margin-bottom: 10px"
+                  >
+                    <NInput
+                      v-model:value="sub.name"
+                      placeholder="如：吧唧 / 立牌 / 抱枕套"
+                    />
                   </NFormItem>
 
-                  <NFlex :gap="12" align="center" style="margin-bottom: 10px;">
-                    <NFormItem label="所需积分" required style="flex: 1; margin-bottom: 0;">
-                      <NInputNumber v-model:value="sub.price" min="0" placeholder="款式最终价" style="width: 100%;" />
+                  <NFlex
+                    :gap="12"
+                    align="center"
+                    style="margin-bottom: 10px"
+                  >
+                    <NFormItem
+                      label="所需积分"
+                      required
+                      style="flex: 1; margin-bottom: 0"
+                    >
+                      <NInputNumber
+                        v-model:value="sub.price"
+                        min="0"
+                        placeholder="款式最终价"
+                        style="width: 100%"
+                      />
                     </NFormItem>
-                    <NFormItem label="库存" style="flex: 1; margin-bottom: 0;">
-                      <NFlex :gap="12" align="center">
+                    <NFormItem
+                      label="库存"
+                      style="flex: 1; margin-bottom: 0"
+                    >
+                      <NFlex
+                        :gap="12"
+                        align="center"
+                      >
                         <NCheckbox
                           :checked="sub.stock === undefined"
                           @update:checked="(v) => (sub.stock = v ? undefined : 100)"
@@ -1278,12 +1372,24 @@ onMounted(() => { })
                     </NFormItem>
                   </NFlex>
 
-                  <NFlex :gap="12" align="center" style="margin-bottom: 10px;">
-                    <NFormItem label="允许重购" style="flex: 1; margin-bottom: 0;">
-                      <NFlex vertical :gap="6">
+                  <NFlex
+                    :gap="12"
+                    align="center"
+                    style="margin-bottom: 10px"
+                  >
+                    <NFormItem
+                      label="允许重购"
+                      style="flex: 1; margin-bottom: 0"
+                    >
+                      <NFlex
+                        vertical
+                        :gap="6"
+                      >
                         <NCheckbox
                           :checked="sub.isAllowRebuy === undefined"
-                          @update:checked="(v) => (sub.isAllowRebuy = v ? undefined : (currentGoodsModel.goods.isAllowRebuy ?? false))"
+                          @update:checked="
+                            (v) => (sub.isAllowRebuy = v ? undefined : (currentGoodsModel.goods.isAllowRebuy ?? false))
+                          "
                         >
                           沿用父商品（父：{{ currentGoodsModel.goods.isAllowRebuy ? '允许' : '不允许' }}）
                         </NCheckbox>
@@ -1296,28 +1402,48 @@ onMounted(() => { })
                         </NCheckbox>
                       </NFlex>
                     </NFormItem>
-                    <NFormItem label="最大兑换数量" style="flex: 1; margin-bottom: 0;">
-                      <NFlex vertical :gap="6" style="width: 100%">
+                    <NFormItem
+                      label="最大兑换数量"
+                      style="flex: 1; margin-bottom: 0"
+                    >
+                      <NFlex
+                        vertical
+                        :gap="6"
+                        style="width: 100%"
+                      >
                         <NCheckbox
                           :checked="sub.maxBuyCount === undefined"
-                          @update:checked="(v) => (sub.maxBuyCount = v ? undefined : (currentGoodsModel.goods.maxBuyCount ?? 1))"
+                          @update:checked="
+                            (v) => (sub.maxBuyCount = v ? undefined : (currentGoodsModel.goods.maxBuyCount ?? 1))
+                          "
                         >
                           沿用父商品（父：{{ currentGoodsModel.goods.maxBuyCount ?? 1 }}）
                         </NCheckbox>
                         <NInputNumber
-                          :value="sub.maxBuyCount ?? (currentGoodsModel.goods.maxBuyCount ?? 1)"
+                          :value="sub.maxBuyCount ?? currentGoodsModel.goods.maxBuyCount ?? 1"
                           :disabled="sub.maxBuyCount === undefined"
                           min="1"
-                          style="width: 100%;"
+                          style="width: 100%"
                           @update:value="(v) => (sub.maxBuyCount = v)"
                         />
                       </NFlex>
                     </NFormItem>
                   </NFlex>
 
-                  <NFlex :gap="12" align="center" style="margin-bottom: 10px;">
-                    <NFormItem label="类型" style="flex: 1; margin-bottom: 0;">
-                      <NFlex vertical :gap="6" style="width: 100%">
+                  <NFlex
+                    :gap="12"
+                    align="center"
+                    style="margin-bottom: 10px"
+                  >
+                    <NFormItem
+                      label="类型"
+                      style="flex: 1; margin-bottom: 0"
+                    >
+                      <NFlex
+                        vertical
+                        :gap="6"
+                        style="width: 100%"
+                      >
                         <NCheckbox
                           :checked="sub.type === undefined"
                           @update:checked="(v) => (sub.type = v ? undefined : currentGoodsModel.goods.type)"
@@ -1329,16 +1455,15 @@ onMounted(() => { })
                           :disabled="sub.type === undefined"
                           @update:value="(v) => (sub.type = v)"
                         >
-                          <NRadioButton :value="GoodsTypes.Virtual">
-                            虚拟
-                          </NRadioButton>
-                          <NRadioButton :value="GoodsTypes.Physical">
-                            实物
-                          </NRadioButton>
+                          <NRadioButton :value="GoodsTypes.Virtual"> 虚拟 </NRadioButton>
+                          <NRadioButton :value="GoodsTypes.Physical"> 实物 </NRadioButton>
                         </NRadioGroup>
                       </NFlex>
                     </NFormItem>
-                    <NFormItem label="封面" style="flex: 1; margin-bottom: 0;">
+                    <NFormItem
+                      label="封面"
+                      style="flex: 1; margin-bottom: 0"
+                    >
                       <NUpload
                         :file-list="subItemFileLists[getSubItemKey(sub)] || []"
                         :max="1"
@@ -1351,35 +1476,55 @@ onMounted(() => { })
                     </NFormItem>
                   </NFlex>
 
-                  <NFormItem label="描述(可选)" style="margin-bottom: 10px;">
-                    <NInput v-model:value="sub.description" type="textarea" placeholder="留空则沿用父商品描述" maxlength="500" />
+                  <NFormItem
+                    label="描述(可选)"
+                    style="margin-bottom: 10px"
+                  >
+                    <NInput
+                      v-model:value="sub.description"
+                      type="textarea"
+                      placeholder="留空则沿用父商品描述"
+                      maxlength="500"
+                    />
                   </NFormItem>
 
                   <template v-if="resolveSubType(sub) === GoodsTypes.Physical">
-                    <NFormItem label="收货地址(可选)" style="margin-bottom: 0;">
+                    <NFormItem
+                      label="收货地址(可选)"
+                      style="margin-bottom: 0"
+                    >
                       <NRadioGroup
-                        :value="sub.collectUrl === undefined ? 0 : (sub.collectUrl === '' ? 1 : 2)"
-                        @update:value="(v) => { if (v === 0) sub.collectUrl = undefined; else if (v === 1) sub.collectUrl = ''; else sub.collectUrl = (sub.collectUrl && sub.collectUrl !== '') ? sub.collectUrl : 'https://'; }"
+                        :value="sub.collectUrl === undefined ? 0 : sub.collectUrl === '' ? 1 : 2"
+                        @update:value="
+                          (v) => {
+                            if (v === 0) sub.collectUrl = undefined
+                            else if (v === 1) sub.collectUrl = ''
+                            else sub.collectUrl = sub.collectUrl && sub.collectUrl !== '' ? sub.collectUrl : 'https://'
+                          }
+                        "
                       >
-                        <NRadioButton :value="0">
-                          沿用父商品
-                        </NRadioButton>
-                        <NRadioButton :value="1">
-                          本站收集
-                        </NRadioButton>
-                        <NRadioButton :value="2">
-                          站外收集
-                        </NRadioButton>
+                        <NRadioButton :value="0"> 沿用父商品 </NRadioButton>
+                        <NRadioButton :value="1"> 本站收集 </NRadioButton>
+                        <NRadioButton :value="2"> 站外收集 </NRadioButton>
                       </NRadioGroup>
                     </NFormItem>
 
                     <template v-if="sub.collectUrl !== undefined && sub.collectUrl !== ''">
-                      <NFormItem label="收集链接" style="margin-top: 8px;">
-                        <NFlex vertical :gap="8" style="width: 100%">
-                          <NInput v-model:value="sub.collectUrl" placeholder="用于给用户填写收货地址的表单分享链接" maxlength="300" />
-                          <NCheckbox v-model:checked="sub.embedCollectUrl">
-                            尝试将收集链接嵌入到网页中
-                          </NCheckbox>
+                      <NFormItem
+                        label="收集链接"
+                        style="margin-top: 8px"
+                      >
+                        <NFlex
+                          vertical
+                          :gap="8"
+                          style="width: 100%"
+                        >
+                          <NInput
+                            v-model:value="sub.collectUrl"
+                            placeholder="用于给用户填写收货地址的表单分享链接"
+                            maxlength="300"
+                          />
+                          <NCheckbox v-model:checked="sub.embedCollectUrl"> 尝试将收集链接嵌入到网页中 </NCheckbox>
                         </NFlex>
                       </NFormItem>
                     </template>
@@ -1387,7 +1532,10 @@ onMounted(() => { })
                 </div>
               </template>
             </NTabPane>
-            <NTabPane name="exchange" tab="兑换">
+            <NTabPane
+              name="exchange"
+              tab="兑换"
+            >
               <!-- 兑换规则分组 -->
               <NDivider
                 title-placement="left"
@@ -1400,12 +1548,8 @@ onMounted(() => { })
                 label="礼物类型"
               >
                 <NRadioGroup v-model:value="currentGoodsModel.goods.type">
-                  <NRadioButton :value="GoodsTypes.Virtual">
-                    虚拟礼物
-                  </NRadioButton>
-                  <NRadioButton :value="GoodsTypes.Physical">
-                    实体礼物
-                  </NRadioButton>
+                  <NRadioButton :value="GoodsTypes.Virtual"> 虚拟礼物 </NRadioButton>
+                  <NRadioButton :value="GoodsTypes.Physical"> 实体礼物 </NRadioButton>
                 </NRadioGroup>
               </NFormItem>
 
@@ -1413,17 +1557,18 @@ onMounted(() => { })
                 path="settings"
                 label="选项"
               >
-                <NCheckbox v-model:checked="currentGoodsModel.goods.isAllowRebuy">
-                  允许重复兑换
-                </NCheckbox>
+                <NCheckbox v-model:checked="currentGoodsModel.goods.isAllowRebuy"> 允许重复兑换 </NCheckbox>
               </NFormItem>
 
               <NFormItem
                 label="特殊权限"
-                style="margin-bottom: 16px;"
+                style="margin-bottom: 16px"
               >
                 <NCollapse>
-                  <NCollapseItem title="展开配置" name="guard">
+                  <NCollapseItem
+                    title="展开配置"
+                    name="guard"
+                  >
                     <NFlex
                       vertical
                       :gap="8"
@@ -1433,11 +1578,11 @@ onMounted(() => { })
                         @update:checked="
                           (v) => {
                             if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
                             }
                             currentGoodsModel.goods.setting.guardFreeMonths = v
                               ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                              : undefined;
+                              : undefined
                           }
                         "
                       >
@@ -1465,43 +1610,39 @@ onMounted(() => { })
                         vertical
                         :gap="8"
                       >
-                        <NText>
-                          免费兑换最低舰长等级
-                        </NText>
+                        <NText> 免费兑换最低舰长等级 </NText>
                         <NRadioGroup
                           :value="currentGoodsModel.goods.setting?.allowGuardFreeMinLevel ?? 0"
-                          @update:value="(v) => {
-                            if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                          @update:value="
+                            (v) => {
+                              if (!currentGoodsModel.goods.setting) {
+                                currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
+                              }
+                              currentGoodsModel.goods.setting.allowGuardFreeMinLevel = v
                             }
-                            currentGoodsModel.goods.setting.allowGuardFreeMinLevel = v;
-                          }"
+                          "
                         >
-                          <NRadioButton :value="0">
-                            不限
-                          </NRadioButton>
-                          <NRadioButton :value="1">
-                            总督
-                          </NRadioButton>
-                          <NRadioButton :value="2">
-                            提督
-                          </NRadioButton>
-                          <NRadioButton :value="3">
-                            舰长
-                          </NRadioButton>
+                          <NRadioButton :value="0"> 不限 </NRadioButton>
+                          <NRadioButton :value="1"> 总督 </NRadioButton>
+                          <NRadioButton :value="2"> 提督 </NRadioButton>
+                          <NRadioButton :value="3"> 舰长 </NRadioButton>
                         </NRadioGroup>
 
                         <NCheckbox
                           :checked="currentGoodsModel.goods.setting?.guardFreeMonths?.length === 0"
-                          @update:checked="(v) => {
-                            if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                          @update:checked="
+                            (v) => {
+                              if (!currentGoodsModel.goods.setting) {
+                                currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
+                              }
+                              if (!currentGoodsModel.goods.setting.guardFreeMonths) {
+                                currentGoodsModel.goods.setting.guardFreeMonths = []
+                              }
+                              currentGoodsModel.goods.setting.guardFreeMonths = v
+                                ? []
+                                : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
                             }
-                            if (!currentGoodsModel.goods.setting.guardFreeMonths) {
-                              currentGoodsModel.goods.setting.guardFreeMonths = [];
-                            }
-                            currentGoodsModel.goods.setting.guardFreeMonths = v ? [] : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
-                          }"
+                          "
                         >
                           当前在舰即可
                         </NCheckbox>
@@ -1522,33 +1663,41 @@ onMounted(() => { })
                               :value="m.year"
                               :options="allowedYearOptions"
                               placeholder="请选择年份"
-                              @update:value="(v) => {
-                                if (currentGoodsModel.goods.setting?.guardFreeMonths) {
-                                  currentGoodsModel.goods.setting.guardFreeMonths[idx].year = v;
+                              @update:value="
+                                (v) => {
+                                  if (currentGoodsModel.goods.setting?.guardFreeMonths) {
+                                    currentGoodsModel.goods.setting.guardFreeMonths[idx].year = v
+                                  }
                                 }
-                              }"
+                              "
                             />
                             <NSelect
                               style="flex: 1"
                               :value="m.month"
                               :options="allowedMonthOptions"
                               placeholder="请选择月份"
-                              @update:value="(v) => {
-                                if (currentGoodsModel.goods.setting?.guardFreeMonths) {
-                                  currentGoodsModel.goods.setting.guardFreeMonths[idx].month = v;
+                              @update:value="
+                                (v) => {
+                                  if (currentGoodsModel.goods.setting?.guardFreeMonths) {
+                                    currentGoodsModel.goods.setting.guardFreeMonths[idx].month = v
+                                  }
                                 }
-                              }"
+                              "
                             />
                             <NButton
                               type="error"
                               secondary
-                              @click="() => {
-                                if (!currentGoodsModel.goods.setting?.guardFreeMonths) return;
-                                currentGoodsModel.goods.setting.guardFreeMonths.splice(idx, 1);
-                                if (currentGoodsModel.goods.setting.guardFreeMonths.length === 0) {
-                                  currentGoodsModel.goods.setting.guardFreeMonths = [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
+                              @click="
+                                () => {
+                                  if (!currentGoodsModel.goods.setting?.guardFreeMonths) return
+                                  currentGoodsModel.goods.setting.guardFreeMonths.splice(idx, 1)
+                                  if (currentGoodsModel.goods.setting.guardFreeMonths.length === 0) {
+                                    currentGoodsModel.goods.setting.guardFreeMonths = [
+                                      { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
+                                    ]
+                                  }
                                 }
-                              }"
+                              "
                             >
                               删除
                             </NButton>
@@ -1558,10 +1707,15 @@ onMounted(() => { })
                         <NButton
                           v-if="currentGoodsModel.goods.setting.guardFreeMonths.length > 0"
                           secondary
-                          @click="() => {
-                            if (!currentGoodsModel.goods.setting?.guardFreeMonths) return;
-                            currentGoodsModel.goods.setting.guardFreeMonths.push({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
-                          }"
+                          @click="
+                            () => {
+                              if (!currentGoodsModel.goods.setting?.guardFreeMonths) return
+                              currentGoodsModel.goods.setting.guardFreeMonths.push({
+                                year: new Date().getFullYear(),
+                                month: new Date().getMonth() + 1,
+                              })
+                            }
+                          "
                         >
                           添加月份
                         </NButton>
@@ -1592,11 +1746,11 @@ onMounted(() => { })
                         @update:checked="
                           (v) => {
                             if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
                             }
                             currentGoodsModel.goods.setting.guardLevelMonths = v
                               ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                              : undefined;
+                              : undefined
                           }
                         "
                       >
@@ -1610,15 +1764,19 @@ onMounted(() => { })
                       >
                         <NCheckbox
                           :checked="currentGoodsModel.goods.setting?.guardLevelMonths?.length === 0"
-                          @update:checked="(v) => {
-                            if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                          @update:checked="
+                            (v) => {
+                              if (!currentGoodsModel.goods.setting) {
+                                currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
+                              }
+                              if (!currentGoodsModel.goods.setting.guardLevelMonths) {
+                                currentGoodsModel.goods.setting.guardLevelMonths = []
+                              }
+                              currentGoodsModel.goods.setting.guardLevelMonths = v
+                                ? []
+                                : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
                             }
-                            if (!currentGoodsModel.goods.setting.guardLevelMonths) {
-                              currentGoodsModel.goods.setting.guardLevelMonths = [];
-                            }
-                            currentGoodsModel.goods.setting.guardLevelMonths = v ? [] : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
-                          }"
+                          "
                         >
                           当前在舰即可
                         </NCheckbox>
@@ -1639,33 +1797,41 @@ onMounted(() => { })
                               :value="m.year"
                               :options="allowedYearOptions"
                               placeholder="请选择年份"
-                              @update:value="(v) => {
-                                if (currentGoodsModel.goods.setting?.guardLevelMonths) {
-                                  currentGoodsModel.goods.setting.guardLevelMonths[idx].year = v;
+                              @update:value="
+                                (v) => {
+                                  if (currentGoodsModel.goods.setting?.guardLevelMonths) {
+                                    currentGoodsModel.goods.setting.guardLevelMonths[idx].year = v
+                                  }
                                 }
-                              }"
+                              "
                             />
                             <NSelect
                               style="flex: 1"
                               :value="m.month"
                               :options="allowedMonthOptions"
                               placeholder="请选择月份"
-                              @update:value="(v) => {
-                                if (currentGoodsModel.goods.setting?.guardLevelMonths) {
-                                  currentGoodsModel.goods.setting.guardLevelMonths[idx].month = v;
+                              @update:value="
+                                (v) => {
+                                  if (currentGoodsModel.goods.setting?.guardLevelMonths) {
+                                    currentGoodsModel.goods.setting.guardLevelMonths[idx].month = v
+                                  }
                                 }
-                              }"
+                              "
                             />
                             <NButton
                               type="error"
                               secondary
-                              @click="() => {
-                                if (!currentGoodsModel.goods.setting?.guardLevelMonths) return;
-                                currentGoodsModel.goods.setting.guardLevelMonths.splice(idx, 1);
-                                if (currentGoodsModel.goods.setting.guardLevelMonths.length === 0) {
-                                  currentGoodsModel.goods.setting.guardLevelMonths = [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
+                              @click="
+                                () => {
+                                  if (!currentGoodsModel.goods.setting?.guardLevelMonths) return
+                                  currentGoodsModel.goods.setting.guardLevelMonths.splice(idx, 1)
+                                  if (currentGoodsModel.goods.setting.guardLevelMonths.length === 0) {
+                                    currentGoodsModel.goods.setting.guardLevelMonths = [
+                                      { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
+                                    ]
+                                  }
                                 }
-                              }"
+                              "
                             >
                               删除
                             </NButton>
@@ -1675,10 +1841,15 @@ onMounted(() => { })
                         <NButton
                           v-if="currentGoodsModel.goods.setting.guardLevelMonths.length > 0"
                           secondary
-                          @click="() => {
-                            if (!currentGoodsModel.goods.setting?.guardLevelMonths) return;
-                            currentGoodsModel.goods.setting.guardLevelMonths.push({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
-                          }"
+                          @click="
+                            () => {
+                              if (!currentGoodsModel.goods.setting?.guardLevelMonths) return
+                              currentGoodsModel.goods.setting.guardLevelMonths.push({
+                                year: new Date().getFullYear(),
+                                month: new Date().getMonth() + 1,
+                              })
+                            }
+                          "
                         >
                           添加月份
                         </NButton>
@@ -1686,25 +1857,19 @@ onMounted(() => { })
 
                       <NRadioGroup
                         :value="currentGoodsModel.goods.setting?.allowGuardLevel ?? 0"
-                        @update:value="(v) => {
-                          if (!currentGoodsModel.goods.setting) {
-                            currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                        @update:value="
+                          (v) => {
+                            if (!currentGoodsModel.goods.setting) {
+                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
+                            }
+                            currentGoodsModel.goods.setting.allowGuardLevel = v
                           }
-                          currentGoodsModel.goods.setting.allowGuardLevel = v;
-                        }"
+                        "
                       >
-                        <NRadioButton :value="0">
-                          不限
-                        </NRadioButton>
-                        <NRadioButton :value="1">
-                          总督
-                        </NRadioButton>
-                        <NRadioButton :value="2">
-                          提督
-                        </NRadioButton>
-                        <NRadioButton :value="3">
-                          舰长
-                        </NRadioButton>
+                        <NRadioButton :value="0"> 不限 </NRadioButton>
+                        <NRadioButton :value="1"> 总督 </NRadioButton>
+                        <NRadioButton :value="2"> 提督 </NRadioButton>
+                        <NRadioButton :value="3"> 舰长 </NRadioButton>
                       </NRadioGroup>
                     </NFlex>
                   </NCollapseItem>
@@ -1733,7 +1898,7 @@ onMounted(() => { })
                 <NFormItem
                   path="address"
                   label="收货地址"
-                  style="margin-bottom: 16px;"
+                  style="margin-bottom: 16px"
                 >
                   <NFlex
                     vertical
@@ -1741,14 +1906,18 @@ onMounted(() => { })
                   >
                     <NRadioGroup
                       :value="currentGoodsModel.goods.collectUrl === undefined ? 0 : 1"
-                      @update:value="(v) => {
-                        if (v === 0) currentGoodsModel.goods.collectUrl = undefined;
-                        else currentGoodsModel.goods.collectUrl = (currentGoodsModel.goods.collectUrl && currentGoodsModel.goods.collectUrl !== '') ? currentGoodsModel.goods.collectUrl : 'https://';
-                      }"
+                      @update:value="
+                        (v) => {
+                          if (v === 0) currentGoodsModel.goods.collectUrl = undefined
+                          else
+                            currentGoodsModel.goods.collectUrl =
+                              currentGoodsModel.goods.collectUrl && currentGoodsModel.goods.collectUrl !== ''
+                                ? currentGoodsModel.goods.collectUrl
+                                : 'https://'
+                        }
+                      "
                     >
-                      <NRadioButton :value="0">
-                        通过本站收集收货地址
-                      </NRadioButton>
+                      <NRadioButton :value="0"> 通过本站收集收货地址 </NRadioButton>
                       <NRadioButton :value="1">
                         使用站外链接收集地址
                         <NTooltip>
@@ -1789,9 +1958,7 @@ onMounted(() => { })
                     label="隐私协议"
                     required
                   >
-                    <NCheckbox v-model:checked="isAllowedPrivacyPolicy">
-                      同意本站隐私协议
-                    </NCheckbox>
+                    <NCheckbox v-model:checked="isAllowedPrivacyPolicy"> 同意本站隐私协议 </NCheckbox>
                   </NFormItem>
                 </template>
               </template>
@@ -1807,15 +1974,9 @@ onMounted(() => { })
                   label="密钥选择模式"
                 >
                   <NRadioGroup v-model:value="currentGoodsModel.goods.keySelectionMode">
-                    <NRadioButton :value="KeySelectionMode.None">
-                      不使用
-                    </NRadioButton>
-                    <NRadioButton :value="KeySelectionMode.Random">
-                      随机选择
-                    </NRadioButton>
-                    <NRadioButton :value="KeySelectionMode.Sequential">
-                      顺序选择
-                    </NRadioButton>
+                    <NRadioButton :value="KeySelectionMode.None"> 不使用 </NRadioButton>
+                    <NRadioButton :value="KeySelectionMode.Random"> 随机选择 </NRadioButton>
+                    <NRadioButton :value="KeySelectionMode.Sequential"> 顺序选择 </NRadioButton>
                   </NRadioGroup>
                 </NFormItem>
                 <!-- 添加多Key支持配置 -->
@@ -1853,7 +2014,7 @@ onMounted(() => { })
                 <NFormItem
                   path="content"
                   required
-                  style="margin-bottom: 16px;"
+                  style="margin-bottom: 16px"
                 >
                   <template #label>
                     礼物内容
@@ -1878,11 +2039,14 @@ onMounted(() => { })
           </NTabs>
         </NForm>
         <!-- 添加一个底部间距，让滚动更自然 -->
-        <div style="height: 16px;" />
+        <div style="height: 16px" />
       </NScrollbar>
     </div>
     <template #footer>
-      <NFlex justify="end" :gap="12">
+      <NFlex
+        justify="end"
+        :gap="12"
+      >
         <NButton
           secondary
           size="large"
@@ -1907,82 +2071,80 @@ onMounted(() => { })
 </template>
 
 <style scoped>
-  .point-goods-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
+.point-goods-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
-  .point-goods-card :deep(.n-card-header) {
-    padding: 16px;
-  }
+.point-goods-card :deep(.n-card-header) {
+  padding: 16px;
+}
 
-  .point-goods-card :deep(.n-card-content) {
-    padding: 16px;
-    flex-grow: 1;
-  }
+.point-goods-card :deep(.n-card-content) {
+  padding: 16px;
+  flex-grow: 1;
+}
 
-  .point-goods-card :deep(.n-card-footer) {
-    padding: 12px 16px;
-  }
+.point-goods-card :deep(.n-card-footer) {
+  padding: 12px 16px;
+}
 
-  .goods-modal :deep(.n-card-header) {
-    padding: 16px 20px;
-  }
+.goods-modal :deep(.n-card-header) {
+  padding: 16px 20px;
+}
 
-  .goods-modal :deep(.n-card-content) {
-    padding: 0 20px 8px;
-  }
+.goods-modal :deep(.n-card-content) {
+  padding: 0 20px 8px;
+}
 
-  .goods-modal :deep(.n-card-footer) {
-    padding: 12px 20px 16px;
-    border-top: 1px solid var(--vtsuru-border);
-    background-color: var(--vtsuru-bg-inset);
-  }
+.goods-modal :deep(.n-card-footer) {
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--vtsuru-border);
+  background-color: var(--vtsuru-bg-inset);
+}
 
-  .scrollable-container {
-    position: relative;
-    background-color: transparent;
-    border: none;
-    border-radius: var(--vtsuru-radius);
-    margin: 0;
-  }
+.scrollable-container {
+  position: relative;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--vtsuru-radius);
+  margin: 0;
+}
 
-  .goods-scrollbar {
-    padding: 0;
-    border-radius: 0;
-    background-color: transparent;
-  }
+.goods-scrollbar {
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
 
-  .goods-scrollbar :deep(.n-scrollbar-rail) {
-    right: 0;
-  }
+.goods-scrollbar :deep(.n-scrollbar-rail) {
+  right: 0;
+}
 
-  .goods-scrollbar :deep(.n-scrollbar-content) {
-    padding: 12px 0 8px;
-  }
+.goods-scrollbar :deep(.n-scrollbar-content) {
+  padding: 12px 0 8px;
+}
 
-  .goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card) {
-    width: 104px;
-    height: 104px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card) {
+  width: 104px;
+  height: 104px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .manage-sub-item-card {
-    margin-bottom: 12px;
-    padding: 16px;
-    border: 1px solid var(--vtsuru-border);
-    border-radius: var(--vtsuru-radius);
-    background-color: var(--vtsuru-bg-surface);
-    transition: all 0.3s var(--vtsuru-bezier);
-  }
+.manage-sub-item-card {
+  margin-bottom: 12px;
+  padding: 16px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-surface);
+  transition: all 0.3s var(--vtsuru-bezier);
+}
 
-  .manage-sub-item-card:hover {
-    border-color: var(--vtsuru-primary);
-    box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
-  }
-
+.manage-sub-item-card:hover {
+  border-color: var(--vtsuru-primary);
+  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
+}
 </style>
-

@@ -1,13 +1,23 @@
 <script setup lang="ts">
-import { CheckmarkCircleOutline, CloseCircleOutline, EyeOffOutline, EyeOutline, HelpCircle, LogInOutline, LogOutOutline } from '@vicons/ionicons5'
 import { error as logError, info as logInfo } from '@tauri-apps/plugin-log'
 import { openUrl } from '@tauri-apps/plugin-opener'
+import {
+  CheckmarkCircleOutline,
+  CloseCircleOutline,
+  EyeOffOutline,
+  EyeOutline,
+  HelpCircle,
+  LogInOutline,
+  LogOutOutline,
+} from '@vicons/ionicons5'
 import { intervalToDuration } from 'date-fns'
 import { useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+
 import { getLoginInfoAsync, getLoginUrlDataAsync } from '@/apps/client/data/biliLogin'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useSettings } from '@/apps/client/store/useSettings'
+
 import FetcherCookieCloudCard from './FetcherCookieCloudCard.vue'
 
 const biliCookie = useBiliCookie()
@@ -31,12 +41,18 @@ const QRCODE_EXPIRE_MS = 3 * 60 * 1000 // 二维码有效期 3 分钟
 
 const loginStatusString = computed(() => {
   switch (loginStatus.value) {
-    case 'expired': return '过期'
-    case 'unknown': return '未知'
-    case 'scanned': return '已扫描, 等待确认'
-    case 'waiting': return '等待扫描'
-    case 'confirmed': return '已登录'
-    default: return undefined
+    case 'expired':
+      return '过期'
+    case 'unknown':
+      return '未知'
+    case 'scanned':
+      return '已扫描, 等待确认'
+    case 'waiting':
+      return '等待扫描'
+    case 'confirmed':
+      return '已登录'
+    default:
+      return undefined
   }
 })
 
@@ -121,37 +137,64 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard title="凭据 & 账户" size="small" bordered style="width: 100%;">
+  <NCard
+    title="凭据 & 账户"
+    size="small"
+    bordered
+    style="width: 100%"
+  >
     <template #header-extra>
-      <NTag v-if="biliCookie.isCookieValid" type="success" size="small">
+      <NTag
+        v-if="biliCookie.isCookieValid"
+        type="success"
+        size="small"
+      >
         <template #icon>
           <NIcon :component="CheckmarkCircleOutline" />
         </template>
         已登录
       </NTag>
-      <NTag v-else type="error" size="small">
+      <NTag
+        v-else
+        type="error"
+        size="small"
+      >
         <template #icon>
           <NIcon :component="CloseCircleOutline" />
         </template>
         未登录
       </NTag>
     </template>
-    <NFlex vertical :size="12">
-      <NDescriptions label-placement="left" bordered size="small" :columns="1">
-        <NDescriptionsItem v-if="biliCookie.isCookieValid" label="B站用户名">
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NDescriptions
+        label-placement="left"
+        bordered
+        size="small"
+        :columns="1"
+      >
+        <NDescriptionsItem
+          v-if="biliCookie.isCookieValid"
+          label="B站用户名"
+        >
           <NSpin
             :show="biliCookie.isCookieValid && !biliCookie.userInfo"
             size="small"
-            style="display: inline-block; width: 100%;"
+            style="display: inline-block; width: 100%"
           >
             <NText>{{ biliCookie.userInfo?.name ?? '未登录或加载中...' }}</NText>
           </NSpin>
         </NDescriptionsItem>
-        <NDescriptionsItem v-if="biliCookie.isCookieValid" label="用户UID">
+        <NDescriptionsItem
+          v-if="biliCookie.isCookieValid"
+          label="用户UID"
+        >
           <NSpin
             :show="biliCookie.isCookieValid && !biliCookie.userInfo"
             size="small"
-            style="display: inline-block;"
+            style="display: inline-block"
           >
             <NText>{{ biliCookie.userInfo?.mid ?? 'N/A' }}</NText>
           </NSpin>
@@ -172,11 +215,22 @@ onUnmounted(() => {
       </NDescriptions>
 
       <div v-if="biliCookie.isCookieValid">
-        <NFlex align="center" justify="space-between" style="margin-bottom: 4px;">
-          <NText small depth="3">
+        <NFlex
+          align="center"
+          justify="space-between"
+          style="margin-bottom: 4px"
+        >
+          <NText
+            small
+            depth="3"
+          >
             登录凭据 (Cookie - 敏感信息)
           </NText>
-          <NButton text size="tiny" @click="showCookie = !showCookie">
+          <NButton
+            text
+            size="tiny"
+            @click="showCookie = !showCookie"
+          >
             <template #icon>
               <NIcon :component="showCookie ? EyeOffOutline : EyeOutline" />
             </template>
@@ -191,13 +245,13 @@ onUnmounted(() => {
           autosize
           :min-rows="1"
           :max-rows="3"
-          style="max-height: 150px;"
+          style="max-height: 150px"
         />
         <NButton
           type="error"
           ghost
           size="small"
-          style="margin-top: 8px;"
+          style="margin-top: 8px"
           @click="logout"
         >
           <template #icon>
@@ -206,22 +260,26 @@ onUnmounted(() => {
           退出登录
         </NButton>
       </div>
-      <NDivider style="margin: 0;">
-        登录方式
-      </NDivider>
+      <NDivider style="margin: 0"> 登录方式 </NDivider>
       <NTabs
         v-model:value="settings.settings.loginType"
         type="segment"
         size="small"
         @update-value="settings.save()"
       >
-        <NTabPane name="qrcode" tab="扫码登录">
+        <NTabPane
+          name="qrcode"
+          tab="扫码登录"
+        >
           <NFlex
             v-if="!isQRCodeLogining || loginStatus === 'expired'"
             align="center"
             :size="8"
           >
-            <NButton id="bilibili-login" @click="startLogin">
+            <NButton
+              id="bilibili-login"
+              @click="startLogin"
+            >
               <template #icon>
                 <NIcon :component="LogInOutline" />
               </template>
@@ -234,7 +292,8 @@ onUnmounted(() => {
               <div>
                 <p>所有关于Cookie的操作都将在本地进行, 不会上传到任何服务器。</p>
                 <p>
-                  相关代码开源于 <NButton
+                  相关代码开源于
+                  <NButton
                     text
                     type="info"
                     @click="openUrl('https://github.com/Megghy/vtsuru.live/tree/master/src/client')"
@@ -261,7 +320,10 @@ onUnmounted(() => {
             />
           </NFlex>
         </NTabPane>
-        <NTabPane name="cookiecloud" tab="Cookie Cloud">
+        <NTabPane
+          name="cookiecloud"
+          tab="Cookie Cloud"
+        >
           <FetcherCookieCloudCard />
         </NTabPane>
       </NTabs>

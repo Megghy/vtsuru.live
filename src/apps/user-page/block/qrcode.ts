@@ -1,5 +1,5 @@
 export const QR_CODE_LEVELS = ['L', 'M', 'Q', 'H'] as const
-export type QrCodeLevel = typeof QR_CODE_LEVELS[number]
+export type QrCodeLevel = (typeof QR_CODE_LEVELS)[number]
 
 const QR_CODE_BYTE_LIMITS: Record<QrCodeLevel, number> = {
   L: 2800,

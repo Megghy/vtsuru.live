@@ -1,6 +1,7 @@
-import type { AuthInfo } from '../DanmakuClients/OpenLiveClient'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import BaseDanmakuClient from '../DanmakuClients/BaseDanmakuClient'
+import type { AuthInfo } from '../DanmakuClients/OpenLiveClient'
 import OpenLiveClient from '../DanmakuClients/OpenLiveClient'
 
 const mocks = vi.hoisted(() => {
@@ -9,7 +10,10 @@ const mocks = vi.hoisted(() => {
     public closeCalls = 0
     public closed = false
 
-    public constructor(public roomId: number, public options?: unknown) {
+    public constructor(
+      public roomId: number,
+      public options?: unknown,
+    ) {
       super()
       KeepLiveWSMock.instances.push(this)
     }
@@ -190,7 +194,9 @@ describe('open live client heartbeat lifecycle', () => {
       heartbeatCalls++
       heartbeatSignal = (args[3] as { signal: AbortSignal }).signal
       return new Promise((_resolve, reject) => {
-        heartbeatSignal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true })
+        heartbeatSignal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), {
+          once: true,
+        })
       })
     })
 

@@ -1,17 +1,43 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <script setup lang="ts">
-import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { Info12Filled, Money20Regular, Money24Regular, Search24Filled, Wrench24Filled } from '@vicons/fluent'
 import { useDebounceFn } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import {
-  NAvatar, NButton, NCard, NCheckbox, NCheckboxGroup, NCollapse, NCollapseItem, NCollapseTransition, NDivider, NIcon, NInput, NInputNumber, NList, NListItem, NModal, NRadioButton, NRadioGroup, NSkeleton, NFlex, NSpin, NSwitch, NTag, NTooltip, useMessage } from 'naive-ui';
+  NAvatar,
+  NButton,
+  NCard,
+  NCheckbox,
+  NCheckboxGroup,
+  NCollapse,
+  NCollapseItem,
+  NCollapseTransition,
+  NDivider,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NList,
+  NListItem,
+  NModal,
+  NRadioButton,
+  NRadioGroup,
+  NSkeleton,
+  NFlex,
+  NSpin,
+  NSwitch,
+  NTag,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import DanmakuItem from './DanmakuItem.vue'
+
 import { GetString } from './danmakuExport'
+import DanmakuItem from './DanmakuItem.vue'
 import LiveInfoContainer from './LiveInfoContainer.vue'
 import SimpleVirtualList from './SimpleVirtualList.vue'
 
@@ -167,8 +193,8 @@ watch(
   () => currentDanmakus,
   (list) => {
     const normalized = normalizeDanmakuList(list)
-    const baseIds = new Set(normalized.map(item => item.id))
-    const filteredDynamic = dynamicDanmakus.value.filter(item => !baseIds.has(item.id))
+    const baseIds = new Set(normalized.map((item) => item.id))
+    const filteredDynamic = dynamicDanmakus.value.filter((item) => !baseIds.has(item.id))
     baseDanmakus.value = normalized
     if (filteredDynamic.length !== dynamicDanmakus.value.length) {
       dynamicDanmakus.value = filteredDynamic
@@ -188,19 +214,17 @@ const combinedDanmakus = computed(() => {
   return [...baseDanmakus.value, ...dynamicDanmakus.value]
 })
 
-const existEnterMessage = computed(() =>
-  combinedDanmakus.value.some(item => item.type === EventDataTypes.Enter),
-)
+const existEnterMessage = computed(() => combinedDanmakus.value.some((item) => item.type === EventDataTypes.Enter))
 
 const filteredDanmakus = computed(() => {
   const source = combinedDanmakus.value
   if (!source.length) return []
 
   const selectedTypes = new Set(filterSelected.value)
-  let working = source.filter(item => selectedTypes.has(item.type))
+  let working = source.filter((item) => selectedTypes.has(item.type))
 
   if (hideEmoji.value) {
-    working = working.filter(item => item.type !== EventDataTypes.Message || !item.isEmoji)
+    working = working.filter((item) => item.type !== EventDataTypes.Message || !item.isEmoji)
   }
 
   const keywordValue = keyword.value.trim()
@@ -224,17 +248,17 @@ const filteredDanmakus = computed(() => {
       }
       return danmakuText.toLowerCase().includes(keywordLower)
     }
-    working = working.filter(item => (deselect.value ? !matcher(item) : matcher(item)))
+    working = working.filter((item) => (deselect.value ? !matcher(item) : matcher(item)))
   }
 
   if (price.value && price.value > 0) {
     const minPrice = price.value
-    working = working.filter(item => (item.price ?? 0) >= (minPrice ?? 0))
+    working = working.filter((item) => (item.price ?? 0) >= (minPrice ?? 0))
   }
 
   if (orderByPrice.value) {
     working = working
-      .filter(item => item.type !== EventDataTypes.Message)
+      .filter((item) => item.type !== EventDataTypes.Message)
       .toSorted((a, b) => (a.price ?? 0) - (b.price ?? 0))
   } else {
     working = [...working].toSorted((a, b) => a.time - b.time)
@@ -286,12 +310,8 @@ function aggregateRankStats(source: DanmakuModel[]): RankInfo[] {
 
 function buildRankedList(stats: RankInfo[], type: RankType) {
   if (!stats.length) return []
-  const filtered = stats
-    .filter(info => (type === RankType.Paid ? info.Paid > 0 : true))
-    .map(info => ({ ...info }))
-  filtered.sort((a, b) =>
-    type === RankType.Danmaku ? b.Danmakus - a.Danmakus : b.Paid - a.Paid,
-  )
+  const filtered = stats.filter((info) => (type === RankType.Paid ? info.Paid > 0 : true)).map((info) => ({ ...info }))
+  filtered.sort((a, b) => (type === RankType.Danmaku ? b.Danmakus - a.Danmakus : b.Paid - a.Paid))
   const limited = filtered.slice(0, 100)
   limited.forEach((info, idx) => {
     info.Index = idx + 1
@@ -307,7 +327,7 @@ function OnNameClick(uId: number, ouId: string) {
   const sourceDanmakus = combinedDanmakus.value
   switch (to) {
     case 'userDanmakus': {
-      userDanmakus.value = sourceDanmakus.filter(d => (d.uId ? d.uId === uId : d.ouId === ouId))
+      userDanmakus.value = sourceDanmakus.filter((d) => (d.uId ? d.uId === uId : d.ouId === ouId))
       showModal.value = true
       break
     }
@@ -343,8 +363,8 @@ function OnRank(isRank: boolean) {
 function InsertDanmakus(targetDanmakus: DanmakuModel[]) {
   if (!Array.isArray(targetDanmakus) || targetDanmakus.length === 0) return
   const existingIds = new Set<string>([
-    ...baseDanmakus.value.map(item => item.id),
-    ...dynamicDanmakus.value.map(item => item.id),
+    ...baseDanmakus.value.map((item) => item.id),
+    ...dynamicDanmakus.value.map((item) => item.id),
   ])
   const normalized = normalizeDanmakuList(targetDanmakus, existingIds)
   if (!normalized.length) return
@@ -358,17 +378,9 @@ function Export() {
   isExporting.value = true
   const source = onlyExportFilteredDanmakus.value ? filteredDanmakus.value : combinedDanmakus.value
   saveAs(
-    new Blob(
-      [
-        GetString(
-          accountInfo.value,
-          currentLive,
-          source,
-          exportType.value,
-        ),
-      ],
-      { type: 'text/plain;charset=utf-8' },
-    ),
+    new Blob([GetString(accountInfo.value, currentLive, source, exportType.value)], {
+      type: 'text/plain;charset=utf-8',
+    }),
     `${Date.now()}_${currentLive.startAt}_${currentLive.title.replace('_', '-')}_${accountInfo.value?.name}.${exportType.value}`,
   )
   isExporting.value = false
@@ -414,7 +426,7 @@ defineExpose({
     <NModal
       v-model:show="showModal"
       preset="card"
-      style="width: 600px;max-width: 90vw;max-height: 90vh;"
+      style="width: 600px; max-width: 90vw; max-height: 90vh"
       content-style="overflow-y: auto"
       @after-leave="userDanmakus = undefined"
     >
@@ -426,12 +438,8 @@ defineExpose({
           v-model:value="modalShowTools"
           size="small"
         >
-          <template #checked>
-            显示
-          </template>
-          <template #unchecked>
-            隐藏
-          </template>
+          <template #checked> 显示 </template>
+          <template #unchecked> 隐藏 </template>
           <template #icon>
             <NIcon :component="Wrench24Filled" />
           </template>
@@ -452,9 +460,7 @@ defineExpose({
       preset="card"
       style="width: 500px; max-width: 90vw; height: auto"
     >
-      <template #header>
-        导出
-      </template>
+      <template #header> 导出 </template>
       <NSpin :show="isExporting">
         <NFlex
           vertical
@@ -464,12 +470,8 @@ defineExpose({
             v-model:value="exportType"
             style="margin: 0 auto"
           >
-            <NRadioButton value="json">
-              Json
-            </NRadioButton>
-            <NRadioButton value="xml">
-              XML
-            </NRadioButton>
+            <NRadioButton value="json"> Json </NRadioButton>
+            <NRadioButton value="xml"> XML </NRadioButton>
             <NRadioButton value="csv">
               CSV
               <NTooltip>
@@ -496,26 +498,14 @@ defineExpose({
               name="1"
             >
               <div>
-                文件名格式: {<NTooltip>
-                  <template #trigger>
-                    生成时间
-                  </template>Unix
-                </NTooltip>}_{<NTooltip>
-                  <template #trigger>
-                    开始时间
-                  </template>Unix: {{ currentLive.startAt }}
-                </NTooltip>}_{<NTooltip>
-                  <template #trigger>
-                    直播间标题
-                  </template>' _ ' 将被转义为 ' - '
-                </NTooltip>}_{<NTooltip>
-                  <template #trigger>
-                    用户名
-                  </template>{{ accountInfo?.name }}
-                </NTooltip>}.{{ exportType }}
-                <br>
+                文件名格式: {<NTooltip> <template #trigger> 生成时间 </template>Unix </NTooltip>}_{<NTooltip>
+                  <template #trigger> 开始时间 </template>Unix: {{ currentLive.startAt }} </NTooltip
+                >}_{<NTooltip> <template #trigger> 直播间标题 </template>' _ ' 将被转义为 ' - ' </NTooltip>}_{<NTooltip>
+                  <template #trigger> 用户名 </template>{{ accountInfo?.name }} </NTooltip
+                >}.{{ exportType }}
+                <br />
                 弹幕Type对应:
-                <br>● 0 : 上舰 <br>● 1: sc <br>● 2: 礼物 <br>● 3: 弹幕
+                <br />● 0 : 上舰 <br />● 1: sc <br />● 2: 礼物 <br />● 3: 弹幕
               </div>
             </NCollapseItem>
           </NCollapse>
@@ -553,12 +543,8 @@ defineExpose({
             size="small"
             @update-value="OnRank"
           >
-            <template #checked>
-              排行
-            </template>
-            <template #unchecked>
-              弹幕
-            </template>
+            <template #checked> 排行 </template>
+            <template #unchecked> 弹幕 </template>
           </NSwitch>
           <NDivider
             v-if="showRank && !isRanking"
@@ -580,7 +566,7 @@ defineExpose({
             <span v-else />
           </Transition>
         </NDivider>
-        <br v-else>
+        <br v-else />
       </template>
       <NCollapseTransition :show="innerShowTools && !isRanking">
         <NFlex
@@ -610,9 +596,7 @@ defineExpose({
                 隐藏表情
               </NCheckbox>
             </NCollapseTransition>
-            <NCheckbox v-model:checked="hideAvatar">
-              隐藏头像
-            </NCheckbox>
+            <NCheckbox v-model:checked="hideAvatar"> 隐藏头像 </NCheckbox>
             <NCheckbox
               v-model:checked="orderByPrice"
               @update:checked="UpdateDanmakus"
@@ -796,12 +780,8 @@ defineExpose({
           v-model:value="rankType"
           size="small"
         >
-          <NRadioButton :value="RankType.Danmaku">
-            弹幕
-          </NRadioButton>
-          <NRadioButton :value="RankType.Paid">
-            付费
-          </NRadioButton>
+          <NRadioButton :value="RankType.Danmaku"> 弹幕 </NRadioButton>
+          <NRadioButton :value="RankType.Paid"> 付费 </NRadioButton>
         </NRadioGroup>
         <NDivider />
         <NList

@@ -1,4 +1,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
+
+import { useAccount } from '@/api/account'
 import {
   startLive,
   stopLive,
@@ -8,10 +10,10 @@ import {
   updateRoomNews,
 } from '@/apps/client/api/live-manage'
 import type { LiveArea } from '@/apps/client/api/live-manage'
-import { useAccount } from '@/api/account'
 import { roomInfo } from '@/apps/client/data/info'
-import { useTauriStore } from '@/apps/client/store/useTauriStore'
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
+import { useTauriStore } from '@/apps/client/store/useTauriStore'
+
 import { useLiveCover } from './useLiveCover'
 
 interface RtmpInfoState {
@@ -54,7 +56,7 @@ export function useLiveControl() {
 
   const areaOptions = computed(() => {
     const parentMap = new Map<number, { label: string; value: number; children: { label: string; value: number }[] }>()
-    liveAreas.value.forEach(area => {
+    liveAreas.value.forEach((area) => {
       if (!parentMap.has(area.parent_id)) {
         parentMap.set(area.parent_id, {
           label: area.parent_name,
@@ -101,11 +103,11 @@ export function useLiveControl() {
     if (!areaId && !areaName) return
 
     // 1. 优先按 id 精确匹配
-    let matched = liveAreas.value.find(area => area.id === areaId)
+    let matched = liveAreas.value.find((area) => area.id === areaId)
 
     // 2. 如果 id 找不到，尝试用名称匹配（父分区名 + 子分区名）
     if (!matched && areaName) {
-      matched = liveAreas.value.find(area => {
+      matched = liveAreas.value.find((area) => {
         const childNameMatch = area.name === areaName
         const parentMatch = parentName ? area.parent_name === parentName : true
         return childNameMatch && parentMatch
@@ -120,8 +122,7 @@ export function useLiveControl() {
   const loadLiveAreas = async () => {
     try {
       liveAreas.value = await getLiveAreas()
-    }
-    catch (err) {
+    } catch (err) {
       console.error('加载直播分区失败:', err)
       window.$message.error('加载直播分区失败')
     }
@@ -168,16 +169,13 @@ export function useLiveControl() {
 
       if (response.code === 0) {
         window.$message.success('直播间公告更新成功！')
-      }
-      else {
+      } else {
         window.$message.error(`更新公告失败: ${response.message || '未知错误'}`)
       }
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('更新直播间公告失败:', err)
       window.$message.error(`更新公告失败: ${err.message || err}`)
-    }
-    finally {
+    } finally {
       isUpdatingAnnouncement.value = false
     }
   }
@@ -236,8 +234,7 @@ export function useLiveControl() {
             server: rtmpServer.value,
             code: rtmpCode.value,
           })
-        }
-        catch (err) {
+        } catch (err) {
           console.error('保存推流信息失败:', err)
         }
 
@@ -266,13 +263,11 @@ export function useLiveControl() {
             console.error('自动开始 OBS 推流异常:', err)
           }
         }
-      }
-      else {
+      } else {
         window.$message.error(`开播失败: ${response.message || response.msg}`)
         console.error('开播失败详情:', response)
       }
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('开播失败:', err)
       window.$message.error(`开播失败: ${err.message || err}`)
     }
@@ -307,12 +302,10 @@ export function useLiveControl() {
           }
         }
         await handleStartLive()
-      }
-      else {
+      } else {
         window.$message.error(`更新直播间信息失败: ${response.message || response.msg}`)
       }
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('更新直播间信息失败:', err)
       window.$message.error(`更新直播间信息失败: ${err.message || err}`)
     }
@@ -361,12 +354,10 @@ export function useLiveControl() {
             console.error('下播场景切换异常:', err)
           }
         }
-      }
-      else {
+      } else {
         window.$message.error(`下播失败: ${response.message || response.msg}`)
       }
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('下播失败:', err)
       window.$message.error(`下播失败: ${err.message || err}`)
     }
@@ -405,12 +396,10 @@ export function useLiveControl() {
             roomInfo.value.area_id = liveAreaId.value
           }
         }
-      }
-      else {
+      } else {
         window.$message.error(`更新失败: ${response.message || response.msg}`)
       }
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('更新直播间信息失败:', err)
       window.$message.error(`更新失败: ${err.message || err}`)
     }
@@ -424,12 +413,15 @@ export function useLiveControl() {
 
   // 复制到剪贴板
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      window.$message.success('已复制到剪贴板')
-    }).catch((err) => {
-      console.error('复制失败:', err)
-      window.$message.error('复制失败')
-    })
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        window.$message.success('已复制到剪贴板')
+      })
+      .catch((err) => {
+        console.error('复制失败:', err)
+        window.$message.error('复制失败')
+      })
   }
 
   // 同步推流码到 OBS
@@ -455,8 +447,7 @@ export function useLiveControl() {
         rtmpServer.value = savedRtmp.server || ''
         rtmpCode.value = savedRtmp.code || ''
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('加载已保存的推流信息失败:', err)
     }
 

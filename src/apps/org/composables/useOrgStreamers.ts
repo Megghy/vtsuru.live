@@ -1,10 +1,12 @@
+import { useMessage } from 'naive-ui'
 import { computed, inject, provide, ref } from 'vue'
 import type { InjectionKey } from 'vue'
-import { useMessage } from 'naive-ui'
+
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
-import type { OrgContext } from './useOrgContext'
+
 import type { OrgStreamerDetailModel, OrgStreamerItem, StreamerOption } from '../types'
+import type { OrgContext } from './useOrgContext'
 
 export function useOrgStreamers(ctx: OrgContext) {
   const message = useMessage()
@@ -16,13 +18,11 @@ export function useOrgStreamers(ctx: OrgContext) {
   const filtered = computed(() => {
     if (!search.value) return streamers.value
     const q = search.value.toLowerCase()
-    return streamers.value.filter(s =>
-      s.streamer.name.toLowerCase().includes(q) || String(s.streamer.id).includes(q),
-    )
+    return streamers.value.filter((s) => s.streamer.name.toLowerCase().includes(q) || String(s.streamer.id).includes(q))
   })
 
   const options = computed<StreamerOption[]>(() =>
-    streamers.value.map(s => ({ label: s.streamer.name, value: s.streamer.id })),
+    streamers.value.map((s) => ({ label: s.streamer.name, value: s.streamer.id })),
   )
 
   async function load() {
@@ -46,7 +46,9 @@ export function useOrgStreamers(ctx: OrgContext) {
   async function remove(streamerUserId: number) {
     try {
       unwrapOk(
-        await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/streamer/remove`, { targetStreamerUserId: streamerUserId }),
+        await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/streamer/remove`, {
+          targetStreamerUserId: streamerUserId,
+        }),
         '移除失败',
       )
       message.success('移除成功')
@@ -114,7 +116,7 @@ export function useStreamerDetail(ctx: OrgContext) {
         '加载失败',
       )
       detail.value = data
-      lives.value = page.value === 1 ? (data.lives || []) : [...lives.value, ...(data.lives || [])]
+      lives.value = page.value === 1 ? data.lives || [] : [...lives.value, ...(data.lives || [])]
       hasMore.value = (data.lives?.length || 0) >= pageSize.value
       editStatus.value = data.status
       editNote.value = data.note || ''
@@ -154,8 +156,18 @@ export function useStreamerDetail(ctx: OrgContext) {
   }
 
   return {
-    show, selectedId, loading, detail, lives, hasMore,
-    editStatus, editNote, saving,
-    open, load, loadMore, save,
+    show,
+    selectedId,
+    loading,
+    detail,
+    lives,
+    hasMore,
+    editStatus,
+    editNote,
+    saving,
+    open,
+    load,
+    loadMore,
+    save,
   }
 }

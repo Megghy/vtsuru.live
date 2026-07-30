@@ -1,6 +1,7 @@
+import { toRaw } from 'vue'
+
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { toRaw } from 'vue'
 
 export function createId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -64,7 +65,10 @@ export function cloneBlockNode(block: BlockNode): BlockNode {
   return cloned
 }
 
-export interface DiffOp { kind: 'same' | 'add' | 'del', text: string }
+export interface DiffOp {
+  kind: 'same' | 'add' | 'del'
+  text: string
+}
 
 export function stableStringify(v: unknown, indent = 2): string {
   const seen = new WeakSet<object>()
@@ -74,9 +78,11 @@ export function stableStringify(v: unknown, indent = 2): string {
     if (seen.has(x)) throw new Error('无法序列化循环引用对象')
     seen.add(x)
     const out: Record<string, unknown> = {}
-    Object.keys(x).toSorted().forEach((k) => {
-      out[k] = normalize((x as Record<string, unknown>)[k])
-    })
+    Object.keys(x)
+      .toSorted()
+      .forEach((k) => {
+        out[k] = normalize((x as Record<string, unknown>)[k])
+      })
     return out
   }
   return JSON.stringify(normalize(v), null, indent)
@@ -91,9 +97,7 @@ export function diffByLines(aText: string, bText: string): DiffOp[] {
 
   for (let i = n - 1; i >= 0; i--) {
     for (let j = m - 1; j >= 0; j--) {
-      dp[i][j] = a[i] === b[j]
-        ? (dp[i + 1][j + 1] + 1)
-        : Math.max(dp[i + 1][j], dp[i][j + 1])
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1])
     }
   }
 
@@ -140,10 +144,7 @@ function asRecord(v: unknown): Record<string, unknown> | null {
 
 function isEmptyRichText(html: unknown) {
   if (typeof html !== 'string') return true
-  const bodyText = new DOMParser()
-    .parseFromString(html, 'text/html')
-    .body
-    .textContent
+  const bodyText = new DOMParser().parseFromString(html, 'text/html').body.textContent
   const text = (bodyText ?? '')
     .replace(/\u00A0/g, ' ')
     .replace(/\s+/g, ' ')
@@ -152,9 +153,10 @@ function isEmptyRichText(html: unknown) {
 }
 
 export function isEmptyBlock(block: BlockNode): boolean {
-  const propsObj: Record<string, unknown> = (block.props && typeof block.props === 'object' && !Array.isArray(block.props))
-    ? (block.props as Record<string, unknown>)
-    : {}
+  const propsObj: Record<string, unknown> =
+    block.props && typeof block.props === 'object' && !Array.isArray(block.props)
+      ? (block.props as Record<string, unknown>)
+      : {}
 
   if (block.type === 'layout') {
     const children = Array.isArray(propsObj.children) ? propsObj.children : []
@@ -186,17 +188,19 @@ export function isEmptyBlock(block: BlockNode): boolean {
   }
   if (block.type === 'links' || block.type === 'buttons') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it) => {
-      const item = asRecord(it)
-      const label = item?.label
-      return typeof label === 'string' && label.trim().length > 0
-    }) || items.some((it) => {
-      const item = asRecord(it)
-      const page = typeof item?.page === 'string' ? item.page.trim() : ''
-      if (page.length > 0) return true
-      const url = typeof item?.url === 'string' ? item.url.trim() : ''
-      return url.length > 0 && url !== 'https://'
-    })
+    const hasAny =
+      items.some((it) => {
+        const item = asRecord(it)
+        const label = item?.label
+        return typeof label === 'string' && label.trim().length > 0
+      }) ||
+      items.some((it) => {
+        const item = asRecord(it)
+        const page = typeof item?.page === 'string' ? item.page.trim() : ''
+        if (page.length > 0) return true
+        const url = typeof item?.url === 'string' ? item.url.trim() : ''
+        return url.length > 0 && url !== 'https://'
+      })
     return !hasAny
   }
   if (block.type === 'button') {
@@ -210,9 +214,7 @@ export function isEmptyBlock(block: BlockNode): boolean {
     return imagesFile.length === 0 && isEmptyRichText(propsObj.html)
   }
   if (block.type === 'profile') {
-    const hasAny = !!propsObj.avatarFile
-      || !isEmptyText(propsObj.displayName)
-      || !isEmptyText(propsObj.bio)
+    const hasAny = !!propsObj.avatarFile || !isEmptyText(propsObj.displayName) || !isEmptyText(propsObj.bio)
     return !hasAny
   }
   if (block.type === 'tags') {
@@ -250,32 +252,37 @@ export function isEmptyBlock(block: BlockNode): boolean {
   }
   if (block.type === 'faq') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it) => {
-      const item = asRecord(it)
-      const q = item?.q
-      return typeof q === 'string' && q.trim().length > 0
-    }) || items.some((it) => {
-      const item = asRecord(it)
-      const a = item?.a
-      return typeof a === 'string' && a.trim().length > 0
-    })
+    const hasAny =
+      items.some((it) => {
+        const item = asRecord(it)
+        const q = item?.q
+        return typeof q === 'string' && q.trim().length > 0
+      }) ||
+      items.some((it) => {
+        const item = asRecord(it)
+        const a = item?.a
+        return typeof a === 'string' && a.trim().length > 0
+      })
     return !hasAny
   }
   if (block.type === 'milestone') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it) => {
-      const item = asRecord(it)
-      const date = item?.date
-      return typeof date === 'string' && date.trim().length > 0
-    }) || items.some((it) => {
-      const item = asRecord(it)
-      const title = item?.title
-      return typeof title === 'string' && title.trim().length > 0
-    }) || items.some((it) => {
-      const item = asRecord(it)
-      const description = item?.description
-      return typeof description === 'string' && description.trim().length > 0
-    })
+    const hasAny =
+      items.some((it) => {
+        const item = asRecord(it)
+        const date = item?.date
+        return typeof date === 'string' && date.trim().length > 0
+      }) ||
+      items.some((it) => {
+        const item = asRecord(it)
+        const title = item?.title
+        return typeof title === 'string' && title.trim().length > 0
+      }) ||
+      items.some((it) => {
+        const item = asRecord(it)
+        const description = item?.description
+        return typeof description === 'string' && description.trim().length > 0
+      })
     return !hasAny
   }
   if (block.type === 'quote') {
@@ -308,7 +315,7 @@ export function pruneHiddenEmptyBlocks(settingsToPrune: UserPagesSettingsV1): nu
   const pruneProject = (p: BlockPageProject | undefined) => {
     if (!p) return
     const before = p.blocks.length
-    p.blocks = p.blocks.filter(b => !(b.hidden && isEmptyBlock(b)))
+    p.blocks = p.blocks.filter((b) => !(b.hidden && isEmptyBlock(b)))
     removed += before - p.blocks.length
   }
 

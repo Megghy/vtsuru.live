@@ -1,6 +1,7 @@
 import type { Emitter } from 'mitt'
-import type { Music } from '@/store/useMusicRequest'
 import mitt from 'mitt'
+
+import type { Music } from '@/store/useMusicRequest'
 
 export declare interface MittType {
   onOpenTemplateSettings: { template: string }

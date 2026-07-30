@@ -2,9 +2,10 @@
 import { saveAs } from 'file-saver'
 import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NSelect, NSlider, NSwitch, NText } from 'naive-ui'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
+
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
-import { canvasToBlob } from '@/shared/utils'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { canvasToBlob } from '@/shared/utils'
 
 const message = useMessage()
 
@@ -54,7 +55,10 @@ function wrapLines(ctx: CanvasRenderingContext2D, content: string, maxLineWidth:
   const paragraphs = content.split('\n')
   const lines: string[] = []
   for (const para of paragraphs) {
-    if (!para) { lines.push(''); continue }
+    if (!para) {
+      lines.push('')
+      continue
+    }
     let current = ''
     for (const char of para) {
       const test = current + char
@@ -128,20 +132,32 @@ async function download() {
       width: style.maxWidth,
     })
     message.success('已保存')
-  } catch { message.error('导出失败') }
+  } catch {
+    message.error('导出失败')
+  }
 }
 </script>
 
 <template>
-  <NCard title="文字转图片" segmented>
+  <NCard
+    title="文字转图片"
+    segmented
+  >
     <template #header-extra>
-      <NButton type="primary" :disabled="!text" @click="download">
+      <NButton
+        type="primary"
+        :disabled="!text"
+        @click="download"
+      >
         下载 PNG
       </NButton>
     </template>
     <div class="text-to-image-layout">
       <div class="controls-panel">
-        <NText depth="3" style="margin-bottom: 8px; display: block">
+        <NText
+          depth="3"
+          style="margin-bottom: 8px; display: block"
+        >
           输入文本
         </NText>
         <NInput
@@ -150,84 +166,145 @@ async function download() {
           placeholder="在此粘贴长文本，将自动渲染为图片..."
           :autosize="{ minRows: 6, maxRows: 16 }"
         />
-        <NFlex vertical style="margin-top: 16px; gap: 12px">
+        <NFlex
+          vertical
+          style="margin-top: 16px; gap: 12px"
+        >
           <NFlex align="center">
-            <NText style="width: 70px">
-              字体
-            </NText>
-            <NSelect :value="style.fontFamily" :options="fontOptions" :loading="fontsLoading" filterable style="flex: 1" @update:value="onFontChange" />
+            <NText style="width: 70px"> 字体 </NText>
+            <NSelect
+              :value="style.fontFamily"
+              :options="fontOptions"
+              :loading="fontsLoading"
+              filterable
+              style="flex: 1"
+              @update:value="onFontChange"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              加粗
-            </NText>
+            <NText style="width: 70px"> 加粗 </NText>
             <NSwitch v-model:value="style.bold" />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              水平对齐
-            </NText>
-            <NSelect v-model:value="style.textAlign" :options="alignOptions" style="width: 120px" />
+            <NText style="width: 70px"> 水平对齐 </NText>
+            <NSelect
+              v-model:value="style.textAlign"
+              :options="alignOptions"
+              style="width: 120px"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              垂直对齐
-            </NText>
-            <NSelect v-model:value="style.verticalAlign" :options="vAlignOptions" style="width: 120px" />
+            <NText style="width: 70px"> 垂直对齐 </NText>
+            <NSelect
+              v-model:value="style.verticalAlign"
+              :options="vAlignOptions"
+              style="width: 120px"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              字号
-            </NText>
-            <NSlider v-model:value="style.fontSize" :min="14" :max="48" :step="1" style="flex: 1" />
-            <NInputNumber v-model:value="style.fontSize" :min="14" :max="48" size="small" style="width: 80px" />
+            <NText style="width: 70px"> 字号 </NText>
+            <NSlider
+              v-model:value="style.fontSize"
+              :min="14"
+              :max="48"
+              :step="1"
+              style="flex: 1"
+            />
+            <NInputNumber
+              v-model:value="style.fontSize"
+              :min="14"
+              :max="48"
+              size="small"
+              style="width: 80px"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              行高
-            </NText>
-            <NSlider v-model:value="style.lineHeight" :min="1.2" :max="2.5" :step="0.1" style="flex: 1" />
-            <NInputNumber v-model:value="style.lineHeight" :min="1.2" :max="2.5" :step="0.1" size="small" style="width: 80px" />
+            <NText style="width: 70px"> 行高 </NText>
+            <NSlider
+              v-model:value="style.lineHeight"
+              :min="1.2"
+              :max="2.5"
+              :step="0.1"
+              style="flex: 1"
+            />
+            <NInputNumber
+              v-model:value="style.lineHeight"
+              :min="1.2"
+              :max="2.5"
+              :step="0.1"
+              size="small"
+              style="width: 80px"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              内边距
-            </NText>
-            <NSlider v-model:value="style.padding" :min="16" :max="80" :step="4" style="flex: 1" />
-            <NInputNumber v-model:value="style.padding" :min="16" :max="80" size="small" style="width: 80px" />
+            <NText style="width: 70px"> 内边距 </NText>
+            <NSlider
+              v-model:value="style.padding"
+              :min="16"
+              :max="80"
+              :step="4"
+              style="flex: 1"
+            />
+            <NInputNumber
+              v-model:value="style.padding"
+              :min="16"
+              :max="80"
+              size="small"
+              style="width: 80px"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              最大宽度
-            </NText>
-            <NSlider v-model:value="style.maxWidth" :min="400" :max="1200" :step="50" style="flex: 1" />
-            <NInputNumber v-model:value="style.maxWidth" :min="400" :max="1200" :step="50" size="small" style="width: 100px" />
+            <NText style="width: 70px"> 最大宽度 </NText>
+            <NSlider
+              v-model:value="style.maxWidth"
+              :min="400"
+              :max="1200"
+              :step="50"
+              style="flex: 1"
+            />
+            <NInputNumber
+              v-model:value="style.maxWidth"
+              :min="400"
+              :max="1200"
+              :step="50"
+              size="small"
+              style="width: 100px"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              文字颜色
-            </NText>
-            <NColorPicker v-model:value="style.color" style="flex: 1" />
+            <NText style="width: 70px"> 文字颜色 </NText>
+            <NColorPicker
+              v-model:value="style.color"
+              style="flex: 1"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              背景色
-            </NText>
-            <NColorPicker v-model:value="style.bgColor" style="flex: 1" />
+            <NText style="width: 70px"> 背景色 </NText>
+            <NColorPicker
+              v-model:value="style.bgColor"
+              style="flex: 1"
+            />
           </NFlex>
           <NFlex align="center">
-            <NText style="width: 70px">
-              渐变终色
-            </NText>
-            <NColorPicker v-model:value="style.bgGradient" style="flex: 1" />
+            <NText style="width: 70px"> 渐变终色 </NText>
+            <NColorPicker
+              v-model:value="style.bgGradient"
+              style="flex: 1"
+            />
           </NFlex>
-          <NText depth="3" style="font-size: 12px">
+          <NText
+            depth="3"
+            style="font-size: 12px"
+          >
             渐变终色留空则使用纯色背景
           </NText>
         </NFlex>
       </div>
       <div class="preview-panel">
-        <NText depth="3" style="margin-bottom: 8px; display: block">
+        <NText
+          depth="3"
+          style="margin-bottom: 8px; display: block"
+        >
           预览
         </NText>
         <div class="preview-scroll">

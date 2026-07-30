@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { DanmakuWindowBCData, DanmakuWindowSettings } from '@/apps/client/store/useDanmakuWindow'
-import type { EventModel } from '@/api/api-models'
-import { NSpin } from 'naive-ui';
+import { NSpin } from 'naive-ui'
 import { nanoid } from 'nanoid'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import ClientDanmakuItem from '@/apps/client/components/danmaku/ClientDanmakuItem.vue'
+import type { DanmakuWindowBCData, DanmakuWindowSettings } from '@/apps/client/store/useDanmakuWindow'
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'
 // 添加TransitionGroup导入
 
@@ -26,7 +27,7 @@ function parseColorToRgba(color?: string): ParsedColor | null {
 
   const rgbaMatch = value.match(/^rgba?\(([^)]+)\)$/i)
   if (rgbaMatch) {
-    const parts = rgbaMatch[1].split(',').map(part => part.trim())
+    const parts = rgbaMatch[1].split(',').map((part) => part.trim())
     if (parts.length >= 3) {
       const r = Number(parts[0])
       const g = Number(parts[1])
@@ -42,7 +43,7 @@ function parseColorToRgba(color?: string): ParsedColor | null {
 
   if (value.startsWith('#')) {
     const hex = value.slice(1)
-    const normalizeHex = (segment: string) => segment.length === 1 ? segment + segment : segment
+    const normalizeHex = (segment: string) => (segment.length === 1 ? segment + segment : segment)
     let r = 0
     let g = 0
     let b = 0
@@ -66,7 +67,7 @@ function parseColorToRgba(color?: string): ParsedColor | null {
       return null
     }
 
-    if ([r, g, b, a].some(component => Number.isNaN(component))) {
+    if ([r, g, b, a].some((component) => Number.isNaN(component))) {
       return null
     }
 
@@ -278,9 +279,13 @@ onUnmounted(() => {
 })
 
 // 监听设置变化
-watch(() => setting.value, () => {
-  updateCssVariables()
-}, { deep: true })
+watch(
+  () => setting.value,
+  () => {
+    updateCssVariables()
+  },
+  { deep: true },
+)
 </script>
 
 <template>
@@ -295,9 +300,7 @@ watch(() => setting.value, () => {
     :class="{ 'has-items': hasItems, 'batch-update': isInBatchUpdate }"
   >
     <div class="danmaku-window-bg" />
-    <div
-      class="danmaku-list"
-    >
+    <div class="danmaku-list">
       <!-- 使用TransitionGroup替代普通div -->
       <TransitionGroup
         name="danmaku-list"
@@ -310,7 +313,8 @@ watch(() => setting.value, () => {
           :item="item"
           :setting="setting"
           :data-type="item.type"
-          class="danmaku-item" :class="[{ 'batch-item': isInBatchUpdate }]"
+          class="danmaku-item"
+          :class="[{ 'batch-item': isInBatchUpdate }]"
         />
       </TransitionGroup>
     </div>
@@ -319,177 +323,177 @@ watch(() => setting.value, () => {
 
 <style>
 html,
-  body {
-    background: transparent;
-    overflow: hidden;
-  }
+body {
+  background: transparent;
+  overflow: hidden;
+}
 
-  .n-layout {
-    background: transparent;
-  }
+.n-layout {
+  background: transparent;
+}
 
-  :root {
-    --dw-bg-color: rgba(0, 0, 0, 0.6);
-    --dw-bg-color-rgb: 0, 0, 0;
-    --dw-bg-alpha: 0.6;
-    --dw-window-bg-color: transparent;
-    --dw-text-color: #ffffff;
-    --dw-border-radius: 0px;
-    --dw-opacity: 1;
-    --dw-font-size: 14px;
-    --dw-avatar-size: 20px;
-    --dw-emoji-size: 24px;
-    --dw-item-spacing: 5px;
-    --dw-animation-duration: 300ms;
-    --dw-enter-offset-x: 18px;
-    --dw-enter-offset-y: -8px;
-    --dw-leave-offset-x: 14px;
-    --dw-leave-offset-y: 8px;
-    --dw-shadow: none;
-  }
+:root {
+  --dw-bg-color: rgba(0, 0, 0, 0.6);
+  --dw-bg-color-rgb: 0, 0, 0;
+  --dw-bg-alpha: 0.6;
+  --dw-window-bg-color: transparent;
+  --dw-text-color: #ffffff;
+  --dw-border-radius: 0px;
+  --dw-opacity: 1;
+  --dw-font-size: 14px;
+  --dw-avatar-size: 20px;
+  --dw-emoji-size: 24px;
+  --dw-item-spacing: 5px;
+  --dw-animation-duration: 300ms;
+  --dw-enter-offset-x: 18px;
+  --dw-enter-offset-y: -8px;
+  --dw-leave-offset-x: 14px;
+  --dw-leave-offset-y: 8px;
+  --dw-shadow: none;
+}
 
-  .danmaku-window {
-    position: relative;
-    -webkit-app-region: drag;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    border-radius: var(--dw-border-radius, 0);
-    color: var(--dw-text-color);
-    font-size: var(--dw-font-size);
-    box-shadow: var(--dw-shadow);
-    overflow-x: hidden;
-    transition: opacity 0.3s ease;
-  }
+.danmaku-window {
+  position: relative;
+  -webkit-app-region: drag;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--dw-border-radius, 0);
+  color: var(--dw-text-color);
+  font-size: var(--dw-font-size);
+  box-shadow: var(--dw-shadow);
+  overflow-x: hidden;
+  transition: opacity 0.3s ease;
+}
 
-  .danmaku-window-bg {
-    position: absolute;
-    inset: 0;
-    border-radius: var(--dw-border-radius, 0);
-    background-color: var(--dw-window-bg-color, transparent);
-    backdrop-filter: blur(0);
-    pointer-events: none;
-  }
+.danmaku-window-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--dw-border-radius, 0);
+  background-color: var(--dw-window-bg-color, transparent);
+  backdrop-filter: blur(0);
+  pointer-events: none;
+}
 
-  /* 没有弹幕时完全透明 */
-  .danmaku-window:not(.has-items) {
-    opacity: 0;
-  }
+/* 没有弹幕时完全透明 */
+.danmaku-window:not(.has-items) {
+  opacity: 0;
+}
 
-  .danmaku-list {
-    padding: 8px;
-    height: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: var(--dw-direction);
-    box-sizing: border-box;
-  }
+.danmaku-list {
+  padding: 8px;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: var(--dw-direction);
+  box-sizing: border-box;
+}
 
-  .danmaku-list-container {
-    width: 100%;
-    display: flex;
-    flex-direction: inherit;
-    gap: var(--dw-item-spacing);
-    position: relative;
-    padding-bottom: 8px;
-  }
+.danmaku-list-container {
+  width: 100%;
+  display: flex;
+  flex-direction: inherit;
+  gap: var(--dw-item-spacing);
+  position: relative;
+  padding-bottom: 8px;
+}
 
-  .danmaku-list.reverse {
-    flex-direction: column-reverse;
-  }
+.danmaku-list.reverse {
+  flex-direction: column-reverse;
+}
 
-  .danmaku-list::-webkit-scrollbar {
-    width: 4px;
-  }
+.danmaku-list::-webkit-scrollbar {
+  width: 4px;
+}
 
-  .danmaku-list::-webkit-scrollbar-track {
-    background: transparent;
-  }
+.danmaku-list::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-  .danmaku-list::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-  }
+.danmaku-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
 
-  /* 批量更新模式下的优化 */
-  .batch-update .danmaku-list-move {
-    transition-duration: 160ms !important;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
+/* 批量更新模式下的优化 */
+.batch-update .danmaku-list-move {
+  transition-duration: 160ms !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
 
-  .batch-item {
-    transition-duration: 160ms !important;
-  }
+.batch-item {
+  transition-duration: 160ms !important;
+}
 
-  /* 动画相关样式 - 根据 enableAnimation 设置应用 */
-  .danmaku-list-move {
-    transition: transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1);
-  }
+/* 动画相关样式 - 根据 enableAnimation 设置应用 */
+.danmaku-list-move {
+  transition: transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1);
+}
 
-  .danmaku-list-enter-active {
-    transition:
-      transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1),
-      opacity calc(var(--dw-animation-duration) * 0.8) cubic-bezier(0.2, 0, 0, 1);
-    transition-delay: var(--transition-delay, 0s);
-  }
+.danmaku-list-enter-active {
+  transition:
+    transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1),
+    opacity calc(var(--dw-animation-duration) * 0.8) cubic-bezier(0.2, 0, 0, 1);
+  transition-delay: var(--transition-delay, 0s);
+}
 
-  .danmaku-list-leave-active {
-    transition:
-      transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1),
-      opacity calc(var(--dw-animation-duration) * 0.8) cubic-bezier(0.2, 0, 0, 1);
-  }
+.danmaku-list-leave-active {
+  transition:
+    transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1),
+    opacity calc(var(--dw-animation-duration) * 0.8) cubic-bezier(0.2, 0, 0, 1);
+}
 
-  /* 当禁用动画时应用的样式 */
-  :root[data-animation-disabled="true"] .danmaku-list-move,
-  :root[data-animation-disabled="true"] .danmaku-list-enter-active,
-  :root[data-animation-disabled="true"] .danmaku-list-leave-active {
-    transition: none !important;
-    animation: none !important;
-  }
+/* 当禁用动画时应用的样式 */
+:root[data-animation-disabled='true'] .danmaku-list-move,
+:root[data-animation-disabled='true'] .danmaku-list-enter-active,
+:root[data-animation-disabled='true'] .danmaku-list-leave-active {
+  transition: none !important;
+  animation: none !important;
+}
 
-  .danmaku-list-enter-from,
-  .danmaku-list-leave-to {
-    opacity: 0;
-    transform: translate3d(var(--dw-enter-offset-x), var(--dw-enter-offset-y), 0) scale(0.98);
-  }
+.danmaku-list-enter-from,
+.danmaku-list-leave-to {
+  opacity: 0;
+  transform: translate3d(var(--dw-enter-offset-x), var(--dw-enter-offset-y), 0) scale(0.98);
+}
 
-  .danmaku-list-leave-to {
-    transform: translate3d(var(--dw-leave-offset-x), var(--dw-leave-offset-y), 0) scale(0.98);
-  }
+.danmaku-list-leave-to {
+  transform: translate3d(var(--dw-leave-offset-x), var(--dw-leave-offset-y), 0) scale(0.98);
+}
 
-  /* 3. ensure leaving items are taken out of layout flow so that moving
+/* 3. ensure leaving items are taken out of layout flow so that moving
       animations can be calculated correctly. */
+.danmaku-list-leave-active {
+  position: absolute;
+  width: 100%;
+}
+
+/* 根据弹幕类型提供不同的动画特性 */
+[data-type='3'] {
+  /* 普通弹幕 */
+  --transition-delay: 0ms;
+}
+
+[data-type='2'] {
+  /* 礼物 */
+  --transition-delay: 15ms;
+}
+
+[data-type='1'] {
+  /* SC */
+  --transition-delay: 25ms;
+}
+
+.danmaku-item {
+  /* 添加 will-change 提示浏览器进行优化 */
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .danmaku-list-move,
+  .danmaku-list-enter-active,
   .danmaku-list-leave-active {
-    position: absolute;
-    width: 100%;
+    transition: none !important;
   }
-
-  /* 根据弹幕类型提供不同的动画特性 */
-  [data-type="3"] {
-    /* 普通弹幕 */
-    --transition-delay: 0ms;
-  }
-
-  [data-type="2"] {
-    /* 礼物 */
-    --transition-delay: 15ms;
-  }
-
-  [data-type="1"] {
-    /* SC */
-    --transition-delay: 25ms;
-  }
-
-  .danmaku-item {
-    /* 添加 will-change 提示浏览器进行优化 */
-    will-change: transform, opacity;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .danmaku-list-move,
-    .danmaku-list-enter-active,
-    .danmaku-list-leave-active {
-      transition: none !important;
-    }
-  }
+}
 </style>

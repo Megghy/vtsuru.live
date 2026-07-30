@@ -1,4 +1,5 @@
 import { FETCH_API } from '@/shared/config'
+
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
 interface CustomApiProviderConfig {
@@ -31,17 +32,15 @@ export class CustomApiVoiceProvider implements VoiceProvider {
       return null
     }
 
-    const scheme = providerCfg?.voiceAPISchemeType === 'https'
-      ? 'https://'
-      : providerCfg?.useAPIDirectly
-        ? 'http://'
-        : `${FETCH_API}http://`
+    const scheme =
+      providerCfg?.voiceAPISchemeType === 'https'
+        ? 'https://'
+        : providerCfg?.useAPIDirectly
+          ? 'http://'
+          : `${FETCH_API}http://`
 
     try {
-      return `${scheme}${apiUrl.replace(/^https?:\/\//, '')}`.replace(
-        /\{\{\s*text\s*\}\}/,
-        encodeURIComponent(text),
-      )
+      return `${scheme}${apiUrl.replace(/^https?:\/\//, '')}`.replace(/\{\{\s*text\s*\}\}/, encodeURIComponent(text))
     } catch {
       console.error(`[CustomApiTTS] 无效的 API 地址`)
       return null

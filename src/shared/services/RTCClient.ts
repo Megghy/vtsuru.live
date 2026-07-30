@@ -1,6 +1,7 @@
-import { useVTsuruHub } from '@/store/useVTsuruHub'
-import type { DataConnection } from 'peerjs';
+import type { DataConnection } from 'peerjs'
 import Peer from 'peerjs'
+
+import { useVTsuruHub } from '@/store/useVTsuruHub'
 
 export interface ComponentsEventHubModel {
   IsMaster: boolean
@@ -75,10 +76,10 @@ export abstract class BaseRTCClient {
           {
             urls: ['turn:turn.suki.club'],
             username: this.user,
-            credential: this.pass
-          }
-        ]
-      }
+            credential: this.pass,
+          },
+        ],
+      },
       //debug: 3
     })
 
@@ -101,7 +102,6 @@ export abstract class BaseRTCClient {
     //console.log(data)
     if (data.Key == 'Heartbeat') {
       // 心跳
-      
     } else if (data.Key == 'VTsuru.RTCEvent.On') {
       // 添加事件
       this.handledEvents[conn.peer].push(data.Data)
@@ -119,26 +119,21 @@ export abstract class BaseRTCClient {
     }
   }
   public async getAllRTC() {
-    return (
-      (await this.vhub.invoke<ComponentsEventHubModel[]>('GetOnlineRTC')) || []
-    )
+    return (await this.vhub.invoke<ComponentsEventHubModel[]>('GetOnlineRTC')) || []
   }
   protected onConnectionClose(id: string) {
     this.connections = this.connections.filter((item) => item.peer != id)
     delete this.handledEvents[id]
 
     console.log(
-      `[Components-Event] <${this.connections.length}> ${this.type == 'master' ? 'Slave' : 'Master'} 下线: ` +
-        id
+      `[Components-Event] <${this.connections.length}> ${this.type == 'master' ? 'Slave' : 'Master'} 下线: ` + id,
     )
   }
 
   public async Init() {
     if (!this.isInited) {
       this.isInited = true
-      await this.vhub.on('RTCOffline', (id: string) =>
-        this.onConnectionClose(id)
-      )
+      await this.vhub.on('RTCOffline', (id: string) => this.onConnectionClose(id))
       this.connectRTC()
     }
     return this
@@ -150,9 +145,7 @@ export class SlaveRTCClient extends BaseRTCClient {
   public async connectToAllMaster() {
     const masters = (await this.getAllRTC()).filter(
       (item) =>
-        item.IsMaster &&
-        item.Token != this.peer.id &&
-        !this.connections.some((conn) => conn.peer == item.Token)
+        item.IsMaster && item.Token != this.peer.id && !this.connections.some((conn) => conn.peer == item.Token),
     )
     masters.forEach((item) => {
       this.connectToMaster(item.Token)
@@ -167,10 +160,7 @@ export class SlaveRTCClient extends BaseRTCClient {
 
       this.handledEvents[id] = []
 
-      console.log(
-        `[Components-Event] <${this.connections.length}> ==> Master 连接已建立: ` +
-          id
-      )
+      console.log(`[Components-Event] <${this.connections.length}> ==> Master 连接已建立: ` + id)
     })
     c?.on('error', (err) => console.error(err))
     c?.on('data', (data) => this.processData(c, data as RTCData))
@@ -198,10 +188,7 @@ export class MasterRTCClient extends BaseRTCClient {
       conn.on('open', () => {
         this.connections.push(conn)
         this.handledEvents[conn.peer] = []
-        console.log(
-          `[Components-Event] <${this.connections.length}> Slave 上线: ` +
-            conn.peer
-        )
+        console.log(`[Components-Event] <${this.connections.length}> Slave 上线: ` + conn.peer)
       })
       conn.on('data', (d) => this.processData(conn, d as RTCData))
       conn.on('error', (err) => console.error(err))

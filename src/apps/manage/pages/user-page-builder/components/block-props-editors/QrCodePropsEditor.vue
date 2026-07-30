@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import type { BlockNode } from '@/apps/user-page/block/schema'
 import { NColorPicker, NForm, NFormItem, NInput, NInputNumber, NSelect } from 'naive-ui'
+
+import type { BlockNode } from '@/apps/user-page/block/schema'
+
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
@@ -16,9 +18,16 @@ const levelOptions = [
 </script>
 
 <template>
-  <NForm label-placement="top" size="small">
+  <NForm
+    label-placement="top"
+    size="small"
+  >
     <PropsGrid>
-      <NFormItem class="span-full" label="内容" required>
+      <NFormItem
+        class="span-full"
+        label="内容"
+        required
+      >
         <NInput
           v-model:value="blockProps.content"
           type="textarea"
@@ -28,23 +37,54 @@ const levelOptions = [
           placeholder="文本或 https 链接"
         />
       </NFormItem>
-      <NFormItem class="span-full" label="标题">
-        <NInput v-model:value="blockProps.title" maxlength="100" show-count placeholder="可选" />
+      <NFormItem
+        class="span-full"
+        label="标题"
+      >
+        <NInput
+          v-model:value="blockProps.title"
+          maxlength="100"
+          show-count
+          placeholder="可选"
+        />
       </NFormItem>
       <NFormItem label="尺寸">
-        <NInputNumber v-model:value="blockProps.size" :min="128" :max="512" :step="16" style="width: 100%" />
+        <NInputNumber
+          v-model:value="blockProps.size"
+          :min="128"
+          :max="512"
+          :step="16"
+          style="width: 100%"
+        />
       </NFormItem>
       <NFormItem label="纠错等级">
-        <NSelect v-model:value="blockProps.level" :options="levelOptions" />
+        <NSelect
+          v-model:value="blockProps.level"
+          :options="levelOptions"
+        />
       </NFormItem>
       <NFormItem label="前景色">
-        <NColorPicker v-model:value="blockProps.foreground" :show-alpha="false" :modes="['hex']" />
+        <NColorPicker
+          v-model:value="blockProps.foreground"
+          :show-alpha="false"
+          :modes="['hex']"
+        />
       </NFormItem>
       <NFormItem label="背景色">
-        <NColorPicker v-model:value="blockProps.background" :show-alpha="false" :modes="['hex']" />
+        <NColorPicker
+          v-model:value="blockProps.background"
+          :show-alpha="false"
+          :modes="['hex']"
+        />
       </NFormItem>
       <NFormItem label="边距">
-        <NInputNumber v-model:value="blockProps.margin" :min="0" :max="32" :step="1" style="width: 100%" />
+        <NInputNumber
+          v-model:value="blockProps.margin"
+          :min="0"
+          :max="32"
+          :step="1"
+          style="width: 100%"
+        />
       </NFormItem>
     </PropsGrid>
   </NForm>

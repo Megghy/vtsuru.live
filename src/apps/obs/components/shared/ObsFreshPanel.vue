@@ -1,33 +1,28 @@
 <script setup lang="ts">
-import { NEmpty } from 'naive-ui';
+import { NEmpty } from 'naive-ui'
 import { toRef } from 'vue'
-import type {
-  ObsDisplayCurrent,
-  ObsDisplayFooterTag,
-  ObsDisplayItem,
-} from './obsDisplay'
+
+import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
 import { useObsListAnimation } from './useObsListAnimation'
 
-const props = withDefaults(defineProps<{
-  title: string
-  countText: string
-  current: ObsDisplayCurrent
-  items: ObsDisplayItem[]
-  footerTags?: ObsDisplayFooterTag[]
-  speedMultiplier?: number
-  emptyText: string
-}>(), {
-  footerTags: () => [],
-  speedMultiplier: 1,
-})
+const props = withDefaults(
+  defineProps<{
+    title: string
+    countText: string
+    current: ObsDisplayCurrent
+    items: ObsDisplayItem[]
+    footerTags?: ObsDisplayFooterTag[]
+    speedMultiplier?: number
+    emptyText: string
+  }>(),
+  {
+    footerTags: () => [],
+    speedMultiplier: 1,
+  },
+)
 
-const {
-  listContainerRef,
-  listInnerRef,
-  isMoreThanContainer,
-  animationTranslateYCss,
-  animationDurationCss,
-} = useObsListAnimation(toRef(props, 'items'), toRef(props, 'speedMultiplier'))
+const { listContainerRef, listInnerRef, isMoreThanContainer, animationTranslateYCss, animationDurationCss } =
+  useObsListAnimation(toRef(props, 'items'), toRef(props, 'speedMultiplier'))
 </script>
 
 <template>
@@ -59,7 +54,7 @@ const {
                 class="obs-fresh-current-avatar"
                 :src="current.avatarUrl"
                 referrerpolicy="no-referrer"
-              >
+              />
               <span
                 v-if="current.subtitle"
                 class="obs-fresh-current-subtitle"
@@ -239,7 +234,8 @@ const {
 }
 
 @keyframes obs-fresh-breathe {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 3px rgba(16, 185, 129, 0.2);
   }
@@ -306,7 +302,9 @@ const {
 
 .obs-fresh-transition-enter-active,
 .obs-fresh-transition-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
 .obs-fresh-transition-enter-from,

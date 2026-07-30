@@ -9,8 +9,11 @@ const loading = ref(false)
 let loaded = false
 
 function loadRecent(): string[] {
-  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') }
-  catch { return [] }
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]')
+  } catch {
+    return []
+  }
 }
 
 function saveRecent() {
@@ -19,7 +22,7 @@ function saveRecent() {
 
 export function markFontUsed(family: string) {
   if (!family) return
-  recentFonts.value = [family, ...recentFonts.value.filter(f => f !== family)].slice(0, MAX_RECENT)
+  recentFonts.value = [family, ...recentFonts.value.filter((f) => f !== family)].slice(0, MAX_RECENT)
   saveRecent()
 }
 

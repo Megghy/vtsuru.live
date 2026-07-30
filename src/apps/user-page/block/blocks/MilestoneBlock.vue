@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { FlagOutline } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui';
+import { NIcon } from 'naive-ui'
+import { computed } from 'vue'
+
 import BlockCard from '../BlockCard.vue'
 
 interface MilestoneItem {
@@ -18,15 +19,16 @@ interface BlockConfig {
   backgrounded?: boolean
 }
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
   return {
     title: typeof o.title === 'string' && o.title.trim() ? o.title.trim() : '里程碑',
-    mode: (o.mode === 'timeline' || o.mode === 'list') ? o.mode : 'timeline',
+    mode: o.mode === 'timeline' || o.mode === 'list' ? o.mode : 'timeline',
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
@@ -41,48 +43,91 @@ const items = computed(() => {
       title: typeof it?.title === 'string' ? it.title.trim() : '',
       description: typeof it?.description === 'string' ? it.description.trim() : '',
     }))
-    .filter(it => it.date || it.title || it.description)
+    .filter((it) => it.date || it.title || it.description)
 })
 </script>
 
 <template>
-  <BlockCard class="milestone-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded">
+  <BlockCard
+    class="milestone-card"
+    :framed="cfg.framed"
+    :backgrounded="cfg.backgrounded"
+  >
     <template #header>
       <div class="header">
-        <NIcon size="18" depth="2">
+        <NIcon
+          size="18"
+          depth="2"
+        >
           <FlagOutline />
         </NIcon>
         <span>{{ cfg.title }}</span>
       </div>
     </template>
 
-    <div v-if="items.length === 0" class="empty">
+    <div
+      v-if="items.length === 0"
+      class="empty"
+    >
       暂无里程碑
     </div>
 
     <template v-else>
-      <div v-if="cfg.mode !== 'list'" class="timeline">
-        <div v-for="(it, idx) in items" :key="idx" class="timeline-item">
-          <span class="timeline-marker" aria-hidden="true" />
-          <div v-if="it.date" class="date">
+      <div
+        v-if="cfg.mode !== 'list'"
+        class="timeline"
+      >
+        <div
+          v-for="(it, idx) in items"
+          :key="idx"
+          class="timeline-item"
+        >
+          <span
+            class="timeline-marker"
+            aria-hidden="true"
+          />
+          <div
+            v-if="it.date"
+            class="date"
+          >
             {{ it.date }}
           </div>
-          <div v-if="it.title" class="title">
+          <div
+            v-if="it.title"
+            class="title"
+          >
             {{ it.title }}
           </div>
-          <div v-if="it.description" class="desc">
+          <div
+            v-if="it.description"
+            class="desc"
+          >
             {{ it.description }}
           </div>
         </div>
       </div>
 
-      <div v-else class="list">
-        <div v-for="(it, idx) in items" :key="idx" class="list-item">
+      <div
+        v-else
+        class="list"
+      >
+        <div
+          v-for="(it, idx) in items"
+          :key="idx"
+          class="list-item"
+        >
           <div class="meta">
             <span class="date">{{ it.date || '—' }}</span>
-            <span v-if="it.title" class="title">{{ it.title }}</span>
+            <span
+              v-if="it.title"
+              class="title"
+              >{{ it.title }}</span
+            >
           </div>
-          <div v-if="it.description" class="desc">
+          <div
+            v-if="it.description"
+            class="desc"
+          >
             {{ it.description }}
           </div>
         </div>

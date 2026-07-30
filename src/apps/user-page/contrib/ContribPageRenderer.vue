@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/api-models'
-import { NResult, NSpin } from 'naive-ui';
+import { NResult, NSpin } from 'naive-ui'
 import { computed, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
+
+import type { UserInfo } from '@/api/api-models'
+
 import type { ContribPageRef } from '../types'
 import { getContribPageImporter } from './registry'
 
@@ -56,4 +58,3 @@ watch(
     />
   </NSpin>
 </template>
-

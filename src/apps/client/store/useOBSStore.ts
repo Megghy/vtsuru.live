@@ -1,6 +1,7 @@
+import OBSWebSocket from 'obs-websocket-js'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
-import OBSWebSocket from 'obs-websocket-js'
+
 import { useTauriStore } from './useTauriStore'
 
 // OBS配置接口
@@ -11,8 +12,8 @@ export interface ObsConfigState {
 
 // 场景配置接口
 export interface ObsSceneConfig {
-  startScene?: string  // 开播场景
-  stopScene?: string   // 下播场景
+  startScene?: string // 开播场景
+  stopScene?: string // 下播场景
   waitingScene?: string // 等待场景
   autoSwitchEnabled: boolean // 是否启用自动切换
   autoToggleStream: boolean // 是否在开播下播后自动切换OBS推流状态
@@ -70,7 +71,7 @@ export const useOBSStore = defineStore('obs', () => {
   const obsSceneError = ref('')
   const obsSceneConfig = ref<ObsSceneConfig>({
     autoSwitchEnabled: false,
-    autoToggleStream: true // 默认开启
+    autoToggleStream: true, // 默认开启
   })
 
   // OBS实例和定时器
@@ -101,10 +102,13 @@ export const useOBSStore = defineStore('obs', () => {
       obsStats.value.cpuUsage = typeof stats.cpuUsage === 'number' ? stats.cpuUsage : null
       obsStats.value.memoryUsage = typeof stats.memoryUsage === 'number' ? stats.memoryUsage : null
       obsStats.value.fps = typeof stats.activeFps === 'number' ? stats.activeFps : null
-      obsStats.value.averageRenderTimeMs = typeof stats.averageFrameRenderTime === 'number' ? stats.averageFrameRenderTime : null
-      obsStats.value.renderSkippedFrames = typeof stats.renderSkippedFrames === 'number' ? stats.renderSkippedFrames : null
+      obsStats.value.averageRenderTimeMs =
+        typeof stats.averageFrameRenderTime === 'number' ? stats.averageFrameRenderTime : null
+      obsStats.value.renderSkippedFrames =
+        typeof stats.renderSkippedFrames === 'number' ? stats.renderSkippedFrames : null
       obsStats.value.renderTotalFrames = typeof stats.renderTotalFrames === 'number' ? stats.renderTotalFrames : null
-      obsStats.value.outputSkippedFrames = typeof stats.outputSkippedFrames === 'number' ? stats.outputSkippedFrames : null
+      obsStats.value.outputSkippedFrames =
+        typeof stats.outputSkippedFrames === 'number' ? stats.outputSkippedFrames : null
       obsStats.value.outputTotalFrames = typeof stats.outputTotalFrames === 'number' ? stats.outputTotalFrames : null
 
       const streamStatus: any = await obs.call('GetStreamStatus')
@@ -127,8 +131,7 @@ export const useOBSStore = defineStore('obs', () => {
 
       // 获取当前场景
       await updateCurrentScene()
-    }
-    catch (err) {
+    } catch (err) {
       console.error('获取 OBS 统计失败:', err)
     }
   }
@@ -152,16 +155,18 @@ export const useOBSStore = defineStore('obs', () => {
   // 启动自动重连循环
   function startObsAutoReconnectLoop() {
     if (obsReconnectTimer !== null) return
-    
+
     // 如果当前条件满足，立即尝试连接一次
-    if (obsAutoReconnect.value && 
-        obsAddress.value && 
-        obsPassword.value && 
-        !obsConnected.value && 
-        !obsConnecting.value) {
+    if (
+      obsAutoReconnect.value &&
+      obsAddress.value &&
+      obsPassword.value &&
+      !obsConnected.value &&
+      !obsConnecting.value
+    ) {
       void handleObsConnect()
     }
-    
+
     // 启动定时重连循环
     obsReconnectTimer = window.setInterval(() => {
       if (!obsAutoReconnect.value) return
@@ -185,7 +190,7 @@ export const useOBSStore = defineStore('obs', () => {
   async function handleObsConnect() {
     console.log('handleObsConnect called')
     console.log('obsConnected:', obsConnected.value, 'obsConnecting:', obsConnecting.value)
-    
+
     if (obsConnected.value || obsConnecting.value) {
       console.log('Early return: already connected or connecting')
       return
@@ -219,18 +224,16 @@ export const useOBSStore = defineStore('obs', () => {
           address,
           password: obsPassword.value || undefined,
         })
-      }
-      catch (err) {
+      } catch (err) {
         console.error('保存 OBS 配置失败:', err)
       }
 
       startObsStatsLoop()
       void updateObsStats()
-      
+
       // 连接成功后获取场景列表
       void fetchObsScenes()
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('连接 OBS 失败:', err)
       obsError.value = err?.message || String(err)
       obsConnected.value = false
@@ -249,11 +252,9 @@ export const useOBSStore = defineStore('obs', () => {
       if (obs) {
         await obs.disconnect()
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('断开 OBS 失败:', err)
-    }
-    finally {
+    } finally {
       obsConnected.value = false
       obsStreamActive.value = false
     }
@@ -274,12 +275,10 @@ export const useOBSStore = defineStore('obs', () => {
       }
       window.$message.success(obsStreamActive.value ? '已开始 OBS 推流' : '已停止 OBS 推流')
       void updateObsStats()
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('切换 OBS 推流状态失败:', err)
       window.$message.error(`切换 OBS 推流状态失败: ${err?.message || err}`)
-    }
-    finally {
+    } finally {
       isTogglingObsStream.value = false
     }
   }
@@ -303,13 +302,11 @@ export const useOBSStore = defineStore('obs', () => {
       window.$message.success('已开始 OBS 推流')
       void updateObsStats()
       return true
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('开始 OBS 推流失败:', err)
       window.$message.error(`开始 OBS 推流失败: ${err?.message || err}`)
       return false
-    }
-    finally {
+    } finally {
       isTogglingObsStream.value = false
     }
   }
@@ -333,13 +330,11 @@ export const useOBSStore = defineStore('obs', () => {
       window.$message.success('已停止 OBS 推流')
       void updateObsStats()
       return true
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('停止 OBS 推流失败:', err)
       window.$message.error(`停止 OBS 推流失败: ${err?.message || err}`)
       return false
-    }
-    finally {
+    } finally {
       isTogglingObsStream.value = false
     }
   }
@@ -354,21 +349,20 @@ export const useOBSStore = defineStore('obs', () => {
     try {
       // 获取当前的流设置
       const streamSettings: any = await obs.call('GetStreamServiceSettings')
-      
+
       // 更新服务器和推流码
       await obs.call('SetStreamServiceSettings', {
         streamServiceType: streamSettings.streamServiceType || 'rtmp_custom',
         streamServiceSettings: {
           ...streamSettings.streamServiceSettings,
           server,
-          key
-        }
+          key,
+        },
       })
 
       window.$message.success('推流码已同步到 OBS')
       return true
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('同步推流码到 OBS 失败:', err)
       window.$message.error(`同步推流码失败: ${err?.message || err}`)
       return false
@@ -383,8 +377,7 @@ export const useOBSStore = defineStore('obs', () => {
       const sceneList: any = await obs.call('GetSceneList')
       obsScenes.value = sceneList.scenes.map((scene: any) => scene.sceneName as string)
       console.log('获取到OBS场景列表:', obsScenes.value)
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('获取OBS场景列表失败:', err)
       obsSceneError.value = err?.message || '获取场景列表失败'
     }
@@ -397,8 +390,7 @@ export const useOBSStore = defineStore('obs', () => {
     try {
       const currentScene: any = await obs.call('GetCurrentProgramScene')
       currentObsScene.value = currentScene.currentProgramSceneName || ''
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('获取当前场景失败:', err)
     }
   }
@@ -424,23 +416,21 @@ export const useOBSStore = defineStore('obs', () => {
     try {
       isSwitchingScene.value = true
       obsSceneError.value = ''
-      
+
       await obs.call('SetCurrentProgramScene', {
-        sceneName
+        sceneName,
       })
-      
+
       currentObsScene.value = sceneName
       console.log(`已切换到场景: ${sceneName}`)
       window.$message.success(`已切换到场景: ${sceneName}`)
       return true
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error('切换场景失败:', err)
       obsSceneError.value = err?.message || '切换场景失败'
       window.$message.error(`切换场景失败: ${err?.message || err}`)
       return false
-    }
-    finally {
+    } finally {
       isSwitchingScene.value = false
     }
   }
@@ -450,8 +440,7 @@ export const useOBSStore = defineStore('obs', () => {
     try {
       await tauriStore.set(OBS_SCENE_CONFIG_KEY, obsSceneConfig.value)
       console.log('场景配置已保存')
-    }
-    catch (err) {
+    } catch (err) {
       console.error('保存场景配置失败:', err)
     }
   }
@@ -464,8 +453,7 @@ export const useOBSStore = defineStore('obs', () => {
         obsSceneConfig.value = saved
         console.log('已加载场景配置:', saved)
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('加载场景配置失败:', err)
     }
   }
@@ -482,8 +470,7 @@ export const useOBSStore = defineStore('obs', () => {
           obsAutoReconnect.value = true
         }
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('加载OBS配置失败:', err)
     }
   }
@@ -492,7 +479,7 @@ export const useOBSStore = defineStore('obs', () => {
   async function init() {
     await loadObsConfig()
     await loadSceneConfig()
-    
+
     // 只有在设置了地址和密码后才启动自动重连
     if (obsAutoReconnect.value && obsAddress.value) {
       startObsAutoReconnectLoop()

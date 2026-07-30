@@ -1,7 +1,9 @@
-import type { AutoActionItem, RuntimeState } from '../types'
-import type { EventModel } from '@/api/api-models'
-import { ref } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
+
+import type { EventModel } from '@/api/api-models'
+
+import type { AutoActionItem, RuntimeState } from '../types'
 
 vi.mock('@/apps/client/store/useBiliCookie', () => ({
   useBiliCookie: () => ({ isCookieValid: true }),
@@ -88,7 +90,7 @@ describe('filterValidActions', () => {
       makeAction({ id: 'b', triggerConfig: { onlyDuringLive: false } }),
     ]
     const result = filterValidActions(actions, TriggerType.DANMAKU, notLive)
-    expect(result.map(a => a.id)).toEqual(['b'])
+    expect(result.map((a) => a.id)).toEqual(['b'])
   })
 
   it('excludes ignoreTianXuan actions when tianxuan is active', () => {
@@ -98,7 +100,7 @@ describe('filterValidActions', () => {
       makeAction({ id: 'b', triggerConfig: { ignoreTianXuan: false } }),
     ]
     const result = filterValidActions(actions, TriggerType.DANMAKU, isLive, tx)
-    expect(result.map(a => a.id)).toEqual(['b'])
+    expect(result.map((a) => a.id)).toEqual(['b'])
   })
 
   it('respects enabledTriggerTypes option', () => {
@@ -111,14 +113,11 @@ describe('filterValidActions', () => {
   })
 
   it('applies customFilter', () => {
-    const actions = [
-      makeAction({ id: 'keep', name: 'keep' }),
-      makeAction({ id: 'drop', name: 'drop' }),
-    ]
+    const actions = [makeAction({ id: 'keep', name: 'keep' }), makeAction({ id: 'drop', name: 'drop' })]
     const result = filterValidActions(actions, TriggerType.DANMAKU, isLive, undefined, {
-      customFilter: a => a.name === 'keep',
+      customFilter: (a) => a.name === 'keep',
     })
-    expect(result.map(a => a.id)).toEqual(['keep'])
+    expect(result.map((a) => a.id)).toEqual(['keep'])
   })
 
   it('filters by specific actionType', () => {
@@ -129,7 +128,7 @@ describe('filterValidActions', () => {
     const result = filterValidActions(actions, TriggerType.DANMAKU, isLive, undefined, {
       actionType: ActionType.SEND_PRIVATE_MSG,
     })
-    expect(result.map(a => a.id)).toEqual(['b'])
+    expect(result.map((a) => a.id)).toEqual(['b'])
   })
 })
 

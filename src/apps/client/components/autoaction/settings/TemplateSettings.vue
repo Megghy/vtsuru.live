@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { computed } from 'vue'
+
+import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType } from '@/apps/client/store/useAutoAction'
+
 import TemplateEditor from '../TemplateEditor.vue'
 
 const props = defineProps({
@@ -44,7 +46,7 @@ const templateDescription = computed(() => {
 })
 
 // Handle template updates from TemplateEditor
-function handleTemplateUpdate(payload: { index: number, value: string }) {
+function handleTemplateUpdate(payload: { index: number; value: string }) {
   // Assuming index will always be 0 here as we only render one editor
   // And assuming action.templates is a string based on previous findings
   if (payload.index === 0) {

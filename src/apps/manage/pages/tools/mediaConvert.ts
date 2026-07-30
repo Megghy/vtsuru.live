@@ -25,7 +25,7 @@ export const formats: FormatDef[] = [
   { value: 'wav', label: 'WAV 音频 (无损)', kind: 'audio', mime: 'audio/wav' },
 ]
 
-export const formatMap = new Map(formats.map(f => [f.value, f]))
+export const formatMap = new Map(formats.map((f) => [f.value, f]))
 
 export interface ConvertSettings {
   format: OutputFormat
@@ -113,10 +113,32 @@ export interface Preset {
 
 // 预设只覆盖关键参数，其余沿用当前设置。需要源为视频的预设标 videoOnly。
 export const presets: (Preset & { videoOnly?: boolean })[] = [
-  { key: 'compress', label: '压到最小', desc: 'H.264 高压缩，限制 720p', videoOnly: true, patch: { format: 'mp4', videoCrf: 30, videoMaxWidth: 1280, videoFps: 30, audioBitrate: 96 } },
-  { key: 'mp3', label: '提取 MP3', desc: '从视频/音频提取 192k 音轨', patch: { format: 'mp3', audioBitrate: 192, keepMetadata: true } },
-  { key: 'gif', label: '转 GIF', desc: '480px / 15fps 动图', videoOnly: true, patch: { format: 'gif', gifWidth: 480, gifFps: 15, gifLoop: true } },
-  { key: 'normalize', label: '响度标准化', desc: '统一音量，转 M4A', patch: { format: 'm4a', loudnorm: true, volume: 100, audioBitrate: 192 } },
+  {
+    key: 'compress',
+    label: '压到最小',
+    desc: 'H.264 高压缩，限制 720p',
+    videoOnly: true,
+    patch: { format: 'mp4', videoCrf: 30, videoMaxWidth: 1280, videoFps: 30, audioBitrate: 96 },
+  },
+  {
+    key: 'mp3',
+    label: '提取 MP3',
+    desc: '从视频/音频提取 192k 音轨',
+    patch: { format: 'mp3', audioBitrate: 192, keepMetadata: true },
+  },
+  {
+    key: 'gif',
+    label: '转 GIF',
+    desc: '480px / 15fps 动图',
+    videoOnly: true,
+    patch: { format: 'gif', gifWidth: 480, gifFps: 15, gifLoop: true },
+  },
+  {
+    key: 'normalize',
+    label: '响度标准化',
+    desc: '统一音量，转 M4A',
+    patch: { format: 'm4a', loudnorm: true, volume: 100, audioBitrate: 192 },
+  },
 ]
 
 export interface TrimRange {
@@ -129,7 +151,7 @@ export interface CommandStep {
   args: string[]
 }
 
-function trimArgs(trim: TrimRange): { pre: string[], post: string[] } {
+function trimArgs(trim: TrimRange): { pre: string[]; post: string[] } {
   const start = positive(trim.start)
   const end = positive(trim.end)
   return {
@@ -150,8 +172,14 @@ function effectiveDuration(srcDuration: number, trim: TrimRange, speed: number):
 function atempoChain(speed: number): string[] {
   const steps: string[] = []
   let remaining = speed
-  while (remaining > 2) { steps.push('atempo=2.0'); remaining /= 2 }
-  while (remaining < 0.5) { steps.push('atempo=0.5'); remaining *= 2 }
+  while (remaining > 2) {
+    steps.push('atempo=2.0')
+    remaining /= 2
+  }
+  while (remaining < 0.5) {
+    steps.push('atempo=0.5')
+    remaining *= 2
+  }
   if (Math.abs(remaining - 1) > 0.001) steps.push(`atempo=${remaining.toFixed(3)}`)
   return steps
 }
@@ -164,7 +192,8 @@ function audioFilterChain(s: ConvertSettings, outDuration: number): string[] {
   if (s.loudnorm) f.push('loudnorm')
   else if (s.volume !== 100) f.push(`volume=${(s.volume / 100).toFixed(2)}`)
   if (s.audioFadeIn > 0) f.push(`afade=t=in:st=0:d=${s.audioFadeIn}`)
-  if (s.audioFadeOut > 0) f.push(`afade=t=out:st=${Math.max(0, outDuration - s.audioFadeOut).toFixed(2)}:d=${s.audioFadeOut}`)
+  if (s.audioFadeOut > 0)
+    f.push(`afade=t=out:st=${Math.max(0, outDuration - s.audioFadeOut).toFixed(2)}:d=${s.audioFadeOut}`)
   return f
 }
 
@@ -183,7 +212,8 @@ function videoFilterChain(s: ConvertSettings, width: number | null, fps: number 
     f.push(`eq=brightness=${s.brightness}:contrast=${s.contrast}:saturation=${s.saturation}`)
   if (s.sharpen) f.push('unsharp=5:5:1.0')
   if (s.videoFadeIn > 0) f.push(`fade=t=in:st=0:d=${s.videoFadeIn}`)
-  if (s.videoFadeOut > 0) f.push(`fade=t=out:st=${Math.max(0, outDuration - s.videoFadeOut).toFixed(2)}:d=${s.videoFadeOut}`)
+  if (s.videoFadeOut > 0)
+    f.push(`fade=t=out:st=${Math.max(0, outDuration - s.videoFadeOut).toFixed(2)}:d=${s.videoFadeOut}`)
   return f
 }
 
@@ -218,26 +248,57 @@ function applyVideoCodec(args: string[], s: ConvertSettings, outDuration: number
     else args.push('-crf', String(s.videoCrf), '-b:v', '0')
     return
   }
-  args.push('-c:v', s.videoCodec === 'h265' ? 'libx265' : 'libx264', '-preset', s.videoPreset, '-pix_fmt', 'yuv420p', '-movflags', '+faststart')
+  args.push(
+    '-c:v',
+    s.videoCodec === 'h265' ? 'libx265' : 'libx264',
+    '-preset',
+    s.videoPreset,
+    '-pix_fmt',
+    'yuv420p',
+    '-movflags',
+    '+faststart',
+  )
   if (s.rateMode === 'targetSize') args.push('-b:v', `${targetVideoBitrate(s, outDuration)}k`)
   else args.push('-crf', String(s.videoCrf))
 }
 
-export function buildCommands(input: string, output: string, s: ConvertSettings, trim: TrimRange, srcDuration: number): CommandStep[] {
+export function buildCommands(
+  input: string,
+  output: string,
+  s: ConvertSettings,
+  trim: TrimRange,
+  srcDuration: number,
+): CommandStep[] {
   const fmt = formatMap.get(s.format)
   const { pre, post } = trimArgs(trim)
   const meta = s.keepMetadata ? [] : ['-map_metadata', '-1']
   const outDuration = effectiveDuration(srcDuration, trim, s.speed)
 
   if (fmt.kind === 'gif') {
-    const extra = videoFilterChain({ ...s, videoFadeIn: 0, videoFadeOut: 0 }, null, null, outDuration)
-      .filter(x => !x.startsWith('scale') && !x.startsWith('fps'))
+    const extra = videoFilterChain({ ...s, videoFadeIn: 0, videoFadeOut: 0 }, null, null, outDuration).filter(
+      (x) => !x.startsWith('scale') && !x.startsWith('fps'),
+    )
     const base = `fps=${s.gifFps},scale=${s.gifWidth}:-1:flags=lanczos`
     const chain = [base, ...extra].join(',')
     const palette = 'palette.png'
     return [
       { args: [...pre, '-i', input, ...post, '-vf', `${chain},palettegen=stats_mode=diff`, '-y', palette] },
-      { args: [...pre, '-i', input, ...post, '-i', palette, '-lavfi', `${chain}[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=3`, '-loop', s.gifLoop ? '0' : '-1', '-y', output] },
+      {
+        args: [
+          ...pre,
+          '-i',
+          input,
+          ...post,
+          '-i',
+          palette,
+          '-lavfi',
+          `${chain}[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=3`,
+          '-loop',
+          s.gifLoop ? '0' : '-1',
+          '-y',
+          output,
+        ],
+      },
     ]
   }
 

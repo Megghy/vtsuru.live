@@ -47,10 +47,12 @@ export function getGoogleFontFamilyCss(value: unknown) {
 function isCatalogItem(value: unknown): value is FontsourceCatalogItem {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const item = value as Record<string, unknown>
-  return item.type === 'google'
-    && typeof item.family === 'string'
-    && typeof item.category === 'string'
-    && isValidGoogleFontFamily(item.family)
+  return (
+    item.type === 'google' &&
+    typeof item.family === 'string' &&
+    typeof item.category === 'string' &&
+    isValidGoogleFontFamily(item.family)
+  )
 }
 
 export async function loadGoogleFontsCatalog() {
@@ -100,11 +102,15 @@ function acquireGoogleFont(value: unknown) {
   link.rel = 'stylesheet'
   link.href = url.toString()
   link.dataset.vtsuruGoogleFont = family
-  link.addEventListener('error', () => {
-    if (fontLinks.get(family)?.link === link) fontLinks.delete(family)
-    link.remove()
-    console.error(`Google Font 加载失败: ${family}`)
-  }, { once: true })
+  link.addEventListener(
+    'error',
+    () => {
+      if (fontLinks.get(family)?.link === link) fontLinks.delete(family)
+      link.remove()
+      console.error(`Google Font 加载失败: ${family}`)
+    },
+    { once: true },
+  )
   document.head.appendChild(link)
   fontLinks.set(family, { link, references: 1 })
   return () => releaseGoogleFont(family)
@@ -120,8 +126,12 @@ function releaseGoogleFont(family: string) {
 }
 
 export function useGoogleFont(fontFamily: Readonly<Ref<string | undefined>>) {
-  watch(fontFamily, (value, _previous, onCleanup) => {
-    const release = acquireGoogleFont(value)
-    onCleanup(release)
-  }, { immediate: true })
+  watch(
+    fontFamily,
+    (value, _previous, onCleanup) => {
+      const release = acquireGoogleFont(value)
+      onCleanup(release)
+    },
+    { immediate: true },
+  )
 }

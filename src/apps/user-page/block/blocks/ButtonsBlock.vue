@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui';
+import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const propsObj = computed<Record<string, any>>(() => {
   if (!props.blockProps || typeof props.blockProps !== 'object' || Array.isArray(props.blockProps)) return {}
@@ -53,7 +54,7 @@ type NormalizedButtonItem = {
 const normalizedItems = computed<NormalizedButtonItem[]>(() => {
   const list = items.value
   return list.map((raw) => {
-    const it = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw as any : {}
+    const it = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as any) : {}
     const label = typeof it.label === 'string' ? it.label : ''
     if (it.back === true) return { label, kind: 'back' }
     const page = typeof it.page === 'string' ? it.page.trim() : ''
@@ -66,7 +67,9 @@ const normalizedItems = computed<NormalizedButtonItem[]>(() => {
   })
 })
 
-const direction = computed<'vertical' | 'horizontal'>(() => (propsObj.value.direction === 'horizontal' ? 'horizontal' : 'vertical'))
+const direction = computed<'vertical' | 'horizontal'>(() =>
+  propsObj.value.direction === 'horizontal' ? 'horizontal' : 'vertical',
+)
 const gap = computed(() => {
   const v = Number(propsObj.value.gap)
   if (!Number.isFinite(v)) return 10
@@ -77,7 +80,8 @@ const gap = computed(() => {
 
 const buttonType = computed(() => {
   const v = propsObj.value.type
-  if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default') return v
+  if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default')
+    return v
   return 'primary'
 })
 
@@ -125,12 +129,19 @@ const borderTitleAlign = computed<'left' | 'center' | 'right'>(() => {
   return 'left'
 })
 
-const flexJustify = computed<'start' | 'center' | 'end'>(() => (direction.value === 'horizontal' ? align.value : 'start'))
+const flexJustify = computed<'start' | 'center' | 'end'>(() =>
+  direction.value === 'horizontal' ? align.value : 'start',
+)
 const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value === 'vertical' ? align.value : 'start'))
 </script>
 
 <template>
-  <BlockCard :framed="framed" :backgrounded="backgrounded" :border-title="framed ? borderTitle : ''" :border-title-align="borderTitleAlign">
+  <BlockCard
+    :framed="framed"
+    :backgrounded="backgrounded"
+    :border-title="framed ? borderTitle : ''"
+    :border-title-align="borderTitleAlign"
+  >
     <NFlex
       :vertical="direction === 'vertical'"
       :wrap="direction === 'horizontal'"
@@ -139,7 +150,10 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
       class="buttons-container"
       :style="{ gap: `${gap}px` }"
     >
-      <template v-for="(it, idx) in normalizedItems" :key="idx">
+      <template
+        v-for="(it, idx) in normalizedItems"
+        :key="idx"
+      >
         <NButton
           v-if="it.kind === 'external'"
           size="small"
@@ -195,7 +209,11 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vtsuru-btn { transition: none; }
-  .vtsuru-btn:active { transform: none; }
+  .vtsuru-btn {
+    transition: none;
+  }
+  .vtsuru-btn:active {
+    transform: none;
+  }
 }
 </style>

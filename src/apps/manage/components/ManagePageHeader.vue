@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { FunctionTypes } from '@/api/api-models'
 import { Copy24Filled, Info24Filled } from '@vicons/fluent'
-import { useAccount } from '@/api/account'
 import { NButton, NCard, NFlex, NIcon, NInput, NInputGroup, NSwitch, NText, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
+
+import { useAccount } from '@/api/account'
+import type { FunctionTypes } from '@/api/api-models'
 import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import { copyToClipboard } from '@/shared/utils'
 
@@ -24,20 +25,34 @@ const props = defineProps<{
 
 const accountInfo = useAccount()
 const toggle = props.functionType != null ? useFunctionToggle(props.functionType, props.title) : null
-const links = computed(() => props.links?.filter(link => link.value) ?? [])
+const links = computed(() => props.links?.filter((link) => link.value) ?? [])
 const switchLoading = computed(() => toggle?.loading.value ?? false)
 </script>
 
 <template>
   <div class="manage-page-header">
-    <NFlex class="manage-page-header__top" justify="space-between" align="flex-start" wrap :size="12">
+    <NFlex
+      class="manage-page-header__top"
+      justify="space-between"
+      align="flex-start"
+      wrap
+      :size="12"
+    >
       <div class="manage-page-header__titles">
         <div class="manage-page-header__title-row">
           <h1 class="manage-page-header__title">
             {{ title }}
           </h1>
-          <NFlex v-if="functionType != null && accountInfo" class="manage-page-header__function-toggle" align="center" :size="8">
-            <NText depth="3" class="manage-kicker">
+          <NFlex
+            v-if="functionType != null && accountInfo"
+            class="manage-page-header__function-toggle"
+            align="center"
+            :size="8"
+          >
+            <NText
+              depth="3"
+              class="manage-kicker"
+            >
               功能
             </NText>
             <NTooltip>
@@ -48,31 +63,43 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
                   :disabled="loading || switchLoading"
                   @update:value="toggle?.setEnable"
                 >
-                  <template #checked>
-                    已启用
-                  </template>
-                  <template #unchecked>
-                    已禁用
-                  </template>
+                  <template #checked> 已启用 </template>
+                  <template #unchecked> 已禁用 </template>
                 </NSwitch>
               </template>
               关闭后不会显示在个人主页
             </NTooltip>
           </NFlex>
         </div>
-        <NText v-if="subtitle" depth="3" class="manage-page-header__subtitle">
+        <NText
+          v-if="subtitle"
+          depth="3"
+          class="manage-page-header__subtitle"
+        >
           {{ subtitle }}
         </NText>
       </div>
 
-      <NFlex class="manage-page-header__right" align="center" justify="end" wrap :size="10">
-        <NFlex class="manage-page-header__actions" :wrap="true">
+      <NFlex
+        class="manage-page-header__right"
+        align="center"
+        justify="end"
+        wrap
+        :size="10"
+      >
+        <NFlex
+          class="manage-page-header__actions"
+          :wrap="true"
+        >
           <slot name="action" />
         </NFlex>
       </NFlex>
     </NFlex>
 
-    <div v-if="$slots.default" class="manage-page-header__below">
+    <div
+      v-if="$slots.default"
+      class="manage-page-header__below"
+    >
       <slot />
     </div>
 
@@ -83,7 +110,12 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
       :bordered="true"
       content-style="padding: 12px;"
     >
-      <NFlex class="manage-page-header__links-content" align="flex-end" wrap :size="12">
+      <NFlex
+        class="manage-page-header__links-content"
+        align="flex-end"
+        wrap
+        :size="12"
+      >
         <NFlex
           v-for="link in links"
           :key="`${link.label}:${link.value}`"
@@ -91,20 +123,34 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
           vertical
           :size="8"
         >
-          <NFlex align="center" :size="4">
+          <NFlex
+            align="center"
+            :size="4"
+          >
             <NText class="manage-kicker">
               {{ link.label }}
             </NText>
             <NTooltip v-if="link.description">
               <template #trigger>
-                <NIcon :component="Info24Filled" class="manage-page-header__link-info" />
+                <NIcon
+                  :component="Info24Filled"
+                  class="manage-page-header__link-info"
+                />
               </template>
               {{ link.description }}
             </NTooltip>
           </NFlex>
           <NInputGroup class="manage-page-header__link-input">
-            <NInput :value="link.value" readonly size="small" />
-            <NButton secondary size="small" @click="copyToClipboard(link.copyValue ?? link.value)">
+            <NInput
+              :value="link.value"
+              readonly
+              size="small"
+            />
+            <NButton
+              secondary
+              size="small"
+              @click="copyToClipboard(link.copyValue ?? link.value)"
+            >
               <template #icon>
                 <NIcon :component="Copy24Filled" />
               </template>
@@ -112,7 +158,10 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
             </NButton>
           </NInputGroup>
         </NFlex>
-        <div v-if="$slots['links-extra']" class="manage-page-header__links-extra">
+        <div
+          v-if="$slots['links-extra']"
+          class="manage-page-header__links-extra"
+        >
           <slot name="links-extra" />
         </div>
       </NFlex>

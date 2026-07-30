@@ -1,10 +1,11 @@
-import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import type { EventModel } from '@/api/api-models'
 import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
+import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
+
+import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface EnergyRankSettings {
   width: number
@@ -127,9 +128,12 @@ export const useEnergyRank = defineStore('energyRank', () => {
 
   function computeScore(entry: RankEntry): number {
     switch (settings.value.rankBy) {
-      case 'paid': return entry.totalPaid
-      case 'danmaku': return entry.danmakuCount
-      case 'combined': return entry.totalPaid + entry.danmakuCount * 10
+      case 'paid':
+        return entry.totalPaid
+      case 'danmaku':
+        return entry.danmakuCount
+      case 'combined':
+        return entry.totalPaid + entry.danmakuCount * 10
     }
   }
 
@@ -150,7 +154,7 @@ export const useEnergyRank = defineStore('energyRank', () => {
 
   async function init() {
     if (isInited) return
-    rankWindow.value = (await getAllWebviewWindows()).find(w => w.label === 'energy-rank-window')
+    rankWindow.value = (await getAllWebviewWindows()).find((w) => w.label === 'energy-rank-window')
     if (!rankWindow.value) return
 
     rankWindow.value.onCloseRequested((event) => {
@@ -172,17 +176,23 @@ export const useEnergyRank = defineStore('energyRank', () => {
     bc.postMessage({ type: 'window-ready' })
     bc.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
 
-    danmakuClient.onEvent('danmaku', e => onEvent(e))
-    danmakuClient.onEvent('gift', e => onEvent(e))
-    danmakuClient.onEvent('sc', e => onEvent(e))
-    danmakuClient.onEvent('guard', e => onEvent(e))
+    danmakuClient.onEvent('danmaku', (e) => onEvent(e))
+    danmakuClient.onEvent('gift', (e) => onEvent(e))
+    danmakuClient.onEvent('sc', (e) => onEvent(e))
+    danmakuClient.onEvent('guard', (e) => onEvent(e))
 
-    watch(() => settings, (v) => {
-      rankMap.value.forEach(entry => { entry.score = computeScore(entry) })
-      bc?.postMessage({ type: 'update-setting', data: toRaw(v.value) })
-      sendRankList()
-      applyWindowSettings()
-    }, { deep: true })
+    watch(
+      () => settings,
+      (v) => {
+        rankMap.value.forEach((entry) => {
+          entry.score = computeScore(entry)
+        })
+        bc?.postMessage({ type: 'update-setting', data: toRaw(v.value) })
+        sendRankList()
+        applyWindowSettings()
+      },
+      { deep: true },
+    )
 
     isInited = true
   }

@@ -6,7 +6,7 @@ import { HardwareChipOutline } from '@vicons/ionicons5'
 import { onMounted, ref } from 'vue'
 
 const osInfo = ref<string>('未知')
-const memoryInfo = ref<{ total?: number, free?: number, used?: number }>({})
+const memoryInfo = ref<{ total?: number; free?: number; used?: number }>({})
 
 async function fetchSystemInfo() {
   try {
@@ -17,7 +17,7 @@ async function fetchSystemInfo() {
   }
 
   try {
-    const mem: { total: number, free: number } = await invoke('get_memory_info')
+    const mem: { total: number; free: number } = await invoke('get_memory_info')
     memoryInfo.value = { total: mem.total, free: mem.free, used: mem.total - mem.free }
   } catch (e) {
     logError(`Failed to get Memory info: ${e}`)
@@ -35,7 +35,7 @@ onMounted(fetchSystemInfo)
     title="系统信息"
     size="small"
     bordered
-    style="width: 100%;"
+    style="width: 100%"
   >
     <template #header-extra>
       <NIcon :component="HardwareChipOutline" />
@@ -51,9 +51,9 @@ onMounted(fetchSystemInfo)
       </NDescriptionsItem>
       <NDescriptionsItem label="内存 (近似)">
         <span v-if="memoryInfo?.total">
-          已用: {{ ((memoryInfo.used ?? 0) / 1024 / 1024 / 1024).toFixed(2) }} GB /
-          可用: {{ ((memoryInfo.free ?? 0) / 1024 / 1024 / 1024).toFixed(2) }} GB /
-          总计: {{ (memoryInfo.total / 1024 / 1024 / 1024).toFixed(2) }} GB
+          已用: {{ ((memoryInfo.used ?? 0) / 1024 / 1024 / 1024).toFixed(2) }} GB / 可用:
+          {{ ((memoryInfo.free ?? 0) / 1024 / 1024 / 1024).toFixed(2) }} GB / 总计:
+          {{ (memoryInfo.total / 1024 / 1024 / 1024).toFixed(2) }} GB
         </span>
         <span v-else> N/A </span>
       </NDescriptionsItem>

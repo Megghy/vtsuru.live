@@ -1,17 +1,35 @@
 <script setup lang="ts">
-import type {
-  FormRules,
-} from 'naive-ui'
-import type { AddressInfo } from '@/api/api-models'
 import { Add24Regular, Person24Regular, Delete24Regular, Edit24Regular, DocumentText24Regular } from '@vicons/fluent'
+import type { FormRules } from 'naive-ui'
 import {
-  NAlert, NButton, NCard, NCheckbox, NEmpty, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NModal, NPopconfirm, NScrollbar, NSelect, NSpin, NTag, NText, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NEmpty,
+  NFlex,
+  NForm,
+  NFormItem,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NModal,
+  NPopconfirm,
+  NScrollbar,
+  NSelect,
+  NSpin,
+  NTag,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { computed, ref } from 'vue'
+
+import type { AddressInfo } from '@/api/api-models'
+// @ts-expect-error 导入有点问题
+import UserAgreement from '@/content/agreements/UserAgreement.md'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
-// @ts-expect-error 导入有点问题
-import UserAgreement from '@/content/agreements/UserAgreement.md'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 // 地区数据类型定义
@@ -45,7 +63,7 @@ const areas = usePersistedStorage<{
 
 // 计算属性：获取省份选项
 const provinceOptions = computed(() => {
-  return Object.keys(areas.value?.data ?? {}).map(p => ({ label: p, value: p }))
+  return Object.keys(areas.value?.data ?? {}).map((p) => ({ label: p, value: p }))
 })
 
 // 计算属性：当前用户授权信息
@@ -54,19 +72,19 @@ const biliAuth = computed(() => useAuth.biliAuth)
 // 获取城市选项
 function cityOptions(province: string) {
   if (!areas.value?.data[province]) return []
-  return Object.keys(areas.value?.data[province] ?? {}).map(c => ({ label: c, value: c }))
+  return Object.keys(areas.value?.data[province] ?? {}).map((c) => ({ label: c, value: c }))
 }
 
 // 获取区/县选项
 function districtOptions(province: string, city: string) {
   if (!areas.value?.data[province]?.[city]) return []
-  return Object.keys(areas.value?.data[province][city] ?? {}).map(d => ({ label: d, value: d }))
+  return Object.keys(areas.value?.data[province][city] ?? {}).map((d) => ({ label: d, value: d }))
 }
 
 // 获取街道选项
 function streetOptions(province: string, city: string, district: string) {
   if (!areas.value?.data[province]?.[city]?.[district]) return []
-  return areas.value?.data[province][city][district]?.map(s => ({ label: s, value: s })) ?? []
+  return areas.value?.data[province][city][district]?.map((s) => ({ label: s, value: s })) ?? []
 }
 
 // 表单验证规则
@@ -126,7 +144,7 @@ async function updateAddress() {
 
       // 更新本地地址列表
       if (biliAuth.value.address) {
-        const index = biliAuth.value.address?.findIndex(a => a.id == data.data.id) ?? -1
+        const index = biliAuth.value.address?.findIndex((a) => a.id == data.data.id) ?? -1
         if (index >= 0) {
           biliAuth.value.address[index] = data.data
         } else {
@@ -157,7 +175,7 @@ async function deleteAddress(id: string) {
     if (data.code == 200) {
       message.success('已删除')
       if (biliAuth.value.address) {
-        biliAuth.value.address = biliAuth.value.address?.filter(a => a.id != id)
+        biliAuth.value.address = biliAuth.value.address?.filter((a) => a.id != id)
       }
     } else {
       handleApiError('删除地址', data.message)
@@ -305,7 +323,7 @@ defineExpose({
     <NFlex
       vertical
       :gap="16"
-      style="width: 100%; max-width: 800px; margin: 0 auto;"
+      style="width: 100%; max-width: 800px; margin: 0 auto"
     >
       <!-- 地址管理 -->
       <NCard
@@ -326,13 +344,19 @@ defineExpose({
           </NButton>
         </template>
 
-        <NFlex vertical :gap="12">
+        <NFlex
+          vertical
+          :gap="12"
+        >
           <NEmpty
             v-if="!biliAuth.address || biliAuth.address.length === 0"
             description="暂无收货地址"
             style="margin: 20px 0"
           />
-          <div v-else class="address-grid">
+          <div
+            v-else
+            class="address-grid"
+          >
             <div
               v-for="address in biliAuth.address"
               :key="address.id"
@@ -346,10 +370,12 @@ defineExpose({
                       quaternary
                       circle
                       type="info"
-                      @click="() => {
-                        currentAddress = JSON.parse(JSON.stringify(address))
-                        showAddressModal = true
-                      }"
+                      @click="
+                        () => {
+                          currentAddress = JSON.parse(JSON.stringify(address))
+                          showAddressModal = true
+                        }
+                      "
                     >
                       <template #icon>
                         <NIcon :component="Edit24Regular" />
@@ -411,8 +437,15 @@ defineExpose({
           </NFlex>
         </template>
 
-        <NFlex vertical :gap="12">
-          <NAlert type="info" :bordered="false" size="small">
+        <NFlex
+          vertical
+          :gap="12"
+        >
+          <NAlert
+            type="info"
+            :bordered="false"
+            size="small"
+          >
             您可以添加多个 Bilibili 账号并在其中快速切换。
           </NAlert>
 
@@ -420,7 +453,10 @@ defineExpose({
             v-if="useAuth.biliTokens.length === 0"
             description="暂无授权账号"
           />
-          <div v-else class="account-list">
+          <div
+            v-else
+            class="account-list"
+          >
             <div
               v-for="item in useAuth.biliTokens"
               :key="item.token"
@@ -428,21 +464,42 @@ defineExpose({
               :class="{ 'is-current': useAuth.biliToken === item.token }"
               @click="switchAuth(item.token)"
             >
-              <NFlex align="center" justify="space-between" :wrap="false">
-                <NFlex align="center" :gap="12" style="flex: 1; overflow: hidden;">
+              <NFlex
+                align="center"
+                justify="space-between"
+                :wrap="false"
+              >
+                <NFlex
+                  align="center"
+                  :gap="12"
+                  style="flex: 1; overflow: hidden"
+                >
                   <div class="account-avatar">
-                    <NIcon :component="Person24Regular" size="24" />
+                    <NIcon
+                      :component="Person24Regular"
+                      size="24"
+                    />
                   </div>
-                  <NFlex vertical :gap="2" style="flex: 1; overflow: hidden;">
-                    <NText strong class="account-name">
+                  <NFlex
+                    vertical
+                    :gap="2"
+                    style="flex: 1; overflow: hidden"
+                  >
+                    <NText
+                      strong
+                      class="account-name"
+                    >
                       {{ item.name }}
                     </NText>
-                    <NText depth="3" style="font-size: 12px;">
+                    <NText
+                      depth="3"
+                      style="font-size: 12px"
+                    >
                       UID: {{ item.uId }}
                     </NText>
                   </NFlex>
                 </NFlex>
-                
+
                 <NTag
                   v-if="useAuth.biliToken === item.token"
                   type="success"
@@ -471,11 +528,20 @@ defineExpose({
         title="快捷登录"
         size="small"
       >
-        <NFlex vertical :gap="8">
-          <NText depth="3" style="font-size: 13px">
+        <NFlex
+          vertical
+          :gap="8"
+        >
+          <NText
+            depth="3"
+            style="font-size: 13px"
+          >
             使用此链接可以在其他设备直接登录您的账号，请妥善保管。
           </NText>
-          <NFlex :wrap="false" :gap="8">
+          <NFlex
+            :wrap="false"
+            :gap="8"
+          >
             <NInput
               type="textarea"
               :value="`${CURRENT_HOST}bili-user?auth=${useAuth.biliToken}`"
@@ -495,8 +561,16 @@ defineExpose({
       </NCard>
 
       <!-- 用户协议按钮 -->
-      <NFlex justify="center" style="margin-top: 8px">
-        <NButton text type="info" size="small" @click="showAgreementModal = true">
+      <NFlex
+        justify="center"
+        style="margin-top: 8px"
+      >
+        <NButton
+          text
+          type="info"
+          size="small"
+          @click="showAgreementModal = true"
+        >
           <template #icon>
             <NIcon :component="DocumentText24Regular" />
           </template>
@@ -510,7 +584,7 @@ defineExpose({
   <NModal
     v-model:show="showAddressModal"
     preset="card"
-    style="width: 600px; max-width: 95vw;"
+    style="width: 600px; max-width: 95vw"
     title="收货地址"
     :segmented="{ content: true, action: true }"
   >
@@ -565,7 +639,11 @@ defineExpose({
             <NSelect
               :key="currentAddress.district"
               v-model:value="currentAddress.street"
-              :options="currentAddress.city && currentAddress.district ? streetOptions(currentAddress.province, currentAddress.city, currentAddress.district) : []"
+              :options="
+                currentAddress.city && currentAddress.district
+                  ? streetOptions(currentAddress.province, currentAddress.city, currentAddress.district)
+                  : []
+              "
               :disabled="!currentAddress?.district"
               placeholder="街道"
               style="flex: 1; min-width: 120px"
@@ -630,11 +708,7 @@ defineExpose({
           justify="end"
           :gap="12"
         >
-          <NButton
-            @click="showAddressModal = false"
-          >
-            取消
-          </NButton>
+          <NButton @click="showAddressModal = false"> 取消 </NButton>
           <NButton
             type="primary"
             :loading="isLoading"
@@ -667,9 +741,7 @@ defineExpose({
         vertical
         :gap="12"
       >
-        <NText depth="3">
-          请输入登录链接或authcode
-        </NText>
+        <NText depth="3"> 请输入登录链接或authcode </NText>
         <NInput
           v-model:value="authCodeInput"
           type="textarea"
@@ -680,11 +752,7 @@ defineExpose({
           justify="end"
           :gap="12"
         >
-          <NButton
-            @click="showAddAccountModal = false"
-          >
-            取消
-          </NButton>
+          <NButton @click="showAddAccountModal = false"> 取消 </NButton>
           <NButton
             type="primary"
             :loading="isLoading"

@@ -1,11 +1,13 @@
-import type { AccountInfo, APIRoot, FunctionTypes } from './api-models'
 import { isSameDay } from 'date-fns'
-import { createNaiveUIApi } from '@/shared/utils'
 import { ref } from 'vue'
-import { cookie } from './auth'
+
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { ACCOUNT_API_URL, USER_CONFIG_API_URL } from '@/shared/config'
 import { persistedRemoveItem } from '@/shared/storage/persist'
+import { createNaiveUIApi } from '@/shared/utils'
+
+import type { AccountInfo, APIRoot, FunctionTypes } from './api-models'
+import { cookie } from './auth'
 
 export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
 export const isLoadingAccount = ref(true)
@@ -73,27 +75,13 @@ function refreshCookie(token?: string) {
   })
 }
 export async function SaveAccountSettings() {
-  return QueryPostAPI(
-    `${ACCOUNT_API_URL}update-setting`,
-    ACCOUNT.value?.settings,
-  )
+  return QueryPostAPI(`${ACCOUNT_API_URL}update-setting`, ACCOUNT.value?.settings)
 }
 export async function SaveEnableFunctions(functions: FunctionTypes[]) {
-  return QueryPostAPI(
-    `${ACCOUNT_API_URL}update-enable-functions`,
-    functions,
-  )
+  return QueryPostAPI(`${ACCOUNT_API_URL}update-enable-functions`, functions)
 }
 export async function SaveSetting(
-  name:
-    | 'Queue'
-    | 'Point'
-    | 'Index'
-    | 'General'
-    | 'QuestionDisplay'
-    | 'SongRequest'
-    | 'QuestionBox'
-    | 'SendEmail',
+  name: 'Queue' | 'Point' | 'Index' | 'General' | 'QuestionDisplay' | 'SongRequest' | 'QuestionBox' | 'SendEmail',
   setting: unknown,
 ) {
   const result = await QueryPostAPIWithParams(
@@ -107,21 +95,16 @@ export async function SaveSetting(
 }
 export async function UpdateFunctionEnable(func: FunctionTypes) {
   if (ACCOUNT.value) {
-    const oldValue = JSON.parse(
-      JSON.stringify(ACCOUNT.value.settings.enableFunctions),
-    )
+    const oldValue = JSON.parse(JSON.stringify(ACCOUNT.value.settings.enableFunctions))
     if (ACCOUNT.value?.settings.enableFunctions.includes(func)) {
-      ACCOUNT.value.settings.enableFunctions
-        = ACCOUNT.value.settings.enableFunctions.filter(f => f != func)
+      ACCOUNT.value.settings.enableFunctions = ACCOUNT.value.settings.enableFunctions.filter((f) => f != func)
     } else {
       ACCOUNT.value.settings.enableFunctions.push(func)
     }
     await SaveEnableFunctions(ACCOUNT.value?.settings.enableFunctions)
       .then((data) => {
         if (data.code == 200) {
-          message.success(
-            `已${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}`,
-          )
+          message.success(`已${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}`)
         } else {
           if (ACCOUNT.value) {
             ACCOUNT.value.settings.enableFunctions = oldValue
@@ -132,9 +115,7 @@ export async function UpdateFunctionEnable(func: FunctionTypes) {
         }
       })
       .catch((err) => {
-        message.error(
-          `${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${err}`,
-        )
+        message.error(`${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${err}`)
       })
   }
 }
@@ -142,12 +123,7 @@ export function useAccount() {
   return ACCOUNT
 }
 
-export async function Register(
-  name: string,
-  email: string,
-  password: string,
-  token: string,
-): Promise<APIRoot<string>> {
+export async function Register(name: string, email: string, password: string, token: string): Promise<APIRoot<string>> {
   return QueryPostAPI<string>(`${ACCOUNT_API_URL}register`, {
     name,
     email,
@@ -156,10 +132,7 @@ export async function Register(
   })
 }
 
-export async function Login(
-  nameOrEmail: string,
-  password: string,
-): Promise<APIRoot<string>> {
+export async function Login(nameOrEmail: string, password: string): Promise<APIRoot<string>> {
   return QueryPostAPI<string>(`${ACCOUNT_API_URL}login`, {
     nameOrEmail,
     password,
@@ -168,10 +141,7 @@ export async function Login(
 export async function Self(token?: string): Promise<APIRoot<AccountInfo>> {
   return QueryPostAPIWithParams<AccountInfo>(`${ACCOUNT_API_URL}self`, token ? { token } : undefined)
 }
-export async function AddBiliBlackList(
-  id: number,
-  name: string,
-): Promise<APIRoot<unknown>> {
+export async function AddBiliBlackList(id: number, name: string): Promise<APIRoot<unknown>> {
   return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/add-bili`, {
     id,
     name,
@@ -193,17 +163,20 @@ export async function downloadConfigDirect(name: string) {
   })
 }
 export type ConfigStatus = 'success' | 'error' | 'notfound'
-export async function DownloadConfig<T>(name: string, id?: number): Promise<
+export async function DownloadConfig<T>(
+  name: string,
+  id?: number,
+): Promise<
   | {
-    msg: undefined
-    status: ConfigStatus
-    data: T
-  }
+      msg: undefined
+      status: ConfigStatus
+      data: T
+    }
   | {
-    msg: string
-    status: ConfigStatus
-    data: undefined
-  }
+      msg: string
+      status: ConfigStatus
+      data: undefined
+    }
 > {
   try {
     const resp = await QueryGetAPI<string>(USER_CONFIG_API_URL + (id ? 'get-user' : 'get'), {
@@ -284,10 +257,7 @@ export async function EnableFunction(func: FunctionTypes) {
       if (await updateFunctionEnable()) {
         return true
       } else {
-        ACCOUNT.value.settings.enableFunctions.splice(
-          ACCOUNT.value.settings.enableFunctions.indexOf(func),
-          1,
-        )
+        ACCOUNT.value.settings.enableFunctions.splice(ACCOUNT.value.settings.enableFunctions.indexOf(func), 1)
         return false
       }
     }
@@ -299,10 +269,7 @@ export async function DisableFunction(func: FunctionTypes) {
     if (!ACCOUNT.value.settings.enableFunctions.includes(func)) {
       return true
     } else {
-      ACCOUNT.value.settings.enableFunctions.splice(
-        ACCOUNT.value.settings.enableFunctions.indexOf(func),
-        1,
-      )
+      ACCOUNT.value.settings.enableFunctions.splice(ACCOUNT.value.settings.enableFunctions.indexOf(func), 1)
       if (await updateFunctionEnable()) {
         return true
       } else {
@@ -316,9 +283,7 @@ export async function DisableFunction(func: FunctionTypes) {
 async function updateFunctionEnable() {
   if (ACCOUNT.value) {
     try {
-      const data = await SaveEnableFunctions(
-        ACCOUNT.value.settings.enableFunctions,
-      )
+      const data = await SaveEnableFunctions(ACCOUNT.value.settings.enableFunctions)
       if (data.code == 200) {
         return true
       } else {

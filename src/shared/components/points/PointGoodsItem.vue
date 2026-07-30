@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { ResponsePointGoodModel } from '@/api/api-models'
 import { Pin16Filled } from '@vicons/fluent'
-import { NCard, NEllipsis, NEmpty, NIcon, NImage, NTag } from 'naive-ui';
+import { NCard, NEllipsis, NEmpty, NIcon, NImage, NTag } from 'naive-ui'
+import { computed } from 'vue'
+
+import type { ResponsePointGoodModel } from '@/api/api-models'
 import { GoodsTypes } from '@/api/api-models'
 import { IMGUR_URL } from '@/shared/config'
-import { computed } from 'vue'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel | undefined
@@ -18,22 +19,22 @@ const emptyCover = `${IMGUR_URL}None.png`
 
 const hasSubItems = computed(() => (props.goods?.subItems?.length ?? 0) > 0)
 const subItems = computed(() => props.goods?.subItems ?? [])
-const availableSubItemCount = computed(() => subItems.value.filter(s => s.count == null || s.count > 0).length)
+const availableSubItemCount = computed(() => subItems.value.filter((s) => s.count == null || s.count > 0).length)
 const isSoldOut = computed(() => {
   if (!props.goods) return false
   if (!hasSubItems.value) return props.goods.count === 0
-  return subItems.value.length > 0 && subItems.value.every(s => s.count === 0)
+  return subItems.value.length > 0 && subItems.value.every((s) => s.count === 0)
 })
 const priceMin = computed(() => {
   if (!props.goods) return 0
   if (!hasSubItems.value) return props.goods.price
-  const list = subItems.value.map(s => s.price)
+  const list = subItems.value.map((s) => s.price)
   return list.length ? Math.min(...list) : props.goods.price
 })
 const priceMax = computed(() => {
   if (!props.goods) return 0
   if (!hasSubItems.value) return props.goods.price
-  const list = subItems.value.map(s => s.price)
+  const list = subItems.value.map((s) => s.price)
   return list.length ? Math.max(...list) : props.goods.price
 })
 const priceRangeText = computed(() => {
@@ -77,12 +78,18 @@ const priceRangeText = computed(() => {
         </div>
 
         <!-- 售罄遮罩 -->
-        <div v-if="isSoldOut" class="sold-out-mask">
+        <div
+          v-if="isSoldOut"
+          class="sold-out-mask"
+        >
           <span class="sold-out-text">已售完</span>
         </div>
 
         <!-- 置顶标记 -->
-        <div v-if="goods.isPinned" class="pin-badge">
+        <div
+          v-if="goods.isPinned"
+          class="pin-badge"
+        >
           <NIcon :component="Pin16Filled" />
         </div>
 
@@ -138,10 +145,14 @@ const priceRangeText = computed(() => {
       <!-- 标题行 -->
       <div class="header-row-container">
         <div class="title-main">
-          <NEllipsis class="goods-title" :line-clamp="1" :tooltip="{ arrowPointToCenter: true }">
+          <NEllipsis
+            class="goods-title"
+            :line-clamp="1"
+            :tooltip="{ arrowPointToCenter: true }"
+          >
             <span
               class="goods-title-text"
-              style="font-weight: 800; font-size: 1.05rem; line-height: 1.25; letter-spacing: -0.015em;"
+              style="font-weight: 800; font-size: 1.05rem; line-height: 1.25; letter-spacing: -0.015em"
             >
               {{ goods.name }}
             </span>
@@ -149,71 +160,115 @@ const priceRangeText = computed(() => {
         </div>
 
         <!-- 库存显示 -->
-        <div class="stock-badge" :class="{ 'stock-none': isSoldOut, 'stock-inf': hasSubItems ? availableSubItemCount > 0 : (!goods.count && goods.count !== 0) }">
-          <template v-if="isSoldOut">
-            缺货
-          </template>
-          <template v-else-if="hasSubItems">
-            {{ availableSubItemCount }} 选
-          </template>
-          <template v-else-if="goods.count && goods.count > 0">
-            余 {{ goods.count }}
-          </template>
-          <template v-else>
-            无限
-          </template>
+        <div
+          class="stock-badge"
+          :class="{
+            'stock-none': isSoldOut,
+            'stock-inf': hasSubItems ? availableSubItemCount > 0 : !goods.count && goods.count !== 0,
+          }"
+        >
+          <template v-if="isSoldOut"> 缺货 </template>
+          <template v-else-if="hasSubItems"> {{ availableSubItemCount }} 选 </template>
+          <template v-else-if="goods.count && goods.count > 0"> 余 {{ goods.count }} </template>
+          <template v-else> 无限 </template>
         </div>
       </div>
 
       <!-- 描述文本 -->
       <div class="description-container">
-        <NEllipsis :line-clamp="2" class="description-text" :tooltip="{ arrowPointToCenter: true }">
+        <NEllipsis
+          :line-clamp="2"
+          class="description-text"
+          :tooltip="{ arrowPointToCenter: true }"
+        >
           {{ goods.description || '暂无描述' }}
         </NEllipsis>
       </div>
 
       <!-- 标签区域 (用户侧) -->
-      <div v-if="!isManage" class="tags-row">
+      <div
+        v-if="!isManage"
+        class="tags-row"
+      >
         <template v-if="goods.setting?.allowGuardLevel && goods.setting.allowGuardLevel > 0">
           <!-- 已经在封面显示，此处可省略或重复强调，选择保留其他重要Tag -->
         </template>
 
-        <NTag v-if="goods.canFreeBuy" :bordered="false" size="tiny" type="success" round class="mini-tag">
+        <NTag
+          v-if="goods.canFreeBuy"
+          :bordered="false"
+          size="tiny"
+          type="success"
+          round
+          class="mini-tag"
+        >
           ⭐ 舰长免费
         </NTag>
-        <NTag v-if="!goods.isAllowRebuy" :bordered="false" size="tiny" type="error" round class="mini-tag">
+        <NTag
+          v-if="!goods.isAllowRebuy"
+          :bordered="false"
+          size="tiny"
+          type="error"
+          round
+          class="mini-tag"
+        >
           🔒 限购一次
         </NTag>
-        <NTag v-for="tag in goods.tags" :key="tag" :bordered="false" size="tiny" round class="mini-tag custom-tag">
+        <NTag
+          v-for="tag in goods.tags"
+          :key="tag"
+          :bordered="false"
+          size="tiny"
+          round
+          class="mini-tag custom-tag"
+        >
           {{ tag }}
         </NTag>
       </div>
 
       <!-- 管理侧信息卡片 -->
-      <div v-if="isManage" class="manage-info-grid">
-        <div v-if="goods.type === GoodsTypes.Physical && goods.maxBuyCount" class="info-cell">
+      <div
+        v-if="isManage"
+        class="manage-info-grid"
+      >
+        <div
+          v-if="goods.type === GoodsTypes.Physical && goods.maxBuyCount"
+          class="info-cell"
+        >
           <span class="label">📦 限购</span>
           <span class="value">{{ goods.maxBuyCount }}</span>
         </div>
         <div class="info-cell">
           <span class="label">🔄 重购</span>
-          <span class="value" :class="goods.isAllowRebuy ? 'text-success' : 'text-error'">
+          <span
+            class="value"
+            :class="goods.isAllowRebuy ? 'text-success' : 'text-error'"
+          >
             {{ goods.isAllowRebuy ? '是' : '否' }}
           </span>
         </div>
-        <div v-if="goods.type === GoodsTypes.Virtual && goods.virtualKeys?.length" class="info-cell">
+        <div
+          v-if="goods.type === GoodsTypes.Virtual && goods.virtualKeys?.length"
+          class="info-cell"
+        >
           <span class="label">🔑 密钥</span>
           <span class="value">{{ goods.virtualKeys.length }}</span>
         </div>
-        <div v-if="goods.type === GoodsTypes.Physical" class="info-cell">
+        <div
+          v-if="goods.type === GoodsTypes.Physical"
+          class="info-cell"
+        >
           <span class="label">📮 地址</span>
           <span class="value">{{ goods.collectUrl ? '站外' : '本站' }}</span>
         </div>
         <!-- 子商品简略信息 -->
-        <div v-if="hasSubItems" class="info-cell sub-items-summary">
+        <div
+          v-if="hasSubItems"
+          class="info-cell sub-items-summary"
+        >
           <span class="label">🎨 款式</span>
           <NEllipsis class="value">
-            {{ subItems.map(s => s.name).join(' / ') }}
+            {{ subItems.map((s) => s.name).join(' / ') }}
           </NEllipsis>
         </div>
       </div>
@@ -241,7 +296,9 @@ const priceRangeText = computed(() => {
 
 .goods-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12), 0 4px 8px -4px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 12px 24px -6px rgba(0, 0, 0, 0.12),
+    0 4px 8px -4px rgba(0, 0, 0, 0.08);
   border-color: var(--vtsuru-primary);
 }
 
@@ -335,7 +392,7 @@ const priceRangeText = computed(() => {
   left: 0;
   right: 0;
   padding: 40px 12px 12px; /* 增加内边距避免溢出 */
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -343,7 +400,8 @@ const priceRangeText = computed(() => {
   pointer-events: none; /* 允许点击穿透到图片预览 */
 }
 
-.overlay-tags, .price-pill {
+.overlay-tags,
+.price-pill {
   pointer-events: auto; /* 标签和价格恢复点击 */
 }
 
@@ -360,9 +418,16 @@ const priceRangeText = computed(() => {
   line-height: 20px;
 }
 
-.tag-success { background: rgba(var(--vtsuru-success-rgb), 0.85); }
-.tag-info { background: rgba(var(--vtsuru-info-rgb), 0.85); }
-.tag-warning { background: rgba(var(--vtsuru-warning-rgb), 0.85); color: #000; }
+.tag-success {
+  background: rgba(var(--vtsuru-success-rgb), 0.85);
+}
+.tag-info {
+  background: rgba(var(--vtsuru-info-rgb), 0.85);
+}
+.tag-warning {
+  background: rgba(var(--vtsuru-warning-rgb), 0.85);
+  color: #000;
+}
 
 /* 价格胶囊 */
 .price-pill {
@@ -373,7 +438,7 @@ const priceRangeText = computed(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   height: 26px;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -383,7 +448,9 @@ const priceRangeText = computed(() => {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.coin-icon { font-size: 14px; }
+.coin-icon {
+  font-size: 14px;
+}
 
 .price-original {
   font-size: 11px;
@@ -392,7 +459,8 @@ const priceRangeText = computed(() => {
   opacity: 0.7;
 }
 
-.price-current, .price-highlight {
+.price-current,
+.price-highlight {
   font-weight: 700;
   font-size: 14px;
   line-height: 1;
@@ -403,7 +471,9 @@ const priceRangeText = computed(() => {
   color: #efefef;
 }
 
-.price-highlight { color: var(--vtsuru-primary); }
+.price-highlight {
+  color: var(--vtsuru-primary);
+}
 
 /* 内容区域 */
 .header-row-container {
@@ -421,7 +491,9 @@ const priceRangeText = computed(() => {
 
 .goods-title-text {
   color: var(--vtsuru-fg);
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .goods-card:hover .goods-title-text {
@@ -443,11 +515,17 @@ const priceRangeText = computed(() => {
   white-space: nowrap;
   font-weight: 700;
   border: 1px solid var(--vtsuru-border);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.stock-none { color: var(--vtsuru-error); background-color: rgba(var(--vtsuru-error-rgb), 0.1); }
-.stock-inf { color: var(--vtsuru-success); background-color: rgba(var(--vtsuru-success-rgb), 0.1); }
+.stock-none {
+  color: var(--vtsuru-error);
+  background-color: rgba(var(--vtsuru-error-rgb), 0.1);
+}
+.stock-inf {
+  color: var(--vtsuru-success);
+  background-color: rgba(var(--vtsuru-success-rgb), 0.1);
+}
 
 .description-text {
   font-size: 12px;
@@ -501,8 +579,17 @@ const priceRangeText = computed(() => {
   font-size: 11px;
 }
 
-.info-cell .label { color: var(--vtsuru-fg-muted); }
-.info-cell .value { font-weight: 600; color: var(--vtsuru-fg); }
-.text-success { color: var(--vtsuru-success) !important; }
-.text-error { color: var(--vtsuru-error) !important; }
+.info-cell .label {
+  color: var(--vtsuru-fg-muted);
+}
+.info-cell .value {
+  font-weight: 600;
+  color: var(--vtsuru-fg);
+}
+.text-success {
+  color: var(--vtsuru-success) !important;
+}
+.text-error {
+  color: var(--vtsuru-error) !important;
+}
 </style>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { SelectOption } from 'naive-ui'
-import { NSelect } from 'naive-ui';
 import { useDebounceFn } from '@vueuse/core'
+import type { SelectOption } from 'naive-ui'
+import { NSelect } from 'naive-ui'
 import { ref, watch } from 'vue'
+
 import { QueryGetAPI } from '@/api/query'
 import { USER_API_URL } from '@/shared/config'
 
@@ -79,7 +80,7 @@ watch(
   () => model.value,
   async (v) => {
     if (!v) return
-    if (options.value.some(o => o.value === v)) return
+    if (options.value.some((o) => o.value === v)) return
     await fetchOptions(String(v))
   },
   { immediate: true },

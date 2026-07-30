@@ -1,6 +1,8 @@
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
+
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { useUserPagePersistence } from '../useUserPagePersistence'
 import type { UserPageValidationIssue } from '../validateUserPagesSettings'
 
@@ -32,7 +34,7 @@ function createPersistence(validationIssues: UserPageValidationIssue[] = []) {
     localDraftStorage: ref(null),
     localDraftBaseSnapshot: ref(''),
     maxConfigBytes: 131072,
-    history: { batch: fn => fn(), clear: vi.fn() },
+    history: { batch: (fn) => fn(), clear: vi.fn() },
     validateForPublish: vi.fn().mockReturnValue(validationIssues),
     loadState: vi.fn(),
     restoreSnapshot: vi.fn(),
@@ -43,7 +45,7 @@ function createPersistence(validationIssues: UserPageValidationIssue[] = []) {
 describe('user page publishing', () => {
   beforeEach(() => {
     publishMyUserPagesSettings.mockReset()
-    publishMyUserPagesSettings.mockImplementation(async settings => structuredClone(settings))
+    publishMyUserPagesSettings.mockImplementation(async (settings) => structuredClone(settings))
   })
 
   it('keeps the publish dialog open with a retryable error', async () => {
@@ -68,14 +70,16 @@ describe('user page publishing', () => {
   })
 
   it('does not publish while structured validation issues remain', async () => {
-    const persistence = createPersistence([{
-      message: '链接必须使用 HTTPS',
-      severity: 'error',
-      scope: 'block',
-      pageKey: 'home',
-      blockId: 'links',
-      fieldPath: 'items[0].url',
-    }])
+    const persistence = createPersistence([
+      {
+        message: '链接必须使用 HTTPS',
+        severity: 'error',
+        scope: 'block',
+        pageKey: 'home',
+        blockId: 'links',
+        fieldPath: 'items[0].url',
+      },
+    ])
     persistence.openPublishModal()
 
     await persistence.confirmPublish()

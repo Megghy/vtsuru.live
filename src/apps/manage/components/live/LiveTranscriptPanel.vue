@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { DataTableColumns } from 'naive-ui'
-import type { TranscriptSegment, TranscriptSegmentPage, TranscriptSession } from '@/shared/models/transcription'
 import { saveAs } from 'file-saver'
+import type { DataTableColumns } from 'naive-ui'
 import { NButton, NDataTable, NEmpty, NFlex, NSelect, NSpin, NTag, NText } from 'naive-ui'
 import { computed, h, ref } from 'vue'
+
 import { QueryGetAPI, unwrapOk } from '@/api/query'
 import { LIVE_API_URL } from '@/shared/config'
+import type { TranscriptSegment, TranscriptSegmentPage, TranscriptSession } from '@/shared/models/transcription'
 
 const props = defineProps<{
   liveId: string
@@ -18,21 +19,21 @@ const sessions = ref<TranscriptSession[]>([])
 const segments = ref<TranscriptSegment[]>([])
 const selectedSessionId = ref<string>()
 
-const sessionOptions = computed(() => sessions.value.map(session => ({
-  label: `${formatDateTime(session.startedAt)} · ${providerName(session.provider)}`,
-  value: session.id,
-})))
-
-const selectedSession = computed(() =>
-  sessions.value.find(session => session.id === selectedSessionId.value),
+const sessionOptions = computed(() =>
+  sessions.value.map((session) => ({
+    label: `${formatDateTime(session.startedAt)} · ${providerName(session.provider)}`,
+    value: session.id,
+  })),
 )
+
+const selectedSession = computed(() => sessions.value.find((session) => session.id === selectedSessionId.value))
 
 const columns: DataTableColumns<TranscriptSegment> = [
   {
     title: '时间',
     key: 'startMs',
     width: 110,
-    render: row => h(NText, { depth: 3 }, () => formatClock(row.startMs)),
+    render: (row) => h(NText, { depth: 3 }, () => formatClock(row.startMs)),
   },
   {
     title: '字幕',
@@ -42,7 +43,7 @@ const columns: DataTableColumns<TranscriptSegment> = [
     title: '说话人',
     key: 'speaker',
     width: 120,
-    render: row => row.speaker || '—',
+    render: (row) => row.speaker || '—',
   },
 ]
 
@@ -100,7 +101,7 @@ function formatDateTime(timestamp: number) {
 function formatClock(milliseconds: number, srt = false) {
   const totalSeconds = Math.floor(milliseconds / 1000)
   const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor(totalSeconds % 3600 / 60)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
   const ms = milliseconds % 1000
   const separator = srt ? ',' : '.'
@@ -127,8 +128,8 @@ function downloadTxt() {
     `Language: ${session.language}`,
     '',
   ]
-  const lines = segments.value.map(segment =>
-    `[${formatClock(segment.startMs)}] ${segment.speaker ? `${segment.speaker}: ` : ''}${segment.text}`,
+  const lines = segments.value.map(
+    (segment) => `[${formatClock(segment.startMs)}] ${segment.speaker ? `${segment.speaker}: ` : ''}${segment.text}`,
   )
   saveText([...header, ...lines].join('\r\n'), 'txt')
 }
@@ -136,12 +137,16 @@ function downloadTxt() {
 function downloadSrt() {
   const session = selectedSession.value
   if (!session) return
-  const content = segments.value.map((segment, index) => [
-    index + 1,
-    `${formatClock(segment.startMs, true)} --> ${formatClock(segment.endMs, true)}`,
-    `${segment.speaker ? `${segment.speaker}: ` : ''}${segment.text}`,
-    '',
-  ].join('\r\n')).join('\r\n')
+  const content = segments.value
+    .map((segment, index) =>
+      [
+        index + 1,
+        `${formatClock(segment.startMs, true)} --> ${formatClock(segment.endMs, true)}`,
+        `${segment.speaker ? `${segment.speaker}: ` : ''}${segment.text}`,
+        '',
+      ].join('\r\n'),
+    )
+    .join('\r\n')
   saveText(content, 'srt')
 }
 
@@ -150,8 +155,15 @@ defineExpose({ load })
 
 <template>
   <NSpin :show="loading">
-    <NFlex vertical :size="12">
-      <NFlex v-if="sessions.length" align="center" justify="space-between">
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NFlex
+        v-if="sessions.length"
+        align="center"
+        justify="space-between"
+      >
         <NSelect
           v-model:value="selectedSessionId"
           :options="sessionOptions"
@@ -159,29 +171,42 @@ defineExpose({ load })
           @update:value="loadSegments"
         />
         <NFlex>
-          <NButton size="small" :disabled="!segments.length" @click="downloadTxt">
+          <NButton
+            size="small"
+            :disabled="!segments.length"
+            @click="downloadTxt"
+          >
             下载 TXT
           </NButton>
-          <NButton size="small" :disabled="!segments.length" @click="downloadSrt">
+          <NButton
+            size="small"
+            :disabled="!segments.length"
+            @click="downloadSrt"
+          >
             下载 SRT
           </NButton>
         </NFlex>
       </NFlex>
 
-      <NFlex v-if="selectedSession" align="center" :size="8">
-        <NTag size="small" :bordered="false">
+      <NFlex
+        v-if="selectedSession"
+        align="center"
+        :size="8"
+      >
+        <NTag
+          size="small"
+          :bordered="false"
+        >
           {{ providerName(selectedSession.provider) }}
         </NTag>
-        <NText depth="3">
-          {{ selectedSession.model }} · {{ selectedSession.language }}
-        </NText>
+        <NText depth="3"> {{ selectedSession.model }} · {{ selectedSession.language }} </NText>
       </NFlex>
 
       <NDataTable
         v-if="segments.length"
         :columns="columns"
         :data="segments"
-        :row-key="row => row.sequence"
+        :row-key="(row) => row.sequence"
         :max-height="650"
         virtual-scroll
         size="small"
@@ -193,7 +218,11 @@ defineExpose({ load })
         :description="error || (loaded ? '这场直播暂无转写归档' : '尚未加载转写归档')"
       >
         <template #extra>
-          <NButton v-if="!loaded || error" size="small" @click="load">
+          <NButton
+            v-if="!loaded || error"
+            size="small"
+            @click="load"
+          >
             {{ error ? '重试' : '加载' }}
           </NButton>
         </template>

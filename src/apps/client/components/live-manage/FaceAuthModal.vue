@@ -10,7 +10,7 @@ const c = props.control
     v-model:show="c.showFaceAuthModal.value"
     preset="card"
     title="人脸认证"
-    style="width: 400px;"
+    style="width: 400px"
     :closable="true"
     @close="c.closeFaceAuthModal"
   >
@@ -19,24 +19,25 @@ const c = props.control
       align="center"
       :size="16"
     >
-      <NText>
-        请使用B站APP扫描下方二维码进行人脸认证
-      </NText>
+      <NText> 请使用B站APP扫描下方二维码进行人脸认证 </NText>
 
       <div
         v-if="c.faceAuthQrCode.value"
-        style="padding: 16px; background: var(--vtsuru-bg-surface); border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-radius);"
+        style="
+          padding: 16px;
+          background: var(--vtsuru-bg-surface);
+          border: 1px solid var(--vtsuru-border);
+          border-radius: var(--vtsuru-radius);
+        "
       >
         <img
           :src="c.faceAuthQrCode.value"
           alt="人脸认证二维码"
-          style="width: 200px; height: 200px;"
-        >
+          style="width: 200px; height: 200px"
+        />
       </div>
 
-      <NText depth="3">
-        认证完成后，请关闭此窗口并重新点击"开始直播"
-      </NText>
+      <NText depth="3"> 认证完成后，请关闭此窗口并重新点击"开始直播" </NText>
 
       <NButton
         type="primary"

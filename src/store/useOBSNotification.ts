@@ -1,5 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
+
 import { useVTsuruHub } from './useVTsuruHub'
 
 export interface ObsNotificationPayload {
@@ -14,7 +15,7 @@ export interface ObsNotificationPayload {
 const sourceLabelMap: Record<string, string> = {
   'live-request': '点歌',
   'music-request': '点歌',
-  'queue': '排队',
+  queue: '排队',
 }
 
 export const useOBSNotification = defineStore('obs-notification', () => {
@@ -24,7 +25,7 @@ export const useOBSNotification = defineStore('obs-notification', () => {
 
   function resolveMeta(payload: ObsNotificationPayload): string | undefined {
     const userName = payload.UserName?.trim()
-    const sourceLabel = payload.Source ? sourceLabelMap[payload.Source] ?? payload.Source : undefined
+    const sourceLabel = payload.Source ? (sourceLabelMap[payload.Source] ?? payload.Source) : undefined
 
     if (!userName && !sourceLabel) {
       return undefined
@@ -105,9 +106,7 @@ export const useOBSNotification = defineStore('obs-notification', () => {
 
     await hub.on('ObsNotification', listener)
 
-    const filterInfo = sources && sources.length > 0
-      ? `(过滤: ${sources.join(', ')})`
-      : '(所有类型)'
+    const filterInfo = sources && sources.length > 0 ? `(过滤: ${sources.join(', ')})` : '(所有类型)'
     console.log(`[OBS] OBS 通知模块已初始化 ${filterInfo}`)
   }
 

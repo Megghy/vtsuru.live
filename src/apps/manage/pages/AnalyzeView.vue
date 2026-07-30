@@ -1,18 +1,53 @@
 <script lang="ts" setup>
-import { ChatbubblesOutline, PeopleOutline, RefreshOutline, TimeOutline, TrendingDown, TrendingUp, WalletOutline, } from '@vicons/ionicons5'
+import {
+  ChatbubblesOutline,
+  PeopleOutline,
+  RefreshOutline,
+  TimeOutline,
+  TrendingDown,
+  TrendingUp,
+  WalletOutline,
+} from '@vicons/ionicons5'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
-  DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TitleComponent, TooltipComponent, } from 'echarts/components'
+  DataZoomComponent,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  MarkPointComponent,
+  TitleComponent,
+  TooltipComponent,
+} from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import {
-  NButton, NCard, NCheckbox, NCheckboxGroup, NDescriptions, NDescriptionsItem, NEmpty, NGrid, NGridItem, NIcon, NNumberAnimation, NProgress, NSkeleton, NFlex, NTag, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui';
+  NButton,
+  NCard,
+  NCheckbox,
+  NCheckboxGroup,
+  NDescriptions,
+  NDescriptionsItem,
+  NEmpty,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NNumberAnimation,
+  NProgress,
+  NSkeleton,
+  NFlex,
+  NTag,
+  NTime,
+  NTooltip,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+
 import { QueryGetAPI } from '@/api/query'
-import { formatCurrency, formatDate, formatNumber } from '@/apps/manage/composables/formatters'
-import { ANALYZE_API_URL } from '@/shared/config'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { formatCurrency, formatDate, formatNumber } from '@/apps/manage/composables/formatters'
+import { ANALYZE_API_URL } from '@/shared/config'
 
 // 注册必要的组件
 echarts.use([
@@ -91,14 +126,14 @@ const hasData = computed(() => analyzeData.value && Object.keys(analyzeData.valu
 const chartRef = ref<HTMLElement | null>(null)
 let mainChart: echarts.ECharts | null = null
 const selectedMetrics = ref<string[]>(['income', 'interactionCount'])
-const chartMetrics = computed(() => ([
+const chartMetrics = computed(() => [
   { label: '收入', value: 'income', color: themeVars.value.warningColor, type: 'line', yAxisIndex: 1 },
   { label: '互动数', value: 'interactionCount', color: themeVars.value.infoColor, type: 'line', yAxisIndex: 0 },
   { label: '弹幕数', value: 'danmakuCount', color: themeVars.value.successColor, type: 'line', yAxisIndex: 0 },
   { label: '点赞数', value: 'likeCount', color: themeVars.value.errorColor, type: 'line', yAxisIndex: 0 },
   { label: '互动人数', value: 'interactionUsers', color: themeVars.value.primaryColor, type: 'bar', yAxisIndex: 0 },
   { label: '付费人数', value: 'payingUsers', color: themeVars.value.primaryColorHover, type: 'bar', yAxisIndex: 0 },
-]))
+])
 
 const metricColorVars = computed(() => ({
   '--metric-income': themeVars.value.warningColor,
@@ -152,36 +187,41 @@ function initChart() {
 function updateChartOption() {
   if (!mainChart) return
   const chartData = getChartDataArray()
-  const dates = chartData.map(item => item.date)
+  const dates = chartData.map((item) => item.date)
   const themeColors = getThemeColors()
 
   // 确定哪些 Y 轴需要显示
   const showRightAxis = selectedMetrics.value.includes('income')
-  const showLeftAxis = selectedMetrics.value.some(m => m !== 'income')
+  const showLeftAxis = selectedMetrics.value.some((m) => m !== 'income')
 
-  const series = selectedMetrics.value.map((metricKey) => {
-    const metricConfig = chartMetrics.value.find(m => m.value === metricKey)
-    if (!metricConfig) return null
+  const series = selectedMetrics.value
+    .map((metricKey) => {
+      const metricConfig = chartMetrics.value.find((m) => m.value === metricKey)
+      if (!metricConfig) return null
 
       return {
-      name: metricConfig.label,
-      type: metricConfig.type,
-      data: chartData.map(item => (item as any)[metricKey]),
-      smooth: true,
-      yAxisIndex: (metricKey === 'income' && showLeftAxis) ? 1 : 0, // 如果同时显示左轴，收入走右轴；否则走左轴
-      itemStyle: {
-        color: metricConfig.color,
-      },
-      areaStyle: metricConfig.type === 'line' ? {
-        opacity: 0.1,
-        color: metricConfig.color,
-      } : undefined,
-      barMaxWidth: metricConfig.type === 'bar' ? '20%' : undefined,
-    }
-  }).filter(Boolean)
+        name: metricConfig.label,
+        type: metricConfig.type,
+        data: chartData.map((item) => (item as any)[metricKey]),
+        smooth: true,
+        yAxisIndex: metricKey === 'income' && showLeftAxis ? 1 : 0, // 如果同时显示左轴，收入走右轴；否则走左轴
+        itemStyle: {
+          color: metricConfig.color,
+        },
+        areaStyle:
+          metricConfig.type === 'line'
+            ? {
+                opacity: 0.1,
+                color: metricConfig.color,
+              }
+            : undefined,
+        barMaxWidth: metricConfig.type === 'bar' ? '20%' : undefined,
+      }
+    })
+    .filter(Boolean)
 
   const yAxis = []
-  
+
   // 左轴 (默认)
   if (showLeftAxis) {
     yAxis.push({
@@ -194,8 +234,8 @@ function updateChartOption() {
       nameTextStyle: { color: themeColors.textColor },
     })
   } else if (showRightAxis) {
-      // 只有金额，显示在左边
-      yAxis.push({
+    // 只有金额，显示在左边
+    yAxis.push({
       type: 'value',
       position: 'left',
       name: '金额',
@@ -232,7 +272,7 @@ function updateChartOption() {
       axisPointer: { type: 'shadow' },
     },
     legend: {
-      data: series.map(s => s!.name),
+      data: series.map((s) => s!.name),
       textStyle: { color: themeColors.textColor },
       bottom: 0,
     },
@@ -318,9 +358,13 @@ function handleResize() {
 }
 
 // 监听主题变化
-watch(() => themeVars.value, () => {
-  nextTick(() => updateChartOption())
-}, { deep: true })
+watch(
+  () => themeVars.value,
+  () => {
+    nextTick(() => updateChartOption())
+  },
+  { deep: true },
+)
 
 // 组件挂载时初始化
 onMounted(() => {
@@ -337,19 +381,36 @@ onUnmounted(() => {
 
 <template>
   <div class="analyze-view">
-    <ManagePageHeader title="数据分析" subtitle="近7/30天汇总与趋势">
+    <ManagePageHeader
+      title="数据分析"
+      subtitle="近7/30天汇总与趋势"
+    >
       <template #action>
         <EventFetcherAlert />
         <NTooltip v-if="lastUpdateTime > 0">
           <template #trigger>
-            <NTag size="small" :bordered="false">
-              <NIcon :component="TrendingUp" style="margin-right: 4px;" />
-              <NTime :time="lastUpdateTime" type="relative" />更新
+            <NTag
+              size="small"
+              :bordered="false"
+            >
+              <NIcon
+                :component="TrendingUp"
+                style="margin-right: 4px"
+              />
+              <NTime
+                :time="lastUpdateTime"
+                type="relative"
+              />更新
             </NTag>
           </template>
           <NTime :time="lastUpdateTime" />
         </NTooltip>
-        <NButton :loading="refreshing" :disabled="loading" size="small" @click="handleRefresh">
+        <NButton
+          :loading="refreshing"
+          :disabled="loading"
+          size="small"
+          @click="handleRefresh"
+        >
           <template #icon>
             <NIcon :component="RefreshOutline" />
           </template>
@@ -359,26 +420,51 @@ onUnmounted(() => {
     </ManagePageHeader>
 
     <!-- 加载骨架屏 -->
-    <div v-if="loading" class="skeleton-container">
-      <NGrid cols="1 800:2 1200:4" :x-gap="16" :y-gap="16">
-        <NGridItem v-for="i in 4" :key="i">
+    <div
+      v-if="loading"
+      class="skeleton-container"
+    >
+      <NGrid
+        cols="1 800:2 1200:4"
+        :x-gap="16"
+        :y-gap="16"
+      >
+        <NGridItem
+          v-for="i in 4"
+          :key="i"
+        >
           <NCard size="small">
-            <NSkeleton text width="40%" style="margin-bottom: 12px;" />
-            <NSkeleton text height="30px" width="80%" />
+            <NSkeleton
+              text
+              width="40%"
+              style="margin-bottom: 12px"
+            />
+            <NSkeleton
+              text
+              height="30px"
+              width="80%"
+            />
           </NCard>
         </NGridItem>
       </NGrid>
-      <div style="margin-top: 20px;">
-        <NSkeleton height="400px" width="100%" border-radius="8px" />
+      <div style="margin-top: 20px">
+        <NSkeleton
+          height="400px"
+          width="100%"
+          border-radius="8px"
+        />
       </div>
     </div>
 
     <!-- 空状态 -->
-    <NEmpty v-else-if="!hasData" description="暂无数据" size="large" style="margin: 60px 0">
+    <NEmpty
+      v-else-if="!hasData"
+      description="暂无数据"
+      size="large"
+      style="margin: 60px 0"
+    >
       <template #extra>
-        <NButton @click="() => fetchAnalyzeData()">
-          重新加载
-        </NButton>
+        <NButton @click="() => fetchAnalyzeData()"> 重新加载 </NButton>
       </template>
     </NEmpty>
 
@@ -387,30 +473,44 @@ onUnmounted(() => {
       <!-- 核心指标卡片 -->
       <div class="core-metrics">
         <div :style="metricColorVars">
-          <NGrid cols="1 600:2 1000:4" :x-gap="16" :y-gap="16">
+          <NGrid
+            cols="1 600:2 1000:4"
+            :x-gap="16"
+            :y-gap="16"
+          >
             <!-- 收入 -->
             <NGridItem>
-              <NCard size="small" class="metric-card income-card">
+              <NCard
+                size="small"
+                class="metric-card income-card"
+              >
                 <div class="metric-content">
                   <div class="metric-header">
                     <span class="metric-label">近30天收入</span>
-                    <NIcon :component="WalletOutline" class="metric-icon" />
+                    <NIcon
+                      :component="WalletOutline"
+                      class="metric-icon"
+                    />
                   </div>
                   <div class="metric-value">
-                    <NNumberAnimation :from="0" :to="summaryData?.last30Days?.totalIncome || 0" :precision="2" />
+                    <NNumberAnimation
+                      :from="0"
+                      :to="summaryData?.last30Days?.totalIncome || 0"
+                      :precision="2"
+                    />
                     <span class="currency-symbol">¥</span>
                   </div>
                   <div class="metric-footer">
                     <div class="trend-info">
                       <span :class="getTrendType(summaryData?.last30Days?.incomeTrend || 0)">
-                        <NIcon :component="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? TrendingUp : TrendingDown" />
+                        <NIcon
+                          :component="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? TrendingUp : TrendingDown"
+                        />
                         {{ Math.abs(summaryData?.last30Days?.incomeTrend || 0) }}%
                       </span>
                       <span class="trend-label">环比</span>
                     </div>
-                    <div class="sub-stat">
-                      日均 ¥{{ (summaryData?.last30Days?.dailyAvgIncome || 0).toFixed(0) }}
-                    </div>
+                    <div class="sub-stat">日均 ¥{{ (summaryData?.last30Days?.dailyAvgIncome || 0).toFixed(0) }}</div>
                   </div>
                 </div>
               </NCard>
@@ -418,26 +518,36 @@ onUnmounted(() => {
 
             <!-- 互动 -->
             <NGridItem>
-              <NCard size="small" class="metric-card interaction-card">
+              <NCard
+                size="small"
+                class="metric-card interaction-card"
+              >
                 <div class="metric-content">
                   <div class="metric-header">
                     <span class="metric-label">近30天互动</span>
-                    <NIcon :component="ChatbubblesOutline" class="metric-icon" />
+                    <NIcon
+                      :component="ChatbubblesOutline"
+                      class="metric-icon"
+                    />
                   </div>
                   <div class="metric-value">
-                    <NNumberAnimation :from="0" :to="summaryData?.last30Days?.totalInteractions || 0" show-separator />
+                    <NNumberAnimation
+                      :from="0"
+                      :to="summaryData?.last30Days?.totalInteractions || 0"
+                      show-separator
+                    />
                   </div>
                   <div class="metric-footer">
                     <div class="trend-info">
                       <span :class="getTrendType(summaryData?.last30Days?.interactionTrend || 0)">
-                        <NIcon :component="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? TrendingUp : TrendingDown" />
+                        <NIcon
+                          :component="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? TrendingUp : TrendingDown"
+                        />
                         {{ Math.abs(summaryData?.last30Days?.interactionTrend || 0) }}%
                       </span>
                       <span class="trend-label">环比</span>
                     </div>
-                    <div class="sub-stat">
-                      {{ formatNumber(summaryData?.last30Days?.totalDanmakuCount || 0) }} 弹幕
-                    </div>
+                    <div class="sub-stat">{{ formatNumber(summaryData?.last30Days?.totalDanmakuCount || 0) }} 弹幕</div>
                   </div>
                 </div>
               </NCard>
@@ -445,11 +555,17 @@ onUnmounted(() => {
 
             <!-- 用户 -->
             <NGridItem>
-              <NCard size="small" class="metric-card users-card">
+              <NCard
+                size="small"
+                class="metric-card users-card"
+              >
                 <div class="metric-content">
                   <div class="metric-header">
                     <span class="metric-label">互动/付费人数</span>
-                    <NIcon :component="PeopleOutline" class="metric-icon" />
+                    <NIcon
+                      :component="PeopleOutline"
+                      class="metric-icon"
+                    />
                   </div>
                   <div class="metric-value">
                     <span>{{ formatNumber(summaryData?.last30Days?.interactionUsers || 0) }}</span>
@@ -460,14 +576,32 @@ onUnmounted(() => {
                     <div class="trend-info">
                       <NProgress
                         type="line"
-                        :percentage="Math.min(100, Math.round(((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100) * 10) / 10)"
+                        :percentage="
+                          Math.min(
+                            100,
+                            Math.round(
+                              ((summaryData?.last30Days?.payingUsers || 0) /
+                                (summaryData?.last30Days?.interactionUsers || 1)) *
+                                100 *
+                                10,
+                            ) / 10,
+                          )
+                        "
                         :height="6"
                         :color="themeVars.primaryColor"
                         :rail-color="themeVars.primaryColorSuppl"
                         :show-indicator="false"
-                        style="width: 60px; margin-right: 8px;"
+                        style="width: 60px; margin-right: 8px"
                       />
-                      <span class="trend-label">{{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}% 付费率</span>
+                      <span class="trend-label"
+                        >{{
+                          (
+                            ((summaryData?.last30Days?.payingUsers || 0) /
+                              (summaryData?.last30Days?.interactionUsers || 1)) *
+                            100
+                          ).toFixed(1)
+                        }}% 付费率</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -476,11 +610,17 @@ onUnmounted(() => {
 
             <!-- 直播 -->
             <NGridItem>
-              <NCard size="small" class="metric-card time-card">
+              <NCard
+                size="small"
+                class="metric-card time-card"
+              >
                 <div class="metric-content">
                   <div class="metric-header">
                     <span class="metric-label">近30天直播</span>
-                    <NIcon :component="TimeOutline" class="metric-icon" />
+                    <NIcon
+                      :component="TimeOutline"
+                      class="metric-icon"
+                    />
                   </div>
                   <div class="metric-value">
                     {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / 60).toFixed(1) }}
@@ -491,7 +631,14 @@ onUnmounted(() => {
                       <span class="trend-label">活跃 {{ summaryData?.last30Days?.activeLiveDays || 0 }} 天</span>
                     </div>
                     <div class="sub-stat">
-                      场均 {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / (summaryData?.last30Days?.activeLiveDays || 1) / 60).toFixed(1) }}h
+                      场均
+                      {{
+                        (
+                          (summaryData?.last30Days?.totalLiveMinutes || 0) /
+                          (summaryData?.last30Days?.activeLiveDays || 1) /
+                          60
+                        ).toFixed(1)
+                      }}h
                     </div>
                   </div>
                 </div>
@@ -502,30 +649,60 @@ onUnmounted(() => {
       </div>
 
       <!-- 图表区域 -->
-      <NCard size="small" title="趋势分析" class="chart-card" style="margin-top: 16px;">
+      <NCard
+        size="small"
+        title="趋势分析"
+        class="chart-card"
+        style="margin-top: 16px"
+      >
         <template #header-extra>
           <NCheckboxGroup v-model:value="selectedMetrics">
             <NFlex>
-              <NCheckbox v-for="metric in chartMetrics" :key="metric.value" :value="metric.value">
+              <NCheckbox
+                v-for="metric in chartMetrics"
+                :key="metric.value"
+                :value="metric.value"
+              >
                 <span :style="{ color: metric.color }">{{ metric.label }}</span>
               </NCheckbox>
             </NFlex>
           </NCheckboxGroup>
         </template>
-        <div ref="chartRef" class="main-chart" />
+        <div
+          ref="chartRef"
+          class="main-chart"
+        />
       </NCard>
 
       <!-- 详细数据对比 -->
-      <div class="details-section" style="margin-top: 16px;">
-        <NGrid cols="1 900:2" :x-gap="16" :y-gap="16">
+      <div
+        class="details-section"
+        style="margin-top: 16px"
+      >
+        <NGrid
+          cols="1 900:2"
+          :x-gap="16"
+          :y-gap="16"
+        >
           <NGridItem>
-            <NCard size="small" title="近7天详细数据">
+            <NCard
+              size="small"
+              title="近7天详细数据"
+            >
               <template #header-extra>
-                <NTag type="info" size="small" :bordered="false">
+                <NTag
+                  type="info"
+                  size="small"
+                  :bordered="false"
+                >
                   短期表现
                 </NTag>
               </template>
-              <NDescriptions label-placement="left" :column="2" bordered>
+              <NDescriptions
+                label-placement="left"
+                :column="2"
+                bordered
+              >
                 <NDescriptionsItem label="总收入">
                   {{ formatCurrency(summaryData?.last7Days?.totalIncome || 0) }}
                 </NDescriptionsItem>
@@ -551,18 +728,36 @@ onUnmounted(() => {
                   {{ formatNumber(summaryData?.last7Days?.payingUsers || 0) }}
                 </NDescriptionsItem>
               </NDescriptions>
-              
-              <div class="mini-funnel" style="margin-top: 16px;">
+
+              <div
+                class="mini-funnel"
+                style="margin-top: 16px"
+              >
                 <div class="funnel-row">
                   <span class="label">互动转化</span>
                   <NProgress
                     type="line"
-                    :percentage="Math.min(100, Math.round(((summaryData?.last7Days?.payingUsers || 0) / (summaryData?.last7Days?.interactionUsers || 1) * 100) * 10) / 10)"
+                    :percentage="
+                      Math.min(
+                        100,
+                        Math.round(
+                          ((summaryData?.last7Days?.payingUsers || 0) /
+                            (summaryData?.last7Days?.interactionUsers || 1)) *
+                            100 *
+                            10,
+                        ) / 10,
+                      )
+                    "
                     :height="12"
                     :color="themeVars.successColor"
                     :rail-color="themeVars.successColorSuppl"
                   >
-                    {{ ((summaryData?.last7Days?.payingUsers || 0) / (summaryData?.last7Days?.interactionUsers || 1) * 100).toFixed(1) }}%
+                    {{
+                      (
+                        ((summaryData?.last7Days?.payingUsers || 0) / (summaryData?.last7Days?.interactionUsers || 1)) *
+                        100
+                      ).toFixed(1)
+                    }}%
                   </NProgress>
                 </div>
               </div>
@@ -570,13 +765,24 @@ onUnmounted(() => {
           </NGridItem>
 
           <NGridItem>
-            <NCard size="small" title="近30天详细数据">
+            <NCard
+              size="small"
+              title="近30天详细数据"
+            >
               <template #header-extra>
-                <NTag type="warning" size="small" :bordered="false">
+                <NTag
+                  type="warning"
+                  size="small"
+                  :bordered="false"
+                >
                   中期表现
                 </NTag>
               </template>
-              <NDescriptions label-placement="left" :column="2" bordered>
+              <NDescriptions
+                label-placement="left"
+                :column="2"
+                bordered
+              >
                 <NDescriptionsItem label="总收入">
                   {{ formatCurrency(summaryData?.last30Days?.totalIncome || 0) }}
                 </NDescriptionsItem>
@@ -603,17 +809,36 @@ onUnmounted(() => {
                 </NDescriptionsItem>
               </NDescriptions>
 
-              <div class="mini-funnel" style="margin-top: 16px;">
+              <div
+                class="mini-funnel"
+                style="margin-top: 16px"
+              >
                 <div class="funnel-row">
                   <span class="label">互动转化</span>
                   <NProgress
                     type="line"
-                    :percentage="Math.min(100, Math.round(((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100) * 10) / 10)"
+                    :percentage="
+                      Math.min(
+                        100,
+                        Math.round(
+                          ((summaryData?.last30Days?.payingUsers || 0) /
+                            (summaryData?.last30Days?.interactionUsers || 1)) *
+                            100 *
+                            10,
+                        ) / 10,
+                      )
+                    "
                     :height="12"
                     :color="themeVars.warningColor"
                     :rail-color="themeVars.warningColorSuppl"
                   >
-                    {{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}%
+                    {{
+                      (
+                        ((summaryData?.last30Days?.payingUsers || 0) /
+                          (summaryData?.last30Days?.interactionUsers || 1)) *
+                        100
+                      ).toFixed(1)
+                    }}%
                   </NProgress>
                 </div>
               </div>
@@ -704,9 +929,15 @@ onUnmounted(() => {
   gap: 4px;
 }
 
-.success { color: var(--vtsuru-success); }
-.error { color: var(--vtsuru-error); }
-.info { color: var(--vtsuru-fg-muted); }
+.success {
+  color: var(--vtsuru-success);
+}
+.error {
+  color: var(--vtsuru-error);
+}
+.info {
+  color: var(--vtsuru-fg-muted);
+}
 
 .trend-label {
   color: var(--vtsuru-fg-muted);
@@ -717,10 +948,18 @@ onUnmounted(() => {
 }
 
 /* 特定卡片样式微调 */
-.income-card .metric-icon { color: var(--metric-income); }
-.interaction-card .metric-icon { color: var(--metric-interaction); }
-.users-card .metric-icon { color: var(--metric-users); }
-.time-card .metric-icon { color: var(--metric-time); }
+.income-card .metric-icon {
+  color: var(--metric-income);
+}
+.interaction-card .metric-icon {
+  color: var(--metric-interaction);
+}
+.users-card .metric-icon {
+  color: var(--metric-users);
+}
+.time-card .metric-icon {
+  color: var(--metric-time);
+}
 
 .chart-card {
   min-height: 400px;

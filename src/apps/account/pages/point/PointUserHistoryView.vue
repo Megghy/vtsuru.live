@@ -1,15 +1,28 @@
 <script setup lang="ts">
-import type { ResponsePointHisrotyModel } from '@/api/api-models'
+import { ArrowSync24Regular, ArrowDownload24Regular } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
-import { ArrowSync24Regular, ArrowDownload24Regular } from '@vicons/fluent'
-import { NButton, NDatePicker, NEmpty, NFlex, NGrid, NIcon, NRadioButton, NRadioGroup, NSelect, NSpin, useMessage } from 'naive-ui';
+import {
+  NButton,
+  NDatePicker,
+  NEmpty,
+  NFlex,
+  NGrid,
+  NIcon,
+  NRadioButton,
+  NRadioGroup,
+  NSelect,
+  NSpin,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
+
+import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { PointFrom } from '@/api/api-models'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
 import { POINT_API_URL } from '@/shared/config'
-import { useBiliAuth } from '@/store/useBiliAuth'
 import { objectsToCSV } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 // 定义加载完成的事件
 const emit = defineEmits(['dataLoaded'])
@@ -76,14 +89,14 @@ const filteredHistory = computed(() => {
 
   // 积分类型筛选
   if (pointTypeFilter.value === 'increase') {
-    result = result.filter(h => h.point > 0)
+    result = result.filter((h) => h.point > 0)
   } else if (pointTypeFilter.value === 'decrease') {
-    result = result.filter(h => h.point < 0)
+    result = result.filter((h) => h.point < 0)
   }
 
   // 时间范围筛选
   if (dateRange.value && dateRange.value[0] && dateRange.value[1]) {
-    result = result.filter(h => h.createAt >= dateRange.value![0] && h.createAt <= dateRange.value![1])
+    result = result.filter((h) => h.createAt >= dateRange.value![0] && h.createAt <= dateRange.value![1])
   }
 
   return result
@@ -91,17 +104,17 @@ const filteredHistory = computed(() => {
 
 // 积分历史统计（跟随筛选条件）
 const historyStats = computed(() => {
-  const totalIncrease = filteredHistory.value.filter(h => h.point > 0).reduce((sum, h) => sum + h.point, 0)
-  const totalDecrease = Math.abs(filteredHistory.value.filter(h => h.point < 0).reduce((sum, h) => sum + h.point, 0))
+  const totalIncrease = filteredHistory.value.filter((h) => h.point > 0).reduce((sum, h) => sum + h.point, 0)
+  const totalDecrease = Math.abs(filteredHistory.value.filter((h) => h.point < 0).reduce((sum, h) => sum + h.point, 0))
   return {
     total: filteredHistory.value.length,
     totalIncrease: Number(totalIncrease.toFixed(1)),
     totalDecrease: Number(totalDecrease.toFixed(1)),
     netIncrease: Number((totalIncrease - totalDecrease).toFixed(1)),
-    fromManual: filteredHistory.value.filter(h => h.from === PointFrom.Manual).length,
-    fromDanmaku: filteredHistory.value.filter(h => h.from === PointFrom.Danmaku).length,
-    fromCheckIn: filteredHistory.value.filter(h => h.from === PointFrom.CheckIn).length,
-    fromUse: filteredHistory.value.filter(h => h.from === PointFrom.Use).length,
+    fromManual: filteredHistory.value.filter((h) => h.from === PointFrom.Manual).length,
+    fromDanmaku: filteredHistory.value.filter((h) => h.from === PointFrom.Danmaku).length,
+    fromCheckIn: filteredHistory.value.filter((h) => h.from === PointFrom.CheckIn).length,
+    fromUse: filteredHistory.value.filter((h) => h.from === PointFrom.Use).length,
   }
 })
 
@@ -138,7 +151,7 @@ function exportHistoryData() {
           积分变化: Number(item.point.toFixed(1)),
           来源: pointFromText[item.from] || '未知',
           主播: item.extra?.user?.name || '-',
-          款式: (item.extra?.selectedSubItems ?? []).map(s => `${s.nameSnapshot} x ${s.quantity}`).join('; ') || '-',
+          款式: (item.extra?.selectedSubItems ?? []).map((s) => `${s.nameSnapshot} x ${s.quantity}`).join('; ') || '-',
           数量: item.count || '-',
           备注: item.extra?.reason || '-',
         }
@@ -146,7 +159,7 @@ function exportHistoryData() {
     )
 
     // 添加BOM标记，确保Excel正确识别UTF-8编码
-    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF])
+    const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
     const utf8encoder = new TextEncoder()
     const utf8array = utf8encoder.encode(text)
 
@@ -173,33 +186,21 @@ function exportHistoryData() {
       style="margin-bottom: 16px"
     >
       <div class="stat-card">
-        <div class="stat-label">
-          总记录
-        </div>
+        <div class="stat-label">总记录</div>
         <div class="stat-value">
           {{ historyStats.total }}
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          总获得
-        </div>
-        <div class="stat-value success">
-          +{{ historyStats.totalIncrease }}
-        </div>
+        <div class="stat-label">总获得</div>
+        <div class="stat-value success">+{{ historyStats.totalIncrease }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          总消耗
-        </div>
-        <div class="stat-value error">
-          -{{ historyStats.totalDecrease }}
-        </div>
+        <div class="stat-label">总消耗</div>
+        <div class="stat-value error">-{{ historyStats.totalDecrease }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">
-          净增加
-        </div>
+        <div class="stat-label">净增加</div>
         <div class="stat-value primary">
           {{ historyStats.netIncrease }}
         </div>
@@ -208,10 +209,22 @@ function exportHistoryData() {
 
     <!-- 工具栏 -->
     <div class="toolbar-section">
-      <NFlex vertical :gap="12">
+      <NFlex
+        vertical
+        :gap="12"
+      >
         <!-- 筛选行 -->
-        <NFlex justify="space-between" align="center" wrap :gap="12">
-          <NFlex align="center" :gap="12" wrap>
+        <NFlex
+          justify="space-between"
+          align="center"
+          wrap
+          :gap="12"
+        >
+          <NFlex
+            align="center"
+            :gap="12"
+            wrap
+          >
             <NSelect
               v-model:value="streamerFilter"
               :options="streamerOptions"
@@ -224,15 +237,9 @@ function exportHistoryData() {
               v-model:value="pointTypeFilter"
               size="medium"
             >
-              <NRadioButton value="all">
-                全部
-              </NRadioButton>
-              <NRadioButton value="increase">
-                增加
-              </NRadioButton>
-              <NRadioButton value="decrease">
-                减少
-              </NRadioButton>
+              <NRadioButton value="all"> 全部 </NRadioButton>
+              <NRadioButton value="increase"> 增加 </NRadioButton>
+              <NRadioButton value="decrease"> 减少 </NRadioButton>
             </NRadioGroup>
             <NDatePicker
               v-model:value="dateRange"
@@ -245,13 +252,22 @@ function exportHistoryData() {
           </NFlex>
 
           <NFlex :gap="8">
-            <NButton secondary size="medium" type="info" @click="exportHistoryData">
+            <NButton
+              secondary
+              size="medium"
+              type="info"
+              @click="exportHistoryData"
+            >
               <template #icon>
                 <NIcon :component="ArrowDownload24Regular" />
               </template>
               导出
             </NButton>
-            <NButton secondary size="medium" @click="getHistories">
+            <NButton
+              secondary
+              size="medium"
+              @click="getHistories"
+            >
               <template #icon>
                 <NIcon :component="ArrowSync24Regular" />
               </template>
@@ -262,7 +278,7 @@ function exportHistoryData() {
       </NFlex>
     </div>
 
-    <div style="margin-top: 16px;" />
+    <div style="margin-top: 16px" />
 
     <NEmpty
       v-if="filteredHistory.length === 0"
@@ -304,9 +320,15 @@ function exportHistoryData() {
   color: var(--vtsuru-fg-muted);
 }
 
-.stat-value.primary { color: var(--vtsuru-primary); }
-.stat-value.success { color: var(--vtsuru-success); }
-.stat-value.error { color: var(--vtsuru-error); }
+.stat-value.primary {
+  color: var(--vtsuru-primary);
+}
+.stat-value.success {
+  color: var(--vtsuru-success);
+}
+.stat-value.error {
+  color: var(--vtsuru-error);
+}
 
 .toolbar-section {
   background-color: var(--vtsuru-bg-surface);

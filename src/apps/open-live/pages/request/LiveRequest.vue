@@ -1,25 +1,20 @@
 <script setup lang="ts">
-import type {
-  OpenLiveInfo,
-} from '@/api/api-models'
-import {
-  NAlert, NButton, NCard, NDivider, NTabPane, NTabs, NTooltip, useMessage } from 'naive-ui';
+import { NAlert, NButton, NCard, NDivider, NTabPane, NTabs, NTooltip, useMessage } from 'naive-ui'
 import { onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
+
 import { SaveSetting, useAccount } from '@/api/account'
-import {
-  FunctionTypes,
-} from '@/api/api-models'
+import type { OpenLiveInfo } from '@/api/api-models'
+import { FunctionTypes } from '@/api/api-models'
+import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
+import ObsConfigModal from '@/apps/open-live/components/ObsConfigModal.vue'
+import OpenLivePageLayout from '@/apps/open-live/components/OpenLivePageLayout.vue'
+import SongRequestHistory from '@/apps/open-live/components/request/SongRequestHistory.vue'
+import SongRequestList from '@/apps/open-live/components/request/SongRequestList.vue'
+import SongRequestSettings from '@/apps/open-live/components/request/SongRequestSettings.vue'
 import SongPlayer from '@/components/SongPlayer.vue'
 import { useFunctionToggle } from '@/composables/useFunctionToggle'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
-import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
-import ObsConfigModal from '@/apps/open-live/components/ObsConfigModal.vue'
-import OpenLivePageLayout from '@/apps/open-live/components/OpenLivePageLayout.vue'
-
-import SongRequestHistory from '@/apps/open-live/components/request/SongRequestHistory.vue'
-import SongRequestList from '@/apps/open-live/components/request/SongRequestList.vue'
-import SongRequestSettings from '@/apps/open-live/components/request/SongRequestSettings.vue'
 
 defineProps<{
   roomInfo?: OpenLiveInfo
@@ -104,7 +99,10 @@ onUnmounted(() => {
     :enabled="liveRequestEnabled"
     @update:enabled="onUpdateFunctionEnable"
   >
-    <template v-if="accountInfo.id" #actions>
+    <template
+      v-if="accountInfo.id"
+      #actions
+    >
       <NTooltip>
         <template #trigger>
           <NButton
@@ -143,7 +141,10 @@ onUnmounted(() => {
     </template>
 
     <!-- 主体内容 -->
-    <NCard size="small" bordered>
+    <NCard
+      size="small"
+      bordered
+    >
       <NTabs
         v-if="!accountInfo?.id || liveRequestEnabled"
         type="line"
@@ -172,16 +173,22 @@ onUnmounted(() => {
 
           <!-- 活跃歌曲列表 -->
           <SongRequestList
-            @update:sort-type="(value: any) => { accountInfo.settings.songRequest.sortType = value; updateSettings() }"
-            @update:is-reverse="(value: any) => {
-              if (liveRequest.configCanEdit) {
-                accountInfo.settings.songRequest.isReverse = value
+            @update:sort-type="
+              (value: any) => {
+                accountInfo.settings.songRequest.sortType = value
                 updateSettings()
               }
-              else {
-                liveRequest.isReverse = value
+            "
+            @update:is-reverse="
+              (value: any) => {
+                if (liveRequest.configCanEdit) {
+                  accountInfo.settings.songRequest.isReverse = value
+                  updateSettings()
+                } else {
+                  liveRequest.isReverse = value
+                }
               }
-            }"
+            "
           />
         </NTabPane>
         <NTabPane

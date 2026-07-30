@@ -1,18 +1,14 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { CheckmarkCircle16Regular, ChevronDown12Regular, ErrorCircle16Regular, Toolbox16Regular } from '@vicons/fluent'
 import { NCollapseTransition, NIcon, NText } from 'naive-ui'
-import {
-  CheckmarkCircle16Regular,
-  ChevronDown12Regular,
-  ErrorCircle16Regular,
-  Toolbox16Regular,
-} from '@vicons/fluent'
+import { computed, reactive } from 'vue'
+
 import type { AssistantToolEvent } from '../api/assistant'
 
 const props = defineProps<{ tools: AssistantToolEvent[] }>()
 const expanded = reactive<Record<string, boolean>>({})
 
-const visibleTools = computed(() => props.tools.filter(t => t.title || t.name))
+const visibleTools = computed(() => props.tools.filter((t) => t.title || t.name))
 
 const STATUS_META = {
   running: { label: '执行中', icon: Toolbox16Regular },
@@ -35,7 +31,10 @@ function formatDuration(ms?: number): string {
 </script>
 
 <template>
-  <div v-if="visibleTools.length" class="tool-trace">
+  <div
+    v-if="visibleTools.length"
+    class="tool-trace"
+  >
     <div
       v-for="tool in visibleTools"
       :key="tool.id"
@@ -49,14 +48,15 @@ function formatDuration(ms?: number): string {
         @click="toggle(tool)"
       >
         <span class="tool-line__state">
-          <NIcon :component="STATUS_META[tool.status].icon" size="15" />
+          <NIcon
+            :component="STATUS_META[tool.status].icon"
+            size="15"
+          />
         </span>
         <span class="tool-line__title">{{ tool.title || tool.name }}</span>
         <span class="tool-line__meta">
           {{ STATUS_META[tool.status].label }}
-          <template v-if="formatDuration(tool.durationMs)">
-            · {{ formatDuration(tool.durationMs) }}
-          </template>
+          <template v-if="formatDuration(tool.durationMs)"> · {{ formatDuration(tool.durationMs) }} </template>
         </span>
         <NIcon
           :component="ChevronDown12Regular"
@@ -68,13 +68,25 @@ function formatDuration(ms?: number): string {
 
       <NCollapseTransition :show="isOpen(tool)">
         <div class="tool-line__body">
-          <NText v-if="tool.error" type="error" class="tool-line__detail">
+          <NText
+            v-if="tool.error"
+            type="error"
+            class="tool-line__detail"
+          >
             {{ tool.error }}
           </NText>
-          <NText v-else-if="tool.summary" depth="3" class="tool-line__detail">
+          <NText
+            v-else-if="tool.summary"
+            depth="3"
+            class="tool-line__detail"
+          >
             {{ tool.summary }}
           </NText>
-          <NText v-else depth="3" class="tool-line__detail tool-line__detail--muted">
+          <NText
+            v-else
+            depth="3"
+            class="tool-line__detail tool-line__detail--muted"
+          >
             {{ tool.name }}
           </NText>
         </div>
@@ -180,7 +192,12 @@ function formatDuration(ms?: number): string {
 }
 
 @keyframes tool-pulse {
-  0%, 100% { opacity: 0.52; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.52;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 </style>

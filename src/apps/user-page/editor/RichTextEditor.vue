@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
-import type { UploadFileResponse } from '@/api/api-models'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage, useThemeVars } from 'naive-ui';
+import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef, watch } from 'vue'
+
+import type { UploadFileResponse } from '@/api/api-models'
 import { UserFileLocation, UserFileTypes } from '@/api/api-models'
 import { uploadFiles } from '@/shared/services/fileUpload'
 import { isDarkMode } from '@/shared/utils'
+
 import '@/assets/editorDarkMode.css'
 import '@wangeditor/editor/dist/css/style.css'
 
@@ -91,15 +93,7 @@ const editorConfig: Partial<IEditorConfig> = {
       ],
     },
     fontSize: {
-      fontSizeList: [
-        '12px',
-        '14px',
-        '16px',
-        { name: '18px', value: '18px' },
-        '20px',
-        '24px',
-        '32px',
-      ],
+      fontSizeList: ['12px', '14px', '16px', { name: '18px', value: '18px' }, '20px', '24px', '32px'],
     },
     lineHeight: {
       lineHeightList: ['1', '1.4', '1.6', '1.8', '2', '2.2'],
@@ -114,7 +108,7 @@ const editorConfig: Partial<IEditorConfig> = {
         try {
           message.info('图片上传中')
           const [result] = await uploadFiles(file, UserFileTypes.Image, UserFileLocation.Local)
-          if (!imagesFile.value.some(x => x.id === result.id)) imagesFile.value = [...imagesFile.value, result]
+          if (!imagesFile.value.some((x) => x.id === result.id)) imagesFile.value = [...imagesFile.value, result]
           insertFn(result.path, result.name || '', result.path)
           message.success('图片上传成功')
         } catch (e) {
@@ -146,7 +140,7 @@ watch(
   () => html.value,
   (v) => {
     const srcs = extractImageSrcs(v)
-    const next = imagesFile.value.filter(f => srcs.has(f.path))
+    const next = imagesFile.value.filter((f) => srcs.has(f.path))
     if (next.length !== imagesFile.value.length) imagesFile.value = next
   },
   { flush: 'post' },

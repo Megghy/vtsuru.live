@@ -1,16 +1,21 @@
 import { computed } from 'vue'
+
 import { QueueFrom } from '@/api/api-models'
+import type { ResponseQueueModel } from '@/api/api-models'
 import type {
   ObsDisplayBadge,
   ObsDisplayCurrent,
   ObsDisplayFooterTag,
   ObsDisplayItem,
 } from '@/apps/obs/components/shared/obsDisplay'
-import type { ResponseQueueModel } from '@/api/api-models'
 import { getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
+
 import { useQueueData } from './useQueueData'
 
-function buildPaymentBadgeText(from: QueueFrom, item: Pick<ResponseQueueModel, 'giftPrice' | 'mysteryBoxName' | 'mysteryBoxPrice'>) {
+function buildPaymentBadgeText(
+  from: QueueFrom,
+  item: Pick<ResponseQueueModel, 'giftPrice' | 'mysteryBoxName' | 'mysteryBoxPrice'>,
+) {
   if (from === QueueFrom.Manual) {
     return '主播添加'
   }
@@ -42,9 +47,9 @@ export function useQueueObsView(currentId: string) {
     }
 
     if (
-      data.progressing.value.from === QueueFrom.Manual
-      || data.settings.value.showPayment
-      || (data.progressing.value.giftPrice ?? data.progressing.value.mysteryBoxPrice ?? 0) > 0
+      data.progressing.value.from === QueueFrom.Manual ||
+      data.settings.value.showPayment ||
+      (data.progressing.value.giftPrice ?? data.progressing.value.mysteryBoxPrice ?? 0) > 0
     ) {
       badges.push({
         text: buildPaymentBadgeText(data.progressing.value.from, data.progressing.value),
@@ -64,7 +69,7 @@ export function useQueueObsView(currentId: string) {
   })
 
   const items = computed<ObsDisplayItem[]>(() => {
-    return data.activeItems.value.map(item => ({
+    return data.activeItems.value.map((item) => ({
       id: item.id,
       primary: item.user?.name || '未知用户',
       badges: [
@@ -74,9 +79,9 @@ export function useQueueObsView(currentId: string) {
               tone: 'muted',
             }
           : null,
-        item.from === QueueFrom.Manual
-          || data.settings.value.showPayment
-          || (item.giftPrice ?? item.mysteryBoxPrice ?? 0) > 0
+        item.from === QueueFrom.Manual ||
+        data.settings.value.showPayment ||
+        (item.giftPrice ?? item.mysteryBoxPrice ?? 0) > 0
           ? {
               text: buildPaymentBadgeText(item.from, item),
               tone: item.from === QueueFrom.Manual ? 'accent' : 'danger',

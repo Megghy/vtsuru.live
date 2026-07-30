@@ -1,4 +1,5 @@
 import type { TranscriptionProfile } from '@/shared/models/transcription'
+
 import type { TranscriptionProviderCallbacks, TranscriptionProviderClient } from '../types'
 import { OpenAITranscriptionClient } from './openai'
 import { TencentTranscriptionClient } from './tencent'

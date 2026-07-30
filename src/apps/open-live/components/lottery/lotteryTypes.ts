@@ -27,4 +27,3 @@ export interface ManualUserFormModel {
   fans_medal_name: string
   guard_level: number
 }
-

@@ -1,4 +1,5 @@
 import { del, get, update } from 'idb-keyval'
+
 import { ActionType } from '../types'
 
 // 历史记录类型常量
@@ -125,7 +126,7 @@ export async function logCommandHistory(
  * 获取历史记录
  */
 export async function getHistoryByType(type: HistoryType): Promise<HistoryItem[]> {
-  return await get<HistoryItem[]>(HISTORY_KEYS[type]) || []
+  return (await get<HistoryItem[]>(HISTORY_KEYS[type])) || []
 }
 
 /**
@@ -139,7 +140,5 @@ export async function clearHistory(type: HistoryType): Promise<void> {
  * 清除所有历史记录
  */
 export async function clearAllHistory(): Promise<void> {
-  await Promise.all(
-    Object.values(HistoryType).map(async type => clearHistory(type)),
-  )
+  await Promise.all(Object.values(HistoryType).map(async (type) => clearHistory(type)))
 }

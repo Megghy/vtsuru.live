@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import type { BlockNode, BlockVisibilityContext } from '../schemaTypes'
 import { isBlockVisible } from '../visibility'
 
@@ -12,7 +13,12 @@ describe('isBlockVisible', () => {
   it('无条件时始终显示', () => expect(isBlockVisible(block(), context)).toBe(true))
 
   it('同时匹配直播、设备和时间条件', () => {
-    expect(isBlockVisible(block({ liveState: 'live', device: 'mobile', startsAt: 1_700_000_000, endsAt: 1_900_000_000 }), context)).toBe(true)
+    expect(
+      isBlockVisible(
+        block({ liveState: 'live', device: 'mobile', startsAt: 1_700_000_000, endsAt: 1_900_000_000 }),
+        context,
+      ),
+    ).toBe(true)
   })
 
   it('任一条件不匹配时隐藏', () => {

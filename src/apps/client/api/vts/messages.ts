@@ -133,7 +133,7 @@ export interface VtsItemEventData {
   itemEventType: string
   itemInstanceID: string
   itemFileName: string
-  itemPosition?: { x: number, y: number }
+  itemPosition?: { x: number; y: number }
 }
 
 export interface VtsHotkeysInCurrentModelRequestData {
@@ -298,7 +298,7 @@ export interface VtsItemUnloadRequestData {
 }
 
 export interface VtsItemUnloadResponseData {
-  unloadedItems: Array<{ instanceID: string, fileName: string }>
+  unloadedItems: Array<{ instanceID: string; fileName: string }>
 }
 
 export interface VtsApiErrorData {

@@ -1,15 +1,8 @@
-import type {
-  AutoActionItem,
-  ExecutionContext,
-  RuntimeState,
-} from './types'
 import { clear, createStore, del, get, set } from 'idb-keyval' // 导入 useIDBKeyval
 import { nanoid } from 'nanoid'
-import {
-  ActionType,
-  Priority,
-  TriggerType,
-} from './types'
+
+import type { AutoActionItem, ExecutionContext, RuntimeState } from './types'
+import { ActionType, Priority, TriggerType } from './types'
 
 // --- 定义用户持久化数据的自定义存储区 ---
 const USER_DATA_DB_NAME = 'AutoActionUserDataDB'
@@ -98,16 +91,14 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
  */
 export function getRandomTemplate(template: string): string | null {
   if (!template) return null
-  const lines = template.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+  const lines = template
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0)
   if (lines.length === 0) return null
   if (lines.length === 1) return lines[0]
   return lines[Math.floor(Math.random() * lines.length)]
 }
-
-
-
-
-
 
 export function evaluateExpression(expression: string, context: ExecutionContext): boolean {
   if (!expression || expression.trim() === '') return true

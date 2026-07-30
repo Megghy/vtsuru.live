@@ -1,11 +1,13 @@
 {
   "name": "vtsuru.live",
-  "type": "module",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "bunx --bun vite",
     "build": "vite build",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "budget:user-page": "bun scripts/check-user-page-budget.mjs",
     "visual:user-page": "node scripts/capture-user-page-regression.mjs",
     "visual:user-page-theme": "node scripts/capture-user-page-theme-isolation.mjs",
@@ -13,7 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint && eslint . --cache",
-    "lint:fix": "oxlint --fix && eslint . --cache --fix",
+    "lint:fix": "oxlint --fix && eslint . --cache --fix && oxfmt --write .",
     "knip": "knip"
   },
   "dependencies": {
@@ -62,7 +64,6 @@
     "esearch-ocr": "^8.5.0",
     "fast-xml-parser": "^5.9.3",
     "file-saver": "^2.0.5",
-    "grapheme-splitter": "^1.0.4",
     "html2canvas": "^1.4.1",
     "idb-keyval": "^6.2.6",
     "jszip": "^3.10.1",
@@ -114,17 +115,16 @@
     "@vicons/ionicons5": "^0.13.0",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "@vitest/ui": "^4.1.9",
-    "@vue-vine/eslint-config": "^1.1.12",
     "eslint": "^10.6.0",
     "eslint-plugin-oxlint": "^1.72.0",
     "jsdom": "^29.1.1",
     "knip": "6.24.0",
+    "oxfmt": "^0.61.0",
     "oxlint": "^1.72.0",
     "playwright-core": "^1.61.1",
     "stylus": "^0.64.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9",
-    "vue-tsc": "^3.3.6",
-    "vue-vine": "^1.7.27"
+    "vue-tsc": "^3.3.6"
   }
 }

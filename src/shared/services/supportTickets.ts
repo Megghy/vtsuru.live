@@ -34,7 +34,7 @@ export async function addSupportTicketMessage(id: number, content: string) {
 
 export async function updateSupportTicketPreferences(
   id: number,
-  preferences: { isPublic: boolean, emailOnStaffReply: boolean },
+  preferences: { isPublic: boolean; emailOnStaffReply: boolean },
 ) {
   const response = await QueryPatchAPI<unknown>(`${SUPPORT_TICKET_API_URL}${id}/preferences`, preferences)
   unwrapOk(response, '保存偏好失败')

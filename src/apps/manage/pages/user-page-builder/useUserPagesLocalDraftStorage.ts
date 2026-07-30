@@ -1,10 +1,12 @@
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { migrateUserPagesSettings } from '@/apps/user-page/normalize'
 import { useStorage } from '@vueuse/core'
 import type { MaybeRefOrGetter } from 'vue'
 import { computed, toValue } from 'vue'
-import { USER_PAGES_LOCAL_DRAFT_KEY } from './storageKeys'
+
+import { migrateUserPagesSettings } from '@/apps/user-page/normalize'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { persistedGetItemRaw, usePersistedStorage } from '@/shared/storage/persist'
+
+import { USER_PAGES_LOCAL_DRAFT_KEY } from './storageKeys'
 
 export interface UserPagesLocalDraftSnapshot {
   settings: UserPagesSettingsV1

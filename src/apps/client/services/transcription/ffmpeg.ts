@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+
 import type { BilibiliStreamSource } from './bilibili'
 
 export interface FfmpegJobStatus {
@@ -47,14 +48,14 @@ export async function startAudioExtraction(
   let closed = false
   let active = false
   stdout.binaryType = 'arraybuffer'
-  stdout.addEventListener('message', event => onAudio(new Uint8Array(event.data as ArrayBuffer)))
+  stdout.addEventListener('message', (event) => onAudio(new Uint8Array(event.data as ArrayBuffer)))
   stdout.addEventListener('close', () => {
     closed = true
     if (active) onClose()
   })
 
   const stderr = new WebSocket(`${spawned.wsBaseUrl}/stderr?token=${token}`)
-  stderr.addEventListener('message', event => onStderr(String(event.data)))
+  stderr.addEventListener('message', (event) => onStderr(String(event.data)))
 
   try {
     await Promise.all([waitForOpen(stdout), waitForOpen(stderr)])
@@ -86,22 +87,35 @@ export async function stopStaleTranscriptionJobs() {
 function buildArgs(url: string, sampleRate: number): string[] {
   return [
     '-hide_banner',
-    '-loglevel', 'warning',
+    '-loglevel',
+    'warning',
     '-nostdin',
-    '-rw_timeout', '15000000',
-    '-reconnect', '1',
-    '-reconnect_streamed', '1',
-    '-reconnect_delay_max', '5',
-    '-user_agent', 'Mozilla/5.0',
-    '-headers', 'Referer: https://live.bilibili.com/\r\nOrigin: https://live.bilibili.com\r\n',
+    '-rw_timeout',
+    '15000000',
+    '-reconnect',
+    '1',
+    '-reconnect_streamed',
+    '1',
+    '-reconnect_delay_max',
+    '5',
+    '-user_agent',
+    'Mozilla/5.0',
+    '-headers',
+    'Referer: https://live.bilibili.com/\r\nOrigin: https://live.bilibili.com\r\n',
     '-re',
-    '-i', url,
-    '-map', '0:a:0',
+    '-i',
+    url,
+    '-map',
+    '0:a:0',
     '-vn',
-    '-ac', '1',
-    '-ar', String(sampleRate),
-    '-c:a', 'pcm_s16le',
-    '-f', 's16le',
+    '-ac',
+    '1',
+    '-ar',
+    String(sampleRate),
+    '-c:a',
+    'pcm_s16le',
+    '-f',
+    's16le',
     'pipe:1',
   ]
 }

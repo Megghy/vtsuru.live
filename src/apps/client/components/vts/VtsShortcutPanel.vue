@@ -2,11 +2,13 @@
 import { NAlert, NButton, NCard, NDivider, NFlex, NInput, NPopconfirm, NSelect, NText } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { isTauri } from '@/shared/config'
+
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { isTauri } from '@/shared/config'
+
+import { useVtsAction } from './useVtsAction'
 import { useVtsShortcuts } from './useVtsShortcuts'
 import type { VtsShortcutBinding } from './useVtsShortcuts'
-import { useVtsAction } from './useVtsAction'
 
 const REQUIRED_VERSION = '0.1.8'
 
@@ -48,9 +50,9 @@ const actionTypeOptions = [
   { label: '重置物理', value: 'panic-reset' },
 ]
 
-const hotkeyOptions = computed(() => vts.hotkeys.map(h => ({ label: h.name || h.hotkeyID, value: h.hotkeyID })))
-const macroOptions = computed(() => vts.macros.map(m => ({ label: m.name, value: m.id })))
-const presetOptions = computed(() => vts.presets.map(p => ({ label: p.name, value: p.id })))
+const hotkeyOptions = computed(() => vts.hotkeys.map((h) => ({ label: h.name || h.hotkeyID, value: h.hotkeyID })))
+const macroOptions = computed(() => vts.macros.map((m) => ({ label: m.name, value: m.id })))
+const presetOptions = computed(() => vts.presets.map((p) => ({ label: p.name, value: p.id })))
 
 function getTargetOptions(type: string) {
   if (type === 'hotkey') return hotkeyOptions.value
@@ -81,34 +83,70 @@ onUnmounted(() => shortcuts.cleanup())
 </script>
 
 <template>
-  <NCard size="small" bordered title="全局快捷键">
+  <NCard
+    size="small"
+    bordered
+    title="全局快捷键"
+  >
     <template v-if="versionTooLow">
-      <NAlert type="warning" :show-icon="true">
-        <NFlex align="center" justify="space-between" :wrap="true" :size="8">
-          <NText>
-            客户端版本过低 (当前 {{ clientVersion }}，需要 {{ REQUIRED_VERSION }}+)，请更新后使用
-          </NText>
-          <NButton size="small" @click="router.push({ name: 'client-settings' })">
+      <NAlert
+        type="warning"
+        :show-icon="true"
+      >
+        <NFlex
+          align="center"
+          justify="space-between"
+          :wrap="true"
+          :size="8"
+        >
+          <NText> 客户端版本过低 (当前 {{ clientVersion }}，需要 {{ REQUIRED_VERSION }}+)，请更新后使用 </NText>
+          <NButton
+            size="small"
+            @click="router.push({ name: 'client-settings' })"
+          >
             前往设置更新
           </NButton>
         </NFlex>
       </NAlert>
     </template>
 
-    <NFlex v-else vertical :size="12">
-      <NFlex align="center" :wrap="true" :size="8">
-        <NButton size="small" @click="shortcuts.addBinding({ label: '', shortcut: '', actionType: 'hotkey', targetId: '' })">
+    <NFlex
+      v-else
+      vertical
+      :size="12"
+    >
+      <NFlex
+        align="center"
+        :wrap="true"
+        :size="8"
+      >
+        <NButton
+          size="small"
+          @click="shortcuts.addBinding({ label: '', shortcut: '', actionType: 'hotkey', targetId: '' })"
+        >
           添加快捷键
         </NButton>
-        <NText depth="3">
-          窗口失焦时也能触发，适合直播中快速操作
-        </NText>
+        <NText depth="3"> 窗口失焦时也能触发，适合直播中快速操作 </NText>
       </NFlex>
 
-      <NDivider v-if="shortcuts.bindings.value.length > 0" style="margin: 4px 0" />
+      <NDivider
+        v-if="shortcuts.bindings.value.length > 0"
+        style="margin: 4px 0"
+      />
 
-      <NFlex v-for="b in shortcuts.bindings.value" :key="b.id" align="center" justify="space-between" :wrap="true" :size="8">
-        <NFlex align="center" :wrap="true" :size="8">
+      <NFlex
+        v-for="b in shortcuts.bindings.value"
+        :key="b.id"
+        align="center"
+        justify="space-between"
+        :wrap="true"
+        :size="8"
+      >
+        <NFlex
+          align="center"
+          :wrap="true"
+          :size="8"
+        >
           <NInput
             :value="b.shortcut"
             placeholder="如 Ctrl+Shift+1"
@@ -120,7 +158,9 @@ onUnmounted(() => shortcuts.cleanup())
             :options="actionTypeOptions"
             style="width: 130px"
             size="small"
-            @update:value="(v) => shortcuts.updateBinding(b.id, { actionType: v as VtsShortcutBinding['actionType'], targetId: '' })"
+            @update:value="
+              (v) => shortcuts.updateBinding(b.id, { actionType: v as VtsShortcutBinding['actionType'], targetId: '' })
+            "
           />
           <NSelect
             v-if="needsTarget(b.actionType)"
@@ -141,7 +181,10 @@ onUnmounted(() => shortcuts.cleanup())
         </NFlex>
         <NPopconfirm @positive-click="shortcuts.removeBinding(b.id)">
           <template #trigger>
-            <NButton size="small" type="error">
+            <NButton
+              size="small"
+              type="error"
+            >
               删除
             </NButton>
           </template>

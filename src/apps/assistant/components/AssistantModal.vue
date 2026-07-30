@@ -2,6 +2,7 @@
 import { LineHorizontal320Regular, Add20Regular, QuestionCircle20Regular } from '@vicons/fluent'
 import { NButton, NDrawer, NDrawerContent, NFlex, NIcon, NModal, NPopover, NTag, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { useAssistantStore } from '../store/useAssistantStore'
 import AssistantChatWindow from './AssistantChatWindow.vue'
 import AssistantConversationList from './AssistantConversationList.vue'
@@ -40,44 +41,75 @@ function onClose() {
     @after-leave="onClose"
   >
     <template #header>
-      <NFlex align="center" :size="8" :wrap="false" class="assistant-modal__header">
-        <NButton class="assistant-modal__menu-btn" size="tiny" quaternary circle @click="drawerVisible = true">
+      <NFlex
+        align="center"
+        :size="8"
+        :wrap="false"
+        class="assistant-modal__header"
+      >
+        <NButton
+          class="assistant-modal__menu-btn"
+          size="tiny"
+          quaternary
+          circle
+          @click="drawerVisible = true"
+        >
           <template #icon>
             <NIcon :component="LineHorizontal320Regular" />
           </template>
         </NButton>
-        <NText class="assistant-modal__brand">
-          VTsuru 助手
-        </NText>
-        <NPopover trigger="hover" placement="bottom-start" style="max-width: 280px">
+        <NText class="assistant-modal__brand"> VTsuru 助手 </NText>
+        <NPopover
+          trigger="hover"
+          placement="bottom-start"
+          style="max-width: 280px"
+        >
           <template #trigger>
-            <NButton size="tiny" quaternary circle class="assistant-modal__help">
+            <NButton
+              size="tiny"
+              quaternary
+              circle
+              class="assistant-modal__help"
+            >
               <template #icon>
                 <NIcon :component="QuestionCircle20Regular" />
               </template>
             </NButton>
           </template>
           <div class="assistant-features">
-            <div class="assistant-features__title">
-              我能帮你做这些
-            </div>
-            <div v-for="f in features" :key="f.title" class="assistant-features__item">
+            <div class="assistant-features__title">我能帮你做这些</div>
+            <div
+              v-for="f in features"
+              :key="f.title"
+              class="assistant-features__item"
+            >
               <NText strong>
                 {{ f.title }}
               </NText>
-              <NText depth="3" class="assistant-features__desc">
+              <NText
+                depth="3"
+                class="assistant-features__desc"
+              >
                 {{ f.desc }}
               </NText>
             </div>
           </div>
         </NPopover>
-        <NTag size="small" :bordered="false" type="info">
+        <NTag
+          size="small"
+          :bordered="false"
+          type="info"
+        >
           {{ ctx.title || '管理后台' }}
         </NTag>
       </NFlex>
     </template>
     <template #header-extra>
-      <NButton size="tiny" quaternary @click="store.reset">
+      <NButton
+        size="tiny"
+        quaternary
+        @click="store.reset"
+      >
         <template #icon>
           <NIcon :component="Add20Regular" />
         </template>
@@ -98,8 +130,15 @@ function onClose() {
     </div>
 
     <!-- 窄屏: 会话列表抽屉 -->
-    <NDrawer v-model:show="drawerVisible" :width="260" placement="left">
-      <NDrawerContent title="历史会话" closable>
+    <NDrawer
+      v-model:show="drawerVisible"
+      :width="260"
+      placement="left"
+    >
+      <NDrawerContent
+        title="历史会话"
+        closable
+      >
         <AssistantConversationList @click="drawerVisible = false" />
       </NDrawerContent>
     </NDrawer>
@@ -107,30 +146,74 @@ function onClose() {
 </template>
 
 <style scoped>
-.assistant-modal__header { min-width: 0; }
-.assistant-modal__brand { font-size: 15px; font-weight: 600; }
-.assistant-modal__menu-btn { display: none; }
+.assistant-modal__header {
+  min-width: 0;
+}
+.assistant-modal__brand {
+  font-size: 15px;
+  font-weight: 600;
+}
+.assistant-modal__menu-btn {
+  display: none;
+}
 
-.assistant-features { display: flex; flex-direction: column; gap: 8px; }
-.assistant-features__title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
-.assistant-features__item { display: flex; flex-direction: column; gap: 1px; }
-.assistant-features__desc { font-size: 12px; line-height: 1.4; }
+.assistant-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.assistant-features__title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.assistant-features__item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.assistant-features__desc {
+  font-size: 12px;
+  line-height: 1.4;
+}
 
-.assistant-modal__layout { display: flex; gap: 12px; height: 100%; min-height: 0; }
+.assistant-modal__layout {
+  display: flex;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
 .assistant-modal__sidebar {
-  flex: 0 0 200px; min-width: 0;
+  flex: 0 0 200px;
+  min-width: 0;
   border-right: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
   padding-right: 12px;
 }
-.assistant-modal__main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+.assistant-modal__main {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 
-.assistant-modal__body { flex: 1 1 0; min-height: 0; }
+.assistant-modal__body {
+  flex: 1 1 0;
+  min-height: 0;
+}
 
-:deep(.n-card__content) { display: flex; flex-direction: column; }
+:deep(.n-card__content) {
+  display: flex;
+  flex-direction: column;
+}
 
 @media (max-width: 720px) {
-  .assistant-modal__menu-btn { display: inline-flex; }
-  .assistant-modal__sidebar { display: none; }
+  .assistant-modal__menu-btn {
+    display: inline-flex;
+  }
+  .assistant-modal__sidebar {
+    display: none;
+  }
 }
 </style>
 
@@ -140,11 +223,15 @@ function onClose() {
   width: 840px;
   max-width: calc(100vw - 32px);
 }
-.assistant-modal .assistant-modal__layout { height: min(64vh, 560px); }
+.assistant-modal .assistant-modal__layout {
+  height: min(64vh, 560px);
+}
 @media (max-width: 720px) {
   .assistant-modal {
     width: calc(100vw - 24px);
   }
-  .assistant-modal .assistant-modal__layout { height: 70vh; }
+  .assistant-modal .assistant-modal__layout {
+    height: 70vh;
+  }
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { SupportTicketSummary } from '@/api/api-models'
 import { NTag, NTime } from 'naive-ui'
+
+import type { SupportTicketSummary } from '@/api/api-models'
 
 defineProps<{
   ticket: SupportTicketSummary
@@ -12,16 +13,23 @@ const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
 </script>
 
 <template>
-  <button type="button" class="public-ticket-card">
+  <button
+    type="button"
+    class="public-ticket-card"
+  >
     <img
       v-if="ticket.images[0]"
       class="public-ticket-card__image"
       :src="ticket.images[0].path"
       :alt="ticket.images[0].name"
-    >
+    />
     <div class="public-ticket-card__body">
       <div class="public-ticket-card__tags">
-        <NTag size="small" :type="statusTypes[ticket.status]" :bordered="false">
+        <NTag
+          size="small"
+          :type="statusTypes[ticket.status]"
+          :bordered="false"
+        >
           {{ statusLabels[ticket.status] }}
         </NTag>
         <span>{{ typeLabels[ticket.type] }}</span>
@@ -29,7 +37,10 @@ const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
       <h2>{{ ticket.title }}</h2>
       <div class="public-ticket-card__meta">
         <span>#{{ ticket.id }}</span>
-        <NTime :time="ticket.lastMessageTime" type="relative" />
+        <NTime
+          :time="ticket.lastMessageTime"
+          type="relative"
+        />
       </div>
     </div>
   </button>
@@ -47,7 +58,9 @@ const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
   background: var(--vtsuru-bg);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .public-ticket-card:hover {

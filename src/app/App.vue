@@ -1,7 +1,20 @@
 <script setup lang="ts">
-import { dateZhCN, NConfigProvider, NDialogProvider, NElement, NLayoutContent, NLoadingBarProvider, NMessageProvider, NModalProvider, NNotificationProvider, NSpin, zhCN } from 'naive-ui';
+import {
+  dateZhCN,
+  NConfigProvider,
+  NDialogProvider,
+  NElement,
+  NLayoutContent,
+  NLoadingBarProvider,
+  NMessageProvider,
+  NModalProvider,
+  NNotificationProvider,
+  NSpin,
+  zhCN,
+} from 'naive-ui'
 import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
+
 import TempComponent from '@/app/components/TempComponent.vue'
 import { applyThemeCssVars, buildSiteTokens, getThemeOverrides } from '@/shared/config/theme'
 import { isDarkMode, theme } from '@/shared/utils'
@@ -66,7 +79,7 @@ watchEffect(() => {
                 <TempComponent>
                   <NLayoutContent>
                     <NElement
-                      style="height: 100vh;"
+                      style="height: 100vh"
                       :theme-overrides="themeOverrides"
                     >
                       <UserLayout v-if="layout === 'user'" />
@@ -103,7 +116,9 @@ body {
 }
 
 :root {
-  font-feature-settings: 'liga' 1, 'calt' 1;
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1;
   --vtsuru-header-height: 50px;
   --vtsuru-content-padding: 12px;
 }
@@ -255,5 +270,4 @@ a:hover {
   position: absolute;
   bottom: 0;
 }
-
 </style>

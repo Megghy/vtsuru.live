@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { BaseDanmakuItemProps } from './danmakuUtils'
+import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
+
 import CardStyleDanmakuItem from './CardStyleDanmakuItem.vue'
+import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { useDanmakuUtils } from './danmakuUtils'
 import TextStyleDanmakuItem from './TextStyleDanmakuItem.vue'
-import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 
 const props = defineProps<BaseDanmakuItemProps>()
 
@@ -14,7 +15,8 @@ const { typeClass } = useDanmakuUtils(props, emojiData)
 
 <template>
   <div
-    class="danmaku-item-content" :class="[typeClass]"
+    class="danmaku-item-content"
+    :class="[typeClass]"
     :data-disappear="item.disappearAt"
   >
     <!-- 根据设置选择显示风格 -->
@@ -33,19 +35,19 @@ const { typeClass } = useDanmakuUtils(props, emojiData)
 </template>
 
 <style scoped>
-  /* 基础布局 */
-  .danmaku-item-content {
-    display: flex;
-    width: 100%;
-    overflow: hidden;
-    will-change: transform, opacity;
-    margin-bottom: var(--dw-item-spacing, 4px);
-    padding: 0;
-    background: none;
-    border-radius: 0;
-    box-shadow: none;
-    min-height: 0;
-    font-size: var(--dw-font-size);
-    color: var(--dw-text-color);
-  }
+/* 基础布局 */
+.danmaku-item-content {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  will-change: transform, opacity;
+  margin-bottom: var(--dw-item-spacing, 4px);
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 0;
+  font-size: var(--dw-font-size);
+  color: var(--dw-text-color);
+}
 </style>

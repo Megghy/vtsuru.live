@@ -21,7 +21,7 @@ export function getLayoutChildrenReadonly(layout: BlockNode): BlockNode[] | null
 export function blockContainsId(root: BlockNode, id: string): boolean {
   if (root.id === id) return true
   const children = getLayoutChildrenReadonly(root)
-  return children?.some(child => blockContainsId(child, id)) ?? false
+  return children?.some((child) => blockContainsId(child, id)) ?? false
 }
 
 function findBlockLocationInList(list: BlockNode[], id: string, parentLayout: BlockNode | null): BlockLocation | null {

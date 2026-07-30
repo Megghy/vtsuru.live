@@ -1,4 +1,59 @@
-canvas.yt-live-chat-paid-message-renderer, caption.yt-live-chat-paid-message-renderer, center.yt-live-chat-paid-message-renderer, cite.yt-live-chat-paid-message-renderer, code.yt-live-chat-paid-message-renderer, dd.yt-live-chat-paid-message-renderer, del.yt-live-chat-paid-message-renderer, dfn.yt-live-chat-paid-message-renderer, div.yt-live-chat-paid-message-renderer, dl.yt-live-chat-paid-message-renderer, dt.yt-live-chat-paid-message-renderer, em.yt-live-chat-paid-message-renderer, embed.yt-live-chat-paid-message-renderer, fieldset.yt-live-chat-paid-message-renderer, font.yt-live-chat-paid-message-renderer, form.yt-live-chat-paid-message-renderer, h1.yt-live-chat-paid-message-renderer, h2.yt-live-chat-paid-message-renderer, h3.yt-live-chat-paid-message-renderer, h4.yt-live-chat-paid-message-renderer, h5.yt-live-chat-paid-message-renderer, h6.yt-live-chat-paid-message-renderer, hr.yt-live-chat-paid-message-renderer, i.yt-live-chat-paid-message-renderer, iframe.yt-live-chat-paid-message-renderer, img.yt-live-chat-paid-message-renderer, ins.yt-live-chat-paid-message-renderer, kbd.yt-live-chat-paid-message-renderer, label.yt-live-chat-paid-message-renderer, legend.yt-live-chat-paid-message-renderer, li.yt-live-chat-paid-message-renderer, menu.yt-live-chat-paid-message-renderer, object.yt-live-chat-paid-message-renderer, ol.yt-live-chat-paid-message-renderer, p.yt-live-chat-paid-message-renderer, pre.yt-live-chat-paid-message-renderer, q.yt-live-chat-paid-message-renderer, s.yt-live-chat-paid-message-renderer, samp.yt-live-chat-paid-message-renderer, small.yt-live-chat-paid-message-renderer, span.yt-live-chat-paid-message-renderer, strike.yt-live-chat-paid-message-renderer, strong.yt-live-chat-paid-message-renderer, sub.yt-live-chat-paid-message-renderer, sup.yt-live-chat-paid-message-renderer, table.yt-live-chat-paid-message-renderer, tbody.yt-live-chat-paid-message-renderer, td.yt-live-chat-paid-message-renderer, tfoot.yt-live-chat-paid-message-renderer, th.yt-live-chat-paid-message-renderer, thead.yt-live-chat-paid-message-renderer, tr.yt-live-chat-paid-message-renderer, tt.yt-live-chat-paid-message-renderer, u.yt-live-chat-paid-message-renderer, ul.yt-live-chat-paid-message-renderer, var.yt-live-chat-paid-message-renderer {
+canvas.yt-live-chat-paid-message-renderer,
+caption.yt-live-chat-paid-message-renderer,
+center.yt-live-chat-paid-message-renderer,
+cite.yt-live-chat-paid-message-renderer,
+code.yt-live-chat-paid-message-renderer,
+dd.yt-live-chat-paid-message-renderer,
+del.yt-live-chat-paid-message-renderer,
+dfn.yt-live-chat-paid-message-renderer,
+div.yt-live-chat-paid-message-renderer,
+dl.yt-live-chat-paid-message-renderer,
+dt.yt-live-chat-paid-message-renderer,
+em.yt-live-chat-paid-message-renderer,
+embed.yt-live-chat-paid-message-renderer,
+fieldset.yt-live-chat-paid-message-renderer,
+font.yt-live-chat-paid-message-renderer,
+form.yt-live-chat-paid-message-renderer,
+h1.yt-live-chat-paid-message-renderer,
+h2.yt-live-chat-paid-message-renderer,
+h3.yt-live-chat-paid-message-renderer,
+h4.yt-live-chat-paid-message-renderer,
+h5.yt-live-chat-paid-message-renderer,
+h6.yt-live-chat-paid-message-renderer,
+hr.yt-live-chat-paid-message-renderer,
+i.yt-live-chat-paid-message-renderer,
+iframe.yt-live-chat-paid-message-renderer,
+img.yt-live-chat-paid-message-renderer,
+ins.yt-live-chat-paid-message-renderer,
+kbd.yt-live-chat-paid-message-renderer,
+label.yt-live-chat-paid-message-renderer,
+legend.yt-live-chat-paid-message-renderer,
+li.yt-live-chat-paid-message-renderer,
+menu.yt-live-chat-paid-message-renderer,
+object.yt-live-chat-paid-message-renderer,
+ol.yt-live-chat-paid-message-renderer,
+p.yt-live-chat-paid-message-renderer,
+pre.yt-live-chat-paid-message-renderer,
+q.yt-live-chat-paid-message-renderer,
+s.yt-live-chat-paid-message-renderer,
+samp.yt-live-chat-paid-message-renderer,
+small.yt-live-chat-paid-message-renderer,
+span.yt-live-chat-paid-message-renderer,
+strike.yt-live-chat-paid-message-renderer,
+strong.yt-live-chat-paid-message-renderer,
+sub.yt-live-chat-paid-message-renderer,
+sup.yt-live-chat-paid-message-renderer,
+table.yt-live-chat-paid-message-renderer,
+tbody.yt-live-chat-paid-message-renderer,
+td.yt-live-chat-paid-message-renderer,
+tfoot.yt-live-chat-paid-message-renderer,
+th.yt-live-chat-paid-message-renderer,
+thead.yt-live-chat-paid-message-renderer,
+tr.yt-live-chat-paid-message-renderer,
+tt.yt-live-chat-paid-message-renderer,
+u.yt-live-chat-paid-message-renderer,
+ul.yt-live-chat-paid-message-renderer,
+var.yt-live-chat-paid-message-renderer {
   margin: 0;
   padding: 0;
   border: 0;
@@ -40,7 +95,8 @@ canvas.yt-live-chat-paid-message-renderer, caption.yt-live-chat-paid-message-ren
   transform: translateX(100px);
 }
 
-yt-live-chat-paid-message-renderer:hover #menu.yt-live-chat-paid-message-renderer, yt-live-chat-paid-message-renderer[menu-visible] #menu.yt-live-chat-paid-message-renderer {
+yt-live-chat-paid-message-renderer:hover #menu.yt-live-chat-paid-message-renderer,
+yt-live-chat-paid-message-renderer[menu-visible] #menu.yt-live-chat-paid-message-renderer {
   transform: none;
 }
 
@@ -64,7 +120,8 @@ yt-live-chat-paid-message-renderer:focus-within #menu.yt-live-chat-paid-message-
   justify-content: center;
 }
 
-yt-live-chat-paid-message-renderer[has-inline-action-buttons]:hover #inline-action-button-container.yt-live-chat-paid-message-renderer {
+yt-live-chat-paid-message-renderer[has-inline-action-buttons]:hover
+  #inline-action-button-container.yt-live-chat-paid-message-renderer {
   display: flex;
   -ms-flex-direction: row;
   -webkit-flex-direction: row;
@@ -72,7 +129,8 @@ yt-live-chat-paid-message-renderer[has-inline-action-buttons]:hover #inline-acti
   display: var(--yt-live-chat-inline-action-button-container-display, none);
 }
 
-yt-live-chat-paid-message-renderer[has-inline-action-buttons][hide-inline-action-buttons]:hover #inline-action-button-container.yt-live-chat-paid-message-renderer {
+yt-live-chat-paid-message-renderer[has-inline-action-buttons][hide-inline-action-buttons]:hover
+  #inline-action-button-container.yt-live-chat-paid-message-renderer {
   display: none;
 }
 
@@ -80,27 +138,28 @@ yt-live-chat-paid-message-renderer[has-inline-action-buttons]:hover #menu.yt-liv
   display: var(--yt-live-chat-item-with-inline-actions-context-menu-display, block);
 }
 
-#inline-action-buttons.yt-live-chat-paid-message-renderer>*.yt-live-chat-paid-message-renderer, #additional-inline-action-buttons.yt-live-chat-paid-message-renderer>*.yt-live-chat-paid-message-renderer {
+#inline-action-buttons.yt-live-chat-paid-message-renderer > *.yt-live-chat-paid-message-renderer,
+#additional-inline-action-buttons.yt-live-chat-paid-message-renderer > *.yt-live-chat-paid-message-renderer {
   --yt-button-icon-size: 36px;
   --yt-button-icon-padding: 6px;
   color: hsl(0, 0%, 100%);
   border-radius: 2px;
 }
 
-#inline-action-buttons.yt-live-chat-paid-message-renderer>*.yt-live-chat-paid-message-renderer {
-  background: hsla(0, 0%, 6.7%, .8);
+#inline-action-buttons.yt-live-chat-paid-message-renderer > *.yt-live-chat-paid-message-renderer {
+  background: hsla(0, 0%, 6.7%, 0.8);
 }
 
-#inline-action-buttons.yt-live-chat-paid-message-renderer>.yt-live-chat-paid-message-renderer:hover {
+#inline-action-buttons.yt-live-chat-paid-message-renderer > .yt-live-chat-paid-message-renderer:hover {
   background: hsl(0, 0%, 6.7%);
 }
 
-#additional-inline-action-buttons.yt-live-chat-paid-message-renderer>*.yt-live-chat-paid-message-renderer {
+#additional-inline-action-buttons.yt-live-chat-paid-message-renderer > *.yt-live-chat-paid-message-renderer {
   color: var(--yt-live-chat-additional-inline-action-button-color);
   background: var(--yt-live-chat-additional-inline-action-button-background-color);
 }
 
-#additional-inline-action-buttons.yt-live-chat-paid-message-renderer>.yt-live-chat-paid-message-renderer:hover {
+#additional-inline-action-buttons.yt-live-chat-paid-message-renderer > .yt-live-chat-paid-message-renderer:hover {
   background: var(--yt-live-chat-additional-inline-action-button-background-color-hover);
 }
 
@@ -108,7 +167,9 @@ yt-live-chat-paid-message-renderer[has-inline-action-buttons]:hover #menu.yt-liv
   margin-left: 32px;
 }
 
-#inline-action-buttons.yt-live-chat-paid-message-renderer>*.yt-live-chat-paid-message-renderer:not(:first-child), #additional-inline-action-buttons.yt-live-chat-paid-message-renderer>*.yt-live-chat-paid-message-renderer:not(:first-child) {
+#inline-action-buttons.yt-live-chat-paid-message-renderer > *.yt-live-chat-paid-message-renderer:not(:first-child),
+#additional-inline-action-buttons.yt-live-chat-paid-message-renderer
+  > *.yt-live-chat-paid-message-renderer:not(:first-child) {
   margin-left: 8px;
 }
 
@@ -137,7 +198,10 @@ yt-live-chat-paid-message-renderer[dashboard-money-feed] {
   -ms-flex-direction: column;
   -webkit-flex-direction: column;
   flex-direction: column;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 2px 2px 0 rgba(0, 0, 0, 0.14),
+    0 1px 5px 0 rgba(0, 0, 0, 0.12),
+    0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
 
 yt-live-chat-paid-message-renderer[dashboard-money-feed] #card.yt-live-chat-paid-message-renderer {
@@ -226,7 +290,8 @@ yt-live-chat-paid-message-renderer[dashboard-money-feed] #header-content.yt-live
   flex-basis: 0.000000001px;
 }
 
-yt-live-chat-paid-message-renderer[dashboard-money-feed] #header-content-primary-column.yt-live-chat-paid-message-renderer {
+yt-live-chat-paid-message-renderer[dashboard-money-feed]
+  #header-content-primary-column.yt-live-chat-paid-message-renderer {
   margin-bottom: 4px;
   display: flex;
   -ms-flex-direction: row;
@@ -280,14 +345,19 @@ yt-live-chat-paid-message-renderer[dashboard-money-feed] #author-name.yt-live-ch
   order: 1;
 }
 
-yt-live-chat-paid-message-renderer[dashboard-money-feed] #author-name.yt-live-chat-paid-message-renderer[is-deleted].yt-live-chat-paid-message-renderer::before {
+yt-live-chat-paid-message-renderer[dashboard-money-feed]
+  #author-name.yt-live-chat-paid-message-renderer[is-deleted].yt-live-chat-paid-message-renderer::before {
   content: 'â€‹';
   display: inline;
   width: 0;
 }
 
 #menu.yt-live-chat-paid-message-renderer {
-  background: linear-gradient(to right, transparent, var(--yt-live-chat-paid-message-header-background-color, #125aac) 100%);
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--yt-live-chat-paid-message-header-background-color, #125aac) 100%
+  );
   border-radius: 0 4px 4px 0;
 }
 
@@ -296,7 +366,8 @@ yt-live-chat-paid-message-renderer[dashboard-money-feed] #menu.yt-live-chat-paid
   background: linear-gradient(to right, transparent, var(--yt-live-chat-background-color) 40%);
 }
 
-yt-live-chat-paid-message-renderer[allow-animations] #content.yt-live-chat-paid-message-renderer, yt-live-chat-paid-message-renderer[allow-animations] #header.yt-live-chat-paid-message-renderer {
+yt-live-chat-paid-message-renderer[allow-animations] #content.yt-live-chat-paid-message-renderer,
+yt-live-chat-paid-message-renderer[allow-animations] #header.yt-live-chat-paid-message-renderer {
   transition-property: background-color, color;
   transition-duration: 0.2s;
 }
@@ -344,11 +415,15 @@ yt-live-chat-paid-message-renderer[dashboard-money-feed] #message.yt-live-chat-p
   margin-top: 4px;
 }
 
-#message.yt-live-chat-paid-message-renderer a.yt-live-chat-paid-message-renderer .mention.yt-live-chat-paid-message-renderer {
+#message.yt-live-chat-paid-message-renderer
+  a.yt-live-chat-paid-message-renderer
+  .mention.yt-live-chat-paid-message-renderer {
   text-decoration: underline;
 }
 
-#message.yt-live-chat-paid-message-renderer:empty, #author-name.yt-live-chat-paid-message-renderer:empty:not([is-deleted]).yt-live-chat-paid-message-renderer, #deleted-state.yt-live-chat-paid-message-renderer:empty {
+#message.yt-live-chat-paid-message-renderer:empty,
+#author-name.yt-live-chat-paid-message-renderer:empty:not([is-deleted]).yt-live-chat-paid-message-renderer,
+#deleted-state.yt-live-chat-paid-message-renderer:empty {
   display: none;
 }
 
@@ -369,7 +444,7 @@ yt-live-chat-paid-message-renderer[dashboard-money-feed] #author-name.yt-live-ch
 }
 
 yt-live-chat-paid-message-renderer[show-footer-divider] #footer.yt-live-chat-paid-message-renderer::before {
-  content: "";
+  content: '';
   display: flex;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   margin: 8px 0;

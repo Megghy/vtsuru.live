@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NScrollbar } from 'naive-ui';
+import { NScrollbar } from 'naive-ui'
+
 import BlockPropertyEditor from './BlockPropertyEditor.vue'
 
 defineOptions({ name: 'BuilderPropsPane' })
@@ -10,4 +11,3 @@ defineOptions({ name: 'BuilderPropsPane' })
     <BlockPropertyEditor />
   </NScrollbar>
 </template>
-

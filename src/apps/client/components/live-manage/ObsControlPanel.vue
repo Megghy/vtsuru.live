@@ -20,33 +20,30 @@ const handleToggleConnect = () => {
     class="live-manage-card"
   >
     <template #header>
-      <NFlex align="center" justify="space-between">
-        <NText strong>
-          OBS 控制 / 统计
-        </NText>
+      <NFlex
+        align="center"
+        justify="space-between"
+      >
+        <NText strong> OBS 控制 / 统计 </NText>
         <NTooltip placement="bottom">
           <template #trigger>
             <NText
               depth="3"
-              style="font-size: 12px; cursor: help;"
+              style="font-size: 12px; cursor: help"
             >
               使用说明
             </NText>
           </template>
-          <div style="max-width: 260px;">
-            <p style="margin: 0 0 8px;">
-              在 OBS 中开启 WebSocket：
-            </p>
-            <ol style="padding-left: 18px; margin: 0;">
+          <div style="max-width: 260px">
+            <p style="margin: 0 0 8px">在 OBS 中开启 WebSocket：</p>
+            <ol style="padding-left: 18px; margin: 0">
               <li>在 OBS 菜单中选择「工具 - WebSocket 服务器设置」</li>
               <li>选择「开启 WebSocket 服务器」</li>
               <li>服务器密码选择手动输入或点击「生成密码」自动生成，也可留空</li>
               <li>点击「应用」</li>
               <li>点击「显示连接信息」，记下端口与密码</li>
             </ol>
-            <p style="margin: 8px 0 0;">
-              在上方输入对应的连接信息，点击「连接」即可
-            </p>
+            <p style="margin: 8px 0 0">在上方输入对应的连接信息，点击「连接」即可</p>
           </div>
         </NTooltip>
       </NFlex>
@@ -145,17 +142,23 @@ const handleToggleConnect = () => {
         </NGi>
         <NGi>
           <NStatistic label="丢帧（输出）">
-            <NTooltip v-if="obsStore.obsStats.outputSkippedFrames != null && obsStore.obsStats.outputTotalFrames != null && obsStore.obsStats.outputTotalFrames > 0">
+            <NTooltip
+              v-if="
+                obsStore.obsStats.outputSkippedFrames != null &&
+                obsStore.obsStats.outputTotalFrames != null &&
+                obsStore.obsStats.outputTotalFrames > 0
+              "
+            >
               <template #trigger>
-                <span style="cursor: help;">
-                  {{ ((obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100).toFixed(2) }}%
+                <span style="cursor: help">
+                  {{
+                    ((obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100).toFixed(2)
+                  }}%
                 </span>
               </template>
               {{ obsStore.obsStats.outputSkippedFrames }} / {{ obsStore.obsStats.outputTotalFrames }}
             </NTooltip>
-            <template v-else>
-              —
-            </template>
+            <template v-else> — </template>
           </NStatistic>
         </NGi>
         <NGi>
@@ -170,26 +173,35 @@ const handleToggleConnect = () => {
         </NGi>
         <NGi>
           <NStatistic label="渲染跳帧">
-            <NTooltip v-if="obsStore.obsStats.renderSkippedFrames != null && obsStore.obsStats.renderTotalFrames != null && obsStore.obsStats.renderTotalFrames > 0">
+            <NTooltip
+              v-if="
+                obsStore.obsStats.renderSkippedFrames != null &&
+                obsStore.obsStats.renderTotalFrames != null &&
+                obsStore.obsStats.renderTotalFrames > 0
+              "
+            >
               <template #trigger>
-                <span style="cursor: help;">
-                  {{ ((obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100).toFixed(2) }}%
+                <span style="cursor: help">
+                  {{
+                    ((obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100).toFixed(2)
+                  }}%
                 </span>
               </template>
               {{ obsStore.obsStats.renderSkippedFrames }} / {{ obsStore.obsStats.renderTotalFrames }}
             </NTooltip>
-            <template v-else>
-              —
-            </template>
+            <template v-else> — </template>
           </NStatistic>
         </NGi>
       </NGrid>
 
       <!-- __SCENE__ -->
       <!-- OBS 场景控制 -->
-      <NDivider style="margin: 0;" />
+      <NDivider style="margin: 0" />
 
-      <NText strong style="display: block;">
+      <NText
+        strong
+        style="display: block"
+      >
         OBS 场景控制
       </NText>
 
@@ -198,11 +210,9 @@ const handleToggleConnect = () => {
         <NFlex
           align="center"
           justify="space-between"
-          style="margin-bottom: 8px;"
+          style="margin-bottom: 8px"
         >
-          <NText strong>
-            场景切换
-          </NText>
+          <NText strong> 场景切换 </NText>
           <NTag
             :type="obsStore.currentObsScene ? 'success' : 'default'"
             size="small"
@@ -222,13 +232,15 @@ const handleToggleConnect = () => {
             :type="scene === obsStore.currentObsScene ? 'primary' : 'default'"
             :bordered="scene !== obsStore.currentObsScene"
             size="medium"
-            style="cursor: pointer;"
+            style="cursor: pointer"
             :loading="obsStore.isSwitchingScene"
-            @click="() => {
-              if (!obsStore.isSwitchingScene && scene !== obsStore.currentObsScene) {
-                obsStore.switchToScene(scene)
+            @click="
+              () => {
+                if (!obsStore.isSwitchingScene && scene !== obsStore.currentObsScene) {
+                  obsStore.switchToScene(scene)
+                }
               }
-            }"
+            "
           >
             {{ scene }}
           </NTag>
@@ -241,11 +253,9 @@ const handleToggleConnect = () => {
       </div>
 
       <!-- 场景配置 -->
-      <NDivider style="margin: 0;" />
+      <NDivider style="margin: 0" />
 
-      <NText strong>
-        场景联动配置
-      </NText>
+      <NText strong> 场景联动配置 </NText>
 
       <NFlex
         vertical
@@ -268,7 +278,10 @@ const handleToggleConnect = () => {
         >
           <div>
             <NText>开播下播后自动切换 OBS 推流状态</NText>
-            <NText depth="3" style="font-size: 12px; display: block; margin-top: 2px;">
+            <NText
+              depth="3"
+              style="font-size: 12px; display: block; margin-top: 2px"
+            >
               开播时自动开始推流，下播时自动停止推流
             </NText>
           </div>
@@ -280,45 +293,42 @@ const handleToggleConnect = () => {
       </NFlex>
 
       <template v-if="obsStore.obsSceneConfig.autoSwitchEnabled">
-        <NFlex vertical :size="12">
+        <NFlex
+          vertical
+          :size="12"
+        >
           <div>
-            <NText strong>
-              开播场景
-            </NText>
+            <NText strong> 开播场景 </NText>
             <NSelect
               v-model:value="obsStore.obsSceneConfig.startScene"
-              :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
+              :options="obsStore.obsScenes.map((scene) => ({ label: scene, value: scene }))"
               placeholder="选择开播时自动切换的场景"
               :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              style="margin-top: 8px;"
+              style="margin-top: 8px"
               @update:value="obsStore.saveSceneConfig"
             />
           </div>
 
           <div>
-            <NText strong>
-              下播场景
-            </NText>
+            <NText strong> 下播场景 </NText>
             <NSelect
               v-model:value="obsStore.obsSceneConfig.stopScene"
-              :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
+              :options="obsStore.obsScenes.map((scene) => ({ label: scene, value: scene }))"
               placeholder="选择下播时自动切换的场景"
               :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              style="margin-top: 8px;"
+              style="margin-top: 8px"
               @update:value="obsStore.saveSceneConfig"
             />
           </div>
 
           <div>
-            <NText strong>
-              等待场景
-            </NText>
+            <NText strong> 等待场景 </NText>
             <NSelect
               v-model:value="obsStore.obsSceneConfig.waitingScene"
-              :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
+              :options="obsStore.obsScenes.map((scene) => ({ label: scene, value: scene }))"
               placeholder="选择等待直播时的场景（可选）"
               :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              style="margin-top: 8px;"
+              style="margin-top: 8px"
               @update:value="obsStore.saveSceneConfig"
             />
           </div>
@@ -337,7 +347,7 @@ const handleToggleConnect = () => {
       <!-- 帮助提示 -->
       <NText
         depth="3"
-        style="font-size: 12px; display: block;"
+        style="font-size: 12px; display: block"
       >
         配置场景联动后，开播/下播时会自动切换到对应的场景。请确保 OBS 中已创建相应的场景。
       </NText>

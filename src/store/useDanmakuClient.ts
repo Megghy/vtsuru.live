@@ -1,19 +1,20 @@
+import { defineStore } from 'pinia'
+import { computed, onScopeDispose, ref, shallowRef } from 'vue'
+
+import { useAccount } from '@/api/account'
 import type { EventModel, OpenLiveInfo } from '@/api/api-models'
+import { isTauri } from '@/shared/config'
+import { probeLocalFetcher } from '@/shared/rpc/client'
+import type { ClientType, DanmakuSourceMeta } from '@/shared/services/danmakuChannel'
+import { createDanmakuChannel } from '@/shared/services/danmakuChannel'
+import BroadcastChannelClient from '@/shared/services/DanmakuClients/BroadcastChannelClient'
 import type DanmakuEventEmitter from '@/shared/services/DanmakuClients/DanmakuEventEmitter'
 import type { ModelEventListeners, RawEventListeners } from '@/shared/services/DanmakuClients/DanmakuEventEmitter'
 import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
-import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
-import type { ClientType, DanmakuSourceMeta } from '@/shared/services/danmakuChannel'
-import { defineStore } from 'pinia'
-import { computed, onScopeDispose, ref, shallowRef } from 'vue'
-import { useAccount } from '@/api/account'
-import { isTauri } from '@/shared/config'
-import BroadcastChannelClient from '@/shared/services/DanmakuClients/BroadcastChannelClient'
 import DirectClient from '@/shared/services/DanmakuClients/DirectClient'
 import LocalRpcClient from '@/shared/services/DanmakuClients/LocalRpcClient'
+import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import OpenLiveClient from '@/shared/services/DanmakuClients/OpenLiveClient'
-import { createDanmakuChannel } from '@/shared/services/danmakuChannel'
-import { probeLocalFetcher } from '@/shared/rpc/client'
 
 const MODEL_EVENT_NAMES = ['danmaku', 'gift', 'sc', 'guard', 'enter', 'scDel', 'follow', 'like'] as const
 const REMOTE_SOURCE_TTL_MS = 15_000
@@ -22,7 +23,7 @@ const FALLBACK_ELECTION_MS = 600
 const CONNECT_RETRY_MS = 5_000
 const CONNECT_ATTEMPTS = 5
 
-type EventName = typeof MODEL_EVENT_NAMES[number]
+type EventName = (typeof MODEL_EVENT_NAMES)[number]
 type EventNameWithAll = EventName | 'all'
 type Listener = (arg1: any, arg2?: any) => void
 type AllEventListener = (arg1: any) => void
@@ -228,7 +229,12 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     return useDanmakuClient()
   }
 
-  async function connectGeneration(intent: SourceIntent, taskGeneration: number, reconnecting: boolean, allowUpstream: boolean) {
+  async function connectGeneration(
+    intent: SourceIntent,
+    taskGeneration: number,
+    reconnecting: boolean,
+    allowUpstream: boolean,
+  ) {
     channel.requestState(intent.scope)
     const leader = await acquireLeadership(intent.scope, taskGeneration)
     if (!isCurrent(taskGeneration, intent)) return
@@ -268,7 +274,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   }
 
   async function buildLeaderClient(intent: SourceIntent, allowLocal: boolean) {
-    if (allowLocal && !isTauri() && await probeLocalFetcher()) return new LocalRpcClient()
+    if (allowLocal && !isTauri() && (await probeLocalFetcher())) return new LocalRpcClient()
     return intent.build()
   }
 
@@ -276,7 +282,8 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     danmakuClient.value = client
     client.eventsRaw = rawListeners
     client.onConnectionLost = () => {
-      if (danmakuClient.value === client && isCurrent(taskGeneration, intent)) void restartConnection(`${client.type} 弹幕源意外断开`)
+      if (danmakuClient.value === client && isCurrent(taskGeneration, intent))
+        void restartConnection(`${client.type} 弹幕源意外断开`)
     }
     attachModelEventBridge(client, intent.scope)
 
@@ -295,13 +302,14 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
       }
 
       authInfo.value = client instanceof OpenLiveClient ? client.roomAuthInfo : undefined
-      sourceMeta.value = client instanceof OpenLiveClient && client.roomAuthInfo
-        ? {
-            roomId: client.roomAuthInfo.anchor_info.room_id,
-            uname: client.roomAuthInfo.anchor_info.uname,
-            avatar: client.roomAuthInfo.anchor_info.uface,
-          }
-        : intent.meta
+      sourceMeta.value =
+        client instanceof OpenLiveClient && client.roomAuthInfo
+          ? {
+              roomId: client.roomAuthInfo.anchor_info.room_id,
+              uname: client.roomAuthInfo.anchor_info.uname,
+              avatar: client.roomAuthInfo.anchor_info.uface,
+            }
+          : intent.meta
       state.value = 'connected'
       phase.value = 'connected'
       startSourceHeartbeat()
@@ -418,7 +426,9 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
 
   function startReaderWatchdog() {
     stopReaderWatchdog()
-    readerWatchdogTimer = setInterval(() => { void verifyLeaderLock() }, SOURCE_HEARTBEAT_MS)
+    readerWatchdogTimer = setInterval(() => {
+      void verifyLeaderLock()
+    }, SOURCE_HEARTBEAT_MS)
   }
 
   function stopReaderWatchdog() {
@@ -432,7 +442,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     if (navigator.locks) {
       const scope = currentIntent.scope
       const snapshot = await navigator.locks.query()
-      if (!snapshot.held?.some(lock => lock.name === getLockName(scope))) {
+      if (!snapshot.held?.some((lock) => lock.name === getLockName(scope))) {
         await restartConnection('主弹幕源已退出')
       }
       return
@@ -454,19 +464,24 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
         resolve(leader)
       }
 
-      const task = navigator.locks.request(getLockName(scope), { ifAvailable: true }, async (lock) => {
-        if (!lock || generation !== taskGeneration) {
+      const task = navigator.locks
+        .request(getLockName(scope), { ifAvailable: true }, async (lock) => {
+          if (!lock || generation !== taskGeneration) {
+            decide(false)
+            return
+          }
+          decide(true)
+          await new Promise<void>((release) => {
+            releaseLeaderLock = release
+          })
+        })
+        .catch((error) => {
+          console.warn('[DanmakuClient] Web Locks 获取失败:', error)
           decide(false)
-          return
-        }
-        decide(true)
-        await new Promise<void>((release) => { releaseLeaderLock = release })
-      }).catch((error) => {
-        console.warn('[DanmakuClient] Web Locks 获取失败:', error)
-        decide(false)
-      }).finally(() => {
-        if (leaderLockTask === task) leaderLockTask = undefined
-      })
+        })
+        .finally(() => {
+          if (leaderLockTask === task) leaderLockTask = undefined
+        })
       leaderLockTask = task
     })
   }

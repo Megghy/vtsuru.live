@@ -1,8 +1,10 @@
-import type { APIRoot, UserBasicInfo, UserInfo } from './api-models'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+
 import { QueryGetAPI } from '@/api/query'
 import { USER_API_URL } from '@/shared/config'
+
+import type { APIRoot, UserBasicInfo, UserInfo } from './api-models'
 
 export const USERS = ref<{ [id: string]: UserInfo }>({})
 

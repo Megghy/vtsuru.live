@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useThemeVars } from 'naive-ui'
+import { computed } from 'vue'
 
 defineProps<{
   active: boolean
@@ -24,9 +24,16 @@ const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
   >
     <div class="row">
       <span class="title">{{ title }}</span>
-      <span v-if="badge" class="badge">{{ badge }}</span>
+      <span
+        v-if="badge"
+        class="badge"
+        >{{ badge }}</span
+      >
     </div>
-    <p v-if="description" class="desc">
+    <p
+      v-if="description"
+      class="desc"
+    >
       {{ description }}
     </p>
   </button>
@@ -44,7 +51,10 @@ const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
   display: flex;
   flex-direction: column;
   gap: 4px;
-  transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
   min-height: 56px;
   width: 100%;
   font: inherit;

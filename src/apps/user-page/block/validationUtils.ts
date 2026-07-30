@@ -9,7 +9,7 @@ export function validationFieldPath(path: string, key: string) {
 }
 
 export function asObject(value: unknown): PropsObject | null {
-  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as PropsObject : null
+  return value !== null && typeof value === 'object' && !Array.isArray(value) ? (value as PropsObject) : null
 }
 
 export function isNonEmptyString(value: unknown): value is string {
@@ -27,7 +27,8 @@ export function isHttpsUrl(value: unknown): value is string {
 }
 
 export function optionalString(props: PropsObject, key: string, path: string, errors: ValidationErrors) {
-  if (props[key] !== undefined && typeof props[key] !== 'string') errors.push(`${path}: ${key} 必须是 string`, validationFieldPath(path, key))
+  if (props[key] !== undefined && typeof props[key] !== 'string')
+    errors.push(`${path}: ${key} 必须是 string`, validationFieldPath(path, key))
 }
 
 export function requiredString(props: PropsObject, key: string, path: string, errors: ValidationErrors) {
@@ -35,11 +36,19 @@ export function requiredString(props: PropsObject, key: string, path: string, er
 }
 
 export function optionalBoolean(props: PropsObject, key: string, path: string, errors: ValidationErrors) {
-  if (props[key] !== undefined && typeof props[key] !== 'boolean') errors.push(`${path}: ${key} 必须是 boolean`, validationFieldPath(path, key))
+  if (props[key] !== undefined && typeof props[key] !== 'boolean')
+    errors.push(`${path}: ${key} 必须是 boolean`, validationFieldPath(path, key))
 }
 
-export function optionalEnum(props: PropsObject, key: string, values: readonly unknown[], path: string, errors: ValidationErrors) {
-  if (props[key] !== undefined && !values.includes(props[key])) errors.push(`${path}: ${key} 不支持`, validationFieldPath(path, key))
+export function optionalEnum(
+  props: PropsObject,
+  key: string,
+  values: readonly unknown[],
+  path: string,
+  errors: ValidationErrors,
+) {
+  if (props[key] !== undefined && !values.includes(props[key]))
+    errors.push(`${path}: ${key} 不支持`, validationFieldPath(path, key))
 }
 
 export function optionalNumber(
@@ -59,7 +68,8 @@ export function optionalNumber(
 }
 
 export function optionalHttpsUrl(props: PropsObject, key: string, path: string, errors: ValidationErrors) {
-  if (props[key] !== undefined && props[key] !== '' && !isHttpsUrl(props[key])) errors.push(`${path}: ${key} 必须是 https URL`, validationFieldPath(path, key))
+  if (props[key] !== undefined && props[key] !== '' && !isHttpsUrl(props[key]))
+    errors.push(`${path}: ${key} 必须是 https URL`, validationFieldPath(path, key))
 }
 
 export function optionalCssSize(props: PropsObject, key: string, path: string, errors: ValidationErrors) {
@@ -102,11 +112,16 @@ export function validateLinkTarget(props: PropsObject, path: string, errors: Val
   const hasUrl = props.url !== undefined
   const hasPage = props.page !== undefined
   const hasBack = props.back === true
-  if (props.back !== undefined && props.back !== true) errors.push(`${path}: back 必须为 true`, validationFieldPath(path, 'back'))
+  if (props.back !== undefined && props.back !== true)
+    errors.push(`${path}: back 必须为 true`, validationFieldPath(path, 'back'))
   const count = Number(hasUrl) + Number(hasPage) + Number(hasBack)
   if (count !== 1) errors.push(`${path}: 必须且只能提供 url/page/back 其中一个`)
   if (hasUrl && !isHttpsUrl(props.url)) errors.push(`${path}: url 必须是 https URL`, validationFieldPath(path, 'url'))
-  if (hasPage && (!isNonEmptyString(props.page) || (props.page !== 'home' && !/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(props.page)))) {
+  if (
+    hasPage &&
+    (!isNonEmptyString(props.page) ||
+      (props.page !== 'home' && !/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(props.page)))
+  ) {
     errors.push(`${path}: page 必须是 home 或合法 slug`, validationFieldPath(path, 'page'))
   }
 }

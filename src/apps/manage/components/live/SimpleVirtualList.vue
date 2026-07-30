@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { ScrollbarInst } from 'naive-ui/es/_internal'
-import type { PropType } from 'vue'
-import type { VirtualListInst } from 'vueuc'
-import type { ItemData } from 'vueuc/lib/virtual-list/src/type'
 import { NScrollbar } from 'naive-ui/es/_internal'
+import type { PropType } from 'vue'
 import { computed, onMounted, ref } from 'vue'
+import type { VirtualListInst } from 'vueuc'
 import { VVirtualList } from 'vueuc'
+import type { ItemData } from 'vueuc/lib/virtual-list/src/type'
 
 const props = defineProps({
   items: {

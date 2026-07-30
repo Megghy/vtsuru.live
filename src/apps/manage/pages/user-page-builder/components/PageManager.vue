@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NModal, NText, NTooltip } from 'naive-ui';
-import { computed, h, inject, ref } from 'vue'
 import { CopyOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
+import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NModal, NText, NTooltip } from 'naive-ui'
+import { computed, h, inject, ref } from 'vue'
+
 import { UserPageEditorKey } from '../context'
 import { usePageEntries } from '../usePageEntries'
 
@@ -20,16 +21,23 @@ const deletePageSlug = ref('')
 
 const pageActionOptions = [
   { label: '复制', key: 'duplicate', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
-  { label: '删除', key: 'delete', icon: () => h(NIcon, null, { default: () => h(TrashOutline) }), props: { style: 'color: #d03050' } },
+  {
+    label: '删除',
+    key: 'delete',
+    icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
+    props: { style: 'color: #d03050' },
+  },
 ]
 
 const { pageEntries, visiblePages, hiddenPages } = usePageEntries(editor)
 const pagesCount = computed(() => pageEntries.value.length)
 const canCreateMorePages = computed(() => pagesCount.value < editor.MAX_PAGES_COUNT)
-const pageSections = computed(() => [
-  { key: 'visible', label: '子页面 · 导航显示', pages: visiblePages.value, hidden: false },
-  { key: 'hidden', label: '隐藏页面 · 仅可通过按钮跳转', pages: hiddenPages.value, hidden: true },
-].filter(section => section.pages.length))
+const pageSections = computed(() =>
+  [
+    { key: 'visible', label: '子页面 · 导航显示', pages: visiblePages.value, hidden: false },
+    { key: 'hidden', label: '隐藏页面 · 仅可通过按钮跳转', pages: hiddenPages.value, hidden: true },
+  ].filter((section) => section.pages.length),
+)
 
 function openDuplicatePage(slug: string) {
   duplicateFromSlug.value = slug
@@ -89,8 +97,14 @@ function confirmDuplicatePage() {
         新建子页面
       </NButton>
       <NFlex vertical>
-        <template v-for="section in pageSections" :key="section.key">
-          <NText depth="3" :style="{ fontSize: '12px', marginTop: section.hidden ? '10px' : '4px' }">
+        <template
+          v-for="section in pageSections"
+          :key="section.key"
+        >
+          <NText
+            depth="3"
+            :style="{ fontSize: '12px', marginTop: section.hidden ? '10px' : '4px' }"
+          >
             {{ section.label }}
           </NText>
           <div
@@ -116,7 +130,12 @@ function confirmDuplicatePage() {
                     :options="pageActionOptions"
                     @select="(key) => handlePageAction(String(key), p.slug)"
                   >
-                    <NButton quaternary circle size="small" aria-label="更多页面操作">
+                    <NButton
+                      quaternary
+                      circle
+                      size="small"
+                      aria-label="更多页面操作"
+                    >
                       <template #icon>
                         <NIcon><EllipsisHorizontalOutline /></NIcon>
                       </template>
@@ -138,20 +157,33 @@ function confirmDuplicatePage() {
       style="width: 420px; max-width: 90vw"
       :auto-focus="false"
     >
-      <NForm size="small" label-placement="top">
-        <NFormItem label="slug" required>
-          <NInput v-model:value="newSlug" placeholder="例如 links / sponsor / faq" />
+      <NForm
+        size="small"
+        label-placement="top"
+      >
+        <NFormItem
+          label="slug"
+          required
+        >
+          <NInput
+            v-model:value="newSlug"
+            placeholder="例如 links / sponsor / faq"
+          />
         </NFormItem>
-        <NAlert type="info" :show-icon="true">
+        <NAlert
+          type="info"
+          :show-icon="true"
+        >
           创建后可访问：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
         </NAlert>
       </NForm>
       <template #footer>
         <NFlex justify="end">
-          <NButton @click="addPageModal = false">
-            取消
-          </NButton>
-          <NButton type="primary" @click="createPage">
+          <NButton @click="addPageModal = false"> 取消 </NButton>
+          <NButton
+            type="primary"
+            @click="createPage"
+          >
             创建
           </NButton>
         </NFlex>
@@ -165,23 +197,34 @@ function confirmDuplicatePage() {
       style="width: 420px; max-width: 90vw"
       :auto-focus="false"
     >
-      <NForm size="small" label-placement="top">
-        <NAlert type="info" :show-icon="true">
+      <NForm
+        size="small"
+        label-placement="top"
+      >
+        <NAlert
+          type="info"
+          :show-icon="true"
+        >
           复制自：/{{ duplicateFromSlug || 'slug' }}
         </NAlert>
-        <NFormItem label="新 slug" required>
-          <NInput v-model:value="duplicateToSlug" placeholder="例如 links-copy" />
+        <NFormItem
+          label="新 slug"
+          required
+        >
+          <NInput
+            v-model:value="duplicateToSlug"
+            placeholder="例如 links-copy"
+          />
         </NFormItem>
-        <NText depth="3">
-          会自动为区块页生成新的 block.id，避免与原页面冲突。
-        </NText>
+        <NText depth="3"> 会自动为区块页生成新的 block.id，避免与原页面冲突。 </NText>
       </NForm>
       <template #footer>
         <NFlex justify="end">
-          <NButton @click="duplicatePageModal = false">
-            取消
-          </NButton>
-          <NButton type="primary" @click="confirmDuplicatePage">
+          <NButton @click="duplicatePageModal = false"> 取消 </NButton>
+          <NButton
+            type="primary"
+            @click="confirmDuplicatePage"
+          >
             确定
           </NButton>
         </NFlex>

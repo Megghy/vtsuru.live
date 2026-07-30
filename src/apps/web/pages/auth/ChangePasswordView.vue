@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { NButton, NCard, NInput, NLayoutContent, NFlex, useMessage } from 'naive-ui';
+import { NButton, NCard, NInput, NLayoutContent, NFlex, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+
 import { QueryGetAPI } from '@/api/query'
-import { ACCOUNT_API_URL } from '@/shared/config'
 import router from '@/app/router'
+import { ACCOUNT_API_URL } from '@/shared/config'
+
 import '@/apps/web/styles/web-page.css'
 
 const password = ref('')
@@ -52,7 +54,11 @@ function changePassword() {
 <template>
   <NLayoutContent class="web-center">
     <div class="web-page web-page--md">
-      <NCard title="修改密码" size="small" bordered>
+      <NCard
+        title="修改密码"
+        size="small"
+        bordered
+      >
         <NFlex vertical>
           <NInput
             v-model:value="password"

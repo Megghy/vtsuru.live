@@ -18,7 +18,14 @@ export interface RemoveBgOptions {
 const STORAGE_KEY = 'remove-bg-options'
 
 function defaultOptions(): RemoveBgOptions {
-  return { mode: 'remove-bg', model: 'isnet_fp16', device: 'cpu', format: 'image/png', quality: 0.8, proxyToWorker: true }
+  return {
+    mode: 'remove-bg',
+    model: 'isnet_fp16',
+    device: 'cpu',
+    format: 'image/png',
+    quality: 0.8,
+    proxyToWorker: true,
+  }
 }
 
 function loadOptions(): RemoveBgOptions {

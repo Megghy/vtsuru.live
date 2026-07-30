@@ -29,6 +29,7 @@ export interface ThemeTokens {
   secondaryHover: string
   secondaryPressed: string
   borderColor: string
+  cardBorderColor: string
   inputBorderColor: string
   inputBorderHover: string
   placeholder: string
@@ -61,7 +62,6 @@ export interface ThemeTokens {
   // tooltip
   tooltipColor: string
   tooltipTextColor: string
-
 }
 
 interface SurfacePalette {
@@ -76,6 +76,7 @@ interface SurfacePalette {
   secondary: string
   secondaryHover: string
   secondaryPressed: string
+  cardBorderColor: string
 }
 
 function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
@@ -104,7 +105,7 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
   const brandHover = pickByMode(isDark, brand[200], brand[300])
   const brandPressed = pickByMode(isDark, brand[400], brand[500])
   const brandRail = pickByMode(isDark, rgba(brand[400], 0.22), rgba(brand[400], 0.18))
-  const brandSoft = pickByMode(isDark, rgba(brand[400], 0.14), rgba(brand[400], 0.10))
+  const brandSoft = pickByMode(isDark, rgba(brand[400], 0.14), rgba(brand[400], 0.1))
   const brandTint = pickByMode(isDark, rgba(brand[400], 0.18), rgba(brand[400], 0.14))
 
   const tooltipColor = isDark ? neutral[800] : neutral[900]
@@ -112,15 +113,9 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
 
   // 浮层阴影：暗色统一加 1px 极弱描边，与页面背景剥离
   const shadowGlow = isDark ? `0 0 0 1px ${rgba(neutral[50], 0.06)}` : ''
-  const shadow1Base = isDark
-    ? `0 1px 2px ${rgba(neutral[950], 0.6)}`
-    : `0 1px 2px ${rgba(neutral[950], 0.06)}`
-  const shadow2Base = isDark
-    ? `0 4px 12px ${rgba(neutral[950], 0.7)}`
-    : `0 4px 12px ${rgba(neutral[950], 0.12)}`
-  const shadow3Base = isDark
-    ? `0 8px 30px ${rgba(neutral[950], 0.7)}`
-    : `0 8px 30px ${rgba(neutral[950], 0.12)}`
+  const shadow1Base = isDark ? `0 1px 2px ${rgba(neutral[950], 0.6)}` : `0 1px 2px ${rgba(neutral[950], 0.06)}`
+  const shadow2Base = isDark ? `0 4px 12px ${rgba(neutral[950], 0.7)}` : `0 4px 12px ${rgba(neutral[950], 0.12)}`
+  const shadow3Base = isDark ? `0 8px 30px ${rgba(neutral[950], 0.7)}` : `0 8px 30px ${rgba(neutral[950], 0.12)}`
 
   const shadow1 = isDark ? `${shadowGlow}, ${shadow1Base}` : shadow1Base
   const shadow2 = isDark ? `${shadowGlow}, ${shadow2Base}` : shadow2Base
@@ -161,61 +156,71 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
 }
 
 export function buildSiteTokens(isDark: boolean): ThemeTokens {
-  return createTokens(isDark, isDark
-    ? {
-        canvas: neutral[950],
-        surface: neutral[900],
-        surfaceHover: neutral[800],
-        inset: neutral[950],
-        elevated: neutral[800],
-        control: neutral[900],
-        controlHover: neutral[800],
-        controlPressed: neutral[700],
-        secondary: neutral[700],
-        secondaryHover: neutral[600],
-        secondaryPressed: neutral[500],
-      }
-    : {
-        canvas: '#ffffff',
-        surface: '#ffffff',
-        surfaceHover: neutral[100],
-        inset: neutral[100],
-        elevated: '#ffffff',
-        control: '#ffffff',
-        controlHover: neutral[100],
-        controlPressed: neutral[200],
-        secondary: neutral[200],
-        secondaryHover: neutral[300],
-        secondaryPressed: neutral[400],
-      })
+  return createTokens(
+    isDark,
+    isDark
+      ? {
+          canvas: neutral[950],
+          surface: neutral[900],
+          surfaceHover: neutral[800],
+          inset: neutral[950],
+          elevated: neutral[800],
+          control: neutral[900],
+          controlHover: neutral[800],
+          controlPressed: neutral[700],
+          secondary: neutral[700],
+          secondaryHover: neutral[600],
+          secondaryPressed: neutral[500],
+          cardBorderColor: neutral[800],
+        }
+      : {
+          canvas: '#ffffff',
+          surface: '#ffffff',
+          surfaceHover: neutral[100],
+          inset: neutral[100],
+          elevated: '#ffffff',
+          control: '#ffffff',
+          controlHover: neutral[100],
+          controlPressed: neutral[200],
+          secondary: neutral[200],
+          secondaryHover: neutral[300],
+          secondaryPressed: neutral[400],
+          cardBorderColor: neutral[300],
+        },
+  )
 }
 
 export function buildManageTokens(isDark: boolean): ThemeTokens {
-  return createTokens(isDark, isDark
-    ? {
-        canvas: neutral[900],
-        surface: neutral[800],
-        surfaceHover: neutral[700],
-        inset: neutral[950],
-        elevated: neutral[700],
-        control: neutral[800],
-        controlHover: neutral[700],
-        controlPressed: neutral[600],
-        secondary: neutral[700],
-        secondaryHover: neutral[600],
-        secondaryPressed: neutral[500],
-      }
-    : {
-        canvas: neutral[100],
-        surface: '#ffffff',
-        surfaceHover: neutral[100],
-        inset: neutral[200],
-        elevated: '#ffffff',
-        control: '#ffffff',
-        controlHover: neutral[100],
-        controlPressed: neutral[200],
-        secondary: neutral[200],
-        secondaryHover: neutral[300],
-        secondaryPressed: neutral[400],
-      })
+  return createTokens(
+    isDark,
+    isDark
+      ? {
+          canvas: neutral[900],
+          surface: neutral[800],
+          surfaceHover: neutral[700],
+          inset: neutral[950],
+          elevated: neutral[700],
+          control: neutral[800],
+          controlHover: neutral[700],
+          controlPressed: neutral[600],
+          secondary: neutral[700],
+          secondaryHover: neutral[600],
+          secondaryPressed: neutral[500],
+          cardBorderColor: neutral[700],
+        }
+      : {
+          canvas: neutral[100],
+          surface: '#ffffff',
+          surfaceHover: neutral[100],
+          inset: neutral[200],
+          elevated: '#ffffff',
+          control: '#ffffff',
+          controlHover: neutral[100],
+          controlPressed: neutral[200],
+          secondary: neutral[200],
+          secondaryHover: neutral[300],
+          secondaryPressed: neutral[400],
+          cardBorderColor: neutral[300],
+        },
+  )
 }

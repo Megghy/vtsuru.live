@@ -1,8 +1,21 @@
 <script setup lang="ts">
-import type { Setting_LiveRequest } from '@/api/api-models'
-import { NAlert, NButton, NCard, NCheckbox, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NFlex, NSpin, useMessage } from 'naive-ui';
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NFlex,
+  NSpin,
+  useMessage,
+} from 'naive-ui'
 import { computed } from 'vue'
+
 import { SaveSetting, useAccount } from '@/api/account'
+import type { Setting_LiveRequest } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 
 const defaultSettings = {
@@ -75,15 +88,37 @@ async function updateSettings() {
 
 <template>
   <NSpin :show="liveRequest.isLoading">
-    <NFlex vertical :size="12">
-      <NCard size="small" bordered title="规则">
-        <NFlex vertical :size="12">
-          <NFlex align="center" :wrap="true" :size="12">
+    <NFlex
+      vertical
+      :size="12"
+    >
+      <NCard
+        size="small"
+        bordered
+        title="规则"
+      >
+        <NFlex
+          vertical
+          :size="12"
+        >
+          <NFlex
+            align="center"
+            :wrap="true"
+            :size="12"
+          >
             <NInputGroup class="song-request-settings__w-280">
               <NInputGroupLabel>点播弹幕前缀</NInputGroupLabel>
               <template v-if="liveRequest.configCanEdit">
-                <NInput v-model:value="accountInfo.settings.songRequest.orderPrefix" size="small" />
-                <NButton type="primary" secondary size="small" @click="updateSettings">
+                <NInput
+                  v-model:value="accountInfo.settings.songRequest.orderPrefix"
+                  size="small"
+                />
+                <NButton
+                  type="primary"
+                  secondary
+                  size="small"
+                  @click="updateSettings"
+                >
                   保存
                 </NButton>
               </template>
@@ -94,7 +129,10 @@ async function updateSettings() {
               />
             </NInputGroup>
             <NAlert
-              v-if="accountInfo.settings.songRequest.orderPrefix && accountInfo.settings.songRequest.orderPrefix.includes(' ')"
+              v-if="
+                accountInfo.settings.songRequest.orderPrefix &&
+                accountInfo.settings.songRequest.orderPrefix.includes(' ')
+              "
               type="info"
               size="small"
               :bordered="false"
@@ -121,7 +159,11 @@ async function updateSettings() {
             </NButton>
           </NInputGroup>
 
-          <NFlex align="center" :wrap="true" :size="12">
+          <NFlex
+            align="center"
+            :wrap="true"
+            :size="12"
+          >
             <NCheckbox
               v-model:checked="accountInfo.settings.songRequest.enableOnStreaming"
               :disabled="!liveRequest.configCanEdit"
@@ -139,7 +181,11 @@ async function updateSettings() {
           </NFlex>
 
           <template v-if="!accountInfo.settings.songRequest.allowAllDanmaku">
-            <NFlex align="center" :wrap="true" :size="12">
+            <NFlex
+              align="center"
+              :wrap="true"
+              :size="12"
+            >
               <NCheckbox
                 v-model:checked="accountInfo.settings.songRequest.needWearFanMedal"
                 :disabled="!liveRequest.configCanEdit"
@@ -193,7 +239,11 @@ async function updateSettings() {
             </NFlex>
           </template>
 
-          <NFlex align="center" :wrap="true" :size="12">
+          <NFlex
+            align="center"
+            :wrap="true"
+            :size="12"
+          >
             <NCheckbox
               v-model:checked="accountInfo.settings.songRequest.allowSC"
               :disabled="!liveRequest.configCanEdit"
@@ -234,8 +284,16 @@ async function updateSettings() {
         </NFlex>
       </NCard>
 
-      <NCard size="small" bordered title="点歌">
-        <NFlex align="center" :wrap="true" :size="12">
+      <NCard
+        size="small"
+        bordered
+        title="点歌"
+      >
+        <NFlex
+          align="center"
+          :wrap="true"
+          :size="12"
+        >
           <NCheckbox
             v-model:checked="accountInfo.settings.songRequest.onlyAllowSongList"
             :disabled="!liveRequest.configCanEdit"
@@ -279,9 +337,20 @@ async function updateSettings() {
         </NFlex>
       </NCard>
 
-      <NCard size="small" bordered title="冷却（秒）">
-        <NFlex vertical :size="12">
-          <NFlex align="center" :wrap="true" :size="12">
+      <NCard
+        size="small"
+        bordered
+        title="冷却（秒）"
+      >
+        <NFlex
+          vertical
+          :size="12"
+        >
+          <NFlex
+            align="center"
+            :wrap="true"
+            :size="12"
+          >
             <NCheckbox
               v-model:checked="accountInfo.settings.songRequest.enableCooldown"
               :disabled="!liveRequest.configCanEdit"
@@ -298,7 +367,11 @@ async function updateSettings() {
             </NCheckbox>
           </NFlex>
 
-          <NFlex v-if="accountInfo.settings.songRequest.enableCooldown" :wrap="true" :size="12">
+          <NFlex
+            v-if="accountInfo.settings.songRequest.enableCooldown"
+            :wrap="true"
+            :size="12"
+          >
             <NInputGroup class="song-request-settings__w-280">
               <NInputGroupLabel>普通弹幕</NInputGroupLabel>
               <NInputNumber
@@ -392,8 +465,16 @@ async function updateSettings() {
         </NFlex>
       </NCard>
 
-      <NCard size="small" bordered title="OBS">
-        <NFlex align="center" :wrap="true" :size="12">
+      <NCard
+        size="small"
+        bordered
+        title="OBS"
+      >
+        <NFlex
+          align="center"
+          :wrap="true"
+          :size="12"
+        >
           <NInputGroup class="song-request-settings__w-260">
             <NInputGroupLabel>标题</NInputGroupLabel>
             <template v-if="configCanEdit">
@@ -402,7 +483,12 @@ async function updateSettings() {
                 placeholder="默认为 点播"
                 size="small"
               />
-              <NButton type="primary" secondary size="small" @click="updateSettings">
+              <NButton
+                type="primary"
+                secondary
+                size="small"
+                @click="updateSettings"
+              >
                 保存
               </NButton>
             </template>
@@ -431,7 +517,11 @@ async function updateSettings() {
         </NFlex>
       </NCard>
 
-      <NCard size="small" bordered title="警告消息">
+      <NCard
+        size="small"
+        bordered
+        title="警告消息"
+      >
         <NCheckbox
           :checked="liveRequest.isWarnMessageAutoClose"
           @update:checked="liveRequest.isWarnMessageAutoClose = $event"

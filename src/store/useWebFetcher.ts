@@ -1,21 +1,22 @@
-import type { ZstdCodec } from '@oneidentity/zstd-js/wasm'
-import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 import * as signalR from '@microsoft/signalr'
 import * as msgpack from '@microsoft/signalr-protocol-msgpack'
 import { encode } from '@msgpack/msgpack'
+import type { ZstdCodec } from '@oneidentity/zstd-js/wasm'
 import { ZstdInit } from '@oneidentity/zstd-js/wasm'
 import { getVersion } from '@tauri-apps/api/app'
 import { platform, version } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue' // shallowRef 用于非深度响应对象
 import { useRoute } from 'vue-router'
+
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { getEventType, recordEvent, streamingInfo } from '@/apps/client/data/info'
 import { onReceivedNotification } from '@/apps/client/data/notification'
-
 import { QueryBiliAPI } from '@/apps/client/data/utils'
 import { BASE_HUB_URL, isDev, isTauri } from '@/shared/config'
+import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
+
 import { useDanmakuClient } from './useDanmakuClient'
 import { useWebRTC } from './useRTC'
 
@@ -60,7 +61,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
   const bytesSentSession = ref(0)
   let zstd: ZstdCodec | undefined // Zstd 编码器实例 (如果需要压缩)
 
-  const prefix = computed(() => isFromClient ? '[web-fetcher-iframe] ' : '[web-fetcher] ')
+  const prefix = computed(() => (isFromClient ? '[web-fetcher-iframe] ' : '[web-fetcher] '))
 
   /**
    * 启动 WebFetcher 服务
@@ -69,7 +70,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     type: 'openlive' | 'direct' = 'openlive',
     directAuthInfo?: DirectClientAuthInfo,
     _isFromClient: boolean = false,
-  ): Promise<{ success: boolean, message: string }> {
+  ): Promise<{ success: boolean; message: string }> {
     if (state.value === 'connected' || state.value === 'connecting') {
       console.log(`${prefix.value}已经启动，无需重复启动`)
       return { success: true, message: '已启动' }
@@ -96,7 +97,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
           return { success: false, message: serverDisconnectReason.value }
         }
         console.log(`${prefix.value}连接 SignalR 失败, 5秒后重试`)
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        await new Promise((resolve) => setTimeout(resolve, 5000))
         // 如果用户手动停止，则退出重试循环
         if (state.value === 'disconnected') return { success: false, message: '用户手动停止' }
       }
@@ -112,7 +113,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       }
       while (!danmakuResult?.success) {
         console.log(`${prefix.value}弹幕客户端启动失败, 5秒后重试`)
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        await new Promise((resolve) => setTimeout(resolve, 5000))
         // 如果用户手动停止，则退出重试循环
         if (state.value === 'disconnected') return { success: false, message: '用户手动停止' }
         danmakuResult = await connectDanmakuClient(type, directAuthInfo)
@@ -147,7 +148,8 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
     // 清理定时器
     if (timer) {
-      clearInterval(timer); timer = undefined
+      clearInterval(timer)
+      timer = undefined
     }
 
     // 停止弹幕客户端
@@ -181,10 +183,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
   /**
    * 连接弹幕客户端
    */
-  async function connectDanmakuClient(
-    type: 'openlive' | 'direct',
-    directConnectInfo?: DirectClientAuthInfo,
-  ) {
+  async function connectDanmakuClient(type: 'openlive' | 'direct', directConnectInfo?: DirectClientAuthInfo) {
     if (client.state !== 'waiting') {
       console.log(`${prefix.value}弹幕客户端已连接或正在连接`)
       return { success: true, message: '弹幕客户端已启动' }
@@ -240,10 +239,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     return new Promise((resolve, reject) => {
       connection.on('Finished', () => resolve())
       connection.on('Disconnect', (reason: unknown) => {
-        void disconnectByServer(reason, connection).then(
-          () => reject(new Error(String(reason))),
-          reject,
-        )
+        void disconnectByServer(reason, connection).then(() => reject(new Error(String(reason))), reject)
       })
     })
   }
@@ -266,7 +262,8 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       signalRConnectionId.value = undefined
       console.log(`${prefix.value}正在连接到 vtsuru 服务器...`)
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(`${BASE_HUB_URL}web-fetcher?token=${route.query.token ?? account.value.token}`, { // 使用 account.token
+        .withUrl(`${BASE_HUB_URL}web-fetcher?token=${route.query.token ?? account.value.token}`, {
+          // 使用 account.token
           headers: { Authorization: `Bearer ${cookie.value?.cookie}` },
           skipNegotiation: true,
           transport: signalR.HttpTransportType.WebSockets,
@@ -302,7 +299,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         state.value = 'connected' // 更新状态为已连接
         await sendSelfInfo(connection)
         signalRId.value = signalRConnectionId.value
-        connection.send('Reconnected').catch(err => console.error(`${prefix.value}Send Reconnected failed: ${err}`))
+        connection.send('Reconnected').catch((err) => console.error(`${prefix.value}Send Reconnected failed: ${err}`))
       })
 
       connection.onclose(async (error) => {
@@ -323,7 +320,9 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
           console.log(`${prefix.value}连接已手动关闭.`)
         }
       })
-      connection.on('Request', async (url: string, method: string, body: string, useCookie: boolean) => onRequest(url, method, body, useCookie))
+      connection.on('Request', async (url: string, method: string, body: string, useCookie: boolean) =>
+        onRequest(url, method, body, useCookie),
+      )
       connection.on('Notification', (type: string, data: any) => {
         onReceivedNotification(type, data)
       })
@@ -342,7 +341,13 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     }
   }
   async function sendSelfInfo(connection: signalR.HubConnection): Promise<void> {
-    return connection.invoke<void>('SetSelfInfo', isFromClient ? `tauri ${platform()} ${version()}` : navigator.userAgent, isFromClient ? 'tauri' : 'web', isFromClient ? await getVersion() : '1.0.0', webfetcherType.value === 'direct')
+    return connection.invoke<void>(
+      'SetSelfInfo',
+      isFromClient ? `tauri ${platform()} ${version()}` : navigator.userAgent,
+      isFromClient ? 'tauri' : 'web',
+      isFromClient ? await getVersion() : '1.0.0',
+      webfetcherType.value === 'direct',
+    )
   }
   interface ResponseFetchRequestData {
     Message: string
@@ -445,19 +450,19 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     const batch = events.slice(0, batchSize)
 
     try {
-      let result: { Success: boolean, Message: string } = { Success: false, Message: '' }
+      let result: { Success: boolean; Message: string } = { Success: false, Message: '' }
       let length = 0
-      const eventCharLength = batch.map(event => event.length).reduce((a, b) => a + b, 0) // 计算字符长度
+      const eventCharLength = batch.map((event) => event.length).reduce((a, b) => a + b, 0) // 计算字符长度
       if (zstd && eventCharLength > 100) {
         const data = zstd.ZstdSimple.compress(encode(batch), 11)
         length = data.length
-        result = await signalRClient.value.invoke<{ Success: boolean, Message: string }>(
+        result = await signalRClient.value.invoke<{ Success: boolean; Message: string }>(
           'UploadEventsCompressedV2',
           data,
         )
       } else {
         length = new TextEncoder().encode(batch.join()).length
-        result = await signalRClient.value.invoke<{ Success: boolean, Message: string }>(
+        result = await signalRClient.value.invoke<{ Success: boolean; Message: string }>(
           'UploadEvents',
           batch,
           webfetcherType.value === 'direct',

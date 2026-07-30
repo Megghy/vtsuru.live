@@ -1,12 +1,9 @@
-import {
-  HttpTransportType,
-  HubConnectionBuilder,
-  LogLevel,
-} from '@microsoft/signalr'
+import { HttpTransportType, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import type { HubConnection } from '@microsoft/signalr'
 import { MessagePackHubProtocol } from '@microsoft/signalr-protocol-msgpack'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
+
 import { useAccount } from '@/api/account'
 import { BASE_HUB_URL } from '@/shared/config'
 
@@ -32,7 +29,7 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
 
     let currentAccount = accountInfo.value
     while (!currentAccount || !currentAccount.id || currentAccount.id < 1) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       currentAccount = accountInfo.value
     }
     // console.log('[Components-Event] 正在连接到 VTsuru 服务器...')

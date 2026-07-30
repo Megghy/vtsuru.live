@@ -1,15 +1,35 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/api-models'
 import { useRouteHash } from '@vueuse/router'
 import {
-  NAlert, NButton, NCard, NDataTable, NDescriptions, NDescriptionsItem, NFlex, NLayout, NLayoutContent, NLayoutHeader, NList, NListItem, NResult, NSpin, NTabPane, NTabs, NTag, NText, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NDataTable,
+  NDescriptions,
+  NDescriptionsItem,
+  NFlex,
+  NLayout,
+  NLayoutContent,
+  NLayoutHeader,
+  NList,
+  NListItem,
+  NResult,
+  NSpin,
+  NTabPane,
+  NTabs,
+  NTag,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { POINT_API_URL } from '@/shared/config'
-import { useBiliAuth } from '@/store/useBiliAuth'
+
+import type { UserInfo } from '@/api/api-models'
 import PointOrderView from '@/apps/account/pages/point/PointOrderView.vue'
 import PointUserHistoryView from '@/apps/account/pages/point/PointUserHistoryView.vue'
 import PointUserSettings from '@/apps/account/pages/point/PointUserSettings.vue'
+import { POINT_API_URL } from '@/shared/config'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 // 定义组件接口
 interface ComponentWithReset {
@@ -45,7 +65,7 @@ const router = useRouter()
 
 const biliAuth = computed(() => useAuth.biliAuth)
 const isLoading = ref(false)
-const points = ref<{ owner: UserInfo, points: number }[]>([])
+const points = ref<{ owner: UserInfo; points: number }[]>([])
 const isFirstMounted = ref(true)
 // 分别定义各组件引用，使用正确的类型
 const orderViewRef = ref<OrderViewInstance | null>(null)
@@ -72,7 +92,7 @@ const pointColumn = [
   {
     title: '更多',
     key: 'action',
-    render: (row: { owner: UserInfo, points: number }) => {
+    render: (row: { owner: UserInfo; points: number }) => {
       return h(NFlex, {}, () => [
         h(
           NButton,
@@ -94,7 +114,7 @@ const pointColumn = [
 async function getAllPoints() {
   isLoading.value = true
   try {
-    const data = await useAuth.QueryBiliAuthGetAPI<{ owner: UserInfo, points: number }[]>(
+    const data = await useAuth.QueryBiliAuthGetAPI<{ owner: UserInfo; points: number }[]>(
       `${POINT_API_URL}user/get-all-point`,
     )
     if (data.code == 200) {
@@ -168,12 +188,15 @@ function onTabChange(tabName: string) {
 }
 
 // 监听 biliToken 变化
-watch(() => useAuth.biliToken, (newToken) => {
-  if (newToken) {
-    resetData()
-    getAllPoints()
-  }
-})
+watch(
+  () => useAuth.biliToken,
+  (newToken) => {
+    if (newToken) {
+      resetData()
+      getAllPoints()
+    }
+  },
+)
 
 // 手动刷新当前标签页数据
 function refreshCurrentTab() {
@@ -239,9 +262,7 @@ onMounted(async () => {
             :key="item.token"
             @click="switchAuth(item.token)"
           >
-            <NFlex align="center">
-              {{ item.name }} - {{ item.uId }}
-            </NFlex>
+            <NFlex align="center"> {{ item.name }} - {{ item.uId }} </NFlex>
           </NListItem>
         </NList>
       </NCard>
@@ -288,9 +309,7 @@ onMounted(async () => {
           >
             返回
           </NButton>
-          <NText style="font-size: 24px">
-            认证用户个人中心
-          </NText>
+          <NText style="font-size: 24px"> 认证用户个人中心 </NText>
           <NButton
             size="small"
             type="primary"
@@ -317,7 +336,7 @@ onMounted(async () => {
             >
               <NDescriptionsItem
                 label="用户名"
-                style="min-width: 100px;"
+                style="min-width: 100px"
               >
                 {{ biliAuth.name ?? '未知' }}
               </NDescriptionsItem>
@@ -366,10 +385,12 @@ onMounted(async () => {
                 <NButton
                   size="small"
                   type="primary"
-                  @click="() => {
-                    tabDataLoaded.points = false;
-                    getAllPoints();
-                  }"
+                  @click="
+                    () => {
+                      tabDataLoaded.points = false
+                      getAllPoints()
+                    }
+                  "
                 >
                   刷新积分
                 </NButton>

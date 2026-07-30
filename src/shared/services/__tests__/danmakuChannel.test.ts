@@ -1,5 +1,7 @@
-import type { EventModel } from '@/api/api-models'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import type { EventModel } from '@/api/api-models'
+
 import { createDanmakuChannel } from '../danmakuChannel'
 
 // 跨标签页 BroadcastChannel 的内存 mock (同名 channel 互通, 不回送给自己)
@@ -35,7 +37,17 @@ class BroadcastChannelMock {
 }
 
 function makeEvent(overrides: Partial<EventModel> = {}): EventModel {
-  return { uid: 1, uname: 'tester', msg: 'hi', num: 1, price: 0, guard_level: 0, fans_medal_wearing_status: false, fans_medal_level: 0, ...overrides } as EventModel
+  return {
+    uid: 1,
+    uname: 'tester',
+    msg: 'hi',
+    num: 1,
+    price: 0,
+    guard_level: 0,
+    fans_medal_wearing_status: false,
+    fans_medal_level: 0,
+    ...overrides,
+  } as EventModel
 }
 
 describe('danmakuChannel', () => {

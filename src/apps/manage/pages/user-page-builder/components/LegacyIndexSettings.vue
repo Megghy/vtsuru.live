@@ -1,11 +1,24 @@
 <script setup lang="ts">
-import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
 import { Delete24Regular } from '@vicons/fluent'
 import { ArrowDownOutline, ArrowUpOutline } from '@vicons/ionicons5'
 import {
-  NButton, NCheckbox, NDivider, NEmpty, NFlex, NIcon, NInput, NModal, NPopconfirm, NTag, NTooltip, useMessage } from 'naive-ui';
+  NButton,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NIcon,
+  NInput,
+  NModal,
+  NPopconfirm,
+  NTag,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, ref } from 'vue'
+
 import { SaveSetting, useAccount } from '@/api/account'
+import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { USER_INDEX_API_URL } from '@/shared/config'
@@ -33,7 +46,7 @@ const orderedLinks = computed(() => {
   const order = accountInfo.value?.settings.index.linkOrder
   if (!order?.length) return entries
   const map = new Map(entries)
-  return order.filter(k => map.has(k)).map(k => [k, map.get(k)!]) as [string, string][]
+  return order.filter((k) => map.has(k)).map((k) => [k, map.get(k)!]) as [string, string][]
 })
 
 async function loadIndexInfo() {
@@ -111,8 +124,8 @@ async function removeVideo(id: string) {
     const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}del-video`, { video: id })
     if (response.code !== 200) throw new Error(response.message || `删除失败: ${response.code}`)
     message.success('已删除')
-    if (indexDisplayInfo.value) indexDisplayInfo.value.videos = indexDisplayInfo.value.videos.filter(v => v.id !== id)
-    accountInfo.value.settings.index.videos = accountInfo.value.settings.index.videos.filter(v => v !== id)
+    if (indexDisplayInfo.value) indexDisplayInfo.value.videos = indexDisplayInfo.value.videos.filter((v) => v.id !== id)
+    accountInfo.value.settings.index.videos = accountInfo.value.settings.index.videos.filter((v) => v !== id)
   } catch (err) {
     message.error(`删除失败: ${err}`)
   } finally {
@@ -159,7 +172,7 @@ async function confirmEditLink(oldName: string) {
   idxSetting.links[newLinkName.value] = idxSetting.links[oldName]
   delete idxSetting.links[oldName]
   if (idxSetting.linkOrder) {
-    idxSetting.linkOrder = idxSetting.linkOrder.map(k => (k === oldName ? newLinkName.value : k))
+    idxSetting.linkOrder = idxSetting.linkOrder.map((k) => (k === oldName ? newLinkName.value : k))
   }
   await updateIndexSettings()
   editingLinkName.value = null
@@ -203,7 +216,7 @@ async function addLink() {
 async function removeLink(name: string) {
   delete accountInfo.value.settings.index.links[name]
   if (accountInfo.value.settings.index.linkOrder) {
-    accountInfo.value.settings.index.linkOrder = accountInfo.value.settings.index.linkOrder.filter(k => k !== name)
+    accountInfo.value.settings.index.linkOrder = accountInfo.value.settings.index.linkOrder.filter((k) => k !== name)
   }
   await updateIndexSettings()
   await loadIndexInfo()
@@ -218,10 +231,11 @@ await loadIndexInfo()
 </script>
 
 <template>
-  <NFlex vertical :size="12">
-    <NDivider style="margin: 0;">
-      常规
-    </NDivider>
+  <NFlex
+    vertical
+    :size="12"
+  >
+    <NDivider style="margin: 0"> 常规 </NDivider>
     <NCheckbox
       v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
       :disabled="isLoading"
@@ -230,9 +244,7 @@ await loadIndexInfo()
       允许显示在网站主页
     </NCheckbox>
 
-    <NDivider style="margin: 0;">
-      通知
-    </NDivider>
+    <NDivider style="margin: 0"> 通知 </NDivider>
     <NInput
       v-model:value="accountInfo.settings.index.notification"
       type="textarea"
@@ -249,9 +261,7 @@ await loadIndexInfo()
       </NButton>
     </NFlex>
 
-    <NDivider style="margin: 0;">
-      展示视频
-    </NDivider>
+    <NDivider style="margin: 0"> 展示视频 </NDivider>
     <NButton
       type="primary"
       size="small"
@@ -261,19 +271,41 @@ await loadIndexInfo()
       添加视频
     </NButton>
     <NEmpty v-if="accountInfo.settings.index.videos.length === 0" />
-    <NFlex v-else wrap :size="12">
-      <NTooltip v-for="item in (indexDisplayInfo?.videos ?? [])" :key="item.id">
+    <NFlex
+      v-else
+      wrap
+      :size="12"
+    >
+      <NTooltip
+        v-for="item in indexDisplayInfo?.videos ?? []"
+        :key="item.id"
+      >
         <template #trigger>
           <div>
             <SimpleVideoCard :video="item" />
             <NFlex style="margin-top: 6px">
-              <NButton size="small" secondary :disabled="isLoading" @click="moveVideo(item.id, 'up')">
+              <NButton
+                size="small"
+                secondary
+                :disabled="isLoading"
+                @click="moveVideo(item.id, 'up')"
+              >
                 上移
               </NButton>
-              <NButton size="small" secondary :disabled="isLoading" @click="moveVideo(item.id, 'down')">
+              <NButton
+                size="small"
+                secondary
+                :disabled="isLoading"
+                @click="moveVideo(item.id, 'down')"
+              >
                 下移
               </NButton>
-              <NButton type="warning" size="small" :disabled="isLoading" @click="removeVideo(item.id)">
+              <NButton
+                type="warning"
+                size="small"
+                :disabled="isLoading"
+                @click="removeVideo(item.id)"
+              >
                 删除
               </NButton>
             </NFlex>
@@ -283,9 +315,7 @@ await loadIndexInfo()
       </NTooltip>
     </NFlex>
 
-    <NDivider style="margin: 0;">
-      其他链接
-    </NDivider>
+    <NDivider style="margin: 0"> 其他链接 </NDivider>
     <NButton
       type="primary"
       size="small"
@@ -301,13 +331,30 @@ await loadIndexInfo()
       wrap
       :size="8"
     >
-      <NFlex v-for="link in orderedLinks" :key="link[0]" align="center">
+      <NFlex
+        v-for="link in orderedLinks"
+        :key="link[0]"
+        align="center"
+      >
         <template v-if="editingLinkName === link[0]">
-          <NInput v-model:value="newLinkName" size="small" style="width: 120px" />
-          <NButton size="tiny" type="primary" text @click="confirmEditLink(link[0])">
+          <NInput
+            v-model:value="newLinkName"
+            size="small"
+            style="width: 120px"
+          />
+          <NButton
+            size="tiny"
+            type="primary"
+            text
+            @click="confirmEditLink(link[0])"
+          >
             保存
           </NButton>
-          <NButton size="tiny" text @click="cancelEditLink">
+          <NButton
+            size="tiny"
+            text
+            @click="cancelEditLink"
+          >
             取消
           </NButton>
         </template>
@@ -327,7 +374,13 @@ await loadIndexInfo()
           <NFlex>
             <NTooltip>
               <template #trigger>
-                <NButton size="tiny" secondary text aria-label="上移链接" @click="moveLink(link[0], 'up')">
+                <NButton
+                  size="tiny"
+                  secondary
+                  text
+                  aria-label="上移链接"
+                  @click="moveLink(link[0], 'up')"
+                >
                   <template #icon>
                     <NIcon><ArrowUpOutline /></NIcon>
                   </template>
@@ -337,7 +390,13 @@ await loadIndexInfo()
             </NTooltip>
             <NTooltip>
               <template #trigger>
-                <NButton size="tiny" secondary text aria-label="下移链接" @click="moveLink(link[0], 'down')">
+                <NButton
+                  size="tiny"
+                  secondary
+                  text
+                  aria-label="下移链接"
+                  @click="moveLink(link[0], 'down')"
+                >
                   <template #icon>
                     <NIcon><ArrowDownOutline /></NIcon>
                   </template>
@@ -345,14 +404,23 @@ await loadIndexInfo()
               </template>
               下移链接
             </NTooltip>
-            <NButton size="tiny" text @click="startEditLink(link[0])">
+            <NButton
+              size="tiny"
+              text
+              @click="startEditLink(link[0])"
+            >
               改名
             </NButton>
             <NTooltip>
               <template #trigger>
                 <NPopconfirm @positive-click="removeLink(link[0])">
                   <template #trigger>
-                    <NButton type="error" text size="tiny" aria-label="删除链接">
+                    <NButton
+                      type="error"
+                      text
+                      size="tiny"
+                      aria-label="删除链接"
+                    >
                       <template #icon>
                         <NIcon :component="Delete24Regular" />
                       </template>
@@ -376,9 +444,16 @@ await loadIndexInfo()
     style="width: 600px; max-width: 90vw"
     title="添加视频"
   >
-    <NInput v-model:value="addVideoUrl" placeholder="请输入视频链接" />
+    <NInput
+      v-model:value="addVideoUrl"
+      placeholder="请输入视频链接"
+    />
     <NDivider />
-    <NButton type="primary" :loading="isLoading" @click="addVideo">
+    <NButton
+      type="primary"
+      :loading="isLoading"
+      @click="addVideo"
+    >
       添加视频
     </NButton>
   </NModal>
@@ -391,9 +466,19 @@ await loadIndexInfo()
     title="添加链接"
   >
     <NFlex vertical>
-      <NInput v-model:value="addLinkName" placeholder="链接名称" />
-      <NInput v-model:value="addLinkUrl" placeholder="链接地址" />
-      <NButton type="primary" :loading="isLoading" @click="addLink">
+      <NInput
+        v-model:value="addLinkName"
+        placeholder="链接名称"
+      />
+      <NInput
+        v-model:value="addLinkUrl"
+        placeholder="链接地址"
+      />
+      <NButton
+        type="primary"
+        :loading="isLoading"
+        @click="addLink"
+      >
         添加链接
       </NButton>
     </NFlex>

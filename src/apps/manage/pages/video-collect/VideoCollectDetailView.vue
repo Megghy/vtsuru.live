@@ -1,31 +1,50 @@
 <script setup lang="ts">
-import type {
-  FormRules,
-} from 'naive-ui'
-import type {
-  VideoCollectCreateModel,
-  VideoCollectDetail,
-  VideoCollectTable,
-  VideoInfo,
-} from '@/api/api-models'
-import { ArrowLeft24Regular, Delete24Regular, Edit24Regular, MoreVertical24Regular, Share24Regular, TableDismiss24Regular, } from '@vicons/fluent'
+import {
+  ArrowLeft24Regular,
+  Delete24Regular,
+  Edit24Regular,
+  MoreVertical24Regular,
+  Share24Regular,
+  TableDismiss24Regular,
+} from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { List } from 'linqts'
+import type { FormRules } from 'naive-ui'
 import {
-  NBadge, NButton, NDatePicker, NDropdown, NEmpty, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NPopconfirm, NFlex, NTabPane, NTabs, NText, useMessage, useThemeVars } from 'naive-ui';
+  NBadge,
+  NButton,
+  NDatePicker,
+  NDropdown,
+  NEmpty,
+  NForm,
+  NFormItem,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NModal,
+  NPopconfirm,
+  NFlex,
+  NTabPane,
+  NTabs,
+  NText,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import Qrcode from 'qrcode.vue'
 import { computed, h, onActivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import {
-  VideoStatus,
-} from '@/api/api-models'
+
+import type { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoInfo } from '@/api/api-models'
+import { VideoStatus } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import router from '@/app/router'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
 import { formatDuration } from '@/apps/manage/composables/formatters'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
-import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
-import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
-import router from '@/app/router'
 import { downloadImage } from '@/shared/utils'
 
 const route = useRoute()
@@ -87,13 +106,13 @@ const createRules: FormRules = {
 }
 
 const paddingVideos = computed(() => {
-  return videoDetail.value?.videos?.filter(v => v.info.status == VideoStatus.Pending) ?? []
+  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Pending) ?? []
 })
 const rejectVideos = computed(() => {
-  return videoDetail.value?.videos?.filter(v => v.info.status == VideoStatus.Rejected) ?? []
+  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Rejected) ?? []
 })
 const acceptVideos = computed(() => {
-  return videoDetail.value?.videos?.filter(v => v.info.status == VideoStatus.Accepted) ?? []
+  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Accepted) ?? []
 })
 
 // 移动端下拉菜单选项
@@ -280,9 +299,16 @@ onActivated(async () => {
 
 <template>
   <div class="video-collect-detail">
-    <ManagePageHeader :title="videoDetail?.table?.name || '视频征集'" subtitle="审核与管理视频提交">
+    <ManagePageHeader
+      :title="videoDetail?.table?.name || '视频征集'"
+      subtitle="审核与管理视频提交"
+    >
       <template #action>
-        <NButton secondary size="small" @click="$router.go(-1)">
+        <NButton
+          secondary
+          size="small"
+          @click="$router.go(-1)"
+        >
           <template #icon>
             <NIcon><ArrowLeft24Regular /></NIcon>
           </template>
@@ -290,13 +316,23 @@ onActivated(async () => {
         </NButton>
 
         <NFlex v-if="width > 800">
-          <NButton secondary strong size="small" @click="shareModalVisiable = true">
+          <NButton
+            secondary
+            strong
+            size="small"
+            @click="shareModalVisiable = true"
+          >
             <template #icon>
               <NIcon><Share24Regular /></NIcon>
             </template>
             分享
           </NButton>
-          <NButton secondary strong size="small" @click="editModalVisiable = true">
+          <NButton
+            secondary
+            strong
+            size="small"
+            @click="editModalVisiable = true"
+          >
             <template #icon>
               <NIcon><Edit24Regular /></NIcon>
             </template>
@@ -325,7 +361,12 @@ onActivated(async () => {
           </NButton>
           <NPopconfirm @positive-click="deleteTable">
             <template #trigger>
-              <NButton secondary strong size="small" type="error">
+              <NButton
+                secondary
+                strong
+                size="small"
+                type="error"
+              >
                 <template #icon>
                   <NIcon><Delete24Regular /></NIcon>
                 </template>
@@ -342,7 +383,12 @@ onActivated(async () => {
           :options="mobileMenuOptions"
           @select="handleMobileMenuSelect"
         >
-          <NButton secondary strong size="small" circle>
+          <NButton
+            secondary
+            strong
+            size="small"
+            circle
+          >
             <template #icon>
               <NIcon><MoreVertical24Regular /></NIcon>
             </template>
@@ -425,9 +471,7 @@ onActivated(async () => {
         <NTabPane name="accept">
           <template #tab>
             <div class="tab-label">
-              <NText type="success">
-                已通过
-              </NText>
+              <NText type="success"> 已通过 </NText>
               <NBadge
                 v-if="acceptVideos.length > 0"
                 :value="acceptVideos.length"
@@ -463,9 +507,7 @@ onActivated(async () => {
         <NTabPane name="reject">
           <template #tab>
             <div class="tab-label">
-              <NText type="error">
-                已拒绝
-              </NText>
+              <NText type="error"> 已拒绝 </NText>
               <NBadge
                 v-if="rejectVideos.length > 0"
                 :value="rejectVideos.length"
@@ -507,7 +549,7 @@ onActivated(async () => {
       preset="card"
       style="width: 600px; max-width: 90vw"
     >
-      <div style="display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 12px;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 12px">
         <div :style="{ padding: '12px', background: themeVars.cardColor, borderRadius: themeVars.borderRadius }">
           <Qrcode
             :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`"
@@ -600,8 +642,8 @@ onActivated(async () => {
             </NFormItem>
           </NGridItem>
         </NGrid>
-        
-        <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 12px">
           <NButton
             type="primary"
             :loading="isLoading"

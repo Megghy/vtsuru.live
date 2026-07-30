@@ -1,11 +1,30 @@
 <script setup lang="ts">
-import { BookCoins20Filled, Chat24Filled, Info24Filled, Lottery24Filled, MoreHorizontal24Filled, PersonFeedback24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled, } from '@vicons/fluent'
-import { AnalyticsSharp, BrowsersOutline, Calendar, Chatbox, ListCircle, MusicalNote, OpenOutline } from '@vicons/ionicons5'
-import { useWindowSize } from '@vueuse/core'
 import type { IOptions, RecursivePartial } from '@tsparticles/engine'
-import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NText, NTooltip, useThemeVars } from 'naive-ui';
+import {
+  BookCoins20Filled,
+  Chat24Filled,
+  Info24Filled,
+  Lottery24Filled,
+  MoreHorizontal24Filled,
+  PersonFeedback24Filled,
+  TabletSpeaker24Filled,
+  VehicleShip24Filled,
+  VideoAdd20Filled,
+} from '@vicons/fluent'
+import {
+  AnalyticsSharp,
+  BrowsersOutline,
+  Calendar,
+  Chatbox,
+  ListCircle,
+  MusicalNote,
+  OpenOutline,
+} from '@vicons/ionicons5'
+import { useWindowSize } from '@vueuse/core'
+import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NText, NTooltip, useThemeVars } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+
 import { QueryGetAPI } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'
 import { isDarkMode } from '@/shared/utils'
@@ -162,7 +181,7 @@ function getRoomCoverSrc(room: IndexDataType['streamers'][number]) {
 const roomsRowCapacity = computed(() => {
   const containerWidth = Math.min(width.value * 0.9, 1400)
   const gap = 12
-  const cardWidth = width.value <= 480 ? 180 : (width.value <= 768 ? 200 : 220)
+  const cardWidth = width.value <= 480 ? 180 : width.value <= 768 ? 200 : 220
   return Math.max(1, Math.floor((containerWidth + gap) / (cardWidth + gap)))
 })
 
@@ -180,9 +199,7 @@ const indexGlassVars = computed(() => ({
 const textColor = computed(() => themeVars.value.textColor1)
 const textColorSecondary = computed(() => themeVars.value.textColor2)
 
-const featureIconColor = computed(() => (isDarkMode.value
-  ? 'rgba(226, 232, 240, 0.9)'
-  : 'rgba(15, 23, 42, 0.82)'))
+const featureIconColor = computed(() => (isDarkMode.value ? 'rgba(226, 232, 240, 0.9)' : 'rgba(15, 23, 42, 0.82)'))
 
 const gradientColors = computed(() => ({
   from: themeVars.value.primaryColor,
@@ -201,35 +218,37 @@ const borderRadius = computed(() => ({
 // 功能图标颜色映射 - 优化为统一的色系，与背景渐变协调
 const iconColors = computed(() => {
   // 基于背景渐变色调的统一色板
-  const baseColors = isDarkMode.value ? {
-    // 暗色模式：更柔和的色调，降低饱和度
-    teal: '#4ECDC4', // 青绿色 - 接近背景起始色
-    purple: '#9B7EDE', // 紫色 - 接近背景结束色
-    blue: '#6BB6FF', // 蓝色
-    green: '#7ED321', // 绿色
-    orange: '#F5A623', // 橙色
-    pink: '#D63384', // 粉色
-    indigo: '#6F42C1', // 靛蓝
-    cyan: '#17A2B8', // 青色
-    mint: '#20C997', // 薄荷绿
-    lavender: '#B794F6', // 薰衣草紫
-    coral: '#FF6B6B', // 珊瑚色
-    sage: '#8FBC8F', // 鼠尾草绿
-  } : {
-    // 亮色模式：更鲜艳的色调，保持活力
-    teal: '#2EBFA5', // 青绿色 - 与背景起始色呼应
-    purple: '#8B5CF6', // 紫色 - 与背景结束色呼应
-    blue: '#3B82F6', // 蓝色
-    green: '#10B981', // 绿色
-    orange: '#F59E0B', // 橙色
-    pink: '#EC4899', // 粉色
-    indigo: '#6366F1', // 靛蓝
-    cyan: '#06B6D4', // 青色
-    mint: '#14B8A6', // 薄荷绿
-    lavender: '#A855F7', // 薰衣草紫
-    coral: '#EF4444', // 珊瑚色
-    sage: '#22C55E', // 鼠尾草绿
-  }
+  const baseColors = isDarkMode.value
+    ? {
+        // 暗色模式：更柔和的色调，降低饱和度
+        teal: '#4ECDC4', // 青绿色 - 接近背景起始色
+        purple: '#9B7EDE', // 紫色 - 接近背景结束色
+        blue: '#6BB6FF', // 蓝色
+        green: '#7ED321', // 绿色
+        orange: '#F5A623', // 橙色
+        pink: '#D63384', // 粉色
+        indigo: '#6F42C1', // 靛蓝
+        cyan: '#17A2B8', // 青色
+        mint: '#20C997', // 薄荷绿
+        lavender: '#B794F6', // 薰衣草紫
+        coral: '#FF6B6B', // 珊瑚色
+        sage: '#8FBC8F', // 鼠尾草绿
+      }
+    : {
+        // 亮色模式：更鲜艳的色调，保持活力
+        teal: '#2EBFA5', // 青绿色 - 与背景起始色呼应
+        purple: '#8B5CF6', // 紫色 - 与背景结束色呼应
+        blue: '#3B82F6', // 蓝色
+        green: '#10B981', // 绿色
+        orange: '#F59E0B', // 橙色
+        pink: '#EC4899', // 粉色
+        indigo: '#6366F1', // 靛蓝
+        cyan: '#06B6D4', // 青色
+        mint: '#14B8A6', // 薄荷绿
+        lavender: '#A855F7', // 薰衣草紫
+        coral: '#EF4444', // 珊瑚色
+        sage: '#22C55E', // 鼠尾草绿
+      }
 
   return {
     VehicleShip24Filled: baseColors.teal, // 直播事件记录 - 青绿色
@@ -249,7 +268,7 @@ const iconColors = computed(() => {
 })
 
 // 处理功能卡片点击
-function handleFunctionClick(item: typeof functions[0]) {
+function handleFunctionClick(item: (typeof functions)[0]) {
   if (item.route) {
     // 跳转到对应的管理页面
     $router.push({ name: item.route })
@@ -297,25 +316,49 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="index-background" :style="indexGlassVars">
-    <vue-particles id="tsparticles" :key="isDarkMode ? 'dark' : 'light'" :options="particlesOptions" />
-    <NFlex vertical justify="center" align="center" class="main-container">
+  <div
+    class="index-background"
+    :style="indexGlassVars"
+  >
+    <vue-particles
+      id="tsparticles"
+      :key="isDarkMode ? 'dark' : 'light'"
+      :options="particlesOptions"
+    />
+    <NFlex
+      vertical
+      justify="center"
+      align="center"
+      class="main-container"
+    >
       <!-- 顶部标题部分 -->
       <NCard
         :style="{
           width: '90vw',
           maxWidth: '1400px',
           borderRadius: borderRadius.xlarge,
-        }" class="hero-card glass-card"
+        }"
+        class="hero-card glass-card"
       >
-        <NFlex justify="center" align="center" :size="width > 700 ? 50 : 0" :vertical="width <= 700">
+        <NFlex
+          justify="center"
+          align="center"
+          :size="width > 700 ? 50 : 0"
+          :vertical="width <= 700"
+        >
           <vtb class="hero-icon" />
-          <NFlex vertical justify="center" :align="width <= 700 ? 'center' : 'start'">
+          <NFlex
+            vertical
+            justify="center"
+            :align="width <= 700 ? 'center' : 'start'"
+          >
             <NGradientText
-              :size="width > 700 ? '3rem' : '2.5rem'" :gradient="{
+              :size="width > 700 ? '3rem' : '2.5rem'"
+              :gradient="{
                 deg: 180,
                 ...gradientColors,
-              }" style="font-weight: 700"
+              }"
+              style="font-weight: 700"
             >
               VTSURU.LIVE
             </NGradientText>
@@ -331,26 +374,43 @@ onMounted(async () => {
             </NText>
             <!-- 主播 / 观众入口 -->
             <NFlex
-              :wrap="width <= 700" justify="center" align="center"
+              :wrap="width <= 700"
+              justify="center"
+              align="center"
               :style="{ gap: width > 700 ? '24px' : '16px', marginTop: '20px' }"
             >
               <!-- 主播入口 -->
               <NTooltip placement="bottom">
                 <template #trigger>
                   <NCard
-                    hoverable :style="{
+                    hoverable
+                    :style="{
                       width: width > 700 ? '240px' : '100%',
                       minWidth: '200px',
                       cursor: 'pointer',
                       borderRadius: borderRadius.large,
-                    }" class="entry-card glass-card-soft" @click="$router.push({ name: 'manage-index' })"
+                    }"
+                    class="entry-card glass-card-soft"
+                    @click="$router.push({ name: 'manage-index' })"
                   >
-                    <NFlex vertical align="center" justify="center" :size="8">
-                      <NIcon :component="PersonFeedback24Filled" size="36" :color="textColor" />
-                      <NText :style="{ fontSize: '1.2rem', fontWeight: 500, color: textColor }">
-                        我是主播
-                      </NText>
-                      <NButton type="primary" secondary size="small" :style="{ borderRadius: borderRadius.medium }">
+                    <NFlex
+                      vertical
+                      align="center"
+                      justify="center"
+                      :size="8"
+                    >
+                      <NIcon
+                        :component="PersonFeedback24Filled"
+                        size="36"
+                        :color="textColor"
+                      />
+                      <NText :style="{ fontSize: '1.2rem', fontWeight: 500, color: textColor }"> 我是主播 </NText>
+                      <NButton
+                        type="primary"
+                        secondary
+                        size="small"
+                        :style="{ borderRadius: borderRadius.medium }"
+                      >
                         开始使用
                       </NButton>
                     </NFlex>
@@ -363,19 +423,34 @@ onMounted(async () => {
               <NTooltip placement="bottom">
                 <template #trigger>
                   <NCard
-                    hoverable :style="{
+                    hoverable
+                    :style="{
                       width: width > 700 ? '240px' : '100%',
                       minWidth: '200px',
                       cursor: 'pointer',
                       borderRadius: borderRadius.large,
-                    }" class="entry-card glass-card-soft" @click="$router.push({ name: 'bili-user' })"
+                    }"
+                    class="entry-card glass-card-soft"
+                    @click="$router.push({ name: 'bili-user' })"
                   >
-                    <NFlex vertical align="center" justify="center" :size="8">
-                      <NIcon :component="Chat24Filled" size="36" :color="textColor" />
-                      <NText :style="{ fontSize: '1.2rem', fontWeight: 500, color: textColor }">
-                        我是观众
-                      </NText>
-                      <NButton type="info" secondary size="small" :style="{ borderRadius: borderRadius.medium }">
+                    <NFlex
+                      vertical
+                      align="center"
+                      justify="center"
+                      :size="8"
+                    >
+                      <NIcon
+                        :component="Chat24Filled"
+                        size="36"
+                        :color="textColor"
+                      />
+                      <NText :style="{ fontSize: '1.2rem', fontWeight: 500, color: textColor }"> 我是观众 </NText>
+                      <NButton
+                        type="info"
+                        secondary
+                        size="small"
+                        :style="{ borderRadius: borderRadius.medium }"
+                      >
                         用户主页
                       </NButton>
                     </NFlex>
@@ -386,21 +461,34 @@ onMounted(async () => {
             </NFlex>
 
             <!-- 其他操作按钮 -->
-            <NFlex justify="center" align="center" :wrap="width <= 700" :style="{ marginTop: '20px', gap: '12px' }">
+            <NFlex
+              justify="center"
+              align="center"
+              :wrap="width <= 700"
+              :style="{ marginTop: '20px', gap: '12px' }"
+            >
               <NButton
-                size="large" secondary :style="{ borderRadius: borderRadius.large }"
+                size="large"
+                secondary
+                :style="{ borderRadius: borderRadius.large }"
                 @click="$router.push('/@Megghy')"
               >
                 展示
               </NButton>
               <NButton
-                size="large" tag="a" href="https://play-live.bilibili.com/details/1698742711771" target="_blank"
-                type="primary" :style="{ borderRadius: borderRadius.large }"
+                size="large"
+                tag="a"
+                href="https://play-live.bilibili.com/details/1698742711771"
+                target="_blank"
+                type="primary"
+                :style="{ borderRadius: borderRadius.large }"
               >
                 幻星平台
               </NButton>
               <NButton
-                type="info" size="large" :style="{ borderRadius: borderRadius.large }"
+                type="info"
+                size="large"
+                :style="{ borderRadius: borderRadius.large }"
                 @click="$router.push({ name: 'about' })"
               >
                 关于
@@ -416,9 +504,14 @@ onMounted(async () => {
           width: '90vw',
           maxWidth: '1400px',
           borderRadius: borderRadius.medium,
-        }" size="small" class="glass-card-soft"
+        }"
+        size="small"
+        class="glass-card-soft"
       >
-        <NFlex justify="center" align="center">
+        <NFlex
+          justify="center"
+          align="center"
+        >
           <div class="stats-item">
             <NText :style="{ fontSize: '0.8rem', color: textColorSecondary, display: 'block', textAlign: 'center' }">
               注册用户
@@ -426,7 +519,11 @@ onMounted(async () => {
             <NText
               :style="{ fontSize: '1.2rem', fontWeight: 600, color: textColor, display: 'block', textAlign: 'center' }"
             >
-              <NNumberAnimation :from="0" :to="indexData?.userCount" show-separator />
+              <NNumberAnimation
+                :from="0"
+                :to="indexData?.userCount"
+                show-separator
+              />
             </NText>
           </div>
         </NFlex>
@@ -439,14 +536,17 @@ onMounted(async () => {
           maxWidth: '1400px',
           marginBottom: '20px',
           borderRadius: borderRadius.xlarge,
-        }" class="glass-card"
+        }"
+        class="glass-card"
       >
         <NFlex vertical>
-          <NFlex justify="center" align="center" style="margin-bottom: 30px;">
+          <NFlex
+            justify="center"
+            align="center"
+            style="margin-bottom: 30px"
+          >
             <div class="section-header">
-              <NText class="section-title">
-                🌟 网站功能
-              </NText>
+              <NText class="section-title"> 🌟 网站功能 </NText>
               <div class="section-subtitle">
                 <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
                   为主播和观众提供丰富的互动工具
@@ -455,29 +555,49 @@ onMounted(async () => {
             </div>
           </NFlex>
 
-          <NFlex :wrap="true" justify="center" style="gap: 15px;">
+          <NFlex
+            :wrap="true"
+            justify="center"
+            style="gap: 15px"
+          >
             <NCard
-              v-for="item in functions" :key="item.name" :style="{
+              v-for="item in functions"
+              :key="item.name"
+              :style="{
                 width: '300px',
                 maxWidth: '100%',
                 borderRadius: borderRadius.large,
                 boxShadow: 'none',
                 cursor: item.route ? 'pointer' : 'default',
-              }" hoverable class="feature-card glass-card-soft" @click="handleFunctionClick(item)"
+              }"
+              hoverable
+              class="feature-card glass-card-soft"
+              @click="handleFunctionClick(item)"
             >
               <NFlex vertical>
-                <NFlex align="center" style="margin-bottom: 10px;">
+                <NFlex
+                  align="center"
+                  style="margin-bottom: 10px"
+                >
                   <div class="icon-wrapper">
                     <NIcon
-                      :component="item.icon" size="24"
+                      :component="item.icon"
+                      size="24"
                       :color="featureIconColor"
                     />
                   </div>
-                  <NFlex align="center" :size="8" style="margin-left: 12px;">
+                  <NFlex
+                    align="center"
+                    :size="8"
+                    style="margin-left: 12px"
+                  >
                     <NText :style="{ fontSize: '1.1rem', fontWeight: 500, color: textColor }">
                       {{ item.name }}
                     </NText>
-                    <span v-if="(item as any).badge" class="feature-badge-new">
+                    <span
+                      v-if="(item as any).badge"
+                      class="feature-badge-new"
+                    >
                       {{ (item as any).badge }}
                     </span>
                   </NFlex>
@@ -498,14 +618,17 @@ onMounted(async () => {
           maxWidth: '1400px',
           marginBottom: '20px',
           borderRadius: borderRadius.xlarge,
-        }" class="glass-card"
+        }"
+        class="glass-card"
       >
         <NFlex vertical>
-          <NFlex justify="center" align="center" style="margin-bottom: 30px;">
+          <NFlex
+            justify="center"
+            align="center"
+            style="margin-bottom: 30px"
+          >
             <div class="section-header">
-              <NText class="section-title">
-                自定义页面（区块编辑器）
-              </NText>
+              <NText class="section-title"> 自定义页面（区块编辑器） </NText>
               <div class="section-subtitle">
                 <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
                   用区块搭建个人主页/投稿页/赞助页等，自定义布局与样式
@@ -516,28 +639,36 @@ onMounted(async () => {
 
           <div class="userpage-intro-layout">
             <div class="userpage-intro-copy">
-              <NText :style="{ color: textColor, fontSize: '1rem', fontWeight: 500 }">
-                像搭积木一样拼页面
-              </NText>
-              <div style="height: 8px;" />
+              <NText :style="{ color: textColor, fontSize: '1rem', fontWeight: 500 }"> 像搭积木一样拼页面 </NText>
+              <div style="height: 8px" />
               <NText :style="{ color: textColorSecondary, lineHeight: 1.7 }">
                 支持分组与布局（横向/纵向/拉伸），并提供边框、背景、间距等常用样式开关；编辑区与预览区实时同步，方便调试。
               </NText>
-              <div style="height: 12px;" />
+              <div style="height: 12px" />
               <div class="userpage-intro-list">
                 <div class="userpage-intro-li">
                   - 包括但不仅限于: 个人主页 / 投稿页 / 赞助页 / 图集展示 / 视频展示...
                 </div>
-                <div class="userpage-intro-li">
-                  - 支持：区块组合、拖拽排序、组件级样式与预览
-                </div>
+                <div class="userpage-intro-li">- 支持：区块组合、拖拽排序、组件级样式与预览</div>
               </div>
-              <div style="height: 14px;" />
-              <NFlex :wrap="true" justify="start" style="gap: 10px;">
-                <NButton type="primary" :style="{ borderRadius: borderRadius.medium }" @click="$router.push({ name: 'manage-userPageBuilder' })">
+              <div style="height: 14px" />
+              <NFlex
+                :wrap="true"
+                justify="start"
+                style="gap: 10px"
+              >
+                <NButton
+                  type="primary"
+                  :style="{ borderRadius: borderRadius.medium }"
+                  @click="$router.push({ name: 'manage-userPageBuilder' })"
+                >
                   打开编辑器
                 </NButton>
-                <NButton secondary :style="{ borderRadius: borderRadius.medium }" @click="$router.push('/@Megghy')">
+                <NButton
+                  secondary
+                  :style="{ borderRadius: borderRadius.medium }"
+                  @click="$router.push('/@Megghy')"
+                >
                   查看示例
                 </NButton>
               </NFlex>
@@ -549,7 +680,7 @@ onMounted(async () => {
                   src="https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png"
                   referrerpolicy="no-referrer"
                   alt="自定义页面"
-                >
+                />
               </div>
             </div>
           </div>
@@ -563,35 +694,49 @@ onMounted(async () => {
           maxWidth: '1400px',
           marginBottom: '20px',
           borderRadius: borderRadius.xlarge,
-        }" class="glass-card"
+        }"
+        class="glass-card"
       >
         <NFlex vertical>
-          <NFlex justify="center" align="center" style="margin-bottom: 30px;">
+          <NFlex
+            justify="center"
+            align="center"
+            style="margin-bottom: 30px"
+          >
             <div class="section-header">
-              <NText class="section-title">
-                客户端功能
-              </NText>
+              <NText class="section-title"> 客户端功能 </NText>
               <div class="section-subtitle">
-                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
-                  本地运行的强大自动化工具
-                </NText>
+                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }"> 本地运行的强大自动化工具 </NText>
               </div>
             </div>
           </NFlex>
 
-          <NFlex :wrap="true" justify="center" style="gap: 20px;">
+          <NFlex
+            :wrap="true"
+            justify="center"
+            style="gap: 20px"
+          >
             <NCard
               :style="{
                 width: '380px',
                 maxWidth: '100%',
                 borderRadius: borderRadius.large,
                 boxShadow: 'none',
-              }" hoverable class="feature-card glass-card-soft"
+              }"
+              hoverable
+              class="feature-card glass-card-soft"
             >
               <NFlex vertical>
-                <NFlex align="center" style="margin-bottom: 10px;">
+                <NFlex
+                  align="center"
+                  style="margin-bottom: 10px"
+                >
                   <div class="icon-wrapper">
-                    <NIcon :component="PersonFeedback24Filled" size="24" :color="iconColors.PersonFeedback24Filled" />
+                    <NIcon
+                      :component="PersonFeedback24Filled"
+                      size="24"
+                      :color="iconColors.PersonFeedback24Filled"
+                    />
                   </div>
                   <NText :style="{ fontSize: '1.1rem', fontWeight: 500, marginLeft: '12px', color: textColor }">
                     自动操作
@@ -609,12 +754,21 @@ onMounted(async () => {
                 maxWidth: '100%',
                 borderRadius: borderRadius.large,
                 boxShadow: 'none',
-              }" hoverable class="feature-card glass-card-soft"
+              }"
+              hoverable
+              class="feature-card glass-card-soft"
             >
               <NFlex vertical>
-                <NFlex align="center" style="margin-bottom: 10px;">
+                <NFlex
+                  align="center"
+                  style="margin-bottom: 10px"
+                >
                   <div class="icon-wrapper">
-                    <NIcon :component="Chat24Filled" size="24" :color="iconColors.Chat24Filled" />
+                    <NIcon
+                      :component="Chat24Filled"
+                      size="24"
+                      :color="iconColors.Chat24Filled"
+                    />
                   </div>
                   <NText :style="{ fontSize: '1.1rem', fontWeight: 500, marginLeft: '12px', color: textColor }">
                     弹幕机 (客户端)
@@ -627,10 +781,16 @@ onMounted(async () => {
             </NCard>
           </NFlex>
 
-          <NFlex justify="center" style="margin-top: 20px;">
+          <NFlex
+            justify="center"
+            style="margin-top: 20px"
+          >
             <NFlex>
               <NButton
-                type="primary" tag="a" href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii" target="_blank"
+                type="primary"
+                tag="a"
+                href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
+                target="_blank"
                 :style="{ borderRadius: borderRadius.medium }"
               >
                 <template #icon>
@@ -639,13 +799,19 @@ onMounted(async () => {
                 客户端安装说明
               </NButton>
               <NButton
-                ghost tag="a" href="https://github.com/Megghy/vtsuru-fetvher-client" target="_blank"
+                ghost
+                tag="a"
+                href="https://github.com/Megghy/vtsuru-fetvher-client"
+                target="_blank"
                 :style="{ borderRadius: borderRadius.medium }"
               >
                 客户端代码
               </NButton>
               <NButton
-                ghost tag="a" href="https://github.com/Megghy/vtsuru.live/tree/master/src/client" target="_blank"
+                ghost
+                tag="a"
+                href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
+                target="_blank"
                 :style="{ borderRadius: borderRadius.medium }"
               >
                 逻辑代码
@@ -662,33 +828,46 @@ onMounted(async () => {
           maxWidth: '1400px',
           borderRadius: borderRadius.xlarge,
           boxShadow: 'none',
-        }" class="glass-card"
+        }"
+        class="glass-card"
       >
         <NFlex vertical>
-          <NFlex justify="center" align="center" style="margin-bottom: 30px;">
+          <NFlex
+            justify="center"
+            align="center"
+            style="margin-bottom: 30px"
+          >
             <div class="section-header">
               <NText class="section-title">
                 正在使用本站的主播们
                 <NTooltip>
                   <template #trigger>
-                    <NIcon :component="Info24Filled" :color="textColor" size="16" style="margin-left: 8px;" />
+                    <NIcon
+                      :component="Info24Filled"
+                      :color="textColor"
+                      size="16"
+                      style="margin-left: 8px"
+                    />
                   </template>
                   随机展示不分先后, 仅粉丝数大于500的主播；展示其直播间信息与开播状态
                 </NTooltip>
               </NText>
               <div class="section-subtitle">
-                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
-                  感谢支持 🙂
-                </NText>
+                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }"> 感谢支持 🙂 </NText>
               </div>
             </div>
           </NFlex>
 
-          <div v-if="indexData" class="streamers-section">
+          <div
+            v-if="indexData"
+            class="streamers-section"
+          >
             <!-- 直播间 mini 卡片 -->
             <div class="rooms-grid-mini">
               <div
-                v-for="room in visibleRooms" :key="room.roomId" class="room-mini-card"
+                v-for="room in visibleRooms"
+                :key="room.roomId"
+                class="room-mini-card"
                 :class="{ live: room.isStreaming }"
                 @click="$router.push(`/@${room.name}`)"
               >
@@ -699,7 +878,7 @@ onMounted(async () => {
                     :src="getRoomCoverSrc(room)"
                     referrerpolicy="no-referrer"
                     alt=""
-                  >
+                  />
                   <div class="room-mini-cover__mask" />
                   <div class="room-mini-content">
                     <div class="room-mini-top">
@@ -709,12 +888,18 @@ onMounted(async () => {
                           :src="`${room.avatar}@96w`"
                           referrerpolicy="no-referrer"
                           alt="主播头像"
-                        >
+                        />
                         <div class="room-mini-meta">
-                          <div class="room-mini-name" :title="room.uname || room.name">
+                          <div
+                            class="room-mini-name"
+                            :title="room.uname || room.name"
+                          >
                             {{ room.uname || room.name }}
                           </div>
-                          <div class="room-mini-status" :class="{ live: room.isStreaming }">
+                          <div
+                            class="room-mini-status"
+                            :class="{ live: room.isStreaming }"
+                          >
                             {{ room.isStreaming ? 'LIVE' : 'OFFLINE' }}
                           </div>
                         </div>
@@ -729,17 +914,26 @@ onMounted(async () => {
                           title="打开直播间"
                           @click.stop
                         >
-                          <NIcon :component="OpenOutline" size="16" />
+                          <NIcon
+                            :component="OpenOutline"
+                            size="16"
+                          />
                         </a>
                       </div>
                     </div>
                     <div class="room-mini-spacer" />
                     <div class="room-mini-bottom">
                       <div class="room-mini-bottom__left">
-                        <div class="room-mini-title" :title="room.title">
+                        <div
+                          class="room-mini-title"
+                          :title="room.title"
+                        >
                           {{ room.title || '（暂无标题）' }}
                         </div>
-                        <div class="room-mini-sub" :title="getRoomSubline(room)">
+                        <div
+                          class="room-mini-sub"
+                          :title="getRoomSubline(room)"
+                        >
                           {{ getRoomSubline(room) }}
                         </div>
                       </div>
@@ -751,28 +945,42 @@ onMounted(async () => {
 
             <!-- 底部信息 -->
             <div class="streamers-footer">
-              <NFlex vertical align="center" :size="16" style="margin-top: 32px;">
+              <NFlex
+                vertical
+                align="center"
+                :size="16"
+                style="margin-top: 32px"
+              >
                 <div class="more-indicator">
                   <div class="dots-container">
                     <div class="dot" />
                     <div class="dot" />
                     <div class="dot" />
                   </div>
-                  <NText :style="{ color: textColor, fontSize: '0.9rem', fontWeight: 500 }">
-                    还有更多...
-                  </NText>
+                  <NText :style="{ color: textColor, fontSize: '0.9rem', fontWeight: 500 }"> 还有更多... </NText>
                 </div>
 
-                <NFlex align="center" justify="center" :size="8">
-                  <NIcon :component="Info24Filled" size="14" :color="textColorSecondary" />
+                <NFlex
+                  align="center"
+                  justify="center"
+                  :size="8"
+                >
+                  <NIcon
+                    :component="Info24Filled"
+                    size="14"
+                    :color="textColorSecondary"
+                  />
                   <NText :style="{ color: textColorSecondary, fontSize: '0.8rem', textAlign: 'center' }">
                     不想被展示？前往
                     <NButton
-                      text size="tiny" :style="{
+                      text
+                      size="tiny"
+                      :style="{
                         fontSize: '0.8rem',
                         padding: '0 4px',
                         textDecoration: 'underline',
-                      }" @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
+                      }"
+                      @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
                     >
                       设置页面 (渲染模式-传统-允许展示在主页)
                     </NButton>
@@ -785,11 +993,18 @@ onMounted(async () => {
         </NFlex>
       </NCard>
     </NFlex>
-    <NFlex justify="center" class="footer">
+    <NFlex
+      justify="center"
+      class="footer"
+    >
       <span :style="{ color: textColor }">
         BY
         <NButton
-          tag="a" href="https://space.bilibili.com/10021741" target="_blank" text :style="{
+          tag="a"
+          href="https://space.bilibili.com/10021741"
+          target="_blank"
+          text
+          :style="{
             borderRadius: borderRadius.small,
           }"
         >
@@ -1248,5 +1463,4 @@ onMounted(async () => {
         mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
     .room-mini-card
         width: 180px;
-
 </style>

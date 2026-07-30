@@ -42,7 +42,7 @@ export const BLOCK_TYPES = [
   'supporter',
 ] as const
 
-export type BlockType = typeof BLOCK_TYPES[number]
+export type BlockType = (typeof BLOCK_TYPES)[number]
 
 export const BLOCK_PAGE_VERSION = 1 as const
 export const MAX_PAGE_IMAGES = 50

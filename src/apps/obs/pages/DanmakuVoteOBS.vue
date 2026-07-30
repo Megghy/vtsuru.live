@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { VoteOBSData, VoteOption } from '@/api/api-models'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
+
+import type { VoteOBSData, VoteOption } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { VOTE_API_URL } from '@/shared/config'
 
@@ -26,7 +27,9 @@ const timeLeftMs = computed(() => {
 function formatRemain(ms: number | null | undefined) {
   if (ms == null) return ''
   const total = Math.floor(ms / 1000)
-  const mm = Math.floor(total / 60).toString().padStart(2, '0')
+  const mm = Math.floor(total / 60)
+    .toString()
+    .padStart(2, '0')
   const ss = (total % 60).toString().padStart(2, '0')
   return `${mm}:${ss}`
 }
@@ -71,7 +74,7 @@ function getUserIdFromUrl(): string | null {
       return parts[1]
     }
   }
-  return route.query.user as string || null
+  return (route.query.user as string) || null
 }
 
 // 计算百分比
@@ -138,11 +141,7 @@ onMounted(() => {
   <div
     v-if="voteData && isVisible && isActive"
     class="danmaku-vote-obs"
-    :class="[
-      `theme-${theme}`,
-      `position-${voteData.displayPosition || 'right'}`,
-      { rounded: voteData.roundedCorners },
-    ]"
+    :class="[`theme-${theme}`, `position-${voteData.displayPosition || 'right'}`, { rounded: voteData.roundedCorners }]"
     :style="{
       '--bg-color': voteData.backgroundColor || '#1e1e2e',
       '--text-color': voteData.textColor || '#ffffff',
@@ -154,7 +153,11 @@ onMounted(() => {
       <div class="vote-header">
         <div class="vote-title">
           {{ voteData.title }}
-          <span v-if="timeLeftMs !== null" class="vote-timer">剩余 {{ formatRemain(timeLeftMs) }}</span>
+          <span
+            v-if="timeLeftMs !== null"
+            class="vote-timer"
+            >剩余 {{ formatRemain(timeLeftMs) }}</span
+          >
         </div>
       </div>
 
@@ -169,9 +172,7 @@ onMounted(() => {
           class="vote-option"
         >
           <div class="option-header">
-            <div class="option-name">
-              {{ index + 1 }}. {{ option.text }}
-            </div>
+            <div class="option-name">{{ index + 1 }}. {{ option.text }}</div>
             <div
               v-if="voteData.showResults"
               class="option-count-wrapper"
@@ -201,7 +202,7 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: "Microsoft YaHei", sans-serif;
+  font-family: 'Microsoft YaHei', sans-serif;
   color: var(--text-color);
   display: flex;
   align-items: center;

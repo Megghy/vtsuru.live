@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import type { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
+
+import type { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
 import { SCHEDULE_API_URL } from '@/shared/config'
@@ -57,7 +58,10 @@ onMounted(async () => {
     v-if="isLoading"
     show
   />
-  <div v-else class="schedule-page">
+  <div
+    v-else
+    class="schedule-page"
+  >
     <component
       :is="ScheduleTemplateMap[componentType ?? ''].component"
       :bili-info="biliInfo"

@@ -1,13 +1,26 @@
 <script setup lang="ts">
 import { breakpointsTailwind, useBreakpoints as useVueUseBreakpoints } from '@vueuse/core'
 import {
-  NAlert, NButton, NCard, NCountdown, NInput, NInputGroup, NPopconfirm, NSpin, NStep, NSteps, NText, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NCountdown,
+  NInput,
+  NInputGroup,
+  NPopconfirm,
+  NSpin,
+  NStep,
+  NSteps,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, onMounted, ref } from 'vue'
+
 import { QueryGetAPI } from '@/api/query'
 import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/shared/config'
-import { useBiliAuth } from '@/store/useBiliAuth'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 interface AuthStartModel {
   code: string
@@ -86,9 +99,8 @@ function checkTimeLeft() {
   }
 }
 function copyCode() {
-  const textToCopy = currentStep.value === 2
-    ? `${CURRENT_HOST}bili-user?auth=${currentToken.value}`
-    : startModel.value?.code ?? ''
+  const textToCopy =
+    currentStep.value === 2 ? `${CURRENT_HOST}bili-user?auth=${currentToken.value}` : (startModel.value?.code ?? '')
 
   if (navigator.clipboard && textToCopy) {
     navigator.clipboard.writeText(textToCopy)
@@ -116,9 +128,7 @@ onMounted(async () => {
     >
       <template #header>
         <div class="auth-header">
-          <NText class="auth-title">
-            Bilibili 身份验证
-          </NText>
+          <NText class="auth-title"> Bilibili 身份验证 </NText>
         </div>
       </template>
 
@@ -156,9 +166,7 @@ onMounted(async () => {
             <template v-if="!timeOut">
               <div class="auth-progress">
                 <NSpin size="large" />
-                <NText class="countdown-text">
-                  剩余时间：<NCountdown :duration="timeLeft" />
-                </NText>
+                <NText class="countdown-text"> 剩余时间：<NCountdown :duration="timeLeft" /> </NText>
               </div>
 
               <div class="verification-section">
@@ -207,9 +215,7 @@ onMounted(async () => {
               class="timeout-alert"
             >
               <div class="timeout-content">
-                <NText depth="3">
-                  认证时间已过，请重新开始认证流程
-                </NText>
+                <NText depth="3"> 认证时间已过，请重新开始认证流程 </NText>
                 <NButton
                   type="error"
                   size="large"
@@ -239,12 +245,14 @@ onMounted(async () => {
               >
                 <div class="info-content">
                   <NText>
-                    点击 <NText
+                    点击
+                    <NText
                       type="primary"
                       strong
                     >
                       开始认证
-                    </NText> 后请在 5 分钟之内使用
+                    </NText>
+                    后请在 5 分钟之内使用
                     <NText
                       strong
                       type="primary"
@@ -282,13 +290,11 @@ onMounted(async () => {
               >
                 <div class="success-content">
                   <NText>
-                    您已完成验证！请妥善保存您的登录链接，请勿让其他人获取。
-                    丢失后可以再次通过认证流程获得。
+                    您已完成验证！请妥善保存您的登录链接，请勿让其他人获取。 丢失后可以再次通过认证流程获得。
                   </NText>
-                  <br><br>
+                  <br /><br />
                   <NText depth="2">
-                    要在其他地方登录，或者需要重新登录时，
-                    请将此链接复制到浏览器地址栏打开即可。
+                    要在其他地方登录，或者需要重新登录时， 请将此链接复制到浏览器地址栏打开即可。
                   </NText>
                 </div>
               </NAlert>

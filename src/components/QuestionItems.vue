@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { QAInfo } from '@/api/api-models'
+
 import QuestionItem from './QuestionItem.vue'
 
 defineProps<{
@@ -22,10 +23,16 @@ const emit = defineEmits<{ (e: 'select', id: number): void }>()
       @select="emit('select', $event)"
     >
       <template #footer>
-        <slot name="footer" :item="item" />
+        <slot
+          name="footer"
+          :item="item"
+        />
       </template>
       <template #header-extra>
-        <slot name="header-extra" :item="item" />
+        <slot
+          name="header-extra"
+          :item="item"
+        />
       </template>
     </QuestionItem>
   </div>

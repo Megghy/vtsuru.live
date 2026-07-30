@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { NSpin } from 'naive-ui';
+import { NSpin } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
+
 import { useAccount } from '@/api/account'
-import { useWebFetcher } from '@/store/useWebFetcher'
 import { useOBSNotification } from '@/store/useOBSNotification'
+import { useWebFetcher } from '@/store/useWebFetcher'
 
 const timer = ref<any>()
 const visible = ref(true)
@@ -23,7 +24,7 @@ const transparentTargets = [
   () => document.querySelector('.obs-container'),
 ] as const
 
-const originalBackgroundStyles = new Map<HTMLElement, { color: string, image: string }>()
+const originalBackgroundStyles = new Map<HTMLElement, { color: string; image: string }>()
 
 function applyTransparentBackgrounds() {
   for (const getElement of transparentTargets) {

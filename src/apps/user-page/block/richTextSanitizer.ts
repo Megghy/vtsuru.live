@@ -1,9 +1,32 @@
 import DOMPurify from 'dompurify'
 
 const ALLOWED_TAGS = [
-  'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
-  'strong', 'b', 'em', 'i', 'u', 's', 'del', 'code', 'pre', 'blockquote',
-  'ul', 'ol', 'li', 'a', 'img', 'hr',
+  'p',
+  'br',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'div',
+  'span',
+  'strong',
+  'b',
+  'em',
+  'i',
+  'u',
+  's',
+  'del',
+  'code',
+  'pre',
+  'blockquote',
+  'ul',
+  'ol',
+  'li',
+  'a',
+  'img',
+  'hr',
 ]
 
 function isSafeUrl(value: string, allowFragment: boolean) {
@@ -20,14 +43,19 @@ function isSafeUrl(value: string, allowFragment: boolean) {
 
 function isSafeColor(value: string) {
   const normalized = value.trim().toLowerCase()
-  return /^var\(--[a-z0-9_-]+\)$/.test(normalized)
-    || /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(normalized)
-    || /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(normalized)
-    || /^hsla?\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(normalized)
+  return (
+    /^var\(--[a-z0-9_-]+\)$/.test(normalized) ||
+    /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(normalized) ||
+    /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(normalized) ||
+    /^hsla?\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(normalized)
+  )
 }
 
 function isSafeLength(value: string) {
-  const match = value.trim().toLowerCase().match(/^(\d+(?:\.\d+)?)(px|em|rem|%)$/)
+  const match = value
+    .trim()
+    .toLowerCase()
+    .match(/^(\d+(?:\.\d+)?)(px|em|rem|%)$/)
   if (!match) return false
   const size = Number(match[1])
   if (match[2] === 'px') return size >= 8 && size <= 72
@@ -54,12 +82,17 @@ function sanitizeStyle(styleText: string, alignment = '') {
     if (separator < 0) return
     const property = declaration.slice(0, separator).trim().toLowerCase()
     const value = declaration.slice(separator + 1).trim()
-    if (property === 'text-align' && ['left', 'center', 'right', 'justify', 'start', 'end'].includes(value.toLowerCase())) safe.set(property, value.toLowerCase())
+    if (
+      property === 'text-align' &&
+      ['left', 'center', 'right', 'justify', 'start', 'end'].includes(value.toLowerCase())
+    )
+      safe.set(property, value.toLowerCase())
     else if ((property === 'color' || property === 'background-color') && isSafeColor(value)) safe.set(property, value)
     else if (property === 'font-size' && isSafeLength(value)) safe.set(property, value)
     else if (property === 'line-height' && isSafeLineHeight(value)) safe.set(property, value)
   })
-  if (!safe.has('text-align') && ['left', 'center', 'right', 'justify'].includes(alignment)) safe.set('text-align', alignment)
+  if (!safe.has('text-align') && ['left', 'center', 'right', 'justify'].includes(alignment))
+    safe.set('text-align', alignment)
   return [...safe].map(([property, value]) => `${property}:${value}`).join(';')
 }
 
@@ -73,10 +106,11 @@ export function sanitizeRichText(input: string): string {
   })
 
   fragment.querySelectorAll<HTMLElement>('*').forEach((element) => {
-    const alignment = [...element.classList]
-      .find(className => className.startsWith('ql-align-'))
-      ?.slice('ql-align-'.length)
-      .toLowerCase() ?? ''
+    const alignment =
+      [...element.classList]
+        .find((className) => className.startsWith('ql-align-'))
+        ?.slice('ql-align-'.length)
+        .toLowerCase() ?? ''
     element.removeAttribute('class')
 
     const style = sanitizeStyle(element.getAttribute('style') ?? '', alignment)

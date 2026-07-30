@@ -1,8 +1,28 @@
 <script setup lang="ts">
-import type { DataTableColumns } from 'naive-ui'
+import {
+  Database20Regular,
+  Delete16Filled,
+  ArrowClockwise16Filled,
+  Copy16Regular,
+  Search16Regular,
+  Flash24Regular,
+} from '@vicons/fluent'
 import { createStore, clear as idbClear, del as idbDel, entries as idbEntries } from 'idb-keyval'
-import { Database20Regular, Delete16Filled, ArrowClockwise16Filled, Copy16Regular, Search16Regular, Flash24Regular } from '@vicons/fluent'
-import { NAlert, NButton, NCard, NDataTable, NEmpty, NPopconfirm, NFlex, NTag, NText, useMessage, NInput, NIcon } from 'naive-ui';
+import type { DataTableColumns } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDataTable,
+  NEmpty,
+  NPopconfirm,
+  NFlex,
+  NTag,
+  NText,
+  useMessage,
+  NInput,
+  NIcon,
+} from 'naive-ui'
 import { h, onMounted, ref, computed } from 'vue'
 
 // --- 定义用户持久化数据的自定义存储区 (与 utils.ts 中保持一致) ---
@@ -29,7 +49,8 @@ const runtimeSearch = ref('')
 const persistentSearch = ref('')
 
 function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text)
+  navigator.clipboard
+    .writeText(text)
     .then(() => message.success('已复制'))
     .catch(() => message.error('复制失败'))
 }
@@ -46,14 +67,27 @@ async function fetchPersistentData() {
       let valueDisplay = ''
       let type: string = typeof value
 
-      if (value === null) { valueDisplay = 'null'; type = 'null' }
-      else if (value === undefined) { valueDisplay = 'undefined'; type = 'undefined' }
-      else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') { valueDisplay = String(value) }
-      else if (Array.isArray(value)) { valueDisplay = `[Array (${value.length})]`; type = 'array' }
-      else if (typeof value === 'object') {
-        try { valueDisplay = JSON.stringify(value, null, 2) } catch { valueDisplay = '[Object]' }
+      if (value === null) {
+        valueDisplay = 'null'
+        type = 'null'
+      } else if (value === undefined) {
+        valueDisplay = 'undefined'
+        type = 'undefined'
+      } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        valueDisplay = String(value)
+      } else if (Array.isArray(value)) {
+        valueDisplay = `[Array (${value.length})]`
+        type = 'array'
+      } else if (typeof value === 'object') {
+        try {
+          valueDisplay = JSON.stringify(value, null, 2)
+        } catch {
+          valueDisplay = '[Object]'
+        }
         type = 'object'
-      } else { valueDisplay = `[${typeof value}]` }
+      } else {
+        valueDisplay = `[${typeof value}]`
+      }
 
       return { key: String(key), value, valueDisplay, type }
     })
@@ -69,7 +103,7 @@ async function fetchPersistentData() {
 const filteredPersistentData = computed(() => {
   if (!persistentSearch.value) return persistentData.value
   const lower = persistentSearch.value.toLowerCase()
-  return persistentData.value.filter(item => item.key.toLowerCase().includes(lower))
+  return persistentData.value.filter((item) => item.key.toLowerCase().includes(lower))
 })
 
 async function deletePersistentItem(key: string) {
@@ -117,16 +151,19 @@ function fetchRuntimeData() {
               value = JSON.parse(storedValue)
               type = typeof value
               if (value === null) {
-                valueDisplay = 'null'; type = 'null'
+                valueDisplay = 'null'
+                type = 'null'
               } else if (value === undefined) {
-                valueDisplay = 'undefined'; type = 'undefined'
+                valueDisplay = 'undefined'
+                type = 'undefined'
               } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
                 valueDisplay = String(value)
               } else if (Array.isArray(value)) {
-                valueDisplay = `[Array (${value.length})]`; type = 'array'
+                valueDisplay = `[Array (${value.length})]`
+                type = 'array'
               } else if (typeof value === 'object') {
                 try {
-                  valueDisplay = JSON.stringify(value, null, 2);
+                  valueDisplay = JSON.stringify(value, null, 2)
                 } catch {
                   valueDisplay = '[Object]'
                 }
@@ -164,7 +201,7 @@ function fetchRuntimeData() {
 const filteredRuntimeData = computed(() => {
   if (!runtimeSearch.value) return runtimeData.value
   const lower = runtimeSearch.value.toLowerCase()
-  return runtimeData.value.filter(item => item.key.toLowerCase().includes(lower))
+  return runtimeData.value.filter((item) => item.key.toLowerCase().includes(lower))
 })
 
 function deleteRuntimeItem(key: string) {
@@ -187,7 +224,7 @@ function clearRuntimeData() {
         keysToRemove.push(key)
       }
     }
-    keysToRemove.forEach(key => sessionStorage.removeItem(key))
+    keysToRemove.forEach((key) => sessionStorage.removeItem(key))
     message.success('已清除所有运行时数据')
     fetchRuntimeData()
   } catch (error) {
@@ -198,52 +235,93 @@ function clearRuntimeData() {
 
 // --- 表格列定义 (复用) ---
 const commonColumns: DataTableColumns<DataItem> = [
-  { 
-    title: '键 (Key)', 
-    key: 'key', 
+  {
+    title: '键 (Key)',
+    key: 'key',
     width: 200,
-    render: row => h(NText, { code: true, style: 'font-weight: bold; color: var(--vtsuru-primary);' }, { default: () => row.key })
+    render: (row) =>
+      h(NText, { code: true, style: 'font-weight: bold; color: var(--vtsuru-primary);' }, { default: () => row.key }),
   },
-  { 
-    title: '类型', 
-    key: 'type', 
-    width: 100, 
-    render: row => h(NTag, { size: 'small', type: (row.type === 'error' || row.type === 'parse-error') ? 'error' : 'default', bordered: false }, { default: () => row.type }) 
+  {
+    title: '类型',
+    key: 'type',
+    width: 100,
+    render: (row) =>
+      h(
+        NTag,
+        {
+          size: 'small',
+          type: row.type === 'error' || row.type === 'parse-error' ? 'error' : 'default',
+          bordered: false,
+        },
+        { default: () => row.type },
+      ),
   },
-  { 
-    title: '值 (Value)', 
-    key: 'valueDisplay', 
-    render: row => h('div', { class: 'value-cell' }, [
-      h('pre', { class: 'value-content' }, row.valueDisplay),
-      h(NButton, { 
-        size: 'tiny', 
-        quaternary: true, 
-        class: 'copy-btn', 
-        onClick: () => copyToClipboard(row.valueDisplay) 
-      }, { icon: () => h(NIcon, { component: Copy16Regular }) })
-    ]) 
+  {
+    title: '值 (Value)',
+    key: 'valueDisplay',
+    render: (row) =>
+      h('div', { class: 'value-cell' }, [
+        h('pre', { class: 'value-content' }, row.valueDisplay),
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            quaternary: true,
+            class: 'copy-btn',
+            onClick: () => copyToClipboard(row.valueDisplay),
+          },
+          { icon: () => h(NIcon, { component: Copy16Regular }) },
+        ),
+      ]),
   },
 ]
 
 const persistentColumns: DataTableColumns<DataItem> = [
   ...commonColumns,
-  { 
-    title: '操作', 
-    key: 'actions', 
-    width: 80, 
+  {
+    title: '操作',
+    key: 'actions',
+    width: 80,
     align: 'center',
-    render: row => h(NPopconfirm, { onPositiveClick: () => deletePersistentItem(row.key), positiveText: '确认删除', negativeText: '取消' }, { trigger: () => h(NButton, { size: 'small', type: 'error', quaternary: true }, { icon: () => h(NIcon, { component: Delete16Filled }) }), default: () => `删除持久化键 "${row.key}"?` }) 
+    render: (row) =>
+      h(
+        NPopconfirm,
+        { onPositiveClick: () => deletePersistentItem(row.key), positiveText: '确认删除', negativeText: '取消' },
+        {
+          trigger: () =>
+            h(
+              NButton,
+              { size: 'small', type: 'error', quaternary: true },
+              { icon: () => h(NIcon, { component: Delete16Filled }) },
+            ),
+          default: () => `删除持久化键 "${row.key}"?`,
+        },
+      ),
   },
 ]
 
 const runtimeColumns: DataTableColumns<DataItem> = [
   ...commonColumns,
-  { 
-    title: '操作', 
-    key: 'actions', 
+  {
+    title: '操作',
+    key: 'actions',
     width: 80,
     align: 'center',
-    render: row => h(NPopconfirm, { onPositiveClick: () => deleteRuntimeItem(row.key), positiveText: '确认删除', negativeText: '取消' }, { trigger: () => h(NButton, { size: 'small', type: 'error', quaternary: true }, { icon: () => h(NIcon, { component: Delete16Filled }) }), default: () => `删除运行时键 "${row.key}"?` }) 
+    render: (row) =>
+      h(
+        NPopconfirm,
+        { onPositiveClick: () => deleteRuntimeItem(row.key), positiveText: '确认删除', negativeText: '取消' },
+        {
+          trigger: () =>
+            h(
+              NButton,
+              { size: 'small', type: 'error', quaternary: true },
+              { icon: () => h(NIcon, { component: Delete16Filled }) },
+            ),
+          default: () => `删除运行时键 "${row.key}"?`,
+        },
+      ),
   },
 ]
 
@@ -271,13 +349,20 @@ onMounted(() => {
           <NFlex align="center">
             <NIcon :component="Flash24Regular" />
             <span>运行时数据 (SessionStorage)</span>
-            <NTag size="small" :bordered="false" type="warning">
+            <NTag
+              size="small"
+              :bordered="false"
+              type="warning"
+            >
               临时
             </NTag>
           </NFlex>
         </template>
 
-        <NFlex vertical :size="12">
+        <NFlex
+          vertical
+          :size="12"
+        >
           <NAlert
             type="warning"
             :bordered="false"
@@ -285,20 +370,23 @@ onMounted(() => {
           >
             这里显示通过 <code>getData</code> / <code>setData</code> 管理的数据。仅在程序运行期间保留，重启即逝。
           </NAlert>
-          
-          <NFlex justify="space-between" align="center">
-            <NInput 
-              v-model:value="runtimeSearch" 
-              placeholder="搜索 Key..." 
-              size="small" 
-              style="width: 200px" 
+
+          <NFlex
+            justify="space-between"
+            align="center"
+          >
+            <NInput
+              v-model:value="runtimeSearch"
+              placeholder="搜索 Key..."
+              size="small"
+              style="width: 200px"
               clearable
             >
               <template #prefix>
                 <NIcon :component="Search16Regular" />
               </template>
             </NInput>
-            
+
             <NFlex>
               <NButton
                 :loading="runtimeLoading"
@@ -361,13 +449,20 @@ onMounted(() => {
           <NFlex align="center">
             <NIcon :component="Database20Regular" />
             <span>持久化数据 (IndexedDB)</span>
-            <NTag size="small" :bordered="false" type="info">
+            <NTag
+              size="small"
+              :bordered="false"
+              type="info"
+            >
               永久
             </NTag>
           </NFlex>
         </template>
 
-        <NFlex vertical :size="12">
+        <NFlex
+          vertical
+          :size="12"
+        >
           <NAlert
             type="info"
             :bordered="false"
@@ -375,13 +470,16 @@ onMounted(() => {
           >
             这里显示通过 <code>getStorageData</code> / <code>setStorageData</code> 管理的数据。程序关闭后依然保留。
           </NAlert>
-          
-          <NFlex justify="space-between" align="center">
-            <NInput 
-              v-model:value="persistentSearch" 
-              placeholder="搜索 Key..." 
-              size="small" 
-              style="width: 200px" 
+
+          <NFlex
+            justify="space-between"
+            align="center"
+          >
+            <NInput
+              v-model:value="persistentSearch"
+              placeholder="搜索 Key..."
+              size="small"
+              style="width: 200px"
               clearable
             >
               <template #prefix>
@@ -422,7 +520,7 @@ onMounted(() => {
               </NPopconfirm>
             </NFlex>
           </NFlex>
-          
+
           <NDataTable
             :columns="persistentColumns"
             :data="filteredPersistentData"

@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import type { AccountInfo } from '@/api/api-models'
-import { NButton, NCard, NLayoutContent, NFlex, useMessage } from 'naive-ui';
+import { NButton, NCard, NLayoutContent, NFlex, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+
 import { ACCOUNT } from '@/api/account'
+import type { AccountInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
-import { ACCOUNT_API_URL } from '@/shared/config'
 import router from '@/app/router'
+import { ACCOUNT_API_URL } from '@/shared/config'
+
 import '@/apps/web/styles/web-page.css'
 
 const message = useMessage()
@@ -45,10 +47,11 @@ async function VerifyAccount() {
 <template>
   <NLayoutContent class="web-center">
     <div class="web-page web-page--md">
-      <NCard size="small" bordered>
-        <template #header>
-          激活账户
-        </template>
+      <NCard
+        size="small"
+        bordered
+      >
+        <template #header> 激活账户 </template>
         <NFlex
           justify="center"
           align="center"

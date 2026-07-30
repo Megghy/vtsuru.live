@@ -1,17 +1,11 @@
 import type { Ref } from 'vue'
-import type {
-  AutoActionItem,
-  RuntimeState,
-} from '../types'
-import type { EventModel } from '@/api/api-models'
 import { ref } from 'vue'
-import {
-  executeActions,
-  filterValidActions,
-} from '../actionUtils'
-import {
-  TriggerType,
-} from '../types'
+
+import type { EventModel } from '@/api/api-models'
+
+import { executeActions, filterValidActions } from '../actionUtils'
+import type { AutoActionItem, RuntimeState } from '../types'
+import { TriggerType } from '../types'
 
 /**
  * 入场欢迎模块
@@ -35,12 +29,7 @@ export function useEntryWelcome(
    * @param actions 自动操作列表
    * @param runtimeState 运行时状态
    */
-  function processEnter(
-    event: EventModel,
-    actions: AutoActionItem[],
-    runtimeState: RuntimeState,
-    isTest = false,
-  ) {
+  function processEnter(event: EventModel, actions: AutoActionItem[], runtimeState: RuntimeState, isTest = false) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的入场欢迎操作
@@ -69,8 +58,7 @@ export function useEntryWelcome(
                 case 'guard':
                   return (event.guard_level || 0) > 0
                 case 'medal':
-                  return event.fans_medal_wearing_status
-                    && (event.fans_medal_level || 0) >= (enterMedalMinLevel || 0)
+                  return event.fans_medal_wearing_status && (event.fans_medal_level || 0) >= (enterMedalMinLevel || 0)
                 default:
                   return true
               }

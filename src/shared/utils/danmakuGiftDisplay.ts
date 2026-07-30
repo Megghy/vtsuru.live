@@ -1,16 +1,15 @@
 import type { DanmakuModel, EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 
-type DanmakuGiftLike = Pick<DanmakuModel, 'type' | 'msg' | 'num' | 'price'>
-  & Partial<Pick<DanmakuModel, 'mysteryBoxName' | 'mysteryBoxPrice'>>
-  & Partial<Pick<EventModel, 'mystery_box_name' | 'mystery_box_price'>>
+type DanmakuGiftLike = Pick<DanmakuModel, 'type' | 'msg' | 'num' | 'price'> &
+  Partial<Pick<DanmakuModel, 'mysteryBoxName' | 'mysteryBoxPrice'>> &
+  Partial<Pick<EventModel, 'mystery_box_name' | 'mystery_box_price'>>
 
 type GiftPaymentLike = {
   giftPrice?: number | null
   price?: number | null
-}
-  & Partial<Pick<DanmakuModel, 'mysteryBoxName' | 'mysteryBoxPrice'>>
-  & Partial<Pick<EventModel, 'mystery_box_name' | 'mystery_box_price'>>
+} & Partial<Pick<DanmakuModel, 'mysteryBoxName' | 'mysteryBoxPrice'>> &
+  Partial<Pick<EventModel, 'mystery_box_name' | 'mystery_box_price'>>
 
 export interface DanmakuGiftDisplayMeta {
   hasMysteryBoxGift: boolean
@@ -74,8 +73,12 @@ export function getGiftPaymentDisplayMeta(item: GiftPaymentLike): GiftPaymentDis
     mysteryBoxPriceText,
     giftPriceText,
     shortText: hasMysteryBoxPayment
-      ? mysteryBoxPriceText ? `盲盒 ￥${mysteryBoxPriceText}` : '盲盒'
-      : giftPriceText ? `￥${giftPriceText}` : '免费礼物',
+      ? mysteryBoxPriceText
+        ? `盲盒 ￥${mysteryBoxPriceText}`
+        : '盲盒'
+      : giftPriceText
+        ? `￥${giftPriceText}`
+        : '免费礼物',
     compactText: compactParts.filter(Boolean).join(' / '),
     detailText: detailParts.length > 0 ? detailParts.join(' / ') : undefined,
   }
@@ -103,8 +106,7 @@ export function getDanmakuGiftDisplayMeta(item: DanmakuGiftLike): DanmakuGiftDis
 
 function normalizeText(...values: Array<string | null | undefined>) {
   for (const value of values) {
-    if (!value)
-      continue
+    if (!value) continue
 
     const trimmed = value.trim()
     if (trimmed) {

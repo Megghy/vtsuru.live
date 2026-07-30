@@ -1,6 +1,8 @@
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { effectScope, nextTick } from 'vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { effectScope, nextTick } from 'vue'
+
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { useUserPageEditorCore } from '../useUserPageEditorCore'
 
 function createCore() {

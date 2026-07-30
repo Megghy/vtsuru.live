@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
+
 import { chromium } from 'playwright-core'
 
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
@@ -30,9 +31,10 @@ try {
     const page = await context.newPage()
     const pageErrors = []
     const reactiveWarnings = []
-    page.on('pageerror', error => pageErrors.push(error.message))
+    page.on('pageerror', (error) => pageErrors.push(error.message))
     page.on('console', (message) => {
-      if (message.type() === 'warning' && message.text().includes('made a reactive object')) reactiveWarnings.push(message.text())
+      if (message.type() === 'warning' && message.text().includes('made a reactive object'))
+        reactiveWarnings.push(message.text())
     })
     await page.route('**/api/user-pages/get-user**', async (route) => {
       const response = await route.fetch()
@@ -112,4 +114,4 @@ try {
 }
 
 console.dir(results, { depth: null })
-if (results.some(result => result.failures.length)) process.exitCode = 1
+if (results.some((result) => result.failures.length)) process.exitCode = 1

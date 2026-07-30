@@ -2,31 +2,27 @@ import type { PointOrderStatus, ResponsePointOrder2OwnerModel } from '@/api/api-
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL, POINT_API_URL } from '@/shared/config'
 
-export type PointOrderScope =
-  | { kind: 'owner' }
-  | { kind: 'org', orgId: number, streamerId?: number, customer?: number }
+export type PointOrderScope = { kind: 'owner' } | { kind: 'org'; orgId: number; streamerId?: number; customer?: number }
 
 export async function fetchOwnerOrders(scope: PointOrderScope): Promise<ResponsePointOrder2OwnerModel[]> {
   if (scope.kind === 'owner') {
-    return unwrapOk(
-      await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-orders`),
-      '获取订单失败',
-    )
+    return unwrapOk(await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-orders`), '获取订单失败')
   }
 
   return unwrapOk(
-    await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(
-      `${ORG_API_URL}${scope.orgId}/points/orders`,
-      {
-        ...(scope.streamerId ? { streamerId: scope.streamerId } : {}),
-        ...(scope.customer ? { customerId: scope.customer } : {}),
-      },
-    ),
+    await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${ORG_API_URL}${scope.orgId}/points/orders`, {
+      ...(scope.streamerId ? { streamerId: scope.streamerId } : {}),
+      ...(scope.customer ? { customerId: scope.customer } : {}),
+    }),
     '获取订单失败',
   )
 }
 
-export async function updateOrdersStatus(scope: PointOrderScope, ids: number[], status: PointOrderStatus): Promise<void> {
+export async function updateOrdersStatus(
+  scope: PointOrderScope,
+  ids: number[],
+  status: PointOrderStatus,
+): Promise<void> {
   if (!ids.length) return
 
   if (scope.kind === 'owner') {

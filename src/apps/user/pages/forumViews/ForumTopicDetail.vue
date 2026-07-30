@@ -1,22 +1,47 @@
 <script setup lang="ts">
-import type { PaginationResponse, UserInfo } from '@/api/api-models'
-import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
-import { ArrowCircleLeft12Regular, Comment24Regular, Delete24Filled, Eye24Regular, } from '@vicons/fluent'
+import { ArrowCircleLeft12Regular, Comment24Regular, Delete24Filled, Eye24Regular } from '@vicons/fluent'
 import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
 import {
-  NAvatar, NAvatarGroup, NBackTop, NButton, NCard, NDivider, NEllipsis, NEmpty, NFlex, NIcon, NInput, NList, NListItem, NModal, NPagination, NPopconfirm, NTag, NText, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui';
+  NAvatar,
+  NAvatarGroup,
+  NBackTop,
+  NButton,
+  NCard,
+  NDivider,
+  NEllipsis,
+  NEmpty,
+  NFlex,
+  NIcon,
+  NInput,
+  NList,
+  NListItem,
+  NModal,
+  NPagination,
+  NPopconfirm,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+
 import { useAccount } from '@/api/account'
+import type { PaginationResponse, UserInfo } from '@/api/api-models'
+import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import { ForumCommentSortTypes } from '@/api/models/forum'
+import router from '@/app/router'
 import TurnstileVerify from '@/apps/user/components/TurnstileVerify.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { VTSURU_API_URL } from '@/shared/config'
-import router from '@/app/router'
-import { useForumStore } from '@/store/useForumStore'
 import { getUserAvatarUrl } from '@/shared/utils'
+import { useForumStore } from '@/store/useForumStore'
+
 import ForumCommentItem from './ForumCommentItem.vue'
 import ForumReplyItem from './ForumReplyItem.vue'
+
 import '@/assets/forumContentStyle.css'
 
 interface PostCommentModel {
@@ -111,7 +136,7 @@ async function refreshComments() {
 }
 function onDeleteComment(id: number) {
   if (comments.value) {
-    comments.value.data = comments.value.data.filter(c => c.id !== id)
+    comments.value.data = comments.value.data.filter((c) => c.id !== id)
   }
 }
 async function delTopic(id: number) {
@@ -147,9 +172,16 @@ onMounted(async () => {
   <template v-else>
     <div class="forum-topic-detail">
       <NBackTop />
-      <NCard size="small" bordered>
+      <NCard
+        size="small"
+        bordered
+      >
         <template #header>
-          <NFlex align="center" :wrap="false" :size="8">
+          <NFlex
+            align="center"
+            :wrap="false"
+            :size="8"
+          >
             <NButton
               text
               size="small"
@@ -330,10 +362,11 @@ onMounted(async () => {
           v-html="topic.content"
         />
       </NCard>
-      <NCard size="small" bordered>
-        <template #header>
-          评论
-        </template>
+      <NCard
+        size="small"
+        bordered
+      >
+        <template #header> 评论 </template>
         <template #header-extra>
           <NButton
             type="primary"
@@ -347,7 +380,7 @@ onMounted(async () => {
         <NFlex
           align="center"
           justify="center"
-          style="padding-top: 6px;"
+          style="padding-top: 6px"
         >
           <NPagination
             v-if="comments && (comments?.data?.length ?? 0) > 0"
@@ -358,7 +391,7 @@ onMounted(async () => {
             @update:page="refreshComments"
           />
         </NFlex>
-        <div style="height: 12px;" />
+        <div style="height: 12px" />
         <NEmpty
           v-if="!comments || !comments.data || comments.data.length === 0"
           description="暂无评论"
@@ -379,7 +412,7 @@ onMounted(async () => {
             />
           </NListItem>
         </NList>
-        <div style="height: 12px;" />
+        <div style="height: 12px" />
         <NFlex
           v-if="(comments?.data?.length ?? 0) > 5"
           align="center"
@@ -402,9 +435,7 @@ onMounted(async () => {
     preset="card"
     style="width: 1000px; max-width: 90vw; height: auto"
   >
-    <template #header>
-      发送评论
-    </template>
+    <template #header> 发送评论 </template>
     <VEditor
       ref="editorRef"
       v-model:value="currentCommentContent.content"
@@ -423,9 +454,7 @@ onMounted(async () => {
     preset="card"
     style="width: 1000px; max-width: 90vw; height: auto"
   >
-    <template #header>
-      发送回复
-    </template>
+    <template #header> 发送回复 </template>
     <template v-if="useForum.replyingReply">
       <NCard
         size="small"

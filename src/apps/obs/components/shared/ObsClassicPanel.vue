@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { NDivider, NEmpty } from 'naive-ui';
+import { NDivider, NEmpty } from 'naive-ui'
 import { computed, toRef } from 'vue'
-import type {
-  ObsDisplayCurrent,
-  ObsDisplayFooterTag,
-  ObsDisplayItem,
-} from './obsDisplay'
+
+import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
 import { useObsListAnimation } from './useObsListAnimation'
 
-const props = withDefaults(defineProps<{
-  title: string
-  countText: string
-  current: ObsDisplayCurrent
-  items: ObsDisplayItem[]
-  footerTags?: ObsDisplayFooterTag[]
-  speedMultiplier?: number
-  emptyText: string
-}>(), {
-  footerTags: () => [],
-  speedMultiplier: 1,
-})
+const props = withDefaults(
+  defineProps<{
+    title: string
+    countText: string
+    current: ObsDisplayCurrent
+    items: ObsDisplayItem[]
+    footerTags?: ObsDisplayFooterTag[]
+    speedMultiplier?: number
+    emptyText: string
+  }>(),
+  {
+    footerTags: () => [],
+    speedMultiplier: 1,
+  },
+)
 
 const loopFooterTags = computed(() => [...props.footerTags, ...props.footerTags])
 
@@ -55,7 +55,7 @@ const {
           class="obs-classic-current-avatar"
           :src="current.avatarUrl"
           referrerpolicy="no-referrer"
-        >
+        />
         <div class="obs-classic-current-body">
           <p class="obs-classic-current-title">
             {{ current.title }}
@@ -284,7 +284,9 @@ const {
 
 .obs-classic-transition-enter-active,
 .obs-classic-transition-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
 .obs-classic-transition-enter-from,

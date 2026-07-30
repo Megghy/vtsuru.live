@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import type { LevelTypes, PaginationResponse } from '@/api/api-models'
+
 import { isLoggedIn } from '@/api/account'
+import type { LevelTypes, PaginationResponse } from '@/api/api-models'
 import { QueryGetAPI, QueryGetPaginationAPI } from '@/api/query'
 import { NOTIFICATION_API_URL } from '@/shared/config'
 
@@ -78,8 +79,8 @@ export const useNotificationStore = defineStore('notification', () => {
     }
 
     const idSet = new Set(ids)
-    unread.value = unread.value.filter(n => !idSet.has(n.id))
-    latest.value = latest.value.map(n => (idSet.has(n.id) ? { ...n, isReaded: true } : n))
+    unread.value = unread.value.filter((n) => !idSet.has(n.id))
+    latest.value = latest.value.map((n) => (idSet.has(n.id) ? { ...n, isReaded: true } : n))
   }
 
   async function updateUnread() {
@@ -92,12 +93,12 @@ export const useNotificationStore = defineStore('notification', () => {
       return
     }
 
-    void updateUnread().catch(err => console.warn('[notification] refreshUnread failed', err))
+    void updateUnread().catch((err) => console.warn('[notification] refreshUnread failed', err))
     setInterval(() => {
       if (route?.name?.toString().startsWith('obs-')) {
         return
       }
-      void updateUnread().catch(err => console.warn('[notification] refreshUnread failed', err))
+      void updateUnread().catch((err) => console.warn('[notification] refreshUnread failed', err))
     }, 10 * 1000)
     isInited.value = true
   }

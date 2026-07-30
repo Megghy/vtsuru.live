@@ -4,7 +4,7 @@ import type { SelectOption } from 'naive-ui'
 import { NAlert, NButton, NFlex, NIcon, NInput, NSelect, NText, NTooltip, useMessage } from 'naive-ui'
 import type { VNode } from 'vue'
 import { computed, h, ref, watch } from 'vue'
-import { useSpeechService } from '@/store/useSpeechService'
+
 import {
   COSYVOICE_LANGUAGE_HINTS,
   COSYVOICE_MODELS,
@@ -13,6 +13,8 @@ import {
   DEFAULT_COSYVOICE_VOICE,
   listCosyVoiceCustomVoices,
 } from '@/apps/open-live/voice-providers/cosyvoice'
+import { useSpeechService } from '@/store/useSpeechService'
+
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 
@@ -21,7 +23,8 @@ const speechService = useSpeechService()
 
 // 下拉项会被 naive-ui teleport 到 body，scoped 样式失效，故用内联样式（消费 :root 上的主题变量）
 const MODEL_STYLE = {
-  option: 'display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:var(--model-pad,5px 2px)',
+  option:
+    'display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:var(--model-pad,5px 2px)',
   copy: 'min-width:0;display:flex;flex-direction:column;gap:3px',
   head: 'display:flex;align-items:center;gap:5px;min-width:0',
   lock: 'flex-shrink:0;font-size:12px;color:var(--vtsuru-fg-muted)',
@@ -36,18 +39,18 @@ const customVoiceLoading = ref(false)
 const cosyvoice = computed(() => settings.value.providers.cosyvoice)
 const hasUserKey = computed(() => Boolean(cosyvoice.value.apiKey?.trim()))
 const customVoices = computed(() => cosyvoice.value.customVoices ?? [])
-const selectedModel = computed(() => COSYVOICE_MODELS.find(x => x.value === cosyvoice.value.model))
+const selectedModel = computed(() => COSYVOICE_MODELS.find((x) => x.value === cosyvoice.value.model))
 const customVoiceOnly = computed(() => Boolean(selectedModel.value?.customVoiceOnly))
-const voiceOptions = computed(() => customVoiceOnly.value ? customVoices.value : speechService.getAvailableVoices())
-const modelOptions = computed(() => COSYVOICE_MODELS.map(option => ({
-  ...option,
-  disabled: option.customVoiceOnly && !hasUserKey.value,
-})))
+const voiceOptions = computed(() => (customVoiceOnly.value ? customVoices.value : speechService.getAvailableVoices()))
+const modelOptions = computed(() =>
+  COSYVOICE_MODELS.map((option) => ({
+    ...option,
+    disabled: option.customVoiceOnly && !hasUserKey.value,
+  })),
+)
 
 function modelNote(option: SelectOption) {
-  return option.disabled
-    ? '需要填写自己的 DashScope Key，并使用声音复刻/声音设计音色。'
-    : option.note as string
+  return option.disabled ? '需要填写自己的 DashScope Key，并使用声音复刻/声音设计音色。' : (option.note as string)
 }
 
 function renderModelLabel(option: SelectOption) {
@@ -64,11 +67,15 @@ function renderModelLabel(option: SelectOption) {
   ])
 }
 
-function renderModelOption({ node, option }: { node: VNode, option: SelectOption }) {
-  return h(NTooltip, { placement: 'right', showArrow: false, delay: 300 }, {
-    trigger: () => node,
-    default: () => modelNote(option),
-  })
+function renderModelOption({ node, option }: { node: VNode; option: SelectOption }) {
+  return h(
+    NTooltip,
+    { placement: 'right', showArrow: false, delay: 300 },
+    {
+      trigger: () => node,
+      default: () => modelNote(option),
+    },
+  )
 }
 
 async function refreshCustomVoices() {
@@ -100,13 +107,13 @@ watch(
     if (!model) cosyvoice.value.model = DEFAULT_COSYVOICE_MODEL
     if (model?.startsWith('cosyvoice-v3.5')) {
       const current = cosyvoice.value.voice
-      const customVoice = customVoices.value.find(x => x.value === current)
+      const customVoice = customVoices.value.find((x) => x.value === current)
       cosyvoice.value.voice = customVoice ? String(customVoice.value) : String(customVoices.value[0]?.value ?? '')
       return
     }
     const current = cosyvoice.value.voice
-    const isCustomVoice = customVoices.value.some(x => x.value === current)
-    const isSystemVoice = COSYVOICE_SYSTEM_VOICES.some(x => x.value === current)
+    const isCustomVoice = customVoices.value.some((x) => x.value === current)
+    const isSystemVoice = COSYVOICE_SYSTEM_VOICES.some((x) => x.value === current)
     if (!isCustomVoice && !isSystemVoice) cosyvoice.value.voice = DEFAULT_COSYVOICE_VOICE
   },
   { immediate: true },
@@ -123,7 +130,10 @@ watch(hasUserKey, (value) => {
 
 <template>
   <div class="form">
-    <SectionField label="DashScope API Key" hint="需要前往阿里云百炼创建语音服务实例并获取 API Key, 否则使用本站默认的共享 Key, 可能会遇到排队或调用失败的情况">
+    <SectionField
+      label="DashScope API Key"
+      hint="需要前往阿里云百炼创建语音服务实例并获取 API Key, 否则使用本站默认的共享 Key, 可能会遇到排队或调用失败的情况"
+    >
       <NInput
         v-model:value="settings.providers.cosyvoice.apiKey"
         type="password"
@@ -132,8 +142,16 @@ watch(hasUserKey, (value) => {
         size="small"
         :input-props="{ autocomplete: 'new-password' }"
       />
-      <NText depth="3" style="font-size: 11px">
-        <a href="https://bailian.console.aliyun.com/" target="_blank" rel="noopener" style="color: var(--vtsuru-fg-muted)">
+      <NText
+        depth="3"
+        style="font-size: 11px"
+      >
+        <a
+          href="https://bailian.console.aliyun.com/"
+          target="_blank"
+          rel="noopener"
+          style="color: var(--vtsuru-fg-muted)"
+        >
           前往阿里云百炼获取 API Key →
         </a>
       </NText>
@@ -150,8 +168,15 @@ watch(hasUserKey, (value) => {
     </SectionField>
 
     <SectionField label="音色">
-      <NFlex vertical :size="6">
-        <NFlex :size="6" align="center" :wrap="false">
+      <NFlex
+        vertical
+        :size="6"
+      >
+        <NFlex
+          :size="6"
+          align="center"
+          :wrap="false"
+        >
           <VoiceSelectWithPreview
             v-model="settings.providers.cosyvoice.voice"
             :options="voiceOptions"
@@ -175,11 +200,23 @@ watch(hasUserKey, (value) => {
             从当前用户 DashScope Key 拉取声音复刻/设计音色
           </NTooltip>
         </NFlex>
-        <NAlert v-if="customVoiceOnly && customVoices.length === 0" type="warning" :bordered="false">
+        <NAlert
+          v-if="customVoiceOnly && customVoices.length === 0"
+          type="warning"
+          :bordered="false"
+        >
           CosyVoice3.5 不支持系统音色。请刷新并选择声音复刻/声音设计音色。
         </NAlert>
-        <NText depth="3" style="font-size: 11px">
-          <a href="https://help.aliyun.com/zh/model-studio/voice-cloning-user-guide" target="_blank" rel="noopener" style="color: var(--vtsuru-fg-muted)">
+        <NText
+          depth="3"
+          style="font-size: 11px"
+        >
+          <a
+            href="https://help.aliyun.com/zh/model-studio/voice-cloning-user-guide"
+            target="_blank"
+            rel="noopener"
+            style="color: var(--vtsuru-fg-muted)"
+          >
             如何创建声音复刻 / 声音设计音色？查看百炼教程 →
           </a>
         </NText>

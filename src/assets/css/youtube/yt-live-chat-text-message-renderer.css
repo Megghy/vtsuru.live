@@ -1,4 +1,59 @@
-canvas.yt-live-chat-text-message-renderer, caption.yt-live-chat-text-message-renderer, center.yt-live-chat-text-message-renderer, cite.yt-live-chat-text-message-renderer, code.yt-live-chat-text-message-renderer, dd.yt-live-chat-text-message-renderer, del.yt-live-chat-text-message-renderer, dfn.yt-live-chat-text-message-renderer, div.yt-live-chat-text-message-renderer, dl.yt-live-chat-text-message-renderer, dt.yt-live-chat-text-message-renderer, em.yt-live-chat-text-message-renderer, embed.yt-live-chat-text-message-renderer, fieldset.yt-live-chat-text-message-renderer, font.yt-live-chat-text-message-renderer, form.yt-live-chat-text-message-renderer, h1.yt-live-chat-text-message-renderer, h2.yt-live-chat-text-message-renderer, h3.yt-live-chat-text-message-renderer, h4.yt-live-chat-text-message-renderer, h5.yt-live-chat-text-message-renderer, h6.yt-live-chat-text-message-renderer, hr.yt-live-chat-text-message-renderer, i.yt-live-chat-text-message-renderer, iframe.yt-live-chat-text-message-renderer, img.yt-live-chat-text-message-renderer, ins.yt-live-chat-text-message-renderer, kbd.yt-live-chat-text-message-renderer, label.yt-live-chat-text-message-renderer, legend.yt-live-chat-text-message-renderer, li.yt-live-chat-text-message-renderer, menu.yt-live-chat-text-message-renderer, object.yt-live-chat-text-message-renderer, ol.yt-live-chat-text-message-renderer, p.yt-live-chat-text-message-renderer, pre.yt-live-chat-text-message-renderer, q.yt-live-chat-text-message-renderer, s.yt-live-chat-text-message-renderer, samp.yt-live-chat-text-message-renderer, small.yt-live-chat-text-message-renderer, span.yt-live-chat-text-message-renderer, strike.yt-live-chat-text-message-renderer, strong.yt-live-chat-text-message-renderer, sub.yt-live-chat-text-message-renderer, sup.yt-live-chat-text-message-renderer, table.yt-live-chat-text-message-renderer, tbody.yt-live-chat-text-message-renderer, td.yt-live-chat-text-message-renderer, tfoot.yt-live-chat-text-message-renderer, th.yt-live-chat-text-message-renderer, thead.yt-live-chat-text-message-renderer, tr.yt-live-chat-text-message-renderer, tt.yt-live-chat-text-message-renderer, u.yt-live-chat-text-message-renderer, ul.yt-live-chat-text-message-renderer, var.yt-live-chat-text-message-renderer {
+canvas.yt-live-chat-text-message-renderer,
+caption.yt-live-chat-text-message-renderer,
+center.yt-live-chat-text-message-renderer,
+cite.yt-live-chat-text-message-renderer,
+code.yt-live-chat-text-message-renderer,
+dd.yt-live-chat-text-message-renderer,
+del.yt-live-chat-text-message-renderer,
+dfn.yt-live-chat-text-message-renderer,
+div.yt-live-chat-text-message-renderer,
+dl.yt-live-chat-text-message-renderer,
+dt.yt-live-chat-text-message-renderer,
+em.yt-live-chat-text-message-renderer,
+embed.yt-live-chat-text-message-renderer,
+fieldset.yt-live-chat-text-message-renderer,
+font.yt-live-chat-text-message-renderer,
+form.yt-live-chat-text-message-renderer,
+h1.yt-live-chat-text-message-renderer,
+h2.yt-live-chat-text-message-renderer,
+h3.yt-live-chat-text-message-renderer,
+h4.yt-live-chat-text-message-renderer,
+h5.yt-live-chat-text-message-renderer,
+h6.yt-live-chat-text-message-renderer,
+hr.yt-live-chat-text-message-renderer,
+i.yt-live-chat-text-message-renderer,
+iframe.yt-live-chat-text-message-renderer,
+img.yt-live-chat-text-message-renderer,
+ins.yt-live-chat-text-message-renderer,
+kbd.yt-live-chat-text-message-renderer,
+label.yt-live-chat-text-message-renderer,
+legend.yt-live-chat-text-message-renderer,
+li.yt-live-chat-text-message-renderer,
+menu.yt-live-chat-text-message-renderer,
+object.yt-live-chat-text-message-renderer,
+ol.yt-live-chat-text-message-renderer,
+p.yt-live-chat-text-message-renderer,
+pre.yt-live-chat-text-message-renderer,
+q.yt-live-chat-text-message-renderer,
+s.yt-live-chat-text-message-renderer,
+samp.yt-live-chat-text-message-renderer,
+small.yt-live-chat-text-message-renderer,
+span.yt-live-chat-text-message-renderer,
+strike.yt-live-chat-text-message-renderer,
+strong.yt-live-chat-text-message-renderer,
+sub.yt-live-chat-text-message-renderer,
+sup.yt-live-chat-text-message-renderer,
+table.yt-live-chat-text-message-renderer,
+tbody.yt-live-chat-text-message-renderer,
+td.yt-live-chat-text-message-renderer,
+tfoot.yt-live-chat-text-message-renderer,
+th.yt-live-chat-text-message-renderer,
+thead.yt-live-chat-text-message-renderer,
+tr.yt-live-chat-text-message-renderer,
+tt.yt-live-chat-text-message-renderer,
+u.yt-live-chat-text-message-renderer,
+ul.yt-live-chat-text-message-renderer,
+var.yt-live-chat-text-message-renderer {
   margin: 0;
   padding: 0;
   border: 0;
@@ -40,7 +95,8 @@ canvas.yt-live-chat-text-message-renderer, caption.yt-live-chat-text-message-ren
   transform: translateX(100px);
 }
 
-yt-live-chat-text-message-renderer:hover #menu.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer[menu-visible] #menu.yt-live-chat-text-message-renderer {
+yt-live-chat-text-message-renderer:hover #menu.yt-live-chat-text-message-renderer,
+yt-live-chat-text-message-renderer[menu-visible] #menu.yt-live-chat-text-message-renderer {
   transform: none;
 }
 
@@ -64,7 +120,8 @@ yt-live-chat-text-message-renderer:focus-within #menu.yt-live-chat-text-message-
   justify-content: center;
 }
 
-yt-live-chat-text-message-renderer[has-inline-action-buttons]:hover #inline-action-button-container.yt-live-chat-text-message-renderer {
+yt-live-chat-text-message-renderer[has-inline-action-buttons]:hover
+  #inline-action-button-container.yt-live-chat-text-message-renderer {
   display: flex;
   -ms-flex-direction: row;
   -webkit-flex-direction: row;
@@ -72,7 +129,8 @@ yt-live-chat-text-message-renderer[has-inline-action-buttons]:hover #inline-acti
   display: var(--yt-live-chat-inline-action-button-container-display, none);
 }
 
-yt-live-chat-text-message-renderer[has-inline-action-buttons][hide-inline-action-buttons]:hover #inline-action-button-container.yt-live-chat-text-message-renderer {
+yt-live-chat-text-message-renderer[has-inline-action-buttons][hide-inline-action-buttons]:hover
+  #inline-action-button-container.yt-live-chat-text-message-renderer {
   display: none;
 }
 
@@ -80,27 +138,28 @@ yt-live-chat-text-message-renderer[has-inline-action-buttons]:hover #menu.yt-liv
   display: var(--yt-live-chat-item-with-inline-actions-context-menu-display, block);
 }
 
-#inline-action-buttons.yt-live-chat-text-message-renderer>*.yt-live-chat-text-message-renderer, #additional-inline-action-buttons.yt-live-chat-text-message-renderer>*.yt-live-chat-text-message-renderer {
+#inline-action-buttons.yt-live-chat-text-message-renderer > *.yt-live-chat-text-message-renderer,
+#additional-inline-action-buttons.yt-live-chat-text-message-renderer > *.yt-live-chat-text-message-renderer {
   --yt-button-icon-size: 36px;
   --yt-button-icon-padding: 6px;
   color: hsl(0, 0%, 100%);
   border-radius: 2px;
 }
 
-#inline-action-buttons.yt-live-chat-text-message-renderer>*.yt-live-chat-text-message-renderer {
-  background: hsla(0, 0%, 6.7%, .8);
+#inline-action-buttons.yt-live-chat-text-message-renderer > *.yt-live-chat-text-message-renderer {
+  background: hsla(0, 0%, 6.7%, 0.8);
 }
 
-#inline-action-buttons.yt-live-chat-text-message-renderer>.yt-live-chat-text-message-renderer:hover {
+#inline-action-buttons.yt-live-chat-text-message-renderer > .yt-live-chat-text-message-renderer:hover {
   background: hsl(0, 0%, 6.7%);
 }
 
-#additional-inline-action-buttons.yt-live-chat-text-message-renderer>*.yt-live-chat-text-message-renderer {
+#additional-inline-action-buttons.yt-live-chat-text-message-renderer > *.yt-live-chat-text-message-renderer {
   color: var(--yt-live-chat-additional-inline-action-button-color);
   background: var(--yt-live-chat-additional-inline-action-button-background-color);
 }
 
-#additional-inline-action-buttons.yt-live-chat-text-message-renderer>.yt-live-chat-text-message-renderer:hover {
+#additional-inline-action-buttons.yt-live-chat-text-message-renderer > .yt-live-chat-text-message-renderer:hover {
   background: var(--yt-live-chat-additional-inline-action-button-background-color-hover);
 }
 
@@ -108,7 +167,9 @@ yt-live-chat-text-message-renderer[has-inline-action-buttons]:hover #menu.yt-liv
   margin-left: 32px;
 }
 
-#inline-action-buttons.yt-live-chat-text-message-renderer>*.yt-live-chat-text-message-renderer:not(:first-child), #additional-inline-action-buttons.yt-live-chat-text-message-renderer>*.yt-live-chat-text-message-renderer:not(:first-child) {
+#inline-action-buttons.yt-live-chat-text-message-renderer > *.yt-live-chat-text-message-renderer:not(:first-child),
+#additional-inline-action-buttons.yt-live-chat-text-message-renderer
+  > *.yt-live-chat-text-message-renderer:not(:first-child) {
   margin-left: 8px;
 }
 
@@ -178,7 +239,9 @@ a.yt-live-chat-text-message-renderer {
   word-break: break-all;
 }
 
-#message.yt-live-chat-text-message-renderer a.yt-live-chat-text-message-renderer .mention.yt-live-chat-text-message-renderer {
+#message.yt-live-chat-text-message-renderer
+  a.yt-live-chat-text-message-renderer
+  .mention.yt-live-chat-text-message-renderer {
   text-decoration: underline;
 }
 
@@ -186,7 +249,12 @@ a.yt-live-chat-text-message-renderer {
   margin-left: 2px;
 }
 
-#message.yt-live-chat-text-message-renderer:empty, #deleted-state.yt-live-chat-text-message-renderer:empty, #show-original.yt-live-chat-text-message-renderer:empty, yt-live-chat-text-message-renderer[show-original] #deleted-state.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer[show-original] #show-original.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer[is-deleted]:not([show-original]) #message.yt-live-chat-text-message-renderer {
+#message.yt-live-chat-text-message-renderer:empty,
+#deleted-state.yt-live-chat-text-message-renderer:empty,
+#show-original.yt-live-chat-text-message-renderer:empty,
+yt-live-chat-text-message-renderer[show-original] #deleted-state.yt-live-chat-text-message-renderer,
+yt-live-chat-text-message-renderer[show-original] #show-original.yt-live-chat-text-message-renderer,
+yt-live-chat-text-message-renderer[is-deleted]:not([show-original]) #message.yt-live-chat-text-message-renderer {
   display: none;
 }
 
@@ -202,7 +270,9 @@ a.yt-live-chat-text-message-renderer {
   border-radius: 2px;
 }
 
-#deleted-state.yt-live-chat-text-message-renderer, #show-original.yt-live-chat-text-message-renderer, yt-live-chat-text-message-renderer[is-deleted] #message.yt-live-chat-text-message-renderer {
+#deleted-state.yt-live-chat-text-message-renderer,
+#show-original.yt-live-chat-text-message-renderer,
+yt-live-chat-text-message-renderer[is-deleted] #message.yt-live-chat-text-message-renderer {
   font-style: italic;
   color: var(--yt-live-chat-deleted-message-color, rgba(0, 0, 0, 0.5));
 }

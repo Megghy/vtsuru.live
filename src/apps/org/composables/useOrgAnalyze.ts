@@ -1,9 +1,11 @@
-import { computed, nextTick, ref } from 'vue'
 import { useMessage } from 'naive-ui'
+import { computed, nextTick, ref } from 'vue'
+
 import { QueryGetAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
-import type { OrgContext } from './useOrgContext'
+
 import type { AnalyzeData, SummaryRange } from '../types'
+import type { OrgContext } from './useOrgContext'
 
 export function useOrgAnalyze(ctx: OrgContext) {
   const message = useMessage()
@@ -12,9 +14,7 @@ export function useOrgAnalyze(ctx: OrgContext) {
   const range = ref<SummaryRange>('last7Days')
 
   const summary = computed(() => data.value?.summary?.[range.value] ?? null)
-  const hasChartData = computed(() =>
-    !!data.value && Object.keys(data.value.chartData || {}).length > 0,
-  )
+  const hasChartData = computed(() => !!data.value && Object.keys(data.value.chartData || {}).length > 0)
 
   async function load(onLoaded?: () => Promise<void> | void) {
     if (!ctx.orgId.value) return

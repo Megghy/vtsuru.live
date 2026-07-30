@@ -1,24 +1,41 @@
 <script setup lang="ts">
-import type {
-  DataTableRowKey,
-} from 'naive-ui'
-import type { ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
+import {
+  ArrowSync24Regular,
+  ArrowDownload24Regular,
+  Delete24Regular,
+  Edit24Regular,
+  Filter24Regular,
+} from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
+import type { DataTableRowKey } from 'naive-ui'
 import {
-  NButton, NCheckbox, NDivider, NEmpty, NFlex, NGrid, NIcon, NModal, NPopconfirm, NSelect, NSpin, NText, useMessage
-} from 'naive-ui';
+  NButton,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NGrid,
+  NIcon,
+  NModal,
+  NPopconfirm,
+  NSelect,
+  NSpin,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+
 import { useAccount } from '@/api/account'
+import type { ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
 import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
 import { fetchOwnerOrders, updateOrdersStatus } from '@/api/point-orders'
 import { QueryPostAPI } from '@/api/query'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
 import { POINT_API_URL } from '@/shared/config'
-import { objectsToCSV } from '@/shared/utils'
-import { ArrowSync24Regular, ArrowDownload24Regular, Delete24Regular, Edit24Regular, Filter24Regular } from '@vicons/fluent'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { objectsToCSV } from '@/shared/utils'
 
 // 订单筛选设置类型定义
 interface OrderFilterSettings {
@@ -32,7 +49,7 @@ interface OrderFilterSettings {
 const props = defineProps<{
   goods?: ResponsePointGoodModel[]
   orgId?: number
-  streamerOptions?: { label: string, value: number }[]
+  streamerOptions?: { label: string; value: number }[]
 }>()
 
 // 默认筛选设置
@@ -41,9 +58,9 @@ const defaultSettings = {
 } as OrderFilterSettings
 
 // 使用持久化存储保存筛选设置
-const filterKey = computed(() => (props.orgId
-  ? `vtsuru:setting:point:order-filter:org-${props.orgId}`
-  : 'vtsuru:setting:point:order-filter:owner'))
+const filterKey = computed(() =>
+  props.orgId ? `vtsuru:setting:point:order-filter:org-${props.orgId}` : 'vtsuru:setting:point:order-filter:owner',
+)
 const filterSettings = usePersistedStorage<OrderFilterSettings>(filterKey, defaultSettings)
 
 watch(
@@ -90,11 +107,11 @@ const showStatusModal = ref(false)
 const orderStats = computed(() => {
   return {
     total: orders.value.length,
-    pending: orders.value.filter(o => o.status === PointOrderStatus.Pending).length,
-    shipped: orders.value.filter(o => o.status === PointOrderStatus.Shipped).length,
-    completed: orders.value.filter(o => o.status === PointOrderStatus.Completed).length,
-    physical: orders.value.filter(o => o.type === GoodsTypes.Physical).length,
-    virtual: orders.value.filter(o => o.type === GoodsTypes.Virtual).length,
+    pending: orders.value.filter((o) => o.status === PointOrderStatus.Pending).length,
+    shipped: orders.value.filter((o) => o.status === PointOrderStatus.Shipped).length,
+    completed: orders.value.filter((o) => o.status === PointOrderStatus.Completed).length,
+    physical: orders.value.filter((o) => o.type === GoodsTypes.Physical).length,
+    virtual: orders.value.filter((o) => o.type === GoodsTypes.Virtual).length,
     totalPoints: Number(orders.value.reduce((sum, o) => sum + o.point, 0).toFixed(1)),
     filteredCount: filteredOrders.value.length,
   }
@@ -116,7 +133,7 @@ async function deleteOrder() {
     const data = await QueryPostAPI(`${POINT_API_URL}delete-orders`, selectedItem.value)
     if (data.code == 200) {
       message.success('删除成功')
-      orders.value = orders.value.filter(o => !selectedItem.value?.includes(o.id))
+      orders.value = orders.value.filter((o) => !selectedItem.value?.includes(o.id))
       selectedItem.value = undefined
     } else {
       message.error(`删除失败: ${data.message}`)
@@ -195,7 +212,7 @@ function exportData() {
             ? `${s.address?.province}省${s.address?.city}市${s.address?.district}区${s.address?.street}街道${s.address?.address}`
             : '无',
           礼物名: gift?.name ?? '已删除',
-          款式: (s.selectedSubItems ?? []).map(sub => `${sub.nameSnapshot} x ${sub.quantity}`).join('; ') || '-',
+          款式: (s.selectedSubItems ?? []).map((sub) => `${sub.nameSnapshot} x ${sub.quantity}`).join('; ') || '-',
           礼物数量: s.count,
           礼物单价: gift?.price ? Number(gift.price.toFixed(1)) : 0,
           礼物总价: Number(s.point.toFixed(1)),
@@ -209,7 +226,7 @@ function exportData() {
     )
 
     // 添加BOM标记，确保Excel正确识别UTF-8编码
-    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF])
+    const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
     const utf8encoder = new TextEncoder()
     const utf8array = utf8encoder.encode(text)
 
@@ -259,49 +276,35 @@ onMounted(async () => {
         style="margin-bottom: 16px"
       >
         <div class="stat-card">
-          <div class="stat-label">
-            总订单
-          </div>
+          <div class="stat-label">总订单</div>
           <div class="stat-value">
             {{ orderStats.total }}
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">
-            待发货
-          </div>
+          <div class="stat-label">待发货</div>
           <div class="stat-value warning">
             {{ orderStats.pending }}
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">
-            已发货
-          </div>
+          <div class="stat-label">已发货</div>
           <div class="stat-value info">
             {{ orderStats.shipped }}
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">
-            已完成
-          </div>
+          <div class="stat-label">已完成</div>
           <div class="stat-value success">
             {{ orderStats.completed }}
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">
-            实体 / 虚拟
-          </div>
-          <div class="stat-value">
-            {{ orderStats.physical }} / {{ orderStats.virtual }}
-          </div>
+          <div class="stat-label">实体 / 虚拟</div>
+          <div class="stat-value">{{ orderStats.physical }} / {{ orderStats.virtual }}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">
-            总积分
-          </div>
+          <div class="stat-label">总积分</div>
           <div class="stat-value primary">
             {{ orderStats.totalPoints }}
           </div>
@@ -310,10 +313,22 @@ onMounted(async () => {
 
       <!-- 工具栏区域 -->
       <div class="toolbar-section">
-        <NFlex vertical :gap="12">
+        <NFlex
+          vertical
+          :gap="12"
+        >
           <!-- 筛选行 -->
-          <NFlex justify="space-between" align="center" wrap :gap="12">
-            <NFlex align="center" :gap="12" wrap>
+          <NFlex
+            justify="space-between"
+            align="center"
+            wrap
+            :gap="12"
+          >
+            <NFlex
+              align="center"
+              :gap="12"
+              wrap
+            >
               <NSelect
                 v-if="orgId && streamerOptions?.length"
                 v-model:value="filterSettings.streamerId"
@@ -348,10 +363,11 @@ onMounted(async () => {
               />
               <NSelect
                 v-model:value="filterSettings.customer"
-                :options="new List(orders)
-                  .DistinctBy((s) => s.customer.userId)
-                  .Select((s) => ({ label: s.customer.name, value: s.customer.userId }))
-                  .ToArray()
+                :options="
+                  new List(orders)
+                    .DistinctBy((s) => s.customer.userId)
+                    .Select((s) => ({ label: s.customer.name, value: s.customer.userId }))
+                    .ToArray()
                 "
                 placeholder="按用户筛选"
                 filterable
@@ -359,9 +375,7 @@ onMounted(async () => {
                 size="medium"
                 style="min-width: 160px; max-width: 240px"
               />
-              <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo">
-                仅未填单号
-              </NCheckbox>
+              <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo"> 仅未填单号 </NCheckbox>
             </NFlex>
 
             <NButton
@@ -376,13 +390,22 @@ onMounted(async () => {
               重置筛选
             </NButton>
           </NFlex>
-          
+
           <NDivider style="margin: 0" />
 
           <!-- 操作行 -->
-          <NFlex justify="space-between" align="center" wrap :gap="12">
+          <NFlex
+            justify="space-between"
+            align="center"
+            wrap
+            :gap="12"
+          >
             <NFlex :gap="12">
-              <NButton secondary size="medium" @click="refresh">
+              <NButton
+                secondary
+                size="medium"
+                @click="refresh"
+              >
                 <template #icon>
                   <NIcon :component="ArrowSync24Regular" />
                 </template>
@@ -418,7 +441,10 @@ onMounted(async () => {
                 确定要更新选中订单的状态吗?
               </NPopconfirm>
 
-              <NPopconfirm v-if="!orgId" @positive-click="deleteOrder">
+              <NPopconfirm
+                v-if="!orgId"
+                @positive-click="deleteOrder"
+              >
                 <template #trigger>
                   <NButton
                     size="medium"
@@ -459,7 +485,7 @@ onMounted(async () => {
           <NText>请选择您想要将订单更新为的状态</NText>
           <NSelect
             v-model:value="targetStatus"
-            :options=" [
+            :options="[
               { label: '已完成', value: PointOrderStatus.Completed },
               { label: '等待发货', value: PointOrderStatus.Pending },
               { label: '已发货', value: PointOrderStatus.Shipped },
@@ -471,9 +497,7 @@ onMounted(async () => {
             justify="end"
             :gap="12"
           >
-            <NButton @click="showStatusModal = false">
-              取消
-            </NButton>
+            <NButton @click="showStatusModal = false"> 取消 </NButton>
             <NButton
               type="primary"
               :disabled="targetStatus === undefined"
@@ -517,10 +541,18 @@ onMounted(async () => {
   color: var(--vtsuru-fg-muted);
 }
 
-.stat-value.primary { color: var(--vtsuru-primary); }
-.stat-value.success { color: var(--vtsuru-success); }
-.stat-value.info { color: var(--vtsuru-info); }
-.stat-value.warning { color: var(--vtsuru-warning); }
+.stat-value.primary {
+  color: var(--vtsuru-primary);
+}
+.stat-value.success {
+  color: var(--vtsuru-success);
+}
+.stat-value.info {
+  color: var(--vtsuru-info);
+}
+.stat-value.warning {
+  color: var(--vtsuru-warning);
+}
 
 .toolbar-section {
   background-color: var(--vtsuru-bg-surface);

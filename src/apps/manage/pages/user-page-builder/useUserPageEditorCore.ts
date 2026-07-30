@@ -1,8 +1,10 @@
-import type { BlockPageProject } from '@/apps/user-page/block/schema'
-import type { ContribPageRef, UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { debounceFilter, useRefHistory } from '@vueuse/core'
 import type { ComputedRef } from 'vue'
 import { computed, ref, watch } from 'vue'
+
+import type { BlockPageProject } from '@/apps/user-page/block/schema'
+import type { ContribPageRef, UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { deepCloneJson } from './editorHelpers'
 import { createDefaultProject, ensurePageConfig, getPageModeLabel } from './editorPageConfig'
 import { useUserPageBlocks } from './useUserPageBlocks'
@@ -60,14 +62,18 @@ function createCoreState() {
 }
 
 function watchCurrentPageSelection(state: ReturnType<typeof createCoreState>, clearSelection: () => void) {
-  watch([state.settings, state.currentKey], ([settings, key]) => {
-    if (key !== 'home' && !settings.pages?.[key]) {
-      state.currentKey.value = 'home'
-      return
-    }
-    clearSelection()
-    state.hoveredBlockId.value = null
-  }, { immediate: true, flush: 'sync' })
+  watch(
+    [state.settings, state.currentKey],
+    ([settings, key]) => {
+      if (key !== 'home' && !settings.pages?.[key]) {
+        state.currentKey.value = 'home'
+        return
+      }
+      clearSelection()
+      state.hoveredBlockId.value = null
+    },
+    { immediate: true, flush: 'sync' },
+  )
 }
 
 function createEditorHistory(settings: ReturnType<typeof ref<UserPagesSettingsV1>>) {
@@ -75,17 +81,21 @@ function createEditorHistory(settings: ReturnType<typeof ref<UserPagesSettingsV1
     deep: true,
     flush: 'sync',
     capacity: 80,
-    clone: value => deepCloneJson(value),
+    clone: (value) => deepCloneJson(value),
     eventFilter: debounceFilter(120),
   })
 }
 
 export function useUserPageEditorCore(options: UseUserPageEditorCoreOptions) {
   const state = createCoreState()
-  const currentLabel = computed(() => state.currentKey.value === 'home' ? '主页' : `/${state.currentKey.value}`)
-  const currentProject = computed(() => state.currentPage.value.mode === 'block' ? (state.currentPage.value.block ?? null) : null)
+  const currentLabel = computed(() => (state.currentKey.value === 'home' ? '主页' : `/${state.currentKey.value}`))
+  const currentProject = computed(() =>
+    state.currentPage.value.mode === 'block' ? (state.currentPage.value.block ?? null) : null,
+  )
   const currentTheme = computed(() => currentProject.value?.theme ?? null)
-  const currentContrib = computed(() => state.currentPage.value.mode === 'contrib' ? (state.currentPage.value.contrib ?? null) : null)
+  const currentContrib = computed(() =>
+    state.currentPage.value.mode === 'contrib' ? (state.currentPage.value.contrib ?? null) : null,
+  )
   const loadedFromLabel = computed(() => {
     if (state.loadedFrom.value === 'draft') return '草稿'
     if (state.loadedFrom.value === 'published') return '已发布'

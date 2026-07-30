@@ -23,6 +23,4 @@ export type SocialPlatform = (typeof SOCIAL_PLATFORM_ENTRIES)[number][0]
 export const SOCIAL_PLATFORM_OPTIONS = SOCIAL_PLATFORM_ENTRIES.map(([value, label]) => ({ label, value }))
 export const SOCIAL_PLATFORM_IDS: readonly SocialPlatform[] = SOCIAL_PLATFORM_ENTRIES.map(([value]) => value)
 
-export const SOCIAL_PLATFORM_NAMES = Object.fromEntries(
-  SOCIAL_PLATFORM_ENTRIES,
-) as Record<SocialPlatform, string>
+export const SOCIAL_PLATFORM_NAMES = Object.fromEntries(SOCIAL_PLATFORM_ENTRIES) as Record<SocialPlatform, string>

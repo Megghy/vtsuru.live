@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import type { ResponseLiveInfoModel } from '@/api/api-models'
-import { Info24Filled, Chat24Regular, HandRight24Regular, Money24Regular
-} from '@vicons/fluent'
-import {
-  NIcon, NNumberAnimation, NPopover, NFlex, NTag, NTime, NTooltip, NText } from 'naive-ui';
+import { Info24Filled, Chat24Regular, HandRight24Regular, Money24Regular } from '@vicons/fluent'
+import { NIcon, NNumberAnimation, NPopover, NFlex, NTag, NTime, NTooltip, NText } from 'naive-ui'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+
+import type { ResponseLiveInfoModel } from '@/api/api-models'
 
 const props = defineProps<{
   live: ResponseLiveInfoModel
@@ -26,19 +25,28 @@ watch(
   (newValue) => {
     defaultDanmakusCount.value = newValue.danmakusCount
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
 <template>
   <div class="live-info-container">
     <!-- Cover Image -->
-    <div class="cover-wrapper" @click.stop="OnClickCover">
+    <div
+      class="cover-wrapper"
+      @click.stop="OnClickCover"
+    >
       <img
-        referrerpolicy="no-referrer" class="live-cover" :class="[{ 'is-live': !live.isFinish }]"
-        :src="`${live.coverUrl}@200w`" loading="lazy"
+        referrerpolicy="no-referrer"
+        class="live-cover"
+        :class="[{ 'is-live': !live.isFinish }]"
+        :src="`${live.coverUrl}@200w`"
+        loading="lazy"
+      />
+      <div
+        v-if="!live.isFinish"
+        class="live-badge"
       >
-      <div v-if="!live.isFinish" class="live-badge">
         LIVE
       </div>
     </div>
@@ -47,7 +55,10 @@ watch(
     <div class="content-wrapper">
       <div class="info-section">
         <!-- Title -->
-        <div class="title-row" @click.stop="OnClickCover">
+        <div
+          class="title-row"
+          @click.stop="OnClickCover"
+        >
           <NText class="live-title">
             {{ live.title }}
           </NText>
@@ -55,11 +66,26 @@ watch(
 
         <!-- Meta Data -->
         <div class="meta-row">
-          <NFlex align="center" size="small" wrap>
-            <NTag v-if="!live.isFinish" size="small" :bordered="false" type="success" class="status-tag">
+          <NFlex
+            align="center"
+            size="small"
+            wrap
+          >
+            <NTag
+              v-if="!live.isFinish"
+              size="small"
+              :bordered="false"
+              type="success"
+              class="status-tag"
+            >
               直播中
             </NTag>
-            <NTag v-else size="small" :bordered="false" disabled>
+            <NTag
+              v-else
+              size="small"
+              :bordered="false"
+              disabled
+            >
               已结束
             </NTag>
 
@@ -72,18 +98,19 @@ watch(
             <NPopover trigger="hover">
               <template #trigger>
                 <span class="meta-text">
-                  <NTime :time="live.startAt" format="yyyy-MM-dd HH:mm" />
+                  <NTime
+                    :time="live.startAt"
+                    format="yyyy-MM-dd HH:mm"
+                  />
                 </span>
               </template>
               <div v-if="live.isFinish">
                 结束于:
                 <NTime :time="live.stopAt ?? 0" />
-                <br>
+                <br />
                 时长: {{ (((live.stopAt ?? 0) - (live.startAt ?? 0)) / (3600 * 1000)).toFixed(1) }} 小时
               </div>
-              <div v-else>
-                已直播: {{ ((Date.now() - (live.startAt ?? 0)) / (3600 * 1000)).toFixed(1) }} 小时
-              </div>
+              <div v-else>已直播: {{ ((Date.now() - (live.startAt ?? 0)) / (3600 * 1000)).toFixed(1) }} 小时</div>
             </NPopover>
           </NFlex>
         </div>
@@ -93,39 +120,62 @@ watch(
       <div class="stats-section">
         <div class="stat-item">
           <span class="stat-label">
-            <NIcon :component="Chat24Regular" depth="3" size="14" style="margin-right: 4px; vertical-align: -2px;" />
+            <NIcon
+              :component="Chat24Regular"
+              depth="3"
+              size="14"
+              style="margin-right: 4px; vertical-align: -2px"
+            />
             弹幕
           </span>
           <span class="stat-value">
-            <NNumberAnimation :from="defaultDanmakusCount" :to="live.danmakusCount" show-separator />
+            <NNumberAnimation
+              :from="defaultDanmakusCount"
+              :to="live.danmakusCount"
+              show-separator
+            />
           </span>
         </div>
 
         <div class="stat-item">
           <span class="stat-label">
             <NIcon
-              :component="HandRight24Regular" depth="3" size="14"
-              style="margin-right: 4px; vertical-align: -2px;"
+              :component="HandRight24Regular"
+              depth="3"
+              size="14"
+              style="margin-right: 4px; vertical-align: -2px"
             />
             互动
           </span>
           <span class="stat-value">
-            <NNumberAnimation :from="0" :to="live.interactionCount" show-separator />
+            <NNumberAnimation
+              :from="0"
+              :to="live.interactionCount"
+              show-separator
+            />
           </span>
         </div>
 
         <div class="stat-item income">
           <span class="stat-label">
-            <NIcon :component="Money24Regular" depth="3" size="14" style="margin-right: 4px; vertical-align: -2px;" />
+            <NIcon
+              :component="Money24Regular"
+              depth="3"
+              size="14"
+              style="margin-right: 4px; vertical-align: -2px"
+            />
             收益
             <NTooltip v-if="new Date(live.startAt) < guartPriceStartData">
               <template #trigger>
-                <NIcon :component="Info24Filled" style="vertical-align: middle; cursor: help;" />
+                <NIcon
+                  :component="Info24Filled"
+                  style="vertical-align: middle; cursor: help"
+                />
               </template>
               因为官方并没有提供上舰的价格, 所以记录中的舰长价格一律按照打折价格计算
-              <br>
+              <br />
               即舰长 138, 提督 1598, 总督 15998
-              <br>
+              <br />
               把鼠标放在下面的价格上就可以查看排除舰长后的收益
             </NTooltip>
           </span>
@@ -136,7 +186,8 @@ watch(
                 <NNumberAnimation
                   :from="0"
                   :to="new Date(live.startAt) < guartPriceStartData ? live.totalIncomeWithGuard : live.totalIncome"
-                  show-separator :precision="1"
+                  show-separator
+                  :precision="1"
                 />
               </span>
             </template>

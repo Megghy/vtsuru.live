@@ -2,6 +2,7 @@
 import { useDebounceFn } from '@vueuse/core'
 import { cloneDeep } from 'lodash-es'
 import { defineComponent } from 'vue'
+
 import * as constants from './constants'
 import MembershipItem from './MembershipItem.vue'
 import PaidMessage from './PaidMessage.vue'
@@ -89,7 +90,7 @@ export default defineComponent({
   },
   computed: {
     canScrollToBottom() {
-      return this.atBottom/* || this.allowScroll */
+      return this.atBottom /* || this.allowScroll */
     },
   },
   watch: {
@@ -151,8 +152,8 @@ export default defineComponent({
         }
 
         if (
-          longer.includes(shorter) // 长的包含短的
-          && longer.length - shorter.length < shorter.length // 长度差较小
+          longer.includes(shorter) && // 长的包含短的
+          longer.length - shorter.length < shorter.length // 长度差较小
         ) {
           this.updateMessage(message.id, {
             $add: {
@@ -167,9 +168,9 @@ export default defineComponent({
     mergeSimilarGift(authorName, price, _freePrice, giftName, num) {
       for (const message of this.iterRecentMessages(5)) {
         if (
-          message.type === constants.MESSAGE_TYPE_GIFT
-          && message.authorName === authorName
-          && message.giftName === giftName
+          message.type === constants.MESSAGE_TYPE_GIFT &&
+          message.authorName === authorName &&
+          message.giftName === giftName
         ) {
           this.updateMessage(message.id, {
             $add: {
@@ -184,7 +185,7 @@ export default defineComponent({
       return false
     },
     // 从新到老迭代num条消息，注意会迭代smoothedMessageQueue，不会迭代paidMessages
-    * iterRecentMessages(num, onlyCountAddMessages = true) {
+    *iterRecentMessages(num, onlyCountAddMessages = true) {
       if (num <= 0) {
         return
       }
@@ -202,7 +203,7 @@ export default defineComponent({
       }
     },
     // 从新到老迭代消息的数组
-    * iterMessageArrs() {
+    *iterMessageArrs() {
       for (let i = this.smoothedMessageQueue.length - 1; i >= 0; i--) {
         yield this.smoothedMessageQueue[i]
       }
@@ -213,12 +214,12 @@ export default defineComponent({
       this.delMessages([id])
     },
     delMessages(ids) {
-      this.enqueueMessages(ids.map(
-        id => ({
+      this.enqueueMessages(
+        ids.map((id) => ({
           type: constants.MESSAGE_TYPE_DEL,
           id,
-        }),
-      ))
+        })),
+      )
     },
     clearMessages() {
       this.messages = []
@@ -238,11 +239,13 @@ export default defineComponent({
       }
     },
     updateMessage(id, newValuesObj) {
-      this.enqueueMessages([{
-        type: constants.MESSAGE_TYPE_UPDATE,
-        id,
-        newValuesObj,
-      }])
+      this.enqueueMessages([
+        {
+          type: constants.MESSAGE_TYPE_UPDATE,
+          id,
+          newValuesObj,
+        },
+      ])
     },
 
     enqueueMessages(messages) {
@@ -488,7 +491,7 @@ export default defineComponent({
         this.lastSmoothChatMessageAddMs = performance.now()
       }
       const interval = performance.now() - this.lastSmoothChatMessageAddMs
-      this.chatRateMs = (0.9 * this.chatRateMs) + (0.1 * interval)
+      this.chatRateMs = 0.9 * this.chatRateMs + 0.1 * interval
       if (this.isSmoothed) {
         if (this.chatRateMs < 400) {
           this.isSmoothed = false
@@ -515,15 +518,16 @@ export default defineComponent({
 
       const interval = time - this.lastSmoothScrollUpdate
       if (
-        this.scrollPixelsRemaining <= 0 || this.scrollPixelsRemaining >= 400 // 已经滚动到底部或者离底部太远则结束
-        || interval >= 1000 // 离上一帧时间太久，可能用户切换到其他网页
-        || this.scrollTimeRemainingMs <= 0 // 时间已结束
+        this.scrollPixelsRemaining <= 0 ||
+        this.scrollPixelsRemaining >= 400 || // 已经滚动到底部或者离底部太远则结束
+        interval >= 1000 || // 离上一帧时间太久，可能用户切换到其他网页
+        this.scrollTimeRemainingMs <= 0 // 时间已结束
       ) {
         this.resetSmoothScroll()
         return
       }
 
-      const pixelsToScroll = interval / this.scrollTimeRemainingMs * this.scrollPixelsRemaining
+      const pixelsToScroll = (interval / this.scrollTimeRemainingMs) * this.scrollPixelsRemaining
       this.scrollPixelsRemaining -= pixelsToScroll
       if (this.scrollPixelsRemaining < 0) {
         this.scrollPixelsRemaining = 0
@@ -584,7 +588,7 @@ export default defineComponent({
 <template>
   <yt-live-chat-renderer
     class="style-scope yt-live-chat-app"
-    style="--scrollbar-width:11px;"
+    style="--scrollbar-width: 11px"
     hide-timestamps
     @mousemove="refreshCantScrollStartTime"
   >

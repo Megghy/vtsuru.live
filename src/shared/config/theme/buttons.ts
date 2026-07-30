@@ -1,4 +1,5 @@
 import type { GlobalThemeOverrides } from 'naive-ui'
+
 import { resolveReadableForeground, resolveReadableTextColor, shiftColorForInteraction } from './contrast'
 
 type ButtonOverrides = NonNullable<GlobalThemeOverrides['Button']>
@@ -124,8 +125,13 @@ export function getAdaptiveButtonColors(options: AdaptiveButtonColors): ButtonOv
     borderPressed: `${borderWidth} ${borderStyle} ${options.borderColor}`,
     borderFocus: `${borderWidth} ${borderStyle} ${options.borderColor}`,
     borderDisabled: `${borderWidth} ${borderStyle} ${options.borderColor}`,
-    ...Object.assign({}, ...variants
-      .filter((entry): entry is [ButtonVariantName, ButtonVariantColors] => entry[1] !== undefined)
-      .map(([name, colors]) => variantOverrides(name, colors, options.surface, options.isDark, borderWidth, borderStyle))),
+    ...Object.assign(
+      {},
+      ...variants
+        .filter((entry): entry is [ButtonVariantName, ButtonVariantColors] => entry[1] !== undefined)
+        .map(([name, colors]) =>
+          variantOverrides(name, colors, options.surface, options.isDark, borderWidth, borderStyle),
+        ),
+    ),
   } as ButtonOverrides
 }

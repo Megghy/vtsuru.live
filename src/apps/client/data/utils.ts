@@ -1,11 +1,19 @@
 import { fetch } from '@tauri-apps/plugin-http'
 import { error } from '@tauri-apps/plugin-log'
+
 import { QueryPostAPI } from '@/api/query'
 import { OPEN_LIVE_API_URL } from '@/shared/config'
+
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
 
-export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: string = '', useCookie: boolean = true, body?: string | URLSearchParams) {
+export async function QueryBiliAPI(
+  url: string,
+  method: string = 'GET',
+  cookie: string = '',
+  useCookie: boolean = true,
+  body?: string | URLSearchParams,
+) {
   console.log(`调用bilibili api: ${url}`)
   const userAgents = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -18,9 +26,9 @@ export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: 
 
   const headers: Record<string, string> = {
     'User-Agent': randomUserAgent,
-    'Origin': 'https://www.bilibili.com',
-    'Referer': 'https://live.bilibili.com/',
-    'Cookie': useCookie ? (cookie || (await useBiliCookie().getBiliCookie()) || '') : '',
+    Origin: 'https://www.bilibili.com',
+    Referer: 'https://live.bilibili.com/',
+    Cookie: useCookie ? cookie || (await useBiliCookie().getBiliCookie()) || '' : '',
   }
 
   if (body) {
@@ -40,10 +48,8 @@ export async function getRoomKey(roomId: number, _cookie: string) {
       id: roomId,
       type: 0,
     })
-    const result = await QueryBiliAPI(
-      `https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?${wbiKeys}`,
-    )
-    const json = await result.json() as { code: number, data?: { token?: string }, message?: string }
+    const result = await QueryBiliAPI(`https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?${wbiKeys}`)
+    const json = (await result.json()) as { code: number; data?: { token?: string }; message?: string }
     if (json.code === 0) {
       return json.data?.token
     } else {
@@ -57,7 +63,7 @@ export async function getBuvid() {
   try {
     const result = await QueryBiliAPI('https://api.bilibili.com/x/web-frontend/getbuvid')
     if (result.ok) {
-      const json = await result.json() as { code: number, data?: { buvid?: string }, message?: string }
+      const json = (await result.json()) as { code: number; data?: { buvid?: string }; message?: string }
       if (json.code === 0) {
         return json.data?.buvid
       } else {

@@ -1,7 +1,8 @@
 import type { Ref } from 'vue'
-import type { UserPagesSettingsV1 } from '../types'
 import { computed, onActivated, onBeforeUnmount, onDeactivated, ref, watch } from 'vue'
+
 import { inspectCustomCss } from '../block/customHtmlRuntime'
+import type { UserPagesSettingsV1 } from '../types'
 
 export function usePublicUserCustomCss(settings: Readonly<Ref<UserPagesSettingsV1 | null>>) {
   const active = ref(true)
@@ -24,7 +25,11 @@ export function usePublicUserCustomCss(settings: Readonly<Ref<UserPagesSettingsV
   }
 
   watch([css, active], ([value, isActive]) => sync(isActive ? value : ''), { immediate: true })
-  onActivated(() => { active.value = true })
-  onDeactivated(() => { active.value = false })
+  onActivated(() => {
+    active.value = true
+  })
+  onDeactivated(() => {
+    active.value = false
+  })
   onBeforeUnmount(() => sync(''))
 }

@@ -4,11 +4,11 @@ export const PAGE_SHADOW_LEVELS = ['none', 'subtle', 'normal', 'floating'] as co
 export const PAGE_SPACING_LEVELS = ['compact', 'normal', 'relaxed'] as const
 export const PAGE_CONTROL_SIZES = ['compact', 'normal', 'comfortable'] as const
 
-export type PageBorderStrength = typeof PAGE_BORDER_STRENGTHS[number]
-export type PageBorderStyle = typeof PAGE_BORDER_STYLES[number]
-export type PageShadowLevel = typeof PAGE_SHADOW_LEVELS[number]
-export type PageSpacingLevel = typeof PAGE_SPACING_LEVELS[number]
-export type PageControlSize = typeof PAGE_CONTROL_SIZES[number]
+export type PageBorderStrength = (typeof PAGE_BORDER_STRENGTHS)[number]
+export type PageBorderStyle = (typeof PAGE_BORDER_STYLES)[number]
+export type PageShadowLevel = (typeof PAGE_SHADOW_LEVELS)[number]
+export type PageSpacingLevel = (typeof PAGE_SPACING_LEVELS)[number]
+export type PageControlSize = (typeof PAGE_CONTROL_SIZES)[number]
 
 export interface UserPageAppearanceTheme {
   radius?: number
@@ -79,15 +79,13 @@ const shadows: Record<PageShadowLevel, string> = {
 function readEnum<T extends string>(theme: unknown, key: string, values: readonly T[], fallback: T): T {
   if (!theme || typeof theme !== 'object' || Array.isArray(theme)) return fallback
   const value = (theme as Record<string, unknown>)[key]
-  return values.includes(value as T) ? value as T : fallback
+  return values.includes(value as T) ? (value as T) : fallback
 }
 
 function readNumber(theme: unknown, key: string, fallback: number, min: number, max: number) {
   if (!theme || typeof theme !== 'object' || Array.isArray(theme)) return fallback
   const value = (theme as Record<string, unknown>)[key]
-  return typeof value === 'number' && Number.isFinite(value)
-    ? Math.min(max, Math.max(min, value))
-    : fallback
+  return typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback
 }
 
 export function isValidPageMaxWidth(value: string) {
@@ -100,12 +98,12 @@ export function resolveUserPageAppearance(theme: unknown): ResolvedUserPageAppea
   const shadowLevel = readEnum(theme, 'shadowLevel', PAGE_SHADOW_LEVELS, 'normal')
   const spacing = readEnum(theme, 'spacing', PAGE_SPACING_LEVELS, 'normal')
   const controlSize = readEnum(theme, 'controlSize', PAGE_CONTROL_SIZES, 'normal')
-  const rawMaxWidth = theme && typeof theme === 'object' && !Array.isArray(theme)
-    ? (theme as Record<string, unknown>).pageMaxWidth
-    : undefined
-  const pageMaxWidth = typeof rawMaxWidth === 'string' && isValidPageMaxWidth(rawMaxWidth)
-    ? rawMaxWidth.trim() || '820px'
-    : '820px'
+  const rawMaxWidth =
+    theme && typeof theme === 'object' && !Array.isArray(theme)
+      ? (theme as Record<string, unknown>).pageMaxWidth
+      : undefined
+  const pageMaxWidth =
+    typeof rawMaxWidth === 'string' && isValidPageMaxWidth(rawMaxWidth) ? rawMaxWidth.trim() || '820px' : '820px'
   const rawOpacity = readNumber(theme, 'surfaceOpacity', -1, 15, 100)
 
   return {

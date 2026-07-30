@@ -1,10 +1,26 @@
 <script setup lang="ts">
-import type { AccountInfo } from '@/api/api-models'
 import { Info24Filled, Mail24Filled, PersonFeedback24Filled } from '@vicons/fluent'
 import {
-  NAlert, NBackTop, NButton, NCard, NCountdown, NDivider, NElement, NFlex, NIcon, NPopconfirm, NSpin, NTag, NText, useMessage, useThemeVars } from 'naive-ui';
+  NAlert,
+  NBackTop,
+  NButton,
+  NCard,
+  NCountdown,
+  NDivider,
+  NElement,
+  NFlex,
+  NIcon,
+  NPopconfirm,
+  NSpin,
+  NTag,
+  NText,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { ref, watchEffect } from 'vue'
 import { RouterView } from 'vue-router'
+
+import type { AccountInfo } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI } from '@/api/query'
 import { ACCOUNT_API_URL } from '@/shared/config'
@@ -53,7 +69,10 @@ function logout() {
 
 <template>
   <NElement>
-    <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route: viewRoute }">
+    <RouterView
+      v-if="accountInfo?.isEmailVerified"
+      v-slot="{ Component, route: viewRoute }"
+    >
       <template v-if="viewRoute.meta.keepAlive">
         <Suspense>
           <template #default>
@@ -78,7 +97,10 @@ function logout() {
               class="manage-page"
               :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
             >
-              <component :is="Component" :key="viewRoute.fullPath.split('#')[0]" />
+              <component
+                :is="Component"
+                :key="viewRoute.fullPath.split('#')[0]"
+              />
             </div>
           </template>
           <template #fallback>
@@ -90,23 +112,46 @@ function logout() {
 
     <template v-else>
       <div class="manage-page manage-page--md">
-        <NCard size="small" :bordered="true">
-          <NFlex vertical size="large" align="center">
-            <NFlex justify="center" align="center" vertical>
-              <NIcon size="48" :color="themeVars.primaryColor">
+        <NCard
+          size="small"
+          :bordered="true"
+        >
+          <NFlex
+            vertical
+            size="large"
+            align="center"
+          >
+            <NFlex
+              justify="center"
+              align="center"
+              vertical
+            >
+              <NIcon
+                size="48"
+                :color="themeVars.primaryColor"
+              >
                 <Mail24Filled />
               </NIcon>
-              <NText style="font-size: 20px; margin-top: 16px; font-weight: 500;">
-                请验证您的邮箱
-              </NText>
-              <NText depth="3" style="text-align: center; margin-top: 8px;">
-                我们已向您的邮箱 <NText type="primary" strong>
+              <NText style="font-size: 20px; margin-top: 16px; font-weight: 500"> 请验证您的邮箱 </NText>
+              <NText
+                depth="3"
+                style="text-align: center; margin-top: 8px"
+              >
+                我们已向您的邮箱
+                <NText
+                  type="primary"
+                  strong
+                >
                   {{ accountInfo?.bindEmail }}
-                </NText> 发送了验证链接，请查收并点击链接完成验证
+                </NText>
+                发送了验证链接，请查收并点击链接完成验证
               </NText>
             </NFlex>
 
-            <NAlert type="warning" style="max-width: 450px;">
+            <NAlert
+              type="warning"
+              style="max-width: 450px"
+            >
               <template #icon>
                 <NIcon>
                   <Info24Filled />
@@ -119,7 +164,7 @@ function logout() {
               <NButton
                 type="primary"
                 :disabled="!canResendEmail"
-                style="min-width: 140px;"
+                style="min-width: 140px"
                 @click="resendEmail"
               >
                 <template #icon>
@@ -129,7 +174,11 @@ function logout() {
                 </template>
                 重新发送验证邮件
               </NButton>
-              <NTag v-if="!canResendEmail" type="warning" round>
+              <NTag
+                v-if="!canResendEmail"
+                type="warning"
+                round
+              >
                 <NCountdown
                   :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
                   @finish="canResendEmail = true"
@@ -138,7 +187,7 @@ function logout() {
               </NTag>
             </NFlex>
 
-            <NDivider style="width: 80%; min-width: 250px;" />
+            <NDivider style="width: 80%; min-width: 250px" />
 
             <NPopconfirm @positive-click="logout">
               <template #trigger>

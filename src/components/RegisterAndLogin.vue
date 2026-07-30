@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import type {
-  FormInst,
-  FormItemInst,
-  FormItemRule,
-  FormRules,
+import type { FormInst, FormItemInst, FormItemRule, FormRules } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NCountdown,
+  NDivider,
+  NFlex,
+  NForm,
+  NFormItem,
+  NInput,
+  NTabPane,
+  NTabs,
+  NText,
+  useMessage,
 } from 'naive-ui'
-import type { AccountInfo } from '@/api/api-models'
-import { NButton, NCard, NCountdown, NDivider, NFlex, NForm, NFormItem, NInput, NTabPane, NTabs, NText, useMessage } from 'naive-ui'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import VueTurnstile from 'vue-turnstile'
+
 import { GetSelfAccount, useAccount } from '@/api/account'
+import type { AccountInfo } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI, QueryRequestError } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/shared/config'
@@ -30,11 +39,14 @@ type AuthAction = 'idle' | 'login' | 'register' | 'forget'
 type AuthFeedbackTone = 'info' | 'warning' | 'success' | 'error'
 type AuthProgressState = 'idle' | 'submitting' | 'slow' | 'success' | 'error' | 'timeout'
 
-const props = withDefaults(defineProps<{
-  closable?: boolean
-}>(), {
-  closable: false,
-})
+const props = withDefaults(
+  defineProps<{
+    closable?: boolean
+  }>(),
+  {
+    closable: false,
+  },
+)
 
 const emit = defineEmits<{
   close: []
@@ -57,7 +69,7 @@ const loginModel = ref<LoginModel>({
 })
 
 const token = ref('')
-const turnstile = ref<{ reset?: () => void, remove?: () => void }>()
+const turnstile = ref<{ reset?: () => void; remove?: () => void }>()
 
 const selectedTab = ref<'login' | 'register' | 'forget'>('login')
 const inputForgetPasswordValue = ref('')
@@ -140,7 +152,7 @@ const isBusy = computed(() => loginPending.value || registerPending.value || for
 const canSubmitRegister = computed(() => Boolean(token.value) && !isBusy.value)
 const canSubmitForget = computed(() => Boolean(token.value) && canSendForgetPassword.value && !isBusy.value)
 
-const defaultFeedback = computed<{ tone: AuthFeedbackTone, text: string }>(() => {
+const defaultFeedback = computed<{ tone: AuthFeedbackTone; text: string }>(() => {
   if (selectedTab.value === 'register') {
     if (!token.value) {
       return {
@@ -218,9 +230,9 @@ watch(selectedTab, () => {
 
 function validatePasswordStartWith(rule: FormItemRule, value: string): boolean {
   return (
-    !!registerModel.value.password
-    && registerModel.value.password.startsWith(value)
-    && registerModel.value.password.length >= value.length
+    !!registerModel.value.password &&
+    registerModel.value.password.startsWith(value) &&
+    registerModel.value.password.length >= value.length
   )
 }
 
@@ -251,12 +263,7 @@ function scheduleFeedbackReset(delay = 5000) {
   }, delay)
 }
 
-function setFeedback(
-  state: AuthProgressState,
-  tone: AuthFeedbackTone,
-  text: string,
-  autoResetMs?: number,
-) {
+function setFeedback(state: AuthProgressState, tone: AuthFeedbackTone, text: string, autoResetMs?: number) {
   progressState.value = state
   feedbackTone.value = tone
   feedbackText.value = text
@@ -371,9 +378,8 @@ async function finalizeAuthenticatedSession(tokenValue: string, successMessage: 
 }
 
 function handleRequestError(actionLabel: string, error: unknown) {
-  const requestError = error instanceof QueryRequestError
-    ? error
-    : new QueryRequestError('network', `${actionLabel}失败`, error)
+  const requestError =
+    error instanceof QueryRequestError ? error : new QueryRequestError('network', `${actionLabel}失败`, error)
 
   if (requestError.kind === 'aborted') {
     setFeedback('idle', 'warning', `${actionLabel}已取消，你可以立即重试。`, 4000)
@@ -532,11 +538,15 @@ onUnmounted(() => {
 <template>
   <NCard embedded>
     <template #header>
-      <NFlex justify="space-between" align="center">
-        <NText strong>
-          账号认证
-        </NText>
-        <NFlex align="center" size="small">
+      <NFlex
+        justify="space-between"
+        align="center"
+      >
+        <NText strong> 账号认证 </NText>
+        <NFlex
+          align="center"
+          size="small"
+        >
           <slot name="header-extra" />
           <NButton
             v-if="props.closable"
@@ -550,10 +560,11 @@ onUnmounted(() => {
     </template>
 
     <template v-if="isLoggedInNow">
-      <NFlex vertical size="large">
-        <NText type="success">
-          已以 {{ currentAccountName }} 登录，当前页面会自动解锁后续操作。
-        </NText>
+      <NFlex
+        vertical
+        size="large"
+      >
+        <NText type="success"> 已以 {{ currentAccountName }} 登录，当前页面会自动解锁后续操作。 </NText>
         <NFlex
           v-if="props.closable"
           justify="end"
@@ -569,7 +580,10 @@ onUnmounted(() => {
     </template>
 
     <template v-else>
-      <NFlex vertical size="large">
+      <NFlex
+        vertical
+        size="large"
+      >
         <NText
           :type="currentFeedbackType"
           :depth="currentFeedbackType ? undefined : 3"
@@ -613,7 +627,10 @@ onUnmounted(() => {
               </NFormItem>
             </NForm>
 
-            <NFlex vertical size="medium">
+            <NFlex
+              vertical
+              size="medium"
+            >
               <NButton
                 text
                 secondary
@@ -697,7 +714,10 @@ onUnmounted(() => {
               </NFormItem>
             </NForm>
 
-            <NFlex vertical size="medium">
+            <NFlex
+              vertical
+              size="medium"
+            >
               <NFlex justify="end">
                 <NButton
                   v-if="registerPending"
@@ -724,14 +744,20 @@ onUnmounted(() => {
             name="forget"
             tab="忘记密码"
           >
-            <NFlex vertical size="medium">
+            <NFlex
+              vertical
+              size="medium"
+            >
               <NInput
                 v-model:value="inputForgetPasswordValue"
                 placeholder="请输入邮箱"
                 maxlength="64"
               />
 
-              <NFlex justify="space-between" align="center">
+              <NFlex
+                justify="space-between"
+                align="center"
+              >
                 <NButton
                   text
                   secondary
@@ -770,7 +796,10 @@ onUnmounted(() => {
 
         <template v-if="selectedTab !== 'login'">
           <NDivider />
-          <NFlex vertical size="small">
+          <NFlex
+            vertical
+            size="small"
+          >
             <NText depth="3">
               {{ token ? '安全验证已完成，可以继续提交。' : '先完成人机验证，再解锁注册和密码找回操作。' }}
             </NText>

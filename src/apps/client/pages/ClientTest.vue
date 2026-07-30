@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { NButton, NCard, NFlex, NSwitch } from 'naive-ui'
+
 import type { QAInfo } from '@/api/api-models'
-import { NButton, NCard, NFlex, NSwitch } from 'naive-ui';
-import { onReceivedQuestion } from '@/apps/client/data/notification'
-import { useSettings } from '@/apps/client/store/useSettings'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
+import { onReceivedQuestion } from '@/apps/client/data/notification'
+import { useSettings } from '@/apps/client/store/useSettings'
 
 const setting = useSettings()
 async function testNotification() {
@@ -21,17 +22,34 @@ async function testNotification() {
 </script>
 
 <template>
-  <NFlex vertical :size="12">
-    <NCard size="small" bordered>
+  <NFlex
+    vertical
+    :size="12"
+  >
+    <NCard
+      size="small"
+      bordered
+    >
       <ClientPageHeader
         title="测试"
         description="开发与调试入口（仅用于内部测试）"
       />
     </NCard>
 
-    <NCard size="small" bordered>
-      <NFlex :wrap="true" :size="12" align="center">
-        <NButton type="primary" size="small" @click="testNotification">
+    <NCard
+      size="small"
+      bordered
+    >
+      <NFlex
+        :wrap="true"
+        :size="12"
+        align="center"
+      >
+        <NButton
+          type="primary"
+          size="small"
+          @click="testNotification"
+        >
           测试通知
         </NButton>
         <NButton

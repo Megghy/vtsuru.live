@@ -19,11 +19,13 @@ async function copyUrl() {
   } catch {
     copyState.value = 'error'
   }
-  resetTimer = window.setTimeout(() => { copyState.value = 'idle' }, 3000)
+  resetTimer = window.setTimeout(() => {
+    copyState.value = 'idle'
+  }, 3000)
 }
 
 function selectUrl(event: FocusEvent | MouseEvent) {
-  (event.currentTarget as HTMLInputElement).select()
+  ;(event.currentTarget as HTMLInputElement).select()
 }
 
 onBeforeUnmount(() => {
@@ -32,9 +34,15 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <aside class="schedule-subscription" aria-label="订阅直播日程">
+  <aside
+    class="schedule-subscription"
+    aria-label="订阅直播日程"
+  >
     <div class="subscription-copy">
-      <span class="subscription-icon" aria-hidden="true">
+      <span
+        class="subscription-icon"
+        aria-hidden="true"
+      >
         <NIcon size="20"><CalendarNumberOutline /></NIcon>
       </span>
       <span class="subscription-text">
@@ -50,7 +58,7 @@ onBeforeUnmount(() => {
         aria-label="日历订阅链接"
         @focus="selectUrl"
         @click="selectUrl"
-      >
+      />
       <NButton
         tag="a"
         :href="webcalUrl"
@@ -58,7 +66,9 @@ onBeforeUnmount(() => {
         type="primary"
         secondary
       >
-        <template #icon><NIcon><OpenOutline /></NIcon></template>
+        <template #icon
+          ><NIcon><OpenOutline /></NIcon
+        ></template>
         打开日历
       </NButton>
       <NButton
@@ -77,7 +87,11 @@ onBeforeUnmount(() => {
         {{ copyState === 'success' ? '已复制' : copyState === 'error' ? '复制失败' : '复制链接' }}
       </NButton>
     </div>
-    <span class="sr-only" role="status" aria-live="polite">
+    <span
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+    >
       {{ copyState === 'success' ? '日历订阅链接已复制' : copyState === 'error' ? '复制失败，请手动复制链接' : '' }}
     </span>
   </aside>
@@ -85,11 +99,26 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .schedule-subscription {
-  --schedule-subscription-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
-  --schedule-subscription-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted))));
-  --schedule-subscription-bg: var(--vtsuru-block-bg-muted, var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted))));
-  --schedule-subscription-control-bg: var(--user-page-theme-surface-bg-hover, var(--vtsuru-block-bg-muted, var(--vtsuru-bg-muted)));
-  --schedule-subscription-border: var(--vtsuru-block-border, var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border))));
+  --schedule-subscription-fg: var(
+    --vtsuru-block-fg,
+    var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg)))
+  );
+  --schedule-subscription-muted: var(
+    --vtsuru-block-fg-muted,
+    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)))
+  );
+  --schedule-subscription-bg: var(
+    --vtsuru-block-bg-muted,
+    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted)))
+  );
+  --schedule-subscription-control-bg: var(
+    --user-page-theme-surface-bg-hover,
+    var(--vtsuru-block-bg-muted, var(--vtsuru-bg-muted))
+  );
+  --schedule-subscription-border: var(
+    --vtsuru-block-border,
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+  );
   --schedule-subscription-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
   display: flex;
   flex-wrap: wrap;
@@ -100,7 +129,8 @@ onBeforeUnmount(() => {
   max-width: 100%;
   min-width: 0;
   padding: 13px 14px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) color-mix(in srgb, var(--schedule-subscription-accent) 22%, var(--schedule-subscription-border));
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style)
+    color-mix(in srgb, var(--schedule-subscription-accent) 22%, var(--schedule-subscription-border));
   border-radius: var(--vtsuru-page-radius, 8px);
   color: var(--schedule-subscription-fg);
   background: color-mix(in srgb, var(--schedule-subscription-accent) 6%, var(--schedule-subscription-bg));
@@ -132,8 +162,15 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.subscription-text strong { font-size: 13px; line-height: 1.4; }
-.subscription-text span { color: var(--schedule-subscription-muted); font-size: 12px; line-height: 1.45; }
+.subscription-text strong {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.subscription-text span {
+  color: var(--schedule-subscription-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
 
 .subscription-action {
   display: flex;
@@ -156,7 +193,11 @@ onBeforeUnmount(() => {
   outline: none;
   color: var(--schedule-subscription-muted);
   background: var(--schedule-subscription-control-bg);
-  font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  font:
+    12px/1.5 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
 }
 
 .subscription-action input:focus-visible {
@@ -176,9 +217,18 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 520px) {
-  .schedule-subscription { gap: 12px; }
-  .subscription-action { flex: 1 1 100%; width: 100%; }
-  .subscription-action input { flex: 1 1 100%; }
-  .subscription-action :deep(.n-button) { flex: 1 1 0; }
+  .schedule-subscription {
+    gap: 12px;
+  }
+  .subscription-action {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .subscription-action input {
+    flex: 1 1 100%;
+  }
+  .subscription-action :deep(.n-button) {
+    flex: 1 1 0;
+  }
 }
 </style>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { NAutoComplete, NAvatar, NFlex, NText } from 'naive-ui';
-import type { AutoCompleteOption } from 'naive-ui'
 import { useDebounceFn } from '@vueuse/core'
+import { NAutoComplete, NAvatar, NFlex, NText } from 'naive-ui'
+import type { AutoCompleteOption } from 'naive-ui'
 import { computed, h, ref, watch } from 'vue'
+
 import { VTSURU_API_URL } from '@/shared/config'
 
 interface BiliUserInfo {
@@ -27,7 +28,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'userInfoLoaded': [userInfo: BiliUserInfo | null]
+  userInfoLoaded: [userInfo: BiliUserInfo | null]
 }>()
 
 // 使用 defineModel 作为外部 v-model:value 绑定
@@ -47,8 +48,7 @@ watch(
       if (!selectedUserInfo.value || selectedUserInfo.value.mid !== newValue) {
         await loadUserInfo(newValue)
       }
-    }
-    else {
+    } else {
       inputValue.value = ''
       selectedUserInfo.value = null
     }
@@ -67,25 +67,24 @@ async function loadUserInfo(uid: number) {
       const userInfo = data.data.card
       selectedUserInfo.value = userInfo
 
-      options.value = [{
-        label: `${userInfo.name} (${userInfo.mid})`,
-        value: String(userInfo.mid),
-        userInfo,
-      }] as BiliUserSelectorOption[]
+      options.value = [
+        {
+          label: `${userInfo.name} (${userInfo.mid})`,
+          value: String(userInfo.mid),
+          userInfo,
+        },
+      ] as BiliUserSelectorOption[]
 
       emit('userInfoLoaded', userInfo)
-    }
-    else {
+    } else {
       selectedUserInfo.value = null
       emit('userInfoLoaded', null)
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('加载用户信息失败:', error)
     selectedUserInfo.value = null
     emit('userInfoLoaded', null)
-  }
-  finally {
+  } finally {
     loading.value = false
   }
 }
@@ -124,7 +123,7 @@ function handleSelect(value: string) {
   inputValue.value = value
   const numeric = Number.parseInt(value)
   model.value = Number.isNaN(numeric) ? undefined : numeric
-  const option = options.value.find(opt => opt.value === value)
+  const option = options.value.find((opt) => opt.value === value)
   if (option?.userInfo) {
     selectedUserInfo.value = option.userInfo
     emit('userInfoLoaded', option.userInfo)
@@ -148,8 +147,8 @@ function renderOption(option: { option: BiliUserSelectorOption }) {
           size: 32,
           round: true,
           imgProps: {
-            referrerpolicy: 'no-referrer'
-          }
+            referrerpolicy: 'no-referrer',
+          },
         }),
         h(
           NFlex,

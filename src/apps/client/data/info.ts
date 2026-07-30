@@ -1,9 +1,11 @@
-import type { BiliRoomInfo, BiliStreamingInfo, FetcherStatisticData } from './models' // 假设模型路径
 import { error, info } from '@tauri-apps/plugin-log'
 import { format } from 'date-fns'
 import { ref } from 'vue'
+
 import { useAccount } from '@/api/account'
+
 import { useTauriStore } from '../store/useTauriStore'
+import type { BiliRoomInfo, BiliStreamingInfo, FetcherStatisticData } from './models' // 假设模型路径
 import { QueryBiliAPI } from './utils' // 假设 Bili API 工具路径
 // import { useAccount } from '@/api/account'; // 如果需要账户信息
 
@@ -92,8 +94,9 @@ async function updateCallback() {
       shouldUpdateStatistic.value = false // 重置保存标记
 
       // 清理旧数据逻辑 (保持不变)
-      const allKeys = (await store.store.keys()).filter(k => k.startsWith(STATISTIC_STORE_KEY))
-      if (allKeys.length > 30) { // 例如，只保留最近30天的数据
+      const allKeys = (await store.store.keys()).filter((k) => k.startsWith(STATISTIC_STORE_KEY))
+      if (allKeys.length > 30) {
+        // 例如，只保留最近30天的数据
         allKeys.sort() // 按日期字符串升序排序
         const oldestKey = allKeys[0]
         await store.store.delete(oldestKey)
@@ -118,7 +121,8 @@ async function updateCallback() {
     updateDelay = 15 // 直播中15秒更新一次 (可以适当调整)
   }
   // 使用取模运算控制调用频率
-  if (updateCount.value % (updateDelay / 5) === 0) { // 因为主循环是5秒一次
+  if (updateCount.value % (updateDelay / 5) === 0) {
+    // 因为主循环是5秒一次
     updateRoomAndStreamingInfo()
   }
   updateCount.value++
@@ -168,7 +172,7 @@ export function getEventType(command: { cmd: string }): string {
 export async function getHistoricalStatistics(days: number = 7): Promise<FetcherStatisticData[]> {
   const store = useTauriStore()
   const keys = (await store.store.keys())
-    .filter(key => key.startsWith(STATISTIC_STORE_KEY))
+    .filter((key) => key.startsWith(STATISTIC_STORE_KEY))
     .toSorted((a, b) => b.localeCompare(a)) // 按日期降序排序
 
   const historicalData: FetcherStatisticData[] = []

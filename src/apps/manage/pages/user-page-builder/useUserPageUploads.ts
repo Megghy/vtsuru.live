@@ -1,19 +1,21 @@
+import type { Ref } from 'vue'
+import { ref, shallowRef } from 'vue'
+
 import { UserFileLocation, UserFileTypes } from '@/api/api-models'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
+import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { UploadStage, uploadFiles } from '@/shared/services/fileUpload'
-import { reportUserPageError } from '@/apps/user-page/runtime/observability'
-import type { Ref } from 'vue'
-import { ref, shallowRef } from 'vue'
+
 import { validateUserPageImageFiles } from './userPageImageUpload'
 
 type UploadKey = 'imageFile' | 'avatarFile'
 
 type PendingUploadContext =
-  | { kind: 'block', blockId: string, key: UploadKey }
-  | { kind: 'itemImage', blockId: string, item: Record<string, any> }
-  | { kind: 'galleryBulk', blockId: string }
+  | { kind: 'block'; blockId: string; key: UploadKey }
+  | { kind: 'itemImage'; blockId: string; item: Record<string, any> }
+  | { kind: 'galleryBulk'; blockId: string }
   | { kind: 'pageBackground' }
   | { kind: 'globalBackground' }
   | { kind: 'pageBackgroundOverride' }
@@ -31,7 +33,7 @@ export interface UseUserPageUploadsOptions {
 
 export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
   const isUploading = ref(false)
-  const uploadQueue = ref<Array<{ name: string, stage: UploadStage }>>([])
+  const uploadQueue = ref<Array<{ name: string; stage: UploadStage }>>([])
   const uploadInput = ref<HTMLInputElement | null>(null)
   const pendingUpload = shallowRef<PendingUploadContext | null>(null)
 
@@ -147,7 +149,8 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     const ctx = pendingUpload.value
     pendingUpload.value = null
     const isBulk = ctx.kind === 'galleryBulk'
-    const requiresProject = ctx.kind === 'pageBackground' || ctx.kind === 'block' || ctx.kind === 'itemImage' || ctx.kind === 'galleryBulk'
+    const requiresProject =
+      ctx.kind === 'pageBackground' || ctx.kind === 'block' || ctx.kind === 'itemImage' || ctx.kind === 'galleryBulk'
     const project = requiresProject ? opts.currentProject.value : null
     if (requiresProject && !project) {
       opts.notify.error('当前页不是区块模式，无法上传')
@@ -190,7 +193,9 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       })()
       if (ctx.kind === 'galleryBulk') {
         if (currentImages + files.length > MAX_PAGE_IMAGES) {
-          opts.notify.error(`图片数量将超出上限 ${currentImages + files.length}/${MAX_PAGE_IMAGES}，请减少选择数量或先删除一些图片`)
+          opts.notify.error(
+            `图片数量将超出上限 ${currentImages + files.length}/${MAX_PAGE_IMAGES}，请减少选择数量或先删除一些图片`,
+          )
           return
         }
       } else if (willAddNewImage && currentImages >= MAX_PAGE_IMAGES) {
@@ -200,14 +205,14 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     }
 
     isUploading.value = true
-    uploadQueue.value = files.map(file => ({ name: file.name, stage: UploadStage.Preparing }))
+    uploadQueue.value = files.map((file) => ({ name: file.name, stage: UploadStage.Preparing }))
     try {
       const uploadedList = await uploadFiles(
         isBulk ? files : files[0],
         UserFileTypes.Image,
         UserFileLocation.Local,
         (stage) => {
-          uploadQueue.value = uploadQueue.value.map(item => ({ ...item, stage: stage as UploadStage }))
+          uploadQueue.value = uploadQueue.value.map((item) => ({ ...item, stage: stage as UploadStage }))
         },
       )
       if (!uploadedList?.length) throw new Error('上传失败：无返回结果')
@@ -218,11 +223,13 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       } else if (ctx.kind === 'globalBackground') {
         opts.settings.value.background ??= {}
         ;(opts.settings.value.background as any).pageBackgroundImageFile = uploadedList[0]
-        if ((opts.settings.value.background as any).pageBackgroundType !== 'image') (opts.settings.value.background as any).pageBackgroundType = 'image'
+        if ((opts.settings.value.background as any).pageBackgroundType !== 'image')
+          (opts.settings.value.background as any).pageBackgroundType = 'image'
       } else if (ctx.kind === 'pageBackgroundOverride') {
         opts.currentPage.value.background ??= {}
         ;(opts.currentPage.value.background as any).pageBackgroundImageFile = uploadedList[0]
-        if ((opts.currentPage.value.background as any).pageBackgroundType !== 'image') (opts.currentPage.value.background as any).pageBackgroundType = 'image'
+        if ((opts.currentPage.value.background as any).pageBackgroundType !== 'image')
+          (opts.currentPage.value.background as any).pageBackgroundType = 'image'
       } else {
         const block = findBlockById(project.blocks, ctx.blockId)
         if (!block) throw new Error('找不到要上传到的区块，可能已被删除')

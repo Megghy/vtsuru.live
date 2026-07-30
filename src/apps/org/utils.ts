@@ -38,14 +38,24 @@ export function streamerStatusTagType(status: number): 'default' | 'success' | '
 
 export function inviteStatusLabel(status: number): string {
   const map: Record<number, string> = {
-    0: '有效', 1: '已过期', 2: '已撤销', 3: '已使用', 4: '已接受', 5: '已拒绝',
+    0: '有效',
+    1: '已过期',
+    2: '已撤销',
+    3: '已使用',
+    4: '已接受',
+    5: '已拒绝',
   }
   return map[status] ?? `未知(${status})`
 }
 
 export function inviteStatusTagType(status: number): 'success' | 'info' | 'warning' | 'error' | 'default' {
   const map: Record<number, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
-    0: 'success', 4: 'success', 1: 'warning', 2: 'error', 5: 'error', 3: 'info',
+    0: 'success',
+    4: 'success',
+    1: 'warning',
+    2: 'error',
+    5: 'error',
+    3: 'info',
   }
   return map[status] ?? 'default'
 }
@@ -61,7 +71,7 @@ export function exportCsv(filename: string, headers: string[], rows: (string | n
     const s = String(v ?? '')
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const content = [headers, ...rows].map(r => r.map(escape).join(',')).join('\n')
+  const content = [headers, ...rows].map((r) => r.map(escape).join(',')).join('\n')
   const blob = new Blob([`﻿${content}`], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)

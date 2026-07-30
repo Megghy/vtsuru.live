@@ -1,10 +1,12 @@
-import type { Ref } from 'vue'
-import type { AutoActionItem, RuntimeState } from '../types'
-import type { DanmakuModel, EventModel } from '@/api/api-models'
 import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval'
 import { v4 as uuidv4 } from 'uuid'
+import type { Ref } from 'vue'
+
+import type { DanmakuModel, EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
+
 import { executeActions } from '../actionUtils'
+import type { AutoActionItem, RuntimeState } from '../types'
 import { ActionType, KeywordMatchType, Priority, TriggerType } from '../types'
 import { buildExecutionContext, createDefaultAutoAction } from '../utils'
 
@@ -44,7 +46,8 @@ export interface CheckInConfig {
 function createDefaultCheckInConfig(): CheckInConfig {
   const successAction = createDefaultAutoAction(TriggerType.DANMAKU)
   successAction.name = '签到成功回复'
-  successAction.template = '@{{user.name}} 签到成功，获得 {{checkin.points}} 积分，连续签到 {{checkin.consecutiveDays}} 天'
+  successAction.template =
+    '@{{user.name}} 签到成功，获得 {{checkin.points}} 积分，连续签到 {{checkin.consecutiveDays}} 天'
 
   const cooldownAction = createDefaultAutoAction(TriggerType.DANMAKU)
   cooldownAction.name = '签到冷却回复'
@@ -52,7 +55,8 @@ function createDefaultCheckInConfig(): CheckInConfig {
 
   const earlyBirdAction = createDefaultAutoAction(TriggerType.DANMAKU)
   earlyBirdAction.name = '早鸟签到回复'
-  earlyBirdAction.template = '恭喜 {{user.name}} 完成早鸟签到！获得 {{checkin.points}} 积分，连续签到 {{checkin.consecutiveDays}} 天！'
+  earlyBirdAction.template =
+    '恭喜 {{user.name}} 完成早鸟签到！获得 {{checkin.points}} 积分，连续签到 {{checkin.consecutiveDays}} 天！'
 
   return {
     sendReply: true,
@@ -93,7 +97,8 @@ function normalizeEvent(source: DanmakuModel | EventModel | undefined): EventMod
     guard_level: field(event, 'guard_level', 'guardLevel', 'GuardLevel') ?? 0,
     fans_medal_level: field(event, 'fans_medal_level', 'fansMedalLevel', 'FansMedalLevel') ?? 0,
     fans_medal_name: field(event, 'fans_medal_name', 'fansMedalName', 'FansMedalName') ?? '',
-    fans_medal_wearing_status: field(event, 'fans_medal_wearing_status', 'fansMedalWearingStatus', 'FansMedalWearingStatus') ?? false,
+    fans_medal_wearing_status:
+      field(event, 'fans_medal_wearing_status', 'fansMedalWearingStatus', 'FansMedalWearingStatus') ?? false,
     emoji: field<string>(event, 'emoji', 'Emoji'),
     ouid: field<string>(event, 'ouid', 'ouId', 'OUId') ?? '',
   }
@@ -140,7 +145,10 @@ export function useCheckIn(
     const success = payload.Success ?? payload.success ?? false
     const duplicate = isDuplicateStatus(payload)
     const action = success
-      ? liveStartTime.value && isLive.value && Date.now() - liveStartTime.value < 30 * 60 * 1000 && checkInConfig.value.earlyBird.enabled
+      ? liveStartTime.value &&
+        isLive.value &&
+        Date.now() - liveStartTime.value < 30 * 60 * 1000 &&
+        checkInConfig.value.earlyBird.enabled
         ? checkInConfig.value.earlyBird.successAction
         : checkInConfig.value.successAction
       : duplicate

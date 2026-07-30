@@ -1,8 +1,9 @@
-import type { APIRoot, PaginationResponse } from './api-models'
 import { apiFail, mapToCurrentAPI } from '@/shared/config'
+
+import type { APIRoot, PaginationResponse } from './api-models'
 import { cookie } from './auth'
 
-export function unwrapOk<T>(resp: { code: number, message?: string, data: T }, failMessage: string): T {
+export function unwrapOk<T>(resp: { code: number; message?: string; data: T }, failMessage: string): T {
   if (resp.code !== 200) throw new Error(resp.message || failMessage)
   return resp.data
 }
@@ -78,9 +79,7 @@ function buildAuthHeaders(headers?: [string, string][]) {
   return h
 }
 
-export type QueryParams =
-  | Record<string, string | number | boolean | null | undefined>
-  | URLSearchParams
+export type QueryParams = Record<string, string | number | boolean | null | undefined> | URLSearchParams
 
 function serializeBody(body: unknown) {
   if (body instanceof FormData) return body
@@ -110,14 +109,18 @@ export async function QueryPatchAPI<T>(
   } catch {
     throw new Error(`无效的API地址: ${urlString}`)
   }
-  return QueryAPIInternal<APIRoot<T>>(url, {
-    method: 'patch',
-    headers: {
-      ...buildAuthHeaders(headers),
-      'Content-Type': 'application/json',
+  return QueryAPIInternal<APIRoot<T>>(
+    url,
+    {
+      method: 'patch',
+      headers: {
+        ...buildAuthHeaders(headers),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  }, options)
+    options,
+  )
 }
 
 export async function QueryPostAPIWithParams<T>(
@@ -128,14 +131,7 @@ export async function QueryPostAPIWithParams<T>(
   headers?: [string, string][],
   options?: QueryRequestOptions,
 ): Promise<APIRoot<T>> {
-  return QueryPostAPIWithParamsInternal<APIRoot<T>>(
-    urlString,
-    params,
-    body,
-    contentType,
-    headers,
-    options,
-  )
+  return QueryPostAPIWithParamsInternal<APIRoot<T>>(urlString, params, body, contentType, headers, options)
 }
 
 async function QueryPostAPIWithParamsInternal<T>(
@@ -160,11 +156,15 @@ async function QueryPostAPIWithParamsInternal<T>(
     h['Content-Type'] = contentType
   }
 
-  return QueryAPIInternal<T>(url, {
-    method: 'post',
-    headers: h,
-    body: serializeBody(body),
-  }, options)
+  return QueryAPIInternal<T>(
+    url,
+    {
+      method: 'post',
+      headers: h,
+      body: serializeBody(body),
+    },
+    options,
+  )
 }
 async function QueryAPIInternal<T>(url: URL, init: RequestInit, options?: QueryRequestOptions) {
   const rawUrl = url.toString()
@@ -213,10 +213,14 @@ export async function QueryDeleteAPI<T>(
 ): Promise<APIRoot<T>> {
   const url = new URL(urlString)
   url.search = getParams(params)
-  return QueryAPIInternal<APIRoot<T>>(url, {
-    method: 'delete',
-    headers: buildAuthHeaders(headers),
-  }, options)
+  return QueryAPIInternal<APIRoot<T>>(
+    url,
+    {
+      method: 'delete',
+      headers: buildAuthHeaders(headers),
+    },
+    options,
+  )
 }
 
 async function QueryGetAPIInternal<T>(
@@ -269,16 +273,8 @@ function getParams(params?: QueryParams) {
 
   return resultParams.toString()
 }
-export async function QueryPostPaginationAPI<T>(
-  url: string,
-  body?: unknown,
-): Promise<PaginationResponse<T>> {
-  return QueryPostAPIWithParamsInternal<PaginationResponse<T>>(
-    url,
-    undefined,
-    body,
-    'application/json',
-  )
+export async function QueryPostPaginationAPI<T>(url: string, body?: unknown): Promise<PaginationResponse<T>> {
+  return QueryPostAPIWithParamsInternal<PaginationResponse<T>>(url, undefined, body, 'application/json')
 }
 export async function QueryGetPaginationAPI<T>(
   urlString: string,

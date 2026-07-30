@@ -1,9 +1,22 @@
 <script setup lang="ts">
-import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import {
-  NAlert, NButton, NCard, NEmpty, NIcon, NInput, NPagination, NSelect, NFlex, NSpin, NTag, NTooltip } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NEmpty,
+  NIcon,
+  NInput,
+  NPagination,
+  NSelect,
+  NFlex,
+  NSpin,
+  NTag,
+  NTooltip,
+} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
+
+import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { CHECKIN_API_URL } from '@/shared/config'
 
@@ -65,9 +78,7 @@ const filteredRankingData = computed(() => {
   // 按用户名筛选
   if (userFilter.value) {
     const keyword = userFilter.value.toLowerCase()
-    filtered = filtered.filter(user =>
-      user.name.toLowerCase().includes(keyword),
-    )
+    filtered = filtered.filter((user) => user.name.toLowerCase().includes(keyword))
   }
 
   return filtered
@@ -143,7 +154,10 @@ onMounted(() => {
     bordered
   >
     <template #header-extra>
-      <NFlex :wrap="true" :size="8">
+      <NFlex
+        :wrap="true"
+        :size="8"
+      >
         <NSelect
           v-model:value="timeRange"
           size="small"
@@ -186,24 +200,12 @@ onMounted(() => {
           <!-- 排行榜头部 -->
           <div class="ranking-header">
             <div class="ranking-row">
-              <div class="col-rank">
-                排名
-              </div>
-              <div class="col-user">
-                用户
-              </div>
-              <div class="col-days">
-                连续签到
-              </div>
-              <div class="col-monthly">
-                本月签到
-              </div>
-              <div class="col-total">
-                总签到
-              </div>
-              <div class="col-time">
-                最近签到时间
-              </div>
+              <div class="col-rank">排名</div>
+              <div class="col-user">用户</div>
+              <div class="col-days">连续签到</div>
+              <div class="col-monthly">本月签到</div>
+              <div class="col-total">总签到</div>
+              <div class="col-time">最近签到时间</div>
             </div>
           </div>
 
@@ -239,7 +241,7 @@ onMounted(() => {
                   size="small"
                   type="success"
                   :bordered="false"
-                  style="margin-left: 8px;"
+                  style="margin-left: 8px"
                 >
                   已认证
                 </NTag>
@@ -250,9 +252,7 @@ onMounted(() => {
                 <div class="days-count">
                   {{ item.consecutiveDays }}
                 </div>
-                <div class="days-text">
-                  天
-                </div>
+                <div class="days-text">天</div>
               </div>
 
               <!-- 本月签到列 -->
@@ -260,9 +260,7 @@ onMounted(() => {
                 <div class="count-value">
                   {{ item.monthlyCheckInCount || 0 }}
                 </div>
-                <div class="count-text">
-                  次
-                </div>
+                <div class="count-text">次</div>
               </div>
 
               <!-- 总签到列 -->
@@ -270,9 +268,7 @@ onMounted(() => {
                 <div class="count-value">
                   {{ item.totalCheckInCount || 0 }}
                 </div>
-                <div class="count-text">
-                  次
-                </div>
+                <div class="count-text">次</div>
               </div>
 
               <!-- 签到时间列 -->
@@ -307,7 +303,10 @@ onMounted(() => {
     </NSpin>
 
     <div class="ranking-info">
-      <NAlert type="info" size="small">
+      <NAlert
+        type="info"
+        size="small"
+      >
         <template #icon>
           <NIcon>
             <Info24Filled />

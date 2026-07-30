@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+
+import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
+import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { QUESTION_API_URL } from '@/shared/config'
 import { useWebRTC } from '@/store/useRTC'
-import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
-import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 
 defineProps<{
   id?: number
@@ -57,7 +58,7 @@ async function getQuestionAndSetting() {
     console.log(err)
   }
 }
-function handleScroll(value: { clientHeight: number, scrollHeight: number, scrollTop: number }) {
+function handleScroll(value: { clientHeight: number; scrollHeight: number; scrollTop: number }) {
   cardRef.value?.setScroll(value)
 }
 onMounted(() => {

@@ -1,24 +1,28 @@
-import type { TrayIconOptions } from '@tauri-apps/api/tray'
 import { invoke } from '@tauri-apps/api/core'
 import { Menu } from '@tauri-apps/api/menu'
+import type { TrayIconOptions } from '@tauri-apps/api/tray'
 import { TrayIcon } from '@tauri-apps/api/tray'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 import { getCurrentWindow, PhysicalSize } from '@tauri-apps/api/window'
 import { attachConsole, info, warn } from '@tauri-apps/plugin-log'
-import {
-  isPermissionGranted,
-  onAction,
-  requestPermission,
-  sendNotification,
-} from '@tauri-apps/plugin-notification'
+import { isPermissionGranted, onAction, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
 import { h, ref } from 'vue'
+
 import { isLoggedIn, useAccount } from '@/api/account'
-import { clientSupportsRpc, clientVersion, CN_HOST, initClientVersion, isDev, REQUIRED_CLIENT_VERSION } from '@/shared/config'
-import { useWebFetcher } from '@/store/useWebFetcher'
+import {
+  clientSupportsRpc,
+  clientVersion,
+  CN_HOST,
+  initClientVersion,
+  isDev,
+  REQUIRED_CLIENT_VERSION,
+} from '@/shared/config'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
+import { useWebFetcher } from '@/store/useWebFetcher'
+
 import { useAutoAction } from '../store/useAutoAction'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
@@ -167,9 +171,12 @@ export function startUpdateCheck() {
   void checkUpdatePeriodically()
 
   // 之后每 6 小时检查一次更新
-  updateCheckTimer = window.setInterval(() => {
-    void checkUpdatePeriodically()
-  }, 6 * 60 * 60 * 1000) // 6 hours
+  updateCheckTimer = window.setInterval(
+    () => {
+      void checkUpdatePeriodically()
+    },
+    6 * 60 * 60 * 1000,
+  ) // 6 hours
   info('[更新检查] 定时器已启动，间隔 6 小时')
 }
 
@@ -258,17 +265,25 @@ async function handleUpdateInstall(update: any) {
     const progressNotification = window.$notification.info({
       title: '正在下载更新',
       content: () =>
-          h('div', { style: 'display: flex; flex-direction: column; gap: 10px; min-width: 240px;' }, [
-          h('div', {
-            style: 'height: 6px; border-radius: 999px; background: var(--vtsuru-bg-inset); overflow: hidden;',
-          }, [
-            h('div', {
-              style: `height: 100%; width: ${progressPercentage.value}%; background: linear-gradient(90deg, var(--vtsuru-primary), var(--vtsuru-primary-hover)); transition: width 0.2s ease;`,
-            }),
-          ]),
-          h('div', {
-            style: 'font-size: 12px; color: var(--vtsuru-fg); text-align: center;',
-          }, progressText.value),
+        h('div', { style: 'display: flex; flex-direction: column; gap: 10px; min-width: 240px;' }, [
+          h(
+            'div',
+            {
+              style: 'height: 6px; border-radius: 999px; background: var(--vtsuru-bg-inset); overflow: hidden;',
+            },
+            [
+              h('div', {
+                style: `height: 100%; width: ${progressPercentage.value}%; background: linear-gradient(90deg, var(--vtsuru-primary), var(--vtsuru-primary-hover)); transition: width 0.2s ease;`,
+              }),
+            ],
+          ),
+          h(
+            'div',
+            {
+              style: 'font-size: 12px; color: var(--vtsuru-fg); text-align: center;',
+            },
+            progressText.value,
+          ),
         ]),
       closable: false,
       duration: 0,
@@ -291,9 +306,8 @@ async function handleUpdateInstall(update: any) {
           const totalMb = Math.max(contentLength / 1024 / 1024, 0)
           const formatMb = (value: number) =>
             value >= 100 ? Math.round(value).toString() : (Math.round(value * 10) / 10).toString()
-          progressText.value = contentLength > 0
-            ? `已下载 ${formatMb(downloadedMb)}MB / ${formatMb(totalMb)}MB`
-            : '正在下载更新...'
+          progressText.value =
+            contentLength > 0 ? `已下载 ${formatMb(downloadedMb)}MB / ${formatMb(totalMb)}MB` : '正在下载更新...'
           info(`[更新] 已下载 ${downloaded} / ${contentLength} 字节`)
           break
         }
@@ -315,7 +329,7 @@ async function handleUpdateInstall(update: any) {
     })
 
     // 延迟 3 秒后重启
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    await new Promise((resolve) => setTimeout(resolve, 3000))
     try {
       await useWebFetcher().Stop()
     } catch (stopError) {
@@ -366,7 +380,7 @@ export async function initAll(isOnBoot: boolean) {
   }
 
   if (isOnBoot) {
-    if (setting.settings.bootAsMinimized && !isDev && await appWindow.isVisible()) {
+    if (setting.settings.bootAsMinimized && !isDev && (await appWindow.isVisible())) {
       appWindow.hide()
       sendNotification({
         title: 'VTsuru.Client',
@@ -423,9 +437,8 @@ export async function initAll(isOnBoot: boolean) {
   tray = await TrayIcon.new(options)
   clientInitStage.value = '系统托盘就绪'
 
-  const shouldInitDanmakuClient = isLoggedIn.value
-    && accountInfo.value.isBiliVerified
-    && !setting.settings.dev_disableDanmakuClient
+  const shouldInitDanmakuClient =
+    isLoggedIn.value && accountInfo.value.isBiliVerified && !setting.settings.dev_disableDanmakuClient
   if (shouldInitDanmakuClient) {
     startDanmakuClientInitFlow()
   } else {
@@ -435,7 +448,7 @@ export async function initAll(isOnBoot: boolean) {
   appWindow.setMinSize(new PhysicalSize(720, 480))
 
   getAllWebviewWindows().then(async (windows) => {
-    const w = windows.find(win => win.label === 'danmaku-window')
+    const w = windows.find((win) => win.label === 'danmaku-window')
     if (w) {
       const useWindow = useDanmakuWindow()
       useWindow.init()
@@ -450,7 +463,7 @@ export async function initAll(isOnBoot: boolean) {
       }
     }
 
-    const gw = windows.find(win => win.label === 'gift-window')
+    const gw = windows.find((win) => win.label === 'gift-window')
     if (gw) {
       const { useGiftWindow } = await import('@/apps/client/store/useGiftWindow')
       const giftStore = useGiftWindow()
@@ -478,9 +491,13 @@ export async function initAll(isOnBoot: boolean) {
   // 启动开放 RPC 接口 (供外部网页接入本地弹幕/发送能力)。
   // 老版本 client 二进制没有 Rust 中继, 前端跑在其上时不启动, 避免徒劳等待。
   if (clientSupportsRpc()) {
-    void useFetcherRpcServer().start().catch(async err => warn(`[RPC] 启动失败: ${err}`))
+    void useFetcherRpcServer()
+      .start()
+      .catch(async (err) => warn(`[RPC] 启动失败: ${err}`))
   } else {
-    warn(`[RPC] 当前 client 版本 ${clientVersion.value ?? '未知'} 过旧, 跳过开放接口 (需 ${REQUIRED_CLIENT_VERSION}+, 请更新客户端)`)
+    warn(
+      `[RPC] 当前 client 版本 ${clientVersion.value ?? '未知'} 过旧, 跳过开放接口 (需 ${REQUIRED_CLIENT_VERSION}+, 请更新客户端)`,
+    )
   }
 
   // startHeartbeat()
@@ -534,13 +551,13 @@ export async function initDanmakuClient() {
     info('弹幕客户端已初始化, 跳过初始化')
     return { success: true, message: '' }
   }
-  
+
   // 检查是否启用 EventFetcher
   if (!settings.settings.enableEventFetcher) {
     info('EventFetcher 功能已禁用, 跳过弹幕客户端初始化')
     return { success: true, message: 'EventFetcher 已禁用' }
   }
-  
+
   isInitingDanmakuClient.value = true
   console.log(settings.settings)
   let result = { success: false, message: '' }
@@ -613,10 +630,7 @@ export async function callStartDanmakuClient() {
   const webFetcher = useWebFetcher()
   if (settings.settings.useDanmakuClientType === 'direct') {
     info('开始初始化弹幕客户端 [direct]')
-    const key = await getRoomKey(
-      accountInfo.value.biliRoomId,
-      await biliCookie.getBiliCookie() || '',
-    )
+    const key = await getRoomKey(accountInfo.value.biliRoomId, (await biliCookie.getBiliCookie()) || '')
     if (!key) {
       warn('获取房间密钥失败, 无法连接弹幕客户端')
       return { success: false, message: '无法获取房间密钥' }
@@ -626,12 +640,16 @@ export async function callStartDanmakuClient() {
       warn('获取buvid失败, 无法连接弹幕客户端')
       return { success: false, message: '无法获取buvid' }
     }
-    return webFetcher.Start('direct', {
-      roomId: accountInfo.value.biliRoomId,
-      buvid,
-      token: key,
-      tokenUserId: biliCookie.uId,
-    }, true)
+    return webFetcher.Start(
+      'direct',
+      {
+        roomId: accountInfo.value.biliRoomId,
+        buvid,
+        token: key,
+        tokenUserId: biliCookie.uId,
+      },
+      true,
+    )
   } else {
     info('开始初始化弹幕客户端 [openlive]')
     return webFetcher.Start('openlive', undefined, true)

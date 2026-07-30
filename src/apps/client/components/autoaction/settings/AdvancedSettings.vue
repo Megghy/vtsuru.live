@@ -1,10 +1,23 @@
 <script setup lang="ts">
-import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCollapse, NCollapseItem, NInput, NInputNumber, NFlex, NSwitch, NForm, NFormItem, NText, NTooltip, NIcon } from 'naive-ui';
-import { computed } from 'vue'
-import { createDefaultAutoAction } from '@/apps/client/store/autoAction/utils'
-import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Info16Regular } from '@vicons/fluent'
+import {
+  NCollapse,
+  NCollapseItem,
+  NInput,
+  NInputNumber,
+  NFlex,
+  NSwitch,
+  NForm,
+  NFormItem,
+  NText,
+  NTooltip,
+  NIcon,
+} from 'naive-ui'
+import { computed } from 'vue'
+
+import { createDefaultAutoAction } from '@/apps/client/store/autoAction/utils'
+import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
+import { TriggerType } from '@/apps/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
@@ -33,8 +46,10 @@ function isModified(path: string, value: any) {
 
   // 遍历路径获取值
   for (const part of pathParts) {
-    defaultValue = defaultValue && typeof defaultValue === 'object' ? defaultValue[part as keyof typeof defaultValue] : undefined
-    currentValue = currentValue && typeof currentValue === 'object' ? currentValue[part as keyof typeof currentValue] : undefined
+    defaultValue =
+      defaultValue && typeof defaultValue === 'object' ? defaultValue[part as keyof typeof defaultValue] : undefined
+    currentValue =
+      currentValue && typeof currentValue === 'object' ? currentValue[part as keyof typeof currentValue] : undefined
   }
 
   // 处理特殊情况，如果指定了具体值进行比较
@@ -48,16 +63,20 @@ function isModified(path: string, value: any) {
 // 检查用户过滤区域是否有修改
 const userFilterModified = computed(() => {
   if (!showUserFilter.value) return false
-  return isModified('triggerConfig.userFilterEnabled', props.action.triggerConfig.userFilterEnabled)
-    || isModified('triggerConfig.requireMedal', props.action.triggerConfig.requireMedal)
-    || isModified('triggerConfig.requireCaptain', props.action.triggerConfig.requireCaptain)
+  return (
+    isModified('triggerConfig.userFilterEnabled', props.action.triggerConfig.userFilterEnabled) ||
+    isModified('triggerConfig.requireMedal', props.action.triggerConfig.requireMedal) ||
+    isModified('triggerConfig.requireCaptain', props.action.triggerConfig.requireCaptain)
+  )
 })
 
 // 检查冷却控制区域是否有修改
 const cooldownModified = computed(() => {
-  return isModified('ignoreCooldown', props.action.ignoreCooldown)
-    || isModified('actionConfig.delaySeconds', props.action.actionConfig.delaySeconds)
-    || isModified('actionConfig.cooldownSeconds', props.action.actionConfig.cooldownSeconds)
+  return (
+    isModified('ignoreCooldown', props.action.ignoreCooldown) ||
+    isModified('actionConfig.delaySeconds', props.action.actionConfig.delaySeconds) ||
+    isModified('actionConfig.cooldownSeconds', props.action.actionConfig.cooldownSeconds)
+  )
 })
 
 // 检查逻辑表达式是否有修改
@@ -73,7 +92,10 @@ const customJsModified = computed(() => {
 
 <template>
   <div class="advanced-settings">
-    <NCollapse :default-expanded-names="[]" accordion>
+    <NCollapse
+      :default-expanded-names="[]"
+      accordion
+    >
       <NCollapseItem
         v-if="showUserFilter"
         key="user-filter"
@@ -82,29 +104,60 @@ const customJsModified = computed(() => {
         :class="{ 'section-modified': userFilterModified }"
       >
         <template #header>
-          <NFlex align="center" :size="8">
-            <NText strong :type="userFilterModified ? 'warning' : 'default'">
+          <NFlex
+            align="center"
+            :size="8"
+          >
+            <NText
+              strong
+              :type="userFilterModified ? 'warning' : 'default'"
+            >
               用户过滤条件
             </NText>
-            <NTag v-if="userFilterModified" size="tiny" type="warning" round border-weight="0">
+            <NTag
+              v-if="userFilterModified"
+              size="tiny"
+              type="warning"
+              round
+              border-weight="0"
+            >
               已修改
             </NTag>
           </NFlex>
         </template>
-        
+
         <div class="section-content">
-          <NForm label-placement="left" label-width="120" size="small" :show-feedback="false">
+          <NForm
+            label-placement="left"
+            label-width="120"
+            size="small"
+            :show-feedback="false"
+          >
             <NFormItem label="启用过滤">
-              <NSwitch v-model:value="action.triggerConfig.userFilterEnabled" size="small" />
+              <NSwitch
+                v-model:value="action.triggerConfig.userFilterEnabled"
+                size="small"
+              />
             </NFormItem>
-            
+
             <transition name="fade">
-              <NFlex v-if="action.triggerConfig.userFilterEnabled" vertical :size="8" style="padding-top: 8px">
+              <NFlex
+                v-if="action.triggerConfig.userFilterEnabled"
+                vertical
+                :size="8"
+                style="padding-top: 8px"
+              >
                 <NFormItem label="要求本房勋章">
-                  <NSwitch v-model:value="action.triggerConfig.requireMedal" size="small" />
+                  <NSwitch
+                    v-model:value="action.triggerConfig.requireMedal"
+                    size="small"
+                  />
                 </NFormItem>
                 <NFormItem label="要求任意舰长">
-                  <NSwitch v-model:value="action.triggerConfig.requireCaptain" size="small" />
+                  <NSwitch
+                    v-model:value="action.triggerConfig.requireCaptain"
+                    size="small"
+                  />
                 </NFormItem>
               </NFlex>
             </transition>
@@ -119,30 +172,55 @@ const customJsModified = computed(() => {
         :class="{ 'section-modified': cooldownModified }"
       >
         <template #header>
-          <NFlex align="center" :size="8">
-            <NText strong :type="cooldownModified ? 'warning' : 'default'">
+          <NFlex
+            align="center"
+            :size="8"
+          >
+            <NText
+              strong
+              :type="cooldownModified ? 'warning' : 'default'"
+            >
               频率与延迟控制
             </NText>
-            <NTag v-if="cooldownModified" size="tiny" type="warning" round border-weight="0">
+            <NTag
+              v-if="cooldownModified"
+              size="tiny"
+              type="warning"
+              round
+              border-weight="0"
+            >
               已修改
             </NTag>
           </NFlex>
         </template>
-        
+
         <div class="section-content">
-          <NForm label-placement="left" label-width="120" size="small" :show-feedback="false">
+          <NForm
+            label-placement="left"
+            label-width="120"
+            size="small"
+            :show-feedback="false"
+          >
             <NFormItem label="忽略全局冷却">
               <template #label>
                 <NTooltip trigger="hover">
                   <template #trigger>
-                    <span>忽略全局冷却 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                    <span
+                      >忽略全局冷却
+                      <NIcon
+                        :component="Info16Regular"
+                        style="vertical-align: -2px"
+                    /></span>
                   </template>
                   开启后此操作不受全局发送频率限制的影响
                 </NTooltip>
               </template>
-              <NSwitch v-model:value="action.ignoreCooldown" size="small" />
+              <NSwitch
+                v-model:value="action.ignoreCooldown"
+                size="small"
+              />
             </NFormItem>
-            
+
             <NFormItem label="延迟执行(秒)">
               <NInputNumber
                 v-model:value="action.actionConfig.delaySeconds"
@@ -152,7 +230,7 @@ const customJsModified = computed(() => {
                 placeholder="0"
               />
             </NFormItem>
-            
+
             <NFormItem label="冷却时间(秒)">
               <NInputNumber
                 v-model:value="action.actionConfig.cooldownSeconds"
@@ -173,23 +251,39 @@ const customJsModified = computed(() => {
         :class="{ 'section-modified': logicalExpressionModified }"
       >
         <template #header>
-          <NFlex align="center" :size="8">
-            <NText strong :type="logicalExpressionModified ? 'warning' : 'default'">
+          <NFlex
+            align="center"
+            :size="8"
+          >
+            <NText
+              strong
+              :type="logicalExpressionModified ? 'warning' : 'default'"
+            >
               逻辑判断表达式
             </NText>
-            <NTag v-if="logicalExpressionModified" size="tiny" type="warning" round border-weight="0">
+            <NTag
+              v-if="logicalExpressionModified"
+              size="tiny"
+              type="warning"
+              round
+              border-weight="0"
+            >
               已配置
             </NTag>
           </NFlex>
         </template>
-        
+
         <div class="section-content">
-          <NFlex vertical :size="8">
-            <NText depth="3" style="font-size: 12px">
+          <NFlex
+            vertical
+            :size="8"
+          >
+            <NText
+              depth="3"
+              style="font-size: 12px"
+            >
               使用 JavaScript 语法，仅在返回值为真时执行。例如：
-              <NText code>
-                user.guardLevel &gt; 0 || gift.price &gt;= 10
-              </NText>
+              <NText code> user.guardLevel &gt; 0 || gift.price &gt;= 10 </NText>
             </NText>
             <NInput
               v-model:value="action.logicalExpression"
@@ -209,27 +303,39 @@ const customJsModified = computed(() => {
         :class="{ 'section-modified': customJsModified }"
       >
         <template #header>
-          <NFlex align="center" :size="8">
-            <NText strong :type="customJsModified ? 'warning' : 'default'">
+          <NFlex
+            align="center"
+            :size="8"
+          >
+            <NText
+              strong
+              :type="customJsModified ? 'warning' : 'default'"
+            >
               自定义脚本 (JS)
             </NText>
-            <NTag v-if="customJsModified" size="tiny" type="warning" round border-weight="0">
+            <NTag
+              v-if="customJsModified"
+              size="tiny"
+              type="warning"
+              round
+              border-weight="0"
+            >
               已编写
             </NTag>
           </NFlex>
         </template>
-        
+
         <div class="section-content">
-          <NFlex vertical :size="8">
-            <NText depth="3" style="font-size: 12px">
-              在操作执行前运行。可访问 
-              <NText code>
-                context
-              </NText>, <NText code>
-                event
-              </NText>, <NText code>
-                biliFunc
-              </NText> 等变量。
+          <NFlex
+            vertical
+            :size="8"
+          >
+            <NText
+              depth="3"
+              style="font-size: 12px"
+            >
+              在操作执行前运行。可访问
+              <NText code> context </NText>, <NText code> event </NText>, <NText code> biliFunc </NText> 等变量。
             </NText>
             <NInput
               v-model:value="action.executeCommand"

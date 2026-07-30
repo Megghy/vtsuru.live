@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import type { UserInfo, VideoCollectTable } from '@/api/api-models'
-import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui';
+import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
 import { ref } from 'vue'
+
+import type { UserInfo, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/shared/config'
@@ -41,10 +42,17 @@ async function get() {
 
 <template>
   <div class="video-collect-view">
-    <NCard size="small" :bordered="true" title="视频征集">
+    <NCard
+      size="small"
+      :bordered="true"
+      title="视频征集"
+    >
       <NSpin :show="isLoading">
         <template v-if="videoTables.length === 0">
-          <NFlex justify="center" style="padding: 20px 0">
+          <NFlex
+            justify="center"
+            style="padding: 20px 0"
+          >
             <NEmpty description="没有正在进行的征集表" />
           </NFlex>
         </template>

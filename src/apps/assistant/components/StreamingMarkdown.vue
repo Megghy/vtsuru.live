@@ -2,12 +2,15 @@
 import * as smd from 'streaming-markdown'
 import { onBeforeUnmount, ref, watch } from 'vue'
 
-const props = withDefaults(defineProps<{
-  content: string
-  streaming?: boolean
-}>(), {
-  streaming: false,
-})
+const props = withDefaults(
+  defineProps<{
+    content: string
+    streaming?: boolean
+  }>(),
+  {
+    streaming: false,
+  },
+)
 
 const root = ref<HTMLElement | null>(null)
 const hrefProtocols = ['http:', 'https:', 'mailto:'] as const
@@ -103,17 +106,17 @@ function syncMarkdown() {
   if (!props.streaming) endParser()
 }
 
-watch(
-  () => [props.content, props.streaming, root.value] as const,
-  syncMarkdown,
-  { immediate: true, flush: 'post' },
-)
+watch(() => [props.content, props.streaming, root.value] as const, syncMarkdown, { immediate: true, flush: 'post' })
 
 onBeforeUnmount(endParser)
 </script>
 
 <template>
-  <div ref="root" class="streaming-markdown" :class="{ 'is-streaming': streaming }" />
+  <div
+    ref="root"
+    class="streaming-markdown"
+    :class="{ 'is-streaming': streaming }"
+  />
 </template>
 
 <style scoped>
@@ -150,12 +153,20 @@ onBeforeUnmount(endParser)
   line-height: 1.35;
 }
 
-.streaming-markdown :deep(h1) { font-size: 18px; }
-.streaming-markdown :deep(h2) { font-size: 16px; }
-.streaming-markdown :deep(h3) { font-size: 15px; }
+.streaming-markdown :deep(h1) {
+  font-size: 18px;
+}
+.streaming-markdown :deep(h2) {
+  font-size: 16px;
+}
+.streaming-markdown :deep(h3) {
+  font-size: 15px;
+}
 .streaming-markdown :deep(h4),
 .streaming-markdown :deep(h5),
-.streaming-markdown :deep(h6) { font-size: 14px; }
+.streaming-markdown :deep(h6) {
+  font-size: 14px;
+}
 
 .streaming-markdown :deep(ul),
 .streaming-markdown :deep(ol) {
@@ -168,7 +179,7 @@ onBeforeUnmount(endParser)
   padding-left: 0.1em;
 }
 
-.streaming-markdown :deep(li > input[type="checkbox"]) {
+.streaming-markdown :deep(li > input[type='checkbox']) {
   width: 14px;
   height: 14px;
   margin: 0 0.45em 0 -1.35em;
@@ -199,7 +210,7 @@ onBeforeUnmount(endParser)
   border-radius: 4px;
   background: var(--vtsuru-bg-elevated, rgba(128, 128, 128, 0.08));
   color: inherit;
-  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
   font-size: 0.92em;
 }
 
@@ -289,8 +300,16 @@ onBeforeUnmount(endParser)
 }
 
 @keyframes smd-caret {
-  0%, 45% { opacity: 1; }
-  50%, 95% { opacity: 0; }
-  100% { opacity: 1; }
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  95% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 </style>

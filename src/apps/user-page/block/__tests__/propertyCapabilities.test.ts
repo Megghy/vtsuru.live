@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 describe('isBlockPropertyAvailable', () => {

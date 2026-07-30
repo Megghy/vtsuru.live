@@ -1,8 +1,10 @@
 import type { InjectionKey, Ref } from 'vue'
 import { computed, inject, provide, ref } from 'vue'
+
+import { isLoggedIn } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
-import { isLoggedIn } from '@/api/account'
+
 import type { OrgInfoModel } from '../types'
 
 export interface OrgContext {

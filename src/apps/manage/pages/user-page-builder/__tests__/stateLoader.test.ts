@@ -1,7 +1,9 @@
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { describe, expect, it } from 'vitest'
-import { selectInitialSettings } from '../useUserPageStateLoader'
+
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { getUserPagesLocalDraftKey } from '../useUserPagesLocalDraftStorage'
+import { selectInitialSettings } from '../useUserPageStateLoader'
 
 const published: UserPagesSettingsV1 = {
   version: 1,
@@ -62,10 +64,7 @@ describe('user page local draft recovery', () => {
       ...published,
       pages: { works: { mode: 'legacy', title: '旧本地修改' } },
     }
-    const selected = selectInitialSettings(
-      { draft: currentDraft, published, rollback: null },
-      localDraft(staleLocal),
-    )
+    const selected = selectInitialSettings({ draft: currentDraft, published, rollback: null }, localDraft(staleLocal))
 
     expect(selected.settings).toBe(currentDraft)
     expect(selected.dirty).toBe(false)

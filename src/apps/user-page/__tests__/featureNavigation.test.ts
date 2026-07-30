@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
+
 import { FunctionTypes } from '@/api/api-models'
+
 import { getEnabledUserFunctions, isUserFeatureEnabled, USER_FEATURE_DEFINITION_MAP } from '../featureNavigation'
 
 describe('featureNavigation', () => {
@@ -15,7 +17,9 @@ describe('featureNavigation', () => {
   })
 
   it('论坛使用独立可用性查询', () => {
-    const enabled = getEnabledUserFunctions({ extra: { enableFunctions: Object.values(FunctionTypes).filter(value => typeof value === 'number') } })
+    const enabled = getEnabledUserFunctions({
+      extra: { enableFunctions: Object.values(FunctionTypes).filter((value) => typeof value === 'number') },
+    })
     expect(isUserFeatureEnabled(USER_FEATURE_DEFINITION_MAP.forum, enabled)).toBe(false)
   })
 })

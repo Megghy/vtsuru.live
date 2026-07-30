@@ -23,11 +23,10 @@ export async function addVtsuruLiveWatermark(file: File): Promise<File> {
     const output = getOutputFormat(file.type)
     const blob = await canvasToBlob(canvas, output.type, output.quality)
 
-    return new File(
-      [blob],
-      getWatermarkedFileName(file.name, output.extension),
-      { type: output.type, lastModified: file.lastModified },
-    )
+    return new File([blob], getWatermarkedFileName(file.name, output.extension), {
+      type: output.type,
+      lastModified: file.lastModified,
+    })
   } finally {
     image.close()
   }
@@ -105,7 +104,7 @@ function getOutputFormat(inputType: string) {
 }
 
 async function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality?: number): Promise<Blob> {
-  const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, type, quality))
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality))
   if (!blob) throw new Error('Failed to export image')
   return blob
 }

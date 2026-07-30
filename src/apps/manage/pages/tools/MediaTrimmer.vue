@@ -17,11 +17,16 @@ const playhead = ref(0)
 const dragging = ref<'start' | 'end' | null>(null)
 const total = ref(props.duration ?? 0)
 
-watch(() => props.duration, d => { if (d) total.value = d })
+watch(
+  () => props.duration,
+  (d) => {
+    if (d) total.value = d
+  },
+)
 
 const startVal = computed(() => start.value ?? 0)
 const endVal = computed(() => end.value ?? total.value)
-const pct = (t: number) => total.value > 0 ? `${Math.min(100, (t / total.value) * 100)}%` : '0%'
+const pct = (t: number) => (total.value > 0 ? `${Math.min(100, (t / total.value) * 100)}%` : '0%')
 
 function onLoaded() {
   const d = media.value?.duration
@@ -91,45 +96,83 @@ const hasTrim = computed(() => start.value != null || end.value != null)
 <template>
   <div class="trimmer">
     <video
-      v-if="isVideo" ref="media" :src="src" controls playsinline
-      class="player" @loadedmetadata="onLoaded" @timeupdate="onTimeUpdate"
+      v-if="isVideo"
+      ref="media"
+      :src="src"
+      controls
+      playsinline
+      class="player"
+      @loadedmetadata="onLoaded"
+      @timeupdate="onTimeUpdate"
     />
     <audio
-      v-else ref="media" :src="src" controls
-      class="player audio" @loadedmetadata="onLoaded" @timeupdate="onTimeUpdate"
+      v-else
+      ref="media"
+      :src="src"
+      controls
+      class="player audio"
+      @loadedmetadata="onLoaded"
+      @timeupdate="onTimeUpdate"
     />
 
     <div
-      ref="track" class="track" @pointerup="clickTrack"
-      @pointermove="onDrag" @pointercancel="endDrag"
+      ref="track"
+      class="track"
+      @pointerup="clickTrack"
+      @pointermove="onDrag"
+      @pointercancel="endDrag"
     >
-      <div class="range" :style="{ left: pct(startVal), right: `calc(100% - ${pct(endVal)})` }" />
-      <div class="cursor" :style="{ left: pct(playhead) }" />
       <div
-        class="handle start" :style="{ left: pct(startVal) }"
-        @pointerdown.stop="beginDrag('start', $event)" @pointerup.stop="endDrag"
+        class="range"
+        :style="{ left: pct(startVal), right: `calc(100% - ${pct(endVal)})` }"
+      />
+      <div
+        class="cursor"
+        :style="{ left: pct(playhead) }"
+      />
+      <div
+        class="handle start"
+        :style="{ left: pct(startVal) }"
+        @pointerdown.stop="beginDrag('start', $event)"
+        @pointerup.stop="endDrag"
       >
         <span class="handle-label">{{ clock(startVal) }}</span>
       </div>
       <div
-        class="handle end" :style="{ left: pct(endVal) }"
-        @pointerdown.stop="beginDrag('end', $event)" @pointerup.stop="endDrag"
+        class="handle end"
+        :style="{ left: pct(endVal) }"
+        @pointerdown.stop="beginDrag('end', $event)"
+        @pointerup.stop="endDrag"
       >
         <span class="handle-label">{{ clock(endVal) }}</span>
       </div>
     </div>
 
     <div class="trim-actions">
-      <NButton size="tiny" @click="setStartHere">
+      <NButton
+        size="tiny"
+        @click="setStartHere"
+      >
         设为入点
       </NButton>
-      <NButton size="tiny" @click="setEndHere">
+      <NButton
+        size="tiny"
+        @click="setEndHere"
+      >
         设为出点
       </NButton>
-      <NText depth="3" class="trim-info">
+      <NText
+        depth="3"
+        class="trim-info"
+      >
         截取 {{ clock(startVal) }} - {{ clock(endVal) }}（{{ clock(endVal - startVal) }}）
       </NText>
-      <NButton v-if="hasTrim" size="tiny" quaternary @click="reset">
+      <NButton
+        v-if="hasTrim"
+        size="tiny"
+        quaternary
+        @click="reset"
+      >
         重置
       </NButton>
     </div>

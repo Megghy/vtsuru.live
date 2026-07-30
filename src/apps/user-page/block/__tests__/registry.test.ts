@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { BLOCK_TYPES } from '../schema'
+
 import { BLOCK_DEFINITIONS, BLOCK_LIBRARY, createBlockNode, getBlockLabel } from '../registry'
+import { BLOCK_TYPES } from '../schema'
 
 describe('block registry', () => {
   it('每个区块都只有一份完整能力定义', () => {
-    expect(BLOCK_DEFINITIONS.map(item => item.type)).toEqual(BLOCK_TYPES)
+    expect(BLOCK_DEFINITIONS.map((item) => item.type)).toEqual(BLOCK_TYPES)
     BLOCK_DEFINITIONS.forEach((item) => {
       expect(item.label).not.toBe('')
       expect(item.category).not.toBe('')

@@ -1,6 +1,7 @@
 import type { WritableComputedRef } from 'vue'
-import type { LocationQueryRaw, LocationQueryValueRaw } from 'vue-router'
 import { computed, nextTick, toValue } from 'vue'
+import type { LocationQueryRaw, LocationQueryValueRaw } from 'vue-router'
+
 import router from '@/app/router'
 
 type QueryValue = LocationQueryValueRaw | LocationQueryValueRaw[]
@@ -49,12 +50,8 @@ export function useRouteQueryParam<T extends QueryValue>(
   options: RouteQueryParamOptions<T> = {},
 ): WritableComputedRef<T> {
   const transform = options.transform
-  const get = typeof transform === 'function'
-    ? transform
-    : transform?.get ?? ((value: QueryValue) => value as T)
-  const set = typeof transform === 'object' && transform.set
-    ? transform.set
-    : ((value: T) => value)
+  const get = typeof transform === 'function' ? transform : (transform?.get ?? ((value: QueryValue) => value as T))
+  const set = typeof transform === 'object' && transform.set ? transform.set : (value: T) => value
 
   return computed({
     get() {

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { ScheduleConfigType } from '@/shared/types/TemplateTypes'
 import { getISOWeek, getISOWeekYear } from 'date-fns'
 import { computed, onMounted, ref } from 'vue'
+
+import type { ScheduleConfigType } from '@/shared/types/TemplateTypes'
+
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 
 const props = defineProps<ScheduleConfigType>()
@@ -87,14 +89,14 @@ onMounted(() => {
             v-else
             id="rest"
             class="schedule-template pinky day-content"
-          > 休息 </span>
+          >
+            休息
+          </span>
         </div>
       </div>
     </div>
     <div class="schedule-template pinky title-container">
-      <div class="schedule-template pinky title">
-        S C H E D U L E
-      </div>
+      <div class="schedule-template pinky title">S C H E D U L E</div>
     </div>
   </div>
 </template>
@@ -108,8 +110,8 @@ onMounted(() => {
   height: 700px;
   border-radius: 20px;
   background-color: #faebeb;
-  background-image: linear-gradient(90deg, #ffffff 10%, rgba(0, 0, 0, 0) 10%),
-    linear-gradient(#ffffff 10%, rgba(0, 0, 0, 0) 10%);
+  background-image:
+    linear-gradient(90deg, #ffffff 10%, rgba(0, 0, 0, 0) 10%), linear-gradient(#ffffff 10%, rgba(0, 0, 0, 0) 10%);
   background-size: 20px 20px;
   border: 3px solid #e0cbcb;
 }

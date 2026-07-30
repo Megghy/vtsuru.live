@@ -1,19 +1,23 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import type { Position } from '@/types/gamepad'
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{
-  svg?: Component
-  position?: Position
-  axes?: { x: number; y: number }
-  sensitivity?: number
-}>(), {
-  svg: undefined,
-  axes: () => ({ x: 0, y: 0 }),
-  position: () => ({ top: '0', left: '0', width: '5%' }),
-  sensitivity: 15,
-})
+import type { Position } from '@/types/gamepad'
+
+const props = withDefaults(
+  defineProps<{
+    svg?: Component
+    position?: Position
+    axes?: { x: number; y: number }
+    sensitivity?: number
+  }>(),
+  {
+    svg: undefined,
+    axes: () => ({ x: 0, y: 0 }),
+    position: () => ({ top: '0', left: '0', width: '5%' }),
+    sensitivity: 15,
+  },
+)
 
 const style = computed(() => ({
   top: props.position.top,

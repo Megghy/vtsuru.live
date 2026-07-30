@@ -60,5 +60,5 @@ export const CHECKIN_PLACEHOLDERS: Placeholder[] = [
 export function getMergedPlaceholders(triggerType: TriggerType): Placeholder[] {
   const specific = TRIGGER_PLACEHOLDERS[triggerType] ?? []
   const merged = [...specific, ...BASE_PLACEHOLDERS]
-  return Array.from(new Map(merged.map(item => [item.name, item])).values())
+  return Array.from(new Map(merged.map((item) => [item.name, item])).values())
 }

@@ -1,20 +1,15 @@
 import type { Ref } from 'vue'
-import type {
-  AutoActionItem,
-  ExecutionContext,
-  RuntimeState,
-  TriggerType,
-} from './types'
+
 import type { EventModel } from '@/api/api-models'
+import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { isTauri } from '@/shared/config'
+
 import { useBiliCookie } from '../useBiliCookie'
 import { evaluateTemplateExpressions } from './expressionEvaluator'
-import {
-  ActionType,
-} from './types'
+import type { AutoActionItem, ExecutionContext, RuntimeState, TriggerType } from './types'
+import { ActionType } from './types'
 import { buildExecutionContext, evaluateExpression, getRandomTemplate } from './utils'
 import { logCommandHistory, logDanmakuHistory, logPrivateMsgHistory } from './utils/historyLogger'
-import { isTauri } from '@/shared/config'
-import { useVtsStore } from '@/apps/client/store/useVtsStore'
 
 /**
  * 过滤有效的自动操作项
@@ -192,8 +187,9 @@ async function sendAndLogDanmaku(
 ): Promise<boolean> {
   if (!canSendWithRateLimit()) {
     console.warn(`[AutoAction] 速率限制：每分钟最多 ${RATE_LIMIT_MAX_SENDS} 条弹幕，跳过: ${action.name || action.id}`)
-    logDanmakuHistory(action.id, action.name || '未命名操作', message, roomId, false, '速率限制')
-      .catch(err => console.error('记录弹幕历史失败:', err))
+    logDanmakuHistory(action.id, action.name || '未命名操作', message, roomId, false, '速率限制').catch((err) =>
+      console.error('记录弹幕历史失败:', err),
+    )
     return false
   }
   try {
@@ -206,7 +202,7 @@ async function sendAndLogDanmaku(
       roomId,
       success,
       success ? undefined : '发送失败',
-    ).catch(err => console.error('记录弹幕历史失败:', err))
+    ).catch((err) => console.error('记录弹幕历史失败:', err))
     if (!success) {
       window.$notification.error({
         title: '自动回复发送失败',
@@ -224,7 +220,7 @@ async function sendAndLogDanmaku(
       roomId,
       false,
       err instanceof Error ? err.toString() : String(err), // 确保err是字符串
-    ).catch(e => console.error('记录弹幕历史失败:', e))
+    ).catch((e) => console.error('记录弹幕历史失败:', e))
     return false
   }
 }
@@ -282,7 +278,7 @@ export function executeActions(
     if (!options?.isTest) {
       // 应用自定义过滤器
       if (options?.customFilters) {
-        const passesAllFilters = options.customFilters.every(filter => filter(action, context))
+        const passesAllFilters = options.customFilters.every((filter) => filter(action, context))
         if (!passesAllFilters) continue
       }
 
@@ -313,8 +309,14 @@ export function executeActions(
         }
 
         if (!biliCookie.isCookieValid) {
-          logDanmakuHistory(action.id, action.name || '未命名操作', message, roomId, false, 'Cookie 未就绪或无效')
-            .catch(err => console.error('记录弹幕历史失败:', err))
+          logDanmakuHistory(
+            action.id,
+            action.name || '未命名操作',
+            message,
+            roomId,
+            false,
+            'Cookie 未就绪或无效',
+          ).catch((err) => console.error('记录弹幕历史失败:', err))
           window.$notification.error({
             title: '自动回复发送失败',
             content: 'Cookie 未就绪或无效',
@@ -335,8 +337,14 @@ export function executeActions(
           }
         } else {
           console.warn(`[AutoAction] 未提供弹幕发送处理器，无法执行操作: ${action.name || action.id}`)
-          logDanmakuHistory(action.id, action.name || '未命名操作', message, roomId, false, '未提供弹幕发送处理器')
-            .catch(err => console.error('记录弹幕历史失败:', err))
+          logDanmakuHistory(
+            action.id,
+            action.name || '未命名操作',
+            message,
+            roomId,
+            false,
+            '未提供弹幕发送处理器',
+          ).catch((err) => console.error('记录弹幕历史失败:', err))
         }
         break
       }
@@ -353,7 +361,8 @@ export function executeActions(
             runtimeState.lastExecutionTime[action.id] = Date.now()
 
             const sendPmPromise = async (uid: number, msg: string) => {
-              return handlers.sendPrivateMessage(uid, msg)
+              return handlers
+                .sendPrivateMessage(uid, msg)
                 .then((success) => {
                   // 记录私信发送历史
                   logPrivateMsgHistory(
@@ -363,7 +372,7 @@ export function executeActions(
                     uid,
                     success,
                     success ? undefined : '发送失败',
-                  ).catch(err => console.error('记录私信历史失败:', err))
+                  ).catch((err) => console.error('记录私信历史失败:', err))
 
                   if (success && options?.onSuccess) {
                     // 发送成功后调用 onSuccess 回调
@@ -381,7 +390,7 @@ export function executeActions(
                     uid,
                     false,
                     err instanceof Error ? err.toString() : String(err), // 确保err是字符串
-                  ).catch(e => console.error('记录私信历史失败:', e))
+                  ).catch((e) => console.error('记录私信历史失败:', e))
                   return false // 明确返回 false 表示失败
                 })
             }
@@ -408,12 +417,9 @@ export function executeActions(
           runtimeState.lastExecutionTime[action.id] = Date.now()
 
           // 目前只记录执行历史，具体实现可在未来扩展
-          logCommandHistory(
-            action.id,
-            action.name || '未命名操作',
-            command,
-            true,
-          ).catch(err => console.error('记录命令执行历史失败:', err))
+          logCommandHistory(action.id, action.name || '未命名操作', command, true).catch((err) =>
+            console.error('记录命令执行历史失败:', err),
+          )
 
           console.warn(`[AutoAction] 暂不支持执行自定义命令: ${action.name || action.id}`)
         }
@@ -459,7 +465,8 @@ export function executeActions(
               const paramId = (action.actionConfig as any)?.vtsParamId as string | undefined
               const value = (action.actionConfig as any)?.vtsParamValue as number | undefined
               const weight = (action.actionConfig as any)?.vtsParamWeight as number | undefined
-              if (!paramId || value === undefined) throw new Error(`VTS_PARAM_ADD 缺少 vtsParamId/vtsParamValue: ${action.name || action.id}`)
+              if (!paramId || value === undefined)
+                throw new Error(`VTS_PARAM_ADD 缺少 vtsParamId/vtsParamValue: ${action.name || action.id}`)
               await vts.injectParametersAdd([{ id: paramId, value, weight }])
               break
             }
@@ -482,10 +489,14 @@ export function executeActions(
         }
 
         if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-          setTimeout(() => void run().catch((err) => {
-            console.error(`[AutoAction] ${action.actionType} 执行失败:`, err)
-            options?.onError?.(action, context, err)
-          }), action.actionConfig.delaySeconds * 1000)
+          setTimeout(
+            () =>
+              void run().catch((err) => {
+                console.error(`[AutoAction] ${action.actionType} 执行失败:`, err)
+                options?.onError?.(action, context, err)
+              }),
+            action.actionConfig.delaySeconds * 1000,
+          )
         } else {
           void run().catch((err) => {
             console.error(`[AutoAction] ${action.actionType} 执行失败:`, err)

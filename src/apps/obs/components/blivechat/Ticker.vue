@@ -2,6 +2,7 @@
 <script setup>
 // @ts-nocheck
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+
 import * as constants from './constants'
 import ImgShadow from './ImgShadow.vue'
 import MembershipItem from './MembershipItem.vue'
@@ -100,7 +101,7 @@ function getBgColor(message) {
     color2 = config.colors.headerBg
   }
   const pinTime = getPinTime(message)
-  let progress = (1 - ((curTime.value - message.addTime) / (60 * 1000) / pinTime)) * 100
+  let progress = (1 - (curTime.value - message.addTime) / (60 * 1000) / pinTime) * 100
   if (progress < 0) {
     progress = 0
   } else if (progress > 100) {
@@ -182,7 +183,7 @@ function onItemClick(message) {
           :key="message.raw.id"
           tabindex="0"
           class="style-scope yt-live-chat-ticker-renderer"
-          style="overflow: hidden;"
+          style="overflow: hidden"
           @click="onItemClick(message.raw)"
         >
           <div
@@ -211,7 +212,8 @@ function onItemClick(message) {
                 id="text"
                 dir="ltr"
                 class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
-              >{{ message.text }}</span>
+                >{{ message.text }}</span
+              >
             </div>
           </div>
         </yt-live-chat-ticker-paid-message-item-renderer>

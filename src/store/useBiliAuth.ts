@@ -1,8 +1,9 @@
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
-import type { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
-import type { QueryParams, QueryRequestOptions } from '@/api/query'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+
+import type { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
+import type { QueryParams, QueryRequestOptions } from '@/api/query'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { BILI_AUTH_API_URL, POINT_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -43,7 +44,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
           biliAuth.value = data.data
           console.log('[bili-auth] 已获取 Bilibili 认证信息')
           // 将token加入到biliTokens
-          const index = biliTokens.value.findIndex(t => t.id == biliAuth.value.id)
+          const index = biliTokens.value.findIndex((t) => t.id == biliAuth.value.id)
           if (index >= 0) {
             biliTokens.value[index] = {
               id: biliAuth.value.id,
@@ -80,7 +81,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   }
   function getBiliAuthHeaders(headers?: [string, string][]) {
     const result = [...(headers ?? [])]
-    if (result.find(h => h[0].toLowerCase() == 'bili-auth') == null) {
+    if (result.find((h) => h[0].toLowerCase() == 'bili-auth') == null) {
       result.push(['Bili-Auth', currentToken.value ?? ''])
     }
     return result
@@ -137,7 +138,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   }
   function logout() {
     biliAuth.value = {} as BiliAuthModel
-    biliTokens.value = biliTokens.value.filter(t => t.token != currentToken.value)
+    biliTokens.value = biliTokens.value.filter((t) => t.token != currentToken.value)
     currentToken.value = ''
     console.log('[bili-auth] 已登出 Bilibili 认证')
   }

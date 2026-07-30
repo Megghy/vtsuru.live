@@ -1,21 +1,23 @@
 <script setup lang="ts">
-import { NButton, NConfigProvider, NIcon, NScrollbar, useMessage } from 'naive-ui';
 import { Bot24Regular } from '@vicons/fluent'
+import { NButton, NConfigProvider, NIcon, NScrollbar, useMessage } from 'naive-ui'
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+
 import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
-import { selectedAPIKey } from '@/shared/config'
-import { buildManageTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
-import { isDarkMode } from '@/shared/utils'
-import '@/apps/manage/styles/manage-page.css'
+import AssistantModal from '@/apps/assistant/components/AssistantModal.vue'
+import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import ManageAuthGate from '@/apps/manage/components/layout/ManageAuthGate.vue'
+
+import '@/apps/manage/styles/manage-page.css'
 import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate.vue'
 import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer.vue'
 import ManageSider from '@/apps/manage/components/layout/ManageSider.vue'
 import ManageTopBar from '@/apps/manage/components/layout/ManageTopBar.vue'
-import AssistantModal from '@/apps/assistant/components/AssistantModal.vue'
-import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
+import { selectedAPIKey } from '@/shared/config'
+import { buildManageTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
+import { isDarkMode } from '@/shared/utils'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -48,8 +50,14 @@ onMounted(() => {
 
 <template>
   <NConfigProvider :theme-overrides="manageThemeOverrides">
-    <div class="manage-theme" :style="manageCssVars">
-      <div v-if="accountInfo.id" class="manage-shell">
+    <div
+      class="manage-theme"
+      :style="manageCssVars"
+    >
+      <div
+        v-if="accountInfo.id"
+        class="manage-shell"
+      >
         <div class="manage-shell__body">
           <ManageSider :account-info="accountInfo" />
 

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { parseEmbedUrl } from '../embed'
-import BlockCard from '../BlockCard.vue'
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+import BlockCard from '../BlockCard.vue'
+import { parseEmbedUrl } from '../embed'
+
+const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
 const model = computed(() => {
-  const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
-    : {}
+  const o =
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as any)
+      : {}
   const url = String(o.url ?? '')
   const title = typeof o.title === 'string' ? o.title : undefined
   const framed = typeof o.framed === 'boolean' ? o.framed : true
@@ -33,7 +35,11 @@ const model = computed(() => {
 </script>
 
 <template>
-  <BlockCard :framed="model.framed" :backgrounded="model.backgrounded" :content-style="{ padding: 0 }">
+  <BlockCard
+    :framed="model.framed"
+    :backgrounded="model.backgrounded"
+    :content-style="{ padding: 0 }"
+  >
     <div class="embed-wrapper">
       <iframe
         v-if="model.ok"
@@ -45,13 +51,12 @@ const model = computed(() => {
         :sandbox="model.sandbox"
         referrerpolicy="no-referrer"
       />
-      <div v-else class="embed-placeholder">
-        <div class="embed-placeholder__title">
-          嵌入链接无效
-        </div>
-        <div class="embed-placeholder__desc">
-          请使用支持的哔哩哔哩或 YouTube 视频链接
-        </div>
+      <div
+        v-else
+        class="embed-placeholder"
+      >
+        <div class="embed-placeholder__title">嵌入链接无效</div>
+        <div class="embed-placeholder__desc">请使用支持的哔哩哔哩或 YouTube 视频链接</div>
       </div>
     </div>
   </BlockCard>

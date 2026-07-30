@@ -1,12 +1,26 @@
 <script setup lang="ts">
-import type {
-  DataTableColumns,
+import type { DataTableColumns } from 'naive-ui'
+import {
+  NButton,
+  NDataTable,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NGi,
+  NGrid,
+  NInput,
+  NModal,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
 } from 'naive-ui'
-import type { ResponsePointHisrotyModel } from '@/api/api-models'
-import { NButton, NDataTable, NDivider, NEmpty, NFlex, NGi, NGrid, NInput, NModal, NTag, NText, NTime, NTooltip } from 'naive-ui';
 import { computed, h, ref } from 'vue'
+
+import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { EventDataTypes, PointFrom } from '@/api/api-models'
 import { formatDanmakuPrice, getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
+
 import PointGoodsItem from './PointGoodsItem.vue'
 
 defineProps<{
@@ -33,20 +47,31 @@ function renderGiftDetail(row: ResponsePointHisrotyModel, labelType: 'info' | 'w
   const detailText = [
     giftDisplay.mysteryBoxName ? `来源 ${giftDisplay.mysteryBoxName}` : undefined,
     giftDisplay.mysteryBoxPriceText ? `盲盒 ￥${giftDisplay.mysteryBoxPriceText}` : undefined,
-    giftDisplay.giftPriceText ? `${giftDisplay.hasMysteryBoxGift ? '开出' : '礼物'} ￥${giftDisplay.giftPriceText}` : undefined,
-  ].filter(Boolean).join(' / ')
+    giftDisplay.giftPriceText
+      ? `${giftDisplay.hasMysteryBoxGift ? '开出' : '礼物'} ￥${giftDisplay.giftPriceText}`
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join(' / ')
 
   return h(NFlex, { align: 'center', gap: 6, wrap: true }, () => [
     h(NTag, { type: labelType, size: 'small', style: { margin: '0' }, bordered: false }, () => '礼物'),
     h('span', {}, giftDisplay.giftSummaryText),
     giftDisplay.hasMysteryBoxGift
       ? h(NTooltip, null, {
-          trigger: () => h(NTag, { type: 'warning', size: 'tiny', bordered: false }, () => giftDisplay.mysteryBoxPriceText ? `盲盒 ￥${giftDisplay.mysteryBoxPriceText}` : '盲盒'),
+          trigger: () =>
+            h(NTag, { type: 'warning', size: 'tiny', bordered: false }, () =>
+              giftDisplay.mysteryBoxPriceText ? `盲盒 ￥${giftDisplay.mysteryBoxPriceText}` : '盲盒',
+            ),
           default: () => detailText || '盲盒礼物',
         })
       : null,
     giftDisplay.giftPriceText
-      ? h(NTag, { type: 'error', size: 'tiny', style: { margin: '0' }, bordered: false }, () => `￥${giftDisplay.giftPriceText}`)
+      ? h(
+          NTag,
+          { type: 'error', size: 'tiny', style: { margin: '0' }, bordered: false },
+          () => `￥${giftDisplay.giftPriceText}`,
+        )
       : null,
   ])
 }
@@ -70,11 +95,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
     sorter: (row1: ResponsePointHisrotyModel, row2: ResponsePointHisrotyModel) => row1.point - row2.point,
     render: (row: ResponsePointHisrotyModel) => {
       const point = Number(row.point.toFixed(1))
-      return h(
-        NText,
-        { style: { color: point < 0 ? 'red' : 'green' } },
-        () => (point < 0 ? '' : '+') + point,
-      )
+      return h(NText, { style: { color: point < 0 ? 'red' : 'green' } }, () => (point < 0 ? '' : '+') + point)
     },
   },
   {
@@ -166,11 +187,16 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
               ]),
               // 显示选中的子商品款式
               row.extra?.selectedSubItems && row.extra.selectedSubItems.length > 0
-                ? h(NFlex, { gap: 4, wrap: true }, () => 
-                    row.extra!.selectedSubItems!.map(s => h(NTag, { size: 'tiny', type: 'info', bordered: false }, 
-                      () => `${s.nameSnapshot} x ${s.quantity}`))
+                ? h(NFlex, { gap: 4, wrap: true }, () =>
+                    row.extra!.selectedSubItems!.map((s) =>
+                      h(
+                        NTag,
+                        { size: 'tiny', type: 'info', bordered: false },
+                        () => `${s.nameSnapshot} x ${s.quantity}`,
+                      ),
+                    ),
                   )
-                : null
+                : null,
             ])
           case PointFrom.CheckIn:
             return h(NFlex, { align: 'center' }, () => [
@@ -257,11 +283,15 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
           }
 
           return h(NFlex, { align: 'center' }, () => [
-            h(NTag, {
-              type: 'info',
-              size: 'small',
-              bordered: false,
-            }, () => '弹幕'),
+            h(
+              NTag,
+              {
+                type: 'info',
+                size: 'small',
+                bordered: false,
+              },
+              () => '弹幕',
+            ),
             h('span', {}, row.extra?.danmaku?.msg),
           ])
         }
@@ -289,9 +319,10 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
             ]),
             // 显示款式摘要
             row.extra?.selectedSubItems && row.extra.selectedSubItems.length > 0
-              ? h(NFlex, { gap: 4, wrap: true }, () => 
-                  row.extra!.selectedSubItems!.map(s => h(NText, { depth: 3, style: { fontSize: '12px' } }, 
-                    () => `${s.nameSnapshot} x ${s.quantity}`))
+              ? h(NFlex, { gap: 4, wrap: true }, () =>
+                  row.extra!.selectedSubItems!.map((s) =>
+                    h(NText, { depth: 3, style: { fontSize: '12px' } }, () => `${s.nameSnapshot} x ${s.quantity}`),
+                  ),
                 )
               : null,
             row.extra?.remark
@@ -333,32 +364,58 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
     v-model:show="showGoodsModal"
     preset="card"
     title="礼物详情 (快照)"
-    style="max-width: 500px; width: 95vw;"
+    style="max-width: 500px; width: 95vw"
   >
-    <NFlex vertical :gap="16">
-      <div v-if="currentGoods" style="border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-radius); padding: 12px;">
-        <PointGoodsItem :goods="currentGoods" :show-footer="false" />
+    <NFlex
+      vertical
+      :gap="16"
+    >
+      <div
+        v-if="currentGoods"
+        style="border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-radius); padding: 12px"
+      >
+        <PointGoodsItem
+          :goods="currentGoods"
+          :show-footer="false"
+        />
       </div>
 
       <!-- 已选款式详情 -->
       <template v-if="selectedSubItems.length > 0">
-        <NDivider style="margin: 8px 0">
-          已选款式
-        </NDivider>
-        <NGrid cols="1 400:2" :x-gap="12" :y-gap="12">
-          <NGi v-for="sub in selectedSubItems" :key="sub.subItemId">
+        <NDivider style="margin: 8px 0"> 已选款式 </NDivider>
+        <NGrid
+          cols="1 400:2"
+          :x-gap="12"
+          :y-gap="12"
+        >
+          <NGi
+            v-for="sub in selectedSubItems"
+            :key="sub.subItemId"
+          >
             <div class="selected-sub-item-display">
-              <NFlex vertical :gap="4">
-                <NFlex align="center" justify="space-between">
+              <NFlex
+                vertical
+                :gap="4"
+              >
+                <NFlex
+                  align="center"
+                  justify="space-between"
+                >
                   <NText strong>
                     {{ sub.nameSnapshot }}
                   </NText>
-                  <NText depth="3">
-                    x {{ sub.quantity }}
-                  </NText>
+                  <NText depth="3"> x {{ sub.quantity }} </NText>
                 </NFlex>
-                <NFlex justify="space-between" align="center">
-                  <NTag size="tiny" :bordered="false" type="primary" secondary>
+                <NFlex
+                  justify="space-between"
+                  align="center"
+                >
+                  <NTag
+                    size="tiny"
+                    :bordered="false"
+                    type="primary"
+                    secondary
+                  >
                     {{ sub.priceSnapshot }} 积分
                   </NTag>
                 </NFlex>
@@ -369,9 +426,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
       </template>
 
       <template v-if="currentGoods?.content">
-        <NDivider style="margin: 8px 0">
-          礼物内容
-        </NDivider>
+        <NDivider style="margin: 8px 0"> 礼物内容 </NDivider>
         <NInput
           :value="currentGoods?.content"
           type="textarea"
@@ -382,9 +437,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
       </template>
 
       <template v-if="currentHistory?.extra?.remark">
-        <NDivider style="margin: 8px 0">
-          兑换留言
-        </NDivider>
+        <NDivider style="margin: 8px 0"> 兑换留言 </NDivider>
         <NText depth="3">
           {{ currentHistory.extra.remark }}
         </NText>

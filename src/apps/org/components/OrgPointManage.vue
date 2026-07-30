@@ -1,10 +1,36 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NEmpty, NSelect, NGrid, NGridItem, NIcon, NList, NListItem, NSkeleton, NFlex, NStatistic, NTag, useMessage } from 'naive-ui'
-import { CashOutline, CubeOutline, GiftOutline, PeopleOutline, RefreshOutline, StorefrontOutline, TimeOutline } from '@vicons/ionicons5'
+import {
+  CashOutline,
+  CubeOutline,
+  GiftOutline,
+  PeopleOutline,
+  RefreshOutline,
+  StorefrontOutline,
+  TimeOutline,
+} from '@vicons/ionicons5'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NEmpty,
+  NSelect,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NList,
+  NListItem,
+  NSkeleton,
+  NFlex,
+  NStatistic,
+  NTag,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
+
 import { QueryGetAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
+import { ORG_API_URL } from '@/shared/config'
+
 import { useOrgContext } from '../composables/useOrgContext'
 import { injectOrgStreamers } from '../composables/useOrgStreamers'
 import OrgAuditList from './OrgAuditList.vue'
@@ -15,8 +41,10 @@ const message = useMessage()
 
 const isLoading = ref(true)
 const pointStats = ref<Record<string, number> | null>(null)
-const pointGoods = ref<{ id: number, name: string, description?: string, price: number, stock: number }[]>([])
-const auditLogs = ref<{ id: number, action: string, detail: string, createdAt: number, userId: number, userName?: string }[]>([])
+const pointGoods = ref<{ id: number; name: string; description?: string; price: number; stock: number }[]>([])
+const auditLogs = ref<
+  { id: number; action: string; detail: string; createdAt: number; userId: number; userName?: string }[]
+>([])
 const selectedStreamerId = ref<number | null>(null)
 
 const statItems = computed(() => {
@@ -43,9 +71,18 @@ async function loadData() {
   isLoading.value = true
   const streamerParam = selectedStreamerId.value ? { streamerId: selectedStreamerId.value } : undefined
   try {
-    pointStats.value = unwrapOk(await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/stats`, streamerParam), '加载积分统计失败')
-    pointGoods.value = unwrapOk(await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/goods`, streamerParam), '加载积分商品失败')
-    auditLogs.value = unwrapOk(await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/audit`, { take: 100 }), '加载操作审计失败')
+    pointStats.value = unwrapOk(
+      await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/stats`, streamerParam),
+      '加载积分统计失败',
+    )
+    pointGoods.value = unwrapOk(
+      await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/goods`, streamerParam),
+      '加载积分商品失败',
+    )
+    auditLogs.value = unwrapOk(
+      await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/audit`, { take: 100 }),
+      '加载操作审计失败',
+    )
   } catch (err) {
     message.error(err instanceof Error ? err.message : '加载失败')
   } finally {
@@ -59,8 +96,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NFlex vertical :size="16">
-    <NCard title="主播" size="small">
+  <NFlex
+    vertical
+    :size="16"
+  >
+    <NCard
+      title="主播"
+      size="small"
+    >
       <NSelect
         v-model:value="selectedStreamerId"
         :options="streamerOptions"
@@ -70,10 +113,26 @@ onMounted(async () => {
       />
     </NCard>
 
-    <NGrid :x-gap="12" :y-gap="12" :cols="4" item-responsive responsive="screen">
-      <NGridItem v-for="item in statItems" :key="item.label" span="4 m:2 l:1">
-        <NCard size="small" :bordered="false">
-          <NStatistic :label="item.label" :value="item.value">
+    <NGrid
+      :x-gap="12"
+      :y-gap="12"
+      :cols="4"
+      item-responsive
+      responsive="screen"
+    >
+      <NGridItem
+        v-for="item in statItems"
+        :key="item.label"
+        span="4 m:2 l:1"
+      >
+        <NCard
+          size="small"
+          :bordered="false"
+        >
+          <NStatistic
+            :label="item.label"
+            :value="item.value"
+          >
             <template #prefix>
               <NIcon :component="item.icon" />
             </template>
@@ -82,10 +141,27 @@ onMounted(async () => {
       </NGridItem>
     </NGrid>
 
-    <NGrid :x-gap="12" :y-gap="12" :cols="3" item-responsive responsive="screen">
-      <NGridItem v-for="item in orderItems" :key="item.label" span="3 m:1">
-        <NCard size="small" :bordered="false">
-          <NStatistic :label="item.label" :value="item.value" :class="item.cls">
+    <NGrid
+      :x-gap="12"
+      :y-gap="12"
+      :cols="3"
+      item-responsive
+      responsive="screen"
+    >
+      <NGridItem
+        v-for="item in orderItems"
+        :key="item.label"
+        span="3 m:1"
+      >
+        <NCard
+          size="small"
+          :bordered="false"
+        >
+          <NStatistic
+            :label="item.label"
+            :value="item.value"
+            :class="item.cls"
+          >
             <template #prefix>
               <NIcon :component="item.icon" />
             </template>
@@ -95,7 +171,10 @@ onMounted(async () => {
     </NGrid>
 
     <NFlex>
-      <NButton :loading="isLoading" @click="loadData">
+      <NButton
+        :loading="isLoading"
+        @click="loadData"
+      >
         <template #icon>
           <NIcon :component="RefreshOutline" />
         </template>
@@ -103,26 +182,49 @@ onMounted(async () => {
       </NButton>
     </NFlex>
 
-    <NSkeleton v-if="isLoading" text :repeat="4" />
-    <NEmpty v-else-if="!pointStats && !pointGoods.length" description="暂无积分数据" />
+    <NSkeleton
+      v-if="isLoading"
+      text
+      :repeat="4"
+    />
+    <NEmpty
+      v-else-if="!pointStats && !pointGoods.length"
+      description="暂无积分数据"
+    />
 
-    <NCard v-if="pointGoods.length > 0" title="积分商品" size="small">
+    <NCard
+      v-if="pointGoods.length > 0"
+      title="积分商品"
+      size="small"
+    >
       <NList>
-        <NListItem v-for="goods in pointGoods.slice(0, 5)" :key="goods.id">
-          <NFlex justify="space-between" align="center">
+        <NListItem
+          v-for="goods in pointGoods.slice(0, 5)"
+          :key="goods.id"
+        >
+          <NFlex
+            justify="space-between"
+            align="center"
+          >
             <div>
-              <div style="font-weight: 600;">
+              <div style="font-weight: 600">
                 {{ goods.name }}
               </div>
-              <div style="font-size: 12px; opacity: 0.7;">
+              <div style="font-size: 12px; opacity: 0.7">
                 {{ goods.description }}
               </div>
             </div>
             <NFlex :size="6">
-              <NTag type="info" size="small">
+              <NTag
+                type="info"
+                size="small"
+              >
                 {{ goods.price }} 积分
               </NTag>
-              <NTag :type="goods.stock > 0 ? 'success' : 'error'" size="small">
+              <NTag
+                :type="goods.stock > 0 ? 'success' : 'error'"
+                size="small"
+              >
                 {{ goods.stock > 0 ? `库存: ${goods.stock}` : '缺货' }}
               </NTag>
             </NFlex>
@@ -131,14 +233,29 @@ onMounted(async () => {
       </NList>
     </NCard>
 
-    <NCard title="积分规则" size="small">
-      <NAlert v-if="!selectedStreamerId" type="warning" :bordered="false">
+    <NCard
+      title="积分规则"
+      size="small"
+    >
+      <NAlert
+        v-if="!selectedStreamerId"
+        type="warning"
+        :bordered="false"
+      >
         请选择一个主播后再修改积分规则
       </NAlert>
-      <PointSettings v-else :org-id="orgId" :streamer-id="selectedStreamerId" />
+      <PointSettings
+        v-else
+        :org-id="orgId"
+        :streamer-id="selectedStreamerId"
+      />
     </NCard>
 
-    <NCard v-if="auditLogs.length" title="操作审计" size="small">
+    <NCard
+      v-if="auditLogs.length"
+      title="操作审计"
+      size="small"
+    >
       <OrgAuditList :logs="auditLogs" />
     </NCard>
   </NFlex>

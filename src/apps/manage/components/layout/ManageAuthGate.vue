@@ -1,10 +1,22 @@
 <script setup lang="ts">
 import { BrowsersOutline } from '@vicons/ionicons5'
 import {
-  NAlert, NButton, NCard, NDivider, NFlex, NIcon, NLayoutContent, NSpin, NText, useMessage, useThemeVars } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NDivider,
+  NFlex,
+  NIcon,
+  NLayoutContent,
+  NSpin,
+  NText,
+  useMessage,
+  useThemeVars,
+} from 'naive-ui'
 import { ref, watch } from 'vue'
-import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+
 import { isLoadingAccount } from '@/api/account'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { selectedAPIKey } from '@/shared/config'
 
 const message = useMessage()
@@ -12,23 +24,27 @@ const themeVars = useThemeVars()
 const showAPISwitchDialog = ref(false)
 let loadingTimer: number | null = null
 
-watch(isLoadingAccount, (loading) => {
-  if (loading) {
-    showAPISwitchDialog.value = false
-    loadingTimer = window.setTimeout(() => {
-      if (isLoadingAccount.value && selectedAPIKey.value === 'main') {
-        showAPISwitchDialog.value = true
-      }
-    }, 3000)
-    return
-  }
+watch(
+  isLoadingAccount,
+  (loading) => {
+    if (loading) {
+      showAPISwitchDialog.value = false
+      loadingTimer = window.setTimeout(() => {
+        if (isLoadingAccount.value && selectedAPIKey.value === 'main') {
+          showAPISwitchDialog.value = true
+        }
+      }, 3000)
+      return
+    }
 
-  if (loadingTimer) {
-    clearTimeout(loadingTimer)
-    loadingTimer = null
-  }
-  showAPISwitchDialog.value = false
-}, { immediate: true })
+    if (loadingTimer) {
+      clearTimeout(loadingTimer)
+      loadingTimer = null
+    }
+    showAPISwitchDialog.value = false
+  },
+  { immediate: true },
+)
 
 function switchToBackupAPI() {
   selectedAPIKey.value = 'failover'
@@ -53,32 +69,55 @@ function switchToBackupAPI() {
     }"
   >
     <template v-if="!isLoadingAccount">
-      <NCard class="login-card" :bordered="false">
+      <NCard
+        class="login-card"
+        :bordered="false"
+      >
         <template #header>
-          <NFlex justify="center" align="center" style="padding: 12px 0;">
+          <NFlex
+            justify="center"
+            align="center"
+            style="padding: 12px 0"
+          >
             <NText
               strong
-              style="font-size: 1.8rem;"
+              style="font-size: 1.8rem"
             >
               VTSURU CENTER
             </NText>
           </NFlex>
         </template>
 
-        <NFlex vertical size="large" style="padding: 8px 0;">
-          <NFlex justify="center" align="center">
-            <NText style="font-size: 16px; text-align: center;">
-              请登录或注册后使用
-            </NText>
+        <NFlex
+          vertical
+          size="large"
+          style="padding: 8px 0"
+        >
+          <NFlex
+            justify="center"
+            align="center"
+          >
+            <NText style="font-size: 16px; text-align: center"> 请登录或注册后使用 </NText>
           </NFlex>
 
           <NAlert type="info">
-            <NFlex vertical align="center" size="small">
-              <div style="text-align: center;">
+            <NFlex
+              vertical
+              align="center"
+              size="small"
+            >
+              <div style="text-align: center">
                 如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录, 直接访问认证完成后给出的链接即可
               </div>
-              <NFlex justify="center" style="width: 100%; margin-top: 8px;">
-                <NButton type="primary" size="small" @click="$router.push({ name: 'bili-user' })">
+              <NFlex
+                justify="center"
+                style="width: 100%; margin-top: 8px"
+              >
+                <NButton
+                  type="primary"
+                  size="small"
+                  @click="$router.push({ name: 'bili-user' })"
+                >
                   <template #icon>
                     <NIcon :component="BrowsersOutline" />
                   </template>
@@ -88,12 +127,17 @@ function switchToBackupAPI() {
             </NFlex>
           </NAlert>
 
-          <NDivider style="margin: 8px 0;" />
+          <NDivider style="margin: 8px 0" />
 
           <RegisterAndLogin />
 
           <NFlex justify="center">
-            <NButton secondary tag="a" href="/" style="min-width: 100px;">
+            <NButton
+              secondary
+              tag="a"
+              href="/"
+              style="min-width: 100px"
+            >
               回到主页
             </NButton>
           </NFlex>
@@ -102,24 +146,45 @@ function switchToBackupAPI() {
     </template>
 
     <template v-else>
-      <NCard class="loading-card" :bordered="false">
-        <NFlex vertical justify="center" align="center" style="padding: 20px 10px;">
-          <NSpin :loading="isLoadingAccount" size="large">
+      <NCard
+        class="loading-card"
+        :bordered="false"
+      >
+        <NFlex
+          vertical
+          justify="center"
+          align="center"
+          style="padding: 20px 10px"
+        >
+          <NSpin
+            :loading="isLoadingAccount"
+            size="large"
+          >
             <NText>正在请求账户数据...</NText>
           </NSpin>
           <NAlert
             v-if="showAPISwitchDialog"
             type="warning"
-            style="margin-top: 20px; max-width: 400px;"
+            style="margin-top: 20px; max-width: 400px"
             title="加载时间较长"
           >
             <NFlex vertical>
               <NText>当前API响应较慢，是否切换到备用API？</NText>
-              <NFlex justify="end" :size="8">
-                <NButton size="small" @click="showAPISwitchDialog = false">
+              <NFlex
+                justify="end"
+                :size="8"
+              >
+                <NButton
+                  size="small"
+                  @click="showAPISwitchDialog = false"
+                >
                   继续等待
                 </NButton>
-                <NButton type="primary" size="small" @click="switchToBackupAPI">
+                <NButton
+                  type="primary"
+                  size="small"
+                  @click="switchToBackupAPI"
+                >
                   切换到备用API
                 </NButton>
               </NFlex>

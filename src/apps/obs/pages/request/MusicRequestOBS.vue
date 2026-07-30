@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+
+import { useMusicRequestObsView } from '@/apps/obs/components/request/useMusicRequestObsView'
 import ObsClassicPanel from '@/apps/obs/components/shared/ObsClassicPanel.vue'
 import ObsFreshPanel from '@/apps/obs/components/shared/ObsFreshPanel.vue'
 import ObsMinimalPanel from '@/apps/obs/components/shared/ObsMinimalPanel.vue'
-import { useMusicRequestObsView } from '@/apps/obs/components/request/useMusicRequestObsView'
 import { useOBSNotification } from '@/store/useOBSNotification'
 
 const props = defineProps<{
@@ -45,14 +46,7 @@ const panelComponent = computed(() => {
   }
 })
 
-const {
-  title,
-  countText,
-  current,
-  items,
-  footerTags,
-  update,
-} = useMusicRequestObsView(currentId.value)
+const { title, countText, current, items, footerTags, update } = useMusicRequestObsView(currentId.value)
 
 const obsNotification = useOBSNotification()
 

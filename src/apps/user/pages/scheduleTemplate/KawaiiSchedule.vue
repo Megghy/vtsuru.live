@@ -1,15 +1,16 @@
-<script lang="ts">
-</script>
+<script lang="ts"></script>
 
 <script setup lang="ts">
+import { getISOWeek, getISOWeekYear } from 'date-fns'
 import type { WritableComputedRef } from 'vue'
+import { computed, ref, watch } from 'vue'
+
 import type { ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes' // Use base type
 import type { ExtractConfigData, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
-import { getISOWeek, getISOWeekYear } from 'date-fns'
-import { computed, ref, watch } from 'vue'
-import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
+
+import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 
 const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfigType>>()
 const Config = defineTemplateConfig([
@@ -109,9 +110,7 @@ const currentWeekData = computed<ScheduleWeekInfo | null>(() => {
   const findPredicateSelected = (item: ScheduleWeekInfo) => `${item.year}-${item.week}` === _selectedDate.value
   const findPredicateCurrent = (item: ScheduleWeekInfo) => isTodayInWeek(item.year, item.week)
 
-  let target = _selectedDate.value
-    ? props.data.find(findPredicateSelected)
-    : props.data.find(findPredicateCurrent)
+  let target = _selectedDate.value ? props.data.find(findPredicateSelected) : props.data.find(findPredicateCurrent)
 
   // Fallback if target not found (e.g., selected date no longer exists)
   if (!target) {
@@ -121,29 +120,42 @@ const currentWeekData = computed<ScheduleWeekInfo | null>(() => {
 })
 
 // Watcher to initialize or update selectedDate based on available data
-watch([() => props.data, currentWeekData], ([newDataArray, newCurrentWeek], [oldDataArray, oldCurrentWeek]) => {
-  const currentSelection = _selectedDate.value
-  const dataAvailable = newDataArray && newDataArray.length > 0
+watch(
+  [() => props.data, currentWeekData],
+  ([newDataArray, newCurrentWeek], [oldDataArray, oldCurrentWeek]) => {
+    const currentSelection = _selectedDate.value
+    const dataAvailable = newDataArray && newDataArray.length > 0
 
-  if (!currentSelection && newCurrentWeek) {
-    // Initialize selection if empty and current week data is available
-    _selectedDate.value = `${newCurrentWeek.year}-${newCurrentWeek.week}`
-  } else if (currentSelection && dataAvailable) {
-    // Check if the currently selected date still exists in the new data array
-    const selectionExists = newDataArray.some((d: ScheduleWeekInfo) => `${d.year}-${d.week}` === currentSelection)
-    if (!selectionExists) {
-      // If selection no longer exists, fallback to current week or first available
-      const fallbackWeek = newDataArray.find((d: ScheduleWeekInfo) => isTodayInWeek(d.year, d.week)) || newDataArray[0]
-      _selectedDate.value = fallbackWeek ? `${fallbackWeek.year}-${fallbackWeek.week}` : undefined
+    if (!currentSelection && newCurrentWeek) {
+      // Initialize selection if empty and current week data is available
+      _selectedDate.value = `${newCurrentWeek.year}-${newCurrentWeek.week}`
+    } else if (currentSelection && dataAvailable) {
+      // Check if the currently selected date still exists in the new data array
+      const selectionExists = newDataArray.some((d: ScheduleWeekInfo) => `${d.year}-${d.week}` === currentSelection)
+      if (!selectionExists) {
+        // If selection no longer exists, fallback to current week or first available
+        const fallbackWeek =
+          newDataArray.find((d: ScheduleWeekInfo) => isTodayInWeek(d.year, d.week)) || newDataArray[0]
+        _selectedDate.value = fallbackWeek ? `${fallbackWeek.year}-${fallbackWeek.week}` : undefined
+      }
+    } else if (!dataAvailable) {
+      // Clear selection if no data is available
+      _selectedDate.value = undefined
     }
-  } else if (!dataAvailable) {
-    // Clear selection if no data is available
-    _selectedDate.value = undefined
-  }
-}, { immediate: true })
+  },
+  { immediate: true },
+)
 
 // Day mapping and order
-const dayMap: Record<string, string> = { Mon: '周一', Tue: '周二', Wed: '周三', Thu: '周四', Fri: '周五', Sat: '周六', Sun: '周日' }
+const dayMap: Record<string, string> = {
+  Mon: '周一',
+  Tue: '周二',
+  Wed: '周三',
+  Thu: '周四',
+  Fri: '周五',
+  Sat: '周六',
+  Sun: '周日',
+}
 const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 // Formatted schedule data for display
@@ -153,9 +165,10 @@ const formattedSchedule = computed(() => {
   return daysOfWeek.map((dayKey, index) => {
     const dayList = currentWeekData.value!.days[index]
     // 如果当天有多个行程，取第一个展示；如果没有则显示默认
-    const firstItem = Array.isArray(dayList) && dayList.length > 0
-      ? dayList[0]
-      : { time: '', tag: '', title: '', tagColor: '', id: null }
+    const firstItem =
+      Array.isArray(dayList) && dayList.length > 0
+        ? dayList[0]
+        : { time: '', tag: '', title: '', tagColor: '', id: null }
 
     return {
       key: dayKey,
@@ -194,7 +207,10 @@ defineExpose({ Config, DefaultConfig })
       '--day-content-text-color': rgbaToString(effectiveConfig.dayContentTextColor),
       '--time-label-bg-color': rgbaToString(effectiveConfig.timeLabelBgColor),
       '--time-label-text-color': rgbaToString(effectiveConfig.timeLabelTextColor),
-      'backgroundImage': effectiveConfig.backgroundFile && effectiveConfig.backgroundFile.length > 0 ? `url(${effectiveConfig.backgroundFile[0].path})` : 'none',
+      backgroundImage:
+        effectiveConfig.backgroundFile && effectiveConfig.backgroundFile.length > 0
+          ? `url(${effectiveConfig.backgroundFile[0].path})`
+          : 'none',
     }"
   >
     <!-- 装饰图片渲染 -->
@@ -218,8 +234,8 @@ defineExpose({ Config, DefaultConfig })
       <img
         :src="img.path"
         alt="decoration"
-        style="display: block; width: 100%; height: auto;"
-      >
+        style="display: block; width: 100%; height: auto"
+      />
     </div>
 
     <!-- 日程表主体 -->

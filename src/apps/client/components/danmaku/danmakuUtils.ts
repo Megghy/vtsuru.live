@@ -1,10 +1,12 @@
 import type { ComputedRef, Ref } from 'vue'
-import type { DanmakuWindowSettings } from '../../store/useDanmakuWindow'
-import type { EventModel } from '@/api/api-models'
 import { computed } from 'vue'
+
+import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { GetGuardColor } from '@/shared/utils'
 import { formatDanmakuPrice, getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
+
+import type { DanmakuWindowSettings } from '../../store/useDanmakuWindow'
 
 // 粉丝勋章等级对应的颜色
 export const MEDAL_LEVEL_COLORS: { [key: number]: string } = {
@@ -62,14 +64,15 @@ export function getMedalColor(level: number): string {
 }
 
 export interface BaseDanmakuItemProps {
-  item: EventModel & { randomId: string, isNew?: boolean, disappearAt?: number }
+  item: EventModel & { randomId: string; isNew?: boolean; disappearAt?: number }
   setting: DanmakuWindowSettings
 }
 
 export function useDanmakuUtils(
   props: BaseDanmakuItemProps,
-  emojiData: Ref<{ updateAt?: number, data: { inline: { [key: string]: string }, plain: { [key: string]: string } } }>
-    | { data: { inline: { [key: string]: string }, plain: { [key: string]: string } } },
+  emojiData:
+    | Ref<{ updateAt?: number; data: { inline: { [key: string]: string }; plain: { [key: string]: string } } }>
+    | { data: { inline: { [key: string]: string }; plain: { [key: string]: string } } },
 ) {
   // 计算SC弹幕的颜色类
   const scColorClass = computed(() => {
@@ -89,13 +92,20 @@ export function useDanmakuUtils(
   // 根据类型计算样式
   const typeClass = computed(() => {
     switch (props.item.type) {
-      case EventDataTypes.Message: return 'message-item'
-      case EventDataTypes.Gift: return 'gift-item'
-      case EventDataTypes.SC: return `sc-item ${scColorClass.value}`
-      case EventDataTypes.Guard: return 'guard-item'
-      case EventDataTypes.Enter: return 'enter-item'
-      case EventDataTypes.Like: return 'like-item'
-      default: return ''
+      case EventDataTypes.Message:
+        return 'message-item'
+      case EventDataTypes.Gift:
+        return 'gift-item'
+      case EventDataTypes.SC:
+        return `sc-item ${scColorClass.value}`
+      case EventDataTypes.Guard:
+        return 'guard-item'
+      case EventDataTypes.Enter:
+        return 'enter-item'
+      case EventDataTypes.Like:
+        return 'like-item'
+      default:
+        return ''
     }
   })
 
@@ -114,13 +124,13 @@ export function useDanmakuUtils(
   const showAvatar = computed(() => props.setting.showAvatar)
 
   // 解析包含内联表情的消息
-  const parsedMessage = computed<{ type: 'text' | 'emoji', content?: string, url?: string, name?: string }[]>(() => {
+  const parsedMessage = computed<{ type: 'text' | 'emoji'; content?: string; url?: string; name?: string }[]>(() => {
     // 仅处理非纯表情的普通消息
     if (props.item.type !== EventDataTypes.Message || props.item.emoji || !props.item.msg) {
       return []
     }
 
-    const segments: { type: 'text' | 'emoji', content?: string, url?: string, name?: string }[] = []
+    const segments: { type: 'text' | 'emoji'; content?: string; url?: string; name?: string }[] = []
     let lastIndex = 0
     const regex = /\[([^\]]+)\]/g // 匹配 [表情名]
     let match
@@ -142,10 +152,11 @@ export function useDanmakuUtils(
         const emojiFullName = match[0] // 完整匹配，例如 "[哈哈]"
         const emojiName = match[1] // 去除方括号后的名称，例如 "哈哈"
         // 兼容键名为带/不带方括号的两种情况
-        const emojiInfo = (availableEmojis.inline?.[emojiFullName]
-          ?? availableEmojis.inline?.[emojiName]
-          ?? availableEmojis.plain?.[emojiFullName]
-          ?? availableEmojis.plain?.[emojiName])
+        const emojiInfo =
+          availableEmojis.inline?.[emojiFullName] ??
+          availableEmojis.inline?.[emojiName] ??
+          availableEmojis.plain?.[emojiFullName] ??
+          availableEmojis.plain?.[emojiName]
 
         if (emojiInfo) {
           // 找到了表情
@@ -179,13 +190,20 @@ export function useDanmakuUtils(
   // 获取不同类型消息的显示标签
   const typeLabel = computed(() => {
     switch (props.item.type) {
-      case EventDataTypes.Message: return '' // 普通消息不需要标签
-      case EventDataTypes.Gift: return '【礼物】'
-      case EventDataTypes.SC: return '【SC】'
-      case EventDataTypes.Guard: return '【舰长】'
-      case EventDataTypes.Enter: return '【进场】'
-      case EventDataTypes.Like: return '【点赞】'
-      default: return ''
+      case EventDataTypes.Message:
+        return '' // 普通消息不需要标签
+      case EventDataTypes.Gift:
+        return '【礼物】'
+      case EventDataTypes.SC:
+        return '【SC】'
+      case EventDataTypes.Guard:
+        return '【舰长】'
+      case EventDataTypes.Enter:
+        return '【进场】'
+      case EventDataTypes.Like:
+        return '【点赞】'
+      default:
+        return ''
     }
   })
 

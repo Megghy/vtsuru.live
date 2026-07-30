@@ -1,7 +1,9 @@
-import type { AutoActionItem, RuntimeState } from '../types'
-import type { EventModel } from '@/api/api-models'
-import { ref } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
+
+import type { EventModel } from '@/api/api-models'
+
+import type { AutoActionItem, RuntimeState } from '../types'
 
 vi.mock('@/apps/client/store/useBiliCookie', () => ({
   useBiliCookie: () => ({ isCookieValid: true }),
@@ -87,7 +89,9 @@ describe('useAutoReply onDanmaku', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2030, 0, 1, 12))
   })
-  afterEach(() => { vi.useRealTimers() })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
   it('triggers when keyword matches (Contains)', async () => {
     const reply = useAutoReply(isLive, roomId, sendDanmaku)
@@ -167,11 +171,7 @@ describe('useAutoReply onDanmaku', () => {
         keywordMatchType: KeywordMatchType.Contains,
       },
     })
-    reply.onDanmaku(
-      makeEvent({ msg: 'x', fans_medal_wearing_status: false }),
-      [action],
-      makeRuntimeState(),
-    )
+    reply.onDanmaku(makeEvent({ msg: 'x', fans_medal_wearing_status: false }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
     expect(sentMessages).toEqual([])
   })
@@ -231,7 +231,10 @@ describe('useAutoReply onDanmaku', () => {
 
 describe('useFollowThank', () => {
   let sent: string[]
-  const sendDanmaku = vi.fn(async (_r: number, m: string) => { sent.push(m); return true })
+  const sendDanmaku = vi.fn(async (_r: number, m: string) => {
+    sent.push(m)
+    return true
+  })
 
   beforeEach(() => {
     sent = []
@@ -239,7 +242,9 @@ describe('useFollowThank', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2030, 0, 2, 12))
   })
-  afterEach(() => { vi.useRealTimers() })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
   it('replies on follow event with user variable', async () => {
     const mod = useFollowThank(isLive, roomId, isTianXuan, sendDanmaku)
@@ -255,7 +260,10 @@ describe('useFollowThank', () => {
 
 describe('useSuperChatThank', () => {
   let sent: string[]
-  const sendDanmaku = vi.fn(async (_r: number, m: string) => { sent.push(m); return true })
+  const sendDanmaku = vi.fn(async (_r: number, m: string) => {
+    sent.push(m)
+    return true
+  })
 
   beforeEach(() => {
     sent = []
@@ -263,7 +271,9 @@ describe('useSuperChatThank', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2030, 0, 3, 12))
   })
-  afterEach(() => { vi.useRealTimers() })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
   it('replies when SC price meets minimum', async () => {
     const mod = useSuperChatThank(isLive, roomId, isTianXuan, sendDanmaku)
@@ -272,11 +282,7 @@ describe('useSuperChatThank', () => {
       template: '感谢{{user.name}}的{{sc.price}}元SC',
       triggerConfig: { scFilterMode: 'price', scMinPrice: 30 } as any,
     })
-    mod.processSuperChat(
-      makeEvent({ uname: 'Carol', price: 50, msg: 'hello' }),
-      [action],
-      makeRuntimeState(),
-    )
+    mod.processSuperChat(makeEvent({ uname: 'Carol', price: 50, msg: 'hello' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
     expect(sent).toEqual(['感谢Carol的50元SC'])
   })
@@ -288,11 +294,7 @@ describe('useSuperChatThank', () => {
       template: 'thanks',
       triggerConfig: { scFilterMode: 'price', scMinPrice: 100 } as any,
     })
-    mod.processSuperChat(
-      makeEvent({ price: 30, msg: 'hi' }),
-      [action],
-      makeRuntimeState(),
-    )
+    mod.processSuperChat(makeEvent({ price: 30, msg: 'hi' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
     expect(sent).toEqual([])
   })
@@ -300,7 +302,10 @@ describe('useSuperChatThank', () => {
 
 describe('useEntryWelcome', () => {
   let sent: string[]
-  const sendDanmaku = vi.fn(async (_r: number, m: string) => { sent.push(m); return true })
+  const sendDanmaku = vi.fn(async (_r: number, m: string) => {
+    sent.push(m)
+    return true
+  })
 
   beforeEach(() => {
     sent = []
@@ -308,7 +313,9 @@ describe('useEntryWelcome', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2030, 0, 4, 12))
   })
-  afterEach(() => { vi.useRealTimers() })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
   it('welcomes entering user', async () => {
     const mod = useEntryWelcome(isLive, roomId, isTianXuan, sendDanmaku)
@@ -324,7 +331,10 @@ describe('useEntryWelcome', () => {
 
 describe('useGiftThank', () => {
   let sent: string[]
-  const sendDanmaku = vi.fn(async (_r: number, m: string) => { sent.push(m); return true })
+  const sendDanmaku = vi.fn(async (_r: number, m: string) => {
+    sent.push(m)
+    return true
+  })
 
   beforeEach(() => {
     sent = []
@@ -332,7 +342,9 @@ describe('useGiftThank', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2030, 0, 5, 12))
   })
-  afterEach(() => { vi.useRealTimers() })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
   it('thanks for gift with summary template', async () => {
     const mod = useGiftThank(isLive, roomId, isTianXuan, sendDanmaku)
@@ -340,11 +352,7 @@ describe('useGiftThank', () => {
       triggerType: TriggerType.GIFT,
       template: '感谢{{user.name}}的{{gift.summary}}',
     })
-    mod.processGift(
-      makeEvent({ uname: 'Eve', msg: '小心心', num: 3, price: 0 }),
-      [action],
-      makeRuntimeState(),
-    )
+    mod.processGift(makeEvent({ uname: 'Eve', msg: '小心心', num: 3, price: 0 }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
     expect(sent).toEqual(['感谢Eve的3个小心心'])
   })
@@ -356,11 +364,7 @@ describe('useGiftThank', () => {
       template: 'thanks',
       triggerConfig: { minValue: 50 },
     })
-    mod.processGift(
-      makeEvent({ msg: '小心心', num: 1, price: 10 }),
-      [action],
-      makeRuntimeState(),
-    )
+    mod.processGift(makeEvent({ msg: '小心心', num: 1, price: 10 }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
     expect(sent).toEqual([])
   })
@@ -373,19 +377,11 @@ describe('useGiftThank', () => {
       template: 'allowed',
       triggerConfig: { filterMode: 'whitelist', filterGiftNames: ['辣条'] } as any,
     })
-    mod.processGift(
-      makeEvent({ msg: '小心心' }),
-      [allowedAction],
-      makeRuntimeState(),
-    )
+    mod.processGift(makeEvent({ msg: '小心心' }), [allowedAction], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
     expect(sent).toEqual([])
 
-    mod.processGift(
-      makeEvent({ msg: '辣条' }),
-      [allowedAction],
-      makeRuntimeState(),
-    )
+    mod.processGift(makeEvent({ msg: '辣条' }), [allowedAction], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
     expect(sent).toEqual(['allowed'])
   })
@@ -397,11 +393,7 @@ describe('useGiftThank', () => {
       template: 'thanks',
       triggerConfig: { filterMode: 'blacklist', filterGiftNames: ['小心心'] } as any,
     })
-    mod.processGift(
-      makeEvent({ msg: '小心心' }),
-      [action],
-      makeRuntimeState(),
-    )
+    mod.processGift(makeEvent({ msg: '小心心' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
     expect(sent).toEqual([])
   })

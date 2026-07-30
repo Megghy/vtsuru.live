@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+
+import { useLiveRequestObsView } from '@/apps/obs/components/request/useLiveRequestObsView'
 import ObsClassicPanel from '@/apps/obs/components/shared/ObsClassicPanel.vue'
 import ObsFreshPanel from '@/apps/obs/components/shared/ObsFreshPanel.vue'
 import ObsMinimalPanel from '@/apps/obs/components/shared/ObsMinimalPanel.vue'
-import { useLiveRequestObsView } from '@/apps/obs/components/request/useLiveRequestObsView'
 import { useOBSNotification } from '@/store/useOBSNotification'
 
 const props = defineProps<{
@@ -46,15 +47,7 @@ const panelComponent = computed(() => {
   }
 })
 
-const {
-  title,
-  countText,
-  current,
-  items,
-  footerTags,
-  update,
-  initRTC,
-} = useLiveRequestObsView(currentId.value)
+const { title, countText, current, items, footerTags, update, initRTC } = useLiveRequestObsView(currentId.value)
 
 const obsNotification = useOBSNotification()
 

@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import type { ComponentPublicInstance } from 'vue'
-import type { BodyOptionConfig } from '@/apps/obs-store/data/gamepadConfigs'
-import type { GamepadConfig, GamepadType } from '@/types/gamepad'
 import { NCard, NText } from 'naive-ui'
+import type { ComponentPublicInstance } from 'vue'
 import { computed, nextTick, ref, shallowRef, watch } from 'vue'
+
+import type { BodyOptionConfig } from '@/apps/obs-store/data/gamepadConfigs'
 import { controllerBodies, controllerStructures, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
-import { useGamepadStore } from '@/store/useGamepadStore'
-import { useSvgGamepadRenderer } from '@/composables/useSvgGamepadRenderer'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
+import { useSvgGamepadRenderer } from '@/composables/useSvgGamepadRenderer'
+import { useGamepadStore } from '@/store/useGamepadStore'
+import type { GamepadConfig, GamepadType } from '@/types/gamepad'
+
 import GamepadButton from './GamepadButton.vue'
 import GamepadStick from './GamepadStick.vue'
 
@@ -37,17 +39,24 @@ const props = withDefaults(defineProps<Props>(), {
 const queryType = useRouteQueryParam<GamepadType>('type', 'xbox', { transform: String as (v: any) => GamepadType })
 const queryBodyId = useRouteQueryParam<string>('bodyId', '')
 const queryOverlay = useRouteQueryParam('overlay', 'true')
-const queryPressedColor = useRouteQueryParam<string | null>('pressedColor', null, { transform: v => v === 'null' ? null : String(v) })
+const queryPressedColor = useRouteQueryParam<string | null>('pressedColor', null, {
+  transform: (v) => (v === 'null' ? null : String(v)),
+})
 const queryViewBox = useRouteQueryParam<string>('viewBox', '')
-const querySensitivity = useRouteQueryParam<number>('stickSensitivity', 5, { transform: v => {
-  const n = Number(v); return Number.isNaN(n) ? 5 : n
-} })
+const querySensitivity = useRouteQueryParam<number>('stickSensitivity', 5, {
+  transform: (v) => {
+    const n = Number(v)
+    return Number.isNaN(n) ? 5 : n
+  },
+})
 
 // props 优先，否则用 query
 const selectedType = computed(() => props.type ?? queryType.value)
 const selectedBodyId = computed(() => props.bodyId ?? queryBodyId.value)
 const useOverlayButtons = computed(() => props.overlay ?? queryOverlay.value === 'true')
-const customPressedColor = computed(() => props.pressedColor !== undefined ? props.pressedColor : queryPressedColor.value)
+const customPressedColor = computed(() =>
+  props.pressedColor !== undefined ? props.pressedColor : queryPressedColor.value,
+)
 const customViewBox = computed(() => props.viewBox ?? queryViewBox.value)
 const stickSensitivityVal = computed(() => props.stickSensitivity ?? querySensitivity.value)
 
@@ -61,16 +70,20 @@ const bodySvgRef = ref<ComponentPublicInstance | null>(null)
 const bodySvgComponent = shallowRef<any>(null)
 
 const defaultViewBox = computed(() => {
-  const body = bodies.value.find(b => b.name === selectedBodyId.value)
+  const body = bodies.value.find((b) => b.name === selectedBodyId.value)
   return body?.defaultViewBox || config.value?.defaultViewBox || '0 0 1000 1000'
 })
 const effectiveViewBox = computed(() => customViewBox.value || defaultViewBox.value)
 
 // 加载 SVG body 组件
-watch(() => [selectedBodyId.value, selectedType.value], () => {
-  const body = bodies.value.find(b => b.name === selectedBodyId.value)
-  bodySvgComponent.value = body?.body || config.value?.bodySvg || null
-}, { immediate: true })
+watch(
+  () => [selectedBodyId.value, selectedType.value],
+  () => {
+    const body = bodies.value.find((b) => b.name === selectedBodyId.value)
+    bodySvgComponent.value = body?.body || config.value?.bodySvg || null
+  },
+  { immediate: true },
+)
 
 // SVG 渲染器
 const { analyzeSvg } = useSvgGamepadRenderer({
@@ -88,7 +101,10 @@ const gamepad = useGamepadStore()
 
 <template>
   <div :class="inlineMode ? 'gp-display-inline' : 'gp-display-fullscreen'">
-    <div v-if="config" class="gp-viewer">
+    <div
+      v-if="config"
+      class="gp-viewer"
+    >
       <div class="gp-svg-container">
         <component
           :is="bodySvgComponent"
@@ -98,12 +114,16 @@ const gamepad = useGamepadStore()
           :viewBox="effectiveViewBox"
           preserveAspectRatio="xMidYMid meet"
         />
-        <NText v-else>
-          无法加载手柄 SVG
-        </NText>
+        <NText v-else> 无法加载手柄 SVG </NText>
       </div>
-      <div v-if="useOverlayButtons" class="gp-overlay">
-        <template v-for="(comp, i) in config.components" :key="`${selectedType}-${i}`">
+      <div
+        v-if="useOverlayButtons"
+        class="gp-overlay"
+      >
+        <template
+          v-for="(comp, i) in config.components"
+          :key="`${selectedType}-${i}`"
+        >
           <GamepadButton
             v-if="comp.type === 'button'"
             :name="comp.name"
@@ -121,7 +141,10 @@ const gamepad = useGamepadStore()
         </template>
       </div>
     </div>
-    <NCard v-else class="gp-error">
+    <NCard
+      v-else
+      class="gp-error"
+    >
       无效的游戏手柄类型: {{ selectedType }}
     </NCard>
   </div>
@@ -176,6 +199,10 @@ const gamepad = useGamepadStore()
   justify-content: center;
   align-items: center;
 }
-.gp-overlay > * { pointer-events: all; }
-.gp-error { max-width: 400px; }
+.gp-overlay > * {
+  pointer-events: all;
+}
+.gp-error {
+  max-width: 400px;
+}
 </style>

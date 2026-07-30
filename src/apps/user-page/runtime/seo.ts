@@ -17,7 +17,13 @@ export function usePublicPageSeo(source: SeoSource) {
   const originalTitle = document.title
   const managed = new Map<string, RestorableElement>()
 
-  function setElement(selector: string, tag: 'meta' | 'link', attribute: string, value: string, attrs: Record<string, string>) {
+  function setElement(
+    selector: string,
+    tag: 'meta' | 'link',
+    attribute: string,
+    value: string,
+    attrs: Record<string, string>,
+  ) {
     let record = managed.get(selector)
     if (!record) {
       const existing = document.head.querySelector<HTMLElement>(selector)

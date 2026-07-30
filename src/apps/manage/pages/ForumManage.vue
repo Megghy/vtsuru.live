@@ -1,21 +1,41 @@
 <script setup lang="ts">
-import type {
-  DataTableColumns,
+import type { DataTableColumns } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NDataTable,
+  NDescriptions,
+  NDescriptionsItem,
+  NDivider,
+  NFlex,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NModal,
+  NSelect,
+  NSpin,
+  NTabPane,
+  NTabs,
+  NTag,
+  NTime,
+  useMessage,
 } from 'naive-ui'
+import { h, onMounted, ref } from 'vue'
+
+import { useAccount } from '@/api/account'
 import type { UserBasicInfo } from '@/api/api-models'
 import type { ForumModel, ForumUserModel } from '@/api/models/forum'
-import { NAlert, NButton, NCard, NCheckbox, NDataTable, NDescriptions, NDescriptionsItem, NDivider, NFlex, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NTabPane, NTabs, NTag, NTime, useMessage } from 'naive-ui';
-import { h, onMounted, ref } from 'vue'
-import { useAccount } from '@/api/account'
 import { ForumUserLevels } from '@/api/models/forum'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { useApiAction } from '@/apps/manage/composables/useApiAction'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import UserBasicInfoCard from '@/apps/manage/components/UserBasicInfoCard.vue'
-import { FORUM_API_URL } from '@/shared/config'
+import { useApiAction } from '@/apps/manage/composables/useApiAction'
 // @ts-ignore
 import Agreement from '@/content/agreements/EnableForumAgreement.md'
+import { FORUM_API_URL } from '@/shared/config'
 import { useForumStore } from '@/store/useForumStore'
-import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
 const useForum = useForumStore()
 const accountInfo = useAccount()
@@ -73,7 +93,10 @@ async function createForum() {
     message.warning('请输入名称')
     return
   }
-  const data = await run(() => QueryPostAPI<ForumModel>(`${FORUM_API_URL}create`, { name: create_Name.value }), { success: '创建成功', fail: '创建失败' })
+  const data = await run(() => QueryPostAPI<ForumModel>(`${FORUM_API_URL}create`, { name: create_Name.value }), {
+    success: '创建成功',
+    fail: '创建失败',
+  })
   if (data) currentForum.value = data
 }
 async function SwitchForum(owner: number) {
@@ -110,7 +133,7 @@ const applyingColumns: DataTableColumns<ForumUserModel> = [
           onClick: () =>
             useForum.ConfirmApply(currentForum.value.owner.id, row.id).then((success) => {
               if (success) message.success('操作成功')
-              currentForum.value.applying = currentForum.value.applying.filter(u => u.id != row.id)
+              currentForum.value.applying = currentForum.value.applying.filter((u) => u.id != row.id)
             }),
         },
         { default: () => '通过申请' },
@@ -197,7 +220,10 @@ const adminColumns: DataTableColumns<ForumUserModel> = [
 ]
 
 async function addAdmin(id: number) {
-  const ok = await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/add-admin`, { forum: currentForum.value.owner.id, id }), { success: '已设置为管理员' })
+  const ok = await run(
+    () => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/add-admin`, { forum: currentForum.value.owner.id, id }),
+    { success: '已设置为管理员' },
+  )
   if (ok) {
     refreshForumInfo()
     addAdminName.value = ''
@@ -205,19 +231,38 @@ async function addAdmin(id: number) {
   }
 }
 async function removeAdmin(id: number) {
-  if (await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/del-admin`, { forum: currentForum.value.owner.id, id }), { success: '已取消管理员权限' }))
+  if (
+    await run(
+      () => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/del-admin`, { forum: currentForum.value.owner.id, id }),
+      { success: '已取消管理员权限' },
+    )
+  )
     refreshForumInfo()
 }
 async function banUser(id: number) {
-  if (await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/ban`, { forum: currentForum.value.owner.id, id }), { success: '已封禁用户' }))
+  if (
+    await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/ban`, { forum: currentForum.value.owner.id, id }), {
+      success: '已封禁用户',
+    })
+  )
     refreshForumInfo()
 }
 async function unbanUser(id: number) {
-  if (await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/unban`, { forum: currentForum.value.owner.id, id }), { success: '已解禁' }))
+  if (
+    await run(
+      () => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/unban`, { forum: currentForum.value.owner.id, id }),
+      { success: '已解禁' },
+    )
+  )
     refreshForumInfo()
 }
 async function updateForumSettings() {
-  if (await run(() => QueryPostAPI(`${FORUM_API_URL}manage/update-setting`, currentForum.value.settings), { success: '修改成功', fail: '修改失败' }))
+  if (
+    await run(() => QueryPostAPI(`${FORUM_API_URL}manage/update-setting`, currentForum.value.settings), {
+      success: '修改成功',
+      fail: '修改失败',
+    })
+  )
     refreshForumInfo()
 }
 
@@ -230,16 +275,27 @@ onMounted(() => {
 
 <template>
   <div class="forum-manage-view">
-    <ManagePageHeader title="粉丝讨论区" subtitle="创建与管理讨论区">
+    <ManagePageHeader
+      title="粉丝讨论区"
+      subtitle="创建与管理讨论区"
+    >
       <template #action>
-        <NButton secondary size="small" :loading="useForum.isLoading" @click="refreshForumInfo">
+        <NButton
+          secondary
+          size="small"
+          :loading="useForum.isLoading"
+          @click="refreshForumInfo"
+        >
           刷新
         </NButton>
       </template>
     </ManagePageHeader>
 
     <template v-if="!currentForum.name && managedForums.length > 0">
-      <NAlert type="info" :bordered="false">
+      <NAlert
+        type="info"
+        :bordered="false"
+      >
         你是某些讨论区的管理员, 可以在下方选择需要管理的讨论区
       </NAlert>
     </template>
@@ -271,9 +327,7 @@ onMounted(() => {
       size="small"
       title="啊哦"
     >
-      <NAlert type="error">
-        你尚未创建粉丝讨论区
-      </NAlert>
+      <NAlert type="error"> 你尚未创建粉丝讨论区 </NAlert>
       <NDivider />
       <NFlex justify="center">
         <NFlex vertical>
@@ -303,7 +357,8 @@ onMounted(() => {
             type="textarea"
           />
           <NCheckbox v-model:checked="readedAgreement">
-            已阅读并同意 <NButton
+            已阅读并同意
+            <NButton
               text
               type="info"
               @click="showAgreement = true"
@@ -425,7 +480,7 @@ onMounted(() => {
                 添加管理员
               </NButton>
             </NFlex>
-            <br>
+            <br />
             <NDataTable
               :columns="adminColumns"
               :data="currentForum.admins"
@@ -441,7 +496,7 @@ onMounted(() => {
                 封禁用户
               </NButton>
             </NFlex>
-            <br>
+            <br />
             <NDataTable
               :columns="banColumns"
               :data="currentForum.blackList"
@@ -469,7 +524,7 @@ onMounted(() => {
         :user="addAdminName"
         @update:user-info="(v) => (currentAdminInfo = v)"
       />
-      <br>
+      <br />
       <NInput
         v-model:value="addAdminName"
         placeholder="请输入用户名或VTsuruId"
@@ -494,7 +549,7 @@ onMounted(() => {
         :user="addBanName"
         @update:user-info="(v) => (currentBanUserInfo = v)"
       />
-      <br>
+      <br />
       <NInput
         v-model:value="addBanName"
         placeholder="请输入用户名或VTsuruId"

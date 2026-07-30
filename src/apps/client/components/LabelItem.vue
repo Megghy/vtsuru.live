@@ -1,14 +1,20 @@
 <script lang="ts" setup>
-withDefaults(defineProps<{
-  label: string
-  labelPlacement?: 'left' | 'top'
-}>(), {
-  labelPlacement: 'left',
-})
+withDefaults(
+  defineProps<{
+    label: string
+    labelPlacement?: 'left' | 'top'
+  }>(),
+  {
+    labelPlacement: 'left',
+  },
+)
 </script>
 
 <template>
-  <span class="label-item" :class="`label-item--${labelPlacement}`">
+  <span
+    class="label-item"
+    :class="`label-item--${labelPlacement}`"
+  >
     <span class="label-item__label">
       {{ label }}
     </span>

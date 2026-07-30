@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/api-models'
 import { NIcon } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+
+import type { UserInfo } from '@/api/api-models'
 import { fetchPublicForumExists } from '@/apps/user-page/api'
-import { getEnabledUserFunctions, isUserFeatureEnabled, USER_FEATURE_DEFINITION_MAP } from '@/apps/user-page/featureNavigation'
+import {
+  getEnabledUserFunctions,
+  isUserFeatureEnabled,
+  USER_FEATURE_DEFINITION_MAP,
+} from '@/apps/user-page/featureNavigation'
 import type { UserFeatureKey } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
+
 import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{
@@ -14,20 +20,24 @@ const props = defineProps<{
   userInfo?: UserInfo
 }>()
 
-const values = computed<Record<string, unknown>>(() => props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
-  ? props.blockProps as Record<string, unknown>
-  : {})
-const configuredItems = computed(() => Array.isArray(values.value.items) ? values.value.items : [])
+const values = computed<Record<string, unknown>>(() =>
+  props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+    ? (props.blockProps as Record<string, unknown>)
+    : {},
+)
+const configuredItems = computed(() => (Array.isArray(values.value.items) ? values.value.items : []))
 const enabledFunctions = computed(() => getEnabledUserFunctions(props.userInfo))
 const forumQuery = useUserPageRuntimeQuery<boolean>({
   key: () => `forum-exists:${props.userInfo?.id ?? 0}`,
   ttlMs: 60_000,
-  loader: signal => fetchPublicForumExists(props.userInfo!.id, { signal }),
+  loader: (signal) => fetchPublicForumExists(props.userInfo!.id, { signal }),
 })
-const needsForum = computed(() => configuredItems.value.some((item) => {
-  const value = item && typeof item === 'object' && !Array.isArray(item) ? item as Record<string, unknown> : {}
-  return value.key === 'forum' && value.hidden !== true
-}))
+const needsForum = computed(() =>
+  configuredItems.value.some((item) => {
+    const value = item && typeof item === 'object' && !Array.isArray(item) ? (item as Record<string, unknown>) : {}
+    return value.key === 'forum' && value.hidden !== true
+  }),
+)
 
 async function loadForumAvailability() {
   if (!props.userInfo?.id || !needsForum.value) {
@@ -41,21 +51,38 @@ async function loadForumAvailability() {
   }
 }
 
-onMounted(() => { void loadForumAvailability() })
-watch(() => [props.userInfo?.id, needsForum.value] as const, () => { void loadForumAvailability() })
+onMounted(() => {
+  void loadForumAvailability()
+})
+watch(
+  () => [props.userInfo?.id, needsForum.value] as const,
+  () => {
+    void loadForumAvailability()
+  },
+)
 
-const availableFeatures = computed(() => configuredItems.value.flatMap((item) => {
-  const value = item && typeof item === 'object' && !Array.isArray(item) ? item as Record<string, unknown> : {}
-  if (value.hidden === true || typeof value.key !== 'string' || !(value.key in USER_FEATURE_DEFINITION_MAP)) return []
-  const feature = USER_FEATURE_DEFINITION_MAP[value.key as UserFeatureKey]
-  const enabled = feature.key === 'forum' ? forumQuery.data.value === true : isUserFeatureEnabled(feature, enabledFunctions.value)
-  return enabled ? [feature] : []
-}))
+const availableFeatures = computed(() =>
+  configuredItems.value.flatMap((item) => {
+    const value = item && typeof item === 'object' && !Array.isArray(item) ? (item as Record<string, unknown>) : {}
+    if (value.hidden === true || typeof value.key !== 'string' || !(value.key in USER_FEATURE_DEFINITION_MAP)) return []
+    const feature = USER_FEATURE_DEFINITION_MAP[value.key as UserFeatureKey]
+    const enabled =
+      feature.key === 'forum' ? forumQuery.data.value === true : isUserFeatureEnabled(feature, enabledFunctions.value)
+    return enabled ? [feature] : []
+  }),
+)
 </script>
 
 <template>
-  <BlockCard v-if="availableFeatures.length" :framed="values.framed !== false" :backgrounded="values.backgrounded !== false">
-    <nav class="feature-nav" aria-label="用户功能">
+  <BlockCard
+    v-if="availableFeatures.length"
+    :framed="values.framed !== false"
+    :backgrounded="values.backgrounded !== false"
+  >
+    <nav
+      class="feature-nav"
+      aria-label="用户功能"
+    >
       <RouterLink
         v-for="feature in availableFeatures"
         :key="feature.key"
@@ -90,7 +117,9 @@ const availableFeatures = computed(() => configuredItems.value.flatMap((item) =>
   color: var(--vtsuru-fg);
   background: var(--vtsuru-bg-muted);
   text-decoration: none;
-  transition: border-color 140ms ease, background-color 140ms ease;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
 }
 
 .feature-link:hover {

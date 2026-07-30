@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildCustomHtmlDocument, collectCustomHtmlAssetKeys, inspectCustomCss, inspectCustomHtml } from '../customHtmlRuntime'
+
 import { normalizeCustomHtmlProps } from '../customHtmlContract'
+import {
+  buildCustomHtmlDocument,
+  collectCustomHtmlAssetKeys,
+  inspectCustomCss,
+  inspectCustomHtml,
+} from '../customHtmlRuntime'
 
 const file = { id: 7, path: '/api/files/cover.webp', name: 'cover.webp', hash: 'hash' }
 const theme = {
@@ -31,22 +37,29 @@ describe('customHtmlRuntime', () => {
   })
 
   it('拒绝脚本、事件属性、内联样式和直接图片地址', () => {
-    const issues = inspectCustomHtml('<script>bad()</script><p onclick="bad()" style="color:red">x</p><img src="https://evil.test/x.png">', [])
-    expect(issues.map(item => item.message).join('\n')).toContain('<script>')
-    expect(issues.map(item => item.message).join('\n')).toContain('onclick')
-    expect(issues.map(item => item.message).join('\n')).toContain('style')
-    expect(issues.map(item => item.message).join('\n')).toContain('src')
+    const issues = inspectCustomHtml(
+      '<script>bad()</script><p onclick="bad()" style="color:red">x</p><img src="https://evil.test/x.png">',
+      [],
+    )
+    expect(issues.map((item) => item.message).join('\n')).toContain('<script>')
+    expect(issues.map((item) => item.message).join('\n')).toContain('onclick')
+    expect(issues.map((item) => item.message).join('\n')).toContain('style')
+    expect(issues.map((item) => item.message).join('\n')).toContain('src')
   })
 
   it('拒绝 CSS 外部加载和不允许的规则', () => {
-    expect(inspectCustomCss('@import "https://evil.test/a.css";.x{background:url(https://evil.test/x.png)}').issues.length).toBeGreaterThan(0)
-    expect(inspectCustomCss('@font-face{font-family:x;src:url(https://evil.test/x.woff)}').issues.length).toBeGreaterThan(0)
+    expect(
+      inspectCustomCss('@import "https://evil.test/a.css";.x{background:url(https://evil.test/x.png)}').issues.length,
+    ).toBeGreaterThan(0)
+    expect(
+      inspectCustomCss('@font-face{font-family:x;src:url(https://evil.test/x.woff)}').issues.length,
+    ).toBeGreaterThan(0)
   })
 
   it('标记 CSS 中没有绑定的资源键', () => {
     const issues = inspectCustomCss('.x{background:var(--vtsuru-asset-missing)}', [])
 
-    expect(issues.issues.map(item => item.message)).toContain('找不到资源键：missing')
+    expect(issues.issues.map((item) => item.message)).toContain('找不到资源键：missing')
   })
 
   it('从 HTML 和 CSS 收集资源键', () => {

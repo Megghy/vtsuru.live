@@ -1,9 +1,4 @@
 <script setup lang="ts">
-import type { BlockNode } from '@/apps/user-page/block/schema'
-import { BLOCK_LIBRARY, getBlockLabel } from '@/apps/user-page/block/registry'
-import { NButton, NDropdown, NIcon, NText, NTooltip } from 'naive-ui';
-import { computed, inject } from 'vue'
-import { VueDraggable } from 'vue-draggable-plus'
 import {
   AlertCircleOutline,
   ChevronForwardOutline,
@@ -13,6 +8,13 @@ import {
   LocateOutline,
   ReorderThreeOutline,
 } from '@vicons/ionicons5'
+import { NButton, NDropdown, NIcon, NText, NTooltip } from 'naive-ui'
+import { computed, inject } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
+
+import { BLOCK_LIBRARY, getBlockLabel } from '@/apps/user-page/block/registry'
+import type { BlockNode } from '@/apps/user-page/block/schema'
+
 import { UserPageEditorKey } from '../context'
 
 defineOptions({ name: 'BlockTreeList' })
@@ -50,7 +52,7 @@ const blocksModel = computed({
   },
 })
 
-const iconMap = new Map(BLOCK_LIBRARY.map(it => [it.type, it.icon]))
+const iconMap = new Map(BLOCK_LIBRARY.map((it) => [it.type, it.icon]))
 function getIcon(type: BlockNode['type']) {
   return iconMap.get(type)
 }
@@ -165,14 +167,17 @@ function scrollToPreviewBlock(blockId: string) {
 
   const containerRect = container.getBoundingClientRect()
   const elRect = el.getBoundingClientRect()
-  const targetTop = (elRect.top - containerRect.top) + container.scrollTop - (container.clientHeight / 2) + (elRect.height / 2)
+  const targetTop =
+    elRect.top - containerRect.top + container.scrollTop - container.clientHeight / 2 + elRect.height / 2
   container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' })
 }
 
 function focusTreeItem(row: HTMLElement | undefined) {
   if (!row) return
   const tree = row.closest<HTMLElement>('[role="tree"]')
-  tree?.querySelectorAll<HTMLElement>('[role="treeitem"]').forEach(item => { item.tabIndex = -1 })
+  tree?.querySelectorAll<HTMLElement>('[role="treeitem"]').forEach((item) => {
+    item.tabIndex = -1
+  })
   row.tabIndex = 0
   row.focus()
 }
@@ -180,15 +185,18 @@ function focusTreeItem(row: HTMLElement | undefined) {
 function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
   const row = event.currentTarget as HTMLElement
   const tree = row.closest<HTMLElement>('[role="tree"]')
-  const items = Array.from(tree?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? [])
-    .filter(item => item.getClientRects().length > 0)
+  const items = Array.from(tree?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? []).filter(
+    (item) => item.getClientRects().length > 0,
+  )
   const index = items.indexOf(row)
   if (event.key === 'ArrowDown') focusTreeItem(items[index + 1])
   else if (event.key === 'ArrowUp') focusTreeItem(items[index - 1])
   else if (event.key === 'Home') focusTreeItem(items[0])
   else if (event.key === 'End') focusTreeItem(items.at(-1))
-  else if (event.key === 'ArrowRight' && block.type === 'layout' && !props.expandedLayoutIdSet.has(block.id)) props.onToggleExpanded(block.id)
-  else if (event.key === 'ArrowLeft' && block.type === 'layout' && props.expandedLayoutIdSet.has(block.id)) props.onToggleExpanded(block.id)
+  else if (event.key === 'ArrowRight' && block.type === 'layout' && !props.expandedLayoutIdSet.has(block.id))
+    props.onToggleExpanded(block.id)
+  else if (event.key === 'ArrowLeft' && block.type === 'layout' && props.expandedLayoutIdSet.has(block.id))
+    props.onToggleExpanded(block.id)
   else if (event.key === 'ArrowLeft') {
     const parent = row.closest('.children')?.parentElement?.querySelector<HTMLElement>(':scope > [role="treeitem"]')
     focusTreeItem(parent)
@@ -236,13 +244,21 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         :aria-level="props.depth + 1"
         :aria-selected="props.selectionSet.has(b.id)"
         :aria-expanded="b.type === 'layout' ? props.expandedLayoutIdSet.has(b.id) : undefined"
-        :tabindex="editor.selectedBlockIds.value[0] === b.id || (!editor.selectedBlockIds.value.length && props.depth === 0 && blocksModel[0]?.id === b.id) ? 0 : -1"
+        :tabindex="
+          editor.selectedBlockIds.value[0] === b.id ||
+          (!editor.selectedBlockIds.value.length && props.depth === 0 && blocksModel[0]?.id === b.id)
+            ? 0
+            : -1
+        "
         @click="props.onRowClick(b.id, $event)"
         @keydown="handleTreeKeydown($event, b)"
         @mouseenter="editor.hoveredBlockId.value = b.id"
         @mouseleave="editor.hoveredBlockId.value === b.id && (editor.hoveredBlockId.value = null)"
       >
-        <div class="indent" :style="{ width: indentWidth }" />
+        <div
+          class="indent"
+          :style="{ width: indentWidth }"
+        />
 
         <NIcon
           v-if="b.type === 'layout'"
@@ -254,25 +270,47 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         >
           <ChevronForwardOutline />
         </NIcon>
-        <div v-else class="expand-placeholder" />
+        <div
+          v-else
+          class="expand-placeholder"
+        />
 
-        <NIcon class="drag-handle" size="18" title="拖拽排序：靠近上下边缘；拖到区块中间松开：成组/加入组">
+        <NIcon
+          class="drag-handle"
+          size="18"
+          title="拖拽排序：靠近上下边缘；拖到区块中间松开：成组/加入组"
+        >
           <ReorderThreeOutline />
         </NIcon>
 
-        <NIcon v-if="getIcon(b.type)" class="type-icon" size="16">
+        <NIcon
+          v-if="getIcon(b.type)"
+          class="type-icon"
+          size="16"
+        >
           <component :is="getIcon(b.type)!" />
         </NIcon>
-        <div v-else class="type-icon-placeholder" />
+        <div
+          v-else
+          class="type-icon-placeholder"
+        />
 
         <div class="block-label">
           <span class="truncate-text">
             {{ getDisplayTitle(b) }}
           </span>
-          <NText v-if="b.name && b.name.trim().length" depth="3" class="type-hint">
+          <NText
+            v-if="b.name && b.name.trim().length"
+            depth="3"
+            class="type-hint"
+          >
             {{ getBlockLabel(b.type) }}
           </NText>
-          <NText v-if="b.type === 'layout'" depth="3" style="margin-left: 6px; font-size: 12px">
+          <NText
+            v-if="b.type === 'layout'"
+            depth="3"
+            style="margin-left: 6px; font-size: 12px"
+          >
             ({{ getLayoutChildrenModel(b).length }})
           </NText>
         </div>
@@ -341,7 +379,13 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
               :options="props.blockActionOptions"
               @select="(key) => props.onBlockAction(String(key), b.id)"
             >
-              <NButton quaternary circle size="tiny" aria-label="更多区块操作" @click.stop>
+              <NButton
+                quaternary
+                circle
+                size="tiny"
+                aria-label="更多区块操作"
+                @click.stop
+              >
                 <template #icon>
                   <NIcon><EllipsisHorizontalOutline /></NIcon>
                 </template>
@@ -360,7 +404,10 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         @leave="onExpandLeave"
         @after-leave="onExpandAfterLeave"
       >
-        <div v-if="b.type === 'layout' && props.expandedLayoutIdSet.has(b.id)" class="children">
+        <div
+          v-if="b.type === 'layout' && props.expandedLayoutIdSet.has(b.id)"
+          class="children"
+        >
           <BlockTreeList
             :blocks="getLayoutChildrenModel(b)"
             :depth="props.depth + 1"
@@ -441,7 +488,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 
 .block-item-row.drag-insert-before::before,
 .block-item-row.drag-insert-after::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 6px;
   left: 6px;
@@ -488,7 +535,9 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 .expand-toggle {
   cursor: pointer;
   opacity: 0.85;
-  transition: transform 160ms ease, opacity 160ms ease;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
   transform: rotate(0deg);
 }
 

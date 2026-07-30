@@ -1,6 +1,8 @@
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { effectScope, nextTick, ref } from 'vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { effectScope, nextTick, ref } from 'vue'
+
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+
 import { useUserPageAutoSave } from '../useUserPageAutoSave'
 
 function createAutoSave(saveDraft: () => Promise<boolean>) {

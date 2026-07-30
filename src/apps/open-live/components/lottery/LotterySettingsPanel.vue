@@ -1,8 +1,28 @@
 <script setup lang="ts">
-import type { LotteryOption } from '@/apps/open-live/components/lottery/lotteryTypes'
-import { Add24Filled, Delete24Filled, Pause24Filled, Play24Filled, Sparkle24Filled, Target24Filled } from '@vicons/fluent'
 import {
-  NButton, NCheckbox, NCollapseTransition, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NRadioButton, NRadioGroup, NFlex } from 'naive-ui';
+  Add24Filled,
+  Delete24Filled,
+  Pause24Filled,
+  Play24Filled,
+  Sparkle24Filled,
+  Target24Filled,
+} from '@vicons/fluent'
+import {
+  NButton,
+  NCheckbox,
+  NCollapseTransition,
+  NForm,
+  NFormItem,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputNumber,
+  NRadioButton,
+  NRadioGroup,
+  NFlex,
+} from 'naive-ui'
+
+import type { LotteryOption } from '@/apps/open-live/components/lottery/lotteryTypes'
 defineProps<{
   option: LotteryOption
   isStartLottery: boolean
@@ -28,7 +48,10 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
   <div class="settings-wrapper">
     <div class="settings-header">
       <NFlex align="center">
-        <NIcon :component="Sparkle24Filled" color="var(--vtsuru-warning)" />
+        <NIcon
+          :component="Sparkle24Filled"
+          color="var(--vtsuru-warning)"
+        />
         <span style="font-weight: bold; font-size: 16px">抽奖设置</span>
       </NFlex>
       <NButton
@@ -48,18 +71,18 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
             <NIcon :component="Target24Filled" />
             参与规则
           </div>
-          <NForm label-placement="left" label-width="80" size="small">
+          <NForm
+            label-placement="left"
+            label-width="80"
+            size="small"
+          >
             <NFormItem label="参与方式">
               <NRadioGroup
                 v-model:value="option.type"
                 :disabled="isLottering || isStartLottery"
               >
-                <NRadioButton value="danmaku">
-                  弹幕
-                </NRadioButton>
-                <NRadioButton value="gift">
-                  礼物
-                </NRadioButton>
+                <NRadioButton value="danmaku"> 弹幕 </NRadioButton>
+                <NRadioButton value="gift"> 礼物 </NRadioButton>
               </NRadioGroup>
             </NFormItem>
 
@@ -71,17 +94,17 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   placeholder="留空则任意弹幕"
                 />
               </NFormItem>
-              <NFormItem v-if="option.danmakuKeyword" label="匹配规则">
-                <NRadioGroup v-model:value="option.danmakuFilterType" :disabled="isStartLottery">
-                  <NRadioButton value="all">
-                    完全一致
-                  </NRadioButton>
-                  <NRadioButton value="contains">
-                    包含
-                  </NRadioButton>
-                  <NRadioButton value="regex">
-                    正则
-                  </NRadioButton>
+              <NFormItem
+                v-if="option.danmakuKeyword"
+                label="匹配规则"
+              >
+                <NRadioGroup
+                  v-model:value="option.danmakuFilterType"
+                  :disabled="isStartLottery"
+                >
+                  <NRadioButton value="all"> 完全一致 </NRadioButton>
+                  <NRadioButton value="contains"> 包含 </NRadioButton>
+                  <NRadioButton value="regex"> 正则 </NRadioButton>
                 </NRadioGroup>
               </NFormItem>
             </template>
@@ -96,9 +119,7 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                     :min="0"
                     style="width: 50%"
                   >
-                    <template #suffix>
-                      元
-                    </template>
+                    <template #suffix> 元 </template>
                   </NInputNumber>
                   <NInput
                     v-model:value="option.giftName"
@@ -112,13 +133,22 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 
             <NFormItem label="身份限制">
               <NFlex>
-                <NCheckbox v-model:checked="option.needGuard" :disabled="isStartLottery">
+                <NCheckbox
+                  v-model:checked="option.needGuard"
+                  :disabled="isStartLottery"
+                >
                   舰长
                 </NCheckbox>
-                <NCheckbox v-model:checked="option.needFanMedal" :disabled="isStartLottery">
+                <NCheckbox
+                  v-model:checked="option.needFanMedal"
+                  :disabled="isStartLottery"
+                >
                   粉丝牌
                 </NCheckbox>
-                <NCheckbox v-model:checked="option.needWearFanMedal" :disabled="isStartLottery">
+                <NCheckbox
+                  v-model:checked="option.needWearFanMedal"
+                  :disabled="isStartLottery"
+                >
                   佩戴
                 </NCheckbox>
               </NFlex>
@@ -144,9 +174,16 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
             <NIcon :component="Sparkle24Filled" />
             玩法设置
           </div>
-          <NForm label-placement="left" label-width="auto" size="small">
+          <NForm
+            label-placement="left"
+            label-width="auto"
+            size="small"
+          >
             <div class="form-row">
-              <NFormItem label="抽取人数" style="flex: 1">
+              <NFormItem
+                label="抽取人数"
+                style="flex: 1"
+              >
                 <NInputNumber
                   v-model:value="option.resultCount"
                   :min="1"
@@ -154,7 +191,10 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   style="width: 100%"
                 />
               </NFormItem>
-              <NFormItem label="动画速度" style="flex: 1">
+              <NFormItem
+                label="动画速度"
+                style="flex: 1"
+              >
                 <NInputNumber
                   v-model:value="option.animationSpeed"
                   :step="100"
@@ -163,9 +203,7 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   :disabled="isLottering"
                   style="width: 100%"
                 >
-                  <template #suffix>
-                    ms
-                  </template>
+                  <template #suffix> ms </template>
                 </NInputNumber>
               </NFormItem>
             </div>
@@ -180,15 +218,36 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                     active: option.lotteryType === key,
                     disabled: isLottering || (key === 'wheel' && currentUsersLength < 2),
                   }"
-                  @click="!isLottering && (key !== 'wheel' || currentUsersLength >= 2) && (option.lotteryType = key as any)"
+                  @click="
+                    !isLottering && (key !== 'wheel' || currentUsersLength >= 2) && (option.lotteryType = key as any)
+                  "
                 >
                   <div class="mode-icon">
-                    <NIcon v-if="key === 'single'" :component="Delete24Filled" />
-                    <NIcon v-else-if="key === 'half'" :component="Pause24Filled" style="transform: rotate(90deg)" />
-                    <NIcon v-else-if="key === 'flip'" :component="Sparkle24Filled" />
-                    <NIcon v-else-if="key === 'wheel'" :component="Target24Filled" />
-                    <NIcon v-else-if="key === 'cards'" :component="Add24Filled" />
-                    <NIcon v-else-if="key === 'elimination'" :component="Play24Filled" />
+                    <NIcon
+                      v-if="key === 'single'"
+                      :component="Delete24Filled"
+                    />
+                    <NIcon
+                      v-else-if="key === 'half'"
+                      :component="Pause24Filled"
+                      style="transform: rotate(90deg)"
+                    />
+                    <NIcon
+                      v-else-if="key === 'flip'"
+                      :component="Sparkle24Filled"
+                    />
+                    <NIcon
+                      v-else-if="key === 'wheel'"
+                      :component="Target24Filled"
+                    />
+                    <NIcon
+                      v-else-if="key === 'cards'"
+                      :component="Add24Filled"
+                    />
+                    <NIcon
+                      v-else-if="key === 'elimination'"
+                      :component="Play24Filled"
+                    />
                   </div>
                   <div class="mode-info">
                     <div class="mode-title">

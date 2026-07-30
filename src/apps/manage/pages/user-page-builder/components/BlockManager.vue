@@ -2,6 +2,7 @@
 import type { MenuOption } from 'naive-ui'
 import { NButton, NFlex, NInput, NModal, NScrollbar, NText } from 'naive-ui'
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+
 import { UserPageEditorKey } from '../context'
 import BlockTreeList from './BlockTreeList.vue'
 
@@ -30,9 +31,11 @@ const selectionCount = computed(() => editor.selectedBlockIds.value.length)
 const selectionSet = computed(() => new Set(editor.selectedBlockIds.value))
 
 const invalidBlockIdSet = computed(() => {
-  return new Set(editor.liveValidationIssues.value
-    .filter(issue => issue.scope === 'block' && issue.pageKey === editor.currentKey.value && issue.blockId)
-    .map(issue => issue.blockId as string))
+  return new Set(
+    editor.liveValidationIssues.value
+      .filter((issue) => issue.scope === 'block' && issue.pageKey === editor.currentKey.value && issue.blockId)
+      .map((issue) => issue.blockId as string),
+  )
 })
 
 const selectionAnchorId = ref<string | null>(null)
@@ -53,34 +56,47 @@ type DragDropIntent =
   | null
 
 const dragDropIntent = ref<DragDropIntent>(null)
-const dragGroupTargetId = computed(() => dragDropIntent.value?.kind === 'group' ? dragDropIntent.value.targetId : null)
-const dragGroupTargetMode = computed(() => dragDropIntent.value?.kind === 'group' ? dragDropIntent.value.mode : null)
-const dragInsertTargetId = computed(() => dragDropIntent.value?.kind === 'reorder' ? dragDropIntent.value.targetId : null)
-const dragInsertPosition = computed(() => dragDropIntent.value?.kind === 'reorder' ? dragDropIntent.value.position : null)
+const dragGroupTargetId = computed(() =>
+  dragDropIntent.value?.kind === 'group' ? dragDropIntent.value.targetId : null,
+)
+const dragGroupTargetMode = computed(() => (dragDropIntent.value?.kind === 'group' ? dragDropIntent.value.mode : null))
+const dragInsertTargetId = computed(() =>
+  dragDropIntent.value?.kind === 'reorder' ? dragDropIntent.value.targetId : null,
+)
+const dragInsertPosition = computed(() =>
+  dragDropIntent.value?.kind === 'reorder' ? dragDropIntent.value.position : null,
+)
 
 function ensureExpanded(layoutId: string) {
   if (expandedLayoutIdSet.value.has(layoutId)) return
   expandedLayoutIds.value = Array.from(new Set([...expandedLayoutIds.value, layoutId]))
 }
 
-watch(() => editor.validationFocusRequest.value?.requestId, async () => {
-  const request = editor.validationFocusRequest.value
-  if (!request || request.scope !== 'block' || request.pageKey !== editor.currentKey.value) return
-  request.ancestorLayoutIds.forEach(ensureExpanded)
-  if (!request.blockId) return
-  await scrollBlockIntoView(request.blockId)
-})
+watch(
+  () => editor.validationFocusRequest.value?.requestId,
+  async () => {
+    const request = editor.validationFocusRequest.value
+    if (!request || request.scope !== 'block' || request.pageKey !== editor.currentKey.value) return
+    request.ancestorLayoutIds.forEach(ensureExpanded)
+    if (!request.blockId) return
+    await scrollBlockIntoView(request.blockId)
+  },
+)
 
 async function scrollBlockIntoView(blockId: string) {
   await nextTick()
-  const row = Array.from(managerRoot.value?.querySelectorAll<HTMLElement>('[data-block-id]') ?? [])
-    .find(element => element.dataset.blockId === blockId)
+  const row = Array.from(managerRoot.value?.querySelectorAll<HTMLElement>('[data-block-id]') ?? []).find(
+    (element) => element.dataset.blockId === blockId,
+  )
   row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
 
-watch(() => editor.selectedBlockIds.value[0], (blockId) => {
-  if (blockId) void scrollBlockIntoView(blockId)
-})
+watch(
+  () => editor.selectedBlockIds.value[0],
+  (blockId) => {
+    if (blockId) void scrollBlockIntoView(blockId)
+  },
+)
 
 function getPointerClientPoint(ev: any): { x: number; y: number } | null {
   if (!ev) return null
@@ -217,8 +233,8 @@ function selectRange(toId: string) {
   const anchor = selectionAnchorId.value ?? editor.selectedBlockIds.value[0]
   if (!anchor) return selectOnly(toId)
   const ids = visibleBlockIds.value
-  const a = ids.findIndex(id => id === anchor)
-  const b = ids.findIndex(id => id === toId)
+  const a = ids.findIndex((id) => id === anchor)
+  const b = ids.findIndex((id) => id === toId)
   if (a < 0 || b < 0) return selectOnly(toId)
   const [start, end] = a < b ? [a, b] : [b, a]
   editor.selectedBlockIds.value = ids.slice(start, end + 1)
@@ -373,30 +389,69 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="managerRoot" class="block-manager">
-    <span class="sr-only" role="status" aria-live="polite">{{ dragStatus }}</span>
+  <div
+    ref="managerRoot"
+    class="block-manager"
+  >
+    <span
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+      >{{ dragStatus }}</span
+    >
     <Transition name="fade-slide">
-      <div v-if="selectionCount > 1" class="block-manager__selection-toolbar">
-        <NFlex size="small" align="center">
-          <NText depth="3">
-            已选择 {{ selectionCount }} 个区块
-          </NText>
-          <NButton size="tiny" type="primary" secondary @click="bulkGroup">
+      <div
+        v-if="selectionCount > 1"
+        class="block-manager__selection-toolbar"
+      >
+        <NFlex
+          size="small"
+          align="center"
+        >
+          <NText depth="3"> 已选择 {{ selectionCount }} 个区块 </NText>
+          <NButton
+            size="tiny"
+            type="primary"
+            secondary
+            @click="bulkGroup"
+          >
             成组
           </NButton>
-          <NButton size="tiny" secondary @click="bulkHide">
+          <NButton
+            size="tiny"
+            secondary
+            @click="bulkHide"
+          >
             批量隐藏
           </NButton>
-          <NButton size="tiny" secondary @click="bulkShow">
+          <NButton
+            size="tiny"
+            secondary
+            @click="bulkShow"
+          >
             批量显示
           </NButton>
-          <NButton size="tiny" secondary @click="bulkCopy">
+          <NButton
+            size="tiny"
+            secondary
+            @click="bulkCopy"
+          >
             批量复制
           </NButton>
-          <NButton size="tiny" secondary :disabled="!hasClipboard" @click="bulkPaste">
+          <NButton
+            size="tiny"
+            secondary
+            :disabled="!hasClipboard"
+            @click="bulkPaste"
+          >
             粘贴
           </NButton>
-          <NButton size="tiny" type="error" secondary @click="bulkDelete">
+          <NButton
+            size="tiny"
+            type="error"
+            secondary
+            @click="bulkDelete"
+          >
             批量删除
           </NButton>
         </NFlex>
@@ -434,13 +489,20 @@ onBeforeUnmount(() => {
       style="width: 420px; max-width: 90vw"
       :auto-focus="false"
     >
-      <NInput v-model:value="renameBlockName" maxlength="50" show-count placeholder="仅用于编辑器内识别" @keyup.enter="confirmRenameBlock" />
+      <NInput
+        v-model:value="renameBlockName"
+        maxlength="50"
+        show-count
+        placeholder="仅用于编辑器内识别"
+        @keyup.enter="confirmRenameBlock"
+      />
       <template #footer>
         <NFlex justify="end">
-          <NButton @click="renameBlockModal = false">
-            取消
-          </NButton>
-          <NButton type="primary" @click="confirmRenameBlock">
+          <NButton @click="renameBlockModal = false"> 取消 </NButton>
+          <NButton
+            type="primary"
+            @click="confirmRenameBlock"
+          >
             保存
           </NButton>
         </NFlex>

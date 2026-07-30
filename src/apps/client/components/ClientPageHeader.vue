@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NFlex, NText } from 'naive-ui';
+import { NFlex, NText } from 'naive-ui'
 defineProps<{
   title?: string
   description?: string
@@ -21,7 +21,10 @@ defineProps<{
           </NText>
         </slot>
       </div>
-      <div v-if="$slots.description || description" class="client-page-header__description">
+      <div
+        v-if="$slots.description || description"
+        class="client-page-header__description"
+      >
         <slot name="description">
           {{ description }}
         </slot>
@@ -53,4 +56,3 @@ defineProps<{
   justify-content: flex-end;
 }
 </style>
-

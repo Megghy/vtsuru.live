@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+
 import { QueryPostAPI } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'
 

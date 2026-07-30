@@ -1,21 +1,4 @@
 <script setup lang="ts">
-import type { APIFileModel } from '@/api/api-models'
-import { UserFileLocation, UserFileTypes } from '@/api/api-models'
-import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
-import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
-import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
-import {
-  CUSTOM_CSS_MAX_BYTES,
-  CUSTOM_HTML_MAX_BYTES,
-  normalizeCustomHtmlProps,
-  utf8ByteLength,
-} from '@/apps/user-page/block/customHtmlContract'
-import type { CustomHtmlProps } from '@/apps/user-page/block/customHtmlContract'
-import { collectCustomHtmlAssetKeys, inspectCustomCss, inspectCustomHtml } from '@/apps/user-page/block/customHtmlRuntime'
-import type { CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
-import { buildSiteTokens } from '@/shared/config/theme/tokens'
-import { uploadFiles } from '@/shared/services/fileUpload'
-import { isDarkMode } from '@/shared/utils'
 import {
   CloudUploadOutline,
   CodeWorkingOutline,
@@ -43,10 +26,33 @@ import {
   useDialog,
 } from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
+
+import type { APIFileModel } from '@/api/api-models'
+import { UserFileLocation, UserFileTypes } from '@/api/api-models'
+import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
+import {
+  CUSTOM_CSS_MAX_BYTES,
+  CUSTOM_HTML_MAX_BYTES,
+  normalizeCustomHtmlProps,
+  utf8ByteLength,
+} from '@/apps/user-page/block/customHtmlContract'
+import type { CustomHtmlProps } from '@/apps/user-page/block/customHtmlContract'
+import {
+  collectCustomHtmlAssetKeys,
+  inspectCustomCss,
+  inspectCustomHtml,
+} from '@/apps/user-page/block/customHtmlRuntime'
+import type { CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
+import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
+import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
+import { buildSiteTokens } from '@/shared/config/theme/tokens'
+import { uploadFiles } from '@/shared/services/fileUpload'
+import { isDarkMode } from '@/shared/utils'
+
 import { UserPageEditorKey } from '../context'
 import { deepCloneJson } from '../editorHelpers'
-import { findBlockById } from '../userPageBlockTree'
 import { useBuilderResources } from '../useBuilderResources'
+import { findBlockById } from '../userPageBlockTree'
 import { isSupportedUserPageImagePath, validateUserPageImageFiles } from '../userPageImageUpload'
 import CustomHtmlCodeEditor from './CustomHtmlCodeEditor.vue'
 
@@ -72,16 +78,15 @@ const resources = useBuilderResources({
   notifySuccess: editor.message.success,
 })
 
-const imageResources = computed(() => resources.resources.value.filter(resource => (
-  !resource.missing
-  && isSupportedUserPageImagePath(resource.path)
-)))
+const imageResources = computed(() =>
+  resources.resources.value.filter((resource) => !resource.missing && isSupportedUserPageImagePath(resource.path)),
+)
 const filteredResources = computed(() => {
   const query = resourceSearch.value.trim().toLowerCase()
   if (!query) return imageResources.value
-  return imageResources.value.filter(file => `${file.id} ${file.name} ${file.path}`.toLowerCase().includes(query))
+  return imageResources.value.filter((file) => `${file.id} ${file.name} ${file.path}`.toLowerCase().includes(query))
 })
-const attachedIds = computed(() => new Set(draft.value.assets.map(asset => asset.file.id)))
+const attachedIds = computed(() => new Set(draft.value.assets.map((asset) => asset.file.id)))
 const htmlBytes = computed(() => utf8ByteLength(draft.value.html))
 const cssBytes = computed(() => utf8ByteLength(draft.value.css))
 const codeIssues = computed(() => {
@@ -89,12 +94,14 @@ const codeIssues = computed(() => {
     ...inspectCustomHtml(draft.value.html, draft.value.assets),
     ...inspectCustomCss(draft.value.css, draft.value.assets).issues,
   ]
-  if (htmlBytes.value > CUSTOM_HTML_MAX_BYTES) issues.push({ field: 'html', message: 'HTML 不能超过 32 KiB', line: 1, column: 1 })
-  if (cssBytes.value > CUSTOM_CSS_MAX_BYTES) issues.push({ field: 'css', message: 'CSS 不能超过 24 KiB', line: 1, column: 1 })
+  if (htmlBytes.value > CUSTOM_HTML_MAX_BYTES)
+    issues.push({ field: 'html', message: 'HTML 不能超过 32 KiB', line: 1, column: 1 })
+  if (cssBytes.value > CUSTOM_CSS_MAX_BYTES)
+    issues.push({ field: 'css', message: 'CSS 不能超过 24 KiB', line: 1, column: 1 })
   return issues
 })
 const isDirty = computed(() => JSON.stringify(draft.value) !== initialSnapshot.value)
-const monacoTheme = computed(() => previewDark.value ? 'vs-dark' as const : 'vs' as const)
+const monacoTheme = computed(() => (previewDark.value ? ('vs-dark' as const) : ('vs' as const)))
 const previewTokens = computed(() => buildSiteTokens(previewDark.value))
 const previewTheme = computed<CustomHtmlTheme>(() => ({
   fg: previewTokens.value.foreground,
@@ -155,27 +162,29 @@ function attachResource(file: APIFileModel, insert = true) {
     }
   }
   if (!insert) return
-  const key = draft.value.assets.find(asset => asset.file.id === file.id)?.key ?? `file-${file.id}`
-  codeEditor.value?.insertText(activeLanguage.value === 'html'
-    ? `\n<img data-vtsuru-asset="${key}" alt="">`
-    : `var(--vtsuru-asset-${key})`)
+  const key = draft.value.assets.find((asset) => asset.file.id === file.id)?.key ?? `file-${file.id}`
+  codeEditor.value?.insertText(
+    activeLanguage.value === 'html' ? `\n<img data-vtsuru-asset="${key}" alt="">` : `var(--vtsuru-asset-${key})`,
+  )
 }
 
 function syncReferencedResources() {
   const keys = collectCustomHtmlAssetKeys(draft.value.html, draft.value.css)
-  const attachedKeys = new Set(draft.value.assets.map(asset => asset.key))
+  const attachedKeys = new Set(draft.value.assets.map((asset) => asset.key))
   keys.forEach((key) => {
     if (attachedKeys.has(key)) return
     const match = key.match(/^file-(\d+)$/)
-    const file = match ? imageResources.value.find(item => item.id === Number(match[1])) : null
+    const file = match ? imageResources.value.find((item) => item.id === Number(match[1])) : null
     if (file) attachResource(file, false)
   })
 }
 
 function applyChanges() {
   const usedKeys = collectCustomHtmlAssetKeys(draft.value.html, draft.value.css)
-  draft.value.assets = draft.value.assets.filter(asset => usedKeys.has(asset.key))
-  editor.batchHistory(() => { props.block.props = deepCloneJson(draft.value) })
+  draft.value.assets = draft.value.assets.filter((asset) => usedKeys.has(asset.key))
+  editor.batchHistory(() => {
+    props.block.props = deepCloneJson(draft.value)
+  })
   initialSnapshot.value = JSON.stringify(draft.value)
   show.value = false
   editor.message.success('自定义代码已应用')
@@ -191,7 +200,9 @@ function closeEditor() {
     content: '代码工作区中的修改尚未应用到区块。',
     positiveText: '放弃修改',
     negativeText: '继续编辑',
-    onPositiveClick: () => { show.value = false },
+    onPositiveClick: () => {
+      show.value = false
+    },
   })
 }
 
@@ -222,16 +233,19 @@ async function handleUpload(event: Event) {
   }
 }
 
-watch(show, (visible) => {
-  if (!visible) return
-  resetDraft()
-  void resources.loadResources()
-}, { immediate: true })
-watchDebounced(
-  [() => draft.value.html, () => draft.value.css, imageResources],
-  syncReferencedResources,
-  { debounce: 180, deep: true },
+watch(
+  show,
+  (visible) => {
+    if (!visible) return
+    resetDraft()
+    void resources.loadResources()
+  },
+  { immediate: true },
 )
+watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], syncReferencedResources, {
+  debounce: 180,
+  deep: true,
+})
 </script>
 
 <template>
@@ -247,29 +261,64 @@ watchDebounced(
     @update:show="updateShow"
   >
     <template #header-extra>
-      <NFlex align="center" :wrap="false" size="small">
-        <NTag v-if="codeIssues.length" type="error" size="small">
+      <NFlex
+        align="center"
+        :wrap="false"
+        size="small"
+      >
+        <NTag
+          v-if="codeIssues.length"
+          type="error"
+          size="small"
+        >
           {{ codeIssues.length }} 个问题
         </NTag>
-        <NButton size="small" secondary @click="closeEditor">
+        <NButton
+          size="small"
+          secondary
+          @click="closeEditor"
+        >
           取消
         </NButton>
-        <NButton size="small" type="primary" @click="applyChanges">
+        <NButton
+          size="small"
+          type="primary"
+          @click="applyChanges"
+        >
           应用
         </NButton>
       </NFlex>
     </template>
 
-    <div class="workspace" :class="{ 'resources-hidden': !resourcesVisible }">
-      <aside v-if="resourcesVisible" class="resources-pane">
-        <NFlex vertical size="small" class="resources-toolbar">
-          <NFlex justify="space-between" align="center" :wrap="false">
-            <NText strong>
-              图片资源
-            </NText>
+    <div
+      class="workspace"
+      :class="{ 'resources-hidden': !resourcesVisible }"
+    >
+      <aside
+        v-if="resourcesVisible"
+        class="resources-pane"
+      >
+        <NFlex
+          vertical
+          size="small"
+          class="resources-toolbar"
+        >
+          <NFlex
+            justify="space-between"
+            align="center"
+            :wrap="false"
+          >
+            <NText strong> 图片资源 </NText>
             <NTooltip>
               <template #trigger>
-                <NButton circle secondary size="small" :loading="uploading" aria-label="上传图片" @click="uploadInput?.click()">
+                <NButton
+                  circle
+                  secondary
+                  size="small"
+                  :loading="uploading"
+                  aria-label="上传图片"
+                  @click="uploadInput?.click()"
+                >
                   <template #icon>
                     <NIcon><CloudUploadOutline /></NIcon>
                   </template>
@@ -278,34 +327,88 @@ watchDebounced(
               上传图片
             </NTooltip>
           </NFlex>
-          <NInput v-model:value="resourceSearch" size="small" clearable placeholder="搜索文件" />
-          <input ref="uploadInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp" hidden @change="handleUpload">
+          <NInput
+            v-model:value="resourceSearch"
+            size="small"
+            clearable
+            placeholder="搜索文件"
+          />
+          <input
+            ref="uploadInput"
+            type="file"
+            accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
+            hidden
+            @change="handleUpload"
+          />
         </NFlex>
         <NScrollbar class="resource-scroll">
-          <div v-if="filteredResources.length" class="resource-list">
-            <button v-for="file in filteredResources" :key="file.id" type="button" class="resource-row" @click="attachResource(file)">
-              <img :src="file.path" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+          <div
+            v-if="filteredResources.length"
+            class="resource-list"
+          >
+            <button
+              v-for="file in filteredResources"
+              :key="file.id"
+              type="button"
+              class="resource-row"
+              @click="attachResource(file)"
+            >
+              <img
+                :src="file.path"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                referrerpolicy="no-referrer"
+              />
               <span class="resource-copy">
                 <strong>{{ file.name || `资源 #${file.id}` }}</strong>
                 <small>#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small>
               </span>
             </button>
           </div>
-          <NEmpty v-else-if="!resources.isLoading.value" size="small" description="没有可用图片" />
+          <NEmpty
+            v-else-if="!resources.isLoading.value"
+            size="small"
+            description="没有可用图片"
+          />
         </NScrollbar>
       </aside>
 
       <section class="code-pane">
         <div class="pane-toolbar">
-          <NFlex justify="space-between" align="center" :wrap="false">
-            <NTabs v-model:value="activeLanguage" type="segment" size="small" style="width: 190px">
-              <NTabPane name="html" tab="HTML" />
-              <NTabPane name="css" tab="CSS" />
+          <NFlex
+            justify="space-between"
+            align="center"
+            :wrap="false"
+          >
+            <NTabs
+              v-model:value="activeLanguage"
+              type="segment"
+              size="small"
+              style="width: 190px"
+            >
+              <NTabPane
+                name="html"
+                tab="HTML"
+              />
+              <NTabPane
+                name="css"
+                tab="CSS"
+              />
             </NTabs>
-            <NFlex :wrap="false" size="small">
+            <NFlex
+              :wrap="false"
+              size="small"
+            >
               <NTooltip>
                 <template #trigger>
-                  <NButton circle secondary size="small" aria-label="切换资源栏" @click="resourcesVisible = !resourcesVisible">
+                  <NButton
+                    circle
+                    secondary
+                    size="small"
+                    aria-label="切换资源栏"
+                    @click="resourcesVisible = !resourcesVisible"
+                  >
                     <template #icon>
                       <NIcon><FolderOpenOutline /></NIcon>
                     </template>
@@ -315,7 +418,13 @@ watchDebounced(
               </NTooltip>
               <NTooltip>
                 <template #trigger>
-                  <NButton circle secondary size="small" aria-label="格式化代码" @click="codeEditor?.formatDocument()">
+                  <NButton
+                    circle
+                    secondary
+                    size="small"
+                    aria-label="格式化代码"
+                    @click="codeEditor?.formatDocument()"
+                  >
                     <template #icon>
                       <NIcon><CodeWorkingOutline /></NIcon>
                     </template>
@@ -325,7 +434,10 @@ watchDebounced(
               </NTooltip>
             </NFlex>
           </NFlex>
-          <NText depth="3" class="byte-count">
+          <NText
+            depth="3"
+            class="byte-count"
+          >
             HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes
           </NText>
         </div>
@@ -345,14 +457,20 @@ watchDebounced(
 
       <section class="preview-pane">
         <div class="pane-toolbar preview-toolbar">
-          <NText strong>
-            实时预览
-          </NText>
-          <NFlex :wrap="false" size="small">
+          <NText strong> 实时预览 </NText>
+          <NFlex
+            :wrap="false"
+            size="small"
+          >
             <NButtonGroup size="small">
               <NTooltip>
                 <template #trigger>
-                  <NButton :type="previewDevice === 'desktop' ? 'primary' : 'default'" secondary aria-label="桌面预览" @click="previewDevice = 'desktop'">
+                  <NButton
+                    :type="previewDevice === 'desktop' ? 'primary' : 'default'"
+                    secondary
+                    aria-label="桌面预览"
+                    @click="previewDevice = 'desktop'"
+                  >
                     <template #icon>
                       <NIcon><DesktopOutline /></NIcon>
                     </template>
@@ -362,7 +480,12 @@ watchDebounced(
               </NTooltip>
               <NTooltip>
                 <template #trigger>
-                  <NButton :type="previewDevice === 'mobile' ? 'primary' : 'default'" secondary aria-label="移动预览" @click="previewDevice = 'mobile'">
+                  <NButton
+                    :type="previewDevice === 'mobile' ? 'primary' : 'default'"
+                    secondary
+                    aria-label="移动预览"
+                    @click="previewDevice = 'mobile'"
+                  >
                     <template #icon>
                       <NIcon><PhonePortraitOutline /></NIcon>
                     </template>
@@ -373,7 +496,13 @@ watchDebounced(
             </NButtonGroup>
             <NTooltip>
               <template #trigger>
-                <NButton circle secondary size="small" :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'" @click="previewDark = !previewDark">
+                <NButton
+                  circle
+                  secondary
+                  size="small"
+                  :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
+                  @click="previewDark = !previewDark"
+                >
                   <template #icon>
                     <NIcon><SunnyOutline v-if="previewDark" /><MoonOutline v-else /></NIcon>
                   </template>
@@ -384,9 +513,18 @@ watchDebounced(
           </NFlex>
         </div>
         <NScrollbar class="preview-scroll">
-          <div class="preview-stage" :class="{ dark: previewDark }">
-            <div class="preview-content" :style="previewStyle">
-              <CustomHtmlBlock :block-props="draft" :theme="previewTheme" />
+          <div
+            class="preview-stage"
+            :class="{ dark: previewDark }"
+          >
+            <div
+              class="preview-content"
+              :style="previewStyle"
+            >
+              <CustomHtmlBlock
+                :block-props="draft"
+                :theme="previewTheme"
+              />
             </div>
           </div>
         </NScrollbar>
@@ -422,41 +560,122 @@ watchDebounced(
   flex-direction: column;
 }
 
-.preview-pane { border-right: 0; }
+.preview-pane {
+  border-right: 0;
+}
 .resources-toolbar,
-.pane-toolbar { flex: 0 0 auto; padding: 10px 12px; border-bottom: 1px solid var(--vtsuru-border); }
-.byte-count { display: block; margin-top: 6px; font-size: 11px; }
+.pane-toolbar {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--vtsuru-border);
+}
+.byte-count {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+}
 .resource-scroll,
-.preview-scroll { flex: 1; min-height: 0; }
-.resource-list { padding: 6px; }
-.resource-row { display: flex; width: 100%; align-items: center; gap: 9px; padding: 7px; border: 0; border-radius: 6px; color: var(--vtsuru-fg); background: transparent; text-align: left; cursor: pointer; }
-.resource-row:hover { background: var(--vtsuru-bg-muted); }
-.resource-row:focus-visible { outline: 2px solid var(--vtsuru-brand); outline-offset: -2px; }
-.resource-row img { width: 42px; height: 42px; flex: 0 0 42px; border: 1px solid var(--vtsuru-border); border-radius: 4px; object-fit: cover; }
-.resource-copy { min-width: 0; display: flex; flex-direction: column; }
+.preview-scroll {
+  flex: 1;
+  min-height: 0;
+}
+.resource-list {
+  padding: 6px;
+}
+.resource-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  padding: 7px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--vtsuru-fg);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.resource-row:hover {
+  background: var(--vtsuru-bg-muted);
+}
+.resource-row:focus-visible {
+  outline: 2px solid var(--vtsuru-brand);
+  outline-offset: -2px;
+}
+.resource-row img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 4px;
+  object-fit: cover;
+}
+.resource-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
 .resource-copy strong,
-.resource-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.resource-copy strong { font-size: 12px; font-weight: 600; }
-.resource-copy small { color: var(--vtsuru-fg-muted); font-size: 11px; }
-.preview-toolbar { display: flex; min-height: 53px; align-items: center; justify-content: space-between; gap: 12px; }
-.preview-stage { min-height: 100%; padding: 24px; background: #f4f4f5; }
-.preview-stage.dark { background: #18181b; }
-.preview-content { margin: 0 auto; padding: 16px; border: 1px solid var(--vtsuru-border); border-radius: 6px; background: var(--vtsuru-bg); transition: width 160ms ease; }
+.resource-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.resource-copy strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.resource-copy small {
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+}
+.preview-toolbar {
+  display: flex;
+  min-height: 53px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.preview-stage {
+  min-height: 100%;
+  padding: 24px;
+  background: #f4f4f5;
+}
+.preview-stage.dark {
+  background: #18181b;
+}
+.preview-content {
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 6px;
+  background: var(--vtsuru-bg);
+  transition: width 160ms ease;
+}
 
 @media (max-width: 980px) {
   .workspace,
   .workspace.resources-hidden {
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(380px, 1fr) minmax(300px, .8fr);
+    grid-template-rows: auto minmax(380px, 1fr) minmax(300px, 0.8fr);
     overflow: auto;
   }
-  .workspace.resources-hidden { grid-template-rows: minmax(380px, 1fr) minmax(300px, .8fr); }
-  .resources-pane { max-height: 220px; }
+  .workspace.resources-hidden {
+    grid-template-rows: minmax(380px, 1fr) minmax(300px, 0.8fr);
+  }
+  .resources-pane {
+    max-height: 220px;
+  }
   .resources-pane,
-  .code-pane { border-right: 0; border-bottom: 1px solid var(--vtsuru-border); }
+  .code-pane {
+    border-right: 0;
+    border-bottom: 1px solid var(--vtsuru-border);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .preview-content { transition: none; }
+  .preview-content {
+    transition: none;
+  }
 }
 </style>

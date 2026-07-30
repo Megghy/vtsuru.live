@@ -1,23 +1,45 @@
 <script setup lang="ts">
-import type { BiliAuthModel } from '@/api/api-models'
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
 import { DocumentTextOutline } from '@vicons/ionicons5'
 import {
-  NAlert, NButton, NCard, NCode, NCountdown, NDivider, NEllipsis, NFlex, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSelect, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NCode,
+  NCountdown,
+  NDivider,
+  NEllipsis,
+  NFlex,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NModal,
+  NPopconfirm,
+  NSelect,
+  NTabPane,
+  NTabs,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
-import VueTurnstile from 'vue-turnstile'
 import { useRoute, useRouter } from 'vue-router'
+import VueTurnstile from 'vue-turnstile'
+
 import { useAccount } from '@/api/account'
-import { cookie } from '@/api/auth'
+import type { BiliAuthModel } from '@/api/api-models'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
+import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
-import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey, TURNSTILE_KEY } from '@/shared/config'
-import { checkUpdateNote } from '@/shared/services/UpdateNote'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
+import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey, TURNSTILE_KEY } from '@/shared/config'
+import { checkUpdateNote } from '@/shared/services/UpdateNote'
 
 const token = ref('')
 const turnstile = ref()
@@ -58,14 +80,14 @@ const biliAuthText = ref('')
 const isLoading = ref(false)
 
 // API选择器选项
-const apiOptions = availableAPIs.map(api => ({
+const apiOptions = availableAPIs.map((api) => ({
   label: api.name,
   value: api.key,
 }))
 
 // 切换API
 function handleAPIChange(value: string) {
-  message.info(`正在切换到${availableAPIs.find(api => api.key === value)?.name}...`)
+  message.info(`正在切换到${availableAPIs.find((api) => api.key === value)?.name}...`)
   setTimeout(() => {
     location.reload()
   }, 500)
@@ -309,7 +331,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="dashboard-view" :class="{ 'dashboard-view--wide': selectedTab === 'template' }">
+  <div
+    class="dashboard-view"
+    :class="{ 'dashboard-view--wide': selectedTab === 'template' }"
+  >
     <div class="dashboard-alerts">
       <NAlert
         v-if="accountInfo?.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
@@ -317,9 +342,18 @@ onUnmounted(() => {
         title="身份码已失效"
         :bordered="false"
       >
-        <NFlex justify="space-between" align="center" wrap :size="12">
+        <NFlex
+          justify="space-between"
+          align="center"
+          wrap
+          :size="12"
+        >
           <NText>你的身份码已失效, 这会导致无法获取直播间数据.</NText>
-          <NButton size="small" type="error" @click="bindBiliCodeModalVisiable = true">
+          <NButton
+            size="small"
+            type="error"
+            @click="bindBiliCodeModalVisiable = true"
+          >
             更新身份码
           </NButton>
         </NFlex>
@@ -337,21 +371,44 @@ onUnmounted(() => {
       <NTabPane
         name="info"
         tab="个人信息"
-        style="width: 100%;"
+        style="width: 100%"
         display-directive="show:lazy"
       >
-        <NCard size="small" bordered :segmented="{ content: true }">
-          <NFlex vertical :size="12">
-            <NFlex justify="space-between" align="baseline" wrap :size="12">
+        <NCard
+          size="small"
+          bordered
+          :segmented="{ content: true }"
+        >
+          <NFlex
+            vertical
+            :size="12"
+          >
+            <NFlex
+              justify="space-between"
+              align="baseline"
+              wrap
+              :size="12"
+            >
               <div class="dashboard-profile">
-                <NText strong class="dashboard-profile__name">
+                <NText
+                  strong
+                  class="dashboard-profile__name"
+                >
                   {{ accountInfo?.name }}
                 </NText>
-                <NText depth="3" class="dashboard-profile__meta">
+                <NText
+                  depth="3"
+                  class="dashboard-profile__meta"
+                >
                   注册于 <NTime :time="accountInfo?.createAt" />
                 </NText>
               </div>
-              <NFlex align="center" justify="end" wrap :size="8">
+              <NFlex
+                align="center"
+                justify="end"
+                wrap
+                :size="8"
+              >
                 <NButton
                   type="primary"
                   secondary
@@ -363,7 +420,10 @@ onUnmounted(() => {
                   </template>
                   自定义页面
                 </NButton>
-                <NText depth="3" code>
+                <NText
+                  depth="3"
+                  code
+                >
                   {{ accountInfo?.id }}
                 </NText>
                 <NButton
@@ -396,16 +456,17 @@ onUnmounted(() => {
             </NFlex>
 
             <NFlex vertical>
-              <NCard size="small" bordered>
+              <NCard
+                size="small"
+                bordered
+              >
                 <NFlex :size="5">
                   邮箱:
                   <NEllipsis
                     v-if="accountInfo?.isEmailVerified"
                     style="max-width: 100%"
                   >
-                    <NText style="color: var(--vtsuru-primary)">
-                      已认证 | {{ accountInfo?.bindEmail }}
-                    </NText>
+                    <NText style="color: var(--vtsuru-primary)"> 已认证 | {{ accountInfo?.bindEmail }} </NText>
                   </NEllipsis>
                   <template v-else>
                     <NTag
@@ -425,7 +486,10 @@ onUnmounted(() => {
                   </NButton>
                 </NFlex>
               </NCard>
-              <NCard size="small" bordered>
+              <NCard
+                size="small"
+                bordered
+              >
                 主播 Bilibili 账户:
                 <NEllipsis
                   v-if="accountInfo?.isBiliVerified"
@@ -511,7 +575,10 @@ onUnmounted(() => {
                   </NButton>
                 </template>
               </NCard>
-              <NCard size="small" bordered>
+              <NCard
+                size="small"
+                bordered
+              >
                 用户 Bilibili 账户:
                 <NEllipsis
                   v-if="accountInfo?.biliUserAuthInfo"
@@ -578,7 +645,10 @@ onUnmounted(() => {
                   />
                   <NPopconfirm @positive-click="resetToken">
                     <template #trigger>
-                      <NButton type="error" size="small">
+                      <NButton
+                        type="error"
+                        size="small"
+                      >
                         重置
                       </NButton>
                     </template>
@@ -595,15 +665,22 @@ onUnmounted(() => {
               size="small"
               :bordered="false"
             >
-              <NFlex align="center" :wrap="true" :size="12">
+              <NFlex
+                align="center"
+                :wrap="true"
+                :size="12"
+              >
                 <NText>当前使用的API:</NText>
                 <NSelect
                   v-model:value="selectedAPIKey"
                   :options="apiOptions"
-                  style="max-width: 220px;"
+                  style="max-width: 220px"
                   @update:value="handleAPIChange"
                 />
-                <NText depth="3" style="font-size: 12px;">
+                <NText
+                  depth="3"
+                  style="font-size: 12px"
+                >
                   如果访问速度较慢可以尝试切换API
                 </NText>
               </NFlex>
@@ -655,7 +732,8 @@ onUnmounted(() => {
           type="primary"
           @click="sendEmailVerifyCode"
         >
-          发送验证码 <template v-if="!canSendEmailVerifyCode">
+          发送验证码
+          <template v-if="!canSendEmailVerifyCode">
             |
             <NCountdown :duration="60000" />
           </template>
@@ -748,21 +826,22 @@ onUnmounted(() => {
               前往幻星页面
             </NButton>
           </template>
-          在幻星页面右侧 或者 <NButton
+          在幻星页面右侧 或者
+          <NButton
             text
             tag="a"
             href="https://link.bilibili.com/p/center/index#/my-room/start-live"
             target="_blank"
             type="success"
           >
-            开播页
-          </NButton>直播信息处可以获取
-          <br>
+            开播页 </NButton
+          >直播信息处可以获取
+          <br />
           刷新身份码后需要在这里更新
           <img
             src="https://files.vtsuru.suki.club/updatelog/dbc2b6fe-fc85-42f3-9167-78f15abe74ce.png"
-            style="max-width: 400px; display: block; margin-top: 8px;"
-          >
+            style="max-width: 400px; display: block; margin-top: 8px"
+          />
         </NTooltip>
       </NInputGroup>
     </NFlex>

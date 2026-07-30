@@ -1,13 +1,18 @@
 import { List } from 'linqts'
+
 import { KeywordMatchType, QueueSortType } from '@/api/api-models'
 
 /** 舰长等级对应主题色 (1 总督 / 2 提督 / 3 舰长), 其它返回次要文本色 */
 export function getGuardColor(level: number | null | undefined): string {
   switch (level) {
-    case 1: return 'rgb(122, 4, 35)'
-    case 2: return 'rgb(157, 155, 255)'
-    case 3: return 'rgb(104, 136, 241)'
-    default: return 'var(--vtsuru-fg-muted)'
+    case 1:
+      return 'rgb(122, 4, 35)'
+    case 2:
+      return 'rgb(157, 155, 255)'
+    case 3:
+      return 'rgb(104, 136, 241)'
+    default:
+      return 'var(--vtsuru-fg-muted)'
   }
 }
 
@@ -53,24 +58,20 @@ export function sortByQueueType<T>(
 
   switch (sortType) {
     case QueueSortType.GuardFirst:
-      list = list
-        .OrderBy(q => (accessor.guardLevel(q) || 4))
-        .ThenBy(q => accessor.createAt(q))
+      list = list.OrderBy((q) => accessor.guardLevel(q) || 4).ThenBy((q) => accessor.createAt(q))
       break
     case QueueSortType.PaymentFist:
-      list = list
-        .OrderByDescending(q => accessor.price(q) ?? 0)
-        .ThenBy(q => accessor.createAt(q))
+      list = list.OrderByDescending((q) => accessor.price(q) ?? 0).ThenBy((q) => accessor.createAt(q))
       break
     case QueueSortType.FansMedalFirst:
       list = list
-        .OrderByDescending(q => (accessor.fansMedalWearing?.(q) ? 1 : 0))
-        .ThenByDescending(q => accessor.fansMedalLevel(q) ?? 0)
-        .ThenBy(q => accessor.createAt(q))
+        .OrderByDescending((q) => (accessor.fansMedalWearing?.(q) ? 1 : 0))
+        .ThenByDescending((q) => accessor.fansMedalLevel(q) ?? 0)
+        .ThenBy((q) => accessor.createAt(q))
       break
     case QueueSortType.TimeFirst:
     default:
-      list = list.OrderBy(q => accessor.createAt(q))
+      list = list.OrderBy((q) => accessor.createAt(q))
       break
   }
 

@@ -1,12 +1,28 @@
 <script setup lang="ts">
-import type { ResponseLiveInfoModel } from '@/api/api-models'
-import { ArrowSync24Filled, Search24Filled
-} from '@vicons/fluent'
-import { NAlert, NButton, NCard, NDivider, NEmpty, NFlex, NIcon, NInput, NInputNumber, NPagination, NSelect, NSkeleton, NSwitch, NText, useMessage } from 'naive-ui';
+import { ArrowSync24Filled, Search24Filled } from '@vicons/fluent'
+import { useSessionStorage } from '@vueuse/core'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NPagination,
+  NSelect,
+  NSkeleton,
+  NSwitch,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useSessionStorage } from '@vueuse/core'
+
 import { useAccount } from '@/api/account'
+import type { ResponseLiveInfoModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
@@ -34,7 +50,10 @@ const pageSize = usePersistedStorage<number>('ManageLive.pageSize', 10)
 // search / filter / sort
 const keyword = usePersistedStorage<string>('ManageLive.keyword', '')
 const statusFilter = usePersistedStorage<'all' | 'live' | 'finished'>('ManageLive.status', 'all')
-const sortKey = usePersistedStorage<'startAt' | 'danmakusCount' | 'totalIncome' | 'interactionCount'>('ManageLive.sort', 'startAt')
+const sortKey = usePersistedStorage<'startAt' | 'danmakusCount' | 'totalIncome' | 'interactionCount'>(
+  'ManageLive.sort',
+  'startAt',
+)
 const sortOrder = usePersistedStorage<'desc' | 'asc'>('ManageLive.order', 'desc')
 
 // refresh
@@ -54,17 +73,13 @@ const totalCount = computed(() => filteredAndSortedLives.value.length)
 
 const filteredAndSortedLives = computed(() => {
   // filter by status
-  let arr = lives.value.filter(l =>
-    statusFilter.value === 'all'
-      ? true
-      : statusFilter.value === 'live'
-        ? !l.isFinish
-        : l.isFinish,
+  let arr = lives.value.filter((l) =>
+    statusFilter.value === 'all' ? true : statusFilter.value === 'live' ? !l.isFinish : l.isFinish,
   )
   // search by title or id
   if (keyword.value && keyword.value.trim() !== '') {
     const k = keyword.value.trim().toLowerCase()
-    arr = arr.filter(l => l.title.toLowerCase().includes(k) || l.liveId.toLowerCase().includes(k))
+    arr = arr.filter((l) => l.title.toLowerCase().includes(k) || l.liveId.toLowerCase().includes(k))
   }
   // sort
   arr = arr.slice().toSorted((a, b) => {
@@ -124,25 +139,26 @@ function applyQueryToState() {
   if (q.page) page.value = Number(q.page) || 1
   if (q.pageSize) pageSize.value = Number(q.pageSize) || 10
   if (q.q) keyword.value = String(q.q)
-  if (q.status && (['all', 'live', 'finished'] as const).includes(q.status as any))
-    statusFilter.value = q.status as any
+  if (q.status && (['all', 'live', 'finished'] as const).includes(q.status as any)) statusFilter.value = q.status as any
   if (q.sort && (['startAt', 'danmakusCount', 'totalIncome', 'interactionCount'] as const).includes(q.sort as any))
     sortKey.value = q.sort as any
   if (q.order && (['asc', 'desc'] as const).includes(q.order as any)) sortOrder.value = q.order as any
 }
 
 function syncStateToQuery() {
-  router.replace({
-    query: {
-      ...route.query,
-      page: String(page.value),
-      pageSize: String(pageSize.value),
-      q: keyword.value || undefined,
-      status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
-      sort: sortKey.value !== 'startAt' ? sortKey.value : undefined,
-      order: sortOrder.value !== 'desc' ? sortOrder.value : undefined,
-    },
-  }).catch(() => { })
+  router
+    .replace({
+      query: {
+        ...route.query,
+        page: String(page.value),
+        pageSize: String(pageSize.value),
+        q: keyword.value || undefined,
+        status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+        sort: sortKey.value !== 'startAt' ? sortKey.value : undefined,
+        order: sortOrder.value !== 'desc' ? sortOrder.value : undefined,
+      },
+    })
+    .catch(() => {})
 }
 
 watch([page, pageSize, keyword, statusFilter, sortKey, sortOrder], syncStateToQuery)
@@ -189,10 +205,20 @@ onBeforeUnmount(() => {
       :loading="isLoading"
     >
       <template #action>
-        <NButton size="small" secondary :disabled="isLoading" @click="resetFilters">
+        <NButton
+          size="small"
+          secondary
+          :disabled="isLoading"
+          @click="resetFilters"
+        >
           重置筛选
         </NButton>
-        <NButton size="small" type="primary" :loading="isLoading" @click="getAll">
+        <NButton
+          size="small"
+          type="primary"
+          :loading="isLoading"
+          @click="getAll"
+        >
           <template #icon>
             <NIcon :component="ArrowSync24Filled" />
           </template>
@@ -204,14 +230,29 @@ onBeforeUnmount(() => {
         <EventFetcherAlert />
         <EventFetcherStatusCard />
 
-        <NAlert v-if="!isVerified" type="info" title="未认证" :bordered="false">
+        <NAlert
+          v-if="!isVerified"
+          type="info"
+          title="未认证"
+          :bordered="false"
+        >
           尚未进行 Bilibili 认证，部分功能可能受限。
         </NAlert>
 
-        <NAlert v-else-if="loadError" type="error" title="加载失败" :bordered="false">
+        <NAlert
+          v-else-if="loadError"
+          type="error"
+          title="加载失败"
+          :bordered="false"
+        >
           <div>{{ loadError }}</div>
           <div style="margin-top: 8px">
-            <NButton size="small" secondary :loading="isLoading" @click="getAll">
+            <NButton
+              size="small"
+              secondary
+              :loading="isLoading"
+              @click="getAll"
+            >
               重试
             </NButton>
           </div>
@@ -220,10 +261,29 @@ onBeforeUnmount(() => {
     </ManagePageHeader>
 
     <template v-if="isVerified">
-      <NCard class="toolbar-card" size="small" :bordered="true" content-style="padding: 12px;">
-        <NFlex justify="space-between" align="center" wrap :size="12">
-          <NFlex align="center" wrap :size="10">
-            <NInput v-model:value="keyword" placeholder="搜索标题或ID" clearable class="search-input">
+      <NCard
+        class="toolbar-card"
+        size="small"
+        :bordered="true"
+        content-style="padding: 12px;"
+      >
+        <NFlex
+          justify="space-between"
+          align="center"
+          wrap
+          :size="12"
+        >
+          <NFlex
+            align="center"
+            wrap
+            :size="10"
+          >
+            <NInput
+              v-model:value="keyword"
+              placeholder="搜索标题或ID"
+              clearable
+              class="search-input"
+            >
               <template #prefix>
                 <NIcon :component="Search24Filled" />
               </template>
@@ -240,7 +300,11 @@ onBeforeUnmount(() => {
             />
           </NFlex>
 
-          <NFlex align="center" wrap :size="10">
+          <NFlex
+            align="center"
+            wrap
+            :size="10"
+          >
             <span class="manage-kicker">排序</span>
             <NSelect
               v-model:value="sortKey"
@@ -265,14 +329,17 @@ onBeforeUnmount(() => {
 
             <NDivider vertical />
 
-            <NFlex align="center" wrap :size="8">
-              <NSwitch v-model:value="enableAutoRefresh" size="small">
-                <template #checked>
-                  自动刷新
-                </template>
-                <template #unchecked>
-                  自动刷新
-                </template>
+            <NFlex
+              align="center"
+              wrap
+              :size="8"
+            >
+              <NSwitch
+                v-model:value="enableAutoRefresh"
+                size="small"
+              >
+                <template #checked> 自动刷新 </template>
+                <template #unchecked> 自动刷新 </template>
               </NSwitch>
               <NInputNumber
                 v-if="enableAutoRefresh"
@@ -282,35 +349,59 @@ onBeforeUnmount(() => {
                 :min="10"
                 placeholder="秒"
               >
-                <template #suffix>
-                  s
-                </template>
+                <template #suffix> s </template>
               </NInputNumber>
             </NFlex>
           </NFlex>
         </NFlex>
 
-        <NDivider style="margin: 12px 0 0;" />
-        <NFlex justify="space-between" align="center" wrap :size="12" style="margin-top: 10px;">
-          <NText depth="3" class="result-meta">
+        <NDivider style="margin: 12px 0 0" />
+        <NFlex
+          justify="space-between"
+          align="center"
+          wrap
+          :size="12"
+          style="margin-top: 10px"
+        >
+          <NText
+            depth="3"
+            class="result-meta"
+          >
             共 {{ totalCount }} 条记录
           </NText>
         </NFlex>
       </NCard>
 
-      <NSkeleton v-if="isLoading && !lives.length" class="skeleton" text :repeat="6" />
+      <NSkeleton
+        v-if="isLoading && !lives.length"
+        class="skeleton"
+        text
+        :repeat="6"
+      />
       <template v-else>
-        <NCard v-if="!filteredAndSortedLives.length" class="empty-card" size="small" :bordered="true">
+        <NCard
+          v-if="!filteredAndSortedLives.length"
+          class="empty-card"
+          size="small"
+          :bordered="true"
+        >
           <NEmpty description="没有找到符合条件的直播记录">
             <template #extra>
-              <NButton type="primary" :loading="isLoading" @click="getAll">
+              <NButton
+                type="primary"
+                :loading="isLoading"
+                @click="getAll"
+              >
                 重新加载
               </NButton>
             </template>
           </NEmpty>
         </NCard>
 
-        <div v-else class="live-stack">
+        <div
+          v-else
+          class="live-stack"
+        >
           <div
             v-for="live in pagedLives"
             :key="live.liveId"
@@ -389,7 +480,10 @@ onBeforeUnmount(() => {
   border-radius: var(--vtsuru-radius);
   background-color: var(--vtsuru-bg-surface);
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .live-row:hover {

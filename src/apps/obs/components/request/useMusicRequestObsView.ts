@@ -1,14 +1,8 @@
-import type {
-  DanmakuUserInfo,
-  SongsInfo,
-} from '@/api/api-models'
-import type {
-  ObsDisplayCurrent,
-  ObsDisplayFooterTag,
-  ObsDisplayItem,
-} from '@/apps/obs/components/shared/obsDisplay'
 import { computed, ref } from 'vue'
+
+import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
 import { AVATAR_URL, MUSIC_REQUEST_API_URL } from '@/shared/config'
 
 interface WaitMusicInfo {
@@ -35,11 +29,10 @@ export function useMusicRequestObsView(currentId: string) {
       active: true,
       title: playing.value.music.name,
       subtitle: playing.value.from?.name ?? '主播添加',
-      avatarUrl: playing.value.music.cover ?? (playing.value.from?.uid ? AVATAR_URL + playing.value.from.uid : undefined),
+      avatarUrl:
+        playing.value.music.cover ?? (playing.value.from?.uid ? AVATAR_URL + playing.value.from.uid : undefined),
       emptyText: '暂无点歌',
-      badges: playing.value.music.author?.length
-        ? [{ text: playing.value.music.author.join('/'), tone: 'muted' }]
-        : [],
+      badges: playing.value.music.author?.length ? [{ text: playing.value.music.author.join('/'), tone: 'muted' }] : [],
     }
   })
 
@@ -55,7 +48,7 @@ export function useMusicRequestObsView(currentId: string) {
 
   async function get() {
     try {
-      const data = await QueryGetAPI<{ playing?: WaitMusicInfo, waiting: WaitMusicInfo[] }>(
+      const data = await QueryGetAPI<{ playing?: WaitMusicInfo; waiting: WaitMusicInfo[] }>(
         `${MUSIC_REQUEST_API_URL}get-waiting`,
         { id: currentId },
       )

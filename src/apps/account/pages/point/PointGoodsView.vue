@@ -1,30 +1,44 @@
 <script setup lang="ts">
-import type {
-  SelectOption,
-  FormRules,
-} from 'naive-ui'
-// 移除未使用的 useAccount
-import type {
-  AddressInfo,
-  ResponsePointGoodModel,
-  ResponsePointOrder2UserModel,
-  UserInfo,
-} from '@/api/api-models'
-import { useDebounceFn } from '@vueuse/core'
 import { ArrowSync24Regular, Search24Regular, Filter24Regular, Person24Regular, Add24Regular } from '@vicons/fluent'
+import { useDebounceFn } from '@vueuse/core'
+import type { SelectOption, FormRules } from 'naive-ui'
 import {
-  NAlert, NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NImage, NInput, NInputNumber, NModal, NScrollbar, NSelect, NSpin, NTag, NText, useDialog, useMessage } from 'naive-ui';
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NForm,
+  NFormItem,
+  NGi,
+  NGrid,
+  NIcon,
+  NImage,
+  NInput,
+  NInputNumber,
+  NModal,
+  NScrollbar,
+  NSelect,
+  NSpin,
+  NTag,
+  NText,
+  useDialog,
+  useMessage,
+} from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  GoodsTypes,
-} from '@/api/api-models'
+
+// 移除未使用的 useAccount
+import type { AddressInfo, ResponsePointGoodModel, ResponsePointOrder2UserModel, UserInfo } from '@/api/api-models'
+import { GoodsTypes } from '@/api/api-models'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import { POINT_API_URL } from '@/shared/config'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { NavigateToNewTab } from '@/shared/utils'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { NavigateToNewTab } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 // 移除未使用的 biliInfo prop
 const props = defineProps<{
@@ -54,7 +68,7 @@ const userAgree = ref(false)
 const buyCount = ref(1) // 购买数量
 const selectedAddress = ref<AddressInfo>() // 选中的地址
 const remark = ref('') // 新增：用于存储用户备注
-type BuySubItem = { subItemId: number, quantity: number }
+type BuySubItem = { subItemId: number; quantity: number }
 const selectedSubItems = ref<BuySubItem[]>([]) // 选中的子选项（可多选）
 
 // 筛选相关状态
@@ -95,14 +109,14 @@ watch(searchKeyword, (newVal) => {
 
 const currentGoodsCost = computed(() => {
   if (!currentGoods.value) return 0
-  
+
   // 如果标记为免费，直接返回 0
   if (currentGoods.value.canFreeBuy) return 0
 
   // 子选项模式：按子选项的最终价累加
   if (hasSubItems.value) {
     // 建立 ID 到子项的映射，使用 String 键处理可能的类型不一致
-    const subMap = new Map((currentGoods.value.subItems ?? []).map(s => [String(s.id), s]))
+    const subMap = new Map((currentGoods.value.subItems ?? []).map((s) => [String(s.id), s]))
     const sum = selectedSubItems.value.reduce((acc, s) => {
       const sub = subMap.get(String(s.subItemId))
       if (!sub) return acc
@@ -122,16 +136,14 @@ const needAddress = computed(() => {
   if (!currentGoods.value) return false
   if (!hasSubItems.value) return currentGoods.value.type === GoodsTypes.Physical && !currentGoods.value.collectUrl
 
-  const selectedIds = new Set(selectedSubItems.value.map(s => String(s.subItemId)))
-  return (currentGoods.value.subItems ?? []).some(s =>
-    selectedIds.has(String(s.id))
-    && s.type === GoodsTypes.Physical
-    && !s.collectUrl,
+  const selectedIds = new Set(selectedSubItems.value.map((s) => String(s.subItemId)))
+  return (currentGoods.value.subItems ?? []).some(
+    (s) => selectedIds.has(String(s.id)) && s.type === GoodsTypes.Physical && !s.collectUrl,
   )
 })
 
 function isSubItemChecked(id: number) {
-  return selectedSubItems.value.some(s => String(s.subItemId) === String(id))
+  return selectedSubItems.value.some((s) => String(s.subItemId) === String(id))
 }
 
 function toggleSubItem(id: number, checked: boolean) {
@@ -142,19 +154,19 @@ function toggleSubItem(id: number, checked: boolean) {
       message.warning(`最多只能选择 ${maxSelections} 种子商品`)
       return
     }
-    if (!selectedSubItems.value.some(s => Number(s.subItemId) === targetId)) {
+    if (!selectedSubItems.value.some((s) => Number(s.subItemId) === targetId)) {
       // 使用赋值操作触发响应式
       selectedSubItems.value = [...selectedSubItems.value, { subItemId: targetId, quantity: 1 }]
     }
   } else {
-    selectedSubItems.value = selectedSubItems.value.filter(s => Number(s.subItemId) !== targetId)
+    selectedSubItems.value = selectedSubItems.value.filter((s) => Number(s.subItemId) !== targetId)
   }
 }
 
 function updateSubItemQuantity(id: number, quantity: number | null) {
   const targetId = Number(id)
   const q = Number(quantity ?? 1)
-  selectedSubItems.value = selectedSubItems.value.map(s => {
+  selectedSubItems.value = selectedSubItems.value.map((s) => {
     if (Number(s.subItemId) === targetId) {
       return { ...s, quantity: q }
     }
@@ -237,7 +249,7 @@ async function updateAddress() {
       message.success('地址已保存')
       showAddressModal.value = false
       if (biliAuth.value.address) {
-        const index = biliAuth.value.address?.findIndex(a => a.id === data.data.id) ?? -1
+        const index = biliAuth.value.address?.findIndex((a) => a.id === data.data.id) ?? -1
         if (index >= 0) {
           biliAuth.value.address[index] = data.data
         } else {
@@ -287,7 +299,7 @@ const currentRoomGuardLabel = computed(() => {
 const addressOptions = computed(() => {
   if (!biliAuth.value.id) return []
   return (
-    biliAuth.value.address?.map(item => ({
+    biliAuth.value.address?.map((item) => ({
       label: item.address, // 使用地址作为标签
       value: item.id, // 使用地址ID作为值
     })) ?? []
@@ -295,22 +307,22 @@ const addressOptions = computed(() => {
 })
 
 const provinceOptions = computed(() => {
-  return Object.keys(areas.value?.data ?? {}).map(p => ({ label: p, value: p }))
+  return Object.keys(areas.value?.data ?? {}).map((p) => ({ label: p, value: p }))
 })
 
 function cityOptions(province: string) {
   if (!areas.value?.data[province]) return []
-  return Object.keys(areas.value?.data[province] ?? {}).map(c => ({ label: c, value: c }))
+  return Object.keys(areas.value?.data[province] ?? {}).map((c) => ({ label: c, value: c }))
 }
 
 function districtOptions(province: string, city: string) {
   if (!areas.value?.data[province]?.[city]) return []
-  return Object.keys(areas.value?.data[province][city] ?? {}).map(d => ({ label: d, value: d }))
+  return Object.keys(areas.value?.data[province][city] ?? {}).map((d) => ({ label: d, value: d }))
 }
 
 function streetOptions(province: string, city: string, district: string) {
   if (!areas.value?.data[province]?.[city]?.[district]) return []
-  return areas.value?.data[province][city][district]?.map(s => ({ label: s, value: s })) ?? []
+  return areas.value?.data[province][city][district]?.map((s) => ({ label: s, value: s })) ?? []
 }
 
 const addressFormRules: FormRules = {
@@ -341,9 +353,9 @@ const canDoBuy = computed(() => {
     if (selectedSubItems.value.length === 0) return false
     const maxSelections = currentGoods.value.maxSubItemSelections
     if (maxSelections && maxSelections > 0 && selectedSubItems.value.length > maxSelections) return false
-    if (selectedSubItems.value.some(s => s.quantity < 1 || !Number.isInteger(s.quantity))) return false
+    if (selectedSubItems.value.some((s) => s.quantity < 1 || !Number.isInteger(s.quantity))) return false
 
-    const subMap = new Map((currentGoods.value.subItems ?? []).map(s => [String(s.id), s]))
+    const subMap = new Map((currentGoods.value.subItems ?? []).map((s) => [String(s.id), s]))
     // 简单库存校验（后端仍会强校验）
     for (const s of selectedSubItems.value) {
       const sub = subMap.get(String(s.subItemId))
@@ -365,34 +377,32 @@ const canDoBuy = computed(() => {
   const pointCheck = currentGoods.value.canFreeBuy || currentGoodsCost.value <= currentPoint.value
 
   // 如果是实物礼物且没有外部收集链接，则必须选择地址
-  const addressCheck
-    = currentGoods.value.type !== GoodsTypes.Physical
-      || currentGoods.value.collectUrl
-      || !!selectedAddress.value
+  const addressCheck =
+    currentGoods.value.type !== GoodsTypes.Physical || currentGoods.value.collectUrl || !!selectedAddress.value
 
   return pointCheck && addressCheck
 })
 
 // 礼物标签列表
 const tags = computed(() => {
-  return Array.from(new Set(goods.value.flatMap(g => g.tags)))
+  return Array.from(new Set(goods.value.flatMap((g) => g.tags)))
 })
 
 // 经过筛选和排序后的礼物列表
 const selectedItems = computed(() => {
   let filteredItems = goods.value
     // 标签筛选
-    .filter(item => !selectedTag.value || item.tags.includes(selectedTag.value))
+    .filter((item) => !selectedTag.value || item.tags.includes(selectedTag.value))
     // 可兑换筛选 (只显示 getTooltip 返回 '开始兑换' 的礼物)
-    .filter(item => !onlyCanBuy.value || getTooltip(item) === '开始兑换')
+    .filter((item) => !onlyCanBuy.value || getTooltip(item) === '开始兑换')
     // 舰长等级筛选 (只显示允许所有等级或忽略舰长限制的礼物)
-    .filter(item => !ignoreGuard.value || item.allowGuardLevel === 0)
+    .filter((item) => !ignoreGuard.value || item.allowGuardLevel === 0)
     // 关键词搜索 (匹配名称或描述)
     .filter(
-      item =>
-        !debouncedSearchKeyword.value
-        || item.name.toLowerCase().includes(debouncedSearchKeyword.value.toLowerCase())
-        || (item.description && item.description.toLowerCase().includes(debouncedSearchKeyword.value.toLowerCase())),
+      (item) =>
+        !debouncedSearchKeyword.value ||
+        item.name.toLowerCase().includes(debouncedSearchKeyword.value.toLowerCase()) ||
+        (item.description && item.description.toLowerCase().includes(debouncedSearchKeyword.value.toLowerCase())),
     )
 
   // 应用排序方式
@@ -450,22 +460,25 @@ function getTooltip(item: ResponsePointGoodModel): string {
 
   const hasSubs = (item.subItems?.length ?? 0) > 0
   if (hasSubs) {
-    const available = (item.subItems ?? []).filter(s => s.count == null || s.count > 0)
+    const available = (item.subItems ?? []).filter((s) => s.count == null || s.count > 0)
     if (!available.length) return '库存不足'
-    const minPrice = Math.min(...available.map(s => Number(s.price)))
-    if ((currentPoint.value ?? 0) < minPrice && !item.canFreeBuy) return `积分不足(最低需要${minPrice}, 当前${currentPoint.value ?? 0})`
+    const minPrice = Math.min(...available.map((s) => Number(s.price)))
+    if ((currentPoint.value ?? 0) < minPrice && !item.canFreeBuy)
+      return `积分不足(最低需要${minPrice}, 当前${currentPoint.value ?? 0})`
   } else {
     if ((item?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
     if (!item.isAllowRebuy && item.hasPurchased) return '该礼物不允许重复兑换'
     if (item.purchasedCount >= (item.maxBuyCount ?? Number.MAX_VALUE)) return `已达兑换上限(${item.maxBuyCount})`
-    if ((currentPoint.value ?? 0) < item.price && !item.canFreeBuy) return `积分不足(需要${item.price}, 当前${currentPoint.value ?? 0})`
+    if ((currentPoint.value ?? 0) < item.price && !item.canFreeBuy)
+      return `积分不足(需要${item.price}, 当前${currentPoint.value ?? 0})`
   }
 
   // 检查舰长等级要求
   const currentGuardLevel = biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0
   if (item.allowGuardLevel > 0 && currentGuardLevel < item.allowGuardLevel) {
     const needText = item.allowGuardLevel === 1 ? '总督' : item.allowGuardLevel === 2 ? '提督' : '舰长'
-    const curText = currentGuardLevel === 1 ? '总督' : currentGuardLevel === 2 ? '提督' : currentGuardLevel === 3 ? '舰长' : '无'
+    const curText =
+      currentGuardLevel === 1 ? '总督' : currentGuardLevel === 2 ? '提督' : currentGuardLevel === 3 ? '舰长' : '无'
     return `舰长等级不足(需要${needText}+, 当前${curText})`
   }
 
@@ -500,7 +513,7 @@ async function buyGoods() {
     return
   }
 
-  const subMap = new Map((currentGoods.value.subItems ?? []).map(s => [String(s.id), s]))
+  const subMap = new Map((currentGoods.value.subItems ?? []).map((s) => [String(s.id), s]))
   const hasSubs = hasSubItems.value
 
   // 输入验证
@@ -553,8 +566,8 @@ async function buyGoods() {
 
   const selectedSummary = hasSubs
     ? selectedSubItems.value
-      .map(s => `${subMap.get(String(s.subItemId))?.name ?? s.subItemId}×${s.quantity}`)
-      .join('、')
+        .map((s) => `${subMap.get(String(s.subItemId))?.name ?? s.subItemId}×${s.quantity}`)
+        .join('、')
     : `${buyCount.value} 个`
 
   const dialogContent = hasSubs
@@ -590,19 +603,17 @@ async function buyGoods() {
           const hasContent = data.data.goods.content
           const orderSubItems = data.data.selectedSubItems ?? []
           const subItemText = orderSubItems.length
-            ? orderSubItems.map(s => `${s.nameSnapshot}×${s.quantity}`).join('、')
+            ? orderSubItems.map((s) => `${s.nameSnapshot}×${s.quantity}`).join('、')
             : ''
           const keyText = orderSubItems
-            .flatMap(s => (s.assignedVirtualKeys || []).map(k => `${s.nameSnapshot}: ${k}`))
+            .flatMap((s) => (s.assignedVirtualKeys || []).map((k) => `${s.nameSnapshot}: ${k}`))
             .join('\n')
 
           // 显示成功对话框
           dialog.success({
             title: '成功',
             content: () => {
-              const elements: any[] = [
-                h(NText, null, { default: () => `兑换成功，订单号：${data.data.id}` }),
-              ]
+              const elements: any[] = [h(NText, null, { default: () => `兑换成功，订单号：${data.data.id}` })]
 
               if (subItemText) {
                 elements.push(
@@ -679,13 +690,13 @@ function onBuyClick(good: ResponsePointGoodModel) {
 
 // 自定义渲染地址选择器的标签
 function renderLabel(option: SelectOption) {
-  const address = biliAuth.value.address?.find(a => a.id === option.value)
+  const address = biliAuth.value.address?.find((a) => a.id === option.value)
   return h(AddressDisplay, { address, size: 'small' })
 }
 
 // 自定义渲染地址选择器的选项
-function renderOption({ option }: { node: any, option: SelectOption }) {
-  const address = biliAuth.value.address?.find(a => a.id === option.value)
+function renderOption({ option }: { node: any; option: SelectOption }) {
+  const address = biliAuth.value.address?.find((a) => a.id === option.value)
   return h(
     NButton,
     {
@@ -748,13 +759,15 @@ onMounted(async () => {
     <!-- 未认证提示 -->
     <div v-if="!useAuth.isAuthed">
       <NAlert
-      
         type="warning"
         title="需要认证"
         size="small"
         :bordered="false"
       >
-        <NFlex vertical :gap="8">
+        <NFlex
+          vertical
+          :gap="8"
+        >
           <NText>你尚未进行 Bilibili 账号认证, 可先浏览礼物，认证后可查看积分并兑换礼物。</NText>
           <NFlex>
             <NButton
@@ -769,18 +782,37 @@ onMounted(async () => {
       </NAlert>
       <NDivider />
     </div>
-    
 
     <!-- 用户信息与工具栏 -->
-    <NCard v-if="useAuth.isAuthed" class="header-card" embedded>
+    <NCard
+      v-if="useAuth.isAuthed"
+      class="header-card"
+      embedded
+    >
       <div class="header-container">
         <!-- 用户简要信息 -->
         <div class="user-status-bar">
-          <NFlex justify="space-between" align="center">
-            <NFlex align="center" :gap="16">
-              <NFlex align="center" :gap="8">
-                <NIcon :component="Person24Regular" size="20" class="status-icon" />
-                <NText strong class="username">
+          <NFlex
+            justify="space-between"
+            align="center"
+          >
+            <NFlex
+              align="center"
+              :gap="16"
+            >
+              <NFlex
+                align="center"
+                :gap="8"
+              >
+                <NIcon
+                  :component="Person24Regular"
+                  size="20"
+                  class="status-icon"
+                />
+                <NText
+                  strong
+                  class="username"
+                >
                   {{ biliAuth.name }}
                 </NText>
                 <NTag
@@ -793,30 +825,51 @@ onMounted(async () => {
                   ⚓ {{ currentRoomGuardLabel }}
                 </NTag>
               </NFlex>
-                
+
               <NDivider vertical />
-                
-              <NFlex align="center" :gap="4">
-                <NText depth="3">
-                  当前积分:
-                </NText>
-                <NText v-if="currentPoint >= 0" type="primary" strong class="point-value">
+
+              <NFlex
+                align="center"
+                :gap="4"
+              >
+                <NText depth="3"> 当前积分: </NText>
+                <NText
+                  v-if="currentPoint >= 0"
+                  type="primary"
+                  strong
+                  class="point-value"
+                >
                   {{ formattedCurrentPoint }}
                 </NText>
-                <NText v-else depth="3" italic>
+                <NText
+                  v-else
+                  depth="3"
+                  italic
+                >
                   加载中...
                 </NText>
               </NFlex>
             </NFlex>
 
-            <NFlex align="center" :gap="12">
-              <NButton quaternary size="small" @click="gotoAuthPage">
+            <NFlex
+              align="center"
+              :gap="12"
+            >
+              <NButton
+                quaternary
+                size="small"
+                @click="gotoAuthPage"
+              >
                 <template #icon>
                   <NIcon :component="Person24Regular" />
                 </template>
                 账号中心
               </NButton>
-              <NButton quaternary size="small" @click="NavigateToNewTab('/bili-user#settings')">
+              <NButton
+                quaternary
+                size="small"
+                @click="NavigateToNewTab('/bili-user#settings')"
+              >
                 <template #icon>
                   <NIcon :component="ArrowSync24Regular" />
                 </template>
@@ -826,17 +879,30 @@ onMounted(async () => {
           </NFlex>
         </div>
 
-        <NDivider style="margin: 4px 0;" />
+        <NDivider style="margin: 4px 0" />
 
         <!-- 筛选工具栏 -->
         <div class="toolbar-section">
-          <NFlex vertical :gap="16">
+          <NFlex
+            vertical
+            :gap="16"
+          >
             <!-- 标签分类 -->
-            <NFlex v-if="tags.length > 0" align="center" :gap="12">
-              <NText depth="3" class="filter-label">
+            <NFlex
+              v-if="tags.length > 0"
+              align="center"
+              :gap="12"
+            >
+              <NText
+                depth="3"
+                class="filter-label"
+              >
                 分类:
               </NText>
-              <NFlex :gap="8" wrap>
+              <NFlex
+                :gap="8"
+                wrap
+              >
                 <NButton
                   v-for="tag in tags"
                   :key="tag"
@@ -852,8 +918,17 @@ onMounted(async () => {
             </NFlex>
 
             <!-- 搜索与排序 -->
-            <NFlex justify="space-between" align="center" wrap :gap="12">
-              <NFlex align="center" :gap="12" wrap>
+            <NFlex
+              justify="space-between"
+              align="center"
+              wrap
+              :gap="12"
+            >
+              <NFlex
+                align="center"
+                :gap="12"
+                wrap
+              >
                 <NInput
                   v-model:value="searchKeyword"
                   placeholder="搜索礼物名称..."
@@ -881,13 +956,12 @@ onMounted(async () => {
                   clearable
                 />
 
-                <NFlex align="center" :gap="16">
-                  <NCheckbox v-model:checked="onlyCanBuy">
-                    仅显示可兑换
-                  </NCheckbox>
-                  <NCheckbox v-model:checked="ignoreGuard">
-                    忽略等级限制
-                  </NCheckbox>
+                <NFlex
+                  align="center"
+                  :gap="16"
+                >
+                  <NCheckbox v-model:checked="onlyCanBuy"> 仅显示可兑换 </NCheckbox>
+                  <NCheckbox v-model:checked="ignoreGuard"> 忽略等级限制 </NCheckbox>
                 </NFlex>
               </NFlex>
 
@@ -903,7 +977,11 @@ onMounted(async () => {
                   </template>
                   重置筛选
                 </NButton>
-                <NButton secondary size="medium" @click="refreshCurrentPoint">
+                <NButton
+                  secondary
+                  size="medium"
+                  @click="refreshCurrentPoint"
+                >
                   <template #icon>
                     <NIcon :component="ArrowSync24Regular" />
                   </template>
@@ -916,7 +994,10 @@ onMounted(async () => {
       </div>
     </NCard>
 
-    <div v-if="useAuth.isAuthed" style="margin-top: 20px;" />
+    <div
+      v-if="useAuth.isAuthed"
+      style="margin-top: 20px"
+    />
 
     <!-- 礼物列表区域 -->
     <NSpin :show="isLoading">
@@ -930,23 +1011,45 @@ onMounted(async () => {
         :x-gap="16"
         :y-gap="16"
       >
-        <NGi v-for="item in selectedItems" :key="item.id">
+        <NGi
+          v-for="item in selectedItems"
+          :key="item.id"
+        >
           <PointGoodsItem
             :goods="item"
             class="goods-item-card"
             :class="{ 'is-unavailable': getTooltip(item) !== '开始兑换' }"
           >
             <template #footer>
-              <NFlex vertical :gap="12">
-                <NFlex v-if="item.hasPurchased || !item.canPurchase" :gap="4" wrap>
-                  <NTag v-if="item.hasPurchased" :type="item.isAllowRebuy ? 'info' : 'warning'" size="tiny" :bordered="false" round>
+              <NFlex
+                vertical
+                :gap="12"
+              >
+                <NFlex
+                  v-if="item.hasPurchased || !item.canPurchase"
+                  :gap="4"
+                  wrap
+                >
+                  <NTag
+                    v-if="item.hasPurchased"
+                    :type="item.isAllowRebuy ? 'info' : 'warning'"
+                    size="tiny"
+                    :bordered="false"
+                    round
+                  >
                     {{ item.isAllowRebuy ? `已兑换 ${item.purchasedCount} 次` : '已兑换' }}
                   </NTag>
-                  <NTag v-if="!item.canPurchase && item.cannotPurchaseReason" type="error" size="tiny" :bordered="false" round>
+                  <NTag
+                    v-if="!item.canPurchase && item.cannotPurchaseReason"
+                    type="error"
+                    size="tiny"
+                    :bordered="false"
+                    round
+                  >
                     {{ item.cannotPurchaseReason }}
                   </NTag>
                 </NFlex>
-                
+
                 <NButton
                   block
                   :type="item.isPinned ? 'primary' : 'default'"
@@ -961,7 +1064,7 @@ onMounted(async () => {
           </PointGoodsItem>
         </NGi>
       </NGrid>
-      
+
       <NDivider v-if="selectedItems.length > 0" />
     </NSpin>
 
@@ -971,7 +1074,7 @@ onMounted(async () => {
       :show="showBuyModal"
       preset="card"
       :title="currentGoods.name"
-      style="width: 520px; max-width: 95vw;"
+      style="width: 520px; max-width: 95vw"
       :mask-closable="!isLoading"
       :close-on-esc="!isLoading"
       :segmented="{ content: true, action: true }"
@@ -989,15 +1092,15 @@ onMounted(async () => {
       </template>
 
       <!-- 滚动区域 -->
-      <NScrollbar style="max-height: 60vh;">
-        <div style="padding: 0 12px 20px 2px;">
+      <NScrollbar style="max-height: 60vh">
+        <div style="padding: 0 12px 20px 2px">
           <!-- 礼物信息展示 -->
-          <div style="margin-bottom: 12px;">
+          <div style="margin-bottom: 12px">
             <PointGoodsItem
               :goods="currentGoods"
               :show-footer="false"
               content-style="height: auto; border: none; box-shadow: none;"
-              style="border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-radius);"
+              style="border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-radius)"
             />
           </div>
 
@@ -1005,12 +1108,10 @@ onMounted(async () => {
           <NAlert
             v-if="currentGoods.soldCount != null && currentGoods.soldCount > 0"
             type="info"
-            style="margin-bottom: 12px;"
+            style="margin-bottom: 12px"
             :bordered="false"
           >
-            <template #header>
-              已售信息
-            </template>
+            <template #header> 已售信息 </template>
             此礼物已被兑换 <strong>{{ currentGoods.soldCount }}</strong> 次
           </NAlert>
 
@@ -1018,7 +1119,7 @@ onMounted(async () => {
           <NAlert
             v-if="currentGoods.hasPurchased"
             :type="currentGoods.isAllowRebuy ? 'info' : 'warning'"
-            style="margin-bottom: 12px;"
+            style="margin-bottom: 12px"
             :bordered="false"
           >
             <template #header>
@@ -1027,8 +1128,8 @@ onMounted(async () => {
             你已兑换过此礼物 <strong>{{ currentGoods.purchasedCount }}</strong> 次
             <span v-if="!currentGoods.isAllowRebuy">，该礼物不允许重复兑换</span>
             <span v-else-if="currentGoods.maxBuyCount">
-              ，最多可兑换 <strong>{{ currentGoods.maxBuyCount }}</strong> 次
-              (剩余 <strong>{{ currentGoods.maxBuyCount - currentGoods.purchasedCount }}</strong> 次)
+              ，最多可兑换 <strong>{{ currentGoods.maxBuyCount }}</strong> 次 (剩余
+              <strong>{{ currentGoods.maxBuyCount - currentGoods.purchasedCount }}</strong> 次)
             </span>
           </NAlert>
 
@@ -1044,29 +1145,61 @@ onMounted(async () => {
               v-if="hasSubItems"
               label="选择款式"
               required
-              style="margin-bottom: 12px;"
+              style="margin-bottom: 12px"
             >
-              <NFlex vertical :gap="12" style="width: 100%;">
+              <NFlex
+                vertical
+                :gap="12"
+                style="width: 100%"
+              >
                 <div
-                  v-for="sub in (currentGoods.subItems ?? [])"
+                  v-for="sub in currentGoods.subItems ?? []"
                   :key="sub.id"
                   class="sub-item-card"
-                  :class="{ 
-                    'active': isSubItemChecked(sub.id), 
-                    'disabled': sub.count === 0 || (currentGoods.maxSubItemSelections && currentGoods.maxSubItemSelections > 0 && selectedSubItems.length >= currentGoods.maxSubItemSelections && !isSubItemChecked(sub.id))
+                  :class="{
+                    active: isSubItemChecked(sub.id),
+                    disabled:
+                      sub.count === 0 ||
+                      (currentGoods.maxSubItemSelections &&
+                        currentGoods.maxSubItemSelections > 0 &&
+                        selectedSubItems.length >= currentGoods.maxSubItemSelections &&
+                        !isSubItemChecked(sub.id)),
                   }"
-                  @click="(sub.count === 0 || (currentGoods.maxSubItemSelections && currentGoods.maxSubItemSelections > 0 && selectedSubItems.length >= currentGoods.maxSubItemSelections && !isSubItemChecked(sub.id))) ? null : toggleSubItem(sub.id, !isSubItemChecked(sub.id))"
+                  @click="
+                    sub.count === 0 ||
+                    (currentGoods.maxSubItemSelections &&
+                      currentGoods.maxSubItemSelections > 0 &&
+                      selectedSubItems.length >= currentGoods.maxSubItemSelections &&
+                      !isSubItemChecked(sub.id))
+                      ? null
+                      : toggleSubItem(sub.id, !isSubItemChecked(sub.id))
+                  "
                 >
-                  <NFlex align="center" justify="space-between" :gap="12" style="width: 100%;">
-                    <NFlex align="center" :gap="12" style="flex: 1; overflow: hidden;">
+                  <NFlex
+                    align="center"
+                    justify="space-between"
+                    :gap="12"
+                    style="width: 100%"
+                  >
+                    <NFlex
+                      align="center"
+                      :gap="12"
+                      style="flex: 1; overflow: hidden"
+                    >
                       <!-- Checkbox -->
                       <NCheckbox
                         :checked="isSubItemChecked(sub.id)"
-                        :disabled="sub.count === 0 || (currentGoods.maxSubItemSelections && currentGoods.maxSubItemSelections > 0 && selectedSubItems.length >= currentGoods.maxSubItemSelections && !isSubItemChecked(sub.id))"
+                        :disabled="
+                          sub.count === 0 ||
+                          (currentGoods.maxSubItemSelections &&
+                            currentGoods.maxSubItemSelections > 0 &&
+                            selectedSubItems.length >= currentGoods.maxSubItemSelections &&
+                            !isSubItemChecked(sub.id))
+                        "
                         @click.stop
                         @update:checked="(v) => toggleSubItem(sub.id, v)"
                       />
-                    
+
                       <!-- Cover -->
                       <NImage
                         v-if="sub.cover?.path"
@@ -1077,24 +1210,48 @@ onMounted(async () => {
                         object-fit="cover"
                         @click.stop
                       />
-                    
+
                       <!-- Info -->
-                      <NFlex vertical :gap="4" style="flex: 1; min-width: 0;">
-                        <NFlex align="center" :gap="8">
-                          <NText strong :depth="sub.count === 0 ? 3 : 1" class="sub-item-name">
+                      <NFlex
+                        vertical
+                        :gap="4"
+                        style="flex: 1; min-width: 0"
+                      >
+                        <NFlex
+                          align="center"
+                          :gap="8"
+                        >
+                          <NText
+                            strong
+                            :depth="sub.count === 0 ? 3 : 1"
+                            class="sub-item-name"
+                          >
                             {{ sub.name }}
                           </NText>
-                          <NTag size="tiny" :bordered="false" round type="primary" secondary>
+                          <NTag
+                            size="tiny"
+                            :bordered="false"
+                            round
+                            type="primary"
+                            secondary
+                          >
                             {{ sub.price }} 积分
                           </NTag>
                         </NFlex>
-                      
+
                         <!-- Description -->
-                        <NText v-if="sub.description" depth="3" style="font-size: 12px; line-height: 1.2;">
+                        <NText
+                          v-if="sub.description"
+                          depth="3"
+                          style="font-size: 12px; line-height: 1.2"
+                        >
                           {{ sub.description }}
                         </NText>
 
-                        <NText depth="3" style="font-size: 12px;">
+                        <NText
+                          depth="3"
+                          style="font-size: 12px"
+                        >
                           <span v-if="sub.count === 0">缺货</span>
                           <span v-else-if="sub.count != null">库存 {{ sub.count }}</span>
                           <span v-else>库存不限</span>
@@ -1103,14 +1260,14 @@ onMounted(async () => {
                     </NFlex>
 
                     <!-- Quantity -->
-                    <div v-if="isSubItemChecked(sub.id)" @click.stop>
+                    <div
+                      v-if="isSubItemChecked(sub.id)"
+                      @click.stop
+                    >
                       <NInputNumber
-                        :value="selectedSubItems.find(s => s.subItemId === sub.id)?.quantity ?? 1"
+                        :value="selectedSubItems.find((s) => s.subItemId === sub.id)?.quantity ?? 1"
                         :min="1"
-                        :max="Math.min(
-                          sub.maxBuyCount ?? 100000,
-                          sub.count == null ? 100000 : sub.count,
-                        )"
+                        :max="Math.min(sub.maxBuyCount ?? 100000, sub.count == null ? 100000 : sub.count)"
                         button-placement="both"
                         size="small"
                         style="width: 100px"
@@ -1121,7 +1278,10 @@ onMounted(async () => {
                     </div>
                   </NFlex>
                 </div>
-                <NText depth="3" style="font-size: 12px; margin-left: 4px;">
+                <NText
+                  depth="3"
+                  style="font-size: 12px; margin-left: 4px"
+                >
                   * 可多选，价格按所选款式累计计算
                   <span v-if="currentGoods.maxSubItemSelections && currentGoods.maxSubItemSelections > 0">
                     （最多选 {{ currentGoods.maxSubItemSelections }} 种，已选 {{ selectedSubItems.length }} 种）
@@ -1135,15 +1295,17 @@ onMounted(async () => {
               v-else
               label="兑换数量"
               required
-              style="margin-bottom: 12px;"
+              style="margin-bottom: 12px"
             >
               <NInputNumber
                 v-model:value="buyCount"
                 :min="1"
-                :max="Math.min(
-                  currentGoods.maxBuyCount ?? 100000,
-                  (currentGoods.maxBuyCount ?? 100000) - (currentGoods.purchasedCount ?? 0),
-                )"
+                :max="
+                  Math.min(
+                    currentGoods.maxBuyCount ?? 100000,
+                    (currentGoods.maxBuyCount ?? 100000) - (currentGoods.purchasedCount ?? 0),
+                  )
+                "
                 button-placement="both"
                 style="max-width: 140px"
                 step="1"
@@ -1151,7 +1313,7 @@ onMounted(async () => {
               />
               <NText
                 depth="3"
-                style="margin-left: 12px; font-size: 12px;"
+                style="margin-left: 12px; font-size: 12px"
               >
                 {{
                   currentGoods.hasPurchased
@@ -1166,10 +1328,17 @@ onMounted(async () => {
               v-if="needAddress"
               label="收货地址"
               required
-              style="margin-bottom: 12px;"
+              style="margin-bottom: 12px"
             >
-              <NFlex vertical :gap="8" style="width: 100%">
-                <NFlex style="width: 100%" :gap="8">
+              <NFlex
+                vertical
+                :gap="8"
+                style="width: 100%"
+              >
+                <NFlex
+                  style="width: 100%"
+                  :gap="8"
+                >
                   <NSelect
                     v-model:show="showAddressSelect"
                     :value="selectedAddress?.id"
@@ -1177,7 +1346,7 @@ onMounted(async () => {
                     :render-label="renderLabel"
                     :render-option="renderOption"
                     placeholder="请选择收货地址"
-                    style="flex-grow: 1;"
+                    style="flex-grow: 1"
                   />
                   <NButton
                     secondary
@@ -1197,7 +1366,10 @@ onMounted(async () => {
                     </template>
                   </NButton>
                 </NFlex>
-                <NText depth="3" style="font-size: 12px;">
+                <NText
+                  depth="3"
+                  style="font-size: 12px"
+                >
                   可以新增地址或刷新地址列表，也可前往
                   <NButton
                     text
@@ -1213,7 +1385,10 @@ onMounted(async () => {
             </NFormItem>
 
             <!-- 备注输入 -->
-            <NFormItem label="备注信息" style="margin-bottom: 0;">
+            <NFormItem
+              label="备注信息"
+              style="margin-bottom: 0"
+            >
               <NInput
                 v-model:value="remark"
                 type="textarea"
@@ -1229,28 +1404,47 @@ onMounted(async () => {
 
       <!-- 底部操作栏 -->
       <template #action>
-        <NFlex justify="space-between" align="center">
-          <NFlex vertical :gap="2">
-            <NFlex align="baseline" :gap="4">
-              <NText depth="3" style="font-size: 12px;">
+        <NFlex
+          justify="space-between"
+          align="center"
+        >
+          <NFlex
+            vertical
+            :gap="2"
+          >
+            <NFlex
+              align="baseline"
+              :gap="4"
+            >
+              <NText
+                depth="3"
+                style="font-size: 12px"
+              >
                 总计花费
               </NText>
-              <NText type="primary" style="font-size: 18px; font-weight: bold;">
+              <NText
+                type="primary"
+                style="font-size: 18px; font-weight: bold"
+              >
                 {{ currentGoodsCost }}
               </NText>
-              <NText depth="3" style="font-size: 12px;">
+              <NText
+                depth="3"
+                style="font-size: 12px"
+              >
                 积分
               </NText>
             </NFlex>
-            <NText depth="3" style="font-size: 12px;">
+            <NText
+              depth="3"
+              style="font-size: 12px"
+            >
               当前持有: {{ currentPoint >= 0 ? formattedCurrentPoint : '--' }}
             </NText>
           </NFlex>
 
           <NFlex align="center">
-            <NButton @click="showBuyModal = false">
-              取消
-            </NButton>
+            <NButton @click="showBuyModal = false"> 取消 </NButton>
             <NButton
               type="primary"
               :disabled="!canDoBuy || isLoading"
@@ -1261,10 +1455,16 @@ onMounted(async () => {
             </NButton>
           </NFlex>
         </NFlex>
-        
+
         <!-- 错误提示 -->
-        <div v-if="!canDoBuy && (currentGoods.cannotPurchaseReason || currentGoodsCost > currentPoint)" style="margin-top: 12px; text-align: right;">
-          <NText type="error" style="font-size: 12px;">
+        <div
+          v-if="!canDoBuy && (currentGoods.cannotPurchaseReason || currentGoodsCost > currentPoint)"
+          style="margin-top: 12px; text-align: right"
+        >
+          <NText
+            type="error"
+            style="font-size: 12px"
+          >
             {{ currentGoods.cannotPurchaseReason || '积分不足或条件不满足' }}
           </NText>
         </div>
@@ -1275,7 +1475,7 @@ onMounted(async () => {
     <NModal
       v-model:show="showAddressModal"
       preset="card"
-      style="width: 600px; max-width: 95vw;"
+      style="width: 600px; max-width: 95vw"
       title="收货地址"
       :segmented="{ content: true, action: true }"
     >
@@ -1330,7 +1530,11 @@ onMounted(async () => {
               <NSelect
                 :key="currentAddress.district"
                 v-model:value="currentAddress.street"
-                :options="currentAddress.city && currentAddress.district ? streetOptions(currentAddress.province, currentAddress.city, currentAddress.district) : []"
+                :options="
+                  currentAddress.city && currentAddress.district
+                    ? streetOptions(currentAddress.province, currentAddress.city, currentAddress.district)
+                    : []
+                "
                 :disabled="!currentAddress?.district"
                 placeholder="街道"
                 style="flex: 1; min-width: 120px"
@@ -1380,11 +1584,7 @@ onMounted(async () => {
             justify="end"
             :gap="12"
           >
-            <NButton
-              @click="showAddressModal = false"
-            >
-              取消
-            </NButton>
+            <NButton @click="showAddressModal = false"> 取消 </NButton>
             <NButton
               type="primary"
               :loading="isLoading"
@@ -1486,7 +1686,8 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .user-status-bar, .toolbar-section {
+  .user-status-bar,
+  .toolbar-section {
     padding: 12px;
   }
 }

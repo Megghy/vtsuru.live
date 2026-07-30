@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import type {
-  Setting_LiveRequest,
-  SongRequestInfo,
-} from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
-import { NDivider, NEmpty, NMessageProvider } from 'naive-ui';
+import { NDivider, NEmpty, NMessageProvider } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { Vue3Marquee } from 'vue3-marquee'
 import { useRoute } from 'vue-router'
-import {
-  QueueSortType,
-  SongRequestFrom,
-} from '@/api/api-models'
+import { Vue3Marquee } from 'vue3-marquee'
+
+import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
+import { QueueSortType, SongRequestFrom } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/shared/config'
 
@@ -40,21 +35,21 @@ const songs = computed(() => {
   let result = new List(originSongs.value)
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: {
-      result = result.ThenBy(q => q.createAt)
+      result = result.ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.GuardFirst: {
       result = result
-        .OrderBy(q => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-        .ThenBy(q => q.createAt)
+        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+        .ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {
-      result = result.OrderByDescending(q => q.price ?? 0).ThenBy(q => q.createAt)
+      result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.FansMedalFirst: {
-      result = result.OrderByDescending(q => q.user?.fans_medal_level ?? 0).ThenBy(q => q.createAt)
+      result = result.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
       break
     }
   }
@@ -73,7 +68,7 @@ const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[], setting: Setting_LiveRequest }>(
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
       `${SONG_REQUEST_API_URL}get-today`,
       {
         id: currentId.value,
@@ -85,7 +80,7 @@ async function get() {
   } catch (err) {
     console.error(err)
   }
-  return {} as { songs: SongRequestInfo[], setting: Setting_LiveRequest }
+  return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
 }
 async function update() {
   const r = await get()
@@ -123,9 +118,7 @@ onUnmounted(() => {
       {{ settings.obsTitleToday ?? '今日已唱' }}
     </p>
     <NDivider class="live-request-divider">
-      <p class="live-request-header-count">
-        {{ songs.length ?? 0 }} 条
-      </p>
+      <p class="live-request-header-count">{{ songs.length ?? 0 }} 条</p>
     </NDivider>
     <div
       ref="listContainerRef"
@@ -289,7 +282,8 @@ onUnmounted(() => {
 }
 
 /* 弹幕点歌 */
-.live-request-list-item[from='1'] {}
+.live-request-list-item[from='1'] {
+}
 
 .live-request-list-item-name {
   font-style: italic;

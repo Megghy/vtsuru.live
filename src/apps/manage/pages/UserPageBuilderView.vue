@@ -1,20 +1,35 @@
 <script setup lang="ts">
-import { NAlert, NButton, NButtonGroup, NFlex, NIcon, NInputNumber, NModal, NResult, NSpin, NText, useDialog, useMessage } from 'naive-ui'
-import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ReorderThreeOutline } from '@vicons/ionicons5'
 import { useEventListener } from '@vueuse/core'
+import {
+  NAlert,
+  NButton,
+  NButtonGroup,
+  NFlex,
+  NIcon,
+  NInputNumber,
+  NModal,
+  NResult,
+  NSpin,
+  NText,
+  useDialog,
+  useMessage,
+} from 'naive-ui'
+import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+
+import BlockPageThemeModal from './user-page-builder/components/BlockPageThemeModal.vue'
+import BuilderPaneHost from './user-page-builder/components/BuilderPaneHost.vue'
+import BuilderResourcesModal from './user-page-builder/components/BuilderResourcesModal.vue'
+import BuilderToolbar from './user-page-builder/components/BuilderToolbar.vue'
+import GlobalPageStyleModal from './user-page-builder/components/GlobalPageStyleModal.vue'
 import { UserPageEditorKey } from './user-page-builder/context'
-import { useUserPageEditor } from './user-page-builder/useUserPageEditor'
 import { COLUMN_META, DEFAULT_COLUMNS_ORDER, useBuilderLayout } from './user-page-builder/useBuilderLayout'
 import type { BuilderColumnId } from './user-page-builder/useBuilderLayout'
-import BuilderPaneHost from './user-page-builder/components/BuilderPaneHost.vue'
-import BuilderToolbar from './user-page-builder/components/BuilderToolbar.vue'
-import BuilderResourcesModal from './user-page-builder/components/BuilderResourcesModal.vue'
-import GlobalPageStyleModal from './user-page-builder/components/GlobalPageStyleModal.vue'
-import BlockPageThemeModal from './user-page-builder/components/BlockPageThemeModal.vue'
+import { useUserPageEditor } from './user-page-builder/useUserPageEditor'
 import type { UserPageValidationIssue } from './user-page-builder/validateUserPagesSettings'
 
 const editor = useUserPageEditor()
@@ -52,8 +67,8 @@ const {
   applyPreset,
   resetLayout,
 } = builderLayout
-type ColumnResizeTarget = { id: BuilderColumnId, direction: 1 | -1 }
-type ColumnResizeState = ColumnResizeTarget & { startX: number, startWidth: number }
+type ColumnResizeTarget = { id: BuilderColumnId; direction: 1 | -1 }
+type ColumnResizeState = ColumnResizeTarget & { startX: number; startWidth: number }
 
 const columnResizeState = ref<ColumnResizeState | null>(null)
 const mediumPaneIds: BuilderColumnId[] = ['pages', 'blocks']
@@ -90,9 +105,10 @@ const columnResizeTargets = computed<Partial<Record<BuilderColumnId, ColumnResiz
   const targets: Partial<Record<BuilderColumnId, ColumnResizeTarget>> = {}
   const previewIndex = activeColumnsOrder.value.indexOf('preview')
   activeColumnsOrder.value.slice(0, -1).forEach((id, index) => {
-    const target = index < previewIndex
-      ? { id, direction: 1 as const }
-      : { id: activeColumnsOrder.value[index + 1], direction: -1 as const }
+    const target =
+      index < previewIndex
+        ? { id, direction: 1 as const }
+        : { id: activeColumnsOrder.value[index + 1], direction: -1 as const }
     if (target.id !== 'pages' || !isPagesCollapsed.value) targets[id] = target
   })
   return targets
@@ -145,7 +161,9 @@ function isEditableTarget(target: EventTarget | null) {
 
 function announceKeyboardAction(text: string) {
   keyboardStatus.value = ''
-  requestAnimationFrame(() => { keyboardStatus.value = text })
+  requestAnimationFrame(() => {
+    keyboardStatus.value = text
+  })
 }
 
 function handleEditorShortcut(event: KeyboardEvent) {
@@ -165,7 +183,12 @@ function handleEditorShortcut(event: KeyboardEvent) {
     event.preventDefault()
     void editor.saveDraft()
     announceKeyboardAction('正在保存')
-  } else if (editor.currentPage.value.mode === 'block' && command && key === 'c' && !window.getSelection()?.toString()) {
+  } else if (
+    editor.currentPage.value.mode === 'block' &&
+    command &&
+    key === 'c' &&
+    !window.getSelection()?.toString()
+  ) {
     event.preventDefault()
     editor.copyBlocksToClipboard(editor.selectedBlockIds.value)
     announceKeyboardAction('已复制所选区块')
@@ -182,7 +205,11 @@ function handleEditorShortcut(event: KeyboardEvent) {
       editor.pasteBlocksAfter(ids.at(-1) ?? null)
     }
     announceKeyboardAction('已创建区块副本')
-  } else if (editor.currentPage.value.mode === 'block' && event.key === 'Delete' && editor.selectedBlockIds.value.length) {
+  } else if (
+    editor.currentPage.value.mode === 'block' &&
+    event.key === 'Delete' &&
+    editor.selectedBlockIds.value.length
+  ) {
     event.preventDefault()
     editor.removeBlocks(editor.selectedBlockIds.value)
     announceKeyboardAction('已删除所选区块，可使用撤销恢复')
@@ -198,10 +225,11 @@ function focusPublishValidationIssue(issue: UserPageValidationIssue) {
   const request = editor.validationFocusRequest.value
   if (request?.scope === 'settings') globalBgModal.value = true
   else if (
-    request?.scope === 'page'
-    && editor.currentPage.value.mode === 'block'
-    && (request.fieldPath?.startsWith('theme') || request.fieldPath?.startsWith('background'))
-  ) editor.pageThemeModal.value = true
+    request?.scope === 'page' &&
+    editor.currentPage.value.mode === 'block' &&
+    (request.fieldPath?.startsWith('theme') || request.fieldPath?.startsWith('background'))
+  )
+    editor.pageThemeModal.value = true
 }
 
 onMounted(async () => {
@@ -251,7 +279,10 @@ onBeforeRouteLeave(() => {
 
 <template>
   <div class="user-page-builder">
-    <ManagePageHeader title="自定义页面" subtitle="配置个人主页与子页面">
+    <ManagePageHeader
+      title="自定义页面"
+      subtitle="配置个人主页与子页面"
+    >
       <template #action>
         <BuilderToolbar
           v-if="editor.loadStatus.value === 'ready'"
@@ -261,7 +292,10 @@ onBeforeRouteLeave(() => {
       </template>
     </ManagePageHeader>
 
-    <NSpin class="builder-spin" :show="editor.isLoading.value">
+    <NSpin
+      class="builder-spin"
+      :show="editor.isLoading.value"
+    >
       <NResult
         v-if="editor.loadStatus.value === 'error'"
         status="error"
@@ -270,7 +304,11 @@ onBeforeRouteLeave(() => {
         class="load-error"
       >
         <template #footer>
-          <NButton type="primary" :loading="editor.isLoading.value" @click="editor.init">
+          <NButton
+            type="primary"
+            :loading="editor.isLoading.value"
+            @click="editor.init"
+          >
             重试
           </NButton>
         </template>
@@ -293,19 +331,42 @@ onBeforeRouteLeave(() => {
           style="margin-bottom: 12px"
         >
           <div>检测到另一服务端版本上的本地修改，当前显示服务端内容。</div>
-          <NFlex size="small" style="margin-top: 8px">
-            <NButton size="tiny" @click="editor.discardConflictingLocalDraft">
+          <NFlex
+            size="small"
+            style="margin-top: 8px"
+          >
+            <NButton
+              size="tiny"
+              @click="editor.discardConflictingLocalDraft"
+            >
               放弃本地修改
             </NButton>
-            <NButton size="tiny" type="warning" @click="editor.restoreConflictingLocalDraft">
+            <NButton
+              size="tiny"
+              type="warning"
+              @click="editor.restoreConflictingLocalDraft"
+            >
               恢复本地修改
             </NButton>
           </NFlex>
         </NAlert>
 
-        <div ref="builderBodyEl" class="builder-body" :data-workspace-mode="workspaceMode">
-          <span class="sr-only" role="status" aria-live="polite">{{ keyboardStatus }}</span>
-          <NButtonGroup v-if="workspaceMode !== 'wide' && responsivePaneIds.length > 1" class="workspace-tabs" size="small">
+        <div
+          ref="builderBodyEl"
+          class="builder-body"
+          :data-workspace-mode="workspaceMode"
+        >
+          <span
+            class="sr-only"
+            role="status"
+            aria-live="polite"
+            >{{ keyboardStatus }}</span
+          >
+          <NButtonGroup
+            v-if="workspaceMode !== 'wide' && responsivePaneIds.length > 1"
+            class="workspace-tabs"
+            size="small"
+          >
             <NButton
               v-for="id in responsivePaneIds"
               :key="id"
@@ -365,14 +426,29 @@ onBeforeRouteLeave(() => {
           style="width: 520px; max-width: 95vw"
           :auto-focus="false"
         >
-          <NFlex size="small" style="margin-bottom: 12px">
-            <NButton size="small" secondary @click="applyPreset('content')">
+          <NFlex
+            size="small"
+            style="margin-bottom: 12px"
+          >
+            <NButton
+              size="small"
+              secondary
+              @click="applyPreset('content')"
+            >
               内容优先
             </NButton>
-            <NButton size="small" secondary @click="applyPreset('preview')">
+            <NButton
+              size="small"
+              secondary
+              @click="applyPreset('preview')"
+            >
               预览优先
             </NButton>
-            <NButton size="small" secondary @click="applyPreset('compact')">
+            <NButton
+              size="small"
+              secondary
+              @click="applyPreset('compact')"
+            >
               紧凑编辑
             </NButton>
           </NFlex>
@@ -384,20 +460,40 @@ onBeforeRouteLeave(() => {
             <div
               v-for="id in layoutColumnsModel"
               :key="id"
-              style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--vtsuru-border); border-radius: 10px; margin: 8px 0"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 10px 12px;
+                border: 1px solid var(--vtsuru-border);
+                border-radius: 10px;
+                margin: 8px 0;
+              "
             >
               <div style="min-width: 0; display: flex; align-items: center; gap: 10px">
-                <NIcon class="drag-handle" size="18" style="cursor: grab">
+                <NIcon
+                  class="drag-handle"
+                  size="18"
+                  style="cursor: grab"
+                >
                   <ReorderThreeOutline />
                 </NIcon>
                 <NText strong>
                   {{ COLUMN_META[id as any]?.label ?? id }}
                 </NText>
               </div>
-              <NText depth="3" style="font-size: 12px; white-space: nowrap">
+              <NText
+                depth="3"
+                style="font-size: 12px; white-space: nowrap"
+              >
                 {{ id }}
               </NText>
-              <NText v-if="id === 'preview'" depth="3" style="width: 112px; text-align: center; font-size: 12px">
+              <NText
+                v-if="id === 'preview'"
+                depth="3"
+                style="width: 112px; text-align: center; font-size: 12px"
+              >
                 自动填充
               </NText>
               <NInputNumber
@@ -408,11 +504,9 @@ onBeforeRouteLeave(() => {
                 :step="20"
                 size="small"
                 style="width: 112px"
-                @update:value="value => setColumnWidth(id, value)"
+                @update:value="(value) => setColumnWidth(id, value)"
               >
-                <template #suffix>
-                  px
-                </template>
+                <template #suffix> px </template>
               </NInputNumber>
             </div>
           </VueDraggable>
@@ -425,7 +519,11 @@ onBeforeRouteLeave(() => {
               >
                 重置顺序和列宽
               </NButton>
-              <NButton size="small" type="primary" @click="layoutModal = false">
+              <NButton
+                size="small"
+                type="primary"
+                @click="layoutModal = false"
+              >
                 完成
               </NButton>
             </NFlex>
@@ -450,7 +548,11 @@ onBeforeRouteLeave(() => {
               配置大小：{{ editor.publishCheckBytes.value }} bytes（后端上限 131072 bytes / 128KB）
             </NText>
 
-            <NAlert v-if="editor.publishCheckIssues.value.length" type="error" :show-icon="true">
+            <NAlert
+              v-if="editor.publishCheckIssues.value.length"
+              type="error"
+              :show-icon="true"
+            >
               <NButton
                 v-for="(issue, idx) in editor.publishCheckIssues.value"
                 :key="`${issue.pageKey}:${issue.blockId}:${issue.fieldPath}:${idx}`"
@@ -462,24 +564,37 @@ onBeforeRouteLeave(() => {
                 {{ issue.message }}
               </NButton>
             </NAlert>
-            <NAlert v-else type="success" :show-icon="true">
+            <NAlert
+              v-else
+              type="success"
+              :show-icon="true"
+            >
               校验通过，可以发布
             </NAlert>
 
-            <NAlert v-if="editor.publishCheckWarnings.value.length" type="warning" :show-icon="true">
-              <div v-for="(it, idx) in editor.publishCheckWarnings.value" :key="idx">
+            <NAlert
+              v-if="editor.publishCheckWarnings.value.length"
+              type="warning"
+              :show-icon="true"
+            >
+              <div
+                v-for="(it, idx) in editor.publishCheckWarnings.value"
+                :key="idx"
+              >
                 {{ it }}
               </div>
             </NAlert>
-            <NAlert v-if="editor.publishError.value" type="error" :show-icon="true">
+            <NAlert
+              v-if="editor.publishError.value"
+              type="error"
+              :show-icon="true"
+            >
               {{ editor.publishError.value }}
             </NAlert>
           </NFlex>
           <template #footer>
             <NFlex justify="end">
-              <NButton @click="editor.publishModal.value = false">
-                取消
-              </NButton>
+              <NButton @click="editor.publishModal.value = false"> 取消 </NButton>
               <NButton
                 type="primary"
                 :disabled="editor.publishCheckIssues.value.length > 0"
@@ -591,63 +706,63 @@ onBeforeRouteLeave(() => {
   overflow: visible;
 }
 
-.builder-body[data-workspace-mode="wide"] .builder-pane-slot.is-wide-active {
+.builder-body[data-workspace-mode='wide'] .builder-pane-slot.is-wide-active {
   display: flex;
 }
 
-.builder-body[data-workspace-mode="wide"] .builder-pane-grid.is-legacy {
+.builder-body[data-workspace-mode='wide'] .builder-pane-grid.is-legacy {
   grid-template-columns: var(--builder-legacy-columns);
 }
 
-.builder-body[data-workspace-mode="wide"] .builder-pane-grid.is-legacy [data-pane-id="preview"] {
+.builder-body[data-workspace-mode='wide'] .builder-pane-grid.is-legacy [data-pane-id='preview'] {
   order: 0 !important;
 }
 
-.builder-body[data-workspace-mode="wide"] .builder-pane-grid.is-legacy [data-pane-id="props"] {
+.builder-body[data-workspace-mode='wide'] .builder-pane-grid.is-legacy [data-pane-id='props'] {
   order: 1 !important;
 }
 
-.builder-body[data-workspace-mode="medium"] .builder-pane-grid {
+.builder-body[data-workspace-mode='medium'] .builder-pane-grid {
   grid-template-columns: var(--builder-medium-columns);
 }
 
-.builder-body[data-workspace-mode="medium"] .builder-pane-slot.is-medium-active {
+.builder-body[data-workspace-mode='medium'] .builder-pane-slot.is-medium-active {
   display: flex;
   order: 0 !important;
 }
 
-.builder-body[data-workspace-mode="medium"] [data-pane-id="preview"] {
+.builder-body[data-workspace-mode='medium'] [data-pane-id='preview'] {
   grid-column: 2;
   order: 1 !important;
 }
 
-.builder-body[data-workspace-mode="medium"] [data-pane-id="pages"],
-.builder-body[data-workspace-mode="medium"] [data-pane-id="blocks"] {
+.builder-body[data-workspace-mode='medium'] [data-pane-id='pages'],
+.builder-body[data-workspace-mode='medium'] [data-pane-id='blocks'] {
   grid-column: 1;
 }
 
-.builder-body[data-workspace-mode="medium"] [data-pane-id="props"] {
+.builder-body[data-workspace-mode='medium'] [data-pane-id='props'] {
   grid-column: 3;
   order: 2 !important;
 }
 
-.builder-body[data-workspace-mode="compact"] .builder-pane-grid {
+.builder-body[data-workspace-mode='compact'] .builder-pane-grid {
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(160px, 1fr) minmax(180px, 1fr);
 }
 
-.builder-body[data-workspace-mode="compact"] .builder-pane-slot.is-compact-active {
+.builder-body[data-workspace-mode='compact'] .builder-pane-slot.is-compact-active {
   display: flex;
   order: 0 !important;
 }
 
-.builder-body[data-workspace-mode="compact"] [data-pane-id="pages"],
-.builder-body[data-workspace-mode="compact"] [data-pane-id="blocks"],
-.builder-body[data-workspace-mode="compact"] [data-pane-id="preview"] {
+.builder-body[data-workspace-mode='compact'] [data-pane-id='pages'],
+.builder-body[data-workspace-mode='compact'] [data-pane-id='blocks'],
+.builder-body[data-workspace-mode='compact'] [data-pane-id='preview'] {
   grid-row: 1;
 }
 
-.builder-body[data-workspace-mode="compact"] [data-pane-id="props"] {
+.builder-body[data-workspace-mode='compact'] [data-pane-id='props'] {
   grid-row: 2;
   order: 1 !important;
 }
@@ -682,7 +797,7 @@ onBeforeRouteLeave(() => {
   width: 2px;
   border-radius: 1px;
   background: var(--vtsuru-border);
-  content: "";
+  content: '';
   transition: background-color 140ms ease;
 }
 
@@ -712,7 +827,7 @@ onBeforeRouteLeave(() => {
   overflow: hidden;
 }
 .user-page-builder :deep(.preview-bg-host.enabled)::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: calc(-24px - var(--user-page-bg-blur, 0px));
   background-color: var(--user-page-bg-color, transparent);
@@ -723,16 +838,20 @@ onBeforeRouteLeave(() => {
   transform: none;
   pointer-events: none;
   z-index: 0;
-  transition: background-color 180ms ease, filter 180ms ease;
+  transition:
+    background-color 180ms ease,
+    filter 180ms ease;
 }
 .user-page-builder :deep(.preview-bg-host.enabled)::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   background: var(--user-page-bg-scrim, transparent);
   pointer-events: none;
   z-index: 0;
-  transition: background-color 180ms ease, opacity 180ms ease;
+  transition:
+    background-color 180ms ease,
+    opacity 180ms ease;
 }
 .user-page-builder :deep(.preview-bg-host.enabled.bg-blur)::before {
   filter: blur(var(--user-page-bg-blur, 0px));
@@ -747,7 +866,9 @@ onBeforeRouteLeave(() => {
   background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
-  transition: background-color 180ms ease, backdrop-filter 180ms ease;
+  transition:
+    background-color 180ms ease,
+    backdrop-filter 180ms ease;
 }
 
 .user-page-builder :deep(.preview-content) {
