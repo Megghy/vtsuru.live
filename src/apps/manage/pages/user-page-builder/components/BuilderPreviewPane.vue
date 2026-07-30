@@ -110,30 +110,17 @@ const previewUserThemeOverrides = computed<GlobalThemeOverrides>(() => {
 const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
   const bg = previewBg.value
   if (!bg || bg.blurMode === 'none') return {}
-  const vars = previewBgVars.value as any
-  const surfaceBg = vars['--user-page-ui-surface-bg']
-  const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
-  const surfaceBgPressed = vars['--user-page-ui-surface-bg-pressed']
+  const vars = previewUiVars.value
   const borderColor = vars['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
   return {
     common: {
       borderColor,
       dividerColor: borderColor,
     },
-    Card: {
-      color: surfaceBg,
-      colorEmbedded: surfaceBgHover,
-      borderColor,
-    },
     List: {
       color: 'transparent',
       listItemColor: 'transparent',
       borderColor,
-    },
-    Button: {
-      color: surfaceBg,
-      colorHover: surfaceBgHover,
-      colorPressed: surfaceBgPressed,
     },
   }
 })

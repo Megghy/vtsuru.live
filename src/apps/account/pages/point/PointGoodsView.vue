@@ -772,7 +772,7 @@ onMounted(async () => {
     
 
     <!-- 用户信息与工具栏 -->
-    <NCard v-if="useAuth.isAuthed" class="header-card" :bordered="false">
+    <NCard v-if="useAuth.isAuthed" class="header-card" embedded>
       <div class="header-container">
         <!-- 用户简要信息 -->
         <div class="user-status-bar">

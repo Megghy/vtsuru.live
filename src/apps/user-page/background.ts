@@ -134,16 +134,16 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     contrastSurface,
   )
   const pageText = textPalette.color
-  const disabledTextColor = buildTokens(effectiveIsDark).disabledForeground
+  const siteTokens = buildTokens(effectiveIsDark)
   const readablePrimary = resolveUserPageReadableAccent(primaryColor, backgroundColor, effectiveIsDark, contrastSurface) || pageText
 
   const contentColor = customSurface || backgroundColor || surfaceVars['--user-page-ui-surface-bg']
   const surfaceColor = customSurface || (backgroundColor
     ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)`
     : surfaceVars['--user-page-ui-surface-bg'])
-  const surfaceHover = customSurface || (backgroundColor
-    ? `color-mix(in srgb, ${backgroundColor} 42%, transparent)`
-    : surfaceVars['--user-page-ui-surface-bg-hover'])
+  const surfaceHover = backgroundColor
+    ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
+    : surfaceVars['--user-page-ui-surface-bg-hover']
   const borderColor = surfaceVars['--vtsuru-card-border-color']
 
   return {
@@ -156,11 +156,14 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--vtsuru-page-primary-readable': readablePrimary,
     '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
     '--vtsuru-page-content-color': contentColor,
+    '--vtsuru-page-card-bg': surfaceColor,
+    '--vtsuru-page-card-bg-embedded': surfaceHover,
     '--vtsuru-page-text': pageText,
     '--vtsuru-surface-fg': pageText,
     '--vtsuru-surface-fg-muted': textPalette.muted,
     '--vtsuru-surface-fg-subtle': textPalette.subtle,
-    '--vtsuru-page-fg-disabled': disabledTextColor,
+    '--vtsuru-page-fg-disabled': siteTokens.disabledForeground,
+    '--vtsuru-page-placeholder-disabled': siteTokens.placeholderDisabled,
     '--vtsuru-page-bg': backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : 'transparent',
     '--user-page-theme-content-bg': 'transparent',
     '--text-color-base': pageText,
@@ -191,12 +194,14 @@ export function getUserPageNaiveThemeOverrides(
   const primaryColor = readThemeString(theme, 'primaryColor')
   const appearance = resolveUserPageAppearance(theme)
   const contentColor = vars['--vtsuru-page-content-color'] || vars['--user-page-ui-surface-bg']
-  const hoverColor = vars['--user-page-ui-surface-bg-hover']
+  const cardColor = vars['--vtsuru-page-card-bg']
+  const cardEmbeddedColor = vars['--vtsuru-page-card-bg-embedded']
   const borderColor = vars['--vtsuru-card-border-color'] || vars['--user-page-border-color']
   const textColor = vars['--vtsuru-page-text']
   const mutedTextColor = vars['--vtsuru-surface-fg-muted']
   const subtleTextColor = vars['--vtsuru-surface-fg-subtle']
   const disabledTextColor = vars['--vtsuru-page-fg-disabled']
+  const disabledPlaceholderColor = vars['--vtsuru-page-placeholder-disabled']
   const controlOverlay = resolveUserPageControlOverlay(contentColor)
 
   return {
@@ -209,7 +214,7 @@ export function getUserPageNaiveThemeOverrides(
       textColor2: mutedTextColor,
       textColor3: subtleTextColor,
       textColorDisabled: disabledTextColor,
-      cardColor: contentColor,
+      cardColor,
       modalColor: contentColor,
       popoverColor: contentColor,
       borderRadius: `${appearance.radius}px`,
@@ -223,8 +228,8 @@ export function getUserPageNaiveThemeOverrides(
       ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
     },
     Card: {
-      color: contentColor,
-      colorEmbedded: hoverColor,
+      color: cardColor,
+      colorEmbedded: cardEmbeddedColor,
       borderColor,
       borderRadius: `${appearance.radius}px`,
     },
@@ -239,7 +244,7 @@ export function getUserPageNaiveThemeOverrides(
       textColor,
       textColorDisabled: disabledTextColor,
       placeholderColor: subtleTextColor,
-      placeholderColorDisabled: disabledTextColor,
+      placeholderColorDisabled: disabledPlaceholderColor,
       border: `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`,
       borderHover: `${appearance.borderWidth} ${appearance.borderStyle} ${primaryColor || borderColor}`,
       borderFocus: `${appearance.borderWidth} ${appearance.borderStyle} ${primaryColor || borderColor}`,
@@ -249,8 +254,8 @@ export function getUserPageNaiveThemeOverrides(
         InternalSelection: {
           colorDisabled: controlOverlay.disabled,
           textColorDisabled: disabledTextColor,
-          placeholderColorDisabled: disabledTextColor,
-          arrowColorDisabled: disabledTextColor,
+          placeholderColorDisabled: disabledPlaceholderColor,
+          arrowColorDisabled: disabledPlaceholderColor,
         },
       },
     },
