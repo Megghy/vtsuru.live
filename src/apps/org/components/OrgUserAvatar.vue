@@ -18,6 +18,6 @@ const src = computed(() => withImageSize(props.faceUrl, `@${props.size}w`))
     :src="src"
     :img-props="{ referrerpolicy: 'no-referrer' }"
     :fallback-src="DEFAULT_AVATAR"
-    style="border: 1px solid var(--n-divider-color); flex: 0 0 auto;"
+    style="border: 1px solid var(--vtsuru-border); flex: 0 0 auto;"
   />
 </template>

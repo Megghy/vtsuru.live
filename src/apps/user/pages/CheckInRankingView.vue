@@ -332,28 +332,28 @@ onMounted(() => {
 /* 自定义表格样式 */
 .custom-ranking-table {
   overflow: hidden;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
   margin-bottom: 16px;
   overflow-x: auto;
 }
 
 .ranking-header {
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
   font-weight: 600;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
 }
 
 .ranking-row {
   display: flex;
   align-items: center;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--n-divider-color);
+  border-bottom: 1px solid var(--vtsuru-border);
   transition: background-color 0.2s ease;
 }
 
 .ranking-body .ranking-row:hover {
-  background-color: rgba(var(--n-primary-color-rgb), 0.04);
+  background-color: color-mix(in srgb, var(--vtsuru-page-primary) 4%, transparent);
 }
 
 .ranking-body .ranking-row:last-child {
@@ -361,7 +361,7 @@ onMounted(() => {
 }
 
 .top-three {
-  background-color: rgba(var(--n-primary-color-rgb), 0.02);
+  background-color: color-mix(in srgb, var(--vtsuru-page-primary) 2%, transparent);
 }
 
 .col-rank {
@@ -399,23 +399,23 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: var(--n-text-color-2);
-  background-color: var(--n-color-embedded);
+  color: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
+  background-color: var(--vtsuru-bg-inset);
 }
 
 .rank-1 {
-  background-color: rgba(var(--n-warning-color-rgb), 0.16);
-  color: var(--n-warning-color) !important;
+  background-color: rgba(var(--vtsuru-warning-rgb), 0.16);
+  color: var(--vtsuru-warning) !important;
 }
 
 .rank-2 {
-  background-color: rgba(var(--n-info-color-rgb), 0.14);
-  color: var(--n-info-color) !important;
+  background-color: rgba(var(--vtsuru-info-rgb), 0.14);
+  color: var(--vtsuru-info) !important;
 }
 
 .rank-3 {
-  background-color: rgba(var(--n-success-color-rgb), 0.14);
-  color: var(--n-success-color) !important;
+  background-color: rgba(var(--vtsuru-success-rgb), 0.14);
+  color: var(--vtsuru-success) !important;
 }
 
 .user-name {
@@ -427,13 +427,13 @@ onMounted(() => {
 .count-value {
   font-weight: 600;
   font-size: 18px;
-  color: var(--n-info-color);
+  color: var(--vtsuru-info);
   margin-right: 4px;
 }
 
 .days-text,
 .count-text {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   font-size: 12px;
 }
 

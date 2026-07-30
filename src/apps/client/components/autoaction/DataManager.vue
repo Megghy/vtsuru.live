@@ -202,7 +202,7 @@ const commonColumns: DataTableColumns<DataItem> = [
     title: '键 (Key)', 
     key: 'key', 
     width: 200,
-    render: row => h(NText, { code: true, style: 'font-weight: bold; color: var(--n-primary-color);' }, { default: () => row.key }) 
+    render: row => h(NText, { code: true, style: 'font-weight: bold; color: var(--vtsuru-primary);' }, { default: () => row.key })
   },
   { 
     title: '类型', 
@@ -464,9 +464,9 @@ onMounted(() => {
   margin: 0;
   font-family: monospace;
   font-size: 12px;
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
   padding: 4px 8px;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
   max-height: 100px;
 }
 
@@ -476,7 +476,7 @@ onMounted(() => {
   right: 0;
   opacity: 0;
   transition: opacity 0.2s;
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
 }
 
 :deep(.value-cell:hover .copy-btn) {
@@ -484,9 +484,9 @@ onMounted(() => {
 }
 
 code {
-  background-color: var(--n-code-color);
+  background-color: var(--vtsuru-bg-inset);
   padding: 2px 4px;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
   font-family: monospace;
   font-size: 13px;
 }

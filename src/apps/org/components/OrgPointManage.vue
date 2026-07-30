@@ -146,12 +146,12 @@ onMounted(async () => {
 
 <style scoped>
 .pending :deep(.n-statistic-value) {
-  color: var(--n-warning-color);
+  color: var(--vtsuru-warning);
 }
 .shipped :deep(.n-statistic-value) {
-  color: var(--n-info-color);
+  color: var(--vtsuru-info);
 }
 .completed :deep(.n-statistic-value) {
-  color: var(--n-success-color);
+  color: var(--vtsuru-success);
 }
 </style>

@@ -19,8 +19,9 @@ export interface EditableField {
   value: string
   /** 原值 (修改前), 用于只读对比; 新增项为空 */
   before?: string
-  /** text(默认) / textarea / time / number / tags(逗号分隔) */
-  type: 'text' | 'textarea' | 'time' | 'number' | 'tags'
+  /** text(默认) / textarea / time / number / tags(逗号分隔) / select */
+  type: 'text' | 'textarea' | 'time' | 'number' | 'tags' | 'select'
+  options?: Array<{ label: string, value: string }>
 }
 
 /** 单条操作预览项 (新增/修改/删除), 与后端 AssistantPreviewItem 对应 */
@@ -32,6 +33,7 @@ export interface AssistantPreviewItem {
   before?: string
   after?: string
   note?: string
+  url?: string
   /** 可编辑字段, 为空表示该项不可编辑 */
   fields?: EditableField[]
 }

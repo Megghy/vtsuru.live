@@ -183,7 +183,7 @@ const borderTitleAlignClass = computed(() => {
   min-width: 0;
   border-radius: var(--vtsuru-page-radius);
   color: var(--vtsuru-block-fg);
-  background: var(--user-page-theme-surface-bg, var(--user-page-ui-surface-bg, var(--vtsuru-bg-elevated)));
+  background: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--vtsuru-bg-muted)));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: var(--vtsuru-page-border);

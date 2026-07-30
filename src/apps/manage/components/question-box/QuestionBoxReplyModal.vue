@@ -30,7 +30,7 @@ async function submitReply() {
   >
     <template v-if="useQB.currentQuestion">
       <NText>正在回复给: {{ useQB.currentQuestion.sender?.name || useQB.currentQuestion.anonymousName || '匿名用户' }}</NText>
-      <NCard size="small" :bordered="false" style="margin-top: 5px; background-color: var(--n-action-color);">
+      <NCard size="small" embedded :bordered="false" style="margin-top: 5px;">
         {{ useQB.currentQuestion.question?.message }}
       </NCard>
       <NDivider style="margin: 15px 0;" />

@@ -774,10 +774,10 @@ onMounted(() => {
 }
 
 .reply-editor-section {
-  background-color: var(--n-color-modal);
+  background-color: var(--vtsuru-bg-elevated);
   padding: 12px;
-  border-radius: var(--n-border-radius);
-  border: 1px solid var(--n-divider-color);
+  border-radius: var(--vtsuru-radius);
+  border: 1px solid var(--vtsuru-border);
 }
 
 .section-label {
@@ -787,9 +787,9 @@ onMounted(() => {
 }
 
 .ranking-toolbar {
-  background-color: var(--n-action-color);
+  background-color: var(--vtsuru-bg-muted);
   padding: 8px 12px;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
 }
 
 .checkin-footer {
@@ -797,7 +797,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   font-size: 12px;
 }
 

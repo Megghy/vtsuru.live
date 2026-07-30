@@ -122,7 +122,7 @@ function addSlot() {
 <style scoped>
 .param-slot {
   padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
 }
 </style>

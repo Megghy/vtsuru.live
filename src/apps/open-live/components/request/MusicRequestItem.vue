@@ -39,7 +39,7 @@ const indexStyle = computed<CSSProperties>(() => ({
   borderRadius: '50%',
   color: '#fff',
   fontSize: '13px',
-  backgroundColor: 'var(--n-info-color)',
+  backgroundColor: 'var(--vtsuru-info)',
   flexShrink: 0,
 }))
 </script>

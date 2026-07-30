@@ -8,7 +8,6 @@ import type { BlockPageProject, BlockVisibilityContext } from './schema'
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'
 import { getUserPageNaiveThemeOverrides, getUserPageThemeCssVars } from '@/apps/user-page/background'
-import { buildTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
 import { isBlockVisible } from './visibility'
 import { collectPageSections, PageSectionsKey } from './sectionNavigation'
 
@@ -30,14 +29,7 @@ const emit = defineEmits<{
   (event: 'hover-block', blockId: string | null): void
 }>()
 
-const baseOverrides = computed(() => getThemeOverrides(props.isDark))
-const surfaceTokens = computed(() => buildTokens(props.isDark))
-
 const userThemeVars = computed(() => getUserPageThemeCssVars(props.project.theme, props.isDark))
-const containerStyle = computed(() => ({
-  ...getThemeCssVars(surfaceTokens.value),
-  ...userThemeVars.value,
-}))
 
 const naiveTheme = computed(() => {
   if (props.isDark) return darkTheme
@@ -49,9 +41,9 @@ const userOverrides = computed<GlobalThemeOverrides>(() => (
   getUserPageNaiveThemeOverrides(props.project.theme, userThemeVars.value, props.isDark)
 ))
 
-// Deep merge: Base (theme.ts) <- User (Builder) <- Extra (Props)
+// 展示页主题是完整基底，外部只允许追加预览态覆盖。
 const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const sources = [baseOverrides.value, userOverrides.value, props.extraThemeOverrides ?? {}]
+  const sources = [userOverrides.value, props.extraThemeOverrides ?? {}]
 
   // Simple deep merge for 2 levels (common, Button, etc.)
   const result: any = {}
@@ -98,7 +90,7 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   <NConfigProvider :theme="naiveTheme" :theme-overrides="mergedThemeOverrides">
     <div
       class="page"
-      :style="containerStyle"
+      :style="userThemeVars"
     >
       <div
         v-for="block in renderedBlocks"

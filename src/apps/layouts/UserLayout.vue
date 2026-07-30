@@ -872,7 +872,7 @@ watch(
   padding: 0 12px; // 左右内边距
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--n-border-color); // 底部边框
+  border-bottom: 1px solid var(--vtsuru-border); // 底部边框
   flex-shrink: 0; // 防止头部被压缩
   position: relative;
   z-index: 20;
@@ -931,7 +931,7 @@ watch(
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--n-body-color);
+  background-color: var(--vtsuru-bg);
 }
 
 .page-root :deep(.n-card.n-card--bordered) {
@@ -1079,7 +1079,7 @@ watch(
 
 .sider-avatar {
   &.streaming-avatar {
-    outline: 2px solid var(--n-success-color);
+    outline: 2px solid var(--vtsuru-success);
     outline-offset: 2px;
   }
 }
@@ -1113,12 +1113,12 @@ watch(
 
 .user-sider {
   height: 100%;
-  border-right: 1px solid var(--n-border-color);
-  background: var(--user-page-theme-surface-bg, var(--n-body-color));
+  border-right: 1px solid var(--vtsuru-border);
+  background: var(--user-page-theme-surface-bg, var(--vtsuru-bg-surface));
   box-sizing: border-box;
   overflow: hidden;
   flex: 0 0 auto;
-  transition: width 180ms var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+  transition: width 180ms var(--vtsuru-bezier, cubic-bezier(.4, 0, .2, 1));
 }
 
 .sider-shell {
@@ -1191,7 +1191,7 @@ watch(
 
 .sider-nav {
   padding: 6px 8px 10px;
-  transition: padding 180ms var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+  transition: padding 180ms var(--vtsuru-bezier, cubic-bezier(.4, 0, .2, 1));
 }
 
 .sider-nav.collapsed {
@@ -1281,7 +1281,7 @@ watch(
   width: 100%;
   text-align: center;
   padding: 10px 10px; // 左右留白，防止文字贴边
-  border-top: 1px solid var(--n-border-color);
+  border-top: 1px solid var(--vtsuru-border);
   box-sizing: border-box;
   flex: 0 0 auto;
 }
@@ -1308,7 +1308,7 @@ watch(
   align-items: center;
   height: 100%;
   width: 100%;
-  background-color: var(--n-body-color);
+  background-color: var(--vtsuru-bg);
   position: absolute; // 相对于 content-layout-container 定位
   top: 0;
   left: 0;
@@ -1337,7 +1337,7 @@ watch(
   padding: var(--vtsuru-content-padding);
   box-sizing: border-box;
   position: relative; // 为内部非绝对定位的内容提供上下文，例如 NBackTop
-  background-color: var(--user-page-theme-content-bg, var(--n-body-color));
+  background-color: var(--user-page-theme-content-bg, var(--vtsuru-bg));
   max-width: 100%;
   overflow-x: clip;
 }
@@ -1459,7 +1459,7 @@ watch(
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: var(--n-success-color);
+  background-color: var(--vtsuru-success);
   margin-left: 4px; // 与用户名稍微隔开
   vertical-align: middle; // 垂直居中对齐
 }

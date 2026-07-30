@@ -96,7 +96,7 @@ function onDragEnd() {
   gap: 4px;
 }
 .drop-target {
-  border-top: 2px solid var(--n-primary-color);
+  border-top: 2px solid var(--vtsuru-primary);
   padding-top: 2px;
 }
 </style>

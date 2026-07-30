@@ -28,7 +28,7 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
   <div class="settings-wrapper">
     <div class="settings-header">
       <NFlex align="center">
-        <NIcon :component="Sparkle24Filled" color="var(--n-warning-color)" />
+        <NIcon :component="Sparkle24Filled" color="var(--vtsuru-warning)" />
         <span style="font-weight: bold; font-size: 16px">抽奖设置</span>
       </NFlex>
       <NButton
@@ -259,11 +259,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 }
 
 .setting-section {
-  background: var(--n-card-color);
-  border-radius: var(--n-border-radius);
+  background: var(--vtsuru-bg-surface);
+  border-radius: var(--vtsuru-radius);
   padding: 20px;
   height: 100%;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   box-sizing: border-box;
 }
 
@@ -274,8 +274,8 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--n-text-color);
-  border-bottom: 1px dashed var(--n-border-color);
+  color: var(--vtsuru-fg);
+  border-bottom: 1px dashed var(--vtsuru-border);
   padding-bottom: 12px;
 }
 
@@ -292,22 +292,22 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
   align-items: center;
   justify-content: center;
   padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-  background-color: var(--n-card-color);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-surface);
   cursor: pointer;
   text-align: center;
   gap: 8px;
 }
 
 .mode-card:hover:not(.disabled) {
-  border-color: var(--n-primary-color);
-  background-color: rgba(var(--n-primary-color-rgb), 0.05);
+  border-color: var(--vtsuru-primary);
+  background-color: rgba(var(--vtsuru-primary-rgb), 0.05);
 }
 
 .mode-card.active {
-  border-color: var(--n-primary-color);
-  background-color: rgba(var(--n-primary-color-rgb), 0.1);
-  color: var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
+  background-color: rgba(var(--vtsuru-primary-rgb), 0.1);
+  color: var(--vtsuru-primary);
 }
 </style>

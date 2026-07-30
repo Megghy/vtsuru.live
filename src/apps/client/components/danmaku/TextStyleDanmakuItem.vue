@@ -244,7 +244,7 @@ const {
 }
 
 .mystery-box-text-tooltip__label {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .mystery-box-text-tooltip__value {

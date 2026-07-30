@@ -12,7 +12,7 @@ import { computed, h } from 'vue'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'
 import { SongFrom, ThemeType } from '@/api/api-models'
-import { getThemeOverrides, VTSURU_API_URL } from '@/shared/config'
+import { buildSiteTokens, getThemeOverrides, VTSURU_API_URL } from '@/shared/config'
 
 const osThemeRef = useOsTheme() // 获取当前系统主题
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
@@ -32,7 +32,7 @@ export const isDarkMode = computed(() => {
 
 export const configProviderPropsRef = computed<ConfigProviderProps>(() => ({
   theme: theme.value,
-  themeOverrides: getThemeOverrides(isDarkMode.value),
+  themeOverrides: getThemeOverrides(buildSiteTokens(isDarkMode.value)),
   locale: zhCN,
   dateLocale: dateZhCN,
 }))

@@ -384,7 +384,7 @@ onBeforeRouteLeave(() => {
             <div
               v-for="id in layoutColumnsModel"
               :key="id"
-              style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--n-border-color); border-radius: 10px; margin: 8px 0"
+              style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--vtsuru-border); border-radius: 10px; margin: 8px 0"
             >
               <div style="min-width: 0; display: flex; align-items: center; gap: 10px">
                 <NIcon class="drag-handle" size="18" style="cursor: grab">

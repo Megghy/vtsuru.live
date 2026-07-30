@@ -255,7 +255,7 @@ async function download() {
 .preview-scroll {
   overflow: auto;
   max-height: 70vh;
-  border: 1px solid var(--n-border-color, #e0e0e0);
+  border: 1px solid var(--vtsuru-border, #e0e0e0);
   border-radius: 4px;
   padding: 8px;
   background: #f5f5f5;

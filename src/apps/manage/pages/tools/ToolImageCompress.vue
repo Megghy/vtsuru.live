@@ -234,14 +234,14 @@ function clearAll() {
   justify-content: center;
   gap: 4px;
   padding: 32px;
-  border: 2px dashed var(--n-border-color, #e0e0e0);
+  border: 2px dashed var(--vtsuru-border, #e0e0e0);
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
 }
 .drop-zone:hover,
 .drop-zone.active {
-  border-color: var(--n-color-target, #18a058);
+  border-color: var(--vtsuru-bg-muted, #18a058);
   background: rgba(24, 160, 88, 0.04);
 }
 .image-grid {
@@ -250,7 +250,7 @@ function clearAll() {
   gap: 12px;
 }
 .image-card {
-  border: 1px solid var(--n-border-color, #e0e0e0);
+  border: 1px solid var(--vtsuru-border, #e0e0e0);
   border-radius: 6px;
   padding: 8px;
   display: flex;

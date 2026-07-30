@@ -123,7 +123,7 @@ function onScroll(e: Event) {
 .conv-list__more-spin { display: flex; justify-content: center; padding: 8px 0; }
 .conv-item {
   --conv-item-bg: transparent;
-  --conv-item-text: var(--vtsuru-fg, var(--n-text-color));
+  --conv-item-text: var(--vtsuru-fg, var(--vtsuru-fg));
   --conv-item-ring: transparent;
 
   display: flex; align-items: center; gap: 4px;

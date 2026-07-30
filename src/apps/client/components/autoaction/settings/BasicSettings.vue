@@ -172,7 +172,7 @@ const priorityOptions = [
 
 <style scoped>
 .basic-settings-card {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
 }
 
 :deep(.n-form-item-label) {

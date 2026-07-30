@@ -188,7 +188,7 @@ onUnmounted(disposeChart)
 
 <style scoped>
 .stat-card {
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
 }
 .rank-no {
   width: 22px;
@@ -199,6 +199,6 @@ onUnmounted(disposeChart)
 }
 .rank-no.top {
   opacity: 1;
-  color: var(--n-primary-color);
+  color: var(--vtsuru-primary);
 }
 </style>

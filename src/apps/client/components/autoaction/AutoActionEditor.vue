@@ -159,8 +159,8 @@ function getAdvancedSummary() {
 }
 
 .content-settings-card {
-  background-color: var(--n-color-modal);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-elevated);
+  border-radius: var(--vtsuru-radius);
 }
 
 .trigger-settings {

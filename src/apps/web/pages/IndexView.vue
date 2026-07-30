@@ -805,7 +805,7 @@ onMounted(async () => {
     position: relative;
     min-height: 100vh;
     box-sizing: border-box;
-    background-color: var(--n-body-color);
+    background-color: var(--vtsuru-bg);
     padding-bottom: 60px;
     isolation: isolate;
 
@@ -864,7 +864,7 @@ onMounted(async () => {
 .section-title
     font-size: 1.2rem;
     font-weight: 500;
-    color: var(--n-text-color);
+    color: var(--vtsuru-fg);
 
 .footer
     position: absolute;
@@ -909,7 +909,7 @@ onMounted(async () => {
     gap: 6px;
 
 .userpage-intro-li
-    color: var(--n-text-color-2);
+    color: var(--vtsuru-fg);
     font-size: 0.92rem;
     line-height: 1.5;
 
@@ -948,9 +948,9 @@ onMounted(async () => {
     justify-content: center;
     width: 32px;
     height: 32px;
-    border-radius: var(--n-border-radius);
+    border-radius: var(--vtsuru-radius);
     background: rgba(255, 255, 255, 0.34);
-    border: 1px solid var(--n-border-color);
+    border: 1px solid var(--vtsuru-border);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 
@@ -1009,7 +1009,7 @@ onMounted(async () => {
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 1px 2px rgba(9, 9, 11, 0.08);
-    transition: transform 140ms var(--n-bezier), box-shadow 140ms var(--n-bezier), border-color 140ms var(--n-bezier);
+    transition: transform 140ms var(--vtsuru-bezier), box-shadow 140ms var(--vtsuru-bezier), border-color 140ms var(--vtsuru-bezier);
 
 :global(.dark) .room-mini-card
     background: rgba(9, 9, 11, 0.26);
@@ -1205,7 +1205,7 @@ onMounted(async () => {
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
-    transition: background 140ms var(--n-bezier), border-color 140ms var(--n-bezier), transform 140ms var(--n-bezier);
+    transition: background 140ms var(--vtsuru-bezier), border-color 140ms var(--vtsuru-bezier), transform 140ms var(--vtsuru-bezier);
 
 .room-mini-btn:hover
     background: rgba(9, 9, 11, 0.32);
@@ -1230,7 +1230,7 @@ onMounted(async () => {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: var(--n-text-color-3);
+    background: var(--vtsuru-fg-muted);
 
 /* 响应式优化 */
 @media (max-width: 768px)

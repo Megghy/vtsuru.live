@@ -291,7 +291,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
           v-if="props.invalidSet.has(b.id)"
           size="18"
           title="该区块配置有误"
-          style="color: var(--n-error-color, #d03050)"
+          style="color: var(--vtsuru-error, #d03050)"
         >
           <AlertCircleOutline />
         </NIcon>
@@ -413,7 +413,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 }
 
 .block-item-row.is-layout {
-  box-shadow: inset 3px 0 0 var(--n-primary-color);
+  box-shadow: inset 3px 0 0 var(--vtsuru-primary);
 }
 
 .block-item-row.is-layout .block-label {
@@ -421,18 +421,18 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 }
 
 .block-item-row:hover {
-  background: var(--n-color-embedded);
+  background: var(--vtsuru-bg-inset);
 }
 
 .block-item-row.active {
-  border-color: var(--n-color-target);
-  background: var(--n-color-embedded);
+  border-color: var(--vtsuru-bg-muted);
+  background: var(--vtsuru-bg-inset);
 }
 
 .block-item-row.drag-group-target {
-  border-color: var(--n-primary-color);
-  background: var(--n-color-embedded);
-  box-shadow: 0 0 0 1px var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
+  background: var(--vtsuru-bg-inset);
+  box-shadow: 0 0 0 1px var(--vtsuru-primary);
 }
 
 .block-item-row.drag-group-target-wrap {
@@ -448,7 +448,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
   z-index: 3;
   height: 2px;
   border-radius: 2px;
-  background: var(--n-primary-color);
+  background: var(--vtsuru-primary);
 }
 
 .block-item-row.drag-insert-before::before {
@@ -465,15 +465,15 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
   border-radius: 999px;
   font-size: 12px;
   line-height: 18px;
-  color: var(--n-primary-color);
-  border: 1px solid var(--n-primary-color);
+  color: var(--vtsuru-primary);
+  border: 1px solid var(--vtsuru-primary);
   opacity: 0.9;
   flex: 0 0 auto;
 }
 
 .block-item-row.invalid,
 .block-item-row.active.invalid {
-  border-color: var(--n-error-color-pressed, var(--n-error-color, #d03050));
+  border-color: var(--vtsuru-error-pressed, var(--vtsuru-error, #d03050));
 }
 
 .block-item-row.hidden .block-label {
@@ -542,7 +542,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 /* 拖放时的插入线指示 */
 .sortable-chosen {
   opacity: 0.9;
-  background: var(--n-color-embedded);
+  background: var(--vtsuru-bg-inset);
 }
 
 .sortable-drag {

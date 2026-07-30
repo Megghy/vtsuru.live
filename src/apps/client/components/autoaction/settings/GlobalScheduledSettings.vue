@@ -73,6 +73,6 @@ watch(() => autoActionStore.globalIntervalSeconds, () => {
 
 <style scoped>
 .global-scheduled-card {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
 }
 </style>

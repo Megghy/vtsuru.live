@@ -242,7 +242,7 @@ onDeactivated(() => {
                 <NSpin v-if="speechState.isApiAudioLoading" :size="14" />
                 <NIcon
                   v-else :component="Mic24Filled" :size="16"
-                  :color="speechState.isSpeaking ? 'var(--n-success-color)' : 'var(--n-text-color-3)'"
+                  :color="speechState.isSpeaking ? 'var(--vtsuru-success)' : 'var(--vtsuru-fg-muted)'"
                 />
               </template>
               <NText :type="speechState.isSpeaking ? 'success' : isPaused ? 'warning' : 'default'" style="font-size: 14px">
@@ -299,21 +299,21 @@ onDeactivated(() => {
 <style scoped>
 .read-danmaku { display: flex; flex-direction: column; gap: 12px; }
 .topbar {
-  background: var(--n-card-color); border: 1px solid var(--n-divider-color);
+  background: var(--vtsuru-bg-surface); border: 1px solid var(--vtsuru-border);
   border-radius: 8px; padding: 10px 14px;
 }
 .main { display: grid; grid-template-columns: minmax(320px, 400px) 1fr; gap: 12px; align-items: start; }
 .settings, .status { display: flex; flex-direction: column; gap: 10px; }
 .card {
-  background: var(--n-card-color); border: 1px solid var(--n-divider-color);
+  background: var(--vtsuru-bg-surface); border: 1px solid var(--vtsuru-border);
   border-radius: 8px; padding: 12px;
 }
 .status-card .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .speaking-text {
   display: block; margin-top: 8px; padding: 6px 8px;
-  background: var(--n-color-target); border-radius: 4px;
-  font-size: 12px; color: var(--n-text-color-2);
-  border-left: 2px solid var(--n-success-color);
+  background: var(--vtsuru-bg-muted); border-radius: 4px;
+  font-size: 12px; color: var(--vtsuru-fg);
+  border-left: 2px solid var(--vtsuru-success);
 }
 @media (max-width: 960px) { .main { grid-template-columns: 1fr; } }
 .settings-tabs :deep(.n-tabs-tab) {
@@ -337,7 +337,7 @@ onDeactivated(() => {
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  border: 2px solid var(--n-success-color, #18a058);
+  border: 2px solid var(--vtsuru-success, #18a058);
   opacity: 0;
   animation: start-wave 2s ease-out infinite;
   pointer-events: none;

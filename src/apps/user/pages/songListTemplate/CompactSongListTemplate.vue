@@ -275,7 +275,7 @@ function requestSong(song: SongsInfo) {
 .count {
   margin-left: auto;
   font-size: 13px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }
 
 .preview-player {
@@ -285,7 +285,7 @@ function requestSong(song: SongsInfo) {
 .list-container {
   height: 70vh;
   min-height: 400px;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 12px;
   overflow: auto;
 }
@@ -297,16 +297,16 @@ function requestSong(song: SongsInfo) {
   gap: 12px;
   padding: 0 14px;
   box-sizing: border-box;
-  border-bottom: 1px solid var(--n-divider-color);
+  border-bottom: 1px solid var(--vtsuru-border);
   transition: background-color 0.12s ease;
 }
 
 .row.is-odd {
-  background: var(--n-action-color);
+  background: var(--vtsuru-bg-inset);
 }
 
 .row:hover {
-  background: var(--n-button-color-hover, rgba(127, 127, 127, 0.08));
+  background: var(--vtsuru-bg-muted, rgba(127, 127, 127, 0.08));
 }
 
 .row.is-singing {
@@ -323,7 +323,7 @@ function requestSong(song: SongsInfo) {
   text-align: right;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }
 
 .row-cover {
@@ -332,7 +332,7 @@ function requestSong(song: SongsInfo) {
   flex: 0 0 auto;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--n-action-color);
+  background: var(--vtsuru-bg-inset);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -347,7 +347,7 @@ function requestSong(song: SongsInfo) {
 .row-cover-fallback {
   font-size: 18px;
   font-weight: 700;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }
 
 .row-main {
@@ -365,7 +365,7 @@ function requestSong(song: SongsInfo) {
 .row-title .name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -374,7 +374,7 @@ function requestSong(song: SongsInfo) {
 
 .row-title .translate {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -385,7 +385,7 @@ function requestSong(song: SongsInfo) {
 .row-author {
   margin-top: 1px;
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

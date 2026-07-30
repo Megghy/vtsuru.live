@@ -251,14 +251,14 @@ const customJsModified = computed(() => {
 }
 
 .settings-section {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
   margin-bottom: 4px;
 }
 
 .section-content {
   padding: 8px 12px 12px;
-  background-color: var(--n-action-color);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-muted);
+  border-radius: var(--vtsuru-radius);
 }
 
 .section-modified :deep(.n-collapse-item__header-main) {
@@ -268,7 +268,7 @@ const customJsModified = computed(() => {
 .code-input :deep(textarea) {
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
-  background-color: var(--n-color-modal);
+  background-color: var(--vtsuru-bg-elevated);
 }
 
 /* Fade animation for internal form items */

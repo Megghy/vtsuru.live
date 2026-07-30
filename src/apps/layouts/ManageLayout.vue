@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { NButton, NIcon, NScrollbar, useMessage } from 'naive-ui';
+import { NButton, NConfigProvider, NIcon, NScrollbar, useMessage } from 'naive-ui';
 import { Bot24Regular } from '@vicons/fluent'
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { selectedAPIKey } from '@/shared/config'
+import { buildManageTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
+import { isDarkMode } from '@/shared/utils'
 import '@/apps/manage/styles/manage-page.css'
 import ManageAuthGate from '@/apps/manage/components/layout/ManageAuthGate.vue'
 import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate.vue'
@@ -19,6 +21,9 @@ const accountInfo = useAccount()
 const message = useMessage()
 const route = useRoute()
 const assistant = useAssistantStore()
+const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
+const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
+const manageThemeOverrides = computed(() => getThemeOverrides(manageTokens.value))
 
 function openAssistant() {
   assistant.open({
@@ -42,39 +47,43 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="accountInfo.id" class="manage-shell">
-    <div class="manage-shell__body">
-      <ManageSider :account-info="accountInfo" />
+  <NConfigProvider :theme-overrides="manageThemeOverrides">
+    <div class="manage-theme" :style="manageCssVars">
+      <div v-if="accountInfo.id" class="manage-shell">
+        <div class="manage-shell__body">
+          <ManageSider :account-info="accountInfo" />
 
-      <div class="manage-shell__main">
-        <ManageTopBar :account-name="accountInfo?.name" />
-        <NScrollbar class="manage-shell__scroll">
-          <div class="manage-shell__content">
-            <ManageContentGate :account-info="accountInfo" />
+          <div class="manage-shell__main">
+            <ManageTopBar :account-name="accountInfo?.name" />
+            <NScrollbar class="manage-shell__scroll">
+              <div class="manage-shell__content">
+                <ManageContentGate :account-info="accountInfo" />
+              </div>
+            </NScrollbar>
+
+            <ManageMusicPlayer />
           </div>
-        </NScrollbar>
+        </div>
 
-        <ManageMusicPlayer />
+        <NButton
+          circle
+          type="primary"
+          size="large"
+          class="assistant-fab"
+          title="VTsuru 助手"
+          @click="openAssistant"
+        >
+          <template #icon>
+            <NIcon :component="Bot24Regular" />
+          </template>
+        </NButton>
+
+        <AssistantModal />
       </div>
+
+      <ManageAuthGate v-else />
     </div>
-
-    <NButton
-      circle
-      type="primary"
-      size="large"
-      class="assistant-fab"
-      title="VTsuru 助手"
-      @click="openAssistant"
-    >
-      <template #icon>
-        <NIcon :component="Bot24Regular" />
-      </template>
-    </NButton>
-
-    <AssistantModal />
-  </div>
-
-  <ManageAuthGate v-else />
+  </NConfigProvider>
 </template>
 
 <style scoped>
@@ -86,12 +95,16 @@ onMounted(() => {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
+.manage-theme,
 .manage-shell {
   height: 100vh;
+  background: var(--vtsuru-bg);
+}
+
+.manage-shell {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--n-body-color);
 }
 
 .manage-shell__body {

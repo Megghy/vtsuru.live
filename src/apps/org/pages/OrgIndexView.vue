@@ -156,7 +156,7 @@ watch(
               @click="openOrg(org.id)"
             >
               <NFlex justify="space-between" align="start">
-                <NIcon size="32" color="var(--n-primary-color)" :component="BusinessOutline" />
+                <NIcon size="32" color="var(--vtsuru-primary)" :component="BusinessOutline" />
                 <NTag :bordered="false" :type="roleTagType(org.role)" size="small">
                   {{ roleLabel(org.role) }}
                 </NTag>
@@ -217,11 +217,11 @@ watch(
 .org-card {
   cursor: pointer;
   height: 100%;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
 }
 .org-card:hover {
-  border-color: var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
 }
 .text-ellipsis {
   white-space: nowrap;

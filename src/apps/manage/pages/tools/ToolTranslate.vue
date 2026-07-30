@@ -145,8 +145,8 @@ async function copyResult() {
   border-radius: 6px;
   font-size: 14px;
   line-height: 1.7;
-  border: 1px solid var(--n-border-color);
-  background: var(--n-color-embedded);
+  border: 1px solid var(--vtsuru-border);
+  background: var(--vtsuru-bg-inset);
   font-family: inherit;
   color: inherit;
   outline: none;

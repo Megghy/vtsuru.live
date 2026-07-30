@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NEmpty, NInput, NTag, NText } from 'naive-ui'
+import { NButton, NEmpty, NInput, NSelect, NTag, NText } from 'naive-ui'
 import { computed } from 'vue'
 import type { AssistantPreviewItem, EditableField, ProposalEditItem } from '../../api/assistant'
 
@@ -57,8 +57,13 @@ function setFieldValue(index: number, key: string, value: string) {
   if (entry) entry.values[key] = value
 }
 
+function setSelectValue(index: number, key: string, value: unknown) {
+  if (value != null) setFieldValue(index, key, String(value))
+}
+
 function displayValue(f: EditableField) {
-  return f.value || (f.type === 'tags' ? '无' : '空')
+  const value = f.options?.find(option => option.value === f.value)?.label ?? f.value
+  return value || (f.type === 'tags' ? '无' : '空')
 }
 </script>
 
@@ -82,7 +87,15 @@ function displayValue(f: EditableField) {
             <NText depth="3" class="edit-field__label">
               {{ f.label }}
             </NText>
+            <NSelect
+              v-if="f.type === 'select'"
+              :value="fieldValue(i, f.key)"
+              :options="f.options"
+              size="small"
+              @update:value="setSelectValue(i, f.key, $event)"
+            />
             <NInput
+              v-else
               :value="fieldValue(i, f.key)"
               :type="f.type === 'textarea' ? 'textarea' : 'text'"
               :autosize="f.type === 'textarea' ? { minRows: 2, maxRows: 6 } : undefined"
@@ -138,6 +151,9 @@ function displayValue(f: EditableField) {
         <NText v-if="item.note" depth="3" class="generic-item__note">
           {{ item.note }}
         </NText>
+        <NButton v-if="item.url" text type="primary" tag="a" :href="item.url" class="generic-item__link">
+          查看工单
+        </NButton>
       </div>
     </div>
     <NEmpty v-else size="small" description="暂无可预览的字段" />
@@ -150,7 +166,7 @@ function displayValue(f: EditableField) {
 .generic-item {
   display: flex; flex-direction: column; gap: 2px;
   padding: 6px 8px; border-radius: 6px;
-  background: var(--n-color-modal, rgba(128, 128, 128, 0.06));
+  background: var(--vtsuru-bg-elevated, rgba(128, 128, 128, 0.06));
 }
 .generic-item__head { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .generic-item__title { font-weight: 500; min-width: 0; word-break: break-word; }
@@ -163,9 +179,9 @@ function displayValue(f: EditableField) {
 .field { display: inline-flex; align-items: center; gap: 4px; }
 .field--changed {
   padding: 0 6px; border-radius: 4px;
-  background: var(--n-color-success-suppl, rgba(24, 160, 88, 0.12));
+  background: var(--vtsuru-success-soft, rgba(24, 160, 88, 0.12));
 }
-.field__arrow { color: var(--n-text-color-3); }
+.field__arrow { color: var(--vtsuru-fg-muted); }
 .field__after { font-weight: 600; }
 
 /* 结构化字段对比 */
@@ -175,14 +191,15 @@ function displayValue(f: EditableField) {
 .struct-field__val { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; word-break: break-word; }
 .struct-field__val--changed {
   padding: 0 6px; border-radius: 4px;
-  background: var(--n-color-success-suppl, rgba(24, 160, 88, 0.12));
+  background: var(--vtsuru-success-soft, rgba(24, 160, 88, 0.12));
 }
-.struct-field__arrow { color: var(--n-text-color-3); }
+.struct-field__arrow { color: var(--vtsuru-fg-muted); }
 .struct-field__after { font-weight: 600; }
 
 .generic-item__diff { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; }
-.diff-arrow { color: var(--n-text-color-3); }
+.diff-arrow { color: var(--vtsuru-fg-muted); }
 .generic-item__note { font-size: 12px; }
+.generic-item__link { align-self: flex-start; font-size: 12px; }
 .generic-item__edit { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 .edit-field { display: flex; flex-direction: column; gap: 2px; }
 .edit-field__label { font-size: 12px; }

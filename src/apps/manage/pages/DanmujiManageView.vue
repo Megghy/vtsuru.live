@@ -802,7 +802,7 @@ function copyObsUrl() {
                           </NSwitch>
                         </template>
                         <NFlex align="center">
-                          <span style="font-size: 12px; color: var(--n-text-color-3);">生成间隔:</span>
+                          <span style="font-size: 12px; color: var(--vtsuru-fg-muted);">生成间隔:</span>
                           <NInputNumber
                             v-model:value="autoGenerateInterval"
                             :min="0.5" :max="10" :step="0.5"
@@ -961,7 +961,7 @@ function copyObsUrl() {
 
 .left-panel-scroll-container {
   height: 100%;
-  background-color: var(--n-color);
+  background-color: var(--vtsuru-bg-surface);
 }
 
 .obs-link-card {
@@ -980,7 +980,7 @@ function copyObsUrl() {
 
 .label-desc {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .main-tabs {
@@ -1008,7 +1008,7 @@ function copyObsUrl() {
 .editor-container {
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -1035,11 +1035,11 @@ function copyObsUrl() {
 .form-section-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg);
   margin-top: 16px;
   margin-bottom: 8px;
   padding-left: 4px;
-  border-left: 3px solid var(--n-primary-color);
+  border-left: 3px solid var(--vtsuru-primary);
   line-height: 1;
 }
 .form-section-title:first-child {
@@ -1051,7 +1051,7 @@ function copyObsUrl() {
   transition: all 0.2s;
 }
 .checkbox-card:hover {
-  background-color: var(--n-action-color);
+  background-color: var(--vtsuru-bg-muted);
 }
 
 .right-panel-container {
@@ -1059,7 +1059,7 @@ function copyObsUrl() {
   width: 100%;
   padding: 16px;
   box-sizing: border-box;
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
   display: flex;
   flex-direction: column;
 }
@@ -1072,7 +1072,7 @@ function copyObsUrl() {
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   overflow: hidden;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
 }
 
 .preview-toolbar {

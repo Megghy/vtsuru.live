@@ -220,7 +220,7 @@ function propertyAvailable(property: string) {
           <div
             v-for="(element, index) in itemsModel"
             :key="getItemKey(element)"
-            style="border: 1px solid var(--n-border-color); border-radius: 10px; padding: 10px"
+            style="border: 1px solid var(--vtsuru-border); border-radius: 10px; padding: 10px"
           >
             <NFlex align="center" justify="space-between">
               <NFlex align="center" :wrap="false" style="gap: 10px; min-width: 0">
@@ -232,7 +232,7 @@ function propertyAvailable(property: string) {
                   :src="getItemPreviewSrc(element)"
                   alt=""
                   referrerpolicy="no-referrer"
-                  style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--n-border-color); flex: 0 0 auto"
+                  style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--vtsuru-border); flex: 0 0 auto"
                 >
                 <NText depth="3" style="white-space: nowrap">
                   #{{ index + 1 }}

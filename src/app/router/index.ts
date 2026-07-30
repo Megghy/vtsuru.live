@@ -89,8 +89,16 @@ const routes: Array<RouteRecordRaw> = [
     name: 'feedback',
     component: async () => import('@/apps/web/pages/ViewerFeedbackView.vue'),
     meta: {
-      title: '反馈',
+      title: '工单',
       keepAlive: true,
+    },
+  },
+  {
+    path: '/feedback/:id',
+    name: 'feedback-detail',
+    component: async () => import('@/apps/web/pages/ViewerFeedbackView.vue'),
+    meta: {
+      title: '工单详情',
     },
   },
   {

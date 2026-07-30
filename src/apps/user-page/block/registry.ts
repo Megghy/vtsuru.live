@@ -143,7 +143,7 @@ const AsyncBlockLoading = () => h('div', {
 const AsyncBlockError = () => h('div', {
   class: 'block-load-state block-load-state--error',
   role: 'alert',
-  style: 'min-height:48px;display:grid;place-items:center;color:var(--n-error-color)',
+  style: 'min-height:48px;display:grid;place-items:center;color:var(--vtsuru-error)',
 }, '区块加载失败')
 
 function createViewer(loader: AsyncComponentLoader): Component {

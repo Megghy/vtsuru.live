@@ -256,7 +256,7 @@ async function onRemoveBgConfirm(blob: Blob) {
 <style scoped>
 .drop-zone {
   min-height: 300px; display: flex; align-items: center; justify-content: center;
-  border: 2px dashed var(--n-border-color); border-radius: 12px; cursor: pointer;
+  border: 2px dashed var(--vtsuru-border); border-radius: 12px; cursor: pointer;
   transition: border-color 0.2s;
 }
 .drop-zone:hover, .drop-zone.active { border-color: var(--primary-color, #18a058); }
@@ -266,8 +266,8 @@ async function onRemoveBgConfirm(blob: Blob) {
 
 .panel {
   display: flex; flex-direction: column; gap: 8px;
-  padding: 10px; border: 1px solid var(--n-border-color);
-  border-radius: 8px; background: var(--n-color-embedded);
+  padding: 10px; border: 1px solid var(--vtsuru-border);
+  border-radius: 8px; background: var(--vtsuru-bg-inset);
 }
 .panel-title { font-size: 13px; margin-bottom: 2px; }
 
@@ -283,5 +283,5 @@ async function onRemoveBgConfirm(blob: Blob) {
 
 .props-empty { padding: 12px; text-align: center; }
 .prop-row { display: flex; align-items: center; gap: 6px; }
-.prop-row > span { font-size: 11px; color: var(--n-text-color-3); width: 40px; flex-shrink: 0; }
+.prop-row > span { font-size: 11px; color: var(--vtsuru-fg-muted); width: 40px; flex-shrink: 0; }
 </style>

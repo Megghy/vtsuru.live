@@ -152,7 +152,7 @@ function renderTemplateLabel(option: SelectOption) {
     h('span', option.label as string),
     caps.length
       ? h('span', {
-          style: 'font-size:11px;color:var(--n-text-color-3);flex-shrink:0',
+          style: 'font-size:11px;color:var(--vtsuru-fg-muted);flex-shrink:0',
         }, `${caps.length} 项能力`)
       : null,
   ])
@@ -432,8 +432,8 @@ async function setAsDisplayTemplate() {
 .capability-bar {
   padding: 10px 14px;
   border-radius: 10px;
-  background: var(--n-action-color, rgba(128, 128, 128, 0.06));
-  border: 1px solid var(--n-border-color, rgba(128, 128, 128, 0.15));
+  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.06));
+  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.15));
 }
 
 .capability-bar__title {
@@ -450,7 +450,7 @@ async function setAsDisplayTemplate() {
 
 .capability-bar__chevron {
   transition: transform 0.2s ease;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .capability-bar__chevron.is-expanded {
@@ -464,7 +464,7 @@ async function setAsDisplayTemplate() {
   flex-wrap: wrap;
   gap: 6px;
   padding-right: 14px;
-  border-right: 1px solid var(--n-divider-color, rgba(128, 128, 128, 0.2));
+  border-right: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.2));
 }
 
 .capability-group:last-child {

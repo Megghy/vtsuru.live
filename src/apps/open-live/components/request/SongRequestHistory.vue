@@ -259,11 +259,11 @@ const columns: DataTableColumns<SongRequestInfo> = [
 
 <style>
 .song-active {
-  color: var(--n-text-color);
-  background-color: rgba(var(--n-primary-color-rgb), 0.08);
+  color: var(--vtsuru-fg);
+  background-color: rgba(var(--vtsuru-primary-rgb), 0.08);
 }
 
 .song-active:hover {
-  background-color: rgba(var(--n-primary-color-rgb), 0.12) !important;
+  background-color: rgba(var(--vtsuru-primary-rgb), 0.12) !important;
 }
 </style>

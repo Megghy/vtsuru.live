@@ -436,7 +436,7 @@ onMounted(async () => {
 }
 
 .info-card {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
 }
 
 :deep(.n-tabs-nav) {

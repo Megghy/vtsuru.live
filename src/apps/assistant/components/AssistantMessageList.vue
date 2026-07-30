@@ -275,7 +275,7 @@ function formatTokens(value?: number): string {
 .msg-bubble {
   --msg-bubble-bg: transparent;
   --msg-bubble-border: transparent;
-  --msg-bubble-text: var(--vtsuru-fg, var(--n-text-color));
+  --msg-bubble-text: var(--vtsuru-fg, var(--vtsuru-fg));
 
   max-width: 88%; min-width: 0;
   padding: 8px 12px; border-radius: 10px;
@@ -318,7 +318,7 @@ function formatTokens(value?: number): string {
   display: flex; align-items: center; gap: 5px;
   cursor: pointer; user-select: none;
   margin-bottom: 6px;
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
   font-size: 12px;
 }
 .msg-think__icon { flex: 0 0 auto; }
@@ -340,14 +340,14 @@ function formatTokens(value?: number): string {
   font-size: 12px; line-height: 1.6; white-space: pre-wrap;
   background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.05));
   border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.14));
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
 }
 .msg-images { display: flex; flex-wrap: wrap; gap: 6px; }
 .msg-image {
   max-width: 160px; max-height: 160px;
   border-radius: 8px; object-fit: cover;
 }
-.msg-image-hint { color: var(--vtsuru-fg-muted, var(--n-text-color-3)); font-size: 13px; }
+.msg-image-hint { color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted)); font-size: 13px; }
 .msg-editor { display: flex; flex-direction: column; gap: 6px; min-width: min(360px, 72vw); }
 .msg-editor__input { min-width: 0; }
 .msg-editor__actions {
@@ -357,7 +357,7 @@ function formatTokens(value?: number): string {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   margin-top: 2px; padding-top: 6px;
   border-top: 1px dashed var(--vtsuru-border, rgba(128, 128, 128, 0.16));
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
   font-size: 11px; line-height: 1.4;
 }
 .msg-usage span { display: inline-flex; align-items: center; gap: 3px; }
@@ -384,7 +384,7 @@ function formatTokens(value?: number): string {
 }
 .msg-row--user .msg-actions { justify-content: flex-end; }
 .msg-actions:hover { opacity: 1; }
-.msg-action { color: var(--vtsuru-fg-muted, var(--n-text-color-3)); }
+.msg-action { color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted)); }
 .msg-error { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .msg-error__text { font-size: 13px; }
 </style>

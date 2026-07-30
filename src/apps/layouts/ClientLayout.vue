@@ -387,7 +387,7 @@ onMounted(() => {
                 <div class="status-row-label">
                   <NIcon
                     :size="16"
-                    :color="rpcServer.connectionCount > 0 ? 'var(--n-success-color)' : 'var(--n-text-color-3)'"
+                    :color="rpcServer.connectionCount > 0 ? 'var(--vtsuru-success)' : 'var(--vtsuru-fg-muted)'"
                   >
                     <PlugConnected24Filled />
                   </NIcon>
@@ -454,7 +454,7 @@ onMounted(() => {
             <div class="status-row-label">
               <NIcon
                 :size="16"
-                :color="cookieStatusType === 'success' ? 'var(--n-success-color)' : cookieStatusType === 'error' ? 'var(--n-error-color)' : 'var(--n-warning-color)'"
+                :color="cookieStatusType === 'success' ? 'var(--vtsuru-success)' : cookieStatusType === 'error' ? 'var(--vtsuru-error)' : 'var(--vtsuru-warning)'"
               >
                 <Cookies24Filled />
               </NIcon>
@@ -541,7 +541,7 @@ onMounted(() => {
     justify-content: center;
     /* 计算高度，减去 WindowBar 的高度 */
     height: calc(100vh - var(--client-titlebar-height));
-    background-color: var(--n-color);
+    background-color: var(--vtsuru-bg-surface);
     /* 可选：添加背景色 */
   }
 
@@ -573,7 +573,7 @@ onMounted(() => {
   .login-subtitle {
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
     text-align: center;
     /* 居中副标题 */
   }
@@ -619,7 +619,7 @@ onMounted(() => {
   .sider-header {
     height: 60px;
     /* 固定高度 */
-    border-bottom: 1px solid var(--n-border-color);
+    border-bottom: 1px solid var(--vtsuru-border);
     /* 使用 Naive UI 的边框颜色变量 */
     padding: 0 1rem;
     display: flex;
@@ -671,12 +671,12 @@ onMounted(() => {
     cursor: default;
     padding: 4px 6px;
     margin: 0 -6px;
-    border-radius: var(--n-border-radius);
+    border-radius: var(--vtsuru-radius);
     transition: background-color 0.2s;
   }
 
   .status-row--hoverable:hover {
-    background-color: var(--n-close-color-hover, rgba(128, 128, 128, 0.1));
+    background-color: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.1));
   }
 
   .status-row-label {
@@ -702,8 +702,8 @@ onMounted(() => {
     flex-direction: column;
     gap: 2px;
     padding: 6px 8px;
-    border-radius: var(--n-border-radius);
-    background-color: var(--n-close-color-hover, rgba(128, 128, 128, 0.08));
+    border-radius: var(--vtsuru-radius);
+    background-color: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
   }
 
   .rpc-detail-origin {
@@ -727,12 +727,12 @@ onMounted(() => {
 
   /* 连接成功图标颜色 */
   .fetcher-status-icon.connected {
-    color: var(--n-success-color);
+    color: var(--vtsuru-success);
   }
 
   /* 连接失败/断开图标颜色 */
   .fetcher-status-icon.disconnected {
-    color: var(--n-error-color);
+    color: var(--vtsuru-error);
   }
 
   /* 侧边栏菜单样式 */
@@ -746,9 +746,9 @@ onMounted(() => {
   .cookie-status-card {
     margin-top: 12px;
     padding: 12px;
-    border: 1px solid var(--n-border-color);
-    border-radius: var(--n-border-radius);
-    background-color: var(--n-card-color);
+    border: 1px solid var(--vtsuru-border);
+    border-radius: var(--vtsuru-radius);
+    background-color: var(--vtsuru-bg-surface);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -772,7 +772,7 @@ onMounted(() => {
     align-items: center;
     height: calc(100vh - var(--client-titlebar-height) - 2rem);
     /* 大致计算高度 */
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
   }
 
   .init-overlay {
@@ -781,7 +781,7 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--n-color);
+    background: var(--vtsuru-bg-surface);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -794,6 +794,6 @@ onMounted(() => {
     gap: 12px;
   }
   .init-stage {
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
   }
 </style>

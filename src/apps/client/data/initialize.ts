@@ -260,14 +260,14 @@ async function handleUpdateInstall(update: any) {
       content: () =>
           h('div', { style: 'display: flex; flex-direction: column; gap: 10px; min-width: 240px;' }, [
           h('div', {
-            style: 'height: 6px; border-radius: 999px; background: var(--n-color-embedded); overflow: hidden;',
+            style: 'height: 6px; border-radius: 999px; background: var(--vtsuru-bg-inset); overflow: hidden;',
           }, [
             h('div', {
-              style: `height: 100%; width: ${progressPercentage.value}%; background: linear-gradient(90deg, var(--n-primary-color), var(--n-primary-color-hover)); transition: width 0.2s ease;`,
+              style: `height: 100%; width: ${progressPercentage.value}%; background: linear-gradient(90deg, var(--vtsuru-primary), var(--vtsuru-primary-hover)); transition: width 0.2s ease;`,
             }),
           ]),
           h('div', {
-            style: 'font-size: 12px; color: var(--n-text-color); text-align: center;',
+            style: 'font-size: 12px; color: var(--vtsuru-fg); text-align: center;',
           }, progressText.value),
         ]),
       closable: false,

@@ -142,7 +142,7 @@ function navigateToTool(routeName: string) {
   align-items: flex-start;
   gap: 14px;
   padding: 16px;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 10px;
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
@@ -181,8 +181,8 @@ function navigateToTool(routeName: string) {
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: var(--n-color-embedded);
-  border: 1px solid var(--n-border-color);
+  background: var(--vtsuru-bg-inset);
+  border: 1px solid var(--vtsuru-border);
   color: var(--primary-color, #18a058);
 }
 

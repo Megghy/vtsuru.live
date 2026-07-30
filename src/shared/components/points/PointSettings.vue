@@ -1080,7 +1080,7 @@ watch(
 .setting-label {
   width: 48px;
   font-weight: 500;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .setting-row-group {
@@ -1119,15 +1119,15 @@ watch(
 
 .gift-item-card {
   padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-  background-color: var(--n-card-color);
-  transition: all 0.3s var(--n-bezier);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-surface);
+  transition: all 0.3s var(--vtsuru-bezier);
 }
 
 .gift-item-card:hover {
-  background-color: var(--n-color-embedded);
-  border-color: var(--n-primary-color);
+  background-color: var(--vtsuru-bg-inset);
+  border-color: var(--vtsuru-primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -1145,7 +1145,7 @@ watch(
 }
 
 .error-text {
-  color: var(--n-error-color);
+  color: var(--vtsuru-error);
   font-size: 12px;
   margin-top: -6px;
   margin-bottom: 8px;

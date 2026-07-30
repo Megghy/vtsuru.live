@@ -4,15 +4,15 @@
  * 设计原则：
  * - primary 保持中性（shadcn/Zinc 风格），不要被替换为品牌色
  * - 品牌色只用于 loading / switch active / 链接 anchor 等具有“品牌曝光”意义的位置
- * - 暗色 / 亮色 token 由 buildTokens 统一产出，本文件不再读 isDark
+ * - 组件只消费传入的语义 token，不自行决定页面场景
  */
 import type { GlobalThemeOverrides } from 'naive-ui'
 import { brand, error, info, neutral, pickByMode, rgba, success, warning } from './colors'
 import { getAdaptiveButtonColors } from './buttons'
-import { buildTokens } from './tokens'
+import type { ThemeTokens } from './tokens'
 
-export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
-  const t = buildTokens(isDark)
+export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
+  const { isDark } = t
 
   const infoColor = pickByMode(isDark, info.light, info.dark)
   const infoColorHover = pickByMode(isDark, info.lightHover, info.darkHover)
@@ -33,6 +33,14 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
   const errorColorHover = pickByMode(isDark, error.lightHover, error.darkHover)
   const errorColorPressed = pickByMode(isDark, error.lightPressed, error.darkPressed)
   const errorColorSuppl = pickByMode(isDark, error.lightSuppl, error.darkSuppl)
+  const alertTone = (color: string) => ({
+    background: rgba(color, isDark ? 0.16 : 0.1),
+    border: `1px solid ${rgba(color, isDark ? 0.42 : 0.32)}`,
+  })
+  const infoAlert = alertTone(infoColor)
+  const successAlert = alertTone(successColor)
+  const warningAlert = alertTone(warningColor)
+  const errorAlert = alertTone(errorColor)
 
   return {
     common: {
@@ -63,23 +71,23 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
 
       textColorBase: t.foreground,
       textColor1: t.foreground,
-      textColor2: t.mutedForeground,
-      textColor3: isDark ? neutral[500] : neutral[400],
+      textColor2: t.foreground,
+      textColor3: t.mutedForeground,
       textColorDisabled: t.disabledForeground,
 
-      bodyColor: t.background,
-      cardColor: t.background,
-      modalColor: t.background,
-      popoverColor: t.background,
-      tableColor: t.background,
-      tableColorHover: t.embeddedColor,
-      tableHeaderColor: t.embeddedColor,
+      bodyColor: t.canvas,
+      cardColor: t.surface,
+      modalColor: t.elevated,
+      popoverColor: t.elevated,
+      tableColor: t.surface,
+      tableColorHover: t.surfaceHover,
+      tableHeaderColor: t.inset,
 
       dividerColor: t.borderColor,
       borderColor: t.borderColor,
 
-      inputColor: t.background,
-      inputColorDisabled: t.embeddedColor,
+      inputColor: t.control,
+      inputColorDisabled: t.inset,
       placeholderColor: t.placeholder,
       placeholderColorDisabled: t.placeholderDisabled,
 
@@ -104,10 +112,15 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     Button: {
       ...getAdaptiveButtonColors({
         isDark,
-        surface: t.background,
-        color: t.background,
-        colorHover: t.muted,
-        colorPressed: isDark ? neutral[800] : neutral[200],
+        surface: t.canvas,
+        color: t.control,
+        colorHover: t.controlHover,
+        colorPressed: t.controlPressed,
+        secondary: {
+          color: t.secondary,
+          hover: t.secondaryHover,
+          pressed: t.secondaryPressed,
+        },
         textColor: t.foreground,
         borderColor: t.borderColor,
         primary: { color: t.primary, hover: t.primaryHover, pressed: t.primaryPressed },
@@ -138,8 +151,8 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       borderHover: `1px solid ${t.inputBorderHover}`,
       borderFocus: `1px solid ${t.inputBorderColor}`,
       boxShadowFocus: t.ringShadow,
-      color: t.background,
-      colorFocus: t.background,
+      color: t.control,
+      colorFocus: t.control,
       textColor: t.foreground,
       textColorDisabled: t.disabledForeground,
       placeholderColorDisabled: t.placeholderDisabled,
@@ -157,16 +170,16 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
           borderHover: `1px solid ${t.inputBorderHover}`,
           borderFocus: `1px solid ${t.inputBorderColor}`,
           boxShadowFocus: t.ringShadow,
-          color: t.background,
+          color: t.control,
           textColor: t.foreground,
-          colorDisabled: t.embeddedColor,
+          colorDisabled: t.inset,
           textColorDisabled: t.disabledForeground,
           placeholderColorDisabled: t.placeholderDisabled,
           arrowColorDisabled: t.placeholderDisabled,
         },
         InternalSelectMenu: {
           borderRadius: t.radiusControl,
-          color: t.background,
+          color: t.elevated,
           optionHeightMedium: '30px',
           optionHeightSmall: '26px',
         },
@@ -174,8 +187,14 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     },
     Card: {
       borderRadius: t.radiusSurface,
-      color: t.background,
-      colorEmbedded: t.embeddedColor,
+      color: t.surface,
+      colorModal: t.elevated,
+      colorPopover: t.elevated,
+      colorEmbedded: t.inset,
+      colorEmbeddedModal: t.inset,
+      colorEmbeddedPopover: t.inset,
+      textColor: t.foreground,
+      titleTextColor: t.foreground,
       borderColor: t.borderColor,
       paddingSmall: '12px 16px',
       paddingMedium: '16px 20px',
@@ -186,11 +205,11 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       titleFontSizeLarge: '17px',
     },
     Modal: {
-      color: t.background,
+      color: t.elevated,
     },
     Dialog: {
       borderRadius: t.radiusSurface,
-      color: t.background,
+      color: t.elevated,
       iconColor: t.foreground,
       closeIconColor: t.mutedForeground,
       padding: '20px',
@@ -204,7 +223,7 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     },
     Popover: {
       borderRadius: t.radiusControl,
-      color: t.background,
+      color: t.elevated,
       boxShadow: t.shadowPopover,
       padding: '8px 12px',
     },
@@ -228,7 +247,7 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     },
     Checkbox: {
       borderRadius: t.radiusSmall,
-      color: t.background,
+      color: t.control,
       colorChecked: t.primary,
       border: `1px solid ${t.borderColor}`,
       borderChecked: `1px solid ${t.primary}`,
@@ -240,7 +259,7 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       buttonBorderColorActive: t.primary,
       buttonTextColor: t.foreground,
       buttonTextColorActive: t.primaryForeground,
-      buttonColor: t.background,
+      buttonColor: t.control,
       buttonColorActive: t.primary,
       buttonHeightMedium: '30px',
       buttonHeightSmall: '24px',
@@ -256,8 +275,8 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     },
     Menu: {
       borderRadius: t.radiusControl,
-      itemColorActive: t.muted,
-      itemColorActiveHover: t.muted,
+      itemColorActive: t.surfaceHover,
+      itemColorActiveHover: t.surfaceHover,
       itemTextColorActive: t.foreground,
       itemTextColorActiveHover: t.foreground,
       itemIconColorActive: t.foreground,
@@ -266,15 +285,15 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     },
     Dropdown: {
       borderRadius: t.radiusControl,
-      color: t.background,
-      optionColorHover: t.muted,
+      color: t.elevated,
+      optionColorHover: t.surfaceHover,
       optionHeightMedium: '30px',
       optionHeightSmall: '26px',
       padding: '4px 0',
     },
     Message: {
       borderRadius: t.radiusControl,
-      color: t.embeddedColor,
+      color: t.elevated,
       textColor: t.foreground,
       border: `1px solid ${t.borderColor}`,
       padding: '8px 12px',
@@ -287,7 +306,7 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     },
     Notification: {
       borderRadius: t.radiusSurface,
-      color: t.embeddedColor,
+      color: t.elevated,
       headerTextColor: t.foreground,
       descriptionTextColor: t.mutedForeground,
       padding: '12px 16px',
@@ -315,7 +334,7 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       colorError: error.lightPressed,
     },
     Avatar: {
-      color: t.muted,
+      color: t.surfaceHover,
     },
     Alert: {
       borderRadius: t.radiusControl,
@@ -323,6 +342,22 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       padding: '12px 16px',
       lineHeight: '1.4',
       fontSize: '13px',
+      colorInfo: infoAlert.background,
+      colorSuccess: successAlert.background,
+      colorWarning: warningAlert.background,
+      colorError: errorAlert.background,
+      borderInfo: infoAlert.border,
+      borderSuccess: successAlert.border,
+      borderWarning: warningAlert.border,
+      borderError: errorAlert.border,
+      titleTextColorInfo: t.foreground,
+      titleTextColorSuccess: t.foreground,
+      titleTextColorWarning: t.foreground,
+      titleTextColorError: t.foreground,
+      contentTextColorInfo: t.foreground,
+      contentTextColorSuccess: t.foreground,
+      contentTextColorWarning: t.foreground,
+      contentTextColorError: t.foreground,
       iconColorInfo: infoColor,
       iconColorSuccess: successColor,
       iconColorWarning: warningColor,
@@ -352,7 +387,7 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       tabPaddingSmallLine: '8px 12px',
       tabPaddingSmallCard: '6px 12px',
       tabPaddingSmallBar: '6px 12px',
-      colorSegment: t.embeddedColor,
+      colorSegment: t.inset,
       tabColorSegment: isDark ? neutral[800] : '#ffffff',
       tabTextColorActiveSegment: t.foreground,
       tabTextColorHoverSegment: t.foreground,

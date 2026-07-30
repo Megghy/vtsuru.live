@@ -120,9 +120,9 @@ const schedulingModeOptions = [
 
 .info-box {
   padding: 8px 12px;
-  background-color: var(--n-action-color);
-  border-radius: var(--n-border-radius);
-  border-left: 4px solid var(--n-info-color);
+  background-color: var(--vtsuru-bg-muted);
+  border-radius: var(--vtsuru-radius);
+  border-left: 4px solid var(--vtsuru-info);
 }
 
 .disabled-overlay {

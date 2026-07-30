@@ -38,7 +38,7 @@
 
 /* shadcn-like card rhythm */
 .manage-page .n-card {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
 }
 
 .manage-page .n-card .n-card-header {
@@ -50,7 +50,7 @@
 }
 
 .manage-muted {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .manage-kicker {
@@ -58,13 +58,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 /* Manage modals: subtle shadcn-like border */
 .n-modal > .n-card {
   box-sizing: border-box;
-  border: 1px solid var(--n-border-color, rgba(148, 163, 184, 0.22));
+  border: 1px solid var(--vtsuru-border);
 }
 
 /* 透明图片预览的棋盘格背景，工具页通用 */

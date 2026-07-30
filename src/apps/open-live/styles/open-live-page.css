@@ -33,7 +33,7 @@
 
 /* shadcn-like card rhythm */
 .open-live-page-inner .n-card {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
 }
 
 .open-live-page-inner .n-card .n-card-header {

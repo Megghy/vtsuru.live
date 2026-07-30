@@ -215,7 +215,7 @@ onMounted(async () => {
             round
             :size="64"
             fallback-src="/img/no-face.png"
-            style="border: 1px solid var(--n-border-color);"
+            style="border: 1px solid var(--vtsuru-border);"
           />
           <div class="user-basic-info">
             <NFlex
@@ -409,9 +409,9 @@ onMounted(async () => {
 }
 
 .user-header {
-  background-color: var(--n-card-color);
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-surface);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
   padding: 24px;
   margin-bottom: 16px;
 }
@@ -424,7 +424,7 @@ onMounted(async () => {
 
 .user-ids {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .info-item-static {
@@ -434,20 +434,20 @@ onMounted(async () => {
 
 .info-label {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   margin-bottom: 4px;
 }
 
 .info-value {
   font-size: 20px; /* match NStatistic value size approximately */
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
   font-variant-numeric: tabular-nums;
 }
 
 .data-tabs {
-  background-color: var(--n-card-color);
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-surface);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
   padding: 16px 24px;
 }
 
@@ -457,7 +457,7 @@ onMounted(async () => {
 }
 
 .info-icon {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   cursor: help;
 }
 </style>

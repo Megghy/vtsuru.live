@@ -98,6 +98,28 @@ export async function QueryPostAPI<T>(
   return QueryPostAPIWithParams<T>(urlString, undefined, body, contentType, headers, options)
 }
 
+export async function QueryPatchAPI<T>(
+  urlString: string,
+  body?: unknown,
+  headers?: [string, string][],
+  options?: QueryRequestOptions,
+): Promise<APIRoot<T>> {
+  let url: URL
+  try {
+    url = new URL(urlString.toString())
+  } catch {
+    throw new Error(`无效的API地址: ${urlString}`)
+  }
+  return QueryAPIInternal<APIRoot<T>>(url, {
+    method: 'patch',
+    headers: {
+      ...buildAuthHeaders(headers),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  }, options)
+}
+
 export async function QueryPostAPIWithParams<T>(
   urlString: string,
   params?: QueryParams,

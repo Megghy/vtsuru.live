@@ -505,7 +505,7 @@ function handleVariableInsert(text: string) {
 <style scoped>
 .template-description {
   margin-bottom: 12px;
-  color: var(--n-text-color-disabled);
+  color: var(--vtsuru-fg-disabled);
   font-size: 13px;
 }
 
@@ -540,21 +540,21 @@ function handleVariableInsert(text: string) {
 
 .live-preview-container {
   margin-top: 8px;
-  background-color: var(--n-color-embedded);
-  border-radius: var(--n-border-radius);
-  border: 1px solid var(--n-border-color);
+  background-color: var(--vtsuru-bg-inset);
+  border-radius: var(--vtsuru-radius);
+  border: 1px solid var(--vtsuru-border);
   overflow: hidden;
 }
 
 .live-preview-label {
   padding: 4px 8px;
-  background-color: var(--n-action-color);
+  background-color: var(--vtsuru-bg-muted);
   font-size: 12px;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg);
   display: flex;
   align-items: center;
   gap: 4px;
-  border-bottom: 1px solid var(--n-divider-color);
+  border-bottom: 1px solid var(--vtsuru-border);
 }
 
 .live-preview-content {
@@ -580,7 +580,7 @@ function handleVariableInsert(text: string) {
 }
 
 .example-card:hover {
-  border-color: var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
 }
 
 .example-header {
@@ -591,12 +591,12 @@ function handleVariableInsert(text: string) {
 }
 
 .example-code {
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
   padding: 4px 6px;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
   font-family: monospace;
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -611,9 +611,9 @@ function handleVariableInsert(text: string) {
   margin-bottom: 5px;
 }
 .function-list code {
-   background-color: var(--n-code-color);
+   background-color: var(--vtsuru-bg-inset);
    padding: 1px 4px;
-   border-radius: var(--n-border-radius);
+   border-radius: var(--vtsuru-radius);
    font-family: monospace;
    margin-right: 4px;
 }
@@ -623,8 +623,8 @@ function handleVariableInsert(text: string) {
 .n-alert pre {
   margin: 4px 0 0 0;
   padding: 6px 8px;
-  background-color: var(--n-code-color);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-inset);
+  border-radius: var(--vtsuru-radius);
   font-size: 12px;
   line-height: 1.4;
 }

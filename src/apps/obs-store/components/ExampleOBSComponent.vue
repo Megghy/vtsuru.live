@@ -166,14 +166,14 @@ watch(() => props.config, (newConfig) => {
 
 <style scoped>
   .example-obs-component {
-    border: 1px dashed var(--n-border-color);
+    border: 1px dashed var(--vtsuru-border);
     padding: 16px;
   }
 
   pre {
-    background-color: var(--n-code-block-color);
+    background-color: var(--vtsuru-bg-inset);
     padding: 8px;
-    border-radius: var(--n-border-radius);
+    border-radius: var(--vtsuru-radius);
     font-size: 0.85em;
     white-space: pre-wrap;
     /* 确保长内容能换行 */

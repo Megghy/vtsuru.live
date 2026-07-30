@@ -151,7 +151,7 @@ function groupSelection() {
         <PageAppearanceOverrides />
       </NCollapse>
 
-      <div style="background: var(--n-color-embedded); padding: 12px; border-radius: 8px">
+      <div style="background: var(--vtsuru-bg-inset); padding: 12px; border-radius: 8px">
         <NText depth="3" style="font-size: 12px; margin-bottom: 8px; display: block">
           页面渲染模式
         </NText>

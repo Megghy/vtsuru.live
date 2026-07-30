@@ -490,42 +490,42 @@ onMounted(async () => {
 
 <style scoped>
 .stat-card {
-  background-color: var(--n-card-color);
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-surface);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  transition: all 0.3s var(--n-bezier);
+  transition: all 0.3s var(--vtsuru-bezier);
 }
 
 .stat-card:hover {
-  border-color: var(--n-primary-color);
-  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
+  border-color: var(--vtsuru-primary);
+  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 .stat-label {
   font-size: 13px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
-.stat-value.primary { color: var(--n-primary-color); }
-.stat-value.success { color: var(--n-success-color); }
-.stat-value.info { color: var(--n-info-color); }
-.stat-value.warning { color: var(--n-warning-color); }
+.stat-value.primary { color: var(--vtsuru-primary); }
+.stat-value.success { color: var(--vtsuru-success); }
+.stat-value.info { color: var(--vtsuru-info); }
+.stat-value.warning { color: var(--vtsuru-warning); }
 
 .toolbar-section {
-  background-color: var(--n-card-color);
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-surface);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
   padding: 12px 16px;
 }
 

@@ -487,7 +487,7 @@ watchEffect(async () => {
 
 .drop-zone {
   display: flex; align-items: center; justify-content: center;
-  min-height: 220px; border: 2px dashed var(--n-border-color);
+  min-height: 220px; border: 2px dashed var(--vtsuru-border);
   border-radius: 12px; cursor: pointer; transition: all 0.25s ease;
 }
 .drop-zone:hover, .drop-zone.active {
@@ -496,7 +496,7 @@ watchEffect(async () => {
 }
 .drop-zone.active { border-style: solid; }
 .drop-zone-content { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.drop-icon { width: 48px; height: 48px; color: var(--n-text-color-3); transition: color 0.2s; }
+.drop-icon { width: 48px; height: 48px; color: var(--vtsuru-fg-muted); transition: color 0.2s; }
 .drop-zone:hover .drop-icon { color: var(--primary-color, #18a058); }
 
 .edit-section, .results-section { animation: slideUp 0.3s ease; }
@@ -511,7 +511,7 @@ watchEffect(async () => {
 .crop-section { display: flex; flex-direction: column; align-items: center; }
 .crop-preview {
   position: relative; width: 100%; max-width: 380px; aspect-ratio: 1;
-  border-radius: 10px; overflow: hidden; border: 1px solid var(--n-border-color);
+  border-radius: 10px; overflow: hidden; border: 1px solid var(--vtsuru-border);
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 .crop-img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -530,8 +530,8 @@ watchEffect(async () => {
 }
 
 .settings-panel {
-  padding: 20px; border: 1px solid var(--n-border-color);
-  border-radius: 10px; background: var(--n-color-embedded); align-self: start;
+  padding: 20px; border: 1px solid var(--vtsuru-border);
+  border-radius: 10px; background: var(--vtsuru-bg-inset); align-self: start;
 }
 .settings-list { display: flex; flex-direction: column; gap: 14px; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -542,7 +542,7 @@ watchEffect(async () => {
   gap: 10px; max-width: 540px; margin: 0 auto;
 }
 .tile-card {
-  position: relative; border: 1px solid var(--n-border-color);
+  position: relative; border: 1px solid var(--vtsuru-border);
   border-radius: 8px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s;
   cursor: pointer;
 }
@@ -573,19 +573,19 @@ watchEffect(async () => {
 /* --- Cell Editor Panel --- */
 .cell-editor-panel {
   max-width: 540px; margin: 12px auto 0;
-  padding: 14px; border: 1px solid var(--n-border-color);
-  border-radius: 8px; background: var(--n-color-embedded);
+  padding: 14px; border: 1px solid var(--vtsuru-border);
+  border-radius: 8px; background: var(--vtsuru-bg-inset);
 }
 .cell-editor-body { display: flex; gap: 16px; align-items: flex-start; }
 .cell-editor-list { flex: 1; min-width: 0; }
 .cell-editor-empty { padding: 12px 0; text-align: center; }
 .cell-img-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
-.cell-img-row + .cell-img-row { border-top: 1px solid var(--n-border-color); }
+.cell-img-row + .cell-img-row { border-top: 1px solid var(--vtsuru-border); }
 .cell-img-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
 .cell-preview { flex-shrink: 0; width: 120px; }
 .cell-preview-img {
   width: 100%; border-radius: 6px;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
@@ -594,13 +594,13 @@ watchEffect(async () => {
   position: sticky; bottom: 0;
   display: flex; justify-content: center; align-items: center; gap: 12px;
   margin-top: 28px; padding: 16px 0;
-  background: color-mix(in srgb, var(--n-color) 85%, transparent);
-  backdrop-filter: blur(8px); border-top: 1px solid var(--n-border-color); z-index: 10;
+  background: color-mix(in srgb, var(--vtsuru-bg-surface) 85%, transparent);
+  backdrop-filter: blur(8px); border-top: 1px solid var(--vtsuru-border); z-index: 10;
 }
 
 /* --- Results --- */
 .result-item {
-  position: relative; border: 1px solid var(--n-border-color);
+  position: relative; border: 1px solid var(--vtsuru-border);
   border-radius: 8px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s;
 }
 .result-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }

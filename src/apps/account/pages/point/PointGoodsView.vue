@@ -997,7 +997,7 @@ onMounted(async () => {
               :goods="currentGoods"
               :show-footer="false"
               content-style="height: auto; border: none; box-shadow: none;"
-              style="border: 1px solid var(--n-border-color); border-radius: var(--n-border-radius);"
+              style="border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-radius);"
             />
           </div>
 
@@ -1441,7 +1441,7 @@ onMounted(async () => {
 
 .goods-item-card {
   height: 100%;
-  transition: all 0.3s var(--n-bezier);
+  transition: all 0.3s var(--vtsuru-bezier);
 }
 
 .is-unavailable {
@@ -1451,34 +1451,34 @@ onMounted(async () => {
 
 .sub-item-card {
   padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
   transition: all 0.2s ease;
   cursor: pointer;
-  background-color: var(--n-color);
+  background-color: var(--vtsuru-bg-surface);
 }
 
 .sub-item-card:hover:not(.disabled) {
-  border-color: var(--n-primary-color);
-  background-color: color-mix(in srgb, var(--n-primary-color), transparent 95%);
+  border-color: var(--vtsuru-primary);
+  background-color: color-mix(in srgb, var(--vtsuru-primary), transparent 95%);
 }
 
 .sub-item-card.active {
-  border-color: var(--n-primary-color);
-  background-color: color-mix(in srgb, var(--n-primary-color), transparent 90%);
-  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
+  border-color: var(--vtsuru-primary);
+  background-color: color-mix(in srgb, var(--vtsuru-primary), transparent 90%);
+  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
 }
 
 .sub-item-card.disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background-color: var(--n-color-modal);
+  background-color: var(--vtsuru-bg-elevated);
 }
 
 .sub-item-cover {
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
 }
 
 .sub-item-name {

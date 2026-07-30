@@ -26,7 +26,7 @@ export function resolveOpaqueColor(value: string, background: Rgb) {
 }
 
 export function ensureTextContrast(value: string, surface: Rgb, isDark: boolean, enabled = true) {
-  const fallback = parseRgb(isDark ? '#fafafa' : '#09090b')!
+  const fallback = parseRgb(isDark ? '#fafafa' : '#09090b')
   const requested = resolveOpaqueColor(value, surface) ?? fallback
   const requestedContrast = wcagContrast(requested, surface)
 
@@ -34,8 +34,8 @@ export function ensureTextContrast(value: string, surface: Rgb, isDark: boolean,
     return { color: formatRgb(requested), contrast: requestedContrast, adjusted: false }
   }
 
-  const black = parseRgb('#000000')!
-  const white = parseRgb('#ffffff')!
+  const black = parseRgb('#000000')
+  const white = parseRgb('#ffffff')
   const target = wcagContrast(black, surface) >= wcagContrast(white, surface) ? black : white
   const mix = interpolate([requested, target], 'rgb')
   let low = 0
@@ -50,7 +50,7 @@ export function ensureTextContrast(value: string, surface: Rgb, isDark: boolean,
 }
 
 export function resolveReadableTextColor(value: string, surfaceValue: string, isDark: boolean) {
-  const backdrop = parseRgb(isDark ? '#09090b' : '#ffffff')!
+  const backdrop = parseRgb(isDark ? '#09090b' : '#ffffff')
   const surface = resolveOpaqueColor(surfaceValue, backdrop) ?? backdrop
   return ensureTextContrast(value, surface, isDark).color
 }
@@ -58,15 +58,18 @@ export function resolveReadableTextColor(value: string, surfaceValue: string, is
 export function shiftColorForInteraction(value: string, amount: number) {
   const color = parseRgb(value)
   if (!color) return value
-  const black = parseRgb('#000000')!
-  const white = parseRgb('#ffffff')!
+  const black = parseRgb('#000000')
+  const white = parseRgb('#ffffff')
   const targetColor = wcagContrast(color, black) >= wcagContrast(color, white) ? black : white
   return formatRgb(interpolate([color, targetColor], 'rgb')(amount))
 }
 
 export function resolveReadableForeground(backgroundValue: string, surfaceValue: string, isDark: boolean) {
-  const backdrop = parseRgb(isDark ? '#09090b' : '#ffffff')!
+  const backdrop = parseRgb(isDark ? '#09090b' : '#ffffff')
   const surface = resolveOpaqueColor(surfaceValue, backdrop) ?? backdrop
   const background = resolveOpaqueColor(backgroundValue, surface) ?? surface
-  return ensureTextContrast(backgroundValue, background, isDark).color
+  const black = parseRgb('#09090b')
+  const white = parseRgb('#fafafa')
+  const foreground = wcagContrast(black, background) >= wcagContrast(white, background) ? black : white
+  return ensureTextContrast(formatRgb(foreground), background, isDark).color
 }

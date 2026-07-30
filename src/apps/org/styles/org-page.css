@@ -20,7 +20,7 @@
 
 /* shadcn-like card rhythm */
 .org-page .n-card {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
 }
 
 .org-page .n-card .n-card-header {
@@ -32,5 +32,5 @@
 }
 
 .org-muted {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }

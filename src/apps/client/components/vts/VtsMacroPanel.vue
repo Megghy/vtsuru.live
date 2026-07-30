@@ -239,7 +239,7 @@ function runMacro(macroId: string) {
           v-for="(element, index) in macroSteps"
           :key="element.id"
           size="small"
-          style="border-radius: var(--n-border-radius); margin-bottom: 8px"
+          style="border-radius: var(--vtsuru-radius); margin-bottom: 8px"
         >
           <NFlex align="center" justify="space-between" :wrap="true" :size="8">
             <NFlex align="center" :wrap="true" :size="8">
@@ -392,7 +392,7 @@ function runMacro(macroId: string) {
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
   cursor: grab;
   user-select: none;
   opacity: 0.85;

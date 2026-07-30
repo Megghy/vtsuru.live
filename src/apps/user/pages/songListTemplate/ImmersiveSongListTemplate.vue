@@ -356,7 +356,7 @@ function requestSong(song: SongsInfo) {
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.5);
-  background: var(--n-action-color);
+  background: var(--vtsuru-bg-inset);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,12 +369,12 @@ function requestSong(song: SongsInfo) {
 }
 
 .stage-cover.is-empty {
-  background: linear-gradient(135deg, var(--n-action-color), var(--n-border-color));
+  background: linear-gradient(135deg, var(--vtsuru-bg-inset), var(--vtsuru-border));
 }
 
 .stage-cover-icon {
   font-size: 80px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   opacity: 0.5;
 }
 
@@ -383,19 +383,19 @@ function requestSong(song: SongsInfo) {
   font-size: 20px;
   font-weight: 750;
   line-height: 1.25;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 .stage-subtitle {
   margin-top: 4px;
   font-size: 13px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }
 
 .stage-author {
   margin-top: 6px;
   font-size: 14px;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
 }
 
 .stage-tags {
@@ -509,7 +509,7 @@ function requestSong(song: SongsInfo) {
   justify-content: center;
   font-size: 16px;
   font-weight: 700;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }
 
 .lib-cover img {
@@ -528,7 +528,7 @@ function requestSong(song: SongsInfo) {
 .lib-name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -536,7 +536,7 @@ function requestSong(song: SongsInfo) {
 
 .lib-author {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -133,7 +133,7 @@ watch(hasUserKey, (value) => {
         :input-props="{ autocomplete: 'new-password' }"
       />
       <NText depth="3" style="font-size: 11px">
-        <a href="https://bailian.console.aliyun.com/" target="_blank" rel="noopener" style="color: var(--n-text-color-3)">
+        <a href="https://bailian.console.aliyun.com/" target="_blank" rel="noopener" style="color: var(--vtsuru-fg-muted)">
           前往阿里云百炼获取 API Key →
         </a>
       </NText>
@@ -179,7 +179,7 @@ watch(hasUserKey, (value) => {
           CosyVoice3.5 不支持系统音色。请刷新并选择声音复刻/声音设计音色。
         </NAlert>
         <NText depth="3" style="font-size: 11px">
-          <a href="https://help.aliyun.com/zh/model-studio/voice-cloning-user-guide" target="_blank" rel="noopener" style="color: var(--n-text-color-3)">
+          <a href="https://help.aliyun.com/zh/model-studio/voice-cloning-user-guide" target="_blank" rel="noopener" style="color: var(--vtsuru-fg-muted)">
             如何创建声音复刻 / 声音设计音色？查看百炼教程 →
           </a>
         </NText>

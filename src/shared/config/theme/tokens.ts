@@ -1,6 +1,6 @@
 /**
  * 主题语义令牌：尺寸、字体、阴影、圆角等与具体组件无关的设计变量。
- * 组件 override 直接消费 buildTokens(isDark) 的返回值。
+ * 组件 override 直接消费场景对应的 ThemeTokens。
  */
 import { brand, neutral, pickByMode, rgba } from './colors'
 
@@ -12,12 +12,22 @@ export interface ThemeTokens {
   radiusControl: string
   radiusSmall: string
 
-  // 文本与背景
-  background: string
+  // 表面层级
+  canvas: string
+  surface: string
+  surfaceHover: string
+  inset: string
+  elevated: string
+
+  // 文本与控件
   foreground: string
-  muted: string
   mutedForeground: string
-  embeddedColor: string
+  control: string
+  controlHover: string
+  controlPressed: string
+  secondary: string
+  secondaryHover: string
+  secondaryPressed: string
   borderColor: string
   inputBorderColor: string
   inputBorderHover: string
@@ -54,21 +64,31 @@ export interface ThemeTokens {
 
 }
 
-export function buildTokens(isDark: boolean): ThemeTokens {
+interface SurfacePalette {
+  canvas: string
+  surface: string
+  surfaceHover: string
+  inset: string
+  elevated: string
+  control: string
+  controlHover: string
+  controlPressed: string
+  secondary: string
+  secondaryHover: string
+  secondaryPressed: string
+}
+
+function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
   const radiusSurface = '6px'
   const radiusControl = '4px'
   const radiusSmall = '2px'
 
-  const background = isDark ? neutral[950] : '#ffffff'
   const foreground = isDark ? neutral[50] : neutral[950]
 
   const borderColor = isDark ? neutral[800] : neutral[300]
   const inputBorderColor = borderColor
-  const inputBorderHover = isDark ? neutral[700] : neutral[300]
-
-  const muted = isDark ? neutral[900] : neutral[100]
-  const mutedForeground = isDark ? neutral[400] : neutral[500]
-  const embeddedColor = isDark ? neutral[900] : neutral[50]
+  const inputBorderHover = isDark ? neutral[600] : neutral[400]
+  const mutedForeground = isDark ? neutral[400] : neutral[600]
 
   const ringColor = isDark ? neutral[300] : neutral[400]
   const ringShadow = `0 0 0 2px ${rgba(ringColor, isDark ? 0.35 : 0.3)}`
@@ -111,11 +131,9 @@ export function buildTokens(isDark: boolean): ThemeTokens {
     radiusSurface,
     radiusControl,
     radiusSmall,
-    background,
+    ...surfaces,
     foreground,
-    muted,
     mutedForeground,
-    embeddedColor,
     borderColor,
     inputBorderColor,
     inputBorderHover,
@@ -140,4 +158,64 @@ export function buildTokens(isDark: boolean): ThemeTokens {
     tooltipColor,
     tooltipTextColor,
   }
+}
+
+export function buildSiteTokens(isDark: boolean): ThemeTokens {
+  return createTokens(isDark, isDark
+    ? {
+        canvas: neutral[950],
+        surface: neutral[900],
+        surfaceHover: neutral[800],
+        inset: neutral[950],
+        elevated: neutral[800],
+        control: neutral[900],
+        controlHover: neutral[800],
+        controlPressed: neutral[700],
+        secondary: neutral[700],
+        secondaryHover: neutral[600],
+        secondaryPressed: neutral[500],
+      }
+    : {
+        canvas: '#ffffff',
+        surface: '#ffffff',
+        surfaceHover: neutral[100],
+        inset: neutral[100],
+        elevated: '#ffffff',
+        control: '#ffffff',
+        controlHover: neutral[100],
+        controlPressed: neutral[200],
+        secondary: neutral[200],
+        secondaryHover: neutral[300],
+        secondaryPressed: neutral[400],
+      })
+}
+
+export function buildManageTokens(isDark: boolean): ThemeTokens {
+  return createTokens(isDark, isDark
+    ? {
+        canvas: neutral[900],
+        surface: neutral[800],
+        surfaceHover: neutral[700],
+        inset: neutral[950],
+        elevated: neutral[700],
+        control: neutral[800],
+        controlHover: neutral[700],
+        controlPressed: neutral[600],
+        secondary: neutral[700],
+        secondaryHover: neutral[600],
+        secondaryPressed: neutral[500],
+      }
+    : {
+        canvas: neutral[100],
+        surface: '#ffffff',
+        surfaceHover: neutral[100],
+        inset: neutral[200],
+        elevated: '#ffffff',
+        control: '#ffffff',
+        controlHover: neutral[100],
+        controlPressed: neutral[200],
+        secondary: neutral[200],
+        secondaryHover: neutral[300],
+        secondaryPressed: neutral[400],
+      })
 }

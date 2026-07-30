@@ -462,7 +462,7 @@ const themeVars = useThemeVars()
 :deep(.n-divider.n-divider--title-position-left .n-divider__title) {
   font-weight: 600;
   font-size: 16px;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 :deep(.n-timeline-item-content__title) {
@@ -470,11 +470,11 @@ const themeVars = useThemeVars()
 }
 
 :deep(.n-timeline-item-content__content) {
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg);
 }
 
 :deep(.n-timeline-item-content__time) {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   font-size: 13px;
 }
 </style>

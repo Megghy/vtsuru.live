@@ -289,7 +289,7 @@ function requestSong(song: SongsInfo) {
 .count {
   margin-left: auto;
   font-size: 13px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }
 
 .preview-player {
@@ -319,7 +319,7 @@ function requestSong(song: SongsInfo) {
   aspect-ratio: 1 / 1;
   border-radius: 14px;
   overflow: hidden;
-  background: var(--n-action-color);
+  background: var(--vtsuru-bg-inset);
   box-shadow: 0 4px 14px -8px rgb(0 0 0 / 0.4);
 }
 
@@ -418,13 +418,13 @@ function requestSong(song: SongsInfo) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 .author {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -433,7 +433,7 @@ function requestSong(song: SongsInfo) {
 .translate {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

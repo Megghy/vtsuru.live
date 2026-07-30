@@ -23,6 +23,7 @@ const songRequest = useLiveRequest()
 
 const isSingingStatus = computed(() => props.song.status === SongRequestStatus.Singing)
 const hasSong = computed(() => !!props.song.song?.url)
+const cardThemeOverrides = { color: 'var(--vtsuru-bg-muted)' }
 
 function onSelectSong() {
   if (hasSong.value) {
@@ -56,20 +57,20 @@ function getIndexStyle(status: SongRequestStatus): CSSProperties {
 
   switch (status) {
     case SongRequestStatus.Singing:
-      return { ...style, backgroundColor: 'var(--n-success-color)' }
+      return { ...style, backgroundColor: 'var(--vtsuru-success)' }
     case SongRequestStatus.Waiting:
-      return { ...style, backgroundColor: 'var(--n-info-color)' }
+      return { ...style, backgroundColor: 'var(--vtsuru-info)' }
     case SongRequestStatus.Finish:
       return {
         ...style,
-        backgroundColor: 'var(--n-color-embedded)',
-        color: 'var(--n-text-color)',
-        border: '1px solid var(--n-border-color)',
+        backgroundColor: 'var(--vtsuru-bg-inset)',
+        color: 'var(--vtsuru-fg)',
+        border: '1px solid var(--vtsuru-border)',
       }
     case SongRequestStatus.Cancel:
-      return { ...style, backgroundColor: 'var(--n-error-color)' }
+      return { ...style, backgroundColor: 'var(--vtsuru-error)' }
     default:
-      return { ...style, backgroundColor: 'var(--n-info-color)' }
+      return { ...style, backgroundColor: 'var(--vtsuru-info)' }
   }
 }
 
@@ -84,11 +85,11 @@ const hasOtherSingSong = computed(() => {
 
 <template>
   <NCard
-    embedded
     size="small"
+    :theme-overrides="cardThemeOverrides"
     content-style="padding: 8px 12px;"
-    :bordered="isSingingStatus"
-    :style="isSingingStatus ? 'border-left: 4px solid var(--n-success-color);' : 'border-left: 4px solid transparent;'"
+    bordered
+    :style="isSingingStatus ? 'border-left: 4px solid var(--vtsuru-success);' : undefined"
   >
     <NFlex justify="space-between" align="center" :wrap="false">
       <!-- 左侧信息 -->

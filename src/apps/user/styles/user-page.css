@@ -22,7 +22,7 @@
 
 /* shadcn-like card rhythm */
 .user-page .n-card {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
 }
 
 .user-page .n-card .n-card-header {
@@ -43,7 +43,7 @@
 }
 
 .user-muted {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }
 
 .user-kicker {
@@ -51,5 +51,5 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }

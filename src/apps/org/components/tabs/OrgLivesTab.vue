@@ -140,16 +140,16 @@ onMounted(() => load())
 <style scoped>
 .live-card {
   height: 100%;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
 }
 .live-card:hover {
-  border-color: var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
 }
 .live-cover {
   height: 140px;
   overflow: hidden;
   position: relative;
-  background: var(--n-color-embedded);
+  background: var(--vtsuru-bg-inset);
 }
 .live-cover-empty {
   width: 100%;
@@ -157,7 +157,7 @@ onMounted(() => load())
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 .live-badge {
   position: absolute;

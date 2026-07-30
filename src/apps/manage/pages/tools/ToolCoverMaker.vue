@@ -312,7 +312,7 @@ async function onRemoveBgConfirm(blob: Blob) {
 }
 .editor-toolbar {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 12px; border-bottom: 1px solid var(--n-border-color);
+  padding: 8px 12px; border-bottom: 1px solid var(--vtsuru-border);
   flex-shrink: 0;
 }
 .editor-body {
@@ -320,14 +320,14 @@ async function onRemoveBgConfirm(blob: Blob) {
 }
 .editor-panel {
   width: 220px; flex-shrink: 0; overflow-y: auto;
-  border-color: var(--n-border-color); padding: 10px;
+  border-color: var(--vtsuru-border); padding: 10px;
   display: flex; flex-direction: column; gap: 4px;
 }
-.panel-left { border-right: 1px solid var(--n-border-color); }
-.panel-right { border-left: 1px solid var(--n-border-color); }
+.panel-left { border-right: 1px solid var(--vtsuru-border); }
+.panel-right { border-left: 1px solid var(--vtsuru-border); }
 .editor-canvas { flex: 1; min-width: 0; display: flex; }
 
-.panel-section { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--n-border-color); margin-bottom: 8px; }
+.panel-section { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--vtsuru-border); margin-bottom: 8px; }
 .panel-section:last-child { border-bottom: none; margin-bottom: 0; }
 .panel-header { margin-bottom: 4px; }
 
@@ -338,17 +338,17 @@ async function onRemoveBgConfirm(blob: Blob) {
   padding: 3px 4px; border-radius: 4px; cursor: pointer;
   border: 1px solid transparent; font-size: 12px;
 }
-.layer-item:hover { background: var(--n-color-embedded); }
+.layer-item:hover { background: var(--vtsuru-bg-inset); }
 .layer-item.active { border-color: var(--primary-color, #18a058); background: color-mix(in srgb, var(--primary-color) 6%, transparent); }
 .layer-item.dragging { opacity: 0.4; }
 .layer-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 
 .props-empty { padding: 12px; text-align: center; }
 .prop-row { display: flex; align-items: center; gap: 6px; }
-.prop-row > span { font-size: 11px; color: var(--n-text-color-3); width: 40px; flex-shrink: 0; }
+.prop-row > span { font-size: 11px; color: var(--vtsuru-fg-muted); width: 40px; flex-shrink: 0; }
 
 @media (max-width: 768px) {
   .editor-body { flex-direction: column; }
-  .editor-panel { width: 100%; border: none; border-bottom: 1px solid var(--n-border-color); }
+  .editor-panel { width: 100%; border: none; border-bottom: 1px solid var(--vtsuru-border); }
 }
 </style>

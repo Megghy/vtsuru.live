@@ -2,17 +2,15 @@
  * 主题入口：聚合 colors / tokens / overrides，并产出可在 .vue / .ts 中直接引用的 CSS 变量。
  */
 import type { ThemeTokens } from './tokens'
-import { brand, error, hexToRgb, info, neutral, pickByMode, success, warning } from './colors'
+import { brand, error, hexToRgb, info, pickByMode, rgba, success, warning } from './colors'
 
 export { brand, error, hexToRgb, info, neutral, pickByMode, rgba, success, warning } from './colors'
 export { getThemeOverrides } from './overrides'
 export type { ThemeTokens } from './tokens'
-export { buildTokens } from './tokens'
+export { buildManageTokens, buildSiteTokens } from './tokens'
 
-const NAIVE_BEZIER = 'cubic-bezier(.4, 0, .2, 1)'
-
-function rgbTriplet(hex: string) {
-  const { r, g, b } = hexToRgb(hex)
+function rgbTriplet(color: string) {
+  const { r, g, b } = hexToRgb(color)
   return `${r}, ${g}, ${b}`
 }
 
@@ -23,8 +21,19 @@ function rgbTriplet(hex: string) {
  * 在 App.vue 的 watchEffect 里调用即可。
  */
 export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
+  const infoColor = pickByMode(tokens.isDark, info.light, info.dark)
+  const successColor = pickByMode(tokens.isDark, success.light, success.dark)
+  const warningColor = pickByMode(tokens.isDark, warning.light, warning.dark)
+  const errorColor = pickByMode(tokens.isDark, error.light, error.dark)
   const vars: Record<string, string> = {
+    '--vtsuru-bezier': 'cubic-bezier(.4, 0, .2, 1)',
+    '--vtsuru-primary': tokens.primary,
+    '--vtsuru-primary-hover': tokens.primaryHover,
+    '--vtsuru-primary-pressed': tokens.primaryPressed,
+    '--vtsuru-primary-fg': tokens.primaryForeground,
+    '--vtsuru-primary-rgb': rgbTriplet(tokens.primary),
     '--vtsuru-brand': tokens.brand,
+    '--vtsuru-brand-fg': brand[900],
     '--vtsuru-brand-hover': tokens.brandHover,
     '--vtsuru-brand-pressed': tokens.brandPressed,
     '--vtsuru-brand-soft': tokens.brandSoft,
@@ -37,9 +46,11 @@ export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
     '--vtsuru-fg': tokens.foreground,
     '--vtsuru-fg-muted': tokens.mutedForeground,
     '--vtsuru-fg-disabled': tokens.disabledForeground,
-    '--vtsuru-bg': tokens.background,
-    '--vtsuru-bg-muted': tokens.muted,
-    '--vtsuru-bg-elevated': tokens.embeddedColor,
+    '--vtsuru-bg': tokens.canvas,
+    '--vtsuru-bg-surface': tokens.surface,
+    '--vtsuru-bg-muted': tokens.surfaceHover,
+    '--vtsuru-bg-inset': tokens.inset,
+    '--vtsuru-bg-elevated': tokens.elevated,
     '--vtsuru-border': tokens.borderColor,
     '--vtsuru-border-hover': tokens.inputBorderHover,
     '--vtsuru-radius': tokens.radiusSurface,
@@ -47,44 +58,20 @@ export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
     '--vtsuru-shadow-1': tokens.shadow1,
     '--vtsuru-shadow-2': tokens.shadow2,
     '--vtsuru-shadow-popover': tokens.shadowPopover,
+    '--vtsuru-info': infoColor,
+    '--vtsuru-info-rgb': rgbTriplet(infoColor),
+    '--vtsuru-info-soft': rgba(infoColor, 0.12),
+    '--vtsuru-success': successColor,
+    '--vtsuru-success-rgb': rgbTriplet(successColor),
+    '--vtsuru-success-soft': rgba(successColor, 0.12),
+    '--vtsuru-warning': warningColor,
+    '--vtsuru-warning-rgb': rgbTriplet(warningColor),
+    '--vtsuru-warning-soft': rgba(warningColor, 0.12),
+    '--vtsuru-error': errorColor,
+    '--vtsuru-error-rgb': rgbTriplet(errorColor),
+    '--vtsuru-error-soft': rgba(errorColor, 0.12),
+    '--vtsuru-error-pressed': pickByMode(tokens.isDark, error.lightPressed, error.darkPressed),
   }
-
-  // 同时把 naive-ui 的通用 CSS 变量注入根节点。
-  // naive 组件会在自身元素上内联同名变量并覆盖这里的值，因此根注入只作为
-  // “裸元素 / scoped CSS”引用 var(--n-*) 时的兜底，避免变量为空导致颜色塌缩。
-  const isDark = tokens.isDark
-  const infoColor = pickByMode(isDark, info.light, info.dark)
-  const successColor = pickByMode(isDark, success.light, success.dark)
-  const warningColor = pickByMode(isDark, warning.light, warning.dark)
-  const errorColor = pickByMode(isDark, error.light, error.dark)
-  Object.assign(vars, {
-    '--n-bezier': NAIVE_BEZIER,
-    '--n-border-radius': tokens.radiusSurface,
-    '--n-border-color': tokens.borderColor,
-    '--n-divider-color': tokens.borderColor,
-    '--n-text-color': tokens.foreground,
-    '--n-text-color-1': tokens.foreground,
-    '--n-text-color-2': tokens.mutedForeground,
-    '--n-text-color-3': isDark ? neutral[500] : neutral[400],
-    '--n-text-color-disabled': tokens.disabledForeground,
-    '--n-body-color': tokens.background,
-    '--n-color': tokens.background,
-    '--n-card-color': tokens.background,
-    '--n-color-modal': tokens.background,
-    '--n-color-embedded': tokens.embeddedColor,
-    '--n-color-segment': tokens.embeddedColor,
-    '--n-table-color-striped': tokens.embeddedColor,
-    '--n-primary-color': tokens.brand,
-    '--n-primary-color-rgb': rgbTriplet(tokens.brand),
-    '--n-info-color': infoColor,
-    '--n-info-color-rgb': rgbTriplet(infoColor),
-    '--n-success-color': successColor,
-    '--n-success-color-rgb': rgbTriplet(successColor),
-    '--n-warning-color': warningColor,
-    '--n-warning-color-rgb': rgbTriplet(warningColor),
-    '--n-error-color': errorColor,
-    '--n-error-color-rgb': rgbTriplet(errorColor),
-  })
 
   return vars
 }

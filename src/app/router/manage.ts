@@ -208,7 +208,7 @@ export default // 管理页面
       name: 'manage-feedback',
       component: async () => import('@/shared/components/FeedbackManage.vue'),
       meta: {
-        title: '反馈',
+        title: '工单',
         pageWidth: 'xl',
       },
     },

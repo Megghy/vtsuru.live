@@ -920,7 +920,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 4px;
   padding: 28px;
-  border: 2px dashed var(--n-border-color, #e0e0e0);
+  border: 2px dashed var(--vtsuru-border, #e0e0e0);
   border-radius: 10px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
@@ -951,7 +951,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--n-color-embedded);
+  background: var(--vtsuru-bg-inset);
 }
 
 .item-list {
@@ -964,7 +964,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 10px;
 }
 
@@ -980,7 +980,7 @@ onBeforeUnmount(() => {
 }
 
 .item-thumb.audio {
-  background: var(--n-color-embedded);
+  background: var(--vtsuru-bg-inset);
 }
 
 .item-thumb img {

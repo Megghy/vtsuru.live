@@ -553,9 +553,9 @@ async function checkEligibility() {
 
 <style scoped>
 .section-container {
-  background-color: var(--n-card-color);
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-surface);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
   padding: 16px;
 }
 </style>

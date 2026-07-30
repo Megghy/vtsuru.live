@@ -13,7 +13,7 @@ import {
 import type { CustomHtmlProps } from '@/apps/user-page/block/customHtmlContract'
 import { collectCustomHtmlAssetKeys, inspectCustomCss, inspectCustomHtml } from '@/apps/user-page/block/customHtmlRuntime'
 import type { CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
-import { buildTokens } from '@/shared/config/theme/tokens'
+import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { uploadFiles } from '@/shared/services/fileUpload'
 import { isDarkMode } from '@/shared/utils'
 import {
@@ -95,12 +95,12 @@ const codeIssues = computed(() => {
 })
 const isDirty = computed(() => JSON.stringify(draft.value) !== initialSnapshot.value)
 const monacoTheme = computed(() => previewDark.value ? 'vs-dark' as const : 'vs' as const)
-const previewTokens = computed(() => buildTokens(previewDark.value))
+const previewTokens = computed(() => buildSiteTokens(previewDark.value))
 const previewTheme = computed<CustomHtmlTheme>(() => ({
   fg: previewTokens.value.foreground,
   fgMuted: previewTokens.value.mutedForeground,
-  bg: previewTokens.value.background,
-  bgElevated: previewTokens.value.embeddedColor,
+  bg: previewTokens.value.canvas,
+  bgElevated: previewTokens.value.elevated,
   border: previewTokens.value.borderColor,
   primary: previewTokens.value.brand,
   radius: previewTokens.value.radiusSurface,
@@ -111,9 +111,11 @@ const previewStyle = computed(() => ({
   maxWidth: '100%',
   '--vtsuru-fg': previewTokens.value.foreground,
   '--vtsuru-fg-muted': previewTokens.value.mutedForeground,
-  '--vtsuru-bg': previewTokens.value.background,
-  '--vtsuru-bg-muted': previewTokens.value.muted,
-  '--vtsuru-bg-elevated': previewTokens.value.embeddedColor,
+  '--vtsuru-bg': previewTokens.value.canvas,
+  '--vtsuru-bg-surface': previewTokens.value.surface,
+  '--vtsuru-bg-muted': previewTokens.value.surfaceHover,
+  '--vtsuru-bg-inset': previewTokens.value.inset,
+  '--vtsuru-bg-elevated': previewTokens.value.elevated,
   '--vtsuru-border': previewTokens.value.borderColor,
   '--vtsuru-brand': previewTokens.value.brand,
   '--vtsuru-radius': previewTokens.value.radiusSurface,
@@ -121,8 +123,8 @@ const previewStyle = computed(() => ({
   '--vtsuru-page-radius': previewTokens.value.radiusSurface,
   '--vtsuru-block-fg': previewTokens.value.foreground,
   '--vtsuru-block-fg-muted': previewTokens.value.mutedForeground,
-  '--vtsuru-block-bg': previewTokens.value.background,
-  '--vtsuru-block-bg-elevated': previewTokens.value.embeddedColor,
+  '--vtsuru-block-bg': previewTokens.value.surface,
+  '--vtsuru-block-bg-elevated': previewTokens.value.elevated,
   '--vtsuru-block-border': previewTokens.value.borderColor,
   colorScheme: previewDark.value ? 'dark' : 'light',
 }))

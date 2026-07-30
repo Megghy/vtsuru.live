@@ -296,7 +296,7 @@ async function handleConfirmImport() {
 
 .module-desc {
   margin-top: 4px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   font-size: 12px;
 }
 </style>

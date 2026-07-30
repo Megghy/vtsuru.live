@@ -646,7 +646,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .metric-label {
@@ -670,19 +670,19 @@ onUnmounted(() => {
   font-size: 14px;
   margin-left: 4px;
   font-weight: normal;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .unit {
   font-size: 14px;
   margin-left: 4px;
   font-weight: normal;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .separator {
   margin: 0 4px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   font-size: 16px;
 }
 
@@ -704,16 +704,16 @@ onUnmounted(() => {
   gap: 4px;
 }
 
-.success { color: var(--n-success-color); }
-.error { color: var(--n-error-color); }
-.info { color: var(--n-text-color-3); }
+.success { color: var(--vtsuru-success); }
+.error { color: var(--vtsuru-error); }
+.info { color: var(--vtsuru-fg-muted); }
 
 .trend-label {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .sub-stat {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 /* 特定卡片样式微调 */
@@ -743,7 +743,7 @@ onUnmounted(() => {
 
 .funnel-row .label {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   width: 60px;
 }
 </style>

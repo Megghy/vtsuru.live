@@ -403,7 +403,7 @@ onUnmounted(() => {
                     v-if="accountInfo?.isEmailVerified"
                     style="max-width: 100%"
                   >
-                    <NText style="color: var(--n-primary-color)">
+                    <NText style="color: var(--vtsuru-primary)">
                       已认证 | {{ accountInfo?.bindEmail }}
                     </NText>
                   </NEllipsis>
@@ -431,7 +431,7 @@ onUnmounted(() => {
                   v-if="accountInfo?.isBiliVerified"
                   style="max-width: 100%"
                 >
-                  <NText style="color: var(--n-primary-color)">
+                  <NText style="color: var(--vtsuru-primary)">
                     <NFlex
                       :size="5"
                       align="center"
@@ -517,7 +517,7 @@ onUnmounted(() => {
                   v-if="accountInfo?.biliUserAuthInfo"
                   style="max-width: 100%"
                 >
-                  <NText style="color: var(--n-primary-color)">
+                  <NText style="color: var(--vtsuru-primary)">
                     <NFlex
                       :size="5"
                       align="center"

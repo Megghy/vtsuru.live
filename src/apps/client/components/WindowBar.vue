@@ -132,7 +132,7 @@ const closeWindow = () => appWindow.hide()
 .titlebar {
   flex: 1;
   height: 30px;
-  border-bottom: 1px solid var(--n-border-color);
+  border-bottom: 1px solid var(--vtsuru-border);
   user-select: none; /* 防止拖动时选中文本 */
   padding: 0 4px; /* 给按钮一些边距 */
   box-sizing: border-box;

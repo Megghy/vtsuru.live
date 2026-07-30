@@ -45,7 +45,7 @@ defineProps<{
 .open-live-page-header__description {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .open-live-page-header__actions {

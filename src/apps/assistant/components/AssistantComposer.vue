@@ -232,7 +232,7 @@ onBeforeUnmount(() => recognition?.abort())
 .composer__preview {
   position: relative; width: 56px; height: 56px;
   border-radius: 8px; overflow: hidden;
-  border: 1px solid var(--n-border-color, rgba(128, 128, 128, 0.2));
+  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.2));
 }
 .composer__preview img { width: 100%; height: 100%; object-fit: cover; }
 .composer__preview-del {

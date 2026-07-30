@@ -672,27 +672,72 @@ export interface DanmakuModel {
   num: number
   ouId: string
 }
-export interface ResponseFeedbackModel {
-  message: string
-  type: FeedbackType
-  status: FeedbackStatus
-  replyMessage?: string
-  userName?: string
-  createAt: number
-}
-export enum FeedbackType {
-  Opinion,
+export enum SupportTicketType {
   Bug,
-  FunctionRequest,
+  Feature,
+  Account,
   Other,
 }
-export enum FeedbackStatus {
-  Padding,
-  Progressing,
-  Finish,
-  Todo,
-  Reject,
-  Developing,
+
+export enum SupportTicketStatus {
+  Open,
+  InProgress,
+  WaitingForUser,
+  Resolved,
+}
+
+export enum SupportTicketSource {
+  User,
+  Assistant,
+}
+
+export enum SupportTicketAuthorType {
+  User,
+  Staff,
+  System,
+}
+
+export interface SupportTicketImage {
+  id: number
+  path: string
+  name: string
+  size: number
+}
+
+export interface SupportTicketMessage {
+  id: number
+  authorType: SupportTicketAuthorType
+  authorUserId?: number | null
+  content: string
+  createTime: number
+}
+
+export interface SupportTicketSummary {
+  id: number
+  title: string
+  type: SupportTicketType
+  status: SupportTicketStatus
+  source: SupportTicketSource
+  isPublic: boolean
+  emailOnStaffReply: boolean
+  createTime: number
+  updateTime: number
+  lastMessageTime: number
+  userLastReadMessageId?: number | null
+  lastMessageId?: number
+  images: SupportTicketImage[]
+  messages?: SupportTicketMessage[]
+}
+
+export type SupportTicketDetail = SupportTicketSummary & { messages: SupportTicketMessage[] }
+
+export interface CreateSupportTicketRequest {
+  title: string
+  content: string
+  type: SupportTicketType
+  isPublic: boolean
+  emailOnStaffReply: boolean
+  imageFileIds: number[]
 }
 export interface TagInfo {
   name: string

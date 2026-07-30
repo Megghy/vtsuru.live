@@ -578,7 +578,7 @@ onBeforeUnmount(clearAll)
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed var(--n-border-color);
+  border: 2px dashed var(--vtsuru-border);
   border-radius: 14px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
@@ -626,7 +626,7 @@ onBeforeUnmount(clearAll)
   place-items: center;
   overflow: auto;
   padding: 16px;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 12px;
 }
 
@@ -643,9 +643,9 @@ onBeforeUnmount(clearAll)
 
 .panel-block {
   padding: 12px;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 12px;
-  background: var(--n-color);
+  background: var(--vtsuru-bg-surface);
 }
 
 .preset-grid {
@@ -662,8 +662,8 @@ onBeforeUnmount(clearAll)
   padding: 8px;
   text-align: left;
   color: inherit;
-  background: var(--n-color);
-  border: 1px solid var(--n-border-color);
+  background: var(--vtsuru-bg-surface);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 10px;
   cursor: pointer;
 }
@@ -675,7 +675,7 @@ onBeforeUnmount(clearAll)
 
 .preset-card small {
   grid-column: 2;
-  color: var(--n-text-color-disabled);
+  color: var(--vtsuru-fg-disabled);
 }
 
 .preset-visual {
@@ -703,7 +703,7 @@ onBeforeUnmount(clearAll)
   flex-direction: column;
   gap: 6px;
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .quality-field {
@@ -734,7 +734,7 @@ onBeforeUnmount(clearAll)
   gap: 8px;
   align-items: center;
   padding: 8px;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 10px;
   cursor: pointer;
 }
@@ -750,8 +750,8 @@ onBeforeUnmount(clearAll)
   display: grid;
   place-items: center;
   border-radius: 8px;
-  color: var(--n-text-color-3);
-  background: var(--n-color-embedded);
+  color: var(--vtsuru-fg-muted);
+  background: var(--vtsuru-bg-inset);
   cursor: grab;
   user-select: none;
 }
@@ -761,7 +761,7 @@ onBeforeUnmount(clearAll)
   height: 48px;
   object-fit: cover;
   border-radius: 8px;
-  background: var(--n-color-embedded);
+  background: var(--vtsuru-bg-inset);
 }
 
 .image-row__body {
@@ -783,7 +783,7 @@ onBeforeUnmount(clearAll)
   gap: 8px;
   padding: 10px;
   border-radius: 10px;
-  background: var(--n-color-embedded);
+  background: var(--vtsuru-bg-inset);
 }
 
 @media (max-width: 960px) {

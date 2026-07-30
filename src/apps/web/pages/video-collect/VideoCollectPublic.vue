@@ -190,7 +190,7 @@ onUnmounted(() => turnstile.value?.remove())
   overflow: hidden;
   isolation: isolate;
   color: var(--vtsuru-page-text);
-  background: var(--n-body-color);
+  background: var(--vtsuru-bg);
   font-family: var(--vtsuru-page-font-family);
 }
 

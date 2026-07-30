@@ -215,13 +215,13 @@ function download() {
 <style scoped>
 .settings-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px; padding: 12px; border: 1px solid var(--n-border-color);
-  border-radius: 8px; background: var(--n-color-embedded);
+  gap: 12px; padding: 12px; border: 1px solid var(--vtsuru-border);
+  border-radius: 8px; background: var(--vtsuru-bg-inset);
 }
 .setting-item { display: flex; flex-direction: column; gap: 4px; }
 .upload-zone {
   display: flex; justify-content: center; align-items: center;
-  height: 200px; border: 2px dashed var(--n-border-color);
+  height: 200px; border: 2px dashed var(--vtsuru-border);
   border-radius: 8px; cursor: pointer; transition: border-color 0.2s;
 }
 .upload-zone:hover { border-color: var(--primary-color, #18a058); }
@@ -229,6 +229,6 @@ function download() {
 .preview-item { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 6px; }
 .preview-img {
   max-width: 100%; max-height: 400px; object-fit: contain;
-  border-radius: 6px; border: 1px solid var(--n-border-color);
+  border-radius: 6px; border: 1px solid var(--vtsuru-border);
 }
 </style>

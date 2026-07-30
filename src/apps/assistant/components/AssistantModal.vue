@@ -119,7 +119,7 @@ function onClose() {
 .assistant-modal__layout { display: flex; gap: 12px; height: 100%; min-height: 0; }
 .assistant-modal__sidebar {
   flex: 0 0 200px; min-width: 0;
-  border-right: 1px solid var(--n-border-color, rgba(128, 128, 128, 0.18));
+  border-right: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
   padding-right: 12px;
 }
 .assistant-modal__main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; min-height: 0; }

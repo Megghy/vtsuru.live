@@ -51,7 +51,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
   <NCard
     v-if="danmaku.type === EventDataTypes.SC"
     :style="`margin-top: 5px;margin-bottom: 5px;max-width:500px;background-color: ${GetSCColor(danmaku.price ?? 0)};`"
-    content-style="border-radius: var(--n-border-radius);padding:5px;min-height:45px;display:flex;align-items:center;"
+    content-style="border-radius: var(--vtsuru-radius);padding:5px;min-height:45px;display:flex;align-items:center;"
     header-style="padding:5px;background: rgba(255, 255, 255, 15%);font-size: 14px;"
     size="small"
     hoverable
@@ -120,7 +120,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
   <template v-else>
     <span
       class="danmaku-item"
-      style="display: flex; align-items: center; white-space: nowrap; margin-left: 5px; color: var(--n-text-color-3)"
+      style="display: flex; align-items: center; white-space: nowrap; margin-left: 5px; color: var(--vtsuru-fg-muted)"
     >
       <NTooltip v-if="danmaku.uId > 0 && showAvatar">
         <template #trigger>
@@ -167,7 +167,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
           <template v-else>
             <span :style="danmaku.uName !== '' && !showAvatar ? 'min-width: 60px' : ''">
               {{ danmaku.uName }}
-              <span style="color: var(--n-text-color-3)">
+              <span style="color: var(--vtsuru-fg-muted)">
                 {{ ': ' }}
               </span>
             </span>
@@ -197,7 +197,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       <span
         v-else-if="danmaku.type === EventDataTypes.Gift"
         class="gift-line"
-        :style="`color:${(danmaku.price ?? 0) > 0 ? 'var(--n-error-color)' : 'var(--n-text-color-3)'}`"
+        :style="`color:${(danmaku.price ?? 0) > 0 ? 'var(--vtsuru-error)' : 'var(--vtsuru-fg-muted)'}`"
       >
         <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
           <template #trigger>
@@ -251,12 +251,12 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
           size="tiny"
           :bordered="false"
         >
-          <span style="color: var(--n-text-color-3)"> {{ danmaku.num }} 个 </span>
+          <span style="color: var(--vtsuru-fg-muted)"> {{ danmaku.num }} 个 </span>
         </NTag>
       </span>
       <span
         v-else-if="danmaku.type === EventDataTypes.Guard"
-        style="color: var(--n-info-color)"
+        style="color: var(--vtsuru-info)"
       >
         上舰
         <NTag
@@ -268,7 +268,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       </span>
       <span
         v-else-if="danmaku.type === EventDataTypes.Enter"
-        style="color: var(--n-success-color)"
+        style="color: var(--vtsuru-success)"
       >
         进入直播间
       </span>
@@ -319,7 +319,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
 }
 
 .mystery-box-tooltip-card__label {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .mystery-box-tooltip-card__value {

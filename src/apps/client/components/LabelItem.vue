@@ -41,7 +41,7 @@ withDefaults(defineProps<{
 
 .label-item__label {
   font-size: 12px;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg);
 }
 
 .label-item--left .label-item__value {

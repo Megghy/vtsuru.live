@@ -44,16 +44,16 @@ defineProps<{
 .label {
   font-size: 12px;
   font-weight: 500;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg);
 }
 .icon {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   cursor: help;
 }
 .value {
   margin-left: auto;
   font-size: 11px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   font-variant-numeric: tabular-nums;
 }
 .body {

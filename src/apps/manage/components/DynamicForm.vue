@@ -507,7 +507,7 @@ onMounted(() => {
   margin-top: 0;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--n-border-color, rgba(148, 163, 184, 0.22));
+  border-bottom: 1px solid var(--vtsuru-border, rgba(148, 163, 184, 0.22));
 }
 
 .dynamic-form--fill .dynamic-form__footer :deep(.n-button) {

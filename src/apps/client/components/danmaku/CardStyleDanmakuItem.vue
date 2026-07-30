@@ -427,7 +427,7 @@ const {
   }
 
   .gift-box-tooltip__label {
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
   }
 
   .gift-box-tooltip__value {

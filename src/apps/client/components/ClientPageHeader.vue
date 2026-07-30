@@ -42,7 +42,7 @@ defineProps<{
 .client-page-header__description {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .client-page-header__actions {

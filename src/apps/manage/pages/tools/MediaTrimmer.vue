@@ -160,7 +160,7 @@ const hasTrim = computed(() => start.value != null || end.value != null)
   height: 28px;
   margin: 14px 8px 0;
   border-radius: 6px;
-  background: var(--n-color-embedded, #f0f0f0);
+  background: var(--vtsuru-bg-inset, #f0f0f0);
   cursor: pointer;
   touch-action: none;
 }

@@ -237,7 +237,7 @@ function openVideo() {
   height: 140px;
   overflow: hidden;
   cursor: pointer;
-  background: var(--n-color);
+  background: var(--vtsuru-bg-surface);
 }
 
 .cover-img {

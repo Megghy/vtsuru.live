@@ -385,21 +385,21 @@ onBeforeUnmount(() => {
 
 .live-row {
   padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-  background-color: var(--n-card-color);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-surface);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .live-row:hover {
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
 }
 
 .live-row:focus-visible {
   outline: none;
-  border-color: rgba(var(--n-primary-color-rgb), 0.35);
-  box-shadow: 0 0 0 2px rgba(var(--n-primary-color-rgb), 0.18);
+  border-color: rgba(var(--vtsuru-primary-rgb), 0.35);
+  box-shadow: 0 0 0 2px rgba(var(--vtsuru-primary-rgb), 0.18);
 }
 
 .pagination {

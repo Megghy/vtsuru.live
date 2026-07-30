@@ -159,10 +159,10 @@ function cancel() {
 .preview-col { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .preview-img {
   max-width: 100%; max-height: 280px; object-fit: contain;
-  border-radius: 6px; border: 1px solid var(--n-border-color);
+  border-radius: 6px; border: 1px solid var(--vtsuru-border);
 }
 .preview-placeholder {
   flex: 1; display: flex; align-items: center; justify-content: center;
-  border: 1px dashed var(--n-border-color); border-radius: 6px; min-height: 120px;
+  border: 1px dashed var(--vtsuru-border); border-radius: 6px; min-height: 120px;
 }
 </style>

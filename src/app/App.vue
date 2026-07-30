@@ -3,7 +3,7 @@ import { dateZhCN, NConfigProvider, NDialogProvider, NElement, NLayoutContent, N
 import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import TempComponent from '@/app/components/TempComponent.vue'
-import { applyThemeCssVars, buildTokens, getThemeOverrides } from '@/shared/config/theme'
+import { applyThemeCssVars, buildSiteTokens, getThemeOverrides } from '@/shared/config/theme'
 import { isDarkMode, theme } from '@/shared/utils'
 
 // 将大型布局组件改为异步组件，避免打入入口包
@@ -36,22 +36,16 @@ const layout = computed(() => {
     return ''
   }
 })
+const siteTokens = computed(() => buildSiteTokens(isDarkMode.value))
+const themeOverrides = computed(() => getThemeOverrides(siteTokens.value))
+
 watchEffect(() => {
   if (isDarkMode.value) {
     document.documentElement.classList.add('dark')
   } else {
     document.documentElement.classList.remove('dark')
   }
-  applyThemeCssVars(buildTokens(isDarkMode.value))
-})
-
-const themeOverrides = computed(() => getThemeOverrides(isDarkMode.value))
-
-onMounted(() => {
-  if (isDarkMode.value) {
-    document.documentElement.classList.add('dark')
-  }
-  applyThemeCssVars(buildTokens(isDarkMode.value))
+  applyThemeCssVars(siteTokens.value)
 })
 </script>
 
@@ -148,7 +142,7 @@ a:hover {
 }
 
 :root .n-notification {
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
 }
 
 :root.dark .n-tabs.n-tabs--segment-type .n-tabs-capsule {
@@ -157,7 +151,7 @@ a:hover {
 }
 
 :root.dark .n-tabs.n-tabs--card-type .n-tabs-tab.n-tabs-tab--active {
-  background-color: var(--n-color-segment);
+  background-color: var(--vtsuru-bg-muted);
 }
 
 @supports (font-variation-settings: normal) {

@@ -26,6 +26,7 @@ const canBlock = computed(() =>
   && (props.queueData.from === QueueFrom.Danmaku || props.queueData.from === QueueFrom.Gift)
   && !!props.queueData.user?.uid,
 )
+const cardThemeOverrides = { color: 'var(--vtsuru-bg-muted)' }
 
 function manage(status: QueueStatus) {
   store.queueDataBeingManaged = props.queueData.id
@@ -47,24 +48,24 @@ const indexStyle = computed<CSSProperties>(() => {
   }
   switch (props.queueData.status) {
     case QueueStatus.Progressing:
-      return { ...base, backgroundColor: 'var(--n-success-color)' }
+      return { ...base, backgroundColor: 'var(--vtsuru-success)' }
     case QueueStatus.Finish:
-      return { ...base, backgroundColor: 'var(--n-color-embedded)', color: 'var(--n-text-color)', border: '1px solid var(--n-border-color)' }
+      return { ...base, backgroundColor: 'var(--vtsuru-bg-inset)', color: 'var(--vtsuru-fg)', border: '1px solid var(--vtsuru-border)' }
     case QueueStatus.Cancel:
-      return { ...base, backgroundColor: 'var(--n-error-color)' }
+      return { ...base, backgroundColor: 'var(--vtsuru-error)' }
     default:
-      return { ...base, backgroundColor: 'var(--n-info-color)' }
+      return { ...base, backgroundColor: 'var(--vtsuru-info)' }
   }
 })
 </script>
 
 <template>
   <NCard
-    embedded
     size="small"
+    :theme-overrides="cardThemeOverrides"
     content-style="padding: 8px 12px;"
-    :bordered="isProcessing"
-    :style="isProcessing ? 'border-left: 4px solid var(--n-success-color);' : 'border-left: 4px solid transparent;'"
+    bordered
+    :style="isProcessing ? 'border-left: 4px solid var(--vtsuru-success);' : undefined"
   >
     <NFlex justify="space-between" align="center" :wrap="false">
       <!-- 左侧信息 -->
@@ -111,7 +112,7 @@ const indexStyle = computed<CSSProperties>(() => {
         <!-- 附加内容 -->
         <NTooltip v-if="queueData.content" placement="right">
           <template #trigger>
-            <NIcon :component="Info24Filled" size="16" style="cursor: help; color: var(--n-text-color-3);" />
+            <NIcon :component="Info24Filled" size="16" style="cursor: help; color: var(--vtsuru-fg-muted);" />
           </template>
           <NCard size="small" :bordered="false" style="max-width: 300px;">
             <template #header>
@@ -232,7 +233,7 @@ const indexStyle = computed<CSSProperties>(() => {
   right: -2px;
   bottom: -2px;
   border-radius: 50%;
-  border: 2px solid var(--n-success-color);
+  border: 2px solid var(--vtsuru-success);
   opacity: 0.35;
 }
 </style>

@@ -166,9 +166,9 @@ function getGuardLevelName(level: number): string {
 
 .gift-codes-section {
   padding: 12px;
-  background-color: var(--n-color-modal);
-  border-radius: var(--n-border-radius);
-  border: 1px solid var(--n-divider-color);
+  background-color: var(--vtsuru-bg-elevated);
+  border-radius: var(--vtsuru-radius);
+  border: 1px solid var(--vtsuru-border);
 }
 
 .gift-code-level {

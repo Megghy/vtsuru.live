@@ -117,7 +117,7 @@ watch([() => d.show.value, () => d.selectedId.value], ([show, id]) => {
                     :src="live.coverUrl"
                     :img-props="{ referrerpolicy: 'no-referrer' }"
                     :fallback-src="DEFAULT_COVER"
-                    style="border-radius: var(--n-border-radius); overflow: hidden; flex: 0 0 auto;"
+                    style="border-radius: var(--vtsuru-radius); overflow: hidden; flex: 0 0 auto;"
                   />
                   <NFlex vertical :size="2" style="min-width: 0; flex: 1;">
                     <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -159,9 +159,9 @@ watch([() => d.show.value, () => d.selectedId.value], ([show, id]) => {
 
 <style scoped>
 .stat-card {
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
 }
 .stat-card:hover {
-  border-color: var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
 }
 </style>

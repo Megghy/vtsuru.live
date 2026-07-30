@@ -366,7 +366,7 @@ onActivated(async () => {
         已通过视频总时长:
         <NText
           strong
-          style="color: var(--n-text-color)"
+          style="color: var(--vtsuru-fg)"
         >
           {{ formatDuration(new List(acceptVideos).Sum((v) => v?.video.length ?? 0)) }}
         </NText>

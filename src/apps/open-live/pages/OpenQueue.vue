@@ -345,7 +345,6 @@ onUnmounted(() => {
                   class="queue-item-wrapper"
                 >
                   <QueueItem :queue-data="queueData" :index="index + 1" />
-                  <NDivider style="margin: 0" />
                 </div>
               </TransitionGroup>
             </div>
@@ -425,6 +424,16 @@ onUnmounted(() => {
 </template>
 
 <style>
+.queue-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.queue-item-wrapper {
+  min-width: 0;
+}
+
 .n-data-table-td {
   white-space: nowrap;
   overflow: hidden;

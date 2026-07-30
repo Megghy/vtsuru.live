@@ -339,13 +339,13 @@
 <style scoped>
   .manage-sider {
     height: 100%;
-    border-right: 1px solid var(--n-border-color);
-    background: var(--n-body-color);
+    border-right: 1px solid var(--vtsuru-border);
+    background: var(--vtsuru-bg-surface);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: width 180ms var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+    transition: width 180ms var(--vtsuru-bezier, cubic-bezier(.4, 0, .2, 1));
   }
 
   .manage-sider__top {
@@ -427,7 +427,7 @@
 
   .manage-sider__nav-inner {
     padding: 4px 8px 10px;
-    transition: padding 180ms var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+    transition: padding 180ms var(--vtsuru-bezier, cubic-bezier(.4, 0, .2, 1));
   }
 
   .manage-sider__nav-inner.collapsed {
@@ -458,7 +458,7 @@
   .nav-group__toggle {
     border: none;
     background: transparent;
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -485,9 +485,9 @@
     height: 22px;
     width: 22px;
     border-radius: 7px;
-    border: 1px solid var(--n-border-color);
+    border: 1px solid var(--vtsuru-border);
     background: transparent;
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -519,11 +519,11 @@
   .danmaku-tooltip__body {
     font-size: 12px;
     line-height: 1.55;
-    color: var(--n-text-color-2);
+    color: var(--vtsuru-fg);
   }
 
   .danmaku-tooltip__body a {
-    color: var(--n-primary-color);
+    color: var(--vtsuru-primary);
     text-decoration: none;
   }
 
@@ -545,7 +545,7 @@
     align-items: center;
     gap: 10px;
     text-decoration: none;
-    color: var(--n-text-color);
+    color: var(--vtsuru-fg);
     border: 1px solid transparent;
     background: transparent;
     transition: background-color 120ms ease, border-color 120ms ease;
@@ -629,12 +629,12 @@
 
   .nav-item__fav-icon {
     font-size: 16px;
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
     transition: color 120ms ease;
   }
 
   .nav-item__fav-icon.active {
-    color: var(--n-warning-color);
+    color: var(--vtsuru-warning);
   }
 
   .nav-item__fav.active .nav-item__fav-icon {
@@ -643,7 +643,7 @@
   }
 
   .manage-sider__footer {
-    border-top: 1px solid var(--n-border-color);
+    border-top: 1px solid var(--vtsuru-border);
     padding: 10px 12px;
     display: flex;
     flex-direction: column;
@@ -653,7 +653,7 @@
 
   .footer-line {
     font-size: 12px;
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
     text-align: center;
   }
 
@@ -661,6 +661,6 @@
     margin-top: 4px;
     font-size: 12px;
     text-align: center;
-    color: var(--n-text-color-3);
+    color: var(--vtsuru-fg-muted);
   }
 </style>

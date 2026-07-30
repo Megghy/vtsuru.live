@@ -47,9 +47,9 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
   display: flex; align-items: center; gap: 6px;
   padding: 4px 6px; font-size: 11px; border-radius: 4px;
 }
-.item:hover { background: var(--n-color-target, rgba(0,0,0,0.03)); }
+.item:hover { background: var(--vtsuru-bg-muted, rgba(0,0,0,0.03)); }
 .uname { font-weight: 500; flex-shrink: 0; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .reason { flex: 1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.time { flex-shrink: 0; font-size: 10px; color: var(--n-text-color-3); }
+.time { flex-shrink: 0; font-size: 10px; color: var(--vtsuru-fg-muted); }
 </style>

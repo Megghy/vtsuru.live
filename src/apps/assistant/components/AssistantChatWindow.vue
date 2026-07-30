@@ -214,7 +214,7 @@ function onPickSuggestion(text: string) {
 }
 .chat-window__composer {
   flex: 0 0 auto; padding-top: 10px; margin-top: 6px;
-  border-top: 1px solid var(--n-border-color, rgba(128, 128, 128, 0.18));
+  border-top: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
 }
 
 .chat-window__welcome {
@@ -230,11 +230,11 @@ function onPickSuggestion(text: string) {
 }
 .chat-window__welcome-title {
   font-size: 16px; font-weight: 600;
-  color: var(--vtsuru-fg, var(--n-text-color));
+  color: var(--vtsuru-fg, var(--vtsuru-fg));
 }
 .chat-window__welcome-sub {
   font-size: 13px; max-width: 360px; line-height: 1.5;
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
 }
 .chat-window__suggestions {
   display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
@@ -247,14 +247,14 @@ function onPickSuggestion(text: string) {
 .chat-window__digest-item {
   display: flex; align-items: center; gap: 8px;
   padding: 9px 12px; border-radius: 10px; text-align: left;
-  border: 1px solid var(--vtsuru-warning-tint, rgba(240, 160, 32, 0.35));
+  border: 1px solid color-mix(in srgb, var(--vtsuru-warning) 35%, transparent);
   background: var(--vtsuru-warning-soft, rgba(240, 160, 32, 0.08));
-  color: var(--vtsuru-fg, var(--n-text-color));
+  color: var(--vtsuru-fg, var(--vtsuru-fg));
   font-size: 13px; cursor: pointer;
   transition: background 0.15s, transform 0.1s;
 }
 .chat-window__digest-item:hover:not(:disabled) {
-  background: var(--vtsuru-warning-soft-hover, rgba(240, 160, 32, 0.16));
+  background: color-mix(in srgb, var(--vtsuru-warning) 16%, transparent);
 }
 .chat-window__digest-item:active:not(:disabled) { transform: scale(0.99); }
 .chat-window__digest-item:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -263,7 +263,7 @@ function onPickSuggestion(text: string) {
   padding: 7px 13px; border-radius: 999px;
   border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.2));
   background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.05));
-  color: var(--vtsuru-fg, var(--n-text-color));
+  color: var(--vtsuru-fg, var(--vtsuru-fg));
   font-size: 13px; cursor: pointer;
   transition: border-color 0.15s, background 0.15s, transform 0.1s;
 }
@@ -275,7 +275,7 @@ function onPickSuggestion(text: string) {
 .chat-window__chip:disabled { opacity: 0.5; cursor: not-allowed; }
 .chat-window__chip--roll {
   display: inline-flex; align-items: center; gap: 4px;
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
   border-style: dashed;
 }
 </style>

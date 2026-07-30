@@ -147,22 +147,22 @@ function handleSelect(key: string) {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border: 1px solid var(--n-divider-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: 6px;
-  background: var(--n-card-color);
+  background: var(--vtsuru-bg-surface);
   font-size: 12px;
   cursor: grab;
   user-select: none;
   transition: border-color 120ms ease, background 120ms ease;
 }
 .queue-item:hover {
-  border-color: var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
 }
 .queue-item:active {
   cursor: grabbing;
 }
 .drag-handle {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   display: flex;
   align-items: center;
 }
@@ -187,7 +187,7 @@ function handleSelect(key: string) {
 }
 .time {
   font-size: 11px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }

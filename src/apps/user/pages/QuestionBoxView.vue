@@ -484,62 +484,64 @@ onUnmounted(() => {
           <div class="divider-line" />
         </div>
 
-        <div v-if="publicQuestions.length > 0" class="questions-stack">
-          <NCard
-            v-for="item in pagedPublicQuestions"
-            :key="item.id"
-            :bordered="true"
-            size="small"
-            content-style="padding: 0"
-          >
-            <div class="question-stack-header">
-              <NTime :time="item.sendAt" type="relative" class="time" />
-              <NTag v-if="item.tag" size="small" :bordered="false" class="tag">
-                {{ item.tag }}
-              </NTag>
-            </div>
+        <template v-if="publicQuestions.length > 0">
+          <div class="questions-stack">
+            <NCard
+              v-for="item in pagedPublicQuestions"
+              :key="item.id"
+              :bordered="true"
+              size="small"
+              content-style="padding: 0"
+            >
+              <div class="question-stack-header">
+                <NTime :time="item.sendAt" type="relative" class="time" />
+                <NTag v-if="item.tag" size="small" :bordered="false" class="tag">
+                  {{ item.tag }}
+                </NTag>
+              </div>
 
-            <div class="question-stack-body">
-              <div class="message">
-                {{ item.question.message }}
+              <div class="question-stack-body">
+                <div class="message">
+                  {{ item.question.message }}
+                </div>
+                <div v-if="item.questionImages?.length" class="images">
+                  <NImage
+                    v-for="(img, idx) in item.questionImages"
+                    :key="idx"
+                    :src="img.path"
+                    class="img"
+                  />
+                </div>
               </div>
-              <div v-if="item.questionImages?.length" class="images">
-                <NImage
-                  v-for="(img, idx) in item.questionImages"
-                  :key="idx"
-                  :src="img.path"
-                  class="img"
-                />
-              </div>
-            </div>
 
-            <div v-if="item.answer" class="answer-stack-body">
-              <NDivider style="margin: 0 0 15px 0;" />
-              <div class="answer-header">
-                <NAvatar
-                  :src="`${AVATAR_URL + userInfo?.biliId}?size=64`"
-                  circle
-                  :img-props="{
-                    referrerpolicy: 'no-referrer',
-                  }"
-                  size="small"
-                  class="avatar"
-                />
-                <span class="name">{{ userInfo?.name }} 的回复</span>
+              <div v-if="item.answer" class="answer-stack-body">
+                <NDivider style="margin: 0 0 15px 0;" />
+                <div class="answer-header">
+                  <NAvatar
+                    :src="`${AVATAR_URL + userInfo?.biliId}?size=64`"
+                    circle
+                    :img-props="{
+                      referrerpolicy: 'no-referrer',
+                    }"
+                    size="small"
+                    class="avatar"
+                  />
+                  <span class="name">{{ userInfo?.name }} 的回复</span>
+                </div>
+                <div class="answer-message">
+                  {{ item.answer.message }}
+                </div>
               </div>
-              <div class="answer-message">
-                {{ item.answer.message }}
-              </div>
-            </div>
-          </NCard>
-        </div>
-        <NPagination
-          v-if="publicQuestions.length > publicPageSize"
-          v-model:page="publicPageNum"
-          :item-count="publicQuestions.length"
-          :page-size="publicPageSize"
-          style="margin-top: 16px; justify-content: center;"
-        />
+            </NCard>
+          </div>
+          <NPagination
+            v-if="publicQuestions.length > publicPageSize"
+            v-model:page="publicPageNum"
+            :item-count="publicQuestions.length"
+            :page-size="publicPageSize"
+            style="margin-top: 16px; justify-content: center;"
+          />
+        </template>
 
         <NEmpty v-else-if="!isGetting" class="empty" description="暂无公开回复" />
         <NSpin v-else class="loading" />
@@ -668,12 +670,12 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: -0.02em;
   margin: 0 0 2px;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 .header-main .subtitle {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   margin: 0;
 }
 
@@ -688,7 +690,7 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 500;
   line-height: 1;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
   opacity: 0.8;
   margin-bottom: 2px;
 }
@@ -730,9 +732,9 @@ onUnmounted(() => {
   position: relative;
   width: 64px;
   height: 64px;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
   overflow: hidden;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
 }
 .upload-item .remove-btn {
   position: absolute;
@@ -744,22 +746,22 @@ onUnmounted(() => {
 .add-btn {
   width: 64px;
   height: 64px;
-  border-radius: var(--n-border-radius);
-  border: 1px dashed var(--n-border-color);
+  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
+  border: 1px dashed var(--vtsuru-border);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
   gap: 2px;
 }
 
 .add-btn:hover {
-  border-color: var(--n-primary-color);
-  color: var(--n-primary-color);
-  background-color: rgba(var(--n-primary-color-rgb), 0.04);
+  border-color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary);
+  background-color: color-mix(in srgb, var(--vtsuru-page-primary) 4%, transparent);
 }
 
 .add-btn .btn-text {
@@ -811,14 +813,14 @@ onUnmounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   white-space: nowrap;
 }
 
 .divider-line {
   height: 1px;
   flex-grow: 1;
-  background-color: var(--n-border-color);
+  background-color: var(--vtsuru-border);
 }
 
 .questions-stack {
@@ -836,7 +838,7 @@ onUnmounted(() => {
 
 .question-stack-header .time {
   font-size: 11px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
 }
 
 .question-stack-body {
@@ -847,7 +849,7 @@ onUnmounted(() => {
   font-size: 14px;
   line-height: 1.5;
   white-space: pre-wrap;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 .question-stack-body .images {
@@ -864,10 +866,10 @@ onUnmounted(() => {
   padding: 0;
   max-width: 180px;
   max-height: 96px;
-  border-radius: var(--n-border-radius);
-  border: 1px solid var(--n-border-color);
+  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
+  border: 1px solid var(--vtsuru-border);
   overflow: hidden;
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
 }
 
 .question-stack-body .images .img :deep(img) {
@@ -882,9 +884,9 @@ onUnmounted(() => {
 .answer-stack-body {
   margin: 0 12px 10px;
   padding: 8px 10px;
-  background-color: rgba(var(--n-primary-color-rgb), 0.02);
-  border-radius: var(--n-border-radius);
-  border: 1px solid rgba(var(--n-primary-color-rgb), 0.08);
+  background-color: color-mix(in srgb, var(--vtsuru-page-primary) 2%, transparent);
+  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
+  border: 1px solid color-mix(in srgb, var(--vtsuru-page-primary) 8%, transparent);
 }
 
 .answer-header {
@@ -897,14 +899,14 @@ onUnmounted(() => {
 .answer-header .name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--n-primary-color);
+  color: var(--vtsuru-page-primary);
 }
 
 .answer-message {
   font-size: 14px;
   line-height: 1.5;
   white-space: pre-wrap;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 .empty, .loading {
@@ -921,11 +923,11 @@ onUnmounted(() => {
 }
 
 .local-question-card {
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
 }
 
 .local-question-card:hover {
-  border-color: var(--n-primary-color);
+  border-color: var(--vtsuru-page-primary);
 }
 
 .local-question-message {

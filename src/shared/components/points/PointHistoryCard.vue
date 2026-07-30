@@ -336,7 +336,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
     style="max-width: 500px; width: 95vw;"
   >
     <NFlex vertical :gap="16">
-      <div v-if="currentGoods" style="border: 1px solid var(--n-border-color); border-radius: var(--n-border-radius); padding: 12px;">
+      <div v-if="currentGoods" style="border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-radius); padding: 12px;">
         <PointGoodsItem :goods="currentGoods" :show-footer="false" />
       </div>
 
@@ -396,9 +396,9 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
 <style scoped>
 .selected-sub-item-display {
   padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-  background-color: var(--n-color-modal);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-elevated);
   height: 100%;
 }
 

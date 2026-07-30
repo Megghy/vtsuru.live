@@ -7,7 +7,7 @@ export function getGuardColor(level: number | null | undefined): string {
     case 1: return 'rgb(122, 4, 35)'
     case 2: return 'rgb(157, 155, 255)'
     case 3: return 'rgb(104, 136, 241)'
-    default: return 'var(--n-text-color-3)'
+    default: return 'var(--vtsuru-fg-muted)'
   }
 }
 

@@ -76,7 +76,7 @@ const goToSettings = () => {
 .cookie-invalid-alert__content {
   font-size: 13px;
   line-height: 1.6;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 .cookie-invalid-alert__actions {

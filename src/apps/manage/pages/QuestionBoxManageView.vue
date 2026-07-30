@@ -132,7 +132,7 @@ onMounted(() => {
             <NEmpty v-if="useQB.sendQuestions.length === 0" description="暂无发送的提问" style="margin-top: 40px;" />
             <NList v-else :show-divider="false">
               <NListItem v-for="item in useQB.sendQuestions" :key="item.id" style="padding: 0 0 12px 0;">
-                <NCard size="small" hoverable embedded content-style="padding: 12px 16px;">
+                <NCard size="small" hoverable content-style="padding: 12px 16px;">
                   <template #header>
                     <NFlex align="center" justify="space-between">
                       <NFlex :size="8" align="center">

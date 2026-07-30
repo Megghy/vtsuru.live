@@ -880,7 +880,7 @@ onMounted(() => {
 }
 
 :deep(.n-data-table .n-data-table-tr:hover) {
-  background-color: var(--n-table-color-striped);
+  background-color: var(--vtsuru-bg-muted);
 }
 
 .order-detail-content {
@@ -895,9 +895,9 @@ onMounted(() => {
 
 .selected-sub-item-display {
   padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-  background-color: var(--n-color-modal);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-elevated);
 }
 
 .order-status-steps {
@@ -917,7 +917,7 @@ onMounted(() => {
 
 .status-info-desc {
   margin-left: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .status-actions-info {
@@ -925,18 +925,18 @@ onMounted(() => {
 }
 
 .action-icon {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .action-title {
   font-weight: 500;
   margin-bottom: 4px;
   font-size: 14px;
-  color: var(--n-text-color-1);
+  color: var(--vtsuru-fg);
 }
 
 .action-desc {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   font-size: 13px;
 }
 
@@ -966,9 +966,9 @@ onMounted(() => {
 .collect-iframe {
   height: 600px;
   width: 100%;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
   overflow: hidden;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
 }
 
 .status-action-buttons {

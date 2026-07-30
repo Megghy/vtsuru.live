@@ -388,27 +388,27 @@ onMounted(() => {
 
   .component-card {
     cursor: pointer;
-    border: 1px solid var(--n-border-color);
-    border-radius: var(--n-border-radius);
+    border: 1px solid var(--vtsuru-border);
+    border-radius: var(--vtsuru-radius);
   }
 
   .component-card:hover {
-    border-color: var(--n-primary-color);
+    border-color: var(--vtsuru-primary);
   }
 
   .component-card p {
     min-height: 40px;
     /* 防止描述为空时卡片高度不一致 */
     font-size: 0.9em;
-    color: var(--n-text-color-disabled);
+    color: var(--vtsuru-fg-disabled);
   }
 
   .component-preview-area {
     min-height: 300px; /* 预览区域最小高度 */
     /* padding: 16px; /* 由 NModal card preset 提供内边距 */
     /* margin-top: 16px; /* NModal 会处理间距 */
-    /* border: 1px solid var(--n-border-color); /* NModal card preset 提供边框 */
-    /* border-radius: var(--n-border-radius); /* NModal card preset 提供圆角 */
-    /* background-color: var(--n-card-color); /* NModal card preset 提供背景 */
+    /* border: 1px solid var(--vtsuru-border); /* NModal card preset 提供边框 */
+    /* border-radius: var(--vtsuru-radius); /* NModal card preset 提供圆角 */
+    /* background-color: var(--vtsuru-bg-surface); /* NModal card preset 提供背景 */
   }
 </style>

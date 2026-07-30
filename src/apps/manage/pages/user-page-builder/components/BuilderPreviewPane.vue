@@ -10,7 +10,6 @@ import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTe
 import { getPageBackgroundCssVars, getUserPageNaiveThemeOverrides, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
-import { getThemeOverrides } from '@/shared/config/theme'
 import { isDarkMode } from '@/shared/utils'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import PhonePreview from './PhonePreview.vue'
@@ -126,18 +125,14 @@ const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
 })
 
 const previewThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const base = getThemeOverrides(previewEffectiveIsDark.value)
   const user = previewUserThemeOverrides.value
   const surface = previewSurfaceThemeOverrides.value
   return {
-    ...base,
     ...user,
     ...surface,
-    common: { ...base.common, ...user.common, ...surface.common },
-    Card: { ...base.Card, ...user.Card, ...surface.Card },
-    Input: { ...base.Input, ...user.Input },
-    List: { ...base.List, ...surface.List },
-    Button: { ...base.Button, ...user.Button, ...surface.Button },
+    common: { ...user.common, ...surface.common },
+    Card: { ...user.Card, ...surface.Card },
+    List: { ...user.List, ...surface.List },
   }
 })
 

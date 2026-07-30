@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
-import { applyThemeCssVars, buildTokens } from '@/shared/config/theme'
+import { applyThemeCssVars, buildSiteTokens } from '@/shared/config/theme'
 
 export type PreviewViewport = 'phone' | 'tablet' | 'desktop'
 
@@ -16,7 +16,7 @@ const previewRoot = ref<HTMLElement | null>(null)
 
 watchEffect(() => {
   if (!previewRoot.value) return
-  applyThemeCssVars(buildTokens(props.isDark), previewRoot.value)
+  applyThemeCssVars(buildSiteTokens(props.isDark), previewRoot.value)
 })
 </script>
 

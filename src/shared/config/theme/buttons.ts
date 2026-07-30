@@ -16,6 +16,7 @@ interface AdaptiveButtonColors {
   color: string
   colorHover: string
   colorPressed: string
+  secondary: ButtonVariantColors
   textColor: string
   borderColor: string
   borderWidth?: string
@@ -77,6 +78,8 @@ function variantOverrides(
 export function getAdaptiveButtonColors(options: AdaptiveButtonColors): ButtonOverrides {
   const borderWidth = options.borderWidth ?? '1px'
   const borderStyle = options.borderStyle ?? 'solid'
+  const secondaryHover = options.secondary.hover ?? shiftColorForInteraction(options.secondary.color, 0.12)
+  const secondaryPressed = options.secondary.pressed ?? shiftColorForInteraction(options.secondary.color, 0.2)
   const variants: Array<[ButtonVariantName, ButtonVariantColors | undefined]> = [
     ['Primary', options.primary],
     ['Info', options.info],
@@ -91,9 +94,9 @@ export function getAdaptiveButtonColors(options: AdaptiveButtonColors): ButtonOv
     colorPressed: options.colorPressed,
     colorFocus: options.colorHover,
     colorDisabled: options.color,
-    colorSecondary: options.colorHover,
-    colorSecondaryHover: options.colorPressed,
-    colorSecondaryPressed: options.colorPressed,
+    colorSecondary: options.secondary.color,
+    colorSecondaryHover: secondaryHover,
+    colorSecondaryPressed: secondaryPressed,
     colorTertiary: options.colorHover,
     colorTertiaryHover: options.colorPressed,
     colorTertiaryPressed: options.colorPressed,

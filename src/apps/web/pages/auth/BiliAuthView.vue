@@ -382,14 +382,14 @@ onMounted(async () => {
 .auth-title {
   font-size: 1.5em;
   font-weight: 600;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
 }
 
 .auth-content {
   display: flex;
   gap: 30px;
   min-height: 400px;
-  border-top: 1px solid var(--n-border-color);
+  border-top: 1px solid var(--vtsuru-border);
 }
 
 .steps-container {
@@ -407,7 +407,7 @@ onMounted(async () => {
 .content-container {
   flex: 1;
   padding-left: 30px;
-  border-left: 1px solid var(--n-border-color);
+  border-left: 1px solid var(--vtsuru-border);
   display: flex;
   margin-top: 20px;
   align-items: center;
@@ -580,7 +580,7 @@ onMounted(async () => {
   .content-container {
     padding-left: 0;
     border-left: none;
-    border-top: 1px solid var(--n-border-color);
+    border-top: 1px solid var(--vtsuru-border);
     padding-top: 20px;
   }
 

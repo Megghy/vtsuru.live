@@ -497,7 +497,7 @@ const triggerTypeOptions = [
   flex: 1;
   overflow: hidden;
   margin-top: 16px;
-  border-top: 1px solid var(--n-divider-color);
+  border-top: 1px solid var(--vtsuru-border);
 }
 
 .inner-layout {
@@ -524,12 +524,12 @@ const triggerTypeOptions = [
 }
 
 .status-dot--active {
-  background-color: var(--n-success-color);
-  box-shadow: 0 0 4px var(--n-success-color);
+  background-color: var(--vtsuru-success);
+  box-shadow: 0 0 4px var(--vtsuru-success);
 }
 
 .status-dot--inactive {
-  background-color: var(--n-error-color);
+  background-color: var(--vtsuru-error);
   opacity: 0.6;
 }
 
@@ -540,10 +540,10 @@ const triggerTypeOptions = [
 .next-action-display {
   margin-top: 12px;
   padding: 8px 12px;
-  background-color: var(--n-color-embedded);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-inset);
+  border-radius: var(--vtsuru-radius);
   font-size: 13px;
-  border-left: 3px solid var(--n-primary-color);
+  border-left: 3px solid var(--vtsuru-primary);
 }
 
 .setting-item {
@@ -559,7 +559,7 @@ const triggerTypeOptions = [
 
 .setting-item .desc {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   margin-top: 4px;
 }
 

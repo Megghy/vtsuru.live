@@ -122,7 +122,7 @@ function formatDuration(ms?: number): string {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
 }
 
 .tool-line--running .tool-line__state {
@@ -148,13 +148,13 @@ function formatDuration(ms?: number): string {
 }
 
 .tool-line__meta {
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
   font-size: 11px;
   white-space: nowrap;
 }
 
 .tool-line__chevron {
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
   transition: transform 0.2s;
 }
 
@@ -176,7 +176,7 @@ function formatDuration(ms?: number): string {
 }
 
 .tool-line__detail--muted {
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
 }
 
 @keyframes tool-pulse {

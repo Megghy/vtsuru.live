@@ -707,14 +707,14 @@ defineExpose({
 
 .address-card {
   padding: 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-  background-color: var(--n-color-embedded);
-  transition: all 0.3s var(--n-bezier);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-inset);
+  transition: all 0.3s var(--vtsuru-bezier);
 }
 
 .address-card:hover {
-  border-color: var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -726,40 +726,40 @@ defineExpose({
 
 .account-item-card {
   padding: 12px 16px;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
   cursor: pointer;
-  transition: all 0.3s var(--n-bezier);
-  background-color: var(--n-card-color);
+  transition: all 0.3s var(--vtsuru-bezier);
+  background-color: var(--vtsuru-bg-surface);
 }
 
 .account-item-card:hover {
-  background-color: var(--n-color-embedded);
-  border-color: var(--n-primary-color);
+  background-color: var(--vtsuru-bg-inset);
+  border-color: var(--vtsuru-primary);
 }
 
 .account-item-card.is-current {
-  border-color: var(--n-primary-color);
-  background-color: color-mix(in srgb, var(--n-primary-color), transparent 95%);
-  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
+  border-color: var(--vtsuru-primary);
+  background-color: color-mix(in srgb, var(--vtsuru-primary), transparent 95%);
+  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
 }
 
 .account-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--n-text-color-3);
-  border: 1px solid var(--n-border-color);
+  color: var(--vtsuru-fg-muted);
+  border: 1px solid var(--vtsuru-border);
 }
 
 .is-current .account-avatar {
-  color: var(--n-primary-color);
-  border-color: var(--n-primary-color);
-  background-color: color-mix(in srgb, var(--n-primary-color), transparent 90%);
+  color: var(--vtsuru-primary);
+  border-color: var(--vtsuru-primary);
+  background-color: color-mix(in srgb, var(--vtsuru-primary), transparent 90%);
 }
 
 .account-name {

@@ -645,7 +645,7 @@ onUnmounted(() => {
   gap: 6px;
   padding: 12px 8px;
   border-radius: 10px;
-  border: 1px solid var(--n-border-color, rgba(128, 128, 128, 0.18));
+  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
   transition: opacity 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
 }
 

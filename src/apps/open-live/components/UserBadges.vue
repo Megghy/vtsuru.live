@@ -26,7 +26,7 @@ const GUARD_NAME: Record<number, string> = { 1: '总督', 2: '提督', 3: '舰�
     <NTag :size="size" round :bordered="false" type="info" style="margin-right: 4px;">
       {{ user?.fans_medal_level }}
     </NTag>
-    <span style="color: var(--n-info-color)">{{ user?.fans_medal_name }}</span>
+    <span style="color: var(--vtsuru-info)">{{ user?.fans_medal_name }}</span>
   </NTag>
 
   <NTag

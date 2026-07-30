@@ -784,7 +784,7 @@ onMounted(() => { })
                 :gap="8"
                 style="width: 100%"
               >
-                <NText style="font-size: 14px; color: var(--n-primary-color); font-weight: 500;">
+                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500;">
                   <NIcon
                     :component="ShoppingBag24Filled"
                     style="vertical-align: -0.15em; margin-right: 4px"
@@ -864,7 +864,7 @@ onMounted(() => { })
                 :gap="8"
                 style="width: 100%"
               >
-                <NText style="font-size: 14px; color: var(--n-primary-color); font-weight: 500;">
+                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500;">
                   <NIcon
                     :component="ShoppingBag24Filled"
                     style="vertical-align: -0.15em; margin-right: 4px"
@@ -1936,15 +1936,15 @@ onMounted(() => { })
 
   .goods-modal :deep(.n-card-footer) {
     padding: 12px 20px 16px;
-    border-top: 1px solid var(--n-border-color);
-    background-color: var(--n-color-embedded);
+    border-top: 1px solid var(--vtsuru-border);
+    background-color: var(--vtsuru-bg-inset);
   }
 
   .scrollable-container {
     position: relative;
     background-color: transparent;
     border: none;
-    border-radius: var(--n-border-radius);
+    border-radius: var(--vtsuru-radius);
     margin: 0;
   }
 
@@ -1973,15 +1973,15 @@ onMounted(() => { })
   .manage-sub-item-card {
     margin-bottom: 12px;
     padding: 16px;
-    border: 1px solid var(--n-border-color);
-    border-radius: var(--n-border-radius);
-    background-color: var(--n-card-color);
-    transition: all 0.3s var(--n-bezier);
+    border: 1px solid var(--vtsuru-border);
+    border-radius: var(--vtsuru-radius);
+    background-color: var(--vtsuru-bg-surface);
+    transition: all 0.3s var(--vtsuru-bezier);
   }
 
   .manage-sub-item-card:hover {
-    border-color: var(--n-primary-color);
-    box-shadow: 0 0 0 1px var(--n-primary-color) inset;
+    border-color: var(--vtsuru-primary);
+    box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
   }
 
 </style>

@@ -49,17 +49,23 @@ async function loadVoices() {
 }
 
 async function loadCustomVoices() {
-  if (!account.value) return
+  if (!account.value.id) {
+    customVoices.value = []
+    return
+  }
   try {
     const resp = await QueryGetAPI<CustomVoice[]>(`${TTS_API_URL}mimo/voices/custom`)
-    if (resp.code === 200 && Array.isArray(resp.data)) {
-      customVoices.value = resp.data
-      const provider = speechService.getCurrentProvider()
-      if (provider instanceof MimoVoiceProvider) {
-        provider.setCustomVoices(resp.data as MimoCustomVoiceInfo[])
-      }
+    if (resp.code !== 200) throw new Error(resp.message || '加载自定义音色失败')
+    if (!Array.isArray(resp.data)) throw new Error('自定义音色数据格式错误')
+
+    customVoices.value = resp.data
+    const provider = speechService.getCurrentProvider()
+    if (provider instanceof MimoVoiceProvider) {
+      provider.setCustomVoices(resp.data as MimoCustomVoiceInfo[])
     }
-  } catch { /* ignore */ }
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : '加载自定义音色失败')
+  }
 }
 
 function editCustomVoice(voice: CustomVoice) {
@@ -105,8 +111,10 @@ const allVoiceOptions = computed<any[]>(() => {
   ]
 })
 
-watch(() => settings.value.provider, (val) => {
-  if (val === 'mimo') { loadVoices(); loadCustomVoices() }
+watch([() => settings.value.provider, () => account.value.id], ([provider, accountId]) => {
+  if (provider !== 'mimo') return
+  loadVoices()
+  if (accountId) loadCustomVoices()
 }, { immediate: true })
 </script>
 
@@ -129,49 +137,49 @@ watch(() => settings.value.provider, (val) => {
           </p>
           <table style="border-collapse: collapse; width: 100%; font-size: 11px">
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
                 基础情绪
               </td><td style="padding: 2px 6px">
                 开心 / 悲伤 / 愤怒 / 恐惧 / 惊讶 / 兴奋 / 委屈 / 冷漠
               </td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
                 复合情绪
               </td><td style="padding: 2px 6px">
                 怅然 / 欣慰 / 无奈 / 愧疚 / 释然 / 忐忑 / 动情
               </td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
                 语调风格
               </td><td style="padding: 2px 6px">
                 温柔 / 高冷 / 活泼 / 慵懒 / 俏皮 / 深沉 / 凌厉
               </td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
                 音色定位
               </td><td style="padding: 2px 6px">
                 磁性 / 醇厚 / 清亮 / 空灵 / 甜美 / 沙哑
               </td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
                 腔调方言
               </td><td style="padding: 2px 6px">
                 夹子音 / 御姐音 / 正太音 / 台湾腔 / 东北话 / 粤语
               </td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">
                 特殊
               </td><td style="padding: 2px 6px">
                 (唱歌) — 需放在最开头
               </td>
             </tr>
           </table>
-          <p style="margin: 6px 0 0; color: var(--n-text-color-3)">
+          <p style="margin: 6px 0 0; color: var(--vtsuru-fg-muted)">
             文中还可插入 [叹气] [笑] [哽咽] [颤抖] [气声] 等音频标签做细粒度控制
           </p>
         </div>
@@ -194,7 +202,7 @@ watch(() => settings.value.provider, (val) => {
         :input-props="{ autocomplete: 'new-password' }"
       />
       <NText depth="3" style="font-size: 11px">
-        <a href="https://platform.xiaomimimo.com" target="_blank" rel="noopener" style="color: var(--n-text-color-3)">
+        <a href="https://platform.xiaomimimo.com" target="_blank" rel="noopener" style="color: var(--vtsuru-fg-muted)">
           前往 MiMo 开放平台获取 API Key →
         </a>
       </NText>
@@ -204,11 +212,11 @@ watch(() => settings.value.provider, (val) => {
     <SectionField label="自定义音色">
       <NFlex justify="space-between" align="center" style="margin-bottom: 6px">
         <NText depth="3" style="font-size: 11px">
-          {{ account ? `${customVoices.length} 个自定义音色` : '登录后可用' }}
+          {{ account.id ? `${customVoices.length} 个自定义音色` : '登录后可用' }}
         </NText>
         <NButton
           size="tiny" type="primary" tertiary
-          :disabled="!account"
+          :disabled="!account.id"
           @click="showCreateDialog = true"
         >
           <template #icon>
@@ -218,7 +226,7 @@ watch(() => settings.value.provider, (val) => {
         </NButton>
       </NFlex>
 
-      <NEmpty v-if="customVoices.length === 0 && account" description="暂无自定义音色" size="small" />
+      <NEmpty v-if="customVoices.length === 0 && account.id" description="暂无自定义音色" size="small" />
 
       <div v-else class="voice-list">
         <div
@@ -288,13 +296,13 @@ watch(() => settings.value.provider, (val) => {
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  border: 1px solid var(--n-divider-color, #e5e5e5);
+  border: 1px solid var(--vtsuru-border, #e5e5e5);
   border-radius: 6px;
   font-size: 12px;
   transition: border-color 120ms ease;
 }
 .voice-item.active {
-  border-color: var(--n-primary-color, #18a058);
+  border-color: var(--vtsuru-primary, #18a058);
   background: rgba(24, 160, 88, 0.05);
 }
 .voice-name {

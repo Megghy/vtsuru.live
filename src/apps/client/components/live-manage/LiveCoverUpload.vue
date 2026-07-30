@@ -27,10 +27,10 @@ const c = props.control
           style="
             width: 160px;
             height: 90px;
-            border-radius: var(--n-border-radius);
+            border-radius: var(--vtsuru-radius);
             overflow: hidden;
-            background: var(--n-color-embedded);
-            border: 1px solid var(--n-border-color);
+            background: var(--vtsuru-bg-inset);
+            border: 1px solid var(--vtsuru-border);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -104,9 +104,9 @@ const c = props.control
             style="
               width: 160px;
               height: 90px;
-              border-radius: var(--n-border-radius);
+              border-radius: var(--vtsuru-radius);
               overflow: hidden;
-              border: 2px solid var(--n-border-color);
+              border: 2px solid var(--vtsuru-border);
             "
           >
             <img

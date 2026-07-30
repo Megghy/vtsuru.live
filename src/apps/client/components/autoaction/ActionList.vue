@@ -437,8 +437,8 @@ function importActions() {
 
 .action-list-header {
   padding: 12px 16px;
-  background-color: var(--n-color-embedded);
-  border-radius: var(--n-border-radius);
+  background-color: var(--vtsuru-bg-inset);
+  border-radius: var(--vtsuru-radius);
   margin-bottom: 12px;
 }
 
@@ -447,7 +447,7 @@ function importActions() {
 }
 
 .action-table :deep(.n-data-table-tr:hover) {
-  background-color: var(--n-color-hover);
+  background-color: var(--vtsuru-bg-muted);
 }
 
 .action-name-cell {
@@ -459,7 +459,7 @@ function importActions() {
 .batch-actions {
   display: flex;
   gap: 4px;
-  border-left: 1px solid var(--n-divider-color);
+  border-left: 1px solid var(--vtsuru-border);
   padding-left: 12px;
   margin-left: 4px;
 }

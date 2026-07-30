@@ -174,7 +174,7 @@ const obsUrl = computed(() => {
   width: 280px;
   position: relative;
   margin: 0 auto;
-  border: 1px dashed var(--n-border-color);
+  border: 1px dashed var(--vtsuru-border);
   overflow: hidden;
 }
 

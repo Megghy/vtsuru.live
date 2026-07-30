@@ -35,7 +35,7 @@ const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
 <style scoped>
 .provider-tile {
   appearance: none;
-  background: var(--n-color, #fff);
+  background: var(--vtsuru-bg-surface, #fff);
   border: 1.5px solid var(--border-color, #e5e5e5);
   border-radius: 8px;
   padding: 10px 12px;
@@ -73,13 +73,13 @@ const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
   font-size: 11px;
   padding: 1px 6px;
   border-radius: 4px;
-  background: var(--n-color-target);
-  color: var(--n-text-color-3);
-  border: 1px solid var(--n-divider-color);
+  background: var(--vtsuru-bg-muted);
+  color: var(--vtsuru-fg-muted);
+  border: 1px solid var(--vtsuru-border);
 }
 .desc {
   font-size: 11px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   margin: 0;
   line-height: 1.4;
 }

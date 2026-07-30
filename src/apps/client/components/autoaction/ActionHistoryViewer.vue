@@ -80,7 +80,7 @@ const columns: DataTableColumns<HistoryItem> = [
           {
             trigger: () => h(
               NIcon,
-              { color: 'var(--n-success-color)', size: 20 },
+              { color: 'var(--vtsuru-success)', size: 20 },
               { default: () => h(CheckmarkCircle16Filled) }
             ),
             default: () => '执行成功',
@@ -93,7 +93,7 @@ const columns: DataTableColumns<HistoryItem> = [
           {
             trigger: () => h(
               NIcon,
-              { color: 'var(--n-error-color)', size: 20 },
+              { color: 'var(--vtsuru-error)', size: 20 },
               { default: () => h(DismissCircle16Filled) }
             ),
             default: () => row.error || '执行失败',

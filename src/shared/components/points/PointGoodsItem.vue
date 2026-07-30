@@ -242,12 +242,12 @@ const priceRangeText = computed(() => {
 .goods-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12), 0 4px 8px -4px rgba(0, 0, 0, 0.08);
-  border-color: var(--n-primary-color);
+  border-color: var(--vtsuru-primary);
 }
 
 .is-pinned {
-  border-color: var(--n-primary-color);
-  background-color: rgba(var(--n-primary-color-rgb), 0.02);
+  border-color: var(--vtsuru-primary);
+  background-color: rgba(var(--vtsuru-primary-rgb), 0.02);
 }
 
 /* 封面区域 */
@@ -257,7 +257,7 @@ const priceRangeText = computed(() => {
   padding-bottom: 56.25%; /* 16:9 比例 */
   height: 0;
   overflow: hidden;
-  background-color: var(--n-color-modal);
+  background-color: var(--vtsuru-bg-elevated);
 }
 
 .cover-image-container {
@@ -323,7 +323,7 @@ const priceRangeText = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--n-primary-color);
+  color: var(--vtsuru-primary);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   z-index: 6;
 }
@@ -360,9 +360,9 @@ const priceRangeText = computed(() => {
   line-height: 20px;
 }
 
-.tag-success { background: rgba(var(--n-success-color-rgb), 0.85); }
-.tag-info { background: rgba(var(--n-info-color-rgb), 0.85); }
-.tag-warning { background: rgba(var(--n-warning-color-rgb), 0.85); color: #000; }
+.tag-success { background: rgba(var(--vtsuru-success-rgb), 0.85); }
+.tag-info { background: rgba(var(--vtsuru-info-rgb), 0.85); }
+.tag-warning { background: rgba(var(--vtsuru-warning-rgb), 0.85); color: #000; }
 
 /* 价格胶囊 */
 .price-pill {
@@ -403,7 +403,7 @@ const priceRangeText = computed(() => {
   color: #efefef;
 }
 
-.price-highlight { color: var(--n-primary-color); }
+.price-highlight { color: var(--vtsuru-primary); }
 
 /* 内容区域 */
 .header-row-container {
@@ -420,38 +420,38 @@ const priceRangeText = computed(() => {
 }
 
 .goods-title-text {
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg);
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .goods-card:hover .goods-title-text {
-  color: var(--n-primary-color) !important;
+  color: var(--vtsuru-primary) !important;
   transform: translateY(-1px);
   transform-origin: left center;
 }
 
 .is-pinned .goods-title-text {
-  color: var(--n-primary-color);
+  color: var(--vtsuru-primary);
 }
 
 .stock-badge {
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 6px;
-  background-color: var(--n-color-embedded);
-  color: var(--n-text-color-3);
+  background-color: var(--vtsuru-bg-inset);
+  color: var(--vtsuru-fg-muted);
   white-space: nowrap;
   font-weight: 700;
-  border: 1px solid var(--n-border-color);
+  border: 1px solid var(--vtsuru-border);
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.stock-none { color: var(--n-error-color); background-color: rgba(var(--n-error-color-rgb), 0.1); }
-.stock-inf { color: var(--n-success-color); background-color: rgba(var(--n-success-color-rgb), 0.1); }
+.stock-none { color: var(--vtsuru-error); background-color: rgba(var(--vtsuru-error-rgb), 0.1); }
+.stock-inf { color: var(--vtsuru-success); background-color: rgba(var(--vtsuru-success-rgb), 0.1); }
 
 .description-text {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   line-height: 1.5;
   margin-bottom: 8px;
   min-height: 36px; /* 保证两行高度一致 */
@@ -472,8 +472,8 @@ const priceRangeText = computed(() => {
 }
 
 .custom-tag {
-  background-color: var(--n-color-embedded);
-  color: var(--n-text-color-2);
+  background-color: var(--vtsuru-bg-inset);
+  color: var(--vtsuru-fg);
 }
 
 /* 管理侧信息网格 */
@@ -481,7 +481,7 @@ const priceRangeText = computed(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
-  background-color: var(--n-color-embedded);
+  background-color: var(--vtsuru-bg-inset);
   padding: 8px;
   border-radius: 8px;
   margin-top: 4px;
@@ -489,7 +489,7 @@ const priceRangeText = computed(() => {
 
 .sub-items-summary {
   grid-column: span 2;
-  border-top: 1px dashed var(--n-border-color);
+  border-top: 1px dashed var(--vtsuru-border);
   padding-top: 4px;
   margin-top: 2px;
 }
@@ -501,8 +501,8 @@ const priceRangeText = computed(() => {
   font-size: 11px;
 }
 
-.info-cell .label { color: var(--n-text-color-3); }
-.info-cell .value { font-weight: 600; color: var(--n-text-color-2); }
-.text-success { color: var(--n-success-color) !important; }
-.text-error { color: var(--n-error-color) !important; }
+.info-cell .label { color: var(--vtsuru-fg-muted); }
+.info-cell .value { font-weight: 600; color: var(--vtsuru-fg); }
+.text-success { color: var(--vtsuru-success) !important; }
+.text-error { color: var(--vtsuru-error) !important; }
 </style>

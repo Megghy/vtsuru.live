@@ -728,7 +728,7 @@ onUnmounted(() => {
         >
           <div
             v-if="isStartLottery"
-            style="color: var(--n-primary-color)"
+            style="color: var(--vtsuru-primary)"
           >
             <NFlex
               align="center"
@@ -969,12 +969,12 @@ onUnmounted(() => {
   align-items: baseline;
   gap: 4px;
   font-size: 14px;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg);
 }
 .user-count-stat .n-number-animation {
   font-size: 24px;
   font-weight: bold;
-  color: var(--n-primary-color);
+  color: var(--vtsuru-primary);
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 .user-count-stat .unit {
@@ -991,7 +991,7 @@ onUnmounted(() => {
 .status-bar {
   margin: 16px 0;
   text-align: center;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg);
 }
 
 
@@ -1021,7 +1021,7 @@ onUnmounted(() => {
 
 .mode-desc {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
   display: none; /* 默认不显示描述，hover或大屏可以显示，目前保持简洁 */
 }
 
@@ -1057,9 +1057,9 @@ onUnmounted(() => {
 }
 
 .lottery-card-wrapper.winner {
-  outline: 2px solid var(--n-success-color);
+  outline: 2px solid var(--vtsuru-success);
   outline-offset: 2px;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
 }
 
 /* 主卡片 */
@@ -1085,8 +1085,8 @@ onUnmounted(() => {
 }
 
 .card-back {
-  background: var(--n-card-color);
-  color: var(--n-text-color);
+  background: var(--vtsuru-bg-surface);
+  color: var(--vtsuru-fg);
 }
 
 .card-front {
@@ -1094,7 +1094,7 @@ onUnmounted(() => {
 }
 
 .winner-card {
-  --n-border-color: var(--n-success-color) !important;
+  --n-border-color: var(--vtsuru-success) !important;
 }
 
 /* 神秘卡片样式 */
@@ -1150,7 +1150,7 @@ onUnmounted(() => {
   right: -5px;
   width: 24px;
   height: 24px;
-  background: var(--n-warning-color);
+  background: var(--vtsuru-warning);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1180,10 +1180,10 @@ onUnmounted(() => {
 }
 
 .medal-level {
-  background: var(--n-color-embedded);
-  color: var(--n-text-color);
+  background: var(--vtsuru-bg-inset);
+  color: var(--vtsuru-fg);
   padding: 1px 4px;
-  border-radius: var(--n-border-radius);
+  border-radius: var(--vtsuru-radius);
   font-weight: bold;
   margin-right: 4px;
 }
@@ -1198,7 +1198,7 @@ onUnmounted(() => {
 }
 
 .winner-text {
-  background: var(--n-success-color);
+  background: var(--vtsuru-success);
   color: white;
   padding: 4px 12px;
   border-radius: 999px;
@@ -1234,7 +1234,7 @@ onUnmounted(() => {
   height: 300px;
   border-radius: 50%;
   overflow: hidden;
-  border: 4px solid var(--n-primary-color);
+  border: 4px solid var(--vtsuru-primary);
 }
 
 .wheel-pointer {
@@ -1246,7 +1246,7 @@ onUnmounted(() => {
   height: 0;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-bottom: 20px solid var(--n-error-color);
+  border-bottom: 20px solid var(--vtsuru-error);
   z-index: 10;
 }
 
@@ -1269,7 +1269,7 @@ onUnmounted(() => {
     transform: translate(-50%, -50%) rotate(calc(var(--slice-angle) / 2));
     font-size: 12px;
     font-weight: bold;
-    color: var(--n-text-color);
+    color: var(--vtsuru-fg);
     white-space: nowrap;
 }
 

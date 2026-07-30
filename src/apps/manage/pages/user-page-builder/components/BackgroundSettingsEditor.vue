@@ -208,7 +208,7 @@ function clearAll() {
                   :src="imagePath"
                   alt=""
                   referrerpolicy="no-referrer"
-                  style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--n-border-color);"
+                  style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--vtsuru-border);"
                 >
               </Transition>
             </NFlex>
@@ -235,7 +235,7 @@ function clearAll() {
 
     <template v-if="type !== 'none'">
       <NFlex justify="space-between" align="center" :wrap="false" style="margin-bottom: 10px">
-        <div style="font-size: 12px; color: var(--n-text-color-3)" title="建议开启以让内置页面也生效">
+        <div style="font-size: 12px; color: var(--vtsuru-fg-muted)" title="建议开启以让内置页面也生效">
           覆盖导航区域
         </div>
         <NSwitch v-model:value="coverSidebar" size="small" />

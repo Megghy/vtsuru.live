@@ -6,7 +6,8 @@ import { resolveUserPageAppearance } from './themeConfig'
 import { resolveUserPageControlOverlay, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
 import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
 import { parseRgb } from '@/shared/config/theme/contrast'
-import { buildTokens } from '@/shared/config/theme/tokens'
+import { getThemeOverrides } from '@/shared/config/theme/overrides'
+import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { hexToRgba } from '@/shared/utils'
 
 export interface ResolvedPageBackground {
@@ -121,7 +122,8 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
   const fontFamily = readThemeString(theme, 'fontFamily')
   const appearance = resolveUserPageAppearance(theme)
   const surfaceVars = getUserPageSurfaceCssVars(effectiveIsDark, theme)
-  const pagePrimary = primaryColor || 'var(--n-primary-color)'
+  const siteTokens = buildSiteTokens(effectiveIsDark)
+  const pagePrimary = primaryColor || siteTokens.primary
   const customSurface = backgroundColor && appearance.surfaceOpacity !== undefined
     ? applyColorOpacity(backgroundColor, appearance.surfaceOpacity)
     : ''
@@ -134,13 +136,16 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     contrastSurface,
   )
   const pageText = textPalette.color
-  const siteTokens = buildTokens(effectiveIsDark)
   const readablePrimary = resolveUserPageReadableAccent(primaryColor, backgroundColor, effectiveIsDark, contrastSurface) || pageText
 
   const contentColor = customSurface || backgroundColor || surfaceVars['--user-page-ui-surface-bg']
+  const defaultCardSurface = applyColorOpacity(
+    siteTokens.surfaceHover,
+    appearance.surfaceOpacity ?? (effectiveIsDark ? 70 : 62),
+  )
   const surfaceColor = customSurface || (backgroundColor
     ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)`
-    : surfaceVars['--user-page-ui-surface-bg'])
+    : defaultCardSurface)
   const surfaceHover = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
     : surfaceVars['--user-page-ui-surface-bg-hover']
@@ -148,6 +153,10 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
 
   return {
     ...surfaceVars,
+    '--vtsuru-primary': pagePrimary,
+    '--vtsuru-primary-hover': pagePrimary,
+    '--vtsuru-primary-pressed': pagePrimary,
+    '--vtsuru-primary-fg': readablePrimary,
     '--vtsuru-page-primary': pagePrimary,
     '--vtsuru-page-primary-soft': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
     '--vtsuru-page-primary-active': `color-mix(in srgb, ${pagePrimary} 26%, transparent)`,
@@ -159,11 +168,20 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--vtsuru-page-card-bg': surfaceColor,
     '--vtsuru-page-card-bg-embedded': surfaceHover,
     '--vtsuru-page-text': pageText,
+    '--vtsuru-fg': pageText,
     '--vtsuru-surface-fg': pageText,
+    '--vtsuru-fg-muted': textPalette.muted,
     '--vtsuru-surface-fg-muted': textPalette.muted,
     '--vtsuru-surface-fg-subtle': textPalette.subtle,
+    '--vtsuru-fg-disabled': siteTokens.disabledForeground,
     '--vtsuru-page-fg-disabled': siteTokens.disabledForeground,
     '--vtsuru-page-placeholder-disabled': siteTokens.placeholderDisabled,
+    '--vtsuru-bg': contentColor,
+    '--vtsuru-bg-surface': surfaceColor,
+    '--vtsuru-bg-muted': surfaceHover,
+    '--vtsuru-bg-inset': surfaceHover,
+    '--vtsuru-bg-elevated': surfaceColor,
+    '--vtsuru-border': borderColor,
     '--vtsuru-page-bg': backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : 'transparent',
     '--user-page-theme-content-bg': 'transparent',
     '--text-color-base': pageText,
@@ -191,6 +209,7 @@ export function getUserPageNaiveThemeOverrides(
   vars: Record<string, string>,
   effectiveIsDark: boolean,
 ): GlobalThemeOverrides {
+  const base = getThemeOverrides(buildSiteTokens(effectiveIsDark))
   const primaryColor = readThemeString(theme, 'primaryColor')
   const appearance = resolveUserPageAppearance(theme)
   const contentColor = vars['--vtsuru-page-content-color'] || vars['--user-page-ui-surface-bg']
@@ -205,7 +224,9 @@ export function getUserPageNaiveThemeOverrides(
   const controlOverlay = resolveUserPageControlOverlay(contentColor)
 
   return {
+    ...base,
     common: {
+      ...base.common,
       fontFamily: vars['--vtsuru-page-font-family'],
       borderColor,
       dividerColor: borderColor,
@@ -228,12 +249,14 @@ export function getUserPageNaiveThemeOverrides(
       ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
     },
     Card: {
+      ...base.Card,
       color: cardColor,
       colorEmbedded: cardEmbeddedColor,
       borderColor,
       borderRadius: `${appearance.radius}px`,
     },
     Input: {
+      ...base.Input,
       heightSmall: appearance.controlHeights.small,
       heightMedium: appearance.controlHeights.medium,
       heightLarge: appearance.controlHeights.large,
@@ -250,8 +273,11 @@ export function getUserPageNaiveThemeOverrides(
       borderFocus: `${appearance.borderWidth} ${appearance.borderStyle} ${primaryColor || borderColor}`,
     },
     Select: {
+      ...base.Select,
       peers: {
+        ...base.Select?.peers,
         InternalSelection: {
+          ...base.Select?.peers?.InternalSelection,
           colorDisabled: controlOverlay.disabled,
           textColorDisabled: disabledTextColor,
           placeholderColorDisabled: disabledPlaceholderColor,
@@ -260,12 +286,18 @@ export function getUserPageNaiveThemeOverrides(
       },
     },
     Button: {
+      ...base.Button,
       ...getAdaptiveButtonColors({
         isDark: effectiveIsDark,
         surface: contentColor,
         color: controlOverlay.color,
         colorHover: controlOverlay.focus,
         colorPressed: controlOverlay.disabled,
+        secondary: {
+          color: controlOverlay.focus,
+          hover: controlOverlay.disabled,
+          pressed: controlOverlay.disabled,
+        },
         textColor,
         borderColor,
         borderWidth: appearance.borderWidth,
@@ -283,10 +315,12 @@ export function getUserPageNaiveThemeOverrides(
       borderRadiusLarge: `${appearance.radius}px`,
     },
     Popover: {
+      ...base.Popover,
       borderRadius: `${appearance.radius}px`,
       boxShadow: appearance.shadow,
     },
     Dialog: {
+      ...base.Dialog,
       borderRadius: `${appearance.radius}px`,
     },
   }

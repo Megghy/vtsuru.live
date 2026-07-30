@@ -186,9 +186,9 @@ const displayUrl = computed(() => {
   position: relative;
   width: 100%;
   height: 300px;
-  background: var(--n-color-embedded);
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
+  background: var(--vtsuru-bg-inset);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
   overflow: hidden;
 }
 </style>

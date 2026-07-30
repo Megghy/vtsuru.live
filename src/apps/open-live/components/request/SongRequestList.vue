@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Checkmark12Regular, PeopleQueue24Filled } from '@vicons/fluent'
 import { isSameDay } from 'date-fns'
-import { NButton, NCard, NCheckbox, NDivider, NEmpty, NIcon, NInput, NInputGroup, NPopconfirm, NRadioButton, NRadioGroup, NFlex, NTag } from 'naive-ui';
+import { NButton, NCard, NCheckbox, NEmpty, NIcon, NInput, NInputGroup, NPopconfirm, NRadioButton, NRadioGroup, NFlex, NTag } from 'naive-ui';
 import { computed, provide } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { QueueSortType, SongRequestStatus } from '@/api/api-models'
@@ -136,21 +136,18 @@ async function updateSettings() {
     </NCard>
 
     <div v-if="songRequest.activeSongs.length > 0" class="song-list-container">
-      <div>
-        <div
-          v-for="(song, index) in songRequest.activeSongs"
-          :key="song.id"
-          class="song-item-wrapper"
-        >
-          <SongRequestItem
-            :song="song"
-            :index="index + 1"
-            :is-loading="songRequest.isLoading"
-            :is-lrc-loading="songRequest.isLrcLoading"
-            :update-key="songRequest.updateKey"
-          />
-          <NDivider style="margin: 0" />
-        </div>
+      <div
+        v-for="(song, index) in songRequest.activeSongs"
+        :key="song.id"
+        class="song-item-wrapper"
+      >
+        <SongRequestItem
+          :song="song"
+          :index="index + 1"
+          :is-loading="songRequest.isLoading"
+          :is-lrc-loading="songRequest.isLrcLoading"
+          :update-key="songRequest.updateKey"
+        />
       </div>
     </div>
     <NEmpty
@@ -165,8 +162,12 @@ async function updateSettings() {
 .song-list-container {
   margin-top: 10px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .song-item-wrapper {
+  min-width: 0;
 }
 </style>
