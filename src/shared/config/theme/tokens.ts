@@ -23,6 +23,7 @@ export interface ThemeTokens {
   inputBorderHover: string
   placeholder: string
   placeholderDisabled: string
+  disabledForeground: string
 
   // primary（中性 shadcn 风格）
   primary: string
@@ -51,8 +52,6 @@ export interface ThemeTokens {
   tooltipColor: string
   tooltipTextColor: string
 
-  // 在彩色按钮 / 标签上反转文字颜色（仅暗色模式有效）
-  darkTextOnTint: string | undefined
 }
 
 export function buildTokens(isDark: boolean): ThemeTokens {
@@ -122,6 +121,7 @@ export function buildTokens(isDark: boolean): ThemeTokens {
     inputBorderHover,
     placeholder: isDark ? neutral[600] : neutral[400],
     placeholderDisabled: isDark ? neutral[700] : neutral[300],
+    disabledForeground: isDark ? neutral[500] : neutral[400],
     primary,
     primaryHover,
     primaryPressed,
@@ -139,6 +139,5 @@ export function buildTokens(isDark: boolean): ThemeTokens {
     shadowPopover,
     tooltipColor,
     tooltipTextColor,
-    darkTextOnTint: isDark ? neutral[950] : undefined,
   }
 }

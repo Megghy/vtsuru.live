@@ -48,7 +48,7 @@ const pageBackgroundClass = computed(() => ({
   'background-glass': pageBackground.value?.blurMode === 'glass',
 }))
 const pageThemeOverrides = computed(() => ({
-    ...getUserPageNaiveThemeOverrides(appearanceTheme.value, pageThemeVars.value),
+    ...getUserPageNaiveThemeOverrides(appearanceTheme.value, pageThemeVars.value, effectiveIsDark.value),
     Layout: { color: 'transparent' },
 }))
 

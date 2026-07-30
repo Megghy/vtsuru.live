@@ -11,13 +11,21 @@ export default class BroadcastChannelClient extends DanmakuEventEmitter {
   private unsubscribe: (() => void) | undefined
 
   // channel 由 store 拥有并传入 (借用), 本 client 不负责创建/关闭它
-  constructor(private readonly channel: DanmakuChannel) {
+  constructor(
+    private readonly channel: DanmakuChannel,
+    private readonly scope: string,
+    private readonly ownerSourceId?: string,
+  ) {
     super()
   }
 
   public async Start(): Promise<{ success: boolean, message: string }> {
     if (this.state === 'connected') return { success: true, message: '已连接' }
-    this.unsubscribe = this.channel.onEvent((eventName, data) => this.emitModel(eventName, data))
+    this.unsubscribe = this.channel.onEvent((sourceId, scope, eventName, data) => {
+      if (scope === this.scope && (!this.ownerSourceId || sourceId === this.ownerSourceId)) {
+        this.emitModel(eventName, data)
+      }
+    })
     this.state = 'connected'
     console.log('[broadcast] 已接入同浏览器其他标签页的弹幕流')
     return { success: true, message: '' }

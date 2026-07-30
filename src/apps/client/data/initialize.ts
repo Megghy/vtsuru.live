@@ -25,6 +25,7 @@ import { useBiliFunction } from '../store/useBiliFunction'
 import { useClientBackup } from '../store/useClientBackup'
 import { useDanmakuWindow } from '../store/useDanmakuWindow'
 import { useSettings } from '../store/useSettings'
+import { useTranscription } from '../store/useTranscription'
 import { initInfo } from './info'
 import { getBuvid, getRoomKey } from './utils'
 
@@ -472,6 +473,7 @@ export async function initAll(isOnBoot: boolean) {
   useAutoAction().init()
   useBiliFunction().init()
   await useClientBackup().init()
+  await useTranscription().init()
 
   // 启动开放 RPC 接口 (供外部网页接入本地弹幕/发送能力)。
   // 老版本 client 二进制没有 Rust 中继, 前端跑在其上时不启动, 避免徒劳等待。
@@ -505,6 +507,7 @@ export function OnClientUnmounted() {
   stopHeartbeat()
   stopUpdateCheck()
   void useClientBackup().dispose()
+  void useTranscription().dispose()
   useFetcherRpcServer().dispose()
   tray.close()
   // useDanmakuWindow().closeWindow();

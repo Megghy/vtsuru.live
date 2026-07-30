@@ -239,22 +239,15 @@ onBeforeUnmount(() => {
 
 const pageThemeOverrides = computed(() => {
   const vars = mergedLayoutVars.value as Record<string, string>
-  const surfaceBg = vars['--user-page-ui-surface-bg']
-  const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
   const borderColor = (vars as any)['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
 
   return {
-    ...getUserPageNaiveThemeOverrides(layoutTheme.value, vars),
+    ...getUserPageNaiveThemeOverrides(layoutTheme.value, vars, effectiveIsDark.value),
     List: {
       color: 'transparent',
       listItemColor: 'transparent',
       borderColor,
     },
-    Button: {
-      color: surfaceBg,
-      colorHover: surfaceBgHover,
-    },
-    // 可以根据需要继续添加其他组件的透明化适配
   }
 })
 
@@ -939,6 +932,11 @@ watch(
   flex-direction: column;
   overflow: hidden;
   background-color: var(--n-body-color);
+}
+
+.page-root :deep(.n-card.n-card--bordered) {
+  border: var(--vtsuru-page-border);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 
 :global(html.vtsuru-userpage-host),

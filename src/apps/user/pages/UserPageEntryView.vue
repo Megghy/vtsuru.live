@@ -65,6 +65,8 @@ const mergedBlockProject = computed(() => {
 
 const contentMaxWidth = computed(() => {
   const value = mergedBlockProject.value?.theme?.pageMaxWidth
+    ?? pageConfig.value?.theme?.pageMaxWidth
+    ?? settings.value?.theme?.pageMaxWidth
   return typeof value === 'string' && value.trim() ? value.trim() : '820px'
 })
 

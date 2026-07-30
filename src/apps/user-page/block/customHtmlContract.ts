@@ -26,7 +26,7 @@ export interface CustomHtmlProps {
 
 export const DEFAULT_CUSTOM_HTML_PROPS: Readonly<CustomHtmlProps> = {
   html: '<section class="custom-panel">\n  <h2>自定义内容</h2>\n  <p>在代码编辑器中修改 HTML 和 CSS。</p>\n</section>',
-  css: '.custom-panel {\n  padding: 24px;\n  border: 1px solid var(--vtsuru-border);\n  border-radius: var(--vtsuru-radius);\n  color: var(--vtsuru-fg);\n  background: var(--vtsuru-bg-elevated);\n}\n\n.custom-panel h2 {\n  margin: 0 0 8px;\n  font-size: 22px;\n}\n\n.custom-panel p {\n  margin: 0;\n  color: var(--vtsuru-fg-muted);\n}',
+  css: '.custom-panel {\n  padding: 24px;\n  border: var(--vtsuru-border-width) var(--vtsuru-border-style) var(--vtsuru-border);\n  border-radius: var(--vtsuru-radius);\n  color: var(--vtsuru-fg);\n  background: var(--vtsuru-bg-elevated);\n  box-shadow: var(--vtsuru-shadow);\n}\n\n.custom-panel h2 {\n  margin: 0 0 8px;\n  font-size: 22px;\n}\n\n.custom-panel p {\n  margin: 0;\n  color: var(--vtsuru-fg-muted);\n}',
   heightMode: 'auto',
   height: 320,
   maxHeight: 1200,

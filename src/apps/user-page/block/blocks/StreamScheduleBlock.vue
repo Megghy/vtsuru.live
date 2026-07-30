@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { ScheduleDayInfo, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
 import { SCHEDULE_API_URL } from '@/shared/config'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import { NAlert, NButton, NIcon, NSpin, NTag } from 'naive-ui'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { CalendarNumberOutline, CopyOutline, RefreshOutline } from '@vicons/ionicons5'
+import { computed, onMounted, watch } from 'vue'
+import { CalendarNumberOutline, RefreshOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
@@ -48,20 +49,6 @@ const cfg = computed<BlockConfig>(() => {
   }
 })
 
-const copyState = ref<'idle' | 'success' | 'error'>('idle')
-let copyTimer: number | undefined
-
-const buttonThemeOverrides = {
-  colorSecondary: 'var(--vtsuru-block-bg-muted)',
-  colorSecondaryHover: 'var(--vtsuru-block-bg-muted)',
-  colorSecondaryPressed: 'var(--vtsuru-block-bg-muted)',
-  textColor: 'var(--vtsuru-block-fg)',
-  border: '1px solid var(--vtsuru-block-border)',
-  borderHover: '1px solid var(--vtsuru-page-primary)',
-  borderPressed: '1px solid var(--vtsuru-page-primary)',
-  borderFocus: '1px solid var(--vtsuru-page-primary)',
-}
-
 const scheduleQuery = useUserPageRuntimeQuery<ScheduleWeekInfo[]>({
   key: () => `schedule:${props.userInfo?.id ?? ''}`,
   ttlMs: 60_000,
@@ -97,9 +84,6 @@ async function loadSchedule(force = false) {
 
 onMounted(() => { void loadSchedule() })
 watch(() => props.userInfo?.id, () => { void loadSchedule() })
-onBeforeUnmount(() => {
-  if (copyTimer !== undefined) window.clearTimeout(copyTimer)
-})
 
 function dayLabel(dayIndex: number) {
   return ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][dayIndex] ?? ''
@@ -137,22 +121,6 @@ const rows = computed<ScheduleRow[]>(() => {
 })
 
 const icsUrl = computed(() => props.userInfo?.id ? `${SCHEDULE_API_URL}${props.userInfo.id}.ics` : '')
-const copyMessage = computed(() => copyState.value === 'success'
-  ? '日历链接已复制'
-  : copyState.value === 'error' ? '复制失败，请选中链接手动复制' : '')
-
-async function copyCalendarUrl() {
-  if (!icsUrl.value || copyState.value === 'success') return
-  if (copyTimer !== undefined) window.clearTimeout(copyTimer)
-  try {
-    await navigator.clipboard.writeText(icsUrl.value)
-    copyState.value = 'success'
-  } catch (error) {
-    console.error('复制日历链接失败', error)
-    copyState.value = 'error'
-  }
-  copyTimer = window.setTimeout(() => { copyState.value = 'idle' }, 3000)
-}
 </script>
 
 <template>
@@ -170,29 +138,12 @@ async function copyCalendarUrl() {
         <span class="week-count">未来 {{ cfg.weeksCount }} 周</span>
       </header>
 
-      <div v-if="cfg.showIcs && icsUrl" class="calendar-action">
-        <input :value="icsUrl" readonly aria-label="日历订阅链接" @focus="($event.target as HTMLInputElement).select()">
-        <NButton
-          size="small"
-          secondary
-          :theme-overrides="buttonThemeOverrides"
-          :disabled="copyState === 'success'"
-          @click="copyCalendarUrl"
-        >
-          <template #icon>
-            <NIcon><CopyOutline /></NIcon>
-          </template>
-          {{ copyState === 'success' ? '已复制' : '复制' }}
-        </NButton>
-        <span class="copy-feedback" role="status" aria-live="polite">{{ copyMessage }}</span>
-      </div>
-
       <div class="schedule-body">
         <NSpin :show="loading" size="small">
           <NAlert v-if="failed" type="error" :show-icon="true">
             <div class="remote-state">
               <span>日程加载失败，请稍后重试</span>
-              <NButton size="small" secondary :theme-overrides="buttonThemeOverrides" @click="loadSchedule(true)">
+              <NButton size="small" type="primary" secondary @click="loadSchedule(true)">
                 <template #icon>
                   <NIcon><RefreshOutline /></NIcon>
                 </template>
@@ -252,6 +203,11 @@ async function copyCalendarUrl() {
           </div>
         </NSpin>
       </div>
+      <ScheduleSubscription
+        v-if="cfg.showIcs && icsUrl"
+        class="schedule-subscription-entry"
+        :url="icsUrl"
+      />
     </section>
   </BlockCard>
 </template>
@@ -263,17 +219,14 @@ async function copyCalendarUrl() {
 .header-title-wrap :deep(.n-icon) { color: var(--vtsuru-page-primary-readable, var(--vtsuru-block-fg)); }
 .header-title-wrap h2 { margin: 0; font-size: 15px; line-height: 1.4; letter-spacing: 0; }
 .week-count { flex: none; color: var(--vtsuru-block-fg-muted); font-size: 12px; }
-.calendar-action { position: relative; display: flex; gap: 8px; padding: 12px 20px 28px; border-bottom: 1px solid var(--vtsuru-block-border); }
-.calendar-action input { min-width: 0; flex: 1; padding: 7px 9px; border: 1px solid var(--vtsuru-block-border); border-radius: 6px; color: var(--vtsuru-block-fg-muted); background: var(--vtsuru-block-bg-muted); caret-color: var(--vtsuru-block-fg); font: 12px ui-monospace, monospace; }
-.calendar-action input:focus-visible { outline: 2px solid var(--vtsuru-page-primary); outline-offset: 1px; }
-.copy-feedback { position: absolute; left: 20px; bottom: 7px; color: var(--vtsuru-block-fg-muted); font-size: 11px; }
 .schedule-body { min-height: 90px; padding: 20px; }
+.schedule-subscription-entry { margin: 0 20px 20px; }
 .remote-state { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .empty-state { padding: 24px; color: var(--vtsuru-block-fg-muted); text-align: center; }
-.table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--vtsuru-block-border); border-radius: 6px; }
+.table-wrap { max-width: 100%; overflow-x: auto; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border); border-radius: var(--vtsuru-page-radius); }
 .table-wrap:focus-visible { outline: 2px solid var(--vtsuru-page-primary); outline-offset: 2px; }
 table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 13px; }
-th, td { padding: 11px 12px; border-bottom: 1px solid var(--vtsuru-block-border); text-align: left; vertical-align: middle; }
+th, td { padding: 11px 12px; border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border); text-align: left; vertical-align: middle; }
 th { color: var(--vtsuru-block-fg-muted); background: var(--vtsuru-block-bg-muted); font-size: 12px; font-weight: 600; }
 tbody tr:last-child td { border-bottom: 0; }
 tr.today { background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent); }
@@ -290,9 +243,8 @@ tr.today { background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transp
 
 @container (max-width: 440px) {
   .schedule-header { align-items: flex-start; padding: 14px; }
-  .calendar-action { padding-inline: 14px; }
-  .copy-feedback { left: 14px; }
   .schedule-body { padding: 14px; }
+  .schedule-subscription-entry { margin: 0 14px 14px; }
   .timeline-item { grid-template-columns: 58px minmax(0, 1fr); gap: 10px; padding: 12px 8px; }
   .remote-state { align-items: flex-start; flex-direction: column; }
 }

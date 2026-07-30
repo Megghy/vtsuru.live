@@ -220,7 +220,7 @@ const actionButtonProps = computed(() => hasCover.value
 .name, .platform { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .name { font-size: 15px; line-height: 1.3; }
 .platform { margin-top: 2px; color: var(--vtsuru-block-fg-muted); font-size: 12px; }
-.status { flex: none; gap: 6px; padding: 4px 9px; border: 1px solid var(--vtsuru-block-border); border-radius: 999px; color: var(--vtsuru-block-fg-muted); background: var(--vtsuru-block-bg-muted); font-size: 12px; font-weight: 600; }
+.status { flex: none; gap: 6px; padding: 4px 9px; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border); border-radius: 999px; color: var(--vtsuru-block-fg-muted); background: var(--vtsuru-block-bg-muted); font-size: 12px; font-weight: 600; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentcolor; }
 .status.online { color: var(--vtsuru-page-primary, var(--vtsuru-brand)); }
 .body { display: grid; gap: 8px; min-width: 0; }

@@ -1,8 +1,7 @@
-import { LiveWS } from '@laplace.live/ws/client'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { GuidUtils } from '@/shared/utils'
 import { AVATAR_URL } from '@/shared/config'
-import BaseDanmakuClient from './BaseDanmakuClient'
+import BaseDanmakuClient, { DanmakuKeepLiveWS } from './BaseDanmakuClient'
 import Long from 'long'
 
 export interface DirectClientAuthInfo {
@@ -27,9 +26,9 @@ export default class DirectClient extends BaseDanmakuClient {
 
   public readonly authInfo: DirectClientAuthInfo
 
-  protected async initClient(): Promise<{ success: boolean, message: string }> {
+  protected async initClient(signal: AbortSignal): Promise<{ success: boolean, message: string }> {
     if (this.authInfo) {
-      const chatClient = new LiveWS(this.authInfo.roomId, {
+      const chatClient = new DanmakuKeepLiveWS(this.authInfo.roomId, {
         key: this.authInfo.token,
         buvid: this.authInfo.buvid,
         uid: this.authInfo.tokenUserId,
@@ -57,36 +56,13 @@ export default class DirectClient extends BaseDanmakuClient {
         }
       })
 
-      return super.initClientInner(chatClient)
+      return super.initClientInner(chatClient, signal)
     } else {
       console.log('[direct] 无法开启场次, 未提供弹幕客户端认证信息')
       return {
         success: false,
         message: '未提供弹幕客户端认证信息',
       }
-    }
-  }
-
-  private isReconnecting = false
-
-  protected onUnexpectedDisconnect(): void {
-    if (this.isReconnecting) return
-    this.isReconnecting = true
-    console.log(`[${this.type}] WebSocket 意外断开, 将自动重连`)
-    void this.reconnect()
-  }
-
-  private async reconnect() {
-    for (let attempt = 1; ; attempt++) {
-      const delay = Math.min(10_000 * attempt, 60_000)
-      await new Promise(r => setTimeout(r, delay))
-      const result = await this.Start()
-      if (result.success) {
-        console.log(`[${this.type}] 重连成功 (第 ${attempt} 次尝试)`)
-        this.isReconnecting = false
-        return
-      }
-      console.error(`[${this.type}] 重连失败 (第 ${attempt} 次): ${result.message}`)
     }
   }
 

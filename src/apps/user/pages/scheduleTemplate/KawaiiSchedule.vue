@@ -6,10 +6,9 @@ import type { WritableComputedRef } from 'vue'
 import type { ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes' // Use base type
 import type { ExtractConfigData, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
-import { getWeek, getYear } from 'date-fns'
-import { NDivider, NSelect, NFlex } from 'naive-ui';
+import { getISOWeek, getISOWeekYear } from 'date-fns'
 import { computed, ref, watch } from 'vue'
-import SaveCompoent from '@/apps/user/components/SaveCompoent.vue' // 引入截图组件
+import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
 const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfigType>>()
@@ -104,14 +103,6 @@ const selectedDate: WritableComputedRef<string | undefined> = computed({
   },
 })
 
-// 周选择器选项
-const weekOptions = computed(() => {
-  return props.data?.map((item: ScheduleWeekInfo) => ({
-    label: `${item.year}年 第${item.week}周`,
-    value: `${item.year}-${item.week}`,
-  })) ?? []
-})
-
 // Find current/selected week data without side effects
 const currentWeekData = computed<ScheduleWeekInfo | null>(() => {
   if (!props.data || props.data.length === 0) return null
@@ -177,9 +168,7 @@ const formattedSchedule = computed(() => {
 // --- 方法 ---
 function isTodayInWeek(year: number, week: number): boolean {
   const today = new Date()
-  const todayYear = getYear(today)
-  const todayWeek = getWeek(today, { weekStartsOn: 1 })
-  return todayYear === year && todayWeek === week
+  return getISOWeekYear(today) === year && getISOWeek(today) === week
 }
 
 // --- Expose Config and DefaultConfig for template system ---
@@ -188,25 +177,12 @@ defineExpose({ Config, DefaultConfig })
 </script>
 
 <template>
-  <div class="kawaii-schedule-selector">
-    <NFlex align="center">
-      <NSelect
-        v-model:value="selectedDate"
-        :options="weekOptions"
-        style="width: 200px"
-        placeholder="选择周次"
-        size="small"
-        clearable
-      />
-      <SaveCompoent
-        v-if="tableRef"
-        :compoent="tableRef"
-        :file-name="`日程表_${selectedDate || '当前'}_${props.userInfo?.name || '用户'}`"
-        tooltip-text="保存当前周表为图片"
-      />
-    </NFlex>
-    <NDivider />
-  </div>
+  <ScheduleWeekToolbar
+    v-model="selectedDate"
+    :weeks="props.data ?? []"
+    :capture-target="tableRef"
+    :file-name="`日程表_${selectedDate || '当前'}_${props.userInfo?.name || '用户'}`"
+  />
 
   <div
     ref="tableRef"
@@ -426,17 +402,6 @@ defineExpose({ Config, DefaultConfig })
   line-height: 1.4;
   width: 100%;
   /* Take full width */
-}
-
-/* --- Week Selector Area --- */
-.kawaii-schedule-selector {
-  padding: 5px 10px;
-  /* Add some padding */
-}
-
-/* Optional: Style Naive components if needed */
-:deep(.n-select .n-base-selection) {
-  border-radius: 15px;
 }
 
 /* --- Configuration UI specific styles --- */

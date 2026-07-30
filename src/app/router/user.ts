@@ -40,17 +40,6 @@ export default [
       keepAlive: true,
       pageContainer: 'none',
     },
-    children: [
-      {
-        path: 'ics',
-        name: 'user-schedule-ics',
-        component: async () => import('@/apps/user/pages/ScheduleView.vue'),
-        beforeEnter(to: any) {
-          // 直接重定向到外部 URL
-          window.location.href = `https://vtsuru.live/api/schedule/get-ics?id=${to.query.id}`
-        },
-      },
-    ],
   },
   {
     path: 'goods',

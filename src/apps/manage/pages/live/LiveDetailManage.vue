@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { NButton, NEmpty, NSpin, useMessage, useThemeVars } from 'naive-ui';
+import { NButton, NEmpty, NSpin, NTabPane, NTabs, useMessage, useThemeVars } from 'naive-ui';
 import { computed, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
 import DanmakuContainer from '@/apps/manage/components/live/DanmakuContainer.vue'
+import LiveTranscriptPanel from '@/apps/manage/components/live/LiveTranscriptPanel.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useVTsuruHub } from '@/store/useVTsuruHub'
 import { LIVE_API_URL } from '@/shared/config'
@@ -25,6 +26,8 @@ const isLoading = ref(true)
 const loadError = ref<string | null>(null)
 const liveInfo = ref<ResponseLiveDetail | undefined>()
 const danmakuContainerRef = ref<InstanceType<typeof DanmakuContainer> | null>(null)
+const transcriptPanelRef = ref<InstanceType<typeof LiveTranscriptPanel> | null>(null)
+const activeTab = ref<'danmaku' | 'transcript'>('danmaku')
 
 const pageTitle = computed(() => liveInfo.value?.live?.title || '直播详情')
 const pageSubtitle = computed(() => {
@@ -101,6 +104,13 @@ function onNewDanmaku(event: DanmakuModel) {
   }
 }
 
+function handleTabChange(tab: string) {
+  activeTab.value = tab as 'danmaku' | 'transcript'
+  if (tab === 'transcript') {
+    nextTick(() => transcriptPanelRef.value?.load())
+  }
+}
+
 onMounted(async () => {
   await loadInitialData()
   await hub.Init()
@@ -132,21 +142,37 @@ onBeforeUnmount(async () => {
           </span>
         </template>
       </ManagePageHeader>
-      <DanmakuContainer
+      <NTabs
         v-if="liveInfo"
-        ref="danmakuContainerRef"
-        :current-live="liveInfo.live"
-        :current-danmakus="liveInfo.danmakus"
-        :height="750"
-        show-rank
-        show-liver
-        show-live-info
-        show-tools
-        show-name
-        to="userDanmakus"
-        :item-range="100"
-        :item-height="25"
-      />
+        :value="activeTab"
+        type="segment"
+        size="small"
+        animated
+        @update:value="handleTabChange"
+      >
+        <NTabPane name="danmaku" tab="弹幕记录">
+          <DanmakuContainer
+            ref="danmakuContainerRef"
+            :current-live="liveInfo.live"
+            :current-danmakus="liveInfo.danmakus"
+            :height="750"
+            show-rank
+            show-liver
+            show-live-info
+            show-tools
+            show-name
+            to="userDanmakus"
+            :item-range="100"
+            :item-height="25"
+          />
+        </NTabPane>
+        <NTabPane name="transcript" tab="语音转写">
+          <LiveTranscriptPanel
+            ref="transcriptPanelRef"
+            :live-id="liveInfo.live.liveId"
+          />
+        </NTabPane>
+      </NTabs>
       <NEmpty
         v-else
         description="无数据"

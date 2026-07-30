@@ -74,7 +74,7 @@ const model = computed(() => {
   border: 4px solid var(--vtsuru-block-bg-muted);
   position: relative;
   z-index: 2;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 
 .profile-name {

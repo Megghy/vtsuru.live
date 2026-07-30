@@ -1,253 +1,167 @@
-import type { LiveWS } from '@laplace.live/ws/client'
-// BaseDanmakuClient.ts
+import { KeepLiveWS } from '@laplace.live/ws/client'
 import DanmakuEventEmitter from './DanmakuEventEmitter'
-// 导入事件模型和类型枚举
 
-// B 站弹幕客户端抽象基类 (基于 @laplace.live/ws 的 LiveWS)。
-// 事件订阅/分发逻辑在 DanmakuEventEmitter, 这里只负责连接与原始命令解析。
-export default abstract class BaseDanmakuClient extends DanmakuEventEmitter {
-  constructor() {
-    super()
-    this.client = null // 初始化客户端实例为 null
+type StartResult = { success: boolean, message: string }
+type ConnectOutcome = 'connected' | 'error' | 'timeout' | 'cancelled'
+
+const CONNECT_TIMEOUT_MS = 30_000
+
+export class DanmakuKeepLiveWS extends KeepLiveWS {
+  public override connect(reconnect = true) {
+    if (this.closed) return
+    super.connect(reconnect)
   }
+}
 
-  // WebSocket 客户端实例
-  public client: LiveWS | null
-
-  // 客户端类型 (由子类实现)
+export default abstract class BaseDanmakuClient extends DanmakuEventEmitter {
+  public client: DanmakuKeepLiveWS | null = null
   public abstract type: 'openlive' | 'direct'
-  // 目标服务器地址 (由子类实现)
   public abstract serverUrl: string
 
-  /**
-   * 启动弹幕客户端连接
-   * @returns Promise<{ success: boolean; message: string }> 启动结果
-   */
-  public async Start(): Promise<{ success: boolean, message: string }> {
-    // 如果已连接，直接返回成功
+  private lifecycle = 0
+  private lifecycleController: AbortController | undefined
+
+  public async Start(): Promise<StartResult> {
     if (this.state === 'connected') {
-      return {
-        success: true,
-        message: '弹幕客户端已启动',
-      }
+      return { success: true, message: '弹幕客户端已启动' }
     }
-    // 如果正在连接中，返回提示
     if (this.state === 'connecting') {
-      return {
-        success: false,
-        message: '弹幕客户端正在启动',
-      }
+      return { success: false, message: '弹幕客户端正在启动' }
     }
-    // 设置状态为连接中
+
+    const generation = ++this.lifecycle
+    const controller = new AbortController()
+    this.lifecycleController = controller
     this.state = 'connecting'
+    console.log(`[${this.type}] 正在启动弹幕客户端`)
+
     try {
-      // 确保 client 为 null 才初始化
-      if (!this.client) {
-        console.log(`[${this.type}] 正在启动弹幕客户端`)
-        // 调用子类实现的初始化方法
-        const result = await this.initClient()
-        if (result.success) {
-          this.state = 'connected'
-          console.log(`[${this.type}] 弹幕客户端已完成启动`)
-        } else {
-          this.state = 'disconnected'
-          console.error(`[${this.type}] 弹幕客户端启动失败: ${result.message}`)
-        }
-        return result
+      const result = await this.initClient(controller.signal)
+      if (!this.isCurrentLifecycle(generation, controller)) {
+        return { success: false, message: '弹幕客户端启动已取消' }
+      }
+
+      this.state = result.success ? 'connected' : 'disconnected'
+      if (result.success) {
+        console.log(`[${this.type}] 弹幕客户端已完成启动`)
       } else {
-        console.warn(`[${this.type}] 客户端实例已存在但状态异常，尝试重置状态`)
-        this.state = 'disconnected'
-        return {
-          success: false,
-          message: '客户端实例状态异常，请尝试重新启动',
-        }
+        this.closeCurrentClient()
+        console.error(`[${this.type}] 弹幕客户端启动失败: ${result.message}`)
+        this.lifecycleController = undefined
       }
-    } catch (err: any) {
-      console.error(`[${this.type}] 启动过程中发生异常:`, err)
+      return result
+    } catch (error) {
+      if (!this.isCurrentLifecycle(generation, controller)) {
+        return { success: false, message: '弹幕客户端启动已取消' }
+      }
+
+      const message = error instanceof Error ? error.message : String(error)
+      console.error(`[${this.type}] 启动过程中发生异常:`, error)
       this.state = 'disconnected'
-      if (this.client) {
-        try {
-          this.client.close()
-        } catch { }
-        this.client = null
-      }
-      return {
-        success: false,
-        message: err?.message || err?.toString() || '未知错误',
-      }
+      this.closeCurrentClient()
+      this.lifecycleController = undefined
+      return { success: false, message }
     }
   }
 
-  /**
-   * 停止弹幕客户端连接
-   */
-  public Stop() {
-    // 如果已断开，则无需操作
-    if (this.state === 'disconnected') {
-      return
-    }
-    // 设置状态为已断开
+  public Stop(): void {
+    ++this.lifecycle
     this.state = 'disconnected'
-    if (this.client) {
-      console.log(`[${this.type}] 正在停止弹幕客户端`)
-      try {
-        this.client.close() // 关闭 WebSocket 连接
-      } catch (err) {
-        console.error(`[${this.type}] 关闭客户端时发生错误:`, err)
-      }
-      this.client = null // 将客户端实例置为 null
-    } else {
-      console.warn(`[${this.type}] 弹幕客户端未被启动, 忽略停止操作`)
-    }
-    // 注意: 清空所有事件监听器
-    // this.eventsAsModel = this.createEmptyEventModelListeners();
-    // this.eventsRaw = this.createEmptyRawEventlisteners();
+
+    const controller = this.lifecycleController
+    this.lifecycleController = undefined
+    controller?.abort()
+
+    if (!this.client) return
+    console.log(`[${this.type}] 正在停止弹幕客户端`)
+    this.closeCurrentClient()
   }
 
-  protected onUnexpectedDisconnect(): void {
-    this.onConnectionLost?.()
+  protected abstract initClient(signal: AbortSignal): Promise<StartResult>
+
+  protected async initClientInner(chatClient: DanmakuKeepLiveWS, signal: AbortSignal): Promise<StartResult> {
+    if (signal.aborted) {
+      chatClient.close()
+      return { success: false, message: '弹幕客户端启动已取消' }
+    }
+
+    let message = ''
+    let finish!: (outcome: ConnectOutcome) => void
+    const outcomePromise = new Promise<ConnectOutcome>((resolve) => {
+      let settled = false
+      finish = (outcome) => {
+        if (settled) return
+        settled = true
+        resolve(outcome)
+      }
+    })
+
+    const failHandshake = (reason: string) => {
+      if (this.client !== chatClient || this.state !== 'connecting') return
+      message = reason
+      finish('error')
+    }
+    const onLive = () => {
+      if (this.client !== chatClient || signal.aborted) return
+      if (this.state === 'connecting') finish('connected')
+      else if (this.state === 'connected') console.log(`[${this.type}] 弹幕客户端已自动重连`)
+    }
+    const onClose = () => {
+      if (this.client !== chatClient) return
+      if (this.state === 'connecting') failHandshake('连接在握手完成前关闭')
+      else if (this.state === 'connected') console.warn(`[${this.type}] WebSocket 已断开，等待自动重连`)
+    }
+    const onError = (error: Event) => {
+      console.error(`[${this.type}] WebSocket 发生错误:`, error)
+      failHandshake('WebSocket 连接发生错误')
+    }
+    const onAbort = () => finish('cancelled')
+
+    chatClient.addEventListener('live', onLive)
+    chatClient.addEventListener('close', onClose)
+    chatClient.addEventListener('error', onError)
+    chatClient.addEventListener('msg', event => {
+      if (this.client === chatClient && !signal.aborted) this.onRawMessage(event.data)
+    })
+    signal.addEventListener('abort', onAbort, { once: true })
+    this.client = chatClient
+
+    const timeoutId = setTimeout(() => finish('timeout'), CONNECT_TIMEOUT_MS)
+    const outcome = await outcomePromise
+    clearTimeout(timeoutId)
+    signal.removeEventListener('abort', onAbort)
+
+    if (outcome === 'connected') return { success: true, message: '' }
+
+    if (outcome === 'timeout') message = '连接超时'
+    if (outcome === 'cancelled') message = '弹幕客户端启动已取消'
+    if (this.client === chatClient) this.client = null
+    chatClient.close()
+    return { success: false, message }
   }
 
-  /**
-   * 初始化客户端实例 (抽象方法，由子类实现具体的创建逻辑)
-   * @returns Promise<{ success: boolean; message: string }> 初始化结果
-   */
-  protected abstract initClient(): Promise<{
-    success: boolean
-    message: string
-  }>
+  private isCurrentLifecycle(generation: number, controller: AbortController) {
+    return generation === this.lifecycle
+      && controller === this.lifecycleController
+      && !controller.signal.aborted
+  }
 
-  /**
-   * 内部通用的客户端事件绑定和连接状态等待逻辑
-   * @param chatClient - 已创建的 KeepLiveWS 实例
-   * @returns Promise<{ success: boolean; message: string }> 连接结果
-   */
-  protected async initClientInner(
-    chatClient: LiveWS,
-  ): Promise<{ success: boolean, message: string }> {
-    let isConnected = false // 标记是否连接成功
-    let isError = false // 标记是否发生错误
-    let errorMsg = '' // 存储错误信息
-    let finishWait: ((v: 'connected' | 'error') => void) | undefined
-
-    // 监听错误事件
-    chatClient.addEventListener('error', (err: any) => {
-      console.error(`[${this.type}] 客户端发生错误:`, err)
-      isError = true
-      errorMsg = err?.message || err?.toString() || '未知错误'
-      finishWait?.('error')
-    })
-
-    chatClient.addEventListener('live', () => {
-      console.log(`[${this.type}] 弹幕客户端连接成功`)
-      isConnected = true
-      finishWait?.('connected')
-    })
-
-    // 监听连接关闭事件
-    chatClient.addEventListener('close', () => {
-      console.log(`[${this.type}] 弹幕客户端连接已关闭`)
-      if (this.state !== 'disconnected') {
-        this.state = 'disconnected'
-        this.client = null
-        this.onUnexpectedDisconnect()
-      }
-      isConnected = false // 标记为未连接
-    })
-
-    // 监听原始消息事件 (通用)
-    // 注意: 子类可能也会监听特定事件名, 这里的 'msg' 是备用或处理未被特定监听器捕获的事件
-    chatClient.addEventListener('msg', (event: any) => this.onRawMessage(event.data))
-
-    this.client = chatClient // 保存客户端实例
-
-    // 等待连接成功或发生错误（用事件/超时驱动，避免轮询）
-    const timeout = 30000 // 30 秒超时
-    const outcome = await new Promise<'connected' | 'error' | 'timeout'>((resolve) => {
-      let finished = false
-      const timeoutId = setTimeout(() => {
-        if (finished) return
-        finished = true
-        finishWait = undefined
-        resolve('timeout')
-      }, timeout)
-
-      const finish = (v: 'connected' | 'error') => {
-        if (finished) return
-        finished = true
-        clearTimeout(timeoutId)
-        finishWait = undefined
-        resolve(v)
-      }
-
-      finishWait = finish
-    })
-
-    if (outcome === 'timeout') {
-      isError = true
-      errorMsg = '连接超时'
-      console.error(`[${this.type}] ${errorMsg}`)
-    }
-
-    // 如果连接过程中发生错误，清理客户端实例
-    if (isError && this.client) {
-      try {
-        this.client.close()
-      } catch { }
-      this.client = null
-      this.state = 'disconnected'
-    }
-
-    // 返回连接结果
-    return {
-      success: isConnected && !isError,
-      message: errorMsg,
+  private closeCurrentClient() {
+    const client = this.client
+    this.client = null
+    if (!client) return
+    try {
+      client.close()
+    } catch (error) {
+      console.error(`[${this.type}] 关闭客户端时发生错误:`, error)
     }
   }
 
-  // --- 抽象处理方法 (子类实现) ---
-  // 这些方法负责接收原始数据, 触发 RawEvent, 转换数据, 触发 ModelEvent
-
-  /**
-   * 处理弹幕消息 (子类实现)
-   * @param data - 原始消息数据部分 (any 类型)
-   * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
-   */
-  public abstract onDanmaku(comand: any): void
-  /**
-   * 处理礼物消息 (子类实现)
-   * @param data - 原始消息数据部分 (any 类型)
-   * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
-   */
-  public abstract onGift(comand: any): void
-  /**
-   * 处理 Super Chat 消息 (子类实现)
-   * @param data - 原始消息数据部分 (any 类型)
-   * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
-   */
-  public abstract onSC(comand: any): void
-  /**
-   * 处理上舰/舰队消息 (子类实现)
-   * @param data - 原始消息数据部分 (any 类型)
-   * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
-   */
-  public abstract onGuard(comand: any): void
-  /**
-   * 处理用户进入消息 (子类实现)
-   * @param data - 原始消息数据部分 (any 类型)
-   * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
-   */
-  public abstract onEnter(comand: any): void
-  /**
-   * 处理 SC 删除消息 (子类实现)
-   * @param data - 原始消息数据部分 (any 类型) - 通常可能只包含 message_id
-   * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
-   */
-  public abstract onScDel(comand: any): void
-  /**
-   * 处理点赞消息 (子类实现)
-   * @param data - 原始消息数据部分 (any 类型)
-   * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
-   */
-  public abstract onLike(comand: any): void
+  public abstract onDanmaku(command: any): void
+  public abstract onGift(command: any): void
+  public abstract onSC(command: any): void
+  public abstract onGuard(command: any): void
+  public abstract onEnter(command: any): void
+  public abstract onScDel(command: any): void
+  public abstract onLike(command: any): void
 }

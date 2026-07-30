@@ -395,7 +395,7 @@ onMounted(async () => {
               </NButton>
               <NButton
                 size="large" tag="a" href="https://play-live.bilibili.com/details/1698742711771" target="_blank"
-                color="#ff778f" :style="{ borderRadius: borderRadius.large }"
+                type="primary" :style="{ borderRadius: borderRadius.large }"
               >
                 幻星平台
               </NButton>
@@ -640,13 +640,13 @@ onMounted(async () => {
               </NButton>
               <NButton
                 ghost tag="a" href="https://github.com/Megghy/vtsuru-fetvher-client" target="_blank"
-                color="white" :style="{ borderRadius: borderRadius.medium }"
+                :style="{ borderRadius: borderRadius.medium }"
               >
                 客户端代码
               </NButton>
               <NButton
                 ghost tag="a" href="https://github.com/Megghy/vtsuru.live/tree/master/src/client" target="_blank"
-                color="white" :style="{ borderRadius: borderRadius.medium }"
+                :style="{ borderRadius: borderRadius.medium }"
               >
                 逻辑代码
               </NButton>
@@ -769,7 +769,6 @@ onMounted(async () => {
                     不想被展示？前往
                     <NButton
                       text size="tiny" :style="{
-                        color: textColor,
                         fontSize: '0.8rem',
                         padding: '0 4px',
                         textDecoration: 'underline',
@@ -791,7 +790,6 @@ onMounted(async () => {
         BY
         <NButton
           tag="a" href="https://space.bilibili.com/10021741" target="_blank" text :style="{
-            color: isDarkMode ? 'rgb(200, 235, 220)' : 'rgb(215, 245, 230)',
             borderRadius: borderRadius.small,
           }"
         >

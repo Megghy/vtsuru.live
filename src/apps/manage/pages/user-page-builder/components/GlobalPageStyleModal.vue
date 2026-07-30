@@ -5,6 +5,8 @@ import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type { BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
 import GlobalCssEditorModal from './GlobalCssEditorModal.vue'
+import ThemeAdvancedOptions from './ThemeAdvancedOptions.vue'
+import type { ThemeAppearanceTarget } from './ThemeAdvancedOptions.vue'
 import ThemeTextColorEditor from './ThemeTextColorEditor.vue'
 import type { ThemeTextColorTarget } from './ThemeTextColorEditor.vue'
 
@@ -48,6 +50,11 @@ function themeColor(key: 'primaryColor' | 'backgroundColor') {
 const primaryColor = themeColor('primaryColor')
 const backgroundColor = themeColor('backgroundColor')
 const textColorTarget: ThemeTextColorTarget = {
+  get: () => (editor.settings.value as any).theme,
+  ensure: ensureTheme,
+  cleanup: cleanupEmptyTheme,
+}
+const appearanceTarget: ThemeAppearanceTarget = {
   get: () => (editor.settings.value as any).theme,
   ensure: ensureTheme,
   cleanup: cleanupEmptyTheme,
@@ -104,6 +111,7 @@ function clearTheme() {
             </NFormItem>
           </NFlex>
           <ThemeTextColorEditor :target="textColorTarget" />
+          <ThemeAdvancedOptions :target="appearanceTarget" />
           <NFlex justify="end">
             <NButton size="small" secondary :disabled="!(editor.settings.value as any).theme" @click="clearTheme">
               清除主题

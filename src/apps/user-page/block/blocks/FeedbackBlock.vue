@@ -184,6 +184,6 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
 }
 
 .embed-notice { border-radius: var(--vtsuru-page-radius); }
-.iframe-container { width: 100%; overflow: hidden; border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
+.iframe-container { width: 100%; overflow: hidden; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
 .iframe-container iframe { display: block; width: 100%; border: 0; }
 </style>

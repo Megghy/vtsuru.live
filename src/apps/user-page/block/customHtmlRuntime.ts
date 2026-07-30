@@ -36,6 +36,9 @@ export interface CustomHtmlTheme {
   border: string
   primary: string
   radius: string
+  borderWidth?: string
+  borderStyle?: string
+  shadow?: string
   colorScheme: string
 }
 
@@ -242,6 +245,9 @@ export function buildCustomHtmlDocument(props: CustomHtmlProps, theme: CustomHtm
     `--vtsuru-border:${theme.border}`,
     `--vtsuru-primary:${theme.primary}`,
     `--vtsuru-radius:${theme.radius}`,
+    `--vtsuru-border-width:${theme.borderWidth ?? '1px'}`,
+    `--vtsuru-border-style:${theme.borderStyle ?? 'solid'}`,
+    `--vtsuru-shadow:${theme.shadow ?? 'none'}`,
     assetVariables,
   ].filter(Boolean).join(';')
   const nonce = createNonce()

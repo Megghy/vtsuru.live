@@ -1,19 +1,19 @@
-import { converter, formatRgb, interpolate, parse, wcagContrast } from 'culori'
 import type { Rgb } from 'culori'
+import { formatRgb, interpolate, wcagContrast } from 'culori'
 import type { PageThemeMode } from './block/schema'
+import type { UserPageThemeConfig } from './themeConfig'
+import { compositeOpaque, ensureTextContrast, parseRgb, resolveOpaqueColor } from '@/shared/config/theme/contrast'
 
 const MIN_TEXT_CONTRAST = 4.5
-const toRgb = converter('rgb')
 
-export interface UserPageTextTheme {
-  fontFamily?: string
-  textColor?: string
-  textColorLight?: string
-  textColorDark?: string
-  autoTextContrast?: boolean
-  backgroundColor?: string
-  pageThemeMode?: PageThemeMode
-}
+export type UserPageTextTheme = Pick<UserPageThemeConfig,
+  'fontFamily'
+  | 'textColor'
+  | 'textColorLight'
+  | 'textColorDark'
+  | 'autoTextContrast'
+  | 'backgroundColor'
+  | 'pageThemeMode'>
 
 export interface ResolvedUserPageTextColor {
   color: string
@@ -31,27 +31,6 @@ export function resolvePageThemeIsDark(mode: PageThemeMode | undefined, fallback
   if (mode === 'dark') return true
   if (mode === 'light') return false
   return fallbackIsDark
-}
-
-function parseRgb(value: string) {
-  const color = parse(value)
-  return color ? toRgb(color) : undefined
-}
-
-function compositeOpaque(foreground: Rgb, background: Rgb): Rgb {
-  const alpha = foreground.alpha ?? 1
-  return {
-    mode: 'rgb',
-    r: foreground.r * alpha + background.r * (1 - alpha),
-    g: foreground.g * alpha + background.g * (1 - alpha),
-    b: foreground.b * alpha + background.b * (1 - alpha),
-    alpha: 1,
-  }
-}
-
-function resolveOpaqueColor(value: string, background: Rgb) {
-  const color = parseRgb(value)
-  return color ? compositeOpaque(color, background) : undefined
 }
 
 function resolveSurface(isDark: boolean, surfaceColor?: string) {
@@ -77,30 +56,6 @@ function selectTextColor(theme: UserPageTextTheme | undefined, isDark: boolean) 
   return { value: isDark ? '#fafafa' : '#09090b', source: 'default' as const }
 }
 
-function ensureTextContrast(value: string, surface: Rgb, isDark: boolean, enabled = true) {
-  const fallback = parseRgb(isDark ? '#fafafa' : '#09090b')
-  const requested = resolveOpaqueColor(value, surface) ?? fallback
-  const requestedContrast = wcagContrast(requested, surface)
-
-  if (!enabled || requestedContrast >= MIN_TEXT_CONTRAST) {
-    return { color: formatRgb(requested), contrast: requestedContrast, adjusted: false }
-  }
-
-  const black = parseRgb('#000000')
-  const white = parseRgb('#ffffff')
-  const target = wcagContrast(black, surface) >= wcagContrast(white, surface) ? black : white
-  const mix = interpolate([requested, target], 'rgb')
-  let low = 0
-  let high = 1
-  for (let index = 0; index < 12; index++) {
-    const middle = (low + high) / 2
-    if (wcagContrast(mix(middle), surface) >= MIN_TEXT_CONTRAST) high = middle
-    else low = middle
-  }
-  const color = mix(high)
-  return { color: formatRgb(color), contrast: wcagContrast(color, surface), adjusted: true }
-}
-
 export function resolveUserPageTextColor(
   theme: UserPageTextTheme | undefined,
   isDark: boolean,
@@ -121,9 +76,10 @@ export function resolveUserPageReadableAccent(
   primaryColor: string | undefined,
   backgroundColor: string | undefined,
   isDark: boolean,
+  surfaceColor?: string,
 ) {
   if (!primaryColor?.trim()) return ''
-  const surface = resolveSurface(isDark, resolveUserPageSurfaceReference(backgroundColor, isDark))
+  const surface = resolveSurface(isDark, surfaceColor ?? resolveUserPageSurfaceReference(backgroundColor, isDark))
   const accent = parseRgb(primaryColor)
   const activeSurface = accent
     ? compositeOpaque({ ...accent, alpha: (accent.alpha ?? 1) * 0.14 }, surface)

@@ -11,6 +11,7 @@ import { useRoute } from 'vue-router'
 import { ThemeType } from '@/api/api-models'
 import { useSettings } from '@/apps/client/store/useSettings'
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
+import ClientTranscriptionPanel from '@/apps/client/components/settings/ClientTranscriptionPanel.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -68,6 +69,7 @@ const handleCheckUpdate = async () => {
 const navOptions: MenuOption[] = [
   { label: '常规', key: 'general' },
   { label: '通知', key: 'notification' },
+  { label: '语音转写', key: 'transcription' },
   { label: '备份', key: 'backup' },
   { label: '其他', key: 'other' },
   { label: '关于', key: 'about' },
@@ -304,6 +306,12 @@ function handleTitleClick() {
                 <template v-else-if="currentTab === 'backup'">
                   <NCard title="备份" size="small" bordered>
                     <ClientBackupPanel />
+                  </NCard>
+                </template>
+
+                <template v-else-if="currentTab === 'transcription'">
+                  <NCard title="语音转写" size="small" bordered>
+                    <ClientTranscriptionPanel />
                   </NCard>
                 </template>
 

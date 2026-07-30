@@ -199,7 +199,7 @@ const containerStyle = computed(() => {
     gap: 12px;
     align-items: center;
     padding: 12px 14px;
-    border: 1px solid var(--vtsuru-border);
+    border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
     border-radius: var(--vtsuru-page-radius);
     text-decoration: none;
     transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;

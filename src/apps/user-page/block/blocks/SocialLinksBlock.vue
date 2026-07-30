@@ -202,14 +202,14 @@ const iconSize = computed(() => {
   background: var(--social-bg);
   color: var(--social-fg);
   text-decoration: none;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-card-border-color);
   transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 .social:hover {
   filter: brightness(1.08);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 .social:active {
   filter: brightness(0.95);

@@ -38,6 +38,9 @@ const THEME_VARIABLES = [
   '--vtsuru-border',
   '--vtsuru-primary',
   '--vtsuru-radius',
+  '--vtsuru-border-width',
+  '--vtsuru-border-style',
+  '--vtsuru-shadow',
 ]
 
 function currentAssetEntries() {

@@ -121,7 +121,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/@:id',
     name: 'user',
     alias: '/user/:id',
-    // @ts-expect-error
     children: user,
   },
   {

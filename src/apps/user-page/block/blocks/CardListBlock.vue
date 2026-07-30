@@ -64,7 +64,7 @@ const items = computed(() => Array.isArray(values.value.items) ? values.value.it
 <style scoped>
 .cards { container-type: inline-size; display: grid; gap: 10px; }
 .cards--grid { grid-template-columns: repeat(var(--card-columns), minmax(0, 1fr)); }
-.card-item { min-width: 0; overflow: hidden; border: 1px solid var(--vtsuru-border); border-radius: 6px; background: var(--vtsuru-bg-muted); }
+.card-item { min-width: 0; overflow: hidden; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
 .card-image { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--vtsuru-bg-muted); }
 .card-content { display: grid; gap: 9px; padding: 12px; }
 .card-content h3, .card-content p { margin: 0; overflow-wrap: anywhere; }

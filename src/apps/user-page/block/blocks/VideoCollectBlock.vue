@@ -102,7 +102,7 @@ watch(() => [props.userInfo?.id, enabled.value] as const, () => { void load() })
 .collect-heading, .deadline { gap: 7px; }
 .collect-heading { font-weight: 600; }
 .collect-list { container-type: inline-size; display: grid; gap: 8px; }
-.collect-item { gap: 14px; min-width: 0; padding: 11px 12px; border: 1px solid var(--vtsuru-border); border-radius: 6px; color: var(--vtsuru-fg); background: var(--vtsuru-bg-muted); text-decoration: none; }
+.collect-item { gap: 14px; min-width: 0; padding: 11px 12px; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); color: var(--vtsuru-fg); background: var(--vtsuru-bg-muted); text-decoration: none; }
 .collect-item:hover { border-color: var(--vtsuru-primary, #18a058); background: var(--vtsuru-bg-elevated); }
 .collect-copy { display: grid; flex: 1; gap: 5px; min-width: 0; }
 .collect-copy strong, .collect-copy p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

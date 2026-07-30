@@ -7,7 +7,7 @@ import { useMediaQuery, useNow } from '@vueuse/core'
 import type { BlockPageProject, BlockVisibilityContext } from './schema'
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'
-import { getUserPageThemeCssVars } from '@/apps/user-page/background'
+import { getUserPageNaiveThemeOverrides, getUserPageThemeCssVars } from '@/apps/user-page/background'
 import { buildTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
 import { isBlockVisible } from './visibility'
 import { collectPageSections, PageSectionsKey } from './sectionNavigation'
@@ -33,26 +33,10 @@ const emit = defineEmits<{
 const baseOverrides = computed(() => getThemeOverrides(props.isDark))
 const surfaceTokens = computed(() => buildTokens(props.isDark))
 
-const radius = computed(() => props.project.theme?.radius ?? 6) // Default to 6 (shadcn default)
-const spacing = computed(() => {
-  const v = props.project.theme?.spacing ?? 'normal'
-  if (v === 'compact') return 10
-  if (v === 'relaxed') return 20
-  return 16
-})
-const pageMaxWidth = computed(() => {
-  const v = (props.project.theme as any)?.pageMaxWidth
-  if (typeof v !== 'string') return null
-  const s = v.trim()
-  return s.length ? s : null
-})
 const userThemeVars = computed(() => getUserPageThemeCssVars(props.project.theme, props.isDark))
 const containerStyle = computed(() => ({
   ...getThemeCssVars(surfaceTokens.value),
   ...userThemeVars.value,
-  '--vtsuru-page-radius': `${radius.value}px`,
-  '--vtsuru-page-spacing': `${spacing.value}px`,
-  ...(pageMaxWidth.value ? { '--vtsuru-page-max-width': pageMaxWidth.value } : {}),
 }))
 
 const naiveTheme = computed(() => {
@@ -61,43 +45,9 @@ const naiveTheme = computed(() => {
 })
 
 // Specific overrides from the "Builder" UI
-const userOverrides = computed<GlobalThemeOverrides>(() => {
-  const t: any = props.project.theme ?? {}
-  const primaryColor = typeof t.primaryColor === 'string' ? t.primaryColor : undefined
-  const textColor = userThemeVars.value['--vtsuru-page-text']
-  const mutedTextColor = userThemeVars.value['--vtsuru-surface-fg-muted']
-  const subtleTextColor = userThemeVars.value['--vtsuru-surface-fg-subtle']
-  const backgroundColor = typeof t.backgroundColor === 'string' ? t.backgroundColor : undefined
-  const radiusPx = `${radius.value}px`
-  const surfaceBg = backgroundColor
-
-  return {
-    common: {
-      fontFamily: userThemeVars.value['--vtsuru-page-font-family'],
-      ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
-      ...(textColor ? {
-        textColorBase: textColor,
-        textColor1: textColor,
-        textColor2: mutedTextColor,
-        textColor3: subtleTextColor,
-      } : {}),
-      ...(surfaceBg ? { cardColor: surfaceBg, modalColor: surfaceBg, popoverColor: surfaceBg } : {}),
-      borderRadius: radiusPx,
-      borderRadiusSmall: radiusPx,
-    },
-    Button: {
-      borderRadiusTiny: radiusPx,
-      borderRadiusSmall: radiusPx,
-      borderRadiusMedium: radiusPx,
-      borderRadiusLarge: radiusPx,
-    },
-    // Reset specific component radius to match page setting if needed,
-    // although theme.ts has good defaults. We only override if necessary.
-    Card: {
-      borderRadius: radiusPx,
-    },
-  }
-})
+const userOverrides = computed<GlobalThemeOverrides>(() => (
+  getUserPageNaiveThemeOverrides(props.project.theme, userThemeVars.value, props.isDark)
+))
 
 // Deep merge: Base (theme.ts) <- User (Builder) <- Extra (Props)
 const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {

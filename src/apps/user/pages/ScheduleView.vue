@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import type { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
-import { TagQuestionMark16Filled } from '@vicons/fluent'
-import { NButton, NDivider, NFlex, NInput, NInputGroup, NSpin, NTooltip, useMessage } from 'naive-ui';
+import { NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
+import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
 import { SCHEDULE_API_URL } from '@/shared/config'
 import { ScheduleTemplateMap } from '@/shared/config/templates'
-import { copyToClipboard } from '@/shared/utils'
 
 const props = defineProps<{
   biliInfo: any | undefined
@@ -22,8 +21,6 @@ const currentData = ref<ScheduleWeekInfo[]>()
 const isLoading = ref(true)
 const message = useMessage()
 
-const errMessage = ref('')
-
 async function get() {
   isLoading.value = true
   await QueryGetAPI<ScheduleWeekInfo[]>(`${SCHEDULE_API_URL}get`, {
@@ -33,7 +30,6 @@ async function get() {
       if (data.code == 200) {
         currentData.value = data.data
       } else {
-        errMessage.value = data.message
         message.error(`加载失败: ${data.message}`)
       }
     })
@@ -61,42 +57,24 @@ onMounted(async () => {
     v-if="isLoading"
     show
   />
-  <div v-else>
-    <NDivider
-      style="margin: 16px 0 16px 0"
-      title-placement="left"
-    >
-      订阅链接
-      <NTooltip>
-        <template #trigger>
-          <NIcon>
-            <TagQuestionMark16Filled />
-          </NIcon>
-        </template>
-        通过订阅链接可以订阅日程表到日历软件中
-      </NTooltip>
-    </NDivider>
-    <NFlex align="center">
-      <NInputGroup style="max-width: 400px;">
-        <NInput
-          :value="`${SCHEDULE_API_URL}${userInfo?.id}.ics`"
-          readonly
-        />
-        <NButton
-          secondary
-          @click="copyToClipboard(`${SCHEDULE_API_URL}${userInfo?.id}.ics`)"
-        >
-          复制
-        </NButton>
-      </NInputGroup>
-    </NFlex>
-    <NDivider />
+  <div v-else class="schedule-page">
     <component
       :is="ScheduleTemplateMap[componentType ?? ''].component"
       :bili-info="biliInfo"
       :user-info="userInfo"
       :data="currentData"
-      v-bind="$attrs"
+    />
+    <ScheduleSubscription
+      v-if="userInfo?.id"
+      :url="`${SCHEDULE_API_URL}${userInfo.id}.ics`"
     />
   </div>
 </template>
+
+<style scoped>
+.schedule-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+</style>

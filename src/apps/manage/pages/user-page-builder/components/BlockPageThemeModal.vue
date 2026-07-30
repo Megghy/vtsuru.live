@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { BlockPageTheme, PageThemeMode } from '@/apps/user-page/block/schema'
-import { NAlert, NButton, NColorPicker, NDivider, NFlex, NForm, NFormItem, NInput, NInputNumber, NModal, NScrollbar, NSelect } from 'naive-ui'
+import { NAlert, NButton, NColorPicker, NDivider, NFlex, NForm, NFormItem, NInput, NModal, NScrollbar, NSelect } from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
 import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type { BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
 import PropsGrid from './PropsGrid.vue'
+import ThemeAdvancedOptions from './ThemeAdvancedOptions.vue'
+import type { ThemeAppearanceTarget } from './ThemeAdvancedOptions.vue'
 import ThemeTextColorEditor from './ThemeTextColorEditor.vue'
 import type { ThemeTextColorTarget } from './ThemeTextColorEditor.vue'
 
@@ -65,6 +67,10 @@ const textColorTarget: ThemeTextColorTarget = {
   get: () => editor.currentProject.value?.theme,
   ensure: ensureTheme,
 }
+const appearanceTarget: ThemeAppearanceTarget = {
+  get: () => editor.currentProject.value?.theme,
+  ensure: ensureTheme,
+}
 const pageThemeMode = computed<PageThemeMode>({
   get: () => editor.currentProject.value?.theme?.pageThemeMode ?? 'auto',
   set: (value) => {
@@ -72,26 +78,6 @@ const pageThemeMode = computed<PageThemeMode>({
     else ensureTheme().pageThemeMode = value
   },
 })
-const pageMaxWidth = computed({
-  get: () => editor.currentProject.value?.theme?.pageMaxWidth ?? '',
-  set: (value: string) => {
-    const normalized = value.trim()
-    if (normalized) ensureTheme().pageMaxWidth = normalized
-    else delete ensureTheme().pageMaxWidth
-  },
-})
-const radius = computed<number | null>({
-  get: () => editor.currentProject.value?.theme?.radius ?? null,
-  set: (value) => {
-    if (value === null) delete ensureTheme().radius
-    else ensureTheme().radius = value
-  },
-})
-const spacing = computed<NonNullable<BlockPageTheme['spacing']>>({
-  get: () => editor.currentProject.value?.theme?.spacing ?? 'normal',
-  set: value => { ensureTheme().spacing = value },
-})
-
 const backgroundTarget: BackgroundSettingsTarget = {
   get: () => editor.currentProject.value?.theme,
   ensure: ensureTheme,
@@ -194,24 +180,9 @@ function confirmImportJson() {
             <NFormItem label="内容区域底色">
               <NColorPicker v-model:value="backgroundColor" />
             </NFormItem>
-            <NFormItem label="圆角大小">
-              <NInputNumber v-model:value="radius" :min="0" :max="32" clearable style="width: 100%" />
-            </NFormItem>
-            <NFormItem label="内容最大宽度">
-              <NInput v-model:value="pageMaxWidth" placeholder="默认 820px；例如 100% / 1200px" />
-            </NFormItem>
-            <NFormItem class="span-full" label="布局密度">
-              <NSelect
-                v-model:value="spacing"
-                :options="[
-                  { label: '紧凑', value: 'compact' },
-                  { label: '标准', value: 'normal' },
-                  { label: '宽松', value: 'relaxed' },
-                ]"
-              />
-            </NFormItem>
           </PropsGrid>
           <ThemeTextColorEditor :target="textColorTarget" />
+          <ThemeAdvancedOptions :target="appearanceTarget" />
         </NForm>
 
         <NDivider style="margin: 12px 0 10px">

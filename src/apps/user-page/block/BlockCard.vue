@@ -109,7 +109,7 @@ const borderTitleAlignClass = computed(() => {
       </div>
       <NCard
         size="small"
-        :bordered="!isUnframed"
+        :bordered="false"
         class="vtsuru-block-card"
         :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded }"
         :content-style="resolvedContentStyle"
@@ -186,13 +186,13 @@ const borderTitleAlignClass = computed(() => {
   background: var(--user-page-theme-surface-bg, var(--user-page-ui-surface-bg, var(--vtsuru-bg-elevated)));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.02),
-    0 10px 30px rgba(0, 0, 0, 0.06);
+  border: var(--vtsuru-page-border);
+  box-shadow: var(--vtsuru-page-shadow);
   overflow: hidden;
 }
 
 .vtsuru-block-card.unframed {
+  border: 0;
   box-shadow: none;
 }
 
@@ -210,7 +210,7 @@ const borderTitleAlignClass = computed(() => {
 
 .vtsuru-block-card :deep(.n-card-header) {
   padding: 12px var(--vtsuru-page-spacing);
-  border-bottom: 1px solid var(--vtsuru-block-border);
+  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
 }
 
 .vtsuru-block-card :deep(.n-card__content) {

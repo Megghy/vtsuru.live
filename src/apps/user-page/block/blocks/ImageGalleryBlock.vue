@@ -199,14 +199,14 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
 .list.masonry { columns: var(--vtsuru-gallery-cols); column-gap: var(--vtsuru-gallery-gap); }
 .item { min-width: 0; margin: 0; }
 .list.masonry .item { break-inside: avoid; margin-bottom: var(--vtsuru-gallery-gap); }
-.media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
+.media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
 .media.masonry { aspect-ratio: auto; min-height: 120px; }
 .media.masonry .image { height: auto; min-height: 120px; }
 .image-state { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; min-height: 120px; padding: 16px; color: var(--vtsuru-fg-muted); background: var(--vtsuru-bg-muted); font-size: 13px; text-align: center; }
 .image-state.hidden { visibility: hidden; }
 .caption, .carousel-caption { margin: 8px 0 0; color: var(--vtsuru-fg-muted); font-size: 13px; line-height: 1.5; text-align: center; overflow-wrap: anywhere; }
 .carousel-caption { min-height: 20px; padding-inline: 8px; }
-.carousel :deep(.n-carousel__arrow) { color: var(--vtsuru-fg); background: var(--vtsuru-bg-elevated); border: 1px solid var(--vtsuru-border); }
+.carousel :deep(.n-carousel__arrow) { color: var(--vtsuru-fg); background: var(--vtsuru-bg-elevated); border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border); }
 .carousel :deep(.n-carousel__arrow:focus-visible) { outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand)); outline-offset: 2px; }
 
 @container (max-width: 640px) {

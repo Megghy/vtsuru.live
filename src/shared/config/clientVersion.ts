@@ -10,6 +10,8 @@ import { isTauri } from './api'
 export const REQUIRED_CLIENT_VERSION = '0.1.9'
 // 开放 RPC 接口 (含 /health CORS + PNA 预检) 起始可用的 client 版本
 export const RPC_MIN_CLIENT_VERSION = '0.1.9'
+// 本地直播音频提取和实时语音转写起始可用版本
+export const TRANSCRIPTION_MIN_CLIENT_VERSION = '0.1.11'
 
 // 当前运行的 client 版本 (非 Tauri 环境为 undefined); 由 initClientVersion 填充
 export const clientVersion = ref<string | undefined>()
@@ -38,6 +40,11 @@ export function isClientUpToDate(): boolean {
 /** 当前 client 是否支持开放 RPC 接口 */
 export function clientSupportsRpc(): boolean {
   return isClientAtLeast(RPC_MIN_CLIENT_VERSION)
+}
+
+/** 当前 client 是否支持本地直播转写 */
+export function clientSupportsTranscription(): boolean {
+  return isClientAtLeast(TRANSCRIPTION_MIN_CLIENT_VERSION)
 }
 
 /** 读取并缓存当前 client 版本 (仅 Tauri 环境有效) */

@@ -18,6 +18,9 @@ const detectedTheme = ref<CustomHtmlTheme>({
   border: '#e4e4e7',
   primary: '#18a058',
   radius: '8px',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  shadow: 'none',
   colorScheme: 'light',
 })
 let themeObserver: MutationObserver | null = null
@@ -41,6 +44,9 @@ function readTheme() {
     border: read('--vtsuru-block-border', '--vtsuru-border') || '#e4e4e7',
     primary: read('--vtsuru-page-primary', '--vtsuru-brand') || '#18a058',
     radius: read('--vtsuru-page-radius', '--vtsuru-radius') || '8px',
+    borderWidth: read('--vtsuru-page-border-width', '--vtsuru-border-width') || '1px',
+    borderStyle: read('--vtsuru-page-border-style', '--vtsuru-border-style') || 'solid',
+    shadow: read('--vtsuru-page-shadow', '--vtsuru-shadow') || 'none',
     colorScheme: style.colorScheme || 'light',
   }
   if (Object.keys(nextTheme).some(key => nextTheme[key as keyof CustomHtmlTheme] !== detectedTheme.value[key as keyof CustomHtmlTheme])) {

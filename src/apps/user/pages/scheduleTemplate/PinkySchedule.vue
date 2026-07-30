@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import type { ScheduleConfigType } from '@/shared/types/TemplateTypes'
-import { getWeek, getYear } from 'date-fns'
-import { NDivider, NSelect, NFlex } from 'naive-ui';
+import { getISOWeek, getISOWeekYear } from 'date-fns'
 import { computed, onMounted, ref } from 'vue'
-import SaveCompoent from '@/apps/user/components/SaveCompoent.vue'
+import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 
 const props = defineProps<ScheduleConfigType>()
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -33,22 +32,11 @@ const formattedDays = computed(() => {
     return { time: '', tag: '', title: '', tagColor: '', id: null }
   })
 })
-const options = computed(() => {
-  return props.data?.map((item) => {
-    return {
-      label: `${item.year}年${item.week}周`,
-      value: `${item.year}-${item.week}`,
-    }
-  })
-})
 const selectedDate = ref<string>()
 
 function isTodayInWeek(year: number, week: number): boolean {
   const today = new Date()
-  const todayYear = getYear(today)
-  const todayWeek = getWeek(today, { weekStartsOn: 1 })
-
-  return todayYear === year && todayWeek === week
+  return getISOWeekYear(today) === year && getISOWeek(today) === week
 }
 
 onMounted(() => {
@@ -59,19 +47,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <NFlex>
-    <NSelect
-      v-model:value="selectedDate"
-      :options="options"
-      style="width: 200px"
-      placeholder="选择其他周表"
-    />
-    <SaveCompoent
-      :compoent="table"
-      :file-name="`周表_${selectedDate}_${props.userInfo?.name}`"
-    />
-  </NFlex>
-  <NDivider />
+  <ScheduleWeekToolbar
+    v-model="selectedDate"
+    :weeks="props.data ?? []"
+    :capture-target="table"
+    :file-name="`周表_${selectedDate}_${props.userInfo?.name}`"
+  />
   <div
     ref="table"
     class="schedule-template pinky container"

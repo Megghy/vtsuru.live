@@ -115,7 +115,7 @@ watch(() => [props.userInfo?.id, enabled.value] as const, () => { void load() })
 .goods-header, .error-row, .goods-meta { justify-content: space-between; gap: 12px; width: 100%; }
 .goods-heading { gap: 7px; font-weight: 600; }
 .goods-grid { container-type: inline-size; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.goods-item { min-width: 0; overflow: hidden; border: 1px solid var(--vtsuru-border); border-radius: 6px; color: var(--vtsuru-fg); background: var(--vtsuru-bg-muted); text-decoration: none; transition: border-color .15s ease, background-color .15s ease; }
+.goods-item { min-width: 0; overflow: hidden; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); color: var(--vtsuru-fg); background: var(--vtsuru-bg-muted); text-decoration: none; transition: border-color .15s ease, background-color .15s ease; }
 .goods-item:hover { border-color: var(--vtsuru-primary, #18a058); background: var(--vtsuru-bg-elevated); }
 .cover-wrap { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--vtsuru-bg-elevated); }
 .cover, .cover :deep(img) { width: 100%; height: 100%; }

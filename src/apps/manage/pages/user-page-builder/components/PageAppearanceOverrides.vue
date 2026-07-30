@@ -6,6 +6,8 @@ import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type { BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
 import PropsGrid from './PropsGrid.vue'
+import ThemeAdvancedOptions from './ThemeAdvancedOptions.vue'
+import type { ThemeAppearanceTarget } from './ThemeAdvancedOptions.vue'
 import ThemeTextColorEditor from './ThemeTextColorEditor.vue'
 import type { ThemeTextColorTarget } from './ThemeTextColorEditor.vue'
 
@@ -44,6 +46,11 @@ function colorModel(key: ColorKey) {
 const primaryColor = colorModel('primaryColor')
 const backgroundColor = colorModel('backgroundColor')
 const textColorTarget: ThemeTextColorTarget = {
+  get: () => page.value.theme,
+  ensure: () => (page.value.theme ??= {}),
+  cleanup: cleanupEmptyTheme,
+}
+const appearanceTarget: ThemeAppearanceTarget = {
   get: () => page.value.theme,
   ensure: () => (page.value.theme ??= {}),
   cleanup: cleanupEmptyTheme,
@@ -117,6 +124,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
         </NFormItem>
       </PropsGrid>
       <ThemeTextColorEditor :target="textColorTarget" />
+      <ThemeAdvancedOptions :target="appearanceTarget" />
     </NForm>
   </NCollapseItem>
 </template>

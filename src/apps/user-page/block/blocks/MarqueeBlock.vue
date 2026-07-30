@@ -107,7 +107,7 @@ watch([displayText, vertical], async () => {
   );
   margin: -4px -8px;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--vtsuru-page-radius);
   background: var(--marquee-surface);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);

@@ -220,7 +220,7 @@ const breakdown = computed(() => {
   align-items: center;
   gap: 6px;
   margin-bottom: 20px;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
   padding-bottom: 4px;
   padding-left: 8px;
   padding-right: 8px;

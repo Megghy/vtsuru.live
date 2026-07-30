@@ -1,3 +1,5 @@
+import type { UserPageThemeConfig } from '../themeConfig'
+
 export const BLOCK_TYPES = [
   'profile',
   'layout',
@@ -51,18 +53,7 @@ export type PageBackgroundImageFit = 'cover' | 'contain' | 'fill' | 'none'
 export type PageBackgroundScrimMode = 'auto' | 'black' | 'white'
 export type PageThemeMode = 'auto' | 'light' | 'dark'
 
-export interface BlockPageTheme {
-  fontFamily?: string
-  primaryColor?: string
-  backgroundColor?: string
-  textColor?: string
-  textColorLight?: string
-  textColorDark?: string
-  autoTextContrast?: boolean
-  radius?: number
-  spacing?: 'compact' | 'normal' | 'relaxed'
-  pageMaxWidth?: string
-  pageThemeMode?: PageThemeMode
+export interface BlockPageTheme extends UserPageThemeConfig {
   pageBackgroundType?: PageBackgroundType
   pageBackgroundColor?: string
   pageBackgroundImageFile?: unknown

@@ -46,7 +46,7 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
   border-radius: var(--vtsuru-page-radius);
   padding: 0 16px;
   font-weight: 500;
-  border: 1px solid var(--vtsuru-border);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
   background: var(--vtsuru-bg-elevated);
   color: var(--vtsuru-page-text, var(--vtsuru-fg));
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;

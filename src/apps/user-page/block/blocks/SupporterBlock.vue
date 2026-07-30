@@ -144,14 +144,14 @@ function getStyle(p: Platform) {
   align-items: center;
   gap: 12px;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--vtsuru-block-border);
+  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
   background: var(--vtsuru-block-bg-muted);
 }
 
 .header-icon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--vtsuru-page-radius);
   background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent);
   color: var(--vtsuru-page-primary);
   display: flex;
@@ -189,11 +189,11 @@ function getStyle(p: Platform) {
   gap: 16px;
   padding: 16px;
   background: var(--vtsuru-block-bg-muted);
-  border-radius: 12px;
+  border-radius: var(--vtsuru-page-radius);
   text-decoration: none;
   color: var(--vtsuru-block-fg);
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid transparent;
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) transparent;
   position: relative;
   overflow: hidden;
 }
@@ -213,7 +213,7 @@ function getStyle(p: Platform) {
 .support-card:hover {
   transform: translateY(-2px);
   border-color: var(--accent-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 
 .support-card:hover .card-glow {
@@ -223,7 +223,7 @@ function getStyle(p: Platform) {
 .icon-box {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--vtsuru-page-radius);
   background: var(--vtsuru-block-bg-muted);
   display: flex;
   align-items: center;

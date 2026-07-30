@@ -2,6 +2,14 @@ import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/
 import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { isValidGoogleFontFamily } from '@/apps/user-page/googleFonts'
+import {
+  isValidPageMaxWidth,
+  PAGE_BORDER_STRENGTHS,
+  PAGE_BORDER_STYLES,
+  PAGE_CONTROL_SIZES,
+  PAGE_SHADOW_LEVELS,
+  PAGE_SPACING_LEVELS,
+} from '@/apps/user-page/themeConfig'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 
 export type UserPageValidationScope = 'settings' | 'page' | 'block'
@@ -43,6 +51,27 @@ function validateTheme(value: unknown, fieldRoot: string, target: IssueTarget, i
   }
   if (theme.autoTextContrast !== undefined && typeof theme.autoTextContrast !== 'boolean') {
     report(issues, target, `${fieldRoot}.autoTextContrast`, 'autoTextContrast 必须是 boolean')
+  }
+  if (theme.radius !== undefined && (typeof theme.radius !== 'number' || !Number.isFinite(theme.radius) || theme.radius < 0 || theme.radius > 32)) {
+    report(issues, target, `${fieldRoot}.radius`, 'radius 必须是 0~32 的数字')
+  }
+  if (theme.surfaceOpacity !== undefined && (typeof theme.surfaceOpacity !== 'number' || !Number.isFinite(theme.surfaceOpacity) || theme.surfaceOpacity < 15 || theme.surfaceOpacity > 100)) {
+    report(issues, target, `${fieldRoot}.surfaceOpacity`, 'surfaceOpacity 必须是 15~100 的数字')
+  }
+  const enumFields = [
+    ['borderStrength', PAGE_BORDER_STRENGTHS],
+    ['borderStyle', PAGE_BORDER_STYLES],
+    ['shadowLevel', PAGE_SHADOW_LEVELS],
+    ['spacing', PAGE_SPACING_LEVELS],
+    ['controlSize', PAGE_CONTROL_SIZES],
+  ] as const
+  enumFields.forEach(([key, values]) => {
+    if (theme[key] !== undefined && !(values as readonly unknown[]).includes(theme[key])) {
+      report(issues, target, `${fieldRoot}.${key}`, `${key} 不合法`)
+    }
+  })
+  if (theme.pageMaxWidth !== undefined && (typeof theme.pageMaxWidth !== 'string' || !isValidPageMaxWidth(theme.pageMaxWidth))) {
+    report(issues, target, `${fieldRoot}.pageMaxWidth`, 'pageMaxWidth 仅支持 none / 100% / 1200px 这类格式')
   }
   const mode = theme.pageThemeMode
   if (mode !== undefined && !['auto', 'light', 'dark'].includes(String(mode))) {

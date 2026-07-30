@@ -7,7 +7,7 @@ import {
   NAlert, NButton, NFlex, NIcon, NPopconfirm, NSpin,
   NStatistic, NTabPane, NTabs, NTag, NText, useMessage,
 } from 'naive-ui'
-import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
 import type { EventModel } from '@/api/api-models'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
@@ -43,6 +43,7 @@ const {
 const audioOutputDevices = ref<{ label: string; value: string }[]>([])
 const audioOutputDevicesLoading = ref(false)
 const eventsRegistered = ref(false)
+let mounted = false
 
 const queueStats = computed(() => {
   const total = speakQueue.value.length
@@ -50,6 +51,9 @@ const queueStats = computed(() => {
   const messages = speakQueue.value.filter(i => i.data.type === EventDataTypes.Message).length
   return { total, gifts, messages }
 })
+const lastEventTime = computed(() => client.lastEventAt
+  ? new Date(client.lastEventAt).toLocaleTimeString()
+  : '')
 
 function onGetEvent(data: EventModel) { speechService.addToQueue(data) }
 
@@ -115,15 +119,20 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 onMounted(async () => {
+  mounted = true
   await speechService.initialize()
+  if (!mounted) return
   await client.ensureOpenlive({ connect: props.autoConnect })
+  if (!mounted) return
   registerEvents()
   await fetchAudioOutputDevices()
+  if (!mounted) return
   navigator.mediaDevices?.addEventListener('devicechange', fetchAudioOutputDevices)
   document.addEventListener('keydown', onKeydown)
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
+  mounted = false
   unregisterEvents()
   navigator.mediaDevices?.removeEventListener('devicechange', fetchAudioOutputDevices)
   document.removeEventListener('keydown', onKeydown)
@@ -247,6 +256,15 @@ onDeactivated(() => {
             {{ speechState.speakingText }}
           </NText>
           <NFlex :size="4" :wrap="true" style="margin-top: 8px">
+            <NTag :type="client.connected ? 'success' : 'warning'" :bordered="false" size="small">
+              {{ client.connectionStatus }}
+            </NTag>
+            <NTag v-if="lastEventTime" :bordered="false" size="small">
+              最近收到 {{ lastEventTime }}
+            </NTag>
+            <NTag v-if="client.reconnectCount" type="warning" :bordered="false" size="small">
+              已重连 {{ client.reconnectCount }} 次
+            </NTag>
             <NTag v-if="isPaused" type="warning" :bordered="false" size="small">
               暂停中
             </NTag>

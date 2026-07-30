@@ -159,7 +159,7 @@ const themeVars = useThemeVars()
                   href="https://vuejs.org/"
                   target="_blank"
                   text
-                  style="padding: 0; color: inherit;"
+                  style="padding: 0;"
                 >
                   Vue.js
                 </NButton>
@@ -175,7 +175,7 @@ const themeVars = useThemeVars()
                   href="https://www.typescriptlang.org/"
                   target="_blank"
                   text
-                  style="padding: 0; color: inherit;"
+                  style="padding: 0;"
                 >
                   TypeScript
                 </NButton>
@@ -191,7 +191,7 @@ const themeVars = useThemeVars()
                   href="https://www.naiveui.com/"
                   target="_blank"
                   text
-                  style="padding: 0; color: inherit;"
+                  style="padding: 0;"
                 >
                   Naive UI
                 </NButton>
@@ -218,7 +218,7 @@ const themeVars = useThemeVars()
                   href="https://dotnet.microsoft.com/"
                   target="_blank"
                   text
-                  style="padding: 0; color: inherit;"
+                  style="padding: 0;"
                 >
                   C# .NET 10
                 </NButton>
@@ -234,7 +234,7 @@ const themeVars = useThemeVars()
                   href="https://www.postgresql.org/"
                   target="_blank"
                   text
-                  style="padding: 0; color: inherit;"
+                  style="padding: 0;"
                 >
                   PostgreSQL
                 </NButton>
@@ -250,7 +250,7 @@ const themeVars = useThemeVars()
                   href="https://microsoft.github.io/garnet/"
                   target="_blank"
                   text
-                  style="padding: 0; color: inherit;"
+                  style="padding: 0;"
                 >
                   Garnet
                 </NButton>

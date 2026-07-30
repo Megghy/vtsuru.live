@@ -8,6 +8,7 @@
  */
 import type { GlobalThemeOverrides } from 'naive-ui'
 import { brand, error, info, neutral, pickByMode, rgba, success, warning } from './colors'
+import { getAdaptiveButtonColors } from './buttons'
 import { buildTokens } from './tokens'
 
 export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
@@ -64,6 +65,7 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       textColor1: t.foreground,
       textColor2: t.mutedForeground,
       textColor3: isDark ? neutral[500] : neutral[400],
+      textColorDisabled: t.disabledForeground,
 
       bodyColor: t.background,
       cardColor: t.background,
@@ -100,6 +102,20 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       boxShadow3: t.shadowPopover,
     },
     Button: {
+      ...getAdaptiveButtonColors({
+        isDark,
+        surface: t.background,
+        color: t.background,
+        colorHover: t.muted,
+        colorPressed: isDark ? neutral[800] : neutral[200],
+        textColor: t.foreground,
+        borderColor: t.borderColor,
+        primary: { color: t.primary, hover: t.primaryHover, pressed: t.primaryPressed },
+        info: { color: infoColor, hover: infoColorHover, pressed: infoColorPressed },
+        success: { color: successColor, hover: successColorHover, pressed: successColorPressed },
+        warning: { color: warningColor, hover: warningColorHover, pressed: warningColorPressed },
+        error: { color: errorColor, hover: errorColorHover, pressed: errorColorPressed },
+      }),
       heightMedium: '30px',
       // 与 input-group 对齐：small 容器中拼装时也保持 30px
       heightSmall: '30px',
@@ -112,42 +128,6 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       paddingLarge: '0 16px',
       fontWeight: '500',
 
-      color: t.background,
-      colorHover: t.muted,
-      colorPressed: isDark ? neutral[800] : neutral[200],
-      border: `1px solid ${t.borderColor}`,
-      borderHover: `1px solid ${t.borderColor}`,
-      borderPressed: `1px solid ${t.borderColor}`,
-      textColor: t.foreground,
-
-      colorPrimary: t.primary,
-      colorHoverPrimary: t.primaryHover,
-      colorPressedPrimary: t.primaryPressed,
-      borderPrimary: `1px solid ${t.primary}`,
-      borderHoverPrimary: `1px solid ${t.primaryHover}`,
-      borderPressedPrimary: `1px solid ${t.primaryPressed}`,
-      textColorPrimary: t.primaryForeground,
-      textColorHoverPrimary: t.primaryForeground,
-      textColorPressedPrimary: t.primaryForeground,
-      textColorFocusPrimary: t.primaryForeground,
-
-      // 暗色模式下彩色按钮使用深色文字以保持对比度
-      textColorInfo: t.darkTextOnTint,
-      textColorHoverInfo: t.darkTextOnTint,
-      textColorPressedInfo: t.darkTextOnTint,
-      textColorFocusInfo: t.darkTextOnTint,
-      textColorSuccess: t.darkTextOnTint,
-      textColorHoverSuccess: t.darkTextOnTint,
-      textColorPressedSuccess: t.darkTextOnTint,
-      textColorFocusSuccess: t.darkTextOnTint,
-      textColorWarning: t.darkTextOnTint,
-      textColorHoverWarning: t.darkTextOnTint,
-      textColorPressedWarning: t.darkTextOnTint,
-      textColorFocusWarning: t.darkTextOnTint,
-      textColorError: t.darkTextOnTint,
-      textColorHoverError: t.darkTextOnTint,
-      textColorPressedError: t.darkTextOnTint,
-      textColorFocusError: t.darkTextOnTint,
     },
     Input: {
       heightMedium: '30px',
@@ -161,6 +141,8 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       color: t.background,
       colorFocus: t.background,
       textColor: t.foreground,
+      textColorDisabled: t.disabledForeground,
+      placeholderColorDisabled: t.placeholderDisabled,
       paddingMedium: '0 10px',
       paddingSmall: '0 8px',
     },
@@ -177,6 +159,10 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
           boxShadowFocus: t.ringShadow,
           color: t.background,
           textColor: t.foreground,
+          colorDisabled: t.embeddedColor,
+          textColorDisabled: t.disabledForeground,
+          placeholderColorDisabled: t.placeholderDisabled,
+          arrowColorDisabled: t.placeholderDisabled,
         },
         InternalSelectMenu: {
           borderRadius: t.radiusControl,

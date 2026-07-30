@@ -94,7 +94,7 @@ const items = computed(() => {
 
 :deep(.faq-item) {
   margin-top: 8px !important;
-  border: 1px solid var(--vtsuru-border) !important;
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border) !important;
   border-radius: var(--vtsuru-page-radius) !important;
   transition: background-color 0.2s ease;
   overflow: hidden;

@@ -407,6 +407,8 @@ function createSpeechService() {
   let timedBroadcastTimer: number | undefined
   let timedBroadcastIndex = 0
   let pendingObjectUrl: string | undefined
+  let speechRunId = 0
+  let isProcessingQueue = false
 
   function revokePendingObjectUrl() {
     if (pendingObjectUrl) {
@@ -639,11 +641,13 @@ function createSpeechService() {
       return
     }
 
+    const runId = ++speechRunId
     speechState.isSpeaking = true
     speechState.speakingText = text
 
     if (checkTimer) clearTimeout(checkTimer)
     checkTimer = setTimeout(() => {
+      if (runId !== speechRunId) return
       message.error('语音播放超时')
       cancelSpeech()
     }, 30000)
@@ -654,7 +658,7 @@ function createSpeechService() {
 
       if (loadingTimeoutTimer) clearTimeout(loadingTimeoutTimer)
       loadingTimeoutTimer = setTimeout(() => {
-        if (speechState.isApiAudioLoading) {
+        if (runId === speechRunId && speechState.isApiAudioLoading) {
           console.error('[TTS] 音频加载超时 (25秒)')
           message.error('音频加载超时，请检查网络连接或API状态')
           cancelSpeech()
@@ -665,14 +669,17 @@ function createSpeechService() {
         provider
           .fetchAudio(text)
           .then((blob) => {
+            if (runId !== speechRunId) return
             const url = URL.createObjectURL(blob)
             revokePendingObjectUrl()
             pendingObjectUrl = url
             setTimeout(() => {
+              if (runId !== speechRunId) return
               speechState.apiAudioSrc = url
             }, 0)
           })
           .catch((error) => {
+            if (runId !== speechRunId) return
             console.error('[TTS] 获取音频失败:', error)
             message.error(`语音合成失败: ${error instanceof Error ? error.message : '未知错误'}`)
             cancelSpeech()
@@ -684,6 +691,7 @@ function createSpeechService() {
           return
         }
         setTimeout(() => {
+          if (runId !== speechRunId) return
           speechState.apiAudioSrc = url
         }, 0)
       } else {
@@ -693,9 +701,10 @@ function createSpeechService() {
     } else {
       Promise.resolve(provider.speak(text))
         .then(() => {
-          if (speechState.isSpeaking) cancelSpeech()
+          if (runId === speechRunId) cancelSpeech()
         })
         .catch((error) => {
+          if (runId !== speechRunId) return
           console.error('[TTS] 播放错误:', error)
           message.error(`无法播放语音: ${error instanceof Error ? error.message : '未知错误'}`)
           cancelSpeech()
@@ -706,39 +715,41 @@ function createSpeechService() {
   }
 
   async function processQueue() {
-    if (speechState.isSpeaking || speakQueue.value.length === 0) return
+    if (isProcessingQueue || speechState.isSpeaking || speakQueue.value.length === 0) return
     if (isPaused.value) return
 
-    const now = Date.now()
-    const combineDelay = (settings.value.combineGiftDelay ?? 0) * 1000
+    isProcessingQueue = true
+    try {
+      const now = Date.now()
+      const combineDelay = (settings.value.combineGiftDelay ?? 0) * 1000
 
-    let targetIndex = -1
-    for (let i = 0; i < speakQueue.value.length; i++) {
-      const item = speakQueue.value[i]
-      if (item.data.type === EventDataTypes.Gift
-        && combineDelay > 0
-        && item.updateAt > now - combineDelay) {
-        continue
-      }
-      targetIndex = i
-      break
-    }
-
-    if (targetIndex === -1) return
-
-    const targetItem = speakQueue.value.splice(targetIndex, 1)[0]
-
-    if (targetItem.data.type !== EventDataTypes.Gift) {
-      giftCombineMap.clear()
-      speakQueue.value.forEach((item, index) => {
-        if (item.data.type === EventDataTypes.Gift) {
-          giftCombineMap.set(`${item.data.uid}-${item.data.msg}`, index)
+      let targetIndex = -1
+      for (let i = 0; i < speakQueue.value.length; i++) {
+        const item = speakQueue.value[i]
+        if (item.data.type === EventDataTypes.Gift
+          && combineDelay > 0
+          && item.updateAt > now - combineDelay) {
+          continue
         }
-      })
-    }
+        targetIndex = i
+        break
+      }
 
-    let text = getTextFromDanmaku(targetItem.data)
-    if (text) {
+      if (targetIndex === -1) return
+
+      const targetItem = speakQueue.value.splice(targetIndex, 1)[0]
+
+      if (targetItem.data.type !== EventDataTypes.Gift) {
+        giftCombineMap.clear()
+        speakQueue.value.forEach((item, index) => {
+          if (item.data.type === EventDataTypes.Gift) {
+            giftCombineMap.set(`${item.data.uid}-${item.data.msg}`, index)
+          }
+        })
+      }
+
+      let text = getTextFromDanmaku(targetItem.data)
+      if (!text) return
       readedDanmaku.value++
 
       // 已播报历史
@@ -763,6 +774,8 @@ function createSpeechService() {
       }
 
       doSpeak(text)
+    } finally {
+      isProcessingQueue = false
     }
   }
 
@@ -786,6 +799,7 @@ function createSpeechService() {
   }
 
   function cancelSpeech() {
+    speechRunId++
     speechState.isSpeaking = false
 
     if (checkTimer) {
@@ -806,7 +820,6 @@ function createSpeechService() {
     revokePendingObjectUrl()
 
     getCurrentProvider()?.stop()
-    EasySpeech.cancel()
     speechState.speakingText = ''
   }
 
@@ -992,7 +1005,7 @@ function createSpeechService() {
     if (!enabled || validTexts.length === 0 || intervalMinutes <= 0) return
     timedBroadcastTimer = setInterval(() => {
       if (!speechState.canSpeech || isPaused.value) return
-      if (speechState.isSpeaking || speechState.isApiAudioLoading) return
+      if (isProcessingQueue || speechState.isSpeaking || speechState.isApiAudioLoading) return
       const text = validTexts[timedBroadcastIndex % validTexts.length]
       timedBroadcastIndex++
       doSpeak(text.trim())

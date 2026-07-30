@@ -376,8 +376,8 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 4px 0;
-  border-top: 1px solid var(--vtsuru-block-border);
-  border-bottom: 1px solid var(--vtsuru-block-border);
+  border-top: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
+  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
 }
 
 .stat {

@@ -97,7 +97,7 @@ watch(() => [props.userInfo?.id, count.value, enabled.value] as const, () => { v
 .ranking-header, .error-row { justify-content: space-between; gap: 12px; width: 100%; }
 .ranking-heading { gap: 7px; font-weight: 600; }
 .ranking-list { container-type: inline-size; display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.ranking-item { gap: 9px; min-width: 0; min-height: 42px; padding: 7px 10px; border: 1px solid var(--vtsuru-border); border-radius: 6px; background: var(--vtsuru-bg-muted); }
+.ranking-item { gap: 9px; min-width: 0; min-height: 42px; padding: 7px 10px; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
 .rank { display: grid; place-items: center; flex: none; width: 25px; height: 25px; border-radius: 50%; color: var(--vtsuru-fg-muted); background: var(--vtsuru-bg-elevated); font-size: 12px; font-weight: 700; }
 .rank--1 { color: #6b4d00; background: #f8d66d; }
 .rank--2 { color: #40464d; background: #d9e0e7; }

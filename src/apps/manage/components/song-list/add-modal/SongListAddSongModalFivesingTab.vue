@@ -161,7 +161,7 @@ async function addFivesingSongs(song: SongsInfo) {
             <td>
               <NButton
                 size="small"
-                color="green"
+                type="success"
                 :disabled="existingSongs.findIndex((s) => s.from === SongFrom.FiveSing && s.id === song.id) > -1"
                 @click="addFivesingSongs(song)"
               >

@@ -85,8 +85,8 @@ const availableFeatures = computed(() => configuredItems.value.flatMap((item) =>
   min-width: 0;
   min-height: 44px;
   padding: 9px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
+  border-radius: var(--vtsuru-page-radius);
   color: var(--vtsuru-fg);
   background: var(--vtsuru-bg-muted);
   text-decoration: none;

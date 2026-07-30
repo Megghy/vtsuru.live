@@ -1,11 +1,10 @@
 import type { OpenLiveInfo } from '@/api/api-models'
-import { LiveWS } from '@laplace.live/ws/client'
-import { clearInterval, setInterval } from 'worker-timers'
+import { clearTimeout, setTimeout } from 'worker-timers'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { GuidUtils } from '@/shared/utils'
 import { OPEN_LIVE_API_URL } from '@/shared/config'
-import BaseDanmakuClient from './BaseDanmakuClient'
+import BaseDanmakuClient, { DanmakuKeepLiveWS } from './BaseDanmakuClient'
 
 export default class OpenLiveClient extends BaseDanmakuClient {
   public serverUrl: string = ''
@@ -16,36 +15,38 @@ export default class OpenLiveClient extends BaseDanmakuClient {
 
   public type = 'openlive' as const
 
-  private timer: any | undefined
+  private heartbeatTimer: ReturnType<typeof setTimeout> | undefined
+  private heartbeatController: AbortController | undefined
+  private heartbeatGeneration = 0
+  private connectionLossReported = false
 
   public authInfo: AuthInfo | undefined
   public roomAuthInfo: OpenLiveInfo | undefined
 
   public async Start(): Promise<{ success: boolean, message: string }> {
+    const wasConnected = this.state === 'connected'
     const result = await super.Start()
-    if (result.success) {
-      this.timer ??= setInterval(() => {
-        this.sendHeartbeat()
-      }, 20 * 1000)
+    if (result.success && !wasConnected && this.state === 'connected') {
+      this.connectionLossReported = false
+      this.startHeartbeat()
+    } else if (!result.success && this.state === 'disconnected') {
+      this.roomAuthInfo = undefined
     }
     return result
   }
 
   public Stop() {
+    this.stopHeartbeat()
     super.Stop()
-    clearInterval(this.timer)
-    this.timer = undefined
     this.roomAuthInfo = undefined
   }
 
-  protected onUnexpectedDisconnect(): void {
-    // OpenLiveClient 通过心跳机制检测断连并重连，不使用基类的钩子
-  }
+  protected async initClient(signal: AbortSignal): Promise<{ success: boolean, message: string }> {
+    const auth = await this.getAuthInfo(signal)
+    if (signal.aborted) return { success: false, message: '弹幕客户端启动已取消' }
 
-  protected async initClient(): Promise<{ success: boolean, message: string }> {
-    const auth = await this.getAuthInfo()
     if (auth.data) {
-      const chatClient = new LiveWS(auth.data.anchor_info.room_id, {
+      const chatClient = new DanmakuKeepLiveWS(auth.data.anchor_info.room_id, {
         authBody: JSON.parse(auth.data.websocket_info.auth_body),
         address: auth.data.websocket_info.wss_link[0],
       })
@@ -79,7 +80,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
 
       this.roomAuthInfo = auth.data
 
-      return super.initClientInner(chatClient)
+      return super.initClientInner(chatClient, signal)
     } else {
       console.log(`[${this.type}] 无法开启场次: ${auth.message}`)
       return {
@@ -89,7 +90,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     }
   }
 
-  private async getAuthInfo(): Promise<{
+  private async getAuthInfo(signal: AbortSignal): Promise<{
     data: OpenLiveInfo | null
     message: string
   }> {
@@ -97,6 +98,9 @@ export default class OpenLiveClient extends BaseDanmakuClient {
       const data = await QueryPostAPI<OpenLiveInfo>(
         `${OPEN_LIVE_API_URL}start`,
         this.authInfo?.Code ? this.authInfo : undefined,
+        undefined,
+        undefined,
+        { signal, timeoutMs: 15_000 },
       )
       if (data.code == 200) {
         console.log(`[${this.type}] 已获取场次信息`)
@@ -118,48 +122,73 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     }
   }
 
-  private isReconnecting = false
+  private reportConnectionLoss(reason: string) {
+    if (this.connectionLossReported || this.state !== 'connected') return
+    this.connectionLossReported = true
+    this.stopHeartbeat()
+    console.error(`[${this.type}] ${reason}, 将重新选择弹幕源`)
+    this.onConnectionLost?.()
+  }
 
-  private async reconnect() {
-    this.Stop()
-    for (let attempt = 1; ; attempt++) {
-      const result = await this.Start()
-      if (result.success) {
-        console.log(`[${this.type}] 重连成功 (第 ${attempt} 次尝试)`)
-        return
+  private startHeartbeat() {
+    this.stopHeartbeat()
+    const generation = ++this.heartbeatGeneration
+    this.scheduleHeartbeat(generation)
+  }
+
+  private stopHeartbeat() {
+    ++this.heartbeatGeneration
+    if (this.heartbeatTimer !== undefined) clearTimeout(this.heartbeatTimer)
+    this.heartbeatTimer = undefined
+    this.heartbeatController?.abort()
+    this.heartbeatController = undefined
+  }
+
+  private scheduleHeartbeat(generation: number) {
+    if (!this.isHeartbeatActive(generation) || this.heartbeatTimer !== undefined || this.heartbeatController) return
+    this.heartbeatTimer = setTimeout(() => {
+      this.heartbeatTimer = undefined
+      void this.sendHeartbeat(generation)
+    }, 20_000)
+  }
+
+  private async sendHeartbeat(generation: number) {
+    if (!this.isHeartbeatActive(generation)) return
+
+    const controller = new AbortController()
+    this.heartbeatController = controller
+
+    try {
+      const data = await (this.authInfo
+        ? QueryPostAPI<string>(
+            `${OPEN_LIVE_API_URL}heartbeat`,
+            this.authInfo,
+            undefined,
+            undefined,
+            { signal: controller.signal, timeoutMs: 15_000 },
+          )
+        : QueryGetAPI<string>(
+            `${OPEN_LIVE_API_URL}heartbeat-internal`,
+            undefined,
+            undefined,
+            { signal: controller.signal, timeoutMs: 15_000 },
+          ))
+
+      if (this.isHeartbeatActive(generation) && data.code !== 200) {
+        this.reportConnectionLoss(`心跳失败: ${data.message}`)
       }
-      const delay = Math.min(10_000 * attempt, 60_000)
-      console.error(`[${this.type}] 重连失败 (第 ${attempt} 次): ${result.message}, ${delay / 1000}s 后重试`)
-      await new Promise(r => setTimeout(r, delay))
+    } catch (error) {
+      if (this.isHeartbeatActive(generation) && !controller.signal.aborted) {
+        this.reportConnectionLoss(`心跳请求异常: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    } finally {
+      if (this.heartbeatController === controller) this.heartbeatController = undefined
+      if (!this.connectionLossReported) this.scheduleHeartbeat(generation)
     }
   }
 
-  private sendHeartbeat() {
-    if (this.state !== 'connected' || this.isReconnecting) {
-      if (this.state !== 'connected' && !this.isReconnecting) {
-        clearInterval(this.timer)
-        this.timer = undefined
-      }
-      return
-    }
-    const query = this.authInfo
-      ? QueryPostAPI<OpenLiveInfo>(
-          `${OPEN_LIVE_API_URL}heartbeat`,
-          this.authInfo,
-        )
-      : QueryGetAPI<OpenLiveInfo>(`${OPEN_LIVE_API_URL}heartbeat-internal`)
-    query.then(async (data) => {
-      if (data.code != 200) {
-        if (this.isReconnecting) return
-        this.isReconnecting = true
-        console.error(`[${this.type}] 心跳失败, 将重新连接`)
-        try {
-          await this.reconnect()
-        } finally {
-          this.isReconnecting = false
-        }
-      }
-    })
+  private isHeartbeatActive(generation: number) {
+    return generation === this.heartbeatGeneration && this.state === 'connected'
   }
 
   public onDanmaku(command: any) {

@@ -223,14 +223,14 @@ onMounted(async () => {
           >
             <!-- 连接状态指示 -->
             <NTag
-              :type="danmakuClient.connected ? 'success' : 'warning'"
+              :type="danmakuClient.phase === 'error' ? 'error' : danmakuClient.connected ? 'success' : 'warning'"
               round
               size="small"
             >
               <template #icon>
                 <NIcon :component="danmakuClient.connected ? Sunny : Moon" /> <!-- 示例图标 -->
               </template>
-              {{ danmakuClient.connected ? `已连接: ${danmakuClient.authInfo?.anchor_info?.uname ?? '主播'}` : '连接中...' }}
+              {{ danmakuClient.connectionStatus }}
             </NTag>
             <!-- 主题切换开关 -->
             <NSwitch v-model:value="isDarkValue">

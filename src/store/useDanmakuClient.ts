@@ -1,9 +1,11 @@
 import type { EventModel, OpenLiveInfo } from '@/api/api-models'
 import type DanmakuEventEmitter from '@/shared/services/DanmakuClients/DanmakuEventEmitter'
+import type { ModelEventListeners, RawEventListeners } from '@/shared/services/DanmakuClients/DanmakuEventEmitter'
 import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
+import type { ClientType, DanmakuSourceMeta } from '@/shared/services/danmakuChannel'
 import { defineStore } from 'pinia'
-import { computed, ref, shallowRef } from 'vue'
+import { computed, onScopeDispose, ref, shallowRef } from 'vue'
 import { useAccount } from '@/api/account'
 import { isTauri } from '@/shared/config'
 import BroadcastChannelClient from '@/shared/services/DanmakuClients/BroadcastChannelClient'
@@ -14,61 +16,117 @@ import { createDanmakuChannel } from '@/shared/services/danmakuChannel'
 import { probeLocalFetcher } from '@/shared/rpc/client'
 
 const MODEL_EVENT_NAMES = ['danmaku', 'gift', 'sc', 'guard', 'enter', 'scDel', 'follow', 'like'] as const
-const REMOTE_SOURCE_TTL_MS = 10_000
-const DEFAULT_REMOTE_WAIT_MS = 600
+const REMOTE_SOURCE_TTL_MS = 15_000
+const SOURCE_HEARTBEAT_MS = 3_000
+const FALLBACK_ELECTION_MS = 600
+const CONNECT_RETRY_MS = 5_000
+const CONNECT_ATTEMPTS = 5
 
 type EventName = typeof MODEL_EVENT_NAMES[number]
 type EventNameWithAll = EventName | 'all'
 type Listener = (arg1: any, arg2?: any) => void
 type AllEventListener = (arg1: any) => void
 type GenericListener = Listener | AllEventListener
-type ModelListeners = DanmakuEventEmitter['eventsAsModel']
+type ConnectionPhase = 'idle' | 'electing' | 'connecting' | 'connected' | 'reconnecting' | 'error'
+
+interface SourceIntent {
+  scope: string
+  type: Exclude<ClientType, 'broadcast'>
+  allowLocal: boolean
+  build: () => DanmakuEventEmitter
+  meta?: DanmakuSourceMeta
+}
+
+interface RemoteSource {
+  scope: string
+  clientType: ClientType
+  receivedAt: number
+  meta?: DanmakuSourceMeta
+}
 
 function createSourceId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
-function createModelListeners(client: DanmakuEventEmitter): ModelListeners {
-  return client.createEmptyEventModelListeners()
+function hashScope(value: string) {
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0).toString(36)
+}
+
+function createModelListeners(): ModelEventListeners {
+  return { danmaku: [], gift: [], sc: [], guard: [], enter: [], scDel: [], all: [], follow: [], like: [] }
+}
+
+function createRawListeners(): RawEventListeners {
+  return { danmaku: [], gift: [], sc: [], guard: [], enter: [], scDel: [], all: [], follow: [], like: [] }
 }
 
 export const useDanmakuClient = defineStore('DanmakuClient', () => {
-  const danmakuClient = shallowRef<DanmakuEventEmitter | undefined>(new OpenLiveClient())
+  const accountInfo = useAccount()
+  const sourceId = createSourceId()
+  const channel = createDanmakuChannel(sourceId)
+
+  const danmakuClient = shallowRef<DanmakuEventEmitter>()
   const state = ref<'waiting' | 'connecting' | 'connected'>('waiting')
+  const phase = ref<ConnectionPhase>('idle')
+  const authInfo = ref<OpenLiveInfo>()
+  const sourceMeta = ref<DanmakuSourceMeta>()
+  const lastEventAt = ref<number>()
+  const lastError = ref('')
+  const reconnectCount = ref(0)
+  const remoteSourceTick = ref(0)
+
+  const modelListeners = createModelListeners()
+  const rawListeners = createRawListeners()
+  const remoteSources = new Map<string, RemoteSource>()
+
+  let currentIntent: SourceIntent | undefined
+  let activeScope = ''
+  let generation = 0
+  let connectTask: Promise<void> | undefined
+  let connectTaskScope = ''
+  let restartTask: Promise<void> | undefined
+  let sourceHeartbeatTimer: ReturnType<typeof setInterval> | undefined
+  let readerWatchdogTimer: ReturnType<typeof setInterval> | undefined
+  let releaseLeaderLock: (() => void) | undefined
+  let leaderLockTask: Promise<void> | undefined
+
   const connected = computed(() => state.value === 'connected')
   const hasRemoteSource = computed(() => {
-    void remoteSourceTick.value // 触碰以建立响应式依赖
-    return hasFreshRemoteSource()
+    void remoteSourceTick.value
+    return Boolean(currentIntent && getBestRemoteSource(currentIntent.scope))
   })
   const hasAnySource = computed(() => connected.value || hasRemoteSource.value)
-  const authInfo = ref<OpenLiveInfo>()
-  const accountInfo = useAccount()
+  const connectionStatus = computed(() => {
+    if (phase.value === 'connected') return sourceMeta.value?.uname ? `已连接: ${sourceMeta.value.uname}` : '已连接'
+    if (phase.value === 'electing') return '正在选择弹幕源'
+    if (phase.value === 'connecting') return '正在连接弹幕源'
+    if (phase.value === 'reconnecting') return '弹幕源已断开，正在重连'
+    if (phase.value === 'error') return lastError.value || '弹幕源连接失败'
+    return '尚未连接'
+  })
 
-  const sourceId = createSourceId()
-  const modelListeners = createModelListeners(danmakuClient.value)
-  const remoteSources = new Map<string, number>()
-  const remoteSourceTick = ref(0)
-  const channel = createDanmakuChannel(sourceId, currentAccountId, isSameAccount)
-
-  let isInitializing = false
-  let initFinished: Promise<void> | undefined
-  let resolveInitFinished: (() => void) | undefined
-  let heartbeatTimer: ReturnType<typeof setInterval> | undefined
-  let readerWatchdogTimer: ReturnType<typeof setInterval> | undefined
-
-  // 事件的接收由 BroadcastChannelClient 承担; store 只关心「谁在当上游」这个决策信号。
-  channel.onState((remoteId, remoteState, at) => {
+  const unsubscribeState = channel.onState((remoteId, scope, remoteState, clientType, meta) => {
     if (remoteState === 'connected') {
-      markRemoteSource(remoteId, at)
-    } else {
-      remoteSources.delete(remoteId)
-      remoteSourceTick.value = Date.now()
-      onRemoteSourceLost()
+      remoteSources.set(remoteId, { scope, clientType, meta, receivedAt: Date.now() })
+      remoteSourceTick.value++
+      convergeFallbackLeader(remoteId, scope)
+      if (danmakuClient.value?.type === 'broadcast' && scope === activeScope && meta) sourceMeta.value = meta
+      return
+    }
+
+    remoteSources.delete(remoteId)
+    remoteSourceTick.value++
+    if (danmakuClient.value?.type === 'broadcast' && scope === activeScope && !getBestRemoteSource(scope)) {
+      void restartConnection('上游标签页已断开')
     }
   })
-  channel.onStateRequest(() => {
-    // 仅上游 client 应答在场查询; broadcast reader 自己也是消费者, 不冒充源
-    if (connected.value && danmakuClient.value?.type !== 'broadcast') publishState('connected')
+  const unsubscribeStateRequest = channel.onStateRequest((scope) => {
+    if (connected.value && isUpstreamClient() && scope === activeScope) publishState('connected')
   })
 
   function onEvent(eventName: 'all', listener: AllEventListener): void
@@ -83,256 +141,284 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   function offEvent(eventName: EventNameWithAll, listener: GenericListener): void {
     const listeners = modelListeners[eventName] as GenericListener[]
     const index = listeners.indexOf(listener)
-    if (index > -1) listeners.splice(index, 1)
+    if (index >= 0) listeners.splice(index, 1)
   }
 
   function on(eventName: 'all', listener: AllEventListener): void
   function on(eventName: EventName, listener: Listener): void
   function on(eventName: EventNameWithAll, listener: GenericListener): void {
-    const listeners = danmakuClient.value?.eventsRaw[eventName] as GenericListener[] | undefined
-    if (listeners && !listeners.includes(listener)) listeners.push(listener)
+    const listeners = rawListeners[eventName] as GenericListener[]
+    if (!listeners.includes(listener)) listeners.push(listener)
   }
 
   function off(eventName: 'all', listener: AllEventListener): void
   function off(eventName: EventName, listener: Listener): void
   function off(eventName: EventNameWithAll, listener: GenericListener): void {
-    const listeners = danmakuClient.value?.eventsRaw[eventName] as GenericListener[] | undefined
-    const index = listeners?.indexOf(listener) ?? -1
-    if (listeners && index > -1) listeners.splice(index, 1)
+    const listeners = rawListeners[eventName] as GenericListener[]
+    const index = listeners.indexOf(listener)
+    if (index >= 0) listeners.splice(index, 1)
+  }
+
+  function createOpenLiveIntent(auth?: AuthInfo): SourceIntent {
+    const accountKey = accountInfo.value?.id ? `account:${accountInfo.value.id}` : `tab:${sourceId}`
+    const authKey = auth?.Code ? `external:${hashScope(`${auth.Code}:${auth.Mid}:${auth.Caller}`)}` : accountKey
+    return {
+      scope: `openlive:${authKey}`,
+      type: 'openlive',
+      allowLocal: true,
+      build: () => new OpenLiveClient(auth),
+    }
   }
 
   async function initOpenlive(auth?: AuthInfo) {
-    return ensureSource(() => new OpenLiveClient(auth))
+    return activateIntent(createOpenLiveIntent(auth))
+  }
+
+  async function ensureOpenlive(options: { connect?: boolean } = {}) {
+    if (connected.value) return useDanmakuClient()
+    const intent = currentIntent ?? createOpenLiveIntent()
+    return activateIntent(intent, false, options.connect !== false)
   }
 
   async function initDirect(auth: DirectClientAuthInfo) {
-    return ensureSource(() => new DirectClient(auth))
+    return activateIntent({
+      scope: `direct:${auth.roomId}:${auth.tokenUserId}`,
+      type: 'direct',
+      allowLocal: true,
+      build: () => new DirectClient(auth),
+      meta: { roomId: auth.roomId },
+    })
   }
 
   async function initLocal() {
-    return initClient(new LocalRpcClient())
+    return activateIntent({
+      scope: `local:${accountInfo.value?.id ?? sourceId}`,
+      type: 'local',
+      allowLocal: false,
+      build: () => new LocalRpcClient(),
+    })
   }
 
-  // 尝试接入本地 eventfetcher (仅网页环境; Tauri webview 是 fetcher 自身, 不连自己)
-  // 先用轻量 /health 探测, 未安装则立即回退, 不进入 initClient 的重试循环 (避免拖延)。
-  async function tryLocalFetcher() {
-    if (isTauri()) return false
-    if (!await probeLocalFetcher()) return false
-    await initLocal()
-    return connected.value
-  }
-
-  // 统一的弹幕源选择链: 同浏览器已有上游 → broadcast 消费; 否则本地 fetcher; 都没有才由调用方指定的上游 (openlive/direct) 建连。
-  // 所有「我需要弹幕」的入口 (页面直连 initOpenlive/initDirect, 或 ensureOpenlive) 都走这里, 保证跨标签页复用。
-  async function ensureSource(
-    buildUpstream: () => DanmakuEventEmitter,
-    options: { connect?: boolean, remoteWaitMs?: number } = {},
-  ) {
-    if (connected.value) return useDanmakuClient()
-    if (isInitializing) {
-      if (initFinished) await initFinished
+  async function activateIntent(intent: SourceIntent, reconnecting = false, allowUpstream = true) {
+    if (connected.value && currentIntent?.scope === intent.scope) return useDanmakuClient()
+    if (connectTask && connectTaskScope === intent.scope) {
+      await connectTask
       return useDanmakuClient()
     }
 
-    await waitForRemoteSource(options.remoteWaitMs ?? DEFAULT_REMOTE_WAIT_MS)
+    currentIntent = intent
+    const taskGeneration = ++generation
+    await stopActiveConnection(true)
+    state.value = 'connecting'
+    phase.value = reconnecting ? 'reconnecting' : 'electing'
+    lastError.value = ''
+    activeScope = intent.scope
 
-    // 同浏览器已有其他标签页在当上游 → 作为消费者接入, 不重复建上游连接
-    if (hasFreshRemoteSource()) {
-      await initClient(new BroadcastChannelClient(channel))
-      return useDanmakuClient()
+    const task = connectGeneration(intent, taskGeneration, reconnecting, allowUpstream)
+    connectTask = task
+    connectTaskScope = intent.scope
+    try {
+      await task
+    } finally {
+      if (connectTask === task) {
+        connectTask = undefined
+        connectTaskScope = ''
+      }
     }
-    if (options.connect === false) return useDanmakuClient()
-
-    // 优先接入本地 eventfetcher, 未安装则回退到调用方指定的上游
-    if (await tryLocalFetcher()) return useDanmakuClient()
-
-    await initClient(buildUpstream())
     return useDanmakuClient()
   }
 
-  async function ensureOpenlive(options: { connect?: boolean, remoteWaitMs?: number } = {}) {
-    return ensureSource(() => new OpenLiveClient(), options)
-  }
+  async function connectGeneration(intent: SourceIntent, taskGeneration: number, reconnecting: boolean, allowUpstream: boolean) {
+    channel.requestState(intent.scope)
+    const leader = await acquireLeadership(intent.scope, taskGeneration)
+    if (!isCurrent(taskGeneration, intent)) return
 
-  // 上游标签页断开时: 若本 tab 只是 broadcast 消费者且已无其他源, 则重新选主 (通常升级为自建)
-  function onRemoteSourceLost() {
-    if (danmakuClient.value?.type !== 'broadcast') return
-    if (hasFreshRemoteSource()) return
-    console.log('[DanmakuClient] 上游标签页已断开, 重新选择弹幕源')
-    void reselectSource()
-  }
-
-  // 当前活跃源 (本 tab 自建的 openlive/direct/local) 意外断开时重新走选择链。
-  // 用 client 身份校验防止已被替换的旧实例误触发。
-  function onActiveSourceLost(client: DanmakuEventEmitter) {
-    if (danmakuClient.value !== client) return
-    console.warn(`[DanmakuClient] 弹幕源 (${client.type}) 意外断开, 重新选择弹幕源`)
-    void reselectSource()
-  }
-
-  async function reselectSource() {
-    await dispose()
-    await ensureOpenlive()
-  }
-
-  async function initClient(client: DanmakuEventEmitter) {
-    if (isInitializing) {
-      if (initFinished) await initFinished
-      return useDanmakuClient()
+    if (!leader) {
+      await connectBroadcast(intent, taskGeneration)
+      return
     }
-    if (connected.value) return useDanmakuClient()
 
-    isInitializing = true
-    initFinished = new Promise((resolve) => {
-      resolveInitFinished = resolve
-    })
-    state.value = 'connecting'
+    if (!allowUpstream) {
+      releaseLeadership()
+      state.value = 'waiting'
+      phase.value = 'idle'
+      return
+    }
 
-    try {
-      const oldRawEvents = danmakuClient.value?.eventsRaw ?? client.createEmptyRawEventlisteners()
-      if (danmakuClient.value?.state === 'connected') await disposeClientInstance(danmakuClient.value)
-
-      danmakuClient.value = client
-      danmakuClient.value.eventsRaw = oldRawEvents
-      danmakuClient.value.onConnectionLost = () => onActiveSourceLost(client)
-      attachModelEventBridge(danmakuClient.value)
-
-      for (let retryCount = 0; retryCount < 5; retryCount++) {
-        if (state.value !== 'connecting') break
-        if (await attemptConnect(retryCount + 1)) break
-
-        const isLast = retryCount === 4
-        if (isLast) {
-          await dispose()
-        } else {
-          await new Promise(resolve => setTimeout(resolve, 5000))
-        }
+    phase.value = reconnecting ? 'reconnecting' : 'connecting'
+    let allowLocal = intent.allowLocal
+    for (let attempt = 1; attempt <= CONNECT_ATTEMPTS && isCurrent(taskGeneration, intent); attempt++) {
+      const client = await buildLeaderClient(intent, allowLocal)
+      if (!isCurrent(taskGeneration, intent)) {
+        client.Stop()
+        return
       }
 
-      return useDanmakuClient()
-    } finally {
-      isInitializing = false
-      resolveInitFinished?.()
-      resolveInitFinished = undefined
-      initFinished = undefined
+      const result = await startClient(client, intent, taskGeneration)
+      if (result) return
+      if (client.type === 'local') allowLocal = false
+      if (attempt < CONNECT_ATTEMPTS) await wait(CONNECT_RETRY_MS)
     }
+
+    if (!isCurrent(taskGeneration, intent)) return
+    await stopActiveConnection(false)
+    state.value = 'waiting'
+    phase.value = 'error'
+    lastError.value ||= '无法连接弹幕源'
   }
 
-  async function attemptConnect(attempt: number) {
-    if (!danmakuClient.value) return false
+  async function buildLeaderClient(intent: SourceIntent, allowLocal: boolean) {
+    if (allowLocal && !isTauri() && await probeLocalFetcher()) return new LocalRpcClient()
+    return intent.build()
+  }
 
-    console.log(`[DanmakuClient] 尝试连接 (第 ${attempt} 次)...`)
+  async function startClient(client: DanmakuEventEmitter, intent: SourceIntent, taskGeneration: number) {
+    danmakuClient.value = client
+    client.eventsRaw = rawListeners
+    client.onConnectionLost = () => {
+      if (danmakuClient.value === client && isCurrent(taskGeneration, intent)) void restartConnection(`${client.type} 弹幕源意外断开`)
+    }
+    attachModelEventBridge(client, intent.scope)
+
     try {
-      const result = await danmakuClient.value.Start()
+      const result = await client.Start()
+      if (!isCurrent(taskGeneration, intent) || danmakuClient.value !== client) {
+        client.onConnectionLost = undefined
+        client.Stop()
+        return false
+      }
       if (!result.success) {
-        console.error(`[DanmakuClient] 连接尝试失败: ${result.message}`)
+        lastError.value = result.message || '弹幕源连接失败'
+        client.onConnectionLost = undefined
+        client.Stop()
         return false
       }
 
-      authInfo.value = danmakuClient.value instanceof OpenLiveClient ? danmakuClient.value.roomAuthInfo : undefined
+      authInfo.value = client instanceof OpenLiveClient ? client.roomAuthInfo : undefined
+      sourceMeta.value = client instanceof OpenLiveClient && client.roomAuthInfo
+        ? {
+            roomId: client.roomAuthInfo.anchor_info.room_id,
+            uname: client.roomAuthInfo.anchor_info.uname,
+            avatar: client.roomAuthInfo.anchor_info.uface,
+          }
+        : intent.meta
       state.value = 'connected'
-      // 仅上游 client 对外宣告自己是弹幕源 (broadcast reader 只是消费者)
-      if (isUpstreamClient()) {
-        startHeartbeat()
-        publishState('connected')
-      } else {
-        // broadcast reader: 上游可能崩溃/直接关闭标签页 (无干净 disconnected 消息),
-        // 心跳会随之消失。用看门狗轮询远端源新鲜度, 过期即重新选源。
-        startReaderWatchdog()
-      }
-      console.log('[DanmakuClient] 初始化成功')
+      phase.value = 'connected'
+      startSourceHeartbeat()
+      publishState('connected')
+      console.log(`[DanmakuClient] 已连接 ${client.type} 弹幕源`)
       return true
     } catch (error) {
-      console.error('[DanmakuClient] 连接尝试期间发生异常:', error)
+      lastError.value = error instanceof Error ? error.message : String(error)
+      client.onConnectionLost = undefined
+      client.Stop()
       return false
     }
   }
 
-  function attachModelEventBridge(client: DanmakuEventEmitter) {
-    client.eventsAsModel = client.createEmptyEventModelListeners()
-    // broadcast reader 消费的正是别人广播的事件, 若再广播出去会形成回声, 故只有上游 client 才 sink
-    const isUpstream = client.type !== 'broadcast'
+  async function connectBroadcast(intent: SourceIntent, taskGeneration: number) {
+    const owner = getBestRemoteSource(intent.scope)
+    const client = new BroadcastChannelClient(channel, intent.scope, owner?.id)
+    danmakuClient.value = client
+    client.eventsRaw = rawListeners
+    attachModelEventBridge(client, intent.scope)
+    const result = await client.Start()
+    if (!result.success || !isCurrent(taskGeneration, intent)) {
+      client.Stop()
+      return
+    }
 
+    sourceMeta.value = owner?.source.meta
+    state.value = 'connected'
+    phase.value = 'connected'
+    startReaderWatchdog()
+    console.log('[DanmakuClient] 已接入同浏览器主弹幕源')
+  }
+
+  function attachModelEventBridge(client: DanmakuEventEmitter, scope: string) {
+    client.eventsAsModel = client.createEmptyEventModelListeners()
+    const upstream = client.type !== 'broadcast'
     for (const eventName of MODEL_EVENT_NAMES) {
-      const listeners = client.eventsAsModel[eventName] as Array<(data: EventModel, command?: any) => void>
-      listeners.push((data, command) => {
+      client.eventsAsModel[eventName].push((data, command) => {
+        lastEventAt.value = Date.now()
         emitLocalEvent(eventName, data, command)
-        if (isUpstream) publishEvent(eventName, data)
+        if (upstream) channel.publishEvent(scope, eventName, data)
       })
     }
   }
 
   function emitLocalEvent(eventName: EventName, data: EventModel, command?: any) {
-    for (const listener of modelListeners[eventName] as Listener[]) {
-      listener(data, command)
-    }
-    for (const listener of modelListeners.all as AllEventListener[]) {
-      listener(data)
+    for (const listener of modelListeners[eventName]) listener(data, command)
+    for (const listener of modelListeners.all) listener(data)
+  }
+
+  async function restartConnection(reason: string) {
+    if (!currentIntent || restartTask) return restartTask
+    const intent = currentIntent
+    reconnectCount.value++
+    console.warn(`[DanmakuClient] ${reason}`)
+    const task = activateIntent(intent, true).then(() => undefined)
+    restartTask = task
+    try {
+      await task
+    } finally {
+      if (restartTask === task) restartTask = undefined
     }
   }
 
-  function publishEvent(eventName: EventName, data: EventModel) {
-    channel.publishEvent(eventName, data)
+  async function stopActiveConnection(announce: boolean) {
+    stopSourceHeartbeat()
+    stopReaderWatchdog()
+    const client = danmakuClient.value
+    if (announce && client && client.type !== 'broadcast' && activeScope) publishState('disconnected')
+    if (client) {
+      client.onConnectionLost = undefined
+      client.Stop()
+    }
+    danmakuClient.value = undefined
+    authInfo.value = undefined
+    sourceMeta.value = undefined
+    releaseLeadership()
+  }
+
+  async function dispose() {
+    currentIntent = undefined
+    activeScope = ''
+    ++generation
+    await stopActiveConnection(true)
+    state.value = 'waiting'
+    phase.value = 'idle'
+  }
+
+  function isCurrent(taskGeneration: number, intent: SourceIntent) {
+    return generation === taskGeneration && currentIntent === intent
+  }
+
+  function isUpstreamClient() {
+    return danmakuClient.value !== undefined && danmakuClient.value.type !== 'broadcast'
   }
 
   function publishState(nextState: 'connected' | 'disconnected') {
-    channel.publishState(nextState, danmakuClient.value?.type)
+    if (!danmakuClient.value || !activeScope) return
+    channel.publishState(activeScope, nextState, danmakuClient.value.type, sourceMeta.value)
   }
 
-  async function waitForRemoteSource(waitMs: number) {
-    if (hasFreshRemoteSource()) return
-    channel.requestState()
-    await new Promise(resolve => setTimeout(resolve, waitMs))
+  function startSourceHeartbeat() {
+    stopSourceHeartbeat()
+    sourceHeartbeatTimer = setInterval(() => {
+      if (connected.value && isUpstreamClient()) publishState('connected')
+    }, SOURCE_HEARTBEAT_MS)
   }
 
-  function currentAccountId() {
-    return accountInfo.value?.id
+  function stopSourceHeartbeat() {
+    if (!sourceHeartbeatTimer) return
+    clearInterval(sourceHeartbeatTimer)
+    sourceHeartbeatTimer = undefined
   }
 
-  function isSameAccount(accountId?: number) {
-    const localAccountId = currentAccountId()
-    return !accountId || !localAccountId || accountId === localAccountId
-  }
-
-  function markRemoteSource(id: string, at = Date.now()) {
-    remoteSources.set(id, at)
-    pruneRemoteSources()
-    remoteSourceTick.value = Date.now()
-  }
-
-  function hasFreshRemoteSource() {
-    pruneRemoteSources()
-    return remoteSources.size > 0
-  }
-
-  function pruneRemoteSources() {
-    const expiredAt = Date.now() - REMOTE_SOURCE_TTL_MS
-    for (const [id, at] of remoteSources) {
-      if (at < expiredAt) remoteSources.delete(id)
-    }
-  }
-
-  function startHeartbeat() {
-    if (heartbeatTimer) return
-    heartbeatTimer = setInterval(() => {
-      if (connected.value) publishState('connected')
-    }, 3000)
-  }
-
-  function stopHeartbeat() {
-    if (!heartbeatTimer) return
-    clearInterval(heartbeatTimer)
-    heartbeatTimer = undefined
-  }
-
-  // broadcast reader 专用: 定期检查上游是否还在。上游崩溃时不会发 disconnected,
-  // 只能靠源过期 (REMOTE_SOURCE_TTL_MS) 判定并重新选源。
   function startReaderWatchdog() {
-    if (readerWatchdogTimer) return
-    readerWatchdogTimer = setInterval(() => {
-      if (danmakuClient.value?.type !== 'broadcast') return
-      if (!hasFreshRemoteSource()) onRemoteSourceLost()
-    }, 3000)
+    stopReaderWatchdog()
+    readerWatchdogTimer = setInterval(() => { void verifyLeaderLock() }, SOURCE_HEARTBEAT_MS)
   }
 
   function stopReaderWatchdog() {
@@ -341,36 +427,117 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     readerWatchdogTimer = undefined
   }
 
-  async function disposeClientInstance(client: DanmakuEventEmitter) {
-    try {
-      client.Stop()
-    } catch (error) {
-      console.error('[DanmakuClient] 停止客户端时出错:', error)
+  async function verifyLeaderLock() {
+    if (danmakuClient.value?.type !== 'broadcast' || !currentIntent || restartTask) return
+    if (navigator.locks) {
+      const scope = currentIntent.scope
+      const snapshot = await navigator.locks.query()
+      if (!snapshot.held?.some(lock => lock.name === getLockName(scope))) {
+        await restartConnection('主弹幕源已退出')
+      }
+      return
     }
+    if (!getBestRemoteSource(currentIntent.scope)) await restartConnection('主弹幕源心跳已过期')
   }
 
-  function isUpstreamClient() {
-    return danmakuClient.value !== undefined && danmakuClient.value.type !== 'broadcast'
+  function getLockName(scope: string) {
+    return `vtsuru.danmaku.source.${scope}`
   }
 
-  async function dispose() {
-    isInitializing = false
+  async function acquireLeadership(scope: string, taskGeneration: number) {
+    if (!navigator.locks) return fallbackElection(scope, taskGeneration)
+    return new Promise<boolean>((resolve) => {
+      let decided = false
+      const decide = (leader: boolean) => {
+        if (decided) return
+        decided = true
+        resolve(leader)
+      }
 
-    const wasUpstream = isUpstreamClient()
-    if (danmakuClient.value) await disposeClientInstance(danmakuClient.value)
-    state.value = 'waiting'
-    authInfo.value = undefined
-    stopHeartbeat()
-    stopReaderWatchdog()
-    if (wasUpstream) publishState('disconnected')
+      const task = navigator.locks.request(getLockName(scope), { ifAvailable: true }, async (lock) => {
+        if (!lock || generation !== taskGeneration) {
+          decide(false)
+          return
+        }
+        decide(true)
+        await new Promise<void>((release) => { releaseLeaderLock = release })
+      }).catch((error) => {
+        console.warn('[DanmakuClient] Web Locks 获取失败:', error)
+        decide(false)
+      }).finally(() => {
+        if (leaderLockTask === task) leaderLockTask = undefined
+      })
+      leaderLockTask = task
+    })
   }
 
-  attachModelEventBridge(danmakuClient.value)
+  async function fallbackElection(scope: string, taskGeneration: number) {
+    channel.requestState(scope)
+    await wait(FALLBACK_ELECTION_MS)
+    if (generation !== taskGeneration) return false
+    return !getBestRemoteSource(scope)
+  }
+
+  function releaseLeadership() {
+    releaseLeaderLock?.()
+    releaseLeaderLock = undefined
+  }
+
+  function convergeFallbackLeader(remoteId: string, scope: string) {
+    if (navigator.locks || !connected.value || !isUpstreamClient() || scope !== activeScope) return
+    if (remoteId.localeCompare(sourceId) < 0) void restartConnection('检测到优先级更高的同浏览器弹幕源')
+  }
+
+  function getBestRemoteSource(scope: string) {
+    pruneRemoteSources()
+    const candidates = [...remoteSources.entries()]
+      .filter(([, source]) => source.scope === scope)
+      .toSorted(([left], [right]) => left.localeCompare(right))
+    if (!candidates.length) return undefined
+    const [id, source] = candidates[0]
+    return { id, source }
+  }
+
+  function pruneRemoteSources() {
+    const expiredAt = Date.now() - REMOTE_SOURCE_TTL_MS
+    let changed = false
+    for (const [id, source] of remoteSources) {
+      if (source.receivedAt < expiredAt) {
+        remoteSources.delete(id)
+        changed = true
+      }
+    }
+    if (changed) remoteSourceTick.value++
+  }
+
+  async function wait(duration: number) {
+    return new Promise<void>((resolve) => {
+      const timer = setTimeout(() => {
+        clearTimeout(timer)
+        resolve()
+      }, duration)
+    })
+  }
+
+  const pruneTimer = setInterval(pruneRemoteSources, SOURCE_HEARTBEAT_MS)
+  onScopeDispose(() => {
+    void dispose()
+    unsubscribeState()
+    unsubscribeStateRequest()
+    channel.close()
+    clearInterval(pruneTimer)
+  })
 
   return {
     danmakuClient,
     state,
+    phase,
     authInfo,
+    sourceMeta,
+    lastEventAt,
+    lastError,
+    reconnectCount,
+    connectionStatus,
     connected,
     hasRemoteSource,
     hasAnySource,

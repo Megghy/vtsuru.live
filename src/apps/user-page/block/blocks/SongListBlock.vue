@@ -143,7 +143,7 @@ function requestStatus(song: SongsInfo) {
 .song-heading { gap: 7px; font-weight: 600; }
 .song-search { margin-bottom: 10px; }
 .song-list { container-type: inline-size; display: grid; gap: 6px; }
-.song-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; min-width: 0; padding: 9px 10px; border: 1px solid var(--vtsuru-border); border-radius: 6px; background: var(--vtsuru-bg-muted); }
+.song-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; min-width: 0; padding: 9px 10px; border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
 .song-main { min-width: 0; }
 .song-main strong, .song-translation, .song-author { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .song-main strong { font-size: 14px; }

@@ -1,4 +1,5 @@
-import type { BlockPageProject, PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundScrimMode, PageBackgroundType, PageThemeMode } from './block/schema'
+import type { BlockPageProject, PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundScrimMode, PageBackgroundType } from './block/schema'
+import type { UserPageThemeConfig } from './themeConfig'
 
 export type UserPageRenderMode = 'legacy' | 'block' | 'contrib'
 export type BiliProfileStatus = 'idle' | 'loading' | 'empty' | 'error' | 'ready'
@@ -45,16 +46,7 @@ export interface UserPageConfig {
   background?: UserPageBackgroundConfigV1
 }
 
-export interface UserPageThemeConfigV1 {
-  fontFamily?: string
-  primaryColor?: string
-  textColor?: string
-  textColorLight?: string
-  textColorDark?: string
-  autoTextContrast?: boolean
-  backgroundColor?: string
-  pageThemeMode?: PageThemeMode
-}
+export type UserPageThemeConfigV1 = UserPageThemeConfig
 
 export interface UserPageBackgroundConfigV1 {
   pageBackgroundType?: PageBackgroundType
