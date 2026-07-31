@@ -113,13 +113,19 @@ function clearTheme() {
               label="主题色"
               class="color-field"
             >
-              <NColorPicker v-model:value="primaryColor" />
+              <NColorPicker
+                v-model:value="primaryColor"
+                :modes="['hex']"
+              />
             </NFormItem>
             <NFormItem
               label="内容底色"
               class="color-field"
             >
-              <NColorPicker v-model:value="backgroundColor" />
+              <NColorPicker
+                v-model:value="backgroundColor"
+                :modes="['hex']"
+              />
             </NFormItem>
             <NFormItem
               label="主题模式"

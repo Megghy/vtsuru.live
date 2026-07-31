@@ -197,7 +197,10 @@ function confirmImportJson() {
           </NFormItem>
           <PropsGrid :min-item-width="240">
             <NFormItem label="主题主色">
-              <NColorPicker v-model:value="primaryColor" />
+              <NColorPicker
+                v-model:value="primaryColor"
+                :modes="['hex']"
+              />
             </NFormItem>
             <NFormItem label="页面主题模式">
               <NSelect
@@ -210,7 +213,10 @@ function confirmImportJson() {
               />
             </NFormItem>
             <NFormItem label="内容区域底色">
-              <NColorPicker v-model:value="backgroundColor" />
+              <NColorPicker
+                v-model:value="backgroundColor"
+                :modes="['hex']"
+              />
             </NFormItem>
           </PropsGrid>
           <ThemeTextColorEditor :target="textColorTarget" />

@@ -2,6 +2,7 @@ import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/cus
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { isValidGoogleFontFamily } from '@/apps/user-page/googleFonts'
+import { isNormalizedUserPageColor, USER_PAGE_THEME_COLOR_KEYS } from '@/apps/user-page/themeColor'
 import {
   isValidPageMaxWidth,
   PAGE_BORDER_STRENGTHS,
@@ -41,10 +42,11 @@ function validateTheme(value: unknown, fieldRoot: string, target: IssueTarget, i
     report(issues, target, fieldRoot, '主题设置必须是 object')
     return
   }
-  const colors = ['primaryColor', 'textColor', 'textColorLight', 'textColorDark', 'backgroundColor']
-  colors.forEach((key) => {
+  USER_PAGE_THEME_COLOR_KEYS.forEach((key) => {
     if (theme[key] !== undefined && typeof theme[key] !== 'string')
       report(issues, target, `${fieldRoot}.${key}`, `${key} 必须是 string`)
+    else if (typeof theme[key] === 'string' && !isNormalizedUserPageColor(theme[key]))
+      report(issues, target, `${fieldRoot}.${key}`, `${key} 必须是十六进制颜色`)
   })
   if (theme.fontFamily !== undefined) {
     if (typeof theme.fontFamily !== 'string')
@@ -144,12 +146,12 @@ function validateBackground(value: unknown, fieldRoot: string, target: IssueTarg
     (typeof strength !== 'number' || !Number.isFinite(strength) || strength < 0 || strength > 100)
   )
     report(issues, target, `${fieldRoot}.pageBackgroundScrimStrength`, '遮罩强度必须是 0~100 的数字')
-  if (
-    type === 'color' &&
-    background.pageBackgroundColor !== undefined &&
-    typeof background.pageBackgroundColor !== 'string'
-  )
-    report(issues, target, `${fieldRoot}.pageBackgroundColor`, '背景颜色必须是 string')
+  if (background.pageBackgroundColor !== undefined) {
+    if (typeof background.pageBackgroundColor !== 'string')
+      report(issues, target, `${fieldRoot}.pageBackgroundColor`, '背景颜色必须是 string')
+    else if (!isNormalizedUserPageColor(background.pageBackgroundColor))
+      report(issues, target, `${fieldRoot}.pageBackgroundColor`, '背景颜色必须是十六进制颜色')
+  }
   const file = background.pageBackgroundImageFile
   if (
     file !== undefined &&

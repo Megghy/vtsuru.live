@@ -223,7 +223,7 @@ function clearAll() {
           <NFormItem label="背景颜色">
             <NColorPicker
               v-model:value="color"
-              :modes="['rgb', 'hex']"
+              :modes="['hex']"
               :show-alpha="true"
             />
           </NFormItem>

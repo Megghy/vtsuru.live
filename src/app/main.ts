@@ -1,5 +1,3 @@
-import { loadSlim } from '@tsparticles/slim'
-import Particles from '@tsparticles/vue3'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 // @ts-expect-error vue3-konva types
@@ -20,16 +18,7 @@ async function bootstrapApp() {
   await initPersistedStorage()
 
   const app = createApp(App)
-  app
-    .use(router)
-    .use(pinia)
-    .use(VueKonva)
-    .use(Particles, {
-      init: async (engine) => {
-        await loadSlim(engine)
-      },
-    })
-    .mount('#app')
+  app.use(router).use(pinia).use(VueKonva).mount('#app')
 
   // 将初始化逻辑改为异步按需加载，避免把其依赖打入入口
   void import('@/app/bootstrap').then((m) => m.InitVTsuru())

@@ -2,7 +2,6 @@ import { formatRgb } from 'culori'
 import type { GlobalThemeOverrides } from 'naive-ui'
 
 import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
-import { parseRgb } from '@/shared/config/theme/contrast'
 import { getThemeOverrides } from '@/shared/config/theme/overrides'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { hexToRgba } from '@/shared/utils'
@@ -15,6 +14,7 @@ import type {
 } from './block/schema'
 import { getGoogleFontFamilyCss } from './googleFonts'
 import { resolveUserPageControlOverlay, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
+import { normalizeUserPageColor, parseUserPageColor } from './themeColor'
 import { resolveUserPageAppearance } from './themeConfig'
 
 export interface ResolvedPageBackground {
@@ -71,7 +71,10 @@ export function resolvePageBackground(raw: unknown): ResolvedPageBackground | nu
 
   const blur = Number(obj.pageBackgroundBlur)
   const blurPx = Number.isFinite(blur) ? Math.min(40, Math.max(0, Math.round(blur))) : 14
-  const color = typeof obj.pageBackgroundColor === 'string' ? obj.pageBackgroundColor : 'transparent'
+  const color =
+    obj.pageBackgroundColor === undefined
+      ? 'transparent'
+      : normalizeUserPageColor(obj.pageBackgroundColor, 'pageBackgroundColor')
   const imagePath = getUploadedFilePath(obj.pageBackgroundImageFile)
 
   if (type === 'image' && !imagePath) return null
@@ -129,14 +132,23 @@ function readThemeString(theme: unknown, key: 'primaryColor' | 'backgroundColor'
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function readThemeColor(theme: unknown, key: 'primaryColor' | 'backgroundColor') {
+  const value = readThemeString(theme, key)
+  return value ? normalizeUserPageColor(value, key) : ''
+}
+
 function applyColorOpacity(value: string, opacity: number) {
-  const color = parseRgb(value)
-  return color ? formatRgb({ ...color, alpha: opacity / 100 }) : ''
+  return formatRgb({ ...parseUserPageColor(value), alpha: opacity / 100 })
+}
+
+function mixWithTransparent(value: string, amount: number) {
+  const color = parseUserPageColor(value)
+  return formatRgb({ ...color, alpha: (color.alpha ?? 1) * amount })
 }
 
 export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean) {
-  const primaryColor = readThemeString(theme, 'primaryColor')
-  const backgroundColor = readThemeString(theme, 'backgroundColor')
+  const primaryColor = readThemeColor(theme, 'primaryColor')
+  const backgroundColor = readThemeColor(theme, 'backgroundColor')
   const fontFamily = readThemeString(theme, 'fontFamily')
   const appearance = resolveUserPageAppearance(theme)
   const surfaceVars = getUserPageSurfaceCssVars(effectiveIsDark, theme)
@@ -159,7 +171,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     appearance.surfaceOpacity ?? (effectiveIsDark ? 70 : 62),
   )
   const surfaceColor =
-    customSurface || (backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : defaultCardSurface)
+    customSurface || (backgroundColor ? mixWithTransparent(backgroundColor, 0.32) : defaultCardSurface)
   const surfaceHover = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
     : surfaceVars['--user-page-ui-surface-bg-hover']
@@ -224,7 +236,7 @@ export function getUserPageNaiveThemeOverrides(
   effectiveIsDark: boolean,
 ): GlobalThemeOverrides {
   const base = getThemeOverrides(buildSiteTokens(effectiveIsDark))
-  const primaryColor = readThemeString(theme, 'primaryColor')
+  const primaryColor = readThemeColor(theme, 'primaryColor')
   const appearance = resolveUserPageAppearance(theme)
   const contentColor = vars['--vtsuru-page-content-color'] || vars['--user-page-ui-surface-bg']
   const cardColor = vars['--vtsuru-page-card-bg']

@@ -473,15 +473,6 @@ function getTooltip(item: ResponsePointGoodModel): string {
       return `积分不足(需要${item.price}, 当前${currentPoint.value ?? 0})`
   }
 
-  // 检查舰长等级要求
-  const currentGuardLevel = biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0
-  if (item.allowGuardLevel > 0 && currentGuardLevel < item.allowGuardLevel) {
-    const needText = item.allowGuardLevel === 1 ? '总督' : item.allowGuardLevel === 2 ? '提督' : '舰长'
-    const curText =
-      currentGuardLevel === 1 ? '总督' : currentGuardLevel === 2 ? '提督' : currentGuardLevel === 3 ? '舰长' : '无'
-    return `舰长等级不足(需要${needText}+, 当前${curText})`
-  }
-
   return '开始兑换'
 }
 

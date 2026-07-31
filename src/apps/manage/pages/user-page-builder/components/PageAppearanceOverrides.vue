@@ -129,7 +129,10 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
             style="gap: 10px"
           >
             <div style="flex: 1; min-width: 0">
-              <NColorPicker v-model:value="primaryColor" />
+              <NColorPicker
+                v-model:value="primaryColor"
+                :modes="['hex']"
+              />
             </div>
             <NButton
               size="tiny"
@@ -148,7 +151,10 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
             style="gap: 10px"
           >
             <div style="flex: 1; min-width: 0">
-              <NColorPicker v-model:value="backgroundColor" />
+              <NColorPicker
+                v-model:value="backgroundColor"
+                :modes="['hex']"
+              />
             </div>
             <NButton
               size="tiny"

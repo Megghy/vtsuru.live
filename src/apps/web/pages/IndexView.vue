@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import type { IOptions, RecursivePartial } from '@tsparticles/engine'
 import {
+  ArrowClockwise24Regular,
   BookCoins20Filled,
   Chat24Filled,
+  ChevronLeft24Regular,
+  ChevronRight24Regular,
   Info24Filled,
   Lottery24Filled,
   MoreHorizontal24Filled,
@@ -20,19 +22,19 @@ import {
   MusicalNote,
   OpenOutline,
 } from '@vicons/ionicons5'
-import { useWindowSize } from '@vueuse/core'
-import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NText, NTooltip, useThemeVars } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { useResizeObserver } from '@vueuse/core'
+import { NButton, NIcon, NNumberAnimation, NTooltip } from 'naive-ui'
+import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { QueryGetAPI } from '@/api/query'
+import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import { VTSURU_API_URL } from '@/shared/config'
-import { isDarkMode } from '@/shared/utils'
 import vtb from '@/svgs/ic_vtuber.svg'
 
-const { width } = useWindowSize()
 const $router = useRouter()
-const themeVars = useThemeVars()
+
+const featureTones = ['tone-cyan', 'tone-yellow', 'tone-coral'] as const
 
 const functions = [
   {
@@ -48,8 +50,8 @@ const functions = [
     route: 'manage-point',
   },
   {
-    name: '弹幕机 (OBS',
-    desc: '在OBS上显示直播间弹幕、礼物和互动内容，兼容blivechat样式 (开发中',
+    name: '弹幕机（OBS）',
+    desc: '在 OBS 上显示直播间弹幕、礼物和互动内容，兼容 blivechat 样式（开发中）',
     icon: Chat24Filled,
     route: 'manage-danmuji',
   },
@@ -73,7 +75,7 @@ const functions = [
     route: 'manage-songList',
   },
   {
-    name: '棉花糖 (提问箱',
+    name: '棉花糖（提问箱）',
     desc: '一个简单易用的提问箱',
     icon: Chatbox,
     route: 'manage-questionBox',
@@ -91,13 +93,13 @@ const functions = [
     route: 'manage-liveLottery',
   },
   {
-    name: '弹幕点歌 (歌势)',
+    name: '弹幕点歌（歌势）',
     desc: '可以让弹幕进行点歌, 然后自己唱',
     icon: ListCircle,
     route: 'manage-musicRequest',
   },
   {
-    name: '弹幕点歌 (点播)',
+    name: '弹幕点歌（点播）',
     desc: '可以让弹幕进行点歌, 进行搜索后直接播放',
     icon: ListCircle,
     route: 'manage-liveRequest',
@@ -157,6 +159,10 @@ interface IndexDataType {
 }
 
 const indexData = ref<IndexDataType>()
+const isRefreshingRooms = ref(false)
+const canScrollRoomsLeft = ref(false)
+const canScrollRoomsRight = ref(false)
+const roomsScroller = useTemplateRef<HTMLElement>('roomsScroller')
 
 function formatDurationSeconds(totalSeconds: number) {
   const s = Math.max(0, Math.floor(totalSeconds))
@@ -178,840 +184,480 @@ function getRoomCoverSrc(room: IndexDataType['streamers'][number]) {
   return room.cover || room.avatar || ''
 }
 
-const roomsRowCapacity = computed(() => {
-  const containerWidth = Math.min(width.value * 0.9, 1400)
-  const gap = 12
-  const cardWidth = width.value <= 480 ? 180 : width.value <= 768 ? 200 : 220
-  return Math.max(1, Math.floor((containerWidth + gap) / (cardWidth + gap)))
-})
-
-const visibleRooms = computed(() => indexData.value?.streamers?.slice(0, roomsRowCapacity.value) ?? [])
-
-const glassBg = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.22)' : 'rgba(255, 255, 255, 0.42)'))
-const glassBgSoft = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.14)' : 'rgba(255, 255, 255, 0.30)'))
-const indexGlassVars = computed(() => ({
-  '--index-glass-bg': glassBg.value,
-  '--index-glass-bg-soft': glassBgSoft.value,
-  // 避免浅色/深色下出现“发黑”的边框观感，统一使用更中性的灰蓝色系
-  '--index-glass-border': isDarkMode.value ? 'rgba(148, 163, 184, 0.18)' : 'rgba(148, 163, 184, 0.22)',
-}))
-
-const textColor = computed(() => themeVars.value.textColor1)
-const textColorSecondary = computed(() => themeVars.value.textColor2)
-
-const featureIconColor = computed(() => (isDarkMode.value ? 'rgba(226, 232, 240, 0.9)' : 'rgba(15, 23, 42, 0.82)'))
-
-const gradientColors = computed(() => ({
-  from: themeVars.value.primaryColor,
-  to: themeVars.value.infoColor,
-}))
-
-// 统一的圆角设计系统
-const borderRadius = computed(() => ({
-  small: themeVars.value.borderRadiusSmall,
-  medium: themeVars.value.borderRadius,
-  large: themeVars.value.borderRadius,
-  xlarge: themeVars.value.borderRadius,
-  round: '9999px',
-}))
-
-// 功能图标颜色映射 - 优化为统一的色系，与背景渐变协调
-const iconColors = computed(() => {
-  // 基于背景渐变色调的统一色板
-  const baseColors = isDarkMode.value
-    ? {
-        // 暗色模式：更柔和的色调，降低饱和度
-        teal: '#4ECDC4', // 青绿色 - 接近背景起始色
-        purple: '#9B7EDE', // 紫色 - 接近背景结束色
-        blue: '#6BB6FF', // 蓝色
-        green: '#7ED321', // 绿色
-        orange: '#F5A623', // 橙色
-        pink: '#D63384', // 粉色
-        indigo: '#6F42C1', // 靛蓝
-        cyan: '#17A2B8', // 青色
-        mint: '#20C997', // 薄荷绿
-        lavender: '#B794F6', // 薰衣草紫
-        coral: '#FF6B6B', // 珊瑚色
-        sage: '#8FBC8F', // 鼠尾草绿
-      }
-    : {
-        // 亮色模式：更鲜艳的色调，保持活力
-        teal: '#2EBFA5', // 青绿色 - 与背景起始色呼应
-        purple: '#8B5CF6', // 紫色 - 与背景结束色呼应
-        blue: '#3B82F6', // 蓝色
-        green: '#10B981', // 绿色
-        orange: '#F59E0B', // 橙色
-        pink: '#EC4899', // 粉色
-        indigo: '#6366F1', // 靛蓝
-        cyan: '#06B6D4', // 青色
-        mint: '#14B8A6', // 薄荷绿
-        lavender: '#A855F7', // 薰衣草紫
-        coral: '#EF4444', // 珊瑚色
-        sage: '#22C55E', // 鼠尾草绿
-      }
-
-  return {
-    VehicleShip24Filled: baseColors.teal, // 直播事件记录 - 青绿色
-    BookCoins20Filled: baseColors.orange, // 积分兑换 - 橙色
-    Chat24Filled: baseColors.green, // 弹幕机 - 绿色
-    Calendar: baseColors.pink, // 日程表 - 粉色
-    MusicalNote: baseColors.purple, // 歌单 - 紫色
-    Chatbox: baseColors.blue, // 棉花糖 - 蓝色
-    Lottery24Filled: baseColors.coral, // 抽奖功能 - 珊瑚色
-    ListCircle: baseColors.sage, // 点歌/排队功能 - 鼠尾草绿
-    TabletSpeaker24Filled: baseColors.cyan, // 读弹幕 - 青色
-    VideoAdd20Filled: baseColors.lavender, // 视频征集 - 薰衣草紫
-    AnalyticsSharp: baseColors.mint, // 数据跟踪 - 薄荷绿
-    MoreHorizontal24Filled: baseColors.indigo, // 更多功能 - 靛蓝
-    PersonFeedback24Filled: baseColors.coral, // 自动操作 - 珊瑚色
-  }
-})
-
-// 处理功能卡片点击
 function handleFunctionClick(item: (typeof functions)[0]) {
-  if (item.route) {
-    // 跳转到对应的管理页面
-    $router.push({ name: item.route })
+  $router.push({ name: item.route })
+}
+
+function getFeatureTone(index: number) {
+  return featureTones[index % featureTones.length]
+}
+
+function updateRoomsScrollState() {
+  const scroller = roomsScroller.value
+  if (!scroller) return
+
+  canScrollRoomsLeft.value = scroller.scrollLeft > 1
+  canScrollRoomsRight.value = scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth - 1
+}
+
+function scrollRooms(direction: -1 | 1) {
+  const scroller = roomsScroller.value
+  if (!scroller) return
+
+  scroller.scrollBy({ left: direction * scroller.clientWidth * 0.8, behavior: 'smooth' })
+}
+
+useResizeObserver(roomsScroller, updateRoomsScrollState)
+
+async function loadIndexData() {
+  isRefreshingRooms.value = true
+  try {
+    const data = await QueryGetAPI<IndexDataType>(`${VTSURU_API_URL}get-index-data`)
+    if (data.code !== 200) throw new Error(`Failed to load index data: ${data.code}`)
+
+    indexData.value = data.data
+    await nextTick()
+    roomsScroller.value?.scrollTo({ left: 0, behavior: 'smooth' })
+    updateRoomsScrollState()
+  } finally {
+    isRefreshingRooms.value = false
   }
 }
 
-const particlesOptions = computed<RecursivePartial<IOptions>>(() => {
-  const isDark = isDarkMode.value
-  const dot = isDark ? 'rgba(255, 255, 255, 0.36)' : 'rgba(9, 9, 11, 0.22)'
-  const link = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(9, 9, 11, 0.12)'
-  const accents = isDark
-    ? ['rgba(96, 165, 250, 0.22)', 'rgba(192, 132, 252, 0.18)', 'rgba(45, 212, 191, 0.18)']
-    : ['rgba(59, 130, 246, 0.18)', 'rgba(168, 85, 247, 0.14)', 'rgba(20, 184, 166, 0.14)']
-
-  return {
-    background: { color: { value: 'transparent' } },
-    fullScreen: { enable: false },
-    fpsLimit: 60,
-    detectRetina: true,
-    particles: {
-      number: { value: 42, density: { enable: true } },
-      color: { value: [dot, ...accents] },
-      shape: { type: 'circle' },
-      opacity: { value: { min: 0.16, max: 0.36 } },
-      size: { value: { min: 1, max: 2 } },
-      links: { enable: true, distance: 140, color: link, opacity: 0.26, width: 1 },
-      move: { enable: true, speed: 0.6, direction: 'none', outModes: { default: 'out' } },
-    },
-    interactivity: {
-      events: {
-        onHover: { enable: false, mode: [] },
-        onClick: { enable: false, mode: [] },
-        resize: { enable: true },
-      },
-    },
-  }
-})
-
-onMounted(async () => {
-  const data = await QueryGetAPI<IndexDataType>(`${VTSURU_API_URL}get-index-data`)
-  if (data.code == 200) {
-    indexData.value = data.data
-  }
+onMounted(() => {
+  void loadIndexData()
 })
 </script>
 
 <template>
-  <div
-    class="index-background"
-    :style="indexGlassVars"
-  >
-    <vue-particles
-      id="tsparticles"
-      :key="isDarkMode ? 'dark' : 'light'"
-      :options="particlesOptions"
-    />
-    <NFlex
-      vertical
-      justify="center"
-      align="center"
-      class="main-container"
-    >
-      <!-- 顶部标题部分 -->
-      <NCard
-        :style="{
-          width: '90vw',
-          maxWidth: '1400px',
-          borderRadius: borderRadius.xlarge,
-        }"
-        class="hero-card glass-card"
-      >
-        <NFlex
-          justify="center"
-          align="center"
-          :size="width > 700 ? 50 : 0"
-          :vertical="width <= 700"
-        >
+  <div class="index-background">
+    <HomeEmojiBackdrop />
+    <main class="main-container">
+      <section class="hero-section home-section">
+        <div class="hero-layout">
           <vtb class="hero-icon" />
-          <NFlex
-            vertical
-            justify="center"
-            :align="width <= 700 ? 'center' : 'start'"
-          >
-            <NGradientText
-              :size="width > 700 ? '3rem' : '2.5rem'"
-              :gradient="{
-                deg: 180,
-                ...gradientColors,
-              }"
-              style="font-weight: 700"
-            >
-              VTSURU.LIVE
-            </NGradientText>
-            <NText
-              :style="{
-                fontSize: width > 700 ? '1.5em' : '1.2em',
-                fontWeight: 500,
-                color: textColor,
-                textAlign: width <= 700 ? 'center' : 'left',
-              }"
-            >
-              一个给主播提供便利功能的网站 😊
-            </NText>
-            <!-- 主播 / 观众入口 -->
-            <NFlex
-              :wrap="width <= 700"
-              justify="center"
-              align="center"
-              :style="{ gap: width > 700 ? '24px' : '16px', marginTop: '20px' }"
-            >
-              <!-- 主播入口 -->
+          <div class="hero-content">
+            <h1 class="brand-title">VTSURU.LIVE</h1>
+            <p class="hero-tagline">一个给主播提供便利功能的网站 😊</p>
+
+            <div class="entry-grid">
               <NTooltip placement="bottom">
                 <template #trigger>
-                  <NCard
-                    hoverable
-                    :style="{
-                      width: width > 700 ? '240px' : '100%',
-                      minWidth: '200px',
-                      cursor: 'pointer',
-                      borderRadius: borderRadius.large,
-                    }"
-                    class="entry-card glass-card-soft"
+                  <button
+                    type="button"
+                    class="entry-card tone-cyan"
                     @click="$router.push({ name: 'manage-index' })"
                   >
-                    <NFlex
-                      vertical
-                      align="center"
-                      justify="center"
-                      :size="8"
-                    >
-                      <NIcon
-                        :component="PersonFeedback24Filled"
-                        size="36"
-                        :color="textColor"
-                      />
-                      <NText :style="{ fontSize: '1.2rem', fontWeight: 500, color: textColor }"> 我是主播 </NText>
-                      <NButton
-                        type="primary"
-                        secondary
-                        size="small"
-                        :style="{ borderRadius: borderRadius.medium }"
-                      >
-                        开始使用
-                      </NButton>
-                    </NFlex>
-                  </NCard>
+                    <NIcon
+                      :component="PersonFeedback24Filled"
+                      size="36"
+                    />
+                    <strong>我是主播</strong>
+                    <span>开始使用</span>
+                  </button>
                 </template>
                 进入主播后台，管理直播相关工具与设置
               </NTooltip>
 
-              <!-- 观众入口 -->
               <NTooltip placement="bottom">
                 <template #trigger>
-                  <NCard
-                    hoverable
-                    :style="{
-                      width: width > 700 ? '240px' : '100%',
-                      minWidth: '200px',
-                      cursor: 'pointer',
-                      borderRadius: borderRadius.large,
-                    }"
-                    class="entry-card glass-card-soft"
+                  <button
+                    type="button"
+                    class="entry-card tone-yellow"
                     @click="$router.push({ name: 'bili-user' })"
                   >
-                    <NFlex
-                      vertical
-                      align="center"
-                      justify="center"
-                      :size="8"
-                    >
-                      <NIcon
-                        :component="Chat24Filled"
-                        size="36"
-                        :color="textColor"
-                      />
-                      <NText :style="{ fontSize: '1.2rem', fontWeight: 500, color: textColor }"> 我是观众 </NText>
-                      <NButton
-                        type="info"
-                        secondary
-                        size="small"
-                        :style="{ borderRadius: borderRadius.medium }"
-                      >
-                        用户主页
-                      </NButton>
-                    </NFlex>
-                  </NCard>
+                    <NIcon
+                      :component="Chat24Filled"
+                      size="36"
+                    />
+                    <strong>我是观众</strong>
+                    <span>用户主页</span>
+                  </button>
                 </template>
                 进入个人主页，查看积分与互动记录
               </NTooltip>
-            </NFlex>
+            </div>
 
-            <!-- 其他操作按钮 -->
-            <NFlex
-              justify="center"
-              align="center"
-              :wrap="width <= 700"
-              :style="{ marginTop: '20px', gap: '12px' }"
-            >
+            <div class="hero-actions">
               <NButton
-                size="large"
                 secondary
-                :style="{ borderRadius: borderRadius.large }"
                 @click="$router.push('/@Megghy')"
               >
                 展示
               </NButton>
               <NButton
-                size="large"
+                type="primary"
                 tag="a"
                 href="https://play-live.bilibili.com/details/1698742711771"
                 target="_blank"
-                type="primary"
-                :style="{ borderRadius: borderRadius.large }"
               >
                 幻星平台
               </NButton>
               <NButton
                 type="info"
-                size="large"
-                :style="{ borderRadius: borderRadius.large }"
                 @click="$router.push({ name: 'about' })"
               >
                 关于
               </NButton>
-            </NFlex>
-          </NFlex>
-        </NFlex>
-      </NCard>
-
-      <!-- 用户统计部分 -->
-      <NCard
-        :style="{
-          width: '90vw',
-          maxWidth: '1400px',
-          borderRadius: borderRadius.medium,
-        }"
-        size="small"
-        class="glass-card-soft"
-      >
-        <NFlex
-          justify="center"
-          align="center"
-        >
-          <div class="stats-item">
-            <NText :style="{ fontSize: '0.8rem', color: textColorSecondary, display: 'block', textAlign: 'center' }">
-              注册用户
-            </NText>
-            <NText
-              :style="{ fontSize: '1.2rem', fontWeight: 600, color: textColor, display: 'block', textAlign: 'center' }"
-            >
-              <NNumberAnimation
-                :from="0"
-                :to="indexData?.userCount"
-                show-separator
-              />
-            </NText>
-          </div>
-        </NFlex>
-      </NCard>
-
-      <!-- 功能列表部分 -->
-      <NCard
-        :style="{
-          width: '90vw',
-          maxWidth: '1400px',
-          marginBottom: '20px',
-          borderRadius: borderRadius.xlarge,
-        }"
-        class="glass-card"
-      >
-        <NFlex vertical>
-          <NFlex
-            justify="center"
-            align="center"
-            style="margin-bottom: 30px"
-          >
-            <div class="section-header">
-              <NText class="section-title"> 🌟 网站功能 </NText>
-              <div class="section-subtitle">
-                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
-                  为主播和观众提供丰富的互动工具
-                </NText>
-              </div>
-            </div>
-          </NFlex>
-
-          <NFlex
-            :wrap="true"
-            justify="center"
-            style="gap: 15px"
-          >
-            <NCard
-              v-for="item in functions"
-              :key="item.name"
-              :style="{
-                width: '300px',
-                maxWidth: '100%',
-                borderRadius: borderRadius.large,
-                boxShadow: 'none',
-                cursor: item.route ? 'pointer' : 'default',
-              }"
-              hoverable
-              class="feature-card glass-card-soft"
-              @click="handleFunctionClick(item)"
-            >
-              <NFlex vertical>
-                <NFlex
-                  align="center"
-                  style="margin-bottom: 10px"
-                >
-                  <div class="icon-wrapper">
-                    <NIcon
-                      :component="item.icon"
-                      size="24"
-                      :color="featureIconColor"
-                    />
-                  </div>
-                  <NFlex
-                    align="center"
-                    :size="8"
-                    style="margin-left: 12px"
-                  >
-                    <NText :style="{ fontSize: '1.1rem', fontWeight: 500, color: textColor }">
-                      {{ item.name }}
-                    </NText>
-                    <span
-                      v-if="(item as any).badge"
-                      class="feature-badge-new"
-                    >
-                      {{ (item as any).badge }}
-                    </span>
-                  </NFlex>
-                </NFlex>
-                <NText :style="{ lineHeight: 1.6, color: textColorSecondary }">
-                  {{ item.desc }}
-                </NText>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NFlex>
-      </NCard>
-
-      <!-- 自定义页面功能介绍 -->
-      <NCard
-        :style="{
-          width: '90vw',
-          maxWidth: '1400px',
-          marginBottom: '20px',
-          borderRadius: borderRadius.xlarge,
-        }"
-        class="glass-card"
-      >
-        <NFlex vertical>
-          <NFlex
-            justify="center"
-            align="center"
-            style="margin-bottom: 30px"
-          >
-            <div class="section-header">
-              <NText class="section-title"> 自定义页面（区块编辑器） </NText>
-              <div class="section-subtitle">
-                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
-                  用区块搭建个人主页/投稿页/赞助页等，自定义布局与样式
-                </NText>
-              </div>
-            </div>
-          </NFlex>
-
-          <div class="userpage-intro-layout">
-            <div class="userpage-intro-copy">
-              <NText :style="{ color: textColor, fontSize: '1rem', fontWeight: 500 }"> 像搭积木一样拼页面 </NText>
-              <div style="height: 8px" />
-              <NText :style="{ color: textColorSecondary, lineHeight: 1.7 }">
-                支持分组与布局（横向/纵向/拉伸），并提供边框、背景、间距等常用样式开关；编辑区与预览区实时同步，方便调试。
-              </NText>
-              <div style="height: 12px" />
-              <div class="userpage-intro-list">
-                <div class="userpage-intro-li">
-                  - 包括但不仅限于: 个人主页 / 投稿页 / 赞助页 / 图集展示 / 视频展示...
-                </div>
-                <div class="userpage-intro-li">- 支持：区块组合、拖拽排序、组件级样式与预览</div>
-              </div>
-              <div style="height: 14px" />
-              <NFlex
-                :wrap="true"
-                justify="start"
-                style="gap: 10px"
-              >
-                <NButton
-                  type="primary"
-                  :style="{ borderRadius: borderRadius.medium }"
-                  @click="$router.push({ name: 'manage-userPageBuilder' })"
-                >
-                  打开编辑器
-                </NButton>
-                <NButton
-                  secondary
-                  :style="{ borderRadius: borderRadius.medium }"
-                  @click="$router.push('/@Megghy')"
-                >
-                  查看示例
-                </NButton>
-              </NFlex>
             </div>
 
-            <div class="userpage-intro-media">
-              <div class="userpage-intro-image">
-                <img
-                  src="https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png"
-                  referrerpolicy="no-referrer"
-                  alt="自定义页面"
+            <div class="hero-stat">
+              <span>注册用户</span>
+              <strong>
+                <NNumberAnimation
+                  :from="0"
+                  :to="indexData?.userCount ?? 0"
+                  show-separator
                 />
-              </div>
+              </strong>
             </div>
           </div>
-        </NFlex>
-      </NCard>
+        </div>
+      </section>
 
-      <!-- 客户端专属功能部分 -->
-      <NCard
-        :style="{
-          width: '90vw',
-          maxWidth: '1400px',
-          marginBottom: '20px',
-          borderRadius: borderRadius.xlarge,
-        }"
-        class="glass-card"
-      >
-        <NFlex vertical>
-          <NFlex
-            justify="center"
-            align="center"
-            style="margin-bottom: 30px"
+      <section class="home-section">
+        <header class="section-header">
+          <h2 class="section-title">网站功能</h2>
+          <p class="section-subtitle">为主播和观众提供丰富的互动工具</p>
+        </header>
+        <div class="feature-grid">
+          <button
+            v-for="(item, index) in functions"
+            :key="item.name"
+            type="button"
+            class="feature-card"
+            :class="getFeatureTone(index)"
+            @click="handleFunctionClick(item)"
           >
-            <div class="section-header">
-              <NText class="section-title"> 客户端功能 </NText>
-              <div class="section-subtitle">
-                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }"> 本地运行的强大自动化工具 </NText>
-              </div>
-            </div>
-          </NFlex>
+            <span class="feature-card-header">
+              <span class="icon-wrapper">
+                <NIcon
+                  :component="item.icon"
+                  size="24"
+                />
+              </span>
+              <span class="feature-card-title">{{ item.name }}</span>
+              <span
+                v-if="item.badge"
+                class="feature-badge-new"
+              >
+                {{ item.badge }}
+              </span>
+            </span>
+            <span class="feature-card-desc">{{ item.desc }}</span>
+          </button>
+        </div>
+      </section>
 
-          <NFlex
-            :wrap="true"
-            justify="center"
-            style="gap: 20px"
-          >
-            <NCard
-              :style="{
-                width: '380px',
-                maxWidth: '100%',
-                borderRadius: borderRadius.large,
-                boxShadow: 'none',
-              }"
-              hoverable
-              class="feature-card glass-card-soft"
-            >
-              <NFlex vertical>
-                <NFlex
-                  align="center"
-                  style="margin-bottom: 10px"
-                >
-                  <div class="icon-wrapper">
-                    <NIcon
-                      :component="PersonFeedback24Filled"
-                      size="24"
-                      :color="iconColors.PersonFeedback24Filled"
-                    />
-                  </div>
-                  <NText :style="{ fontSize: '1.1rem', fontWeight: 500, marginLeft: '12px', color: textColor }">
-                    自动操作
-                  </NText>
-                </NFlex>
-                <NText :style="{ lineHeight: 1.6, color: textColorSecondary }">
-                  支持弹幕自动回复、礼物感谢、上舰私信、关注感谢、入场欢迎、定时发送和SC感谢等功能，使用模板系统和JS执行环境，可定制化程度挺高
-                </NText>
-              </NFlex>
-            </NCard>
-
-            <NCard
-              :style="{
-                width: '380px',
-                maxWidth: '100%',
-                borderRadius: borderRadius.large,
-                boxShadow: 'none',
-              }"
-              hoverable
-              class="feature-card glass-card-soft"
-            >
-              <NFlex vertical>
-                <NFlex
-                  align="center"
-                  style="margin-bottom: 10px"
-                >
-                  <div class="icon-wrapper">
-                    <NIcon
-                      :component="Chat24Filled"
-                      size="24"
-                      :color="iconColors.Chat24Filled"
-                    />
-                  </div>
-                  <NText :style="{ fontSize: '1.1rem', fontWeight: 500, marginLeft: '12px', color: textColor }">
-                    弹幕机 (客户端)
-                  </NText>
-                </NFlex>
-                <NText :style="{ lineHeight: 1.6, color: textColorSecondary }">
-                  在自己电脑上显示直播间弹幕、礼物和互动内容
-                </NText>
-              </NFlex>
-            </NCard>
-          </NFlex>
-
-          <NFlex
-            justify="center"
-            style="margin-top: 20px"
-          >
-            <NFlex>
+      <section class="home-section userpage-section">
+        <header class="section-header">
+          <h2 class="section-title">自定义页面（区块编辑器）</h2>
+          <p class="section-subtitle">用区块搭建个人主页、投稿页或赞助页</p>
+        </header>
+        <div class="userpage-intro-layout">
+          <div class="userpage-intro-copy">
+            <h3>像搭积木一样拼页面</h3>
+            <p>
+              支持分组与布局（横向、纵向、拉伸），并提供边框、背景、间距等常用样式开关；编辑区与预览区实时同步，方便调试。
+            </p>
+            <ul class="userpage-intro-list">
+              <li>包括个人主页、投稿页、赞助页、图集展示和视频展示</li>
+              <li>支持区块组合、拖拽排序、组件级样式与预览</li>
+            </ul>
+            <div class="section-actions">
               <NButton
                 type="primary"
-                tag="a"
-                href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
-                target="_blank"
-                :style="{ borderRadius: borderRadius.medium }"
+                @click="$router.push({ name: 'manage-userPageBuilder' })"
               >
-                <template #icon>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                客户端安装说明
+                打开编辑器
               </NButton>
               <NButton
-                ghost
-                tag="a"
-                href="https://github.com/Megghy/vtsuru-fetvher-client"
-                target="_blank"
-                :style="{ borderRadius: borderRadius.medium }"
+                secondary
+                @click="$router.push('/@Megghy')"
               >
-                客户端代码
+                查看示例
               </NButton>
-              <NButton
-                ghost
-                tag="a"
-                href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
-                target="_blank"
-                :style="{ borderRadius: borderRadius.medium }"
-              >
-                逻辑代码
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NFlex>
-      </NCard>
-
-      <!-- 直播间列表 -->
-      <NCard
-        :style="{
-          width: '90vw',
-          maxWidth: '1400px',
-          borderRadius: borderRadius.xlarge,
-          boxShadow: 'none',
-        }"
-        class="glass-card"
-      >
-        <NFlex vertical>
-          <NFlex
-            justify="center"
-            align="center"
-            style="margin-bottom: 30px"
-          >
-            <div class="section-header">
-              <NText class="section-title">
-                正在使用本站的主播们
-                <NTooltip>
-                  <template #trigger>
-                    <NIcon
-                      :component="Info24Filled"
-                      :color="textColor"
-                      size="16"
-                      style="margin-left: 8px"
-                    />
-                  </template>
-                  随机展示不分先后, 仅粉丝数大于500的主播；展示其直播间信息与开播状态
-                </NTooltip>
-              </NText>
-              <div class="section-subtitle">
-                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }"> 感谢支持 🙂 </NText>
-              </div>
-            </div>
-          </NFlex>
-
-          <div
-            v-if="indexData"
-            class="streamers-section"
-          >
-            <!-- 直播间 mini 卡片 -->
-            <div class="rooms-grid-mini">
-              <div
-                v-for="room in visibleRooms"
-                :key="room.roomId"
-                class="room-mini-card"
-                :class="{ live: room.isStreaming }"
-                @click="$router.push(`/@${room.name}`)"
-              >
-                <div class="room-mini-cover">
-                  <img
-                    v-if="getRoomCoverSrc(room)"
-                    class="room-mini-cover-img"
-                    :src="getRoomCoverSrc(room)"
-                    referrerpolicy="no-referrer"
-                    alt=""
-                  />
-                  <div class="room-mini-cover__mask" />
-                  <div class="room-mini-content">
-                    <div class="room-mini-top">
-                      <div class="room-mini-header">
-                        <img
-                          class="room-mini-avatar"
-                          :src="`${room.avatar}@96w`"
-                          referrerpolicy="no-referrer"
-                          alt="主播头像"
-                        />
-                        <div class="room-mini-meta">
-                          <div
-                            class="room-mini-name"
-                            :title="room.uname || room.name"
-                          >
-                            {{ room.uname || room.name }}
-                          </div>
-                          <div
-                            class="room-mini-status"
-                            :class="{ live: room.isStreaming }"
-                          >
-                            {{ room.isStreaming ? 'LIVE' : 'OFFLINE' }}
-                          </div>
-                        </div>
-                      </div>
-                      <div class="room-mini-actions">
-                        <a
-                          class="room-mini-btn"
-                          :href="`https://live.bilibili.com/${room.roomId}`"
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label="打开直播间"
-                          title="打开直播间"
-                          @click.stop
-                        >
-                          <NIcon
-                            :component="OpenOutline"
-                            size="16"
-                          />
-                        </a>
-                      </div>
-                    </div>
-                    <div class="room-mini-spacer" />
-                    <div class="room-mini-bottom">
-                      <div class="room-mini-bottom__left">
-                        <div
-                          class="room-mini-title"
-                          :title="room.title"
-                        >
-                          {{ room.title || '（暂无标题）' }}
-                        </div>
-                        <div
-                          class="room-mini-sub"
-                          :title="getRoomSubline(room)"
-                        >
-                          {{ getRoomSubline(room) }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 底部信息 -->
-            <div class="streamers-footer">
-              <NFlex
-                vertical
-                align="center"
-                :size="16"
-                style="margin-top: 32px"
-              >
-                <div class="more-indicator">
-                  <div class="dots-container">
-                    <div class="dot" />
-                    <div class="dot" />
-                    <div class="dot" />
-                  </div>
-                  <NText :style="{ color: textColor, fontSize: '0.9rem', fontWeight: 500 }"> 还有更多... </NText>
-                </div>
-
-                <NFlex
-                  align="center"
-                  justify="center"
-                  :size="8"
-                >
-                  <NIcon
-                    :component="Info24Filled"
-                    size="14"
-                    :color="textColorSecondary"
-                  />
-                  <NText :style="{ color: textColorSecondary, fontSize: '0.8rem', textAlign: 'center' }">
-                    不想被展示？前往
-                    <NButton
-                      text
-                      size="tiny"
-                      :style="{
-                        fontSize: '0.8rem',
-                        padding: '0 4px',
-                        textDecoration: 'underline',
-                      }"
-                      @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
-                    >
-                      设置页面 (渲染模式-传统-允许展示在主页)
-                    </NButton>
-                    关闭展示
-                  </NText>
-                </NFlex>
-              </NFlex>
             </div>
           </div>
-        </NFlex>
-      </NCard>
-    </NFlex>
-    <NFlex
-      justify="center"
-      class="footer"
-    >
-      <span :style="{ color: textColor }">
+          <div class="userpage-intro-media">
+            <div class="userpage-intro-image">
+              <img
+                src="https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png"
+                referrerpolicy="no-referrer"
+                alt="自定义页面示例"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-section client-section">
+        <header class="section-header">
+          <h2 class="section-title">客户端功能</h2>
+          <p class="section-subtitle">本地运行的强大自动化工具</p>
+        </header>
+        <div class="client-grid">
+          <article class="feature-card tone-coral">
+            <div class="feature-card-header">
+              <span class="icon-wrapper">
+                <NIcon
+                  :component="PersonFeedback24Filled"
+                  size="24"
+                />
+              </span>
+              <span class="feature-card-title">自动操作</span>
+            </div>
+            <p class="feature-card-desc">
+              支持弹幕自动回复、礼物感谢、上舰私信、关注感谢、入场欢迎、定时发送和 SC 感谢等功能，使用模板系统和 JS
+              执行环境，可定制化程度较高。
+            </p>
+          </article>
+
+          <article class="feature-card tone-cyan">
+            <div class="feature-card-header">
+              <span class="icon-wrapper">
+                <NIcon
+                  :component="Chat24Filled"
+                  size="24"
+                />
+              </span>
+              <span class="feature-card-title">弹幕机（客户端）</span>
+            </div>
+            <p class="feature-card-desc">在自己电脑上显示直播间弹幕、礼物和互动内容。</p>
+          </article>
+        </div>
+        <div class="section-actions centered-actions">
+          <NButton
+            type="primary"
+            tag="a"
+            href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
+            target="_blank"
+          >
+            <template #icon>
+              <NIcon :component="Info24Filled" />
+            </template>
+            客户端安装说明
+          </NButton>
+          <NButton
+            ghost
+            tag="a"
+            href="https://github.com/Megghy/vtsuru-fetvher-client"
+            target="_blank"
+          >
+            客户端代码
+          </NButton>
+          <NButton
+            ghost
+            tag="a"
+            href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
+            target="_blank"
+          >
+            逻辑代码
+          </NButton>
+        </div>
+      </section>
+
+      <!-- 直播间列表 -->
+      <section class="home-section streamers-home-section">
+        <header class="section-header streamers-section-header">
+          <div class="streamers-heading">
+            <h2 class="section-title">
+              正在使用本站的主播们
+              <NTooltip>
+                <template #trigger>
+                  <NIcon
+                    :component="Info24Filled"
+                    size="16"
+                    class="section-info-icon"
+                  />
+                </template>
+                随机展示不分先后，仅粉丝数大于 500 的主播；展示其直播间信息与开播状态
+              </NTooltip>
+            </h2>
+            <p class="section-subtitle">感谢支持</p>
+          </div>
+
+          <div class="streamers-controls">
+            <NTooltip>
+              <template #trigger>
+                <NButton
+                  circle
+                  quaternary
+                  aria-label="向左滚动"
+                  :disabled="!canScrollRoomsLeft"
+                  @click="scrollRooms(-1)"
+                >
+                  <template #icon>
+                    <NIcon :component="ChevronLeft24Regular" />
+                  </template>
+                </NButton>
+              </template>
+              向左滚动
+            </NTooltip>
+            <NTooltip>
+              <template #trigger>
+                <NButton
+                  circle
+                  quaternary
+                  aria-label="向右滚动"
+                  :disabled="!canScrollRoomsRight"
+                  @click="scrollRooms(1)"
+                >
+                  <template #icon>
+                    <NIcon :component="ChevronRight24Regular" />
+                  </template>
+                </NButton>
+              </template>
+              向右滚动
+            </NTooltip>
+            <NTooltip>
+              <template #trigger>
+                <NButton
+                  circle
+                  quaternary
+                  aria-label="刷新主播列表"
+                  :loading="isRefreshingRooms"
+                  @click="loadIndexData"
+                >
+                  <template #icon>
+                    <NIcon :component="ArrowClockwise24Regular" />
+                  </template>
+                </NButton>
+              </template>
+              刷新主播列表
+            </NTooltip>
+          </div>
+        </header>
+
+        <div
+          v-if="indexData"
+          class="streamers-section"
+        >
+          <!-- 直播间 mini 卡片 -->
+          <div
+            ref="roomsScroller"
+            class="rooms-grid-mini"
+            :class="{
+              'can-scroll-left': canScrollRoomsLeft,
+              'can-scroll-right': canScrollRoomsRight,
+            }"
+            @scroll="updateRoomsScrollState"
+          >
+            <div
+              v-for="room in indexData.streamers"
+              :key="room.roomId"
+              class="room-mini-card"
+              :class="{ live: room.isStreaming }"
+              @click="$router.push(`/@${room.name}`)"
+            >
+              <div class="room-mini-cover">
+                <img
+                  v-if="getRoomCoverSrc(room)"
+                  class="room-mini-cover-img"
+                  :src="getRoomCoverSrc(room)"
+                  referrerpolicy="no-referrer"
+                  alt=""
+                />
+                <div class="room-mini-cover__mask" />
+                <div class="room-mini-content">
+                  <div class="room-mini-top">
+                    <div class="room-mini-header">
+                      <img
+                        class="room-mini-avatar"
+                        :src="`${room.avatar}@96w`"
+                        referrerpolicy="no-referrer"
+                        alt="主播头像"
+                      />
+                      <div class="room-mini-meta">
+                        <div
+                          class="room-mini-name"
+                          :title="room.uname || room.name"
+                        >
+                          {{ room.uname || room.name }}
+                        </div>
+                        <div
+                          class="room-mini-status"
+                          :class="{ live: room.isStreaming }"
+                        >
+                          {{ room.isStreaming ? 'LIVE' : 'OFFLINE' }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="room-mini-actions">
+                      <a
+                        class="room-mini-btn"
+                        :href="`https://live.bilibili.com/${room.roomId}`"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="打开直播间"
+                        title="打开直播间"
+                        @click.stop
+                      >
+                        <NIcon
+                          :component="OpenOutline"
+                          size="16"
+                        />
+                      </a>
+                    </div>
+                  </div>
+                  <div class="room-mini-spacer" />
+                  <div class="room-mini-bottom">
+                    <div class="room-mini-bottom__left">
+                      <div
+                        class="room-mini-title"
+                        :title="room.title"
+                      >
+                        {{ room.title || '（暂无标题）' }}
+                      </div>
+                      <div
+                        class="room-mini-sub"
+                        :title="getRoomSubline(room)"
+                      >
+                        {{ getRoomSubline(room) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部信息 -->
+          <div class="streamers-footer">
+            <div class="streamers-note">
+              <NIcon
+                :component="Info24Filled"
+                size="14"
+              />
+              <span>
+                不想被展示？前往
+                <NButton
+                  text
+                  size="tiny"
+                  @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
+                >
+                  设置页面（渲染模式-传统-允许展示在主页）
+                </NButton>
+                关闭展示
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="footer">
+      <span>
         BY
         <NButton
           tag="a"
           href="https://space.bilibili.com/10021741"
           target="_blank"
           text
-          :style="{
-            borderRadius: borderRadius.small,
-          }"
         >
           Megghy
         </NButton>
       </span>
-    </NFlex>
+    </footer>
   </div>
 </template>
 
@@ -1021,50 +667,356 @@ onMounted(async () => {
     min-height: 100vh;
     box-sizing: border-box;
     background-color: var(--vtsuru-bg);
-    padding-bottom: 60px;
+    color: var(--vtsuru-fg);
     isolation: isolate;
-
-:deep(#tsparticles)
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-
-:deep(#tsparticles canvas)
-    width: 100% !important;
-    height: 100% !important;
-
-:deep(.main-container .n-card)
-    background-color: var(--index-glass-bg-soft) !important;
-    border: 1px solid var(--index-glass-border) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-
-:deep(.glass-card.n-card)
-    background-color: var(--index-glass-bg) !important;
-    border: 1px solid var(--index-glass-border) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-
-:deep(.glass-card-soft.n-card)
-    background-color: var(--index-glass-bg-soft) !important;
-    border: 1px solid var(--index-glass-border) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    overflow-x: hidden;
 
 .main-container
     position: relative;
-    z-index: 2;
-    padding-top: 30px;
-    padding-bottom: 30px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 52px;
+    width: min(90vw, 1400px);
+    margin: 0 auto;
+    padding: 48px 0 72px;
 
-.hero-card
+.home-section
     position: relative;
-    overflow: hidden;
+
+.hero-section
+    padding: 24px 0 36px;
+    border-bottom: 1px solid var(--vtsuru-border);
+
+.hero-layout
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 52px;
+
+.hero-content
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    max-width: 720px;
+
+.brand-title
+    position: relative;
+    margin: 0;
+    color: var(--vtsuru-fg);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1;
+
+.brand-title::after
+    content: '';
+    display: block;
+    width: 58px;
+    height: 5px;
+    margin-top: 14px;
+    border-radius: 999px;
+    background: #27abd9;
+
+.hero-tagline
+    margin: 18px 0 0;
+    color: var(--vtsuru-fg);
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    font-weight: 500;
 
 .hero-icon
+    width: clamp(210px, 24vw, 300px);
+    height: auto;
     animation: logo-float 6s ease-in-out infinite;
     will-change: transform;
+
+.entry-grid
+    display: grid;
+    grid-template-columns: repeat(2, minmax(190px, 240px));
+    gap: 16px;
+    width: 100%;
+    margin-top: 28px;
+
+.entry-card
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 152px;
+    padding: 22px 16px;
+    border: 1px solid var(--vtsuru-border);
+    border-bottom: 3px solid var(--card-accent);
+    border-radius: 8px;
+    background: var(--vtsuru-bg-elevated);
+    color: var(--vtsuru-fg);
+    cursor: pointer;
+    font: inherit;
+    transition: transform 160ms var(--vtsuru-bezier), border-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
+
+.entry-card:hover
+    transform: translateY(-3px);
+    border-color: var(--card-accent);
+    box-shadow: 0 10px 26px var(--card-shadow);
+
+.entry-card .n-icon
+    color: var(--card-accent);
+
+.entry-card strong
+    font-size: 1.15rem;
+    font-weight: 600;
+
+.entry-card span:last-child
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--card-soft);
+    color: var(--card-accent);
+    font-size: 0.82rem;
+
+.tone-cyan
+    --card-accent: #22a8d6;
+    --card-soft: rgba(34, 168, 214, 0.14);
+    --card-shadow: rgba(34, 168, 214, 0.14);
+
+.tone-yellow
+    --card-accent: #d89b26;
+    --card-soft: rgba(216, 155, 38, 0.14);
+    --card-shadow: rgba(216, 155, 38, 0.14);
+
+.tone-coral
+    --card-accent: #dc6473;
+    --card-soft: rgba(220, 100, 115, 0.14);
+    --card-shadow: rgba(220, 100, 115, 0.14);
+
+.hero-actions,
+.section-actions
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+
+.hero-actions
+    margin-top: 22px;
+
+.hero-stat
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 22px;
+    color: var(--vtsuru-fg-muted);
+    font-size: 0.85rem;
+
+.hero-stat strong
+    color: var(--vtsuru-fg);
+    font-size: 1.2rem;
+
+.section-header
+    margin-bottom: 22px;
+    text-align: center;
+
+.section-title
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--vtsuru-fg);
+    font-size: 1.35rem;
+    font-weight: 650;
+
+.section-subtitle
+    margin: 8px 0 0;
+    color: var(--vtsuru-fg-muted);
+    font-size: 0.92rem;
+
+.section-info-icon
+    color: var(--vtsuru-fg-muted);
+
+.feature-grid,
+.client-grid
+    display: grid;
+    gap: 14px;
+
+.feature-grid
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+.client-grid
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+.feature-card
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--vtsuru-border);
+    border-bottom: 3px solid var(--card-accent);
+    border-radius: 8px;
+    background: var(--vtsuru-bg-elevated);
+    color: var(--vtsuru-fg);
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    transition: transform 160ms var(--vtsuru-bezier), border-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
+
+article.feature-card
+    cursor: default;
+
+.feature-card:hover,
+.feature-card:focus-visible
+    transform: translateY(-2px);
+    border-color: var(--card-accent);
+    box-shadow: 0 8px 20px var(--card-shadow);
+    outline: none;
+
+.feature-card-header
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+
+.icon-wrapper
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--vtsuru-border);
+    border-radius: 8px;
+    background: var(--card-soft);
+    color: var(--card-accent);
+
+.feature-card-title
+    min-width: 0;
+    overflow: hidden;
+    color: var(--vtsuru-fg);
+    font-size: 1.06rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+.feature-card-desc
+    margin: 0;
+    color: var(--vtsuru-fg-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+
+.feature-badge-new
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 7px;
+    border: 1px solid var(--vtsuru-border);
+    border-radius: 999px;
+    background: var(--card-soft);
+    color: var(--card-accent);
+    font-size: 11px;
+    font-weight: 700;
+
+.userpage-intro-layout
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 460px);
+    align-items: center;
+    gap: 42px;
+
+.userpage-intro-copy
+    min-width: 0;
+
+.userpage-intro-copy h3
+    margin: 0;
+    color: var(--vtsuru-fg);
+    font-size: 1.18rem;
+
+.userpage-intro-copy p
+    margin: 12px 0 0;
+    color: var(--vtsuru-fg-muted);
+    line-height: 1.7;
+
+.userpage-intro-list
+    display: grid;
+    gap: 7px;
+    margin: 16px 0 20px;
+    padding: 0;
+    color: var(--vtsuru-fg);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    list-style: none;
+
+.userpage-intro-list li::before
+    content: '•';
+    margin-right: 8px;
+    color: #22a8d6;
+
+.userpage-intro-media
+    min-width: 0;
+
+.userpage-intro-image
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--vtsuru-border);
+    border-radius: 8px;
+    background: var(--vtsuru-bg-muted);
+
+.userpage-intro-image img
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+.centered-actions
+    justify-content: center;
+    margin-top: 22px;
+
+.streamers-home-section
+    padding-top: 6px;
+
+.streamers-section
+    width: 100%;
+    margin: 0 auto;
+
+.streamers-section-header
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    text-align: left;
+
+.streamers-heading
+    min-width: 0;
+
+.streamers-controls
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+
+.streamers-footer
+    margin-top: 12px;
+
+.streamers-note
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    color: var(--vtsuru-fg-muted);
+    font-size: 0.8rem;
+    text-align: center;
+
+.streamers-note .n-button
+    padding: 0 4px;
+    font-size: 0.8rem;
+    text-decoration: underline;
+
+.footer
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    padding: 0 0 24px;
+    color: var(--vtsuru-fg-muted);
 
 @media (prefers-reduced-motion: reduce)
     .hero-icon
@@ -1076,148 +1028,118 @@ onMounted(async () => {
     50%
         transform: translateY(-8px);
 
-.section-title
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: var(--vtsuru-fg);
+@media (max-width: 1100px)
+    .feature-grid
+        grid-template-columns: repeat(3, minmax(0, 1fr));
 
-.footer
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    width: 100%;
-    padding: 16px 0;
+@media (max-width: 860px)
+    .feature-grid
+        grid-template-columns: repeat(2, minmax(0, 1fr));
 
-/* 响应式设计 */
 @media (max-width: 700px)
     .main-container
-        padding-top: 20px;
-        padding-bottom: 20px;
+        gap: 42px;
+        width: min(92vw, 560px);
+        padding-top: 24px;
+
+    .hero-section
+        padding-top: 8px;
+
+    .hero-layout
+        flex-direction: column;
+        gap: 22px;
+        text-align: center;
+
+    .hero-content
+        align-items: center;
+        width: 100%;
+
+    .brand-title
+        font-size: 2.5rem;
+
+    .hero-tagline
+        font-size: 1.08rem;
+
+    .entry-grid
+        grid-template-columns: 1fr;
+        width: 100%;
+        max-width: 340px;
+
+    .entry-card
+        min-height: 142px;
+
+    .hero-actions
+        justify-content: center;
+
+    .hero-stat
+        margin-top: 18px;
+
+    .client-grid,
+    .feature-grid,
+    .userpage-intro-layout
+        grid-template-columns: 1fr;
+
+    .userpage-intro-media
+        order: -1;
 
     .section-title
-        font-size: 1.1rem;
+        font-size: 1.18rem;
 
-/* 新增样式 */
-.section-header
-    text-align: center;
+    .streamers-note
+        align-items: flex-start;
 
-.section-subtitle
-    margin-top: 8px;
-
-.userpage-intro-layout
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 18px;
-    width: 100%;
-
-.userpage-intro-copy
-    flex: 1 1 360px;
-    max-width: 640px;
-
-.userpage-intro-list
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-.userpage-intro-li
-    color: var(--vtsuru-fg);
-    font-size: 0.92rem;
-    line-height: 1.5;
-
-.userpage-intro-media
-    flex: 0 1 520px;
-    width: 100%;
-    max-width: 460px;
-
-.userpage-intro-image
-    width: 100%;
-    height: 220px;
-    border-radius: 14px;
-    border: 1px solid rgba(127, 127, 127, 0.45);
-    background: rgba(127, 127, 127, 0.06);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(127, 127, 127, 0.85);
-    user-select: none;
-    overflow: hidden;
-
-.userpage-intro-image img
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-
-:global(.dark) .userpage-intro-image
-    border: 1px dashed rgba(200, 200, 200, 0.35);
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(220, 220, 220, 0.75);
-
-.icon-wrapper
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--vtsuru-radius);
-    background: rgba(255, 255, 255, 0.34);
-    border: 1px solid var(--vtsuru-border);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-:global(.dark) .icon-wrapper
-    background: rgba(9, 9, 11, 0.24);
-
-.feature-badge-new
-    display: inline-flex;
-    align-items: center;
-    height: 18px;
-    padding: 0 8px;
-    border-radius: 9999px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    border: 1px solid var(--index-glass-border);
-    background: rgba(255, 255, 255, 0.26);
-    color: rgba(9, 9, 11, 0.78);
-
-:global(.dark) .feature-badge-new
-    background: rgba(9, 9, 11, 0.35);
-    color: rgba(255, 255, 255, 0.86);
-
-.stats-item
-    padding: 8px 16px;
+    .streamers-note span
+        max-width: 310px;
 
 /* 直播间展示区域 */
-.streamers-section
-    width: 100%;
-    margin: 0 auto;
-
 .rooms-grid-mini
+    --rooms-edge-fade: 64px;
+    --rooms-edge-mid: 40px;
+    --rooms-edge-soft: 18px;
     display: flex;
     flex-wrap: nowrap;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 12px;
     width: 100%;
     margin: 0 auto;
-    padding: 0 6px;
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+    padding: 4px 28px 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 28px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--vtsuru-border) transparent;
+    -webkit-overflow-scrolling: touch;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
 
+.rooms-grid-mini.can-scroll-left
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.16) var(--rooms-edge-soft), rgba(0, 0, 0, 0.58) var(--rooms-edge-mid), #000 var(--rooms-edge-fade), #000 100%);
+    mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.16) var(--rooms-edge-soft), rgba(0, 0, 0, 0.58) var(--rooms-edge-mid), #000 var(--rooms-edge-fade), #000 100%);
+
+.rooms-grid-mini.can-scroll-right
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - var(--rooms-edge-fade)), rgba(0, 0, 0, 0.58) calc(100% - var(--rooms-edge-mid)), rgba(0, 0, 0, 0.16) calc(100% - var(--rooms-edge-soft)), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - var(--rooms-edge-fade)), rgba(0, 0, 0, 0.58) calc(100% - var(--rooms-edge-mid)), rgba(0, 0, 0, 0.16) calc(100% - var(--rooms-edge-soft)), transparent 100%);
+
+.rooms-grid-mini.can-scroll-left.can-scroll-right
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.16) var(--rooms-edge-soft), rgba(0, 0, 0, 0.58) var(--rooms-edge-mid), #000 var(--rooms-edge-fade), #000 calc(100% - var(--rooms-edge-fade)), rgba(0, 0, 0, 0.58) calc(100% - var(--rooms-edge-mid)), rgba(0, 0, 0, 0.16) calc(100% - var(--rooms-edge-soft)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.16) var(--rooms-edge-soft), rgba(0, 0, 0, 0.58) var(--rooms-edge-mid), #000 var(--rooms-edge-fade), #000 calc(100% - var(--rooms-edge-fade)), rgba(0, 0, 0, 0.58) calc(100% - var(--rooms-edge-mid)), rgba(0, 0, 0, 0.16) calc(100% - var(--rooms-edge-soft)), transparent 100%);
+
+@media (min-width: 1200px)
+    .rooms-grid-mini
+        --rooms-edge-fade: 112px;
+        --rooms-edge-mid: 70px;
+        --rooms-edge-soft: 30px;
+
 .room-mini-card
     width: 220px;
     flex: 0 0 auto;
-    border-radius: 14px;
-    border: 1px solid var(--index-glass-border);
+    scroll-snap-align: start;
+    border-radius: 8px;
+    border: 1px solid var(--vtsuru-border);
     overflow: hidden;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.28);
@@ -1427,40 +1349,24 @@ onMounted(async () => {
     border-color: rgba(255, 255, 255, 0.28);
     transform: translateY(-1px);
 
-.streamers-footer
-    margin-top: 24px;
-
-.more-indicator
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-
-.dots-container
-    display: flex;
-    gap: 5px;
-    align-items: center;
-
-.dot
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--vtsuru-fg-muted);
-
 /* 响应式优化 */
 @media (max-width: 768px)
     .rooms-grid-mini
+        --rooms-edge-fade: 38px;
+        --rooms-edge-mid: 24px;
+        --rooms-edge-soft: 12px;
         gap: 10px;
-        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
-        mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+        scroll-padding-inline: 22px;
     .room-mini-card
         width: 200px;
 
 @media (max-width: 480px)
     .rooms-grid-mini
+        --rooms-edge-fade: 32px;
+        --rooms-edge-mid: 20px;
+        --rooms-edge-soft: 10px;
         gap: 10px;
-        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
-        mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+        scroll-padding-inline: 18px;
     .room-mini-card
         width: 180px;
 </style>

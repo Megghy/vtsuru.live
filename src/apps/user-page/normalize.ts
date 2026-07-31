@@ -1,5 +1,6 @@
 import type { BlockNode } from './block/schema'
 import { BLOCK_PAGE_VERSION } from './block/schema'
+import { normalizeUserPageColor, USER_PAGE_THEME_COLOR_KEYS } from './themeColor'
 import type { UserPagesSettingsV1 } from './types'
 
 export const USER_PAGES_SETTINGS_VERSION = 1 as const
@@ -24,17 +25,38 @@ const MIGRATIONS: Readonly<Record<number, Migration>> = {
   0: migrateLegacyToV1,
 }
 
-function forEachBlockProject(settings: JsonObject, visit: (project: JsonObject) => void) {
-  const pages: unknown[] = [settings.home]
+function forEachPage(settings: JsonObject, visit: (page: JsonObject, path: string) => void) {
+  const pages: Array<readonly [unknown, string]> = [[settings.home, 'home']]
   const pageMap = asObject(settings.pages)
-  if (pageMap) pages.push(...Object.values(pageMap))
+  if (pageMap) pages.push(...Object.entries(pageMap).map(([slug, page]) => [page, `pages.${slug}`] as const))
 
-  pages.forEach((pageValue) => {
+  pages.forEach(([pageValue, path]) => {
     const page = asObject(pageValue)
-    if (page?.mode !== 'block') return
-    const project = asObject(page.block)
-    if (project) visit(project)
+    if (page) visit(page, path)
   })
+}
+
+function forEachBlockProject(settings: JsonObject, visit: (project: JsonObject, path: string) => void) {
+  forEachPage(settings, (page, path) => {
+    if (page.mode !== 'block') return
+    const project = asObject(page.block)
+    if (project) visit(project, `${path}.block`)
+  })
+}
+
+function normalizeColors(value: unknown, path: string, keys: readonly string[]) {
+  const colors = asObject(value)
+  if (!colors) return
+  keys.forEach((key) => {
+    if (colors[key] !== undefined && colors[key] !== null) {
+      colors[key] = normalizeUserPageColor(colors[key], `${path}.${key}`)
+    }
+  })
+}
+
+function normalizeTheme(theme: unknown, path: string, includePageBackground = false) {
+  normalizeColors(theme, path, USER_PAGE_THEME_COLOR_KEYS)
+  if (includePageBackground) normalizeColors(theme, path, ['pageBackgroundColor'])
 }
 
 function normalizeCountdownTargets(blocks: unknown) {
@@ -58,7 +80,16 @@ function normalizeCountdownTargets(blocks: unknown) {
 }
 
 function normalizeCurrentVersion(settings: JsonObject) {
-  forEachBlockProject(settings, (project) => normalizeCountdownTargets(project.blocks))
+  normalizeTheme(settings.theme, 'theme')
+  normalizeColors(settings.background, 'background', ['pageBackgroundColor'])
+  forEachPage(settings, (page, path) => {
+    normalizeTheme(page.theme, `${path}.theme`)
+    normalizeColors(page.background, `${path}.background`, ['pageBackgroundColor'])
+  })
+  forEachBlockProject(settings, (project, path) => {
+    normalizeTheme(project.theme, `${path}.theme`, true)
+    normalizeCountdownTargets(project.blocks)
+  })
   return settings
 }
 
@@ -115,6 +146,7 @@ export function migrateBlockPageProject(project: unknown) {
   if (output.version === undefined) output.version = BLOCK_PAGE_VERSION
   if (output.version !== BLOCK_PAGE_VERSION)
     throw new Error(`BlockPageProject.version 不支持: ${String(output.version)}`)
+  normalizeTheme(output.theme, 'theme', true)
   normalizeCountdownTargets(output.blocks)
   return output
 }

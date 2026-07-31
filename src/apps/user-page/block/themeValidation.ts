@@ -1,4 +1,5 @@
 import { isValidGoogleFontFamily } from '../googleFonts'
+import { isNormalizedUserPageColor, USER_PAGE_THEME_COLOR_KEYS } from '../themeColor'
 import {
   isValidPageMaxWidth,
   PAGE_BORDER_STRENGTHS,
@@ -30,15 +31,13 @@ export function validateBlockPageTheme(theme: unknown, errors: ValidationErrors)
     return
   }
 
-  ;[
-    'primaryColor',
-    'backgroundColor',
-    'textColor',
-    'textColorLight',
-    'textColorDark',
-    'pageBackgroundColor',
-    'fontFamily',
-  ].forEach((key) => optionalString(props, key, 'theme', themeErrors))
+  ;[...USER_PAGE_THEME_COLOR_KEYS, 'pageBackgroundColor'].forEach((key) => {
+    optionalString(props, key, 'theme', themeErrors)
+    if (typeof props[key] === 'string' && !isNormalizedUserPageColor(props[key])) {
+      themeErrors.push(`theme: ${key} 必须是十六进制颜色`, key)
+    }
+  })
+  optionalString(props, 'fontFamily', 'theme', themeErrors)
   if (typeof props.fontFamily === 'string' && !isValidGoogleFontFamily(props.fontFamily)) {
     themeErrors.push('theme: fontFamily 格式不合法', 'fontFamily')
   }
