@@ -119,6 +119,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
         <QuestionBoxView
           v-if="props.userInfo"
           :user-info="props.userInfo"
+          embedded
         />
         <NAlert
           v-else

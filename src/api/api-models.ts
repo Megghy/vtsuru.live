@@ -27,6 +27,7 @@ export interface UserBasicInfo {
   name: string
   id: number
   isBiliAuthed: boolean
+  faceUrl?: string
 }
 export interface UserInfo extends UserBasicInfo {
   createAt: number
