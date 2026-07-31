@@ -124,7 +124,7 @@ onBeforeUnmount(() => observer?.disconnect())
 }
 .section-link:hover,
 .section-link.active {
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
   border-bottom-color: var(--vtsuru-page-primary);
 }
 .section-nav--vertical .section-link {

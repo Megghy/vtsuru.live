@@ -182,7 +182,9 @@ const seoTitle = computed(() => {
 })
 
 const pageSlugTitle = computed(() => {
-  if (!userPageSlug.value) return '主页'
+  const name = route.name?.toString()
+  if (name === 'user-index') return '主页'
+  if (name !== 'user-page') return ''
   const title = currentUserPageConfig.value?.title?.trim()
   return title || '页面'
 })
@@ -1262,7 +1264,7 @@ watch(
   border-radius: var(--vtsuru-page-radius);
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-page-primary-border);
   background: var(--vtsuru-page-primary-soft);
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
   display: inline-flex;
   align-items: center;
   justify-content: center;

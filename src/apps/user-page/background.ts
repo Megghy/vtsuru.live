@@ -162,8 +162,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars['--user-page-ui-surface-bg'] : undefined)
   const textPalette = resolveUserPageTextPalette(asObject(theme) ?? undefined, effectiveIsDark, contrastSurface)
   const pageText = textPalette.color
-  const readablePrimary =
-    resolveUserPageReadableAccent(primaryColor, backgroundColor, effectiveIsDark, contrastSurface) || pageText
+  const readablePrimary = resolveUserPageReadableAccent(pagePrimary, backgroundColor, effectiveIsDark, contrastSurface)
 
   const contentColor = customSurface || backgroundColor || surfaceVars['--user-page-ui-surface-bg']
   const defaultCardSurface = applyColorOpacity(

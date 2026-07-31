@@ -45,6 +45,7 @@ import {
 import type { CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
+import { resolveUserPageReadableAccent } from '@/apps/user-page/theme'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { uploadFiles } from '@/shared/services/fileUpload'
 import { isDarkMode } from '@/shared/utils'
@@ -110,6 +111,7 @@ const previewTheme = computed<CustomHtmlTheme>(() => ({
   bgElevated: previewTokens.value.elevated,
   border: previewTokens.value.borderColor,
   primary: previewTokens.value.brand,
+  primaryReadable: resolveUserPageReadableAccent(previewTokens.value.brand, undefined, previewDark.value),
   radius: previewTokens.value.radiusSurface,
   colorScheme: previewDark.value ? 'dark' : 'light',
 }))

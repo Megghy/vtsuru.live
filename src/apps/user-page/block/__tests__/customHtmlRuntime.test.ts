@@ -16,6 +16,7 @@ const theme = {
   bgElevated: '#fafafa',
   border: '#e4e4e7',
   primary: '#18a058',
+  primaryReadable: '#166534',
   radius: '6px',
   colorScheme: 'light',
 }

@@ -1,7 +1,18 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, useTemplateRef } from 'vue'
 
-const decorations = [
+import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
+
+const props = withDefaults(
+  defineProps<{
+    variant?: 'emoji' | 'bilibili'
+  }>(),
+  {
+    variant: 'emoji',
+  },
+)
+
+const emojiDecorations = [
   { symbol: '🎤', size: '58px', blur: '3px', opacity: 0.14 },
   { symbol: '😵‍💫', size: '42px', blur: '2px', opacity: 0.12 },
   { symbol: '🎵', size: '34px', blur: '2px', opacity: 0.13 },
@@ -24,13 +35,33 @@ const decorations = [
   { symbol: '😴', size: '40px', blur: '3px', opacity: 0.12 },
 ]
 
+const bilibiliDecorations = [
+  { size: '82px', blur: '2px', opacity: 0.1, color: '#fb7299' },
+  { size: '54px', blur: '3px', opacity: 0.08, color: '#00aeec' },
+  { size: '68px', blur: '1px', opacity: 0.09, color: '#fb7299' },
+  { size: '44px', blur: '3px', opacity: 0.09, color: '#7a8b99' },
+  { size: '92px', blur: '4px', opacity: 0.08, color: '#00aeec' },
+  { size: '58px', blur: '2px', opacity: 0.11, color: '#fb7299' },
+  { size: '48px', blur: '2px', opacity: 0.08, color: '#7a8b99' },
+  { size: '76px', blur: '3px', opacity: 0.1, color: '#fb7299' },
+  { size: '62px', blur: '2px', opacity: 0.07, color: '#00aeec' },
+  { size: '42px', blur: '1px', opacity: 0.1, color: '#fb7299' },
+  { size: '86px', blur: '4px', opacity: 0.07, color: '#7a8b99' },
+  { size: '52px', blur: '2px', opacity: 0.1, color: '#00aeec' },
+  { size: '70px', blur: '3px', opacity: 0.09, color: '#fb7299' },
+  { size: '46px', blur: '2px', opacity: 0.08, color: '#7a8b99' },
+]
+
 const floatVariants = ['bob', 'sway', 'pulse'] as const
-const animatedDecorations = decorations.map((decoration) => ({
-  ...decoration,
-  floatVariant: floatVariants[Math.floor(Math.random() * floatVariants.length)],
-  floatDuration: `${randomBetween(5.5, 9).toFixed(2)}s`,
-  floatDelay: `-${randomBetween(0, 8).toFixed(2)}s`,
-}))
+const animatedDecorations = computed(() => {
+  const decorations = props.variant === 'bilibili' ? bilibiliDecorations : emojiDecorations
+  return decorations.map((decoration) => ({
+    ...decoration,
+    floatVariant: floatVariants[Math.floor(Math.random() * floatVariants.length)],
+    floatDuration: `${randomBetween(5.5, 9).toFixed(2)}s`,
+    floatDelay: `-${randomBetween(0, 8).toFixed(2)}s`,
+  }))
+})
 
 interface ParticleState {
   element: HTMLElement
@@ -143,6 +174,7 @@ onBeforeUnmount(() => {
   <div
     ref="backdrop"
     class="emoji-backdrop"
+    :class="`emoji-backdrop--${variant}`"
     aria-hidden="true"
   >
     <span
@@ -154,6 +186,7 @@ onBeforeUnmount(() => {
         '--emoji-size': decoration.size,
         '--emoji-blur': decoration.blur,
         '--emoji-opacity': decoration.opacity,
+        '--emoji-color': decoration.color,
       }"
     >
       <span
@@ -164,7 +197,11 @@ onBeforeUnmount(() => {
           '--float-delay': decoration.floatDelay,
         }"
       >
-        {{ decoration.symbol }}
+        <BilibiliIcon
+          v-if="variant === 'bilibili'"
+          class="bilibili-glyph"
+        />
+        <template v-else>{{ decoration.symbol }}</template>
       </span>
     </span>
   </div>
@@ -196,6 +233,15 @@ onBeforeUnmount(() => {
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
     will-change: transform;
+
+.emoji-backdrop--bilibili .emoji-glyph
+    color: var(--emoji-color);
+
+.bilibili-glyph
+    display: block;
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
 
 .emoji-glyph--bob
     animation-name: emoji-float-bob;
@@ -234,4 +280,8 @@ onBeforeUnmount(() => {
 
     .emoji-decoration
         opacity: calc(var(--emoji-opacity) * 0.78);
+
+@media (prefers-reduced-motion: reduce)
+    .emoji-glyph
+        animation: none;
 </style>

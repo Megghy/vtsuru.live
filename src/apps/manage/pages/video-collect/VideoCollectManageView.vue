@@ -1,294 +1,245 @@
 <script setup lang="ts">
-import { Add20Regular } from '@vicons/fluent'
-import type { FormRules } from 'naive-ui'
-import {
-  NButton,
-  NCard,
-  NDatePicker,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NSpin,
-  NText,
-  useMessage,
-} from 'naive-ui'
+import { Add20Regular, ArrowRight24Regular, ArrowSync24Regular, Search24Regular } from '@vicons/fluent'
+import { NButton, NEmpty, NIcon, NInput, NProgress, NSelect, NSpin, NTag, NTime, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { VideoCollectTable } from '@/api/api-models'
+import type { VideoCollectCreateModel, VideoCollectTable } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
 
+import VideoCollectFormModal from './VideoCollectFormModal.vue'
+
+type StatusFilter = 'all' | 'active' | 'finished'
+
 const message = useMessage()
+const router = useRouter()
 const accountInfo = useAccount()
 
-const isLoading = ref(true)
+const videoTables = ref<VideoCollectTable[]>([])
+const isLoading = ref(false)
+const isCreating = ref(false)
 const createModalVisible = ref(false)
-const formRef = ref()
-const defaultModel = { maxVideoCount: 50 } as VideoCollectTable
-const createVideoModel = ref<VideoCollectTable>(JSON.parse(JSON.stringify(defaultModel)))
+const keyword = ref('')
+const statusFilter = ref<StatusFilter>('all')
 
-const videoTables = ref<VideoCollectTable[]>(await get())
 const videoCollectUrl = computed(() =>
   accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/video-collect` : '',
 )
+const activeTables = computed(() => videoTables.value.filter(isActive))
+const totalVideoCount = computed(() => videoTables.value.reduce((sum, table) => sum + table.videoCount, 0))
+const filteredTables = computed(() => {
+  const search = keyword.value.trim().toLocaleLowerCase()
 
-const createRules: FormRules = {
-  name: [
-    {
-      required: true,
-      message: '请输入征集表名称',
-    },
-  ],
-  endAt: [
-    {
-      required: true,
-      message: '请输入结束日期',
-    },
-    {
-      required: true,
-      message: '结束时间不能低于一小时',
-      validator: (rule: unknown, value: string) => {
-        const date = new Date(value)
-        if (date.getTime() < new Date().getTime() + 1000 * 60 * 60) {
-          return false
-        }
-        return true
-      },
-    },
-  ],
-  maxVideoCount: [
-    {
-      required: true,
-      message: '请输入最大视频数量',
-    },
-    {
-      required: true,
-      message: '视频不能少于1个',
-      trigger: ['input', 'blur'],
-      validator: (rule: unknown, value: string) => {
-        if (Number(value) < 1) {
-          return false
-        }
-        return true
-      },
-    },
-  ],
-}
-function dateDisabled(ts: number) {
-  return ts < Date.now() + 1000 * 60 * 60
+  return videoTables.value
+    .filter((table) => {
+      if (statusFilter.value === 'active' && !isActive(table)) return false
+      if (statusFilter.value === 'finished' && isActive(table)) return false
+      if (!search) return true
+      return `${table.name} ${table.description}`.toLocaleLowerCase().includes(search)
+    })
+    .toSorted((a, b) => Number(isActive(b)) - Number(isActive(a)) || b.createAt - a.createAt)
+})
+
+await loadTables()
+
+function isActive(table: VideoCollectTable) {
+  return !table.isFinish && table.endAt > Date.now()
 }
 
-const isLoading2 = ref(false)
-async function get() {
+function capacityPercentage(table: VideoCollectTable) {
+  return Math.min(100, Math.round((table.videoCount / table.maxVideoCount) * 100))
+}
+
+async function loadTables() {
+  isLoading.value = true
   try {
-    isLoading.value = true
-    const data = await QueryGetAPI<VideoCollectTable[]>(`${VIDEO_COLLECT_API_URL}get-all`)
-    if (data.code === 200) {
-      // videoTables.value = data.data
-      return data.data
-    } else {
-      message.error(`获取失败: ${data.message}`)
-      return []
-    }
-  } catch (err) {
-    console.error(err)
-    message.error('获取失败')
-    return []
+    const response = await QueryGetAPI<VideoCollectTable[]>(`${VIDEO_COLLECT_API_URL}get-all`)
+    if (response.code !== 200) throw new Error(response.message)
+    videoTables.value = response.data
+  } catch (error) {
+    console.error(error)
+    message.error('视频征集列表加载失败')
   } finally {
     isLoading.value = false
   }
 }
-function createTable() {
-  formRef.value?.validate().then(async () => {
-    isLoading2.value = true
-    QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}create`, createVideoModel.value)
-      .then((data) => {
-        if (data.code === 200) {
-          videoTables.value.push(data.data)
-          createModalVisible.value = false
-          message.success('创建成功')
-          createVideoModel.value = JSON.parse(JSON.stringify(defaultModel))
-        } else {
-          message.error(`创建失败: ${data.message}`)
-        }
-      })
-      .catch((err) => {
-        console.error(err)
-        message.error('创建失败')
-      })
-      .finally(() => {
-        isLoading2.value = false
-      })
-  })
+
+async function createTable(model: VideoCollectCreateModel) {
+  isCreating.value = true
+  try {
+    const response = await QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}create`, model)
+    if (response.code !== 200) throw new Error(response.message)
+    videoTables.value.unshift(response.data)
+    createModalVisible.value = false
+    message.success('征集已创建')
+  } catch (error) {
+    console.error(error)
+    message.error(error instanceof Error ? error.message : '创建失败')
+  } finally {
+    isCreating.value = false
+  }
 }
 </script>
 
 <template>
   <div class="video-collect-manage">
     <ManagePageHeader
-      title="视频征集管理"
-      subtitle="创建并管理您的视频征集活动"
+      title="视频征集"
+      subtitle="征集活动与提交审核"
       :function-type="FunctionTypes.VideoCollect"
-      :links="[{ label: '视频征集展示页链接', value: videoCollectUrl }]"
+      :loading="isLoading"
+      :links="[{ label: '公开展示页', value: videoCollectUrl }]"
     >
       <template #action>
         <NButton
+          secondary
+          :loading="isLoading"
+          @click="loadTables"
+        >
+          <template #icon>
+            <NIcon><ArrowSync24Regular /></NIcon>
+          </template>
+          刷新
+        </NButton>
+        <NButton
           type="primary"
-          size="medium"
           @click="createModalVisible = true"
         >
           <template #icon>
             <NIcon><Add20Regular /></NIcon>
           </template>
-          新建征集表
+          新建征集
         </NButton>
       </template>
     </ManagePageHeader>
 
-    <NSpin :show="isLoading">
-      <NCard
-        v-if="videoTables.length === 0 && !isLoading"
-        size="small"
-        :bordered="true"
-        class="empty-card"
+    <section
+      class="summary-strip"
+      aria-label="视频征集概览"
+    >
+      <div class="summary-item">
+        <span class="summary-label">全部征集</span>
+        <strong>{{ videoTables.length }}</strong>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">进行中</span>
+        <strong>{{ activeTables.length }}</strong>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">累计视频</span>
+        <strong>{{ totalVideoCount }}</strong>
+      </div>
+    </section>
+
+    <div class="collection-toolbar">
+      <NInput
+        v-model:value="keyword"
+        clearable
+        placeholder="搜索名称或说明"
+        class="collection-search"
       >
-        <NEmpty description="暂无征集表">
-          <template #extra>
-            <NButton
-              type="primary"
-              @click="createModalVisible = true"
-            >
-              创建第一个征集表
-            </NButton>
-          </template>
-        </NEmpty>
-      </NCard>
+        <template #prefix>
+          <NIcon :component="Search24Regular" />
+        </template>
+      </NInput>
+      <NSelect
+        v-model:value="statusFilter"
+        class="status-filter"
+        :options="[
+          { label: '全部状态', value: 'all' },
+          { label: '进行中', value: 'active' },
+          { label: '已结束', value: 'finished' },
+        ]"
+      />
+    </div>
+
+    <NSpin :show="isLoading">
+      <NEmpty
+        v-if="!isLoading && filteredTables.length === 0"
+        :description="videoTables.length === 0 ? '暂无视频征集' : '没有符合条件的征集'"
+        class="collection-empty"
+      >
+        <template
+          v-if="videoTables.length === 0"
+          #extra
+        >
+          <NButton
+            type="primary"
+            @click="createModalVisible = true"
+          >
+            新建征集
+          </NButton>
+        </template>
+      </NEmpty>
 
       <div
         v-else
-        class="grid-container"
+        class="collection-list"
       >
-        <NGrid
-          x-gap="12"
-          y-gap="12"
-          cols="1 640:2 1024:3 1440:4"
-          responsive="self"
+        <button
+          v-for="table in filteredTables"
+          :key="table.id"
+          type="button"
+          class="collection-row"
+          @click="router.push({ name: 'manage-videoCollect-Detail', params: { id: table.id } })"
         >
-          <NGridItem
-            v-for="item in videoTables"
-            :key="item.id"
-          >
-            <VideoCollectInfoCard
-              :item="item"
-              can-click
-              from="owner"
-              style="width: 100%"
-              class="collect-card"
+          <div class="collection-main">
+            <div class="collection-title-row">
+              <NTag
+                size="small"
+                :type="isActive(table) ? 'success' : 'default'"
+                :bordered="false"
+              >
+                {{ isActive(table) ? '进行中' : '已结束' }}
+              </NTag>
+              <strong class="collection-title">{{ table.name }}</strong>
+            </div>
+            <p class="collection-description">
+              {{ table.description || '未填写征集说明' }}
+            </p>
+          </div>
+
+          <div class="collection-deadline">
+            <span class="collection-meta-label">截止时间</span>
+            <NTime
+              :time="table.endAt"
+              format="yyyy-MM-dd HH:mm"
             />
-          </NGridItem>
-        </NGrid>
+          </div>
+
+          <div class="collection-capacity">
+            <div class="collection-capacity-label">
+              <span>提交进度</span>
+              <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
+            </div>
+            <NProgress
+              type="line"
+              :percentage="capacityPercentage(table)"
+              :height="5"
+              :border-radius="3"
+              :show-indicator="false"
+              :status="table.videoCount >= table.maxVideoCount ? 'success' : 'default'"
+            />
+          </div>
+
+          <NIcon
+            :component="ArrowRight24Regular"
+            class="collection-arrow"
+          />
+        </button>
       </div>
     </NSpin>
 
-    <NModal
+    <VideoCollectFormModal
       v-model:show="createModalVisible"
-      preset="card"
-      title="创建视频征集"
-      style="width: 600px; max-width: 90vw"
-      class="custom-modal"
-    >
-      <NForm
-        ref="formRef"
-        :model="createVideoModel"
-        :rules="createRules"
-        label-placement="left"
-        label-width="80"
-        require-mark-placement="right-hanging"
-      >
-        <NFormItem
-          label="标题"
-          path="name"
-        >
-          <NInput
-            v-model:value="createVideoModel.name"
-            placeholder="给征集活动起个响亮的名字"
-            maxlength="30"
-            show-count
-          />
-        </NFormItem>
-        <NFormItem
-          label="描述"
-          path="description"
-        >
-          <NInput
-            v-model:value="createVideoModel.description"
-            type="textarea"
-            placeholder="简要描述活动规则或备注"
-            maxlength="300"
-            show-count
-            :autosize="{ minRows: 3, maxRows: 5 }"
-          />
-        </NFormItem>
-        <NGrid
-          x-gap="24"
-          :cols="2"
-        >
-          <NGridItem>
-            <NFormItem
-              label="最大数量"
-              path="maxVideoCount"
-            >
-              <NInputNumber
-                v-model:value="createVideoModel.maxVideoCount"
-                placeholder="限制数量"
-                :min="1"
-                style="width: 100%"
-              />
-            </NFormItem>
-          </NGridItem>
-          <NGridItem>
-            <NFormItem
-              label="结束时间"
-              path="endAt"
-            >
-              <NDatePicker
-                v-model:value="createVideoModel.endAt"
-                type="datetime"
-                placeholder="选择截止时间"
-                :is-date-disabled="dateDisabled"
-                style="width: 100%"
-              />
-            </NFormItem>
-          </NGridItem>
-        </NGrid>
-
-        <div class="modal-footer">
-          <NText
-            depth="3"
-            style="font-size: 12px"
-          >
-            * 结束时间至少需要在当前时间一小时后
-          </NText>
-          <NButton
-            type="primary"
-            :loading="isLoading2"
-            @click="createTable"
-          >
-            立即创建
-          </NButton>
-        </div>
-      </NForm>
-    </NModal>
+      title="新建视频征集"
+      :loading="isCreating"
+      @submit="createTable"
+    />
   </div>
 </template>
 
@@ -296,30 +247,173 @@ function createTable() {
 .video-collect-manage {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.empty-card {
-  margin-top: 4px;
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-block: 1px solid var(--vtsuru-border);
 }
 
-.grid-container {
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 18px;
+}
+
+.summary-item + .summary-item {
+  border-left: 1px solid var(--vtsuru-border);
+}
+
+.summary-item strong {
+  color: var(--vtsuru-fg);
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.summary-label,
+.collection-meta-label {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.collection-toolbar {
+  display: flex;
+  gap: 10px;
+}
+
+.collection-search {
+  width: min(360px, 100%);
+}
+
+.status-filter {
+  width: 140px;
+}
+
+.collection-list {
+  border-top: 1px solid var(--vtsuru-border);
+}
+
+.collection-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.6fr) minmax(150px, 0.7fr) minmax(170px, 0.8fr) 24px;
+  gap: 24px;
+  align-items: center;
   width: 100%;
+  padding: 16px 12px;
+  color: var(--vtsuru-fg);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--vtsuru-border);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
-/* 深度选择器修改卡片样式 */
-:deep(.collect-card) {
-  height: 100%;
+.collection-row:hover,
+.collection-row:focus-visible {
+  background: var(--vtsuru-bg-muted);
+  outline: none;
 }
 
-.modal-footer {
+.collection-main,
+.collection-capacity {
+  min-width: 0;
+}
+
+.collection-title-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.collection-title {
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-description {
+  overflow: hidden;
+  margin: 7px 0 0;
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-deadline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.collection-capacity-label {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-top: 12px;
+  margin-bottom: 7px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
 }
 
-@media (max-width: 640px) {
-  /* 可以在这里添加针对小屏幕的样式调整 */
+.collection-capacity-label strong {
+  color: var(--vtsuru-fg);
+  font-weight: 600;
+}
+
+.collection-arrow {
+  color: var(--vtsuru-fg-muted);
+}
+
+.collection-empty {
+  padding: 64px 0;
+}
+
+@media (max-width: 760px) {
+  .collection-row {
+    grid-template-columns: minmax(0, 1fr) 20px;
+    gap: 12px;
+    padding: 15px 8px;
+  }
+
+  .collection-deadline,
+  .collection-capacity {
+    grid-column: 1;
+  }
+
+  .collection-deadline {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .collection-arrow {
+    grid-row: 1 / 4;
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 520px) {
+  .summary-item {
+    padding: 12px;
+  }
+
+  .summary-item strong {
+    font-size: 19px;
+  }
+
+  .collection-toolbar {
+    flex-direction: column;
+  }
+
+  .collection-search,
+  .status-filter {
+    width: 100%;
+  }
 }
 </style>

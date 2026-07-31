@@ -1,697 +1,768 @@
 <script setup lang="ts">
 import {
+  ArrowDownload24Regular,
   ArrowLeft24Regular,
+  ArrowSync24Regular,
   Delete24Regular,
   Edit24Regular,
   MoreVertical24Regular,
+  Open24Regular,
+  Search24Regular,
   Share24Regular,
   TableDismiss24Regular,
 } from '@vicons/fluent'
-import { useWindowSize } from '@vueuse/core'
-import { List } from 'linqts'
-import type { FormRules } from 'naive-ui'
+import { saveAs } from 'file-saver'
 import {
   NBadge,
   NButton,
-  NDatePicker,
   NDropdown,
   NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
   NIcon,
   NInput,
-  NInputNumber,
+  NInputGroup,
   NModal,
-  NPopconfirm,
-  NFlex,
+  NProgress,
+  NResult,
+  NSelect,
+  NSpin,
   NTabPane,
   NTabs,
-  NText,
+  NTag,
+  NTime,
+  useDialog,
   useMessage,
-  useThemeVars,
 } from 'naive-ui'
 import Qrcode from 'qrcode.vue'
-import { computed, h, onActivated, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, h, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import type { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoInfo } from '@/api/api-models'
 import { VideoStatus } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import router from '@/app/router'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
 import { formatDuration } from '@/apps/manage/composables/formatters'
-import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
-import { downloadImage } from '@/shared/utils'
+import { copyToClipboard, objectsToCSV } from '@/shared/utils'
+
+import VideoCollectFormModal from './VideoCollectFormModal.vue'
+
+type SortOption = 'submitted-desc' | 'duration-desc' | 'duration-asc' | 'title'
 
 const route = useRoute()
+const router = useRouter()
 const message = useMessage()
-const themeVars = useThemeVars()
-const { width } = useWindowSize()
+const dialog = useDialog()
 
-const shareModalVisiable = ref(false)
-const editModalVisiable = ref(false)
+const videoDetail = ref<VideoCollectDetail>()
 const isLoading = ref(false)
+const tableOperation = ref<string>()
+const videoOperation = ref<string>()
+const shareModalVisible = ref(false)
+const editModalVisible = ref(false)
+const activeStatus = ref(VideoStatus.Pending)
+const keyword = ref('')
+const sortOption = ref<SortOption>('submitted-desc')
+const qrCodeWrapper = ref<HTMLElement>()
 
-const formRef = ref()
-const defaultModel = { maxVideoCount: 50 } as VideoCollectCreateModel
-const updateModel = ref<VideoCollectCreateModel>(JSON.parse(JSON.stringify(defaultModel)))
-
-const videoDetail = ref<VideoCollectDetail>(await getData())
-
-const createRules: FormRules = {
-  name: [
-    {
-      required: true,
-      message: '请输入征集表名称',
-    },
-  ],
-  endAt: [
-    {
-      required: true,
-      message: '请输入结束日期',
-    },
-    {
-      required: true,
-      message: '结束时间不能低于一小时',
-      validator: (rule: unknown, value: string) => {
-        const date = new Date(value)
-        if (date.getTime() < new Date().getTime() + 1000 * 60 * 60) {
-          return false
-        }
-        return true
-      },
-    },
-  ],
-  maxVideoCount: [
-    {
-      required: true,
-      message: '请输入最大视频数量',
-    },
-    {
-      required: true,
-      message: '视频不能少于1个',
-      trigger: ['input', 'blur'],
-      validator: (rule: unknown, value: string) => {
-        if (Number(value) < 1) {
-          return false
-        }
-        return true
-      },
-    },
-  ],
-}
-
-const paddingVideos = computed(() => {
-  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Pending) ?? []
+const table = computed(() => videoDetail.value?.table)
+const videos = computed(() => videoDetail.value?.videos ?? [])
+const shareUrl = computed(() => (table.value ? `${CURRENT_HOST}video-collect/${table.value.shortId}` : ''))
+const isActive = computed(() => Boolean(table.value && !table.value.isFinish && table.value.endAt > Date.now()))
+const pendingVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Pending))
+const acceptedVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Accepted))
+const rejectedVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Rejected))
+const acceptedDuration = computed(() => acceptedVideos.value.reduce((sum, item) => sum + item.video.length, 0))
+const editValue = computed<VideoCollectCreateModel | undefined>(() => {
+  if (!table.value) return undefined
+  return {
+    id: table.value.id,
+    name: table.value.name,
+    description: table.value.description,
+    endAt: table.value.endAt,
+    maxVideoCount: table.value.maxVideoCount,
+  }
 })
-const rejectVideos = computed(() => {
-  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Rejected) ?? []
-})
-const acceptVideos = computed(() => {
-  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Accepted) ?? []
-})
+const visibleVideos = computed(() => {
+  const search = keyword.value.trim().toLocaleLowerCase()
+  const result = videos.value.filter((item) => {
+    if (item.info.status !== activeStatus.value) return false
+    if (!search) return true
+    const senders = item.info.senders
+      .map((sender) => `${sender.sender ?? ''} ${sender.senderId ?? ''} ${sender.description ?? ''}`)
+      .join(' ')
+    return `${item.info.bvid} ${item.video.title} ${item.video.ownerName} ${senders}`
+      .toLocaleLowerCase()
+      .includes(search)
+  })
 
-// 移动端下拉菜单选项
-const mobileMenuOptions = computed(() => [
+  return result.toSorted((a, b) => {
+    if (sortOption.value === 'duration-desc') return b.video.length - a.video.length
+    if (sortOption.value === 'duration-asc') return a.video.length - b.video.length
+    if (sortOption.value === 'title') return a.video.title.localeCompare(b.video.title, 'zh-CN')
+    return latestSubmitTime(b.info) - latestSubmitTime(a.info)
+  })
+})
+const moreOptions = computed(() => [
   {
-    label: '分享',
-    key: 'share',
-    icon: () => h(NIcon, null, { default: () => h(Share24Regular) }),
-  },
-  {
-    label: '更新信息',
-    key: 'edit',
-    icon: () => h(NIcon, null, { default: () => h(Edit24Regular) }),
-  },
-  {
-    label: videoDetail.value.table.isFinish ? '开启表' : '关闭表',
-    key: 'toggle-status',
-    icon: () => h(NIcon, null, { default: () => h(TableDismiss24Regular) }),
-  },
-  {
-    label: '结果页面',
+    label: '查看结果页',
     key: 'result',
+    icon: () => h(NIcon, null, { default: () => h(Open24Regular) }),
   },
   {
-    label: '删除',
+    label: '导出通过结果',
+    key: 'export',
+    disabled: acceptedVideos.value.length === 0,
+    icon: () => h(NIcon, null, { default: () => h(ArrowDownload24Regular) }),
+  },
+  { type: 'divider', key: 'divider' },
+  {
+    label: '删除征集',
     key: 'delete',
-    icon: () => h(NIcon, { color: themeVars.value.errorColor }, { default: () => h(Delete24Regular) }),
+    icon: () => h(NIcon, { color: 'var(--vtsuru-error)' }, { default: () => h(Delete24Regular) }),
   },
 ])
 
-function handleMobileMenuSelect(key: string) {
-  switch (key) {
-    case 'share':
-      shareModalVisiable.value = true
-      break
-    case 'edit':
-      editModalVisiable.value = true
-      break
-    case 'toggle-status':
-      closeTable()
-      break
-    case 'result':
-      router.push({ name: 'video-collect-list', params: { id: videoDetail.value.table.id } })
-      break
-    case 'delete':
-      deleteTable() // 这里最好加个确认，但在下拉菜单里直接触发确认比较麻烦，暂时直接调用，原逻辑是有Popconfirm的
-      // 由于移动端下拉菜单难以直接嵌入Popconfirm，建议改为点击后弹窗确认
-      break
-  }
+await loadData()
+watch(() => route.params.id, loadData)
+
+function currentId() {
+  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  if (!id) throw new Error('缺少征集 ID')
+  return id
 }
 
-async function getData() {
+function latestSubmitTime(info: VideoInfo) {
+  return Math.max(...info.senders.map((sender) => sender.sendAt), 0)
+}
+
+async function loadData() {
+  isLoading.value = true
   try {
-    const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-    if (!id) throw new Error('缺少征集表 id')
-    const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id })
-    if (data.code == 200) {
-      updateModel.value = {
-        id: data.data.table.id,
-        name: data.data.table.name,
-        endAt: data.data.table.endAt,
-        description: data.data.table.description,
-        maxVideoCount: data.data.table.maxVideoCount,
-      } as VideoCollectCreateModel
-      return data.data
-    }
-  } catch (err) {
-    console.error(err)
-    message.error('获取失败')
+    const response = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: currentId() })
+    if (response.code !== 200) throw new Error(response.message)
+    videoDetail.value = response.data
+  } catch (error) {
+    console.error(error)
+    videoDetail.value = undefined
+    message.error(error instanceof Error ? error.message : '征集详情加载失败')
+  } finally {
+    isLoading.value = false
   }
-  return {} as VideoCollectDetail
 }
 
-function setStatus(status: VideoStatus, video: VideoInfo) {
-  isLoading.value = true
-  QueryGetAPI(`${VIDEO_COLLECT_API_URL}set-status`, {
-    id: videoDetail.value.table.id,
-    bvid: video.bvid,
-    status,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        video.status = status
-        message.success('设置成功')
-      } else {
-        message.error(`设置失败: ${data.message}`)
-      }
+async function setStatus(status: VideoStatus, video: VideoInfo) {
+  videoOperation.value = video.bvid
+  try {
+    const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}set-status`, {
+      id: currentId(),
+      bvid: video.bvid,
+      status,
     })
-    .catch((err) => {
-      console.error(err)
-      message.error('设置失败')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-
-function dateDisabled(ts: number) {
-  return ts < Date.now() + 1000 * 60 * 60
-}
-
-function updateTable() {
-  isLoading.value = true
-  updateModel.value.id = videoDetail.value.table.id
-  QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}update`, updateModel.value)
-    .then((data) => {
-      if (data.code == 200) {
-        message.success('更新成功')
-        editModalVisiable.value = false
-        videoDetail.value.table = data.data
-      } else {
-        message.error(`更新失败: ${data.message}`)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('更新失败')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-
-function deleteTable() {
-  isLoading.value = true
-  QueryGetAPI(`${VIDEO_COLLECT_API_URL}del`, {
-    id: videoDetail.value.table.id,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        message.success('已删除')
-        setTimeout(() => {
-          router.push({ name: 'manage-videoCollect' })
-        }, 1000)
-      } else {
-        message.error(`删除失败: ${data.message}`)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('删除失败')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-
-function closeTable() {
-  isLoading.value = true
-  QueryGetAPI(`${VIDEO_COLLECT_API_URL}finish`, {
-    id: videoDetail.value.table.id,
-    finish: !videoDetail.value.table.isFinish,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        message.success(`已${videoDetail.value.table.isFinish ? '开启表' : '关闭表'}`)
-        videoDetail.value.table.isFinish = !videoDetail.value.table.isFinish
-      } else {
-        message.error(`操作失败: ${data.message}`)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('操作失败')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-
-function saveQRCode() {
-  downloadImage(
-    `https://api.qrserver.com/v1/create-qr-code/?data=${`https://vtsuru.live/video-collect/${videoDetail.value.table.shortId}`}`,
-    `vtsuru-视频征集二维码-${videoDetail.value.table.name}.png`,
-  )
-}
-
-onActivated(async () => {
-  if (route.params.id != videoDetail.value.table.id) {
-    videoDetail.value = await getData()
+    if (response.code !== 200) throw new Error(response.message)
+    video.status = status
+    message.success('审核状态已更新')
+  } catch (error) {
+    console.error(error)
+    message.error(error instanceof Error ? error.message : '审核操作失败')
+  } finally {
+    videoOperation.value = undefined
   }
-})
+}
+
+async function updateTable(model: VideoCollectCreateModel) {
+  tableOperation.value = 'edit'
+  try {
+    const response = await QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}update`, {
+      ...model,
+      id: currentId(),
+    })
+    if (response.code !== 200) throw new Error(response.message)
+    if (videoDetail.value) videoDetail.value.table = response.data
+    editModalVisible.value = false
+    message.success('征集信息已更新')
+  } catch (error) {
+    console.error(error)
+    message.error(error instanceof Error ? error.message : '更新失败')
+  } finally {
+    tableOperation.value = undefined
+  }
+}
+
+async function toggleCollection() {
+  if (!table.value) return
+  tableOperation.value = 'toggle'
+  const finish = !table.value.isFinish
+  try {
+    const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}finish`, { id: table.value.id, finish })
+    if (response.code !== 200) throw new Error(response.message)
+    table.value.isFinish = finish
+    message.success(finish ? '征集已结束' : '征集已重新开启')
+  } catch (error) {
+    console.error(error)
+    message.error(error instanceof Error ? error.message : '状态更新失败')
+  } finally {
+    tableOperation.value = undefined
+  }
+}
+
+function confirmDelete() {
+  dialog.warning({
+    title: '删除视频征集',
+    content: `确定删除“${table.value?.name}”吗？此操作无法撤销。`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: deleteTable,
+  })
+}
+
+async function deleteTable() {
+  if (!table.value) return
+  tableOperation.value = 'delete'
+  try {
+    const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}del`, { id: table.value.id })
+    if (response.code !== 200) throw new Error(response.message)
+    message.success('征集已删除')
+    await router.replace({ name: 'manage-videoCollect' })
+  } catch (error) {
+    console.error(error)
+    message.error(error instanceof Error ? error.message : '删除失败')
+  } finally {
+    tableOperation.value = undefined
+  }
+}
+
+function handleMoreAction(key: string) {
+  if (key === 'result' && table.value) {
+    router.push({ name: 'video-collect-list', params: { id: table.value.id } })
+  } else if (key === 'export') {
+    exportResults()
+  } else if (key === 'delete') {
+    confirmDelete()
+  }
+}
+
+function exportResults() {
+  if (!table.value || acceptedVideos.value.length === 0) return
+  const rows = acceptedVideos.value.map(({ info, video }) => ({
+    BV号: info.bvid,
+    标题: video.title,
+    UP主: video.ownerName,
+    时长秒: video.length,
+    推荐人: info.senders.map((sender) => sender.sender || '匿名用户').join('、'),
+    推荐理由: info.senders
+      .map((sender) => sender.description)
+      .filter(Boolean)
+      .join(' | '),
+  }))
+  const content = `\uFEFF${objectsToCSV(rows)}`
+  saveAs(new Blob([content], { type: 'text/csv;charset=utf-8' }), `${table.value.name}-通过结果-${Date.now()}.csv`)
+}
+
+function saveQrCode() {
+  const canvas = qrCodeWrapper.value?.querySelector('canvas')
+  canvas?.toBlob((blob) => {
+    if (!blob || !table.value) return
+    saveAs(blob, `${table.value.name}-二维码.png`)
+  })
+}
 </script>
 
 <template>
   <div class="video-collect-detail">
-    <ManagePageHeader
-      :title="videoDetail?.table?.name || '视频征集'"
-      subtitle="审核与管理视频提交"
-    >
-      <template #action>
-        <NButton
-          secondary
-          size="small"
-          @click="$router.go(-1)"
+    <NSpin :show="isLoading">
+      <template v-if="videoDetail && table">
+        <ManagePageHeader
+          :title="table.name"
+          subtitle="投稿审核"
+          :loading="Boolean(tableOperation)"
         >
-          <template #icon>
-            <NIcon><ArrowLeft24Regular /></NIcon>
-          </template>
-          返回
-        </NButton>
-
-        <NFlex v-if="width > 800">
-          <NButton
-            secondary
-            strong
-            size="small"
-            @click="shareModalVisiable = true"
-          >
-            <template #icon>
-              <NIcon><Share24Regular /></NIcon>
-            </template>
-            分享
-          </NButton>
-          <NButton
-            secondary
-            strong
-            size="small"
-            @click="editModalVisiable = true"
-          >
-            <template #icon>
-              <NIcon><Edit24Regular /></NIcon>
-            </template>
-            更新信息
-          </NButton>
-          <NButton
-            secondary
-            strong
-            size="small"
-            :type="videoDetail.table.isFinish ? 'success' : 'warning'"
-            @click="closeTable"
-          >
-            <template #icon>
-              <NIcon><TableDismiss24Regular /></NIcon>
-            </template>
-            {{ videoDetail.table.isFinish ? '开启征集' : '结束征集' }}
-          </NButton>
-          <NButton
-            secondary
-            strong
-            size="small"
-            type="info"
-            @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"
-          >
-            查看结果
-          </NButton>
-          <NPopconfirm @positive-click="deleteTable">
-            <template #trigger>
+          <template #action>
+            <NButton
+              secondary
+              @click="router.push({ name: 'manage-videoCollect' })"
+            >
+              <template #icon
+                ><NIcon><ArrowLeft24Regular /></NIcon
+              ></template>
+              返回
+            </NButton>
+            <NButton
+              secondary
+              @click="shareModalVisible = true"
+            >
+              <template #icon
+                ><NIcon><Share24Regular /></NIcon
+              ></template>
+              分享
+            </NButton>
+            <NButton
+              secondary
+              @click="editModalVisible = true"
+            >
+              <template #icon
+                ><NIcon><Edit24Regular /></NIcon
+              ></template>
+              编辑
+            </NButton>
+            <NButton
+              secondary
+              :type="isActive ? 'warning' : 'success'"
+              :loading="tableOperation === 'toggle'"
+              @click="toggleCollection"
+            >
+              <template #icon
+                ><NIcon><TableDismiss24Regular /></NIcon
+              ></template>
+              {{ isActive ? '结束征集' : '重新开启' }}
+            </NButton>
+            <NDropdown
+              trigger="click"
+              :options="moreOptions"
+              @select="handleMoreAction"
+            >
               <NButton
                 secondary
-                strong
-                size="small"
-                type="error"
+                circle
+                title="更多操作"
               >
-                <template #icon>
-                  <NIcon><Delete24Regular /></NIcon>
-                </template>
-                删除
+                <template #icon
+                  ><NIcon><MoreVertical24Regular /></NIcon
+                ></template>
               </NButton>
-            </template>
-            确定删除表? 此操作无法撤销
-          </NPopconfirm>
-        </NFlex>
+            </NDropdown>
+          </template>
+        </ManagePageHeader>
 
-        <NDropdown
-          v-else
-          trigger="click"
-          :options="mobileMenuOptions"
-          @select="handleMobileMenuSelect"
-        >
-          <NButton
-            secondary
-            strong
-            size="small"
-            circle
+        <section class="collection-overview">
+          <div class="collection-copy">
+            <div class="collection-state">
+              <NTag
+                :type="isActive ? 'success' : 'default'"
+                :bordered="false"
+              >
+                {{ isActive ? '进行中' : '已结束' }}
+              </NTag>
+              <span>
+                创建于
+                <NTime
+                  :time="table.createAt"
+                  format="yyyy-MM-dd HH:mm"
+                />
+              </span>
+            </div>
+            <p>{{ table.description || '未填写征集说明' }}</p>
+            <div class="collection-facts">
+              <div>
+                <span>截止时间</span>
+                <strong>
+                  <NTime
+                    :time="table.endAt"
+                    format="yyyy-MM-dd HH:mm"
+                  />
+                </strong>
+              </div>
+              <div>
+                <span>剩余名额</span>
+                <strong>{{ Math.max(0, table.maxVideoCount - table.videoCount) }}</strong>
+              </div>
+            </div>
+            <div class="capacity-progress">
+              <div class="capacity-heading">
+                <span>提交进度</span>
+                <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
+              </div>
+              <NProgress
+                type="line"
+                :percentage="Math.min(100, Math.round((table.videoCount / table.maxVideoCount) * 100))"
+                :height="6"
+                :show-indicator="false"
+              />
+            </div>
+          </div>
+          <div class="review-stats">
+            <div>
+              <span>待审核</span><strong>{{ pendingVideos.length }}</strong>
+            </div>
+            <div>
+              <span>已通过</span><strong>{{ acceptedVideos.length }}</strong>
+            </div>
+            <div>
+              <span>已拒绝</span><strong>{{ rejectedVideos.length }}</strong>
+            </div>
+            <div>
+              <span>通过总时长</span><strong class="duration-value">{{ formatDuration(acceptedDuration) }}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="review-workspace">
+          <NTabs
+            v-model:value="activeStatus"
+            type="segment"
+            animated
+            class="status-tabs"
           >
-            <template #icon>
-              <NIcon><MoreVertical24Regular /></NIcon>
-            </template>
-          </NButton>
-        </NDropdown>
+            <NTabPane :name="VideoStatus.Pending">
+              <template #tab>
+                <span class="status-tab"
+                  >待审核
+                  <NBadge
+                    :value="pendingVideos.length"
+                    :max="99"
+                    type="warning"
+                /></span>
+              </template>
+            </NTabPane>
+            <NTabPane :name="VideoStatus.Accepted">
+              <template #tab>
+                <span class="status-tab"
+                  >已通过
+                  <NBadge
+                    :value="acceptedVideos.length"
+                    :max="99"
+                    type="success"
+                /></span>
+              </template>
+            </NTabPane>
+            <NTabPane :name="VideoStatus.Rejected">
+              <template #tab>
+                <span class="status-tab"
+                  >已拒绝
+                  <NBadge
+                    :value="rejectedVideos.length"
+                    :max="99"
+                    type="error"
+                /></span>
+              </template>
+            </NTabPane>
+          </NTabs>
+
+          <div class="review-toolbar">
+            <NInput
+              v-model:value="keyword"
+              clearable
+              placeholder="搜索标题、BV 号、UP 主或推荐人"
+              class="review-search"
+            >
+              <template #prefix><NIcon :component="Search24Regular" /></template>
+            </NInput>
+            <NSelect
+              v-model:value="sortOption"
+              class="review-sort"
+              :options="[
+                { label: '最近提交', value: 'submitted-desc' },
+                { label: '时长从长到短', value: 'duration-desc' },
+                { label: '时长从短到长', value: 'duration-asc' },
+                { label: '按标题排序', value: 'title' },
+              ]"
+            />
+            <NButton
+              secondary
+              :loading="isLoading"
+              @click="loadData"
+            >
+              <template #icon
+                ><NIcon><ArrowSync24Regular /></NIcon
+              ></template>
+              刷新
+            </NButton>
+          </div>
+
+          <NEmpty
+            v-if="visibleVideos.length === 0"
+            :description="keyword ? '没有符合条件的视频' : '此状态下暂无视频'"
+            class="review-empty"
+          />
+          <div
+            v-else
+            class="video-grid"
+          >
+            <VideoItemCard
+              v-for="item in visibleVideos"
+              :key="item.info.bvid"
+              :video-info="item.info"
+              :video-data="item.video"
+              :loading="videoOperation === item.info.bvid"
+              @update-status="setStatus"
+            />
+          </div>
+        </section>
       </template>
-    </ManagePageHeader>
 
-    <!-- Info Card -->
-    <div class="info-card-wrapper">
-      <VideoCollectInfoCard
-        :item="videoDetail.table"
-        style="width: 100%"
-        from="owner"
-      />
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-bar">
-      <NText depth="3">
-        已通过视频总时长:
-        <NText
-          strong
-          style="color: var(--vtsuru-fg)"
-        >
-          {{ formatDuration(new List(acceptVideos).Sum((v) => v?.video.length ?? 0)) }}
-        </NText>
-      </NText>
-    </div>
-
-    <!-- Content Area -->
-    <div class="content-area">
-      <NEmpty
-        v-if="videoDetail?.videos?.length === 0"
-        description="暂无视频提交"
-      />
-      <NTabs
-        v-else
-        animated
-        type="line"
-        justify-content="space-evenly"
-        class="custom-tabs"
+      <NResult
+        v-else-if="!isLoading"
+        status="404"
+        title="无法加载视频征集"
+        description="征集不存在，或当前账号无权访问。"
       >
-        <NTabPane name="padding">
-          <template #tab>
-            <div class="tab-label">
-              <span>待审核</span>
-              <NBadge
-                v-if="paddingVideos.length > 0"
-                :value="paddingVideos.length"
-                :max="99"
-                type="warning"
-                class="tab-badge"
-              />
-            </div>
-          </template>
-          <div class="video-grid">
-            <NGrid
-              x-gap="12"
-              y-gap="12"
-              cols="1 520:2 800:3 1100:4 1400:5"
-              responsive="self"
-            >
-              <NGridItem
-                v-for="v in paddingVideos"
-                :key="v.info.bvid"
-              >
-                <VideoItemCard
-                  :video-info="v.info"
-                  :video-data="v.video"
-                  type="padding"
-                  :is-loading="isLoading"
-                  @update-status="setStatus"
-                />
-              </NGridItem>
-            </NGrid>
-          </div>
-        </NTabPane>
+        <template #footer>
+          <NButton @click="router.push({ name: 'manage-videoCollect' })">返回列表</NButton>
+        </template>
+      </NResult>
+    </NSpin>
 
-        <NTabPane name="accept">
-          <template #tab>
-            <div class="tab-label">
-              <NText type="success"> 已通过 </NText>
-              <NBadge
-                v-if="acceptVideos.length > 0"
-                :value="acceptVideos.length"
-                :max="99"
-                type="success"
-                class="tab-badge"
-              />
-            </div>
-          </template>
-          <div class="video-grid">
-            <NGrid
-              x-gap="12"
-              y-gap="12"
-              cols="1 520:2 800:3 1100:4 1400:5"
-              responsive="self"
-            >
-              <NGridItem
-                v-for="v in acceptVideos"
-                :key="v.info.bvid"
-              >
-                <VideoItemCard
-                  :video-info="v.info"
-                  :video-data="v.video"
-                  type="accept"
-                  :is-loading="isLoading"
-                  @update-status="setStatus"
-                />
-              </NGridItem>
-            </NGrid>
-          </div>
-        </NTabPane>
-
-        <NTabPane name="reject">
-          <template #tab>
-            <div class="tab-label">
-              <NText type="error"> 已拒绝 </NText>
-              <NBadge
-                v-if="rejectVideos.length > 0"
-                :value="rejectVideos.length"
-                :max="99"
-                :color="themeVars.errorColor"
-                class="tab-badge"
-              />
-            </div>
-          </template>
-          <div class="video-grid">
-            <NGrid
-              x-gap="12"
-              y-gap="12"
-              cols="1 520:2 800:3 1100:4 1400:5"
-              responsive="self"
-            >
-              <NGridItem
-                v-for="v in rejectVideos"
-                :key="v.info.bvid"
-              >
-                <VideoItemCard
-                  :video-info="v.info"
-                  :video-data="v.video"
-                  type="reject"
-                  :is-loading="isLoading"
-                  @update-status="setStatus"
-                />
-              </NGridItem>
-            </NGrid>
-          </div>
-        </NTabPane>
-      </NTabs>
-    </div>
-
-    <!-- Modals -->
     <NModal
-      v-model:show="shareModalVisiable"
-      title="分享"
+      v-model:show="shareModalVisible"
       preset="card"
-      style="width: 600px; max-width: 90vw"
+      title="分享视频征集"
+      class="share-modal"
     >
-      <div style="display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 12px">
-        <div :style="{ padding: '12px', background: themeVars.cardColor, borderRadius: themeVars.borderRadius }">
+      <div class="share-content">
+        <div
+          ref="qrCodeWrapper"
+          class="qr-code"
+        >
           <Qrcode
-            :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`"
+            :value="shareUrl"
             level="Q"
-            :size="200"
+            :size="196"
             background="#fff"
             :margin="1"
           />
         </div>
-        <NInput
-          :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`"
-          readonly
-          @click="(e: MouseEvent) => (e.target as HTMLInputElement).select()"
-        />
+        <NInputGroup>
+          <NInput
+            :value="shareUrl"
+            readonly
+          />
+          <NButton
+            type="primary"
+            @click="copyToClipboard(shareUrl)"
+          >
+            复制链接
+          </NButton>
+        </NInputGroup>
         <NButton
-          type="primary"
-          @click="saveQRCode"
+          secondary
+          @click="saveQrCode"
         >
-          保存二维码图片
+          <template #icon
+            ><NIcon><ArrowDownload24Regular /></NIcon
+          ></template>
+          保存二维码
         </NButton>
       </div>
     </NModal>
 
-    <NModal
-      v-model:show="editModalVisiable"
-      title="更新信息"
-      preset="card"
-      style="width: 600px; max-width: 90vw"
-    >
-      <NForm
-        ref="formRef"
-        :model="updateModel"
-        :rules="createRules"
-        label-placement="left"
-        label-width="80"
-      >
-        <NFormItem
-          label="标题"
-          path="name"
-        >
-          <NInput
-            v-model:value="updateModel.name"
-            placeholder="征集表的标题"
-            maxlength="30"
-            show-count
-          />
-        </NFormItem>
-        <NFormItem
-          label="描述"
-          path="description"
-        >
-          <NInput
-            v-model:value="updateModel.description"
-            type="textarea"
-            placeholder="可以是备注之类的"
-            maxlength="300"
-            show-count
-            :autosize="{ minRows: 3, maxRows: 5 }"
-          />
-        </NFormItem>
-        <NGrid
-          :cols="2"
-          :x-gap="12"
-        >
-          <NGridItem>
-            <NFormItem
-              label="最大数量"
-              path="maxVideoCount"
-            >
-              <NInputNumber
-                v-model:value="updateModel.maxVideoCount"
-                placeholder="最大数量"
-                type="number"
-                style="width: 100%"
-              />
-            </NFormItem>
-          </NGridItem>
-          <NGridItem>
-            <NFormItem
-              label="结束时间"
-              path="endAt"
-            >
-              <NDatePicker
-                v-model:value="updateModel.endAt"
-                type="datetime"
-                placeholder="结束征集的时间"
-                :is-date-disabled="dateDisabled"
-                style="width: 100%"
-              />
-            </NFormItem>
-          </NGridItem>
-        </NGrid>
-
-        <div style="display: flex; justify-content: flex-end; margin-top: 12px">
-          <NButton
-            type="primary"
-            :loading="isLoading"
-            @click="updateTable"
-          >
-            保存更改
-          </NButton>
-        </div>
-      </NForm>
-    </NModal>
+    <VideoCollectFormModal
+      v-model:show="editModalVisible"
+      title="编辑视频征集"
+      :initial-value="editValue"
+      :loading="tableOperation === 'edit'"
+      @submit="updateTable"
+    />
   </div>
 </template>
 
 <style scoped>
-.video-collect-detail {
+.video-collect-detail,
+.review-workspace {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.info-card-wrapper {
+.collection-overview {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.3fr) minmax(420px, 1fr);
+  margin-top: 16px;
+  border-block: 1px solid var(--vtsuru-border);
 }
 
-.stats-bar {
+.collection-copy {
+  min-width: 0;
+  padding: 18px 20px 18px 4px;
+}
+
+.collection-state {
   display: flex;
-  justify-content: flex-end;
-  padding: 0 4px 12px;
-}
-
-.content-area {
-}
-
-.custom-tabs :deep(.n-tabs-nav) {
-  padding: 4px;
-}
-
-.tab-label {
-  display: flex;
+  gap: 10px;
   align-items: center;
-  gap: 8px;
-  padding: 0 8px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
 }
 
-.tab-badge {
-  transform: scale(0.85);
+.collection-copy p {
+  margin: 12px 0 14px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.collection-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-block: 1px solid var(--vtsuru-border);
+}
+
+.collection-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 10px 0;
+}
+
+.collection-facts > div + div {
+  padding-left: 18px;
+  border-left: 1px solid var(--vtsuru-border);
+}
+
+.collection-facts span,
+.capacity-heading span {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.collection-facts strong,
+.capacity-heading strong {
+  overflow: hidden;
+  color: var(--vtsuru-fg);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.capacity-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.capacity-heading {
+  display: flex;
+  justify-content: space-between;
+}
+
+.review-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-left: 1px solid var(--vtsuru-border);
+}
+
+.review-stats > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 18px;
+}
+
+.review-stats > div:nth-child(odd) {
+  border-right: 1px solid var(--vtsuru-border);
+}
+
+.review-stats > div:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--vtsuru-border);
+}
+
+.review-stats span {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.review-stats strong {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.review-stats .duration-value {
+  overflow: hidden;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-tabs {
+  width: min(560px, 100%);
+}
+
+.review-workspace {
+  margin-top: 20px;
+}
+
+.status-tab {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.review-toolbar {
+  display: flex;
+  gap: 10px;
+}
+
+.review-search {
+  width: min(440px, 100%);
+}
+
+.review-sort {
+  width: 170px;
 }
 
 .video-grid {
-  padding: 12px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+
+.review-empty {
+  padding: 64px 0;
+}
+
+.share-modal {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.share-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.qr-code {
+  display: flex;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 6px;
+}
+
+@media (max-width: 860px) {
+  .collection-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-copy {
+    padding-right: 4px;
+  }
+
+  .review-stats {
+    border-top: 1px solid var(--vtsuru-border);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .review-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .review-search {
+    width: 100%;
+  }
+
+  .review-sort {
+    flex: 1;
+    width: auto;
+  }
+
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

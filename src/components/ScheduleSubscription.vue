@@ -120,6 +120,7 @@ onBeforeUnmount(() => {
     var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
   );
   --schedule-subscription-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --schedule-subscription-accent-readable: var(--vtsuru-page-primary-readable, var(--schedule-subscription-accent));
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
@@ -152,7 +153,7 @@ onBeforeUnmount(() => {
   width: 36px;
   height: 36px;
   border-radius: 7px;
-  color: var(--schedule-subscription-accent);
+  color: var(--schedule-subscription-accent-readable);
   background: color-mix(in srgb, var(--schedule-subscription-accent) 14%, transparent);
 }
 

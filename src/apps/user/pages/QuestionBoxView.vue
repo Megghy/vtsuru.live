@@ -886,7 +886,7 @@ onUnmounted(() => {
 
 .add-btn:hover {
   border-color: var(--vtsuru-page-primary);
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
   background-color: color-mix(in srgb, var(--vtsuru-page-primary) 4%, transparent);
 }
 
@@ -1025,7 +1025,7 @@ onUnmounted(() => {
 .answer-header .name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
 }
 
 .answer-message {

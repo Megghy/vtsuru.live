@@ -1,79 +1,83 @@
 <script setup lang="ts">
+import { CheckmarkCircle24Regular, Clock24Regular, Person24Regular, Video24Regular } from '@vicons/fluent'
+import type { FormInst, FormRules } from 'naive-ui'
 import {
-  darkTheme,
-  NAlert,
   NButton,
   NCard,
-  NConfigProvider,
-  NDivider,
-  NFlex,
+  NForm,
+  NFormItem,
+  NIcon,
   NInput,
   NInputNumber,
+  NProgress,
   NResult,
-  NText,
+  NTag,
+  NTime,
   useMessage,
 } from 'naive-ui'
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
 
 import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import {
-  getPageBackgroundCssVars,
-  getUserPageNaiveThemeOverrides,
-  getUserPageThemeCssVars,
-  resolvePageBackground,
-} from '@/apps/user-page/background'
-import { useGoogleFont } from '@/apps/user-page/googleFonts'
-import { usePublicUserCustomCss } from '@/apps/user-page/runtime/customCss'
-import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { TURNSTILE_KEY, VIDEO_COLLECT_API_URL } from '@/shared/config'
-import { isDarkMode } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
+
+import VideoCollectPageShell from './VideoCollectPageShell.vue'
 
 interface AddVideoModel {
   id: string
   video: string
-  name: string
-  uid: number
-  description: string
+  name?: string
+  uid?: number
+  description?: string
 }
 
-const message = useMessage()
+interface TurnstileInstance {
+  remove: () => void
+  reset: () => void
+}
+
 const route = useRoute()
+const router = useRouter()
+const message = useMessage()
 const biliAuth = useBiliAuth()
+
+const table = ref<VideoCollectTable | null>()
+const formRef = ref<FormInst>()
+const turnstile = ref<TurnstileInstance>()
 const token = ref('')
-const turnstile = ref()
-const addModel = ref({} as AddVideoModel)
 const isLoading = ref(false)
-const table = ref<VideoCollectTable | null>(await loadTable())
-const ownerSettings = ref<UserPagesSettingsV1 | null>(await loadOwnerSettings(table.value))
-const isBiliAuthed = computed(() => biliAuth.isAuthed && !!biliAuth.biliAuth?.userId)
-const appearanceTheme = computed(() => ownerSettings.value?.theme)
-const effectiveIsDark = computed(() => resolvePageThemeIsDark(appearanceTheme.value?.pageThemeMode, isDarkMode.value))
-const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
-const pageThemeVars = computed(() => getUserPageThemeCssVars(appearanceTheme.value, effectiveIsDark.value))
-const pageBackground = computed(() => resolvePageBackground(ownerSettings.value?.background))
-const pageBackgroundVars = computed(() =>
-  pageBackground.value ? getPageBackgroundCssVars(pageBackground.value, effectiveIsDark.value) : {},
-)
-const pageBackgroundClass = computed(() => ({
-  'has-background': !!pageBackground.value,
-  'background-blur': pageBackground.value?.blurMode === 'background',
-  'background-glass': pageBackground.value?.blurMode === 'glass',
-}))
-const pageThemeOverrides = computed(() => ({
-  ...getUserPageNaiveThemeOverrides(appearanceTheme.value, pageThemeVars.value, effectiveIsDark.value),
-  Layout: { color: 'transparent' },
-}))
+const isPageLoading = ref(false)
+const submitted = ref(false)
+const addModel = ref<AddVideoModel>({ id: '', video: '' })
 
-useGoogleFont(computed(() => appearanceTheme.value?.fontFamily))
-usePublicUserCustomCss(ownerSettings)
+const isBiliAuthed = computed(() => biliAuth.isAuthed && Boolean(biliAuth.biliAuth?.userId))
+const isClosed = computed(() => !table.value || table.value.isFinish || table.value.endAt <= Date.now())
+const capacityPercentage = computed(() => {
+  if (!table.value) return 0
+  return Math.min(100, Math.round((table.value.videoCount / table.value.maxVideoCount) * 100))
+})
+const rules: FormRules = {
+  video: [
+    { required: true, message: '请输入视频链接或 BV 号', trigger: ['input', 'blur'] },
+    {
+      message: '请输入有效的哔哩哔哩视频链接或 BV 号',
+      validator: (_rule, value: string) => /BV[0-9A-Za-z]{10}/.test(value.trim()),
+      trigger: ['input', 'blur'],
+    },
+  ],
+  uid: {
+    type: 'number',
+    min: 1,
+    message: 'UID 必须是正整数',
+    trigger: ['input', 'blur'],
+  },
+}
 
+await loadTable()
+watch(() => route.params.id, loadTable)
 watch(
   () => biliAuth.biliAuth,
   (auth) => {
@@ -84,247 +88,487 @@ watch(
   { immediate: true },
 )
 
+function currentId() {
+  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  if (!id) throw new Error('缺少征集 ID')
+  return id
+}
+
 async function loadTable() {
+  isPageLoading.value = true
   try {
-    const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-    if (!id) throw new Error('缺少征集表 id')
-    const response = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id })
-    if (response.code === 404) return null
-    if (response.code !== 200) throw new Error(response.message || '获取视频征集表失败')
-    return response.data.table
+    const response = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: currentId() })
+    table.value = response.code === 200 ? response.data.table : null
+    if (response.code !== 200 && response.code !== 404) throw new Error(response.message)
   } catch (error) {
-    console.error('获取视频征集表失败', error)
-    message.error('获取失败')
-    return null
+    console.error('获取视频征集失败', error)
+    table.value = null
+    message.error(error instanceof Error ? error.message : '获取失败')
+  } finally {
+    isPageLoading.value = false
   }
 }
 
-async function loadOwnerSettings(value: VideoCollectTable | null) {
-  if (!value) return null
-  try {
-    return await fetchUserPagesSettingsByUserId(value.owner.id)
-  } catch (error) {
-    console.error('加载视频征集所有者主题失败', error)
-    return null
-  }
-}
-
-async function add() {
-  if (!addModel.value.video) {
-    message.error('请输入视频')
+async function addVideo() {
+  await formRef.value?.validate()
+  if (!token.value) {
+    message.warning('请完成人机验证')
     return
   }
 
   isLoading.value = true
-  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-  addModel.value.id = String(table.value?.id ?? id ?? '')
+  const payload = { ...addModel.value, id: table.value?.id ?? currentId() }
   const headers: [string, string][] = [['Turnstile', token.value]]
+
   try {
     const response = await (isBiliAuthed.value
-      ? biliAuth.QueryBiliAuthPostAPI(`${VIDEO_COLLECT_API_URL}add`, addModel.value, headers)
-      : QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, addModel.value, headers))
-    if (response.code !== 200) {
-      message.error(`添加失败: ${response.message}`)
-      return
-    }
-    message.success('已成功推荐视频')
-    setTimeout(() => location.reload(), 1000)
+      ? biliAuth.QueryBiliAuthPostAPI(`${VIDEO_COLLECT_API_URL}add`, payload, headers)
+      : QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, payload, headers))
+    if (response.code !== 200) throw new Error(response.message)
+
+    submitted.value = true
+    addModel.value.video = ''
+    addModel.value.description = ''
+    token.value = ''
+    turnstile.value?.reset()
+    await loadTable()
   } catch (error) {
     console.error('推荐视频失败', error)
-    message.error('添加失败')
+    message.error(error instanceof Error ? error.message : '推荐失败')
+    turnstile.value?.reset()
   } finally {
     isLoading.value = false
-    turnstile.value?.reset()
   }
+}
+
+function submitAnother() {
+  submitted.value = false
+  formRef.value?.restoreValidation()
 }
 
 onUnmounted(() => turnstile.value?.remove())
 </script>
 
 <template>
-  <NConfigProvider
-    :theme="pageNaiveTheme"
-    :theme-overrides="pageThemeOverrides"
-  >
-    <div
-      class="video-collect-public page-root"
-      :class="pageBackgroundClass"
-      :style="[pageThemeVars, pageBackgroundVars]"
-    >
-      <main class="video-collect-public__content">
+  <VideoCollectPageShell :table="table">
+    <template #default="{ effectiveIsDark }">
+      <main class="collect-submit-page">
         <NResult
-          v-if="!table"
+          v-if="table === null && !isPageLoading"
           status="404"
-          title="指定收集表不存在"
-          description="检查一下你输入的链接吧"
+          title="视频征集不存在"
+          description="链接可能有误，或该征集已被删除。"
         />
-        <NCard
-          v-else
-          class="video-collect-public__card"
+
+        <div
+          v-else-if="table"
+          class="collect-submit-layout"
         >
-          <template #header>
-            视频征集
-            <NDivider vertical />
-            <NButton
-              text
-              @click="$router.push({ name: 'user-index', params: { id: table.owner.name } })"
+          <section class="collect-intro">
+            <button
+              type="button"
+              class="owner-link"
+              @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
             >
-              <NText
-                depth="3"
-                class="video-collect-public__owner"
+              <NIcon :component="Person24Regular" />
+              {{ table.owner.name }} 的视频征集
+            </button>
+            <div class="collect-title-row">
+              <h1>{{ table.name }}</h1>
+              <NTag
+                :type="isClosed ? 'default' : 'success'"
+                :bordered="false"
               >
-                {{ table.owner.name }}
-              </NText>
-            </NButton>
-          </template>
-          <VideoCollectInfoCard
-            :item="table"
-            :can-click="false"
-            from="user"
-          />
-          <NDivider />
-          <NAlert
-            v-if="table.isFinish"
-            type="error"
-            title="该征集表已截止"
-          />
-          <NFlex
-            v-else
-            vertical
+                {{ isClosed ? '已结束' : '进行中' }}
+              </NTag>
+            </div>
+            <p class="collect-description">
+              {{ table.description || '未填写征集说明' }}
+            </p>
+
+            <div class="collect-meta">
+              <div>
+                <NIcon :component="Clock24Regular" />
+                <span>截止时间</span>
+                <strong
+                  ><NTime
+                    :time="table.endAt"
+                    format="yyyy-MM-dd HH:mm"
+                /></strong>
+              </div>
+              <div>
+                <NIcon :component="Video24Regular" />
+                <span>已收集</span>
+                <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
+              </div>
+            </div>
+            <NProgress
+              type="line"
+              :percentage="capacityPercentage"
+              :height="7"
+              :show-indicator="false"
+            />
+          </section>
+
+          <NCard
+            class="submit-panel"
+            :bordered="true"
           >
-            <NInput
-              v-model:value="addModel.video"
-              placeholder="B站视频链接或BVID"
-            />
-            <NInput
-              v-model:value="addModel.name"
-              placeholder="(选填) 推荐人"
-              :disabled="isBiliAuthed"
-            />
-            <NInputNumber
-              v-model:value="addModel.uid"
-              placeholder="(选填) 推荐人UId"
-              :show-button="false"
-              :disabled="isBiliAuthed"
-            />
-            <NInput
-              v-model:value="addModel.description"
-              placeholder="(选填) 推荐理由"
-            />
-            <NButton
-              type="primary"
-              :loading="isLoading || !token"
-              @click="add"
+            <NResult
+              v-if="submitted"
+              status="success"
+              title="推荐成功"
+              description="这个视频已经加入征集。"
             >
-              推荐视频
-            </NButton>
-            <VueTurnstile
-              ref="turnstile"
-              v-model="token"
-              :site-key="TURNSTILE_KEY"
-              :theme="effectiveIsDark ? 'dark' : 'light'"
-              class="video-collect-public__turnstile"
-            />
-          </NFlex>
-        </NCard>
+              <template #footer>
+                <NButton
+                  type="primary"
+                  @click="submitAnother"
+                >
+                  再推荐一个
+                </NButton>
+              </template>
+            </NResult>
+
+            <template v-else-if="isClosed">
+              <NResult
+                status="info"
+                title="征集已结束"
+                description="当前不再接收新的视频推荐。"
+              />
+            </template>
+
+            <template v-else>
+              <div class="submit-panel__heading">
+                <NIcon :component="CheckmarkCircle24Regular" />
+                <div>
+                  <h2>推荐视频</h2>
+                  <p>填写哔哩哔哩视频信息</p>
+                </div>
+              </div>
+
+              <NForm
+                ref="formRef"
+                :model="addModel"
+                :rules="rules"
+                label-placement="top"
+                @submit.prevent="addVideo"
+              >
+                <NFormItem
+                  label="视频链接或 BV 号"
+                  path="video"
+                >
+                  <NInput
+                    v-model:value="addModel.video"
+                    placeholder="https://www.bilibili.com/video/BV..."
+                    clearable
+                  />
+                </NFormItem>
+
+                <div
+                  v-if="isBiliAuthed"
+                  class="authenticated-user"
+                >
+                  <NIcon :component="CheckmarkCircle24Regular" />
+                  <span>以 {{ addModel.name }}（UID {{ addModel.uid }}）推荐</span>
+                </div>
+                <div
+                  v-else
+                  class="identity-fields"
+                >
+                  <NFormItem label="推荐人">
+                    <NInput
+                      v-model:value="addModel.name"
+                      placeholder="选填"
+                    />
+                  </NFormItem>
+                  <NFormItem
+                    label="哔哩哔哩 UID"
+                    path="uid"
+                  >
+                    <NInputNumber
+                      v-model:value="addModel.uid"
+                      placeholder="选填"
+                      :show-button="false"
+                      :precision="0"
+                      style="width: 100%"
+                    />
+                  </NFormItem>
+                </div>
+
+                <NFormItem label="推荐理由">
+                  <NInput
+                    v-model:value="addModel.description"
+                    type="textarea"
+                    placeholder="选填"
+                    maxlength="200"
+                    show-count
+                    :autosize="{ minRows: 3, maxRows: 5 }"
+                  />
+                </NFormItem>
+
+                <VueTurnstile
+                  ref="turnstile"
+                  v-model="token"
+                  :site-key="TURNSTILE_KEY"
+                  :theme="effectiveIsDark ? 'dark' : 'light'"
+                  size="flexible"
+                  class="turnstile"
+                />
+                <NButton
+                  type="primary"
+                  attr-type="submit"
+                  block
+                  :loading="isLoading"
+                  :disabled="!token"
+                >
+                  提交推荐
+                </NButton>
+              </NForm>
+            </template>
+          </NCard>
+        </div>
       </main>
-    </div>
-  </NConfigProvider>
+    </template>
+  </VideoCollectPageShell>
 </template>
 
 <style scoped>
-.video-collect-public {
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-  isolation: isolate;
-  color: var(--vtsuru-page-text);
-  background: var(--vtsuru-bg);
-  font-family: var(--vtsuru-page-font-family);
-}
-
-.video-collect-public.has-background {
-  background: transparent;
-}
-
-.video-collect-public.has-background::before,
-.video-collect-public.has-background::after {
-  content: '';
-  position: absolute;
-  pointer-events: none;
-}
-
-.video-collect-public.has-background::before {
-  inset: calc(-24px - var(--user-page-bg-blur, 0px));
-  z-index: -2;
-  background-color: var(--user-page-bg-color, transparent);
-  background-image: var(--user-page-bg-image, none);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: var(--user-page-bg-size, cover);
-}
-
-.video-collect-public.has-background::after {
-  inset: 0;
-  z-index: -1;
-  background: var(--user-page-bg-scrim, transparent);
-}
-
-.video-collect-public.background-blur::before {
-  filter: blur(var(--user-page-bg-blur, 0px));
-}
-
-.video-collect-public.background-glass::after {
-  background: linear-gradient(var(--glass-surface-bg), var(--glass-surface-bg)), var(--user-page-bg-scrim, transparent);
-  backdrop-filter: blur(var(--user-page-bg-blur, 0px));
-  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
-}
-
-.video-collect-public__content {
-  min-height: 100vh;
-  padding: 24px;
-  box-sizing: border-box;
+.collect-submit-page {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 40px 16px;
+  box-sizing: border-box;
   place-items: center;
 }
 
-.video-collect-public__card {
-  width: min(500px, 100%);
+.collect-submit-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+  gap: clamp(28px, 6vw, 72px);
+  align-items: center;
+  width: min(100%, 1040px);
+  max-width: var(--vtsuru-page-max-width, 1040px);
   min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
-.video-collect-public__owner {
-  font-size: 14px;
+.collect-intro,
+.submit-panel {
+  min-width: 0;
 }
 
-.video-collect-public__turnstile {
-  max-width: 100%;
+.collect-intro {
+  animation: submit-enter 0.52s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.submit-panel {
+  animation: submit-enter 0.52s 90ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.owner-link {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  padding: 0;
+  color: var(--collect-muted);
+  font: inherit;
+  font-size: 13px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.owner-link:hover {
+  color: var(--collect-accent);
+}
+
+.collect-title-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.collect-title-row h1 {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 34px;
+  line-height: 1.22;
+  letter-spacing: 0;
+}
+
+.collect-description {
+  margin: 18px 0 28px;
+  color: var(--collect-muted);
+  font-size: 15px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.collect-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 14px;
+  border-block: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--collect-border);
+}
+
+.collect-meta > div {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 3px 8px;
+  padding: 14px 0;
+}
+
+.collect-meta > div + div {
+  padding-left: 20px;
+  border-left: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--collect-border);
+}
+
+.collect-meta .n-icon {
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--collect-accent);
+}
+
+.collect-meta span {
+  color: var(--collect-muted);
+  font-size: 12px;
+}
+
+.collect-meta strong {
   overflow: hidden;
-  text-align: center;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.video-collect-public__turnstile :deep(iframe) {
+.submit-panel {
+  background: var(--collect-card);
+  border: var(--vtsuru-page-border);
+  border-color: var(--collect-border);
+  border-radius: var(--vtsuru-page-radius, 8px);
+  box-shadow: var(--vtsuru-page-shadow);
+}
+
+.submit-panel__heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.submit-panel__heading > .n-icon {
+  color: var(--collect-accent);
+  font-size: 28px;
+}
+
+.submit-panel__heading h2,
+.submit-panel__heading p {
+  margin: 0;
+}
+
+.submit-panel__heading h2 {
+  font-size: 18px;
+}
+
+.submit-panel__heading p {
+  margin-top: 2px;
+  color: var(--collect-muted);
+  font-size: 12px;
+}
+
+.identity-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.authenticated-user {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  color: var(--collect-muted);
+  font-size: 13px;
+  background: var(--vtsuru-page-primary-soft);
+  border-radius: var(--vtsuru-page-radius, 6px);
+}
+
+.authenticated-user .n-icon {
+  flex: 0 0 auto;
+  color: var(--collect-accent);
+}
+
+.turnstile {
+  max-width: 100%;
+  margin: 2px 0 14px;
+  overflow: hidden;
+}
+
+.turnstile :deep(iframe) {
   max-width: 100%;
 }
 
-@media (max-width: 520px) {
-  .video-collect-public__content {
-    padding: 14px;
+@keyframes submit-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
   }
 
-  .video-collect-public__card {
-    width: 100%;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  .video-collect-public.background-glass::after {
-    background: var(--vtsuru-bg-elevated);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+@media (max-width: 760px) {
+  .collect-submit-page {
+    align-items: start;
+    padding-block: 28px;
+  }
+
+  .collect-submit-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .collect-title-row h1 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 420px) {
+  .collect-submit-page {
+    padding: 20px 12px;
+  }
+
+  .collect-title-row {
+    align-items: flex-start;
+  }
+
+  .collect-title-row h1 {
+    font-size: 25px;
+  }
+
+  .collect-meta,
+  .identity-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .collect-meta > div + div {
+    padding-left: 0;
+    border-top: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--collect-border);
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collect-intro,
+  .submit-panel {
+    animation: none;
   }
 }
 </style>

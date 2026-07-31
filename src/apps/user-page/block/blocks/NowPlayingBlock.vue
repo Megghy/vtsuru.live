@@ -189,7 +189,7 @@ useIntervalFn(() => {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
   background: var(--vtsuru-brand-tint);
   font-size: 21px;
 }
@@ -219,7 +219,7 @@ useIntervalFn(() => {
   text-align: center;
 }
 .queue-count strong {
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
   font-size: 20px;
 }
 .playing-empty {

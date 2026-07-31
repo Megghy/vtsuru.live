@@ -1,308 +1,360 @@
 <script setup lang="ts">
-import { Clock24Filled, Person24Filled } from '@vicons/fluent'
-import { NButton, NCard, NEllipsis, NIcon, NPopconfirm, NScrollbar, NFlex, NTag, NText } from 'naive-ui'
+import {
+  ArrowClockwise24Regular,
+  Checkmark24Regular,
+  Clock24Regular,
+  Dismiss24Regular,
+  Open24Regular,
+  Person24Regular,
+} from '@vicons/fluent'
+import { NButton, NEllipsis, NIcon, NTag, NTime } from 'naive-ui'
+import { computed } from 'vue'
 
 import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
 import { VideoStatus } from '@/api/api-models'
+
 const props = defineProps<{
   videoInfo: VideoInfo
   videoData: VideoCollectVideo
-  type: 'padding' | 'accept' | 'reject'
-  isLoading?: boolean
+  loading?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'updateStatus', status: VideoStatus, video: VideoInfo): void
+  updateStatus: [status: VideoStatus, video: VideoInfo]
 }>()
 
-function handleStatusChange(status: VideoStatus) {
-  emit('updateStatus', status, props.videoInfo)
-}
+const actions = computed(() => {
+  if (props.videoInfo.status === VideoStatus.Pending) {
+    return [
+      { label: '通过', status: VideoStatus.Accepted, type: 'success' as const, icon: Checkmark24Regular },
+      { label: '拒绝', status: VideoStatus.Rejected, type: 'error' as const, icon: Dismiss24Regular },
+    ]
+  }
+  if (props.videoInfo.status === VideoStatus.Accepted) {
+    return [
+      { label: '退回待审', status: VideoStatus.Pending, type: 'default' as const, icon: ArrowClockwise24Regular },
+      { label: '改为拒绝', status: VideoStatus.Rejected, type: 'error' as const, icon: Dismiss24Regular },
+    ]
+  }
+  return [
+    { label: '退回待审', status: VideoStatus.Pending, type: 'default' as const, icon: ArrowClockwise24Regular },
+    { label: '改为通过', status: VideoStatus.Accepted, type: 'success' as const, icon: Checkmark24Regular },
+  ]
+})
 
-function formatSeconds(seconds: number): string {
-  const minutes = Math.floor(seconds / 60)
+function formatDuration(seconds: number) {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
   const remainingSeconds = seconds % 60
-  const formattedMinutes = minutes.toString().padStart(2, '0')
-  const formattedSeconds = remainingSeconds.toString().padStart(2, '0')
-  return `${formattedMinutes}:${formattedSeconds}`
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
+    : `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
 }
 
 function openVideo() {
-  window.open(`https://www.bilibili.com/video/${props.videoInfo.bvid}`, '_blank')
+  window.open(`https://www.bilibili.com/video/${props.videoInfo.bvid}`, '_blank', 'noopener,noreferrer')
 }
 </script>
 
 <template>
-  <NCard
-    size="small"
-    hoverable
-    embedded
-    class="video-card"
-    content-style="padding: 0;"
-  >
-    <template #cover>
-      <div
-        class="cover-container"
-        @click="openVideo"
-      >
-        <img
-          :src="videoData.cover.replace('http://', 'https://')"
-          referrerpolicy="no-referrer"
-          class="cover-img"
-        />
-        <div class="cover-info">
-          <span class="info-item">
-            <NIcon
-              :component="Clock24Filled"
-              color="lightgrey"
-            />
-            <NText style="color: lightgrey; font-size: 12px; margin-left: 4px">
-              {{ formatSeconds(videoData.length) }}
-            </NText>
-          </span>
-          <span class="info-item">
-            <NIcon
-              :component="Person24Filled"
-              color="lightgrey"
-            />
-            <NText style="color: lightgrey; font-size: 12px; margin-left: 4px">
-              {{ videoData.ownerName }}
-            </NText>
-          </span>
-        </div>
-      </div>
-    </template>
+  <article class="video-item">
+    <button
+      type="button"
+      class="video-cover"
+      :aria-label="`打开视频：${videoData.title}`"
+      @click="openVideo"
+    >
+      <img
+        :src="videoData.cover.replace('http://', 'https://')"
+        :alt="videoData.title"
+        referrerpolicy="no-referrer"
+      />
+      <span class="duration-label">
+        <NIcon :component="Clock24Regular" />
+        {{ formatDuration(videoData.length) }}
+      </span>
+    </button>
 
-    <div class="card-content">
-      <div class="title-row">
-        <NButton
-          text
-          style="width: 100%; justify-content: flex-start; text-align: left"
+    <div class="video-content">
+      <div class="video-heading">
+        <button
+          type="button"
+          class="video-title"
           @click="openVideo"
         >
-          <NEllipsis style="max-width: 100%">
-            <template #tooltip>
-              <div style="max-width: 300px">
-                {{ videoData.title }}
-              </div>
-            </template>
-            <span style="font-weight: 500; font-size: 15px">{{ videoData.title }}</span>
+          <NEllipsis :line-clamp="2">
+            {{ videoData.title }}
           </NEllipsis>
+        </button>
+        <NButton
+          text
+          circle
+          title="在哔哩哔哩打开"
+          @click="openVideo"
+        >
+          <template #icon>
+            <NIcon :component="Open24Regular" />
+          </template>
         </NButton>
       </div>
 
-      <div class="sender-info">
-        <NScrollbar style="max-height: 80px">
+      <div class="video-meta">
+        <span>
+          <NIcon :component="Person24Regular" />
+          {{ videoData.ownerName }}
+        </span>
+        <code>{{ videoInfo.bvid }}</code>
+      </div>
+
+      <div class="recommendations">
+        <div class="recommendations-heading">
+          <span>推荐记录</span>
+          <NTag
+            size="tiny"
+            :bordered="false"
+          >
+            {{ videoInfo.senders.length }} 人
+          </NTag>
+        </div>
+        <div class="recommendation-list">
           <div
             v-for="(sender, index) in videoInfo.senders"
-            :key="index"
-            class="sender-item"
+            :key="`${sender.senderId ?? sender.sender}-${sender.sendAt}-${index}`"
+            class="recommendation-item"
           >
-            <div class="sender-row">
-              <NTag
-                size="small"
-                :bordered="false"
-                round
-                style="margin-right: 6px; transform: scale(0.85); transform-origin: left center"
-              >
-                推荐人
-              </NTag>
-              <NText depth="2">
-                {{ sender.sender ?? '未填写' }}
-                <span style="opacity: 0.5">[{{ sender.senderId ?? '未填写' }}]</span>
-              </NText>
+            <div class="recommendation-author">
+              <strong>{{ sender.sender || '匿名用户' }}</strong>
+              <span v-if="sender.senderId">UID {{ sender.senderId }}</span>
+              <NTime
+                :time="sender.sendAt"
+                type="relative"
+              />
             </div>
-            <div
-              v-if="sender.description"
-              class="sender-desc"
-            >
-              <NText depth="3">
-                {{ sender.description }}
-              </NText>
-            </div>
-            <NDivider
-              v-if="index < videoInfo.senders.length - 1"
-              style="margin: 8px 0"
-            />
+            <p v-if="sender.description">
+              {{ sender.description }}
+            </p>
           </div>
-        </NScrollbar>
+        </div>
       </div>
 
-      <div class="action-area">
-        <template v-if="type === 'padding'">
-          <NFlex
-            justify="space-between"
-            :wrap="false"
-          >
-            <NButton
-              strong
-              secondary
-              type="success"
-              size="small"
-              class="flex-1"
-              :loading="isLoading"
-              @click="handleStatusChange(VideoStatus.Accepted)"
-            >
-              通过
-            </NButton>
-            <NButton
-              strong
-              secondary
-              type="error"
-              size="small"
-              class="flex-1"
-              :loading="isLoading"
-              @click="handleStatusChange(VideoStatus.Rejected)"
-            >
-              拒绝
-            </NButton>
-          </NFlex>
-        </template>
-
-        <template v-if="type === 'accept'">
-          <NFlex
-            justify="space-between"
-            :wrap="false"
-          >
-            <NButton
-              secondary
-              size="small"
-              class="flex-1"
-              :loading="isLoading"
-              @click="handleStatusChange(VideoStatus.Pending)"
-            >
-              重置
-            </NButton>
-            <NPopconfirm @positive-click="handleStatusChange(VideoStatus.Rejected)">
-              <template #trigger>
-                <NButton
-                  strong
-                  secondary
-                  type="error"
-                  size="small"
-                  class="flex-1"
-                  :loading="isLoading"
-                >
-                  拒绝
-                </NButton>
-              </template>
-              确定要拒绝这个已通过的视频吗？
-            </NPopconfirm>
-          </NFlex>
-        </template>
-
-        <template v-if="type === 'reject'">
-          <NFlex
-            justify="space-between"
-            :wrap="false"
-          >
-            <NButton
-              strong
-              secondary
-              type="success"
-              size="small"
-              class="flex-1"
-              :loading="isLoading"
-              @click="handleStatusChange(VideoStatus.Accepted)"
-            >
-              通过
-            </NButton>
-            <NButton
-              secondary
-              size="small"
-              class="flex-1"
-              :loading="isLoading"
-              @click="handleStatusChange(VideoStatus.Pending)"
-            >
-              重置
-            </NButton>
-          </NFlex>
-        </template>
+      <div class="video-actions">
+        <NButton
+          v-for="action in actions"
+          :key="action.status"
+          secondary
+          strong
+          size="small"
+          :type="action.type"
+          :loading="loading"
+          @click="emit('updateStatus', action.status, videoInfo)"
+        >
+          <template #icon>
+            <NIcon :component="action.icon" />
+          </template>
+          {{ action.label }}
+        </NButton>
       </div>
     </div>
-  </NCard>
+  </article>
 </template>
 
 <style scoped>
-.video-card {
-  height: 100%;
+.video-item {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  height: 100%;
   overflow: hidden;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 6px;
 }
 
-.cover-container {
+.video-cover {
   position: relative;
-  height: 140px;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
   overflow: hidden;
+  background: var(--vtsuru-bg-muted);
+  border: 0;
   cursor: pointer;
-  background: var(--vtsuru-bg-surface);
 }
 
-.cover-img {
+.video-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.18s ease;
 }
 
-.cover-container:hover .cover-img {
-  transform: scale(1.05);
+.video-cover:hover img {
+  transform: scale(1.025);
 }
 
-.cover-info {
+.duration-label {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 6px 8px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  right: 8px;
+  bottom: 8px;
   display: flex;
-  justify-content: space-between;
+  gap: 4px;
   align-items: center;
+  padding: 3px 6px;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  background: rgb(0 0 0 / 72%);
+  border-radius: 4px;
 }
 
-.info-item {
+.video-content {
   display: flex;
-  align-items: center;
-}
-
-.card-content {
+  flex: 1;
+  flex-direction: column;
+  gap: 11px;
+  min-height: 0;
   padding: 12px;
+}
+
+.video-heading {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  min-height: 42px;
+}
+
+.video-title {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  color: var(--vtsuru-fg);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.video-title:hover {
+  color: var(--vtsuru-brand);
+}
+
+.video-meta,
+.video-meta span {
+  display: flex;
+  align-items: center;
+}
+
+.video-meta {
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.video-meta span {
+  min-width: 0;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.video-meta code {
+  font-size: 11px;
+}
+
+.recommendations {
+  min-height: 98px;
+  padding-top: 10px;
+  border-top: 1px solid var(--vtsuru-border);
+}
+
+.recommendations-heading,
+.recommendation-author {
+  display: flex;
+  align-items: center;
+}
+
+.recommendations-heading {
+  justify-content: space-between;
+  margin-bottom: 7px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.recommendation-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  max-height: 112px;
+  overflow: auto;
 }
 
-.title-row {
-  height: 24px;
-  display: flex;
-  align-items: center;
-}
-
-.sender-info {
-  padding: 8px;
+.recommendation-author {
+  gap: 6px;
+  min-width: 0;
   font-size: 12px;
-  min-height: 60px;
 }
 
-.sender-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2px;
+.recommendation-author strong {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.sender-desc {
-  padding-left: 4px;
+.recommendation-author span,
+.recommendation-author :deep(.n-time) {
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+}
+
+.recommendation-author :deep(.n-time) {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.recommendation-item p {
+  display: -webkit-box;
+  margin: 3px 0 0;
+  overflow: hidden;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
   line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.action-area {
+.video-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
   margin-top: auto;
-  padding-top: 4px;
+  padding-top: 2px;
 }
 
-.flex-1 {
-  flex: 1;
+@media (max-width: 520px) {
+  .video-item {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+  .video-cover {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .video-heading {
+    min-height: 0;
+  }
+
+  .recommendations {
+    min-height: 0;
+  }
 }
 </style>

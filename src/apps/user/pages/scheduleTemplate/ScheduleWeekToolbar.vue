@@ -85,7 +85,7 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       textColor: 'var(--schedule-toolbar-fg)',
       placeholderColor: 'var(--schedule-toolbar-muted)',
       arrowColor: 'var(--schedule-toolbar-muted)',
-      caretColor: 'var(--schedule-toolbar-accent)',
+      caretColor: 'var(--schedule-toolbar-accent-readable)',
       border: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-border)',
       borderHover: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-accent)',
       borderActive: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-accent)',
@@ -99,8 +99,8 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       color: 'var(--schedule-toolbar-bg)',
       optionTextColor: 'var(--schedule-toolbar-fg)',
       optionTextColorPressed: 'var(--schedule-toolbar-fg)',
-      optionTextColorActive: 'var(--schedule-toolbar-accent)',
-      optionCheckColor: 'var(--schedule-toolbar-accent)',
+      optionTextColorActive: 'var(--schedule-toolbar-accent-readable)',
+      optionCheckColor: 'var(--schedule-toolbar-accent-readable)',
       optionColorPending: 'var(--schedule-toolbar-control-bg)',
       optionColorActive: 'var(--schedule-toolbar-control-bg)',
       optionColorActivePending: 'var(--schedule-toolbar-control-bg-hover)',
@@ -185,6 +185,7 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
     var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
   );
   --schedule-toolbar-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --schedule-toolbar-accent-readable: var(--vtsuru-page-primary-readable, var(--schedule-toolbar-accent));
   --schedule-toolbar-focus: color-mix(in srgb, var(--schedule-toolbar-accent) 24%, transparent);
 
   display: flex;
@@ -231,7 +232,7 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
 }
 
 .schedule-week-toolbar__step:hover:not(:disabled) {
-  color: var(--schedule-toolbar-accent);
+  color: var(--schedule-toolbar-accent-readable);
   background: var(--schedule-toolbar-control-bg-hover);
   border-color: var(--schedule-toolbar-accent);
 }

@@ -44,9 +44,7 @@ const appearanceKeys = [
 ] as const satisfies readonly (keyof UserPageAppearanceTheme)[]
 
 export function getUserPageAppearanceOverrides(theme?: UserPageAppearanceTheme): UserPageAppearanceTheme {
-  return Object.fromEntries(
-    appearanceKeys.flatMap((key) => (theme?.[key] === undefined ? [] : [[key, theme[key]]])),
-  ) as UserPageAppearanceTheme
+  return Object.fromEntries(appearanceKeys.flatMap((key) => (theme?.[key] === undefined ? [] : [[key, theme[key]]])))
 }
 
 export interface ResolvedUserPageAppearance {

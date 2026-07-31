@@ -82,7 +82,7 @@ function platformLabel(p: Platform) {
 }
 
 function getStyle(p: Platform) {
-  const presets: Record<Platform, { bg: string; fg: string }> = {
+  const presets: Record<Platform, { bg: string; fg: string; readable?: string }> = {
     afdian: { bg: '#946ce6', fg: '#ffffff' },
     kofi: { bg: '#ff5f5f', fg: '#ffffff' },
     patreon: { bg: '#ff424d', fg: '#ffffff' },
@@ -90,7 +90,11 @@ function getStyle(p: Platform) {
     twitch: { bg: '#9146FF', fg: '#ffffff' },
     youtube: { bg: '#ff0000', fg: '#ffffff' },
     fanbox: { bg: '#fff015', fg: '#000000' },
-    other: { bg: 'var(--vtsuru-page-primary)', fg: 'var(--user-page-ui-surface-bg)' },
+    other: {
+      bg: 'var(--vtsuru-page-primary)',
+      fg: 'var(--vtsuru-page-primary-readable)',
+      readable: 'var(--vtsuru-page-primary-readable)',
+    },
   }
   return presets[p]
 }
@@ -133,6 +137,7 @@ function getStyle(p: Platform) {
           :style="{
             '--accent-color': getStyle(it.platform).bg,
             '--accent-text': getStyle(it.platform).fg,
+            '--accent-readable': getStyle(it.platform).readable ?? getStyle(it.platform).bg,
           }"
         >
           <div class="card-glow" />
@@ -178,7 +183,7 @@ function getStyle(p: Platform) {
   height: 32px;
   border-radius: var(--vtsuru-page-radius);
   background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent);
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -257,7 +262,7 @@ function getStyle(p: Platform) {
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: var(--accent-color);
+  color: var(--accent-readable);
   position: relative;
   z-index: 1;
   transition: transform 0.3s;
@@ -308,7 +313,7 @@ function getStyle(p: Platform) {
 .support-card:hover .arrow-icon {
   opacity: 1;
   transform: translateX(4px);
-  color: var(--accent-color);
+  color: var(--accent-readable);
 }
 
 .empty-state {

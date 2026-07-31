@@ -284,7 +284,7 @@ watch(
   -webkit-line-clamp: 2;
 }
 .price {
-  color: var(--vtsuru-primary, #18a058);
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-primary, #18a058));
   font-size: 13px;
   font-weight: 700;
 }

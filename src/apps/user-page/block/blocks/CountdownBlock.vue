@@ -112,7 +112,7 @@ const breakdown = computed(() => {
         <div class="done-icon-wrapper">
           <NIcon
             size="32"
-            color="var(--vtsuru-page-primary, var(--vtsuru-brand))"
+            color="var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)))"
           >
             <HourglassOutline />
           </NIcon>
@@ -287,7 +287,7 @@ const breakdown = computed(() => {
 }
 
 .digit-box.highlight .val {
-  color: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
 }
 
 .done-display {

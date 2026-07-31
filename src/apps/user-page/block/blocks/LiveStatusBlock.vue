@@ -340,7 +340,7 @@ const actionButtonProps = computed(() =>
   background: currentcolor;
 }
 .status.online {
-  color: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
 }
 .body {
   display: grid;

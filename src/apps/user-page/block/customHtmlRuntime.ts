@@ -78,6 +78,7 @@ export interface CustomHtmlTheme {
   bgElevated: string
   border: string
   primary: string
+  primaryReadable: string
   radius: string
   borderWidth?: string
   borderStyle?: string
@@ -311,6 +312,7 @@ export function buildCustomHtmlDocument(props: CustomHtmlProps, theme: CustomHtm
     `--vtsuru-bg-elevated:${theme.bgElevated}`,
     `--vtsuru-border:${theme.border}`,
     `--vtsuru-primary:${theme.primary}`,
+    `--vtsuru-primary-readable:${theme.primaryReadable}`,
     `--vtsuru-radius:${theme.radius}`,
     `--vtsuru-border-width:${theme.borderWidth ?? '1px'}`,
     `--vtsuru-border-style:${theme.borderStyle ?? 'solid'}`,
@@ -321,7 +323,7 @@ export function buildCustomHtmlDocument(props: CustomHtmlProps, theme: CustomHtm
     .join(';')
   const nonce = createNonce()
   const bridge = `(()=>{let frame=0;const send=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>parent.postMessage({type:'vtsuru-custom-html-height',height:Math.ceil(Math.max(document.body.scrollHeight,document.body.getBoundingClientRect().height))},'*'))};new ResizeObserver(send).observe(document.body);addEventListener('load',send);send()})()`
-  const baseCss = `:root{${themeVariables};color-scheme:${theme.colorScheme}}*{box-sizing:border-box}html,body{min-width:0;margin:0;padding:0}body{color:var(--vtsuru-fg);background:transparent;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-wrap:anywhere}img{max-width:100%;height:auto}a{color:var(--vtsuru-primary)}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}`
+  const baseCss = `:root{${themeVariables};color-scheme:${theme.colorScheme}}*{box-sizing:border-box}html,body{min-width:0;margin:0;padding:0}body{color:var(--vtsuru-fg);background:transparent;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-wrap:anywhere}img{max-width:100%;height:auto}a{color:var(--vtsuru-primary-readable)}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}`
 
   return {
     issues: [...htmlIssues, ...cssResult.issues],

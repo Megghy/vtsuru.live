@@ -62,7 +62,7 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
   margin-bottom: 0.25em;
 }
 .rich-text :deep(a) {
-  color: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
   border-bottom: 1px solid transparent;
   font-weight: 500;
   text-decoration: none;
