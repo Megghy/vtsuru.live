@@ -427,6 +427,7 @@ function resetProgress() {
                   tag="div"
                   name="result-card"
                   class="result-grid"
+                  :class="{ 'is-flip-layout': mode === 'flip' }"
                 >
                   <VideoCollectResultCard
                     v-for="(item, index) in mode === 'flip' ? shuffledVideos : acceptedVideos"
@@ -605,6 +606,10 @@ function resetProgress() {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
   gap: var(--vtsuru-page-spacing, 16px);
   min-width: 0;
+}
+
+.result-grid.is-flip-layout {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
 }
 
 .mode-content {

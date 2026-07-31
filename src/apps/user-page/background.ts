@@ -2,6 +2,7 @@ import { formatRgb } from 'culori'
 import type { GlobalThemeOverrides } from 'naive-ui'
 
 import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
+import { resolveReadableForeground } from '@/shared/config/theme/contrast'
 import { getThemeOverrides } from '@/shared/config/theme/overrides'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { hexToRgba } from '@/shared/utils'
@@ -253,6 +254,9 @@ export function getUserPageNaiveThemeOverrides(
   const subtleTextColor = vars['--vtsuru-surface-fg-subtle']
   const disabledTextColor = vars['--vtsuru-page-fg-disabled']
   const disabledPlaceholderColor = vars['--vtsuru-page-placeholder-disabled']
+  const pagePrimary = vars['--vtsuru-page-primary']
+  const pagePrimaryFocus = vars['--vtsuru-page-primary-focus']
+  const pagePrimaryForeground = resolveReadableForeground(pagePrimary, contentColor, effectiveIsDark)
   const controlOverlay = resolveUserPageControlOverlay(contentColor)
   const radius = `${appearance.radius}px`
   const border = `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`
@@ -373,6 +377,27 @@ export function getUserPageNaiveThemeOverrides(
       borderRadius: radius,
       border,
       borderChecked: primaryBorder,
+    },
+    Radio: {
+      ...base.Radio,
+      buttonBorderColor: borderColor,
+      buttonBorderColorActive: pagePrimary,
+      buttonBorderColorHover: pagePrimary,
+      buttonBoxShadowFocus: `inset 0 0 0 1px ${pagePrimary}, 0 0 0 2px ${pagePrimaryFocus}`,
+      buttonBoxShadowHover: `inset 0 0 0 1px ${pagePrimary}`,
+      buttonColor: controlOverlay.color,
+      buttonColorActive: pagePrimary,
+      buttonTextColor: textColor,
+      buttonTextColorActive: pagePrimaryForeground,
+      buttonTextColorHover: pagePrimary,
+      buttonBorderRadius: radius,
+      dotColorActive: pagePrimary,
+    },
+    Empty: {
+      ...base.Empty,
+      textColor: mutedTextColor,
+      iconColor: pagePrimary,
+      extraTextColor: mutedTextColor,
     },
     Tooltip: { ...base.Tooltip, borderRadius: radius, boxShadow: appearance.shadow },
     Menu: { ...base.Menu, borderRadius: radius },

@@ -105,11 +105,6 @@ const visibleVideos = computed(() => {
 })
 const moreOptions = computed(() => [
   {
-    label: '查看结果页',
-    key: 'result',
-    icon: () => h(NIcon, null, { default: () => h(Open24Regular) }),
-  },
-  {
     label: '导出通过结果',
     key: 'export',
     disabled: acceptedVideos.value.length === 0,
@@ -233,9 +228,7 @@ async function deleteTable() {
 }
 
 function handleMoreAction(key: string) {
-  if (key === 'result' && table.value) {
-    router.push({ name: 'video-collect-list', params: { id: table.value.id } })
-  } else if (key === 'export') {
+  if (key === 'export') {
     exportResults()
   } else if (key === 'delete') {
     confirmDelete()
@@ -286,6 +279,15 @@ function saveQrCode() {
                 ><NIcon><ArrowLeft24Regular /></NIcon
               ></template>
               返回
+            </NButton>
+            <NButton
+              type="primary"
+              @click="router.push({ name: 'video-collect-list', params: { id: table.id }, query: route.query })"
+            >
+              <template #icon>
+                <NIcon :component="Open24Regular" />
+              </template>
+              查看结果页
             </NButton>
             <NButton
               secondary
