@@ -32,6 +32,7 @@ import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { GetGuardColor } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
+import { filterSongs, getSongFieldValues } from './utils/songListData'
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -59,47 +60,17 @@ const isLoading = ref('')
 const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 const tags = computed(() => {
-  if (props.data) {
-    return [
-      ...new Set(
-        props.data
-          .map((item) => {
-            return item.tags ?? []
-          })
-          .reduce((prev, curr) => [...prev, ...curr], []),
-      ),
-    ]
-  }
-  return []
+  return getSongFieldValues(props.data, 'tags')
 })
 const authors = computed(() => {
-  if (props.data) {
-    return [
-      ...new Set(
-        props.data
-          .map((item) => {
-            return item.author ?? []
-          })
-          .reduce((prev, curr) => [...prev, ...curr], []),
-      ),
-    ]
-  }
-  return []
+  return getSongFieldValues(props.data, 'author')
 })
 const songs = computed(() => {
-  if (props.data) {
-    return props.data
-      .filter((item) => {
-        const kw = searchKeyword.value.toLowerCase()
-        return (
-          (!selectedTag.value || item.tags?.includes(selectedTag.value)) &&
-          (!kw || item.name.toLowerCase().includes(kw) || (item.translateName?.toLowerCase().includes(kw) ?? false)) &&
-          (!selectedAuthor.value || item.author?.includes(selectedAuthor.value) == true)
-        )
-      })
-      .slice(0, index.value)
-  }
-  return []
+  return filterSongs(props.data, {
+    keyword: searchKeyword.value,
+    tag: selectedTag.value,
+    author: selectedAuthor.value,
+  }).slice(0, index.value)
 })
 const onScroll = throttle((e: Event) => {
   const scrollEl = e.target as HTMLDivElement

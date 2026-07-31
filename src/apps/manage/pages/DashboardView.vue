@@ -33,6 +33,7 @@ import type { BiliAuthModel } from '@/api/api-models'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { parseBiliAuthCredential } from '@/apps/account/components/biliAuthCredential'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
@@ -270,8 +271,16 @@ async function BindBiliAuth() {
     message.error('认证链接不能为空')
     return
   }
+  let authToken: string
+  try {
+    authToken = parseBiliAuthCredential(biliAuthText.value)
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : '认证链接格式无效')
+    return
+  }
+
   isLoading.value = true
-  await QueryGetAPI<BiliAuthModel>(`${ACCOUNT_API_URL}bind-bili-auth`, { token: biliAuthText.value })
+  await QueryGetAPI<BiliAuthModel>(`${ACCOUNT_API_URL}bind-bili-auth`, { token: authToken })
     .then(async (data) => {
       if (data.code == 200) {
         message.success(`已绑定用户: ${data.data.userId}`)
@@ -899,7 +908,7 @@ onUnmounted(() => {
             </NButton>
           </template>
           直接粘贴认证完成后给出的类似
-          <NCode> https://vtsuru.live/bili-user?auth=abcdefghijklmnopqrstuvwxyz== </NCode>
+          <NCode> https://vtsuru.live/bili-user/points#auth=abcdefghijklmnopqrstuvwxyz%3D%3D </NCode>
           的链接即可
         </NTooltip>
       </NInputGroup>

@@ -582,7 +582,7 @@ watch(
                 v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
                 type="primary"
                 tag="a"
-                href="/bili-user"
+                href="/bili-user/points"
                 target="_blank"
                 size="small"
                 secondary
@@ -590,7 +590,7 @@ watch(
                 <template #icon>
                   <NIcon :component="Person48Filled" />
                 </template>
-                <span v-if="windowWidth >= 768"> 认证用户中心 </span>
+                <span v-if="windowWidth >= 768"> Bilibili 账户中心 </span>
               </NButton>
               <!-- 主播后台按钮 -->
               <NButton
@@ -944,12 +944,12 @@ watch(
           <NButton
             type="primary"
             size="small"
-            @click="$router.push({ name: 'bili-user' })"
+            @click="$router.push({ name: 'bili-user-points' })"
           >
             <template #icon>
               <NIcon :component="BrowsersOutline" />
             </template>
-            前往 Bilibili 认证用户主页
+            前往 Bilibili 账户中心
           </NButton>
         </NFlex>
       </NFlex>

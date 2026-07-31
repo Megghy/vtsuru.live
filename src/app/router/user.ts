@@ -28,7 +28,7 @@ export default [
     meta: {
       title: '提问箱',
       keepAlive: true,
-      pageWidth: 'xl',
+      pageWidth: 'md',
     },
   },
   {

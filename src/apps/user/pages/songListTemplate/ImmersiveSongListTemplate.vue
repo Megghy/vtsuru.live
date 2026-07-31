@@ -12,6 +12,7 @@ import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { GetGuardColor } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
+import { filterSongs } from './utils/songListData'
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -79,16 +80,7 @@ const isSelf = computed(() => !!props.userInfo?.id && accountInfo.value?.id === 
 const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 const filteredSongs = computed<SongsInfo[]>(() => {
-  const data = props.data
-  if (!data) return []
-  const keyword = searchKeyword.value.trim().toLowerCase()
-  if (!keyword) return data
-  return data.filter((song) => {
-    const haystack = [song.name, song.translateName ?? '', song.author?.join(' ') ?? '', song.tags?.join(' ') ?? '']
-      .join(' ')
-      .toLowerCase()
-    return haystack.includes(keyword)
-  })
+  return filterSongs(props.data, { keyword: searchKeyword.value })
 })
 
 const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
@@ -345,7 +337,7 @@ function requestSong(song: SongsInfo) {
   display: flex;
   gap: var(--vtsuru-page-spacing);
   width: 100%;
-  max-width: var(--vtsuru-page-max-width);
+  max-width: var(--vtsuru-page-max-width, 1180px);
   margin: 0 auto;
   height: calc(100vh - 130px);
   min-height: 480px;

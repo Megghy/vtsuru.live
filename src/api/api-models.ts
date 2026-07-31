@@ -809,6 +809,7 @@ export interface ResponsePointGoodModel {
   collectUrl?: string
   embedCollectUrl?: boolean
   isPinned: boolean
+  createAt: number
 
   canFreeBuy: boolean
   allowGuardLevel: GuardLevel

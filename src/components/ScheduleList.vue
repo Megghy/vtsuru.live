@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Bed20Regular, Clock20Regular } from '@vicons/fluent'
-import { useWindowSize } from '@vueuse/core'
 import {
   NBadge,
   NButton,
@@ -31,7 +30,6 @@ const emit = defineEmits<{
   (e: 'onEditItem', schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo): void
   (e: 'onDeleteItem', schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo): void
 }>()
-const { width } = useWindowSize()
 const themeVars = useThemeVars()
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
@@ -201,7 +199,8 @@ function getDayHeaderStyle(
         <NGrid
           x-gap="8"
           y-gap="8"
-          cols="1 1200:7"
+          responsive="self"
+          cols="1 560:2 840:4 1080:7"
           style="align-items: stretch"
         >
           <NGridItem
@@ -411,5 +410,4 @@ function getDayHeaderStyle(
       </NCard>
     </NListItem>
   </NList>
-  <NGrid v-if="width > 1000" />
 </template>

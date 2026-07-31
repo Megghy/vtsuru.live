@@ -10,6 +10,7 @@ import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { GetGuardColor } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
+import { filterSongs } from './utils/songListData'
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -23,25 +24,7 @@ const inputKeyword = ref('')
 const searchKeyword = ref('')
 
 const filteredSongs = computed<SongsInfo[]>(() => {
-  const data = props.data
-  if (!data) return []
-
-  const keyword = searchKeyword.value.trim().toLowerCase()
-  if (!keyword) return data
-
-  return data.filter((song) => {
-    const haystack = [
-      song.name,
-      song.translateName ?? '',
-      song.author?.join(' ') ?? '',
-      song.language?.join(' ') ?? '',
-      song.tags?.join(' ') ?? '',
-      song.description ?? '',
-    ]
-      .join(' ')
-      .toLowerCase()
-    return haystack.includes(keyword)
-  })
+  return filterSongs(props.data, { keyword: searchKeyword.value })
 })
 
 const isSelf = computed(() => {
@@ -278,7 +261,7 @@ function getMetaText(song: SongsInfo) {
 
 <style scoped>
 .song-list-card-template {
-  --content-max-width: var(--vtsuru-page-max-width);
+  --content-max-width: var(--vtsuru-page-max-width, 1180px);
   --card-max-width: 720px;
 
   --sl-background: 0 0% 100%;

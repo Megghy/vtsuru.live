@@ -19,7 +19,13 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
       token: string
     }[]
   >('Bili.Auth.Tokens', [])
-  const currentToken = usePersistedStorage<string>('Bili.Auth.Selected', null)
+  let resolveCurrentTokenReady!: () => void
+  const currentTokenReady = new Promise<void>((resolve) => {
+    resolveCurrentTokenReady = resolve
+  })
+  const currentToken = usePersistedStorage<string>('Bili.Auth.Selected', null, {
+    onReady: resolveCurrentTokenReady,
+  })
 
   const isLoading = ref(false)
   const isAuthed = computed(() => currentToken.value != null && currentToken.value.length > 0)
@@ -30,6 +36,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
       console.warn('[bili-auth] 无效的token')
       return
     }
+    await currentTokenReady
     biliAuth.value = {} as BiliAuthModel
     currentToken.value = token
     await getAuthInfo()

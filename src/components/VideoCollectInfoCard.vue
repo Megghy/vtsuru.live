@@ -30,11 +30,16 @@ function onClick() {
 <template>
   <NCard
     size="small"
-    style="width: 100%; cursor: pointer"
+    :class="{ 'is-clickable': canClick }"
     embedded
-    hoverable
+    :hoverable="canClick"
     :bordered="bordered"
+    :tabindex="canClick ? 0 : undefined"
+    :role="canClick ? 'link' : undefined"
+    :aria-label="canClick ? `打开视频征集：${item.name}` : undefined"
     @click="onClick"
+    @keydown.enter.prevent="onClick"
+    @keydown.space.prevent="onClick"
   >
     <template #header>
       <NFlex :size="5">
@@ -114,3 +119,15 @@ function onClick() {
     </template>
   </NCard>
 </template>
+
+<style scoped>
+.is-clickable {
+  width: 100%;
+  cursor: pointer;
+}
+
+.is-clickable:focus-visible {
+  outline: 2px solid var(--vtsuru-page-primary-focus, var(--vtsuru-brand));
+  outline-offset: 3px;
+}
+</style>

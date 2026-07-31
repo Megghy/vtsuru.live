@@ -4,6 +4,7 @@ import { NButton, NModal, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { DownloadConfig, useAccount } from '@/api/account'
+import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
 import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/shared/config'
@@ -13,6 +14,8 @@ import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import { canRequestSong } from './songListTemplate/utils/songRequestUtils'
+
+import './songListTemplate/songListTheme.css'
 
 // 组件属性
 const props = defineProps<{
@@ -288,7 +291,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div class="song-list-surface">
     <!-- 加载中显示加载动画 -->
     <NSpin :show="isLoading">
       <component

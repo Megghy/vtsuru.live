@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
+import { ArrowClockwise24Regular, Info24Filled, Search24Regular, Trophy24Filled } from '@vicons/fluent'
 import {
   NAlert,
   NButton,
@@ -9,12 +9,12 @@ import {
   NInput,
   NPagination,
   NSelect,
-  NFlex,
   NSpin,
   NTag,
+  NTime,
   NTooltip,
 } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
@@ -26,89 +26,75 @@ const props = defineProps<{
   template?: string | undefined
 }>()
 
-// 状态变量
 const isLoading = ref(false)
 const rankingData = ref<CheckInRankingInfo[]>([])
-const timeRange = ref<string>('all')
-const userFilter = ref<string>('')
-const checkInKeyword = ref('签到') // 默认签到关键词
-const pagination = ref({
-  page: 1,
-  pageSize: 10,
-})
+const timeRange = ref('all')
+const userFilter = ref('')
+const checkInKeyword = ref('签到')
+const pagination = ref({ page: 1, pageSize: 10 })
 
-// 时间段选项
 const timeRangeOptions = [
   { label: '全部时间', value: 'all' },
   { label: '今日', value: 'today' },
   { label: '本周', value: 'week' },
   { label: '本月', value: 'month' },
 ]
+const pageSizeOptions = [10, 20, 50].map((value) => ({ label: `${value} 条/页`, value }))
 
-// 过滤后的排行榜数据
+function getRangeStart(range: string) {
+  const now = new Date()
+  if (range === 'today') {
+    now.setHours(0, 0, 0, 0)
+    return now
+  }
+  if (range === 'week') {
+    now.setDate(now.getDate() - ((now.getDay() || 7) - 1))
+    now.setHours(0, 0, 0, 0)
+    return now
+  }
+  return new Date(now.getFullYear(), now.getMonth(), 1)
+}
+
 const filteredRankingData = computed(() => {
-  let filtered = rankingData.value
+  const keyword = userFilter.value.trim().toLocaleLowerCase()
+  const rangeStart = timeRange.value === 'all' ? undefined : getRangeStart(timeRange.value)
 
-  // 按时间范围筛选
-  if (timeRange.value !== 'all') {
-    const now = new Date()
-    let startTime: Date
-
-    if (timeRange.value === 'today') {
-      // 今天凌晨
-      startTime = new Date(now)
-      startTime.setHours(0, 0, 0, 0)
-    } else if (timeRange.value === 'week') {
-      // 本周一
-      const dayOfWeek = now.getDay() || 7 // 把周日作为7处理
-      startTime = new Date(now)
-      startTime.setDate(now.getDate() - (dayOfWeek - 1))
-      startTime.setHours(0, 0, 0, 0)
-    } else if (timeRange.value === 'month') {
-      // 本月1号
-      startTime = new Date(now.getFullYear(), now.getMonth(), 1)
-    }
-
-    filtered = filtered.filter((user) => {
-      const checkInTime = new Date(user.lastCheckInTime)
-      return checkInTime >= startTime
-    })
-  }
-
-  // 按用户名筛选
-  if (userFilter.value) {
-    const keyword = userFilter.value.toLowerCase()
-    filtered = filtered.filter((user) => user.name.toLowerCase().includes(keyword))
-  }
-
-  return filtered
+  return rankingData.value.filter((item) => {
+    const matchesRange = !rangeStart || new Date(item.lastCheckInTime) >= rangeStart
+    const matchesUser = !keyword || item.name.toLocaleLowerCase().includes(keyword)
+    return matchesRange && matchesUser
+  })
 })
 
-// 处理分页后的数据
 const pagedData = computed(() => {
   const { page, pageSize } = pagination.value
   const startIndex = (page - 1) * pageSize
-  const endIndex = startIndex + pageSize
-  return filteredRankingData.value.slice(startIndex, endIndex)
+  return filteredRankingData.value.slice(startIndex, startIndex + pageSize).map((item, index) => ({
+    ...item,
+    rank: startIndex + index + 1,
+  }))
 })
 
-// 加载签到排行榜数据
+watch([timeRange, userFilter, () => pagination.value.pageSize], () => {
+  pagination.value.page = 1
+})
+
 async function loadCheckInRanking() {
   isLoading.value = true
   try {
-    // 使用用户视角的签到排行API
     const response = await QueryGetAPI<CheckInRankingInfo[]>(`${CHECKIN_API_URL}ranking`, {
       vId: props.userInfo?.id,
       count: 100,
     })
 
-    if (response.code === 200) {
-      rankingData.value = response.data
-      pagination.value.page = 1 // 重置为第一页
-    } else {
+    if (response.code !== 200) {
       rankingData.value = []
       window.$message?.error?.(`获取签到排行榜失败: ${response.message}`)
+      return
     }
+
+    rankingData.value = response.data
+    pagination.value.page = 1
   } catch (error) {
     console.error('加载签到排行榜失败:', error)
     rankingData.value = []
@@ -117,386 +103,188 @@ async function loadCheckInRanking() {
   }
 }
 
-// 获取签到关键词
 async function fetchCheckInKeyword() {
   if (!props.userInfo?.id) return
 
   try {
-    // 获取主播的签到关键词设置
-    const response = await QueryGetAPI<{
-      keyword: string
-      isEnabled: boolean
-      requireAuth: boolean
-    }>(`${CHECKIN_API_URL}keyword`, {
-      vId: props.userInfo?.id,
+    const response = await QueryGetAPI<{ keyword: string }>(`${CHECKIN_API_URL}keyword`, {
+      vId: props.userInfo.id,
     })
-
-    if (response.code === 200 && response.data) {
-      checkInKeyword.value = response.data.keyword
-    }
+    if (response.code === 200) checkInKeyword.value = response.data.keyword
   } catch (error) {
     console.error('获取签到关键词失败:', error)
   }
 }
 
-// 组件挂载时获取签到排行和关键词
 onMounted(() => {
-  fetchCheckInKeyword()
-  loadCheckInRanking()
+  void fetchCheckInKeyword()
+  void loadCheckInRanking()
 })
 </script>
 
 <template>
   <NCard
     class="ranking-card"
-    title="签到排行榜"
     size="small"
     bordered
   >
-    <template #header-extra>
-      <NFlex
-        :wrap="true"
-        :size="8"
-      >
-        <NSelect
-          v-model:value="timeRange"
-          size="small"
-          style="min-width: 120px; width: auto"
-          :options="timeRangeOptions"
-          @update:value="loadCheckInRanking"
-        />
-        <NInput
-          v-model:value="userFilter"
-          size="small"
-          placeholder="搜索用户"
-          clearable
-          style="min-width: 140px; width: auto"
-        />
-        <NButton
-          type="primary"
-          size="small"
-          :loading="isLoading"
-          @click="loadCheckInRanking"
+    <template #header>
+      <div class="ranking-title">
+        <NIcon :component="Trophy24Filled" />
+        <span>签到排行榜</span>
+        <span
+          v-if="rankingData.length"
+          class="ranking-count"
+          >{{ filteredRankingData.length }} 人</span
         >
-          刷新
-        </NButton>
-      </NFlex>
+      </div>
     </template>
 
-    <NSpin :show="isLoading">
-      <div
-        v-if="rankingData.length === 0 && !isLoading"
-        class="empty-data"
+    <div class="filter-bar">
+      <NSelect
+        v-model:value="timeRange"
+        size="small"
+        :options="timeRangeOptions"
+        aria-label="签到时间范围"
+      />
+      <NInput
+        v-model:value="userFilter"
+        size="small"
+        placeholder="搜索用户"
+        clearable
       >
-        <NEmpty description="暂无签到数据" />
-      </div>
+        <template #prefix>
+          <NIcon :component="Search24Regular" />
+        </template>
+      </NInput>
+      <NButton
+        type="primary"
+        size="small"
+        :loading="isLoading"
+        @click="loadCheckInRanking"
+      >
+        <template #icon>
+          <NIcon :component="ArrowClockwise24Regular" />
+        </template>
+        刷新
+      </NButton>
+    </div>
 
-      <!-- 自定义排行榜表格 -->
+    <NSpin :show="isLoading">
+      <NEmpty
+        v-if="!isLoading && rankingData.length === 0"
+        class="empty-data"
+        description="暂无签到数据"
+      />
+      <NEmpty
+        v-else-if="!isLoading && filteredRankingData.length === 0"
+        class="empty-data"
+        description="没有符合条件的用户"
+      />
+
       <div
         v-else
-        class="ranking-table-wrapper"
+        class="ranking-table"
+        role="table"
+        aria-label="签到排行榜"
       >
-        <div class="custom-ranking-table">
-          <!-- 排行榜头部 -->
-          <div class="ranking-header">
-            <div class="ranking-row">
-              <div class="col-rank">排名</div>
-              <div class="col-user">用户</div>
-              <div class="col-days">连续签到</div>
-              <div class="col-monthly">本月签到</div>
-              <div class="col-total">总签到</div>
-              <div class="col-time">最近签到时间</div>
-            </div>
-          </div>
+        <div
+          class="ranking-header ranking-grid"
+          role="row"
+        >
+          <span>排名</span>
+          <span>用户</span>
+          <span>连续签到</span>
+          <span>本月签到</span>
+          <span>总签到</span>
+          <span>最近签到</span>
+        </div>
 
-          <!-- 排行榜内容 -->
-          <div class="ranking-body">
-            <div
-              v-for="(item, index) in pagedData"
-              :key="index"
-              class="ranking-row"
-              :class="{ 'top-three': index < 3 }"
+        <div
+          v-for="item in pagedData"
+          :key="item.ouId"
+          class="ranking-row ranking-grid"
+          :class="{ 'top-three': item.rank <= 3 }"
+          role="row"
+        >
+          <div class="rank-cell">
+            <span
+              class="rank-number"
+              :class="item.rank <= 3 ? `rank-${item.rank}` : undefined"
+              >{{ item.rank }}</span
             >
-              <!-- 排名列 -->
-              <div class="col-rank">
-                <div
-                  class="rank-number"
-                  :class="{
-                    'rank-1': index === 0,
-                    'rank-2': index === 1,
-                    'rank-3': index === 2,
-                  }"
-                >
-                  {{ index + 1 + (pagination.page - 1) * pagination.pageSize }}
-                </div>
-              </div>
-
-              <!-- 用户列 -->
-              <div class="col-user">
-                <div class="user-name">
-                  {{ item.name }}
-                </div>
-                <NTag
-                  v-if="item.isAuthed"
-                  size="small"
-                  type="success"
-                  :bordered="false"
-                  style="margin-left: 8px"
-                >
-                  已认证
-                </NTag>
-              </div>
-
-              <!-- 连续签到列 -->
-              <div class="col-days">
-                <div class="days-count">
-                  {{ item.consecutiveDays }}
-                </div>
-                <div class="days-text">天</div>
-              </div>
-
-              <!-- 本月签到列 -->
-              <div class="col-monthly">
-                <div class="count-value">
-                  {{ item.monthlyCheckInCount || 0 }}
-                </div>
-                <div class="count-text">次</div>
-              </div>
-
-              <!-- 总签到列 -->
-              <div class="col-total">
-                <div class="count-value">
-                  {{ item.totalCheckInCount || 0 }}
-                </div>
-                <div class="count-text">次</div>
-              </div>
-
-              <!-- 签到时间列 -->
-              <div class="col-time">
-                <NTooltip>
-                  <template #trigger>
-                    <NTime
-                      :time="item.lastCheckInTime"
-                      type="relative"
-                    />
-                  </template>
-                  <template #default>
-                    <NTime :time="item.lastCheckInTime" />
-                  </template>
-                </NTooltip>
-              </div>
-            </div>
           </div>
 
-          <!-- 分页控制 -->
-          <div class="ranking-footer">
-            <NPagination
-              v-model:page="pagination.page"
-              v-model:page-size="pagination.pageSize"
-              :item-count="filteredRankingData.length"
-              :page-sizes="[10, 20, 50]"
-              show-size-picker
-            />
+          <div class="user-cell">
+            <strong class="user-name">{{ item.name }}</strong>
+            <NTag
+              v-if="item.isAuthed"
+              size="tiny"
+              type="success"
+              :bordered="false"
+            >
+              已认证
+            </NTag>
           </div>
+
+          <div class="metric-cell streak-cell">
+            <span class="metric-label">连续</span>
+            <strong>{{ item.consecutiveDays }}</strong>
+            <span class="metric-unit">天</span>
+          </div>
+          <div class="metric-cell monthly-cell">
+            <span class="metric-label">本月</span>
+            <strong>{{ item.monthlyCheckInCount ?? 0 }}</strong>
+            <span class="metric-unit">次</span>
+          </div>
+          <div class="metric-cell total-cell">
+            <span class="metric-label">累计</span>
+            <strong>{{ item.totalCheckInCount ?? 0 }}</strong>
+            <span class="metric-unit">次</span>
+          </div>
+          <div class="time-cell">
+            <span class="metric-label">最近签到</span>
+            <NTooltip>
+              <template #trigger>
+                <NTime
+                  :time="item.lastCheckInTime"
+                  type="relative"
+                />
+              </template>
+              <NTime :time="item.lastCheckInTime" />
+            </NTooltip>
+          </div>
+        </div>
+
+        <div class="ranking-footer">
+          <NPagination
+            v-model:page="pagination.page"
+            :page-size="pagination.pageSize"
+            :item-count="filteredRankingData.length"
+            :page-slot="5"
+          />
+          <NSelect
+            v-model:value="pagination.pageSize"
+            class="page-size-select"
+            size="small"
+            :options="pageSizeOptions"
+            aria-label="每页显示数量"
+          />
         </div>
       </div>
     </NSpin>
 
-    <div class="ranking-info">
-      <NAlert
-        type="info"
-        size="small"
-      >
-        <template #icon>
-          <NIcon>
-            <Info24Filled />
-          </NIcon>
-        </template>
-        签到可获得积分，连续签到有额外奖励。排行榜每日更新，发送"{{ checkInKeyword }}"即可参与签到。
-      </NAlert>
-    </div>
+    <NAlert
+      class="ranking-info"
+      type="info"
+      size="small"
+    >
+      <template #icon>
+        <NIcon :component="Info24Filled" />
+      </template>
+      签到可获得积分，连续签到有额外奖励。发送“{{ checkInKeyword }}”即可参与签到。
+    </NAlert>
   </NCard>
 </template>
 
-<style scoped>
-.empty-data {
-  padding: 40px 0;
-  text-align: center;
-}
-
-.ranking-info {
-  margin-top: 12px;
-}
-
-/* 自定义表格样式 */
-.custom-ranking-table {
-  overflow: hidden;
-  border: var(--vtsuru-page-border);
-  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
-  margin-bottom: var(--vtsuru-page-spacing);
-  overflow-x: auto;
-}
-
-.ranking-header {
-  background-color: var(--vtsuru-bg-inset);
-  font-weight: 600;
-  color: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
-}
-
-.ranking-row {
-  display: flex;
-  align-items: center;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--vtsuru-border);
-  transition: background-color 0.2s ease;
-}
-
-.ranking-body .ranking-row:hover {
-  background-color: color-mix(in srgb, var(--vtsuru-page-primary) 4%, transparent);
-}
-
-.ranking-body .ranking-row:last-child {
-  border-bottom: none;
-}
-
-.top-three {
-  background-color: color-mix(in srgb, var(--vtsuru-page-primary) 2%, transparent);
-}
-
-.col-rank {
-  width: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.col-user {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.col-days,
-.col-monthly,
-.col-total {
-  width: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.col-time {
-  width: 150px;
-  text-align: center;
-}
-
-.rank-number {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  color: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
-  background-color: var(--vtsuru-bg-inset);
-}
-
-.rank-1 {
-  background-color: rgba(var(--vtsuru-warning-rgb), 0.16);
-  color: var(--vtsuru-warning) !important;
-}
-
-.rank-2 {
-  background-color: rgba(var(--vtsuru-info-rgb), 0.14);
-  color: var(--vtsuru-info) !important;
-}
-
-.rank-3 {
-  background-color: rgba(var(--vtsuru-success-rgb), 0.14);
-  color: var(--vtsuru-success) !important;
-}
-
-.user-name {
-  font-weight: 600;
-  margin-right: 8px;
-}
-
-.days-count,
-.count-value {
-  font-weight: 600;
-  font-size: 18px;
-  color: var(--vtsuru-info);
-  margin-right: 4px;
-}
-
-.days-text,
-.count-text {
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
-  font-size: 12px;
-}
-
-.ranking-footer {
-  padding: 16px;
-  display: flex;
-  justify-content: center;
-}
-
-/* 增强响应式样式 */
-.ranking-card :deep(.n-card-header__main) {
-  font-size: 16px;
-  white-space: nowrap;
-}
-
-.ranking-table-wrapper {
-  overflow-x: auto;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .ranking-card :deep(.n-card-header) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .ranking-card :deep(.n-card-header__extra) {
-    margin-left: 0;
-    width: 100%;
-  }
-
-  .col-rank {
-    width: 50px;
-  }
-
-  .col-days,
-  .col-monthly,
-  .col-total {
-    width: 80px;
-  }
-
-  .col-time {
-    width: 120px;
-  }
-
-  .custom-ranking-table {
-    min-width: 550px;
-  }
-}
-
-@media (max-width: 480px) {
-  .col-user {
-    min-width: 80px;
-  }
-
-  .col-days,
-  .col-monthly,
-  .col-total {
-    width: 70px;
-  }
-
-  .col-time {
-    width: 100px;
-  }
-}
-</style>
+<style scoped src="./CheckInRankingView.css"></style>

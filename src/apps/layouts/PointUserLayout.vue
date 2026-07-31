@@ -1,494 +1,273 @@
 <script setup lang="ts">
-import { useRouteHash } from '@vueuse/router'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDataTable,
-  NDescriptions,
-  NDescriptionsItem,
-  NFlex,
-  NLayout,
-  NLayoutContent,
-  NLayoutHeader,
-  NList,
-  NListItem,
-  NResult,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+  Add24Regular,
+  ArrowLeft24Regular,
+  History24Regular,
+  Home24Regular,
+  PersonAccounts24Regular,
+  Receipt24Regular,
+  Settings24Regular,
+} from '@vicons/fluent'
+import { NAvatar, NButton, NDropdown, NIcon, NResult, NSpin, NTag, useMessage } from 'naive-ui'
+import { computed, h, watch } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 
-import type { UserInfo } from '@/api/api-models'
-import PointOrderView from '@/apps/account/pages/point/PointOrderView.vue'
-import PointUserHistoryView from '@/apps/account/pages/point/PointUserHistoryView.vue'
-import PointUserSettings from '@/apps/account/pages/point/PointUserSettings.vue'
-import { POINT_API_URL } from '@/shared/config'
+import { hasBiliAuthInUrl, readBiliAuthFromUrl } from '@/apps/account/components/biliAuthCredential'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
-// 定义组件接口
-interface ComponentWithReset {
-  reset: () => void
-}
-
-interface OrderViewInstance extends ComponentWithReset {
-  getOrders: () => Promise<any>
-}
-
-interface HistoryViewInstance extends ComponentWithReset {
-  getHistories: () => Promise<any>
-}
-
-interface SettingsViewInstance extends ComponentWithReset {
-  // 设置组件可能需要的方法
-}
-
-const useAuth = useBiliAuth()
+const auth = useBiliAuth()
 const message = useMessage()
-const realHash = useRouteHash('points', {
-  mode: 'replace',
-})
-const hash = computed({
-  get() {
-    return realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value
-  },
-  set(val) {
-    realHash.value = `#${val}`
-  },
-})
+const route = useRoute()
 const router = useRouter()
 
-const biliAuth = computed(() => useAuth.biliAuth)
-const isLoading = ref(false)
-const points = ref<{ owner: UserInfo; points: number }[]>([])
-const isFirstMounted = ref(true)
-// 分别定义各组件引用，使用正确的类型
-const orderViewRef = ref<OrderViewInstance | null>(null)
-const historyViewRef = ref<HistoryViewInstance | null>(null)
-const settingsViewRef = ref<SettingsViewInstance | null>(null)
-
-// 跟踪各标签页数据是否已加载
-const tabDataLoaded = ref({
-  points: false,
-  orders: false,
-  histories: false,
-  settings: true, // 设置页面不需要加载数据
-})
-
-const pointColumn = [
-  {
-    title: '所属用户',
-    key: 'owner.name',
-  },
-  {
-    title: '积分',
-    key: 'points',
-  },
-  {
-    title: '更多',
-    key: 'action',
-    render: (row: { owner: UserInfo; points: number }) => {
-      return h(NFlex, {}, () => [
-        h(
-          NButton,
-          {
-            onClick: () => {
-              router.push({ name: 'user-goods', params: { id: row.owner.name } })
-            },
-            size: 'small',
-            secondary: true,
-            type: 'info',
-          },
-          () => '查看礼物',
-        ),
-      ])
-    },
-  },
+const navigation = [
+  { name: 'bili-user-points', label: '我的积分', icon: Home24Regular },
+  { name: 'bili-user-orders', label: '我的订单', icon: Receipt24Regular },
+  { name: 'bili-user-history', label: '积分记录', icon: History24Regular },
+  { name: 'bili-user-settings', label: '账户设置', icon: Settings24Regular },
 ]
 
-async function getAllPoints() {
-  isLoading.value = true
-  try {
-    const data = await useAuth.QueryBiliAuthGetAPI<{ owner: UserInfo; points: number }[]>(
-      `${POINT_API_URL}user/get-all-point`,
-    )
-    if (data.code == 200) {
-      console.log('[point] 已获取积分')
-      points.value = data.data
-      tabDataLoaded.value.points = true
-      return data.data
-    }
-  } catch (err) {
-    console.error(err)
-    message.error(`获取积分失败: ${err}`)
-  } finally {
-    isLoading.value = false
-  }
-  return []
+const isReady = computed(() => Boolean(auth.currentToken && !auth.isInvalid && auth.biliAuth.id > 0))
+const hasSavedAccounts = computed(() => auth.biliTokens.length > 0)
+const currentAccountId = computed(() => String(auth.biliAuth.id || ''))
+const accountOptions = computed(() => [
+  ...auth.biliTokens.map((account) => ({
+    key: String(account.id),
+    label: account.name || `Bilibili 用户 ${account.uId}`,
+    disabled: account.id === auth.biliAuth.id,
+  })),
+  { type: 'divider' as const, key: 'divider' },
+  { key: 'add', label: '认证其他账号', icon: hIcon(Add24Regular) },
+])
+
+function hIcon(component: typeof Add24Regular) {
+  return () => h(NIcon, { component })
 }
 
-// 重置所有数据
-function resetData() {
-  points.value = []
-  isFirstMounted.value = true
-  // 重置数据加载状态
-  Object.keys(tabDataLoaded.value).forEach((key) => {
-    tabDataLoaded.value[key as keyof typeof tabDataLoaded.value] = false
-  })
-  tabDataLoaded.value.settings = true // 设置页不需要加载数据
-  // 重置所有子组件的数据
-  orderViewRef.value?.reset?.()
-  historyViewRef.value?.reset?.()
-  settingsViewRef.value?.reset?.()
+async function clearAuthFromUrl() {
+  const query = { ...route.query }
+  delete query.auth
+  await router.replace({ path: route.path, query, hash: '' })
 }
 
-function switchAuth(token: string) {
-  if (token == useAuth.biliToken) {
-    message.info('当前正在使用该账号')
+async function consumeAuthToken() {
+  if (route.query.auth) {
+    await clearAuthFromUrl()
+    message.warning('旧版认证链接已失效，请重新完成账户认证')
     return
   }
-  resetData()
-  useAuth.setCurrentAuth(token)
-  message.success('已选择账号')
-}
 
-function onAllPointPaneMounted() {
-  if (!isFirstMounted.value) return
-  isFirstMounted.value = false
-  getAllPoints()
-}
+  const source = window.location.hash
+  if (!hasBiliAuthInUrl(source)) return
 
-// 处理选项卡切换
-function onTabChange(tabName: string) {
-  // 只在数据未加载时刷新
-  switch (tabName) {
-    case 'points':
-      if (!tabDataLoaded.value.points) {
-        getAllPoints()
-      }
-      break
-    case 'orders':
-      if (!tabDataLoaded.value.orders && orderViewRef.value) {
-        orderViewRef.value.getOrders()
-        tabDataLoaded.value.orders = true
-      }
-      break
-    case 'histories':
-      if (!tabDataLoaded.value.histories && historyViewRef.value) {
-        historyViewRef.value.getHistories()
-        tabDataLoaded.value.histories = true
-      }
-      break
+  await clearAuthFromUrl()
+  try {
+    const token = readBiliAuthFromUrl(source)
+    if (token) await auth.setCurrentAuth(token)
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : '认证链接格式无效')
   }
 }
 
-// 监听 biliToken 变化
-watch(
-  () => useAuth.biliToken,
-  (newToken) => {
-    if (newToken) {
-      resetData()
-      getAllPoints()
-    }
-  },
-)
+async function switchAccount(accountId: string) {
+  if (accountId === 'add') {
+    await router.push({ name: 'bili-auth' })
+    return
+  }
 
-// 手动刷新当前标签页数据
-function refreshCurrentTab() {
-  if (!hash.value) return
+  const account = auth.biliTokens.find((item) => String(item.id) === accountId)
+  if (!account || (account.id === auth.biliAuth.id && account.token === auth.currentToken)) return
 
-  // 将当前标签设为未加载状态
-  tabDataLoaded.value[hash.value as keyof typeof tabDataLoaded.value] = false
-
-  // 触发刷新
-  onTabChange(hash.value)
+  await auth.setCurrentAuth(account.token)
+  if (auth.isInvalid) {
+    message.error('该账号的认证已失效')
+    return
+  }
+  message.success(`已切换至 ${account.name || account.uId}`)
 }
 
-onMounted(async () => {
-  const route = useRoute()
-  if (route.query.auth) {
-    useAuth.biliToken = route.query.auth as string
-    console.log(route.query.auth)
-  }
-  if (biliAuth.value?.id < 0) {
-    isLoading.value = true
-    await useAuth.getAuthInfo()
-    isLoading.value = false
-  }
-})
+async function openSavedAccount(accountId: number) {
+  await switchAccount(String(accountId))
+}
+
+function isNavigationActive(name: string) {
+  return route.name === name
+}
+
+watch(() => route.fullPath, consumeAuthToken, { immediate: true })
 </script>
 
 <template>
-  <NLayout style="height: 100vh">
-    <NSpin
-      v-if="useAuth.isLoading && useAuth.currentToken"
-      :show="useAuth.isLoading"
-    />
-    <NLayoutContent
-      v-else-if="(!useAuth.currentToken && useAuth.biliTokens.length > 0) || useAuth.isInvalid"
-      class="point-user-center"
-    >
-      <NAlert
-        v-if="useAuth.isInvalid"
-        type="error"
-      >
-        当前登录的 Bilibili 账号已失效
-      </NAlert>
-      <NCard
-        title="选择B站账号"
-        embedded
-      >
-        <template #header-extra>
-          <NButton
-            type="primary"
-            size="small"
-            secondary
-            @click="$router.push({ name: 'bili-auth' })"
-          >
-            认证其他账号
-          </NButton>
-        </template>
-        <NList
-          clickable
-          bordered
+  <main class="account-center">
+    <header class="account-header">
+      <div class="account-header__inner">
+        <NButton
+          quaternary
+          circle
+          aria-label="返回首页"
+          @click="router.push({ name: 'index' })"
         >
-          <NListItem
-            v-for="item in useAuth.biliTokens"
-            :key="item.token"
-            @click="switchAuth(item.token)"
-          >
-            <NFlex align="center"> {{ item.name }} - {{ item.uId }} </NFlex>
-          </NListItem>
-        </NList>
-      </NCard>
-    </NLayoutContent>
-    <NLayoutContent
-      v-else-if="!useAuth.currentToken"
-      style="height: 100vh"
+          <template #icon><NIcon :component="ArrowLeft24Regular" /></template>
+        </NButton>
+        <div class="account-brand">
+          <span class="account-brand__mark">VT</span>
+          <div>
+            <strong>Bilibili 账户中心</strong>
+            <span>积分与互动记录</span>
+          </div>
+        </div>
+        <NButton
+          secondary
+          size="small"
+          @click="router.push({ name: 'bili-auth' })"
+        >
+          <template #icon><NIcon :component="Add24Regular" /></template>
+          <span class="desktop-label">认证其他账号</span>
+          <span class="mobile-label">添加账号</span>
+        </NButton>
+      </div>
+    </header>
+
+    <section
+      v-if="auth.isLoading && auth.currentToken"
+      class="account-state"
     >
-      <NAlert
-        v-if="useAuth.isInvalid"
-        type="error"
-      >
-        当前登录的 Bilibili 账号已失效
-      </NAlert>
+      <NSpin size="large" />
+      <div>
+        <strong>正在载入账户</strong>
+        <span>正在同步认证信息，请稍候</span>
+      </div>
+    </section>
+
+    <section
+      v-else-if="!isReady"
+      class="account-state account-state--panel"
+    >
       <NResult
-        status="error"
-        title="你还未进行过B站账户验证"
-        description="请先进行认证. 如果你已经认证过, 请直接访问认证完成时给出的链接"
-        style="padding-top: 64px"
+        :status="auth.isInvalid ? 'warning' : 'info'"
+        :title="auth.isInvalid ? '当前账户认证已失效' : '连接 Bilibili 账户后继续'"
       >
         <template #footer>
-          <NButton
-            type="primary"
-            @click="$router.push({ name: 'bili-auth' })"
-          >
-            去认证
-          </NButton>
+          <div class="state-actions">
+            <NButton
+              type="primary"
+              @click="router.push({ name: 'bili-auth' })"
+            >
+              {{ hasSavedAccounts ? '认证其他账号' : '开始认证' }}
+            </NButton>
+            <NButton @click="router.push({ name: 'index' })">返回首页</NButton>
+          </div>
         </template>
       </NResult>
-    </NLayoutContent>
-    <template v-else>
-      <NLayoutHeader
-        style="padding: 10px"
-        bordered
+
+      <div
+        v-if="hasSavedAccounts"
+        class="saved-accounts"
       >
-        <NFlex
-          justify="space-between"
-          align="center"
+        <div class="saved-accounts__heading">
+          <div>
+            <strong>已保存的账户</strong>
+            <span>选择一个仍然有效的账户继续</span>
+          </div>
+          <NTag
+            size="small"
+            round
+            :bordered="false"
+          >
+            {{ auth.biliTokens.length }} 个账户
+          </NTag>
+        </div>
+        <button
+          v-for="account in auth.biliTokens"
+          :key="account.id"
+          type="button"
+          class="saved-account"
+          @click="openSavedAccount(account.id)"
+        >
+          <NAvatar round>{{ (account.name || 'B').slice(0, 1) }}</NAvatar>
+          <span>
+            <strong>{{ account.name || '未命名账户' }}</strong>
+            <small>UID {{ account.uId }}</small>
+          </span>
+          <NIcon :component="PersonAccounts24Regular" />
+        </button>
+      </div>
+    </section>
+
+    <div
+      v-else
+      class="account-workspace"
+    >
+      <aside class="account-sidebar">
+        <div class="identity-card">
+          <NAvatar
+            :src="auth.biliAuth.avatar"
+            round
+            :size="48"
+          >
+            {{ auth.biliAuth.name?.slice(0, 1) }}
+          </NAvatar>
+          <div class="identity-card__copy">
+            <strong>{{ auth.biliAuth.name }}</strong>
+            <span>UID {{ auth.biliAuth.userId }}</span>
+          </div>
+          <NTag
+            type="success"
+            size="small"
+            round
+            :bordered="false"
+          >
+            已认证
+          </NTag>
+        </div>
+
+        <NDropdown
+          trigger="click"
+          placement="bottom-start"
+          :options="accountOptions"
+          @select="switchAccount"
         >
           <NButton
-            type="primary"
             secondary
-            @click="$router.back()"
+            block
           >
-            返回
+            <template #icon><NIcon :component="PersonAccounts24Regular" /></template>
+            切换账户
           </NButton>
-          <NText style="font-size: 24px"> 认证用户个人中心 </NText>
-          <NButton
-            size="small"
-            type="primary"
-            :disabled="!hash"
-            @click="refreshCurrentTab"
+        </NDropdown>
+
+        <nav
+          class="account-navigation"
+          aria-label="账户中心导航"
+        >
+          <button
+            v-for="item in navigation"
+            :key="item.name"
+            type="button"
+            :class="{ 'is-active': isNavigationActive(item.name) }"
+            @click="router.push({ name: item.name })"
           >
-            刷新数据
-          </NButton>
-        </NFlex>
-      </NLayoutHeader>
-      <NLayoutContent content-style="padding: 0;">
-        <div class="point-user-page">
-          <NCard
-            title="我的信息"
-            bordered
-            size="small"
-            class="info-card"
+            <NIcon :component="item.icon" />
+            <span>{{ item.label }}</span>
+          </button>
+        </nav>
+      </aside>
+
+      <section class="account-content">
+        <RouterView v-slot="{ Component }">
+          <Transition
+            name="account-view"
+            mode="out-in"
           >
-            <NDescriptions
-              label-placement="left"
-              bordered
-              size="small"
-              :column="2"
-            >
-              <NDescriptionsItem
-                label="用户名"
-                style="min-width: 100px"
-              >
-                {{ biliAuth.name ?? '未知' }}
-              </NDescriptionsItem>
-              <NDescriptionsItem label="UserId">
-                {{ biliAuth.userId }}
-              </NDescriptionsItem>
-              <NDescriptionsItem label="OpenId">
-                {{ biliAuth.openId }}
-              </NDescriptionsItem>
-              <NDescriptionsItem label="状态">
-                <NTag
-                  v-if="biliAuth.id > 0"
-                  type="success"
-                  size="small"
-                >
-                  已认证
-                </NTag>
-                <NTag
-                  v-else
-                  type="error"
-                  size="small"
-                >
-                  未认证
-                </NTag>
-              </NDescriptionsItem>
-            </NDescriptions>
-          </NCard>
-          <NTabs
-            v-if="hash"
-            v-model:value="hash"
-            default-value="points"
-            animated
-            type="line"
-            @update:value="onTabChange"
-          >
-            <NTabPane
-              name="points"
-              tab="我的积分"
-              display-directive="show:lazy"
-              @vue:mounted="onAllPointPaneMounted"
-            >
-              <NFlex
-                justify="end"
-                style="margin-bottom: 10px"
-              >
-                <NButton
-                  size="small"
-                  type="primary"
-                  @click="
-                    () => {
-                      tabDataLoaded.points = false
-                      getAllPoints()
-                    }
-                  "
-                >
-                  刷新积分
-                </NButton>
-              </NFlex>
-              <NFlex justify="center">
-                <NDataTable
-                  :loading="isLoading"
-                  :columns="pointColumn"
-                  :data="points"
-                  :pagination="{ defaultPageSize: 10, showSizePicker: true, pageSizes: [10, 25, 50, 100] }"
-                  size="small"
-                  style="max-width: 600px"
-                />
-              </NFlex>
-            </NTabPane>
-            <NTabPane
-              name="orders"
-              tab="我的订单"
-              display-directive="show:lazy"
-            >
-              <PointOrderView
-                ref="orderViewRef"
-                @data-loaded="tabDataLoaded.orders = true"
-              />
-            </NTabPane>
-            <NTabPane
-              name="histories"
-              tab="积分记录"
-              display-directive="show:lazy"
-            >
-              <PointUserHistoryView
-                ref="historyViewRef"
-                @data-loaded="tabDataLoaded.histories = true"
-              />
-            </NTabPane>
-            <NTabPane
-              name="settings"
-              tab="设置"
-              display-directive="show:lazy"
-            >
-              <PointUserSettings ref="settingsViewRef" />
-            </NTabPane>
-          </NTabs>
-        </div>
-      </NLayoutContent>
-    </template>
-  </NLayout>
+            <component
+              :is="Component"
+              :key="`${String(route.name)}-${currentAccountId}`"
+            />
+          </Transition>
+        </RouterView>
+      </section>
+    </div>
+  </main>
 </template>
 
-<style scoped>
-.point-user-center {
-  height: 100vh;
-  padding: 16px;
-}
-
-.point-user-page {
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.info-card {
-  border-radius: var(--vtsuru-radius);
-}
-
-:deep(.n-tabs-nav) {
-  padding: 0 12px;
-}
-
-:deep(.n-tab-pane) {
-  padding-top: 12px;
-}
-
-/* 移动端优化 */
-@media (max-width: 768px) {
-  :deep(.n-layout-header) {
-    padding: 8px !important;
-  }
-
-  :deep(.n-descriptions) {
-    font-size: 13px;
-  }
-
-  :deep(.n-tabs-nav) {
-    padding: 0 4px;
-  }
-
-  .point-user-page {
-    padding: 12px 8px;
-  }
-}
-
-/* 加载动画优化 */
-:deep(.n-spin-container) {
-  min-height: 200px;
-}
-</style>
+<style scoped src="../account/components/PointUserLayout.css"></style>

@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { QueryGetAPI } from '@/api/query'
+import { createBiliAuthUrl } from '@/apps/account/components/biliAuthCredential'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -44,7 +45,7 @@ const currentStep = ref(currentToken.value ? 2 : 0)
 const timeLeft = ref(0)
 const timeOut = ref(false)
 const isStarting = ref(false)
-const authUrl = computed(() => `${CURRENT_HOST}bili-user?auth=${currentToken.value ?? ''}`)
+const authUrl = computed(() => createBiliAuthUrl(CURRENT_HOST, currentToken.value ?? ''))
 let timer: ReturnType<typeof setInterval> | undefined
 
 function stopPolling() {
@@ -324,6 +325,8 @@ onBeforeUnmount(stopPolling)
             <NInput
               id="bili-login-link"
               :value="authUrl"
+              type="password"
+              show-password-on="click"
               readonly
               class="login-link-input"
             >
@@ -354,9 +357,9 @@ onBeforeUnmount(stopPolling)
                 size="large"
                 color="#18a058"
                 text-color="#ffffff"
-                @click="$router.push({ name: 'bili-user' })"
+                @click="$router.push({ name: 'bili-user-points' })"
               >
-                前往个人中心
+                前往 Bilibili 账户中心
                 <template #icon><NIcon :component="ArrowRight24Regular" /></template>
               </NButton>
               <NPopconfirm

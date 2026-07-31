@@ -390,13 +390,13 @@ const tags = computed(() => {
 
 // 经过筛选和排序后的礼物列表
 const selectedItems = computed(() => {
-  let filteredItems = goods.value
+  const filteredItems = goods.value
     // 标签筛选
     .filter((item) => !selectedTag.value || item.tags.includes(selectedTag.value))
     // 可兑换筛选 (只显示 getTooltip 返回 '开始兑换' 的礼物)
     .filter((item) => !onlyCanBuy.value || getTooltip(item) === '开始兑换')
-    // 舰长等级筛选 (只显示允许所有等级或忽略舰长限制的礼物)
-    .filter((item) => !ignoreGuard.value || item.allowGuardLevel === 0)
+    // 等级筛选：开启后只保留不属于任何等级专属的商品
+    .filter((item) => !ignoreGuard.value || (item.allowGuardLevel ?? item.setting?.allowGuardLevel ?? 0) <= 0)
     // 关键词搜索 (匹配名称或描述)
     .filter(
       (item) =>
@@ -405,45 +405,32 @@ const selectedItems = computed(() => {
         (item.description && item.description.toLowerCase().includes(debouncedSearchKeyword.value.toLowerCase())),
     )
 
-  // 应用排序方式
-  if (sortOrder.value) {
+  const compare = (() => {
     switch (sortOrder.value) {
       case 'price_asc':
-        filteredItems = filteredItems.toSorted((a, b) => a.price - b.price)
-        break
+        return (a: ResponsePointGoodModel, b: ResponsePointGoodModel) => a.price - b.price
       case 'price_desc':
-        filteredItems = filteredItems.toSorted((a, b) => b.price - a.price)
-        break
+        return (a: ResponsePointGoodModel, b: ResponsePointGoodModel) => b.price - a.price
       case 'name_asc':
-        filteredItems = filteredItems.toSorted((a, b) => a.name.localeCompare(b.name))
-        break
+        return (a: ResponsePointGoodModel, b: ResponsePointGoodModel) => a.name.localeCompare(b.name)
       case 'name_desc':
-        filteredItems = filteredItems.toSorted((a, b) => b.name.localeCompare(a.name))
-        break
+        return (a: ResponsePointGoodModel, b: ResponsePointGoodModel) => b.name.localeCompare(a.name)
       case 'type':
-        filteredItems = filteredItems.toSorted((a, b) => a.type - b.type)
-        break
-      case 'popular':
-        // 按照热门程度排序（置顶的排在前面）
-        filteredItems = filteredItems.toSorted((a, b) => {
-          if (a.isPinned && !b.isPinned) return -1
-          if (!a.isPinned && b.isPinned) return 1
-          return 0
-        })
-        break
+        return (a: ResponsePointGoodModel, b: ResponsePointGoodModel) => a.type - b.type
+      case 'recent':
+        return (a: ResponsePointGoodModel, b: ResponsePointGoodModel) => b.createAt - a.createAt
+      default:
+        return undefined
     }
-  }
+  })()
 
-  // 无论是否有其他排序，置顶礼物始终排在前面
-  return filteredItems.toSorted((a, b) => {
-    // 先按置顶状态排序
-    if (a.isPinned && !b.isPinned) return -1
-    if (!a.isPinned && b.isPinned) return 1
-    // 如果已有排序方式，则不再进行额外排序
-    if (sortOrder.value) return 0
-    // 默认排序逻辑
-    return 0
-  })
+  return filteredItems
+    .map((item, index) => ({ item, index }))
+    .toSorted((a, b) => {
+      if (a.item.isPinned !== b.item.isPinned) return a.item.isPinned ? -1 : 1
+      return (compare?.(a.item, b.item) ?? 0) || a.index - b.index
+    })
+    .map(({ item }) => item)
 })
 
 // --- 方法 ---
@@ -645,7 +632,7 @@ async function buyGoods() {
             positiveText: '前往查看',
             negativeText: '关闭',
             onPositiveClick: () => {
-              router.push({ name: 'bili-user', hash: '#orders' })
+              router.push({ name: 'bili-user-orders' })
               resetBuyModalState() // 跳转后也重置状态
             },
             onNegativeClick: () => {
@@ -706,8 +693,7 @@ function renderOption({ option }: { node: any; option: SelectOption }) {
 
 // 跳转到 Bilibili 用户中心页面
 function gotoAuthPage() {
-  // 移除旧的注释代码
-  NavigateToNewTab('/bili-user')
+  NavigateToNewTab('/bili-user/points')
 }
 
 // 清空筛选条件
@@ -784,6 +770,7 @@ onMounted(async () => {
         <!-- 用户简要信息 -->
         <div class="user-status-bar">
           <NFlex
+            class="user-status-content"
             justify="space-between"
             align="center"
           >
@@ -843,6 +830,7 @@ onMounted(async () => {
             </NFlex>
 
             <NFlex
+              class="account-actions"
               align="center"
               :gap="12"
             >
@@ -859,7 +847,7 @@ onMounted(async () => {
               <NButton
                 quaternary
                 size="small"
-                @click="NavigateToNewTab('/bili-user#settings')"
+                @click="NavigateToNewTab('/bili-user/settings')"
               >
                 <template #icon>
                   <NIcon :component="ArrowSync24Regular" />
@@ -916,12 +904,14 @@ onMounted(async () => {
               :gap="12"
             >
               <NFlex
+                class="filter-controls"
                 align="center"
                 :gap="12"
                 wrap
               >
                 <NInput
                   v-model:value="searchKeyword"
+                  class="search-input"
                   placeholder="搜索礼物名称..."
                   clearable
                   size="medium"
@@ -934,12 +924,13 @@ onMounted(async () => {
 
                 <NSelect
                   v-model:value="sortOrder"
+                  class="sort-select"
                   :options="[
                     { label: '默认排序', value: null },
                     { label: '价格从低到高', value: 'price_asc' },
                     { label: '价格从高到低', value: 'price_desc' },
                     { label: '名称 A-Z', value: 'name_asc' },
-                    { label: '最近更新', value: 'popular' },
+                    { label: '最近上架', value: 'recent' },
                   ]"
                   placeholder="排序方式"
                   size="medium"
@@ -948,15 +939,16 @@ onMounted(async () => {
                 />
 
                 <NFlex
+                  class="filter-checks"
                   align="center"
                   :gap="16"
                 >
                   <NCheckbox v-model:checked="onlyCanBuy"> 仅显示可兑换 </NCheckbox>
-                  <NCheckbox v-model:checked="ignoreGuard"> 忽略等级限制 </NCheckbox>
+                  <NCheckbox v-model:checked="ignoreGuard"> 只看非等级专属 </NCheckbox>
                 </NFlex>
               </NFlex>
 
-              <NFlex>
+              <NFlex class="toolbar-actions">
                 <NButton
                   v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder"
                   quaternary
@@ -998,6 +990,7 @@ onMounted(async () => {
       />
       <NGrid
         v-else
+        class="goods-grid"
         cols="1 500:2 800:3 1100:4 1500:5"
         :x-gap="16"
         :y-gap="16"
@@ -1366,7 +1359,7 @@ onMounted(async () => {
                     text
                     type="primary"
                     size="tiny"
-                    @click="NavigateToNewTab('/bili-user#settings')"
+                    @click="NavigateToNewTab('/bili-user/settings')"
                   >
                     账号设置
                   </NButton>
@@ -1593,6 +1586,7 @@ onMounted(async () => {
 <style scoped>
 .point-goods-container {
   width: 100%;
+  min-width: 0;
 }
 
 .header-card {
@@ -1607,6 +1601,17 @@ onMounted(async () => {
 
 .user-status-bar {
   padding: 4px 0;
+}
+
+.user-status-content,
+.filter-controls,
+.toolbar-actions,
+.goods-grid {
+  min-width: 0;
+}
+
+.goods-grid :deep(.n-grid-item) {
+  min-width: 0;
 }
 
 .username {
@@ -1680,6 +1685,39 @@ onMounted(async () => {
   .user-status-bar,
   .toolbar-section {
     padding: 12px;
+  }
+
+  .user-status-content {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .account-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .filter-controls,
+  .toolbar-actions,
+  .search-input,
+  .sort-select {
+    width: 100% !important;
+  }
+
+  .search-input,
+  .sort-select {
+    min-width: 0;
+  }
+
+  .filter-checks {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px !important;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-end;
   }
 }
 </style>

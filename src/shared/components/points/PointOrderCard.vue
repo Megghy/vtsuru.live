@@ -1,932 +1,466 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
 import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import {
   NAlert,
   NAutoComplete,
   NButton,
-  NCard,
+  NCheckbox,
   NDataTable,
   NDivider,
   NEllipsis,
   NEmpty,
   NFlex,
-  NGrid,
-  NGi,
-  NIcon,
   NInput,
   NInputGroup,
   NInputGroupLabel,
   NModal,
+  NPagination,
   NScrollbar,
-  NStep,
-  NSteps,
   NTag,
   NText,
   NTime,
-  NTooltip,
   useDialog,
   useMessage,
 } from 'naive-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 
-import type { ResponsePointOrder2OwnerModel, ResponsePointOrder2UserModel } from '@/api/api-models'
+import type { ResponsePointOrder2OwnerModel } from '@/api/api-models'
 import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
 import { updateOrderExpress, updateOrdersStatus } from '@/api/point-orders'
 
 import AddressDisplay from './AddressDisplay.vue'
 import PointGoodsItem from './PointGoodsItem.vue'
 
-type OrderType = ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel
-
 const props = defineProps<{
-  order: ResponsePointOrder2UserModel[] | ResponsePointOrder2OwnerModel[]
-  type: 'user' | 'owner'
+  order: ResponsePointOrder2OwnerModel[]
+  type: 'owner'
   orgId?: number
   loading?: boolean
 }>()
 
-const emit = defineEmits(['selectedItem'])
+const emit = defineEmits<{ selectedItem: [items: DataTableRowKey[]] }>()
 const message = useMessage()
 const dialog = useDialog()
-// 状态管理
-const isLoading = ref(false)
-const showDetailModal = ref(false)
-const selectedItem = ref<DataTableRowKey[]>([])
-const orderDetail = ref<OrderType>()
+const actionLoading = ref(false)
+const selectedItems = ref<DataTableRowKey[]>([])
+const detail = ref<ResponsePointOrder2OwnerModel>()
+const showDetail = ref(false)
+const page = ref(1)
+const pageSize = 10
 
-const selectedSubItems = computed(() => {
-  if (!orderDetail.value) return []
-  return orderDetail.value.selectedSubItems || []
-})
-
-// 监听加载状态
-watch(
-  () => props.loading,
-  (val) => {
-    isLoading.value = !!val
-  },
-)
-
-// 计算属性
-const orderAsOwner = computed(() => props.order as ResponsePointOrder2OwnerModel[])
-
-const currentGoods = computed(() => {
-  if (!orderDetail.value) return null
-
-  return orderDetail.value.goods
-})
-
-const expressOptions = computed(() => {
-  if (props.type !== 'owner' || !orderAsOwner.value) return []
-
-  // 过滤掉空值并去重
-  const companies = [...new Set(orderAsOwner.value.map((o) => o.expressCompany).filter(Boolean))]
-
-  return companies.map((company) => ({
-    label: company,
-    value: company,
-  }))
-})
-
-// 状态映射表
-const statusMap = {
-  [PointOrderStatus.Pending]: {
-    text: '等待发货',
-    type: 'default',
-    description: '订单创建完成，等待主播发货',
-    action: '发货',
-    nextStatusText: '确认发货后，订单状态将变为"已发货"',
-    prevStatusText: '',
-  },
-  [PointOrderStatus.Shipped]: {
-    text: (hasExpress: boolean) => (hasExpress ? '已发货 | 已填写单号' : '已发货 | 未填写单号'),
-    type: (hasExpress: boolean) => (hasExpress ? 'info' : 'warning'),
-    description: '订单已发货，可以添加快递信息',
-    action: '完成订单',
-    nextStatusText: '确认后将可以进行发货信息填写',
-    prevStatusText: '回退到"等待发货"状态，适用于发货信息填写错误等情况',
-  },
-  [PointOrderStatus.Completed]: {
-    text: '已完成',
-    type: 'success',
-    description: '订单已完成',
-    action: '',
-    nextStatusText: '完成后无法再进行状态修改',
-    prevStatusText: '回退到"已发货"状态（仅限实体礼物）',
-  },
+const statusMeta: Record<PointOrderStatus, { label: string; type: 'warning' | 'info' | 'success'; hint: string }> = {
+  [PointOrderStatus.Pending]: { label: '等待发货', type: 'warning', hint: '订单已创建，等待处理' },
+  [PointOrderStatus.Shipped]: { label: '已发货', type: 'info', hint: '订单已发货，可填写或更新物流信息' },
+  [PointOrderStatus.Completed]: { label: '已完成', type: 'success', hint: '订单流程已完成' },
 }
 
-// 表格列定义
-const orderColumn: DataTableColumns<OrderType> = [
+const loading = computed(() => !!props.loading || actionLoading.value)
+const pagedOrders = computed(() => props.order.slice((page.value - 1) * pageSize, page.value * pageSize))
+const expressOptions = computed(() =>
+  [...new Set(props.order.map((item) => item.expressCompany).filter((name): name is string => !!name))].map((name) => ({
+    label: name,
+    value: name,
+  })),
+)
+
+watch(
+  () => props.order,
+  () => (page.value = 1),
+)
+
+function statusTag(row: ResponsePointOrder2OwnerModel) {
+  const meta = statusMeta[row.status]
+  const label = row.status === PointOrderStatus.Shipped && !row.trackingNumber ? '已发货 · 待填单号' : meta.label
+  const type = row.status === PointOrderStatus.Shipped && !row.trackingNumber ? 'warning' : meta.type
+  return h(NTag, { type, size: 'small', bordered: false }, () => label)
+}
+
+function openDetail(row: ResponsePointOrder2OwnerModel) {
+  detail.value = row
+  showDetail.value = true
+}
+
+function nextStatus(order: ResponsePointOrder2OwnerModel) {
+  if (order.type === GoodsTypes.Virtual && order.status === PointOrderStatus.Pending) return PointOrderStatus.Completed
+  if (order.status === PointOrderStatus.Pending) return PointOrderStatus.Shipped
+  if (order.status === PointOrderStatus.Shipped) return PointOrderStatus.Completed
+  return null
+}
+
+function previousStatus(order: ResponsePointOrder2OwnerModel) {
+  if (order.type === GoodsTypes.Physical && order.status === PointOrderStatus.Shipped) return PointOrderStatus.Pending
+  return null
+}
+
+async function updateStatus(ids: number[], status: PointOrderStatus) {
+  actionLoading.value = true
+  try {
+    await updateOrdersStatus(props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' }, ids, status)
+    props.order.forEach((order) => {
+      if (ids.includes(order.id)) {
+        order.status = status
+        order.updateAt = Date.now()
+      }
+    })
+    message.success('订单状态已更新')
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : `更新订单失败: ${error}`)
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+function confirmStatus(order: ResponsePointOrder2OwnerModel, status: PointOrderStatus) {
+  dialog.info({
+    title: '修改订单状态',
+    content: `确认将订单 #${order.id} 从「${statusMeta[order.status].label}」改为「${statusMeta[status].label}」吗？`,
+    positiveText: '确认修改',
+    negativeText: '取消',
+    onPositiveClick: () => updateStatus([order.id], status),
+  })
+}
+
+async function saveExpress() {
+  if (!detail.value) return
+  actionLoading.value = true
+  try {
+    await updateOrderExpress(
+      props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
+      detail.value.id,
+      detail.value.trackingNumber ?? '',
+      detail.value.expressCompany,
+    )
+    detail.value.updateAt = Date.now()
+    message.success('物流信息已更新')
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : `更新物流信息失败: ${error}`)
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+function updateSelection(items: DataTableRowKey[]) {
+  selectedItems.value = items
+  emit('selectedItem', items)
+}
+
+function toggleSelection(id: number, checked: boolean) {
+  const next = checked ? [...selectedItems.value, id] : selectedItems.value.filter((item) => item !== id)
+  updateSelection([...new Set(next)])
+}
+
+const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
   {
     type: 'selection',
-    disabled: () => props.type === 'user',
     options: [
       'all',
       'none',
       {
-        label: '选中未发货的',
-        key: 'f2',
-        onSelect: (pageData) => {
-          selectedItem.value = pageData.filter((row) => row.status === PointOrderStatus.Pending).map((row) => row.id)
-        },
+        label: '选中待发货订单',
+        key: 'pending',
+        onSelect: (rows) =>
+          updateSelection(rows.filter((row) => row.status === PointOrderStatus.Pending).map((row) => row.id)),
       },
     ],
   },
-  {
-    title: '订单号',
-    minWidth: 70,
-    key: 'id',
-  },
+  { title: '订单号', key: 'id', width: 84 },
   {
     title: '用户',
-    key: 'user',
-    disabled: () => props.type === 'user',
-    render: (row: OrderType) => {
-      if (row.instanceOf === 'user') return ''
-
-      const ownerRow = row as ResponsePointOrder2OwnerModel
-      return h(NTooltip, null, {
-        trigger: () =>
-          h(
-            NButton,
-            {
-              text: true,
-              type: 'primary',
-              tag: 'a',
-              href: `https://space.bilibili.com/${ownerRow.customer?.userId || ''}`,
-              target: '_blank',
-            },
-            { default: () => ownerRow.customer?.name || '未知用户' },
-          ),
-        default: () => ownerRow.customer?.userId || '未知ID',
-      })
-    },
+    key: 'customer',
+    width: 130,
+    render: (row) =>
+      h(
+        NButton,
+        {
+          text: true,
+          type: 'primary',
+          tag: 'a',
+          href: `https://space.bilibili.com/${row.customer?.userId || ''}`,
+          target: '_blank',
+        },
+        () => row.customer?.name || '未知用户',
+      ),
   },
   {
-    title: '礼物名',
-    key: 'giftName',
+    title: '礼物',
+    key: 'goods',
     minWidth: 180,
-    render: (row: OrderType) => {
-      const name = row.goods?.name || '未知礼物'
-      const subs = row.selectedSubItems || []
-
-      if (subs.length === 0) return name
-
-      return h(NFlex, { vertical: true, gap: 4 }, () => [
-        h(NText, { strong: true }, () => name),
-        h(NFlex, { gap: 4, wrap: true }, () =>
-          subs.map((s) =>
-            h(
-              NTag,
-              { size: 'tiny', type: 'info', bordered: false, key: s.subItemId },
-              () => `${s.nameSnapshot} x ${s.quantity}`,
-            ),
-          ),
-        ),
-      ])
-    },
+    render: (row) =>
+      h('div', { class: 'owner-order-goods' }, [
+        h('strong', row.goods.name),
+        row.selectedSubItems?.length
+          ? h('span', row.selectedSubItems.map((item) => `${item.nameSnapshot} x ${item.quantity}`).join(' / '))
+          : null,
+      ]),
   },
-  {
-    title: '数量',
-    key: 'count',
-  },
+  { title: '数量', key: 'count', width: 70 },
   {
     title: '时间',
-    key: 'time',
-    sorter: (row1: OrderType, row2: OrderType) => row1.createAt - row2.createAt,
-    minWidth: 80,
-    render: (row: OrderType) => {
-      return h(NTooltip, null, {
-        trigger: () => h(NTime, { time: row.createAt, type: 'relative' }),
-        default: () => h(NTime, { time: row.createAt }),
-      })
-    },
+    key: 'createAt',
+    width: 120,
+    sorter: (left, right) => left.createAt - right.createAt,
+    render: (row) => h(NTime, { time: row.createAt, type: 'relative' }),
   },
   {
-    title: '使用积分',
+    title: '积分',
     key: 'point',
-    sorter: (row1: OrderType, row2: OrderType) => row1.point - row2.point,
-    render: (row: OrderType) => {
-      return Number(row.point.toFixed(1))
-    },
+    width: 82,
+    sorter: (left, right) => left.point - right.point,
+    render: (row) => Number(row.point.toFixed(1)),
   },
+  { title: '状态', key: 'status', width: 130, render: statusTag },
   {
-    title: '订单状态',
-    key: 'status',
-    filter:
-      props.type === 'owner'
-        ? undefined
-        : (filterOptionValue: unknown, row: OrderType) => row.status === filterOptionValue,
-    filterOptions: [
-      { label: '等待发货', value: PointOrderStatus.Pending },
-      { label: '已发货', value: PointOrderStatus.Shipped },
-      { label: '已完成', value: PointOrderStatus.Completed },
-    ],
-    render: (row: OrderType) => {
-      const status = statusMap[row.status] || { text: '未知状态', type: 'error' }
-      const hasExpress = !!row.expressCompany
-
-      const text = typeof status.text === 'function' ? status.text(hasExpress) : status.text
-      const type = typeof status.type === 'function' ? status.type(hasExpress) : status.type
-
-      return h(
-        NTag,
-        {
-          size: 'small',
-          type: type as any,
-          bordered: false,
-        },
-        () => text,
-      )
-    },
-  },
-  {
-    title: '订单类型',
+    title: '类型',
     key: 'type',
-    filter:
-      props.type === 'owner'
-        ? undefined
-        : (filterOptionValue: unknown, row: OrderType) => row.type === filterOptionValue,
-    filterOptions: [
-      { label: '实体礼物', value: GoodsTypes.Physical },
-      { label: '虚拟礼物', value: GoodsTypes.Virtual },
-    ],
-    render: (row: OrderType) => {
-      return h(
-        NTag,
-        {
-          type: 'success',
-          bordered: false,
-          size: 'small',
-        },
-        () => (row.type === GoodsTypes.Physical ? '实体礼物' : '虚拟礼物'),
-      )
-    },
+    width: 90,
+    render: (row) =>
+      h(NTag, { size: 'small', bordered: false }, () => (row.type === GoodsTypes.Physical ? '实体' : '虚拟')),
   },
   {
     title: '备注',
     key: 'remark',
-    minWidth: 100,
-    render: (row: OrderType) => {
-      if (!row.remark) {
-        return h(NText, { depth: 3, italic: true }, () => '无')
-      }
-      return h(NEllipsis, { style: { maxWidth: '100px' } }, () => row.remark)
-    },
+    width: 120,
+    render: (row) => (row.remark ? h(NEllipsis, null, () => row.remark) : h(NText, { depth: 3 }, () => '无')),
   },
   {
-    title: '地址',
-    key: 'address',
-    minWidth: 250,
-    render: (row: OrderType) => {
-      const goodsCollectUrl = row.goods.collectUrl
-
-      if (row.type === GoodsTypes.Physical) {
-        return goodsCollectUrl
-          ? h(
-              NButton,
-              {
-                tag: 'a',
-                href: goodsCollectUrl,
-                target: '_blank',
-                text: true,
-                type: 'info',
-              },
-              () => h(NText, { italic: true }, () => '通过站外链接收集'),
-            )
-          : h(AddressDisplay, { address: row.address, size: 'small' })
-      } else {
-        return h(NText, { depth: 3, italic: true }, () => '无需发货')
-      }
-    },
-  },
-  {
-    title: '快递信息',
+    title: '物流',
     key: 'express',
     minWidth: 150,
-    render: (row: OrderType) => {
-      if (row.type === GoodsTypes.Physical) {
-        if (row.trackingNumber) {
-          return h(NFlex, { align: 'center', gap: 8 }, () => [
-            h(NTag, { size: 'tiny', bordered: false }, () => row.expressCompany),
-            h(NEllipsis, { style: { maxWidth: '100px' } }, () => h(NText, { depth: 3 }, () => row.trackingNumber)),
-          ])
-        }
-        return h(NText, { depth: 3, italic: true }, () => '尚未发货')
-      }
-      return h(NText, { depth: 3, italic: true }, () => '无需发货')
-    },
+    render: (row) => row.trackingNumber || (row.type === GoodsTypes.Virtual ? '无需发货' : '暂无物流'),
   },
   {
-    title: '操作',
+    title: '',
     key: 'action',
     fixed: 'right',
-    render: (row: OrderType) => {
-      return h(
-        NButton,
-        {
-          type: 'info',
-          size: 'small',
-          onClick: () => {
-            orderDetail.value = row
-            showDetailModal.value = true
-          },
-        },
-        { default: () => '详情' },
-      )
-    },
+    width: 70,
+    render: (row) => h(NButton, { size: 'small', secondary: true, onClick: () => openDetail(row) }, () => '详情'),
   },
 ]
-
-// 业务方法
-function getNextStatus(currentStatus: PointOrderStatus): PointOrderStatus | null {
-  if (!orderDetail.value) return null
-
-  // 虚拟礼物直接从等待到完成
-  if (orderDetail.value.type === GoodsTypes.Virtual && currentStatus === PointOrderStatus.Pending) {
-    return PointOrderStatus.Completed
-  }
-
-  if (currentStatus === PointOrderStatus.Pending) return PointOrderStatus.Shipped
-  if (currentStatus === PointOrderStatus.Shipped) return PointOrderStatus.Completed
-  return null
-}
-
-function getPrevStatus(currentStatus: PointOrderStatus): PointOrderStatus | null {
-  if (!orderDetail.value) return null
-
-  // 虚拟礼物不允许回退
-  if (orderDetail.value.type === GoodsTypes.Virtual) return null
-
-  // 已完成订单不允许回退
-  if (currentStatus === PointOrderStatus.Completed) return null
-
-  if (currentStatus === PointOrderStatus.Shipped) return PointOrderStatus.Pending
-  return null
-}
-
-function onChangeStatus(id: number, status: PointOrderStatus) {
-  const statusInfo = statusMap[status]
-  const currentStatusInfo = orderDetail.value ? statusMap[orderDetail.value.status] : null
-  const currentStatusText = currentStatusInfo
-    ? typeof currentStatusInfo.text === 'function'
-      ? currentStatusInfo.text(!!orderDetail.value?.expressCompany)
-      : currentStatusInfo.text
-    : '当前状态'
-
-  const newStatusText = typeof statusInfo.text === 'function' ? statusInfo.text(false) : statusInfo.text
-
-  let tipText = ''
-  if (status > (orderDetail.value?.status || 0)) {
-    tipText = statusInfo.nextStatusText
-
-    // 特殊处理虚拟礼物
-    if (orderDetail.value?.type === GoodsTypes.Virtual && status === PointOrderStatus.Completed) {
-      tipText = '该虚拟礼物将被标记为已完成'
-    }
-  } else if (status < (orderDetail.value?.status || 0)) {
-    tipText = statusInfo.prevStatusText
-  }
-
-  dialog.info({
-    title: '修改订单状态',
-    content: () =>
-      h('div', null, [
-        h('p', null, `确认将订单状态从「${currentStatusText}」修改为「${newStatusText}」吗？`),
-        tipText ? h('p', { style: 'color: #f90; margin-top: 8px;' }, tipText) : null,
-      ]),
-    positiveText: '确认',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      updateStatus([id], status)
-    },
-  })
-}
-
-async function updateStatus(ids: number[], status: PointOrderStatus) {
-  if (!ids.length) return
-
-  try {
-    isLoading.value = true
-    await updateOrdersStatus(props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' }, ids, status)
-    message.success('操作成功')
-    props.order?.forEach((row) => {
-      if (ids.includes(row.id)) {
-        row.status = status
-        row.updateAt = Date.now()
-      }
-    })
-  } catch (err) {
-    message.error(err instanceof Error ? err.message : `操作失败: ${err}`)
-    console.error(err)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-async function updateExpress(item: ResponsePointOrder2OwnerModel) {
-  try {
-    isLoading.value = true
-    await updateOrderExpress(
-      props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
-      Number(item.id),
-      item.trackingNumber ?? '',
-      item.expressCompany ?? undefined,
-    )
-    item.updateAt = Date.now()
-    message.success('操作成功')
-  } catch (err) {
-    message.error(err instanceof Error ? err.message : `操作失败: ${err}`)
-    console.error(err)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// 初始化
-onMounted(() => {
-  props.order?.forEach((row) => {
-    row.instanceOf = props.type
-  })
-})
 </script>
 
 <template>
   <div class="point-order-card">
-    <NDataTable
-      v-model:checked-row-keys="selectedItem"
-      :row-key="(row) => row.id"
-      :loading="isLoading"
-      :columns="orderColumn"
-      :data="order"
-      :pagination="{
-        showSizePicker: true,
-        pageSizes: [10, 25, 50, 100],
-        defaultPageSize: 10,
-        size: 'small',
-      }"
-      size="small"
-      @update:checked-row-keys="(keys) => emit('selectedItem', keys)"
-    >
-      <template #empty>
-        <NEmpty description="暂无订单" />
-      </template>
-    </NDataTable>
+    <NEmpty
+      v-if="order.length === 0"
+      description="暂无订单"
+    />
 
-    <!-- 订单详情模态框 -->
+    <template v-else>
+      <NDataTable
+        class="desktop-owner-orders"
+        :checked-row-keys="selectedItems"
+        :row-key="(row) => row.id"
+        :loading="loading"
+        :columns="columns"
+        :data="order"
+        :pagination="{ defaultPageSize: 10, showSizePicker: true, pageSizes: [10, 25, 50, 100] }"
+        size="small"
+        @update:checked-row-keys="updateSelection"
+      />
+
+      <div class="mobile-owner-orders">
+        <article
+          v-for="item in pagedOrders"
+          :key="item.id"
+          class="mobile-owner-order"
+        >
+          <div class="mobile-owner-order__topline">
+            <NCheckbox
+              :checked="selectedItems.includes(item.id)"
+              @update:checked="(checked) => toggleSelection(item.id, checked)"
+            >
+              #{{ item.id }}
+            </NCheckbox>
+            <NTag
+              :type="
+                item.status === PointOrderStatus.Shipped && !item.trackingNumber
+                  ? 'warning'
+                  : statusMeta[item.status].type
+              "
+              size="small"
+              :bordered="false"
+            >
+              {{
+                item.status === PointOrderStatus.Shipped && !item.trackingNumber
+                  ? '已发货 · 待填单号'
+                  : statusMeta[item.status].label
+              }}
+            </NTag>
+          </div>
+          <strong>{{ item.goods.name }}</strong>
+          <span
+            >{{ item.customer?.name || '未知用户' }} · {{ item.count }} 件 ·
+            {{ Number(item.point.toFixed(1)) }} 积分</span
+          >
+          <NButton
+            size="small"
+            secondary
+            @click="openDetail(item)"
+          >
+            查看与处理
+          </NButton>
+        </article>
+        <NPagination
+          v-if="order.length > pageSize"
+          v-model:page="page"
+          :page-size="pageSize"
+          :item-count="order.length"
+          simple
+        />
+      </div>
+    </template>
+
     <NModal
-      v-if="orderDetail"
-      v-model:show="showDetailModal"
+      v-if="detail"
+      v-model:show="showDetail"
       preset="card"
       title="订单详情"
-      style="max-width: 90vw; min-width: 400px; width: 800px"
+      class="owner-order-modal"
     >
-      <NScrollbar
-        style="max-height: 80vh; padding-right: 12px"
-        trigger="none"
-      >
-        <div class="order-detail-content">
-          <NDivider style="margin-top: 0">
-            礼物快照
-            <NTooltip>
-              <template #trigger>
-                <NIcon :component="Info24Filled" />
-              </template>
-              兑换成功时生成的礼物快照, 即使主播对礼物内容进行了修改这个地方也不会变化
-            </NTooltip>
-          </NDivider>
-
-          <NFlex justify="center">
-            <PointGoodsItem
-              v-if="currentGoods"
-              class="goods-item"
-              :goods="currentGoods"
-            />
-          </NFlex>
-
-          <!-- 已选款式详情 -->
-          <template v-if="selectedSubItems.length > 0">
-            <NDivider>已选款式</NDivider>
-            <NGrid
-              cols="1 400:2"
-              :x-gap="12"
-              :y-gap="12"
-            >
-              <NGi
-                v-for="sub in selectedSubItems"
-                :key="sub.subItemId"
-              >
-                <div class="selected-sub-item-display">
-                  <NFlex
-                    align="center"
-                    :gap="12"
-                  >
-                    <div
-                      class="sub-info"
-                      style="flex: 1"
-                    >
-                      <NFlex
-                        align="center"
-                        justify="space-between"
-                      >
-                        <NText strong>
-                          {{ sub.nameSnapshot }}
-                        </NText>
-                        <NText depth="3"> x {{ sub.quantity }} </NText>
-                      </NFlex>
-                      <NFlex
-                        justify="space-between"
-                        align="center"
-                        style="margin-top: 4px"
-                      >
-                        <NTag
-                          size="tiny"
-                          :bordered="false"
-                          type="primary"
-                          secondary
-                        >
-                          {{ sub.priceSnapshot }} 积分
-                        </NTag>
-                        <NText
-                          v-if="sub.assignedVirtualKeys && sub.assignedVirtualKeys.length > 0"
-                          type="success"
-                          style="font-size: 12px"
-                        >
-                          已分配 {{ sub.assignedVirtualKeys.length }} 个密钥
-                        </NText>
-                      </NFlex>
-                    </div>
-                  </NFlex>
-                </div>
-              </NGi>
-            </NGrid>
-          </template>
-
-          <!-- 移动并修改备注信息 -->
-          <template v-if="orderDetail.remark">
-            <NAlert
-              title="备注信息"
-              type="info"
-              style="margin-top: 16px; margin-bottom: 16px"
-              closable
-            >
-              <template #icon>
-                <NIcon :component="Info24Filled" />
-              </template>
-              <NText>{{ orderDetail.remark }}</NText>
-            </NAlert>
-          </template>
-
-          <!-- 用户视图 -->
-          <template v-if="orderDetail.instanceOf === 'user'">
-            <!-- 虚拟礼物内容 -->
-            <template v-if="orderDetail.type === GoodsTypes.Virtual">
-              <NDivider>虚拟礼物内容</NDivider>
-              <NInput
-                v-if="currentGoods"
-                :value="currentGoods.content"
-                type="textarea"
-                readonly
-                placeholder="无内容"
-              />
-            </template>
-
-            <!-- 实体礼物地址收集 -->
-            <template
-              v-if="
-                orderDetail.type === GoodsTypes.Physical &&
-                orderDetail.status === PointOrderStatus.Pending &&
-                (orderDetail as ResponsePointOrder2UserModel).goods.embedCollectUrl &&
-                (orderDetail as ResponsePointOrder2UserModel).goods.collectUrl
-              "
-            >
-              <NDivider>填写收货地址</NDivider>
-              <NFlex
-                vertical
-                align="center"
-                gap="12"
-              >
-                <NButton
-                  tag="a"
-                  :href="(orderDetail as ResponsePointOrder2UserModel).goods.collectUrl"
-                  target="_blank"
-                  type="info"
-                >
-                  在新窗口中打开地址填写表格
-                </NButton>
-
-                <iframe
-                  class="collect-iframe"
-                  :src="(orderDetail as ResponsePointOrder2UserModel).goods.collectUrl"
-                  frameborder="0"
-                  allowfullscreen
-                  sandbox="allow-same-origin allow-scripts allow-modals allow-downloads allow-forms allow-popups"
-                />
-              </NFlex>
-            </template>
-          </template>
-
-          <!-- 主播视图 -->
-          <template v-else-if="orderDetail.instanceOf === 'owner'">
-            <NDivider>订单状态管理</NDivider>
-
-            <!-- 虚拟礼物提示 -->
-            <NAlert
-              v-if="orderDetail.type === GoodsTypes.Virtual"
-              type="success"
-              style="margin-bottom: 16px"
-            >
-              <template #icon>
-                <NIcon>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                    />
-                    <line
-                      x1="12"
-                      y1="16"
-                      x2="12"
-                      y2="12"
-                    />
-                    <line
-                      x1="12"
-                      y1="8"
-                      x2="12.01"
-                      y2="8"
-                    />
-                  </svg>
-                </NIcon>
-              </template>
-              该订单为虚拟礼物，无需发货
-            </NAlert>
-
-            <!-- 订单已完成提示 -->
-            <NAlert
-              v-if="orderDetail.status === PointOrderStatus.Completed"
-              type="info"
-              style="margin-bottom: 16px"
-            >
-              <template #icon>
-                <NIcon>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                </NIcon>
-              </template>
-              该订单已完成，无法再进行状态修改
-            </NAlert>
-
-            <!-- 状态信息卡片 -->
-            <NCard
-              class="status-info-card"
-              size="small"
-            >
-              <template #header>
-                <div class="status-info-header">
-                  <NTag
-                    v-if="orderDetail.status === PointOrderStatus.Pending"
-                    type="default"
-                    size="medium"
-                  >
-                    {{ statusMap[PointOrderStatus.Pending].text }}
-                  </NTag>
-                  <NTag
-                    v-else-if="orderDetail.status === PointOrderStatus.Shipped"
-                    :type="orderDetail.expressCompany ? 'info' : 'warning'"
-                    size="medium"
-                  >
-                    {{ orderDetail.expressCompany ? '已发货 | 已填写单号' : '已发货 | 未填写单号' }}
-                  </NTag>
-                  <NTag
-                    v-else-if="orderDetail.status === PointOrderStatus.Completed"
-                    type="success"
-                    size="medium"
-                  >
-                    {{ statusMap[PointOrderStatus.Completed].text }}
-                  </NTag>
-                  <span class="status-info-desc">{{ statusMap[orderDetail.status].description }}</span>
-                </div>
-              </template>
-
-              <NFlex
-                v-if="orderDetail.status !== PointOrderStatus.Completed"
-                vertical
+      <NScrollbar class="owner-order-scrollbar">
+        <div class="owner-order-detail">
+          <div class="order-summary">
+            <div>
+              <span>订单号</span><strong>#{{ detail.id }}</strong>
+            </div>
+            <div>
+              <span>用户</span><strong>{{ detail.customer?.name || '未知用户' }}</strong>
+            </div>
+            <div>
+              <span>使用积分</span><strong>{{ Number(detail.point.toFixed(1)) }}</strong>
+            </div>
+            <div>
+              <span>当前状态</span>
+              <NTag
+                :type="
+                  detail.status === PointOrderStatus.Shipped && !detail.trackingNumber
+                    ? 'warning'
+                    : statusMeta[detail.status].type
+                "
                 size="small"
-                class="status-actions-info"
-              >
-                <NCard
-                  v-if="getNextStatus(orderDetail.status) !== null"
-                  class="status-action-item"
-                  embedded
-                >
-                  <NFlex align="center">
-                    <NIcon
-                      class="action-icon"
-                      size="20"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="m9 18 6-6-6-6" />
-                      </svg>
-                    </NIcon>
-                    <div class="action-text">
-                      <div class="action-title">下一状态操作</div>
-                      <div class="action-desc">
-                        {{ statusMap[orderDetail.status].nextStatusText }}
-                      </div>
-                    </div>
-                  </NFlex>
-                </NCard>
-
-                <NCard
-                  v-if="getPrevStatus(orderDetail.status) !== null"
-                  class="status-action-item"
-                  embedded
-                >
-                  <NFlex align="center">
-                    <NIcon
-                      class="action-icon"
-                      size="20"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="m15 18-6-6 6-6" />
-                      </svg>
-                    </NIcon>
-                    <div class="action-text">
-                      <div class="action-title">回退操作</div>
-                      <div class="action-desc">
-                        {{ statusMap[orderDetail.status].prevStatusText }}
-                      </div>
-                    </div>
-                  </NFlex>
-                </NCard>
-              </NFlex>
-            </NCard>
-
-            <!-- 收货地址信息 -->
-            <template v-if="orderDetail.type === GoodsTypes.Physical">
-              <NDivider>收货地址</NDivider>
-              <NCard
-                size="small"
-                class="address-info-card"
-              >
-                <AddressDisplay
-                  :address="orderDetail.address"
-                  size="default"
-                />
-              </NCard>
-            </template>
-
-            <!-- 快递信息 -->
-            <template
-              v-if="
-                orderDetail.status === PointOrderStatus.Shipped &&
-                orderDetail.instanceOf === 'owner' &&
-                orderDetail.type === GoodsTypes.Physical
-              "
-            >
-              <NDivider>快递</NDivider>
-              <NCard
-                size="small"
-                class="express-form"
-              >
-                <NFlex
-                  vertical
-                  size="medium"
-                >
-                  <NAutoComplete
-                    v-model:value="orderDetail.expressCompany"
-                    placeholder="快递公司"
-                    :options="expressOptions"
-                    class="express-company-input"
-                  />
-                  <NInputGroup>
-                    <NInputGroupLabel>快递单号</NInputGroupLabel>
-                    <NInput
-                      v-model:value="orderDetail.trackingNumber"
-                      placeholder="就是快递单号"
-                      class="tracking-number-input"
-                    />
-                  </NInputGroup>
-                  <NButton
-                    type="primary"
-                    class="update-express-btn"
-                    :loading="isLoading"
-                    @click="updateExpress(orderDetail as ResponsePointOrder2OwnerModel)"
-                  >
-                    更新快递信息
-                  </NButton>
-                </NFlex>
-              </NCard>
-            </template>
-
-            <NDivider> 状态更新 </NDivider>
-
-            <!-- 状态修改指引 -->
-            <NText
-              v-if="orderDetail.status !== PointOrderStatus.Completed"
-              class="status-guide"
-              depth="3"
-            >
-              <NIcon
-                :component="Info24Filled"
-                style="margin-right: 4px"
-              />订 点击步骤条可直接修改订单状态，或使用下方按钮进行更改
-            </NText>
-
-            <NFlex
-              justify="center"
-              class="order-status-steps"
-            >
-              <NSteps
-                :current="orderDetail.status + 1"
-                size="small"
-                @update:current="(c) => onChangeStatus(orderDetail?.id ?? -1, c - 1)"
-              >
-                <NStep
-                  title="等待中"
-                  :description="statusMap[PointOrderStatus.Pending].description"
-                  :disabled="orderDetail.status >= 0 || orderDetail.type === GoodsTypes.Virtual"
-                />
-                <NStep
-                  title="已发货"
-                  :description="statusMap[PointOrderStatus.Shipped].description"
-                  :disabled="orderDetail.status >= 1 || orderDetail.type === GoodsTypes.Virtual"
-                />
-                <NStep
-                  title="已完成"
-                  :description="statusMap[PointOrderStatus.Completed].description"
-                  :disabled="orderDetail.status >= 2"
-                />
-              </NSteps>
-            </NFlex>
-
-            <!-- 状态操作按钮 -->
-            <NFlex
-              justify="center"
-              class="status-action-buttons"
-            >
-              <NButton
-                v-if="getPrevStatus(orderDetail.status) !== null"
-                type="warning"
-                @click="onChangeStatus(orderDetail.id, getPrevStatus(orderDetail.status)!)"
-              >
-                回退到上一状态
-              </NButton>
-
-              <NButton
-                v-if="getNextStatus(orderDetail.status) !== null"
-                type="primary"
-                @click="onChangeStatus(orderDetail.id, getNextStatus(orderDetail.status)!)"
+                :bordered="false"
               >
                 {{
-                  orderDetail.type === GoodsTypes.Virtual && orderDetail.status === PointOrderStatus.Pending
-                    ? '完成订单'
-                    : statusMap[orderDetail.status].action
+                  detail.status === PointOrderStatus.Shipped && !detail.trackingNumber
+                    ? '已发货 · 待填单号'
+                    : statusMeta[detail.status].label
                 }}
-              </NButton>
-            </NFlex>
+              </NTag>
+            </div>
+          </div>
+
+          <NDivider>礼物快照</NDivider>
+          <PointGoodsItem
+            class="detail-goods"
+            :goods="detail.goods"
+          />
+
+          <template v-if="detail.selectedSubItems?.length">
+            <NDivider>已选款式</NDivider>
+            <div class="variant-grid">
+              <div
+                v-for="item in detail.selectedSubItems"
+                :key="item.subItemId"
+                class="variant-item"
+              >
+                <strong>{{ item.nameSnapshot }}</strong>
+                <span>x {{ item.quantity }}</span>
+                <NTag
+                  size="tiny"
+                  type="info"
+                  :bordered="false"
+                >
+                  {{ item.priceSnapshot }} 积分
+                </NTag>
+              </div>
+            </div>
           </template>
+
+          <NAlert
+            v-if="detail.remark"
+            type="info"
+            title="订单备注"
+          >
+            {{ detail.remark }}
+          </NAlert>
+
+          <NDivider>状态处理</NDivider>
+          <NAlert :type="statusMeta[detail.status].type">
+            {{ statusMeta[detail.status].hint }}
+          </NAlert>
+
+          <template v-if="detail.type === GoodsTypes.Physical">
+            <NDivider>收货地址</NDivider>
+            <div class="detail-panel">
+              <NButton
+                v-if="detail.goods.collectUrl"
+                tag="a"
+                :href="detail.goods.collectUrl"
+                target="_blank"
+                text
+                type="primary"
+              >
+                通过站外链接收集
+              </NButton>
+              <AddressDisplay
+                v-else
+                :address="detail.address"
+              />
+            </div>
+          </template>
+
+          <template v-if="detail.type === GoodsTypes.Physical && detail.status === PointOrderStatus.Shipped">
+            <NDivider>物流信息</NDivider>
+            <div class="detail-panel express-form">
+              <NAutoComplete
+                v-model:value="detail.expressCompany"
+                :options="expressOptions"
+                placeholder="快递公司"
+              />
+              <NInputGroup>
+                <NInputGroupLabel>单号</NInputGroupLabel>
+                <NInput
+                  v-model:value="detail.trackingNumber"
+                  placeholder="填写快递单号"
+                />
+              </NInputGroup>
+              <NButton
+                type="primary"
+                :loading="actionLoading"
+                @click="saveExpress"
+              >
+                更新物流信息
+              </NButton>
+            </div>
+          </template>
+
+          <NFlex
+            class="status-actions"
+            justify="end"
+            wrap
+          >
+            <NButton
+              v-if="previousStatus(detail) !== null"
+              type="warning"
+              secondary
+              @click="confirmStatus(detail, previousStatus(detail)!)"
+            >
+              回退到等待发货
+            </NButton>
+            <NButton
+              v-if="nextStatus(detail) !== null"
+              type="primary"
+              @click="confirmStatus(detail, nextStatus(detail)!)"
+            >
+              {{
+                detail.type === GoodsTypes.Virtual
+                  ? '完成订单'
+                  : detail.status === PointOrderStatus.Pending
+                    ? '确认发货'
+                    : '完成订单'
+              }}
+            </NButton>
+          </NFlex>
         </div>
       </NScrollbar>
     </NModal>
@@ -936,125 +470,147 @@ onMounted(() => {
 <style scoped>
 .point-order-card {
   width: 100%;
+  min-width: 0;
 }
 
-:deep(.n-data-table .n-data-table-tr:hover) {
-  background-color: var(--vtsuru-bg-muted);
+:deep(.owner-order-goods) {
+  display: grid;
+  gap: 2px;
 }
 
-.order-detail-content {
-  width: 100%;
-  padding: 0 8px;
+:deep(.owner-order-goods span) {
+  overflow: hidden;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.goods-item {
-  max-width: 300px;
-  width: 100%;
+.mobile-owner-orders {
+  display: none;
 }
 
-.selected-sub-item-display {
-  padding: 12px;
+.owner-order-modal {
+  width: min(780px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+}
+
+.owner-order-scrollbar {
+  max-height: min(78vh, 760px);
+}
+
+.owner-order-detail {
+  display: grid;
+  gap: 12px;
+  padding-right: 10px;
+}
+
+.owner-order-detail :deep(.n-divider) {
+  margin: 4px 0;
+}
+
+.order-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.order-summary > div,
+.variant-item,
+.detail-panel {
+  padding: 10px 12px;
   border: 1px solid var(--vtsuru-border);
   border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-bg-elevated);
+  background: var(--vtsuru-bg-elevated);
 }
 
-.order-status-steps {
-  width: 100%;
-  margin-bottom: 12px;
+.order-summary > div {
+  display: grid;
+  gap: 3px;
 }
 
-.status-info-card {
-  margin-bottom: 16px;
-}
-
-.status-info-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.status-info-desc {
-  margin-left: 12px;
+.order-summary span,
+.variant-item span,
+.mobile-owner-order span {
   color: var(--vtsuru-fg-muted);
+  font-size: 12px;
 }
 
-.status-actions-info {
-  width: 100%;
+.detail-goods {
+  width: min(100%, 320px);
+  margin: 0 auto;
 }
 
-.action-icon {
-  color: var(--vtsuru-fg-muted);
+.variant-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
-.action-title {
-  font-weight: 500;
-  margin-bottom: 4px;
-  font-size: 14px;
-  color: var(--vtsuru-fg);
+.variant-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 8px;
 }
 
-.action-desc {
-  color: var(--vtsuru-fg-muted);
-  font-size: 13px;
-}
-
-.status-guide {
-  display: block;
-  margin-bottom: 12px;
-  font-size: 14px;
-  text-align: center;
+.variant-item .n-tag {
+  grid-column: 1 / -1;
+  justify-self: start;
 }
 
 .express-form {
-  max-width: 400px;
+  display: grid;
+  grid-template-columns: 180px minmax(220px, 1fr) auto;
+  gap: 8px;
 }
 
-.express-company-input {
-  max-width: 200px;
-}
-
-.tracking-number-input {
-  max-width: 300px;
-}
-
-.update-express-btn {
-  width: 120px;
-}
-
-.collect-iframe {
-  height: 600px;
-  width: 100%;
-  border-radius: var(--vtsuru-radius);
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-}
-
-.status-action-buttons {
-  margin: 16px 0 24px;
-  display: flex;
-  gap: 12px;
-}
-
-.status-action-buttons .n-button {
-  min-width: 120px;
-}
-
-.address-info-card {
-  margin-bottom: 16px;
+.status-actions {
+  margin-top: 4px;
 }
 
 @media (max-width: 768px) {
-  .order-detail-modal {
-    max-width: 95vw;
+  .desktop-owner-orders {
+    display: none;
   }
 
-  .goods-item {
-    max-width: 100%;
+  .mobile-owner-orders {
+    display: grid;
+    gap: 8px;
   }
 
-  .collect-iframe {
-    height: 400px;
+  .mobile-owner-order {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--vtsuru-border);
+    border-radius: var(--vtsuru-radius);
+    background: var(--vtsuru-bg-surface);
+  }
+
+  .mobile-owner-order__topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .owner-order-modal {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+  }
+
+  .owner-order-detail {
+    padding-right: 4px;
+  }
+
+  .order-summary,
+  .variant-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .express-form {
+    grid-template-columns: 1fr;
   }
 }
 </style>

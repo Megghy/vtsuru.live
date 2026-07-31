@@ -264,17 +264,17 @@ onMounted(() => {
                   <button
                     type="button"
                     class="entry-card tone-yellow"
-                    @click="$router.push({ name: 'bili-user' })"
+                    @click="$router.push({ name: 'bili-user-points' })"
                   >
                     <NIcon
                       :component="Chat24Filled"
                       size="36"
                     />
                     <strong>我是观众</strong>
-                    <span>用户主页</span>
+                    <span>账户中心</span>
                   </button>
                 </template>
-                进入个人主页，查看积分与互动记录
+                进入 Bilibili 账户中心，查看积分与互动记录
               </NTooltip>
             </div>
 

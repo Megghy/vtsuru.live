@@ -1,0 +1,307 @@
+.ranking-card {
+  --ranking-fg: var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg)));
+  --ranking-muted: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
+  --ranking-subtle: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-subtle));
+  --ranking-bg: var(--user-page-theme-surface-bg, var(--vtsuru-page-card-bg, var(--vtsuru-bg-muted)));
+  --ranking-bg-hover: var(
+    --user-page-theme-surface-bg-hover,
+    var(--vtsuru-page-card-bg-embedded, var(--vtsuru-bg-elevated))
+  );
+  --ranking-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)));
+  --ranking-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  min-width: 0;
+  color: var(--ranking-fg);
+}
+
+.ranking-card :deep(.n-card__content),
+.ranking-card :deep(.n-spin-container),
+.ranking-card :deep(.n-spin-content) {
+  min-width: 0;
+}
+
+.ranking-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.ranking-title > .n-icon {
+  color: var(--ranking-accent);
+}
+
+.ranking-count {
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: var(--ranking-muted);
+  background: var(--ranking-bg-hover);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: 128px minmax(160px, 1fr) auto;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.filter-bar > * {
+  min-width: 0;
+}
+
+.empty-data {
+  padding: 48px 0;
+}
+
+.ranking-table {
+  min-width: 0;
+  overflow: hidden;
+  border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--ranking-border);
+  border-radius: var(--vtsuru-page-radius, 8px);
+  background: var(--ranking-bg);
+}
+
+.ranking-grid {
+  display: grid;
+  grid-template-columns: 64px minmax(120px, 1fr) repeat(3, minmax(72px, 0.65fr)) minmax(112px, 0.9fr);
+  align-items: center;
+  min-width: 0;
+}
+
+.ranking-header {
+  min-height: 40px;
+  padding: 0 12px;
+  color: var(--ranking-muted);
+  background: var(--ranking-bg-hover);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.ranking-header > :nth-child(2) {
+  text-align: left;
+}
+
+.ranking-row {
+  min-height: 58px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--ranking-border);
+  transition: background-color 160ms ease;
+}
+
+.ranking-row:hover {
+  background: color-mix(in srgb, var(--ranking-accent) 5%, transparent);
+}
+
+.ranking-row.top-three {
+  background: color-mix(in srgb, var(--ranking-accent) 3%, transparent);
+}
+
+.rank-cell,
+.metric-cell,
+.time-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.rank-number {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--ranking-muted);
+  background: var(--ranking-bg-hover);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rank-1 {
+  color: color-mix(in srgb, var(--vtsuru-warning, #c58a00) 78%, var(--ranking-fg));
+  background: color-mix(in srgb, var(--vtsuru-warning, #c58a00) 18%, var(--ranking-bg));
+}
+
+.rank-2 {
+  color: color-mix(in srgb, var(--ranking-muted) 82%, var(--ranking-fg));
+  background: color-mix(in srgb, var(--ranking-muted) 16%, var(--ranking-bg));
+}
+
+.rank-3 {
+  color: color-mix(in srgb, #b66a38 76%, var(--ranking-fg));
+  background: color-mix(in srgb, #b66a38 17%, var(--ranking-bg));
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+  padding-right: 10px;
+}
+
+.user-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ranking-fg);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-cell {
+  gap: 3px;
+}
+
+.metric-cell strong {
+  color: var(--ranking-fg);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.metric-label {
+  display: none;
+  color: var(--ranking-subtle);
+  font-size: 11px;
+}
+
+.metric-unit,
+.time-cell {
+  color: var(--ranking-muted);
+  font-size: 12px;
+}
+
+.ranking-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 12px;
+  border-top: 1px solid var(--ranking-border);
+}
+
+.page-size-select {
+  width: 96px;
+}
+
+.ranking-info {
+  margin-top: 12px;
+}
+
+@media (max-width: 680px) {
+  .filter-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .filter-bar > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .ranking-table {
+    overflow: visible;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .ranking-header {
+    display: none;
+  }
+
+  .ranking-row {
+    grid-template-columns: 38px repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto auto auto;
+    gap: 8px 6px;
+    min-height: 0;
+    padding: 12px 4px;
+  }
+
+  .rank-cell {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    align-self: start;
+  }
+
+  .user-cell {
+    grid-column: 2 / -1;
+    grid-row: 1;
+    padding-right: 0;
+  }
+
+  .streak-cell {
+    grid-column: 2;
+  }
+
+  .monthly-cell {
+    grid-column: 3;
+  }
+
+  .total-cell {
+    grid-column: 4;
+  }
+
+  .metric-cell {
+    align-items: baseline;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .metric-label {
+    display: block;
+    flex-basis: 100%;
+  }
+
+  .time-cell {
+    grid-column: 2 / -1;
+    grid-row: 3;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .time-cell .metric-label {
+    display: inline;
+    flex-basis: auto;
+  }
+
+  .ranking-footer {
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .ranking-card :deep(.n-card-header),
+  .ranking-card :deep(.n-card__content) {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .filter-bar .n-button {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .ranking-row {
+    grid-template-columns: 36px repeat(3, minmax(0, 1fr));
+  }
+
+  .ranking-footer :deep(.n-pagination) {
+    justify-content: center;
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ranking-row {
+    transition: none;
+  }
+}

@@ -283,52 +283,63 @@ const priceRangeText = computed(() => {
 
 <style scoped>
 .goods-card {
-  border-radius: 12px;
+  --goods-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
+  --goods-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted)));
+  --goods-bg: var(
+    --vtsuru-block-bg-muted,
+    var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--vtsuru-bg-muted)))
+  );
+  --goods-bg-soft: var(
+    --vtsuru-page-card-bg-embedded,
+    var(--user-page-theme-surface-bg-hover, var(--vtsuru-bg-elevated))
+  );
+  --goods-border: var(
+    --vtsuru-block-border,
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+  );
+  --goods-accent: var(--vtsuru-page-primary, var(--vtsuru-primary, var(--vtsuru-brand)));
+  --goods-shadow: var(--vtsuru-page-shadow, var(--vtsuru-shadow));
+  --goods-overlay-fg: var(--vtsuru-page-primary-readable, #fff);
+  min-width: 0;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-/* 深色模式适配 */
-:global(.dark) .goods-card {
-  border-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--goods-border);
+  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius, 8px));
+  background: var(--goods-bg);
+  transition:
+    transform 0.25s var(--vtsuru-bezier, ease),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .goods-card:hover {
   transform: translateY(-4px);
-  box-shadow:
-    0 12px 24px -6px rgba(0, 0, 0, 0.12),
-    0 4px 8px -4px rgba(0, 0, 0, 0.08);
-  border-color: var(--vtsuru-primary);
+  box-shadow: var(--goods-shadow);
+  border-color: var(--goods-accent);
 }
 
 .is-pinned {
-  border-color: var(--vtsuru-primary);
-  background-color: rgba(var(--vtsuru-primary-rgb), 0.02);
+  border-color: var(--goods-accent);
+  background: color-mix(in srgb, var(--goods-bg), var(--goods-accent) 3%);
 }
 
-/* 封面区域 */
 .cover-wrapper {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 比例 */
   height: 0;
+  padding-bottom: 56.25%;
   overflow: hidden;
-  background-color: var(--vtsuru-bg-elevated);
+  background: var(--goods-bg-soft);
 }
 
-.cover-image-container {
+.cover-image-container,
+.cover-image {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
 }
 
 .cover-image {
-  width: 100%;
-  height: 100%;
   display: block;
 }
 
@@ -338,114 +349,109 @@ const priceRangeText = computed(() => {
   object-fit: cover;
 }
 
-/* 遮罩 */
 .sold-out-mask {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
+  z-index: 11;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 11;
-  pointer-events: none; /* 允许点击穿透到图片，从而触发预览 */
+  pointer-events: none;
   user-select: none;
+  background: color-mix(in srgb, var(--goods-fg), transparent 55%);
+  backdrop-filter: blur(4px);
 }
 
 .sold-out-text {
-  color: #fff;
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  background: rgba(0, 0, 0, 0.6);
   padding: 6px 16px;
+  border: 1px solid color-mix(in srgb, var(--goods-overlay-fg), transparent 70%);
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  /* 虽然父级禁用了 pointer-events，但文字本身建议也显式禁用，确保万无一失 */
-  pointer-events: none;
+  color: var(--goods-overlay-fg);
+  background: color-mix(in srgb, var(--goods-fg), transparent 35%);
+  box-shadow: var(--goods-shadow);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
 }
 
-/* 置顶徽章 */
 .pin-badge {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  border-radius: 50%;
+  z-index: 6;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--vtsuru-primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  z-index: 6;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--goods-border);
+  border-radius: 50%;
+  color: var(--goods-accent);
+  background: color-mix(in srgb, var(--goods-bg), transparent 8%);
+  box-shadow: var(--goods-shadow);
+  backdrop-filter: blur(4px);
 }
 
-/* 底部浮层 */
 .cover-overlay {
   position: absolute;
+  right: 0;
   bottom: 0;
   left: 0;
-  right: 0;
-  padding: 40px 12px 12px; /* 增加内边距避免溢出 */
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
   z-index: 5;
-  pointer-events: none; /* 允许点击穿透到图片预览 */
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 40px 12px 12px;
+  pointer-events: none;
+  background: linear-gradient(to top, color-mix(in srgb, var(--goods-fg), transparent 15%), transparent);
 }
 
 .overlay-tags,
 .price-pill {
-  pointer-events: auto; /* 标签和价格恢复点击 */
+  pointer-events: auto;
 }
 
 .overlay-tags {
   display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
 .glass-tag {
-  backdrop-filter: blur(8px);
-  color: #fff;
-  font-weight: 500;
   height: 20px;
-  line-height: 20px;
+  color: var(--goods-overlay-fg);
+  font-weight: 500;
+  backdrop-filter: blur(8px);
 }
 
 .tag-success {
-  background: rgba(var(--vtsuru-success-rgb), 0.85);
-}
-.tag-info {
-  background: rgba(var(--vtsuru-info-rgb), 0.85);
-}
-.tag-warning {
-  background: rgba(var(--vtsuru-warning-rgb), 0.85);
-  color: #000;
+  background: color-mix(in srgb, var(--vtsuru-success), transparent 15%);
 }
 
-/* 价格胶囊 */
+.tag-info {
+  background: color-mix(in srgb, var(--vtsuru-info), transparent 15%);
+}
+
+.tag-warning {
+  color: var(--goods-fg);
+  background: color-mix(in srgb, var(--vtsuru-warning), transparent 15%);
+}
+
 .price-pill {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  padding: 2px 10px;
-  border-radius: 999px;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   height: 26px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-:global(.dark) .price-pill {
-  background: rgba(30, 30, 30, 0.85);
-  border-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 10px;
+  border: 1px solid var(--goods-border);
+  border-radius: 999px;
+  color: var(--goods-fg);
+  background: color-mix(in srgb, var(--goods-bg), transparent 8%);
+  box-shadow: var(--goods-shadow);
+  backdrop-filter: blur(12px);
 }
 
 .coin-icon {
@@ -453,94 +459,86 @@ const priceRangeText = computed(() => {
 }
 
 .price-original {
+  color: var(--goods-muted);
   font-size: 11px;
   text-decoration: line-through;
-  color: #666;
-  opacity: 0.7;
 }
 
 .price-current,
 .price-highlight {
-  font-weight: 700;
+  color: var(--goods-fg);
   font-size: 14px;
+  font-weight: 700;
   line-height: 1;
-  color: #1a1a1a;
-}
-
-:global(.dark) .price-current {
-  color: #efefef;
 }
 
 .price-highlight {
-  color: var(--vtsuru-primary);
+  color: var(--goods-accent);
 }
 
-/* 内容区域 */
+.card-content {
+  min-width: 0;
+}
+
 .header-row-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  min-width: 0;
   margin-bottom: 10px;
 }
 
 .title-main {
-  flex: 1;
   min-width: 0;
+  flex: 1;
 }
 
 .goods-title-text {
-  color: var(--vtsuru-fg);
-  transition:
-    color 0.2s ease,
-    transform 0.2s ease;
+  color: var(--goods-fg);
+  transition: color 0.2s ease;
 }
 
-.goods-card:hover .goods-title-text {
-  color: var(--vtsuru-primary) !important;
-  transform: translateY(-1px);
-  transform-origin: left center;
-}
-
+.goods-card:hover .goods-title-text,
 .is-pinned .goods-title-text {
-  color: var(--vtsuru-primary);
+  color: var(--goods-accent) !important;
 }
 
 .stock-badge {
-  font-size: 11px;
+  flex-shrink: 0;
   padding: 2px 8px;
+  border: 1px solid var(--goods-border);
   border-radius: 6px;
-  background-color: var(--vtsuru-bg-inset);
-  color: var(--vtsuru-fg-muted);
-  white-space: nowrap;
+  color: var(--goods-muted);
+  background: var(--goods-bg-soft);
+  font-size: 11px;
   font-weight: 700;
-  border: 1px solid var(--vtsuru-border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
 }
 
 .stock-none {
   color: var(--vtsuru-error);
-  background-color: rgba(var(--vtsuru-error-rgb), 0.1);
+  background: color-mix(in srgb, var(--vtsuru-error), transparent 88%);
 }
+
 .stock-inf {
   color: var(--vtsuru-success);
-  background-color: rgba(var(--vtsuru-success-rgb), 0.1);
+  background: color-mix(in srgb, var(--vtsuru-success), transparent 88%);
 }
 
 .description-text {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  line-height: 1.5;
+  min-height: 36px;
   margin-bottom: 8px;
-  min-height: 36px; /* 保证两行高度一致 */
+  color: var(--goods-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
-/* 标签行 */
 .tags-row {
   display: flex;
+  min-height: 22px;
   flex-wrap: wrap;
   gap: 6px;
-  min-height: 22px; /* 占位防止跳动 */
 }
 
 .mini-tag {
@@ -550,45 +548,51 @@ const priceRangeText = computed(() => {
 }
 
 .custom-tag {
-  background-color: var(--vtsuru-bg-inset);
-  color: var(--vtsuru-fg);
+  color: var(--goods-fg);
+  background: var(--goods-bg-soft);
 }
 
-/* 管理侧信息网格 */
 .manage-info-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
-  background-color: var(--vtsuru-bg-inset);
-  padding: 8px;
-  border-radius: 8px;
+  min-width: 0;
   margin-top: 4px;
+  padding: 8px;
+  border-radius: var(--vtsuru-page-radius, 8px);
+  background: var(--goods-bg-soft);
 }
 
 .sub-items-summary {
   grid-column: span 2;
-  border-top: 1px dashed var(--vtsuru-border);
-  padding-top: 4px;
   margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--goods-border);
 }
 
 .info-cell {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 4px;
   font-size: 11px;
 }
 
 .info-cell .label {
-  color: var(--vtsuru-fg-muted);
+  flex-shrink: 0;
+  color: var(--goods-muted);
 }
+
 .info-cell .value {
+  min-width: 0;
+  color: var(--goods-fg);
   font-weight: 600;
-  color: var(--vtsuru-fg);
 }
+
 .text-success {
   color: var(--vtsuru-success) !important;
 }
+
 .text-error {
   color: var(--vtsuru-error) !important;
 }

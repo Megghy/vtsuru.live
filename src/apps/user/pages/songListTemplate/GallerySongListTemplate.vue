@@ -10,6 +10,7 @@ import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { GetGuardColor } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
+import { filterSongs, getSongFieldOptions } from './utils/songListData'
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -35,29 +36,13 @@ const isSelf = computed(() => !!props.userInfo?.id && accountInfo.value?.id === 
 const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 const tagOptions = computed(() => {
-  const set = new Set<string>()
-  props.data?.forEach((song) => song.tags?.forEach((t) => t && set.add(t)))
-  return [...set].map((t) => ({ label: t, value: t }))
+  return getSongFieldOptions(props.data, 'tags')
 })
 
 const filteredSongs = computed<SongsInfo[]>(() => {
-  const data = props.data
-  if (!data) return []
-  const keyword = searchKeyword.value.trim().toLowerCase()
-  const tag = selectedTag.value
-  return data.filter((song) => {
-    if (tag && !song.tags?.includes(tag)) return false
-    if (!keyword) return true
-    const haystack = [
-      song.name,
-      song.translateName ?? '',
-      song.author?.join(' ') ?? '',
-      song.language?.join(' ') ?? '',
-      song.tags?.join(' ') ?? '',
-    ]
-      .join(' ')
-      .toLowerCase()
-    return haystack.includes(keyword)
+  return filterSongs(props.data, {
+    keyword: searchKeyword.value,
+    tag: selectedTag.value,
   })
 })
 
@@ -277,7 +262,7 @@ function requestSong(song: SongsInfo) {
 <style scoped>
 .gallery-template {
   width: 100%;
-  max-width: var(--vtsuru-page-max-width);
+  max-width: var(--vtsuru-page-max-width, 1180px);
   margin: 0 auto;
   padding: 8px 4px 24px;
 }

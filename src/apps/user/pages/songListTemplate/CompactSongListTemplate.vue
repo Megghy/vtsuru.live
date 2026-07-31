@@ -10,6 +10,7 @@ import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
+import { filterSongs, getSongFieldOptions } from './utils/songListData'
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
@@ -36,30 +37,17 @@ const isSelf = computed(() => !!props.userInfo?.id && accountInfo.value?.id === 
 const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 const tagOptions = computed(() => {
-  const set = new Set<string>()
-  props.data?.forEach((song) => song.tags?.forEach((t) => t && set.add(t)))
-  return [...set].map((t) => ({ label: t, value: t }))
+  return getSongFieldOptions(props.data, 'tags')
 })
 const authorOptions = computed(() => {
-  const set = new Set<string>()
-  props.data?.forEach((song) => song.author?.forEach((a) => a && set.add(a)))
-  return [...set].map((a) => ({ label: a, value: a }))
+  return getSongFieldOptions(props.data, 'author')
 })
 
 const filteredSongs = computed<SongsInfo[]>(() => {
-  const data = props.data
-  if (!data) return []
-  const keyword = searchKeyword.value.trim().toLowerCase()
-  const tag = selectedTag.value
-  const author = selectedAuthor.value
-  return data.filter((song) => {
-    if (tag && !song.tags?.includes(tag)) return false
-    if (author && !song.author?.includes(author)) return false
-    if (!keyword) return true
-    const haystack = [song.name, song.translateName ?? '', song.author?.join(' ') ?? '', song.tags?.join(' ') ?? '']
-      .join(' ')
-      .toLowerCase()
-    return haystack.includes(keyword)
+  return filterSongs(props.data, {
+    keyword: searchKeyword.value,
+    tag: selectedTag.value,
+    author: selectedAuthor.value,
   })
 })
 
@@ -253,7 +241,7 @@ function requestSong(song: SongsInfo) {
 <style scoped>
 .compact-template {
   width: 100%;
-  max-width: var(--vtsuru-page-max-width);
+  max-width: var(--vtsuru-page-max-width, 1180px);
   margin: 0 auto;
   padding: 8px 4px 24px;
 }

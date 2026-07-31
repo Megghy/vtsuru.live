@@ -7,6 +7,14 @@
   gap: var(--vtsuru-page-spacing, 16px);
 }
 
+.user-page--md {
+  --vtsuru-page-max-width: 880px;
+}
+
+.user-page--xl {
+  --vtsuru-page-max-width: 1440px;
+}
+
 /* shadcn-like card rhythm */
 .user-page .n-card {
   border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));

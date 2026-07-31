@@ -116,10 +116,37 @@ const routes: Array<RouteRecordRaw> = [
     path: '/bili-user',
     name: 'bili-user',
     component: async () => import('@/apps/layouts/PointUserLayout.vue'),
+    redirect: { name: 'bili-user-points' },
     meta: {
-      title: 'Bilibili 账户',
+      title: 'Bilibili 账户中心',
       keepAlive: true,
     },
+    children: [
+      {
+        path: 'points',
+        name: 'bili-user-points',
+        component: async () => import('@/apps/account/pages/point/PointOverviewView.vue'),
+        meta: { title: '我的积分 · Bilibili 账户中心' },
+      },
+      {
+        path: 'orders',
+        name: 'bili-user-orders',
+        component: async () => import('@/apps/account/pages/point/PointOrderView.vue'),
+        meta: { title: '我的订单 · Bilibili 账户中心' },
+      },
+      {
+        path: 'history',
+        name: 'bili-user-history',
+        component: async () => import('@/apps/account/pages/point/PointUserHistoryView.vue'),
+        meta: { title: '积分记录 · Bilibili 账户中心' },
+      },
+      {
+        path: 'settings',
+        name: 'bili-user-settings',
+        component: async () => import('@/apps/account/pages/point/PointUserSettings.vue'),
+        meta: { title: '账户设置 · Bilibili 账户中心' },
+      },
+    ],
   },
   manage,
   obs,

@@ -1,0 +1,31 @@
+.song-list-surface {
+  --vtsuru-page-max-width: 1440px;
+  --song-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
+  --song-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted)));
+  --song-subtle: var(--vtsuru-block-fg-subtle, var(--vtsuru-surface-fg-subtle, var(--song-muted)));
+  --song-bg: var(
+    --vtsuru-block-bg-muted,
+    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted)))
+  );
+  --song-bg-hover: var(--user-page-theme-surface-bg-hover, color-mix(in srgb, var(--song-bg) 88%, var(--song-fg) 12%));
+  --song-panel: var(--vtsuru-page-card-bg, color-mix(in srgb, var(--song-bg) 88%, transparent));
+  --song-border: var(
+    --vtsuru-block-border,
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+  );
+  --song-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --song-accent-soft: var(--vtsuru-page-primary-soft, color-mix(in srgb, var(--song-accent) 14%, transparent));
+  width: 100%;
+  min-width: 0;
+  color: var(--song-fg);
+}
+
+.song-list-surface,
+.song-list-surface * {
+  box-sizing: border-box;
+}
+
+.song-list-surface > *,
+.song-list-surface :is(.n-flex, .n-grid, .n-grid-item) {
+  min-width: 0;
+}

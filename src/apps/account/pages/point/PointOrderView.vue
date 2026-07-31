@@ -1,248 +1,176 @@
 <script setup lang="ts">
-import { ArrowSync24Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NFlex, NGrid, NIcon, NSelect, NSpin, useMessage } from 'naive-ui'
+import { ArrowSync24Regular, Search24Regular } from '@vicons/fluent'
+import { NButton, NFlex, NIcon, NInput, NSelect, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 import type { ResponsePointOrder2UserModel } from '@/api/api-models'
 import { PointOrderStatus } from '@/api/api-models'
-import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
+import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
+import UserPointOrderList from '@/apps/account/components/UserPointOrderList.vue'
 import { POINT_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
-// 定义加载完成的事件
-const emit = defineEmits(['dataLoaded'])
+const emit = defineEmits<{ dataLoaded: [] }>()
+const auth = useBiliAuth()
 const message = useMessage()
-const useAuth = useBiliAuth()
-
 const orders = ref<ResponsePointOrder2UserModel[]>([])
-const isLoading = ref(false)
+const loading = ref(false)
+const loaded = ref(false)
+let generation = 0
+let request: { generation: number; promise: Promise<void> } | undefined
 
-// 筛选状态
-const statusFilter = ref<PointOrderStatus | null>(null)
-const searchKeyword = ref('')
+const keyword = ref('')
+const status = ref<PointOrderStatus | null>(null)
 
-// 筛选后的订单
 const filteredOrders = computed(() => {
-  let result = orders.value
-
-  // 状态筛选
-  if (statusFilter.value !== null) {
-    result = result.filter((order) => order.status === statusFilter.value)
-  }
-
-  // 搜索关键词筛选
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
-    result = result.filter(
-      (order) => order.goods?.name.toLowerCase().includes(keyword) || order.id.toString().includes(keyword),
-    )
-  }
-
-  return result
+  const query = keyword.value.trim().toLocaleLowerCase()
+  return orders.value.filter((order) => {
+    const matchesStatus = status.value === null || order.status === status.value
+    const matchesKeyword =
+      !query || order.goods.name.toLocaleLowerCase().includes(query) || String(order.id).includes(query)
+    return matchesStatus && matchesKeyword
+  })
 })
 
-// 订单统计
-const orderStats = computed(() => {
-  const totalPoints = orders.value.reduce((sum, o) => sum + o.point, 0)
-  return {
-    total: orders.value.length,
-    pending: orders.value.filter((o) => o.status === PointOrderStatus.Pending).length,
-    shipped: orders.value.filter((o) => o.status === PointOrderStatus.Shipped).length,
-    completed: orders.value.filter((o) => o.status === PointOrderStatus.Completed).length,
-    totalPoints: Number(totalPoints.toFixed(1)),
-  }
-})
+const stats = computed(() => [
+  { label: '全部订单', value: orders.value.length },
+  {
+    label: '待发货',
+    value: orders.value.filter((item) => item.status === PointOrderStatus.Pending).length,
+    tone: 'warning' as const,
+  },
+  {
+    label: '已发货',
+    value: orders.value.filter((item) => item.status === PointOrderStatus.Shipped).length,
+    tone: 'info' as const,
+  },
+  {
+    label: '已完成',
+    value: orders.value.filter((item) => item.status === PointOrderStatus.Completed).length,
+    tone: 'success' as const,
+  },
+  {
+    label: '消耗积分',
+    value: Number(orders.value.reduce((sum, item) => sum + item.point, 0).toFixed(1)),
+    tone: 'primary' as const,
+  },
+])
 
-async function getOrders() {
+async function loadOrders(force = false) {
+  if (request?.generation === generation) return request.promise
+  if (loaded.value && !force) return
+
+  loading.value = true
+  const currentGeneration = generation
+  const promise = (async () => {
+    const result = await auth.QueryBiliAuthGetAPI<ResponsePointOrder2UserModel[]>(`${POINT_API_URL}user/get-orders`)
+    if (result.code !== 200) throw new Error(result.message || '获取订单失败')
+    if (currentGeneration !== generation) return
+    orders.value = result.data
+    loaded.value = true
+    emit('dataLoaded')
+  })()
+  request = { generation: currentGeneration, promise }
+
   try {
-    isLoading.value = true
-    const data = await useAuth.QueryBiliAuthGetAPI<ResponsePointOrder2UserModel[]>(`${POINT_API_URL}user/get-orders`)
-    if (data.code == 200) {
-      orders.value = data.data
-      // 触发数据加载完成事件
-      emit('dataLoaded')
-      return data.data
-    } else {
-      message.error(`获取订单失败: ${data.message}`)
+    await promise
+  } catch (error) {
+    if (currentGeneration === generation) {
+      message.error(error instanceof Error ? error.message : `获取订单失败: ${error}`)
     }
-  } catch (err) {
-    console.log(err)
-    message.error(`获取订单失败: ${err}`)
   } finally {
-    isLoading.value = false
+    if (request?.promise === promise) {
+      request = undefined
+      loading.value = false
+    }
   }
-  return []
 }
 
-// 提供给父组件调用的重置方法
+function refresh() {
+  void loadOrders(true)
+}
+
 function reset() {
+  generation += 1
   orders.value = []
+  loaded.value = false
+  loading.value = false
+  keyword.value = ''
+  status.value = null
 }
 
-// 暴露方法给父组件
-defineExpose({
-  getOrders,
-  reset,
-})
+defineExpose({ getOrders: loadOrders, reset })
 
-onMounted(async () => {
-  orders.value = await getOrders()
-})
+onMounted(() => void loadOrders())
 </script>
 
 <template>
-  <NSpin :show="isLoading">
-    <!-- 统计卡片 -->
-    <NGrid
-      cols="2 600:3 900:5"
-      :x-gap="12"
-      :y-gap="12"
-      style="margin-bottom: 16px"
-    >
-      <div class="stat-card">
-        <div class="stat-label">总订单</div>
-        <div class="stat-value">
-          {{ orderStats.total }}
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">待发货</div>
-        <div class="stat-value warning">
-          {{ orderStats.pending }}
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">已发货</div>
-        <div class="stat-value info">
-          {{ orderStats.shipped }}
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">已完成</div>
-        <div class="stat-value success">
-          {{ orderStats.completed }}
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">总消耗积分</div>
-        <div class="stat-value primary">
-          {{ orderStats.totalPoints }}
-        </div>
-      </div>
-    </NGrid>
-
-    <!-- 工具栏 -->
-    <div class="toolbar-section">
-      <NFlex
-        justify="space-between"
-        align="center"
-        wrap
-        :gap="12"
-      >
+  <NSpin :show="loading">
+    <AccountDataPanel :stats="stats">
+      <template #toolbar>
         <NFlex
           align="center"
-          :gap="12"
-        >
-          <NSelect
-            v-model:value="statusFilter"
-            :options="[
-              { label: '全部状态', value: null as any },
-              { label: '待发货', value: PointOrderStatus.Pending },
-              { label: '已发货', value: PointOrderStatus.Shipped },
-              { label: '已完成', value: PointOrderStatus.Completed },
-            ]"
-            style="width: 140px"
-            placeholder="订单状态"
-            clearable
-            size="medium"
-          />
-        </NFlex>
-
-        <NFlex
-          align="center"
+          justify="space-between"
+          wrap
           :gap="8"
         >
+          <NFlex
+            class="order-filters"
+            align="center"
+            wrap
+            :gap="8"
+          >
+            <NInput
+              v-model:value="keyword"
+              clearable
+              placeholder="搜索礼物名或订单号"
+              style="width: 240px"
+            >
+              <template #prefix><NIcon :component="Search24Regular" /></template>
+            </NInput>
+            <NSelect
+              v-model:value="status"
+              clearable
+              :options="[
+                { label: '全部状态', value: null },
+                { label: '待发货', value: PointOrderStatus.Pending },
+                { label: '已发货', value: PointOrderStatus.Shipped },
+                { label: '已完成', value: PointOrderStatus.Completed },
+              ]"
+              placeholder="订单状态"
+              style="width: 140px"
+            />
+            <span class="filter-result">显示 {{ filteredOrders.length }} / {{ orders.length }} 条</span>
+          </NFlex>
           <NButton
             secondary
-            size="medium"
-            @click="getOrders"
+            @click="refresh"
           >
-            <template #icon>
-              <NIcon :component="ArrowSync24Regular" />
-            </template>
+            <template #icon><NIcon :component="ArrowSync24Regular" /></template>
             刷新
           </NButton>
         </NFlex>
-      </NFlex>
-    </div>
+      </template>
+    </AccountDataPanel>
 
-    <div style="margin-top: 16px" />
-
-    <NEmpty
-      v-if="filteredOrders.length === 0"
-      description="暂无订单"
-    />
-    <PointOrderCard
-      v-else
-      :order="filteredOrders"
-      :loading="isLoading"
-      type="user"
-    />
+    <UserPointOrderList :orders="filteredOrders" />
   </NSpin>
 </template>
 
 <style scoped>
-.stat-card {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: all 0.3s var(--vtsuru-bezier);
-}
-
-.stat-card:hover {
-  border-color: var(--vtsuru-primary);
-  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--vtsuru-fg);
-}
-
-.stat-label {
-  font-size: 13px;
+.filter-result {
   color: var(--vtsuru-fg-muted);
+  font-size: 12px;
 }
 
-.stat-value.primary {
-  color: var(--vtsuru-primary);
-}
-.stat-value.success {
-  color: var(--vtsuru-success);
-}
-.stat-value.info {
-  color: var(--vtsuru-info);
-}
-.stat-value.warning {
-  color: var(--vtsuru-warning);
-}
+@media (max-width: 600px) {
+  .order-filters {
+    width: 100%;
+  }
 
-.toolbar-section {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 12px 16px;
-}
-
-@media (max-width: 768px) {
-  .stat-value {
-    font-size: 20px;
+  .order-filters :deep(.n-input),
+  .order-filters :deep(.n-select) {
+    width: 100% !important;
   }
 }
 </style>
