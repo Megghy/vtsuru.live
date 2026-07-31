@@ -255,7 +255,7 @@ function getSafeUrl(value?: string) {
       <header class="profile-panel">
         <img
           class="profile-avatar"
-          :src="getUserAvatarUrl(userInfo?.id)"
+          :src="userInfo?.faceUrl || userInfo?.streamerInfo?.faceUrl || getUserAvatarUrl(userInfo?.id)"
           :alt="userInfo?.name ?? '主播头像'"
           referrerpolicy="no-referrer"
         />
