@@ -304,12 +304,13 @@ defineExpose({ Config, DefaultConfig })
   /* Ensure minimum height */
   padding: 30px;
   margin: 0 auto;
-  border-radius: 25px;
+  border-radius: var(--vtsuru-page-radius);
   background-color: var(--container-bg-color, rgba(253, 240, 240, 0.8));
   /* Default soft pinkish */
   background-size: cover;
   background-position: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--vtsuru-page-shadow);
+  border: var(--vtsuru-page-border);
   overflow: hidden;
   /* Clip decorations exceeding bounds */
   box-sizing: border-box;
@@ -385,12 +386,12 @@ defineExpose({ Config, DefaultConfig })
   position: relative;
   /* For absolute positioning of time label */
   background-color: var(--day-content-bg-color);
-  border-radius: 12px;
+  border-radius: var(--vtsuru-page-radius);
   padding: 10px 15px;
   min-height: 50px;
   /* Ensure minimum height */
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: var(--vtsuru-page-shadow);
+  border: var(--vtsuru-page-border);
   display: flex;
   /* Use flex for content alignment if needed */
   align-items: center;

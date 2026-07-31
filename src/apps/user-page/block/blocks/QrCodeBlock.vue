@@ -149,7 +149,7 @@ function downloadPng() {
   place-items: center;
   max-width: 100%;
   overflow: hidden;
-  border-radius: min(var(--vtsuru-page-radius), 6px);
+  border-radius: var(--vtsuru-page-radius);
 }
 
 .qrcode-state {

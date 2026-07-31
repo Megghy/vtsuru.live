@@ -283,7 +283,7 @@ const containerStyle = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--vtsuru-page-radius);
   background: var(--vtsuru-bg-muted);
   color: var(--vtsuru-fg-muted);
   font-size: 20px;

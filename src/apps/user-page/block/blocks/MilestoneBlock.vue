@@ -190,7 +190,7 @@ const items = computed(() => {
 .list-item {
   padding: 12px 14px;
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
-  border-radius: calc(var(--vtsuru-page-radius) - 2px);
+  border-radius: max(0px, calc(var(--vtsuru-page-radius) - 2px));
   background: var(--vtsuru-bg-muted);
 }
 

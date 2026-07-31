@@ -7,8 +7,6 @@ export function createDefaultProject(): BlockPageProject {
   return {
     version: 1,
     theme: {
-      spacing: 'normal',
-      radius: 12,
       primaryColor: '#18a058',
     },
     blocks: [

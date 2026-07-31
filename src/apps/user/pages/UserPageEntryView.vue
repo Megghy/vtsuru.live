@@ -208,8 +208,8 @@ const contentClass = computed(() => ({
 }
 
 .page-heading {
-  margin: 0 auto 12px;
-  padding: 0 12px;
+  margin: 0 auto var(--vtsuru-page-spacing);
+  padding: 0 var(--vtsuru-page-spacing);
 }
 
 .page-heading__title,

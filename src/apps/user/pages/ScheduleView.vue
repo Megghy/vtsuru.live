@@ -79,6 +79,6 @@ onMounted(async () => {
 .schedule-page {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
+  gap: var(--vtsuru-page-spacing);
 }
 </style>

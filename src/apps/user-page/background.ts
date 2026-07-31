@@ -176,6 +176,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
     : surfaceVars['--user-page-ui-surface-bg-hover']
   const borderColor = surfaceVars['--vtsuru-card-border-color']
+  const radius = `${appearance.radius}px`
 
   return {
     ...surfaceVars,
@@ -217,13 +218,19 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--primary-color': pagePrimary,
     '--user-page-theme-surface-bg': surfaceColor,
     '--user-page-theme-surface-bg-hover': surfaceHover,
-    '--vtsuru-page-radius': `${appearance.radius}px`,
+    '--vtsuru-page-radius': radius,
+    '--vtsuru-radius': radius,
+    '--vtsuru-radius-control': radius,
+    '--vtsuru-radius-small': radius,
     '--vtsuru-page-spacing': `${appearance.spacing}px`,
     '--vtsuru-page-max-width': appearance.pageMaxWidth,
     '--vtsuru-page-border-width': appearance.borderWidth,
     '--vtsuru-page-border-style': appearance.borderStyle,
     '--vtsuru-page-border': `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`,
     '--vtsuru-page-shadow': appearance.shadow,
+    '--vtsuru-border-width': appearance.borderWidth,
+    '--vtsuru-border-style': appearance.borderStyle,
+    '--vtsuru-shadow': appearance.shadow,
     '--vtsuru-page-control-height-small': appearance.controlHeights.small,
     '--vtsuru-page-control-height-medium': appearance.controlHeights.medium,
     '--vtsuru-page-control-height-large': appearance.controlHeights.large,
@@ -248,6 +255,9 @@ export function getUserPageNaiveThemeOverrides(
   const disabledTextColor = vars['--vtsuru-page-fg-disabled']
   const disabledPlaceholderColor = vars['--vtsuru-page-placeholder-disabled']
   const controlOverlay = resolveUserPageControlOverlay(contentColor)
+  const radius = `${appearance.radius}px`
+  const border = `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`
+  const primaryBorder = `${appearance.borderWidth} ${appearance.borderStyle} ${primaryColor || borderColor}`
 
   return {
     ...base,
@@ -264,8 +274,8 @@ export function getUserPageNaiveThemeOverrides(
       cardColor,
       modalColor: contentColor,
       popoverColor: contentColor,
-      borderRadius: `${appearance.radius}px`,
-      borderRadiusSmall: `${appearance.radius}px`,
+      borderRadius: radius,
+      borderRadiusSmall: radius,
       heightSmall: appearance.controlHeights.small,
       heightMedium: appearance.controlHeights.medium,
       heightLarge: appearance.controlHeights.large,
@@ -279,14 +289,15 @@ export function getUserPageNaiveThemeOverrides(
       color: cardColor,
       colorEmbedded: cardEmbeddedColor,
       borderColor,
-      borderRadius: `${appearance.radius}px`,
+      borderRadius: radius,
+      boxShadow: appearance.shadow,
     },
     Input: {
       ...base.Input,
       heightSmall: appearance.controlHeights.small,
       heightMedium: appearance.controlHeights.medium,
       heightLarge: appearance.controlHeights.large,
-      borderRadius: `${appearance.radius}px`,
+      borderRadius: radius,
       color: controlOverlay.color,
       colorFocus: controlOverlay.focus,
       colorDisabled: controlOverlay.disabled,
@@ -294,9 +305,9 @@ export function getUserPageNaiveThemeOverrides(
       textColorDisabled: disabledTextColor,
       placeholderColor: subtleTextColor,
       placeholderColorDisabled: disabledPlaceholderColor,
-      border: `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`,
-      borderHover: `${appearance.borderWidth} ${appearance.borderStyle} ${primaryColor || borderColor}`,
-      borderFocus: `${appearance.borderWidth} ${appearance.borderStyle} ${primaryColor || borderColor}`,
+      border,
+      borderHover: primaryBorder,
+      borderFocus: primaryBorder,
     },
     Select: {
       ...base.Select,
@@ -304,10 +315,21 @@ export function getUserPageNaiveThemeOverrides(
         ...base.Select?.peers,
         InternalSelection: {
           ...base.Select?.peers?.InternalSelection,
+          heightSmall: appearance.controlHeights.small,
+          heightMedium: appearance.controlHeights.medium,
+          heightLarge: appearance.controlHeights.large,
+          borderRadius: radius,
+          border,
+          borderHover: primaryBorder,
+          borderFocus: primaryBorder,
           colorDisabled: controlOverlay.disabled,
           textColorDisabled: disabledTextColor,
           placeholderColorDisabled: disabledPlaceholderColor,
           arrowColorDisabled: disabledPlaceholderColor,
+        },
+        InternalSelectMenu: {
+          ...base.Select?.peers?.InternalSelectMenu,
+          borderRadius: radius,
         },
       },
     },
@@ -333,19 +355,37 @@ export function getUserPageNaiveThemeOverrides(
       heightSmall: appearance.controlHeights.small,
       heightMedium: appearance.controlHeights.medium,
       heightLarge: appearance.controlHeights.large,
-      borderRadiusTiny: `${appearance.radius}px`,
-      borderRadiusSmall: `${appearance.radius}px`,
-      borderRadiusMedium: `${appearance.radius}px`,
-      borderRadiusLarge: `${appearance.radius}px`,
+      borderRadiusTiny: radius,
+      borderRadiusSmall: radius,
+      borderRadiusMedium: radius,
+      borderRadiusLarge: radius,
     },
     Popover: {
       ...base.Popover,
-      borderRadius: `${appearance.radius}px`,
+      borderRadius: radius,
       boxShadow: appearance.shadow,
     },
     Dialog: {
       ...base.Dialog,
-      borderRadius: `${appearance.radius}px`,
+      borderRadius: radius,
+    },
+    Checkbox: {
+      ...base.Checkbox,
+      borderRadius: radius,
+      border,
+      borderChecked: primaryBorder,
+    },
+    Tooltip: { ...base.Tooltip, borderRadius: radius, boxShadow: appearance.shadow },
+    Menu: { ...base.Menu, borderRadius: radius },
+    Dropdown: { ...base.Dropdown, borderRadius: radius },
+    Message: { ...base.Message, borderRadius: radius, border, boxShadow: appearance.shadow },
+    Notification: { ...base.Notification, borderRadius: radius, boxShadow: appearance.shadow },
+    Tag: { ...base.Tag, borderRadius: radius },
+    Alert: { ...base.Alert, borderRadius: radius },
+    List: { ...base.List, borderRadius: radius },
+    Pagination: {
+      ...base.Pagination,
+      itemBorderRadius: radius,
     },
   }
 }

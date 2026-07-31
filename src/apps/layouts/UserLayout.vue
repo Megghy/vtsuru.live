@@ -47,6 +47,7 @@ import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { clearUserPageRuntimeCache } from '@/apps/user-page/runtime/query'
 import { usePublicPageSeo } from '@/apps/user-page/runtime/seo'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import { getUserPageAppearanceOverrides } from '@/apps/user-page/themeConfig'
 import type { BiliProfile, BiliProfileStatus, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -220,10 +221,18 @@ const pageThemeMode = computed<PageThemeMode>(() => {
   return globalThemeMode.value
 })
 
-const layoutTheme = computed(() => ({
-  ...(userPagesSettings.value as any)?.theme,
-  ...(currentUserPageConfig.value as any)?.theme,
-}))
+const homeAppearanceTheme = computed(() => {
+  const home = userPagesSettings.value?.home
+  return home?.mode === 'block' ? getUserPageAppearanceOverrides(home.block?.theme) : {}
+})
+
+const layoutTheme = computed(() => {
+  const isBuiltInPage = !['user-index', 'user-page'].includes(route.name?.toString() ?? '')
+  return {
+    ...(userPagesSettings.value as any)?.theme,
+    ...(isBuiltInPage ? homeAppearanceTheme.value : (currentUserPageConfig.value as any)?.theme),
+  }
+})
 
 useGoogleFont(
   computed(() => (typeof layoutTheme.value.fontFamily === 'string' ? layoutTheme.value.fontFamily : undefined)),
@@ -269,10 +278,12 @@ onBeforeUnmount(() => {
 const pageThemeOverrides = computed(() => {
   const vars = mergedLayoutVars.value as Record<string, string>
   const borderColor = (vars as any)['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
+  const overrides = getUserPageNaiveThemeOverrides(layoutTheme.value, vars, effectiveIsDark.value)
 
   return {
-    ...getUserPageNaiveThemeOverrides(layoutTheme.value, vars, effectiveIsDark.value),
+    ...overrides,
     List: {
+      ...overrides.List,
       color: 'transparent',
       listItemColor: 'transparent',
       borderColor,
@@ -1001,13 +1012,13 @@ watch(
 .layout-header__logo {
   width: 22px;
   height: 22px;
-  border-radius: 6px;
+  border-radius: var(--vtsuru-page-radius);
   flex: 0 0 auto;
 }
 
 .site-title {
   font-size: 15px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: var(--vtsuru-fg);
 }
 
@@ -1248,8 +1259,8 @@ watch(
   height: 32px;
   width: 32px;
   padding: 0;
-  border-radius: 10px;
-  border: 1px solid var(--vtsuru-page-primary-border);
+  border-radius: var(--vtsuru-page-radius);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-page-primary-border);
   background: var(--vtsuru-page-primary-soft);
   color: var(--vtsuru-page-primary);
   display: inline-flex;
@@ -1320,14 +1331,14 @@ watch(
 
 .nav-item {
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--vtsuru-page-radius);
   padding: 0 10px;
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
   color: var(--vtsuru-page-text);
-  border: 1px solid transparent;
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) transparent;
   background: transparent;
   transition: background-color 120ms ease, border-color 120ms ease;
   box-sizing: border-box;
@@ -1538,7 +1549,7 @@ watch(
   .nav-item {
     width: 42px;
     height: 42px;
-    border-radius: 6px;
+    border-radius: var(--vtsuru-page-radius);
   }
 
   .viewer-page-content {

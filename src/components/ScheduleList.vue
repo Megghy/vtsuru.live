@@ -105,7 +105,7 @@ function getDayHeaderStyle(
     background: isToday
       ? `linear-gradient(135deg, ${primaryColor}25 0%, ${primaryColor}40 100%)`
       : `linear-gradient(135deg, ${primaryColorSuppl}15 0%, ${primaryColorSuppl}25 100%)`,
-    borderRadius: '4px',
+    borderRadius: 'var(--vtsuru-page-radius, var(--vtsuru-radius))',
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
@@ -119,8 +119,8 @@ function getDayHeaderStyle(
   <NEmpty v-if="(schedules?.length ?? 0) === 0" />
   <NList
     v-else
+    :show-divider="false"
     style="padding: 0"
-    bordered
   >
     <NListItem
       v-for="item in schedules"
@@ -134,7 +134,7 @@ function getDayHeaderStyle(
           isCurrentWeek(item.year, item.week)
             ? {
                 boxShadow: `0 0 0 1px ${themeVars.primaryColorSuppl}99 inset`,
-                borderRadius: '8px',
+                borderRadius: 'var(--vtsuru-page-radius, var(--vtsuru-radius))',
                 transition: 'box-shadow 0.2s ease',
               }
             : undefined
@@ -220,8 +220,8 @@ function getDayHeaderStyle(
                   format="MM/dd"
                   :style="{
                     color: isCurrentDay(item.year, item.week, index)
-                      ? themeVars.primaryColor
-                      : themeVars.primaryColorSuppl,
+                      ? 'var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary))'
+                      : 'var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted))',
                     fontWeight: isCurrentDay(item.year, item.week, index) ? '700' : '600',
                   }"
                 />
@@ -302,7 +302,7 @@ function getDayHeaderStyle(
                             alignItems: 'center',
                             gap: '3px',
                             padding: '1px 5px',
-                            borderRadius: '3px',
+                            borderRadius: 'var(--vtsuru-page-radius, var(--vtsuru-radius))',
                             backgroundColor: schedule.tagColor
                               ? `${schedule.tagColor}22`
                               : `${themeVars.primaryColorSuppl}22`,
@@ -317,7 +317,7 @@ function getDayHeaderStyle(
                           />
                           <NText
                             :style="{
-                              color: schedule.tagColor || themeVars.primaryColor,
+                              color: 'var(--vtsuru-page-text, var(--vtsuru-fg))',
                               fontWeight: '600',
                               fontSize: '10.5px',
                               whiteSpace: 'nowrap',

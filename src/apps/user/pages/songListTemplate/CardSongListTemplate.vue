@@ -278,7 +278,7 @@ function getMetaText(song: SongsInfo) {
 
 <style scoped>
 .song-list-card-template {
-  --content-max-width: 1080px;
+  --content-max-width: var(--vtsuru-page-max-width);
   --card-max-width: 720px;
 
   --sl-background: 0 0% 100%;
@@ -335,7 +335,7 @@ html.dark .song-list-card-template {
 }
 
 .search-button {
-  border-radius: 10px;
+  border-radius: var(--vtsuru-page-radius);
 }
 
 .count-row {
@@ -351,7 +351,7 @@ html.dark .song-list-card-template {
 .song-cards {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--vtsuru-page-spacing);
   align-items: center;
 }
 
@@ -359,14 +359,14 @@ html.dark .song-list-card-template {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 12px;
+  gap: var(--vtsuru-page-spacing);
+  padding: var(--vtsuru-page-spacing);
   width: 100%;
   max-width: var(--card-max-width);
-  border-radius: 12px;
+  border-radius: var(--vtsuru-page-radius);
   background: hsl(var(--sl-card));
-  border: 1px solid hsl(var(--sl-border));
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  border: var(--vtsuru-page-border);
+  box-shadow: var(--vtsuru-page-shadow);
   transition:
     box-shadow 0.15s ease,
     transform 0.15s ease,
@@ -379,16 +379,10 @@ html.dark .song-list-card-template {
 
 .song-card.is-singing {
   border-color: hsla(30, 90%, 50%, 0.45);
-  box-shadow: 0 1px 8px hsla(30, 90%, 50%, 0.15);
 }
 
 .song-card:hover {
-  box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.28);
   transform: translateY(-1px);
-}
-
-html.dark .song-card:hover {
-  box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.55);
 }
 
 .card-top {
@@ -408,7 +402,7 @@ html.dark .song-card:hover {
 .left-icon {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
+  border-radius: var(--vtsuru-page-radius);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -468,7 +462,7 @@ html.dark .song-card:hover {
 .song-title:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px hsl(var(--sl-ring) / 0.18);
-  border-radius: 6px;
+  border-radius: var(--vtsuru-page-radius);
 }
 
 .song-author {
@@ -522,7 +516,7 @@ html.dark .song-card:hover {
 }
 
 .request-button {
-  border-radius: 10px;
+  border-radius: var(--vtsuru-page-radius);
 }
 
 .card-bottom {
@@ -580,13 +574,13 @@ html.dark .song-card:hover {
   }
 
   .song-card {
-    padding: 12px 12px;
+    padding: var(--vtsuru-page-spacing);
   }
 
   .left-icon {
     width: 44px;
     height: 44px;
-    border-radius: 10px;
+    border-radius: var(--vtsuru-page-radius);
   }
 
   .card-bottom {

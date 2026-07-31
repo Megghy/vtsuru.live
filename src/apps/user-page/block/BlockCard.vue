@@ -225,7 +225,7 @@ const borderTitleAlignClass = computed(() => {
 }
 
 .vtsuru-block-card :deep(.n-card-header) {
-  padding: 12px var(--vtsuru-page-spacing);
+  padding: var(--vtsuru-page-spacing);
   border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
 }
 

@@ -343,9 +343,9 @@ function requestSong(song: SongsInfo) {
 <style scoped>
 .immersive-template {
   display: flex;
-  gap: 24px;
+  gap: var(--vtsuru-page-spacing);
   width: 100%;
-  max-width: 1100px;
+  max-width: var(--vtsuru-page-max-width);
   margin: 0 auto;
   height: calc(100vh - 130px);
   min-height: 480px;
@@ -365,9 +365,10 @@ function requestSong(song: SongsInfo) {
 .stage-cover {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 18px;
+  border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
-  box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.5);
+  box-shadow: var(--vtsuru-page-shadow);
+  border: var(--vtsuru-page-border);
   background: var(--vtsuru-bg-inset);
   display: flex;
   align-items: center;
@@ -464,12 +465,12 @@ function requestSong(song: SongsInfo) {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  border: 1px solid var(--lib-border);
-  border-radius: 14px;
+  border: var(--vtsuru-page-border);
+  border-radius: var(--vtsuru-page-radius);
   background: var(--lib-panel-bg);
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  box-shadow: 0 8px 30px -18px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 
 .lib-row {
@@ -513,7 +514,7 @@ function requestSong(song: SongsInfo) {
   width: 36px;
   height: 36px;
   flex: 0 0 auto;
-  border-radius: 8px;
+  border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
   background: var(--lib-cover-bg);
   display: flex;

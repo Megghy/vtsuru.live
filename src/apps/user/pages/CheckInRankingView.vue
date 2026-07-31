@@ -331,9 +331,9 @@ onMounted(() => {
 /* 自定义表格样式 */
 .custom-ranking-table {
   overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
+  border: var(--vtsuru-page-border);
   border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
-  margin-bottom: 16px;
+  margin-bottom: var(--vtsuru-page-spacing);
   overflow-x: auto;
 }
 

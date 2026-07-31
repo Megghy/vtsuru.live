@@ -56,7 +56,10 @@ async function get() {
             <NEmpty description="没有正在进行的征集表" />
           </NFlex>
         </template>
-        <NList v-else>
+        <NList
+          v-else
+          class="video-collect-list"
+        >
           <NListItem
             v-for="item in videoTables"
             :key="item.id"
@@ -77,6 +80,11 @@ async function get() {
 .video-collect-view {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--vtsuru-page-spacing);
+}
+
+.video-collect-list :deep(.n-list-item__main) {
+  width: 100%;
+  min-width: 0;
 }
 </style>

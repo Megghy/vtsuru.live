@@ -108,12 +108,13 @@ onMounted(() => {
   margin: 0 auto;
   width: 540px;
   height: 700px;
-  border-radius: 20px;
+  border-radius: var(--vtsuru-page-radius);
   background-color: #faebeb;
   background-image:
     linear-gradient(90deg, #ffffff 10%, rgba(0, 0, 0, 0) 10%), linear-gradient(#ffffff 10%, rgba(0, 0, 0, 0) 10%);
   background-size: 20px 20px;
-  border: 3px solid #e0cbcb;
+  border: var(--vtsuru-page-border);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 .schedule-template.pinky.day-container {
   display: flex;
@@ -125,8 +126,8 @@ onMounted(() => {
 }
 .schedule-template.pinky.day-content-container {
   height: 50px;
-  border-radius: 15px;
-  border: 3px solid var(--pinky-border-color-dark);
+  border-radius: var(--vtsuru-page-radius);
+  border: var(--vtsuru-page-border);
   border-top: none;
   border-left: none;
   background-color: #f5dadac9;
@@ -171,8 +172,9 @@ onMounted(() => {
   height: 70px;
   left: 70px;
   top: 20px;
-  border-radius: 20px;
-  border: 3px solid var(--pinky-border-color-dark);
+  border-radius: var(--vtsuru-page-radius);
+  border: var(--vtsuru-page-border);
+  box-shadow: var(--vtsuru-page-shadow);
   border-top: none;
   border-left: none;
 }

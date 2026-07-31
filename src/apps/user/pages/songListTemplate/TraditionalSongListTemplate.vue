@@ -1044,8 +1044,8 @@ html.dark .filter-label {
 
 .filter-button {
   padding: 4px 12px;
-  border: 1px solid transparent;
-  border-radius: 15px;
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) transparent;
+  border-radius: var(--vtsuru-page-radius);
   background-color: rgba(0, 0, 0, 0.04);
   font-size: 0.85em;
   cursor: pointer;
@@ -1116,19 +1116,19 @@ html.dark .search-icon {
   height: 30px;
   box-sizing: border-box;
   padding: 6px 15px 6px 30px;
-  border-radius: 15px;
+  border-radius: var(--vtsuru-page-radius);
   font-size: 0.9em;
   line-height: normal;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: var(--vtsuru-page-border);
   background-color: rgba(255, 255, 255, 0.8);
   color: var(--text-color-base);
 }
 
 html.dark .filter-input {
-  border-color: var(--border-color);
+  border: var(--vtsuru-page-border);
   background-color: var(--input-color);
   color: var(--text-color-1);
 }
@@ -1149,9 +1149,9 @@ html.dark .filter-input::placeholder {
 
 /* Naive UI Select Styling */
 :deep(.song-list-filter .n-select .n-base-selection) {
-  --n-height: 30px !important;
+  --n-height: var(--vtsuru-page-control-height-medium) !important;
   --n-padding-single: 0 26px 0 10px !important;
-  border-radius: 15px !important;
+  border-radius: var(--vtsuru-page-radius) !important;
 }
 
 :deep(.song-list-filter .n-select .n-base-selection .n-base-selection-placeholder),
@@ -1161,15 +1161,15 @@ html.dark .filter-input::placeholder {
 }
 
 .clear-button {
-  height: 30px;
-  border-radius: 15px;
+  height: var(--vtsuru-page-control-height-medium);
+  border-radius: var(--vtsuru-page-radius);
   font-size: 0.85em;
   line-height: 28px;
 }
 
 .refresh-button {
-  height: 30px;
-  border-radius: 15px;
+  height: var(--vtsuru-page-control-height-medium);
+  border-radius: var(--vtsuru-page-radius);
   font-size: 0.9em;
   line-height: 28px;
   white-space: nowrap;
@@ -1179,7 +1179,7 @@ html.dark .filter-input::placeholder {
 .song-list-background-wrapper {
   position: relative;
   height: calc(100vh - var(--vtsuru-header-height) - var(--vtsuru-content-padding) - var(--vtsuru-content-padding));
-  border-radius: 8px;
+  border-radius: var(--vtsuru-page-radius);
   background-size: cover;
   background-position: center center;
   background-attachment: fixed;
@@ -1264,17 +1264,17 @@ html.dark .profile-card-container {
   min-width: 300px;
   margin: 0 auto 20px auto;
   padding: 15px;
-  border-radius: 15px;
+  border-radius: var(--vtsuru-page-radius);
   transition: transform 0.4s ease-in-out;
   z-index: 100;
-  box-shadow: var(--box-shadow-1);
+  box-shadow: var(--vtsuru-page-shadow);
   background-color: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: var(--vtsuru-page-border);
 }
 
 html.dark .profile-hover-area {
   background-color: rgba(40, 40, 40, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: var(--vtsuru-page-border);
 }
 
 .profile-avatar {
@@ -1339,11 +1339,11 @@ html.dark .profile-extra-info {
   left: calc(100px + 20px + 10px);
   width: 380px;
   padding: 15px 20px;
-  border-radius: 10px;
-  box-shadow: var(--box-shadow-2);
+  border-radius: var(--vtsuru-page-radius);
+  box-shadow: var(--vtsuru-page-shadow);
   z-index: 20;
   background-color: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: var(--vtsuru-page-border);
   opacity: 0;
   visibility: hidden;
   transform: translateX(20px);
@@ -1356,7 +1356,7 @@ html.dark .profile-extra-info {
 
 html.dark .social-links {
   background-color: rgba(50, 50, 50, 0.85);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--vtsuru-card-border-color);
 }
 
 .social-links-title {
@@ -1420,7 +1420,7 @@ html.dark .social-icons-bar .icon {
   align-items: center;
   justify-content: space-between;
   padding: 5px 8px;
-  border-radius: 5px;
+  border-radius: var(--vtsuru-page-radius);
   font-size: 0.85em;
   text-decoration: none;
   color: var(--primary-color);
@@ -1470,23 +1470,23 @@ html.dark .social-link .arrow {
 
 /* Song List Container */
 .song-list-container {
-  padding: 15px 25px;
-  border-radius: 15px;
+  padding: var(--vtsuru-page-spacing);
+  border-radius: var(--vtsuru-page-radius);
   font-family: sans-serif;
-  box-shadow: var(--box-shadow-1);
+  box-shadow: var(--vtsuru-page-shadow);
   background-color: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: var(--vtsuru-page-border);
 }
 
 html.dark .song-list-container {
   background-color: rgba(40, 40, 40, 0.75);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--vtsuru-card-border-color);
 }
 
 /* Table Styles */
 .song-table-wrapper {
   overflow-y: auto;
-  border-radius: 8px;
+  border-radius: var(--vtsuru-page-radius);
   scroll-behavior: smooth;
 }
 

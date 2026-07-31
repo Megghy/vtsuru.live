@@ -783,7 +783,7 @@ onUnmounted(() => {
 }
 
 .question-box-container {
-  max-width: 800px;
+  max-width: var(--vtsuru-page-max-width);
   margin: 0 auto;
   width: 100%;
 }
@@ -791,7 +791,7 @@ onUnmounted(() => {
 .header-main .title {
   font-size: 18px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   margin: 0 0 2px;
   color: var(--vtsuru-fg);
 }
@@ -857,7 +857,7 @@ onUnmounted(() => {
   height: 64px;
   border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
   overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
+  border: var(--vtsuru-page-border);
 }
 .upload-item .remove-btn {
   position: absolute;
@@ -870,7 +870,7 @@ onUnmounted(() => {
   width: 64px;
   height: 64px;
   border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
-  border: 1px dashed var(--vtsuru-border);
+  border: var(--vtsuru-page-border-width) dashed var(--vtsuru-border);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -938,7 +938,7 @@ onUnmounted(() => {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
   color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
   white-space: nowrap;
 }
@@ -993,7 +993,7 @@ onUnmounted(() => {
   max-width: 180px;
   max-height: 96px;
   border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
-  border: 1px solid var(--vtsuru-border);
+  border: var(--vtsuru-page-border);
   overflow: hidden;
   background-color: var(--vtsuru-bg-inset);
 }
@@ -1012,7 +1012,7 @@ onUnmounted(() => {
   padding: 8px 10px;
   background-color: color-mix(in srgb, var(--vtsuru-page-primary) 2%, transparent);
   border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
-  border: 1px solid color-mix(in srgb, var(--vtsuru-page-primary) 8%, transparent);
+  border: var(--vtsuru-page-border);
 }
 
 .answer-header {

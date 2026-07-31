@@ -151,6 +151,7 @@ const sortOptions = [
           </NButton>
           <NButton
             size="small"
+            ghost
             @click="useQB.favorite(item, !item.isFavorite)"
           >
             <template #icon>

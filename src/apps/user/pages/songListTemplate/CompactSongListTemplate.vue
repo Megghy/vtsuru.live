@@ -253,7 +253,7 @@ function requestSong(song: SongsInfo) {
 <style scoped>
 .compact-template {
   width: 100%;
-  max-width: 920px;
+  max-width: var(--vtsuru-page-max-width);
   margin: 0 auto;
   padding: 8px 4px 24px;
 }
@@ -289,8 +289,9 @@ function requestSong(song: SongsInfo) {
 .list-container {
   height: 70vh;
   min-height: 400px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 12px;
+  border: var(--vtsuru-page-border);
+  border-radius: var(--vtsuru-page-radius);
+  box-shadow: var(--vtsuru-page-shadow);
   overflow: auto;
 }
 
@@ -334,7 +335,7 @@ function requestSong(song: SongsInfo) {
   width: 38px;
   height: 38px;
   flex: 0 0 auto;
-  border-radius: 8px;
+  border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
   background: var(--vtsuru-bg-inset);
   display: flex;

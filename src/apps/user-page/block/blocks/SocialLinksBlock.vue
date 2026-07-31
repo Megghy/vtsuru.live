@@ -181,7 +181,7 @@ const iconSize = computed(() => {
           '--social-bg': getStyle(it.platform).bg,
           '--social-fg': getStyle(it.platform).fg,
           '--social-size': `${sizePx}px`,
-          '--social-radius': cfg.variant === 'round' ? '999px' : '12px',
+          '--social-radius': cfg.variant === 'round' ? '999px' : 'var(--vtsuru-page-radius)',
         }"
       >
         <NIcon

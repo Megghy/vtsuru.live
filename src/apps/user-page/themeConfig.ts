@@ -32,6 +32,23 @@ export interface UserPageThemeConfig extends UserPageAppearanceTheme {
   pageThemeMode?: 'auto' | 'light' | 'dark'
 }
 
+const appearanceKeys = [
+  'radius',
+  'borderStrength',
+  'borderStyle',
+  'shadowLevel',
+  'surfaceOpacity',
+  'spacing',
+  'controlSize',
+  'pageMaxWidth',
+] as const satisfies readonly (keyof UserPageAppearanceTheme)[]
+
+export function getUserPageAppearanceOverrides(theme?: UserPageAppearanceTheme): UserPageAppearanceTheme {
+  return Object.fromEntries(
+    appearanceKeys.flatMap((key) => (theme?.[key] === undefined ? [] : [[key, theme[key]]])),
+  ) as UserPageAppearanceTheme
+}
+
 export interface ResolvedUserPageAppearance {
   radius: number
   borderStrength: PageBorderStrength
@@ -71,9 +88,9 @@ const controlHeights: Record<PageControlSize, ResolvedUserPageAppearance['contro
 
 const shadows: Record<PageShadowLevel, string> = {
   none: 'none',
-  subtle: 'var(--vtsuru-shadow-1)',
-  normal: 'var(--vtsuru-shadow-2)',
-  floating: 'var(--vtsuru-shadow-popover)',
+  subtle: '0 1px 2px rgba(9, 9, 11, 0.04)',
+  normal: '0 2px 8px rgba(9, 9, 11, 0.08)',
+  floating: '0 8px 24px rgba(9, 9, 11, 0.14)',
 }
 
 function readEnum<T extends string>(theme: unknown, key: string, values: readonly T[], fallback: T): T {

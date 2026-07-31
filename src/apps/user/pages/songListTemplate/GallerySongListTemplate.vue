@@ -277,7 +277,7 @@ function requestSong(song: SongsInfo) {
 <style scoped>
 .gallery-template {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--vtsuru-page-max-width);
   margin: 0 auto;
   padding: 8px 4px 24px;
 }
@@ -319,7 +319,7 @@ function requestSong(song: SongsInfo) {
 .cover-card {
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
+  border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
   transition:
     transform 0.18s ease,
@@ -333,10 +333,10 @@ function requestSong(song: SongsInfo) {
 .cover {
   position: relative;
   aspect-ratio: 1 / 1;
-  border-radius: 14px;
+  border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
   background: var(--vtsuru-bg-inset);
-  box-shadow: 0 4px 14px -8px rgb(0 0 0 / 0.4);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 
 .cover img {
