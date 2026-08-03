@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { CloudAdd20Filled } from '@vicons/fluent'
+import { CloudAdd20Filled, Search24Regular } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
-import { NButton, NEllipsis, NEmpty, NIcon, NInput, NFlex, NTag, NText, NTooltip } from 'naive-ui'
+import { NButton, NEllipsis, NEmpty, NFlex, NIcon, NInput, NTag, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -59,16 +59,17 @@ function getMetaText(song: SongsInfo) {
 <template>
   <div class="song-list-card-template">
     <div class="search-row">
-      <div class="search-input">
-        <span class="search-icon" />
-        <NInput
-          v-model:value="inputKeyword"
-          class="search-field"
-          clearable
-          placeholder="搜索歌曲或歌手…"
-          @keyup.enter="commitSearch"
-        />
-      </div>
+      <NInput
+        v-model:value="inputKeyword"
+        class="search-field"
+        clearable
+        placeholder="搜索歌曲或歌手…"
+        @keyup.enter="commitSearch"
+      >
+        <template #prefix>
+          <NIcon :component="Search24Regular" />
+        </template>
+      </NInput>
       <NButton
         type="primary"
         class="search-button"
@@ -82,8 +83,8 @@ function getMetaText(song: SongsInfo) {
 
     <NEmpty
       v-if="!data || filteredSongs.length === 0"
+      class="empty-state"
       description="暂无曲目"
-      style="margin-top: 24px"
     />
 
     <div
@@ -171,6 +172,7 @@ function getMetaText(song: SongsInfo) {
                     quaternary
                     class="request-button"
                     :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
+                    :aria-label="`点歌：${song.name}`"
                     @click="requestSong(song)"
                   >
                     <template #icon>
@@ -207,11 +209,9 @@ function getMetaText(song: SongsInfo) {
           </div>
 
           <div class="desc">
-            <NText depth="3">
-              <NEllipsis :tooltip="false">
-                {{ song.translateName || song.description || '' }}
-              </NEllipsis>
-            </NText>
+            <NEllipsis :tooltip="false">
+              {{ song.translateName || song.description || '' }}
+            </NEllipsis>
           </div>
 
           <NFlex
@@ -262,117 +262,101 @@ function getMetaText(song: SongsInfo) {
 <style scoped>
 .song-list-card-template {
   --content-max-width: var(--vtsuru-page-max-width, 1180px);
-  --card-max-width: 720px;
-
-  --sl-background: 0 0% 100%;
-  --sl-card: 0 0% 100%;
-  --sl-foreground: 240 10% 3.9%;
-  --sl-muted: 240 4.8% 95.9%;
-  --sl-muted-foreground: 240 3.8% 46.1%;
-  --sl-border: 240 5.9% 90%;
-  --sl-ring: 240 5.9% 10%;
-  --sl-accent: 221 83% 53%;
-  --sl-success: 142.1 76.2% 36.3%;
+  --card-max-width: 760px;
 
   width: 100%;
+  min-width: 0;
   max-width: var(--content-max-width);
   margin: 0 auto;
-  padding: 16px 12px;
-}
-
-html.dark .song-list-card-template {
-  --sl-background: 240 10% 3.9%;
-  --sl-card: 240 10% 3.9%;
-  --sl-foreground: 0 0% 98%;
-  --sl-muted: 240 3.7% 15.9%;
-  --sl-muted-foreground: 240 5% 64.9%;
-  --sl-border: 240 3.7% 15.9%;
-  --sl-ring: 240 4.9% 83.9%;
+  padding: var(--vtsuru-page-spacing, 16px) 12px;
 }
 
 .search-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
   max-width: var(--card-max-width);
   margin: 0 auto;
 }
 
-.search-input {
+.search-field {
   flex: 1;
-  position: relative;
+  min-width: 0;
 }
 
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
-  opacity: 0.65;
-  font-size: 13px;
-}
-
-.search-field :deep(.n-input__input) {
-  padding-left: 32px;
+.search-field :deep(.n-input__prefix) {
+  color: var(--song-subtle);
 }
 
 .search-button {
-  border-radius: var(--vtsuru-page-radius);
+  flex: none;
+  min-width: 72px;
+  border-radius: var(--vtsuru-page-radius, 8px);
 }
 
 .count-row {
-  margin-top: 12px;
-  margin-bottom: 12px;
+  width: 100%;
   max-width: var(--card-max-width);
-  margin-left: auto;
-  margin-right: auto;
-  color: hsl(var(--sl-muted-foreground));
+  margin: 12px auto;
+  color: var(--song-muted);
   font-size: 13px;
+  line-height: 1.5;
+}
+
+.empty-state {
+  margin-top: 28px;
 }
 
 .song-cards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--vtsuru-page-spacing);
-  align-items: center;
+  display: grid;
+  gap: var(--vtsuru-page-spacing, 16px);
+  width: 100%;
+  max-width: var(--card-max-width);
+  margin: 0 auto;
 }
 
 .song-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--vtsuru-page-spacing);
-  padding: var(--vtsuru-page-spacing);
+  gap: 14px;
   width: 100%;
-  max-width: var(--card-max-width);
-  border-radius: var(--vtsuru-page-radius);
-  background: hsl(var(--sl-card));
-  border: var(--vtsuru-page-border);
+  min-width: 0;
+  padding: var(--vtsuru-page-spacing, 16px);
+  overflow: hidden;
+  border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--song-border);
+  border-radius: var(--vtsuru-page-radius, 8px);
+  background: var(--song-panel);
   box-shadow: var(--vtsuru-page-shadow);
   transition:
-    box-shadow 0.15s ease,
-    transform 0.15s ease,
-    border-color 0.15s ease;
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
 }
 
 .song-card.is-active {
-  border-color: hsl(var(--sl-success) / 0.35);
+  border-color: color-mix(in srgb, var(--song-success) 48%, var(--song-border));
 }
 
 .song-card.is-singing {
-  border-color: hsla(30, 90%, 50%, 0.45);
+  border-color: color-mix(in srgb, var(--song-warning) 56%, var(--song-border));
 }
 
-.song-card:hover {
-  transform: translateY(-1px);
+.song-card:focus-within {
+  border-color: var(--song-accent);
+  box-shadow:
+    0 0 0 3px var(--song-accent-soft),
+    var(--vtsuru-page-shadow);
 }
 
 .card-top {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px 16px;
+  min-width: 0;
 }
 
 .title-left {
@@ -383,43 +367,49 @@ html.dark .song-list-card-template {
 }
 
 .left-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--vtsuru-page-radius);
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--vtsuru-page-radius, 8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: hsl(var(--sl-muted));
-  color: hsl(var(--sl-muted-foreground));
+  background: var(--song-accent-soft);
+  color: color-mix(in srgb, var(--song-accent) 72%, var(--song-fg));
 }
 
 .title-block {
+  flex: 1;
   min-width: 0;
 }
 
 .title-right {
-  flex: none;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
 }
 
 .sub {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-  color: hsl(var(--sl-muted-foreground));
-  font-size: 12px;
+  gap: 6px;
   min-width: 0;
+  margin-top: 4px;
+  color: var(--song-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .dot {
+  flex: none;
   opacity: 0.55;
 }
 
 .meta {
-  max-width: 220px;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -434,22 +424,24 @@ html.dark .song-list-card-template {
   cursor: pointer;
   font-weight: 700;
   font-size: 15px;
-  color: hsl(var(--sl-foreground));
+  line-height: 1.45;
+  color: var(--song-fg);
 }
 
 .song-title:disabled {
   cursor: default;
-  opacity: 0.75;
+  color: var(--song-muted);
 }
 
 .song-title:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px hsl(var(--sl-ring) / 0.18);
-  border-radius: var(--vtsuru-page-radius);
+  outline: 2px solid var(--song-accent);
+  outline-offset: 3px;
+  border-radius: calc(var(--vtsuru-page-radius, 8px) / 2);
 }
 
 .song-author {
-  max-width: 260px;
+  min-width: 0;
+  max-width: 45%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -458,33 +450,37 @@ html.dark .song-list-card-template {
 .badge {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   height: 22px;
   padding: 0 10px;
+  overflow: hidden;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
+  text-overflow: ellipsis;
   user-select: none;
-  border: 1px solid hsl(var(--sl-border));
-  color: hsl(var(--sl-muted-foreground));
-  background: hsl(var(--sl-muted) / 0.35);
+  white-space: nowrap;
+  border: 1px solid var(--song-border);
+  color: var(--song-muted);
+  background: var(--song-panel-strong);
 }
 
 .badge-sc {
-  background: hsl(var(--sl-accent) / 0.12);
-  color: hsl(var(--sl-accent));
-  border: 1px solid hsl(var(--sl-accent) / 0.22);
+  background: var(--song-accent-soft);
+  color: color-mix(in srgb, var(--song-accent) 72%, var(--song-fg));
+  border-color: color-mix(in srgb, var(--song-accent) 30%, var(--song-border));
 }
 
 .badge-active {
-  background: hsl(var(--sl-success) / 0.12);
-  color: hsl(var(--sl-success));
-  border: 1px solid hsl(var(--sl-success) / 0.28);
+  background: color-mix(in srgb, var(--song-success) 14%, transparent);
+  color: color-mix(in srgb, var(--song-success) 72%, var(--song-fg));
+  border-color: color-mix(in srgb, var(--song-success) 38%, var(--song-border));
 }
 
 .badge-singing {
-  background: hsla(30, 90%, 50%, 0.12);
-  color: hsl(30, 90%, 45%);
-  border: 1px solid hsla(30, 90%, 50%, 0.28);
+  background: color-mix(in srgb, var(--song-warning) 14%, transparent);
+  color: color-mix(in srgb, var(--song-warning) 74%, var(--song-fg));
+  border-color: color-mix(in srgb, var(--song-warning) 40%, var(--song-border));
   animation: pulse-singing 2s ease-in-out infinite;
 }
 
@@ -499,16 +495,17 @@ html.dark .song-list-card-template {
 }
 
 .request-button {
-  border-radius: var(--vtsuru-page-radius);
+  border-radius: var(--vtsuru-page-radius, 8px);
 }
 
 .card-bottom {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 10px;
+  gap: 8px 12px;
   align-items: center;
-  padding-top: 10px;
-  border-top: 1px solid hsl(var(--sl-border));
+  min-width: 0;
+  padding-top: 12px;
+  border-top: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--song-border);
 }
 
 .pills {
@@ -525,9 +522,9 @@ html.dark .song-list-card-template {
   padding: 0 8px;
   border-radius: 999px;
   font-size: 12px;
-  border: 1px solid hsl(var(--sl-border));
-  background: hsl(var(--sl-muted) / 0.25);
-  color: hsl(var(--sl-foreground));
+  border: 1px solid var(--song-border);
+  background: var(--song-panel-strong);
+  color: var(--song-fg);
   max-width: 160px;
 }
 
@@ -536,34 +533,47 @@ html.dark .song-list-card-template {
 }
 
 .pill-muted {
-  color: hsl(var(--sl-muted-foreground));
+  color: var(--song-muted);
 }
 
 .desc {
   grid-column: 1 / -1;
   min-width: 0;
-  color: hsl(var(--sl-muted-foreground));
+  color: var(--song-muted);
   font-size: 12px;
 }
 
-@media (max-width: 640px) {
-  .search-row {
-    flex-direction: column;
-    align-items: stretch;
+@media (hover: hover) and (pointer: fine) {
+  .song-card:hover {
+    background: var(--song-bg-hover);
+    transform: translateY(-1px);
   }
+}
 
-  .search-button {
-    width: 100%;
+@media (prefers-reduced-motion: reduce) {
+  .song-card,
+  .badge-singing {
+    transition: none;
+    animation: none;
   }
+}
 
+@media (max-width: 560px) {
   .song-card {
-    padding: var(--vtsuru-page-spacing);
+    gap: 12px;
   }
 
-  .left-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--vtsuru-page-radius);
+  .card-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .title-right {
+    justify-content: flex-start;
+    padding-left: 46px;
+  }
+
+  .action {
+    margin-left: auto;
   }
 
   .card-bottom {
@@ -572,6 +582,20 @@ html.dark .song-list-card-template {
 
   .badges {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 380px) {
+  .song-list-card-template {
+    padding-inline: 8px;
+  }
+
+  .title-right {
+    padding-left: 0;
+  }
+
+  .song-author {
+    max-width: 40%;
   }
 }
 </style>

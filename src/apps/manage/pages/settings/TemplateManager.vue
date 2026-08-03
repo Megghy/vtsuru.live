@@ -3,9 +3,11 @@ import { ChevronDown20Regular, PanelLeftContract20Filled, PanelLeftExpand20Fille
 import { useElementBounding, useWindowSize } from '@vueuse/core'
 import type { SelectGroupOption, SelectOption } from 'naive-ui'
 import {
+  darkTheme,
   NAlert,
   NButton,
   NCollapseTransition,
+  NConfigProvider,
   NDivider,
   NFlex,
   NIcon,
@@ -20,6 +22,11 @@ import { computed, h, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
 
 import { downloadConfigDirect, SaveAccountSettings, useAccount } from '@/api/account'
 import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
+import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
+import { getUserPageNaiveThemeOverrides, getUserPageThemeCssVars } from '@/apps/user-page/background'
+import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import { getUserPageAppearanceOverrides } from '@/apps/user-page/themeConfig'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { FETCH_API } from '@/shared/config'
 import type { TemplateCapability } from '@/shared/config/templateCapabilities'
@@ -32,6 +39,9 @@ import {
 import type { TemplateMapType } from '@/shared/config/templates'
 import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templates'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
+import { isDarkMode } from '@/shared/utils'
+
+import '@/apps/user/pages/songListTemplate/songListTheme.css'
 
 import { schedulePreviewData, songListPreviewData } from './templatePreviewData'
 
@@ -49,6 +59,7 @@ interface TemplateGroup {
 
 const accountInfo = useAccount()
 const message = useMessage()
+const userPageSettings = ref<UserPagesSettings | null>(null)
 
 const isSaving = ref(false)
 
@@ -81,6 +92,35 @@ onMounted(async () => {
     console.error('获取B站用户数据失败:', err)
   }
 })
+
+onMounted(async () => {
+  if (!accountInfo.value?.id) return
+  try {
+    userPageSettings.value = await fetchUserPagesSettingsByUserId(accountInfo.value.id)
+  } catch (err) {
+    console.error('加载展示页主题失败:', err)
+    message.warning('展示页主题加载失败，当前预览使用默认主题')
+  }
+})
+
+const previewTheme = computed(() => {
+  const settings = userPageSettings.value
+  const homeAppearance =
+    settings?.home?.mode === 'block' ? getUserPageAppearanceOverrides(settings.home.block?.theme) : {}
+  return { ...settings?.theme, ...homeAppearance }
+})
+
+const previewThemeMode = computed(() => {
+  const mode = userPageSettings.value?.theme?.pageThemeMode
+  return mode === 'light' || mode === 'dark' ? mode : 'auto'
+})
+
+const previewIsDark = computed(() => resolvePageThemeIsDark(previewThemeMode.value, isDarkMode.value))
+const previewThemeVars = computed(() => getUserPageThemeCssVars(previewTheme.value, previewIsDark.value))
+const previewNaiveTheme = computed(() => (previewIsDark.value ? darkTheme : null))
+const previewNaiveThemeOverrides = computed(() =>
+  getUserPageNaiveThemeOverrides(previewTheme.value, previewThemeVars.value, previewIsDark.value),
+)
 
 function toOptions(map: TemplateMapType): TemplateOption[] {
   return Object.entries(map).map(([value, v]) => ({
@@ -488,17 +528,24 @@ async function setAsDisplayTemplate() {
               v-if="previewComponent"
               :key="selectedKey"
               class="template-preview-content"
+              :class="{ 'song-list-surface': pageKey === 'songlist' }"
+              :style="pageKey === 'songlist' ? previewThemeVars : undefined"
             >
               <Suspense>
-                <component
-                  :is="previewComponent"
-                  ref="previewRef"
-                  :user-info="accountInfo"
-                  :bili-info="biliUserInfo"
-                  :data="group.Data"
-                  :config="currentConfigData"
-                  @vue:mounted="onPreviewMounted"
-                />
+                <NConfigProvider
+                  :theme="pageKey === 'songlist' ? previewNaiveTheme : undefined"
+                  :theme-overrides="pageKey === 'songlist' ? previewNaiveThemeOverrides : undefined"
+                >
+                  <component
+                    :is="previewComponent"
+                    ref="previewRef"
+                    :user-info="accountInfo"
+                    :bili-info="biliUserInfo"
+                    :data="group.Data"
+                    :config="currentConfigData"
+                    @vue:mounted="onPreviewMounted"
+                  />
+                </NConfigProvider>
               </Suspense>
             </div>
           </Transition>
@@ -613,6 +660,10 @@ async function setAsDisplayTemplate() {
 .template-preview-content {
   height: 100% !important;
   overflow: auto;
+}
+
+.template-preview-content.song-list-surface {
+  background: var(--vtsuru-bg);
 }
 
 .template-preview-content > :deep(:only-child) {

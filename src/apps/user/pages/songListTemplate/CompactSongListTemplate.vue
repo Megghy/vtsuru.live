@@ -52,7 +52,7 @@ const filteredSongs = computed<SongsInfo[]>(() => {
 })
 
 const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
-  itemHeight: 56,
+  itemHeight: 60,
   overscan: 8,
 })
 
@@ -68,6 +68,14 @@ function requestSong(song: SongsInfo) {
 
 <template>
   <div class="compact-template">
+    <header class="compact-heading">
+      <div>
+        <span class="heading-kicker">QUICK INDEX</span>
+        <h2>快速曲库</h2>
+      </div>
+      <span class="count">{{ filteredSongs.length }} 首</span>
+    </header>
+
     <div class="toolbar">
       <NInput
         v-model:value="searchKeyword"
@@ -95,7 +103,6 @@ function requestSong(song: SongsInfo) {
         placeholder="标签"
         :options="tagOptions"
       />
-      <span class="count">{{ filteredSongs.length }} 首</span>
     </div>
 
     <SongPlayer
@@ -160,7 +167,7 @@ function requestSong(song: SongsInfo) {
                 v-if="singingSongKeySet.has(song.key)"
                 size="tiny"
                 :bordered="false"
-                :color="{ color: 'rgba(240,160,64,0.15)', textColor: '#e08a20' }"
+                type="warning"
               >
                 演唱中
               </NTag>
@@ -190,16 +197,16 @@ function requestSong(song: SongsInfo) {
             </div>
           </div>
           <div class="row-tags">
-            <NTag
+            <button
               v-for="tag in (song.tags ?? []).slice(0, 3)"
               :key="tag"
-              size="tiny"
-              :bordered="false"
+              type="button"
               class="clickable-tag"
+              :aria-pressed="selectedTag === tag"
               @click="selectedTag = selectedTag === tag ? null : tag"
             >
               {{ tag }}
-            </NTag>
+            </button>
           </div>
           <div class="row-actions">
             <NButton
@@ -220,6 +227,7 @@ function requestSong(song: SongsInfo) {
                 <NButton
                   size="small"
                   circle
+                  :aria-label="`点歌：${song.name}`"
                   :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
                   :loading="requestingKey === song.key"
                   @click="requestSong(song)"
@@ -242,14 +250,43 @@ function requestSong(song: SongsInfo) {
 .compact-template {
   width: 100%;
   max-width: var(--vtsuru-page-max-width, 1180px);
+  min-width: 0;
   margin: 0 auto;
-  padding: 8px 4px 24px;
+  padding: clamp(12px, 2vw, 24px);
+}
+
+.compact-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 14px;
+}
+
+.heading-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--song-accent);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.compact-heading h2 {
+  margin: 0;
+  color: var(--song-fg);
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.15;
 }
 
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  padding: 8px;
+  border: var(--vtsuru-page-border, 1px solid var(--song-border));
+  border-radius: var(--vtsuru-page-radius, 8px);
+  background: var(--song-panel);
+  box-shadow: var(--vtsuru-page-shadow, none);
+  gap: 8px;
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
@@ -265,9 +302,10 @@ function requestSong(song: SongsInfo) {
 }
 
 .count {
-  margin-left: auto;
+  flex: 0 0 auto;
   font-size: 13px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .preview-player {
@@ -275,39 +313,40 @@ function requestSong(song: SongsInfo) {
 }
 
 .list-container {
-  height: 70vh;
-  min-height: 400px;
-  border: var(--vtsuru-page-border);
+  height: min(680px, 70dvh);
+  min-height: 360px;
+  border: var(--vtsuru-page-border, 1px solid var(--song-border));
   border-radius: var(--vtsuru-page-radius);
+  background: var(--song-panel);
   box-shadow: var(--vtsuru-page-shadow);
   overflow: auto;
 }
 
 .row {
-  height: 56px;
+  height: 60px;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 0 14px;
   box-sizing: border-box;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid color-mix(in srgb, var(--song-border) 64%, transparent);
   transition: background-color 0.12s ease;
 }
 
 .row.is-odd {
-  background: var(--vtsuru-bg-inset);
+  background: color-mix(in srgb, var(--song-fg) 2.5%, transparent);
 }
 
 .row:hover {
-  background: var(--vtsuru-bg-muted, rgba(127, 127, 127, 0.08));
+  background: var(--song-bg-hover);
 }
 
 .row.is-singing {
-  box-shadow: inset 3px 0 0 0 #f0a040;
+  box-shadow: inset 3px 0 0 0 var(--song-warning);
 }
 
 .row.is-queued {
-  box-shadow: inset 3px 0 0 0 #52c41a;
+  box-shadow: inset 3px 0 0 0 var(--song-success);
 }
 
 .row-index {
@@ -316,7 +355,7 @@ function requestSong(song: SongsInfo) {
   text-align: right;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
 }
 
 .row-cover {
@@ -325,7 +364,7 @@ function requestSong(song: SongsInfo) {
   flex: 0 0 auto;
   border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
-  background: var(--vtsuru-bg-inset);
+  background: var(--song-panel-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -340,7 +379,7 @@ function requestSong(song: SongsInfo) {
 .row-cover-fallback {
   font-size: 18px;
   font-weight: 700;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
 }
 
 .row-main {
@@ -358,7 +397,7 @@ function requestSong(song: SongsInfo) {
 .row-title .name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--song-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -367,7 +406,7 @@ function requestSong(song: SongsInfo) {
 
 .row-title .translate {
   font-size: 12px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -378,7 +417,7 @@ function requestSong(song: SongsInfo) {
 .row-author {
   margin-top: 1px;
   font-size: 12px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -393,7 +432,26 @@ function requestSong(song: SongsInfo) {
 }
 
 .clickable-tag {
+  max-width: 84px;
+  height: 20px;
+  padding: 0 7px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: var(--song-panel-strong);
+  color: var(--song-muted);
+  font: inherit;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.clickable-tag:hover,
+.clickable-tag:focus-visible {
+  background: var(--song-accent-soft);
+  color: var(--song-accent);
+  outline: none;
 }
 
 .row-actions {
@@ -404,6 +462,15 @@ function requestSong(song: SongsInfo) {
 }
 
 @media (max-width: 640px) {
+  .compact-template {
+    padding: 8px 0 16px;
+  }
+
+  .search {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
   .row-tags {
     display: none;
   }
@@ -411,6 +478,15 @@ function requestSong(song: SongsInfo) {
   .filter {
     flex: 1;
     width: auto;
+  }
+
+  .row-index {
+    display: none;
+  }
+
+  .list-container {
+    height: min(620px, 68dvh);
+    min-height: 320px;
   }
 }
 </style>

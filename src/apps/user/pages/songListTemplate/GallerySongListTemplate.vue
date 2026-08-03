@@ -46,24 +46,6 @@ const filteredSongs = computed<SongsInfo[]>(() => {
   })
 })
 
-// 无封面时根据歌名生成稳定的渐变色
-const GRADIENTS = [
-  ['#fbcfe8', '#fecaca'],
-  ['#fde68a', '#fca5a5'],
-  ['#bfdbfe', '#a5b4fc'],
-  ['#bbf7d0', '#7dd3fc'],
-  ['#ddd6fe', '#fbcfe8'],
-  ['#a7f3d0', '#fde68a'],
-  ['#fbcfe8', '#c7d2fe'],
-  ['#fed7aa', '#fecdd3'],
-]
-function gradientFor(song: SongsInfo) {
-  let hash = 0
-  for (let i = 0; i < song.name.length; i++) hash = (hash * 31 + song.name.charCodeAt(i)) >>> 0
-  const [a, b] = GRADIENTS[hash % GRADIENTS.length]
-  return `linear-gradient(135deg, ${a}, ${b})`
-}
-
 function requestSong(song: SongsInfo) {
   if (isSelf.value) return
   requestingKey.value = song.key
@@ -76,6 +58,14 @@ function requestSong(song: SongsInfo) {
 
 <template>
   <div class="gallery-template">
+    <header class="gallery-heading">
+      <div>
+        <span class="heading-kicker">COVER ARCHIVE</span>
+        <h2>封面曲库</h2>
+      </div>
+      <span class="count">{{ filteredSongs.length }} 首</span>
+    </header>
+
     <div class="toolbar">
       <NInput
         v-model:value="searchKeyword"
@@ -94,7 +84,6 @@ function requestSong(song: SongsInfo) {
         placeholder="标签"
         :options="tagOptions"
       />
-      <span class="count">{{ filteredSongs.length }} 首</span>
     </div>
 
     <SongPlayer
@@ -115,7 +104,7 @@ function requestSong(song: SongsInfo) {
       class="grid"
     >
       <div
-        v-for="song in filteredSongs"
+        v-for="(song, index) in filteredSongs"
         :key="song.key"
         class="cover-card"
         :class="{
@@ -134,10 +123,11 @@ function requestSong(song: SongsInfo) {
           <div
             v-else
             class="cover-placeholder"
-            :style="{ background: gradientFor(song) }"
           >
             <span>{{ song.name.charAt(0) }}</span>
           </div>
+
+          <span class="cover-index">{{ String(index + 1).padStart(2, '0') }}</span>
 
           <span
             v-if="singingSongKeySet.has(song.key)"
@@ -161,6 +151,7 @@ function requestSong(song: SongsInfo) {
                 <NButton
                   circle
                   size="large"
+                  :aria-label="`试听：${song.name}`"
                   :loading="isLrcLoading === song.key"
                   @click="previewSong = song"
                 >
@@ -176,6 +167,7 @@ function requestSong(song: SongsInfo) {
                 <NButton
                   circle
                   size="large"
+                  :aria-label="`点歌：${song.name}`"
                   :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
                   :loading="requestingKey === song.key"
                   @click="requestSong(song)"
@@ -263,14 +255,43 @@ function requestSong(song: SongsInfo) {
 .gallery-template {
   width: 100%;
   max-width: var(--vtsuru-page-max-width, 1180px);
+  min-width: 0;
   margin: 0 auto;
-  padding: 8px 4px 24px;
+  padding: clamp(12px, 2vw, 24px);
+}
+
+.gallery-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 14px;
+}
+
+.heading-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--song-accent);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.gallery-heading h2 {
+  margin: 0;
+  color: var(--song-fg);
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.15;
 }
 
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  padding: 8px;
+  border: var(--vtsuru-page-border, 1px solid var(--song-border));
+  border-radius: var(--vtsuru-page-radius, 8px);
+  background: var(--song-panel);
+  box-shadow: var(--vtsuru-page-shadow, none);
+  gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
@@ -286,9 +307,10 @@ function requestSong(song: SongsInfo) {
 }
 
 .count {
-  margin-left: auto;
+  flex: 0 0 auto;
   font-size: 13px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .preview-player {
@@ -297,22 +319,22 @@ function requestSong(song: SongsInfo) {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr));
+  gap: clamp(12px, 2vw, 20px);
 }
 
 .cover-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   border-radius: var(--vtsuru-page-radius);
-  overflow: hidden;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease;
 }
 
 .cover-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .cover {
@@ -320,7 +342,8 @@ function requestSong(song: SongsInfo) {
   aspect-ratio: 1 / 1;
   border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
-  background: var(--vtsuru-bg-inset);
+  background: var(--song-panel-strong);
+  border: var(--vtsuru-page-border, 1px solid var(--song-border));
   box-shadow: var(--vtsuru-page-shadow);
 }
 
@@ -337,13 +360,25 @@ function requestSong(song: SongsInfo) {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: color-mix(in srgb, var(--song-accent) 14%, var(--song-panel-strong));
 }
 
 .cover-placeholder span {
   font-size: 48px;
   font-weight: 800;
-  color: rgba(0, 0, 0, 0.35);
+  color: color-mix(in srgb, var(--song-accent) 72%, var(--song-fg));
   user-select: none;
+}
+
+.cover-index {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 10px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
 }
 
 .status-flag {
@@ -362,19 +397,19 @@ function requestSong(song: SongsInfo) {
 }
 
 .flag-singing {
-  background: rgba(240, 160, 64, 0.92);
+  background: color-mix(in srgb, var(--song-warning) 90%, transparent);
   animation: pulse 2s ease-in-out infinite;
 }
 
 .flag-queued {
-  background: rgba(82, 196, 26, 0.92);
+  background: color-mix(in srgb, var(--song-success) 90%, transparent);
 }
 
 .flag-sc {
   top: auto;
   bottom: 8px;
   left: 8px;
-  background: rgba(189, 87, 87, 0.92);
+  background: color-mix(in srgb, var(--song-danger) 90%, transparent);
 }
 
 @keyframes pulse {
@@ -394,22 +429,23 @@ function requestSong(song: SongsInfo) {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: rgba(0, 0, 0, 0.42);
+  background: color-mix(in srgb, #000 48%, transparent);
   opacity: 0;
   transition: opacity 0.18s ease;
 }
 
-.cover:hover .cover-overlay {
+.cover:hover .cover-overlay,
+.cover:focus-within .cover-overlay {
   opacity: 1;
 }
 
 .cover-card.is-singing .cover {
-  outline: 2px solid rgba(240, 160, 64, 0.7);
+  outline: 2px solid color-mix(in srgb, var(--song-warning) 72%, transparent);
   outline-offset: -2px;
 }
 
 .cover-card.is-queued .cover {
-  outline: 2px solid rgba(82, 196, 26, 0.6);
+  outline: 2px solid color-mix(in srgb, var(--song-success) 66%, transparent);
   outline-offset: -2px;
 }
 
@@ -424,13 +460,13 @@ function requestSong(song: SongsInfo) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--vtsuru-fg);
+  color: var(--song-fg);
 }
 
 .author {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -439,7 +475,7 @@ function requestSong(song: SongsInfo) {
 .translate {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
+  color: var(--song-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -453,13 +489,26 @@ function requestSong(song: SongsInfo) {
 }
 
 @media (max-width: 520px) {
+  .gallery-template {
+    padding: 8px 0 16px;
+  }
+
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 10px;
   }
 
   .cover-placeholder span {
     font-size: 36px;
+  }
+}
+
+@media (hover: none) {
+  .cover-overlay {
+    inset: auto 8px 8px auto;
+    justify-content: flex-end;
+    background: transparent;
+    opacity: 1;
   }
 }
 </style>

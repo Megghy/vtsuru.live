@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Person48Filled, WindowWrench20Filled } from '@vicons/fluent'
 import { BrowsersOutline, ChevronBackOutline, ChevronForwardOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
-import { useElementSize } from '@vueuse/core'
+import { useElementSize, useMediaQuery } from '@vueuse/core'
 import {
   darkTheme,
   NAvatar,
@@ -82,10 +82,18 @@ const isLoading = computed(() => loadStatus.value === 'idle' || loadStatus.value
 const registerAndLoginModalVisiable = ref(false) // 注册/登录弹窗可见性
 const sider = ref() // 侧边栏 DOM 引用
 const { width: siderWidth } = useElementSize(sider) // 侧边栏宽度
-const windowWidth = window.innerWidth // 窗口宽度，用于响应式显示
-const siderCollapsed = usePersistedStorage<boolean>('Settings.UserSiderCollapsed', windowWidth < 768)
+const isDesktop = useMediaQuery('(min-width: 768px)')
+const isMobileNav = useMediaQuery('(max-width: 520px)')
+const siderCollapsed = usePersistedStorage<boolean>('Settings.UserSiderCollapsed', !isDesktop.value)
 const siderAvatarSize = computed(() => (siderCollapsed.value ? 34 : 42))
 const siderPendantUrl = computed(() => biliUserInfo.value?.pendant?.image_enhance || biliUserInfo.value?.pendant?.image)
+const mobileViewportHeight = ref('100dvh')
+
+function syncMobileViewportHeight() {
+  mobileViewportHeight.value = isMobileNav.value
+    ? `${Math.round(window.visualViewport?.height ?? window.innerHeight)}px`
+    : '100dvh'
+}
 
 type UserNavItem = {
   key: string
@@ -266,6 +274,9 @@ const USERPAGE_HOST_CLASS = 'vtsuru-userpage-host'
 
 onMounted(() => {
   document.documentElement.classList.add(USERPAGE_HOST_CLASS)
+  syncMobileViewportHeight()
+  window.addEventListener('resize', syncMobileViewportHeight)
+  window.visualViewport?.addEventListener('resize', syncMobileViewportHeight)
   // 移动端进入用户页时默认收缩侧栏
   if (window.innerWidth < 768) siderCollapsed.value = true
 })
@@ -275,6 +286,8 @@ onBeforeUnmount(() => {
   clearUserPageRuntimeCache()
   customCssElement?.remove()
   customCssElement = null
+  window.removeEventListener('resize', syncMobileViewportHeight)
+  window.visualViewport?.removeEventListener('resize', syncMobileViewportHeight)
   if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
 })
 
@@ -534,7 +547,7 @@ watch(
     <div
       class="page-root"
       :class="layoutPageBgClass"
-      :style="[layoutUiVars, layoutPageBgVars]"
+      :style="[layoutUiVars, layoutPageBgVars, { '--user-page-viewport-height': mobileViewportHeight }]"
     >
       <!-- 顶部导航栏 -->
       <header class="layout-header">
@@ -592,7 +605,7 @@ watch(
                 <template #icon>
                   <NIcon :component="Person48Filled" />
                 </template>
-                <span v-if="windowWidth >= 768"> Bilibili 账户中心 </span>
+                <span v-if="isDesktop"> Bilibili 账户中心 </span>
               </NButton>
               <!-- 主播后台按钮 -->
               <NButton
@@ -603,7 +616,7 @@ watch(
                 <template #icon>
                   <NIcon :component="WindowWrench20Filled" />
                 </template>
-                <span v-if="windowWidth >= 768"> 主播后台 </span>
+                <span v-if="isDesktop"> 主播后台 </span>
               </NButton>
             </template>
 
@@ -747,7 +760,7 @@ watch(
                       >
                         <template v-if="!item.disabled && item.to">
                           <NTooltip
-                            v-if="siderCollapsed"
+                            v-if="siderCollapsed && !isMobileNav"
                             placement="right"
                             :show-arrow="false"
                           >
@@ -756,6 +769,7 @@ watch(
                                 :to="item.to"
                                 class="nav-item"
                                 :class="{ active: activeMenuKey === item.key }"
+                                :aria-label="item.label"
                               >
                                 <component
                                   :is="item.icon"
@@ -771,18 +785,24 @@ watch(
                             :to="item.to"
                             class="nav-item"
                             :class="{ active: activeMenuKey === item.key }"
+                            :aria-label="siderCollapsed ? item.label : undefined"
                           >
                             <component
                               :is="item.icon"
                               class="nav-item__icon"
                             />
-                            <span class="nav-item__label">{{ item.label }}</span>
+                            <span
+                              v-if="!siderCollapsed"
+                              class="nav-item__label"
+                            >
+                              {{ item.label }}
+                            </span>
                           </RouterLink>
                         </template>
 
                         <template v-else>
                           <NTooltip
-                            v-if="siderCollapsed"
+                            v-if="siderCollapsed && !isMobileNav"
                             placement="right"
                             :show-arrow="false"
                           >
@@ -806,7 +826,12 @@ watch(
                               :is="item.icon"
                               class="nav-item__icon"
                             />
-                            <span class="nav-item__label">{{ item.label }}</span>
+                            <span
+                              v-if="!siderCollapsed"
+                              class="nav-item__label"
+                            >
+                              {{ item.label }}
+                            </span>
                           </div>
                         </template>
                       </div>
@@ -1039,6 +1064,7 @@ watch(
 .page-root {
   font-family: var(--vtsuru-page-font-family);
   height: 100vh;
+  height: var(--user-page-viewport-height, 100dvh);
   width: 100%;
   max-width: 100%;
   display: flex;
@@ -1512,7 +1538,8 @@ watch(
 
   .user-sider {
     width: 100% !important;
-    height: 58px;
+    height: calc(58px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     border-top: 1px solid var(--vtsuru-border);
     border-right: 0;
   }

@@ -9,15 +9,22 @@
   );
   --song-bg-hover: var(--user-page-theme-surface-bg-hover, color-mix(in srgb, var(--song-bg) 88%, var(--song-fg) 12%));
   --song-panel: var(--vtsuru-page-card-bg, color-mix(in srgb, var(--song-bg) 88%, transparent));
+  --song-panel-strong: var(--vtsuru-page-card-bg-embedded, color-mix(in srgb, var(--song-bg) 94%, var(--song-fg) 6%));
   --song-border: var(
     --vtsuru-block-border,
     var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
   );
   --song-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
   --song-accent-soft: var(--vtsuru-page-primary-soft, color-mix(in srgb, var(--song-accent) 14%, transparent));
+  --song-accent-readable: var(--vtsuru-page-primary-readable, var(--song-fg));
+  --song-success: var(--vtsuru-success, #22c55e);
+  --song-warning: var(--vtsuru-warning, #f59e0b);
+  --song-danger: var(--vtsuru-error, #ef4444);
+  --song-control-height: var(--vtsuru-page-control-height-medium, 34px);
   width: 100%;
   min-width: 0;
   color: var(--song-fg);
+  font-family: var(--vtsuru-page-font-family, inherit);
 }
 
 .song-list-surface,

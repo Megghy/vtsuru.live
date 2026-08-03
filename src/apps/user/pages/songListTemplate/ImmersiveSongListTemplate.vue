@@ -2,12 +2,11 @@
 import { CloudAdd20Filled, MusicNote224Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
 import { NButton, NEmpty, NIcon, NInput, NTag, NTooltip } from 'naive-ui'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
-import { useScopedGlobalStyle } from '@/composables/useScopedGlobalStyle'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { GetGuardColor } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -22,53 +21,10 @@ const emits = defineEmits(['requestSong'])
 const accountInfo = useAccount()
 const biliAuth = useBiliAuth()
 
-// 沉浸式: 注入临时全局样式, 让站点侧栏与右侧内容融合, 并铺设贯穿整个内容区的模糊封面背景
-useScopedGlobalStyle(
-  `
-html.vtsuru-immersive-songlist .main-layout-body { position: relative; }
-html.vtsuru-immersive-songlist .main-layout-body::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: var(--immersive-cover, none);
-  background-size: cover;
-  background-position: center;
-  filter: blur(80px) saturate(1.35);
-  transform: scale(1.15);
-  opacity: 0.42;
-  pointer-events: none;
-  z-index: 0;
-  transition: opacity 0.4s ease;
-}
-html.vtsuru-immersive-songlist .user-sider,
-html.vtsuru-immersive-songlist .content-layout-container {
-  position: relative;
-  z-index: 1;
-  background: transparent !important;
-}
-html.vtsuru-immersive-songlist .user-sider { border-right: none !important; }
-html.vtsuru-immersive-songlist .viewer-page-content {
-  background: transparent !important;
-  padding-top: 8px !important;
-}
-`,
-  'vtsuru-immersive-songlist',
-)
-
 const searchKeyword = ref('')
 const selectedSong = ref<SongsInfo>()
 const isLrcLoading = ref('')
 const requestingKey = ref('')
-
-// 当前封面写入全局 CSS 变量, 供注入的背景层引用
-watch(selectedSong, (song) => {
-  const root = document.documentElement
-  if (song?.cover) root.style.setProperty('--immersive-cover', `url(${song.cover})`)
-  else root.style.removeProperty('--immersive-cover')
-})
-onBeforeUnmount(() => {
-  document.documentElement.style.removeProperty('--immersive-cover')
-})
 
 const requestAuthState = computed(() => ({
   isLoggedIn: !!accountInfo.value.id,
@@ -112,9 +68,12 @@ function requestSong(song: SongsInfo) {
 </script>
 
 <template>
-  <div class="immersive-template">
-    <!-- 左侧常驻播放面板 -->
+  <div
+    class="immersive-template"
+    :style="{ '--immersive-cover': selectedSong?.cover ? `url(${selectedSong.cover})` : 'none' }"
+  >
     <aside class="stage">
+      <span class="stage-kicker">NOW SELECTED</span>
       <div
         class="stage-cover"
         :class="{ 'is-empty': !selectedSong?.cover }"
@@ -240,18 +199,27 @@ function requestSong(song: SongsInfo) {
       </template>
     </aside>
 
-    <!-- 右侧曲库列表 -->
     <section class="library">
-      <NInput
-        v-model:value="searchKeyword"
-        class="library-search"
-        clearable
-        placeholder="搜索曲库…"
-      >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
-        </template>
-      </NInput>
+      <header class="library-heading">
+        <div>
+          <span class="library-kicker">LIBRARY</span>
+          <h2>选择一首歌</h2>
+        </div>
+        <span class="library-count">{{ filteredSongs.length }} 首</span>
+      </header>
+
+      <div class="search-shell">
+        <NInput
+          v-model:value="searchKeyword"
+          class="library-search"
+          clearable
+          placeholder="搜索曲库…"
+        >
+          <template #prefix>
+            <NIcon :component="Search24Regular" />
+          </template>
+        </NInput>
+      </div>
 
       <NEmpty
         v-if="filteredSongs.length === 0"
@@ -265,40 +233,45 @@ function requestSong(song: SongsInfo) {
         class="library-list"
       >
         <div v-bind="wrapperProps">
-          <button
+          <div
             v-for="{ data: song } in list"
             :key="song.key"
-            type="button"
             class="lib-row"
             :class="{
               active: selectedSong?.key === song.key,
               'is-singing': singingSongKeySet.has(song.key),
               'is-queued': queuedSongKeySet.has(song.key),
             }"
-            @click="selectSong(song)"
           >
-            <div class="lib-cover">
-              <img
-                v-if="song.cover"
-                :src="song.cover"
-                :alt="song.name"
-                loading="lazy"
-                referrerpolicy="no-referrer"
-              />
-              <span v-else>{{ song.name.charAt(0) }}</span>
-            </div>
-            <div class="lib-main">
-              <span
-                class="lib-name"
-                :title="song.name"
-                >{{ song.name }}</span
-              >
-              <span
-                v-if="song.author?.length"
-                class="lib-author"
-                >{{ song.author.join(' / ') }}</span
-              >
-            </div>
+            <button
+              type="button"
+              class="lib-select"
+              :aria-current="selectedSong?.key === song.key ? 'true' : undefined"
+              @click="selectSong(song)"
+            >
+              <span class="lib-cover">
+                <img
+                  v-if="song.cover"
+                  :src="song.cover"
+                  :alt="song.name"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                />
+                <span v-else>{{ song.name.charAt(0) }}</span>
+              </span>
+              <span class="lib-main">
+                <span
+                  class="lib-name"
+                  :title="song.name"
+                  >{{ song.name }}</span
+                >
+                <span
+                  v-if="song.author?.length"
+                  class="lib-author"
+                  >{{ song.author.join(' / ') }}</span
+                >
+              </span>
+            </button>
             <span
               v-if="singingSongKeySet.has(song.key)"
               class="lib-flag singing"
@@ -314,6 +287,7 @@ function requestSong(song: SongsInfo) {
                 <NButton
                   size="tiny"
                   circle
+                  :aria-label="`点歌：${song.name}`"
                   :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
                   :loading="requestingKey === song.key"
                   @click.stop="requestSong(song)"
@@ -325,7 +299,7 @@ function requestSong(song: SongsInfo) {
               </template>
               {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
             </NTooltip>
-          </button>
+          </div>
         </div>
       </div>
     </section>
@@ -334,24 +308,60 @@ function requestSong(song: SongsInfo) {
 
 <style scoped>
 .immersive-template {
+  position: relative;
+  isolation: isolate;
   display: flex;
-  gap: var(--vtsuru-page-spacing);
+  overflow: hidden;
+  padding: clamp(12px, 2vw, 22px);
+  border: var(--vtsuru-page-border, 1px solid var(--song-border));
+  border-radius: var(--vtsuru-page-radius, 8px);
+  background: var(--song-panel);
+  box-shadow: var(--vtsuru-page-shadow, none);
+  gap: clamp(16px, 3vw, 34px);
   width: 100%;
   max-width: var(--vtsuru-page-max-width, 1180px);
   margin: 0 auto;
-  height: calc(100vh - 130px);
+  height: min(760px, calc(100dvh - 130px));
   min-height: 480px;
 }
 
-/* 左侧舞台 */
+.immersive-template::before {
+  position: absolute;
+  z-index: -1;
+  inset: -50px;
+  background-image: var(--immersive-cover);
+  background-position: center;
+  background-size: cover;
+  filter: blur(54px) saturate(1.18);
+  opacity: 0.16;
+  content: '';
+  transform: scale(1.08);
+}
+
+.stage,
+.library {
+  position: relative;
+  z-index: 1;
+}
+
 .stage {
-  flex: 0 0 340px;
+  flex: 0 0 min(34%, 360px);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 4px;
+  padding: 4px 4px 16px;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+.stage-kicker,
+.library-kicker {
+  align-self: flex-start;
+  margin-bottom: 8px;
+  color: var(--song-accent);
+  font-size: 10px;
+  font-weight: 750;
 }
 
 .stage-cover {
@@ -361,7 +371,7 @@ function requestSong(song: SongsInfo) {
   overflow: hidden;
   box-shadow: var(--vtsuru-page-shadow);
   border: var(--vtsuru-page-border);
-  background: var(--vtsuru-bg-inset);
+  background: var(--song-panel-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -374,12 +384,12 @@ function requestSong(song: SongsInfo) {
 }
 
 .stage-cover.is-empty {
-  background: linear-gradient(135deg, var(--vtsuru-bg-inset), var(--vtsuru-border));
+  background: color-mix(in srgb, var(--song-accent) 12%, var(--song-panel-strong));
 }
 
 .stage-cover-icon {
   font-size: 80px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
   opacity: 0.5;
 }
 
@@ -388,19 +398,19 @@ function requestSong(song: SongsInfo) {
   font-size: 20px;
   font-weight: 750;
   line-height: 1.25;
-  color: var(--vtsuru-fg);
+  color: var(--song-fg);
 }
 
 .stage-subtitle {
   margin-top: 4px;
   font-size: 13px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
 }
 
 .stage-author {
   margin-top: 6px;
   font-size: 14px;
-  color: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
+  color: var(--song-muted);
 }
 
 .stage-tags {
@@ -422,34 +432,48 @@ function requestSong(song: SongsInfo) {
   width: 100%;
 }
 
-/* 右侧曲库 */
 .library {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-
-  --lib-panel-bg: rgba(255, 255, 255, 0.58);
-  --lib-border: rgba(15, 23, 42, 0.08);
-  --lib-divider: rgba(15, 23, 42, 0.06);
-  --lib-hover: rgba(15, 23, 42, 0.05);
-  --lib-active: rgba(99, 102, 241, 0.12);
-  --lib-accent: #6366f1;
-  --lib-cover-bg: rgba(15, 23, 42, 0.06);
 }
 
-:global(html.dark) .library {
-  --lib-panel-bg: rgba(24, 24, 27, 0.42);
-  --lib-border: rgba(255, 255, 255, 0.1);
-  --lib-divider: rgba(255, 255, 255, 0.07);
-  --lib-hover: rgba(255, 255, 255, 0.07);
-  --lib-active: rgba(129, 140, 248, 0.18);
-  --lib-accent: #818cf8;
-  --lib-cover-bg: rgba(255, 255, 255, 0.08);
+.library-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.library-kicker {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.library-heading h2 {
+  margin: 0;
+  color: var(--song-fg);
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.15;
+}
+
+.library-count {
+  color: var(--song-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.search-shell {
+  margin-bottom: 10px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--song-border) 78%, transparent);
+  border-radius: var(--vtsuru-page-radius, 8px);
+  background: var(--song-panel-strong);
 }
 
 .library-search {
-  margin-bottom: 12px;
   flex: 0 0 auto;
 }
 
@@ -457,11 +481,10 @@ function requestSong(song: SongsInfo) {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  border: var(--vtsuru-page-border);
+  border: var(--vtsuru-page-border, 1px solid var(--song-border));
   border-radius: var(--vtsuru-page-radius);
-  background: var(--lib-panel-bg);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  background: var(--song-panel-strong);
+  backdrop-filter: blur(14px);
   box-shadow: var(--vtsuru-page-shadow);
 }
 
@@ -470,13 +493,12 @@ function requestSong(song: SongsInfo) {
   height: 52px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 12px;
+  gap: 8px;
+  padding: 0 10px 0 0;
   box-sizing: border-box;
   border: none;
-  border-bottom: 1px solid var(--lib-divider);
+  border-bottom: 1px solid color-mix(in srgb, var(--song-border) 62%, transparent);
   background: transparent;
-  cursor: pointer;
   text-align: left;
   transition: background-color 0.12s ease;
 }
@@ -486,20 +508,41 @@ function requestSong(song: SongsInfo) {
 }
 
 .lib-row:hover {
-  background: var(--lib-hover);
+  background: var(--song-bg-hover);
 }
 
 .lib-row.active {
-  background: var(--lib-active);
-  box-shadow: inset 3px 0 0 0 var(--lib-accent);
+  background: var(--song-accent-soft);
+  box-shadow: inset 3px 0 0 0 var(--song-accent);
 }
 
 .lib-row.is-singing:not(.active) {
-  box-shadow: inset 3px 0 0 0 #f0a040;
+  box-shadow: inset 3px 0 0 0 var(--song-warning);
 }
 
 .lib-row.is-queued:not(.active) {
-  box-shadow: inset 3px 0 0 0 #52c41a;
+  box-shadow: inset 3px 0 0 0 var(--song-success);
+}
+
+.lib-select {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  align-items: center;
+  padding: 0 0 0 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  gap: 10px;
+}
+
+.lib-select:focus-visible {
+  outline: 2px solid var(--vtsuru-page-primary-focus, var(--song-accent));
+  outline-offset: -3px;
 }
 
 .lib-cover {
@@ -508,13 +551,13 @@ function requestSong(song: SongsInfo) {
   flex: 0 0 auto;
   border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
-  background: var(--lib-cover-bg);
+  background: color-mix(in srgb, var(--song-fg) 7%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   font-weight: 700;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
 }
 
 .lib-cover img {
@@ -533,7 +576,7 @@ function requestSong(song: SongsInfo) {
 .lib-name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--song-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -541,7 +584,7 @@ function requestSong(song: SongsInfo) {
 
 .lib-author {
   font-size: 12px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--song-subtle);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -554,17 +597,19 @@ function requestSong(song: SongsInfo) {
 }
 
 .lib-flag.singing {
-  color: #f0a040;
+  color: var(--song-warning);
 }
 
 .lib-flag.queued {
-  color: #52c41a;
+  color: var(--song-success);
 }
 
 @media (max-width: 860px) {
   .immersive-template {
     flex-direction: column;
     height: auto;
+    min-height: 0;
+    padding: 12px;
   }
 
   .stage {
@@ -577,7 +622,23 @@ function requestSong(song: SongsInfo) {
   }
 
   .library-list {
-    height: 60vh;
+    height: min(560px, 62dvh);
+    min-height: 360px;
+  }
+}
+
+@media (max-width: 520px) {
+  .immersive-template {
+    border-right: 0;
+    border-left: 0;
+  }
+
+  .stage-cover {
+    max-width: 220px;
+  }
+
+  .lib-flag {
+    display: none;
   }
 }
 </style>
