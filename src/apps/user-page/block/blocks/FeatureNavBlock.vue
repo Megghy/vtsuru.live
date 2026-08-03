@@ -124,7 +124,7 @@ const availableFeatures = computed(() =>
 
 .feature-link:hover {
   border-color: var(--vtsuru-page-primary);
-  background: var(--vtsuru-brand-tint);
+  background: var(--vtsuru-page-primary-soft, var(--vtsuru-brand-tint));
 }
 
 .feature-link span {

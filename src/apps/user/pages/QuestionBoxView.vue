@@ -13,6 +13,8 @@ import { QUESTION_API_URL } from '@/shared/config'
 const props = defineProps<{
   userInfo?: UserInfo
   embedded?: boolean
+  defaultTag?: string
+  showPublicQuestions?: boolean
 }>()
 
 const message = useMessage()
@@ -88,10 +90,12 @@ function clearHistory() {
       :user-info="userInfo"
       :tags="tags"
       :embedded="embedded"
+      :default-tag="defaultTag"
       @open-history="showHistory = true"
       @submitted="loadPublicQuestions"
     />
     <PublicQuestionFeed
+      v-if="!embedded || showPublicQuestions !== false"
       :questions="publicQuestions"
       :is-loading="isLoadingQuestions"
       :user-info="userInfo"

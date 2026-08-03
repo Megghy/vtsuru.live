@@ -26,12 +26,14 @@ import {
 import { computed, inject, ref, watch } from 'vue'
 
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
+import { getUserPageNavIconLabel, resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 
 import { UserPageEditorKey } from '../context'
 import BlockTypeEditor from './BlockTypeEditor.vue'
 import ErrorBoundary from './ErrorBoundary.vue'
 import LegacyIndexSettings from './LegacyIndexSettings.vue'
 import PageAppearanceOverrides from './PageAppearanceOverrides.vue'
+import PageIconPickerModal from './PageIconPickerModal.vue'
 import PropsGrid from './PropsGrid.vue'
 import { useBlockManagerLibrary } from './useBlockManagerLibrary'
 import { useBlockPropertyFocus } from './useBlockPropertyFocus'
@@ -50,6 +52,11 @@ const capacityStatus = computed(() => {
 const { expandedPageSections } = useBlockPropertyFocus()
 const { templateOptions, addBlockOptions, insertTemplate, handleAddBlockMenuSelect } = useBlockManagerLibrary()
 const pageSlug = ref(editor.currentKey.value)
+const pageIconPickerShown = ref(false)
+
+function setCurrentPageNavIcon(value: string | undefined) {
+  editor.currentPage.value.navIcon = value
+}
 
 watch(editor.currentKey, (key) => (pageSlug.value = key))
 
@@ -164,6 +171,22 @@ function groupSelection() {
                 <NInput
                   v-model:value="editor.currentPage.value.title"
                   placeholder="可选，用于管理列表展示"
+                />
+              </NFormItem>
+              <NFormItem label="导航图标">
+                <NButton
+                  style="width: 100%; justify-content: flex-start"
+                  @click="pageIconPickerShown = true"
+                >
+                  <template #icon>
+                    <NIcon :component="resolveUserPageNavIcon(editor.currentPage.value.navIcon)" />
+                  </template>
+                  {{ getUserPageNavIconLabel(editor.currentPage.value.navIcon) }}
+                </NButton>
+                <PageIconPickerModal
+                  v-model:show="pageIconPickerShown"
+                  :value="editor.currentPage.value.navIcon"
+                  @select="setCurrentPageNavIcon"
                 />
               </NFormItem>
               <NFormItem label="在导航菜单中显示">

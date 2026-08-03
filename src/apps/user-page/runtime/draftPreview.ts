@@ -1,4 +1,4 @@
-import type { UserPagesSettingsV1 } from '../types'
+import type { UserPagesSettings } from '../types'
 
 const STORAGE_PREFIX = 'vtsuru:user-page-draft-preview:'
 const PREVIEW_TTL_MS = 60_000
@@ -6,10 +6,10 @@ const PREVIEW_TTL_MS = 60_000
 interface DraftPreviewPayload {
   expiresAt: number
   userId: number
-  settings: UserPagesSettingsV1
+  settings: UserPagesSettings
 }
 
-export function createDraftPreview(userId: number, settings: UserPagesSettingsV1) {
+export function createDraftPreview(userId: number, settings: UserPagesSettings) {
   const token = crypto.randomUUID()
   const payload: DraftPreviewPayload = {
     expiresAt: Date.now() + PREVIEW_TTL_MS,
@@ -29,7 +29,7 @@ export function consumeDraftPreview(token: unknown, userId: number) {
 
   try {
     const payload = JSON.parse(raw) as DraftPreviewPayload
-    if (payload.expiresAt < Date.now() || payload.userId !== userId || payload.settings?.version !== 1) return null
+    if (payload.expiresAt < Date.now() || payload.userId !== userId || payload.settings?.version !== 2) return null
     return payload.settings
   } catch {
     return null

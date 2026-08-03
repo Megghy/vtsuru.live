@@ -1,12 +1,52 @@
 <script setup lang="ts">
-import { CalendarNumberOutline, CheckmarkOutline, CopyOutline, OpenOutline } from '@vicons/ionicons5'
-import { NButton, NIcon } from 'naive-ui'
+import {
+  CalendarNumberOutline,
+  CheckmarkOutline,
+  ChevronDownOutline,
+  CopyOutline,
+  OpenOutline,
+  SettingsOutline,
+} from '@vicons/ionicons5'
+import { NButton, NCollapseTransition, NIcon } from 'naive-ui'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 const props = defineProps<{ url: string }>()
 
+const reminderOptions: { value: number | null; label: string }[] = [
+  { value: null, label: '不提醒' },
+  { value: 5, label: '提前5分钟' },
+  { value: 10, label: '提前10分钟' },
+  { value: 30, label: '提前30分钟' },
+  { value: 60, label: '提前1小时' },
+  { value: 180, label: '提前3小时' },
+  { value: 1440, label: '提前1天' },
+  { value: 2880, label: '提前2天' },
+]
+const tagOptions: { value: boolean; label: string }[] = [
+  { value: false, label: '不带标签' },
+  { value: true, label: '附带标签' },
+]
+
+const reminder = ref<number | null>(5)
+const withTag = ref(false)
+const settingsOpen = ref(false)
+const url = computed(() => {
+  const target = new URL(props.url)
+  if (reminder.value === null) target.searchParams.delete('remind')
+  else target.searchParams.set('remind', String(reminder.value))
+  if (withTag.value) target.searchParams.set('tag', '1')
+  else target.searchParams.delete('tag')
+  return target.toString()
+})
+const webcalUrl = computed(() => url.value.replace(/^https?:\/\//, 'webcal://'))
+const reminderLabel = computed(() => reminderOptions.find((option) => option.value === reminder.value)?.label ?? '')
+const settingsSummary = computed(() => {
+  const values = [reminderLabel.value]
+  if (withTag.value) values.push('附带标题标签')
+  return values.join(' · ')
+})
+
 const copyState = ref<'idle' | 'success' | 'error'>('idle')
-const webcalUrl = computed(() => props.url.replace(/^https?:\/\//, 'webcal://'))
 let resetTimer: number | undefined
 
 async function copyUrl() {
@@ -14,7 +54,7 @@ async function copyUrl() {
 
   if (resetTimer !== undefined) window.clearTimeout(resetTimer)
   try {
-    await navigator.clipboard.writeText(props.url)
+    await navigator.clipboard.writeText(url.value)
     copyState.value = 'success'
   } catch {
     copyState.value = 'error'
@@ -87,6 +127,65 @@ onBeforeUnmount(() => {
         {{ copyState === 'success' ? '已复制' : copyState === 'error' ? '复制失败' : '复制链接' }}
       </NButton>
     </div>
+
+    <div class="subscription-settings-bar">
+      <span class="settings-summary">{{ settingsSummary }}</span>
+      <button
+        type="button"
+        class="settings-toggle"
+        :aria-expanded="settingsOpen"
+        aria-controls="schedule-subscription-settings"
+        @click="settingsOpen = !settingsOpen"
+      >
+        <NIcon size="15"><SettingsOutline /></NIcon>
+        <span>订阅设置</span>
+        <NIcon
+          class="settings-toggle-arrow"
+          size="14"
+          :class="{ expanded: settingsOpen }"
+          aria-hidden="true"
+        >
+          <ChevronDownOutline />
+        </NIcon>
+      </button>
+    </div>
+
+    <NCollapseTransition :show="settingsOpen">
+      <div
+        id="schedule-subscription-settings"
+        class="subscription-settings"
+      >
+        <div class="subscription-setting">
+          <span class="setting-label">开播提醒</span>
+          <button
+            v-for="opt in reminderOptions"
+            :key="`r-${opt.value}`"
+            type="button"
+            class="setting-option"
+            :class="{ active: reminder === opt.value }"
+            :aria-pressed="reminder === opt.value"
+            @click="reminder = opt.value"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+
+        <div class="subscription-setting">
+          <span class="setting-label">标题标签</span>
+          <button
+            v-for="opt in tagOptions"
+            :key="`t-${opt.value}`"
+            type="button"
+            class="setting-option"
+            :class="{ active: withTag === opt.value }"
+            :aria-pressed="withTag === opt.value"
+            @click="withTag = opt.value"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+      </div>
+    </NCollapseTransition>
     <span
       class="sr-only"
       role="status"
@@ -204,6 +303,110 @@ onBeforeUnmount(() => {
 .subscription-action input:focus-visible {
   border-color: var(--schedule-subscription-accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--schedule-subscription-accent) 18%, transparent);
+}
+
+.subscription-settings-bar {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.settings-summary {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--schedule-subscription-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: var(--vtsuru-page-radius, 8px);
+  color: var(--schedule-subscription-accent-readable);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.settings-toggle:hover {
+  background: color-mix(in srgb, var(--schedule-subscription-accent) 10%, transparent);
+}
+
+.settings-toggle:focus-visible {
+  outline: 2px solid var(--schedule-subscription-accent);
+  outline-offset: 2px;
+}
+
+.settings-toggle-arrow {
+  transition: transform 120ms ease;
+}
+
+.settings-toggle-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+.subscription-settings {
+  flex: 1 1 100%;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.subscription-setting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.setting-label {
+  color: var(--schedule-subscription-muted);
+  font-size: 12px;
+}
+
+.setting-option {
+  min-height: 26px;
+  padding: 0 11px;
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-subscription-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--schedule-subscription-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.setting-option:hover {
+  border-color: color-mix(in srgb, var(--schedule-subscription-accent) 55%, var(--schedule-subscription-border));
+  color: var(--schedule-subscription-fg);
+}
+
+.setting-option.active {
+  border-color: var(--schedule-subscription-accent);
+  background: color-mix(in srgb, var(--schedule-subscription-accent) 14%, transparent);
+  color: var(--schedule-subscription-accent-readable);
+}
+
+.setting-option:focus-visible {
+  outline: 2px solid var(--schedule-subscription-accent);
+  outline-offset: 2px;
 }
 
 .sr-only {

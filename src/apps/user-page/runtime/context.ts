@@ -1,12 +1,12 @@
 import type { InjectionKey, Ref } from 'vue'
 import { inject, provide, shallowReadonly } from 'vue'
 
-import type { UserPagesSettingsV1 } from '../types'
+import type { UserPagesSettings } from '../types'
 
 export type PublicUserPageStatus = 'idle' | 'loading' | 'not-found' | 'error' | 'ready'
 
 export interface PublicUserPageRuntime {
-  settings: Readonly<Ref<UserPagesSettingsV1 | null>>
+  settings: Readonly<Ref<UserPagesSettings | null>>
   status: Readonly<Ref<PublicUserPageStatus>>
   error: Readonly<Ref<Error | null>>
   retry: () => void
@@ -15,7 +15,7 @@ export interface PublicUserPageRuntime {
 const PUBLIC_USER_PAGE_RUNTIME_KEY: InjectionKey<PublicUserPageRuntime> = Symbol('public-user-page-runtime')
 
 export function providePublicUserPageRuntime(runtime: {
-  settings: Ref<UserPagesSettingsV1 | null>
+  settings: Ref<UserPagesSettings | null>
   status: Ref<PublicUserPageStatus>
   error: Ref<Error | null>
   retry: () => void

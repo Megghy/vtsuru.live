@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { effectScope, nextTick } from 'vue'
 
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { useUserPageEditorCore } from '../useUserPageEditorCore'
 
@@ -24,8 +24,8 @@ describe('user page editor current page binding', () => {
   it('follows settings replacements and writes to the active page', () => {
     const scope = effectScope()
     const core = scope.run(createCore)
-    const replacement: UserPagesSettingsV1 = {
-      version: 1,
+    const replacement: UserPagesSettings = {
+      version: 2,
       home: { mode: 'legacy', title: '新主页' },
       pages: { works: { mode: 'legacy', title: '作品页' } },
     }

@@ -41,6 +41,7 @@ import {
   USER_FEATURE_DEFINITIONS,
 } from '@/apps/user-page/featureNavigation'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
+import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import { providePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { consumeDraftPreview } from '@/apps/user-page/runtime/draftPreview'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
@@ -48,7 +49,7 @@ import { clearUserPageRuntimeCache } from '@/apps/user-page/runtime/query'
 import { usePublicPageSeo } from '@/apps/user-page/runtime/seo'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { getUserPageAppearanceOverrides } from '@/apps/user-page/themeConfig'
-import type { BiliProfile, BiliProfileStatus, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { BiliProfile, BiliProfileStatus, UserPagesSettings } from '@/apps/user-page/types'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
@@ -103,7 +104,7 @@ type UserNavGroup = {
 
 // 侧边栏菜单项
 const navGroups = shallowRef<UserNavGroup[]>([])
-const userPagesSettings = ref<UserPagesSettingsV1 | null>(null)
+const userPagesSettings = ref<UserPagesSettings | null>(null)
 const publicCustomCss = computed(() => {
   const css = userPagesSettings.value?.customCss
   if (typeof css !== 'string' || !css.trim()) return ''
@@ -390,12 +391,13 @@ function updateMenuOptions() {
           ? String((cfg as any).title).trim()
           : `/${slug}`,
       order: typeof (cfg as any)?.navOrder === 'number' ? (cfg as any).navOrder : 0,
+      icon: resolveUserPageNavIcon((cfg as any)?.navIcon),
     }))
     .toSorted((a, b) => a.order - b.order || a.slug.localeCompare(b.slug))
     .map((it) => ({
       label: it.title,
       key: `user-page:${it.slug}`,
-      icon: BrowsersOutline,
+      icon: it.icon,
       to: { name: 'user-page', params: { id: route.params.id, pageSlug: it.slug } },
     })) as UserNavItem[]
 

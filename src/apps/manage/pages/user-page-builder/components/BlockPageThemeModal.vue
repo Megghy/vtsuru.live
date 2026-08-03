@@ -113,6 +113,13 @@ function applyThemePreset(key: string | null) {
   if (preset) Object.assign(ensureTheme(), preset.theme)
 }
 
+function useInheritedTheme() {
+  const project = editor.currentProject.value
+  if (!project) throw new Error('当前页不是区块模式')
+  delete project.theme
+  themePresetKey.value = null
+}
+
 function openExportModal() {
   try {
     exportJson.value = editor.exportCurrentBlockPageJson()
@@ -172,8 +179,20 @@ function confirmImportJson() {
           :show-icon="true"
           style="margin-bottom: 12px"
         >
-          这里的设置仅应用于当前区块页，页面级和全局设置仍可覆盖对应选项。
+          这里的设置仅应用于当前区块页，并会覆盖页面级和全局设置中的同名选项。
         </NAlert>
+
+        <NFlex
+          justify="end"
+          style="margin-bottom: 12px"
+        >
+          <NButton
+            secondary
+            @click="useInheritedTheme"
+          >
+            使用页面与全局主题
+          </NButton>
+        </NFlex>
 
         <NDivider style="margin: 10px 0"> 背景 </NDivider>
         <BackgroundSettingsEditor

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Icon Picker Preview</title>
+    <style>
+      :root {
+        --vtsuru-bg: #ffffff;
+        --vtsuru-bg-inset: #f4f4f5;
+        --vtsuru-bg-muted: #e4e4e7;
+        --vtsuru-fg: #18181b;
+        --vtsuru-brand: #18a058;
+        --vtsuru-brand-tint: rgb(24 160 88 / 12%);
+        --vtsuru-border: #d4d4d8;
+        --vtsuru-border-strong: #a1a1aa;
+      }
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { h, ref } from 'vue'
+      import { NConfigProvider } from 'naive-ui'
+      import PageIconPickerModal from '/src/apps/manage/pages/user-page-builder/components/PageIconPickerModal.vue'
+
+      const show = ref(true)
+      const app = (await import('vue')).createApp({
+        setup() {
+          return () =>
+            h(NConfigProvider, null, {
+              default: () =>
+                h(PageIconPickerModal, {
+                  show: show.value,
+                  value: 'MusicalNotesOutline',
+                  'onUpdate:show': (value) => (show.value = value),
+                }),
+            })
+        },
+      })
+      app.mount('#app')
+    </script>
+  </body>
+</html>

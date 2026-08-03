@@ -2,6 +2,7 @@ import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/cus
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { isValidGoogleFontFamily } from '@/apps/user-page/googleFonts'
+import { isUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import { isNormalizedUserPageColor, USER_PAGE_THEME_COLOR_KEYS } from '@/apps/user-page/themeColor'
 import {
   isValidPageMaxWidth,
@@ -11,7 +12,7 @@ import {
   PAGE_SHADOW_LEVELS,
   PAGE_SPACING_LEVELS,
 } from '@/apps/user-page/themeConfig'
-import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 
 export type UserPageValidationScope = 'settings' | 'page' | 'block'
 
@@ -176,6 +177,8 @@ function validatePage(
     report(issues, pageTarget, 'mode', `页面模式不合法：${String(page.mode)}`)
     return
   }
+  if (page.navIcon !== undefined && !isUserPageNavIcon(page.navIcon))
+    report(issues, pageTarget, 'navIcon', '导航图标不合法')
   validateTheme((page as unknown as UnknownObject).theme, 'theme', pageTarget, issues)
   validateBackground(page.background, 'background', pageTarget, issues)
   if (page.mode === 'block') {
@@ -202,7 +205,7 @@ function validatePage(
   }
 }
 
-function validateSettings(settings: UserPagesSettingsV1, validateBlockProject: BlockProjectValidator) {
+function validateSettings(settings: UserPagesSettings, validateBlockProject: BlockProjectValidator) {
   const issues: UserPageValidationIssue[] = []
   const settingsTarget: IssueTarget = { scope: 'settings', pageKey: null, blockId: null }
   const customCss = (settings as unknown as UnknownObject).customCss
@@ -225,10 +228,10 @@ function validateSettings(settings: UserPagesSettingsV1, validateBlockProject: B
   return issues
 }
 
-export function validateUserPagesSettings(settings: UserPagesSettingsV1) {
+export function validateUserPagesSettings(settings: UserPagesSettings) {
   return validateSettings(settings, validateBlockPageProject)
 }
 
-export function validateRenderableUserPagesSettings(settings: UserPagesSettingsV1) {
+export function validateRenderableUserPagesSettings(settings: UserPagesSettings) {
   return validateSettings(settings, validateRenderableBlockPageProject)
 }

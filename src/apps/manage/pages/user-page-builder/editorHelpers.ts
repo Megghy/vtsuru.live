@@ -1,7 +1,7 @@
 import { toRaw } from 'vue'
 
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 export function createId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -310,7 +310,7 @@ export function isEmptyBlock(block: BlockNode): boolean {
   return false
 }
 
-export function pruneHiddenEmptyBlocks(settingsToPrune: UserPagesSettingsV1): number {
+export function pruneHiddenEmptyBlocks(settingsToPrune: UserPagesSettings): number {
   let removed = 0
   const pruneProject = (p: BlockPageProject | undefined) => {
     if (!p) return

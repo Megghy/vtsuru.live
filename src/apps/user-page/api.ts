@@ -22,9 +22,9 @@ import {
 } from '@/shared/config'
 
 import { migrateUserPagesSettings } from './normalize'
-import type { BiliProfile, UserPagesMyStateResponse, UserPagesSettingsV1 } from './types'
+import type { BiliProfile, UserPagesMyStateResponse, UserPagesSettings } from './types'
 
-function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
+function parseUserPagesSettings(raw: string): UserPagesSettings {
   let parsed: unknown
   try {
     parsed = JSON.parse(raw)
@@ -110,7 +110,7 @@ export async function fetchPublicActiveVideoCollect(userId: number, options?: Qu
 export async function fetchUserPagesSettingsByUserId(
   userId: number,
   options?: QueryRequestOptions,
-): Promise<UserPagesSettingsV1 | null> {
+): Promise<UserPagesSettings | null> {
   const resp = await QueryGetAPI<string>(
     `${USER_PAGES_API_URL}get-user`,
     { id: userId, _ts: Date.now() },
@@ -123,9 +123,9 @@ export async function fetchUserPagesSettingsByUserId(
 }
 
 export async function fetchMyUserPagesState(): Promise<{
-  draft: UserPagesSettingsV1 | null
-  published: UserPagesSettingsV1 | null
-  rollback: UserPagesSettingsV1 | null
+  draft: UserPagesSettings | null
+  published: UserPagesSettings | null
+  rollback: UserPagesSettings | null
 }> {
   const resp = await QueryGetAPI<UserPagesMyStateResponse>(`${USER_PAGES_API_URL}get-my`, { _ts: Date.now() })
   const data = unwrapOk(resp, '无法获取用户页面配置')
@@ -136,7 +136,7 @@ export async function fetchMyUserPagesState(): Promise<{
   }
 }
 
-export async function saveMyUserPagesDraft(settings: UserPagesSettingsV1) {
+export async function saveMyUserPagesDraft(settings: UserPagesSettings) {
   const resp = await QueryPostAPI<string>(`${USER_PAGES_API_URL}save-draft`, {
     json: JSON.stringify(settings),
   })
@@ -148,7 +148,7 @@ export async function clearMyUserPagesDraft() {
   unwrapOk(resp, '清空草稿失败')
 }
 
-export async function publishMyUserPagesSettings(settings: UserPagesSettingsV1) {
+export async function publishMyUserPagesSettings(settings: UserPagesSettings) {
   const resp = await QueryPostAPI<string>(`${USER_PAGES_API_URL}publish`, {
     json: JSON.stringify(settings),
   })

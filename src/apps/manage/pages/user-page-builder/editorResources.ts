@@ -1,5 +1,5 @@
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 export interface FileRefEntry {
   id: number
@@ -8,7 +8,7 @@ export interface FileRefEntry {
   locations: string[]
 }
 
-export function collectFileRefsFromSettings(settings: UserPagesSettingsV1): FileRefEntry[] {
+export function collectFileRefsFromSettings(settings: UserPagesSettings): FileRefEntry[] {
   const map = new Map<number, { id: number; path?: string; name?: string; locations: Set<string> }>()
 
   const add = (obj: any, loc: string) => {
@@ -60,7 +60,7 @@ export function extractImageSrcs(value: string) {
 }
 
 export function normalizeRichTextImagesFile(
-  settings: UserPagesSettingsV1,
+  settings: UserPagesSettings,
   ensurePropsObject: (block: BlockNode) => Record<string, any>,
 ) {
   const normalizeProject = (p: BlockPageProject | undefined) => {

@@ -622,13 +622,23 @@ export const SHARED_BLOCK_DEFINITIONS = [
   ),
   definition(
     'featuredGoods',
-    '精选积分商品',
+    '精选积分礼物',
     'data',
     ['积分', '兑换', '商品', '周边'],
-    { count: 3, selection: 'pinned', showDescription: true, showStock: true },
+    { count: 3, selection: 'pinned', goodsIds: [], showDescription: true, showStock: true },
     withProps((p, path, errors) => {
       optionalEnum(p, 'count', [3, 4, 5, 6], path, errors)
       optionalEnum(p, 'selection', ['pinned', 'available'], path, errors)
+      const goodsIds = p.goodsIds
+      if (
+        goodsIds !== undefined &&
+        (!Array.isArray(goodsIds) ||
+          goodsIds.length > 6 ||
+          goodsIds.some((id) => !Number.isInteger(id) || id <= 0) ||
+          new Set(goodsIds).size !== goodsIds.length)
+      ) {
+        errors.push(`${path}: goodsIds 必须是最多 6 项且不重复的正整数数组`, validationFieldPath(path, 'goodsIds'))
+      }
       booleans(p, ['showDescription', 'showStock'], path, errors)
     }),
   ),

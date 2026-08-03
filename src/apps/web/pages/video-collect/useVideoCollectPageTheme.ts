@@ -13,11 +13,11 @@ import {
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserCustomCss } from '@/apps/user-page/runtime/customCss'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 import { isDarkMode } from '@/shared/utils'
 
 export function useVideoCollectPageTheme(table: Ref<VideoCollectTable | null | undefined>) {
-  const ownerSettings = ref<UserPagesSettingsV1 | null>(null)
+  const ownerSettings = ref<UserPagesSettings | null>(null)
   let requestId = 0
 
   watch(

@@ -702,7 +702,7 @@ async function go(name: string) {
 .sider-top-label,
 .sider-btn-label {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -747,7 +747,7 @@ async function go(name: string) {
   background: transparent;
   color: var(--vtsuru-fg-muted);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   display: inline-flex;
@@ -873,7 +873,7 @@ async function go(name: string) {
 
 .nav-item__label {
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

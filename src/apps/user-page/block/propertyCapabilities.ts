@@ -70,6 +70,8 @@ export const BLOCK_PROPERTY_CAPABILITY_RULES: Partial<Record<BlockType, BlockCap
     url: (props) => !(props.embed === true && props.embedMode === 'questionBox'),
     embedMode: (props) => props.embed === true,
     height: (props) => props.embed === true && props.embedMode === 'iframe',
+    defaultTag: (props) => props.embed === true && props.embedMode === 'questionBox',
+    showPublicQuestions: (props) => props.embed === true && props.embedMode === 'questionBox',
   },
   divider: {
     framed: () => false,

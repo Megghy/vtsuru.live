@@ -1,12 +1,12 @@
 import type { Ref } from 'vue'
 
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { cloneBlockNode, deepCloneJson } from './editorHelpers'
 
 export interface UseUserPagePagesOptions {
-  settings: Ref<UserPagesSettingsV1>
+  settings: Ref<UserPagesSettings>
   currentKey: Ref<string>
   history: { batch: (fn: () => void) => void }
   clearSelection: () => void

@@ -10,7 +10,7 @@ import {
   Send24Regular,
 } from '@vicons/fluent'
 import { NAvatar, NButton, NCheckbox, NIcon, NInput, NTag, useMessage } from 'naive-ui'
-import { toRef, watch } from 'vue'
+import { onBeforeUnmount, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
 
@@ -24,6 +24,7 @@ const props = defineProps<{
   userInfo?: UserInfo
   tags: string[]
   embedded?: boolean
+  defaultTag?: string
 }>()
 const emit = defineEmits<{
   openHistory: []
@@ -68,6 +69,25 @@ watch(
   },
   { immediate: true },
 )
+
+let defaultTagApplied = false
+let defaultTagTimer: number | undefined
+watch(
+  () => props.tags,
+  (tags) => {
+    const defaultValue = props.defaultTag
+    if (!defaultValue || !tags.includes(defaultValue) || defaultTagApplied) return
+    window.clearTimeout(defaultTagTimer)
+    defaultTagTimer = window.setTimeout(() => {
+      if (defaultTagApplied || draft.value.tag !== null) return
+      draft.value = { ...draft.value, tag: defaultValue }
+      defaultTagApplied = true
+    }, 150)
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => window.clearTimeout(defaultTagTimer))
 
 function notifyFile(messageText: string, type: 'warning' | 'error') {
   message[type](messageText)

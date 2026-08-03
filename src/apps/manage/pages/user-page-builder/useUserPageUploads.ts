@@ -5,7 +5,7 @@ import { UserFileLocation, UserFileTypes } from '@/api/api-models'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
 import { reportUserPageError } from '@/apps/user-page/runtime/observability'
-import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 import { UploadStage, uploadFiles } from '@/shared/services/fileUpload'
 
 import { validateUserPageImageFiles } from './userPageImageUpload'
@@ -22,7 +22,7 @@ type PendingUploadContext =
 
 export interface UseUserPageUploadsOptions {
   currentProject: Ref<BlockPageProject | null>
-  settings: Ref<UserPagesSettingsV1>
+  settings: Ref<UserPagesSettings>
   currentPage: Ref<UserPageConfig>
   ensurePropsObject: (block: BlockNode) => Record<string, any>
   notify: {

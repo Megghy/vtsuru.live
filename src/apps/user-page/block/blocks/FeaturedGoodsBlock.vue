@@ -20,6 +20,11 @@ const values = computed<Record<string, unknown>>(() =>
 )
 const count = computed(() => ([3, 4, 5, 6].includes(Number(values.value.count)) ? Number(values.value.count) : 3))
 const selection = computed(() => (values.value.selection === 'available' ? 'available' : 'pinned'))
+const selectedGoodsIds = computed(() =>
+  Array.isArray(values.value.goodsIds)
+    ? values.value.goodsIds.filter((id): id is number => Number.isInteger(id) && id > 0).slice(0, 6)
+    : [],
+)
 const showDescription = computed(() => values.value.showDescription !== false)
 const showStock = computed(() => values.value.showStock !== false)
 const enabled = computed(() => getEnabledUserFunctions(props.userInfo).has(FunctionTypes.Point))
@@ -41,16 +46,23 @@ function price(item: ResponsePointGoodModel) {
   return min === max ? `${min} 积分` : `${min} - ${max} 积分`
 }
 
-const goods = computed(() =>
-  (query.data.value ?? [])
-    .filter((item) => item.status === GoodsStatus.Normal)
+const goods = computed(() => {
+  const available = (query.data.value ?? []).filter((item) => item.status === GoodsStatus.Normal)
+  if (selectedGoodsIds.value.length) {
+    const byId = new Map(available.map((item) => [item.id, item]))
+    return selectedGoodsIds.value.flatMap((id) => {
+      const item = byId.get(id)
+      return item ? [item] : []
+    })
+  }
+  return available
     .toSorted((a, b) =>
       selection.value === 'pinned'
         ? Number(b.isPinned) - Number(a.isPinned)
         : Number(isSoldOut(a)) - Number(isSoldOut(b)),
     )
-    .slice(0, count.value),
-)
+    .slice(0, count.value)
+})
 
 async function load(force = false) {
   if (!props.userInfo?.id || !enabled.value) {
@@ -83,7 +95,7 @@ watch(
     <template #header>
       <div class="goods-header">
         <span class="goods-heading"
-          ><NIcon><StorefrontOutline /></NIcon>精选积分商品</span
+          ><NIcon><StorefrontOutline /></NIcon>精选积分礼物</span
         >
         <RouterLink
           v-if="props.userInfo?.name"

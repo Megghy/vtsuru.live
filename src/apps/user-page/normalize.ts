@@ -1,9 +1,9 @@
 import type { BlockNode } from './block/schema'
 import { BLOCK_PAGE_VERSION } from './block/schema'
 import { normalizeUserPageColor, USER_PAGE_THEME_COLOR_KEYS } from './themeColor'
-import type { UserPagesSettingsV1 } from './types'
+import type { UserPagesSettings } from './types'
 
-export const USER_PAGES_SETTINGS_VERSION = 1 as const
+export const USER_PAGES_SETTINGS_VERSION = 2 as const
 
 type JsonObject = Record<string, unknown>
 type Migration = (input: JsonObject) => JsonObject
@@ -21,8 +21,21 @@ function migrateLegacyToV1(input: JsonObject): JsonObject {
   return output
 }
 
+function migrateV1ToV2(input: JsonObject): JsonObject {
+  const output = structuredClone(input)
+  forEachBlockProject(output, (project) => {
+    const theme = asObject(project.theme)
+    if (!theme || String(theme.primaryColor).toLowerCase() !== '#18a058') return
+    delete theme.primaryColor
+    if (Object.keys(theme).length === 0) delete project.theme
+  })
+  output.version = USER_PAGES_SETTINGS_VERSION
+  return output
+}
+
 const MIGRATIONS: Readonly<Record<number, Migration>> = {
   0: migrateLegacyToV1,
+  1: migrateV1ToV2,
 }
 
 function forEachPage(settings: JsonObject, visit: (page: JsonObject, path: string) => void) {
@@ -106,7 +119,7 @@ function validatePageModes(settings: JsonObject) {
   if (pages) Object.entries(pages).forEach(([slug, page]) => validatePage(page, `pages.${slug}`))
 }
 
-export function migrateUserPagesSettings(input: unknown): UserPagesSettingsV1 {
+export function migrateUserPagesSettings(input: unknown): UserPagesSettings {
   const source = asObject(input)
   if (!source) throw new Error('用户页面配置必须是 object')
 
@@ -136,7 +149,7 @@ export function migrateUserPagesSettings(input: unknown): UserPagesSettingsV1 {
 
   const normalized = normalizeCurrentVersion(current)
   validatePageModes(normalized)
-  return normalized as unknown as UserPagesSettingsV1
+  return normalized as unknown as UserPagesSettings
 }
 
 export function migrateBlockPageProject(project: unknown) {

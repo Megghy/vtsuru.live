@@ -190,7 +190,7 @@ useIntervalFn(() => {
   height: 42px;
   border-radius: 50%;
   color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
-  background: var(--vtsuru-brand-tint);
+  background: var(--vtsuru-page-primary-soft, var(--vtsuru-brand-tint));
   font-size: 21px;
 }
 .playing-copy {

@@ -277,14 +277,14 @@ describe('validateBlockPageProject', () => {
     expect(result.ok === false ? result.issues.map((issue) => issue.fieldPath) : []).toContain('count')
   })
 
-  it('校验精选积分商品配置', () => {
+  it('校验精选积分礼物配置', () => {
     expect(
       validateBlockPageProject(
         project([
           {
             id: 'goods',
             type: 'featuredGoods',
-            props: { count: 4, selection: 'pinned', showDescription: true, showStock: true },
+            props: { count: 4, selection: 'pinned', goodsIds: [12, 34], showDescription: true, showStock: true },
           },
         ]),
       ),
@@ -295,12 +295,12 @@ describe('validateBlockPageProject', () => {
         {
           id: 'bad-goods',
           type: 'featuredGoods',
-          props: { count: 8, selection: 'random' },
+          props: { count: 8, selection: 'random', goodsIds: [1, 1, 2, 3, 4, 5, 6] },
         },
       ]),
     )
     expect(result.ok === false ? result.issues.map((issue) => issue.fieldPath) : []).toEqual(
-      expect.arrayContaining(['count', 'selection']),
+      expect.arrayContaining(['count', 'selection', 'goodsIds']),
     )
   })
 

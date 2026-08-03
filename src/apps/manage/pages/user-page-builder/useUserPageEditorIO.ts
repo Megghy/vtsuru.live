@@ -4,7 +4,7 @@ import { nextTick, ref } from 'vue'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { validateBlockPageProject } from '@/apps/user-page/block/schema'
 import { createDraftPreview } from '@/apps/user-page/runtime/draftPreview'
-import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 
 import { deepCloneJson, estimateUtf8Bytes } from './editorHelpers'
 import type { UserPageValidationIssue } from './validateUserPagesSettings'
@@ -19,11 +19,11 @@ export interface ValidationFocusRequest {
 }
 
 interface UseUserPageEditorIOOptions {
-  settings: Ref<UserPagesSettingsV1>
+  settings: Ref<UserPagesSettings>
   currentKey: Ref<string>
   currentPage: Ref<UserPageConfig>
   currentProject: ComputedRef<BlockPageProject | null>
-  loadedRollback: Ref<UserPagesSettingsV1 | null>
+  loadedRollback: Ref<UserPagesSettings | null>
   accountId: ComputedRef<number>
   accountName: ComputedRef<string>
   selectedBlockIds: Ref<string[]>
@@ -67,7 +67,7 @@ function parseImportedProject(raw: string) {
   return validation.project
 }
 
-function assignProject(settings: UserPagesSettingsV1, key: string, project: BlockPageProject) {
+function assignProject(settings: UserPagesSettings, key: string, project: BlockPageProject) {
   if (key === 'home') {
     settings.home ??= { mode: 'block', block: project }
     settings.home.mode = 'block'
@@ -84,7 +84,7 @@ export function useUserPageEditorIO(options: UseUserPageEditorIOOptions) {
   const validationFocusRequest = ref<ValidationFocusRequest | null>(null)
   let validationFocusRequestId = 0
 
-  function openSettingsPreview(settings: UserPagesSettingsV1) {
+  function openSettingsPreview(settings: UserPagesSettings) {
     if (!options.accountName.value) return
     const pageKey =
       options.currentKey.value === 'home' || settings.pages?.[options.currentKey.value]

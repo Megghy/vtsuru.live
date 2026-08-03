@@ -3,7 +3,7 @@ import type { ComputedRef } from 'vue'
 import { computed, ref, watch } from 'vue'
 
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
-import type { ContribPageRef, UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { ContribPageRef, UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 
 import { deepCloneJson } from './editorHelpers'
 import { createDefaultProject, ensurePageConfig, getPageModeLabel } from './editorPageConfig'
@@ -21,8 +21,8 @@ interface UseUserPageEditorCoreOptions {
 }
 
 function createCoreState() {
-  const settings = ref<UserPagesSettingsV1>({
-    version: 1,
+  const settings = ref<UserPagesSettings>({
+    version: 2,
     home: { mode: 'block', block: createDefaultProject() },
     pages: {},
   })
@@ -45,9 +45,9 @@ function createCoreState() {
     isSaving: ref(false),
     error: ref<string | null>(null),
     rollbackAvailable: ref(false),
-    loadedDraft: ref<UserPagesSettingsV1 | null>(null),
-    loadedPublished: ref<UserPagesSettingsV1 | null>(null),
-    loadedRollback: ref<UserPagesSettingsV1 | null>(null),
+    loadedDraft: ref<UserPagesSettings | null>(null),
+    loadedPublished: ref<UserPagesSettings | null>(null),
+    loadedRollback: ref<UserPagesSettings | null>(null),
     loadedFrom: ref<'draft' | 'published' | 'default'>('default'),
     isDirty: ref(false),
     lastSavedAt: ref<number | null>(null),
@@ -76,7 +76,7 @@ function watchCurrentPageSelection(state: ReturnType<typeof createCoreState>, cl
   )
 }
 
-function createEditorHistory(settings: ReturnType<typeof ref<UserPagesSettingsV1>>) {
+function createEditorHistory(settings: ReturnType<typeof ref<UserPagesSettings>>) {
   return useRefHistory(settings, {
     deep: true,
     flush: 'sync',

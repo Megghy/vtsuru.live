@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { getUserPagesLocalDraftKey } from '../useUserPagesLocalDraftStorage'
 import { selectInitialSettings } from '../useUserPageStateLoader'
 
-const published: UserPagesSettingsV1 = {
-  version: 1,
+const published: UserPagesSettings = {
+  version: 2,
   home: { mode: 'legacy' },
   pages: {},
 }
 
-function localDraft(settings: UserPagesSettingsV1, base: UserPagesSettingsV1 = published) {
+function localDraft(settings: UserPagesSettings, base: UserPagesSettings = published) {
   return { settings, baseSnapshot: JSON.stringify(base) }
 }
 
@@ -21,7 +21,7 @@ describe('user page local draft recovery', () => {
   })
 
   it('本地内容与服务端不同时恢复本地内容并保持未保存状态', () => {
-    const local: UserPagesSettingsV1 = {
+    const local: UserPagesSettings = {
       ...published,
       pages: { works: { mode: 'legacy', title: '本地修改' } },
     }
@@ -44,7 +44,7 @@ describe('user page local draft recovery', () => {
   })
 
   it('保留只有全局主题的服务端草稿', () => {
-    const draft: UserPagesSettingsV1 = {
+    const draft: UserPagesSettings = {
       ...published,
       theme: { fontFamily: 'Huninn' },
     }
@@ -55,12 +55,12 @@ describe('user page local draft recovery', () => {
   })
 
   it('服务端已变化时忽略基于旧版本的本地内容', () => {
-    const currentDraft: UserPagesSettingsV1 = {
+    const currentDraft: UserPagesSettings = {
       ...published,
       home: { mode: 'legacy', title: '服务端当前版本' },
       theme: { fontFamily: 'Huninn' },
     }
-    const staleLocal: UserPagesSettingsV1 = {
+    const staleLocal: UserPagesSettings = {
       ...published,
       pages: { works: { mode: 'legacy', title: '旧本地修改' } },
     }
@@ -73,7 +73,7 @@ describe('user page local draft recovery', () => {
   })
 
   it('旧版未知基线的本地内容保留为待处理冲突', () => {
-    const staleLocal: UserPagesSettingsV1 = {
+    const staleLocal: UserPagesSettings = {
       ...published,
       pages: { works: { mode: 'legacy', title: '旧版本地修改' } },
     }
@@ -87,7 +87,7 @@ describe('user page local draft recovery', () => {
   })
 
   it('服务端没有配置时仅恢复基于空服务端的本地内容', () => {
-    const local: UserPagesSettingsV1 = {
+    const local: UserPagesSettings = {
       ...published,
       pages: { works: { mode: 'legacy', title: '首次本地修改' } },
     }

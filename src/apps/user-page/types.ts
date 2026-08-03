@@ -5,6 +5,7 @@ import type {
   PageBackgroundScrimMode,
   PageBackgroundType,
 } from './block/schema'
+import type { UserPageNavIconId } from './pageIcons'
 import type { UserPageThemeConfig } from './themeConfig'
 
 export type UserPageRenderMode = 'legacy' | 'block' | 'contrib'
@@ -35,6 +36,7 @@ export interface ContribPageRef {
 export interface UserPageConfig {
   mode: UserPageRenderMode
   title?: string
+  navIcon?: UserPageNavIconId
   description?: string
   navVisible?: boolean
   navOrder?: number
@@ -66,8 +68,8 @@ export interface UserPageBackgroundConfigV1 {
   pageBackgroundScrimStrength?: number
 }
 
-export interface UserPagesSettingsV1 {
-  version: 1
+export interface UserPagesSettings {
+  version: 2
   customCss?: string
   /**
    * 全局主题（对所有页面生效，包括内置页面）。

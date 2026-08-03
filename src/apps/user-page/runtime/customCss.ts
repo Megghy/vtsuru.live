@@ -2,9 +2,9 @@ import type { Ref } from 'vue'
 import { computed, onActivated, onBeforeUnmount, onDeactivated, ref, watch } from 'vue'
 
 import { inspectCustomCss } from '../block/customHtmlRuntime'
-import type { UserPagesSettingsV1 } from '../types'
+import type { UserPagesSettings } from '../types'
 
-export function usePublicUserCustomCss(settings: Readonly<Ref<UserPagesSettingsV1 | null>>) {
+export function usePublicUserCustomCss(settings: Readonly<Ref<UserPagesSettings | null>>) {
   const active = ref(true)
   const css = computed(() => {
     const value = settings.value?.customCss

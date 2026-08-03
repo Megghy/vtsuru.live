@@ -14,15 +14,35 @@ import {
   NSwitch,
   NText,
 } from 'naive-ui'
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { QueryGetAPI } from '@/api/query'
+import { QUESTION_API_URL } from '@/shared/config'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
 const { editor, blockProps, propertyAvailable } = useBlockPropsEditor(() => props.block)
+
+const feedbackTags = ref<string[]>([])
+
+async function loadFeedbackTags() {
+  const userId = editor.account.value?.id
+  if (!userId) return
+  try {
+    const response = await QueryGetAPI<unknown[]>(`${QUESTION_API_URL}get-tags`, { id: userId })
+    if (response.code !== 200) throw new Error(response.message)
+    feedbackTags.value = response.data
+      .map((value) => (typeof value === 'string' ? value : (value as Record<string, unknown> | null)?.name))
+      .filter((value): value is string => typeof value === 'string')
+  } catch {
+    feedbackTags.value = []
+  }
+}
+
+onMounted(loadFeedbackTags)
 
 const countdownTarget = computed<number | null>({
   get() {
@@ -256,6 +276,29 @@ function enableFeedbackEmbed(enabled: boolean) {
           :max="1200"
           style="width: 100%"
         />
+      </NFormItem>
+      <NFormItem
+        v-if="propertyAvailable('defaultTag')"
+        label="默认话题"
+      >
+        <NSelect
+          v-model:value="blockProps.defaultTag"
+          :options="feedbackTags.map((tag) => ({ label: tag, value: tag }))"
+          clearable
+          filterable
+          placeholder="不预设话题"
+        />
+      </NFormItem>
+      <NFormItem
+        v-if="propertyAvailable('showPublicQuestions')"
+        label="显示公开问题"
+      >
+        <NFlex justify="end">
+          <NSwitch
+            v-model:value="blockProps.showPublicQuestions"
+            size="small"
+          />
+        </NFlex>
       </NFormItem>
     </PropsGrid>
   </NForm>

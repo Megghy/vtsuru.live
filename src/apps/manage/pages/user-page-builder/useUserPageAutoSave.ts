@@ -1,13 +1,13 @@
 import type { Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
 
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { deepCloneJson } from './editorHelpers'
 import type { UserPageValidationIssue } from './validateUserPagesSettings'
 
 interface UseUserPageAutoSaveOptions {
-  settings: Ref<UserPagesSettingsV1>
+  settings: Ref<UserPagesSettings>
   isLoading: Ref<boolean>
   isSaving: Ref<boolean>
   isDirty: Ref<boolean>
@@ -15,7 +15,7 @@ interface UseUserPageAutoSaveOptions {
   lastSavedSnapshot: Ref<string>
   error: Ref<string | null>
   jsonSanitizedNotified: Ref<boolean>
-  validateAll: (settings: UserPagesSettingsV1) => UserPageValidationIssue[]
+  validateAll: (settings: UserPagesSettings) => UserPageValidationIssue[]
   saveDraft: () => Promise<boolean>
   notifyError: (content: string) => void
 }

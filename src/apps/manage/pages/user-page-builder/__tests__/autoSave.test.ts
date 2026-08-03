@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { effectScope, nextTick, ref } from 'vue'
 
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { useUserPageAutoSave } from '../useUserPageAutoSave'
 
 function createAutoSave(saveDraft: () => Promise<boolean>) {
-  const settings = ref<UserPagesSettingsV1>({
-    version: 1,
+  const settings = ref<UserPagesSettings>({
+    version: 2,
     home: { mode: 'legacy' },
     pages: {},
   })

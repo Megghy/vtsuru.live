@@ -20,6 +20,8 @@ interface BlockConfig {
   height?: number
   framed?: boolean
   backgrounded?: boolean
+  defaultTag?: string
+  showPublicQuestions: boolean
 }
 
 const props = defineProps<{ blockProps: unknown; userInfo?: UserInfo | undefined; biliInfo?: unknown }>()
@@ -47,6 +49,11 @@ const cfg = computed<BlockConfig>(() => {
         : 520,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
+    defaultTag: isBlockPropertyAvailable('feedback', o, 'defaultTag') && typeof o.defaultTag === 'string' ? o.defaultTag : '',
+    showPublicQuestions:
+      isBlockPropertyAvailable('feedback', o, 'showPublicQuestions') && typeof o.showPublicQuestions === 'boolean'
+        ? o.showPublicQuestions
+        : true,
   }
 })
 
@@ -119,7 +126,9 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
         <QuestionBoxView
           v-if="props.userInfo"
           :user-info="props.userInfo"
-          embedded
+          :embedded="true"
+          :default-tag="cfg.defaultTag"
+          :show-public-questions="cfg.showPublicQuestions"
         />
         <NAlert
           v-else

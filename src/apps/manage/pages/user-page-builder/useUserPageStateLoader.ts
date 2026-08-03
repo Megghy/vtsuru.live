@@ -1,17 +1,17 @@
 import type { Ref } from 'vue'
 
 import { fetchMyUserPagesState } from '@/apps/user-page/api'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { deepCloneJson, stableStringify } from './editorHelpers'
 import { createDefaultProject, isEmptyDraftPlaceholder, isMeaningfulSettings } from './editorPageConfig'
 import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
 
 interface UseUserPageStateLoaderOptions {
-  settings: Ref<UserPagesSettingsV1>
-  loadedDraft: Ref<UserPagesSettingsV1 | null>
-  loadedPublished: Ref<UserPagesSettingsV1 | null>
-  loadedRollback: Ref<UserPagesSettingsV1 | null>
+  settings: Ref<UserPagesSettings>
+  loadedDraft: Ref<UserPagesSettings | null>
+  loadedPublished: Ref<UserPagesSettings | null>
+  loadedRollback: Ref<UserPagesSettings | null>
   loadedFrom: Ref<'draft' | 'published' | 'default'>
   rollbackAvailable: Ref<boolean>
   isDirty: Ref<boolean>
@@ -25,7 +25,7 @@ interface UseUserPageStateLoaderOptions {
   notifyError: (content: string) => void
 }
 
-function isSameSettings(first: UserPagesSettingsV1 | null, second: UserPagesSettingsV1 | null) {
+function isSameSettings(first: UserPagesSettings | null, second: UserPagesSettings | null) {
   if (!first || !second) return false
   try {
     return stableStringify(first) === stableStringify(second)
@@ -34,7 +34,7 @@ function isSameSettings(first: UserPagesSettingsV1 | null, second: UserPagesSett
   }
 }
 
-function isSnapshotOfSettings(snapshot: string | null, settings: UserPagesSettingsV1) {
+function isSnapshotOfSettings(snapshot: string | null, settings: UserPagesSettings) {
   if (snapshot === null) return false
   try {
     return stableStringify(JSON.parse(snapshot)) === stableStringify(settings)
@@ -78,10 +78,10 @@ export function selectInitialSettings(
     } as const
   }
   const settings = {
-    version: 1,
+    version: 2,
     home: { mode: 'block', block: createDefaultProject() },
     pages: {},
-  } as UserPagesSettingsV1
+  } as UserPagesSettings
   return {
     settings,
     source: 'default',

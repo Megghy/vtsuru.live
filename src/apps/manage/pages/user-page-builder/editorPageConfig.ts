@@ -1,14 +1,11 @@
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
-import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 
 import { createId } from './editorHelpers'
 
 export function createDefaultProject(): BlockPageProject {
   return {
     version: 1,
-    theme: {
-      primaryColor: '#18a058',
-    },
     blocks: [
       { id: createId(), type: 'profile' },
       { id: createId(), type: 'buttons', props: { items: [] } },
@@ -26,21 +23,21 @@ export function isValidPageConfig(config: unknown): boolean {
   return false
 }
 
-export function isEmptyDraftPlaceholder(settings: UserPagesSettingsV1 | null): boolean {
-  if (!settings || settings.version !== 1 || Object.keys(settings.pages ?? {}).length !== 0) return false
+export function isEmptyDraftPlaceholder(settings: UserPagesSettings | null): boolean {
+  if (!settings || settings.version !== 2 || Object.keys(settings.pages ?? {}).length !== 0) return false
   if (Object.keys(settings).some((key) => !['version', 'home', 'pages'].includes(key))) return false
   if (!settings.home || settings.home.mode !== 'legacy') return false
   const homeKeys = Object.keys(settings.home)
   return homeKeys.length === 1 && homeKeys[0] === 'mode'
 }
 
-export function isMeaningfulSettings(settings: UserPagesSettingsV1 | null): settings is UserPagesSettingsV1 {
-  if (!settings || settings.version !== 1) return false
+export function isMeaningfulSettings(settings: UserPagesSettings | null): settings is UserPagesSettings {
+  if (!settings || settings.version !== 2) return false
   if (isValidPageConfig(settings.home)) return true
   return Object.values(settings.pages ?? {}).some(isValidPageConfig)
 }
 
-export function ensurePageConfig(settings: UserPagesSettingsV1, key: string): UserPageConfig {
+export function ensurePageConfig(settings: UserPagesSettings, key: string): UserPageConfig {
   if (key === 'home') {
     settings.home ??= { mode: 'block', block: createDefaultProject() }
     if (!isValidPageConfig(settings.home)) {

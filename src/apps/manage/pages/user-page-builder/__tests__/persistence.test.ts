@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { useUserPagePersistence } from '../useUserPagePersistence'
 import type { UserPageValidationIssue } from '../validateUserPagesSettings'
@@ -18,8 +18,8 @@ vi.mock('@/apps/user-page/api', () => ({
 }))
 
 function createPersistence(validationIssues: UserPageValidationIssue[] = []) {
-  const settings = ref<UserPagesSettingsV1>({
-    version: 1,
+  const settings = ref<UserPagesSettings>({
+    version: 2,
     home: { mode: 'legacy' },
     pages: {},
   })

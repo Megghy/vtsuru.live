@@ -3,13 +3,13 @@ import type { MaybeRefOrGetter } from 'vue'
 import { computed, toValue } from 'vue'
 
 import { migrateUserPagesSettings } from '@/apps/user-page/normalize'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 import { persistedGetItemRaw, usePersistedStorage } from '@/shared/storage/persist'
 
 import { USER_PAGES_LOCAL_DRAFT_KEY } from './storageKeys'
 
 export interface UserPagesLocalDraftSnapshot {
-  settings: UserPagesSettingsV1
+  settings: UserPagesSettings
   baseSnapshot: string | null
 }
 

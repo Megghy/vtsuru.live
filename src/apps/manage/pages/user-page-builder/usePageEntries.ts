@@ -1,5 +1,7 @@
 import { computed } from 'vue'
 
+import type { UserPageNavIconId } from '@/apps/user-page/pageIcons'
+
 import type { UserPageEditor } from './useUserPageEditor'
 
 export interface PageEntry {
@@ -7,6 +9,7 @@ export interface PageEntry {
   navVisible: boolean
   navOrder: number
   title: string
+  navIcon?: UserPageNavIconId
 }
 
 export function usePageEntries(editor: UserPageEditor) {
@@ -17,6 +20,7 @@ export function usePageEntries(editor: UserPageEditor) {
         navVisible: config.navVisible !== false,
         navOrder: config.navOrder ?? 0,
         title: editor.getPageLabel(slug),
+        navIcon: config.navIcon,
       }))
       .toSorted((a, b) => a.navOrder - b.navOrder || a.slug.localeCompare(b.slug)),
   )

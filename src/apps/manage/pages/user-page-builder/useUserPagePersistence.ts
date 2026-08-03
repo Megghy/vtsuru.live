@@ -9,15 +9,15 @@ import {
 } from '@/apps/user-page/api'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import { reportUserPageError } from '@/apps/user-page/runtime/observability'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { deepCloneJson, estimateUtf8Bytes, pruneHiddenEmptyBlocks } from './editorHelpers'
 import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
 import type { UserPageValidationIssue } from './validateUserPagesSettings'
 
 export interface UseUserPagePersistenceOptions {
-  settings: Ref<UserPagesSettingsV1>
-  loadedPublished: Ref<UserPagesSettingsV1 | null>
+  settings: Ref<UserPagesSettings>
+  loadedPublished: Ref<UserPagesSettings | null>
   loadedFrom?: Ref<'draft' | 'published' | 'default'>
 
   isSaving: Ref<boolean>
@@ -32,7 +32,7 @@ export interface UseUserPagePersistenceOptions {
     batch: (fn: () => void) => void
     clear: () => void
   }
-  validateForPublish: (settingsToValidate: UserPagesSettingsV1) => UserPageValidationIssue[]
+  validateForPublish: (settingsToValidate: UserPagesSettings) => UserPageValidationIssue[]
   loadState: () => Promise<void>
   restoreSnapshot: (snapshot: string) => void
 
@@ -49,7 +49,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
   const publishCheckBytes = ref<number>(0)
   const publishError = ref<string | null>(null)
 
-  function applyPersistedSettings(requestSnapshot: string, persistedSettings: UserPagesSettingsV1) {
+  function applyPersistedSettings(requestSnapshot: string, persistedSettings: UserPagesSettings) {
     const persistedSnapshot = JSON.stringify(persistedSettings)
     const hasNewerChanges = JSON.stringify(opts.settings.value) !== requestSnapshot
     opts.lastSavedSnapshot.value = persistedSnapshot
@@ -64,7 +64,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     return hasNewerChanges
   }
 
-  function scanPublishWarnings(settingsToScan: UserPagesSettingsV1) {
+  function scanPublishWarnings(settingsToScan: UserPagesSettings) {
     let embedCount = 0
     let externalLinkCount = 0
 

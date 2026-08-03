@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ChevronBackOutline, ChevronForwardOutline, HomeOutline } from '@vicons/ionicons5'
 import { NButton, NCard, NFlex, NIcon, NScrollbar, NText, NTooltip } from 'naive-ui'
-import { computed, inject } from 'vue'
+import { inject } from 'vue'
+
+import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 
 import { UserPageEditorKey } from '../context'
 import { usePageEntries } from '../usePageEntries'
@@ -22,12 +24,6 @@ const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const { pageEntries } = usePageEntries(editor)
-const compactPages = computed(() =>
-  pageEntries.value.map((page) => ({
-    ...page,
-    shortLabel: page.title.replace(/^[/@]/, '').trim().slice(0, 1).toLocaleUpperCase() || '#',
-  })),
-)
 </script>
 
 <template>
@@ -118,7 +114,7 @@ const compactPages = computed(() =>
               主页
             </NTooltip>
             <NTooltip
-              v-for="page in compactPages"
+              v-for="page in pageEntries"
               :key="page.slug"
               placement="right"
             >
@@ -131,7 +127,9 @@ const compactPages = computed(() =>
                   :aria-label="page.title"
                   @click="editor.currentKey.value = page.slug"
                 >
-                  {{ page.shortLabel }}
+                  <template #icon>
+                    <NIcon :component="resolveUserPageNavIcon(page.navIcon)" />
+                  </template>
                 </NButton>
               </template>
               {{ page.title }}{{ page.navVisible ? '' : '（导航隐藏）' }}

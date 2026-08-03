@@ -81,7 +81,7 @@ const anchorId = computed(() => (props.blockId ? getHeadingAnchorId(props.blockI
   top: 4px;
   bottom: 4px;
   width: 4px;
-  background: var(--vtsuru-brand-soft);
+  background: var(--vtsuru-page-primary-soft, var(--vtsuru-brand-soft));
   border-radius: 99px;
   opacity: 0.8;
 }

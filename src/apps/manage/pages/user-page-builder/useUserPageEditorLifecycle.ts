@@ -2,7 +2,7 @@ import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvide
 import type { ComputedRef } from 'vue'
 import { computed, ref, watch } from 'vue'
 
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { deepCloneJson, estimateUtf8Bytes, stableStringify } from './editorHelpers'
 import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'
@@ -97,7 +97,7 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     validateForPublish: validateRenderableUserPagesSettings,
     loadState: loader.loadState,
     restoreSnapshot: (snapshot) => {
-      const restored = JSON.parse(snapshot) as UserPagesSettingsV1
+      const restored = JSON.parse(snapshot) as UserPagesSettings
       core.settings.value = restored
       core.blocks.clearSelection()
       localDraftStorage.value = {
