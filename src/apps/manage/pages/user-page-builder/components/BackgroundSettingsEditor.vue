@@ -1,17 +1,4 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NColorPicker,
-  NFlex,
-  NForm,
-  NFormItem,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSwitch,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 type PageBackgroundType = 'none' | 'color' | 'image'
@@ -169,50 +156,30 @@ function clearAll() {
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
-    <NFormItem label="背景类型">
-      <NFlex
-        justify="space-between"
-        align="center"
-        :wrap="false"
+  <div class="builder-form">
+    <UFormField label="背景类型">
+      <div
+        class="builder-row"
         style="gap: 10px"
       >
-        <NRadioGroup
-          v-model:value="type"
-          size="small"
-          style="flex: 1"
-        >
-          <NRadioButton
-            value="none"
-            style="width: 33.3%; text-align: center"
-          >
-            无
-          </NRadioButton>
-          <NRadioButton
-            value="color"
-            style="width: 33.3%; text-align: center"
-          >
-            纯色
-          </NRadioButton>
-          <NRadioButton
-            value="image"
-            style="width: 33.4%; text-align: center"
-          >
-            图片
-          </NRadioButton>
-        </NRadioGroup>
-        <NButton
-          size="small"
-          secondary
+        <URadioGroup
+          v-model="type"
+          :items="[
+            { label: '无', value: 'none' },
+            { label: '纯色', value: 'color' },
+            { label: '图片', value: 'image' },
+          ]"
+          orientation="horizontal"
+        />
+        <UButton
+          size="sm"
+          variant="soft"
           @click="clearAll"
         >
           清空
-        </NButton>
-      </NFlex>
-    </NFormItem>
+        </UButton>
+      </div>
+    </UFormField>
 
     <Transition
       name="fade-slide"
@@ -220,34 +187,34 @@ function clearAll() {
     >
       <div :key="type">
         <template v-if="type === 'color'">
-          <NFormItem label="背景颜色">
-            <NColorPicker
-              v-model:value="color"
+          <UFormField label="背景颜色">
+            <UColorPicker
+              v-model="color"
               :modes="['hex']"
               :show-alpha="true"
             />
-          </NFormItem>
+          </UFormField>
         </template>
 
         <template v-else-if="type === 'image'">
-          <NFormItem label="背景图片">
-            <NFlex align="center">
-              <NButton
+          <UFormField label="背景图片">
+            <div class="builder-row">
+              <UButton
                 v-if="props.target.uploadImage"
-                size="small"
+                size="sm"
                 @click="props.target.uploadImage"
               >
                 上传背景图
-              </NButton>
-              <NButton
+              </UButton>
+              <UButton
                 v-if="props.target.clearImage"
-                size="small"
-                secondary
+                size="sm"
+                variant="soft"
                 :disabled="!imagePath"
                 @click="props.target.clearImage"
               >
                 清除
-              </NButton>
+              </UButton>
               <Transition name="fade-scale">
                 <img
                   v-if="imagePath"
@@ -263,38 +230,36 @@ function clearAll() {
                   "
                 />
               </Transition>
-            </NFlex>
-          </NFormItem>
-          <NFormItem label="图片填充方式">
-            <NSelect
-              v-model:value="fit"
-              :options="[
+            </div>
+          </UFormField>
+          <UFormField label="图片填充方式">
+            <USelect
+              v-model="fit"
+              :items="[
                 { label: '铺满', value: 'cover' },
                 { label: '完整显示', value: 'contain' },
                 { label: '拉伸填满', value: 'fill' },
                 { label: '原始大小', value: 'none' },
               ]"
             />
-          </NFormItem>
+          </UFormField>
           <Transition name="fade">
-            <NAlert
+            <UAlert
               v-if="!imagePath"
               type="warning"
               :show-icon="true"
               style="margin-bottom: 12px"
             >
               请选择并上传一张图片作为背景。
-            </NAlert>
+            </UAlert>
           </Transition>
         </template>
       </div>
     </Transition>
 
     <template v-if="type !== 'none'">
-      <NFlex
-        justify="space-between"
-        align="center"
-        :wrap="false"
+      <div
+        class="builder-row"
         style="margin-bottom: 10px"
       >
         <div
@@ -303,92 +268,62 @@ function clearAll() {
         >
           覆盖导航区域
         </div>
-        <NSwitch
-          v-model:value="coverSidebar"
+        <USwitch
+          v-model="coverSidebar"
           size="small"
         />
-      </NFlex>
+      </div>
 
-      <NFormItem label="遮罩颜色">
-        <NRadioGroup
-          v-model:value="scrimMode"
-          size="small"
-          style="width: 100%"
-        >
-          <NRadioButton
-            value="auto"
-            style="width: 33.3%; text-align: center"
-          >
-            自动
-          </NRadioButton>
-          <NRadioButton
-            value="black"
-            style="width: 33.3%; text-align: center"
-          >
-            黑
-          </NRadioButton>
-          <NRadioButton
-            value="white"
-            style="width: 33.4%; text-align: center"
-          >
-            白
-          </NRadioButton>
-        </NRadioGroup>
-      </NFormItem>
+      <UFormField label="遮罩颜色">
+        <URadioGroup
+          v-model="scrimMode"
+          :items="[
+            { label: '自动', value: 'auto' },
+            { label: '黑', value: 'black' },
+            { label: '白', value: 'white' },
+          ]"
+          orientation="horizontal"
+        />
+      </UFormField>
 
-      <NFormItem
+      <UFormField
         label="遮罩强度 %"
         :show-feedback="false"
       >
-        <NInputNumber
-          v-model:value="scrimStrength"
+        <UInputNumber
+          v-model="scrimStrength"
           :min="0"
           :max="100"
           style="width: 100%"
         />
-      </NFormItem>
+      </UFormField>
 
-      <NFormItem label="背景效果">
-        <NRadioGroup
-          v-model:value="blurMode"
-          size="small"
-          style="width: 100%"
-        >
-          <NRadioButton
-            value="none"
-            style="width: 33.3%; text-align: center"
-          >
-            无
-          </NRadioButton>
-          <NRadioButton
-            value="background"
-            style="width: 33.3%; text-align: center"
-          >
-            模糊背景
-          </NRadioButton>
-          <NRadioButton
-            value="glass"
-            style="width: 33.4%; text-align: center"
-          >
-            磨砂玻璃
-          </NRadioButton>
-        </NRadioGroup>
-      </NFormItem>
+      <UFormField label="背景效果">
+        <URadioGroup
+          v-model="blurMode"
+          :items="[
+            { label: '无', value: 'none' },
+            { label: '模糊背景', value: 'background' },
+            { label: '磨砂玻璃', value: 'glass' },
+          ]"
+          orientation="horizontal"
+        />
+      </UFormField>
 
-      <NFormItem
+      <UFormField
         label="强度 px"
         :show-feedback="false"
       >
-        <NInputNumber
-          v-model:value="blur"
+        <UInputNumber
+          v-model="blur"
           :min="0"
           :max="40"
           style="width: 100%"
           :disabled="blurMode === 'none'"
         />
-      </NFormItem>
+      </UFormField>
     </template>
-  </NForm>
+  </div>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>

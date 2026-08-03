@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Checkmark24Regular, Clock24Regular, Person24Regular, Question24Regular } from '@vicons/fluent'
-import { NIcon, NTag } from 'naive-ui'
-
 import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
 
 defineProps<{
@@ -48,24 +45,24 @@ function formatDuration(seconds: number) {
             referrerpolicy="no-referrer"
           />
           <span class="duration">
-            <NIcon :component="Clock24Regular" />
+            <UIcon name="i-lucide-clock-3" />
             {{ formatDuration(item.video.length) }}
           </span>
         </div>
         <div class="video-result-card__details">
           <div class="title-row">
             <strong>{{ item.video.title }}</strong>
-            <NTag
+            <UBadge
               v-if="watched"
-              size="tiny"
-              type="success"
-              :bordered="false"
+              size="sm"
+              color="success"
+              variant="soft"
             >
               已观看
-            </NTag>
+            </UBadge>
           </div>
           <span class="owner">
-            <NIcon :component="Person24Regular" />
+            <UIcon name="i-lucide-user-round" />
             {{ item.video.ownerName }}
           </span>
           <p v-if="item.video.description">
@@ -76,7 +73,7 @@ function formatDuration(seconds: number) {
 
       <div class="mystery-face">
         <span class="mystery-number">{{ String(index + 1).padStart(2, '0') }}</span>
-        <NIcon :component="Question24Regular" />
+        <UIcon name="i-lucide-circle-help" />
         <strong>点击翻牌</strong>
       </div>
 
@@ -84,7 +81,7 @@ function formatDuration(seconds: number) {
         v-if="revealed && presentation === 'flip'"
         class="revealed-action"
       >
-        <NIcon :component="Checkmark24Regular" />
+        <UIcon name="i-lucide-check" />
         再次点击观看
       </span>
     </div>
@@ -273,7 +270,7 @@ function formatDuration(seconds: number) {
   transform: rotateY(0deg);
 }
 
-.mystery-face .n-icon {
+.mystery-face .iconify {
   font-size: 36px;
 }
 

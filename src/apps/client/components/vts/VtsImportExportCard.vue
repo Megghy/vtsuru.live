@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NModal, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
@@ -86,29 +85,29 @@ function cancelImport() {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="导入 / 导出"
   >
-    <NFlex
+    <div
       align="center"
       :wrap="true"
       :size="8"
     >
-      <NButton
+      <UButton
         size="small"
         @click="exportMinimal"
       >
         导出连接信息
-      </NButton>
-      <NButton
+      </UButton>
+      <UButton
         size="small"
         @click="exportFull"
       >
         导出全量配置
-      </NButton>
-      <NButton
+      </UButton>
+      <UButton
         size="small"
         :loading="importing"
         tag="label"
@@ -120,47 +119,47 @@ function cancelImport() {
           style="display: none"
           @change="onImportFileChange"
         />
-      </NButton>
-      <NText depth="3"> wsUrl: {{ vts.wsUrl || '未设置' }} </NText>
-      <NText depth="3"> Token: {{ vts.authToken ? '已保存' : '无' }} </NText>
-    </NFlex>
-  </NCard>
+      </UButton>
+      <span depth="3"> wsUrl: {{ vts.wsUrl || '未设置' }} </span>
+      <span depth="3"> Token: {{ vts.authToken ? '已保存' : '无' }} </span>
+    </div>
+  </UCard>
 
-  <NModal
-    v-model:show="showPreview"
+  <UModal
+    v-model:open="showPreview"
     preset="card"
     title="导入预览"
     style="width: 560px"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NText
+      <span
         v-for="line in previewLines"
         :key="line"
         depth="3"
       >
         {{ line }}
-      </NText>
-      <NFlex
+      </span>
+      <div
         justify="end"
         :size="8"
       >
-        <NButton
+        <UButton
           :disabled="importing"
           @click="cancelImport"
         >
           取消
-        </NButton>
-        <NButton
-          type="primary"
+        </UButton>
+        <UButton
+          color="primary"
           :loading="importing"
           @click="confirmImport"
         >
           确认导入
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+        </UButton>
+      </div>
+    </div>
+  </UModal>
 </template>

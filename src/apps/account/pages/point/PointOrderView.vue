@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ArrowSync24Regular, Search24Regular } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NInput, NSelect, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 import type { ResponsePointOrder2UserModel } from '@/api/api-models'
@@ -12,7 +10,7 @@ import { useBiliAuth } from '@/store/useBiliAuth'
 
 const emit = defineEmits<{ dataLoaded: [] }>()
 const auth = useBiliAuth()
-const message = useMessage()
+const toast = useToast()
 const orders = ref<ResponsePointOrder2UserModel[]>([])
 const loading = ref(false)
 const loaded = ref(false)
@@ -21,6 +19,11 @@ let request: { generation: number; promise: Promise<void> } | undefined
 
 const keyword = ref('')
 const status = ref<PointOrderStatus | null>(null)
+const statusOptions = [
+  { label: '待发货', value: PointOrderStatus.Pending },
+  { label: '已发货', value: PointOrderStatus.Shipped },
+  { label: '已完成', value: PointOrderStatus.Completed },
+]
 
 const filteredOrders = computed(() => {
   const query = keyword.value.trim().toLocaleLowerCase()
@@ -76,7 +79,7 @@ async function loadOrders(force = false) {
     await promise
   } catch (error) {
     if (currentGeneration === generation) {
-      message.error(error instanceof Error ? error.message : `获取订单失败: ${error}`)
+      toast.add({ title: error instanceof Error ? error.message : `获取订单失败: ${error}`, color: 'error' })
     }
   } finally {
     if (request?.promise === promise) {
@@ -105,71 +108,98 @@ onMounted(() => void loadOrders())
 </script>
 
 <template>
-  <NSpin :show="loading">
+  <div :aria-busy="loading">
     <AccountDataPanel :stats="stats">
       <template #toolbar>
-        <NFlex
-          align="center"
-          justify="space-between"
-          wrap
-          :gap="8"
-        >
-          <NFlex
-            class="order-filters"
-            align="center"
-            wrap
-            :gap="8"
-          >
-            <NInput
-              v-model:value="keyword"
-              clearable
+        <div class="order-toolbar">
+          <div class="order-filters">
+            <UInput
+              v-model="keyword"
+              class="order-filter-control"
+              icon="i-lucide-search"
               placeholder="搜索礼物名或订单号"
-              style="width: 240px"
             >
-              <template #prefix><NIcon :component="Search24Regular" /></template>
-            </NInput>
-            <NSelect
-              v-model:value="status"
-              clearable
-              :options="[
-                { label: '全部状态', value: null },
-                { label: '待发货', value: PointOrderStatus.Pending },
-                { label: '已发货', value: PointOrderStatus.Shipped },
-                { label: '已完成', value: PointOrderStatus.Completed },
-              ]"
-              placeholder="订单状态"
-              style="width: 140px"
+              <template #trailing>
+                <UButton
+                  v-if="keyword"
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  square
+                  icon="i-lucide-x"
+                  aria-label="清除搜索"
+                  @click="keyword = ''"
+                />
+              </template>
+            </UInput>
+            <USelectMenu
+              v-model="status"
+              class="order-filter-control"
+              :items="statusOptions"
+              value-key="value"
+              clear
+              placeholder="全部状态"
             />
             <span class="filter-result">显示 {{ filteredOrders.length }} / {{ orders.length }} 条</span>
-          </NFlex>
-          <NButton
-            secondary
+          </div>
+          <UButton
+            color="neutral"
+            variant="soft"
+            icon="i-lucide-refresh-cw"
+            :loading="loading"
             @click="refresh"
           >
-            <template #icon><NIcon :component="ArrowSync24Regular" /></template>
             刷新
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
       </template>
     </AccountDataPanel>
 
-    <UserPointOrderList :orders="filteredOrders" />
-  </NSpin>
+    <UEmpty
+      v-if="loading"
+      loading
+      title="正在加载订单"
+    />
+    <UserPointOrderList
+      v-else
+      :orders="filteredOrders"
+    />
+  </div>
 </template>
 
 <style scoped>
+.order-toolbar,
+.order-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.order-toolbar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.order-filters {
+  flex-wrap: wrap;
+}
+
+.order-filter-control:first-child {
+  width: 240px;
+}
+
+.order-filter-control:nth-child(2) {
+  width: 140px;
+}
+
 .filter-result {
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
 }
 
 @media (max-width: 600px) {
-  .order-filters {
-    width: 100%;
-  }
-
-  .order-filters :deep(.n-input),
-  .order-filters :deep(.n-select) {
+  .order-filters,
+  .order-filter-control {
     width: 100% !important;
   }
 }

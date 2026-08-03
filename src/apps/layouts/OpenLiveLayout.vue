@@ -1,134 +1,36 @@
 <script setup lang="ts">
-import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent' // 引入 Fluent UI 图标
-import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5' // 引入 Ionicons 图标
-import { useElementSize } from '@vueuse/core' // 引入 VueUse 组合式函数
-import {
-  NAlert,
-  NAvatar,
-  NBackTop,
-  NButton,
-  NEllipsis,
-  NIcon,
-  NLayout,
-  NLayoutContent,
-  NLayoutFooter,
-  NLayoutHeader,
-  NLayoutSider,
-  NMenu,
-  NPageHeader,
-  NResult,
-  NScrollbar,
-  NFlex,
-  NSpin,
-  NSwitch,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
-// 引入 Naive UI 组件
-import { computed, h, onMounted, ref } from 'vue' // 引入 Vue 相关 API
-import { RouterLink, useRoute, useRouter } from 'vue-router' // 引入 Vue Router 相关 API
+import type { NavigationMenuItem } from '@nuxt/ui'
+import { computed, onMounted, ref } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 
-import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
-import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient' // 引入开放平台认证信息类型
+import { ThemeType } from '@/api/api-models'
+import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { isDarkMode } from '@/shared/utils' // 引入暗黑模式判断工具
-import { useDanmakuClient } from '@/store/useDanmakuClient' // 引入弹幕客户端状态管理
+import { isDarkMode } from '@/shared/utils'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 import '@/apps/open-live/styles/open-live-page.css'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
-// -- 基本状态和工具 --
-const route = useRoute() // 获取当前路由信息
-const router = useRouter() // 获取路由实例
-const message = useMessage() // 获取 Naive UI 消息提示 API
-const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto) // 使用持久化存储主题设置 (默认自动)
-const danmakuClient = useDanmakuClient() // 获取弹幕客户端实例
+const route = useRoute()
+const router = useRouter()
+const toast = useToast()
+const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
+const danmakuClient = useDanmakuClient()
+const authInfo = ref<AuthInfo>()
+const danmakuClientError = ref<string>()
+const siderCollapsed = ref(true)
+const content = ref<HTMLElement>()
 
-// -- 侧边栏状态 --
-const sider = ref<HTMLElement | null>(null) // 侧边栏 DOM 引用
-const { width: siderWidth } = useElementSize(sider) // 实时获取侧边栏宽度
-
-// -- 认证与连接状态 --
-const authInfo = ref<AuthInfo>() // 存储从路由查询参数获取的认证信息
-const danmakuClientError = ref<string>() // 存储弹幕客户端初始化错误信息
-
-// -- 菜单配置 --
-// 定义菜单项, 使用 h 函数渲染 RouterLink 以实现路由跳转
-const menuOptions = computed(() => [
-  // 改为 computed 以便将来可能动态修改
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'open-live-lottery',
-            query: route.query, // 保留查询参数
-          },
-        },
-        { default: () => '弹幕抽奖' },
-      ),
-    key: 'open-live-lottery',
-    icon: renderIcon(Lottery24Filled),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'open-live-live-request',
-            query: route.query,
-          },
-        },
-        { default: () => '弹幕点歌' }, // 优化名称
-      ),
-    key: 'open-live-live-request',
-    icon: renderIcon(MusicalNote),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'open-live-queue',
-            query: route.query,
-          },
-        },
-        { default: () => '弹幕排队' }, // 优化名称
-      ),
-    key: 'open-live-queue',
-    icon: renderIcon(PeopleQueue24Filled),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'open-live-speech',
-            query: route.query,
-          },
-        },
-        { default: () => '弹幕朗读' }, // 优化名称
-      ),
-    key: 'open-live-speech',
-    icon: renderIcon(TabletSpeaker24Filled),
-  },
+const menuItems = computed<NavigationMenuItem[][]>(() => [
+  [
+    { label: '弹幕抽奖', icon: 'i-lucide-trophy', to: { name: 'open-live-lottery', query: route.query } },
+    { label: '弹幕点歌', icon: 'i-lucide-music-2', to: { name: 'open-live-live-request', query: route.query } },
+    { label: '弹幕排队', icon: 'i-lucide-list-ordered', to: { name: 'open-live-queue', query: route.query } },
+    { label: '弹幕朗读', icon: 'i-lucide-audio-lines', to: { name: 'open-live-speech', query: route.query } },
+  ],
 ])
 
-// -- 工具函数 --
-/**
- * 渲染 Naive UI 图标的辅助函数
- * @param icon 图标组件
- */
-function renderIcon(icon: unknown) {
-  return () => h(NIcon, null, { default: () => h(icon as any) })
-}
-
-// -- 主题切换逻辑 --
 const isDarkValue = computed({
   get: () => themeType.value === ThemeType.Dark || (themeType.value === ThemeType.Auto && isDarkMode.value),
   set: (value) => {
@@ -136,330 +38,340 @@ const isDarkValue = computed({
   },
 })
 
-// -- 生命周期钩子 --
-onMounted(async () => {
-  // 1. 从路由查询参数解析认证信息
-  authInfo.value = route.query as unknown as AuthInfo
+const connectionColor = computed(() =>
+  danmakuClient.phase === 'error' ? 'error' : danmakuClient.connected ? 'success' : 'warning',
+)
 
-  // 2. 检查是否存在必要的 Code 参数
-  if (authInfo.value?.Code) {
-    try {
-      // 3. 初始化开放平台弹幕客户端
-      await danmakuClient.initOpenlive(authInfo.value) // 改为 await 处理可能的异步初始化
-      // 可选: 初始化成功提示
-      // message.success('弹幕客户端连接中...')
-    } catch (error: any) {
-      // 4. 处理初始化错误
-      console.error('Danmaku client initialization failed:', error)
-      danmakuClientError.value = `弹幕客户端初始化失败: ${error.message || '未知错误'}`
-      message.error(danmakuClientError.value)
-    }
-  } else {
-    // 5. 如果缺少 Code, 显示错误信息
-    message.error('无效访问: 缺少必要的认证参数 (Code)。请通过幻星平台获取链接。')
-    // authInfo 清空, 触发 v-if 显示错误页
+function scrollToTop() {
+  content.value?.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(async () => {
+  authInfo.value = route.query as unknown as AuthInfo
+  if (!authInfo.value?.Code) {
+    toast.add({ title: '无效访问', description: '缺少必要的认证参数 Code。请通过幻星平台获取链接。', color: 'error' })
     authInfo.value = undefined
+    return
+  }
+
+  try {
+    await danmakuClient.initOpenlive(authInfo.value)
+  } catch (error) {
+    console.error('Danmaku client initialization failed:', error)
+    danmakuClientError.value = `弹幕客户端初始化失败: ${error instanceof Error ? error.message : '未知错误'}`
+    toast.add({ title: danmakuClientError.value, color: 'error' })
   }
 })
-
-// onUnmounted 清理 (如果需要)
-// onUnmounted(() => {
-//   danmakuClient.dispose(); // 示例: 如果有清理逻辑
-// })
 </script>
 
 <template>
-  <!-- 情况一: 缺少认证信息, 显示错误提示页 -->
-  <NLayoutContent
+  <main
     v-if="!authInfo?.Code"
-    style="height: 100vh; display: flex; align-items: center; justify-content: center"
-    content-style="padding: 24px;"
+    class="open-live-invalid"
   >
-    <NResult
-      status="error"
+    <UEmpty
       title="无效访问"
       description="请确保您是通过正确的幻星平台 H5 插件链接访问此页面。"
     >
-      <template #footer>
-        请前往
-        <NButton
-          text
-          type="primary"
-          tag="a"
-          href="https://play-live.bilibili.com/details/1698742711771"
+      <template #actions>
+        <UButton
+          to="https://play-live.bilibili.com/details/1698742711771"
           target="_blank"
+          >幻星平台 | VTsuru</UButton
         >
-          幻星平台 | VTsuru
-        </NButton>
-        获取 H5 插件链接。
       </template>
-    </NResult>
-  </NLayoutContent>
+    </UEmpty>
+  </main>
 
-  <!-- 情况二: 存在认证信息, 显示主布局 -->
-  <NLayout
+  <div
     v-else
-    style="height: 100vh"
-    :native-scrollbar="false"
+    class="open-live-shell"
   >
-    <!-- 顶部导航栏 -->
-    <NLayoutHeader
-      style="height: 60px; display: flex; align-items: center; padding: 0 20px"
-      bordered
-    >
-      <!-- 使用 NPageHeader 增强语义和结构 -->
-      <NPageHeader style="width: 100%">
-        <!-- 标题区域 -->
-        <template #title>
-          <NButton
-            text
-            style="text-decoration: none"
-            @click="router.push({ name: 'open-live-index', query: route.query })"
-          >
-            <NText
-              strong
-              style="font-size: 1.5rem; line-height: 1"
-              type="primary"
-            >
-              <!-- 网站/应用 Logo 或名称 -->
-              <img
-                :src="logoUrl"
-                alt="VTsuru Logo"
-                style="height: 24px; vertical-align: middle; margin-right: 8px"
-              />
-              <!-- 可选: 添加 Logo -->
-              VTsuru 开放平台
-            </NText>
-          </NButton>
-        </template>
+    <header class="open-live-header">
+      <UButton
+        color="neutral"
+        variant="ghost"
+        class="open-live-brand"
+        @click="router.push({ name: 'open-live-index', query: route.query })"
+      >
+        <img
+          :src="logoUrl"
+          alt="VTsuru Logo"
+          class="brand-logo"
+        />
+        <span>VTsuru 开放平台</span>
+      </UButton>
+      <span class="open-live-title">{{ ($route.meta.title as string) ?? '功能模块' }}</span>
+      <div class="open-live-actions">
+        <UBadge
+          :label="danmakuClient.connectionStatus"
+          :color="connectionColor"
+          variant="subtle"
+        />
+        <USwitch
+          v-model="isDarkValue"
+          checked-icon="i-lucide-moon"
+          unchecked-icon="i-lucide-sun"
+          aria-label="切换主题"
+        />
+      </div>
+    </header>
 
-        <!-- 副标题/当前页面信息 -->
-        <template #subtitle>
-          <NText depth="3">
-            {{ ($route.meta.title as string) ?? '功能模块' }}
-          </NText>
-        </template>
-
-        <!-- 右侧额外操作区域 -->
-        <template #extra>
-          <NFlex
-            align="center"
-            :size="20"
-          >
-            <!-- 连接状态指示 -->
-            <NTag
-              :type="danmakuClient.phase === 'error' ? 'error' : danmakuClient.connected ? 'success' : 'warning'"
-              round
-              size="small"
-            >
-              <template #icon>
-                <NIcon :component="danmakuClient.connected ? Sunny : Moon" />
-                <!-- 示例图标 -->
-              </template>
-              {{ danmakuClient.connectionStatus }}
-            </NTag>
-            <!-- 主题切换开关 -->
-            <NSwitch v-model:value="isDarkValue">
-              <template #checked>
-                <NIcon :component="Moon" />
-              </template>
-              <template #unchecked>
-                <NIcon :component="Sunny" />
-              </template>
-            </NSwitch>
-          </NFlex>
-        </template>
-      </NPageHeader>
-    </NLayoutHeader>
-
-    <!-- 主体内容区域 (包含侧边栏和内容) -->
-    <NLayout
-      has-sider
-      style="height: calc(100vh - 60px - 40px)"
-    >
-      <!-- 左侧导航栏 -->
-      <NLayoutSider
-        ref="sider"
-        bordered
-        show-trigger
-        default-collapsed
-        collapse-mode="width"
-        :collapsed-width="64"
-        :width="180"
-        :native-scrollbar="false"
-        style="height: 100%"
+    <div class="open-live-body">
+      <aside
+        class="open-live-sidebar"
+        :class="{ 'open-live-sidebar--collapsed': siderCollapsed }"
       >
         <div
           v-if="danmakuClient.authInfo"
-          style="margin-top: 8px"
+          class="anchor-profile"
         >
-          <NFlex
-            vertical
-            justify="center"
-            align="center"
-          >
-            <NAvatar
-              :src="danmakuClient.authInfo?.anchor_info?.uface"
-              :img-props="{ referrerpolicy: 'no-referrer' }"
-              round
-              bordered
-            />
-            <NEllipsis
-              v-if="siderWidth > 100"
-              style="max-width: 100%"
-            >
-              <NText strong>
-                {{ danmakuClient.authInfo?.anchor_info?.uname }}
-              </NText>
-            </NEllipsis>
-          </NFlex>
-        </div>
-        <NMenu
-          :default-value="$route.name?.toString()"
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :options="menuOptions"
-        />
-        <NFlex justify="center">
-          <NText
-            v-if="siderWidth > 150"
-            depth="3"
-          >
-            有更多功能建议请
-            <NButton
-              text
-              type="info"
-              @click="$router.push({ name: 'about' })"
-            >
-              反馈
-            </NButton>
-          </NText>
-        </NFlex>
-      </NLayoutSider>
-
-      <!-- 右侧主内容区域 -->
-      <NLayoutContent
-        style="height: 100%"
-        content-style="padding: 0; height: 100%;"
-        :native-scrollbar="false"
-      >
-        <NScrollbar class="open-live-page">
-          <!-- 弹幕客户端错误提示 -->
-          <NAlert
-            v-if="danmakuClientError"
-            type="error"
-            title="弹幕客户端错误"
-            closable
-            @close="danmakuClientError = undefined"
-          >
-            {{ danmakuClientError }}
-          </NAlert>
-
-          <!-- 路由视图: 根据认证状态显示不同内容 -->
-          <RouterView v-slot="{ Component, route: viewRoute }">
-            <!-- 情况一: 认证信息加载中或连接中 -->
-            <div
-              v-if="!danmakuClient.authInfo && !danmakuClientError"
-              style="display: flex; justify-content: center; align-items: center; height: 80%"
-            >
-              <NSpin size="large">
-                <template #description> 正在加载主播信息并连接服务... </template>
-              </NSpin>
-            </div>
-            <!-- 情况二: 加载/连接成功, 渲染对应页面 -->
-            <KeepAlive v-else-if="Component && danmakuClient.authInfo">
-              <template v-if="viewRoute.meta.pageContainer === 'none'">
-                <component
-                  :is="Component"
-                  :key="viewRoute.fullPath.split('#')[0]"
-                  :room-info="danmakuClient.authInfo"
-                  :code="authInfo.Code"
-                />
-              </template>
-              <div
-                v-else
-                class="open-live-page-inner"
-                :class="{
-                  'open-live-page-inner--md': viewRoute.meta.pageWidth === 'md',
-                  'open-live-page-inner--xl': viewRoute.meta.pageWidth === 'xl',
-                  'open-live-page-inner--full': viewRoute.meta.pageWidth === 'full',
-                }"
-              >
-                <component
-                  :is="Component"
-                  :key="viewRoute.fullPath.split('#')[0]"
-                  :room-info="danmakuClient.authInfo"
-                  :code="authInfo.Code"
-                />
-              </div>
-            </KeepAlive>
-            <!-- 情况三: 组件无法渲染或其他错误 (理论上不应发生, 但作为后备) -->
-            <NResult
-              v-else-if="!danmakuClientError"
-              status="warning"
-              title="页面加载失败"
-              description="无法加载当前功能模块，请尝试刷新或联系开发者。"
-            />
-          </RouterView>
-
-          <!-- 返回顶部按钮 -->
-          <NBackTop
-            :right="40"
-            :bottom="60"
-            listen-to=".open-live-page .n-scrollbar-container"
+          <UAvatar
+            :src="danmakuClient.authInfo.anchor_info?.uface"
+            :alt="danmakuClient.authInfo.anchor_info?.uname"
+            size="lg"
           />
-        </NScrollbar>
-      </NLayoutContent>
-    </NLayout>
-
-    <!-- 底部信息栏 -->
-    <NLayoutFooter
-      style="height: 40px; display: flex; align-items: center; justify-content: center; padding: 0 20px"
-      bordered
-    >
-      <NText
-        depth="3"
-        style="font-size: 12px"
-      >
-        © {{ new Date().getFullYear() }}
-        <!-- 动态年份 -->
-        <NButton
-          text
-          tag="a"
-          href="https://vtsuru.live"
-          target="_blank"
-          type="primary"
-          style="margin-left: 5px"
+          <strong
+            v-if="!siderCollapsed"
+            class="anchor-name"
+            >{{ danmakuClient.authInfo.anchor_info?.uname }}</strong
+          >
+        </div>
+        <UNavigationMenu
+          :items="menuItems"
+          orientation="vertical"
+          :collapsed="siderCollapsed"
+        />
+        <div
+          v-if="!siderCollapsed"
+          class="feedback-link"
         >
-          vtsuru.live
-        </NButton>
-        - 由 VTsuru 提供支持
-      </NText>
-    </NLayoutFooter>
-  </NLayout>
+          有更多功能建议请
+          <UButton
+            color="primary"
+            variant="link"
+            size="xs"
+            @click="router.push({ name: 'about' })"
+            >反馈</UButton
+          >
+        </div>
+        <UButton
+          :icon="siderCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
+          color="neutral"
+          variant="ghost"
+          square
+          class="sidebar-toggle"
+          @click="siderCollapsed = !siderCollapsed"
+        />
+      </aside>
+
+      <section
+        ref="content"
+        class="open-live-content"
+      >
+        <UAlert
+          v-if="danmakuClientError"
+          title="弹幕客户端错误"
+          :description="danmakuClientError"
+          color="error"
+          close
+          @update:open="danmakuClientError = undefined"
+        />
+
+        <RouterView v-slot="{ Component, route: viewRoute }">
+          <div
+            v-if="!danmakuClient.authInfo && !danmakuClientError"
+            class="connection-pending"
+          >
+            <UIcon
+              name="i-lucide-loader-circle"
+              class="size-7 animate-spin"
+            />
+            <span>正在加载主播信息并连接服务...</span>
+          </div>
+          <KeepAlive v-else-if="Component && danmakuClient.authInfo">
+            <component
+              :is="Component"
+              v-if="viewRoute.meta.pageContainer === 'none'"
+              :key="viewRoute.fullPath.split('#')[0]"
+              :room-info="danmakuClient.authInfo"
+              :code="authInfo.Code"
+            />
+            <div
+              v-else
+              class="open-live-page-inner"
+              :class="{
+                'open-live-page-inner--md': viewRoute.meta.pageWidth === 'md',
+                'open-live-page-inner--xl': viewRoute.meta.pageWidth === 'xl',
+                'open-live-page-inner--full': viewRoute.meta.pageWidth === 'full',
+              }"
+            >
+              <component
+                :is="Component"
+                :key="viewRoute.fullPath.split('#')[0]"
+                :room-info="danmakuClient.authInfo"
+                :code="authInfo.Code"
+              />
+            </div>
+          </KeepAlive>
+          <UEmpty
+            v-else-if="!danmakuClientError"
+            title="页面加载失败"
+            description="无法加载当前功能模块，请尝试刷新或联系开发者。"
+          />
+        </RouterView>
+
+        <UButton
+          icon="i-lucide-arrow-up"
+          color="neutral"
+          variant="outline"
+          square
+          class="back-top"
+          aria-label="返回顶部"
+          @click="scrollToTop"
+        />
+      </section>
+    </div>
+
+    <footer class="open-live-footer">
+      © {{ new Date().getFullYear() }}
+      <a
+        href="https://vtsuru.live"
+        target="_blank"
+        >vtsuru.live</a
+      >
+      - 由 VTsuru 提供支持
+    </footer>
+  </div>
 </template>
 
 <style scoped>
-.n-pageheader-wrapper {
-  width: 100% !important;
+.open-live-invalid,
+.connection-pending {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
 }
-
-.open-live-page {
-  height: 100%;
+.open-live-shell {
+  display: grid;
+  height: 100vh;
+  grid-template-rows: 60px minmax(0, 1fr) 40px;
+  background: var(--vtsuru-bg);
 }
-/* 优化 NPageHeader 在窄屏幕下的表现 (可选) */
-@media (max-width: 768px) {
-  .n-page-header-wrapper {
-    padding: 0 10px !important; /* 减少内边距 */
-  }
-  .n-page-header__title {
-    font-size: 1.2rem !important; /* 缩小标题字号 */
-  }
-}
-
-/* 确保 NLayoutContent 的内边距生效 */
-:deep(.n-layout-scroll-container) {
+.open-live-header,
+.open-live-actions,
+.open-live-brand,
+.anchor-profile {
   display: flex;
+  align-items: center;
+}
+.open-live-header {
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--vtsuru-border);
+  background: var(--vtsuru-bg-elevated);
+}
+.open-live-brand {
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.brand-logo {
+  width: 24px;
+  height: 24px;
+}
+.open-live-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--vtsuru-fg-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.open-live-actions {
+  gap: 12px;
+}
+.open-live-body {
+  display: flex;
+  min-height: 0;
+}
+.open-live-sidebar {
+  display: flex;
+  width: 180px;
+  flex: 0 0 180px;
   flex-direction: column;
+  border-right: 1px solid var(--vtsuru-border);
+  background: var(--vtsuru-bg-elevated);
+  transition:
+    width 0.2s,
+    flex-basis 0.2s;
+}
+.open-live-sidebar--collapsed {
+  width: 56px;
+  flex-basis: 56px;
+}
+.anchor-profile {
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 8px;
+}
+.anchor-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.feedback-link {
+  padding: 12px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+.sidebar-toggle {
+  margin: auto 8px 8px;
+}
+.open-live-content {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  overflow: auto;
+}
+.connection-pending {
+  min-height: 60%;
+  gap: 10px;
+  color: var(--vtsuru-fg-muted);
+}
+.back-top {
+  position: fixed;
+  right: 24px;
+  bottom: 56px;
+}
+.open-live-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-top: 1px solid var(--vtsuru-border);
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .open-live-shell {
+    grid-template-rows: auto minmax(0, 1fr) 34px;
+  }
+  .open-live-header {
+    padding: 8px;
+  }
+  .open-live-title {
+    display: none;
+  }
+  .open-live-sidebar {
+    width: 56px;
+    flex-basis: 56px;
+  }
+  .open-live-sidebar:not(.open-live-sidebar--collapsed) {
+    width: 180px;
+    flex-basis: 180px;
+  }
 }
 </style>

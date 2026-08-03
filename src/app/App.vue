@@ -1,23 +1,17 @@
 <script setup lang="ts">
-import {
-  dateZhCN,
-  NConfigProvider,
-  NDialogProvider,
-  NElement,
-  NLayoutContent,
-  NLoadingBarProvider,
-  NMessageProvider,
-  NModalProvider,
-  NNotificationProvider,
-  NSpin,
-  zhCN,
-} from 'naive-ui'
+import { zh_cn } from '@nuxt/ui/locale'
+import { useToast } from '@nuxt/ui/composables'
+import { useEventBus } from '@vueuse/core'
 import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 
-import TempComponent from '@/app/components/TempComponent.vue'
-import { applyThemeCssVars, buildSiteTokens, getThemeOverrides } from '@/shared/config/theme'
-import { isDarkMode, theme } from '@/shared/utils'
+import { cookie } from '@/api/auth'
+import { useAccount } from '@/api/account'
+import { toastEventKey } from '@/app/events'
+import { applyThemeCssVars, buildSiteTokens } from '@/shared/config/theme'
+import { dismissUpdateNote, isUpdateNoteOpen } from '@/shared/services/UpdateNote'
+import { isDarkMode } from '@/shared/utils'
+import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
 // 将大型布局组件改为异步组件，避免打入入口包
 const ManageLayout = defineAsyncComponent(() => import('@/apps/layouts/ManageLayout.vue'))
@@ -25,8 +19,16 @@ const UserLayout = defineAsyncComponent(() => import('@/apps/layouts/UserLayout.
 const ClientLayout = defineAsyncComponent(() => import('@/apps/layouts/ClientLayout.vue'))
 const OBSLayout = defineAsyncComponent(() => import('@/apps/layouts/OBSLayout.vue'))
 const OpenLiveLayout = defineAsyncComponent(() => import('@/apps/layouts/OpenLiveLayout.vue'))
+const UpdateNoteContainer = defineAsyncComponent(() => import('@/apps/web/components/UpdateNoteContainer.vue'))
 
 const route = useRoute()
+const account = useAccount()
+const loading = useLoadingBarStore()
+const toast = useToast()
+const toastBus = useEventBus(toastEventKey)
+
+const handleToast = (options: Parameters<typeof toast.add>[0]) => toast.add(options)
+toastBus.on(handleToast)
 
 const layout = computed(() => {
   if (route.path.startsWith('/user') || route.name == 'user' || route.path.startsWith('/@')) {
@@ -50,7 +52,7 @@ const layout = computed(() => {
   }
 })
 const siteTokens = computed(() => buildSiteTokens(isDarkMode.value))
-const themeOverrides = computed(() => getThemeOverrides(siteTokens.value))
+const waitingForAccount = computed(() => Boolean(route.query.token || cookie.value) && account.value.id < 1)
 
 watchEffect(() => {
   if (isDarkMode.value) {
@@ -63,49 +65,60 @@ watchEffect(() => {
 </script>
 
 <template>
-  <NConfigProvider
-    :theme-overrides="themeOverrides"
-    :theme="theme"
-    style="height: 100vh"
-    :locale="zhCN"
-    :date-locale="dateZhCN"
-  >
-    <NMessageProvider>
-      <NNotificationProvider>
-        <NDialogProvider>
-          <NLoadingBarProvider>
-            <NModalProvider>
-              <Suspense>
-                <TempComponent>
-                  <NLayoutContent>
-                    <NElement
-                      style="height: 100vh"
-                      :theme-overrides="themeOverrides"
-                    >
-                      <UserLayout v-if="layout === 'user'" />
-                      <ManageLayout v-else-if="layout === 'manage'" />
-                      <OpenLiveLayout v-else-if="layout === 'open-live'" />
-                      <OBSLayout v-else-if="layout === 'obs'" />
-                      <ClientLayout v-else-if="layout === 'client'" />
-                      <template v-else>
-                        <RouterView />
-                      </template>
-                    </NElement>
-                  </NLayoutContent>
-                </TempComponent>
-                <template #fallback>
-                  <NSpin
-                    size="large"
-                    show
-                  />
-                </template>
-              </Suspense>
-            </NModalProvider>
-          </NLoadingBarProvider>
-        </NDialogProvider>
-      </NNotificationProvider>
-    </NMessageProvider>
-  </NConfigProvider>
+  <UApp :locale="zh_cn">
+    <UProgress
+      v-if="loading.active"
+      class="route-progress"
+      animation="carousel"
+      size="xs"
+    />
+    <main class="app-shell">
+      <div
+        v-if="waitingForAccount"
+        class="app-loading"
+        role="status"
+      >
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-6 animate-spin"
+        />
+      </div>
+      <Suspense v-else>
+        <UserLayout v-if="layout === 'user'" />
+        <ManageLayout v-else-if="layout === 'manage'" />
+        <OpenLiveLayout v-else-if="layout === 'open-live'" />
+        <OBSLayout v-else-if="layout === 'obs'" />
+        <ClientLayout v-else-if="layout === 'client'" />
+        <RouterView v-else />
+        <template #fallback>
+          <div
+            class="app-loading"
+            role="status"
+          >
+            <UIcon
+              name="i-lucide-loader-circle"
+              class="size-6 animate-spin"
+            />
+          </div>
+        </template>
+      </Suspense>
+    </main>
+    <UModal
+      v-model:open="isUpdateNoteOpen"
+      title="更新日志"
+      :ui="{ content: 'sm:max-w-3xl' }"
+      @update:open="(open) => !open && dismissUpdateNote()"
+    >
+      <template #body>
+        <UpdateNoteContainer />
+      </template>
+      <template #footer>
+        <div class="update-note-actions">
+          <UButton @click="dismissUpdateNote"> 知道了 </UButton>
+        </div>
+      </template>
+    </UModal>
+  </UApp>
 </template>
 
 <style>
@@ -113,6 +126,32 @@ watchEffect(() => {
 html,
 body {
   margin: 0;
+}
+
+#app,
+.app-shell {
+  min-height: 100vh;
+}
+
+.route-progress {
+  position: fixed;
+  z-index: 10000;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+.app-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: var(--vtsuru-fg-muted);
+}
+
+.update-note-actions {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
 }
 
 :root {
@@ -136,37 +175,6 @@ a {
 }
 a:hover {
   color: var(--vtsuru-brand-hover);
-}
-
-/* Workaround: tooltip is popover-based, force readable contrast.
-   合并明暗两套规则到同一选择器，使用 CSS 变量统一管理。 */
-.n-popover.n-tooltip:not(.n-popover--raw) {
-  background-color: rgba(9, 9, 11, 0.92) !important;
-  color: #fafafa !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-:root.dark .n-popover.n-tooltip:not(.n-popover--raw) {
-  background-color: rgba(24, 24, 27, 0.92) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.n-popover.n-tooltip:not(.n-popover--raw) .n-popover-arrow {
-  background-color: rgba(9, 9, 11, 0.92) !important;
-}
-:root.dark .n-popover.n-tooltip:not(.n-popover--raw) .n-popover-arrow {
-  background-color: rgba(24, 24, 27, 0.92) !important;
-}
-
-:root .n-notification {
-  border: 1px solid var(--vtsuru-border);
-}
-
-:root.dark .n-tabs.n-tabs--segment-type .n-tabs-capsule {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-:root.dark .n-tabs.n-tabs--card-type .n-tabs-tab.n-tabs-tab--active {
-  background-color: var(--vtsuru-bg-muted);
 }
 
 @supports (font-variation-settings: normal) {

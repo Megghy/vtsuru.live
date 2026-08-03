@@ -17,8 +17,8 @@ import {
   NSpin,
   NText,
   NTimePicker,
-  useMessage,
 } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import type { VNode } from 'vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
 
@@ -292,7 +292,6 @@ function getAllWeeks(year: number) {
 }
 const accountInfo = useAccount()
 const schedules = ref<ScheduleWeekInfo[]>([])
-const message = useMessage()
 
 const isLoading = ref(true)
 const schedulePageUrl = computed(() =>
@@ -388,11 +387,11 @@ async function get() {
       if (data.code == 200) {
         schedules.value = sortSchedules((data.data ?? []).map((week) => normalizeWeek(week)))
       } else {
-        message.error(`加载失败: ${data.message}`)
+        showErrorToast(`加载失败: ${data.message}`)
       }
     })
     .catch(() => {
-      message.error('加载失败')
+      showErrorToast('加载失败')
     })
     .finally(() => (isLoading.value = false))
 }
@@ -407,11 +406,11 @@ async function addSchedule() {
   })
     .then((data) => {
       if (data.code == 200) {
-        message.success('添加成功')
+        showSuccessToast('添加成功')
         showAddModal.value = false
         schedules.value = sortSchedules([...schedules.value, emptyWeek])
       } else {
-        message.error(`添加失败: ${data.message}`)
+        showErrorToast(`添加失败: ${data.message}`)
       }
     })
     .finally(() => {
@@ -420,7 +419,7 @@ async function addSchedule() {
 }
 async function onCopySchedule() {
   if (schedules.value?.find((s) => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)) {
-    message.error('想要复制到的周已存在')
+    showErrorToast('想要复制到的周已存在')
   } else {
     updateScheduleModel.value.year = selectedScheduleYear.value
     updateScheduleModel.value.week = selectedScheduleWeek.value
@@ -450,7 +449,7 @@ async function saveSchedule(day: number | null) {
   await QueryPostAPI(`${SCHEDULE_API_URL}update`, payload)
     .then((data) => {
       if (data.code == 200) {
-        message.success('成功')
+        showSuccessToast('成功')
         const normalizedWeek = normalizeWeek({
           year: payload.year,
           week: payload.week,
@@ -480,7 +479,7 @@ async function saveSchedule(day: number | null) {
         })
         ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
       } else {
-        message.error(`修改失败: ${data.message}`)
+        showErrorToast(`修改失败: ${data.message}`)
       }
     })
     .finally(() => {
@@ -496,10 +495,10 @@ async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
     week: schedule.week,
   }).then((data) => {
     if (data.code == 200) {
-      message.success('已删除')
+      showSuccessToast('已删除')
       get()
     } else {
-      message.error(`删除失败: ${data.message}`)
+      showErrorToast(`删除失败: ${data.message}`)
     }
   })
 }
@@ -544,7 +543,7 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
     days: sanitizeDays(updatedDays),
   }).then((data) => {
     if (data.code == 200) {
-      message.success('已删除')
+      showSuccessToast('已删除')
       const index = schedules.value.findIndex((s) => s.year === schedule.year && s.week === schedule.week)
       if (index >= 0) {
         schedules.value[index] = normalizeWeek({
@@ -554,7 +553,7 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
         })
       }
     } else {
-      message.error(`删除失败: ${data.message}`)
+      showErrorToast(`删除失败: ${data.message}`)
     }
   })
 }
@@ -583,15 +582,15 @@ async function onBatchAddSchedule() {
 
   const maxWeeks = getAllWeeks(year).length
   if (weekTo < weekFrom) {
-    message.error('结束周不能小于开始周')
+    showErrorToast('结束周不能小于开始周')
     return
   }
   if (weekFrom < 1 || weekTo > maxWeeks) {
-    message.error(`周数范围应为 1-${maxWeeks}`)
+    showErrorToast(`周数范围应为 1-${maxWeeks}`)
     return
   }
   if (dayIndex < 0 || dayIndex > 6) {
-    message.error('星期范围应为 0-6')
+    showErrorToast('星期范围应为 0-6')
     return
   }
 
@@ -603,7 +602,7 @@ async function onBatchAddSchedule() {
     id: null,
   }
   if (!fixedItem.title && !fixedItem.tag && !fixedItem.time) {
-    message.error('请至少填写标签/内容/时间其中一项')
+    showErrorToast('请至少填写标签/内容/时间其中一项')
     return
   }
 
@@ -623,7 +622,7 @@ async function onBatchAddSchedule() {
       })
 
       if (resp.code !== 200) {
-        message.error(`第${week}周添加失败: ${resp.message}`)
+        showErrorToast(`第${week}周添加失败: ${resp.message}`)
         return
       }
 
@@ -637,10 +636,10 @@ async function onBatchAddSchedule() {
     }
 
     schedules.value = sortSchedules(schedules.value)
-    message.success('批量添加完成')
+    showSuccessToast('批量添加完成')
     showBatchAddModal.value = false
   } catch {
-    message.error('批量添加失败')
+    showErrorToast('批量添加失败')
   } finally {
     isFetching.value = false
   }
@@ -661,7 +660,7 @@ function onConfirmItemTransfer() {
   const toDay = itemTransferTargetDay.value
 
   if (itemTransferMode.value === 'move' && fromDay === toDay) {
-    message.error('移动目标不能是当前星期')
+    showErrorToast('移动目标不能是当前星期')
     return
   }
 

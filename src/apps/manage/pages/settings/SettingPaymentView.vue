@@ -1,63 +1,47 @@
 <script setup lang="ts">
-import { NTabPane, NTabs, NAlert, NCard, NDivider, NText } from 'naive-ui'
-import { defineComponent, h, onMounted, shallowRef } from 'vue'
-
 import { useAccount } from '@/api/account'
-import { ConsumptionTypes } from '@/api/models/consumption'
 import { isDev } from '@/shared/config'
 
-const DanmakuStorageView = defineComponent({
-  setup() {
-    return () => h('div', [h(NDivider), h('div', 'WIP...')])
-  },
-})
-
-const accountInfo = useAccount()
-const currentComponent = shallowRef(DanmakuStorageView)
-
-function tabDisplay(type: ConsumptionTypes) {
-  switch (type) {
-    case ConsumptionTypes.DanmakuStorage:
-      return DanmakuStorageView
-  }
-  return DanmakuStorageView
-}
-
-onMounted(() => {
-  currentComponent.value = tabDisplay(ConsumptionTypes.DanmakuStorage)
-})
+const account = useAccount()
 </script>
 
 <template>
-  <NCard
+  <UCard
     title="增值"
-    size="small"
-    bordered
-    :segmented="{ content: true }"
+    description="管理账户增值服务与积分。"
   >
-    <NAlert
+    <UAlert
       v-if="!isDev"
-      type="info"
-      size="small"
-      :bordered="false"
+      color="info"
+      icon="i-lucide-construction"
+      title="增值服务面板正在开发中"
+    />
+    <div
+      v-else
+      class="payment-overview"
     >
-      增值服务面板正在开发中（WIP）
-    </NAlert>
-
-    <template v-else>
-      <NTabs
-        type="line"
-        animated
-        size="small"
-      >
-        <NTabPane
-          name="overview"
-          tab="概览"
-        >
-          <NText depth="3"> 当前积分：{{ accountInfo.point }} </NText>
-        </NTabPane>
-      </NTabs>
-      <component :is="tabDisplay(ConsumptionTypes.DanmakuStorage)" />
-    </template>
-  </NCard>
+      <span>当前积分</span>
+      <strong>{{ account.point }}</strong>
+      <USeparator />
+      <UEmpty
+        icon="i-lucide-hard-drive"
+        title="弹幕存储服务即将提供"
+      />
+    </div>
+  </UCard>
 </template>
+
+<style scoped>
+.payment-overview {
+  display: grid;
+  gap: 12px;
+}
+
+.payment-overview span {
+  color: var(--vtsuru-fg-muted);
+}
+
+.payment-overview strong {
+  font-size: 24px;
+}
+</style>

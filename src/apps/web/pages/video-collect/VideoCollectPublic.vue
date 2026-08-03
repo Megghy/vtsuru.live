@@ -1,20 +1,4 @@
 <script setup lang="ts">
-import { CheckmarkCircle24Regular, Clock24Regular, Person24Regular, Video24Regular } from '@vicons/fluent'
-import type { FormInst, FormRules } from 'naive-ui'
-import {
-  NButton,
-  NCard,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NProgress,
-  NResult,
-  NTag,
-  NTime,
-  useMessage,
-} from 'naive-ui'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
@@ -22,6 +6,7 @@ import VueTurnstile from 'vue-turnstile'
 import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { TURNSTILE_KEY, VIDEO_COLLECT_API_URL } from '@/shared/config'
+import { showErrorToast, showWarningToast } from '@/shared/services/toast'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
@@ -41,11 +26,9 @@ interface TurnstileInstance {
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
 const biliAuth = useBiliAuth()
 
 const table = ref<VideoCollectTable | null>()
-const formRef = ref<FormInst>()
 const turnstile = ref<TurnstileInstance>()
 const token = ref('')
 const isLoading = ref(false)
@@ -59,22 +42,6 @@ const capacityPercentage = computed(() => {
   if (!table.value) return 0
   return Math.min(100, Math.round((table.value.videoCount / table.value.maxVideoCount) * 100))
 })
-const rules: FormRules = {
-  video: [
-    { required: true, message: '请输入视频链接或 BV 号', trigger: ['input', 'blur'] },
-    {
-      message: '请输入有效的哔哩哔哩视频链接或 BV 号',
-      validator: (_rule, value: string) => /BV[0-9A-Za-z]{10}/.test(value.trim()),
-      trigger: ['input', 'blur'],
-    },
-  ],
-  uid: {
-    type: 'number',
-    min: 1,
-    message: 'UID 必须是正整数',
-    trigger: ['input', 'blur'],
-  },
-}
 
 await loadTable()
 watch(() => route.params.id, loadTable)
@@ -103,16 +70,19 @@ async function loadTable() {
   } catch (error) {
     console.error('获取视频征集失败', error)
     table.value = null
-    message.error(error instanceof Error ? error.message : '获取失败')
+    showErrorToast(error instanceof Error ? error.message : '获取失败')
   } finally {
     isPageLoading.value = false
   }
 }
 
 async function addVideo() {
-  await formRef.value?.validate()
+  if (!/BV[0-9A-Za-z]{10}/.test(addModel.value.video.trim())) {
+    showWarningToast('请输入有效的哔哩哔哩视频链接或 BV 号')
+    return
+  }
   if (!token.value) {
-    message.warning('请完成人机验证')
+    showWarningToast('请完成人机验证')
     return
   }
 
@@ -134,7 +104,7 @@ async function addVideo() {
     await loadTable()
   } catch (error) {
     console.error('推荐视频失败', error)
-    message.error(error instanceof Error ? error.message : '推荐失败')
+    showErrorToast(error instanceof Error ? error.message : '推荐失败')
     turnstile.value?.reset()
   } finally {
     isLoading.value = false
@@ -143,7 +113,6 @@ async function addVideo() {
 
 function submitAnother() {
   submitted.value = false
-  formRef.value?.restoreValidation()
 }
 
 onUnmounted(() => turnstile.value?.remove())
@@ -153,9 +122,9 @@ onUnmounted(() => turnstile.value?.remove())
   <VideoCollectPageShell :table="table">
     <template #default="{ effectiveIsDark }">
       <main class="collect-submit-page">
-        <NResult
+        <UEmpty
           v-if="table === null && !isPageLoading"
-          status="404"
+          icon="i-lucide-file-question"
           title="视频征集不存在"
           description="链接可能有误，或该征集已被删除。"
         />
@@ -170,17 +139,17 @@ onUnmounted(() => turnstile.value?.remove())
               class="owner-link"
               @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
             >
-              <NIcon :component="Person24Regular" />
+              <UIcon name="i-lucide-user-round" />
               {{ table.owner.name }} 的视频征集
             </button>
             <div class="collect-title-row">
               <h1>{{ table.name }}</h1>
-              <NTag
-                :type="isClosed ? 'default' : 'success'"
-                :bordered="false"
+              <UBadge
+                :color="isClosed ? 'neutral' : 'success'"
+                variant="soft"
               >
                 {{ isClosed ? '已结束' : '进行中' }}
-              </NTag>
+              </UBadge>
             </div>
             <p class="collect-description">
               {{ table.description || '未填写征集说明' }}
@@ -188,51 +157,34 @@ onUnmounted(() => turnstile.value?.remove())
 
             <div class="collect-meta">
               <div>
-                <NIcon :component="Clock24Regular" />
+                <UIcon name="i-lucide-clock-3" />
                 <span>截止时间</span>
-                <strong
-                  ><NTime
-                    :time="table.endAt"
-                    format="yyyy-MM-dd HH:mm"
-                /></strong>
+                <strong>{{ new Date(table.endAt).toLocaleString('zh-CN') }}</strong>
               </div>
               <div>
-                <NIcon :component="Video24Regular" />
+                <UIcon name="i-lucide-video" />
                 <span>已收集</span>
                 <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
               </div>
             </div>
-            <NProgress
-              type="line"
-              :percentage="capacityPercentage"
-              :height="7"
-              :show-indicator="false"
-            />
+            <UProgress :model-value="capacityPercentage" />
           </section>
 
-          <NCard
-            class="submit-panel"
-            :bordered="true"
-          >
-            <NResult
+          <section class="submit-panel">
+            <UEmpty
               v-if="submitted"
-              status="success"
+              icon="i-lucide-circle-check"
               title="推荐成功"
               description="这个视频已经加入征集。"
             >
               <template #footer>
-                <NButton
-                  type="primary"
-                  @click="submitAnother"
-                >
-                  再推荐一个
-                </NButton>
+                <UButton @click="submitAnother"> 再推荐一个 </UButton>
               </template>
-            </NResult>
+            </UEmpty>
 
             <template v-else-if="isClosed">
-              <NResult
-                status="info"
+              <UEmpty
+                icon="i-lucide-calendar-x"
                 title="征集已结束"
                 description="当前不再接收新的视频推荐。"
               />
@@ -240,72 +192,61 @@ onUnmounted(() => turnstile.value?.remove())
 
             <template v-else>
               <div class="submit-panel__heading">
-                <NIcon :component="CheckmarkCircle24Regular" />
+                <UIcon name="i-lucide-circle-check" />
                 <div>
                   <h2>推荐视频</h2>
                   <p>填写哔哩哔哩视频信息</p>
                 </div>
               </div>
 
-              <NForm
-                ref="formRef"
-                :model="addModel"
-                :rules="rules"
-                label-placement="top"
+              <form
+                class="submit-form"
                 @submit.prevent="addVideo"
               >
-                <NFormItem
-                  label="视频链接或 BV 号"
-                  path="video"
-                >
-                  <NInput
-                    v-model:value="addModel.video"
+                <UFormField label="视频链接或 BV 号">
+                  <UInput
+                    v-model="addModel.video"
                     placeholder="https://www.bilibili.com/video/BV..."
                     clearable
                   />
-                </NFormItem>
+                </UFormField>
 
                 <div
                   v-if="isBiliAuthed"
                   class="authenticated-user"
                 >
-                  <NIcon :component="CheckmarkCircle24Regular" />
+                  <UIcon name="i-lucide-circle-check" />
                   <span>以 {{ addModel.name }}（UID {{ addModel.uid }}）推荐</span>
                 </div>
                 <div
                   v-else
                   class="identity-fields"
                 >
-                  <NFormItem label="推荐人">
-                    <NInput
-                      v-model:value="addModel.name"
+                  <UFormField label="推荐人">
+                    <UInput
+                      v-model="addModel.name"
                       placeholder="选填"
                     />
-                  </NFormItem>
-                  <NFormItem
-                    label="哔哩哔哩 UID"
-                    path="uid"
-                  >
-                    <NInputNumber
-                      v-model:value="addModel.uid"
+                  </UFormField>
+                  <UFormField label="哔哩哔哩 UID">
+                    <UInputNumber
+                      v-model="addModel.uid"
                       placeholder="选填"
-                      :show-button="false"
-                      :precision="0"
-                      style="width: 100%"
+                      :min="1"
+                      class="uid-input"
                     />
-                  </NFormItem>
+                  </UFormField>
                 </div>
 
-                <NFormItem label="推荐理由">
-                  <NInput
-                    v-model:value="addModel.description"
+                <UFormField label="推荐理由">
+                  <UTextarea
+                    v-model="addModel.description"
                     type="textarea"
                     placeholder="选填"
                     maxlength="200"
-                    show-count
-                    :autosize="{ minRows: 3, maxRows: 5 }"
+                    :rows="4"
                   />
-                </NFormItem>
+                </UFormField>
 
                 <VueTurnstile
                   ref="turnstile"
@@ -315,18 +256,17 @@ onUnmounted(() => turnstile.value?.remove())
                   size="flexible"
                   class="turnstile"
                 />
-                <NButton
-                  type="primary"
-                  attr-type="submit"
+                <UButton
+                  type="submit"
                   block
                   :loading="isLoading"
                   :disabled="!token"
                 >
                   提交推荐
-                </NButton>
-              </NForm>
+                </UButton>
+              </form>
             </template>
-          </NCard>
+          </section>
         </div>
       </main>
     </template>
@@ -426,7 +366,7 @@ onUnmounted(() => turnstile.value?.remove())
   border-left: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--collect-border);
 }
 
-.collect-meta .n-icon {
+.collect-meta .iconify {
   grid-row: 1 / 3;
   align-self: center;
   color: var(--collect-accent);
@@ -445,6 +385,7 @@ onUnmounted(() => turnstile.value?.remove())
 }
 
 .submit-panel {
+  padding: 24px;
   background: var(--collect-card);
   border: var(--vtsuru-page-border);
   border-color: var(--collect-border);
@@ -459,7 +400,7 @@ onUnmounted(() => turnstile.value?.remove())
   margin-bottom: 22px;
 }
 
-.submit-panel__heading > .n-icon {
+.submit-panel__heading > .iconify {
   color: var(--collect-accent);
   font-size: 28px;
 }
@@ -485,6 +426,15 @@ onUnmounted(() => turnstile.value?.remove())
   gap: 12px;
 }
 
+.submit-form {
+  display: grid;
+  gap: 16px;
+}
+
+.uid-input {
+  width: 100%;
+}
+
 .authenticated-user {
   display: flex;
   gap: 7px;
@@ -497,7 +447,7 @@ onUnmounted(() => turnstile.value?.remove())
   border-radius: var(--vtsuru-page-radius, 6px);
 }
 
-.authenticated-user .n-icon {
+.authenticated-user .iconify {
   flex: 0 0 auto;
   color: var(--collect-accent);
 }

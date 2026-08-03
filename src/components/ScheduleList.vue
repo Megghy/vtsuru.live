@@ -1,413 +1,436 @@
 <script setup lang="ts">
-import { Bed20Regular, Clock20Regular } from '@vicons/fluent'
-import {
-  NBadge,
-  NButton,
-  NCard,
-  NEllipsis,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NFlex,
-  NText,
-  NTime,
-  useThemeVars,
-} from 'naive-ui'
+import { ref } from 'vue'
 
 import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
-defineProps<{
+
+const props = defineProps<{
   schedules: ScheduleWeekInfo[]
   isSelf: boolean
 }>()
+
 const emit = defineEmits<{
-  (e: 'onUpdate', schedule: ScheduleWeekInfo): void
-  (e: 'onDelete', schedule: ScheduleWeekInfo): void
-  (e: 'onCopy', schedule: ScheduleWeekInfo): void
-  (e: 'onEditItem', schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo): void
-  (e: 'onDeleteItem', schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo): void
+  onUpdate: [schedule: ScheduleWeekInfo]
+  onDelete: [schedule: ScheduleWeekInfo]
+  onCopy: [schedule: ScheduleWeekInfo]
+  onEditItem: [schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo]
+  onDeleteItem: [schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo]
 }>()
-const themeVars = useThemeVars()
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-
-// 常量定义
-const MILLISECONDS_PER_DAY = 86400000
+const now = new Date()
+const currentISOWeek = getISOWeek(now)
+const currentDayOfWeek = (now.getDay() + 6) % 7
+const deleteCandidate = ref<ScheduleWeekInfo>()
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit' })
 
 function getISOWeek(date: Date) {
   const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dayNumber = target.getUTCDay() || 7
   target.setUTCDate(target.getUTCDate() + 4 - dayNumber)
   const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1))
-  const week = Math.ceil(((target.getTime() - yearStart.getTime()) / MILLISECONDS_PER_DAY + 1) / 7)
+
   return {
     year: target.getUTCFullYear(),
-    week,
+    week: Math.ceil(((target.getTime() - yearStart.getTime()) / 86400000 + 1) / 7),
   }
 }
 
-const now = new Date()
-const currentISOWeek = getISOWeek(now)
-const currentDayOfWeek = (now.getDay() + 6) % 7 // 转换为周一=0的格式
-
-function isCurrentWeek(year: number, week: number) {
-  return year === currentISOWeek.year && week === currentISOWeek.week
-}
-
-function isCurrentDay(year: number, week: number, dayIndex: number) {
-  if (!isCurrentWeek(year, week)) return false
-  return dayIndex === currentDayOfWeek
-}
-
-const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
-  month: '2-digit',
-  day: '2-digit',
-})
-
-function getWeekRangeLabel(year: number, week: number) {
-  const weekStart = getDateFromWeek(year, week, 0)
-  const weekEnd = getDateFromWeek(year, week, 6)
-  return `${dateFormatter.format(weekStart)} - ${dateFormatter.format(weekEnd)}`
-}
-
 function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
-  // week starts from 1-52, dayOfWeek starts from 0-6 where 0 is Monday
   const januaryFourth = new Date(year, 0, 4)
   const startOfWeekOne = new Date(januaryFourth)
-  const dayOfWeekJan4 = (januaryFourth.getDay() + 6) % 7
-  startOfWeekOne.setDate(januaryFourth.getDate() - dayOfWeekJan4)
+  startOfWeekOne.setDate(januaryFourth.getDate() - ((januaryFourth.getDay() + 6) % 7))
 
   const targetDate = new Date(startOfWeekOne)
   targetDate.setDate(startOfWeekOne.getDate() + (week - 1) * 7 + dayOfWeek)
   return targetDate
 }
 
-// 样式工具函数
-function getDayHeaderStyle(
-  year: number,
-  week: number,
-  dayIndex: number,
-  primaryColor: string,
-  primaryColorSuppl: string,
-) {
-  const isToday = isCurrentDay(year, week, dayIndex)
+function isCurrentWeek(year: number, week: number) {
+  return year === currentISOWeek.year && week === currentISOWeek.week
+}
 
-  return {
-    marginBottom: '6px',
-    padding: '4px 8px',
-    fontSize: '13px',
-    fontWeight: '600',
-    background: isToday
-      ? `linear-gradient(135deg, ${primaryColor}25 0%, ${primaryColor}40 100%)`
-      : `linear-gradient(135deg, ${primaryColorSuppl}15 0%, ${primaryColorSuppl}25 100%)`,
-    borderRadius: 'var(--vtsuru-page-radius, var(--vtsuru-radius))',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    boxShadow: isToday ? `0 0 0 2px ${primaryColor}66` : undefined,
-    transition: 'all 0.3s ease',
-  }
+function isCurrentDay(year: number, week: number, dayIndex: number) {
+  return isCurrentWeek(year, week) && dayIndex === currentDayOfWeek
+}
+
+function getWeekRangeLabel(year: number, week: number) {
+  return `${dateFormatter.format(getDateFromWeek(year, week, 0))} - ${dateFormatter.format(getDateFromWeek(year, week, 6))}`
+}
+
+function getDayLabel(year: number, week: number, dayIndex: number) {
+  return dateFormatter.format(getDateFromWeek(year, week, dayIndex))
+}
+
+function editSchedule(week: ScheduleWeekInfo, dayIndex: number, schedule: ScheduleDayInfo) {
+  if (props.isSelf) emit('onEditItem', week, dayIndex, schedule)
+}
+
+function confirmWeekDelete() {
+  if (!deleteCandidate.value) return
+  emit('onDelete', deleteCandidate.value)
+  deleteCandidate.value = undefined
 }
 </script>
 
 <template>
-  <NEmpty v-if="(schedules?.length ?? 0) === 0" />
-  <NList
+  <UEmpty
+    v-if="schedules.length === 0"
+    title="暂无直播日程"
+  />
+  <div
     v-else
-    :show-divider="false"
-    style="padding: 0"
+    class="schedule-list"
   >
-    <NListItem
-      v-for="item in schedules"
-      :key="`${item.year} ${item.week}`"
-      style="padding: 0"
+    <UCard
+      v-for="weekSchedule in schedules"
+      :key="`${weekSchedule.year}-${weekSchedule.week}`"
+      class="schedule-list__week"
+      :class="{ 'schedule-list__week--current': isCurrentWeek(weekSchedule.year, weekSchedule.week) }"
     >
-      <NCard
-        size="small"
-        :bordered="false"
-        :style="
-          isCurrentWeek(item.year, item.week)
-            ? {
-                boxShadow: `0 0 0 1px ${themeVars.primaryColorSuppl}99 inset`,
-                borderRadius: 'var(--vtsuru-page-radius, var(--vtsuru-radius))',
-                transition: 'box-shadow 0.2s ease',
-              }
-            : undefined
-        "
-      >
-        <template #header>
-          <div style="display: flex; align-items: center; gap: 8px">
-            <NText> {{ item.year }}年第{{ item.week }}周 </NText>
-            <NBadge
-              v-if="isCurrentWeek(item.year, item.week)"
-              value="本周"
-              type="success"
-              :style="{
-                backgroundColor: `${themeVars.successColor}1f`,
-                color: themeVars.successColor,
-                borderRadius: '12px',
-                padding: '0 8px',
-                fontSize: '11px',
-                fontWeight: 600,
-              }"
+      <template #header>
+        <div class="schedule-list__week-header">
+          <div class="schedule-list__week-title">
+            <strong>{{ weekSchedule.year }}年第{{ weekSchedule.week }}周</strong>
+            <UBadge
+              v-if="isCurrentWeek(weekSchedule.year, weekSchedule.week)"
+              color="success"
+              variant="subtle"
+              size="xs"
+              label="本周"
             />
-            <NText
-              depth="3"
-              :style="{
-                fontSize: '12px',
-                whiteSpace: 'nowrap',
-                fontVariantNumeric: 'tabular-nums',
-              }"
-            >
-              {{ getWeekRangeLabel(item.year, item.week) }}
-            </NText>
+            <span>{{ getWeekRangeLabel(weekSchedule.year, weekSchedule.week) }}</span>
           </div>
-        </template>
-        <template
-          v-if="isSelf"
-          #header-extra
-        >
-          <NFlex>
-            <NButton
-              size="small"
-              @click="emit('onUpdate', item)"
-            >
-              编辑
-            </NButton>
-            <NButton
-              size="small"
-              @click="emit('onCopy', item)"
-            >
-              复制
-            </NButton>
-            <NPopconfirm @positive-click="emit('onDelete', item)">
-              <template #trigger>
-                <NButton
-                  size="small"
-                  type="error"
-                >
-                  删除
-                </NButton>
-              </template>
-              确定删除?
-            </NPopconfirm>
-          </NFlex>
-        </template>
-        <NGrid
-          x-gap="8"
-          y-gap="8"
-          responsive="self"
-          cols="1 560:2 840:4 1080:7"
-          style="align-items: stretch"
-        >
-          <NGridItem
-            v-for="(daySchedules, index) in item.days"
-            :key="index"
-            style="display: flex"
+          <div
+            v-if="isSelf"
+            class="schedule-list__week-actions"
           >
-            <div style="display: flex; flex-direction: column; height: 100%; width: 100%">
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="soft"
+              label="编辑"
+              @click="emit('onUpdate', weekSchedule)"
+            />
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="soft"
+              label="复制"
+              @click="emit('onCopy', weekSchedule)"
+            />
+            <UButton
+              size="xs"
+              color="error"
+              variant="ghost"
+              label="删除"
+              @click="deleteCandidate = weekSchedule"
+            />
+          </div>
+        </div>
+      </template>
+
+      <div class="schedule-list__days">
+        <section
+          v-for="(daySchedules, dayIndex) in weekSchedule.days"
+          :key="dayIndex"
+          class="schedule-list__day"
+        >
+          <header
+            class="schedule-list__day-header"
+            :class="{
+              'schedule-list__day-header--current': isCurrentDay(weekSchedule.year, weekSchedule.week, dayIndex),
+            }"
+          >
+            <span>{{ getDayLabel(weekSchedule.year, weekSchedule.week, dayIndex) }}</span>
+            <strong>{{ weekdays[dayIndex] }}</strong>
+            <span
+              v-if="isCurrentDay(weekSchedule.year, weekSchedule.week, dayIndex)"
+              class="schedule-list__today-dot"
+            />
+          </header>
+
+          <button
+            v-if="daySchedules.length === 0"
+            type="button"
+            class="schedule-list__rest"
+            :disabled="!isSelf"
+            @click="emit('onUpdate', weekSchedule)"
+          >
+            <UIcon name="i-lucide-bed-double" />
+            休息
+          </button>
+
+          <div
+            v-else
+            class="schedule-list__entries"
+          >
+            <article
+              v-for="(schedule, scheduleIndex) in daySchedules"
+              :key="schedule.id || `${dayIndex}-${scheduleIndex}`"
+              class="schedule-list__entry"
+              :class="{ 'schedule-list__entry--editable': isSelf }"
+              :style="{ '--schedule-tag-color': schedule.tagColor || 'var(--schedule-list-border)' }"
+              :tabindex="isSelf ? 0 : undefined"
+              :role="isSelf ? 'button' : undefined"
+              @click="editSchedule(weekSchedule, dayIndex, schedule)"
+              @keydown.enter.prevent="editSchedule(weekSchedule, dayIndex, schedule)"
+              @keydown.space.prevent="editSchedule(weekSchedule, dayIndex, schedule)"
+            >
               <div
-                :style="
-                  getDayHeaderStyle(item.year, item.week, index, themeVars.primaryColor, themeVars.primaryColorSuppl)
-                "
+                v-if="schedule.tag || schedule.time || isSelf"
+                class="schedule-list__entry-meta"
               >
-                <NTime
-                  :time="getDateFromWeek(item.year, item.week, index)"
-                  format="MM/dd"
-                  :style="{
-                    color: isCurrentDay(item.year, item.week, index)
-                      ? 'var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary))'
-                      : 'var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted))',
-                    fontWeight: isCurrentDay(item.year, item.week, index) ? '700' : '600',
-                  }"
-                />
-                <NText :style="{ fontWeight: isCurrentDay(item.year, item.week, index) ? '700' : '500' }">
-                  {{ weekdays[index] }}
-                </NText>
-                <NBadge
-                  v-if="isCurrentDay(item.year, item.week, index)"
-                  dot
-                  :color="themeVars.primaryColor"
-                  :style="{ marginLeft: 'auto' }"
-                />
-              </div>
-              <div style="flex: 1; display: flex; flex-direction: column; min-height: 65px">
-                <NCard
-                  v-if="daySchedules.length === 0"
-                  size="small"
-                  :style="{
-                    minHeight: '40px',
-                    background: isCurrentDay(item.year, item.week, index)
-                      ? `linear-gradient(135deg, ${themeVars.primaryColorSuppl}08 0%, ${themeVars.primaryColorSuppl}15 100%)`
-                      : `linear-gradient(135deg, ${themeVars.cardColor} 0%, ${themeVars.bodyColor} 100%)`,
-                    border: `1px dashed ${isCurrentDay(item.year, item.week, index) ? themeVars.primaryColorSuppl : themeVars.dividerColor}`,
-                    cursor: isSelf ? 'pointer' : 'default',
-                    transition: 'all 0.2s ease',
-                  }"
-                  :hoverable="isSelf"
-                  content-style="display: flex; align-items: center; justify-content: center; gap: 4px;"
-                  @click="isSelf && $emit('onUpdate', item)"
+                <span
+                  v-if="schedule.tag"
+                  class="schedule-list__entry-tag"
                 >
-                  <NIcon
-                    :size="14"
-                    :component="Bed20Regular"
-                    :color="themeVars.textColor3"
+                  <span
+                    v-if="schedule.tagColor"
+                    class="schedule-list__entry-tag-dot"
+                    :style="{ background: schedule.tagColor }"
                   />
-                  <NText
-                    depth="3"
-                    style="font-size: 11px; font-style: italic"
-                    :style="{ opacity: isSelf ? 0.5 : 0.6 }"
-                  >
-                    休息
-                  </NText>
-                </NCard>
-                <NFlex
-                  v-else
-                  vertical
-                  :size="4"
+                  {{ schedule.tag }}
+                </span>
+                <span
+                  v-if="schedule.time"
+                  class="schedule-list__entry-time"
                 >
-                  <NCard
-                    v-for="(schedule, scheduleIndex) in daySchedules"
-                    :key="schedule.id || `${index}-${scheduleIndex}`"
-                    size="small"
-                    :style="{
-                      backgroundColor: schedule.tagColor ? `${schedule.tagColor}12` : themeVars.cardColor,
-                      borderLeft: schedule.tagColor
-                        ? `3px solid ${schedule.tagColor}`
-                        : `3px solid ${themeVars.dividerColor}`,
-                      cursor: isSelf ? 'pointer' : 'default',
-                      transition: 'all 0.2s ease',
-                      padding: '0',
-                    }"
-                    :bordered="true"
-                    :hoverable="isSelf"
-                    content-style="padding: 3px; padding-left: 5px;padding-bottom: 1px;"
-                    @click="isSelf && $emit('onEditItem', item, index, schedule)"
-                  >
-                    <div style="padding: 4px 6px">
-                      <!-- 标签和时间行 (仅当有标签或时间时显示) -->
-                      <div
-                        v-if="schedule.tag || schedule.time"
-                        style="display: flex; align-items: center; gap: 4px; margin-bottom: 3px; flex-wrap: nowrap"
-                      >
-                        <!-- 标签 -->
-                        <div
-                          v-if="schedule.tag"
-                          :style="{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '3px',
-                            padding: '1px 5px',
-                            borderRadius: 'var(--vtsuru-page-radius, var(--vtsuru-radius))',
-                            backgroundColor: schedule.tagColor
-                              ? `${schedule.tagColor}22`
-                              : `${themeVars.primaryColorSuppl}22`,
-                            flexShrink: 0,
-                          }"
-                        >
-                          <NBadge
-                            v-if="schedule.tagColor"
-                            dot
-                            :color="schedule.tagColor"
-                            :style="{ transform: 'scale(0.85)' }"
-                          />
-                          <NText
-                            :style="{
-                              color: 'var(--vtsuru-page-text, var(--vtsuru-fg))',
-                              fontWeight: '600',
-                              fontSize: '10.5px',
-                              whiteSpace: 'nowrap',
-                              lineHeight: '1.2',
-                            }"
-                          >
-                            {{ schedule.tag }}
-                          </NText>
-                        </div>
-                        <!-- 时间 -->
-                        <div
-                          v-if="schedule.time"
-                          :style="{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '2px',
-                            flexShrink: 0,
-                          }"
-                        >
-                          <NIcon
-                            :size="12"
-                            :component="Clock20Regular"
-                            :color="themeVars.textColor3"
-                          />
-                          <NText
-                            depth="2"
-                            :style="{
-                              fontSize: '10.5px',
-                              fontFamily: 'monospace',
-                              whiteSpace: 'nowrap',
-                              fontWeight: '500',
-                            }"
-                          >
-                            {{ schedule.time }}
-                          </NText>
-                        </div>
-                        <!-- 删除按钮 -->
-                        <NButton
-                          v-if="isSelf"
-                          size="tiny"
-                          type="error"
-                          quaternary
-                          circle
-                          style="margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; padding: 0"
-                          @click.stop="$emit('onDeleteItem', item, index, schedule)"
-                        >
-                          <template #icon>
-                            <span style="font-size: 14px; line-height: 1">×</span>
-                          </template>
-                        </NButton>
-                      </div>
-                      <!-- 内容 -->
-                      <div v-if="schedule?.title">
-                        <NEllipsis :line-clamp="2">
-                          <NText
-                            :style="{
-                              fontSize: '12.5px',
-                              lineHeight: '1.4',
-                              color: themeVars.textColor2,
-                            }"
-                          >
-                            {{ schedule.title }}
-                          </NText>
-                        </NEllipsis>
-                      </div>
-                      <!-- 如果既没有标签也没有时间，但有删除按钮 -->
-                      <div
-                        v-if="!schedule.tag && !schedule.time && isSelf && !schedule?.title"
-                        style="display: flex; justify-content: flex-end"
-                      >
-                        <NButton
-                          size="tiny"
-                          type="error"
-                          quaternary
-                          circle
-                          style="width: 18px; height: 18px; padding: 0"
-                          @click.stop="$emit('onDeleteItem', item, index, schedule)"
-                        >
-                          <template #icon>
-                            <span style="font-size: 14px; line-height: 1">×</span>
-                          </template>
-                        </NButton>
-                      </div>
-                    </div>
-                  </NCard>
-                </NFlex>
+                  <UIcon name="i-lucide-clock-3" />
+                  {{ schedule.time }}
+                </span>
+                <UButton
+                  v-if="isSelf"
+                  class="schedule-list__entry-delete"
+                  color="error"
+                  variant="ghost"
+                  size="xs"
+                  square
+                  icon="i-lucide-x"
+                  @click.stop="emit('onDeleteItem', weekSchedule, dayIndex, schedule)"
+                />
               </div>
-            </div>
-          </NGridItem>
-        </NGrid>
-      </NCard>
-    </NListItem>
-  </NList>
+              <p v-if="schedule.title">{{ schedule.title }}</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </UCard>
+  </div>
+
+  <UModal
+    :open="deleteCandidate != null"
+    title="删除日程"
+    @update:open="!$event && (deleteCandidate = undefined)"
+  >
+    <template #body>确定删除该周日程？</template>
+    <template #footer>
+      <div class="schedule-list__dialog-actions">
+        <UButton
+          color="neutral"
+          variant="soft"
+          label="取消"
+          @click="deleteCandidate = undefined"
+        />
+        <UButton
+          color="error"
+          label="确认删除"
+          @click="confirmWeekDelete"
+        />
+      </div>
+    </template>
+  </UModal>
 </template>
+
+<style scoped>
+.schedule-list {
+  --schedule-list-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
+  --schedule-list-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted)));
+  --schedule-list-bg: var(
+    --vtsuru-block-bg-muted,
+    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted)))
+  );
+  --schedule-list-border: var(
+    --vtsuru-block-border,
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+  );
+  --schedule-list-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  display: grid;
+  gap: var(--vtsuru-page-spacing, 16px);
+  min-width: 0;
+  color: var(--schedule-list-fg);
+}
+
+.schedule-list__week--current {
+  box-shadow: inset 0 0 0 1px var(--schedule-list-accent);
+}
+
+.schedule-list__week-header,
+.schedule-list__week-title,
+.schedule-list__week-actions,
+.schedule-list__entry-meta,
+.schedule-list__entry-time,
+.schedule-list__dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-list__week-header {
+  justify-content: space-between;
+}
+
+.schedule-list__week-title span {
+  color: var(--schedule-list-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-list__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.schedule-list__day {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 6px;
+}
+
+.schedule-list__day-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: var(--vtsuru-page-radius, 8px);
+  color: var(--schedule-list-muted);
+  background: color-mix(in srgb, var(--schedule-list-accent) 8%, var(--schedule-list-bg));
+  font-size: 13px;
+}
+
+.schedule-list__day-header--current {
+  color: var(--vtsuru-page-primary-readable, var(--schedule-list-accent));
+  box-shadow: inset 0 0 0 1px var(--schedule-list-accent);
+}
+
+.schedule-list__today-dot,
+.schedule-list__entry-tag-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.schedule-list__today-dot {
+  margin-left: auto;
+  background: var(--schedule-list-accent);
+}
+
+.schedule-list__rest,
+.schedule-list__entry {
+  width: 100%;
+  min-width: 0;
+  border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--schedule-list-border);
+  border-radius: var(--vtsuru-page-radius, 8px);
+  color: var(--schedule-list-fg);
+  background: color-mix(in srgb, var(--schedule-list-bg) 90%, transparent);
+}
+
+.schedule-list__rest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 56px;
+  color: var(--schedule-list-muted);
+  font: inherit;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.schedule-list__rest:not(:disabled),
+.schedule-list__entry--editable {
+  cursor: pointer;
+}
+
+.schedule-list__rest:not(:disabled):hover,
+.schedule-list__entry--editable:hover {
+  box-shadow: var(--vtsuru-page-shadow);
+}
+
+.schedule-list__entries {
+  display: grid;
+  gap: 4px;
+}
+
+.schedule-list__entry {
+  border-left: 3px solid var(--schedule-tag-color);
+  padding: 6px 8px;
+}
+
+.schedule-list__entry-meta {
+  min-height: 18px;
+}
+
+.schedule-list__entry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 5px;
+  border-radius: var(--vtsuru-page-radius, 8px);
+  background: color-mix(in srgb, var(--schedule-tag-color) 16%, transparent);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.schedule-list__entry-time {
+  color: var(--schedule-list-muted);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+}
+
+.schedule-list__entry-delete {
+  margin-left: auto;
+}
+
+.schedule-list__entry p {
+  display: -webkit-box;
+  margin: 3px 0 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.schedule-list__dialog-actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 1080px) {
+  .schedule-list__days {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .schedule-list__days {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 400px) {
+  .schedule-list__week-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .schedule-list__days {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

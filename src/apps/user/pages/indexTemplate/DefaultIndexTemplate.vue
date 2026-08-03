@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { NAvatar, NButton, NCard, NDivider, NFlex, NText, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -21,7 +20,7 @@ defineExpose({ Config, DefaultConfig })
 const width = window.innerWidth
 
 const isLoading = ref(true)
-const message = useMessage()
+const toast = useToast()
 const accountInfo = useAccount()
 
 const indexInfo = ref<ResponseUserIndexModel>((await getIndexInfo()) || ({} as ResponseUserIndexModel))
@@ -48,11 +47,11 @@ async function getIndexInfo() {
     if (data.code == 200) {
       return data.data
     } else if (data.code != 404) {
-      message?.error(`无法获取数据: ${data.message}`)
+      toast.add({ title: `无法获取数据: ${data.message}`, color: 'error' })
       return undefined
     }
   } catch (err) {
-    message?.error(`无法获取数据: ${err}`)
+    toast.add({ title: `无法获取数据: ${err}`, color: 'error' })
     return undefined
   } finally {
     isLoading.value = false
@@ -83,141 +82,139 @@ export const Config = defineTemplateConfig([
 </script>
 
 <template>
-  <NDivider />
+  <USeparator />
   <template v-if="userInfo?.biliId">
     <template v-if="userInfo?.id === accountInfo?.id">
-      <NButton
-        type="primary"
+      <UButton
+        color="primary"
         @click="$router.push({ name: 'manage-userPageBuilder' })"
       >
         自定义个人主页
-      </NButton>
-      <NDivider />
+      </UButton>
+      <USeparator />
     </template>
     <template v-if="indexInfo?.notification">
-      <NCard
+      <UCard
         size="small"
         content-style="text-align: center"
+        class="user-page-card"
       >
         {{ indexInfo?.notification }}
-      </NCard>
+      </UCard>
       <br />
     </template>
 
-    <NFlex
+    <div
       justify="center"
       align="center"
       vertical
     >
-      <NAvatar
+      <UAvatar
         v-if="userInfo.streamerInfo"
         :src="userInfo.streamerInfo.faceUrl"
         :size="width > 750 ? 175 : 100"
-        round
-        bordered
         :img-props="{
           referrerpolicy: 'no-referrer',
         }"
         :style="{ boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
       />
-      <NFlex
+      <div
         align="baseline"
         justify="center"
       >
-        <NText
+        <span
           strong
           style="font-size: 32px"
         >
           {{ userInfo?.name }}
-        </NText>
-        <NText
+        </span>
+        <span
           strong
           style="font-size: 20px"
           depth="3"
         >
           ({{ userInfo?.streamerInfo?.name }})
-        </NText>
-      </NFlex>
-      <NText
+        </span>
+      </div>
+      <span
         strong
         depth="3"
         style="font-size: 16px"
       >
         UID: {{ userInfo.streamerInfo?.uId }}
-      </NText>
-      <NText
+      </span>
+      <span
         strong
         depth="2"
         style="font-size: medium"
       >
         {{ biliInfo?.sign }}
-      </NText>
-    </NFlex>
-    <NDivider />
-    <NFlex
+      </span>
+    </div>
+    <USeparator />
+    <div
       align="center"
       justify="center"
     >
-      <NButton
-        type="primary"
+      <UButton
+        color="primary"
         @click="navigate(`https://space.bilibili.com/${userInfo?.biliId}`)"
       >
         个人主页
-      </NButton>
-      <NButton
-        type="primary"
-        secondary
+      </UButton>
+      <UButton
+        color="primary"
+        variant="soft"
         @click="navigate(`https://live.bilibili.com/${userInfo?.biliRoomId}`)"
       >
         直播间
-      </NButton>
-    </NFlex>
+      </UButton>
+    </div>
     <template v-if="orderedLinks.length > 0">
-      <NDivider> 相关链接 </NDivider>
-      <NFlex
+      <USeparator> 相关链接 </USeparator>
+      <div
         justify="center"
         wrap
       >
-        <NButton
+        <UButton
           v-for="link in orderedLinks"
           :key="link[0] + link[1]"
-          size="small"
-          type="info"
-          secondary
-          tag="a"
+          size="sm"
+          color="info"
+          variant="soft"
           :href="link[1]"
           target="_blank"
           style="margin: 4px"
         >
           {{ link[0] }}
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
     </template>
     <template v-if="indexInfo.videos?.length || 0 > 0">
-      <NDivider>
-        <NText style="font-size: 18px"> 相关视频 </NText>
-      </NDivider>
-      <NFlex justify="center">
+      <USeparator>
+        <span style="font-size: 18px"> 相关视频 </span>
+      </USeparator>
+      <div justify="center">
         <SimpleVideoCard
           v-for="video in indexInfo.videos"
           :key="video.id"
           :video="video"
         />
-      </NFlex>
+      </div>
     </template>
   </template>
   <template v-else>
-    <NFlex
+    <div
       justify="center"
       align="center"
     >
-      <NText
+      <span
         strong
         style="font-size: 32px"
       >
         {{ userInfo?.name }}
-      </NText>
+      </span>
       未认证
-    </NFlex>
+    </div>
   </template>
 </template>

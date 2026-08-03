@@ -1,23 +1,6 @@
 <script setup lang="ts">
-import { Delete24Filled, Pause24Filled, PersonAdd24Filled, Play24Filled, Sparkle24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
-import {
-  NAlert,
-  NAvatar,
-  NButton,
-  NCard,
-  NDivider,
-  NEmpty,
-  NIcon,
-  NNumberAnimation,
-  NProgress,
-  NResult,
-  NFlex,
-  NTag,
-  useMessage,
-  useNotification,
-} from 'naive-ui'
-import { h, onMounted, onUnmounted, ref } from 'vue'
+import { h, onMounted, onUnmounted, ref, resolveComponent } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { OpenLiveInfo, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
@@ -62,9 +45,11 @@ const defaultOption = {
 const lotteryOption = usePersistedStorage('Settings.OpenLive.LotteryOption', defaultOption)
 const lotteryHistory = usePersistedStorage<LotteryHistory[]>('OpenLive.LotteryHistory', [])
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const accountInfo = useAccount()
-const notification = useNotification()
 const client = await useDanmakuClient().initOpenlive()
 
 const originUsers = ref<OpenLiveLotteryUserInfo[]>([])
@@ -154,7 +139,7 @@ function addUser(user: OpenLiveLotteryUserInfo, danmu?: any) {
 // 手动添加用户
 function addManualUser(payload: ManualUserFormModel) {
   if (!payload.name.trim()) {
-    message.error('请输入用户名')
+    feedback('error', '请输入用户名')
     return
   }
 
@@ -170,7 +155,7 @@ function addManualUser(payload: ManualUserFormModel) {
   }
 
   addUser(newUser)
-  message.success(`已添加用户: ${newUser.name}`)
+  feedback('success', `已添加用户: ${newUser.name}`)
   showAddUserModal.value = false
 }
 
@@ -196,7 +181,7 @@ function startLottery() {
 
     try {
       if (originUsers.value.length < lotteryOption.value.resultCount) {
-        message.warning('符合条件的抽奖人数达不到抽选人数')
+        feedback('warning', '符合条件的抽奖人数达不到抽选人数')
         isLottering.value = false
         return
       }
@@ -222,7 +207,7 @@ function startLottery() {
           break
       }
     } catch {
-      message.error('发生错误')
+      feedback('error', '发生错误')
       isLottering.value = false
     }
   }
@@ -273,7 +258,7 @@ function startHalfLottery() {
   } else {
     const half = Math.floor(currentUsers.value.length / 2)
     console.log(`[OPEN-LIVE-Lottery] 人数减半至${half}人`)
-    message.success(`人数减半至 ${half} 人，再次点击"开始抽取"继续`)
+    feedback('success', `人数减半至 ${half} 人，再次点击"开始抽取"继续`)
     while (currentUsers.value.length > half) {
       const randomIndex = getRandomInt(currentUsers.value.length)
       const eliminatedUser = currentUsers.value.splice(randomIndex, 1)[0]
@@ -301,7 +286,7 @@ function startFlipLottery() {
     ensureCardState(winner.openId).isWinner = true
   })
 
-  message.info('点击用户卡片进行翻牌抽取！')
+  feedback('info', '点击用户卡片进行翻牌抽取！')
   // 开启翻牌可点击
   flipEnabled.value = true
   if (flipFinishTimer) {
@@ -315,7 +300,7 @@ function startFlipLottery() {
 function startWheelLottery() {
   console.log('开始转轮模式')
   if (currentUsers.value.length < 2) {
-    message.warning('转轮模式至少需要 2 位用户')
+    feedback('warning', '转轮模式至少需要 2 位用户')
     return
   }
   wheelSpinning.value = true
@@ -348,7 +333,7 @@ function startWheelLottery() {
 // 抽卡模式
 function startCardsLottery() {
   console.log('开始抽卡模式')
-  message.info('正在随机选择获奖卡片...')
+  feedback('info', '正在随机选择获奖卡片...')
 
   // 随机选择获奖者
   const shuffledUsers = shuffleArray(currentUsers.value)
@@ -390,7 +375,7 @@ function startEliminationLottery() {
 
     const targetCount = Math.max(lotteryOption.value.resultCount, Math.floor(currentUsers.value.length / 2))
 
-    message.info(`第 ${currentLotteryStep.value} 轮淘汰赛，目标人数: ${targetCount}`)
+    feedback('info', `第 ${currentLotteryStep.value} 轮淘汰赛，目标人数: ${targetCount}`)
 
     // 随机淘汰到目标人数
     while (currentUsers.value.length > targetCount) {
@@ -425,29 +410,13 @@ function onFinishLottery() {
   isLotteried.value = true
   // 结束后关闭翻牌可点击
   flipEnabled.value = false
-  notification.create({
-    title: '抽奖完成',
-    description: `共${resultUsers.value?.length}人`,
-    duration: 3000,
-    content: () =>
-      h(NFlex, { vertical: true }, () =>
-        resultUsers.value?.map((user) =>
-          h(NFlex, null, () => [
-            h(NAvatar, { src: `${user.avatar}@32w_32h`, imgProps: { referrerpolicy: 'no-referrer' } }),
-            h('span', user.name),
-          ]),
-        ),
-      ),
-    meta: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-    onAfterLeave: () => {
-      message.success('已保存至历史')
-    },
-  })
+  toast.add({ title: '抽奖完成', description: `共 ${resultUsers.value.length} 人`, color: 'success' })
   updateUsers()
   lotteryHistory.value.push({
     users: currentUsers.value ?? [],
     time: Date.now(),
   })
+  feedback('success', '已保存至历史')
 }
 // 翻牌点击处理
 function flipCard(user: OpenLiveLotteryUserInfo) {
@@ -524,7 +493,7 @@ function clear() {
     clearTimeout(flipFinishTimer)
     flipFinishTimer = null
   }
-  message.success('已清空队列')
+  feedback('success', '已清空队列')
 
   updateUsers()
 }
@@ -545,7 +514,7 @@ function shuffleFlipCards() {
     clearTimeout(flipFinishTimer)
     flipFinishTimer = null
   }
-  message.success('已洗牌')
+  feedback('success', '已洗牌')
 }
 function removeUser(user: OpenLiveLotteryUserInfo) {
   currentUsers.value = currentUsers.value.filter((u) => u.openId != user.openId)
@@ -595,11 +564,11 @@ function onGift(data: GiftInfo, command: any) {
 }
 function pause() {
   isStartLottery.value = false
-  message.info('已暂停新用户加入')
+  feedback('info', '已暂停新用户加入')
 }
 function continueLottery() {
   isStartLottery.value = true
-  message.info('开始监听')
+  feedback('info', '开始监听')
 }
 
 let timer: any
@@ -610,7 +579,7 @@ onMounted(async () => {
     currentUsers.value = JSON.parse(JSON.stringify(users))
     console.log(`[OPEN-LIVE-Lottery] 从历史记录中加载 ${users.length} 位用户`)
     if (users.length > 0) {
-      message.info(`从历史记录中加载 ${users.length} 位用户`)
+      feedback('info', `从历史记录中加载 ${users.length} 位用户`)
     }
   }
   client?.on('danmaku', onDanmaku)
@@ -627,14 +596,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NResult
+  <UEmpty
     v-if="!code && !accountInfo"
     status="403"
     title="403"
     description="该页面只能从幻星平台访问或者注册用户使用"
   />
   <template v-else>
-    <NCard
+    <UCard
       size="small"
       bordered
     >
@@ -643,63 +612,63 @@ onUnmounted(() => {
           title="直播抽奖"
           description="收集用户并抽取结果，支持条件过滤、动画效果与 OBS 展示"
         >
-          <template #actions>
-            <NButton
-              text
-              type="primary"
+          <template #footers>
+            <UButton
+              variant="link"
+              color="primary"
               size="small"
               tag="a"
               href="https://vtsuru.live"
               target="_blank"
             >
               主站
-            </NButton>
-            <NButton
-              type="info"
+            </UButton>
+            <UButton
+              color="info"
               size="small"
-              secondary
+              variant="soft"
               @click="showModal = true"
             >
               抽奖历史
-            </NButton>
-            <NButton
-              type="success"
+            </UButton>
+            <UButton
+              color="success"
               size="small"
-              secondary
+              variant="soft"
               @click="showOBSModal = true"
             >
               OBS 组件
-            </NButton>
-            <NButton
-              type="primary"
+            </UButton>
+            <UButton
+              color="primary"
               size="small"
               :disabled="isLottering"
               @click="showAddUserModal = true"
             >
-              <template #icon>
-                <NIcon :component="PersonAdd24Filled" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
               手动添加
-            </NButton>
+            </UButton>
           </template>
         </OpenLivePageHeader>
       </template>
-      <NAlert
+      <UAlert
         v-if="!code && accountInfo && !accountInfo.isBiliVerified"
         type="error"
         size="small"
         :bordered="false"
       >
         请先绑定B站账号
-      </NAlert>
-      <NAlert
+      </UAlert>
+      <UAlert
         v-else-if="!code && accountInfo && accountInfo.biliAuthCodeStatus !== 1"
         type="error"
         size="small"
         :bordered="false"
       >
         身份码状态异常, 请重新绑定
-      </NAlert>
+      </UAlert>
       <LotterySettingsPanel
         :option="lotteryOption"
         :is-start-lottery="isStartLottery"
@@ -707,45 +676,45 @@ onUnmounted(() => {
         :current-users-length="currentUsers.length"
         @reset="resetOption"
       />
-      <NCard
+      <UCard
         v-if="originUsers"
         size="small"
         style="margin-top: 16px; min-height: 400px"
       >
         <template #header>
-          <NFlex
+          <div
             align="center"
             justify="space-between"
           >
             <div class="user-count-stat">
               <span class="label">当前参与</span>
-              <NNumberAnimation
+              <span
                 :from="0"
                 :to="currentUsers.length"
                 active
               />
               <span class="unit">人</span>
             </div>
-            <NFlex>
-              <NButton
-                :type="isStartLottery ? 'warning' : 'success'"
+            <div>
+              <UButton
+                :color="isStartLottery ? 'warning' : 'success'"
                 @click="isStartLottery ? pause() : continueLottery()"
               >
-                <template #icon>
-                  <NIcon :component="isStartLottery ? Pause24Filled : Play24Filled" />
+                <template #leading>
+                  <UIcon name="i-lucide-circle" />
                 </template>
                 {{ isStartLottery ? '暂停监听' : '开始监听' }}
-              </NButton>
-              <NButton
-                type="error"
-                secondary
+              </UButton>
+              <UButton
+                color="error"
+                variant="soft"
                 :disabled="isLottering || originUsers.length === 0"
                 @click="clear"
               >
                 清空
-              </NButton>
-            </NFlex>
-          </NFlex>
+              </UButton>
+            </div>
+          </div>
         </template>
 
         <div
@@ -756,19 +725,19 @@ onUnmounted(() => {
             v-if="isStartLottery"
             style="color: var(--vtsuru-primary)"
           >
-            <NFlex
+            <div
               align="center"
               justify="center"
             >
-              <NIcon
-                :component="Sparkle24Filled"
+              <UIcon
+                name="i-lucide-circle"
                 class="n-icon-spin"
               />
               正在监听弹幕/礼物中...
-            </NFlex>
+            </div>
           </div>
           <div v-else-if="lotteryProgress > 0 && lotteryProgress < 100">
-            <NProgress
+            <UProgress
               type="line"
               :percentage="lotteryProgress"
               indicator-placement="inside"
@@ -784,8 +753,8 @@ onUnmounted(() => {
         </div>
 
         <div class="action-bar">
-          <NButton
-            type="success"
+          <UButton
+            color="success"
             size="large"
             :loading="isLottering"
             :disabled="isStartLottery || isLotteried || currentUsers.length === 0"
@@ -794,33 +763,33 @@ onUnmounted(() => {
             style="width: 180px; height: 48px; font-size: 18px"
             @click="startLottery"
           >
-            <template #icon>
-              <NIcon :component="Sparkle24Filled" />
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
             </template>
             开始抽取
-          </NButton>
-          <NButton
-            secondary
+          </UButton>
+          <UButton
+            variant="soft"
             size="large"
             :disabled="isLottering || !isLotteried"
             style="width: 120px; height: 48px"
             @click="reset"
           >
             重置结果
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             v-if="lotteryOption.lotteryType === 'flip'"
             size="large"
-            type="info"
-            secondary
+            color="info"
+            variant="soft"
             :disabled="!flipEnabled || isLottering || isStartLottery || currentUsers.length === 0"
             style="height: 48px"
             @click="shuffleFlipCards"
           >
             洗牌
-          </NButton>
+          </UButton>
         </div>
-        <NDivider style="margin: 10px 0 20px 0" />
+        <USeparator style="margin: 10px 0 20px 0" />
         <!-- 转轮模式特殊显示 -->
         <div
           v-if="lotteryOption.lotteryType === 'wheel' && currentUsers.length >= 2"
@@ -856,7 +825,7 @@ onUnmounted(() => {
           v-else-if="lotteryOption.lotteryType === 'wheel'"
           class="wheel-container"
         >
-          <NEmpty description="转轮模式至少需要 2 位用户" />
+          <UEmpty description="转轮模式至少需要 2 位用户" />
         </div>
 
         <!-- 卡片显示 -->
@@ -882,37 +851,37 @@ onUnmounted(() => {
           >
             <div class="lottery-card">
               <!-- 卡片背面 -->
-              <NCard
+              <UCard
                 class="card-face card-back"
                 :bordered="false"
                 content-style="padding: 0; display: flex; align-items: center; justify-content: center;"
               >
                 <div class="mystery-card">
                   <div class="mystery-icon">
-                    <NIcon
-                      :component="Sparkle24Filled"
+                    <UIcon
+                      name="i-lucide-circle"
                       size="40"
                     />
                   </div>
                   <div class="mystery-text">点击翻开</div>
                   <div class="card-pattern" />
-                  <NButton
+                  <UButton
                     v-if="!isLottering"
                     class="remove-btn"
                     size="small"
-                    circle
-                    quaternary
+                    square
+                    variant="ghost"
                     @click.stop="removeUser(item)"
                   >
-                    <template #icon>
-                      <NIcon :component="Delete24Filled" />
+                    <template #leading>
+                      <UIcon name="i-lucide-circle" />
                     </template>
-                  </NButton>
+                  </UButton>
                 </div>
-              </NCard>
+              </UCard>
 
               <!-- 卡片正面 -->
-              <NCard
+              <UCard
                 class="card-face card-front"
                 :class="{ 'winner-card': cardStates[item.openId]?.isWinner }"
                 :bordered="cardStates[item.openId]?.isWinner"
@@ -920,7 +889,7 @@ onUnmounted(() => {
               >
                 <div class="user-card-content">
                   <div class="user-avatar-wrapper">
-                    <NAvatar
+                    <UAvatar
                       :src="getAvatarUrl(item.avatar)"
                       :size="80"
                       circle
@@ -933,8 +902,8 @@ onUnmounted(() => {
                       v-if="cardStates[item.openId]?.isWinner"
                       class="winner-badge"
                     >
-                      <NIcon
-                        :component="Sparkle24Filled"
+                      <UIcon
+                        name="i-lucide-circle"
                         size="16"
                       />
                     </div>
@@ -945,32 +914,32 @@ onUnmounted(() => {
                       {{ item.name }}
                     </div>
                     <div class="user-badges">
-                      <NTag
+                      <UBadge
                         v-if="item.fans_medal_wearing_status"
                         :bordered="false"
                         size="small"
                         type="info"
                       >
-                        <template #icon>
+                        <template #leading>
                           <span class="medal-level">{{ item.fans_medal_level }}</span>
                         </template>
                         {{ item.fans_medal_name }}
-                      </NTag>
-                      <NTag
+                      </UBadge>
+                      <UBadge
                         v-else
                         :bordered="false"
                         size="small"
                       >
                         无粉丝牌
-                      </NTag>
-                      <NTag
+                      </UBadge>
+                      <UBadge
                         v-if="item.guard_level > 0"
                         :bordered="false"
                         size="small"
                         type="warning"
                       >
                         舰长{{ item.guard_level }}
-                      </NTag>
+                      </UBadge>
                     </div>
                   </div>
 
@@ -981,29 +950,29 @@ onUnmounted(() => {
                     <div class="winner-text">🎉 中奖了！</div>
                   </div>
 
-                  <NButton
+                  <UButton
                     v-if="!isLottering"
                     class="remove-btn"
                     size="small"
-                    circle
-                    quaternary
+                    square
+                    variant="ghost"
                     @click.stop="removeUser(item)"
                   >
-                    <template #icon>
-                      <NIcon :component="Delete24Filled" />
+                    <template #leading>
+                      <UIcon name="i-lucide-circle" />
                     </template>
-                  </NButton>
+                  </UButton>
                 </div>
-              </NCard>
+              </UCard>
             </div>
           </div>
         </div>
-        <NEmpty
+        <UEmpty
           v-else
           description="暂无用户"
         />
-      </NCard>
-    </NCard>
+      </UCard>
+    </UCard>
   </template>
   <LotteryHistoryModal
     v-model:show="showModal"
@@ -1030,7 +999,7 @@ onUnmounted(() => {
   font-size: 14px;
   color: var(--vtsuru-fg);
 }
-.user-count-stat .n-number-animation {
+.user-count-stat .u-number-animation {
   font-size: 24px;
   font-weight: bold;
   color: var(--vtsuru-primary);
@@ -1152,7 +1121,7 @@ onUnmounted(() => {
 }
 
 .winner-card {
-  --n-border-color: var(--vtsuru-success) !important;
+  --vtsuru-border-color: var(--vtsuru-success) !important;
 }
 
 /* 神秘卡片样式 */

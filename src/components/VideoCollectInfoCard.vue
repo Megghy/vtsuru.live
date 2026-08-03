@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
-import type { CountdownProps } from 'naive-ui'
-import { NCard, NCountdown, NDivider, NEllipsis, NIcon, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { useNow } from '@vueuse/core'
+import { format } from 'date-fns'
+import { computed } from 'vue'
 
 import type { VideoCollectTable } from '@/api/api-models'
 import router from '@/app/router'
@@ -13,121 +13,133 @@ const props = defineProps<{
   from: 'user' | 'owner'
   bordered?: boolean
 }>()
-const renderCountdown: CountdownProps['render'] = (info: { hours: number; minutes: number; seconds: number }) => {
-  return `${String(info.hours).padStart(2, '0')}时 ${String(info.minutes).padStart(2, '0')}分 ${String(info.seconds).padStart(2, '0')}秒`
+
+const now = useNow({ interval: 1000 })
+const remainingTime = computed(() => Math.max(0, props.item.endAt - now.value.getTime()))
+const remainingTimeLabel = computed(() => {
+  const seconds = Math.ceil(remainingTime.value / 1000)
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const remainingSeconds = seconds % 60
+
+  return `${String(hours).padStart(2, '0')}时 ${String(minutes).padStart(2, '0')}分 ${String(remainingSeconds).padStart(2, '0')}秒`
+})
+
+function formatTime(timestamp: number) {
+  return format(timestamp, 'yyyy-MM-dd HH:mm')
 }
-function onClick() {
-  if (props.canClick == true) {
-    if (props.from == 'user') {
-      window.open(`${CURRENT_HOST}video-collect/${props.item.shortId}`, '_blank')
-    } else {
-      router.push({ name: 'manage-videoCollect-Detail', params: { id: props.item.id } })
-    }
+
+function openCollection() {
+  if (!props.canClick) return
+
+  if (props.from === 'user') {
+    window.open(`${CURRENT_HOST}video-collect/${props.item.shortId}`, '_blank')
+    return
   }
+
+  router.push({ name: 'manage-videoCollect-Detail', params: { id: props.item.id } })
 }
 </script>
 
 <template>
-  <NCard
-    size="small"
-    :class="{ 'is-clickable': canClick }"
-    embedded
-    :hoverable="canClick"
-    :bordered="bordered"
+  <UCard
+    class="video-collect-info-card"
+    :class="{ 'video-collect-info-card--clickable': canClick }"
+    :variant="bordered ? 'outline' : 'soft'"
     :tabindex="canClick ? 0 : undefined"
     :role="canClick ? 'link' : undefined"
     :aria-label="canClick ? `打开视频征集：${item.name}` : undefined"
-    @click="onClick"
-    @keydown.enter.prevent="onClick"
-    @keydown.space.prevent="onClick"
+    @click="openCollection"
+    @keydown.enter.prevent="openCollection"
+    @keydown.space.prevent="openCollection"
   >
     <template #header>
-      <NFlex :size="5">
-        <NTag
-          v-if="item.isFinish"
-          size="small"
-        >
-          已结束
-        </NTag>
-        <NTag
-          v-else
-          type="success"
-          size="small"
-        >
-          进行中
-        </NTag>
-        <NDivider vertical />
-        {{ item.name }}
-      </NFlex>
+      <div class="video-collect-info-card__header">
+        <div class="video-collect-info-card__title">
+          <UBadge
+            :color="item.isFinish ? 'neutral' : 'success'"
+            variant="subtle"
+            size="xs"
+            :label="item.isFinish ? '已结束' : '进行中'"
+          />
+          <strong>{{ item.name }}</strong>
+        </div>
+        <slot name="header-extra" />
+      </div>
     </template>
-    <template #header-extra>
-      <slot name="header-extra" />
-    </template>
-    <NText
-      depth="3"
-      style="font-size: 13px"
-    >
-      <NTime :time="item.createAt" />
-    </NText>
-    <br />
-    <NText
-      depth="3"
-      style="font-size: 13px"
-    >
-      结束:
-      <NTime :time="item.endAt" />
-    </NText>
-    <br />
-    <NText depth="3">
-      <NEllipsis>
-        {{ item.description }}
-      </NEllipsis>
-    </NText>
+
+    <div class="video-collect-info-card__details">
+      <time>创建于 {{ formatTime(item.createAt) }}</time>
+      <time>结束于 {{ formatTime(item.endAt) }}</time>
+      <UTooltip :text="item.description">
+        <p>{{ item.description }}</p>
+      </UTooltip>
+    </div>
+
     <template #footer>
-      <NFlex
-        :size="5"
-        align="center"
-      >
-        <NFlex>
-          <NIcon :component="NumberRow24Regular" />
-          <NTooltip>
-            <template #trigger>
-              <NText> {{ item.videoCount }} / {{ item.maxVideoCount }} </NText>
-            </template>
-            已征集数量 / 最大征集数量
-          </NTooltip>
-        </NFlex>
-        <template v-if="!item.isFinish">
-          <NDivider vertical />
-          <NFlex>
-            <NIcon :component="Clock24Regular" />
-            <NTooltip>
-              <template #trigger>
-                <NText depth="3">
-                  剩余
-                  <NCountdown
-                    :duration="item.endAt - Date.now()"
-                    :render="renderCountdown"
-                  />
-                </NText>
-              </template>
-              结束于 <NTime :time="item.endAt" />
-            </NTooltip>
-          </NFlex>
-        </template>
-      </NFlex>
+      <div class="video-collect-info-card__footer">
+        <UTooltip text="已征集数量 / 最大征集数量">
+          <span>
+            <UIcon name="i-lucide-list-ordered" />
+            {{ item.videoCount }} / {{ item.maxVideoCount }}
+          </span>
+        </UTooltip>
+        <UTooltip
+          v-if="!item.isFinish"
+          :text="`结束于 ${formatTime(item.endAt)}`"
+        >
+          <span>
+            <UIcon name="i-lucide-clock-3" />
+            剩余 {{ remainingTimeLabel }}
+          </span>
+        </UTooltip>
+      </div>
     </template>
-  </NCard>
+  </UCard>
 </template>
 
 <style scoped>
-.is-clickable {
+.video-collect-info-card--clickable {
   width: 100%;
   cursor: pointer;
 }
 
-.is-clickable:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary-focus, var(--vtsuru-brand));
+.video-collect-info-card--clickable:focus-visible {
+  outline: 2px solid var(--vtsuru-brand);
   outline-offset: 3px;
+}
+
+.video-collect-info-card__header,
+.video-collect-info-card__title,
+.video-collect-info-card__footer,
+.video-collect-info-card__footer span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-collect-info-card__header {
+  justify-content: space-between;
+}
+
+.video-collect-info-card__details {
+  display: grid;
+  gap: 6px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+}
+
+.video-collect-info-card__details p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.video-collect-info-card__footer {
+  flex-wrap: wrap;
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
 }
 </style>

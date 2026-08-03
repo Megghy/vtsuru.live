@@ -1,9 +1,9 @@
-import { useMessage } from 'naive-ui'
 import { computed, inject, provide, ref } from 'vue'
 import type { InjectionKey } from 'vue'
 
 import { QueryGetAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
+import { showErrorToast, showSuccessToast } from '@/shared/services/toast'
 
 import type { OrgLiveItem } from '../types'
 import type { OrgContext } from './useOrgContext'
@@ -21,7 +21,6 @@ export interface StreamerRankItem {
 }
 
 export function useOrgLives(ctx: OrgContext) {
-  const message = useMessage()
   const lives = ref<OrgLiveItem[]>([])
   const loading = ref(false)
   const loaded = ref(false)
@@ -83,7 +82,7 @@ export function useOrgLives(ctx: OrgContext) {
       )
       loaded.value = true
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载直播记录失败')
+      showErrorToast(err instanceof Error ? err.message : '加载直播记录失败')
     } finally {
       loading.value = false
     }

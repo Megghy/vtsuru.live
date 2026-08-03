@@ -16,6 +16,7 @@ import {
   NTag,
   NText,
 } from 'naive-ui'
+import { showSuccessToast, showErrorToast, showWarningToast } from '@/shared/services/toast'
 import { computed, onBeforeUnmount, reactive, ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -43,8 +44,6 @@ interface Frame {
   width: number
   height: number
 }
-
-const message = useMessage()
 const items = ref<StitchItem[]>([])
 const previewCanvas = ref<HTMLCanvasElement>()
 const dropZoneRef = ref<HTMLElement>()
@@ -132,7 +131,7 @@ watchEffect(() => {
 async function addFiles(files: File[]) {
   const imageFiles = files.filter((file) => file.type.startsWith('image/'))
   if (!imageFiles.length) {
-    message.warning('未检测到图片文件')
+    showWarningToast('未检测到图片文件')
     return
   }
 
@@ -150,7 +149,7 @@ async function addFiles(files: File[]) {
       items.value.push(item)
       selectedId.value = item.id
     } catch {
-      message.error(`图片读取失败：${file.name}`)
+      showErrorToast(`图片读取失败：${file.name}`)
     }
   }
 }
@@ -305,11 +304,11 @@ function roundedRect(
 
 async function exportImage() {
   if (!items.value.length) {
-    message.warning('请先添加图片')
+    showWarningToast('请先添加图片')
     return
   }
   if (outputTooLarge.value) {
-    message.warning('输出画布过大，请降低尺寸或减少图片后再导出')
+    showWarningToast('输出画布过大，请降低尺寸或减少图片后再导出')
     return
   }
 
@@ -326,9 +325,9 @@ async function exportImage() {
       images: items.value.length,
       bytes: blob.size,
     })
-    message.success(`已导出 ${formatFileSize(blob.size)}`)
+    showSuccessToast(`已导出 ${formatFileSize(blob.size)}`)
   } catch (error) {
-    message.error(`导出失败：${error instanceof Error ? error.message : error}`)
+    showErrorToast(`导出失败：${error instanceof Error ? error.message : error}`)
   } finally {
     exporting.value = false
   }

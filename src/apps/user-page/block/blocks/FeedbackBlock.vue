@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ChatbubbleOutline, OpenOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NFlex, NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
@@ -100,18 +99,18 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
       v-if="!canEmbedInternalQuestionBox"
       #header
     >
-      <NFlex
+      <div
         align="center"
         style="gap: 8px"
       >
-        <NIcon
+        <span
           size="18"
           depth="2"
         >
           <ChatbubbleOutline />
-        </NIcon>
+        </span>
         <span>{{ cfg.title }}</span>
-      </NFlex>
+      </div>
     </template>
 
     <div class="feedback-body">
@@ -121,14 +120,12 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           :user-info="props.userInfo"
           embedded
         />
-        <NAlert
+        <UAlert
           v-else
-          type="info"
-          :show-icon="false"
+          color="info"
           style="border-radius: var(--vtsuru-page-radius)"
+          ><template #description> 未加载到用户信息，无法展示站内提问箱 </template></UAlert
         >
-          未加载到用户信息，无法展示站内提问箱
-        </NAlert>
       </template>
 
       <template v-else>
@@ -139,31 +136,28 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           {{ cfg.description }}
         </div>
 
-        <NAlert
+        <UAlert
           v-if="!url"
-          type="info"
-          :show-icon="false"
+          color="info"
           style="border-radius: var(--vtsuru-page-radius)"
+          ><template #description> 未配置跳转链接 </template></UAlert
         >
-          未配置跳转链接
-        </NAlert>
 
         <template v-else>
           <div class="action-row">
-            <NButton
-              type="primary"
-              secondary
-              tag="a"
+            <UButton
+              color="primary"
+              variant="soft"
               target="_blank"
               rel="noopener noreferrer"
               :href="url"
               class="open-btn"
             >
-              <template #icon>
-                <NIcon><OpenOutline /></NIcon>
+              <template #leading>
+                <span><OpenOutline /></span>
               </template>
               {{ cfg.buttonText }}
-            </NButton>
+            </UButton>
             <span class="url-hint">
               {{ url }}
             </span>
@@ -183,14 +177,12 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
               loading="lazy"
             />
           </div>
-          <NAlert
+          <UAlert
             v-else-if="externalEmbedRejected"
-            type="info"
-            :show-icon="false"
+            color="info"
             class="embed-notice"
+            ><template #description> 该来源暂不支持安全内嵌，请使用上方按钮访问 </template></UAlert
           >
-            该来源暂不支持安全内嵌，请使用上方按钮访问
-          </NAlert>
         </template>
       </template>
     </div>

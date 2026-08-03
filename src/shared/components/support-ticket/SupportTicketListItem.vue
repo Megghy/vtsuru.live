@@ -1,23 +1,14 @@
 <script setup lang="ts">
-import { NTag, NTime } from 'naive-ui'
-
 import type { SupportTicketSummary } from '@/api/api-models'
-import { SupportTicketStatus } from '@/api/api-models'
+
+import { formatTicketTime, hasUnreadTicketMessage, ticketStatusColors, ticketStatusLabels } from './ticketPresentation'
 
 defineProps<{
   ticket: SupportTicketSummary
   active: boolean
 }>()
 
-const statusLabels = ['待处理', '处理中', '等待回复', '已解决']
-const statusTypes = ['default', 'info', 'warning', 'success'] as const
 const typeLabels = ['问题', '功能建议', '账号', '其他']
-
-function hasUnread(ticket: SupportTicketSummary) {
-  return (
-    ticket.status !== SupportTicketStatus.Resolved && (ticket.lastMessageId ?? 0) > (ticket.userLastReadMessageId ?? 0)
-  )
-}
 </script>
 
 <template>
@@ -28,25 +19,20 @@ function hasUnread(ticket: SupportTicketSummary) {
   >
     <span class="ticket-item__heading">
       <span
-        v-if="hasUnread(ticket)"
+        v-if="hasUnreadTicketMessage(ticket)"
         class="ticket-item__unread"
         aria-label="有新消息"
       />
       <span class="ticket-item__title">{{ ticket.title }}</span>
-      <NTag
-        size="small"
-        :type="statusTypes[ticket.status]"
-        :bordered="false"
-      >
-        {{ statusLabels[ticket.status] }}
-      </NTag>
+      <UBadge
+        size="sm"
+        :color="ticketStatusColors[ticket.status]"
+        :label="ticketStatusLabels[ticket.status]"
+      />
     </span>
     <span class="ticket-item__meta">
       <span>#{{ ticket.id }} · {{ typeLabels[ticket.type] }}</span>
-      <NTime
-        :time="ticket.lastMessageTime"
-        type="relative"
-      />
+      <span>{{ formatTicketTime(ticket.lastMessageTime) }}</span>
     </span>
   </button>
 </template>

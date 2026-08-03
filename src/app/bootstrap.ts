@@ -1,18 +1,14 @@
-import { NButton, NFlex, NText } from 'naive-ui'
-import { h } from 'vue'
-
 import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
+import router from '@/app/router'
 import { apiFail, BASE_API_URL, isTauri } from '@/shared/config'
+import { showToast } from '@/shared/services/toast'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
-import { createNaiveUIApi } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useNotificationStore } from '@/store/useNotificationStore'
 
 let currentVersion: string
 let isHaveNewVersion = false
-
-const { notification } = createNaiveUIApi(['notification'])
 
 export function InitVTsuru() {
   QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
@@ -26,12 +22,12 @@ export function InitVTsuru() {
           setTimeout(() => {
             location.reload()
           }, 1000)
-          // alert('发现新的版本更新, 请按 Ctrl+F5 强制刷新页面')
-          notification.info({
+          showToast({
             title: '发现新的版本更新',
-            content: '将自动刷新页面',
+            description: currentVersion,
+            color: 'info',
+            icon: 'i-lucide-refresh-cw',
             duration: 5000,
-            meta: () => h(NText, { depth: 3 }, () => currentVersion),
           })
         } else {
           InitVersionCheck()
@@ -46,7 +42,7 @@ export function InitVTsuru() {
 }
 
 async function InitOther() {
-  if (import.meta.env.MODE !== 'development' && !window.$route.path.startsWith('/obs')) {
+  if (import.meta.env.MODE !== 'development' && !location.pathname.startsWith('/obs')) {
     const mod = await import('@hyperdx/browser')
     const HyperDX = (mod as any).default ?? mod
     HyperDX.init({
@@ -93,35 +89,16 @@ function InitVersionCheck() {
         void persistedSetItemRaw('Version', currentVersion)
         console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
 
-        if (window.$route.meta.forceReload || isTauri()) {
+        if (router.currentRoute.value.meta.forceReload || isTauri()) {
           location.reload()
         } else {
-          const n = notification.info({
+          showToast({
             title: '发现新的版本更新',
-            content: '是否现在刷新?',
-            meta: () => h(NText, { depth: 3 }, () => currentVersion),
-            action: () =>
-              h(NFlex, null, () => [
-                h(
-                  NButton,
-                  {
-                    text: true,
-                    type: 'primary',
-                    onClick: () => location.reload(),
-                    size: 'small',
-                  },
-                  { default: () => '刷新' },
-                ),
-                h(
-                  NButton,
-                  {
-                    text: true,
-                    onClick: () => n.destroy(),
-                    size: 'small',
-                  },
-                  { default: () => '稍后' },
-                ),
-              ]),
+            description: currentVersion,
+            color: 'info',
+            icon: 'i-lucide-refresh-cw',
+            duration: 0,
+            actions: [{ label: '刷新', color: 'primary', onClick: () => location.reload() }],
           })
         }
       }

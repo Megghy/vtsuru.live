@@ -49,40 +49,28 @@ function setInitStageSafely(stage: string) {
 }
 
 function startDanmakuClientInitFlow() {
-  const danmakuInitNoticeRef = window.$notification.info({
-    title: '正在初始化弹幕客户端...',
-    closable: false,
-  })
+  const danmakuInitNoticeRef = useToast().add({ color: 'info', title: '正在初始化弹幕客户端...', close: false })
   setInitStageSafely('初始化弹幕客户端...')
 
   void initDanmakuClient()
     .then((result) => {
       if (result.success) {
         info('[init] 弹幕客户端初始化完成')
-        window.$notification.success({
-          title: '弹幕客户端初始化完成',
-          duration: 3000,
-        })
+        useToast().add({ color: 'success', title: '弹幕客户端初始化完成', duration: 3000 })
         setInitStageSafely('弹幕客户端初始化完成')
       } else {
         warn(`[init] 弹幕客户端初始化失败: ${result.message}`)
-        window.$notification.error({
-          title: '弹幕客户端初始化失败',
-          content: result.message || '请稍后重试',
-        })
+        useToast().add({ color: 'error', title: '弹幕客户端初始化失败', description: result.message || '请稍后重试' })
         setInitStageSafely('弹幕客户端初始化失败')
       }
     })
     .catch((error) => {
       warn(`[init] 弹幕客户端初始化异常: ${error}`)
-      window.$notification.error({
-        title: '弹幕客户端初始化异常',
-        content: `${error}`,
-      })
+      useToast().add({ color: 'error', title: '弹幕客户端初始化异常', description: `${error}` })
       setInitStageSafely('弹幕客户端初始化失败')
     })
     .finally(() => {
-      danmakuInitNoticeRef?.destroy()
+      if (danmakuInitNoticeRef) useToast().remove(danmakuInitNoticeRef.id)
     })
 }
 
@@ -187,7 +175,7 @@ export function stopUpdateCheck() {
     info('[更新检查] 定时器已停止')
   }
   if (updateNotificationRef) {
-    updateNotificationRef.destroy()
+    useToast().remove(updateNotificationRef.id)
     updateNotificationRef = null
   }
 }
@@ -211,33 +199,15 @@ async function checkUpdatePeriodically() {
 
       // 显示不可关闭的 NaiveUI notification
       if (!updateNotificationRef) {
-        updateNotificationRef = window.$notification.warning({
+        updateNotificationRef = useToast().add({
+          color: 'warning',
           title: '发现新版本',
-          content: `VTsuru.Client ${update.version} 现已可用`,
-          meta: update.date,
-          action: () => {
-            return h('div', { style: 'display: flex; gap: 8px; margin-top: 8px;' }, [
-              h(
-                'button',
-                {
-                  class: 'n-button n-button--primary-type n-button--small-type',
-                  onClick: () => {
-                    void handleUpdateInstall(update)
-                  },
-                },
-                '立即更新',
-              ),
-              h(
-                'button',
-                {
-                  class: 'n-button n-button--default-type n-button--small-type',
-                  onClick: () => handleUpdateDismiss(),
-                },
-                '稍后提醒',
-              ),
-            ])
-          },
-          closable: false,
+          description: `VTsuru.Client ${update.version} 现已可用`,
+          actions: [
+            { label: '立即更新', color: 'primary', onClick: () => void handleUpdateInstall(update) },
+            { label: '稍后提醒', color: 'neutral', onClick: handleUpdateDismiss },
+          ],
+          close: false,
           duration: 0, // 不自动关闭
         })
       }
@@ -253,7 +223,7 @@ async function handleUpdateInstall(update: any) {
   try {
     // 关闭提示
     if (updateNotificationRef) {
-      updateNotificationRef.destroy()
+      useToast().remove(updateNotificationRef.id)
       updateNotificationRef = null
     }
 
@@ -262,9 +232,10 @@ async function handleUpdateInstall(update: any) {
     let contentLength = 0
     const progressPercentage = ref(0)
     const progressText = ref('准备下载更新...')
-    const progressNotification = window.$notification.info({
+    const progressNotification = useToast().add({
+      color: 'info',
       title: '正在下载更新',
-      content: () =>
+      description: () =>
         h('div', { style: 'display: flex; flex-direction: column; gap: 10px; min-width: 240px;' }, [
           h(
             'div',
@@ -285,7 +256,7 @@ async function handleUpdateInstall(update: any) {
             progressText.value,
           ),
         ]),
-      closable: false,
+      close: false,
       duration: 0,
     })
 
@@ -319,14 +290,10 @@ async function handleUpdateInstall(update: any) {
       }
     })
 
-    progressNotification.destroy()
+    useToast().remove(progressNotification.id)
     info('[更新] 更新安装完成，准备重启应用')
 
-    window.$notification.success({
-      title: '更新完成',
-      content: '应用将在 3 秒后重启',
-      duration: 3000,
-    })
+    useToast().add({ color: 'success', title: '更新完成', description: '应用将在 3 秒后重启', duration: 3000 })
 
     // 延迟 3 秒后重启
     await new Promise((resolve) => setTimeout(resolve, 3000))
@@ -338,17 +305,13 @@ async function handleUpdateInstall(update: any) {
     await relaunch()
   } catch (error) {
     warn(`[更新] 安装更新失败: ${error}`)
-    window.$notification.error({
-      title: '更新失败',
-      content: `更新安装失败: ${error}`,
-      duration: 5000,
-    })
+    useToast().add({ color: 'error', title: '更新失败', description: `更新安装失败: ${error}`, duration: 5000 })
   }
 }
 
 function handleUpdateDismiss() {
   if (updateNotificationRef) {
-    updateNotificationRef.destroy()
+    useToast().remove(updateNotificationRef.id)
     updateNotificationRef = null
   }
   info('[更新] 用户选择稍后更新')
@@ -575,10 +538,7 @@ export async function initDanmakuClient() {
             result = await initOpenLive()
           } else {
             info('未设置bilibili cookie, 跳过弹幕客户端初始化')
-            window.$notification.warning({
-              title: '未设置bilibili cookie, 跳过弹幕客户端初始化',
-              duration: 5,
-            })
+            useToast().add({ color: 'warning', title: '未设置bilibili cookie, 跳过弹幕客户端初始化', duration: 5 })
             result = { success: false, message: '未设置bilibili cookie' }
           }
         } else {

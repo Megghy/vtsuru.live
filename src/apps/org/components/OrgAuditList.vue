@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NEmpty, NList, NListItem, NFlex, NTime } from 'naive-ui'
-
 interface AuditLog {
   id: number
   action: string
@@ -14,20 +12,20 @@ defineProps<{ logs: AuditLog[] }>()
 </script>
 
 <template>
-  <NEmpty
+  <UEmpty
     v-if="logs.length === 0"
-    description="暂无操作记录"
+    icon="i-lucide-scroll-text"
+    title="暂无操作记录"
   />
-  <NList v-else>
-    <NListItem
+  <div
+    v-else
+    class="audit-list"
+  >
+    <article
       v-for="log in logs"
       :key="log.id"
     >
-      <NFlex
-        justify="space-between"
-        :wrap="false"
-        style="gap: 12px"
-      >
+      <div class="audit-row">
         <div style="min-width: 0">
           <div style="font-weight: 600">
             {{ log.action }}
@@ -39,12 +37,22 @@ defineProps<{ logs: AuditLog[] }>()
         <div style="font-size: 12px; opacity: 0.7; white-space: nowrap">
           {{ log.userName || `用户${log.userId}` }}
           ·
-          <NTime
-            :time="log.createdAt"
-            format="yyyy-MM-dd HH:mm"
-          />
+          {{ new Date(log.createdAt).toLocaleString('zh-CN') }}
         </div>
-      </NFlex>
-    </NListItem>
-  </NList>
+      </div>
+    </article>
+  </div>
 </template>
+
+<style scoped>
+.audit-list {
+  display: grid;
+}
+.audit-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--vtsuru-border-muted);
+}
+</style>

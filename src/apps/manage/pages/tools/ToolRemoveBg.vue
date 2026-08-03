@@ -2,12 +2,11 @@
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import { NButton, NCard, NFlex, NProgress, NSelect, NSlider, NSpin, NSwitch, NText, NTooltip } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import { computed, onMounted, ref } from 'vue'
 
 import { useRemoveBg } from '@/composables/useRemoveBg'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-
-const message = useMessage()
 const { options, supported, webgpuSupported, progress, checkSupport, preloadModel, processRemoveBg } = useRemoveBg()
 
 const originalUrl = ref<string>()
@@ -83,9 +82,9 @@ async function process() {
       device: options.device,
       format: fileExt.value,
     })
-    message.success('处理完成')
+    showSuccessToast('处理完成')
   } catch (e: any) {
-    message.error(`处理失败: ${e?.message ?? e}`)
+    showErrorToast(`处理失败: ${e?.message ?? e}`)
   } finally {
     processing.value = false
   }
@@ -95,17 +94,18 @@ async function handlePreload() {
   preloading.value = true
   try {
     await preloadModel()
-    message.success('模型已预加载')
+    showSuccessToast('模型已预加载')
   } catch (e: any) {
-    message.error(`预加载失败: ${e?.message ?? e}`)
+    showErrorToast(`预加载失败: ${e?.message ?? e}`)
   } finally {
     preloading.value = false
   }
 }
 
-function download() {
+async function download() {
   if (!resultUrl.value) return
-  saveAs(resultUrl.value, `result-${Date.now()}.${fileExt.value}`)
+  const response = await fetch(resultUrl.value)
+  saveAs(await response.blob(), `result-${Date.now()}.${fileExt.value}`)
 }
 </script>
 

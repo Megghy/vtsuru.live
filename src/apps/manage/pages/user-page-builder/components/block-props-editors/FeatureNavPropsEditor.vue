@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ReorderThreeOutline } from '@vicons/ionicons5'
-import { NForm, NFormItem, NIcon, NSwitch, NText } from 'naive-ui'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -25,11 +23,8 @@ function setVisible(item: { hidden?: boolean }, visible: boolean) {
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
-    <NFormItem label="功能顺序">
+  <div class="builder-form">
+    <UFormField label="功能顺序">
       <VueDraggable
         v-model="itemsModel"
         handle=".feature-drag-handle"
@@ -41,28 +36,28 @@ function setVisible(item: { hidden?: boolean }, visible: boolean) {
           :key="item.key"
           class="feature-item"
         >
-          <NIcon
+          <UIcon
             class="feature-drag-handle"
             size="19"
             title="拖拽排序"
-          >
-            <ReorderThreeOutline />
-          </NIcon>
-          <NIcon size="18">
-            <component :is="USER_FEATURE_DEFINITION_MAP[item.key].icon" />
-          </NIcon>
-          <NText class="feature-label">
+            name="i-lucide-grip-vertical"
+          />
+          <UIcon
+            size="18"
+            :name="USER_FEATURE_DEFINITION_MAP[item.key].icon"
+          />
+          <span class="builder-text feature-label">
             {{ USER_FEATURE_DEFINITION_MAP[item.key].label }}
-          </NText>
-          <NSwitch
-            :value="item.hidden !== true"
+          </span>
+          <USwitch
+            :model-value="item.hidden !== true"
             size="small"
-            @update:value="(value) => setVisible(item, value)"
+            @update:model-value="(value) => setVisible(item, value)"
           />
         </div>
       </VueDraggable>
-    </NFormItem>
-  </NForm>
+    </UFormField>
+  </div>
 </template>
 
 <style scoped>

@@ -1,26 +1,10 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
-import type { FormInst, FormRules, SelectOption } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NSelect,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { ref } from 'vue'
 
 import type { SongRequestOption, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
+import type { SelectOption } from '@/shared/types/VTsuruConfigTypes'
 
 const props = defineProps<{
   existingSongs: SongsInfo[]
@@ -30,60 +14,77 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'added', songs: SongsInfo[]): void
-  (e: 'loadingChange', value: boolean): void
-  (e: 'resetRender'): void
+  added: [songs: SongsInfo[]]
+  loadingChange: [value: boolean]
+  resetRender: []
 }>()
 
-const message = useMessage()
-
-const formRef = ref<FormInst | null>(null)
-const addSongModel = ref<SongsInfo>({} as SongsInfo)
+const toast = useToast()
 const onlyResetNameOnAdded = ref(true)
 
-const addSongRules: FormRules = {
-  name: [{ required: true, message: '请输入歌曲名称' }],
-  password: [{ required: true, message: '请输入密码' }],
+function createSong(): SongsInfo {
+  return {
+    id: 0,
+    key: '',
+    name: '',
+    author: [],
+    url: '',
+    from: SongFrom.Custom,
+    language: [],
+    tags: [],
+    createTime: Date.now(),
+    updateTime: Date.now(),
+  }
 }
+
+const addSongModel = ref(createSong())
 
 function resetAddingSong(onlyName = false) {
   if (onlyName) {
     addSongModel.value.name = ''
     addSongModel.value.description = ''
   } else {
-    addSongModel.value = {} as SongsInfo
+    addSongModel.value = createSong()
   }
-
   emit('resetRender')
-  message.success('已重置')
+  toast.add({ title: '已重置', color: 'success' })
+}
+
+function setOptions(value: boolean | string) {
+  addSongModel.value.options = value === true
+    ? { needJianzhang: false, needTidu: false, needZongdu: false } as SongRequestOption
+    : undefined
+}
+
+function setMinimum(field: 'scMinPrice' | 'fanMedalMinLevel', value: boolean | string) {
+  if (!addSongModel.value.options) return
+  addSongModel.value.options[field] = value === true ? (field === 'scMinPrice' ? 30 : 5) : undefined
 }
 
 async function addCustomSong() {
-  if (props.existingSongs.findIndex((s) => s.name === addSongModel.value.name) > -1) {
-    message.error('已存在相同名称的歌曲')
+  const song = addSongModel.value
+  if (!song.name.trim()) {
+    toast.add({ title: '请输入歌曲名称', color: 'warning' })
+    return
+  }
+  if (props.existingSongs.some((item) => item.name === song.name)) {
+    toast.add({ title: '已存在相同名称的歌曲', color: 'error' })
     return
   }
 
   emit('loadingChange', true)
   try {
-    await formRef.value?.validate()
-    const result = await addSongsToSongList([addSongModel.value], SongFrom.Custom)
-    if (result.code !== 200) {
-      message.error(`添加失败: ${result.message}`)
-      return
-    }
-
+    const result = await addSongsToSongList([song], SongFrom.Custom)
+    if (result.code !== 200) throw new Error(result.message)
     if (result.data.length !== 1) {
-      message.error('未能添加歌曲, 已存在相同名称的曲目')
+      toast.add({ title: '未能添加歌曲，可能已存在同名曲目', color: 'warning' })
       return
     }
-
-    message.success(`成功添加歌曲: ${addSongModel.value.name}`)
+    toast.add({ title: `成功添加歌曲：${song.name}`, color: 'success' })
     emit('added', result.data)
     resetAddingSong(onlyResetNameOnAdded.value)
-  } catch (err) {
-    console.error(err)
-    message.error('添加失败')
+  } catch (error) {
+    toast.add({ title: `添加失败：${error instanceof Error ? error.message : String(error)}`, color: 'error' })
   } finally {
     emit('loadingChange', false)
   }
@@ -91,193 +92,56 @@ async function addCustomSong() {
 </script>
 
 <template>
-  <NForm
-    ref="formRef"
-    :rules="addSongRules"
-    :model="addSongModel"
-  >
-    <NFormItem
-      path="name"
-      label="名称"
-    >
-      <NInput
-        v-model:value="addSongModel.name"
-        autosize
-        style="min-width: 200px"
-        placeholder="就是歌曲名称"
-        :status="existingSongs.findIndex((s) => s.name === addSongModel.name) > -1 ? 'error' : 'success'"
-      />
-    </NFormItem>
-    <NFormItem
-      path="author"
-      label="作者 (可多选)"
-    >
-      <NSelect
-        v-model:value="addSongModel.author"
-        :options="authors"
-        filterable
-        multiple
-        tag
-        placeholder="输入后按回车新增"
-      />
-    </NFormItem>
-    <NFormItem
-      path="description"
-      label="备注"
-    >
-      <NInput
-        v-model:value="addSongModel.description"
-        placeholder="可选"
-        :maxlength="250"
-        show-count
-        autosize
-        style="min-width: 300px"
-        clearable
-      />
-    </NFormItem>
-    <NFormItem
-      path="language"
-      label="语言 (可多选)"
-    >
-      <NSelect
-        v-model:value="addSongModel.language"
-        filterable
-        multiple
-        clearable
-        tag
-        placeholder="可选，输入后按回车新增"
-        :options="songSelectOption"
-      />
-    </NFormItem>
-    <NFormItem
-      path="tags"
-      label="标签 (可多选)"
-    >
-      <NSelect
-        v-model:value="addSongModel.tags"
-        filterable
-        multiple
-        clearable
-        tag
-        placeholder="可选，输入后按回车新增"
-        :options="tags"
-      />
-    </NFormItem>
-    <NFormItem
-      path="url"
-      label="链接"
-    >
-      <NInput
-        v-model:value="addSongModel.url"
-        placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
-      />
-    </NFormItem>
-    <NFormItem path="options">
-      <template #label>
-        点歌设置
-        <NTooltip>
-          <template #trigger>
-            <NIcon :component="Info24Filled" />
-          </template>
-          这个不是控制是否允许点歌的! 启用后将会覆盖点歌功能中的设置, 用于单独设置歌曲要求
-        </NTooltip>
-      </template>
-      <NFlex vertical>
-        <NCheckbox
-          :checked="addSongModel.options != null"
-          @update:checked="
-            (checked: boolean) => {
-              addSongModel.options = checked
-                ? ({
-                    needJianzhang: false,
-                    needTidu: false,
-                    needZongdu: false,
-                  } as SongRequestOption)
-                : undefined
-            }
-          "
-        >
-          是否启用
-        </NCheckbox>
-        <template v-if="addSongModel.options != null">
-          <NFlex>
-            <NCheckbox v-model:checked="addSongModel.options.needJianzhang"> 需要舰长 </NCheckbox>
-            <NCheckbox v-model:checked="addSongModel.options.needTidu"> 需要提督 </NCheckbox>
-            <NCheckbox v-model:checked="addSongModel.options.needZongdu"> 需要总督 </NCheckbox>
-          </NFlex>
-          <NFlex align="center">
-            <NCheckbox
-              :checked="addSongModel.options.scMinPrice != null"
-              @update:checked="
-                (checked: boolean) => {
-                  if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
-                }
-              "
-            >
-              需要SC
-            </NCheckbox>
-            <NInputGroup
-              v-if="addSongModel.options?.scMinPrice"
-              style="width: 200px"
-            >
-              <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
-              <NInputNumber
-                v-model:value="addSongModel.options.scMinPrice"
-                min="30"
-              />
-            </NInputGroup>
-          </NFlex>
-          <NFlex align="center">
-            <NCheckbox
-              :checked="addSongModel.options.fanMedalMinLevel != null"
-              @update:checked="
-                (checked: boolean) => {
-                  if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
-                }
-              "
-            >
-              需要粉丝牌
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                这个即使不开也会遵循全局点歌设置的粉丝牌等级
-              </NTooltip>
-            </NCheckbox>
-            <NInputGroup
-              v-if="addSongModel.options?.fanMedalMinLevel"
-              style="width: 200px"
-            >
-              <NInputGroupLabel> 最低等级 </NInputGroupLabel>
-              <NInputNumber
-                v-model:value="addSongModel.options.fanMedalMinLevel"
-                min="0"
-              />
-            </NInputGroup>
-          </NFlex>
+  <form class="song-custom-form" @submit.prevent="addCustomSong">
+    <UFormField label="名称" required>
+      <UInput v-model="addSongModel.name" placeholder="歌曲名称" :color="existingSongs.some((song) => song.name === addSongModel.name) ? 'error' : undefined" />
+    </UFormField>
+    <UFormField label="作者">
+      <USelectMenu v-model="addSongModel.author" :items="authors" value-key="value" placeholder="选择或输入作者，回车确认" multiple create-item clear />
+    </UFormField>
+    <UFormField label="备注">
+      <UTextarea v-model="addSongModel.description" placeholder="可选" maxlength="250" autoresize />
+    </UFormField>
+    <UFormField label="语言">
+      <USelectMenu v-model="addSongModel.language" :items="songSelectOption" value-key="value" placeholder="选择或输入语言，回车确认" multiple create-item clear />
+    </UFormField>
+    <UFormField label="标签">
+      <USelectMenu v-model="addSongModel.tags" :items="tags" value-key="value" placeholder="选择或输入标签，回车确认" multiple create-item clear />
+    </UFormField>
+    <UFormField label="链接">
+      <UInput v-model="addSongModel.url" placeholder="可选，音频链接会直接播放，其他链接会在新页面打开" />
+    </UFormField>
+    <UFormField label="点歌设置" hint="启用后覆盖该歌曲的全局点歌要求。">
+      <div class="song-custom-form__requirements">
+        <UCheckbox :model-value="addSongModel.options != null" label="启用独立要求" @update:model-value="setOptions" />
+        <template v-if="addSongModel.options">
+          <div class="song-custom-form__checks">
+            <UCheckbox v-model="addSongModel.options.needJianzhang" label="需要舰长" />
+            <UCheckbox v-model="addSongModel.options.needTidu" label="需要提督" />
+            <UCheckbox v-model="addSongModel.options.needZongdu" label="需要总督" />
+          </div>
+          <div class="song-custom-form__minimum">
+            <UCheckbox :model-value="addSongModel.options.scMinPrice != null" label="需要 SC" @update:model-value="setMinimum('scMinPrice', $event)" />
+            <UInputNumber v-if="addSongModel.options.scMinPrice != null" v-model="addSongModel.options.scMinPrice" :min="30" />
+          </div>
+          <div class="song-custom-form__minimum">
+            <UCheckbox :model-value="addSongModel.options.fanMedalMinLevel != null" label="需要粉丝牌" @update:model-value="setMinimum('fanMedalMinLevel', $event)" />
+            <UInputNumber v-if="addSongModel.options.fanMedalMinLevel != null" v-model="addSongModel.options.fanMedalMinLevel" :min="0" />
+          </div>
         </template>
-      </NFlex>
-    </NFormItem>
-  </NForm>
-  <NFlex align="center">
-    <NButton
-      type="primary"
-      @click="addCustomSong"
-    >
-      添加
-    </NButton>
-    <NButton
-      type="warning"
-      @click="resetAddingSong()"
-    >
-      还原
-    </NButton>
-    <NButton
-      type="warning"
-      @click="resetAddingSong(true)"
-    >
-      还原(仅歌名和备注)
-    </NButton>
-    <NCheckbox v-model:checked="onlyResetNameOnAdded"> 添加完成时仅重置歌名和备注 </NCheckbox>
-  </NFlex>
+      </div>
+    </UFormField>
+    <div class="song-custom-form__actions">
+      <UButton type="submit" label="添加" />
+      <UButton color="warning" variant="soft" label="还原" @click="resetAddingSong()" />
+      <UButton color="warning" variant="ghost" label="仅还原歌名和备注" @click="resetAddingSong(true)" />
+      <UCheckbox v-model="onlyResetNameOnAdded" label="添加后仅重置歌名和备注" />
+    </div>
+  </form>
 </template>
+
+<style scoped>
+.song-custom-form, .song-custom-form__requirements { display: grid; gap: 14px; }
+.song-custom-form__checks, .song-custom-form__actions, .song-custom-form__minimum { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.song-custom-form__minimum :deep(.w-full) { width: 140px; }
+</style>

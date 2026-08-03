@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NFlex, NInput, NTag, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
@@ -50,140 +49,140 @@ function handleRequestToken() {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="VTS 连接"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NFlex
+      <div
         align="center"
         :size="8"
         :wrap="true"
       >
-        <NTag :type="statusType">
+        <UBadge :type="statusType">
           {{ statusText }}
-        </NTag>
-        <NText
+        </UBadge>
+        <span
           v-if="vts.apiVersion"
           depth="3"
         >
           v{{ vts.apiVersion }}
-        </NText>
-        <NText
+        </span>
+        <span
           v-if="vts.lastRttMs != null"
           depth="3"
         >
           {{ vts.lastRttMs }}ms
-        </NText>
-        <NText
+        </span>
+        <span
           v-if="vts.statistics?.framerate != null"
           depth="3"
         >
           {{ vts.statistics.framerate }} FPS
-        </NText>
-        <NTag
+        </span>
+        <UBadge
           v-if="faceTag"
           :type="faceTag.type"
           size="small"
         >
           {{ faceTag.text }}
-        </NTag>
-        <NText
+        </UBadge>
+        <span
           v-if="handTagText"
           depth="3"
         >
           {{ handTagText }}
-        </NText>
-      </NFlex>
+        </span>
+      </div>
 
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="8"
       >
-        <NInput
-          v-model:value="wsUrlInput"
+        <UInput
+          v-model="wsUrlInput"
           style="min-width: 300px"
           placeholder="ws://127.0.0.1:8001"
         />
-        <NButton
+        <UButton
           size="small"
-          type="primary"
+          color="primary"
           :loading="vts.connecting"
           :disabled="vts.connected"
           @click="handleConnect"
         >
           连接
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="small"
           :disabled="!vts.connected"
           @click="vts.disconnect"
         >
           断开
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="small"
           :disabled="!vts.connected"
           @click="run(() => vts.refreshApiState())"
         >
           刷新状态
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
 
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="8"
       >
-        <NButton
+        <UButton
           size="small"
-          type="primary"
+          color="primary"
           :disabled="!vts.connected"
           @click="handleRequestToken"
         >
           申请授权
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="small"
           :disabled="!vts.connected || !vts.authToken"
           @click="run(() => vts.authenticate(), '已鉴权')"
         >
           使用已有 Token
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="small"
           :disabled="!vts.authToken"
           @click="vts.clearAuthToken"
         >
           清除 Token
-        </NButton>
-        <NText
+        </UButton>
+        <span
           v-if="vts.authToken"
           depth="3"
         >
           Token 已保存
-        </NText>
-      </NFlex>
+        </span>
+      </div>
 
-      <NAlert
+      <UAlert
         v-if="vts.lastError"
         type="error"
         :show-icon="false"
       >
         {{ vts.lastError }}
-      </NAlert>
-      <NAlert
+      </UAlert>
+      <UAlert
         v-if="vts.monitorLastError"
         type="warning"
         :show-icon="false"
       >
         监控异常: {{ vts.monitorLastError }}
-      </NAlert>
-    </NFlex>
-  </NCard>
+      </UAlert>
+    </div>
+  </UCard>
 </template>

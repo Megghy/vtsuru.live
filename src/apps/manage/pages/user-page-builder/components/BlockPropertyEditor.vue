@@ -1,28 +1,4 @@
 <script setup lang="ts">
-import { ColorPaletteOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NAutoComplete,
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NDropdown,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NProgress,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSwitch,
-  NText,
-  NTooltip,
-} from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
 
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
@@ -87,48 +63,45 @@ function groupSelection() {
 </script>
 
 <template>
-  <NCard
+  <UCard
     class="block-property-editor"
     title="编辑"
     style="width: 100%; height: 100%"
     content-style="padding: 12px"
   >
     <template #header-extra>
-      <NFlex
-        align="center"
-        :wrap="false"
+      <div
+        class="builder-row"
         style="gap: 6px; min-width: 0"
       >
-        <NTooltip
+        <UTooltip
           v-if="
             editor.currentKey.value !== 'home' &&
             editor.currentPage.value.mode === 'block' &&
             editor.currentProject.value
           "
         >
-          <template #trigger>
-            <NButton
-              type="primary"
-              secondary
-              size="tiny"
-              aria-label="编辑当前页面主题"
-              @click="editor.pageThemeModal.value = true"
-            >
-              <template #icon>
-                <NIcon><ColorPaletteOutline /></NIcon>
-              </template>
-              页面主题
-            </NButton>
-          </template>
-          编辑当前子页面的背景与主题
-        </NTooltip>
-        <NText
-          depth="3"
+          <UButton
+            color="primary"
+            variant="soft"
+            size="xs"
+            aria-label="编辑当前页面主题"
+            @click="editor.pageThemeModal.value = true"
+          >
+            <template #icon>
+              <UIcon name="i-lucide-palette" />
+            </template>
+            页面主题
+          </UButton>
+          <template #content> 编辑当前子页面的背景与主题 </template></UTooltip
+        >
+        <span
+          class="builder-text"
           style="font-size: 12px; white-space: nowrap"
         >
           容量 {{ editor.configBytesPercent.value }}%
-        </NText>
-        <NProgress
+        </span>
+        <UProgress
           type="line"
           :percentage="editor.configBytesPercent.value"
           :status="capacityStatus as any"
@@ -136,118 +109,94 @@ function groupSelection() {
           :height="6"
           style="width: 70px"
         />
-      </NFlex>
+      </div>
     </template>
-    <NFlex
-      vertical
-      size="small"
-    >
-      <NCollapse
+    <div class="builder-stack">
+      <div
         v-if="
           editor.currentPage.value.mode !== 'legacy' &&
           (editor.currentKey.value !== 'home' || editor.currentPage.value.mode !== 'block')
         "
-        v-model:expanded-names="expandedPageSections"
       >
-        <NCollapseItem
+        <details
           v-if="editor.currentKey.value !== 'home'"
           class="page-info-section"
-          title="页面基本设置"
-          name="page-info"
         >
-          <NForm
-            label-placement="top"
-            size="small"
-          >
+          <summary>页面基本设置</summary>
+          <div class="builder-form">
             <PropsGrid>
-              <NFormItem label="页面名称">
-                <NInput
-                  v-model:value="editor.currentPage.value.title"
+              <UFormField label="页面名称">
+                <UInput
+                  v-model="editor.currentPage.value.title"
                   placeholder="可选，用于管理列表展示"
                 />
-              </NFormItem>
-              <NFormItem label="在导航菜单中显示">
-                <NFlex justify="end">
-                  <NSwitch
-                    v-model:value="editor.currentPage.value.navVisible"
+              </UFormField>
+              <UFormField label="在导航菜单中显示">
+                <div class="builder-row">
+                  <USwitch
+                    v-model="editor.currentPage.value.navVisible"
                     size="small"
                   />
-                </NFlex>
-              </NFormItem>
-              <NFormItem
+                </div>
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="页面描述"
               >
-                <NInput
-                  v-model:value="editor.currentPage.value.description"
-                  type="textarea"
+                <UTextarea
+                  v-model="editor.currentPage.value.description"
                   placeholder="可选"
                   :autosize="{ minRows: 2, maxRows: 4 }"
                 />
-              </NFormItem>
-              <NFormItem label="排序权重">
-                <NInputNumber
-                  v-model:value="editor.currentPage.value.navOrder"
+              </UFormField>
+              <UFormField label="排序权重">
+                <UInputNumber
+                  v-model="editor.currentPage.value.navOrder"
                   style="width: 100%"
                   placeholder="数字越小越靠前"
                 />
-              </NFormItem>
-              <NFormItem label="路径 (Slug)">
-                <NFlex
-                  :wrap="false"
+              </UFormField>
+              <UFormField label="路径 (Slug)">
+                <div
+                  class="builder-row"
                   style="width: 100%"
                 >
-                  <NInput
-                    v-model:value="pageSlug"
+                  <UInput
+                    v-model="pageSlug"
                     placeholder="例如 links / sponsor / faq"
                     @keyup.enter="renameCurrentPage"
                   />
-                  <NButton
+                  <UButton
                     :disabled="pageSlug === editor.currentKey.value"
                     @click="renameCurrentPage"
                   >
                     修改
-                  </NButton>
-                </NFlex>
-              </NFormItem>
+                  </UButton>
+                </div>
+              </UFormField>
             </PropsGrid>
-          </NForm>
-        </NCollapseItem>
+          </div>
+        </details>
 
         <PageAppearanceOverrides />
-      </NCollapse>
+      </div>
 
       <div style="background: var(--vtsuru-bg-inset); padding: 12px; border-radius: 8px">
-        <NText
-          depth="3"
+        <span
+          class="builder-text"
           style="font-size: 12px; margin-bottom: 8px; display: block"
         >
           页面渲染模式
-        </NText>
-        <NRadioGroup
-          v-model:value="editor.currentPage.value.mode"
-          size="small"
-          style="width: 100%"
-        >
-          <NRadioButton
-            value="legacy"
-            style="width: 33.3%; text-align: center"
-          >
-            传统
-          </NRadioButton>
-          <NRadioButton
-            value="block"
-            style="width: 33.3%; text-align: center"
-          >
-            区块
-          </NRadioButton>
-          <NRadioButton
-            value="contrib"
-            style="width: 33.4%; text-align: center"
-          >
-            自定义
-          </NRadioButton>
-        </NRadioGroup>
+        </span>
+        <URadioGroup
+          v-model="editor.currentPage.value.mode"
+          :items="[
+            { label: '传统', value: 'legacy' },
+            { label: '区块', value: 'block' },
+            { label: '自定义', value: 'contrib' },
+          ]"
+          orientation="horizontal"
+        />
       </div>
 
       <Transition
@@ -256,82 +205,79 @@ function groupSelection() {
       >
         <div :key="`${editor.currentPage.value.mode}:${!!editor.currentProject.value}`">
           <template v-if="editor.currentPage.value.mode === 'legacy'">
-            <NDivider
+            <USeparator
               style="margin: 0"
               title-placement="left"
             >
               主页设置
-            </NDivider>
+            </USeparator>
             <LegacyIndexSettings />
           </template>
 
           <template v-else-if="editor.currentPage.value.mode === 'contrib'">
-            <NForm
-              label-placement="top"
-              size="small"
-            >
+            <div class="builder-form">
               <PropsGrid>
-                <NFormItem label="作用域">
-                  <NSelect
-                    v-model:value="editor.currentContrib.value!.scope"
-                    :options="[
+                <UFormField label="作用域">
+                  <USelect
+                    v-model="editor.currentContrib.value!.scope"
+                    :items="[
                       { label: '全局', value: 'global' },
                       { label: '主播专属', value: 'streamer' },
                     ]"
                   />
-                </NFormItem>
-                <NFormItem label="页面 ID">
-                  <NAutoComplete
-                    v-model:value="editor.currentContrib.value!.pageId"
-                    :options="editor.contribPageIdOptions.value"
+                </UFormField>
+                <UFormField label="页面 ID">
+                  <UInputMenu
+                    v-model="editor.currentContrib.value!.pageId"
+                    :items="editor.contribPageIdOptions.value"
+                    value-key="value"
                     placeholder="选择或输入 pageId"
                     clearable
                   />
-                </NFormItem>
-                <NFormItem
+                </UFormField>
+                <UFormField
                   v-if="editor.currentContrib.value!.scope === 'streamer'"
                   label="关联主播"
                 >
-                  <NInputNumber
+                  <UInputNumber
                     :value="editor.account.value.id"
                     :disabled="true"
                     style="width: 100%"
                   />
-                </NFormItem>
+                </UFormField>
               </PropsGrid>
-            </NForm>
+            </div>
 
-            <NAlert
+            <UAlert
               v-if="editor.contribConfigError.value"
               type="error"
               :show-icon="true"
               style="margin-top: 12px"
             >
               {{ editor.contribConfigError.value }}
-            </NAlert>
-            <NAlert
+            </UAlert>
+            <UAlert
               v-else-if="editor.contribConfigLoading.value"
               type="info"
               :show-icon="true"
               style="margin-top: 12px"
             >
               投稿页配置加载中...
-            </NAlert>
+            </UAlert>
             <template v-else-if="editor.contribConfigItems.value">
-              <NFlex
-                justify="space-between"
-                align="center"
+              <div
+                class="builder-row"
                 style="margin-top: 12px"
               >
-                <NText strong> 页面配置 </NText>
-                <NButton
-                  size="small"
-                  secondary
+                <span class="builder-text"> 页面配置 </span>
+                <UButton
+                  size="sm"
+                  variant="soft"
                   @click="editor.resetContribConfigToDefault"
                 >
                   重置为默认
-                </NButton>
-              </NFlex>
+                </UButton>
+              </div>
               <ErrorBoundary title="配置面板渲染失败">
                 <ContribConfigEditor
                   :config="editor.contribConfigItems.value"
@@ -339,14 +285,14 @@ function groupSelection() {
                 />
               </ErrorBoundary>
             </template>
-            <NAlert
+            <UAlert
               v-else
               type="warning"
               :show-icon="true"
               style="margin-top: 12px"
             >
               该投稿页未导出 Config/DefaultConfig，可直接提交 PR 按约定补齐。
-            </NAlert>
+            </UAlert>
           </template>
 
           <template v-else-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
@@ -360,12 +306,12 @@ function groupSelection() {
                 data-block-property-editor
                 style="margin-top: 8px"
               >
-                <NText
-                  strong
+                <span
+                  class="builder-text"
                   style="display: block; margin-bottom: 6px"
                 >
                   属性编辑 - {{ editor.selectedBlock.value.type }}
-                </NText>
+                </span>
                 <ErrorBoundary title="区块属性面板渲染失败">
                   <BlockTypeEditor :block="editor.selectedBlock.value" />
                 </ErrorBoundary>
@@ -375,134 +321,126 @@ function groupSelection() {
                 key="multi"
                 class="multi-selection-panel"
               >
-                <NText strong> 已选择 {{ editor.selectedBlocks.value.length }} 个区块 </NText>
-                <NFlex size="small">
-                  <NButton
-                    size="small"
-                    secondary
+                <span class="builder-text"> 已选择 {{ editor.selectedBlocks.value.length }} 个区块 </span>
+                <div class="builder-row">
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     @click="batchSetHidden(false)"
                   >
                     显示
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     @click="batchSetHidden(true)"
                   >
                     隐藏
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     @click="batchSetChrome('framed', true)"
                   >
                     显示边框
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     @click="batchSetChrome('framed', false)"
                   >
                     隐藏边框
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     @click="batchSetChrome('backgrounded', true)"
                   >
                     显示背景
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     @click="batchSetChrome('backgrounded', false)"
                   >
                     透明背景
-                  </NButton>
-                </NFlex>
-                <NFlex size="small">
-                  <NButton
-                    size="small"
-                    type="primary"
-                    secondary
+                  </UButton>
+                </div>
+                <div class="builder-row">
+                  <UButton
+                    size="sm"
+                    color="primary"
+                    variant="soft"
                     @click="groupSelection"
                   >
                     成组
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     @click="duplicateSelection"
                   >
                     创建副本
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     @click="editor.copyBlocksToClipboard(editor.selectedBlockIds.value)"
                   >
                     复制
-                  </NButton>
-                  <NButton
-                    size="small"
-                    type="error"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    color="error"
+                    variant="soft"
                     @click="editor.removeBlocks(editor.selectedBlockIds.value)"
                   >
                     删除
-                  </NButton>
-                </NFlex>
+                  </UButton>
+                </div>
               </div>
               <div
                 v-else
                 key="empty"
                 class="empty-selection-panel"
               >
-                <NText depth="3"> 当前没有选中区块 </NText>
-                <NFlex size="small">
-                  <NDropdown
-                    :options="addBlockOptions"
-                    trigger="click"
-                    @select="(key) => handleAddBlockMenuSelect(String(key))"
-                  >
-                    <NButton
-                      type="primary"
-                      secondary
+                <span class="builder-text"> 当前没有选中区块 </span>
+                <div class="builder-row">
+                  <UDropdownMenu :items="addBlockOptions">
+                    <UButton
+                      color="primary"
+                      variant="soft"
                     >
                       添加区块
-                    </NButton>
-                  </NDropdown>
-                  <NDropdown
-                    :options="templateOptions"
-                    trigger="click"
-                    @select="(key) => insertTemplate(String(key))"
-                  >
-                    <NButton secondary> 起始模板 </NButton>
-                  </NDropdown>
-                </NFlex>
+                    </UButton>
+                  </UDropdownMenu>
+                  <UDropdownMenu :items="templateOptions">
+                    <UButton variant="soft"> 起始模板 </UButton>
+                  </UDropdownMenu>
+                </div>
               </div>
             </Transition>
           </template>
 
           <template v-else>
-            <NAlert
+            <UAlert
               type="warning"
               :show-icon="true"
             >
               当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}，此处无可编辑项
-            </NAlert>
+            </UAlert>
           </template>
         </div>
       </Transition>
 
-      <NButton
+      <UButton
         block
-        secondary
+        variant="soft"
         @click="editor.openPreview"
       >
         打开对外预览页
-      </NButton>
-    </NFlex>
+      </UButton>
+    </div>
 
     <input
       ref="uploadInput"
@@ -512,7 +450,7 @@ function groupSelection() {
       style="display: none"
       @change="editor.onUploadChange"
     />
-  </NCard>
+  </UCard>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>

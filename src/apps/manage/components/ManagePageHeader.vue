@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Copy24Filled, Info24Filled } from '@vicons/fluent'
-import { NButton, NCard, NFlex, NIcon, NInput, NInputGroup, NSwitch, NText, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -31,70 +29,41 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
 
 <template>
   <div class="manage-page-header">
-    <NFlex
-      class="manage-page-header__top"
-      justify="space-between"
-      align="flex-start"
-      wrap
-      :size="12"
-    >
+    <div class="manage-page-header__top">
       <div class="manage-page-header__titles">
         <div class="manage-page-header__title-row">
           <h1 class="manage-page-header__title">
             {{ title }}
           </h1>
-          <NFlex
+          <div
             v-if="functionType != null && accountInfo"
             class="manage-page-header__function-toggle"
-            align="center"
-            :size="8"
           >
-            <NText
-              depth="3"
-              class="manage-kicker"
-            >
-              功能
-            </NText>
-            <NTooltip>
-              <template #trigger>
-                <NSwitch
-                  :value="accountInfo.settings?.enableFunctions?.includes(functionType)"
-                  :loading="switchLoading"
-                  :disabled="loading || switchLoading"
-                  @update:value="toggle?.setEnable"
-                >
-                  <template #checked> 已启用 </template>
-                  <template #unchecked> 已禁用 </template>
-                </NSwitch>
-              </template>
-              关闭后不会显示在个人主页
-            </NTooltip>
-          </NFlex>
+            <span class="manage-kicker">功能</span>
+            <UTooltip text="关闭后不会显示在个人主页">
+              <USwitch
+                :model-value="accountInfo.settings?.enableFunctions?.includes(functionType)"
+                :loading="switchLoading"
+                :disabled="loading || switchLoading"
+                @update:model-value="toggle?.setEnable"
+              />
+            </UTooltip>
+          </div>
         </div>
-        <NText
+        <p
           v-if="subtitle"
-          depth="3"
           class="manage-page-header__subtitle"
         >
           {{ subtitle }}
-        </NText>
+        </p>
       </div>
 
-      <NFlex
-        class="manage-page-header__right"
-        align="center"
-        justify="end"
-        wrap
-        :size="10"
-      >
-        <NFlex
-          class="manage-page-header__actions"
-          :wrap="true"
-        >
+      <div class="manage-page-header__right">
+        <div class="manage-page-header__actions">
           <slot name="action" />
-        </NFlex>
-      </NFlex>
-    </NFlex>
+        </div>
+      </div>
+    </div>
 
     <div
       v-if="$slots.default"
@@ -103,69 +72,51 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
       <slot />
     </div>
 
-    <NCard
+    <UCard
       v-if="links.length > 0 || $slots['links-extra']"
       class="manage-page-header__links"
-      size="small"
-      :bordered="true"
-      content-style="padding: 12px;"
+      :ui="{ body: 'p-3' }"
     >
-      <NFlex
-        class="manage-page-header__links-content"
-        align="flex-end"
-        wrap
-        :size="12"
-      >
-        <NFlex
+      <div class="manage-page-header__links-content">
+        <div
           v-for="link in links"
           :key="`${link.label}:${link.value}`"
           class="manage-page-header__link"
-          vertical
-          :size="8"
         >
-          <NFlex
-            align="center"
-            :size="4"
-          >
-            <NText class="manage-kicker">
-              {{ link.label }}
-            </NText>
-            <NTooltip v-if="link.description">
-              <template #trigger>
-                <NIcon
-                  :component="Info24Filled"
-                  class="manage-page-header__link-info"
-                />
-              </template>
-              {{ link.description }}
-            </NTooltip>
-          </NFlex>
-          <NInputGroup class="manage-page-header__link-input">
-            <NInput
-              :value="link.value"
+          <div class="manage-page-header__link-label">
+            <span class="manage-kicker">{{ link.label }}</span>
+            <UTooltip
+              v-if="link.description"
+              :text="link.description"
+            >
+              <UIcon name="i-lucide-info" class="manage-page-header__link-info" />
+            </UTooltip>
+          </div>
+          <UFieldGroup class="manage-page-header__link-input">
+            <UInput
+              :model-value="link.value"
               readonly
-              size="small"
+              size="sm"
             />
-            <NButton
-              secondary
-              size="small"
+            <UButton
+              color="neutral"
+              variant="soft"
+              size="sm"
               @click="copyToClipboard(link.copyValue ?? link.value)"
             >
-              <template #icon>
-                <NIcon :component="Copy24Filled" />
-              </template>
+              <template #leading><UIcon name="i-lucide-copy" /></template>
               复制
-            </NButton>
-          </NInputGroup>
-        </NFlex>
+            </UButton>
+          </UFieldGroup>
+        </div>
         <div
           v-if="$slots['links-extra']"
           class="manage-page-header__links-extra"
         >
           <slot name="links-extra" />
         </div>
-      </NFlex>
-    </NCard>
+      </div>
+    </UCard>
   </div>
 </template>
 
@@ -199,11 +150,16 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
 }
 
 .manage-page-header__subtitle {
+  margin: 0;
   font-size: 13px;
   line-height: 1.4;
+  color: var(--vtsuru-fg-muted);
 }
 
 .manage-page-header__function-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-height: 28px;
 }
 
@@ -211,8 +167,23 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
   flex: 1;
 }
 
-.manage-page-header__actions :deep(.n-button) {
-  margin-left: 0;
+.manage-page-header__top,
+.manage-page-header__right,
+.manage-page-header__actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.manage-page-header__top {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manage-page-header__right {
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .manage-page-header__links {
@@ -229,10 +200,19 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
 }
 
 .manage-page-header__link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   flex: 0 1 520px;
   width: 520px;
   max-width: 100%;
   min-width: 320px;
+}
+
+.manage-page-header__link-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .manage-page-header__link-input {

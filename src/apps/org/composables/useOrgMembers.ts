@@ -1,14 +1,13 @@
-import { useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
+import { showErrorToast, showSuccessToast } from '@/shared/services/toast'
 
 import type { OrgMemberItem } from '../types'
 import type { OrgContext } from './useOrgContext'
 
 export function useOrgMembers(ctx: OrgContext) {
-  const message = useMessage()
   const members = ref<OrgMemberItem[]>([])
   const loading = ref(false)
   const search = ref('')
@@ -28,7 +27,7 @@ export function useOrgMembers(ctx: OrgContext) {
         '加载成员失败',
       )
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载成员失败')
+      showErrorToast(err instanceof Error ? err.message : '加载成员失败')
     } finally {
       loading.value = false
     }
@@ -41,10 +40,10 @@ export function useOrgMembers(ctx: OrgContext) {
         await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/member/remove`, { targetUserId: userId }),
         '移除失败',
       )
-      message.success('移除成功')
+      showSuccessToast('移除成功')
       await load()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '移除失败')
+      showErrorToast(err instanceof Error ? err.message : '移除失败')
     }
   }
 
@@ -55,10 +54,10 @@ export function useOrgMembers(ctx: OrgContext) {
         await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/member/role`, { targetUserId: userId, role }),
         '更新角色失败',
       )
-      message.success('已更新角色')
+      showSuccessToast('已更新角色')
       await load()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '更新角色失败')
+      showErrorToast(err instanceof Error ? err.message : '更新角色失败')
     }
   }
 

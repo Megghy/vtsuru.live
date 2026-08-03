@@ -1,25 +1,4 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NLi,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NTooltip,
-  NUl,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -44,7 +23,7 @@ const props = withDefaults(
     showStyleOptions: true,
     speed: 1,
     styleType: 'classic',
-    description: '将等待队列以及结果显示在 OBS 中。',
+    content: '将等待队列以及结果显示在 OBS 中。',
   },
 )
 
@@ -83,74 +62,72 @@ const obsUrl = computed(() => {
 </script>
 
 <template>
-  <NModal
-    v-model:show="showModel"
+  <UModal
+    v-model:open="showModel"
     preset="card"
     style="width: 900px; max-width: 90vw"
     title="OBS组件"
     closable
   >
     <template #header-extra>
-      <NButton
+      <UButton
         tag="a"
-        type="primary"
+        color="primary"
         size="small"
         target="_blank"
         :href="obsUrl"
       >
         浏览
-      </NButton>
+      </UButton>
     </template>
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NAlert
+      <UAlert
         title="这是什么？"
         type="info"
         size="small"
         :bordered="false"
       >
         {{ description }}
-      </NAlert>
+      </UAlert>
 
       <template v-if="showStyleOptions">
-        <NDivider style="margin: 0"> 样式与速度 </NDivider>
-        <NFlex
+        <USeparator style="margin: 0"> 样式与速度 </USeparator>
+        <div
           align="center"
           :wrap="true"
           :size="12"
         >
-          <NRadioGroup
-            v-model:value="styleModel"
+          <URadioGroup
+            v-model="styleModel"
             name="obsStyle"
-          >
-            <NFlex :wrap="true">
-              <NRadioButton value="classic"> 经典黑色风格 </NRadioButton>
-              <NRadioButton value="fresh"> 清新明亮风格 </NRadioButton>
-              <NRadioButton value="minimal"> 极简无背景 </NRadioButton>
-            </NFlex>
-          </NRadioGroup>
-          <NInputGroup class="obs-config-modal__speed-group">
-            <NInputGroupLabel>滚动速度倍率</NInputGroupLabel>
-            <NInputNumber
-              v-model:value="speedModel"
+            :items="[
+              { label: '经典黑色风格', value: 'classic' },
+              { label: '清新明亮风格', value: 'fresh' },
+              { label: '极简无背景', value: 'minimal' },
+            ]"
+            orientation="horizontal"
+          />
+          <div class="obs-config-modal__speed-group">
+            <span>滚动速度倍率</span>
+            <UInputNumber
+              v-model="speedModel"
               :min="0.5"
               :max="5"
               :step="0.1"
               placeholder="1"
             />
-          </NInputGroup>
-          <NTooltip>
-            <template #trigger>
-              <NIcon :component="Info24Filled" />
-            </template>
-            数值越大滚动越快（0.5 ~ 5）
-          </NTooltip>
-        </NFlex>
+          </div>
+          <UTooltip>
+            <UIcon name="i-lucide-circle" />
+            <template #content> 数值越大滚动越快（0.5 ~ 5） </template>
+          </UTooltip>
+        </div>
       </template>
 
-      <NDivider style="margin: 0"> 预览 </NDivider>
+      <USeparator style="margin: 0"> 预览 </USeparator>
       <div class="obs-config-modal__preview">
         <slot
           v-if="userId"
@@ -158,7 +135,7 @@ const obsUrl = computed(() => {
           :style-type="styleModel"
           :speed="speedModel"
         />
-        <NEmpty
+        <UEmpty
           v-else
           description="无法预览：未获取到用户信息"
           size="small"
@@ -166,38 +143,38 @@ const obsUrl = computed(() => {
         />
       </div>
 
-      <NInputGroup>
-        <NInput
+      <div>
+        <UInput
           :value="obsUrl"
           readonly
           size="small"
         />
-        <NButton
-          type="primary"
-          secondary
+        <UButton
+          color="primary"
+          variant="soft"
           size="small"
           :disabled="!obsUrl"
           @click="copyToClipboard(obsUrl)"
         >
           复制
-        </NButton>
-      </NInputGroup>
+        </UButton>
+      </div>
 
-      <NCollapse accordion>
-        <NCollapseItem title="使用说明">
-          <NUl>
-            <NLi>在 OBS 来源中添加一个新的「浏览器」源。</NLi>
-            <NLi>将上方 URL 粘贴到「URL」栏中。</NLi>
-            <NLi>推荐宽度 280px 左右，高度 500px 以上，可按直播布局调整。</NLi>
+      <div accordion>
+        <details title="使用说明">
+          <ul>
+            <li>在 OBS 来源中添加一个新的「浏览器」源。</li>
+            <li>将上方 URL 粘贴到「URL」栏中。</li>
+            <li>推荐宽度 280px 左右，高度 500px 以上，可按直播布局调整。</li>
             <template v-if="showStyleOptions">
-              <NLi>可通过 `style` 参数切换 `classic`、`fresh`、`minimal` 三种风格。</NLi>
-              <NLi>可通过 `speed` 参数调节列表滚动速度。</NLi>
+              <li>可通过 `style` 参数切换 `classic`、`fresh`、`minimal` 三种风格。</li>
+              <li>可通过 `speed` 参数调节列表滚动速度。</li>
             </template>
-          </NUl>
-        </NCollapseItem>
-      </NCollapse>
-    </NFlex>
-  </NModal>
+          </ul>
+        </details>
+      </div>
+    </div>
+  </UModal>
 </template>
 
 <style scoped>

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 
 import { QueryRequestError } from '@/api/query'
+import { showErrorToast, showInfoToast, showSuccessToast } from '@/shared/services/toast'
 
 import type {
   AssistantContext,
@@ -374,11 +375,11 @@ export const useAssistantStore = defineStore('assistant', () => {
     action.proposal.error = undefined
     try {
       action.proposal = await approveAction(action.proposal.id)
-      window.$message?.success('操作已执行')
+      showSuccessToast('操作已执行')
     } catch (e) {
       action.proposal.status = 'failed'
       action.proposal.error = e instanceof Error ? e.message : String(e)
-      window.$message?.error(action.proposal.error)
+      showErrorToast(action.proposal.error)
     }
   }
 
@@ -406,10 +407,10 @@ export const useAssistantStore = defineStore('assistant', () => {
     if (!action) return
     try {
       action.proposal = await scheduleAction(action.proposal.id, scheduledTime)
-      window.$message?.success('已设定定时执行')
+      showSuccessToast('已设定定时执行')
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
-      window.$message?.error(msg)
+      showErrorToast(msg)
     }
   }
 
@@ -419,10 +420,10 @@ export const useAssistantStore = defineStore('assistant', () => {
     if (!action) return
     try {
       action.proposal = await cancelScheduleAction(action.proposal.id)
-      window.$message?.info('已取消定时执行')
+      showInfoToast('已取消定时执行')
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
-      window.$message?.error(msg)
+      showErrorToast(msg)
     }
   }
 

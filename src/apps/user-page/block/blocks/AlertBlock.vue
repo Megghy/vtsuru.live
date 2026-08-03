@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -36,17 +35,17 @@ const backgrounded = computed(() =>
     :backgrounded="backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <NAlert
-      :type="type"
+    <UAlert
+      :color="type"
       :title="title || undefined"
-      :show-icon="showIcon"
-      :bordered="bordered"
       class="vtsuru-alert"
     >
-      <div class="alert-content">
-        {{ text }}
-      </div>
-    </NAlert>
+      <template #description
+        ><div class="alert-content">
+          {{ text }}
+        </div></template
+      >
+    </UAlert>
   </BlockCard>
 </template>
 
@@ -60,7 +59,7 @@ const backgrounded = computed(() =>
   line-height: 1.6;
 }
 
-:deep(.n-alert-body__title) {
+:deep(.vtsuru-alert) {
   font-weight: 700 !important;
 }
 </style>

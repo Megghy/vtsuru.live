@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NInput, NSpin } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -13,7 +12,7 @@ const route = useRoute()
 const inputMsg = ref('')
 
 const isMaster = computed(() => {
-  return route.query.slave == null || route.query.slave == undefined
+  return route.query.slave == null
 })
 const dc = useDanmakuClient()
 const customCss = ref('')
@@ -28,9 +27,10 @@ async function mount() {
 </script>
 
 <template>
-  <NSpin
+  <UIcon
     v-if="!accountInfo.id"
-    show
+    name="i-lucide-loader-circle"
+    class="size-6 animate-spin"
   />
   <div
     v-else
@@ -38,14 +38,14 @@ async function mount() {
   >
     master: {{ isMaster }}
     <template v-if="isMaster">
-      <NInput v-model:value="inputMsg" />
-      <NButton @click="rtc.send('test', inputMsg)"> 发送 </NButton>
+      <UInput v-model="inputMsg" />
+      <UButton @click="rtc.send('test', inputMsg)"> 发送 </UButton>
     </template>
 
-    <NInput
-      v-model:value="customCss"
+    <UInput
+      v-model="customCss"
       placeholder="css"
-      @update:value="(s) => danmujiRef?.setCss(s.toString())"
+      @update:model-value="(s) => danmujiRef?.setCss(s.toString())"
     />
     <DanmujiOBS
       ref="danmujiRef"

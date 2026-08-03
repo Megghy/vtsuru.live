@@ -1,18 +1,4 @@
 <script setup lang="ts">
-import { AddCircleOutline, BookmarkOutline, LayersOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NDropdown,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NMenu,
-  NPopover,
-  NScrollbar,
-  NTooltip,
-} from 'naive-ui'
 import { computed, inject } from 'vue'
 
 import { UserPageEditorKey } from '../context'
@@ -38,128 +24,106 @@ const {
 </script>
 
 <template>
-  <NCard
+  <UCard
     class="pane-card blocks-pane"
     title="区块"
     content-style="padding: 0; height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden"
   >
     <template #header-extra>
-      <NFlex
-        class="blocks-pane__actions"
-        :wrap="false"
-        size="small"
-      >
-        <NTooltip v-if="selectionCount">
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="small"
-              aria-label="保存所选区块为模板"
-              @click="saveSelectionAsTemplate"
-            >
-              <template #icon>
-                <NIcon><BookmarkOutline /></NIcon>
-              </template>
-            </NButton>
-          </template>
-          保存所选区块为模板
-        </NTooltip>
+      <div class="builder-row blocks-pane__actions">
+        <UTooltip v-if="selectionCount">
+          <UButton
+            variant="ghost"
+            square
+            size="sm"
+            aria-label="保存所选区块为模板"
+            @click="saveSelectionAsTemplate"
+          >
+            <template #icon>
+              <UIcon name="i-lucide-bookmark" />
+            </template>
+          </UButton>
+          <template #content> 保存所选区块为模板 </template></UTooltip
+        >
 
-        <NTooltip
+        <UTooltip
           :delay="0"
           placement="bottom"
         >
-          <template #trigger>
-            <NDropdown
-              :options="templateOptions"
-              trigger="click"
-              @select="(key) => insertTemplate(String(key))"
+          <UDropdownMenu :items="templateOptions">
+            <UButton
+              variant="ghost"
+              square
+              size="sm"
+              aria-label="应用起始模板"
+              title="起始模板"
             >
-              <NButton
-                quaternary
-                circle
-                size="small"
-                aria-label="应用起始模板"
-                title="起始模板"
-              >
-                <template #icon>
-                  <NIcon><LayersOutline /></NIcon>
-                </template>
-              </NButton>
-            </NDropdown>
-          </template>
-          起始模板
-        </NTooltip>
-
-        <NPopover
-          v-model:show="showAddMenu"
-          trigger="click"
-          placement="bottom-end"
-        >
-          <template #trigger>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  type="primary"
-                  secondary
-                  circle
-                  size="small"
-                  aria-label="添加区块"
-                >
-                  <template #icon>
-                    <NIcon><AddCircleOutline /></NIcon>
-                  </template>
-                </NButton>
+              <template #icon>
+                <UIcon name="i-lucide-layers" />
               </template>
-              添加区块
-            </NTooltip>
+            </UButton>
+          </UDropdownMenu>
+          <template #content> 起始模板 </template></UTooltip
+        >
+
+        <UPopover v-model:open="showAddMenu">
+          <UTooltip text="添加区块">
+            <UButton
+              icon="i-lucide-circle-plus"
+              color="primary"
+              variant="soft"
+              square
+              size="sm"
+              aria-label="添加区块"
+            />
+          </UTooltip>
+          <template #content>
+            <div class="blocks-pane__menu">
+              <UInput
+                v-model="blockSearch"
+                icon="i-lucide-search"
+                placeholder="搜索区块名称或关键词"
+              />
+              <div
+                v-if="addBlockOptions.length"
+                class="builder-scroll blocks-pane__library"
+              >
+                <template
+                  v-for="option in addBlockOptions"
+                  :key="option.key"
+                >
+                  <p
+                    v-if="option.type === 'label'"
+                    class="blocks-pane__group-label"
+                  >
+                    {{ option.label }}
+                  </p>
+                  <UButton
+                    v-else
+                    :label="option.label"
+                    color="neutral"
+                    variant="ghost"
+                    block
+                    @click="option.onSelect?.($event)"
+                  />
+                </template>
+              </div>
+              <UEmpty
+                v-else
+                size="sm"
+                description="没有匹配的区块"
+              />
+            </div>
           </template>
-          <div class="blocks-pane__search">
-            <NInput
-              v-model:value="blockSearch"
-              clearable
-              placeholder="搜索区块名称或关键词"
-            />
-          </div>
-          <NScrollbar style="width: min(310px, calc(100vw - 32px)); max-height: min(360px, calc(100dvh - 160px))">
-            <NMenu
-              v-if="addBlockOptions.length"
-              :options="addBlockOptions"
-              :indent="18"
-              :root-indent="18"
-              :node-props="
-                (option: any) =>
-                  String(option?.key || '').startsWith('divider:')
-                    ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' }
-                    : {}
-              "
-              @update:value="(key) => handleAddBlockMenuSelect(String(key))"
-            />
-            <NEmpty
-              v-else
-              size="small"
-              description="没有匹配的区块"
-              style="padding: 24px"
-            />
-          </NScrollbar>
-        </NPopover>
-      </NFlex>
+        </UPopover>
+      </div>
     </template>
 
     <BlockManager :block-action-options="blockActionOptions" />
-  </NCard>
+  </UCard>
 </template>
 
 <style scoped>
-.blocks-pane :deep(.n-card-header) {
-  padding: 10px 12px;
-}
-
-.blocks-pane :deep(.n-card-header__main) {
-  min-width: max-content;
-}
-
 .blocks-pane__actions {
   gap: 2px !important;
 }
@@ -168,5 +132,24 @@ const {
   width: min(310px, calc(100vw - 32px));
   padding: 10px 10px 4px;
   box-sizing: border-box;
+}
+
+.blocks-pane__menu {
+  display: grid;
+  gap: 8px;
+  width: min(310px, calc(100vw - 32px));
+  padding: 10px;
+}
+
+.blocks-pane__library {
+  display: grid;
+  max-height: min(360px, calc(100dvh - 160px));
+}
+
+.blocks-pane__group-label {
+  margin: 8px 8px 2px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+  font-weight: 700;
 }
 </style>

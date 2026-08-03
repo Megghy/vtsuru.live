@@ -1,21 +1,6 @@
 <script setup lang="ts">
-import {
-  ArrowRedoOutline,
-  ArrowUndoOutline,
-  AlertCircleOutline,
-  ColorPaletteOutline,
-  EllipsisHorizontalOutline,
-  FolderOpenOutline,
-  GridOutline,
-  EyeOutline,
-  RefreshOutline,
-  SaveOutline,
-  SettingsOutline,
-  TrashOutline,
-} from '@vicons/ionicons5'
-import type { DropdownOption } from 'naive-ui'
-import { NButton, NDropdown, NFlex, NIcon, NText, NTooltip, useDialog } from 'naive-ui'
-import { computed, h, inject } from 'vue'
+import type { DropdownMenuItem } from '@nuxt/ui'
+import { computed, inject } from 'vue'
 
 import { UserPageEditorKey } from '../context'
 
@@ -27,7 +12,6 @@ const emit = defineEmits<{
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const dialog = useDialog()
 const statusText = computed(() =>
   editor.hasUnpublishedChanges.value && !editor.isDirty.value
     ? `${editor.saveStatusText.value} · 未发布`
@@ -35,8 +19,8 @@ const statusText = computed(() =>
 )
 const problemCount = computed(() => editor.liveValidationIssues.value.length)
 
-const moreOptions = computed<DropdownOption[]>(() => {
-  const options: DropdownOption[] = [
+const moreOptions = computed(() => {
+  const options: DropdownMenuItem[] = [
     {
       label: `编辑来源：${editor.loadedFromLabel.value}`,
       key: 'version-state',
@@ -45,73 +29,58 @@ const moreOptions = computed<DropdownOption[]>(() => {
   ]
   if (editor.currentPage.value.mode === 'block') {
     options.push(
-      { label: '资源管理', key: 'resources', icon: () => h(NIcon, null, { default: () => h(FolderOpenOutline) }) },
-      { label: '编辑器布局', key: 'layout', icon: () => h(NIcon, null, { default: () => h(GridOutline) }) },
-      { type: 'divider', key: 'divider-block' },
+      { label: '资源管理', key: 'resources', icon: 'i-lucide-folder-open' },
+      { label: '编辑器布局', key: 'layout', icon: 'i-lucide-grid-3x3' },
+      { type: 'separator' as const, key: 'divider-block' },
     )
   }
   options.push(
     {
       label: editor.autoSaveEnabled.value ? '关闭自动保存' : '开启自动保存',
       key: 'auto-save',
-      icon: () => h(NIcon, null, { default: () => h(SettingsOutline) }),
+      icon: 'i-lucide-settings',
     },
     {
-      type: 'divider',
+      type: 'separator' as const,
       key: 'divider-history',
     },
     {
       label: '预览可回滚版本',
       key: 'preview-rollback',
       disabled: !editor.rollbackAvailable.value,
-      icon: () => h(NIcon, null, { default: () => h(EyeOutline) }),
+      icon: 'i-lucide-eye',
     },
     {
       label: '回滚已发布版本',
       key: 'rollback',
       disabled: !editor.rollbackAvailable.value || editor.isSaving.value,
-      icon: () => h(NIcon, null, { default: () => h(RefreshOutline) }),
+      icon: 'i-lucide-refresh-cw',
     },
     {
       label: '清空草稿',
       key: 'clear',
       disabled: editor.isSaving.value,
-      props: { style: 'color: #d03050' },
-      icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
+      class: 'text-red-500',
+      icon: 'i-lucide-trash-2',
     },
   )
-  return options
+  return options.map((item) =>
+    item.key && item.type !== 'separator' ? { ...item, onSelect: () => handleMoreAction(String(item.key)) } : item,
+  )
 })
 
 function confirmRollback() {
-  dialog.warning({
-    title: '回滚已发布版本',
-    content: '确定回滚到上一个已发布版本吗？当前草稿会被替换。',
-    positiveText: '回滚',
-    negativeText: '取消',
-    onPositiveClick: editor.rollback,
-  })
+  if (window.confirm('确定回滚到上一个已发布版本吗？当前草稿会被替换。')) void editor.rollback()
 }
 
 function confirmClearDraft() {
-  dialog.error({
-    title: '清空草稿',
-    content: '将丢弃当前未保存更改，并切换为已发布版本。',
-    positiveText: '清空',
-    negativeText: '取消',
-    onPositiveClick: editor.clearDraft,
-  })
+  if (window.confirm('将丢弃当前未保存更改，并切换为已发布版本。确定清空吗？')) void editor.clearDraft()
 }
 
 function confirmDiscardLocalChanges() {
   const savedSnapshot = editor.lastSavedSnapshot.value
-  dialog.warning({
-    title: '放弃本地修改',
-    content: '将恢复最近一次保存的服务端草稿，已发布版本和服务端草稿不会被删除。',
-    positiveText: '放弃修改',
-    negativeText: '取消',
-    onPositiveClick: () => editor.discardLocalChanges(savedSnapshot),
-  })
+  if (window.confirm('将恢复最近一次保存的服务端草稿，已发布版本和服务端草稿不会被删除。确定放弃修改吗？'))
+    void editor.discardLocalChanges(savedSnapshot)
 }
 
 function handleMoreAction(key: string) {
@@ -125,137 +94,117 @@ function handleMoreAction(key: string) {
 </script>
 
 <template>
-  <NFlex
-    class="builder-toolbar"
-    justify="end"
-    align="center"
-    :wrap="false"
-    size="small"
-  >
-    <NTooltip>
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :disabled="!editor.canUndo.value"
-          aria-label="撤销"
-          @click="editor.undo"
-        >
-          <template #icon>
-            <NIcon><ArrowUndoOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      撤销
-    </NTooltip>
-    <NTooltip>
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :disabled="!editor.canRedo.value"
-          aria-label="重做"
-          @click="editor.redo"
-        >
-          <template #icon>
-            <NIcon><ArrowRedoOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      重做
-    </NTooltip>
-    <NButton
-      size="small"
-      secondary
+  <div class="builder-row builder-toolbar">
+    <UTooltip>
+      <UButton
+        variant="ghost"
+        square
+        size="sm"
+        :disabled="!editor.canUndo.value"
+        aria-label="撤销"
+        @click="editor.undo"
+      >
+        <template #icon>
+          <UIcon name="i-lucide-undo-2" />
+        </template>
+      </UButton>
+      <template #content> 撤销 </template></UTooltip
+    >
+    <UTooltip>
+      <UButton
+        variant="ghost"
+        square
+        size="sm"
+        :disabled="!editor.canRedo.value"
+        aria-label="重做"
+        @click="editor.redo"
+      >
+        <template #icon>
+          <UIcon name="i-lucide-redo-2" />
+        </template>
+      </UButton>
+      <template #content> 重做 </template></UTooltip
+    >
+    <UButton
+      size="sm"
+      variant="soft"
       @click="emit('open-global-style')"
     >
       <template #icon>
-        <NIcon><ColorPaletteOutline /></NIcon>
+        <UIcon name="i-lucide-palette" />
       </template>
       全局主题
-    </NButton>
-    <NTooltip>
-      <template #trigger>
-        <NButton
-          class="discard-button"
-          size="small"
-          secondary
-          :disabled="!editor.isDirty.value || editor.isSaving.value"
-          aria-label="放弃本地修改"
-          @click="confirmDiscardLocalChanges"
-        >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon>
-          </template>
-          <span class="discard-label">放弃本地修改</span>
-        </NButton>
-      </template>
-      放弃本地修改
-    </NTooltip>
-    <NButton
-      size="small"
+    </UButton>
+    <UTooltip>
+      <UButton
+        class="discard-button"
+        size="sm"
+        variant="soft"
+        :disabled="!editor.isDirty.value || editor.isSaving.value"
+        aria-label="放弃本地修改"
+        @click="confirmDiscardLocalChanges"
+      >
+        <template #icon>
+          <UIcon name="i-lucide-refresh-cw" />
+        </template>
+        <span class="discard-label">放弃本地修改</span>
+      </UButton>
+      <template #content> 放弃本地修改 </template></UTooltip
+    >
+    <UButton
+      size="sm"
       :loading="editor.isSaving.value"
       @click="editor.saveDraft"
     >
       <template #icon>
-        <NIcon><SaveOutline /></NIcon>
+        <UIcon name="i-lucide-save" />
       </template>
       保存
-    </NButton>
-    <NButton
+    </UButton>
+    <UButton
       v-if="problemCount"
-      size="small"
-      type="error"
-      secondary
+      size="sm"
+      color="error"
+      variant="soft"
       @click="editor.openPublishModal"
     >
       <template #icon>
-        <NIcon><AlertCircleOutline /></NIcon>
+        <UIcon name="i-lucide-circle-alert" />
       </template>
       {{ problemCount }} 个问题
-    </NButton>
-    <NButton
-      type="primary"
-      size="small"
+    </UButton>
+    <UButton
+      color="primary"
+      size="sm"
       :loading="editor.isSaving.value"
       @click="editor.openPublishModal"
     >
       发布
-    </NButton>
-    <NTooltip>
-      <template #trigger>
-        <NDropdown
-          :options="moreOptions"
-          trigger="click"
-          @select="(key) => handleMoreAction(String(key))"
+    </UButton>
+    <UTooltip>
+      <UDropdownMenu :items="moreOptions">
+        <UButton
+          variant="ghost"
+          square
+          size="sm"
+          aria-label="更多操作"
         >
-          <NButton
-            quaternary
-            circle
-            size="small"
-            aria-label="更多操作"
-          >
-            <template #icon>
-              <NIcon><EllipsisHorizontalOutline /></NIcon>
-            </template>
-          </NButton>
-        </NDropdown>
-      </template>
-      更多操作
-    </NTooltip>
-    <NText
-      class="save-state"
-      :type="editor.hasSyncError.value ? 'error' : undefined"
-      depth="3"
+          <template #icon>
+            <UIcon name="i-lucide-ellipsis" />
+          </template>
+        </UButton>
+      </UDropdownMenu>
+      <template #content> 更多操作 </template></UTooltip
+    >
+    <span
+      class="builder-text save-state"
       role="status"
       aria-live="polite"
       :title="statusText"
     >
       {{ statusText }}
-    </NText>
-  </NFlex>
+    </span>
+  </div>
 </template>
 
 <style scoped>

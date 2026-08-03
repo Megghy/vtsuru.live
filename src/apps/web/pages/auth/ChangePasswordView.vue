@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { NButton, NCard, NInput, NLayoutContent, NFlex, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { QueryGetAPI } from '@/api/query'
 import router from '@/app/router'
 import { ACCOUNT_API_URL } from '@/shared/config'
+import { showErrorToast, showSuccessToast } from '@/shared/services/toast'
 
 import '@/apps/web/styles/web-page.css'
 
 const password = ref('')
 const password2 = ref('')
-const message = useMessage()
 const route = useRoute()
 const key = computed(() => {
   const v = Array.isArray(route.query.key) ? route.query.key[0] : route.query.key
@@ -21,11 +20,11 @@ const isLoading = ref(false)
 
 function changePassword() {
   if (password.value != password2.value) {
-    message.error('两次密码不一致')
+    showErrorToast('两次密码不一致')
     return
   }
   if (!key.value) {
-    message.error('链接无效：缺少 key')
+    showErrorToast('链接无效：缺少 key')
     return
   }
   isLoading.value = true
@@ -35,15 +34,15 @@ function changePassword() {
   })
     .then((data) => {
       if (data.code == 200) {
-        message.success('密码已修改')
+        showSuccessToast('密码已修改')
         router.push({ name: 'manage-index' })
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
     .finally(() => {
       isLoading.value = false
@@ -52,33 +51,43 @@ function changePassword() {
 </script>
 
 <template>
-  <NLayoutContent class="web-center">
+  <main class="web-center">
     <div class="web-page web-page--md">
-      <NCard
-        title="修改密码"
-        size="small"
-        bordered
-      >
-        <NFlex vertical>
-          <NInput
-            v-model:value="password"
-            type="password"
-            placeholder="新密码"
-          />
-          <NInput
-            v-model:value="password2"
-            type="password"
-            placeholder="确认密码"
-          />
-          <NButton
-            type="primary"
-            :loading="isLoading"
-            @click="changePassword"
-          >
-            修改密码
-          </NButton>
-        </NFlex>
-      </NCard>
+      <section class="password-form">
+        <h1>修改密码</h1>
+        <UInput
+          v-model="password"
+          type="password"
+          placeholder="新密码"
+        />
+        <UInput
+          v-model="password2"
+          type="password"
+          placeholder="确认密码"
+        />
+        <UButton
+          block
+          :loading="isLoading"
+          @click="changePassword"
+        >
+          修改密码
+        </UButton>
+      </section>
     </div>
-  </NLayoutContent>
+  </main>
 </template>
+
+<style scoped>
+.password-form {
+  display: flex;
+  max-width: 380px;
+  margin: 0 auto;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.password-form h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+</style>

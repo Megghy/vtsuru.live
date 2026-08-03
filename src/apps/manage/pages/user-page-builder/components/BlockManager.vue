@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import type { MenuOption } from 'naive-ui'
-import { NButton, NFlex, NInput, NModal, NScrollbar, NText } from 'naive-ui'
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import { UserPageEditorKey } from '../context'
 import BlockTreeList from './BlockTreeList.vue'
+import type { BuilderMenuItem } from './useBlockManagerLibrary'
 
 const props = defineProps<{
-  blockActionOptions: MenuOption[]
+  blockActionOptions: BuilderMenuItem[]
 }>()
 
 const editor = inject(UserPageEditorKey)
@@ -404,61 +403,58 @@ onBeforeUnmount(() => {
         v-if="selectionCount > 1"
         class="block-manager__selection-toolbar"
       >
-        <NFlex
-          size="small"
-          align="center"
-        >
-          <NText depth="3"> 已选择 {{ selectionCount }} 个区块 </NText>
-          <NButton
-            size="tiny"
-            type="primary"
-            secondary
+        <div class="builder-row">
+          <span class="builder-text"> 已选择 {{ selectionCount }} 个区块 </span>
+          <UButton
+            size="xs"
+            color="primary"
+            variant="soft"
             @click="bulkGroup"
           >
             成组
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
+          </UButton>
+          <UButton
+            size="xs"
+            variant="soft"
             @click="bulkHide"
           >
             批量隐藏
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
+          </UButton>
+          <UButton
+            size="xs"
+            variant="soft"
             @click="bulkShow"
           >
             批量显示
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
+          </UButton>
+          <UButton
+            size="xs"
+            variant="soft"
             @click="bulkCopy"
           >
             批量复制
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
+          </UButton>
+          <UButton
+            size="xs"
+            variant="soft"
             :disabled="!hasClipboard"
             @click="bulkPaste"
           >
             粘贴
-          </NButton>
-          <NButton
-            size="tiny"
-            type="error"
-            secondary
+          </UButton>
+          <UButton
+            size="xs"
+            color="error"
+            variant="soft"
             @click="bulkDelete"
           >
             批量删除
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
       </div>
     </Transition>
 
-    <NScrollbar class="block-manager__scroll">
+    <div class="builder-scroll block-manager__scroll">
       <div class="block-manager__tree">
         <BlockTreeList
           :blocks="blocksModel"
@@ -480,45 +476,55 @@ onBeforeUnmount(() => {
           :block-action-options="props.blockActionOptions as any"
         />
       </div>
-    </NScrollbar>
+    </div>
 
-    <NModal
-      v-model:show="renameBlockModal"
-      preset="card"
+    <UModal
+      v-model:open="renameBlockModal"
       title="重命名区块"
       style="width: 420px; max-width: 90vw"
-      :auto-focus="false"
     >
-      <NInput
-        v-model:value="renameBlockName"
-        maxlength="50"
-        show-count
-        placeholder="仅用于编辑器内识别"
-        @keyup.enter="confirmRenameBlock"
-      />
+      <template #body
+        ><UInput
+          v-model="renameBlockName"
+          maxlength="50"
+          show-count
+          placeholder="仅用于编辑器内识别"
+          @keyup.enter="confirmRenameBlock"
+      /></template>
       <template #footer>
-        <NFlex justify="end">
-          <NButton @click="renameBlockModal = false"> 取消 </NButton>
-          <NButton
-            type="primary"
+        <div class="builder-row">
+          <UButton @click="renameBlockModal = false"> 取消 </UButton>
+          <UButton
+            color="primary"
             @click="confirmRenameBlock"
           >
             保存
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
       </template>
-    </NModal>
+    </UModal>
 
-    <NModal
-      v-model:show="deleteBlockModal"
-      preset="dialog"
-      type="error"
+    <UModal
+      v-model:open="deleteBlockModal"
       title="删除区块"
-      :content="`将删除 ${pendingDeleteIds.length} 个区块，此操作可通过撤销恢复。`"
-      positive-text="删除"
-      negative-text="取消"
-      @positive-click="confirmDeleteBlocks"
-    />
+    >
+      <template #body>将删除 {{ pendingDeleteIds.length }} 个区块，此操作可通过撤销恢复。</template>
+      <template #footer>
+        <div class="builder-row modal-actions">
+          <UButton
+            label="取消"
+            color="neutral"
+            variant="ghost"
+            @click="deleteBlockModal = false"
+          />
+          <UButton
+            label="删除"
+            color="error"
+            @click="confirmDeleteBlocks"
+          />
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
 

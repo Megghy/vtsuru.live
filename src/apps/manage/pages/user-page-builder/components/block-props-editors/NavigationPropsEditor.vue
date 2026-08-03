@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NInput, NSelect, NSwitch, NText } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { SOCIAL_PLATFORM_OPTIONS } from '@/apps/user-page/block/socialPlatforms'
 
@@ -15,13 +13,12 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
 </script>
 
 <template>
-  <NForm
+  <div
     v-if="props.block.type === 'links'"
-    label-placement="top"
-    size="small"
+    class="builder-form"
   >
     <PropsGrid>
-      <NFormItem
+      <UFormField
         class="span-full"
         label="链接项"
       >
@@ -35,110 +32,108 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="标题">
-                <NInput v-model:value="item.label" />
-              </NFormItem>
-              <NFormItem label="链接">
-                <NInput
-                  v-model:value="item.url"
+              <UFormField label="标题">
+                <UInput v-model="item.label" />
+              </UFormField>
+              <UFormField label="链接">
+                <UInput
+                  v-model="item.url"
                   placeholder="https://..."
                 />
-              </NFormItem>
+              </UFormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'button'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
       <ButtonAppearanceFields :block="props.block" />
-      <NFormItem
+      <UFormField
         class="span-full"
         label="按钮文本"
       >
-        <NInput
-          v-model:value="blockProps.label"
+        <UInput
+          v-model="blockProps.label"
           placeholder="例如：衣柜"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="跳转类型"
       >
-        <NSelect
+        <USelect
           :value="getNavigationTargetType(blockProps)"
-          :options="[
+          :items="[
             { label: '页面', value: 'page' },
             { label: '外链', value: 'external' },
             { label: '返回', value: 'back' },
           ]"
-          @update:value="(value) => setNavigationTargetType(blockProps, value)"
+          @update:model-value="(value) => setNavigationTargetType(blockProps, value as 'page' | 'external' | 'back')"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="目标"
       >
-        <NSelect
+        <USelect
           v-if="blockProps.page"
-          v-model:value="blockProps.page"
-          :options="internalPageOptions"
+          v-model="blockProps.page"
+          :items="internalPageOptions"
         />
-        <NInput
+        <UInput
           v-else-if="!blockProps.back"
-          v-model:value="blockProps.url"
+          v-model="blockProps.url"
           placeholder="链接 https://..."
         />
-        <NText
+        <span
+          class="builder-text"
           v-else
-          depth="3"
         >
           点击后返回上一页
-        </NText>
-      </NFormItem>
+        </span>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'socialLinks'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="大小">
-        <NSelect
-          v-model:value="blockProps.size"
-          :options="[
+      <UFormField label="大小">
+        <USelect
+          v-model="blockProps.size"
+          :items="[
             { label: 'sm', value: 'sm' },
             { label: 'md', value: 'md' },
             { label: 'lg', value: 'lg' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="形状">
-        <NSelect
-          v-model:value="blockProps.variant"
-          :options="[
+      </UFormField>
+      <UFormField label="形状">
+        <USelect
+          v-model="blockProps.variant"
+          :items="[
             { label: 'round', value: 'round' },
             { label: 'square', value: 'square' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="显示文字">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showLabel"
+      </UFormField>
+      <UFormField label="显示文字">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showLabel"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         class="span-full"
         label="链接项"
       >
@@ -152,31 +147,31 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="平台">
-                <NSelect
-                  v-model:value="item.platform"
-                  :options="SOCIAL_PLATFORM_OPTIONS"
+              <UFormField label="平台">
+                <USelect
+                  v-model="item.platform"
+                  :items="SOCIAL_PLATFORM_OPTIONS"
                 />
-              </NFormItem>
-              <NFormItem label="显示名 / 无障碍名称">
-                <NInput
-                  v-model:value="item.label"
+              </UFormField>
+              <UFormField label="显示名 / 无障碍名称">
+                <UInput
+                  v-model="item.label"
                   placeholder="可选"
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="链接"
               >
-                <NInput
-                  v-model:value="item.url"
+                <UInput
+                  v-model="item.url"
                   placeholder="https://..."
                 />
-              </NFormItem>
+              </UFormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NFlex, NModal, NProgress, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { useRemoveBg } from '@/composables/useRemoveBg'
@@ -12,6 +11,13 @@ const { options, webgpuSupported, progress, processRemoveBg } = useRemoveBg()
 const processing = ref(false)
 const resultUrl = ref<string | null>(null)
 const resultBlob = ref<Blob | null>(null)
+const toast = useToast()
+const open = computed({
+  get: () => props.show,
+  set: (value) => {
+    if (!value) cancel()
+  },
+})
 
 const modeOptions = [
   { label: '去背景', value: 'remove-bg' },
@@ -51,8 +57,8 @@ function cleanup() {
 
 async function process() {
   if (!props.sourceUrl) return
-  processing.value = true
   cleanup()
+  processing.value = true
   try {
     const resp = await fetch(props.sourceUrl)
     const blob = await resp.blob()
@@ -60,16 +66,16 @@ async function process() {
     resultBlob.value = result
     resultUrl.value = URL.createObjectURL(result)
   } catch (e: any) {
-    useMessage().error(`处理失败: ${e?.message ?? e}`)
+    toast.add({ title: `处理失败: ${e?.message ?? e}`, color: 'error' })
   } finally {
     processing.value = false
   }
 }
 
 function confirm() {
-  if (resultBlob.value) emit('confirm', resultBlob.value)
-  resultBlob.value = null
-  resultUrl.value = null
+  if (!resultBlob.value) return
+  emit('confirm', resultBlob.value)
+  cleanup()
 }
 
 function cancel() {
@@ -79,150 +85,103 @@ function cancel() {
 </script>
 
 <template>
-  <NModal
-    :show="show"
-    preset="card"
+  <UModal
+    v-model:open="open"
     title="AI 去背景"
-    style="width: 680px; max-width: 95vw"
-    @close="cancel"
-    @mask-click="cancel"
+    :ui="{ content: 'max-w-[95vw] sm:max-w-2xl' }"
   >
-    <!-- Settings -->
-    <div class="settings-row">
-      <div class="s-item">
-        <NText
-          depth="3"
-          style="font-size: 11px"
-        >
-          模式
-        </NText>
-        <NSelect
-          v-model:value="options.mode"
-          :options="modeOptions"
-          size="small"
-        />
-      </div>
-      <div class="s-item">
-        <NText
-          depth="3"
-          style="font-size: 11px"
-        >
-          模型
-        </NText>
-        <NSelect
-          v-model:value="options.model"
-          :options="modelOptions"
-          size="small"
-        />
-      </div>
-      <div class="s-item">
-        <NText
-          depth="3"
-          style="font-size: 11px"
-        >
-          设备
-        </NText>
-        <NSelect
-          v-model:value="options.device"
-          :options="deviceOptions"
-          size="small"
-        />
-      </div>
-      <div class="s-item">
-        <NText
-          depth="3"
-          style="font-size: 11px"
-        >
-          Worker
-        </NText>
-        <NSwitch v-model:value="options.proxyToWorker" />
-      </div>
-    </div>
-
-    <!-- Progress -->
-    <NProgress
-      v-if="progress && progress.total"
-      :percentage="progressPercent"
-      status="info"
-      style="margin: 8px 0"
-    >
-      <NText style="font-size: 11px"> {{ progress.key }} {{ progressPercent }}% </NText>
-    </NProgress>
-
-    <!-- Preview -->
-    <div class="preview-area">
-      <div class="preview-col">
-        <NText
-          depth="3"
-          style="font-size: 11px"
-        >
-          原图
-        </NText>
-        <img
-          v-if="sourceUrl"
-          :src="sourceUrl"
-          class="preview-img"
-        />
-      </div>
-      <div class="preview-col">
-        <NText
-          depth="3"
-          style="font-size: 11px"
-        >
-          结果
-        </NText>
-        <img
-          v-if="resultUrl"
-          :src="resultUrl"
-          class="preview-img manage-checkerboard"
-        />
-        <div
-          v-else
-          class="preview-placeholder"
-        >
-          <NText
-            depth="3"
-            style="font-size: 12px"
-          >
-            {{ processing ? '处理中...' : '点击下方按钮开始' }}
-          </NText>
+    <template #body>
+      <div class="settings-row">
+        <div class="s-item">
+          <span class="s-label">模式</span>
+          <USelect
+            v-model="options.mode"
+            :items="modeOptions"
+            size="sm"
+          />
+        </div>
+        <div class="s-item">
+          <span class="s-label">模型</span>
+          <USelect
+            v-model="options.model"
+            :items="modelOptions"
+            size="sm"
+          />
+        </div>
+        <div class="s-item">
+          <span class="s-label">设备</span>
+          <USelect
+            v-model="options.device"
+            :items="deviceOptions"
+            size="sm"
+          />
+        </div>
+        <div class="s-item">
+          <span class="s-label">Worker</span>
+          <USwitch v-model="options.proxyToWorker" />
         </div>
       </div>
-    </div>
-
-    <!-- Actions -->
-    <template #action>
-      <NFlex
-        justify="space-between"
-        style="width: 100%"
+      <div
+        v-if="progress && progress.total"
+        class="remove-bg-dialog__progress"
       >
-        <NButton
-          size="small"
+        <UProgress :model-value="progressPercent" />
+        <span>{{ progress.key }} {{ progressPercent }}%</span>
+      </div>
+      <div class="preview-area">
+        <div class="preview-col">
+          <span class="s-label">原图</span>
+          <img
+            v-if="sourceUrl"
+            :src="sourceUrl"
+            class="preview-img"
+          />
+        </div>
+        <div class="preview-col">
+          <span class="s-label">结果</span>
+          <img
+            v-if="resultUrl"
+            :src="resultUrl"
+            class="preview-img manage-checkerboard"
+          />
+          <div
+            v-else
+            class="preview-placeholder"
+          >
+            <span>{{ processing ? '处理中...' : '点击下方按钮开始' }}</span>
+          </div>
+        </div>
+      </div>
+    </template>
+    <template #footer>
+      <div class="remove-bg-dialog__footer">
+        <UButton
+          size="sm"
           :loading="processing"
           :disabled="processing || !sourceUrl"
           @click="process"
         >
           {{ resultUrl ? '重新处理' : '开始处理' }}
-        </NButton>
-        <NFlex :size="8">
-          <NButton
-            size="small"
+        </UButton>
+        <div class="remove-bg-dialog__footer-actions">
+          <UButton
+            size="sm"
+            color="neutral"
+            variant="outline"
+            label="取消"
             @click="cancel"
-          >
-            取消
-          </NButton>
-          <NButton
-            size="small"
-            type="primary"
+          />
+          <UButton
+            size="sm"
+            color="primary"
+            label="应用替换"
             :disabled="!resultBlob"
             @click="confirm"
-          >
-            应用替换
-          </NButton>
-        </NFlex>
-      </NFlex>
+          />
+        </div>
+      </div>
     </template>
-  </NModal>
+  </UModal>
 </template>
 
 <style scoped>
@@ -236,6 +195,18 @@ function cancel() {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.s-label,
+.remove-bg-dialog__progress,
+.preview-placeholder {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+.remove-bg-dialog__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
 }
 .preview-area {
   display: flex;
@@ -264,5 +235,14 @@ function cancel() {
   border: 1px dashed var(--vtsuru-border);
   border-radius: 6px;
   min-height: 120px;
+}
+.remove-bg-dialog__footer,
+.remove-bg-dialog__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.remove-bg-dialog__footer {
+  justify-content: space-between;
 }
 </style>

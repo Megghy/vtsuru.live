@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { useMediaQuery, useNow } from '@vueuse/core'
-import type { GlobalThemeOverrides } from 'naive-ui'
-import { darkTheme, NConfigProvider } from 'naive-ui'
 import { computed, provide } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
-import { getUserPageNaiveThemeOverrides, getUserPageThemeCssVars } from '@/apps/user-page/background'
+import { getUserPageThemeCssVars } from '@/apps/user-page/background'
 
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'
@@ -19,7 +17,6 @@ const props = defineProps<{
   biliInfo: any | undefined
   biliStatus?: BiliProfileStatus
   isDark: boolean
-  extraThemeOverrides?: GlobalThemeOverrides
   highlightBlockId?: string | null
   selectedBlockIds?: string[]
   editorMode?: 'select' | 'interact'
@@ -32,38 +29,6 @@ const emit = defineEmits<{
 }>()
 
 const userThemeVars = computed(() => getUserPageThemeCssVars(props.project.theme, props.isDark))
-
-const naiveTheme = computed(() => {
-  if (props.isDark) return darkTheme
-  return null
-})
-
-// Specific overrides from the "Builder" UI
-const userOverrides = computed<GlobalThemeOverrides>(() =>
-  getUserPageNaiveThemeOverrides(props.project.theme, userThemeVars.value, props.isDark),
-)
-
-// 展示页主题是完整基底，外部只允许追加预览态覆盖。
-const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const sources = [userOverrides.value, props.extraThemeOverrides ?? {}]
-
-  // Simple deep merge for 2 levels (common, Button, etc.)
-  const result: any = {}
-
-  for (const source of sources) {
-    if (!source) continue
-    for (const key of Object.keys(source)) {
-      const val = (source as any)[key]
-      if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-        result[key] = { ...result[key], ...val }
-      } else {
-        result[key] = val
-      }
-    }
-  }
-
-  return result as GlobalThemeOverrides
-})
 
 const blockComponents = BLOCK_COMPONENTS
 const isMobile = useMediaQuery('(max-width: 767px)')
@@ -94,56 +59,51 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 </script>
 
 <template>
-  <NConfigProvider
-    :theme="naiveTheme"
-    :theme-overrides="mergedThemeOverrides"
+  <div
+    class="page"
+    :style="userThemeVars"
   >
     <div
-      class="page"
-      :style="userThemeVars"
+      v-for="block in renderedBlocks"
+      :key="block.id"
+      class="block"
+      :class="{
+        layout: block.type === 'layout',
+        highlight: !!props.highlightBlockId && props.highlightBlockId === block.id,
+        selected: selectedBlockIdSet.has(block.id),
+        hidden: block.hidden,
+        unavailable: props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext),
+        selectable: props.editorMode === 'select',
+      }"
+      :data-block-overlay="block.hidden ? '已隐藏' : '当前预览条件下不显示'"
+      :data-block-id="block.id"
+      :data-block-type="block.type"
+      @click="handleBlockClick($event, block.id)"
+      @mouseenter="props.editorMode && emit('hover-block', block.id)"
+      @mouseleave="props.editorMode && emit('hover-block', null)"
     >
-      <div
-        v-for="block in renderedBlocks"
-        :key="block.id"
-        class="block"
-        :class="{
-          layout: block.type === 'layout',
-          highlight: !!props.highlightBlockId && props.highlightBlockId === block.id,
-          selected: selectedBlockIdSet.has(block.id),
-          hidden: block.hidden,
-          unavailable: props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext),
-          selectable: props.editorMode === 'select',
-        }"
-        :data-block-overlay="block.hidden ? '已隐藏' : '当前预览条件下不显示'"
-        :data-block-id="block.id"
-        :data-block-type="block.type"
-        @click="handleBlockClick($event, block.id)"
-        @mouseenter="props.editorMode && emit('hover-block', block.id)"
-        @mouseleave="props.editorMode && emit('hover-block', null)"
-      >
-        <component
-          :is="blockComponents[block.type]"
-          :block-props="block.props"
-          :user-info="userInfo"
-          :bili-info="biliInfo"
-          :bili-status="biliStatus"
-          :block-id="block.type === 'heading' ? block.id : undefined"
-          v-bind="
-            block.type === 'layout'
-              ? {
-                  highlightBlockId: props.highlightBlockId,
-                  selectedBlockIds: props.selectedBlockIds,
-                  editorMode: props.editorMode,
-                  visibilityContext: activeVisibilityContext,
-                  onSelectBlock: (id: string) => emit('select-block', id),
-                  onHoverBlock: (id: string | null) => emit('hover-block', id),
-                }
-              : {}
-          "
-        />
-      </div>
+      <component
+        :is="blockComponents[block.type]"
+        :block-props="block.props"
+        :user-info="userInfo"
+        :bili-info="biliInfo"
+        :bili-status="biliStatus"
+        :block-id="block.type === 'heading' ? block.id : undefined"
+        v-bind="
+          block.type === 'layout'
+            ? {
+                highlightBlockId: props.highlightBlockId,
+                selectedBlockIds: props.selectedBlockIds,
+                editorMode: props.editorMode,
+                visibilityContext: activeVisibilityContext,
+                onSelectBlock: (id: string) => emit('select-block', id),
+                onHoverBlock: (id: string | null) => emit('hover-block', id),
+              }
+            : {}
+        "
+      />
     </div>
-  </NConfigProvider>
+  </div>
 </template>
 
 <style scoped>

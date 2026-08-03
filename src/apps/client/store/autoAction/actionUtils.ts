@@ -204,11 +204,7 @@ async function sendAndLogDanmaku(
       success ? undefined : '发送失败',
     ).catch((err) => console.error('记录弹幕历史失败:', err))
     if (!success) {
-      window.$notification.error({
-        title: '自动回复发送失败',
-        content: message,
-        duration: 5000,
-      })
+      useToast().add({ color: 'error', title: '自动回复发送失败', description: message, duration: 5000 })
     }
     return success
   } catch (err) {
@@ -317,9 +313,10 @@ export function executeActions(
             false,
             'Cookie 未就绪或无效',
           ).catch((err) => console.error('记录弹幕历史失败:', err))
-          window.$notification.error({
+          useToast().add({
+            color: 'error',
             title: '自动回复发送失败',
-            content: 'Cookie 未就绪或无效',
+            description: 'Cookie 未就绪或无效',
             duration: 5000,
           })
           break

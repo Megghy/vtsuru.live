@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { NTag, NTime } from 'naive-ui'
-
 import type { SupportTicketSummary } from '@/api/api-models'
+
+import { formatTicketTime, ticketStatusColors, ticketStatusLabels } from './ticketPresentation'
 
 defineProps<{
   ticket: SupportTicketSummary
 }>()
 
-const statusLabels = ['待处理', '处理中', '等待回复', '已解决']
-const statusTypes = ['default', 'info', 'warning', 'success'] as const
 const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
 </script>
 
@@ -25,22 +23,17 @@ const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
     />
     <div class="public-ticket-card__body">
       <div class="public-ticket-card__tags">
-        <NTag
-          size="small"
-          :type="statusTypes[ticket.status]"
-          :bordered="false"
-        >
-          {{ statusLabels[ticket.status] }}
-        </NTag>
+        <UBadge
+          size="sm"
+          :color="ticketStatusColors[ticket.status]"
+          :label="ticketStatusLabels[ticket.status]"
+        />
         <span>{{ typeLabels[ticket.type] }}</span>
       </div>
       <h2>{{ ticket.title }}</h2>
       <div class="public-ticket-card__meta">
         <span>#{{ ticket.id }}</span>
-        <NTime
-          :time="ticket.lastMessageTime"
-          type="relative"
-        />
+        <span>{{ formatTicketTime(ticket.lastMessageTime) }}</span>
       </div>
     </div>
   </button>

@@ -2,18 +2,6 @@
 // @ts-ignore
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
-import {
-  NButton,
-  NDivider,
-  NFlex,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NModal,
-  NSelect,
-  useThemeVars,
-  useMessage,
-} from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref, useTemplateRef } from 'vue'
 
@@ -25,16 +13,15 @@ import { useQuestionBox } from '@/store/useQuestionBox'
 const show = defineModel<boolean>('show', { required: true })
 const accountInfo = useAccount()
 const useQB = useQuestionBox()
-const themeVars = useThemeVars()
-const message = useMessage()
+const toast = useToast()
 
 const shareCardRef = useTemplateRef<HTMLElement>('shareCardRef')
 const selectedShareTag = ref<string | null>(null)
 
 const shareCardStyleVars = computed(() => ({
-  '--share-radius': themeVars.value.borderRadius,
-  '--share-gradient-from': themeVars.value.primaryColor,
-  '--share-gradient-to': themeVars.value.infoColor,
+  '--share-radius': 'var(--vtsuru-radius-control)',
+  '--share-gradient-from': 'var(--vtsuru-brand)',
+  '--share-gradient-to': 'var(--vtsuru-info)',
 }))
 
 const modalShareUrl = computed(() => {
@@ -57,14 +44,14 @@ function saveShareImage() {
       canvas.toBlob(
         (blob) => {
           if (blob) saveAs(blob, `vtsuru-提问箱-${accountInfo.value?.name}.png`)
-          else message.error('无法生成图片')
+          else toast.add({ title: '无法生成图片', color: 'error' })
         },
         'image/png',
         1,
       )
     })
     .catch((err) => {
-      message.error(`生成分享卡片失败: ${err}`)
+      toast.add({ title: `生成分享卡片失败: ${err}`, color: 'error' })
     })
 }
 
@@ -74,92 +61,90 @@ function saveQRCode() {
     `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(modalShareUrl.value)}`,
     `vtsuru-提问箱二维码-${accountInfo.value.name}.png`,
   )
-  message.success('二维码已开始下载')
+  toast.add({ title: '二维码已开始下载', color: 'success' })
 }
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
+  <UModal
+    v-model:open="show"
     title="分享我的提问箱"
-    style="max-width: 95vw; width: 600px"
+    :ui="{ content: 'max-w-[95vw] sm:max-w-xl' }"
   >
-    <div
-      ref="shareCardRef"
-      class="share-card-container"
-      :style="shareCardStyleVars"
-    >
-      <div class="share-card-background" />
-      <div class="share-card-content">
-        <div class="share-card-main">
-          <div class="share-card-text">
-            <div class="share-card-title">向我提问</div>
-            <div class="share-card-name">
-              {{ accountInfo?.name }}
+    <template #body>
+      <div
+        ref="shareCardRef"
+        class="share-card-container"
+        :style="shareCardStyleVars"
+      >
+        <div class="share-card-background" />
+        <div class="share-card-content">
+          <div class="share-card-main">
+            <div class="share-card-text">
+              <div class="share-card-title">向我提问</div>
+              <div class="share-card-name">
+                {{ accountInfo?.name }}
+              </div>
+            </div>
+            <div class="share-card-divider" />
+            <div class="share-card-meta">
+              <div class="share-card-type">提问箱</div>
+              <div class="share-card-site">VTSURU.LIVE</div>
             </div>
           </div>
-          <div class="share-card-divider" />
-          <div class="share-card-meta">
-            <div class="share-card-type">提问箱</div>
-            <div class="share-card-site">VTSURU.LIVE</div>
+          <div class="share-card-qr">
+            <QrcodeVue
+              :value="modalShareUrl"
+              level="Q"
+              :size="90"
+              background="#FFFFFF"
+              foreground="#000000"
+              :margin="1"
+              render-as="svg"
+            />
           </div>
         </div>
-        <div class="share-card-qr">
-          <QrcodeVue
-            :value="modalShareUrl"
-            level="Q"
-            :size="90"
-            background="#FFFFFF"
-            foreground="#000000"
-            :margin="1"
-            render-as="svg"
+      </div>
+    </template>
+    <template #footer>
+      <div class="question-box-share-modal__footer">
+        <USelectMenu
+          v-model="selectedShareTag"
+          class="question-box-share-modal__tag-select"
+          placeholder="选择要附加到链接的话题"
+          :items="useQB.tags.filter((tag) => tag.visiable).map((tag) => ({ label: tag.name, value: tag.name }))"
+          value-key="value"
+          searchable
+          clearable
+        />
+        <UFieldGroup class="question-box-share-modal__url">
+          <UInput
+            :model-value="modalShareUrl"
+            readonly
+          />
+          <UButton
+            color="neutral"
+            variant="soft"
+            label="复制"
+            @click="copyToClipboard(modalShareUrl)"
+          />
+        </UFieldGroup>
+        <div class="question-box-share-modal__actions">
+          <UButton
+            color="primary"
+            label="保存分享图"
+            @click="saveShareImage"
+          />
+          <UButton
+            color="primary"
+            variant="soft"
+            label="保存二维码"
+            @click="saveQRCode"
           />
         </div>
       </div>
-    </div>
-
-    <NDivider style="margin-top: 20px; margin-bottom: 10px"> 分享链接设置 </NDivider>
-    <NSelect
-      v-model:value="selectedShareTag"
-      placeholder="选择要附加到链接的话题 (可选)"
-      filterable
-      clearable
-      :options="useQB.tags.filter((t) => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
-    />
-
-    <NDivider style="margin-top: 20px; margin-bottom: 10px"> 分享链接 </NDivider>
-    <NInputGroup>
-      <NInputGroupLabel>链接</NInputGroupLabel>
-      <NInput
-        :value="modalShareUrl"
-        readonly
-      />
-      <NButton
-        secondary
-        @click="copyToClipboard(modalShareUrl)"
-      >
-        复制
-      </NButton>
-    </NInputGroup>
-
-    <NDivider style="margin-top: 20px; margin-bottom: 15px" />
-    <NFlex justify="center">
-      <NButton
-        type="primary"
-        @click="saveShareImage"
-      >
-        保存分享图
-      </NButton>
-      <NButton
-        type="primary"
-        secondary
-        @click="saveQRCode"
-      >
-        保存二维码
-      </NButton>
-    </NFlex>
-  </NModal>
+    </template>
+  </UModal>
 </template>
 
 <style scoped>
@@ -247,6 +232,23 @@ function saveQRCode() {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.question-box-share-modal__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.question-box-share-modal__tag-select,
+.question-box-share-modal__url {
+  width: 100%;
+}
+
+.question-box-share-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 @media (max-width: 500px) {

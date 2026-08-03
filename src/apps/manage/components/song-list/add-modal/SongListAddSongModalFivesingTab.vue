@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NDivider, NInput, NPagination, NFlex, NTable, NTag, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
@@ -7,104 +6,78 @@ import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { FETCH_API } from '@/shared/config'
 
-defineProps<{
-  existingSongs: SongsInfo[]
-}>()
-
-const emit = defineEmits<{
-  (e: 'added', songs: SongsInfo[]): void
-  (e: 'loadingChange', value: boolean): void
-}>()
-
-const message = useMessage()
-
-const fivesingSearchInput = ref<string>('')
+const { existingSongs } = defineProps<{ existingSongs: SongsInfo[] }>()
+const emit = defineEmits<{ added: [songs: SongsInfo[]]; loadingChange: [value: boolean] }>()
+const toast = useToast()
+const fivesingSearchInput = ref('')
 const fivesingResults = ref<SongsInfo[]>([])
 const fivesingTotalPageCount = ref(1)
 const fivesingCurrentPage = ref(1)
 const isGettingFivesingSongPlayUrl = ref(0)
 
-function extractTextFromHtml(html: string): string {
-  const match = /<em class="keyword">(.*?)<\/em>/.exec(html)
-  if (match) return match[1]
-  return html
+function extractTextFromHtml(html: string) {
+  return /<em class="keyword">(.*?)<\/em>/.exec(html)?.[1] ?? html
 }
 
-async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
-  const apiUrl = `http://service.5sing.kugou.com/song/getsongurl?songid=${song.id}&songtype=bz&from=web&version=6.6.72`
-  const data = await fetch(FETCH_API + apiUrl)
-  const result = await data.text()
-
-  const json = JSON.parse(result.substring(1, result.length - 1))
-  if (json.code === 0) return json.data.lqurl
-  return ''
+async function getFivesingSongUrl(song: SongsInfo) {
+  const url = `http://service.5sing.kugou.com/song/getsongurl?songid=${song.id}&songtype=bz&from=web&version=6.6.72`
+  const result = await fetch(FETCH_API + url)
+  const json = JSON.parse((await result.text()).slice(1, -1))
+  return json.code === 0 ? json.data.lqurl as string : ''
 }
 
 async function playFivesingSong(song: SongsInfo) {
   isGettingFivesingSongPlayUrl.value = song.id
   try {
     song.url = await getFivesingSongUrl(song)
-  } catch (err) {
-    message.error(`获取歌曲链接失败: ${err}`)
+  } catch (error) {
+    toast.add({ title: `获取歌曲链接失败：${error instanceof Error ? error.message : String(error)}`, color: 'error' })
   } finally {
     isGettingFivesingSongPlayUrl.value = 0
   }
 }
 
-async function getFivesingSearchList(isRestart = false) {
-  if (!fivesingSearchInput.value) {
-    message.error('请输入搜索关键词')
+async function getFivesingSearchList(restart = false) {
+  if (!fivesingSearchInput.value.trim()) {
+    toast.add({ title: '请输入搜索关键词', color: 'warning' })
     return
   }
-
+  if (restart) fivesingCurrentPage.value = 1
   emit('loadingChange', true)
   try {
-    if (isRestart) fivesingCurrentPage.value = 1
-
-    const searchUrl = `http://search.5sing.kugou.com/home/json?keyword=${fivesingSearchInput.value}&sort=1&page=${fivesingCurrentPage.value}&filter=3`
-    const json = await fetch(FETCH_API + searchUrl).then((data) => data.json())
-    if (json.list.length === 0) message.error('搜索结果为空')
-
-    fivesingResults.value = []
-    json.list.forEach((song: any) => {
-      const songInfo = {
-        id: song.songId,
-        name: extractTextFromHtml(song.songName),
-        author: [song.originSinger, song.singer],
-      } as SongsInfo
-      fivesingResults.value.push(songInfo)
-    })
-
+    const url = `http://search.5sing.kugou.com/home/json?keyword=${encodeURIComponent(fivesingSearchInput.value)}&sort=1&page=${fivesingCurrentPage.value}&filter=3`
+    const json = await fetch(FETCH_API + url).then((response) => response.json())
+    fivesingResults.value = json.list.map((song: { songId: number; songName: string; originSinger: string; singer: string }) => ({
+      id: song.songId,
+      key: String(song.songId),
+      name: extractTextFromHtml(song.songName),
+      author: [song.originSinger, song.singer].filter(Boolean),
+      url: '',
+      from: SongFrom.FiveSing,
+      language: [],
+      tags: [],
+      createTime: Date.now(),
+      updateTime: Date.now(),
+    }))
     fivesingTotalPageCount.value = json.pageInfo.totalPages
-    message.success(`成功获取搜索信息, 共 ${json.pageInfo.totalCount} 条, 当前第 ${fivesingCurrentPage.value} 页`)
-  } catch (err) {
-    message.error(`获取歌单失败: ${err}`)
+    toast.add({ title: json.list.length ? `获取到 ${json.pageInfo.totalCount} 条结果` : '搜索结果为空', color: json.list.length ? 'success' : 'warning' })
+  } catch (error) {
+    toast.add({ title: `搜索失败：${error instanceof Error ? error.message : String(error)}`, color: 'error' })
   } finally {
     emit('loadingChange', false)
   }
 }
 
-async function addFivesingSongs(song: SongsInfo) {
+async function addFivesingSong(song: SongsInfo) {
   emit('loadingChange', true)
   try {
-    if (!song.url) {
-      try {
-        song.url = await getFivesingSongUrl(song)
-      } catch {
-        message.error('未能获取到歌曲链接, 将留空')
-      }
-    }
-
-    const data = await addSongsToSongList([song], SongFrom.FiveSing)
-    if (data.code !== 200) {
-      message.error(`添加失败: ${data.message}`)
-      return
-    }
-    message.success('已添加歌曲')
-    emit('added', data.data)
-  } catch (err) {
-    message.error('添加失败')
-    console.error(err)
+    song.url ||= await getFivesingSongUrl(song)
+    const result = await addSongsToSongList([song], SongFrom.FiveSing)
+    if (result.code !== 200) throw new Error(result.message)
+    emit('added', result.data)
+    toast.add({ title: '已添加歌曲', color: 'success' })
+  } catch (error) {
+    toast.add({ title: `添加失败：${error instanceof Error ? error.message : String(error)}`, color: 'error' })
   } finally {
     emit('loadingChange', false)
   }
@@ -112,91 +85,36 @@ async function addFivesingSongs(song: SongsInfo) {
 </script>
 
 <template>
-  <NInput
-    v-model:value="fivesingSearchInput"
-    clearable
-    style="width: 100%"
-    autosize
-    placeholder="输入要搜索的歌名"
-    maxlength="15"
-  />
-  <NDivider style="margin: 10px" />
-  <NButton
-    type="primary"
-    :disabled="!fivesingSearchInput"
-    @click="getFivesingSearchList(true)"
-  >
-    搜索
-  </NButton>
-  <template v-if="fivesingResults.length > 0">
-    <NDivider style="margin: 10px" />
-    <div style="overflow-x: auto">
-      <NTable
-        size="small"
-        style="overflow-x: auto"
-      >
-        <thead>
-          <tr>
-            <th>名称</th>
-            <th>作者</th>
-            <th>试听</th>
-            <th>操作</th>
-          </tr>
-        </thead>
+  <div class="fivesing-import">
+    <UInput v-model="fivesingSearchInput" placeholder="输入要搜索的歌名" maxlength="15" @keyup.enter="getFivesingSearchList(true)" />
+    <UButton :disabled="!fivesingSearchInput" label="搜索" @click="getFivesingSearchList(true)" />
+    <div v-if="fivesingResults.length" class="fivesing-import__table-wrap">
+      <table class="fivesing-import__table">
+        <thead><tr><th>名称</th><th>作者</th><th>试听</th><th /></tr></thead>
         <tbody>
-          <tr
-            v-for="song in fivesingResults"
-            :key="song.id"
-          >
+          <tr v-for="song in fivesingResults" :key="song.id">
             <td>{{ song.name }}</td>
-            <td>
-              <NFlex>
-                <NTag
-                  v-for="author in song.author"
-                  :key="author"
-                  size="small"
-                >
-                  {{ author }}
-                </NTag>
-              </NFlex>
-            </td>
-            <td style="display: flex; justify-content: flex-end">
-              <NButton
-                v-if="!song.url"
-                size="small"
-                :loading="isGettingFivesingSongPlayUrl === song.id"
-                @click="playFivesingSong(song)"
-              >
-                试听
-              </NButton>
-              <audio
-                v-else
-                controls
-                style="max-height: 30px"
-              >
-                <source :src="song.url" />
-              </audio>
-            </td>
-            <td>
-              <NButton
-                size="small"
-                type="success"
-                :disabled="existingSongs.findIndex((s) => s.from === SongFrom.FiveSing && s.id === song.id) > -1"
-                @click="addFivesingSongs(song)"
-              >
-                添加
-              </NButton>
-            </td>
+            <td><UBadge v-for="author in song.author" :key="author" class="fivesing-import__author" color="neutral" variant="subtle" :label="author" /></td>
+            <td><UButton v-if="!song.url" size="xs" :loading="isGettingFivesingSongPlayUrl === song.id" label="试听" @click="playFivesingSong(song)" /><audio v-else controls :src="song.url" /></td>
+            <td><UButton size="xs" color="success" :disabled="existingSongs.some((item) => item.from === SongFrom.FiveSing && item.id === song.id)" label="添加" @click="addFivesingSong(song)" /></td>
           </tr>
         </tbody>
-      </NTable>
+      </table>
+      <div class="fivesing-import__pager">
+        <UButton size="sm" variant="ghost" :disabled="fivesingCurrentPage <= 1" label="上一页" @click="fivesingCurrentPage -= 1; getFivesingSearchList()" />
+        <span>{{ fivesingCurrentPage }} / {{ fivesingTotalPageCount }}</span>
+        <UButton size="sm" variant="ghost" :disabled="fivesingCurrentPage >= fivesingTotalPageCount" label="下一页" @click="fivesingCurrentPage += 1; getFivesingSearchList()" />
+      </div>
     </div>
-    <br />
-    <NPagination
-      v-model:page="fivesingCurrentPage"
-      :page-count="fivesingTotalPageCount"
-      simple
-      @update-page="getFivesingSearchList(false)"
-    />
-  </template>
+  </div>
 </template>
+
+<style scoped>
+.fivesing-import { display: grid; gap: 14px; }
+.fivesing-import__table-wrap { overflow-x: auto; }
+.fivesing-import__table { width: 100%; border-collapse: collapse; }
+.fivesing-import__table th, .fivesing-import__table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--vtsuru-border); }
+.fivesing-import__author { margin: 2px; }
+.fivesing-import__pager { display: flex; justify-content: center; align-items: center; gap: 10px; padding-top: 14px; }
+audio { max-width: 190px; height: 30px; }
+</style>

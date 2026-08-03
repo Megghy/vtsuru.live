@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NSpin } from 'naive-ui'
 import { nanoid } from 'nanoid'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -289,7 +288,7 @@ watch(
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="!setting"
     show
   />
@@ -328,7 +327,7 @@ body {
   overflow: hidden;
 }
 
-.n-layout {
+.u-layout {
   background: transparent;
 }
 

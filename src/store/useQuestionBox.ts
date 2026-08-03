@@ -6,6 +6,7 @@ import type { QAInfo } from '@/api/api-models'
 import { ViolationTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/shared/config'
+import { showErrorToast, showSuccessToast, showWarningToast } from '@/shared/services/toast'
 
 export interface QATagInfo {
   name: string
@@ -20,8 +21,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   const isRepling = ref(false)
   const isChangingPublic = ref(false)
   const accountInfo = useAccount()
-  const message = window.$message
-
   const recieveQuestions = ref<QAInfo[]>([])
   const sendQuestions = ref<QAInfo[]>([])
   const tags = ref<QATagInfo[]>([])
@@ -107,10 +106,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
         isRecieveGetted = true
       } else {
-        message.error(resp.message)
+        showErrorToast(resp.message)
       }
     } catch (err) {
-      message.error(`发生错误: ${err}`)
+      showErrorToast(`发生错误: ${err}`)
     } finally {
       isLoading.value = false
     }
@@ -124,10 +123,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         sendQuestions.value = resp.data
         isSendGetted = true
       } else {
-        message.error(resp.message)
+        showErrorToast(resp.message)
       }
     } catch (err) {
-      message.error(`发生错误: ${err}`)
+      showErrorToast(`发生错误: ${err}`)
     } finally {
       isLoading.value = false
     }
@@ -137,14 +136,14 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}del`, { id })
       if (resp.code === 200) {
-        message.success('删除成功')
+        showSuccessToast('删除成功')
         recieveQuestions.value = recieveQuestions.value.filter((q) => q.id !== id)
         selectedIds.value = selectedIds.value.filter((sid) => sid !== id)
       } else {
-        message.error(resp.message)
+        showErrorToast(resp.message)
       }
     } catch (err) {
-      message.error(`发生错误: ${err}`)
+      showErrorToast(`发生错误: ${err}`)
     }
   }
 
@@ -155,10 +154,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       if (resp.code === 200) {
         tags.value = resp.data
       } else {
-        message.error(resp.message)
+        showErrorToast(resp.message)
       }
     } catch (err) {
-      message.error(`发生错误: ${err}`)
+      showErrorToast(`发生错误: ${err}`)
     } finally {
       isLoading.value = false
     }
@@ -166,59 +165,59 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   async function addTag(tag: string) {
     if (!tag) {
-      message.warning('请输入标签')
+      showWarningToast('请输入标签')
       return
     }
     if (tags.value.find((t) => t.name === tag)) {
-      message.warning('标签已存在')
+      showWarningToast('标签已存在')
       return
     }
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}add-tag`, { tag })
       if (resp.code === 200) {
-        message.success('添加成功')
+        showSuccessToast('添加成功')
         GetTags()
       } else {
-        message.error(`添加失败: ${resp.message}`)
+        showErrorToast(`添加失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`添加失败: ${err}`)
+      showErrorToast(`添加失败: ${err}`)
     }
   }
 
   async function delTag(tag: string) {
     if (!tag) {
-      message.warning('请输入标签')
+      showWarningToast('请输入标签')
       return
     }
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}del-tag`, { tag })
       if (resp.code === 200) {
-        message.success('删除成功')
+        showSuccessToast('删除成功')
         GetTags()
       } else {
-        message.error(`删除失败: ${resp.message}`)
+        showErrorToast(`删除失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`删除失败: ${err}`)
+      showErrorToast(`删除失败: ${err}`)
     }
   }
 
   async function updateTagVisiable(tag: string, visiable: boolean) {
     if (!tag) {
-      message.warning('请输入标签')
+      showWarningToast('请输入标签')
       return
     }
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}update-tag-visiable`, { tag, visiable })
       if (resp.code === 200) {
-        message.success('修改成功')
+        showSuccessToast('修改成功')
         GetTags()
       } else {
-        message.error(`修改失败: ${resp.message}`)
+        showErrorToast(`修改失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`修改失败: ${err}`)
+      showErrorToast(`修改失败: ${err}`)
     }
   }
 
@@ -229,13 +228,13 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       if (resp.code === 200) {
         const index = recieveQuestions.value.findIndex((q) => q.id === id)
         if (index > -1) recieveQuestions.value[index] = resp.data
-        message.success('回复成功')
+        showSuccessToast('回复成功')
         currentQuestion.value = undefined
       } else {
-        message.error(`发送失败: ${resp.message}`)
+        showErrorToast(`发送失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`发送失败: ${err}`)
+      showErrorToast(`发送失败: ${err}`)
     } finally {
       isRepling.value = false
     }
@@ -250,10 +249,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
           setCurrentQuestion(question)
         }
       } else {
-        message.error(`修改失败: ${resp.message}`)
+        showErrorToast(`修改失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`修改失败: ${err}`)
+      showErrorToast(`修改失败: ${err}`)
     }
   }
 
@@ -263,10 +262,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       if (resp.code === 200) {
         question.isFavorite = fav
       } else {
-        message.error(`修改失败: ${resp.message}`)
+        showErrorToast(`修改失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`修改失败: ${err}`)
+      showErrorToast(`修改失败: ${err}`)
     }
   }
 
@@ -276,12 +275,12 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}public`, { id: currentQuestion.value?.id, public: pub })
       if (resp.code === 200) {
         if (currentQuestion.value) currentQuestion.value.isPublic = pub
-        message.success('已修改公开状态')
+        showSuccessToast('已修改公开状态')
       } else {
-        message.error(`修改失败: ${resp.message}`)
+        showErrorToast(`修改失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`修改失败: ${err}`)
+      showErrorToast(`修改失败: ${err}`)
     } finally {
       isChangingPublic.value = false
     }
@@ -293,16 +292,16 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       if (resp.code === 200) {
         const delResp = await QueryGetAPI(`${QUESTION_API_URL}del`, { id: question.id })
         if (delResp.code === 200) {
-          message.success(`已拉黑 ${question.sender.name}`)
+          showSuccessToast(`已拉黑 ${question.sender.name}`)
           recieveQuestions.value = recieveQuestions.value.filter((q) => q.id !== question.id)
         } else {
-          message.error(`删除失败: ${delResp.message}`)
+          showErrorToast(`删除失败: ${delResp.message}`)
         }
       } else {
-        message.error(`拉黑失败: ${resp.message}`)
+        showErrorToast(`拉黑失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`拉黑失败: ${err}`)
+      showErrorToast(`拉黑失败: ${err}`)
     }
   }
 
@@ -310,11 +309,11 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}mark-as-normal`, { id: question.id })
       if (resp.code === 200) {
-        message.success('已标记为正常')
+        showSuccessToast('已标记为正常')
         question.reviewResult.isApproved = true
       }
     } catch (err) {
-      message.error(`标记失败: ${err}`)
+      showErrorToast(`标记失败: ${err}`)
     }
   }
 
@@ -323,9 +322,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     displayQuestion.value = isCurrent ? undefined : item
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}set-current`, isCurrent || !item ? null : { id: item.id })
-      if (resp.code !== 200) message.error(`设置失败: ${resp.message}`)
+      if (resp.code !== 200) showErrorToast(`设置失败: ${resp.message}`)
     } catch (err) {
-      message.error(`设置失败: ${err}`)
+      showErrorToast(`设置失败: ${err}`)
     }
   }
 
@@ -358,7 +357,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       if (q) q.isReaded = isRead
     })
     clearSelection()
-    message.success(`已批量${isRead ? '标记已读' : '标记未读'}`)
+    showSuccessToast(`已批量${isRead ? '标记已读' : '标记未读'}`)
   }
 
   async function batchDelete() {
@@ -367,7 +366,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     await Promise.allSettled(ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}del`, { id })))
     recieveQuestions.value = recieveQuestions.value.filter((q) => !ids.includes(q.id))
     clearSelection()
-    message.success('已批量删除')
+    showSuccessToast('已批量删除')
   }
 
   async function batchSetPublic(pub: boolean) {
@@ -379,7 +378,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       if (q) q.isPublic = pub
     })
     clearSelection()
-    message.success(`已批量${pub ? '公开' : '取消公开'}`)
+    showSuccessToast(`已批量${pub ? '公开' : '取消公开'}`)
   }
 
   // --- 工具方法 ---

@@ -1,19 +1,4 @@
 <script setup lang="ts">
-import { Add20Filled, Delete20Filled } from '@vicons/fluent'
-import {
-  NButton,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSwitch,
-  NText,
-} from 'naive-ui'
 import { reactive } from 'vue'
 
 import { EventDataTypes } from '@/api/api-models'
@@ -198,72 +183,72 @@ function fireMock() {
 
 <template>
   <div class="panel">
-    <NText
+    <span
       depth="3"
       style="font-size: 11px"
     >
       每种类型可设置多条模板，按条件匹配；无条件的模板随机选一条播报。点击变量复制。
-    </NText>
+    </span>
 
-    <NFlex
+    <div
       :size="4"
       :wrap="true"
       style="margin: 4px 0"
     >
-      <NButton
+      <UButton
         v-for="item in Object.values(templateConstants)"
         :key="item.name"
         size="tiny"
-        tertiary
+        variant="soft"
         @click="copyToClipboard(item.words)"
       >
         {{ item.words }}
-      </NButton>
-    </NFlex>
+      </UButton>
+    </div>
 
-    <NCollapse
+    <div
       :default-expanded-names="['message']"
       accordion
     >
-      <NCollapseItem
+      <details
         v-for="row in templateRows"
         :key="row.eventKey"
         :name="row.eventKey"
       >
-        <template #header>
-          <NFlex
+        <summary>
+          <div
             align="center"
             :size="8"
             style="width: 100%"
           >
-            <NCheckbox
-              :checked="settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents]"
-              @update:checked="
+            <UCheckbox
+              :model-value="settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents]"
+              @update:model-value="
                 (v: boolean) => (settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] = v)
               "
               @click.stop
             />
-            <NText>{{ row.label }}</NText>
-            <NText
+            <span>{{ row.label }}</span>
+            <span
               depth="3"
               style="font-size: 11px"
             >
               ({{ settings.templates[row.eventKey]?.rules.length ?? 0 }} 条规则)
-            </NText>
-          </NFlex>
-        </template>
-        <template #header-extra>
-          <NButton
+            </span>
+          </div>
+        </summary>
+        <div class="template-settings__header-actions">
+          <UButton
             size="tiny"
-            type="primary"
-            tertiary
+            color="primary"
+            variant="soft"
             :disabled="!settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents]"
             :loading="speechState.isApiAudioLoading"
             @click.stop="test(row.type)"
           >
             测试
-          </NButton>
-        </template>
+          </UButton>
+        </div>
         <!-- Rules list for this event type -->
         <div class="rules-list">
           <div
@@ -272,71 +257,73 @@ function fireMock() {
             class="rule-card"
           >
             <div class="rule-header">
-              <NText
+              <span
                 depth="3"
                 style="font-size: 11px"
               >
                 规则 {{ ri + 1 }}
-              </NText>
-              <NButton
+              </span>
+              <UButton
                 size="tiny"
-                tertiary
-                type="error"
+                variant="soft"
+                color="error"
                 @click="removeRule(row.eventKey, ri)"
               >
-                <template #icon>
-                  <NIcon :component="Delete20Filled" />
+                <template #leading>
+                  <UIcon name="i-lucide-circle" />
                 </template>
-              </NButton>
+              </UButton>
             </div>
-            <NInput
-              v-model:value="rule.template"
+            <UInput
+              v-model="rule.template"
               size="small"
               :placeholder="`模板文本，如: ${row.label}...`"
             />
             <div class="conditions-section">
-              <NFlex
+              <div
                 align="center"
                 :size="4"
                 style="margin-bottom: 4px"
               >
-                <NText
+                <span
                   depth="3"
                   style="font-size: 11px"
                 >
                   {{ rule.conditions.length === 0 ? '无条件 (随机选取)' : '条件 (全部满足时使用此模板)' }}
-                </NText>
-                <NButton
+                </span>
+                <UButton
                   size="tiny"
-                  tertiary
-                  type="primary"
+                  variant="soft"
+                  color="primary"
                   @click="addCondition(rule, row.eventKey)"
                 >
-                  <template #icon>
-                    <NIcon :component="Add20Filled" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
                   添加条件
-                </NButton>
-              </NFlex>
+                </UButton>
+              </div>
               <div
                 v-for="(cond, ci) in rule.conditions"
                 :key="ci"
                 class="condition-row"
               >
-                <NSelect
-                  v-model:value="cond.field"
-                  :options="fieldOptionsByEvent[row.eventKey]"
+                <USelectMenu
+                  v-model="cond.field"
+                  :items="fieldOptionsByEvent[row.eventKey]"
                   size="small"
                   style="width: 120px"
                   @update:value="() => onFieldChange(cond)"
+                  value-key="value"
                 />
-                <NSelect
-                  v-model:value="cond.op"
-                  :options="getOpsForField(cond.field)"
+                <USelectMenu
+                  v-model="cond.op"
+                  :items="getOpsForField(cond.field)"
                   size="small"
                   style="width: 80px"
+                  value-key="value"
                 />
-                <NInputNumber
+                <UInputNumber
                   v-if="!isTextField(cond.field)"
                   :value="cond.value as number"
                   size="small"
@@ -344,7 +331,7 @@ function fireMock() {
                   :min="0"
                   @update:value="(v: number | null) => (cond.value = v ?? 0)"
                 />
-                <NInput
+                <UInput
                   v-else
                   :value="String(cond.value)"
                   size="small"
@@ -352,179 +339,180 @@ function fireMock() {
                   placeholder="匹配内容"
                   @update:value="(v: string) => (cond.value = v)"
                 />
-                <NButton
+                <UButton
                   size="tiny"
-                  tertiary
-                  type="error"
+                  variant="soft"
+                  color="error"
                   @click="removeCondition(rule, ci)"
                 >
-                  <template #icon>
-                    <NIcon :component="Delete20Filled" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
-                </NButton>
+                </UButton>
               </div>
             </div>
           </div>
-          <NButton
+          <UButton
             size="tiny"
-            tertiary
-            type="primary"
+            variant="soft"
+            color="primary"
             @click="addRule(row.eventKey)"
           >
-            <template #icon>
-              <NIcon :component="Add20Filled" />
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
             </template>
             添加模板规则
-          </NButton>
+          </UButton>
         </div>
-      </NCollapseItem>
-    </NCollapse>
+      </details>
+    </div>
 
-    <NDivider style="margin: 4px 0" />
+    <USeparator style="margin: 4px 0" />
 
-    <NCollapse>
-      <NCollapseItem
+    <div>
+      <details
         name="mock"
         title="模拟触发"
       >
         <div class="mock-section">
-          <NFlex
+          <div
             :size="8"
             :wrap="true"
             align="center"
           >
-            <NSelect
-              v-model:value="mockData.type"
-              :options="mockTypeOptions"
+            <USelectMenu
+              v-model="mockData.type"
+              :items="mockTypeOptions"
               size="small"
               style="width: 90px"
+              value-key="value"
             />
-            <NInput
-              v-model:value="mockData.uname"
+            <UInput
+              v-model="mockData.uname"
               size="small"
               placeholder="用户名"
               style="width: 100px"
             />
-            <NInput
-              v-model:value="mockData.msg"
+            <UInput
+              v-model="mockData.msg"
               size="small"
               placeholder="消息/礼物名"
               style="width: 140px"
             />
-          </NFlex>
-          <NFlex
+          </div>
+          <div
             :size="8"
             :wrap="true"
             align="center"
           >
-            <NFlex
+            <div
               align="center"
               :size="4"
             >
-              <NText
+              <span
                 depth="3"
                 style="font-size: 11px"
               >
                 价格
-              </NText>
-              <NInputNumber
-                v-model:value="mockData.price"
+              </span>
+              <UInputNumber
+                v-model="mockData.price"
                 size="small"
                 :min="0"
                 style="width: 80px"
               />
-            </NFlex>
-            <NFlex
+            </div>
+            <div
               align="center"
               :size="4"
             >
-              <NText
+              <span
                 depth="3"
                 style="font-size: 11px"
               >
                 数量
-              </NText>
-              <NInputNumber
-                v-model:value="mockData.num"
+              </span>
+              <UInputNumber
+                v-model="mockData.num"
                 size="small"
                 :min="0"
                 style="width: 80px"
               />
-            </NFlex>
-            <NFlex
+            </div>
+            <div
               align="center"
               :size="4"
             >
-              <NText
+              <span
                 depth="3"
                 style="font-size: 11px"
               >
                 舰长
-              </NText>
-              <NInputNumber
-                v-model:value="mockData.guard_level"
+              </span>
+              <UInputNumber
+                v-model="mockData.guard_level"
                 size="small"
                 :min="0"
                 :max="3"
                 style="width: 70px"
               />
-            </NFlex>
-            <NFlex
+            </div>
+            <div
               align="center"
               :size="4"
             >
-              <NText
+              <span
                 depth="3"
                 style="font-size: 11px"
               >
                 勋章
-              </NText>
-              <NInputNumber
-                v-model:value="mockData.fans_medal_level"
+              </span>
+              <UInputNumber
+                v-model="mockData.fans_medal_level"
                 size="small"
                 :min="0"
                 :max="40"
                 style="width: 70px"
               />
-            </NFlex>
-          </NFlex>
-          <NButton
+            </div>
+          </div>
+          <UButton
             size="small"
-            type="primary"
+            color="primary"
             @click="fireMock"
           >
             触发事件
-          </NButton>
+          </UButton>
         </div>
-      </NCollapseItem>
-    </NCollapse>
+      </details>
+    </div>
 
-    <NDivider style="margin: 4px 0" />
+    <USeparator style="margin: 4px 0" />
 
-    <NFlex
+    <div
       align="center"
       :size="8"
     >
-      <NSwitch
-        v-model:value="settings.timedBroadcast.enabled"
+      <USwitch
+        v-model="settings.timedBroadcast.enabled"
         size="small"
       />
-      <NText style="font-size: 12px"> 定时播报 </NText>
-      <NInputNumber
-        v-model:value="settings.timedBroadcast.intervalMinutes"
+      <span style="font-size: 12px"> 定时播报 </span>
+      <UInputNumber
+        v-model="settings.timedBroadcast.intervalMinutes"
         :min="1"
         :max="120"
         size="small"
         :disabled="!settings.timedBroadcast.enabled"
         style="width: 80px"
       />
-      <NText
+      <span
         depth="3"
         style="font-size: 11px"
       >
         分钟/次
-      </NText>
-    </NFlex>
+      </span>
+    </div>
 
     <template v-if="settings.timedBroadcast.enabled">
       <div
@@ -532,34 +520,34 @@ function fireMock() {
         :key="i"
         class="broadcast-row"
       >
-        <NInput
-          v-model:value="settings.timedBroadcast.texts[i]"
+        <UInput
+          v-model="settings.timedBroadcast.texts[i]"
           size="small"
           placeholder="播报文本"
           style="flex: 1"
         />
-        <NButton
+        <UButton
           size="tiny"
-          tertiary
-          type="error"
+          variant="soft"
+          color="error"
           @click="settings.timedBroadcast.texts.splice(i, 1)"
         >
-          <template #icon>
-            <NIcon :component="Delete20Filled" />
+          <template #leading>
+            <UIcon name="i-lucide-circle" />
           </template>
-        </NButton>
+        </UButton>
       </div>
-      <NButton
+      <UButton
         size="tiny"
-        tertiary
-        type="primary"
+        variant="soft"
+        color="primary"
         @click="settings.timedBroadcast.texts.push('')"
       >
-        <template #icon>
-          <NIcon :component="Add20Filled" />
+        <template #leading>
+          <UIcon name="i-lucide-circle" />
         </template>
         添加播报文本
-      </NButton>
+      </UButton>
     </template>
   </div>
 </template>

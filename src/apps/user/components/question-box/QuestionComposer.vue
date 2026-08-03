@@ -9,7 +9,6 @@ import {
   Mail24Regular,
   Send24Regular,
 } from '@vicons/fluent'
-import { NAvatar, NButton, NCheckbox, NIcon, NInput, NTag, useMessage } from 'naive-ui'
 import { toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
@@ -32,7 +31,7 @@ const emit = defineEmits<{
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
+const toast = useToast()
 const target = toRef(props, 'userInfo')
 const composer = useQuestionComposer(target, () => emit('submitted'))
 const {
@@ -70,7 +69,7 @@ watch(
 )
 
 function notifyFile(messageText: string, type: 'warning' | 'error') {
-  message[type](messageText)
+  toast.add({ title: messageText, color: type })
 }
 
 function handleFileSelect(event: Event) {
@@ -96,9 +95,9 @@ function handleDrop(event: DragEvent) {
 async function submit() {
   try {
     await sendQuestion()
-    message.success('已送达')
+    toast.add({ title: '已送达', color: 'success' })
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '提交失败')
+    toast.add({ title: error instanceof Error ? error.message : '提交失败', color: 'error' })
   }
 }
 </script>
@@ -109,8 +108,7 @@ async function submit() {
     :class="{ 'is-embedded': embedded }"
   >
     <header class="composer-header">
-      <NAvatar
-        round
+      <UAvatar
         :size="48"
         :src="
           userInfo?.faceUrl ||
@@ -124,27 +122,27 @@ async function submit() {
         <h1>给 {{ userInfo?.name || '主播' }} 留句话</h1>
         <p>说说你正在想的事。</p>
       </div>
-      <NButton
+      <UButton
         v-if="!isIdentified"
-        secondary
-        size="small"
+        variant="soft"
+        size="sm"
         class="history-action"
         @click="emit('openHistory')"
       >
-        <template #icon><NIcon :component="History24Regular" /></template>
+        <template #leading><component :is="History24Regular" /></template>
         本地记录
-      </NButton>
-      <NButton
+      </UButton>
+      <UButton
         v-else-if="isUserLoggedIn"
-        secondary
-        size="small"
+        variant="soft"
+        size="sm"
         class="history-action"
         :disabled="isSelf"
         @click="router.push({ name: 'manage-questionBox', query: { send: '1' } })"
       >
-        <template #icon><NIcon :component="History24Regular" /></template>
+        <template #leading><component :is="History24Regular" /></template>
         已发送
-      </NButton>
+      </UButton>
     </header>
 
     <Transition
@@ -156,18 +154,18 @@ async function submit() {
         key="sent"
         class="sent-state"
       >
-        <span class="sent-icon"><NIcon :component="CheckmarkCircle24Regular" /></span>
+        <span class="sent-icon"><component :is="CheckmarkCircle24Regular" /></span>
         <span class="sent-kicker">MESSAGE DELIVERED</span>
         <h2>已经送达</h2>
         <p>这条留言已进入 {{ userInfo?.name || '主播' }} 的提问箱。</p>
-        <NButton
-          type="primary"
-          secondary
+        <UButton
+          color="primary"
+          variant="soft"
           @click="composeAgain"
         >
           再写一条
-          <template #icon><NIcon :component="ArrowRight24Regular" /></template>
-        </NButton>
+          <template #leading><component :is="ArrowRight24Regular" /></template>
+        </UButton>
       </div>
 
       <div
@@ -206,11 +204,10 @@ async function submit() {
           @dragleave.self="isDragging = false"
           @drop.prevent="handleDrop"
         >
-          <NInput
-            v-model:value="draft.message"
+          <UTextarea
+            v-model="draft.message"
             class="message-input"
             :disabled="isSelf"
-            type="textarea"
             maxlength="10000"
             :autosize="{ minRows: 6, maxRows: 14 }"
             placeholder="写下你想说的话..."
@@ -218,7 +215,7 @@ async function submit() {
           />
           <div class="editor-footer">
             <span class="identity-state">
-              <NIcon :component="LockClosed24Regular" />
+              <component :is="LockClosed24Regular" />
               {{ identityName }}
             </span>
             <span :class="{ 'is-invalid': characterCount > 0 && characterCount < 3 }">
@@ -239,7 +236,7 @@ async function submit() {
                 accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/x-icon"
                 @change="handleFileSelect"
               />
-              <NIcon :component="Image24Regular" />
+              <component :is="Image24Regular" />
               <span>添加图片</span>
             </label>
             <span>{{ selectedFiles.length }} / {{ maxImages }}</span>
@@ -265,7 +262,7 @@ async function submit() {
                 :title="`移除第 ${index + 1} 张图片`"
                 @click="removeImage(index)"
               >
-                <NIcon :component="Dismiss24Regular" />
+                <component :is="Dismiss24Regular" />
               </button>
             </figure>
           </TransitionGroup>
@@ -276,35 +273,35 @@ async function submit() {
           class="identity-panel"
         >
           <div class="identity-copy">
-            <NIcon :component="LockClosed24Regular" />
+            <component :is="LockClosed24Regular" />
             <div>
               <strong>{{ isIdentified ? '提交身份' : '匿名留言' }}</strong>
               <span>{{ isIdentified ? identityName : '邮箱仅用于接收回复通知' }}</span>
             </div>
           </div>
-          <NCheckbox
+          <UCheckbox
             v-if="isIdentified"
             v-model:checked="draft.isAnonymous"
           >
             隐藏我的身份
-          </NCheckbox>
+          </UCheckbox>
           <div
             v-else
             class="guest-fields"
           >
-            <NInput
-              v-model:value="draft.anonymousName"
+            <UInput
+              v-model="draft.anonymousName"
               maxlength="20"
               placeholder="昵称（可选）"
             />
-            <NInput
-              v-model:value="draft.anonymousEmail"
+            <UInput
+              v-model="draft.anonymousEmail"
               maxlength="100"
               placeholder="邮箱（可选）"
               :status="draft.anonymousEmail && !isValidEmail(draft.anonymousEmail) ? 'error' : undefined"
             >
-              <template #prefix><NIcon :component="Mail24Regular" /></template>
-            </NInput>
+              <template #leading><component :is="Mail24Regular" /></template>
+            </UInput>
           </div>
         </div>
 
@@ -312,7 +309,7 @@ async function submit() {
           v-if="isSelf"
           class="self-state"
         >
-          <NIcon :component="LockClosed24Regular" />
+          <component :is="LockClosed24Regular" />
           <span>当前是你自己的提问箱</span>
         </div>
         <footer
@@ -329,23 +326,23 @@ async function submit() {
             />
           </div>
           <div class="submit-action">
-            <NTag
+            <UBadge
               v-if="cooldownSeconds > 0"
-              size="small"
+              size="sm"
               :bordered="false"
             >
               {{ cooldownSeconds }} 秒后可再次提交
-            </NTag>
-            <NButton
-              type="primary"
-              size="large"
+            </UBadge>
+            <UButton
+              color="primary"
+              size="lg"
               :disabled="!canSubmit"
               :loading="isSending"
               @click="submit"
             >
               {{ selectedFiles.length && isSending ? '正在上传' : '送出留言' }}
-              <template #icon><NIcon :component="Send24Regular" /></template>
-            </NButton>
+              <template #leading><component :is="Send24Regular" /></template>
+            </UButton>
           </div>
         </footer>
       </div>

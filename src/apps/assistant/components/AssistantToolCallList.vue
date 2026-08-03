@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { CheckmarkCircle16Regular, ChevronDown12Regular, ErrorCircle16Regular, Toolbox16Regular } from '@vicons/fluent'
-import { NCollapseTransition, NIcon, NText } from 'naive-ui'
 import { computed, reactive } from 'vue'
 
 import type { AssistantToolEvent } from '../api/assistant'
@@ -11,9 +9,9 @@ const expanded = reactive<Record<string, boolean>>({})
 const visibleTools = computed(() => props.tools.filter((t) => t.title || t.name))
 
 const STATUS_META = {
-  running: { label: '执行中', icon: Toolbox16Regular },
-  completed: { label: '完成', icon: CheckmarkCircle16Regular },
-  failed: { label: '失败', icon: ErrorCircle16Regular },
+  running: { label: '执行中', icon: 'i-lucide-wrench' },
+  completed: { label: '完成', icon: 'i-lucide-circle-check' },
+  failed: { label: '失败', icon: 'i-lucide-circle-x' },
 } as const
 
 function isOpen(tool: AssistantToolEvent): boolean {
@@ -48,49 +46,45 @@ function formatDuration(ms?: number): string {
         @click="toggle(tool)"
       >
         <span class="tool-line__state">
-          <NIcon
-            :component="STATUS_META[tool.status].icon"
-            size="15"
-          />
+          <UIcon :name="STATUS_META[tool.status].icon" />
         </span>
         <span class="tool-line__title">{{ tool.title || tool.name }}</span>
         <span class="tool-line__meta">
           {{ STATUS_META[tool.status].label }}
           <template v-if="formatDuration(tool.durationMs)"> · {{ formatDuration(tool.durationMs) }} </template>
         </span>
-        <NIcon
-          :component="ChevronDown12Regular"
-          size="12"
+        <UIcon
+          name="i-lucide-chevron-down"
           class="tool-line__chevron"
           :class="{ 'is-open': isOpen(tool) }"
         />
       </button>
 
-      <NCollapseTransition :show="isOpen(tool)">
-        <div class="tool-line__body">
-          <NText
+      <Transition name="tool-collapse">
+        <div
+          v-if="isOpen(tool)"
+          class="tool-line__body"
+        >
+          <p
             v-if="tool.error"
-            type="error"
-            class="tool-line__detail"
+            class="tool-line__detail tool-line__detail--error"
           >
             {{ tool.error }}
-          </NText>
-          <NText
+          </p>
+          <p
             v-else-if="tool.summary"
-            depth="3"
             class="tool-line__detail"
           >
             {{ tool.summary }}
-          </NText>
-          <NText
+          </p>
+          <p
             v-else
-            depth="3"
             class="tool-line__detail tool-line__detail--muted"
           >
             {{ tool.name }}
-          </NText>
+          </p>
         </div>
-      </NCollapseTransition>
+      </Transition>
     </div>
   </div>
 </template>
@@ -181,10 +175,25 @@ function formatDuration(ms?: number): string {
 .tool-line__detail {
   display: block;
   min-width: 0;
+  margin: 0;
   font-size: 12px;
   line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.tool-line__detail--error {
+  color: var(--vtsuru-error);
+}
+
+.tool-collapse-enter-active,
+.tool-collapse-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.tool-collapse-enter-from,
+.tool-collapse-leave-to {
+  opacity: 0;
 }
 
 .tool-line__detail--muted {

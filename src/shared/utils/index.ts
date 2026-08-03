@@ -1,57 +1,30 @@
-import { SquareArrowForward24Filled } from '@vicons/fluent'
-import type { ConfigProviderProps, UploadFileInfo } from 'naive-ui'
-import { createDiscreteApi, darkTheme, dateZhCN, NButton, NIcon, NTooltip, useOsTheme, zhCN } from 'naive-ui'
-import type { DiscreteApiType } from 'naive-ui/es/discrete/src/interface'
 import { computed, h } from 'vue'
+import { usePreferredDark } from '@vueuse/core'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom, ThemeType } from '@/api/api-models'
-import { buildSiteTokens, getThemeOverrides, VTSURU_API_URL } from '@/shared/config'
+import { VTSURU_API_URL } from '@/shared/config'
+import { showToast } from '@/shared/services/toast'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'
 
-const osThemeRef = useOsTheme() // 获取当前系统主题
+const osThemeRef = usePreferredDark()
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
-export const theme = computed(() => {
-  if (themeType.value == ThemeType.Auto) {
-    const currentOsTheme = useOsTheme() // 获取当前系统主题
-    return currentOsTheme.value === 'dark' ? darkTheme : null
-  } else {
-    return themeType.value == ThemeType.Dark ? darkTheme : null
-  }
-})
 
 export const isDarkMode = computed(() => {
-  if (themeType.value == ThemeType.Auto) return osThemeRef.value === 'dark'
+  if (themeType.value == ThemeType.Auto) return osThemeRef.value
   else return themeType.value == ThemeType.Dark
 })
-
-export const configProviderPropsRef = computed<ConfigProviderProps>(() => ({
-  theme: theme.value,
-  themeOverrides: getThemeOverrides(buildSiteTokens(isDarkMode.value)),
-  locale: zhCN,
-  dateLocale: dateZhCN,
-}))
-
-const { message } = createDiscreteApi(['message'], {
-  configProviderProps: configProviderPropsRef,
-})
-
-export function createNaiveUIApi(types: DiscreteApiType[]) {
-  return createDiscreteApi(types, {
-    configProviderProps: configProviderPropsRef,
-  })
-}
 export function NavigateToNewTab(url: string) {
   window.open(url, '_blank')
 }
 export function copyToClipboard(text: string) {
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(text)
-    message.success('已复制到剪切板')
+    void navigator.clipboard.writeText(text)
+    showToast({ title: '已复制到剪切板', color: 'success', icon: 'i-lucide-check' })
   } else {
-    message.warning('当前环境不支持自动复制, 请手动选择并复制')
+    showToast({ title: '当前环境不支持自动复制', description: '请手动选择并复制', color: 'warning' })
   }
 }
 
@@ -142,7 +115,7 @@ export async function getBase64(file: File | undefined | null): Promise<string |
   })
 }
 export async function getImageUploadModel(
-  files: UploadFileInfo[] | undefined | null,
+  files: Array<{ id: string; file?: File | null }> | undefined | null,
   maxSize: number = 10 * 1024 * 1024,
 ) {
   const result = {
@@ -153,7 +126,7 @@ export async function getImageUploadModel(
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     if ((file.file?.size ?? 0) > maxSize) {
-      message.error(`文件大小不能超过 ${maxSize / 1024 / 1024}MB`)
+      showToast({ title: '文件过大', description: `文件大小不能超过 ${maxSize / 1024 / 1024}MB`, color: 'error' })
       return result
     }
     if (!file.file) {
@@ -246,67 +219,27 @@ export class GuidUtils {
   }
 }
 export function GetPlayButton(song: SongsInfo) {
+  const externalLink = (href: string, title: string, icon: object | string) =>
+    h(
+      'a',
+      {
+        class: 'inline-flex size-8 items-center justify-center rounded text-muted hover:bg-elevated hover:text-highlighted',
+        href,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        title,
+      },
+      [typeof icon === 'string' ? h('span', { class: `${icon} size-4` }) : h(icon, { class: 'size-4' })],
+    )
+
   switch (song.from) {
     case SongFrom.FiveSing: {
-      return h(NTooltip, null, {
-        trigger: () =>
-          h(
-            NButton,
-            {
-              size: 'small',
-              color: '#00BBB3',
-              ghost: true,
-              onClick: () => {
-                window.open(`http://5sing.kugou.com/bz/${song.id}.html`)
-              },
-            },
-            {
-              icon: () => h(FiveSingIcon, { class: 'svg-icon fivesing' }),
-            },
-          ),
-        default: () => '在5sing打开',
-      })
+      return externalLink(`http://5sing.kugou.com/bz/${song.id}.html`, '在 5sing 打开', FiveSingIcon)
     }
     case SongFrom.Netease:
-      return h(NTooltip, null, {
-        trigger: () =>
-          h(
-            NButton,
-            {
-              size: 'small',
-              color: '#C20C0C',
-              ghost: true,
-              onClick: () => {
-                window.open(`https://music.163.com/#/song?id=${song.id}`)
-              },
-            },
-            {
-              icon: () => h(NeteaseIcon, { class: 'svg-icon netease' }),
-            },
-          ),
-        default: () => '在网易云打开',
-      })
+      return externalLink(`https://music.163.com/#/song?id=${song.id}`, '在网易云打开', NeteaseIcon)
     case SongFrom.Custom:
-      return song.url
-        ? h(NTooltip, null, {
-            trigger: () =>
-              h(
-                NButton,
-                {
-                  size: 'small',
-                  color: '#6b95bd',
-                  ghost: true,
-                  onClick: () => {
-                    window.open(song.url)
-                  },
-                },
-                {
-                  icon: () => h(NIcon, { component: SquareArrowForward24Filled }),
-                },
-              ),
-            default: () => '打开链接',
-          })
-        : null
+      return song.url ? externalLink(song.url, '打开链接', 'i-lucide-external-link') : null
   }
 }
 export function getBrowserName() {

@@ -1,18 +1,4 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NDivider,
-  NDynamicTags,
-  NFlex,
-  NForm,
-  NFormItem,
-  NInput,
-  NPopconfirm,
-  NSelect,
-  NTag,
-  NText,
-} from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 
 import { useTranscription } from '@/apps/client/store/useTranscription'
@@ -94,277 +80,295 @@ async function start() {
   try {
     await settingsStore.save()
     await transcription.start()
-    window.$message.success('实时转写已启动')
+    useToast().add({ title: '实时转写已启动', color: 'success' })
   } catch (error) {
-    window.$message.error(`启动转写失败: ${error}`)
+    useToast().add({ title: `启动转写失败: ${error}`, color: 'error' })
   }
 }
 
 async function stop() {
   try {
     await transcription.stop()
-    window.$message.success('实时转写已停止')
+    useToast().add({ title: '实时转写已停止', color: 'success' })
   } catch (error) {
-    window.$message.error(`停止转写失败: ${error}`)
+    useToast().add({ title: `停止转写失败: ${error}`, color: 'error' })
   }
 }
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="16"
   >
-    <NAlert
+    <UAlert
       type="warning"
       :bordered="false"
     >
       直播语音转写功能仍在开发中，当前版本尚未完成，请勿依赖它进行正式直播归档。
-    </NAlert>
-    <NAlert
+    </UAlert>
+    <UAlert
       type="info"
       :bordered="false"
     >
       API 凭据只保存在本机 Tauri Store 中并由客户端直接用于转写，不会上传到本站。本站仅接收最终字幕用于直播归档。
-    </NAlert>
-    <NAlert
+    </UAlert>
+    <UAlert
       type="warning"
       :bordered="false"
     >
       音频来自当前绑定的 Bilibili
       直播间播放流。第三方播放地址和语音服务可能中断，客户端会报告实际状态，但无法承诺持续稳定运行。
-    </NAlert>
-    <NAlert
+    </UAlert>
+    <UAlert
       v-if="!isSupported"
       type="error"
       :bordered="false"
     >
       当前 Client 版本 {{ clientVersion || '未知' }} 不包含本地直播转写能力，请升级到
       {{ TRANSCRIPTION_MIN_CLIENT_VERSION }} 或更高版本。
-    </NAlert>
+    </UAlert>
 
     <section class="setting-section">
-      <NFlex
+      <div
         justify="space-between"
         align="center"
       >
         <div>
-          <NText strong> 运行状态 </NText>
+          <span strong> 运行状态 </span>
           <div class="section-description">仅最终确认的字幕会上传归档，实时临时结果只在本机显示。</div>
         </div>
-        <NTag
+        <UBadge
           :type="statusMeta.type"
           :bordered="false"
         >
           {{ statusMeta.text }}
-        </NTag>
-      </NFlex>
+        </UBadge>
+      </div>
 
-      <NFlex
+      <div
         class="runtime-actions"
         align="center"
       >
-        <NButton
+        <UButton
           v-if="!isRunning"
-          type="primary"
+          color="primary"
           size="small"
           :loading="isBusy"
           :disabled="!isSupported"
           @click="start"
         >
           开始转写
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           v-else
-          type="error"
+          color="error"
           size="small"
           :loading="isBusy"
           @click="stop"
         >
           停止转写
-        </NButton>
-        <NText depth="3">
+        </UButton>
+        <span depth="3">
           已归档 {{ transcription.archivedCount }} 条
           <template v-if="transcription.pendingCount"> ，待上传 {{ transcription.pendingCount }} 条 </template>
-        </NText>
-      </NFlex>
+        </span>
+      </div>
 
-      <NAlert
+      <UAlert
         v-if="transcription.status.message"
         :type="transcription.status.phase === 'error' ? 'error' : 'info'"
         size="small"
       >
         {{ transcription.status.message }}
-      </NAlert>
-      <NAlert
+      </UAlert>
+      <UAlert
         v-if="transcription.uploadError"
         type="warning"
         size="small"
       >
         {{ transcription.uploadError }}
-      </NAlert>
-      <NAlert
+      </UAlert>
+      <UAlert
         v-if="transcription.runtimeError"
         type="warning"
         size="small"
       >
         {{ transcription.runtimeError }}
-      </NAlert>
+      </UAlert>
       <div
         v-if="transcription.partialText || transcription.lastFinalText"
         class="transcript-preview"
       >
-        <NText depth="3">
+        <span depth="3">
           {{ transcription.partialText || transcription.lastFinalText }}
-        </NText>
+        </span>
       </div>
     </section>
 
-    <NDivider />
+    <USeparator />
 
     <section class="setting-section">
-      <NFlex
+      <div
         justify="space-between"
         align="center"
       >
         <div>
-          <NText strong> Provider 配置 </NText>
+          <span strong> Provider 配置 </span>
           <div class="section-description">可保存多个本地配置，启动时使用当前选中的配置。</div>
         </div>
-        <NFlex>
-          <NButton
+        <div>
+          <UButton
             size="tiny"
             :disabled="isRunning"
             @click="addProfile('tencent')"
           >
             新增腾讯云
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             size="tiny"
             :disabled="isRunning"
             @click="addProfile('openai')"
           >
             新增 OpenAI
-          </NButton>
-        </NFlex>
-      </NFlex>
+          </UButton>
+        </div>
+      </div>
 
-      <NFlex
+      <div
         align="center"
         class="profile-picker"
       >
-        <NSelect
-          v-model:value="settingsStore.settings.activeProfileId"
-          :options="profileOptions"
+        <USelectMenu
+          v-model="settingsStore.settings.activeProfileId"
+          :items="profileOptions"
           :disabled="isRunning"
           style="min-width: 260px; flex: 1"
+          value-key="value"
         />
-        <NPopconfirm
-          :disabled="settingsStore.settings.profiles.length === 1 || isRunning"
-          @positive-click="settingsStore.removeActiveProfile()"
-        >
-          <template #trigger>
-            <NButton
-              size="small"
-              type="error"
-              secondary
-              :disabled="settingsStore.settings.profiles.length === 1 || isRunning"
-            >
-              删除
-            </NButton>
+        <UPopover>
+          <UButton
+            size="sm"
+            color="error"
+            variant="soft"
+            :disabled="settingsStore.settings.profiles.length === 1 || isRunning"
+          >
+            删除
+          </UButton>
+          <template #content="{ close }">
+            <div class="space-y-3 p-3">
+              <div>删除后本地保存的该组凭据也会一并移除。</div>
+              <div class="flex justify-end gap-2">
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  @click="close"
+                  >取消</UButton
+                >
+                <UButton
+                  size="xs"
+                  color="error"
+                  @click="(close(), settingsStore.removeActiveProfile())"
+                  >确认</UButton
+                >
+              </div>
+            </div>
           </template>
-          删除后本地保存的该组凭据也会一并移除。
-        </NPopconfirm>
-      </NFlex>
+        </UPopover>
+      </div>
 
-      <NForm
+      <UForm
         v-if="activeProfile"
         label-placement="left"
         label-width="120"
         size="small"
         :disabled="isRunning"
       >
-        <NFormItem label="配置名称">
-          <NInput
-            v-model:value="activeProfile.name"
+        <UFormField label="配置名称">
+          <UInput
+            v-model="activeProfile.name"
             placeholder="用于区分本地配置"
           />
-        </NFormItem>
-        <NFormItem label="Provider">
-          <NSelect
+        </UFormField>
+        <UFormField label="Provider">
+          <USelectMenu
             :value="activeProfile.provider"
-            :options="[
+            :items="[
               { label: '腾讯云', value: 'tencent' },
               { label: 'OpenAI', value: 'openai' },
             ]"
             @update:value="changeProvider"
+            value-key="value"
           />
-        </NFormItem>
-        <NFormItem label="识别语言">
-          <NSelect
-            v-model:value="activeProfile.language"
+        </UFormField>
+        <UFormField label="识别语言">
+          <USelectMenu
+            v-model="activeProfile.language"
             filterable
             tag
-            :options="languageOptions"
+            :items="languageOptions"
+            value-key="value"
           />
-        </NFormItem>
+        </UFormField>
 
         <template v-if="activeProfile.provider === 'tencent'">
-          <NFormItem label="引擎模型">
-            <NSelect
-              v-model:value="activeProfile.engineModelType"
+          <UFormField label="引擎模型">
+            <USelectMenu
+              v-model="activeProfile.engineModelType"
               filterable
               tag
-              :options="tencentModelOptions"
+              :items="tencentModelOptions"
+              value-key="value"
             />
-          </NFormItem>
-          <NFormItem label="App ID">
-            <NInput v-model:value="activeProfile.appId" />
-          </NFormItem>
-          <NFormItem label="Secret ID">
-            <NInput
-              v-model:value="activeProfile.secretId"
+          </UFormField>
+          <UFormField label="App ID">
+            <UInput v-model="activeProfile.appId" />
+          </UFormField>
+          <UFormField label="Secret ID">
+            <UInput
+              v-model="activeProfile.secretId"
               type="password"
               show-password-on="click"
             />
-          </NFormItem>
-          <NFormItem label="Secret Key">
-            <NInput
-              v-model:value="activeProfile.secretKey"
+          </UFormField>
+          <UFormField label="Secret Key">
+            <UInput
+              v-model="activeProfile.secretKey"
               type="password"
               show-password-on="click"
             />
-          </NFormItem>
+          </UFormField>
         </template>
 
         <template v-else>
-          <NFormItem label="模型">
-            <NInput
-              v-model:value="activeProfile.model"
+          <UFormField label="模型">
+            <UInput
+              v-model="activeProfile.model"
               placeholder="gpt-live-transcribe"
             />
-          </NFormItem>
-          <NFormItem label="API 地址">
-            <NInput
-              v-model:value="activeProfile.baseUrl"
+          </UFormField>
+          <UFormField label="API 地址">
+            <UInput
+              v-model="activeProfile.baseUrl"
               placeholder="wss://api.openai.com/v1/realtime"
             />
-          </NFormItem>
-          <NFormItem label="API Key">
-            <NInput
-              v-model:value="activeProfile.apiKey"
+          </UFormField>
+          <UFormField label="API Key">
+            <UInput
+              v-model="activeProfile.apiKey"
               type="password"
               show-password-on="click"
             />
-          </NFormItem>
+          </UFormField>
         </template>
 
-        <NFormItem label="热词">
-          <NDynamicTags v-model:value="activeProfile.hotwords" />
-        </NFormItem>
-      </NForm>
+        <UFormField label="热词">
+          <UInputTags v-model="activeProfile.hotwords" />
+        </UFormField>
+      </UForm>
     </section>
-  </NFlex>
+  </div>
 </template>
 
 <style scoped>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 
 defineProps<{
@@ -10,9 +9,8 @@ defineProps<{
 }>()
 defineEmits<{ (e: 'click'): void }>()
 
-const themeVars = useThemeVars()
-const activeColor = computed(() => themeVars.value.primaryColor)
-const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
+const activeColor = computed(() => 'var(--vtsuru-brand)')
+const activeBg = computed(() => 'var(--vtsuru-brand-tint)')
 </script>
 
 <template>

@@ -1,23 +1,10 @@
 <script setup lang="ts">
 import { ArrowClockwise24Regular, Info24Filled, Search24Regular, Trophy24Filled } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NEmpty,
-  NIcon,
-  NInput,
-  NPagination,
-  NSelect,
-  NSpin,
-  NTag,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import PublicTime from '@/apps/user-page/PublicTime.vue'
 import { CHECKIN_API_URL } from '@/shared/config'
 
 const props = defineProps<{
@@ -32,6 +19,7 @@ const timeRange = ref('all')
 const userFilter = ref('')
 const checkInKeyword = ref('签到')
 const pagination = ref({ page: 1, pageSize: 10 })
+const toast = useToast()
 
 const timeRangeOptions = [
   { label: '全部时间', value: 'all' },
@@ -89,7 +77,7 @@ async function loadCheckInRanking() {
 
     if (response.code !== 200) {
       rankingData.value = []
-      window.$message?.error?.(`获取签到排行榜失败: ${response.message}`)
+      toast.add({ title: `获取签到排行榜失败: ${response.message}`, color: 'error' })
       return
     }
 
@@ -123,14 +111,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <NCard
-    class="ranking-card"
+  <UCard
+    class="user-page-card ranking-card"
     size="small"
     bordered
   >
     <template #header>
       <div class="ranking-title">
-        <NIcon :component="Trophy24Filled" />
+        <component :is="Trophy24Filled" />
         <span>签到排行榜</span>
         <span
           v-if="rankingData.length"
@@ -141,44 +129,44 @@ onMounted(() => {
     </template>
 
     <div class="filter-bar">
-      <NSelect
-        v-model:value="timeRange"
-        size="small"
-        :options="timeRangeOptions"
+      <USelect
+        v-model="timeRange"
+        size="sm"
+        :items="timeRangeOptions"
         aria-label="签到时间范围"
       />
-      <NInput
-        v-model:value="userFilter"
-        size="small"
+      <UInput
+        v-model="userFilter"
+        size="sm"
         placeholder="搜索用户"
         clearable
       >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
+        <template #leading>
+          <component :is="Search24Regular" />
         </template>
-      </NInput>
-      <NButton
-        type="primary"
-        size="small"
+      </UInput>
+      <UButton
+        color="primary"
+        size="sm"
         :loading="isLoading"
         @click="loadCheckInRanking"
       >
-        <template #icon>
-          <NIcon :component="ArrowClockwise24Regular" />
+        <template #leading>
+          <component :is="ArrowClockwise24Regular" />
         </template>
         刷新
-      </NButton>
+      </UButton>
     </div>
 
-    <NSpin :show="isLoading">
-      <NEmpty
+    <div :aria-busy="isLoading">
+      <UEmpty
         v-if="!isLoading && rankingData.length === 0"
-        class="empty-data"
+        class="public-empty empty-data"
         description="暂无签到数据"
       />
-      <NEmpty
+      <UEmpty
         v-else-if="!isLoading && filteredRankingData.length === 0"
-        class="empty-data"
+        class="public-empty empty-data"
         description="没有符合条件的用户"
       />
 
@@ -217,14 +205,14 @@ onMounted(() => {
 
           <div class="user-cell">
             <strong class="user-name">{{ item.name }}</strong>
-            <NTag
+            <UBadge
               v-if="item.isAuthed"
-              size="tiny"
-              type="success"
+              size="xs"
+              color="success"
               :bordered="false"
             >
               已认证
-            </NTag>
+            </UBadge>
           </div>
 
           <div class="metric-cell streak-cell">
@@ -244,47 +232,45 @@ onMounted(() => {
           </div>
           <div class="time-cell">
             <span class="metric-label">最近签到</span>
-            <NTooltip>
-              <template #trigger>
-                <NTime
-                  :time="item.lastCheckInTime"
-                  type="relative"
-                />
-              </template>
-              <NTime :time="item.lastCheckInTime" />
-            </NTooltip>
+            <UTooltip>
+              <PublicTime
+                :time="item.lastCheckInTime"
+                type="relative"
+              />
+
+              <template #content><PublicTime :time="item.lastCheckInTime" /></template>
+            </UTooltip>
           </div>
         </div>
 
         <div class="ranking-footer">
-          <NPagination
+          <UPagination
             v-model:page="pagination.page"
-            :page-size="pagination.pageSize"
-            :item-count="filteredRankingData.length"
-            :page-slot="5"
+            :items-per-page="pagination.pageSize"
+            :total="filteredRankingData.length"
+            :sibling-count="2"
           />
-          <NSelect
-            v-model:value="pagination.pageSize"
+          <USelect
+            v-model="pagination.pageSize"
             class="page-size-select"
-            size="small"
-            :options="pageSizeOptions"
+            size="sm"
+            :items="pageSizeOptions"
             aria-label="每页显示数量"
           />
         </div>
       </div>
-    </NSpin>
+    </div>
 
-    <NAlert
+    <UAlert
       class="ranking-info"
-      type="info"
-      size="small"
+      color="info"
     >
-      <template #icon>
-        <NIcon :component="Info24Filled" />
-      </template>
-      签到可获得积分，连续签到有额外奖励。发送“{{ checkInKeyword }}”即可参与签到。
-    </NAlert>
-  </NCard>
+      <template #leading> <component :is="Info24Filled" /> </template
+      ><template #description>
+        签到可获得积分，连续签到有额外奖励。发送“{{ checkInKeyword }}”即可参与签到。
+      </template></UAlert
+    >
+  </UCard>
 </template>
 
 <style scoped src="./CheckInRankingView.css"></style>

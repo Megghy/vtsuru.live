@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { GlobeOutline, LinkOutline } from '@vicons/ionicons5'
-import { NFlex, NIcon } from 'naive-ui'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 
@@ -163,7 +162,7 @@ const iconSize = computed(() => {
     :framed="cfg.framed"
     :backgrounded="cfg.backgrounded"
   >
-    <NFlex
+    <div
       justify="center"
       wrap
       style="gap: 10px"
@@ -184,13 +183,13 @@ const iconSize = computed(() => {
           '--social-radius': cfg.variant === 'round' ? '999px' : 'var(--vtsuru-page-radius)',
         }"
       >
-        <NIcon
+        <span
           :size="iconSize"
           class="social-icon"
           aria-hidden="true"
         >
           <component :is="platformIcons[it.platform]" />
-        </NIcon>
+        </span>
         <span
           v-if="cfg.showLabel"
           class="social-label"
@@ -198,7 +197,7 @@ const iconSize = computed(() => {
           {{ it.label || SOCIAL_PLATFORM_NAMES[it.platform] }}
         </span>
       </a>
-    </NFlex>
+    </div>
   </BlockCard>
 </template>
 

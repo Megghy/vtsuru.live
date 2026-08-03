@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { OpenOutline, RefreshOutline, StorefrontOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NEmpty, NIcon, NImage, NSpin, NTag } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -83,7 +82,7 @@ watch(
     <template #header>
       <div class="goods-header">
         <span class="goods-heading"
-          ><NIcon><StorefrontOutline /></NIcon>精选积分商品</span
+          ><span><StorefrontOutline /></span>精选积分商品</span
         >
         <RouterLink
           v-if="props.userInfo?.name"
@@ -91,54 +90,54 @@ watch(
           :to="{ name: 'user-goods', params: { id: props.userInfo.name } }"
           custom
         >
-          <NButton
-            text
-            type="primary"
-            size="small"
+          <UButton
+            variant="link"
+            color="primary"
+            size="sm"
             @click="navigate"
           >
-            全部商品<template #icon>
-              <NIcon><OpenOutline /></NIcon>
+            全部商品<template #leading>
+              <span><OpenOutline /></span>
             </template>
-          </NButton>
+          </UButton>
         </RouterLink>
       </div>
     </template>
 
-    <NAlert
+    <UAlert
       v-if="!enabled"
-      type="info"
-      :show-icon="false"
+      color="info"
+      ><template #description> 积分兑换未开放 </template></UAlert
     >
-      积分兑换未开放
-    </NAlert>
-    <NAlert
+    <UAlert
       v-else-if="query.status.value === 'error'"
-      type="error"
-      :show-icon="true"
+      color="error"
     >
-      <div class="error-row">
-        <span>积分商品加载失败</span
-        ><NButton
-          size="small"
-          secondary
-          @click="load(true)"
-        >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon> </template
-          >重试
-        </NButton>
-      </div>
-    </NAlert>
-    <NSpin
+      <template #description
+        ><div class="error-row">
+          <span>积分商品加载失败</span
+          ><UButton
+            size="sm"
+            variant="soft"
+            @click="load(true)"
+          >
+            <template #leading>
+              <span><RefreshOutline /></span> </template
+            >重试
+          </UButton>
+        </div></template
+      >
+    </UAlert>
+    <div
       v-else
-      :show="query.status.value === 'loading' || query.status.value === 'idle'"
+      :aria-busy="query.status.value === 'loading' || query.status.value === 'idle'"
       size="small"
     >
-      <NEmpty
+      <UEmpty
         v-if="query.status.value === 'success' && !goods.length"
-        size="small"
+        size="sm"
         description="暂无可展示商品"
+        class="public-empty"
       />
       <div
         v-else
@@ -151,29 +150,28 @@ watch(
           class="goods-item"
         >
           <div class="cover-wrap">
-            <NImage
+            <img
               v-if="item.cover?.path"
               :src="item.cover.path"
-              object-fit="cover"
-              preview-disabled
-              lazy
+              :alt="item.name"
+              loading="lazy"
               class="cover"
             />
             <div
               v-else
               class="cover-empty"
             >
-              <NIcon><StorefrontOutline /></NIcon>
+              <span><StorefrontOutline /></span>
             </div>
-            <NTag
+            <UBadge
               v-if="isSoldOut(item)"
               class="stock-tag"
-              type="default"
-              size="small"
+              color="neutral"
+              size="sm"
               :bordered="false"
             >
               已售罄
-            </NTag>
+            </UBadge>
           </div>
           <div class="goods-copy">
             <strong>{{ item.name }}</strong>
@@ -191,7 +189,7 @@ watch(
           </div>
         </RouterLink>
       </div>
-    </NSpin>
+    </div>
   </BlockCard>
 </template>
 

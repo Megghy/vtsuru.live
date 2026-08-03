@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { NDivider, NGrid } from 'naive-ui'
 import type { VNode } from 'vue'
 
 import type { updateNoteItemContentType } from '@/shared/services/UpdateNote'
 import { updateNotes } from '@/shared/services/UpdateNote'
+
+const typeMeta = {
+  fix: { label: '错误修复', color: 'info' },
+  new: { label: '功能添加', color: 'success' },
+  optimize: { label: '功能优化', color: 'warning' },
+  other: { label: '其他', color: 'error' },
+} as const
 
 function renderContent(content: updateNoteItemContentType): VNode | string | undefined {
   if (Array.isArray(content)) {
@@ -26,75 +32,83 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
 </script>
 
 <template>
-  <NScrollbar
-    style="max-height: 80vh; padding-right: 16px"
-    trigger="none"
-  >
-    <NFlex vertical>
-      <div
-        v-for="item in updateNotes"
-        :key="item.ver"
+  <div class="update-note-list">
+    <section
+      v-for="item in updateNotes"
+      :key="item.ver"
+      class="update-note-version"
+    >
+      <h3>{{ item.date }}</h3>
+      <article
+        v-for="note in item.items"
+        :key="typeof note.title === 'string' ? note.title : `${item.ver}-${note.type}`"
+        class="update-note-item"
       >
-        <NDivider title-placement="left">
-          {{ item.date }}
-        </NDivider>
-        <NGrid
-          x-gap="10"
-          y-gap="10"
+        <UBadge
+          :color="typeMeta[note.type].color"
+          variant="subtle"
         >
-          <template
-            v-for="note in item.items"
-            :key="note.title"
-          >
-            <NGridItem span="6">
-              <div style="">
-                <NTag
-                  v-if="note.type === 'fix'"
-                  type="info"
-                  round
-                  :bordered="false"
-                >
-                  错误修复
-                </NTag>
-                <NTag
-                  v-else-if="note.type === 'new'"
-                  type="success"
-                  round
-                  :bordered="false"
-                >
-                  功能添加
-                </NTag>
-                <NTag
-                  v-else-if="note.type === 'optimize'"
-                  type="warning"
-                  round
-                  :bordered="false"
-                >
-                  功能优化
-                </NTag>
-                <NTag
-                  v-else-if="note.type === 'other'"
-                  type="error"
-                  round
-                  :bordered="false"
-                >
-                  其他
-                </NTag>
-              </div>
-            </NGridItem>
-            <NGridItem span="18">
-              <NFlex vertical>
-                <template
-                  v-for="content in note.content"
-                  :key="content"
-                >
-                  <component :is="renderContent(content)" />
-                </template>
-              </NFlex>
-            </NGridItem>
-          </template>
-        </NGrid>
-      </div>
-    </NFlex>
-  </NScrollbar>
+          {{ typeMeta[note.type].label }}
+        </UBadge>
+        <div class="update-note-content">
+          <h4 v-if="note.title">
+            <component :is="typeof note.title === 'function' ? note.title() : renderContent(note.title)" />
+          </h4>
+          <component
+            :is="renderContent(content)"
+            v-for="(content, index) in note.content"
+            :key="index"
+          />
+        </div>
+      </article>
+    </section>
+  </div>
 </template>
+
+<style scoped>
+.update-note-list {
+  display: flex;
+  max-height: min(72vh, 720px);
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.update-note-version h3 {
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--vtsuru-border);
+  color: var(--vtsuru-fg);
+  font-size: 14px;
+}
+
+.update-note-item {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.update-note-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--vtsuru-fg-toned);
+  line-height: 1.65;
+}
+
+.update-note-content h4 {
+  margin: 0;
+  color: var(--vtsuru-fg);
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .update-note-item {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

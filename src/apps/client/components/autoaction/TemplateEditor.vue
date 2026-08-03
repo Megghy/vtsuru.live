@@ -1,26 +1,5 @@
 <script setup lang="ts">
-import { Code24Regular, Info24Filled, LiveOff24Regular, AppsListDetail24Regular } from '@vicons/fluent'
 import { useDebounceFn } from '@vueuse/core'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFlex,
-  NHighlight,
-  NIcon,
-  NInput,
-  NModal,
-  NScrollbar,
-  NTabPane,
-  NTabs,
-  NText,
-  useMessage,
-  NGrid,
-  NGi,
-} from 'naive-ui'
 import { computed, ref, nextTick, watch } from 'vue'
 
 import { EventDataTypes } from '@/api/api-models'
@@ -120,7 +99,10 @@ const testContext = computed(() => {
   return defaultContext
 })
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const activeTab = ref('editor')
 const showLivePreview = ref(true)
 const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
@@ -251,7 +233,7 @@ const templateExamples = [
 function insertExample(template: string) {
   props.template.template = template
   emit('update:template', { index: props.templateIndex, value: template })
-  message.success('已插入示例模板')
+  feedback('success', '已插入示例模板')
 }
 
 function handleVariableInsert(text: string) {
@@ -282,7 +264,7 @@ function handleVariableInsert(text: string) {
 </script>
 
 <template>
-  <NCard
+  <UCard
     :title="title"
     size="small"
     class="template-editor-card"
@@ -292,18 +274,18 @@ function handleVariableInsert(text: string) {
       v-if="mergedPlaceholders.length > 0"
       #header-extra
     >
-      <NButton
-        quaternary
+      <UButton
+        variant="ghost"
         size="small"
         class="btn-with-transition"
         @click="showSyntaxModal = true"
       >
-        <NIcon
-          :component="Info24Filled"
+        <UIcon
+          name="i-lucide-circle"
           style="margin-right: 4px"
         />
         变量与语法说明
-      </NButton>
+      </UButton>
     </template>
 
     <p
@@ -314,29 +296,29 @@ function handleVariableInsert(text: string) {
     </p>
 
     <!-- 标签页支持 -->
-    <NTabs
-      v-model:value="activeTab"
-      type="line"
-      animated
-      class="editor-tabs"
-    >
-      <NTabPane
-        name="editor"
-        tab="编辑"
-      >
-        <NGrid
+    <div class="editor-tabs">
+      <UTabs
+        v-model="activeTab"
+        :items="[
+          { label: '编辑', value: 'editor' },
+          { label: '示例库', value: 'examples' },
+        ]"
+        :content="false"
+      />
+      <section v-show="activeTab === 'editor'">
+        <div
           :x-gap="16"
           :cols="5"
           item-responsive
           responsive="screen"
         >
-          <NGi span="5 m:3">
-            <NFlex
+          <div span="5 m:3">
+            <div
               vertical
               :size="8"
             >
               <!-- 长度检查警告 -->
-              <NAlert
+              <UAlert
                 v-if="checkLength && lengthStatus.message && lengthStatus.status !== 'normal'"
                 :type="lengthStatus.status === 'error' ? 'error' : 'warning'"
                 class="length-alert"
@@ -344,12 +326,12 @@ function handleVariableInsert(text: string) {
                 style="margin-bottom: 4px"
               >
                 {{ lengthStatus.message }}
-              </NAlert>
+              </UAlert>
 
               <!-- 模板输入框 -->
-              <NInput
+              <UInput
                 ref="inputInst"
-                v-model:value="template.template"
+                v-model="template.template"
                 type="textarea"
                 placeholder="输入模板内容... 点击右侧变量可快速插入"
                 :autosize="{ minRows: 6, maxRows: 12 }"
@@ -367,73 +349,70 @@ function handleVariableInsert(text: string) {
               />
 
               <!-- 实时预览 -->
-              <NFlex
+              <div
                 align="center"
                 justify="space-between"
                 class="preview-toggle"
               >
-                <NButton
-                  quaternary
+                <UButton
+                  variant="ghost"
                   size="small"
                   @click="showLivePreview = !showLivePreview"
                 >
-                  <template #icon>
-                    <NIcon :component="showLivePreview ? LiveOff24Regular : Code24Regular" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
                   {{ showLivePreview ? '隐藏预览' : '显示预览' }}
-                </NButton>
+                </UButton>
 
                 <div style="flex: 1" />
-              </NFlex>
+              </div>
 
               <transition name="fade">
                 <div
                   v-if="showLivePreview"
                   class="live-preview-container"
                 >
-                  <div class="live-preview-label"><NIcon :component="AppsListDetail24Regular" /> 效果预览</div>
+                  <div class="live-preview-label"><UIcon name="i-lucide-circle" /> 效果预览</div>
                   <div class="live-preview-content">
-                    <NHighlight
+                    <mark
                       v-if="previewResult"
                       :text="previewResult"
                       :patterns="highlightPatterns"
                     />
-                    <NText
+                    <span
                       v-else
                       depth="3"
                       italic
                     >
                       等待输入...
-                    </NText>
+                    </span>
                   </div>
                 </div>
               </transition>
-            </NFlex>
-          </NGi>
+            </div>
+          </div>
 
-          <NGi span="5 m:2">
+          <div span="5 m:2">
             <div class="helper-container">
-              <NText
+              <span
                 depth="3"
                 style="font-size: 12px; margin-bottom: 6px; display: block"
               >
                 可用变量 (点击插入)
-              </NText>
+              </span>
               <TemplateHelper
                 :placeholders="mergedPlaceholders"
                 @insert="handleVariableInsert"
               />
             </div>
-          </NGi>
-        </NGrid>
-      </NTabPane>
+          </div>
+        </div>
+      </section>
 
-      <NTabPane
-        name="examples"
-        tab="示例库"
-      >
+      <section v-show="activeTab === 'examples'">
         <div class="examples-container">
-          <NFlex
+          <div
             vertical
             :size="16"
           >
@@ -442,48 +421,48 @@ function handleVariableInsert(text: string) {
               :key="idx"
               class="example-category"
             >
-              <NText
+              <span
                 strong
                 class="category-title"
               >
                 {{ category.title }}
-              </NText>
-              <NGrid
+              </span>
+              <div
                 :x-gap="12"
                 :y-gap="12"
                 cols="1 s:2"
                 responsive="screen"
               >
-                <NGi
+                <div
                   v-for="(example, i) in category.examples"
                   :key="i"
                 >
-                  <NCard
+                  <UCard
                     size="small"
                     hoverable
                     class="example-card"
                     @click="insertExample(example.template)"
                   >
                     <div class="example-header">
-                      <NText strong>
+                      <span strong>
                         {{ example.label }}
-                      </NText>
+                      </span>
                     </div>
                     <div class="example-code">
                       {{ example.template }}
                     </div>
-                  </NCard>
-                </NGi>
-              </NGrid>
+                  </UCard>
+                </div>
+              </div>
             </div>
-          </NFlex>
+          </div>
         </div>
-      </NTabPane>
-    </NTabs>
+      </section>
+    </div>
 
     <!-- 新增 Modal 组件 -->
-    <NModal
-      v-model:show="showSyntaxModal"
+    <UModal
+      v-model:open="showSyntaxModal"
       preset="card"
       title="模板语法与变量说明"
       :bordered="false"
@@ -492,26 +471,26 @@ function handleVariableInsert(text: string) {
       :close-on-esc="true"
       :mask-closable="true"
     >
-      <NScrollbar style="max-height: 80vh">
-        <NAlert
+      <div style="max-height: 80vh">
+        <UAlert
           title="模板语法说明"
           type="info"
           :show-icon="false"
           style="margin-bottom: 16px"
         >
           模板支持插入变量和执行 JavaScript。
-          <NDivider style="margin: 8px 0" />
+          <USeparator style="margin: 8px 0" />
           <strong>1. 简单变量替换:</strong><br />
           直接使用 <code>{{ '\{\{变量名.属性\}\}' }}</code> 插入值。<br />
           示例: <code>{{ '\{\{user.name\}\}' }}</code> → 显示用户名
-          <NDivider style="margin: 8px 0" />
+          <USeparator style="margin: 8px 0" />
           <strong>2. JS 表达式求值 (<code>js:</code>):</strong><br />
           使用 <code>{{ '\{\{js: 表达式\}\}' }}</code> 执行单个 JS 表达式并插入结果 (隐式返回)。<br />
           适合简单计算、字符串操作、三元运算等。<br />
           示例: <code>{{ '\{\{js: user.guardLevel > 0 ? "舰长" : "非舰长\}\}' }}</code
           ><br />
           示例: <code>{{ '\{\{js: gift.price * gift.count\}\}' }}</code>
-          <NDivider style="margin: 8px 0" />
+          <USeparator style="margin: 8px 0" />
           <strong>3. JS 代码块执行 (<code>js+:</code> 或 <code>js-run:</code>):</strong><br />
           使用 <code>{{ '\{\{js+: 代码...\}\}' }}</code> 或 <code>{{ '\{\{js-run: 代码...\}\}' }}</code> 执行多行 JS
           代码。<br />
@@ -519,24 +498,24 @@ function handleVariableInsert(text: string) {
             >需要显式使用 <code>return</code> 语句来指定输出到模板的值。</strong
           ><br />
           适合需要临时变量、多步逻辑或调用 <code>getData/setData</code> 等函数的场景。<br />
-          <NScrollbar x-scrollable>
+          <div x-scrollable>
             <pre><code>{{ '\{\{js+:\n  const count = (getData(\'greetCount\') || 0) + 1;\n  setData(\'greetCount\', count);\n  return \`这是第 ${count} 次问候！\`;\n\}\}' }}</code></pre>
-          </NScrollbar>
-        </NAlert>
+          </div>
+        </UAlert>
 
-        <NCollapse arrow-placement="right">
-          <NCollapseItem
+        <div arrow-placement="right">
+          <details
             title="数据存储函数说明 (在 js+ 或 js-run 中使用)"
             name="data-functions"
           >
-            <NAlert
+            <UAlert
               type="warning"
               :bordered="false"
               size="small"
               style="margin-bottom: 8px"
             >
               <strong>运行时数据</strong>仅在本次运行有效, 重启后就没了，且操作是<strong>同步</strong>的。
-            </NAlert>
+            </UAlert>
             <ul class="function-list">
               <li><code>getData(key, defaultValue?)</code>: 获取运行时数据。</li>
               <li><code>setData(key, value)</code>: 设置运行时数据。</li>
@@ -544,9 +523,9 @@ function handleVariableInsert(text: string) {
               <li><code>removeData(key)</code>: 移除运行时数据。</li>
             </ul>
 
-            <NDivider style="margin: 12px 0" />
+            <USeparator style="margin: 12px 0" />
 
-            <NAlert
+            <UAlert
               type="info"
               :bordered="false"
               size="small"
@@ -554,7 +533,7 @@ function handleVariableInsert(text: string) {
             >
               <strong>持久化数据</strong>会长期保留，但操作是<strong>异步</strong>的 (返回 Promise)。<br />
               在 <code>js+</code> 或 <code>js-run</code> 中使用 <code>await</code> 处理或使用 <code>.then()</code>。
-            </NAlert>
+            </UAlert>
             <ul class="function-list">
               <li><code>getStorageData(key, defaultValue?)</code>: 获取持久化数据 (异步)。</li>
               <li><code>setStorageData(key, value)</code>: 设置持久化数据 (异步)。</li>
@@ -562,11 +541,11 @@ function handleVariableInsert(text: string) {
               <li><code>removeStorageData(key)</code>: 移除持久化数据 (异步)。</li>
               <li><code>clearStorageData()</code>: 清除所有用户持久化数据 (异步)。</li>
             </ul>
-            <NScrollbar x-scrollable>
+            <div x-scrollable>
               <pre><code>{{ '\{\{js+:\n  // 异步获取并设置持久化数据\n  const key = \`user:${user.uid}:visitCount\`;\n  const count = (await getStorageData(key, 0)) + 1;\n  await setStorageData(key, count);\n  return \`你是第 ${count} 次访问！\`;\n\}\}' }}</code></pre>
-            </NScrollbar>
-          </NCollapseItem>
-        </NCollapse>
+            </div>
+          </details>
+        </div>
         <br />
         <strong>可用变量 (基础):</strong>
 
@@ -575,11 +554,11 @@ function handleVariableInsert(text: string) {
           :key="idx"
           class="placeholder-item"
         >
-          <NText code> {{ ph.name }} </NText>: {{ ph.description }}
+          <span code> {{ ph.name }} </span>: {{ ph.description }}
         </div>
-      </NScrollbar>
-    </NModal>
-  </NCard>
+      </div>
+    </UModal>
+  </UCard>
 </template>
 
 <style scoped>
@@ -697,10 +676,10 @@ function handleVariableInsert(text: string) {
   font-family: monospace;
   margin-right: 4px;
 }
-.n-collapse {
+.u-collapse {
   margin-top: 16px;
 }
-.n-alert pre {
+.u-alert pre {
   margin: 4px 0 0 0;
   padding: 6px 8px;
   background-color: var(--vtsuru-bg-inset);
@@ -708,13 +687,13 @@ function handleVariableInsert(text: string) {
   font-size: 12px;
   line-height: 1.4;
 }
-.n-alert code {
+.u-alert code {
   background-color: transparent;
   padding: 0;
   font-family: monospace;
   font-size: inherit;
 }
-.n-alert pre code {
+.u-alert pre code {
   background-color: transparent;
   padding: 0;
 }

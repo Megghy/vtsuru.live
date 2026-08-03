@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { HomeOutline, PeopleOutline, PlayCircleOutline, VideocamOutline } from '@vicons/ionicons5'
-import { NAlert, NAvatar, NButton, NFlex, NIcon, NSkeleton } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
@@ -100,56 +99,51 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
       role="status"
       aria-label="正在加载B站信息"
     >
-      <NSkeleton
+      <USkeleton
         circle
         width="42px"
         height="42px"
       />
       <div class="bili-loading__content">
-        <NSkeleton
+        <USkeleton
           text
           style="width: 38%"
         />
-        <NSkeleton
+        <USkeleton
           text
           :repeat="2"
         />
       </div>
     </div>
-    <NAlert
+    <UAlert
       v-else-if="displayStatus === 'error'"
-      type="error"
-      :show-icon="true"
+      color="error"
+      ><template #description> B站信息加载失败，请稍后刷新页面重试 </template></UAlert
     >
-      B站信息加载失败，请稍后刷新页面重试
-    </NAlert>
-    <NAlert
+    <UAlert
       v-else-if="displayStatus === 'empty' || !hasContent"
-      type="info"
-      :show-icon="false"
+      color="info"
+      ><template #description> B站信息暂不可用 </template></UAlert
     >
-      B站信息暂不可用
-    </NAlert>
     <div
       v-else
       class="bili-card"
     >
       <template v-if="cfg.variant === 'compact'">
         <div class="bili-compact">
-          <NFlex
+          <div
             align="center"
             justify="space-between"
             style="gap: 12px"
             class="compact-header"
           >
-            <NFlex
+            <div
               align="center"
               style="gap: 10px; min-width: 0"
             >
-              <NAvatar
+              <UAvatar
                 v-if="cfg.showAvatar && model.face"
                 :src="model.face"
-                round
                 :size="34"
                 :img-props="{
                   referrerpolicy: 'no-referrer',
@@ -170,48 +164,46 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
                   <template v-if="model.biliId"> · @{{ model.biliId }} </template>
                 </span>
               </div>
-            </NFlex>
+            </div>
 
-            <NFlex
+            <div
               v-if="cfg.showButtons"
               align="center"
               style="gap: 8px; flex-shrink: 0"
               class="compact-actions"
             >
-              <NButton
+              <UButton
                 v-if="model.spaceUrl"
-                size="tiny"
+                size="xs"
                 class="action compact"
-                secondary
-                tag="a"
+                variant="soft"
                 target="_blank"
                 rel="noopener noreferrer"
                 :href="model.spaceUrl"
                 aria-label="打开B站主页（新窗口打开）"
               >
-                <template #icon>
-                  <NIcon><HomeOutline /></NIcon>
+                <template #leading>
+                  <span><HomeOutline /></span>
                 </template>
                 主页
-              </NButton>
-              <NButton
+              </UButton>
+              <UButton
                 v-if="cfg.showLiveRoom && model.liveRoomUrl"
-                size="tiny"
+                size="xs"
                 class="action compact"
-                secondary
-                tag="a"
+                variant="soft"
                 target="_blank"
                 rel="noopener noreferrer"
                 :href="model.liveRoomUrl"
                 aria-label="打开直播间（新窗口打开）"
               >
-                <template #icon>
-                  <NIcon><PlayCircleOutline /></NIcon>
+                <template #leading>
+                  <span><PlayCircleOutline /></span>
                 </template>
                 直播间
-              </NButton>
-            </NFlex>
-          </NFlex>
+              </UButton>
+            </div>
+          </div>
 
           <div
             v-if="cfg.showSign && model.sign"
@@ -225,12 +217,12 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
             class="bili-stats compact"
           >
             <div class="stat compact">
-              <NIcon
+              <span
                 size="14"
                 class="stat-icon"
               >
                 <PeopleOutline />
-              </NIcon>
+              </span>
               <div class="stat-meta">
                 <div class="stat-k">粉丝</div>
                 <div class="stat-v">
@@ -239,12 +231,12 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
               </div>
             </div>
             <div class="stat compact">
-              <NIcon
+              <span
                 size="14"
                 class="stat-icon"
               >
                 <HomeOutline />
-              </NIcon>
+              </span>
               <div class="stat-meta">
                 <div class="stat-k">关注</div>
                 <div class="stat-v">
@@ -253,12 +245,12 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
               </div>
             </div>
             <div class="stat compact">
-              <NIcon
+              <span
                 size="14"
                 class="stat-icon"
               >
                 <VideocamOutline />
-              </NIcon>
+              </span>
               <div class="stat-meta">
                 <div class="stat-k">视频</div>
                 <div class="stat-v">
@@ -272,14 +264,13 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
 
       <template v-else>
         <div class="bili-header">
-          <NFlex
+          <div
             align="center"
             style="gap: 10px; min-width: 0"
           >
-            <NAvatar
+            <UAvatar
               v-if="cfg.showAvatar && model.face"
               :src="model.face"
-              round
               :size="40"
               :img-props="{
                 referrerpolicy: 'no-referrer',
@@ -300,7 +291,7 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
                 <template v-if="model.biliId"> · @{{ model.biliId }} </template>
               </span>
             </div>
-          </NFlex>
+          </div>
         </div>
 
         <div
@@ -315,12 +306,12 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
           class="bili-stats"
         >
           <div class="stat">
-            <NIcon
+            <span
               size="16"
               class="stat-icon"
             >
               <PeopleOutline />
-            </NIcon>
+            </span>
             <div class="stat-meta">
               <div class="stat-k">粉丝</div>
               <div class="stat-v">
@@ -329,12 +320,12 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
             </div>
           </div>
           <div class="stat">
-            <NIcon
+            <span
               size="16"
               class="stat-icon"
             >
               <HomeOutline />
-            </NIcon>
+            </span>
             <div class="stat-meta">
               <div class="stat-k">关注</div>
               <div class="stat-v">
@@ -343,12 +334,12 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
             </div>
           </div>
           <div class="stat">
-            <NIcon
+            <span
               size="16"
               class="stat-icon"
             >
               <VideocamOutline />
-            </NIcon>
+            </span>
             <div class="stat-meta">
               <div class="stat-k">视频</div>
               <div class="stat-v">
@@ -362,36 +353,34 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
           v-if="cfg.showButtons"
           class="bili-actions"
         >
-          <NButton
+          <UButton
             v-if="model.spaceUrl"
             class="action"
-            secondary
-            tag="a"
+            variant="soft"
             target="_blank"
             rel="noopener noreferrer"
             :href="model.spaceUrl"
             aria-label="打开B站主页（新窗口打开）"
           >
-            <template #icon>
-              <NIcon><HomeOutline /></NIcon>
+            <template #leading>
+              <span><HomeOutline /></span>
             </template>
             主页
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             v-if="cfg.showLiveRoom && model.liveRoomUrl"
             class="action"
-            secondary
-            tag="a"
+            variant="soft"
             target="_blank"
             rel="noopener noreferrer"
             :href="model.liveRoomUrl"
             aria-label="打开直播间（新窗口打开）"
           >
-            <template #icon>
-              <NIcon><PlayCircleOutline /></NIcon>
+            <template #leading>
+              <span><PlayCircleOutline /></span>
             </template>
             直播间
-          </NButton>
+          </UButton>
         </div>
       </template>
     </div>

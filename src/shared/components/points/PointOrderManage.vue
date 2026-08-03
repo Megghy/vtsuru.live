@@ -1,30 +1,6 @@
 <script setup lang="ts">
-import {
-  ArrowSync24Regular,
-  ArrowDownload24Regular,
-  Delete24Regular,
-  Edit24Regular,
-  Filter24Regular,
-} from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
-import { List } from 'linqts'
-import type { DataTableRowKey } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGrid,
-  NIcon,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NSpin,
-  NText,
-  useMessage,
-} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -37,13 +13,12 @@ import { POINT_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { objectsToCSV } from '@/shared/utils'
 
-// 订单筛选设置类型定义
 interface OrderFilterSettings {
-  type?: GoodsTypes // 订单类型（实体/虚拟）
-  status?: PointOrderStatus // 订单状态
-  customer?: number // 用户ID
-  streamerId?: number // 主播ID（仅组织订单）
-  onlyRequireShippingInfo: boolean // 是否只显示需要物流信息的订单
+  type?: GoodsTypes
+  status?: PointOrderStatus
+  customer?: number
+  streamerId?: number
+  onlyRequireShippingInfo: boolean
 }
 
 const props = defineProps<{
@@ -52,518 +27,467 @@ const props = defineProps<{
   streamerOptions?: { label: string; value: number }[]
 }>()
 
-// 默认筛选设置
-const defaultSettings = {
-  onlyRequireShippingInfo: false,
-} as OrderFilterSettings
-
-// 使用持久化存储保存筛选设置
+const toast = useToast()
+const accountInfo = useAccount()
+const defaultSettings: OrderFilterSettings = { onlyRequireShippingInfo: false }
 const filterKey = computed(() =>
   props.orgId ? `vtsuru:setting:point:order-filter:org-${props.orgId}` : 'vtsuru:setting:point:order-filter:owner',
 )
 const filterSettings = usePersistedStorage<OrderFilterSettings>(filterKey, defaultSettings)
-
-watch(
-  () => filterSettings.value.streamerId,
-  () => {
-    if (props.orgId) {
-      refresh()
-    }
-  },
-)
-
-watch(
-  () => filterSettings.value.customer,
-  () => {
-    if (props.orgId) {
-      refresh()
-    }
-  },
-)
-
-const message = useMessage()
-const accountInfo = useAccount()
-
-// 订单数据
 const orders = ref<ResponsePointOrder2OwnerModel[]>([])
-// 根据筛选条件过滤后的订单
-const filteredOrders = computed(() => {
-  return orders.value.filter((o) => {
-    if (filterSettings.value.type != undefined && o.type !== filterSettings.value.type) return false
-    if (filterSettings.value.status != undefined && o.status !== filterSettings.value.status) return false
-    if (filterSettings.value.onlyRequireShippingInfo && o.trackingNumber) return false
-    if (filterSettings.value.customer && o.customer.userId != filterSettings.value.customer) return false
-    if (props.orgId && filterSettings.value.streamerId && o.vTsuruId !== filterSettings.value.streamerId) return false
-    return true
-  })
-})
-
 const isLoading = ref(false)
-const selectedItem = ref<DataTableRowKey[]>()
+const selectedItem = ref<number[]>([])
 const targetStatus = ref<PointOrderStatus>()
 const showStatusModal = ref(false)
+const showDeleteConfirm = ref(false)
 
-// 订单统计
-const orderStats = computed(() => {
-  return {
-    total: orders.value.length,
-    pending: orders.value.filter((o) => o.status === PointOrderStatus.Pending).length,
-    shipped: orders.value.filter((o) => o.status === PointOrderStatus.Shipped).length,
-    completed: orders.value.filter((o) => o.status === PointOrderStatus.Completed).length,
-    physical: orders.value.filter((o) => o.type === GoodsTypes.Physical).length,
-    virtual: orders.value.filter((o) => o.type === GoodsTypes.Virtual).length,
-    totalPoints: Number(orders.value.reduce((sum, o) => sum + o.point, 0).toFixed(1)),
-    filteredCount: filteredOrders.value.length,
-  }
-})
-
-// 获取所有订单
-// 删除选中的订单
-async function deleteOrder() {
-  if (props.orgId) {
-    message.warning('组织订单暂不支持删除')
-    return
-  }
-  if (!selectedItem.value?.length) {
-    message.warning('请选择要删除的订单')
-    return
-  }
-
-  try {
-    const data = await QueryPostAPI(`${POINT_API_URL}delete-orders`, selectedItem.value)
-    if (data.code == 200) {
-      message.success('删除成功')
-      orders.value = orders.value.filter((o) => !selectedItem.value?.includes(o.id))
-      selectedItem.value = undefined
-    } else {
-      message.error(`删除失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`删除失败: ${err}`)
-    console.log(err)
-  }
-}
-
-// 打开状态更新模态框
-function openStatusUpdateModal() {
-  if (!selectedItem.value?.length) {
-    message.warning('请选择要更新的订单')
-    return
-  }
-  showStatusModal.value = true
-}
-
-// 批量更新订单状态
-async function batchUpdateOrderStatus() {
-  if (!selectedItem.value?.length) {
-    message.warning('请选择要更新的订单')
-    return
-  }
-
-  if (targetStatus.value === undefined) {
-    message.warning('请选择目标状态')
-    return
-  }
-
-  try {
-    await updateOrdersStatus(
-      props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
-      (selectedItem.value as number[]) ?? [],
-      targetStatus.value,
-    )
-    message.success('更新成功')
-    const updated = new Set<number>((selectedItem.value as number[]) ?? [])
-    orders.value.forEach((order) => {
-      if (updated.has(Number(order.id))) {
-        order.status = targetStatus.value as PointOrderStatus
-        order.updateAt = Date.now()
-      }
-    })
-    targetStatus.value = undefined
-    showStatusModal.value = false
-  } catch (err) {
-    message.error(err instanceof Error ? err.message : `更新失败: ${err}`)
-    console.log(err)
-  }
-}
-
-// 订单状态文本映射
+const filteredOrders = computed(() =>
+  orders.value.filter((order) => {
+    if (filterSettings.value.type !== undefined && order.type !== filterSettings.value.type) return false
+    if (filterSettings.value.status !== undefined && order.status !== filterSettings.value.status) return false
+    if (filterSettings.value.onlyRequireShippingInfo && order.trackingNumber) return false
+    if (filterSettings.value.customer && order.customer.userId !== filterSettings.value.customer) return false
+    if (props.orgId && filterSettings.value.streamerId && order.vTsuruId !== filterSettings.value.streamerId)
+      return false
+    return true
+  }),
+)
+const orderStats = computed(() => ({
+  total: orders.value.length,
+  pending: orders.value.filter((order) => order.status === PointOrderStatus.Pending).length,
+  shipped: orders.value.filter((order) => order.status === PointOrderStatus.Shipped).length,
+  completed: orders.value.filter((order) => order.status === PointOrderStatus.Completed).length,
+  physical: orders.value.filter((order) => order.type === GoodsTypes.Physical).length,
+  virtual: orders.value.filter((order) => order.type === GoodsTypes.Virtual).length,
+  totalPoints: Number(orders.value.reduce((sum, order) => sum + order.point, 0).toFixed(1)),
+}))
+const customerOptions = computed(() =>
+  [...new Map(orders.value.map((order) => [order.customer.userId, order.customer.name])).entries()].map(
+    ([value, label]) => ({
+      label,
+      value,
+    }),
+  ),
+)
+const typeOptions = [
+  { label: '实体订单', value: GoodsTypes.Physical },
+  { label: '虚拟订单', value: GoodsTypes.Virtual },
+]
+const statusOptions = [
+  { label: '已完成', value: PointOrderStatus.Completed },
+  { label: '等待发货', value: PointOrderStatus.Pending },
+  { label: '已发货', value: PointOrderStatus.Shipped },
+]
 const statusText = {
   [PointOrderStatus.Completed]: '已完成',
   [PointOrderStatus.Pending]: '等待发货',
   [PointOrderStatus.Shipped]: '已发货',
 }
 
-// 导出订单数据为CSV
-function exportData() {
+watch(
+  () => [filterSettings.value.streamerId, filterSettings.value.customer],
+  () => props.orgId && refresh(),
+)
+
+async function deleteOrder() {
+  if (props.orgId) {
+    toast.add({ title: '组织订单暂不支持删除', color: 'warning' })
+    return
+  }
+  if (!selectedItem.value.length) {
+    toast.add({ title: '请选择要删除的订单', color: 'warning' })
+    return
+  }
+  isLoading.value = true
   try {
-    const text = objectsToCSV(
-      filteredOrders.value.map((s) => {
-        const gift = s.goods
-        return {
-          订单号: s.id,
-          订单类型: s.type == GoodsTypes.Physical ? '实体' : '虚拟',
-          订单状态: statusText[s.status],
-          用户名: s.customer.name ?? '未知',
-          用户UID: s.customer.userId,
-          联系人: s.address?.name,
-          联系电话: s.address?.phone,
-          地址: s.address
-            ? `${s.address?.province}省${s.address?.city}市${s.address?.district}区${s.address?.street}街道${s.address?.address}`
-            : '无',
-          礼物名: gift?.name ?? '已删除',
-          款式: (s.selectedSubItems ?? []).map((sub) => `${sub.nameSnapshot} x ${sub.quantity}`).join('; ') || '-',
-          礼物数量: s.count,
-          礼物单价: gift?.price ? Number(gift.price.toFixed(1)) : 0,
-          礼物总价: Number(s.point.toFixed(1)),
-          快递公司: s.expressCompany,
-          快递单号: s.trackingNumber,
-          备注: s.remark ?? '',
-          创建时间: format(s.createAt, 'yyyy-MM-dd HH:mm:ss'),
-          更新时间: s.updateAt ? format(s.updateAt, 'yyyy-MM-dd HH:mm:ss') : '未更新',
-        }
-      }),
-    )
-
-    // 添加BOM标记，确保Excel正确识别UTF-8编码
-    const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
-    const utf8encoder = new TextEncoder()
-    const utf8array = utf8encoder.encode(text)
-
-    saveAs(
-      new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }),
-      `积分订单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`,
-    )
-
-    message.success('导出成功')
+    const result = await QueryPostAPI(`${POINT_API_URL}delete-orders`, selectedItem.value)
+    if (result.code !== 200) throw new Error(result.message)
+    orders.value = orders.value.filter((order) => !selectedItem.value.includes(order.id))
+    selectedItem.value = []
+    showDeleteConfirm.value = false
+    toast.add({ title: '删除成功', color: 'success' })
   } catch (error) {
-    message.error(`导出失败: ${error}`)
-    console.error('导出失败:', error)
+    toast.add({ title: error instanceof Error ? `删除失败: ${error.message}` : `删除失败: ${error}`, color: 'error' })
+  } finally {
+    isLoading.value = false
   }
 }
 
-// 刷新订单数据
-async function refresh() {
-  orders.value = await fetchOwnerOrders(
-    props.orgId
-      ? {
-          kind: 'org',
-          orgId: props.orgId,
-          streamerId: filterSettings.value.streamerId,
-          customer: filterSettings.value.customer,
-        }
-      : { kind: 'owner' },
-  )
+function openStatusUpdateModal() {
+  if (!selectedItem.value.length) {
+    toast.add({ title: '请选择要更新的订单', color: 'warning' })
+    return
+  }
+  showStatusModal.value = true
 }
 
-onMounted(async () => {
-  await refresh()
-})
+async function batchUpdateOrderStatus() {
+  if (!selectedItem.value.length || targetStatus.value === undefined) return
+  isLoading.value = true
+  try {
+    await updateOrdersStatus(
+      props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
+      selectedItem.value,
+      targetStatus.value,
+    )
+    const updated = new Set(selectedItem.value)
+    orders.value.forEach((order) => {
+      if (!updated.has(order.id)) return
+      order.status = targetStatus.value!
+      order.updateAt = Date.now()
+    })
+    targetStatus.value = undefined
+    showStatusModal.value = false
+    toast.add({ title: '更新成功', color: 'success' })
+  } catch (error) {
+    toast.add({ title: error instanceof Error ? error.message : `更新失败: ${error}`, color: 'error' })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function exportData() {
+  try {
+    const text = objectsToCSV(
+      filteredOrders.value.map((order) => ({
+        订单号: order.id,
+        订单类型: order.type === GoodsTypes.Physical ? '实体' : '虚拟',
+        订单状态: statusText[order.status],
+        用户名: order.customer.name ?? '未知',
+        用户UID: order.customer.userId,
+        联系人: order.address?.name,
+        联系电话: order.address?.phone,
+        地址: order.address
+          ? `${order.address.province}省${order.address.city}市${order.address.district}区${order.address.street}街道${order.address.address}`
+          : '无',
+        礼物名: order.goods?.name ?? '已删除',
+        款式: (order.selectedSubItems ?? []).map((item) => `${item.nameSnapshot} x ${item.quantity}`).join('; ') || '-',
+        礼物数量: order.count,
+        礼物单价: order.goods?.price ? Number(order.goods.price.toFixed(1)) : 0,
+        礼物总价: Number(order.point.toFixed(1)),
+        快递公司: order.expressCompany,
+        快递单号: order.trackingNumber,
+        备注: order.remark ?? '',
+        创建时间: format(order.createAt, 'yyyy-MM-dd HH:mm:ss'),
+        更新时间: order.updateAt ? format(order.updateAt, 'yyyy-MM-dd HH:mm:ss') : '未更新',
+      })),
+    )
+    saveAs(
+      new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), new TextEncoder().encode(text)], {
+        type: 'text/csv;charset=utf-8;',
+      }),
+      `积分订单_${format(Date.now(), 'yyyy-MM-dd HH-mm-ss')}_${accountInfo.value?.name}.csv`,
+    )
+    toast.add({ title: '导出成功', color: 'success' })
+  } catch (error) {
+    toast.add({ title: `导出失败: ${error}`, color: 'error' })
+  }
+}
+
+async function refresh() {
+  isLoading.value = true
+  try {
+    orders.value = await fetchOwnerOrders(
+      props.orgId
+        ? {
+            kind: 'org',
+            orgId: props.orgId,
+            streamerId: filterSettings.value.streamerId,
+            customer: filterSettings.value.customer,
+          }
+        : { kind: 'owner' },
+    )
+  } catch (error) {
+    toast.add({ title: error instanceof Error ? error.message : `加载订单失败: ${error}`, color: 'error' })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(refresh)
 </script>
 
 <template>
-  <NSpin :show="isLoading">
-    <NEmpty
-      v-if="orders.length === 0"
-      description="暂无订单"
-    />
+  <div class="point-order-manage">
+    <div
+      v-if="isLoading && !orders.length"
+      class="orders-loading"
+    >
+      <UIcon
+        class="orders-loading__spinner"
+        name="i-lucide-loader-circle"
+      />
+    </div>
+    <div
+      v-else-if="orders.length === 0"
+      class="orders-loading"
+    >
+      <UIcon name="i-lucide-package-search" /><span>暂无订单</span>
+    </div>
     <template v-else>
-      <!-- 统计卡片 -->
-      <NGrid
-        cols="2 600:3 900:6"
-        :x-gap="12"
-        :y-gap="12"
-        style="margin-bottom: 16px"
-      >
+      <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-label">总订单</div>
-          <div class="stat-value">
-            {{ orderStats.total }}
-          </div>
+          <span>总订单</span><strong>{{ orderStats.total }}</strong>
         </div>
         <div class="stat-card">
-          <div class="stat-label">待发货</div>
-          <div class="stat-value warning">
-            {{ orderStats.pending }}
-          </div>
+          <span>待发货</span><strong class="warning">{{ orderStats.pending }}</strong>
         </div>
         <div class="stat-card">
-          <div class="stat-label">已发货</div>
-          <div class="stat-value info">
-            {{ orderStats.shipped }}
-          </div>
+          <span>已发货</span><strong class="info">{{ orderStats.shipped }}</strong>
         </div>
         <div class="stat-card">
-          <div class="stat-label">已完成</div>
-          <div class="stat-value success">
-            {{ orderStats.completed }}
-          </div>
+          <span>已完成</span><strong class="success">{{ orderStats.completed }}</strong>
         </div>
         <div class="stat-card">
-          <div class="stat-label">实体 / 虚拟</div>
-          <div class="stat-value">{{ orderStats.physical }} / {{ orderStats.virtual }}</div>
+          <span>实体 / 虚拟</span><strong>{{ orderStats.physical }} / {{ orderStats.virtual }}</strong>
         </div>
         <div class="stat-card">
-          <div class="stat-label">总积分</div>
-          <div class="stat-value primary">
-            {{ orderStats.totalPoints }}
-          </div>
+          <span>总积分</span><strong class="primary">{{ orderStats.totalPoints }}</strong>
         </div>
-      </NGrid>
-
-      <!-- 工具栏区域 -->
-      <div class="toolbar-section">
-        <NFlex
-          vertical
-          :gap="12"
-        >
-          <!-- 筛选行 -->
-          <NFlex
-            justify="space-between"
-            align="center"
-            wrap
-            :gap="12"
-          >
-            <NFlex
-              align="center"
-              :gap="12"
-              wrap
-            >
-              <NSelect
-                v-if="orgId && streamerOptions?.length"
-                v-model:value="filterSettings.streamerId"
-                :options="streamerOptions"
-                placeholder="主播"
-                clearable
-                size="medium"
-                style="min-width: 140px; max-width: 220px"
-              />
-              <NSelect
-                v-model:value="filterSettings.type"
-                :options="[
-                  { label: '实体订单', value: GoodsTypes.Physical },
-                  { label: '虚拟订单', value: GoodsTypes.Virtual },
-                ]"
-                clearable
-                placeholder="订单类型"
-                size="medium"
-                style="min-width: 140px"
-              />
-              <NSelect
-                v-model:value="filterSettings.status"
-                :options="[
-                  { label: '已完成', value: PointOrderStatus.Completed },
-                  { label: '等待发货', value: PointOrderStatus.Pending },
-                  { label: '已发货', value: PointOrderStatus.Shipped },
-                ]"
-                placeholder="订单状态"
-                clearable
-                size="medium"
-                style="min-width: 140px"
-              />
-              <NSelect
-                v-model:value="filterSettings.customer"
-                :options="
-                  new List(orders)
-                    .DistinctBy((s) => s.customer.userId)
-                    .Select((s) => ({ label: s.customer.name, value: s.customer.userId }))
-                    .ToArray()
-                "
-                placeholder="按用户筛选"
-                filterable
-                clearable
-                size="medium"
-                style="min-width: 160px; max-width: 240px"
-              />
-              <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo"> 仅未填单号 </NCheckbox>
-            </NFlex>
-
-            <NButton
-              secondary
-              size="medium"
-              type="warning"
-              @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))"
-            >
-              <template #icon>
-                <NIcon :component="Filter24Regular" />
-              </template>
-              重置筛选
-            </NButton>
-          </NFlex>
-
-          <NDivider style="margin: 0" />
-
-          <!-- 操作行 -->
-          <NFlex
-            justify="space-between"
-            align="center"
-            wrap
-            :gap="12"
-          >
-            <NFlex :gap="12">
-              <NButton
-                secondary
-                size="medium"
-                @click="refresh"
-              >
-                <template #icon>
-                  <NIcon :component="ArrowSync24Regular" />
-                </template>
-                刷新
-              </NButton>
-              <NButton
-                secondary
-                type="info"
-                size="medium"
-                @click="exportData"
-              >
-                <template #icon>
-                  <NIcon :component="ArrowDownload24Regular" />
-                </template>
-                导出数据
-              </NButton>
-            </NFlex>
-
-            <NFlex :gap="12">
-              <NPopconfirm @positive-click="openStatusUpdateModal">
-                <template #trigger>
-                  <NButton
-                    size="medium"
-                    type="info"
-                    :disabled="!selectedItem?.length"
-                  >
-                    <template #icon>
-                      <NIcon :component="Edit24Regular" />
-                    </template>
-                    批量更新状态 ({{ selectedItem?.length ?? 0 }})
-                  </NButton>
-                </template>
-                确定要更新选中订单的状态吗?
-              </NPopconfirm>
-
-              <NPopconfirm
-                v-if="!orgId"
-                @positive-click="deleteOrder"
-              >
-                <template #trigger>
-                  <NButton
-                    size="medium"
-                    type="error"
-                    :disabled="!selectedItem?.length"
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete24Regular" />
-                    </template>
-                    批量删除 ({{ selectedItem?.length ?? 0 }})
-                  </NButton>
-                </template>
-                确定删除吗?
-              </NPopconfirm>
-            </NFlex>
-          </NFlex>
-        </NFlex>
       </div>
 
-      <NDivider style="margin: 16px 0" />
+      <div class="toolbar-section">
+        <div class="filters">
+          <USelect
+            v-if="orgId && streamerOptions?.length"
+            v-model="filterSettings.streamerId"
+            :items="streamerOptions"
+            placeholder="主播"
+            class="filter-control"
+          />
+          <USelect
+            v-model="filterSettings.type"
+            :items="typeOptions"
+            placeholder="订单类型"
+            class="filter-control"
+          /><USelect
+            v-model="filterSettings.status"
+            :items="statusOptions"
+            placeholder="订单状态"
+            class="filter-control"
+          /><USelect
+            v-model="filterSettings.customer"
+            :items="customerOptions"
+            placeholder="按用户筛选"
+            searchable
+            class="filter-control"
+          />
+          <UCheckbox v-model="filterSettings.onlyRequireShippingInfo">仅未填单号</UCheckbox>
+          <UButton
+            color="warning"
+            variant="soft"
+            icon="i-lucide-filter-x"
+            @click="filterSettings = { ...defaultSettings }"
+            >重置筛选</UButton
+          >
+        </div>
+        <USeparator />
+        <div class="toolbar-actions">
+          <div>
+            <UButton
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-refresh-cw"
+              :loading="isLoading"
+              @click="refresh"
+              >刷新</UButton
+            ><UButton
+              color="info"
+              variant="soft"
+              icon="i-lucide-download"
+              @click="exportData"
+              >导出数据</UButton
+            >
+          </div>
+          <div>
+            <UButton
+              color="info"
+              :disabled="!selectedItem.length"
+              icon="i-lucide-pencil-line"
+              @click="openStatusUpdateModal"
+              >批量更新状态 ({{ selectedItem.length }})</UButton
+            ><UButton
+              v-if="!orgId"
+              color="error"
+              :disabled="!selectedItem.length"
+              icon="i-lucide-trash-2"
+              @click="showDeleteConfirm = true"
+              >批量删除 ({{ selectedItem.length }})</UButton
+            >
+          </div>
+        </div>
+      </div>
 
-      <!-- 订单列表 -->
       <PointOrderCard
         :order="filteredOrders"
         type="owner"
         :org-id="orgId"
-        @selected-item="(items) => (selectedItem = items)"
+        :loading="isLoading"
+        @selected-item="selectedItem = $event"
       />
-
-      <!-- 状态选择模态框 -->
-      <NModal
-        v-model:show="showStatusModal"
-        title="选择目标状态"
-        preset="card"
-        style="max-width: 400px"
-      >
-        <NFlex vertical>
-          <NText>请选择您想要将订单更新为的状态</NText>
-          <NSelect
-            v-model:value="targetStatus"
-            :options="[
-              { label: '已完成', value: PointOrderStatus.Completed },
-              { label: '等待发货', value: PointOrderStatus.Pending },
-              { label: '已发货', value: PointOrderStatus.Shipped },
-            ]"
-            placeholder="选择状态"
-            style="width: 100%"
-          />
-          <NFlex
-            justify="end"
-            :gap="12"
-          >
-            <NButton @click="showStatusModal = false"> 取消 </NButton>
-            <NButton
-              type="primary"
-              :disabled="targetStatus === undefined"
-              @click="batchUpdateOrderStatus"
-            >
-              确认更新
-            </NButton>
-          </NFlex>
-        </NFlex>
-      </NModal>
     </template>
-  </NSpin>
+
+    <UModal
+      v-model:open="showStatusModal"
+      title="选择目标状态"
+      ><template #body
+        ><div class="modal-stack">
+          <span>请选择您想要将订单更新为的状态</span
+          ><USelect
+            v-model="targetStatus"
+            :items="statusOptions"
+            placeholder="选择状态"
+          /></div></template
+      ><template #footer
+        ><div class="modal-actions">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="showStatusModal = false"
+            >取消</UButton
+          ><UButton
+            color="primary"
+            :disabled="targetStatus === undefined"
+            :loading="isLoading"
+            @click="batchUpdateOrderStatus"
+            >确认更新</UButton
+          >
+        </div></template
+      ></UModal
+    >
+    <UModal
+      v-model:open="showDeleteConfirm"
+      title="删除订单"
+      ><template #body
+        ><p>确定删除选中的 {{ selectedItem.length }} 个订单吗？此操作不可撤销。</p></template
+      ><template #footer
+        ><div class="modal-actions">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="showDeleteConfirm = false"
+            >取消</UButton
+          ><UButton
+            color="error"
+            :loading="isLoading"
+            @click="deleteOrder"
+            >确认删除</UButton
+          >
+        </div></template
+      ></UModal
+    >
+  </div>
 </template>
 
 <style scoped>
-.stat-card {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: all 0.3s var(--vtsuru-bezier);
+.point-order-manage {
+  display: grid;
+  gap: 16px;
 }
-
-.stat-card:hover {
-  border-color: var(--vtsuru-primary);
-  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--vtsuru-fg);
-}
-
-.stat-label {
-  font-size: 13px;
+.orders-loading {
+  display: grid;
+  min-height: 240px;
+  place-content: center;
+  gap: 10px;
   color: var(--vtsuru-fg-muted);
+  text-align: center;
 }
-
-.stat-value.primary {
-  color: var(--vtsuru-primary);
+.orders-loading__spinner {
+  font-size: 26px;
+  animation: spin 0.8s linear infinite;
 }
-.stat-value.success {
-  color: var(--vtsuru-success);
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
 }
-.stat-value.info {
-  color: var(--vtsuru-info);
-}
-.stat-value.warning {
-  color: var(--vtsuru-warning);
-}
-
+.stat-card,
 .toolbar-section {
-  background-color: var(--vtsuru-bg-surface);
   border: 1px solid var(--vtsuru-border);
   border-radius: var(--vtsuru-radius);
+  background: var(--vtsuru-bg);
+}
+.stat-card {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+}
+.stat-card span {
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+}
+.stat-card strong {
+  color: var(--vtsuru-fg);
+  font-size: 24px;
+  line-height: 1.2;
+}
+.primary {
+  color: var(--vtsuru-brand) !important;
+}
+.success {
+  color: var(--vtsuru-success) !important;
+}
+.info {
+  color: var(--vtsuru-info) !important;
+}
+.warning {
+  color: var(--vtsuru-warning) !important;
+}
+.toolbar-section,
+.filters,
+.toolbar-actions,
+.toolbar-actions > div,
+.modal-stack {
+  display: grid;
+  gap: 12px;
+}
+.toolbar-section {
   padding: 12px 16px;
 }
-
-@media (max-width: 768px) {
-  .stat-value {
-    font-size: 20px;
+.filters {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: center;
+}
+.filter-control {
+  min-width: 0;
+}
+.toolbar-actions {
+  grid-template-columns: repeat(2, auto);
+  justify-content: space-between;
+  align-items: center;
+}
+.toolbar-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 960px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .toolbar-actions {
+    grid-template-columns: 1fr;
+  }
+  .toolbar-actions > div {
+    justify-content: stretch;
+  }
+  .toolbar-actions :deep(button) {
+    flex: 1;
   }
 }
 </style>

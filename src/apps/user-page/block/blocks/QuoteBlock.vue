@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ChatbubbleEllipsesOutline } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -39,7 +38,7 @@ const cfg = computed<BlockConfig>(() => {
     :content-style="{ padding: 0 }"
   >
     <div class="quote-bg-icon">
-      <NIcon><ChatbubbleEllipsesOutline /></NIcon>
+      <span><ChatbubbleEllipsesOutline /></span>
     </div>
     <div
       class="quote"
@@ -72,7 +71,7 @@ const cfg = computed<BlockConfig>(() => {
   position: relative;
 }
 
-.quote-card :deep(.n-card__content) {
+.quote-card :deep(.user-page-card) {
   height: 100%;
 }
 

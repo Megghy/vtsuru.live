@@ -32,15 +32,15 @@
 }
 
 /* shadcn-like card rhythm */
-.open-live-page-inner .n-card {
+.open-live-page-inner .u-card {
   border-radius: var(--vtsuru-radius);
 }
 
-.open-live-page-inner .n-card .n-card-header {
+.open-live-page-inner .u-card [data-slot='header'] {
   padding: 12px 14px;
 }
 
-.open-live-page-inner .n-card .n-card__content {
+.open-live-page-inner .u-card [data-slot='body'] {
   padding: 14px;
 }
 

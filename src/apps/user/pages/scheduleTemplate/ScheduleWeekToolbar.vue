@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
-import type { SelectOption, SelectProps } from 'naive-ui'
-import { NButton, NSelect, useMessage } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { ScheduleWeekInfo } from '@/api/api-models'
@@ -14,11 +12,11 @@ const props = defineProps<{
 }>()
 
 const selectedWeek = defineModel<string>()
-const message = useMessage()
+const toast = useToast()
 
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' })
 
-const options = computed<SelectOption[]>(() => {
+const options = computed<Array<{ label: string; value: string }>>(() => {
   const showYear = new Set(props.weeks.map((item) => item.year)).size > 1
   return props.weeks
     .toSorted((left, right) => left.year - right.year || left.week - right.week)
@@ -65,7 +63,7 @@ async function saveScheduleImage() {
     saveAs(blob, `${props.fileName}.png`)
   } catch (error) {
     console.error(error)
-    message.error('保存图片失败')
+    toast.add({ title: '保存图片失败', color: 'error' })
   }
 }
 
@@ -74,39 +72,6 @@ function getISOWeekStart(year: number, week: number) {
   const mondayOffset = (januaryFourth.getDay() + 6) % 7
   januaryFourth.setDate(januaryFourth.getDate() - mondayOffset + (week - 1) * 7)
   return januaryFourth
-}
-
-const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
-  peers: {
-    InternalSelection: {
-      color: 'var(--schedule-toolbar-control-bg)',
-      colorActive: 'var(--schedule-toolbar-control-bg)',
-      colorDisabled: 'var(--schedule-toolbar-control-bg)',
-      textColor: 'var(--schedule-toolbar-fg)',
-      placeholderColor: 'var(--schedule-toolbar-muted)',
-      arrowColor: 'var(--schedule-toolbar-muted)',
-      caretColor: 'var(--schedule-toolbar-accent-readable)',
-      border: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-border)',
-      borderHover: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-accent)',
-      borderActive: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-accent)',
-      borderFocus: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-accent)',
-      boxShadowFocus: '0 0 0 2px var(--schedule-toolbar-focus)',
-      boxShadowActive: '0 0 0 2px var(--schedule-toolbar-focus)',
-      borderRadius: 'var(--vtsuru-page-radius)',
-      heightSmall: 'var(--vtsuru-page-control-height-medium)',
-    },
-    InternalSelectMenu: {
-      color: 'var(--schedule-toolbar-bg)',
-      optionTextColor: 'var(--schedule-toolbar-fg)',
-      optionTextColorPressed: 'var(--schedule-toolbar-fg)',
-      optionTextColorActive: 'var(--schedule-toolbar-accent-readable)',
-      optionCheckColor: 'var(--schedule-toolbar-accent-readable)',
-      optionColorPending: 'var(--schedule-toolbar-control-bg)',
-      optionColorActive: 'var(--schedule-toolbar-control-bg)',
-      optionColorActivePending: 'var(--schedule-toolbar-control-bg-hover)',
-      borderRadius: 'var(--vtsuru-page-radius)',
-    },
-  },
 }
 </script>
 
@@ -122,15 +87,13 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
     >
       ‹ 上一周
     </button>
-    <NSelect
+    <USelect
       v-if="options.length"
-      v-model:value="selectedWeek"
+      v-model="selectedWeek"
       class="schedule-week-toolbar__select"
-      :options="options"
-      :theme-overrides="selectThemeOverrides"
-      :to="false"
+      :items="options"
       placeholder="选择周次"
-      size="small"
+      size="sm"
     />
     <span
       v-else
@@ -148,15 +111,15 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
     >
       下一周 ›
     </button>
-    <NButton
+    <UButton
       v-if="captureTarget"
       class="schedule-week-toolbar__save"
-      type="primary"
-      size="medium"
+      color="primary"
+      size="md"
       @click="saveScheduleImage"
     >
       保存图片
-    </NButton>
+    </UButton>
   </div>
 </template>
 

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSwitch } from 'naive-ui'
-
 import type { QAInfo } from '@/api/api-models'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
@@ -22,11 +20,11 @@ async function testNotification() {
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
   >
-    <NCard
+    <UCard
       size="small"
       bordered
     >
@@ -34,39 +32,39 @@ async function testNotification() {
         title="测试"
         description="开发与调试入口（仅用于内部测试）"
       />
-    </NCard>
+    </UCard>
 
-    <NCard
+    <UCard
       size="small"
       bordered
     >
-      <NFlex
+      <div
         :wrap="true"
         :size="12"
         align="center"
       >
-        <NButton
-          type="primary"
+        <UButton
+          color="primary"
           size="small"
           @click="testNotification"
         >
           测试通知
-        </NButton>
-        <NButton
-          type="primary"
+        </UButton>
+        <UButton
+          color="primary"
           size="small"
           @click="$router.push({ name: 'client-danmaku-window-manage' })"
         >
           弹幕机
-        </NButton>
+        </UButton>
         <LabelItem label="关闭弹幕客户端">
-          <NSwitch
-            v-model:value="setting.settings.dev_disableDanmakuClient"
+          <USwitch
+            v-model="setting.settings.dev_disableDanmakuClient"
             size="small"
-            @update:value="setting.save()"
+            @update:model-value="setting.save()"
           />
         </LabelItem>
-      </NFlex>
-    </NCard>
-  </NFlex>
+      </div>
+    </UCard>
+  </div>
 </template>

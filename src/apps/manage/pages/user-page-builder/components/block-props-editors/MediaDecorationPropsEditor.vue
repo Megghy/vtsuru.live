@@ -1,24 +1,10 @@
 <script setup lang="ts">
-import { ImageOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NDatePicker,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSwitch,
-  NText,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
+import UnixDateTimeInput from '../UnixDateTimeInput.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
@@ -43,280 +29,269 @@ function enableFeedbackEmbed(enabled: boolean) {
 </script>
 
 <template>
-  <NForm
+  <div
+    class="builder-form"
     v-if="props.block.type === 'quote'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem
+      <UFormField
         class="span-full"
         label="内容"
       >
-        <NInput
-          v-model:value="blockProps.text"
-          type="textarea"
+        <UTextarea
+          v-model="blockProps.text"
           :autosize="{ minRows: 3, maxRows: 8 }"
         />
-      </NFormItem>
-      <NFormItem label="作者">
-        <NInput v-model:value="blockProps.author" />
-      </NFormItem>
-      <NFormItem label="对齐">
-        <NSelect
-          v-model:value="blockProps.align"
-          :options="[
+      </UFormField>
+      <UFormField label="作者">
+        <UInput v-model="blockProps.author" />
+      </UFormField>
+      <UFormField label="对齐">
+        <USelect
+          v-model="blockProps.align"
+          :items="[
             { label: 'left', value: 'left' },
             { label: 'center', value: 'center' },
             { label: 'right', value: 'right' },
           ]"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'marquee'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem
+      <UFormField
         class="span-full"
         label="文本"
       >
-        <NInput
-          v-model:value="blockProps.text"
-          type="textarea"
+        <UTextarea
+          v-model="blockProps.text"
           :autosize="{ minRows: 2, maxRows: 6 }"
         />
-      </NFormItem>
-      <NFormItem label="方向">
-        <NSelect
-          v-model:value="blockProps.direction"
-          :options="[
+      </UFormField>
+      <UFormField label="方向">
+        <USelect
+          v-model="blockProps.direction"
+          :items="[
             { label: '向左', value: 'left' },
             { label: '向右', value: 'right' },
             { label: '向上', value: 'up' },
             { label: '向下', value: 'down' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="滚动时长 秒">
-        <NInputNumber
-          v-model:value="blockProps.durationSec"
+      </UFormField>
+      <UFormField label="滚动时长 秒">
+        <UInputNumber
+          v-model="blockProps.durationSec"
           :min="4"
           :max="120"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="悬停暂停">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.pauseOnHover"
+      </UFormField>
+      <UFormField label="悬停暂停">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.pauseOnHover"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
+        </div>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'countdown'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem
+      <UFormField
         class="span-full"
         label="标题"
       >
-        <NInput
-          v-model:value="blockProps.title"
+        <UInput
+          v-model="blockProps.title"
           placeholder="例如：生日倒计时"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="目标时间"
       >
-        <NDatePicker
-          v-model:value="countdownTarget"
-          type="datetime"
-          clearable
+        <UnixDateTimeInput
+          v-model="countdownTarget"
           placeholder="选择目标时间"
-          style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="展示样式">
-        <NSelect
-          v-model:value="blockProps.style"
-          :options="[
+      </UFormField>
+      <UFormField label="展示样式">
+        <USelect
+          v-model="blockProps.style"
+          :items="[
             { label: 'cards', value: 'cards' },
             { label: 'inline', value: 'inline' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="显示秒">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showSeconds"
+      </UFormField>
+      <UFormField label="显示秒">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showSeconds"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         class="span-full"
         label="到达后文案"
       >
-        <NInput
-          v-model:value="blockProps.doneText"
+        <UInput
+          v-model="blockProps.doneText"
           placeholder="已到达"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'feedback'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('title')"
         label="标题"
       >
-        <NInput v-model:value="blockProps.title" />
-      </NFormItem>
-      <NFormItem
+        <UInput v-model="blockProps.title" />
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('buttonText')"
         label="按钮文字"
       >
-        <NInput v-model:value="blockProps.buttonText" />
-      </NFormItem>
-      <NFormItem
+        <UInput v-model="blockProps.buttonText" />
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('description')"
         class="span-full"
         label="描述"
       >
-        <NInput
-          v-model:value="blockProps.description"
-          type="textarea"
+        <UTextarea
+          v-model="blockProps.description"
           :autosize="{ minRows: 2, maxRows: 6 }"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('url')"
         class="span-full"
         label="链接 (https)"
         :required="blockProps.embed && blockProps.embedMode === 'iframe'"
       >
-        <NInput
-          v-model:value="blockProps.url"
+        <UInput
+          v-model="blockProps.url"
           placeholder="https://..."
         />
-      </NFormItem>
-      <NFormItem label="嵌入到页面">
-        <NFlex justify="start">
-          <NSwitch
-            v-model:value="blockProps.embed"
+      </UFormField>
+      <UFormField label="嵌入到页面">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.embed"
             size="small"
-            @update:value="enableFeedbackEmbed"
+            @update:model-value="enableFeedbackEmbed"
           />
-          <NAlert
+          <UAlert
             type="info"
             :show-icon="false"
             style="font-size: 12px; padding: 6px 10px; border-radius: var(--vtsuru-page-radius)"
           >
             开启“嵌入到页面”后，可选择站内提问箱
-          </NAlert>
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+          </UAlert>
+        </div>
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('embedMode')"
         class="span-full"
         label="嵌入内容"
       >
-        <NSelect
-          v-model:value="blockProps.embedMode"
-          :options="[
+        <USelect
+          v-model="blockProps.embedMode"
+          :items="[
             { label: '站内提问箱', value: 'questionBox' },
             { label: '站外 iframe', value: 'iframe' },
           ]"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('height')"
         label="内嵌高度"
       >
-        <NInputNumber
-          v-model:value="blockProps.height"
+        <UInputNumber
+          v-model="blockProps.height"
           :min="200"
           :max="1200"
           style="width: 100%"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'image'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="最大宽度">
-        <NInput
-          v-model:value="blockProps.maxWidth"
+      <UFormField label="最大宽度">
+        <UInput
+          v-model="blockProps.maxWidth"
           placeholder="例如 100% 或 480px"
         />
-      </NFormItem>
-      <NFormItem label="最大高度">
-        <NInput
-          v-model:value="blockProps.maxHeight"
+      </UFormField>
+      <UFormField label="最大高度">
+        <UInput
+          v-model="blockProps.maxHeight"
           placeholder="例如 100% 或 320px"
         />
-      </NFormItem>
-      <NFormItem label="形状">
-        <NSelect
-          v-model:value="blockProps.shape"
-          :options="[
+      </UFormField>
+      <UFormField label="形状">
+        <USelect
+          v-model="blockProps.shape"
+          :items="[
             { label: '圆角 - Rounded', value: 'rounded' },
             { label: '直角 - Square', value: 'square' },
             { label: '圆形 - Circle', value: 'circle' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="图片描述 (Alt)">
-        <NInput
-          v-model:value="blockProps.alt"
+      </UFormField>
+      <UFormField label="图片描述 (Alt)">
+        <UInput
+          v-model="blockProps.alt"
           placeholder="图片加载失败时显示的文字"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="本地图片"
       >
-        <NFlex align="center">
-          <NButton
-            size="small"
+        <div class="builder-row">
+          <UButton
+            size="sm"
             :loading="editor.isUploading.value"
             @click="editor.triggerUpload(props.block, 'imageFile')"
           >
             <template #icon>
-              <NIcon><ImageOutline /></NIcon>
+              <UIcon name="i-lucide-image" />
             </template>
             上传图片
-          </NButton>
-          <NButton
-            size="small"
-            secondary
+          </UButton>
+          <UButton
+            size="sm"
+            variant="soft"
             :disabled="!blockProps.imageFile"
             @click="editor.clearUploadedFile(props.block, 'imageFile')"
           >
             清除
-          </NButton>
+          </UButton>
           <img
             v-if="blockProps.imageFile?.path"
             :src="blockProps.imageFile.path"
@@ -330,103 +305,99 @@ function enableFeedbackEmbed(enabled: boolean) {
               border: 1px solid var(--vtsuru-border);
             "
           />
-          <NText depth="3">
+          <span class="builder-text">
             {{ blockProps.imageFile?.name || blockProps.imageFile?.path || '' }}
-          </NText>
-        </NFlex>
-      </NFormItem>
+          </span>
+        </div>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'embed'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem
+      <UFormField
         class="span-full"
         label="嵌入链接 (支持 Bilibili / YouTube)"
       >
-        <NInput
-          v-model:value="blockProps.url"
+        <UInput
+          v-model="blockProps.url"
           placeholder="https://www.youtube.com/watch?v=..."
         />
-      </NFormItem>
-      <NFormItem label="标题">
-        <NInput
-          v-model:value="blockProps.title"
+      </UFormField>
+      <UFormField label="标题">
+        <UInput
+          v-model="blockProps.title"
           placeholder="可选，用于无障碍访问"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'divider'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="文字">
-        <NInput v-model:value="blockProps.text" />
-      </NFormItem>
-      <NFormItem
+      <UFormField label="文字">
+        <UInput v-model="blockProps.text" />
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('titlePlacement')"
         label="文字位置"
       >
-        <NSelect
-          v-model:value="blockProps.titlePlacement"
-          :options="[
+        <USelect
+          v-model="blockProps.titlePlacement"
+          :items="[
             { label: '居左', value: 'left' },
             { label: '居中', value: 'center' },
             { label: '居右', value: 'right' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="上边距 px">
-        <NInputNumber
-          v-model:value="blockProps.marginTop"
+      </UFormField>
+      <UFormField label="上边距 px">
+        <UInputNumber
+          v-model="blockProps.marginTop"
           :min="0"
           :max="80"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="下边距 px">
-        <NInputNumber
-          v-model:value="blockProps.marginBottom"
+      </UFormField>
+      <UFormField label="下边距 px">
+        <UInputNumber
+          v-model="blockProps.marginBottom"
           :min="0"
           :max="80"
           style="width: 100%"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'spacer'"
-    label-placement="top"
-    size="small"
   >
-    <NFormItem label="大小">
-      <NSelect
-        v-model:value="blockProps.size"
-        :options="[
+    <UFormField label="大小">
+      <USelect
+        v-model="blockProps.size"
+        :items="[
           { label: 'sm', value: 'sm' },
           { label: 'md', value: 'md' },
           { label: 'lg', value: 'lg' },
         ]"
       />
-    </NFormItem>
-  </NForm>
+    </UFormField>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'footer'"
-    label-placement="top"
-    size="small"
   >
-    <NFormItem label="文字">
-      <NInput v-model:value="blockProps.text" />
-    </NFormItem>
-  </NForm>
+    <UFormField label="文字">
+      <UInput v-model="blockProps.text" />
+    </UFormField>
+  </div>
 </template>

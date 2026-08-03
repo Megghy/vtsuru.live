@@ -19,16 +19,8 @@
 }
 
 /* shadcn-like card rhythm */
-.org-page .n-card {
+.org-page [data-slot='root'] {
   border-radius: var(--vtsuru-radius);
-}
-
-.org-page .n-card .n-card-header {
-  padding: 12px 14px;
-}
-
-.org-page .n-card .n-card__content {
-  padding: 14px;
 }
 
 .org-muted {

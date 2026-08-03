@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { Live24Filled } from '@vicons/fluent'
 import { useElementSize } from '@vueuse/core'
-import { useThemeVars } from 'naive-ui'
 
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
@@ -10,7 +8,6 @@ import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import CookieInvalidAlert from '@/apps/client/components/CookieInvalidAlert.vue'
 import { roomInfo } from '@/apps/client/data/info'
 const accountInfo = useAccount()
-const themeVars = useThemeVars()
 
 const coverRef = ref()
 const isHover = ref(false)
@@ -27,11 +24,11 @@ function logout() {
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
   >
-    <NCard
+    <UCard
       size="small"
       bordered
     >
@@ -39,118 +36,135 @@ function logout() {
         title="首页"
         description="客户端状态与常用入口"
       />
-    </NCard>
+    </UCard>
 
     <CookieInvalidAlert variant="home" />
 
-    <NGrid
+    <div
       :x-gap="12"
       :y-gap="12"
       cols="1 900:2 1300:3"
       item-responsive
     >
-      <NGridItem>
-        <NCard
+      <div>
+        <UCard
           size="small"
           bordered
           title="快速入口"
         >
-          <NFlex
+          <div
             vertical
             :size="8"
           >
-            <NText> 你好, {{ accountInfo.name }} </NText>
-            <NButton
-              type="primary"
+            <span> 你好, {{ accountInfo.name }} </span>
+            <UButton
+              color="primary"
               block
               class="client-index-quick-entry-button"
               @click="$router.push({ name: 'client-live-manage' })"
             >
-              <template #icon>
-                <NIcon :component="Live24Filled" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
               进入直播管理
-            </NButton>
-          </NFlex>
-        </NCard>
-      </NGridItem>
+            </UButton>
+          </div>
+        </UCard>
+      </div>
 
-      <NGridItem>
-        <NCard
+      <div>
+        <UCard
           size="small"
           bordered
           title="账号"
         >
-          <NFlex
+          <div
             align="center"
             :size="12"
           >
-            <NAvatar
+            <UAvatar
               :src="`${accountInfo.streamerInfo?.faceUrl}@100w`"
               :fallback-src="accountInfo.name?.slice(0, 2)"
               bordered
               round
               :img-props="{ referrerpolicy: 'no-referrer' }"
             />
-            <NFlex
+            <div
               vertical
               :size="4"
               style="min-width: 0"
             >
-              <NFlex
+              <div
                 align="center"
                 :size="8"
                 :wrap="false"
                 style="min-width: 0"
               >
-                <NEllipsis style="max-width: 100%">
-                  <NText
+                <span style="max-width: 100%">
+                  <span
                     strong
                     style="font-size: 16px"
                   >
                     {{ accountInfo.name }}
-                  </NText>
-                </NEllipsis>
-                <NText depth="3"> ({{ accountInfo.streamerInfo?.name }}) </NText>
-              </NFlex>
-              <NText depth="3">
+                  </span>
+                </span>
+                <span depth="3"> ({{ accountInfo.streamerInfo?.name }}) </span>
+              </div>
+              <span depth="3">
                 {{ accountInfo.bindEmail }}
-              </NText>
-            </NFlex>
-          </NFlex>
+              </span>
+            </div>
+          </div>
           <template #footer>
-            <NPopconfirm @positive-click="logout">
-              <template #trigger>
-                <NButton
-                  type="error"
-                  size="small"
-                >
-                  退出登录
-                </NButton>
+            <UPopover>
+              <UButton
+                color="error"
+                size="sm"
+              >
+                退出登录
+              </UButton>
+              <template #content="{ close }">
+                <div class="space-y-3 p-3">
+                  <div>确定要登出吗? B站 Cookie 将需要重新扫描</div>
+                  <div class="flex justify-end gap-2">
+                    <UButton
+                      size="xs"
+                      color="neutral"
+                      variant="ghost"
+                      @click="close"
+                      >取消</UButton
+                    >
+                    <UButton
+                      size="xs"
+                      color="error"
+                      @click="(close(), logout)"
+                      >确认</UButton
+                    >
+                  </div>
+                </div>
               </template>
-              确定要登出吗? B站 Cookie 将需要重新扫描
-            </NPopconfirm>
+            </UPopover>
           </template>
-        </NCard>
-      </NGridItem>
+        </UCard>
+      </div>
 
-      <NGridItem>
-        <NCard
+      <div>
+        <UCard
           size="small"
           bordered
           content-style="padding: 0;"
         >
           <template #header>
-            <NFlex align="center">
+            <div align="center">
               直播状态
-              <NTag
+              <UBadge
                 :type="roomInfo?.live_status === 1 ? 'success' : 'error'"
                 size="small"
                 :bordered="false"
               >
                 {{ roomInfo?.live_status === 1 ? '直播中' : '未直播' }}
-              </NTag>
-            </NFlex>
+              </UBadge>
+            </div>
           </template>
 
           <div
@@ -158,9 +172,9 @@ function logout() {
             class="client-index-cover"
           >
             <div
-              :style="{ position: 'relative', width: '100%', borderRadius: themeVars.borderRadius, overflow: 'hidden' }"
+              :style="{ position: 'relative', width: '100%', borderRadius: 'var(--vtsuru-radius)', overflow: 'hidden' }"
             >
-              <NImage
+              <img
                 ref="coverRef"
                 :src="roomCover"
                 style="width: 100%; opacity: 0.65"
@@ -183,25 +197,25 @@ function logout() {
             v-else
             class="client-index-cover__empty"
           >
-            <NEmpty
+            <UEmpty
               size="small"
               description="暂无直播间封面信息"
             />
           </div>
 
           <div class="client-index-cover__footer">
-            <NButton
-              type="primary"
+            <UButton
+              color="primary"
               size="small"
               @click="openUrl(liveRoomUrl)"
             >
               前往直播间
-            </NButton>
+            </UButton>
           </div>
-        </NCard>
-      </NGridItem>
-    </NGrid>
-  </NFlex>
+        </UCard>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NDivider, NTabPane, NTabs, NTooltip, useMessage } from 'naive-ui'
 import { onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 
 import { SaveSetting, useAccount } from '@/api/account'
@@ -22,7 +21,10 @@ defineProps<{
   isOpenLive?: boolean
 }>()
 const accountInfo = useAccount()
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const client = await useDanmakuClient().initOpenlive()
 
 // OBS相关设置
@@ -53,17 +55,17 @@ async function updateSettings() {
     await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
       .then((msg) => {
         if (msg) {
-          message.success('已保存')
+          feedback('success', '已保存')
           return true
         } else {
-          message.error(`保存失败: ${msg}`)
+          feedback('error', `保存失败: ${msg}`)
         }
       })
       .finally(() => {
         liveRequest.isLoading = false
       })
   } else {
-    message.success('完成')
+    feedback('success', '完成')
   }
 }
 
@@ -101,58 +103,58 @@ onUnmounted(() => {
   >
     <template
       v-if="accountInfo.id"
-      #actions
+      #footers
     >
-      <NTooltip>
-        <template #trigger>
-          <NButton
-            type="primary"
-            size="small"
-            class="open-live-action-btn"
-            :disabled="!accountInfo"
-            @click="showOBSModal = true"
-          >
-            OBS 组件
-          </NButton>
+      <UTooltip>
+        <UButton
+          color="primary"
+          size="small"
+          class="open-live-action-btn"
+          :disabled="!accountInfo"
+          @click="showOBSModal = true"
+        >
+          OBS 组件
+        </UButton>
+        <template #content>
+          {{ liveRequest.configCanEdit ? '配置 OBS 样式与参数' : '登陆后才可以使用此功能' }}
         </template>
-        {{ liveRequest.configCanEdit ? '配置 OBS 样式与参数' : '登陆后才可以使用此功能' }}
-      </NTooltip>
+      </UTooltip>
     </template>
 
     <template #switch-extra>
-      <NAlert
+      <UAlert
         type="info"
         size="small"
         :bordered="false"
         style="margin-top: 10px"
       >
         如果没有部署
-        <NButton
-          text
-          type="primary"
+        <UButton
+          variant="link"
+          color="primary"
           tag="a"
           href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
           target="_blank"
         >
           VtsuruEventFetcher
-        </NButton>
+        </UButton>
         ，则需要保持此页面开启才能点播；也不要同时开多个页面（可能导致点播重复）。
-      </NAlert>
+      </UAlert>
     </template>
 
     <!-- 主体内容 -->
-    <NCard
+    <UCard
       size="small"
       bordered
     >
-      <NTabs
+      <div
         v-if="!accountInfo?.id || liveRequestEnabled"
         type="line"
         animated
         size="small"
         display-directive="show:lazy"
       >
-        <NTabPane
+        <section
           name="list"
           tab="列表"
         >
@@ -167,7 +169,7 @@ onUnmounted(() => {
                 v-model:is-lrc-loading="liveRequest.isLrcLoading"
                 :song="liveRequest.selectedSong"
               />
-              <NDivider style="margin: 15px 0" />
+              <USeparator style="margin: 15px 0" />
             </div>
           </Transition>
 
@@ -190,33 +192,33 @@ onUnmounted(() => {
               }
             "
           />
-        </NTabPane>
-        <NTabPane
+        </section>
+        <section
           name="history"
           tab="历史"
         >
           <!-- 历史歌曲记录 -->
           <SongRequestHistory />
-        </NTabPane>
-        <NTabPane
+        </section>
+        <section
           name="setting"
           tab="设置"
         >
           <!-- 歌曲请求设置 -->
           <SongRequestSettings />
-        </NTabPane>
-      </NTabs>
+        </section>
+      </div>
       <template v-else>
-        <NAlert
+        <UAlert
           title="未启用"
           type="error"
           size="small"
           :bordered="false"
         >
           请先启用弹幕点播功能
-        </NAlert>
+        </UAlert>
       </template>
-    </NCard>
+    </UCard>
   </OpenLivePageLayout>
 
   <ObsConfigModal

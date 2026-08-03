@@ -1,20 +1,4 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NColorPicker,
-  NDivider,
-  NFlex,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSlider,
-  NText,
-} from 'naive-ui'
 import { computed, defineAsyncComponent, ref } from 'vue'
 
 import { controllerBodies, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
@@ -89,154 +73,112 @@ const displayUrl = computed(() => {
 </script>
 
 <template>
-  <NCard
+  <section
     v-if="config"
-    size="small"
-    style="max-width: 720px; margin: 20px auto"
+    class="gamepad-settings"
   >
-    <!-- 类型选择 + 独立窗口 -->
-    <NFlex
-      align="center"
-      size="small"
-      :wrap="true"
-    >
-      <NText>控制器类型:</NText>
-      <NSelect
-        v-model:value="selectedType"
+    <div class="setting-row">
+      <span>控制器类型</span>
+      <USelect
+        v-model="selectedType"
         :options="gamepadTypeOptions"
-        size="small"
-        style="min-width: 140px"
+        class="setting-select"
       />
-      <NButton
-        size="small"
-        type="primary"
-        tag="a"
+      <UButton
+        as="a"
         :href="displayUrl"
         target="_blank"
+        icon="i-lucide-external-link"
       >
         独立显示窗口
-      </NButton>
-    </NFlex>
+      </UButton>
+    </div>
 
-    <NDivider style="margin: 12px 0" />
+    <USeparator />
 
-    <!-- 连接状态 -->
-    <NAlert
+    <UAlert
       v-if="!gamepad.isGamepadConnected"
-      type="warning"
-      :bordered="false"
-      style="margin-bottom: 12px"
-    >
-      未检测到游戏手柄连接
-    </NAlert>
-    <NAlert
+      color="warning"
+      icon="i-lucide-gamepad-2"
+      title="未检测到游戏手柄连接"
+    />
+    <UAlert
       v-else
-      type="success"
-      :bordered="false"
-      style="margin-bottom: 12px"
-    >
-      已连接: {{ gamepad.connectedGamepadInfo?.id }}
-    </NAlert>
+      color="success"
+      icon="i-lucide-circle-check"
+      :title="`已连接: ${gamepad.connectedGamepadInfo?.id}`"
+    />
 
-    <!-- 设置区域 -->
-    <NFlex
-      vertical
-      size="small"
-    >
-      <!-- 主体样式 -->
-      <NFlex
+    <div class="settings-stack">
+      <div
         v-if="bodyOptions.length > 1"
-        align="center"
-        size="small"
+        class="setting-row"
       >
-        <NText>手柄样式:</NText>
-        <NSelect
-          v-model:value="selectedBodyId"
+        <span>手柄样式</span>
+        <USelect
+          v-model="selectedBodyId"
           :options="bodyOptions"
-          size="small"
-          style="min-width: 200px"
+          class="body-select"
         />
-      </NFlex>
+      </div>
 
-      <!-- 渲染模式 -->
-      <NCheckbox v-model:checked="useOverlayButtons"> 叠加式按钮 (更好的交互效果) </NCheckbox>
+      <UCheckbox
+        v-model="useOverlayButtons"
+        label="叠加式按钮（更好的交互效果）"
+      />
 
-      <!-- 按下颜色 -->
-      <NDivider
-        title-placement="left"
-        style="margin: 8px 0"
-      >
-        按键按下效果
-      </NDivider>
-      <NFlex
-        align="center"
-        size="small"
-      >
-        <NCheckbox v-model:checked="enableCustomColor"> 自定义按下颜色 </NCheckbox>
-        <NColorPicker
+      <USeparator label="按键按下效果" />
+      <div class="setting-row">
+        <UCheckbox
+          v-model="enableCustomColor"
+          label="自定义按下颜色"
+        />
+        <UColorPicker
           v-if="enableCustomColor"
-          v-model:value="customPressedColor"
-          :show-alpha="true"
-          size="small"
-          style="width: 120px"
+          v-model="customPressedColor"
         />
-        <NText
+        <span
           v-else
-          depth="3"
+          class="setting-hint"
         >
-          (默认反色)
-        </NText>
-      </NFlex>
+          默认反色
+        </span>
+      </div>
 
-      <!-- 摇杆灵敏度 -->
-      <NDivider
-        title-placement="left"
-        style="margin: 8px 0"
-      >
-        摇杆灵敏度
-      </NDivider>
-      <NFlex
-        align="center"
-        size="small"
-        :wrap="true"
-      >
-        <NSlider
-          v-model:value="stickSensitivity"
+      <USeparator label="摇杆灵敏度" />
+      <div class="sensitivity-row">
+        <USlider
+          v-model="stickSensitivity"
           :min="1"
           :max="20"
           :step="1"
-          style="min-width: 180px; max-width: 280px"
+          class="sensitivity-slider"
         />
-        <NInputNumber
-          v-model:value="stickSensitivity"
+        <UInputNumber
+          v-model="stickSensitivity"
           :min="1"
           :max="40"
-          size="small"
-          style="width: 72px"
+          class="sensitivity-input"
         />
-        <NButton
-          size="small"
+        <UButton
+          color="neutral"
+          variant="soft"
           @click="stickSensitivity = 5"
         >
           重置
-        </NButton>
-      </NFlex>
-      <NText
-        depth="3"
-        style="font-size: 12px"
-      >
-        数值越大移动幅度越大，默认 5
-      </NText>
+        </UButton>
+      </div>
+      <p class="setting-hint">数值越大移动幅度越大，默认 5</p>
 
-      <!-- 实时预览 -->
-      <NDivider style="margin: 8px 0" />
-      <NButton
-        size="small"
-        type="info"
+      <USeparator />
+      <UButton
+        color="neutral"
+        variant="soft"
+        :icon="showPreview ? 'i-lucide-eye-off' : 'i-lucide-eye'"
         @click="showPreview = !showPreview"
       >
         {{ showPreview ? '隐藏预览' : '显示预览' }}
-      </NButton>
+      </UButton>
       <div
         v-if="showPreview"
         class="preview-box"
@@ -254,35 +196,102 @@ const displayUrl = computed(() => {
         />
       </div>
 
-      <!-- 高级设置 -->
-      <NCollapse>
-        <NCollapseItem title="高级布局设置 (独立显示窗口)">
-          <NFlex
-            align="center"
-            size="small"
-          >
-            <NText>ViewBox:</NText>
-            <NInput
-              v-model:value="customViewBox"
+      <UCollapsible class="advanced-settings">
+        <UButton
+          label="高级布局设置（独立显示窗口）"
+          color="neutral"
+          variant="ghost"
+          trailing-icon="i-lucide-chevron-down"
+          block
+        />
+        <template #content>
+          <div class="setting-row advanced-content">
+            <span>ViewBox</span>
+            <UInput
+              v-model="customViewBox"
               :placeholder="defaultViewBox"
-              size="small"
-              style="width: 180px"
+              class="viewbox-input"
             />
-            <NButton
-              size="small"
+            <UButton
+              color="neutral"
+              variant="soft"
               @click="customViewBox = ''"
             >
               重置
-            </NButton>
-          </NFlex>
-        </NCollapseItem>
-      </NCollapse>
-    </NFlex>
-  </NCard>
-  <NCard v-else> 无效的游戏手柄类型 </NCard>
+            </UButton>
+          </div>
+        </template>
+      </UCollapsible>
+    </div>
+  </section>
+  <UEmpty
+    v-else
+    icon="i-lucide-gamepad-2"
+    title="无效的游戏手柄类型"
+  />
 </template>
 
 <style scoped>
+.gamepad-settings {
+  display: grid;
+  gap: 16px;
+  max-width: 720px;
+  margin: 20px auto;
+  padding: 20px;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+}
+
+.settings-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.setting-row,
+.sensitivity-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.setting-select {
+  min-width: 140px;
+}
+
+.body-select {
+  min-width: 200px;
+}
+
+.sensitivity-slider {
+  flex: 1;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.sensitivity-input {
+  width: 84px;
+}
+
+.setting-hint {
+  margin: 0;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.advanced-settings {
+  border-top: 1px solid var(--vtsuru-border-muted);
+}
+
+.advanced-content {
+  padding: 10px 0;
+}
+
+.viewbox-input {
+  width: min(100%, 220px);
+}
+
 .preview-box {
   position: relative;
   width: 100%;

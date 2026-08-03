@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ChevronBackOutline, ChevronForwardOutline, HomeOutline } from '@vicons/ionicons5'
-import { NButton, NCard, NFlex, NIcon, NScrollbar, NText, NTooltip } from 'naive-ui'
 import { computed, inject } from 'vue'
 
 import { UserPageEditorKey } from '../context'
@@ -31,49 +29,43 @@ const compactPages = computed(() =>
 </script>
 
 <template>
-  <NCard
+  <UCard
     class="pane-card pages-pane"
     :class="{ 'pages-pane--collapsed': props.collapsed }"
     content-style="padding: 0; height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; position: relative"
   >
     <template #header>
-      <NFlex
-        justify="space-between"
-        align="center"
-        :wrap="false"
+      <div
+        class="builder-row"
         style="gap: 6px"
       >
         <Transition name="fade">
-          <NText
+          <span
+            class="builder-text"
             v-if="!props.collapsed"
-            strong
           >
             页面
-          </NText>
+          </span>
         </Transition>
-        <NTooltip
+        <UTooltip
           v-if="props.collapsible"
           placement="right"
         >
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="small"
-              :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'"
-              @click="emit('toggle-collapse')"
-            >
-              <template #icon>
-                <NIcon>
-                  <ChevronBackOutline v-if="!props.collapsed" />
-                  <ChevronForwardOutline v-else />
-                </NIcon>
-              </template>
-            </NButton>
-          </template>
-          {{ props.collapsed ? '展开页面栏' : '收起页面栏' }}
-        </NTooltip>
-      </NFlex>
+          <UButton
+            variant="ghost"
+            square
+            size="sm"
+            :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'"
+            @click="emit('toggle-collapse')"
+          >
+            <template #icon>
+              <UIcon :name="props.collapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-left'" />
+            </template>
+          </UButton>
+
+          <template #content>{{ props.collapsed ? '展开页面栏' : '收起页面栏' }}</template>
+        </UTooltip>
+      </div>
     </template>
     <div class="pages-pane__views">
       <div
@@ -82,11 +74,14 @@ const compactPages = computed(() =>
         :aria-hidden="props.collapsed"
       >
         <div class="pane-scroll">
-          <NScrollbar style="height: 100%">
+          <div
+            class="builder-scroll"
+            style="height: 100%"
+          >
             <div style="padding: 12px">
               <PageManager />
             </div>
-          </NScrollbar>
+          </div>
         </div>
       </div>
       <div
@@ -94,53 +89,45 @@ const compactPages = computed(() =>
         :class="{ 'is-active': props.collapsed }"
         :aria-hidden="!props.collapsed"
       >
-        <NScrollbar class="compact-page-scroll">
-          <NFlex
-            class="compact-page-nav"
-            vertical
-            align="center"
-            :wrap="false"
-          >
-            <NTooltip placement="right">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="tiny"
-                  :type="editor.currentKey.value === 'home' ? 'primary' : 'default'"
-                  aria-label="主页"
-                  @click="editor.currentKey.value = 'home'"
-                >
-                  <template #icon>
-                    <NIcon><HomeOutline /></NIcon>
-                  </template>
-                </NButton>
-              </template>
-              主页
-            </NTooltip>
-            <NTooltip
+        <div class="builder-scroll compact-page-scroll">
+          <div class="builder-stack compact-page-nav">
+            <UTooltip placement="right">
+              <UButton
+                square
+                size="xs"
+                :color="editor.currentKey.value === 'home' ? 'primary' : 'default'"
+                aria-label="主页"
+                @click="editor.currentKey.value = 'home'"
+              >
+                <template #icon>
+                  <UIcon name="i-lucide-house" />
+                </template>
+              </UButton>
+              <template #content> 主页 </template></UTooltip
+            >
+            <UTooltip
               v-for="page in compactPages"
               :key="page.slug"
               placement="right"
             >
-              <template #trigger>
-                <NButton
-                  circle
-                  size="tiny"
-                  :type="editor.currentKey.value === page.slug ? 'primary' : 'default'"
-                  :class="{ 'compact-page-button--hidden': !page.navVisible }"
-                  :aria-label="page.title"
-                  @click="editor.currentKey.value = page.slug"
-                >
-                  {{ page.shortLabel }}
-                </NButton>
-              </template>
-              {{ page.title }}{{ page.navVisible ? '' : '（导航隐藏）' }}
-            </NTooltip>
-          </NFlex>
-        </NScrollbar>
+              <UButton
+                square
+                size="xs"
+                :color="editor.currentKey.value === page.slug ? 'primary' : 'default'"
+                :class="{ 'compact-page-button--hidden': !page.navVisible }"
+                :aria-label="page.title"
+                @click="editor.currentKey.value = page.slug"
+              >
+                {{ page.shortLabel }}
+              </UButton>
+
+              <template #content>{{ page.title }}{{ page.navVisible ? '' : '（导航隐藏）' }}</template>
+            </UTooltip>
+          </div>
+        </div>
       </div>
     </div>
-  </NCard>
+  </UCard>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
@@ -150,11 +137,11 @@ const compactPages = computed(() =>
   transition: box-shadow 180ms ease;
 }
 
-.pages-pane--collapsed :deep(.n-card-header) {
+.pages-pane--collapsed :deep([data-slot='header']) {
   padding-inline: 9px;
 }
 
-.pages-pane--collapsed :deep(.n-card-header__main) {
+.pages-pane--collapsed :deep([data-slot='header'] > *) {
   min-width: 0;
 }
 
@@ -213,7 +200,7 @@ const compactPages = computed(() =>
   padding: 10px 0;
 }
 
-.compact-page-nav :deep(.n-button) {
+.compact-page-nav :deep(button) {
   flex: 0 0 auto;
   transition:
     transform 140ms ease,
@@ -221,7 +208,7 @@ const compactPages = computed(() =>
     background-color 140ms ease;
 }
 
-.compact-page-nav :deep(.n-button:hover) {
+.compact-page-nav :deep(button:hover) {
   transform: translateY(-1px);
 }
 

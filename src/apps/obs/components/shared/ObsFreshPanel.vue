@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NEmpty } from 'naive-ui'
 import { toRef } from 'vue'
 
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
@@ -132,11 +131,12 @@ const { listContainerRef, listInnerRef, isMoreThanContainer, animationTranslateY
           </TransitionGroup>
         </div>
       </template>
-      <NEmpty
+      <p
         v-else
-        :description="emptyText"
         class="obs-fresh-empty"
-      />
+      >
+        {{ emptyText }}
+      </p>
     </div>
 
     <div
@@ -436,9 +436,11 @@ const { listContainerRef, listInnerRef, isMoreThanContainer, animationTranslateY
 
 .obs-fresh-empty {
   height: 100%;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #64748b;
 }
 
 .obs-fresh-footer {

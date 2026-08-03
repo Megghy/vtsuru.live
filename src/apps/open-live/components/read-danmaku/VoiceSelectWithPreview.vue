@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Play20Filled } from '@vicons/fluent'
-import { NButton, NIcon, NSelect } from 'naive-ui'
 import { ref } from 'vue'
 
 import { useSpeechService } from '@/store/useSpeechService'
@@ -33,9 +31,9 @@ async function onPreview() {
 
 <template>
   <div class="voice-select-row">
-    <NSelect
+    <USelectMenu
       :value="modelValue"
-      :options="options as any"
+      :items="options as any"
       :loading="loading"
       :placeholder="placeholder ?? '选择音色'"
       :filterable="filterable !== false"
@@ -43,18 +41,19 @@ async function onPreview() {
       style="flex: 1"
       @update:value="$emit('update:modelValue', $event)"
       @focus="$emit('focus')"
+      value-key="value"
     />
-    <NButton
+    <UButton
       :loading="previewing"
-      tertiary
+      variant="soft"
       size="medium"
       @click="onPreview"
     >
-      <template #icon>
-        <NIcon :component="Play20Filled" />
+      <template #leading>
+        <UIcon name="i-lucide-circle" />
       </template>
       试听
-    </NButton>
+    </UButton>
   </div>
 </template>
 

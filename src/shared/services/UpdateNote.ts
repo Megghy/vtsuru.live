@@ -1,8 +1,20 @@
-import { NButton, NImage } from 'naive-ui'
-import { h, type VNode } from 'vue'
+import { h, ref, type VNode } from 'vue'
 
-import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
+
+const UpdateNoteImage = (props: { src: string; width?: number; height?: number }) =>
+  h('img', {
+    src: props.src,
+    width: props.width,
+    height: props.height,
+    loading: 'lazy',
+    style: { maxWidth: '100%', height: props.height ? `${props.height}px` : 'auto', objectFit: 'contain' },
+  })
+
+const UpdateNoteLink = (
+  props: { href: string; target?: string },
+  { slots }: { slots: { default?: () => VNode[] } },
+) => h('a', { href: props.href, target: props.target, rel: 'noopener noreferrer' }, slots.default?.())
 
 export const updateNotes: updateNoteType[] = [
   {
@@ -43,13 +55,13 @@ export const updateNotes: updateNoteType[] = [
             '左侧可以添加新的页面, 右侧可以添加区块, 可以拖拽调整顺序, 拖到一起可以合并成组(布局), 点击区块可以调整参数\r\n',
             '如果有更多的区块建议可以提出, 后续会持续更新\r\n',
             () =>
-              h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png', width: 300 }),
+              h(UpdateNoteImage, { src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png', width: 300 }),
           ],
           [
             '入口：',
             () =>
               h(
-                NButton,
+                UpdateNoteLink,
                 {
                   text: true,
                   tag: 'a',
@@ -62,7 +74,7 @@ export const updateNotes: updateNoteType[] = [
             '  效果:',
             () =>
               h(
-                NButton,
+                UpdateNoteLink,
                 {
                   text: true,
                   tag: 'a',
@@ -88,7 +100,7 @@ export const updateNotes: updateNoteType[] = [
           [
             () =>
               h(
-                NButton,
+                UpdateNoteLink,
                 {
                   text: true,
                   tag: 'a',
@@ -99,7 +111,7 @@ export const updateNotes: updateNoteType[] = [
                 () => 'VTsuru Client ',
               ),
             ' 新增直播管理功能, 允许直接开播下播并使用OBS推流, 不再依赖直播姬\r\n',
-            () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/QQ20251117-182002.png', width: 300 }),
+            () => h(UpdateNoteImage, { src: 'https://files.vtsuru.suki.club/updatelog/QQ20251117-182002.png', width: 300 }),
           ],
         ],
       },
@@ -116,7 +128,7 @@ export const updateNotes: updateNoteType[] = [
           [
             '点播OBS组件新增无背景的简洁样式',
             () =>
-              h(NImage, {
+              h(UpdateNoteImage, {
                 src: 'https://files.vtsuru.suki.club/updatelog/7c8eab68-43d1-4a93-b927-57ebcdda0e5e.png',
                 width: 300,
               }),
@@ -149,12 +161,12 @@ export const updateNotes: updateNoteType[] = [
         content: [
           [
             '签到功能增加排行榜, 可以查看签到天数和签到排名 ',
-            () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/25_5_1_1.png', width: 300 }),
+            () => h(UpdateNoteImage, { src: 'https://files.vtsuru.suki.club/updatelog/25_5_1_1.png', width: 300 }),
           ],
           [
             '签到功能增加仅签到功能, 可以只签到不给予积分, 修改设置项',
             () =>
-              h(NImage, {
+              h(UpdateNoteImage, {
                 src: 'https://files.vtsuru.suki.club/updatelog/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-05-01%20080506.png',
                 width: 300,
               }),
@@ -174,7 +186,7 @@ export const updateNotes: updateNoteType[] = [
           [
             '客户端新增弹幕签到功能，支持观众通过发送特定指令获得积分 (需扫码登录或者使用CookieCloud才能发送回复',
             () =>
-              h(NImage, {
+              h(UpdateNoteImage, {
                 src: 'https://pan.suki.club/d/vtsuru/imgur/0e784480a3016b748af2579b2c492a3b.png',
                 width: 300,
               }),
@@ -183,7 +195,7 @@ export const updateNotes: updateNoteType[] = [
             '客户端安装方式:',
             () =>
               h(
-                NButton,
+                UpdateNoteLink,
                 {
                   text: true,
                   tag: 'a',
@@ -214,7 +226,7 @@ export const updateNotes: updateNoteType[] = [
           [
             '弹幕姬现在可用，兼容 blivechat 样式',
             () =>
-              h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2025-05-01 081550.png', width: 300 }),
+              h(UpdateNoteImage, { src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2025-05-01 081550.png', width: 300 }),
           ],
           [
             '大部分功能都和 blivechat 一致, 不过目前还无法提供本地文件访问, 部分css中需要使用图片等本地资源样式的需要等 EventFetcher 更新相关功能后才能使用\r\n',
@@ -234,7 +246,7 @@ export const updateNotes: updateNoteType[] = [
         content: [
           [
             'EventFetcher客户端新增多种自动操作类型支持，包括弹幕自动回复、礼物感谢、上舰发送私信、关注感谢、入场欢迎、定时发送和SC感谢等, 可以执行js代码',
-            () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/QQ20250422-221703.png', width: 300 }),
+            () => h(UpdateNoteImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/QQ20250422-221703.png', width: 300 }),
           ],
           [
             '使用模板系统，支持随机回复、自定义表达式和条件判断等\r\n',
@@ -242,7 +254,7 @@ export const updateNotes: updateNoteType[] = [
             '发送弹幕和私信需要客户端扫码登录, 客户端安装方式:',
             () =>
               h(
-                NButton,
+                UpdateNoteLink,
                 {
                   text: true,
                   tag: 'a',
@@ -269,7 +281,7 @@ export const updateNotes: updateNoteType[] = [
             'Tauri 客户端新增弹幕机功能, 可以在自己电脑上显示弹幕礼物等. ',
             '客户端需更新至0.1.2版本, 重启客户端后会自动更新',
             () =>
-              h(NImage, {
+              h(UpdateNoteImage, {
                 src: 'https://pan.suki.club/d/vtsuru/imgur/81d76a89-96b8-44e9-be79-6caaa5741f64.png',
                 width: 200,
               }),
@@ -293,7 +305,7 @@ export const updateNotes: updateNoteType[] = [
             '安装方式: ',
             () =>
               h(
-                NButton,
+                UpdateNoteLink,
                 {
                   text: true,
                   tag: 'a',
@@ -310,7 +322,7 @@ export const updateNotes: updateNoteType[] = [
             '源码: ',
             () =>
               h(
-                NButton,
+                UpdateNoteLink,
                 {
                   text: true,
                   tag: 'a',
@@ -323,7 +335,7 @@ export const updateNotes: updateNoteType[] = [
             ' | ',
             () =>
               h(
-                NButton,
+                UpdateNoteLink,
                 {
                   text: true,
                   tag: 'a',
@@ -336,7 +348,7 @@ export const updateNotes: updateNoteType[] = [
           ],
           [
             () =>
-              h(NImage, {
+              h(UpdateNoteImage, {
                 src: 'https://pan.suki.club/d/vtsuru/imgur/01295402D7FBBF192FE5608179A4A7A6.png',
                 width: 200,
               }),
@@ -356,7 +368,7 @@ export const updateNotes: updateNoteType[] = [
           [
             '新增一个歌单样式: 列表',
             () =>
-              h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/QQ20250408-134631.png', width: 300, height: 200 }),
+              h(UpdateNoteImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/QQ20250408-134631.png', width: 300, height: 200 }),
           ],
         ],
       },
@@ -367,26 +379,17 @@ export const updateNotes: updateNoteType[] = [
 export const currentUpdateNoteVer = updateNotes.toSorted((a, b) => b.ver - a.ver)[0].ver
 export const currentUpdateNote = updateNotes.toSorted((a, b) => b.ver - a.ver)[0].items
 export const savedUpdateNoteVer = usePersistedStorage('UpdateNoteVer', 0)
+export const isUpdateNoteOpen = ref(false)
 
 export function checkUpdateNote() {
   if (savedUpdateNoteVer.value < currentUpdateNoteVer) {
-    window.$dialog.create({
-      title: '更新日志',
-      style: {
-        width: '700px',
-        maxWidth: '90vw',
-      },
-      content: () => h(UpdateNoteContainer),
-      negativeText: '确定',
-      positiveText: '下次更新前不再提示',
-      onPositiveClick: () => {
-        savedUpdateNoteVer.value = currentUpdateNoteVer
-      },
-      onClose: () => {
-        savedUpdateNoteVer.value = currentUpdateNoteVer
-      },
-    })
+    isUpdateNoteOpen.value = true
   }
+}
+
+export function dismissUpdateNote() {
+  savedUpdateNoteVer.value = currentUpdateNoteVer
+  isUpdateNoteOpen.value = false
 }
 
 export type updateType = 'fix' | 'new' | 'optimize' | 'other'

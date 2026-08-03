@@ -2,7 +2,6 @@
 import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef, watch } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
@@ -18,8 +17,7 @@ type InsertFnType = (url: string, alt: string, href: string) => void
 const html = defineModel<string>('html', { required: true })
 const imagesFile = defineModel<UploadFileResponse[]>('imagesFile', { default: () => [] })
 
-const message = useMessage()
-const themeVars = useThemeVars()
+const toast = useToast()
 
 const editorRef = shallowRef()
 
@@ -106,13 +104,13 @@ const editorConfig: Partial<IEditorConfig> = {
       maxNumberOfFiles: 1,
       async customUpload(file: File, insertFn: InsertFnType) {
         try {
-          message.info('图片上传中')
+          toast.add({ title: '图片上传中', color: 'info' })
           const [result] = await uploadFiles(file, UserFileTypes.Image, UserFileLocation.Local)
           if (!imagesFile.value.some((x) => x.id === result.id)) imagesFile.value = [...imagesFile.value, result]
           insertFn(result.path, result.name || '', result.path)
-          message.success('图片上传成功')
+          toast.add({ title: '图片上传成功', color: 'success' })
         } catch (e) {
-          message.error((e as Error).message || '图片上传失败')
+          toast.add({ title: (e as Error).message || '图片上传失败', color: 'error' })
           throw e
         }
       },
@@ -155,11 +153,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div
+    class="rich-text-editor"
     :class="{ 'dark-theme': isDarkMode }"
-    :style="{ border: `1px solid ${themeVars.borderColor}`, borderRadius: themeVars.borderRadius, overflow: 'hidden' }"
   >
     <Toolbar
-      :style="{ borderBottom: `1px solid ${themeVars.borderColor}` }"
+      class="rich-text-editor__toolbar"
       :editor="editorRef"
       :default-config="toolbarConfig"
       mode="default"
@@ -173,3 +171,15 @@ onBeforeUnmount(() => {
     />
   </div>
 </template>
+
+<style scoped>
+.rich-text-editor {
+  overflow: hidden;
+  border: var(--vtsuru-page-border, 1px solid var(--vtsuru-border));
+  border-radius: var(--vtsuru-page-radius, 8px);
+}
+
+.rich-text-editor__toolbar {
+  border-bottom: var(--vtsuru-page-border, 1px solid var(--vtsuru-border));
+}
+</style>

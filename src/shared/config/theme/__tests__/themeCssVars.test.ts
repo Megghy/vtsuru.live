@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildManageTokens, buildSiteTokens, getThemeCssVars, getThemeOverrides } from '../index'
+import { buildManageTokens, buildSiteTokens, getThemeCssVars } from '../index'
 
 describe('getThemeCssVars', () => {
   it('creates site variables without exposing naive-ui internals', () => {
@@ -35,13 +35,11 @@ describe('getThemeCssVars', () => {
       '#09090b',
     ])
 
-    const darkOverrides = getThemeOverrides(darkTokens)
-    expect(darkOverrides.common?.textColor2).toBe('#fafafa')
-    expect(darkOverrides.common?.textColor3).toBe('#a1a1aa')
-    expect(darkOverrides.Card?.color).toBe('#27272a')
-    expect(darkOverrides.Card?.borderColor).toBe('#3f3f46')
-    expect(darkOverrides.Card?.colorEmbedded).toBe('#09090b')
-    expect(darkOverrides.Alert?.colorInfo).toBe('rgba(96, 165, 250, 0.16)')
-    expect(darkOverrides.Alert?.borderInfo).toBe('1px solid rgba(96, 165, 250, 0.42)')
+    expect(dark['--vtsuru-fg']).toBe('#fafafa')
+    expect(dark['--vtsuru-fg-muted']).toBe('#a1a1aa')
+    expect(dark['--vtsuru-bg-surface']).toBe('#27272a')
+    expect(dark['--vtsuru-border']).toBe('#3f3f46')
+    expect(dark['--vtsuru-bg-inset']).toBe('#09090b')
+    expect(dark['--vtsuru-info-soft']).toBe('rgba(96, 165, 250, 0.12)')
   })
 })

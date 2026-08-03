@@ -1,22 +1,7 @@
 <script setup lang="ts">
-import { ArrowCounterclockwise24Regular, Delete24Filled } from '@vicons/fluent'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NDataTable,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NPopconfirm,
-  NFlex,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
-import { computed, h, ref } from 'vue'
+const ArrowCounterclockwise24Regular = 'i-lucide-circle'
+const Delete24Filled = 'i-lucide-circle'
+import { computed, h, ref, resolveComponent } from 'vue'
 
 import type { SongRequestInfo } from '@/api/api-models'
 import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
@@ -38,7 +23,7 @@ const statusFilterOptions = computed(() => {
     })
 })
 
-const columns: DataTableColumns<SongRequestInfo> = [
+const columns: any[] = [
   {
     title: '曲名',
     key: 'songName',
@@ -48,15 +33,15 @@ const columns: DataTableColumns<SongRequestInfo> = [
     key: 'user.name',
     render: (row: SongRequestInfo) => {
       return h(
-        NTooltip,
+        resolveComponent('UTooltip'),
         { trigger: 'hover' },
         {
           trigger: () =>
             h(
-              NTag,
+              resolveComponent('UBadge'),
               { bordered: false, size: 'small' },
               row.from == 3 // Manual
-                ? () => h(NText, { italic: true }, () => '手动添加')
+                ? () => h('span', { italic: true }, () => '手动添加')
                 : () => row.user?.name || '未知用户',
             ),
           default: () => (row.from == 3 ? '就是主播自己' : row.user?.uid || '未知ID'),
@@ -91,7 +76,7 @@ const columns: DataTableColumns<SongRequestInfo> = [
           break
         }
       }
-      return h(NTag, { size: 'small', type: fromType }, () => {
+      return h(resolveComponent('UBadge'), { size: 'small', type: fromType }, () => {
         switch (row.from) {
           case SongRequestFrom.Danmaku: {
             return '弹幕'
@@ -142,7 +127,7 @@ const columns: DataTableColumns<SongRequestInfo> = [
         }
       }
       return h(
-        NTag,
+        resolveComponent('UBadge'),
         {
           type: statusType,
           size: 'small',
@@ -157,7 +142,7 @@ const columns: DataTableColumns<SongRequestInfo> = [
     key: 'time',
     sorter: (a: SongRequestInfo, b: SongRequestInfo) => a.createAt - b.createAt,
     render: (row: SongRequestInfo) => {
-      return h(NTime, { time: row.createAt })
+      return h('time', { time: row.createAt })
     },
   },
   {
@@ -166,17 +151,17 @@ const columns: DataTableColumns<SongRequestInfo> = [
     width: 100,
     render(row: SongRequestInfo) {
       return h(
-        NFlex,
+        'div',
         {
           justify: 'center',
           size: 10,
         },
         () => [
           row.status == SongRequestStatus.Finish || row.status == SongRequestStatus.Cancel
-            ? h(NTooltip, null, {
+            ? h(resolveComponent('UTooltip'), null, {
                 trigger: () =>
                   h(
-                    NButton,
+                    resolveComponent('UButton'),
                     {
                       size: 'small',
                       type: 'info',
@@ -187,21 +172,21 @@ const columns: DataTableColumns<SongRequestInfo> = [
                       },
                     },
                     {
-                      icon: () => h(NIcon, { component: ArrowCounterclockwise24Regular }),
+                      icon: () => h(resolveComponent('UIcon'), { component: ArrowCounterclockwise24Regular }),
                     },
                   ),
                 default: () => '重新放回等待列表',
               })
             : undefined,
           h(
-            NPopconfirm,
+            resolveComponent('UPopover'),
             { onPositiveClick: () => songRequest.deleteSongs([row]) },
             {
               trigger: () =>
-                h(NTooltip, null, {
+                h(resolveComponent('UTooltip'), null, {
                   trigger: () =>
                     h(
-                      NButton,
+                      resolveComponent('UButton'),
                       {
                         size: 'small',
                         type: 'error',
@@ -209,7 +194,7 @@ const columns: DataTableColumns<SongRequestInfo> = [
                         loading: songRequest.isLoading,
                       },
                       {
-                        icon: () => h(NIcon, { component: Delete24Filled }),
+                        icon: () => h(resolveComponent('UIcon'), { component: Delete24Filled }),
                       },
                     ),
                   default: () => '删除记录',
@@ -225,62 +210,62 @@ const columns: DataTableColumns<SongRequestInfo> = [
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
   >
-    <NFlex>
-      <NInputGroup style="width: 250px">
-        <NInputGroupLabel> 筛选曲名 </NInputGroupLabel>
-        <NInput
+    <div>
+      <div style="width: 250px">
+        <span> 筛选曲名 </span>
+        <UInput
           :value="songRequest.filterSongName"
           clearable
           placeholder="搜索歌曲..."
           @update:value="songRequest.filterSongName = $event"
         >
-          <template #suffix>
-            <NCheckbox
-              :checked="songRequest.filterSongNameContains"
-              @update:checked="songRequest.filterSongNameContains = $event"
+          <template #trailing>
+            <UCheckbox
+              :model-value="songRequest.filterSongNameContains"
+              @update:model-value="songRequest.filterSongNameContains = $event === true"
             >
               包含
-            </NCheckbox>
+            </UCheckbox>
           </template>
-        </NInput>
-      </NInputGroup>
-      <NInputGroup style="width: 250px">
-        <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
-        <NInput
+        </UInput>
+      </div>
+      <div style="width: 250px">
+        <span> 筛选用户 </span>
+        <UInput
           :value="songRequest.filterName"
           clearable
           placeholder="搜索用户..."
           @update:value="songRequest.filterName = $event"
         >
-          <template #suffix>
-            <NCheckbox
-              :checked="songRequest.filterNameContains"
-              @update:checked="songRequest.filterNameContains = $event"
+          <template #trailing>
+            <UCheckbox
+              :model-value="songRequest.filterNameContains"
+              @update:model-value="songRequest.filterNameContains = $event === true"
             >
               包含
-            </NCheckbox>
+            </UCheckbox>
           </template>
-        </NInput>
-      </NInputGroup>
-    </NFlex>
-    <NDataTable
+        </UInput>
+      </div>
+    </div>
+    <UTable
       ref="table"
       size="small"
       :columns="columns"
       :data="songRequest.songs"
       :bordered="false"
       :loading="songRequest.isLoading"
-      :pagination="{ pageSize: 10 }"
+      :pagination="{ pageIndex: 1, pageSize: 10 }"
       :row-class-name="
         (row, index) =>
           row.status === SongRequestStatus.Singing || row.status === SongRequestStatus.Waiting ? 'song-active' : ''
       "
     />
-  </NFlex>
+  </div>
 </template>
 
 <style>

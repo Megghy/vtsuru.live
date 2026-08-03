@@ -40,7 +40,7 @@ const style = computed(() => ({
 .props-grid > :deep(*) {
   min-width: 0;
 }
-.props-grid :deep(.n-form-item) {
+.props-grid :deep([data-slot='form-field']) {
   margin-bottom: 0;
 }
 .props-grid :deep(.span-full) {

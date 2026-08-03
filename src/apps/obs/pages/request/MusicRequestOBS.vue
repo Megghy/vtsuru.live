@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { useEventBus } from '@vueuse/core'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useMusicRequestObsView } from '@/apps/obs/components/request/useMusicRequestObsView'
@@ -7,6 +8,7 @@ import ObsClassicPanel from '@/apps/obs/components/shared/ObsClassicPanel.vue'
 import ObsFreshPanel from '@/apps/obs/components/shared/ObsFreshPanel.vue'
 import ObsMinimalPanel from '@/apps/obs/components/shared/ObsMinimalPanel.vue'
 import { useOBSNotification } from '@/store/useOBSNotification'
+import { obsUpdateEventKey } from '@/app/events'
 
 const props = defineProps<{
   id?: number
@@ -17,6 +19,7 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
+const obsUpdateBus = useEventBus(obsUpdateEventKey)
 const currentId = computed<string>(() => {
   const value = props.id ?? (Array.isArray(route.query.id) ? route.query.id[0] : route.query.id)
   return value === undefined || value === null ? '' : String(value)
@@ -53,13 +56,7 @@ const obsNotification = useOBSNotification()
 onMounted(() => {
   void obsNotification.init(['music-request'])
   update()
-  window.$mitt.on('onOBSComponentUpdate', () => {
-    update()
-  })
-})
-
-onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate')
+  obsUpdateBus.on(update)
 })
 </script>
 

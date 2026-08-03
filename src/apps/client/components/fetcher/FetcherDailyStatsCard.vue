@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { TrendingUpOutline } from '@vicons/ionicons5'
 import { BarChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -10,8 +9,6 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import type { DataTableColumns } from 'naive-ui'
-import { NTag } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 
@@ -45,7 +42,7 @@ interface TodayTypeRow {
   count: number
 }
 
-const todayTypeColumns: DataTableColumns<TodayTypeRow> = [
+const todayTypeColumns: any[] = [
   { title: '排名', key: 'rank', align: 'center', width: 72 },
   {
     title: '类型',
@@ -54,7 +51,7 @@ const todayTypeColumns: DataTableColumns<TodayTypeRow> = [
     ellipsis: { tooltip: true },
     render: (row) =>
       h(
-        NTag,
+        resolveComponent('UBadge'),
         { size: 'small', type: 'info', bordered: false, style: 'max-width: 100%; justify-content: flex-start;' },
         { default: () => row.type },
       ),
@@ -145,43 +142,41 @@ onMounted(loadHistoricalData)
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
   >
     <!-- 今日统计 -->
-    <NCard
+    <UCard
       title="今日统计"
       size="small"
       bordered
       style="width: 100%"
     >
       <template #header-extra>
-        <NText depth="3">
+        <span depth="3">
           {{ currentStatistic?.date ?? 'N/A' }}
-        </NText>
+        </span>
       </template>
       <div v-if="currentStatistic">
-        <NGrid
+        <div
           :x-gap="16"
           :y-gap="16"
           cols="1 s:2"
           responsive="screen"
         >
-          <NGi>
-            <NStatistic label="今日接收总数">
-              <template #prefix>
-                <NIcon :component="TrendingUpOutline" />
-              </template>
+          <div>
+            <div label="今日接收总数">
+              <UIcon name="i-lucide-circle" />
               <span style="font-size: 1.8em; font-weight: 500">{{
                 currentStatistic.count?.toLocaleString() ?? 0
               }}</span>
-            </NStatistic>
-          </NGi>
-          <NGi>
-            <NText strong> 类型明细: </NText>
+            </div>
+          </div>
+          <div>
+            <span strong> 类型明细: </span>
             <div style="margin-top: 8px">
-              <NDataTable
+              <UTable
                 v-if="todayTypeTableData.length > 0"
                 :columns="todayTypeColumns"
                 :data="todayTypeTableData"
@@ -189,34 +184,33 @@ onMounted(loadHistoricalData)
                 size="small"
                 :bordered="false"
                 striped
-                :pagination="false"
                 :max-height="220"
                 single-line
                 :scrollbar-props="{ size: 6 }"
               />
-              <NEmpty
+              <UEmpty
                 v-else
                 description="今日暂无数据"
                 size="small"
               />
             </div>
-          </NGi>
-        </NGrid>
+          </div>
+        </div>
       </div>
-      <NEmpty
+      <UEmpty
         v-else
         description="正在加载今日统计..."
       />
-    </NCard>
+    </UCard>
 
     <!-- 历史统计 -->
-    <NCard
+    <UCard
       title="历史事件量 (近30日)"
       size="small"
       bordered
       style="width: 100%"
     >
-      <NSpin :show="isLoadingHistory">
+      <div :show="isLoadingHistory">
         <div style="height: 280px">
           <VChart
             v-if="historicalData.length > 0"
@@ -225,13 +219,13 @@ onMounted(loadHistoricalData)
             :manual-update="true"
             autoresize
           />
-          <NEmpty
+          <UEmpty
             v-else
             description="无历史数据"
             style="height: 100%; display: flex; align-items: center; justify-content: center"
           />
         </div>
-      </NSpin>
-    </NCard>
-  </NFlex>
+      </div>
+    </UCard>
+  </div>
 </template>

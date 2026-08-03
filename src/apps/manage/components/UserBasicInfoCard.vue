@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
-import { NAvatar, NCard, NDivider, NEmpty, NFlex, NSpin, NText } from 'naive-ui'
 import { onMounted, ref, watch } from 'vue'
 
 import type { UserBasicInfo } from '@/api/api-models'
@@ -50,26 +49,40 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpin :show="isLoading">
-    <NCard size="small">
-      <NEmpty
-        v-if="!currentUser.id"
-        :description="user ? (isLoading ? '加载中' : '未找到用户') : '未选择用户'"
+  <UCard :ui="{ body: 'p-3' }">
+    <div
+      v-if="isLoading"
+      class="user-basic-info-card__loading"
+    >
+      <USkeleton class="size-10 rounded-full" />
+      <USkeleton class="h-4 w-28" />
+    </div>
+    <UEmpty
+      v-else-if="!currentUser.id"
+      :title="user ? '未找到用户' : '未选择用户'"
+      size="sm"
+    />
+    <div
+      v-else
+      class="user-basic-info-card__content"
+    >
+      <UAvatar
+        :src="getUserAvatarUrl(currentUser.id)"
+        :alt="currentUser.name"
+        size="md"
       />
-      <NFlex
-        v-else
-        align="center"
-      >
-        <NAvatar
-          round
-          :src="getUserAvatarUrl(currentUser.id)"
-          :img-props="{ referrerpolicy: 'no-referrer' }"
-        />
-        <NDivider vertical />
-        <NText>
-          {{ currentUser.name }}
-        </NText>
-      </NFlex>
-    </NCard>
-  </NSpin>
+      <USeparator orientation="vertical" />
+      <strong>{{ currentUser.name }}</strong>
+    </div>
+  </UCard>
 </template>
+
+<style scoped>
+.user-basic-info-card__loading,
+.user-basic-info-card__content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+}
+</style>

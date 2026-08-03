@@ -1,4 +1,3 @@
-import { useMessage } from 'naive-ui'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -8,11 +7,18 @@ import { useUserPageEditorCore } from './useUserPageEditorCore'
 import { useUserPageEditorIO } from './useUserPageEditorIO'
 import { useUserPageEditorLifecycle } from './useUserPageEditorLifecycle'
 
+import './components/builder-ui.css'
+
 const MAX_PAGES_COUNT = 16
 const MAX_CONFIG_BYTES = 128 * 1024
 
 export function useUserPageEditor() {
-  const message = useMessage()
+  const toast = useToast()
+  const message: EditorNotifier = {
+    success: (title) => toast.add({ title, color: 'success' }),
+    warning: (title) => toast.add({ title, color: 'warning' }),
+    error: (title) => toast.add({ title, color: 'error' }),
+  }
   const account = useAccount()
   const accountId = computed(() => account.value.id)
   const core = useUserPageEditorCore({
@@ -59,3 +65,9 @@ export function useUserPageEditor() {
 }
 
 export type UserPageEditor = ReturnType<typeof useUserPageEditor>
+
+export interface EditorNotifier {
+  success: (title: string) => void
+  warning: (title: string) => void
+  error: (title: string) => void
+}

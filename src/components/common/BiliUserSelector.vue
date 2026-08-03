@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
-import { NAutoComplete, NAvatar, NFlex, NText } from 'naive-ui'
-import type { AutoCompleteOption } from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { VTSURU_API_URL } from '@/shared/config'
 
@@ -19,11 +17,17 @@ interface BiliApiResponse {
   }
 }
 
-type BiliUserSelectorOption = AutoCompleteOption & { userInfo?: BiliUserInfo }
+interface BiliUserSelectorOption {
+  label: string
+  value: number
+  description: string
+  avatar: { src: string; alt: string }
+  userInfo: BiliUserInfo
+}
 
-defineProps<{
+const props = defineProps<{
   placeholder?: string
-  size?: 'small' | 'medium' | 'large'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   disabled?: boolean
 }>()
 
@@ -31,55 +35,59 @@ const emit = defineEmits<{
   userInfoLoaded: [userInfo: BiliUserInfo | null]
 }>()
 
-// 使用 defineModel 作为外部 v-model:value 绑定
 const model = defineModel<number | undefined>('value')
-
-const inputValue = ref('')
+const searchTerm = ref('')
 const options = ref<BiliUserSelectorOption[]>([])
 const loading = ref(false)
 const selectedUserInfo = ref<BiliUserInfo | null>(null)
+const selectedUid = computed<number | null>({
+  get: () => model.value ?? null,
+  set: (value) => {
+    model.value = value ?? undefined
+  },
+})
 
-// 监听外部 v-model:value 变化，当外部设置了值时加载用户信息
 watch(
-  () => model.value,
-  async (newValue) => {
-    if (newValue) {
-      inputValue.value = String(newValue)
-      if (!selectedUserInfo.value || selectedUserInfo.value.mid !== newValue) {
-        await loadUserInfo(newValue)
-      }
-    } else {
-      inputValue.value = ''
+  model,
+  async (uid) => {
+    if (!uid) {
+      searchTerm.value = ''
       selectedUserInfo.value = null
+      return
+    }
+
+    searchTerm.value = String(uid)
+    if (!selectedUserInfo.value || selectedUserInfo.value.mid !== uid) {
+      await loadUserInfo(uid)
     }
   },
   { immediate: true },
 )
 
-// 加载用户信息
 async function loadUserInfo(uid: number) {
+  loading.value = true
   try {
-    loading.value = true
     const response = await fetch(`${VTSURU_API_URL}bili-user-info/${uid}`)
     const data: BiliApiResponse = await response.json()
 
-    if (data.code === 0 && data.data?.card) {
-      const userInfo = data.data.card
-      selectedUserInfo.value = userInfo
-
-      options.value = [
-        {
-          label: `${userInfo.name} (${userInfo.mid})`,
-          value: String(userInfo.mid),
-          userInfo,
-        },
-      ] as BiliUserSelectorOption[]
-
-      emit('userInfoLoaded', userInfo)
-    } else {
+    if (data.code !== 0 || !data.data?.card) {
       selectedUserInfo.value = null
       emit('userInfoLoaded', null)
+      return
     }
+
+    const userInfo = data.data.card
+    selectedUserInfo.value = userInfo
+    options.value = [
+      {
+        value: userInfo.mid,
+        label: userInfo.name,
+        description: `UID: ${userInfo.mid}`,
+        avatar: { src: userInfo.face, alt: userInfo.name },
+        userInfo,
+      },
+    ]
+    emit('userInfoLoaded', userInfo)
   } catch (error) {
     console.error('加载用户信息失败:', error)
     selectedUserInfo.value = null
@@ -89,7 +97,6 @@ async function loadUserInfo(uid: number) {
   }
 }
 
-// 防抖搜索函数
 const debouncedSearch = useDebounceFn(async (value: string) => {
   const uid = Number.parseInt(value)
   if (Number.isNaN(uid) || uid <= 0) {
@@ -100,9 +107,8 @@ const debouncedSearch = useDebounceFn(async (value: string) => {
   await loadUserInfo(uid)
 }, 500)
 
-// 处理输入变化
-function handleInput(value: string) {
-  inputValue.value = value
+function handleSearchTerm(value: string) {
+  searchTerm.value = value
   const uid = Number.parseInt(value)
 
   if (Number.isNaN(uid) || uid <= 0) {
@@ -112,76 +118,36 @@ function handleInput(value: string) {
     return
   }
 
-  // 有效的数字输入时，立即同步给外部 v-model
   model.value = uid
-
   debouncedSearch(value)
 }
 
-// 处理选择
-function handleSelect(value: string) {
-  inputValue.value = value
-  const numeric = Number.parseInt(value)
-  model.value = Number.isNaN(numeric) ? undefined : numeric
-  const option = options.value.find((opt) => opt.value === value)
-  if (option?.userInfo) {
-    selectedUserInfo.value = option.userInfo
-    emit('userInfoLoaded', option.userInfo)
+function handleSelect(uid: number | null) {
+  if (!uid) return
+
+  searchTerm.value = String(uid)
+  const selected = options.value.find((option) => option.value === uid)
+  if (selected) {
+    selectedUserInfo.value = selected.userInfo
+    emit('userInfoLoaded', selected.userInfo)
   }
 }
-
-// 自定义渲染选项
-function renderOption(option: { option: BiliUserSelectorOption }) {
-  const { userInfo } = option.option
-  if (!userInfo) {
-    return h(NText, { depth: 3 }, { default: () => '加载中...' })
-  }
-
-  return h(
-    NFlex,
-    { align: 'center', gap: 8 },
-    {
-      default: () => [
-        h(NAvatar, {
-          src: userInfo.face,
-          size: 32,
-          round: true,
-          imgProps: {
-            referrerpolicy: 'no-referrer',
-          },
-        }),
-        h(
-          NFlex,
-          { vertical: true, gap: 2 },
-          {
-            default: () => [
-              h(NText, { strong: true }, { default: () => userInfo.name }),
-              h(NText, { depth: 3, size: 'small' }, { default: () => `UID: ${userInfo.mid}` }),
-            ],
-          },
-        ),
-      ],
-    },
-  )
-}
-
-// 计算当前显示的值 - 只显示UID
-const displayValue = computed(() => {
-  return inputValue.value
-})
 </script>
 
 <template>
-  <NAutoComplete
-    :value="displayValue"
-    :options="options"
-    :loading="loading"
-    :placeholder="placeholder || '请输入B站用户UID'"
-    :size="size || 'medium'"
+  <USelectMenu
+    v-model="selectedUid"
+    :items="options"
+    value-key="value"
     :disabled="disabled"
-    clearable
-    :render-option="renderOption"
-    @update:value="handleInput"
-    @select="handleSelect"
+    :size="size ?? 'md'"
+    :placeholder="placeholder ?? '请输入B站用户UID'"
+    :loading="loading"
+    :search-term="searchTerm"
+    :search-input="{ placeholder: '请输入B站用户UID' }"
+    ignore-filter
+    clear
+    @update:search-term="handleSearchTerm"
+    @update:model-value="handleSelect"
   />
 </template>

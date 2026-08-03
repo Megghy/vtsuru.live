@@ -1,8 +1,13 @@
-import type { SelectOption } from 'naive-ui'
 import type { VNode } from 'vue'
 
 // 导入 Vue 的 VNode 类型和 h 函数（用于示例）
 import type { UploadFileResponse } from '@/api/api-models'
+
+export interface SelectOption {
+  label: string
+  value: string | number
+  disabled?: boolean
+}
 
 // --- 基础和通用类型 ---
 

@@ -1,20 +1,5 @@
 <script setup lang="ts">
-import { Checkmark12Regular, PeopleQueue24Filled } from '@vicons/fluent'
 import { isSameDay } from 'date-fns'
-import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NEmpty,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NFlex,
-  NTag,
-} from 'naive-ui'
 import { computed, provide } from 'vue'
 
 import { SaveSetting, useAccount } from '@/api/account'
@@ -51,130 +36,148 @@ async function updateSettings() {
     await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
       .then((msg) => {
         if (msg) {
-          window.$message.success('已保存')
+          useToast().add({ title: '已保存', color: 'success' })
           return true
         } else {
-          window.$message.error(`保存失败: ${msg}`)
+          useToast().add({ title: `保存失败: ${msg}`, color: 'error' })
         }
       })
       .finally(() => {
         songRequest.isLoading = false
       })
   } else {
-    window.$message.success('完成')
+    useToast().add({ title: '完成', color: 'success' })
   }
 }
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
   >
-    <NCard
+    <UCard
       size="small"
       :bordered="false"
       content-style="padding: 0;"
     >
-      <NFlex
+      <div
         justify="space-between"
         align="center"
       >
         <!-- 左侧统计 -->
-        <NFlex
+        <div
           align="center"
           :size="16"
         >
-          <NTag
+          <UBadge
             type="success"
             round
             :bordered="false"
           >
-            <template #icon>
-              <NIcon :component="PeopleQueue24Filled" />
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
             </template>
             队列: {{ waitingCount }}
-          </NTag>
-          <NTag
+          </UBadge>
+          <UBadge
             type="info"
             round
             :bordered="false"
           >
-            <template #icon>
-              <NIcon :component="Checkmark12Regular" />
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
             </template>
             今日已点: {{ todayFinishedCount }}
-          </NTag>
-          <NText
+          </UBadge>
+          <span
             depth="3"
             style="font-size: 12px"
           >
             共 {{ songRequest.activeSongs.length }} 首
-          </NText>
-        </NFlex>
+          </span>
+        </div>
 
         <!-- 右侧操作 -->
-        <NFlex align="center">
-          <NInputGroup size="small">
-            <NInput
+        <div align="center">
+          <div size="small">
+            <UInput
               :value="songRequest.newSongName"
               placeholder="手动添加歌曲"
               style="width: 150px"
               @update:value="songRequest.newSongName = $event"
             />
-            <NButton
-              type="primary"
+            <UButton
+              color="primary"
               ghost
               @click="songRequest.addSongManual()"
             >
               添加
-            </NButton>
-          </NInputGroup>
+            </UButton>
+          </div>
 
-          <NRadioGroup
-            v-model:value="accountInfo.settings.songRequest.sortType"
+          <URadioGroup
+            v-model="accountInfo.settings.songRequest.sortType"
             :disabled="!songRequest.configCanEdit"
-            size="small"
-            @update:value="updateSettings"
-          >
-            <NRadioButton :value="QueueSortType.TimeFirst"> 时间 </NRadioButton>
-            <NRadioButton :value="QueueSortType.PaymentFist"> 付费 </NRadioButton>
-            <NRadioButton :value="QueueSortType.GuardFirst"> 舰长 </NRadioButton>
-            <NRadioButton :value="QueueSortType.FansMedalFirst"> 粉丝牌 </NRadioButton>
-          </NRadioGroup>
+            :items="[
+              { label: '时间', value: QueueSortType.TimeFirst },
+              { label: '付费', value: QueueSortType.PaymentFist },
+              { label: '舰长', value: QueueSortType.GuardFirst },
+              { label: '粉丝牌', value: QueueSortType.FansMedalFirst },
+            ]"
+            orientation="horizontal"
+            @update:model-value="updateSettings"
+          />
 
-          <NCheckbox
-            :checked="currentIsReverse"
+          <UCheckbox
+            :model-value="currentIsReverse"
             size="small"
-            @update:checked="
+            @update:model-value="
               (value) => {
                 if (songRequest.configCanEdit) {
-                  accountInfo.settings.songRequest.isReverse = value
+                  accountInfo.settings.songRequest.isReverse = value === true
                   updateSettings()
                 } else {
-                  songRequest.isReverse = value
+                  songRequest.isReverse = value === true
                 }
               }
             "
           >
             倒序
-          </NCheckbox>
+          </UCheckbox>
 
-          <NPopconfirm @positive-click="songRequest.deactiveAllSongs()">
-            <template #trigger>
-              <NButton
-                type="error"
-                size="small"
-                ghost
-              >
-                全部取消
-              </NButton>
+          <UPopover>
+            <UButton
+              color="error"
+              size="sm"
+              ghost
+            >
+              全部取消
+            </UButton>
+            <template #content="{ close }">
+              <div class="space-y-3 p-3">
+                <div>确定全部取消吗?</div>
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="close"
+                    >取消</UButton
+                  >
+                  <UButton
+                    size="xs"
+                    color="error"
+                    @click="(close(), songRequest.deactiveAllSongs())"
+                    >确认</UButton
+                  >
+                </div>
+              </div>
             </template>
-            确定全部取消吗?
-          </NPopconfirm>
-        </NFlex>
-      </NFlex>
-    </NCard>
+          </UPopover>
+        </div>
+      </div>
+    </UCard>
 
     <div
       v-if="songRequest.activeSongs.length > 0"
@@ -194,12 +197,12 @@ async function updateSettings() {
         />
       </div>
     </div>
-    <NEmpty
+    <UEmpty
       v-else
       description="暂无点播内容"
       style="margin-top: 40px"
     />
-  </NFlex>
+  </div>
 </template>
 
 <style scoped>

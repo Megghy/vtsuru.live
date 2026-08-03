@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NFlex, NSwitch, NText } from 'naive-ui'
-
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 
 withDefaults(
@@ -31,12 +29,12 @@ defineEmits<{
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
   >
     <!-- ① 页头 -->
-    <NCard
+    <UCard
       size="small"
       bordered
     >
@@ -46,44 +44,44 @@ defineEmits<{
       >
         <template
           v-if="$slots.actions"
-          #actions
+          #footers
         >
           <slot name="actions" />
         </template>
       </OpenLivePageHeader>
-    </NCard>
+    </UCard>
 
     <!-- ② 功能开关卡 (登录 + 启用了开关功能) -->
-    <NCard
+    <UCard
       v-if="isLoggedIn && showFunctionSwitch"
       size="small"
       bordered
     >
-      <NFlex
+      <div
         align="center"
         justify="space-between"
         wrap
         :size="12"
       >
-        <NFlex
+        <div
           align="center"
           wrap
           :size="10"
         >
-          <NText>{{ switchLabel }}</NText>
-          <NSwitch
+          <span>{{ switchLabel }}</span>
+          <USwitch
             size="small"
-            :value="enabled"
+            :model-value="enabled"
             :loading="loading"
-            @update:value="$emit('update:enabled', $event)"
+            @update:model-value="$emit('update:enabled', $event)"
           />
-        </NFlex>
-      </NFlex>
+        </div>
+      </div>
       <slot
         v-if="enabled"
         name="switch-extra"
       />
-    </NCard>
+    </UCard>
 
     <!-- ②' 登录但无开关概念时, 仅渲染额外内容 (如点歌页的提示 Alert) -->
     <template v-else-if="isLoggedIn && $slots['switch-extra']">
@@ -95,26 +93,26 @@ defineEmits<{
       v-if="!isLoggedIn"
       name="login-tip"
     >
-      <NAlert
+      <UAlert
         type="warning"
         size="small"
         :title="loginTipText"
         :bordered="false"
         closable
       >
-        <NButton
+        <UButton
           tag="a"
           href="/manage"
           target="_blank"
-          type="primary"
+          color="primary"
           size="small"
         >
           前往登录或注册
-        </NButton>
-      </NAlert>
+        </UButton>
+      </UAlert>
     </slot>
 
     <!-- ④ 主体 -->
     <slot />
-  </NFlex>
+  </div>
 </template>

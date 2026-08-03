@@ -249,7 +249,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     if (isInited) return
     danmakuWindow.value = (await getAllWebviewWindows()).find((win) => win.label === 'danmaku-window')
     if (!danmakuWindow.value) {
-      window.$message.error('弹幕窗口不存在，请先打开弹幕窗口。')
+      useToast().add({ title: '弹幕窗口不存在，请先打开弹幕窗口。', color: 'error' })
       return
     }
     console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value)

@@ -2,24 +2,6 @@
 import { Person48Filled, WindowWrench20Filled } from '@vicons/fluent'
 import { BrowsersOutline, ChevronBackOutline, ChevronForwardOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
 import { useElementSize } from '@vueuse/core'
-import {
-  darkTheme,
-  NAvatar,
-  NBackTop,
-  NButton,
-  NConfigProvider,
-  NDivider,
-  NEllipsis,
-  NIcon,
-  NModal,
-  NResult,
-  NScrollbar,
-  NFlex,
-  NSpin,
-  NSwitch,
-  NText,
-  NTooltip,
-} from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -27,12 +9,7 @@ import { useAccount } from '@/api/account'
 import type { UserInfo } from '@/api/api-models'
 import { ThemeType } from '@/api/api-models'
 import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import {
-  getPageBackgroundCssVars,
-  getUserPageNaiveThemeOverrides,
-  getUserPageThemeCssVars,
-  resolvePageBackground,
-} from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import {
@@ -242,8 +219,6 @@ useGoogleFont(
 
 const effectiveIsDark = computed(() => resolvePageThemeIsDark(pageThemeMode.value, isDarkMode.value))
 
-const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
-
 let themeTypeBeforeForce: ThemeType | null = null
 watch(
   () => [pageThemeMode.value, themeType.value] as const,
@@ -275,22 +250,6 @@ onBeforeUnmount(() => {
   customCssElement?.remove()
   customCssElement = null
   if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
-})
-
-const pageThemeOverrides = computed(() => {
-  const vars = mergedLayoutVars.value as Record<string, string>
-  const borderColor = (vars as any)['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
-  const overrides = getUserPageNaiveThemeOverrides(layoutTheme.value, vars, effectiveIsDark.value)
-
-  return {
-    ...overrides,
-    List: {
-      ...overrides.List,
-      color: 'transparent',
-      listItemColor: 'transparent',
-      borderColor,
-    },
-  }
 })
 
 const themeSwitchTitle = computed(() => {
@@ -497,8 +456,7 @@ watch(
     v-if="loadStatus === 'not-found'"
     class="center-container"
   >
-    <NResult
-      status="404"
+    <UEmpty
       title="用户不存在"
       :description="id ? '无法找到指定用户，或者该用户未完成认证' : '请检查访问地址中的用户 ID'"
     />
@@ -508,264 +466,236 @@ watch(
     v-else-if="loadStatus === 'error'"
     class="center-container"
   >
-    <NResult
-      status="error"
+    <UEmpty
       title="页面加载失败"
       description="网络暂时不可用或服务发生异常，请稍后重试"
     >
       <template #footer>
-        <NButton
-          type="primary"
+        <UButton
+          color="primary"
           @click="retryPublicPage"
         >
           重新加载
-        </NButton>
+        </UButton>
       </template>
-    </NResult>
+    </UEmpty>
   </div>
 
-  <NConfigProvider
+  <div
     v-else
-    :theme="pageNaiveTheme"
-    :theme-overrides="pageThemeOverrides"
+    class="page-root"
+    :class="layoutPageBgClass"
+    :style="[layoutUiVars, layoutPageBgVars]"
   >
-    <div
-      class="page-root"
-      :class="layoutPageBgClass"
-      :style="[layoutUiVars, layoutPageBgVars]"
-    >
-      <!-- 顶部导航栏 -->
-      <header class="layout-header">
-        <div class="layout-header__inner">
-          <div class="layout-header__left">
-            <img
-              class="layout-header__logo"
-              :src="logoUrl"
-              alt="VTSURU"
-              decoding="async"
-            />
-            <NText
-              strong
-              class="site-title"
-            >
-              VTSURU
-            </NText>
-            <NText
-              v-if="headerSubtitle"
-              depth="3"
-              class="page-title"
-            >
-              {{ headerSubtitle }}
-            </NText>
-          </div>
-
-          <div class="layout-header__right">
-            <!-- 主题切换开关 -->
-            <NSwitch
-              :value="!effectiveIsDark"
-              :disabled="isLoading || pageThemeMode !== 'auto'"
-              :title="themeSwitchTitle"
-              @update:value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)"
-            >
-              <template #checked>
-                <NIcon :component="Sunny" />
-              </template>
-              <template #unchecked>
-                <NIcon :component="Moon" />
-              </template>
-            </NSwitch>
-
-            <!-- 已登录用户操作 -->
-            <template v-if="accountInfo?.id">
-              <!-- B站认证中心按钮 (如果已认证) -->
-              <NButton
-                v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
-                type="primary"
-                tag="a"
-                href="/bili-user/points"
-                target="_blank"
-                size="small"
-                secondary
-              >
-                <template #icon>
-                  <NIcon :component="Person48Filled" />
-                </template>
-                <span v-if="windowWidth >= 768"> Bilibili 账户中心 </span>
-              </NButton>
-              <!-- 主播后台按钮 -->
-              <NButton
-                type="primary"
-                size="small"
-                @click="$router.push({ name: 'manage-index' })"
-              >
-                <template #icon>
-                  <NIcon :component="WindowWrench20Filled" />
-                </template>
-                <span v-if="windowWidth >= 768"> 主播后台 </span>
-              </NButton>
-            </template>
-
-            <!-- 未登录用户操作 -->
-            <NButton
-              v-else
-              type="primary"
-              @click="registerAndLoginModalVisiable = true"
-            >
-              注册 / 登陆
-            </NButton>
-          </div>
-        </div>
-      </header>
-
-      <!-- 主体布局 (包含侧边栏和内容区) -->
-      <div class="main-layout-body">
-        <!-- 左侧边栏 -->
-        <aside
-          ref="sider"
-          class="user-sider"
-          :class="{ collapsed: siderCollapsed }"
-          :style="{ width: siderCollapsed ? '56px' : '180px' }"
-        >
-          <div
-            class="sider-shell"
-            :class="{ collapsed: siderCollapsed }"
+    <!-- 顶部导航栏 -->
+    <header class="layout-header">
+      <div class="layout-header__inner">
+        <div class="layout-header__left">
+          <img
+            class="layout-header__logo"
+            :src="logoUrl"
+            alt="VTSURU"
+            decoding="async"
+          />
+          <span
+            strong
+            class="site-title"
           >
-            <div class="sider-top">
-              <NTooltip
-                placement="right"
-                :show-arrow="false"
-              >
-                <template #trigger>
-                  <button
-                    class="sider-collapse-btn"
-                    type="button"
-                    @click="siderCollapsed = !siderCollapsed"
-                  >
-                    <component
-                      :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
-                      class="sider-collapse-icon"
-                    />
-                  </button>
-                </template>
-                {{ siderCollapsed ? '展开侧栏' : '收起侧栏' }}
-              </NTooltip>
-            </div>
+            VTSURU
+          </span>
+          <span
+            v-if="headerSubtitle"
+            depth="3"
+            class="page-title"
+          >
+            {{ headerSubtitle }}
+          </span>
+        </div>
 
-            <!-- 用户头像和昵称 (加载完成后显示) -->
+        <div class="layout-header__right">
+          <!-- 主题切换开关 -->
+          <USwitch
+            :model-value="!effectiveIsDark"
+            :disabled="isLoading || pageThemeMode !== 'auto'"
+            :title="themeSwitchTitle"
+            @update:model-value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)"
+          >
+          </USwitch>
+
+          <!-- 已登录用户操作 -->
+          <template v-if="accountInfo?.id">
+            <!-- B站认证中心按钮 (如果已认证) -->
+            <UButton
+              v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
+              color="primary"
+              href="/bili-user/points"
+              target="_blank"
+              size="sm"
+              variant="soft"
+            >
+              <template #leading>
+                <component :is="Person48Filled" />
+              </template>
+              <span v-if="windowWidth >= 768"> Bilibili 账户中心 </span>
+            </UButton>
+            <!-- 主播后台按钮 -->
+            <UButton
+              color="primary"
+              size="sm"
+              @click="$router.push({ name: 'manage-index' })"
+            >
+              <template #leading>
+                <component :is="WindowWrench20Filled" />
+              </template>
+              <span v-if="windowWidth >= 768"> 主播后台 </span>
+            </UButton>
+          </template>
+
+          <!-- 未登录用户操作 -->
+          <UButton
+            v-else
+            color="primary"
+            @click="registerAndLoginModalVisiable = true"
+          >
+            注册 / 登陆
+          </UButton>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主体布局 (包含侧边栏和内容区) -->
+    <div class="main-layout-body">
+      <!-- 左侧边栏 -->
+      <aside
+        ref="sider"
+        class="user-sider"
+        :class="{ collapsed: siderCollapsed }"
+        :style="{ width: siderCollapsed ? '56px' : '180px' }"
+      >
+        <div
+          class="sider-shell"
+          :class="{ collapsed: siderCollapsed }"
+        >
+          <div class="sider-top">
+            <UTooltip
+              placement="right"
+              :show-arrow="false"
+            >
+              <button
+                class="sider-collapse-btn"
+                type="button"
+                @click="siderCollapsed = !siderCollapsed"
+              >
+                <component
+                  :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
+                  class="sider-collapse-icon"
+                />
+              </button>
+
+              <template #content>{{ siderCollapsed ? '展开侧栏' : '收起侧栏' }}</template>
+            </UTooltip>
+          </div>
+
+          <!-- 用户头像和昵称 (加载完成后显示) -->
+          <div
+            v-if="userInfo?.streamerInfo"
+            class="sider-profile"
+          >
             <div
-              v-if="userInfo?.streamerInfo"
-              class="sider-profile"
+              vertical
+              justify="center"
+              align="center"
             >
-              <NFlex
-                vertical
-                justify="center"
-                align="center"
+              <button
+                class="sider-avatar-button"
+                type="button"
+                title="前往用户B站主页"
+                @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo.biliId}`)"
               >
-                <button
-                  class="sider-avatar-button"
-                  type="button"
-                  title="前往用户B站主页"
-                  @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo.biliId}`)"
+                <UAvatar
+                  class="sider-avatar"
+                  :class="{ 'streaming-avatar': userInfo.streamerInfo.isStreaming }"
+                  :src="userInfo.streamerInfo.faceUrl"
+                  :img-props="{ referrerpolicy: 'no-referrer' }"
+                  :size="siderAvatarSize"
+                />
+                <img
+                  v-if="siderPendantUrl && !siderCollapsed"
+                  class="sider-avatar-pendant"
+                  :src="siderPendantUrl"
+                  alt=""
+                  aria-hidden="true"
+                  referrerpolicy="no-referrer"
+                />
+              </button>
+              <span
+                v-if="siderWidth > 100"
+                style="max-width: 100%"
+              >
+                <div
+                  align="center"
+                  :size="4"
+                  :wrap="false"
                 >
-                  <NAvatar
-                    class="sider-avatar"
-                    :class="{ 'streaming-avatar': userInfo.streamerInfo.isStreaming }"
-                    :src="userInfo.streamerInfo.faceUrl"
-                    :img-props="{ referrerpolicy: 'no-referrer' }"
-                    :size="siderAvatarSize"
-                    round
-                    bordered
+                  <span>
+                    {{ userInfo?.streamerInfo.name }}
+                  </span>
+                  <span
+                    v-if="userInfo?.streamerInfo?.isStreaming"
+                    class="live-indicator-dot"
+                    title="直播中"
                   />
-                  <img
-                    v-if="siderPendantUrl && !siderCollapsed"
-                    class="sider-avatar-pendant"
-                    :src="siderPendantUrl"
-                    alt=""
-                    aria-hidden="true"
-                    referrerpolicy="no-referrer"
-                  />
-                </button>
-                <NEllipsis
-                  v-if="siderWidth > 100"
-                  style="max-width: 100%"
-                >
-                  <NFlex
-                    align="center"
-                    :size="4"
-                    :wrap="false"
+                </div>
+              </span>
+            </div>
+          </div>
+
+          <!-- 侧边栏加载状态 -->
+          <div
+            v-else-if="isLoading"
+            class="sider-loading"
+          >
+            <UIcon
+              name="i-lucide-loader-circle"
+              class="loading-icon"
+            />
+          </div>
+
+          <USeparator style="margin: 0; margin-top: 5px" />
+
+          <!-- 导航菜单 -->
+          <div
+            class="sider-scroll"
+            :class="{ disabled: isLoading }"
+          >
+            <nav
+              class="sider-nav"
+              :class="{ collapsed: siderCollapsed }"
+            >
+              <template
+                v-for="g in navGroups"
+                :key="g.key"
+              >
+                <div class="nav-group">
+                  <div
+                    v-if="!siderCollapsed"
+                    class="nav-group__header"
                   >
-                    <NText>
-                      {{ userInfo?.streamerInfo.name }}
-                    </NText>
-                    <span
-                      v-if="userInfo?.streamerInfo?.isStreaming"
-                      class="live-indicator-dot"
-                      title="直播中"
-                    />
-                  </NFlex>
-                </NEllipsis>
-              </NFlex>
-            </div>
-
-            <!-- 侧边栏加载状态 -->
-            <div
-              v-else-if="isLoading"
-              class="sider-loading"
-            >
-              <NSpin size="small" />
-            </div>
-
-            <NDivider style="margin: 0; margin-top: 5px" />
-
-            <!-- 导航菜单 -->
-            <NScrollbar
-              class="sider-scroll"
-              :class="{ disabled: isLoading }"
-            >
-              <nav
-                class="sider-nav"
-                :class="{ collapsed: siderCollapsed }"
-              >
-                <template
-                  v-for="g in navGroups"
-                  :key="g.key"
-                >
-                  <div class="nav-group">
+                    <span class="nav-group__label">{{ g.label }}</span>
+                  </div>
+                  <div class="nav-group__items">
                     <div
-                      v-if="!siderCollapsed"
-                      class="nav-group__header"
+                      v-for="item in g.items"
+                      :key="item.key"
+                      class="nav-item-row"
                     >
-                      <span class="nav-group__label">{{ g.label }}</span>
-                    </div>
-                    <div class="nav-group__items">
-                      <div
-                        v-for="item in g.items"
-                        :key="item.key"
-                        class="nav-item-row"
-                      >
-                        <template v-if="!item.disabled && item.to">
-                          <NTooltip
-                            v-if="siderCollapsed"
-                            placement="right"
-                            :show-arrow="false"
-                          >
-                            <template #trigger>
-                              <RouterLink
-                                :to="item.to"
-                                class="nav-item"
-                                :class="{ active: activeMenuKey === item.key }"
-                              >
-                                <component
-                                  :is="item.icon"
-                                  class="nav-item__icon"
-                                />
-                              </RouterLink>
-                            </template>
-                            {{ item.label }}
-                          </NTooltip>
-
+                      <template v-if="!item.disabled && item.to">
+                        <UTooltip
+                          v-if="siderCollapsed"
+                          placement="right"
+                          :show-arrow="false"
+                        >
                           <RouterLink
-                            v-else
                             :to="item.to"
                             class="nav-item"
                             :class="{ active: activeMenuKey === item.key }"
@@ -774,193 +704,204 @@ watch(
                               :is="item.icon"
                               class="nav-item__icon"
                             />
-                            <span class="nav-item__label">{{ item.label }}</span>
                           </RouterLink>
-                        </template>
 
-                        <template v-else>
-                          <NTooltip
-                            v-if="siderCollapsed"
-                            placement="right"
-                            :show-arrow="false"
-                          >
-                            <template #trigger>
-                              <div class="nav-item nav-item--disabled">
-                                <component
-                                  :is="item.icon"
-                                  class="nav-item__icon"
-                                />
-                              </div>
-                            </template>
-                            {{ item.disabledReason || item.label }}
-                          </NTooltip>
+                          <template #content>{{ item.label }}</template>
+                        </UTooltip>
 
-                          <div
-                            v-else
-                            class="nav-item nav-item--disabled"
-                            :title="item.disabledReason || item.label"
-                          >
+                        <RouterLink
+                          v-else
+                          :to="item.to"
+                          class="nav-item"
+                          :class="{ active: activeMenuKey === item.key }"
+                        >
+                          <component
+                            :is="item.icon"
+                            class="nav-item__icon"
+                          />
+                          <span class="nav-item__label">{{ item.label }}</span>
+                        </RouterLink>
+                      </template>
+
+                      <template v-else>
+                        <UTooltip
+                          v-if="siderCollapsed"
+                          placement="right"
+                          :show-arrow="false"
+                        >
+                          <div class="nav-item nav-item--disabled">
                             <component
                               :is="item.icon"
                               class="nav-item__icon"
                             />
-                            <span class="nav-item__label">{{ item.label }}</span>
                           </div>
-                        </template>
-                      </div>
+
+                          <template #content>{{ item.disabledReason || item.label }}</template>
+                        </UTooltip>
+
+                        <div
+                          v-else
+                          class="nav-item nav-item--disabled"
+                          :title="item.disabledReason || item.label"
+                        >
+                          <component
+                            :is="item.icon"
+                            class="nav-item__icon"
+                          />
+                          <span class="nav-item__label">{{ item.label }}</span>
+                        </div>
+                      </template>
                     </div>
                   </div>
-                </template>
-              </nav>
-            </NScrollbar>
-
-            <!-- 侧边栏底部链接 -->
-            <div
-              v-if="siderWidth > 150"
-              class="sider-footer"
-            >
-              <NFlex
-                justify="center"
-                align="center"
-                vertical
-                size="small"
-                style="width: 100%"
-              >
-                <NText
-                  depth="3"
-                  class="footer-text"
-                >
-                  有更多功能建议请
-                  <NButton
-                    text
-                    type="info"
-                    tag="a"
-                    href="/feedback"
-                    target="_blank"
-                    size="tiny"
-                  >
-                    反馈
-                  </NButton>
-                </NText>
-                <NDivider style="margin: 0; width: 100%" />
-                <NText
-                  depth="3"
-                  class="footer-text"
-                >
-                  <NButton
-                    text
-                    type="info"
-                    tag="a"
-                    href="/about"
-                    target="_blank"
-                    size="tiny"
-                  >
-                    关于本站
-                  </NButton>
-                </NText>
-              </NFlex>
-            </div>
+                </div>
+              </template>
+            </nav>
           </div>
-        </aside>
 
-        <!-- 右侧内容区域布局容器 -->
-        <div class="content-layout-container">
-          <!-- 全局加载动画 (覆盖内容区) -->
+          <!-- 侧边栏底部链接 -->
           <div
-            v-if="isLoading"
-            class="loading-container"
-          >
-            <NSpin size="large" />
-          </div>
-          <!-- 实际内容区域 (加载完成且找到用户时显示) -->
-          <NScrollbar
-            v-else-if="loadStatus === 'ready' && userInfo"
-            class="viewer-scroll"
+            v-if="siderWidth > 150"
+            class="sider-footer"
           >
             <div
-              class="viewer-page-content"
-              :class="layoutContentBgClass"
-              :style="layoutContentBgVars"
+              justify="center"
+              align="center"
+              vertical
+              size="small"
+              style="width: 100%"
             >
-              <!-- 路由视图和动画 -->
-              <RouterView v-slot="{ Component, route: viewRoute }">
-                <KeepAlive>
-                  <template v-if="viewRoute.meta.pageContainer === 'none'">
-                    <component
-                      :is="Component"
-                      :key="route.fullPath.split('#')[0]"
-                      :bili-info="biliUserInfo"
-                      :bili-status="biliProfileStatus"
-                      :user-info="userInfo"
-                    />
-                  </template>
-                  <div
-                    v-else
-                    class="user-page"
-                    :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
-                  >
-                    <component
-                      :is="Component"
-                      :key="route.fullPath.split('#')[0]"
-                      :bili-info="biliUserInfo"
-                      :bili-status="biliProfileStatus"
-                      :user-info="userInfo"
-                    />
-                  </div>
-                </KeepAlive>
-              </RouterView>
-              <NBackTop
-                :right="40"
-                :bottom="40"
-                listen-to=".viewer-scroll .n-scrollbar-container"
-              />
+              <span
+                depth="3"
+                class="footer-text"
+              >
+                有更多功能建议请
+                <UButton
+                  variant="link"
+                  color="info"
+                  href="/feedback"
+                  target="_blank"
+                  size="xs"
+                >
+                  反馈
+                </UButton>
+              </span>
+              <USeparator style="margin: 0; width: 100%" />
+              <span
+                depth="3"
+                class="footer-text"
+              >
+                <UButton
+                  variant="link"
+                  color="info"
+                  href="/about"
+                  target="_blank"
+                  size="xs"
+                >
+                  关于本站
+                </UButton>
+              </span>
             </div>
-          </NScrollbar>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 右侧内容区域布局容器 -->
+      <div class="content-layout-container">
+        <!-- 全局加载动画 (覆盖内容区) -->
+        <div
+          v-if="isLoading"
+          class="loading-container"
+        >
+          <UIcon
+            name="i-lucide-loader-circle"
+            class="loading-icon"
+          />
+        </div>
+        <!-- 实际内容区域 (加载完成且找到用户时显示) -->
+        <div
+          v-else-if="loadStatus === 'ready' && userInfo"
+          class="viewer-scroll"
+        >
+          <div
+            class="viewer-page-content"
+            :class="layoutContentBgClass"
+            :style="layoutContentBgVars"
+          >
+            <!-- 路由视图和动画 -->
+            <RouterView v-slot="{ Component, route: viewRoute }">
+              <KeepAlive>
+                <template v-if="viewRoute.meta.pageContainer === 'none'">
+                  <component
+                    :is="Component"
+                    :key="route.fullPath.split('#')[0]"
+                    :bili-info="biliUserInfo"
+                    :bili-status="biliProfileStatus"
+                    :user-info="userInfo"
+                  />
+                </template>
+                <div
+                  v-else
+                  class="user-page"
+                  :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
+                >
+                  <component
+                    :is="Component"
+                    :key="route.fullPath.split('#')[0]"
+                    :bili-info="biliUserInfo"
+                    :bili-status="biliProfileStatus"
+                    :user-info="userInfo"
+                  />
+                </div>
+              </KeepAlive>
+            </RouterView>
+          </div>
         </div>
       </div>
     </div>
-  </NConfigProvider>
+  </div>
 
   <!-- 注册/登录弹窗 -->
-  <NModal
-    v-model:show="registerAndLoginModalVisiable"
-    preset="card"
-    style="width: 500px; max-width: 90vw"
+  <UModal
+    v-model:open="registerAndLoginModalVisiable"
     title="注册 / 登录"
-    :auto-focus="false"
-    :mask-closable="false"
+    :dismissible="false"
+    :ui="{ content: 'max-w-[500px]' }"
   >
-    <NAlert type="info">
-      <NFlex
-        vertical
-        align="center"
-        size="small"
-      >
-        <div style="text-align: center">如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录</div>
-        <NFlex
-          justify="center"
-          style="width: 100%; margin-top: 8px"
-        >
-          <NButton
-            type="primary"
+    <template #body>
+      <UAlert color="info">
+        <template #description
+          ><div
+            vertical
+            align="center"
             size="small"
-            @click="$router.push({ name: 'bili-user-points' })"
           >
-            <template #icon>
-              <NIcon :component="BrowsersOutline" />
-            </template>
-            前往 Bilibili 账户中心
-          </NButton>
-        </NFlex>
-      </NFlex>
-    </NAlert>
-    <br />
-    <!-- 异步加载注册登录组件，优化初始加载性能 -->
-    <RegisterAndLogin
-      closable
-      @close="registerAndLoginModalVisiable = false"
-    />
-  </NModal>
+            <div style="text-align: center">如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录</div>
+            <div
+              justify="center"
+              style="width: 100%; margin-top: 8px"
+            >
+              <UButton
+                color="primary"
+                size="sm"
+                @click="$router.push({ name: 'bili-user-points' })"
+              >
+                <template #leading>
+                  <component :is="BrowsersOutline" />
+                </template>
+                前往 Bilibili 账户中心
+              </UButton>
+            </div>
+          </div></template
+        >
+      </UAlert>
+      <br />
+      <!-- 异步加载注册登录组件，优化初始加载性能 -->
+      <RegisterAndLogin
+        closable
+        @close="registerAndLoginModalVisiable = false"
+      />
+    </template>
+  </UModal>
 </template>
 
 <style lang="stylus" scoped>
@@ -1045,7 +986,7 @@ watch(
   background-color: var(--vtsuru-bg);
 }
 
-.page-root :deep(.n-card.n-card--bordered) {
+.page-root :deep(.user-page-card) {
   border: var(--vtsuru-page-border);
   box-shadow: var(--vtsuru-page-shadow);
 }
@@ -1151,7 +1092,7 @@ watch(
   );
 }
 
-.page-root.bg-host :deep(.n-card) {
+.page-root.bg-host :deep(.user-page-card) {
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
@@ -1164,7 +1105,7 @@ watch(
     -webkit-backdrop-filter: none;
   }
 
-  .page-root.bg-host :deep(.n-card) {
+  .page-root.bg-host :deep(.user-page-card) {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
@@ -1426,6 +1367,19 @@ watch(
   z-index: 5;
 }
 
+.loading-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--vtsuru-page-primary);
+  animation: user-layout-spin 0.7s linear infinite;
+}
+
+@keyframes user-layout-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .viewer-scroll {
   flex: 1;
   min-height: 0;
@@ -1435,11 +1389,11 @@ watch(
   touch-action: pan-y;
 }
 
-.viewer-scroll :deep(.n-scrollbar-container) {
+.viewer-scroll {
   overflow-x: hidden;
 }
 
-.viewer-scroll :deep(.n-scrollbar-content) {
+.viewer-page-content {
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -1447,7 +1401,7 @@ watch(
 .viewer-page-content {
   padding: var(--vtsuru-content-padding);
   box-sizing: border-box;
-  position: relative; // 为内部非绝对定位的内容提供上下文，例如 NBackTop
+  position: relative; // 为内部非绝对定位的内容提供上下文，例如 div
   background-color: var(--user-page-theme-content-bg, var(--vtsuru-bg));
   max-width: 100%;
   overflow-x: clip;
@@ -1518,16 +1472,16 @@ watch(
   .sider-profile,
   .sider-top,
   .sider-footer,
-  .sider-shell > :deep(.n-divider) {
+  .sider-shell > :deep(hr) {
     display: none;
   }
 
-  .sider-scroll :deep(.n-scrollbar-container) {
+  .sider-scroll {
     overflow-x: auto !important;
     overflow-y: hidden !important;
   }
 
-  .sider-scroll :deep(.n-scrollbar-content) {
+  .sider-nav {
     width: max-content;
   }
 
@@ -1558,11 +1512,6 @@ watch(
     padding-left: 10px;
     padding-right: 12px;
   }
-}
-
-// --- 返回顶部按钮 ---
-.n-back-top {
-  z-index: 10; // 确保在最上层
 }
 
 .live-indicator-dot {

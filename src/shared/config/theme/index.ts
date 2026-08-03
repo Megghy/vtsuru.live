@@ -1,11 +1,10 @@
 import { brand, error, hexToRgb, info, pickByMode, rgba, success, warning } from './colors'
 /**
- * 主题入口：聚合 colors / tokens / overrides，并产出可在 .vue / .ts 中直接引用的 CSS 变量。
+ * 主题入口：聚合 colors / tokens，并产出可在 .vue / .ts 中直接引用的 CSS 变量。
  */
 import type { ThemeTokens } from './tokens'
 
 export { brand, error, hexToRgb, info, neutral, pickByMode, rgba, success, warning } from './colors'
-export { getThemeOverrides } from './overrides'
 export type { ThemeTokens } from './tokens'
 export { buildManageTokens, buildSiteTokens } from './tokens'
 
@@ -44,6 +43,9 @@ export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
     '--vtsuru-brand-400': brand[400],
     '--vtsuru-brand-500': brand[500],
     '--vtsuru-fg': tokens.foreground,
+    '--vtsuru-fg-toned': tokens.tonedForeground,
+    '--vtsuru-fg-highlighted': tokens.highlightedForeground,
+    '--vtsuru-fg-inverted': tokens.invertedForeground,
     '--vtsuru-fg-muted': tokens.mutedForeground,
     '--vtsuru-fg-disabled': tokens.disabledForeground,
     '--vtsuru-bg': tokens.canvas,
@@ -51,7 +53,12 @@ export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
     '--vtsuru-bg-muted': tokens.surfaceHover,
     '--vtsuru-bg-inset': tokens.inset,
     '--vtsuru-bg-elevated': tokens.elevated,
+    '--vtsuru-bg-accented': tokens.controlPressed,
+    '--vtsuru-bg-inverted': tokens.primary,
     '--vtsuru-border': tokens.borderColor,
+    '--vtsuru-border-muted': tokens.mutedBorderColor,
+    '--vtsuru-border-accented': tokens.accentedBorderColor,
+    '--vtsuru-border-inverted': tokens.invertedBorderColor,
     '--vtsuru-border-hover': tokens.inputBorderHover,
     '--vtsuru-radius': tokens.radiusSurface,
     '--vtsuru-radius-control': tokens.radiusControl,
@@ -59,15 +66,22 @@ export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
     '--vtsuru-shadow-2': tokens.shadow2,
     '--vtsuru-shadow-popover': tokens.shadowPopover,
     '--vtsuru-info': infoColor,
+    '--vtsuru-info-hover': pickByMode(tokens.isDark, info.lightHover, info.darkHover),
+    '--vtsuru-info-pressed': pickByMode(tokens.isDark, info.lightPressed, info.darkPressed),
     '--vtsuru-info-rgb': rgbTriplet(infoColor),
     '--vtsuru-info-soft': rgba(infoColor, 0.12),
     '--vtsuru-success': successColor,
+    '--vtsuru-success-hover': pickByMode(tokens.isDark, success.lightHover, success.darkHover),
+    '--vtsuru-success-pressed': pickByMode(tokens.isDark, success.lightPressed, success.darkPressed),
     '--vtsuru-success-rgb': rgbTriplet(successColor),
     '--vtsuru-success-soft': rgba(successColor, 0.12),
     '--vtsuru-warning': warningColor,
+    '--vtsuru-warning-hover': pickByMode(tokens.isDark, warning.lightHover, warning.darkHover),
+    '--vtsuru-warning-pressed': pickByMode(tokens.isDark, warning.lightPressed, warning.darkPressed),
     '--vtsuru-warning-rgb': rgbTriplet(warningColor),
     '--vtsuru-warning-soft': rgba(warningColor, 0.12),
     '--vtsuru-error': errorColor,
+    '--vtsuru-error-hover': pickByMode(tokens.isDark, error.lightHover, error.darkHover),
     '--vtsuru-error-rgb': rgbTriplet(errorColor),
     '--vtsuru-error-soft': rgba(errorColor, 0.12),
     '--vtsuru-error-pressed': pickByMode(tokens.isDark, error.lightPressed, error.darkPressed),

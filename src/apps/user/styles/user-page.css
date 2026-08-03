@@ -15,27 +15,41 @@
   --vtsuru-page-max-width: 1440px;
 }
 
-/* shadcn-like card rhythm */
-.user-page .n-card {
-  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
-  box-shadow: var(--vtsuru-page-shadow, none);
+.user-page-card {
+  min-width: 0;
+  color: var(--vtsuru-surface-fg, var(--vtsuru-page-text));
+  background: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg));
+  border: var(--vtsuru-page-border);
+  border-radius: var(--vtsuru-page-radius, 8px);
+  box-shadow: var(--vtsuru-page-shadow);
 }
 
-.user-page .n-card .n-card-header {
-  padding: var(--vtsuru-page-spacing, 16px);
+.user-page [aria-busy='true'],
+.viewer-page-content [aria-busy='true'] {
+  position: relative;
+  min-height: 48px;
 }
 
-.user-page .n-card .n-card__content {
-  padding: var(--vtsuru-page-spacing, 16px);
+.user-page [aria-busy='true']::before,
+.viewer-page-content [aria-busy='true']::before {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  content: '';
+  border: 2px solid color-mix(in srgb, var(--vtsuru-page-primary) 24%, transparent);
+  border-top-color: var(--vtsuru-page-primary);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: user-page-loading-spin 0.7s linear infinite;
 }
 
-/* 在用户页中，列表项通常不需要额外的内边距，因为内部会有卡片或其他带边距的元素 */
-.user-page .n-list .n-list-item {
-  padding: 0;
-}
-
-.user-page .n-list {
-  background-color: transparent;
+@keyframes user-page-loading-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 .user-muted {

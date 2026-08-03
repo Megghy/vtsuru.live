@@ -14,6 +14,7 @@ import {
   NSlider,
   NText,
 } from 'naive-ui'
+import { showSuccessToast } from '@/shared/services/toast'
 import { computed, onMounted, reactive, ref } from 'vue'
 
 import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
@@ -21,8 +22,6 @@ import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/component
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-
-const message = useMessage()
 const WIDTH = 1146
 const HEIGHT = 717
 const editorRef = ref<InstanceType<typeof CanvasEditor>>()
@@ -94,7 +93,7 @@ async function download() {
   trackManageToolSuccess('CoverMaker', 'download', {
     bytes: blob.size,
   })
-  message.success('已下载')
+  showSuccessToast('已下载')
 }
 async function exportProject() {
   if (!editorRef.value) return
@@ -102,7 +101,7 @@ async function exportProject() {
   const blob = new Blob([json], { type: 'application/json' })
   saveAs(blob, `cover-project-${Date.now()}.json`)
   trackManageToolSuccess('CoverMaker', 'export-project')
-  message.success('项目已导出')
+  showSuccessToast('项目已导出')
 }
 
 const { open: openImportPicker, onChange: onImportChange } = useFileDialog({ accept: '.json', multiple: false })
@@ -111,7 +110,7 @@ onImportChange(async (files) => {
   const text = await files[0].text()
   await editorRef.value.importJSON(text)
   trackManageToolSuccess('CoverMaker', 'import-project')
-  message.success('项目已导入')
+  showSuccessToast('项目已导入')
 })
 
 const showRemoveBg = ref(false)
@@ -124,7 +123,7 @@ async function onRemoveBgConfirm(blob: Blob) {
   if (!editorRef.value || !selectedLayer.value) return
   await editorRef.value.replaceLayerImage(selectedLayer.value.id, blob)
   trackManageToolSuccess('CoverMaker', 'remove-bg')
-  message.success('已替换')
+  showSuccessToast('已替换')
 }
 </script>
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NEmpty, NInput, NSelect, NTag, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { AssistantPreviewItem, EditableField, ProposalEditItem } from '../../api/assistant'
@@ -83,21 +82,20 @@ function displayValue(f: EditableField) {
         class="generic-item"
       >
         <div class="generic-item__head">
-          <NTag
-            size="small"
-            :type="OP_META[item.op]?.type ?? 'default'"
-            :bordered="false"
+          <UBadge
+            size="sm"
+            :color="OP_META[item.op]?.type === 'default' ? 'neutral' : OP_META[item.op]?.type"
+            variant="subtle"
           >
             {{ OP_META[item.op]?.label ?? item.op }}
-          </NTag>
+          </UBadge>
           <span class="generic-item__title">{{ item.title }}</span>
-          <NText
+          <span
             v-if="item.time"
-            depth="3"
             class="generic-item__time"
           >
             {{ item.time }}
-          </NText>
+          </span>
         </div>
 
         <!-- 编辑态: 该项有可编辑字段时渲染输入框 -->
@@ -110,27 +108,32 @@ function displayValue(f: EditableField) {
             :key="f.key"
             class="edit-field"
           >
-            <NText
-              depth="3"
-              class="edit-field__label"
-            >
+            <span class="edit-field__label">
               {{ f.label }}
-            </NText>
-            <NSelect
+            </span>
+            <USelect
               v-if="f.type === 'select'"
-              :value="fieldValue(i, f.key)"
-              :options="f.options"
-              size="small"
-              @update:value="setSelectValue(i, f.key, $event)"
+              :model-value="fieldValue(i, f.key)"
+              :items="f.options"
+              size="sm"
+              @update:model-value="setSelectValue(i, f.key, $event)"
             />
-            <NInput
+            <UTextarea
+              v-else-if="f.type === 'textarea'"
+              :model-value="fieldValue(i, f.key)"
+              autoresize
+              :rows="2"
+              :maxrows="6"
+              :placeholder="f.label"
+              size="sm"
+              @update:model-value="setFieldValue(i, f.key, $event)"
+            />
+            <UInput
               v-else
-              :value="fieldValue(i, f.key)"
-              :type="f.type === 'textarea' ? 'textarea' : 'text'"
-              :autosize="f.type === 'textarea' ? { minRows: 2, maxRows: 6 } : undefined"
+              :model-value="fieldValue(i, f.key)"
               :placeholder="f.type === 'tags' ? '逗号分隔' : f.label"
-              size="small"
-              @update:value="setFieldValue(i, f.key, $event)"
+              size="sm"
+              @update:model-value="setFieldValue(i, f.key, $event)"
             />
           </div>
         </div>
@@ -145,35 +148,23 @@ function displayValue(f: EditableField) {
             :key="f.key"
             class="struct-field"
           >
-            <NText
-              depth="3"
-              class="struct-field__label"
-            >
+            <span class="struct-field__label">
               {{ f.label }}
-            </NText>
+            </span>
             <span
               v-if="fieldChanged(f)"
               class="struct-field__val struct-field__val--changed"
             >
-              <NText
-                delete
-                depth="3"
-                >{{ f.before || (f.type === 'tags' ? '无' : '空') }}</NText
-              >
+              <del>{{ f.before || (f.type === 'tags' ? '无' : '空') }}</del>
               <span class="struct-field__arrow">→</span>
-              <NText
-                type="success"
-                class="struct-field__after"
-                >{{ displayValue(f) }}</NText
-              >
+              <span class="struct-field__after">{{ displayValue(f) }}</span>
             </span>
-            <NText
+            <span
               v-else
-              depth="3"
               class="struct-field__val"
             >
               {{ displayValue(f) }}
-            </NText>
+            </span>
           </div>
         </div>
 
@@ -191,75 +182,58 @@ function displayValue(f: EditableField) {
                 v-if="f.changed"
                 class="field field--changed"
               >
-                <NText
-                  delete
-                  depth="3"
-                  class="field__before"
-                  >{{ f.before }}</NText
-                >
+                <del class="field__before">{{ f.before }}</del>
                 <span class="field__arrow">→</span>
-                <NText
-                  type="success"
-                  class="field__after"
-                  >{{ f.after }}</NText
-                >
+                <span class="field__after">{{ f.after }}</span>
               </span>
-              <NText
+              <span
                 v-else
-                depth="3"
                 class="field field--same"
               >
                 {{ f.after }}
-              </NText>
+              </span>
             </template>
           </div>
           <div
             v-else-if="item.before || item.after"
             class="generic-item__diff"
           >
-            <NText
-              v-if="item.before"
-              delete
-              depth="3"
-            >
+            <del v-if="item.before">
               {{ item.before }}
-            </NText>
+            </del>
             <span
               v-if="item.before && item.after"
               class="diff-arrow"
               >→</span
             >
-            <NText
+            <span
               v-if="item.after"
-              type="success"
+              class="generic-item__after"
             >
               {{ item.after }}
-            </NText>
+            </span>
           </div>
         </template>
 
-        <NText
+        <p
           v-if="item.note"
-          depth="3"
           class="generic-item__note"
         >
           {{ item.note }}
-        </NText>
-        <NButton
+        </p>
+        <UButton
           v-if="item.url"
-          text
-          type="primary"
+          variant="link"
           tag="a"
           :href="item.url"
           class="generic-item__link"
         >
           查看工单
-        </NButton>
+        </UButton>
       </div>
     </div>
-    <NEmpty
+    <UEmpty
       v-else
-      size="small"
       description="暂无可预览的字段"
     />
   </div>
@@ -297,6 +271,7 @@ function displayValue(f: EditableField) {
 }
 .generic-item__time {
   font-size: 12px;
+  color: var(--vtsuru-fg-muted);
 }
 
 /* 整串逐字段 diff */
@@ -322,6 +297,7 @@ function displayValue(f: EditableField) {
 }
 .field__after {
   font-weight: 600;
+  color: var(--vtsuru-success);
 }
 
 /* 结构化字段对比 */
@@ -340,6 +316,7 @@ function displayValue(f: EditableField) {
 .struct-field__label {
   flex-shrink: 0;
   min-width: 48px;
+  color: var(--vtsuru-fg-muted);
 }
 .struct-field__val {
   display: inline-flex;
@@ -358,6 +335,7 @@ function displayValue(f: EditableField) {
 }
 .struct-field__after {
   font-weight: 600;
+  color: var(--vtsuru-success);
 }
 
 .generic-item__diff {
@@ -371,7 +349,13 @@ function displayValue(f: EditableField) {
   color: var(--vtsuru-fg-muted);
 }
 .generic-item__note {
+  margin: 0;
   font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+}
+
+.generic-item__after {
+  color: var(--vtsuru-success);
 }
 .generic-item__link {
   align-self: flex-start;

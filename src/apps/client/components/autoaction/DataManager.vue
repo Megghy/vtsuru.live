@@ -1,29 +1,8 @@
 <script setup lang="ts">
-import {
-  Database20Regular,
-  Delete16Filled,
-  ArrowClockwise16Filled,
-  Copy16Regular,
-  Search16Regular,
-  Flash24Regular,
-} from '@vicons/fluent'
+const Copy16Regular = 'i-lucide-circle'
+const Delete16Filled = 'i-lucide-circle'
 import { createStore, clear as idbClear, del as idbDel, entries as idbEntries } from 'idb-keyval'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDataTable,
-  NEmpty,
-  NPopconfirm,
-  NFlex,
-  NTag,
-  NText,
-  useMessage,
-  NInput,
-  NIcon,
-} from 'naive-ui'
-import { h, onMounted, ref, computed } from 'vue'
+import { h, onMounted, ref, computed, resolveComponent } from 'vue'
 
 // --- 定义用户持久化数据的自定义存储区 (与 utils.ts 中保持一致) ---
 const USER_DATA_DB_NAME = 'AutoActionUserDataDB'
@@ -42,7 +21,10 @@ interface DataItem {
   type: string
 }
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 
 // 搜索状态
 const runtimeSearch = ref('')
@@ -51,8 +33,8 @@ const persistentSearch = ref('')
 function copyToClipboard(text: string) {
   navigator.clipboard
     .writeText(text)
-    .then(() => message.success('已复制'))
-    .catch(() => message.error('复制失败'))
+    .then(() => feedback('success', '已复制'))
+    .catch(() => feedback('error', '复制失败'))
 }
 
 // --- 持久化数据 (IndexedDB) 相关状态和函数 ---
@@ -93,7 +75,7 @@ async function fetchPersistentData() {
     })
   } catch (error) {
     console.error('[UserData IDB Manager] Error fetching entries:', error)
-    message.error('无法加载用户持久化数据')
+    feedback('error', '无法加载用户持久化数据')
     persistentData.value = []
   } finally {
     persistentLoading.value = false
@@ -109,22 +91,22 @@ const filteredPersistentData = computed(() => {
 async function deletePersistentItem(key: string) {
   try {
     await idbDel(key, userDataStore)
-    message.success(`已删除持久化键: ${key}`)
+    feedback('success', `已删除持久化键: ${key}`)
     await fetchPersistentData()
   } catch (error) {
     console.error(`[UserData IDB Manager] Error deleting key ${String(key)}:`, error)
-    message.error(`删除键 ${String(key)} 时出错`)
+    feedback('error', `删除键 ${String(key)} 时出错`)
   }
 }
 
 async function clearPersistentData() {
   try {
     await idbClear(userDataStore)
-    message.success('已清除所有用户持久化数据')
+    feedback('success', '已清除所有用户持久化数据')
     await fetchPersistentData()
   } catch (error) {
     console.error('[UserData IDB Manager] Error clearing data:', error)
-    message.error('清除用户数据时出错')
+    feedback('error', '清除用户数据时出错')
   }
 }
 
@@ -191,7 +173,7 @@ function fetchRuntimeData() {
     runtimeData.value = fetchedData
   } catch (error) {
     console.error('[Runtime SessionStorage Manager] Error fetching keys:', error)
-    message.error('无法加载运行时数据')
+    feedback('error', '无法加载运行时数据')
     runtimeData.value = []
   } finally {
     runtimeLoading.value = false
@@ -207,11 +189,11 @@ const filteredRuntimeData = computed(() => {
 function deleteRuntimeItem(key: string) {
   try {
     sessionStorage.removeItem(RUNTIME_STORAGE_PREFIX + key)
-    message.success(`已删除运行时键: ${key}`)
+    feedback('success', `已删除运行时键: ${key}`)
     fetchRuntimeData()
   } catch (error) {
     console.error(`[Runtime SessionStorage Manager] Error deleting key ${String(key)}:`, error)
-    message.error(`删除键 ${String(key)} 时出错`)
+    feedback('error', `删除键 ${String(key)} 时出错`)
   }
 }
 
@@ -225,22 +207,22 @@ function clearRuntimeData() {
       }
     }
     keysToRemove.forEach((key) => sessionStorage.removeItem(key))
-    message.success('已清除所有运行时数据')
+    feedback('success', '已清除所有运行时数据')
     fetchRuntimeData()
   } catch (error) {
     console.error('[Runtime SessionStorage Manager] Error clearing data:', error)
-    message.error('清除运行时数据时出错')
+    feedback('error', '清除运行时数据时出错')
   }
 }
 
 // --- 表格列定义 (复用) ---
-const commonColumns: DataTableColumns<DataItem> = [
+const commonColumns: any[] = [
   {
     title: '键 (Key)',
     key: 'key',
     width: 200,
     render: (row) =>
-      h(NText, { code: true, style: 'font-weight: bold; color: var(--vtsuru-primary);' }, { default: () => row.key }),
+      h('span', { code: true, style: 'font-weight: bold; color: var(--vtsuru-primary);' }, { default: () => row.key }),
   },
   {
     title: '类型',
@@ -248,7 +230,7 @@ const commonColumns: DataTableColumns<DataItem> = [
     width: 100,
     render: (row) =>
       h(
-        NTag,
+        resolveComponent('UBadge'),
         {
           size: 'small',
           type: row.type === 'error' || row.type === 'parse-error' ? 'error' : 'default',
@@ -264,20 +246,20 @@ const commonColumns: DataTableColumns<DataItem> = [
       h('div', { class: 'value-cell' }, [
         h('pre', { class: 'value-content' }, row.valueDisplay),
         h(
-          NButton,
+          resolveComponent('UButton'),
           {
             size: 'tiny',
             quaternary: true,
             class: 'copy-btn',
             onClick: () => copyToClipboard(row.valueDisplay),
           },
-          { icon: () => h(NIcon, { component: Copy16Regular }) },
+          { icon: () => h(resolveComponent('UIcon'), { component: Copy16Regular }) },
         ),
       ]),
   },
 ]
 
-const persistentColumns: DataTableColumns<DataItem> = [
+const persistentColumns: any[] = [
   ...commonColumns,
   {
     title: '操作',
@@ -286,14 +268,14 @@ const persistentColumns: DataTableColumns<DataItem> = [
     align: 'center',
     render: (row) =>
       h(
-        NPopconfirm,
+        resolveComponent('UPopover'),
         { onPositiveClick: () => deletePersistentItem(row.key), positiveText: '确认删除', negativeText: '取消' },
         {
           trigger: () =>
             h(
-              NButton,
+              resolveComponent('UButton'),
               { size: 'small', type: 'error', quaternary: true },
-              { icon: () => h(NIcon, { component: Delete16Filled }) },
+              { icon: () => h(resolveComponent('UIcon'), { component: Delete16Filled }) },
             ),
           default: () => `删除持久化键 "${row.key}"?`,
         },
@@ -301,7 +283,7 @@ const persistentColumns: DataTableColumns<DataItem> = [
   },
 ]
 
-const runtimeColumns: DataTableColumns<DataItem> = [
+const runtimeColumns: any[] = [
   ...commonColumns,
   {
     title: '操作',
@@ -310,14 +292,14 @@ const runtimeColumns: DataTableColumns<DataItem> = [
     align: 'center',
     render: (row) =>
       h(
-        NPopconfirm,
+        resolveComponent('UPopover'),
         { onPositiveClick: () => deleteRuntimeItem(row.key), positiveText: '确认删除', negativeText: '取消' },
         {
           trigger: () =>
             h(
-              NButton,
+              resolveComponent('UButton'),
               { size: 'small', type: 'error', quaternary: true },
-              { icon: () => h(NIcon, { component: Delete16Filled }) },
+              { icon: () => h(resolveComponent('UIcon'), { component: Delete16Filled }) },
             ),
           default: () => `删除运行时键 "${row.key}"?`,
         },
@@ -333,95 +315,108 @@ onMounted(() => {
 </script>
 
 <template>
-  <NScrollbar class="data-manager-scrollbar">
-    <NFlex
+  <div class="data-manager-scrollbar">
+    <div
       vertical
       :size="16"
       class="data-manager"
     >
       <!-- 运行时数据 (SessionStorage) -->
-      <NCard
+      <UCard
         size="small"
         bordered
         :segmented="{ content: true }"
       >
         <template #header>
-          <NFlex align="center">
-            <NIcon :component="Flash24Regular" />
+          <div align="center">
+            <UIcon name="i-lucide-circle" />
             <span>运行时数据 (SessionStorage)</span>
-            <NTag
+            <UBadge
               size="small"
               :bordered="false"
               type="warning"
             >
               临时
-            </NTag>
-          </NFlex>
+            </UBadge>
+          </div>
         </template>
 
-        <NFlex
+        <div
           vertical
           :size="12"
         >
-          <NAlert
+          <UAlert
             type="warning"
             :bordered="false"
             size="small"
           >
             这里显示通过 <code>getData</code> / <code>setData</code> 管理的数据。仅在程序运行期间保留，重启即逝。
-          </NAlert>
+          </UAlert>
 
-          <NFlex
+          <div
             justify="space-between"
             align="center"
           >
-            <NInput
-              v-model:value="runtimeSearch"
+            <UInput
+              v-model="runtimeSearch"
               placeholder="搜索 Key..."
               size="small"
               style="width: 200px"
               clearable
             >
-              <template #prefix>
-                <NIcon :component="Search16Regular" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
-            </NInput>
+            </UInput>
 
-            <NFlex>
-              <NButton
+            <div>
+              <UButton
                 :loading="runtimeLoading"
                 size="small"
                 @click="fetchRuntimeData"
               >
-                <template #icon>
-                  <NIcon :component="ArrowClockwise16Filled" />
+                <template #leading>
+                  <UIcon name="i-lucide-circle" />
                 </template>
                 刷新
-              </NButton>
-              <NPopconfirm
-                positive-text="确认清除"
-                negative-text="取消"
-                @positive-click="clearRuntimeData"
-              >
-                <template #trigger>
-                  <NButton
-                    type="error"
-                    ghost
-                    size="small"
-                    :disabled="runtimeData.length === 0"
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete16Filled" />
-                    </template>
-                    清除所有
-                  </NButton>
+              </UButton>
+              <UPopover>
+                <UButton
+                  color="error"
+                  ghost
+                  size="sm"
+                  :disabled="runtimeData.length === 0"
+                >
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
+                  </template>
+                  清除所有
+                </UButton>
+                <template #content="{ close }">
+                  <div class="space-y-3 p-3">
+                    <div>确定要清除所有当前会话的运行时数据吗？此操作不可逆！</div>
+                    <div class="flex justify-end gap-2">
+                      <UButton
+                        size="xs"
+                        color="neutral"
+                        variant="ghost"
+                        @click="close"
+                        >取消</UButton
+                      >
+                      <UButton
+                        size="xs"
+                        color="error"
+                        @click="(close(), clearRuntimeData)"
+                        >确认清除</UButton
+                      >
+                    </div>
+                  </div>
                 </template>
-                确定要清除所有当前会话的运行时数据吗？此操作不可逆！
-              </NPopconfirm>
-            </NFlex>
-          </NFlex>
+              </UPopover>
+            </div>
+          </div>
 
-          <NDataTable
+          <UTable
             :columns="runtimeColumns"
             :data="filteredRuntimeData"
             :bordered="false"
@@ -433,95 +428,108 @@ onMounted(() => {
             scroll-x="800"
           >
             <template #empty>
-              <NEmpty description="当前会话没有运行时数据" />
+              <UEmpty description="当前会话没有运行时数据" />
             </template>
-          </NDataTable>
-        </NFlex>
-      </NCard>
+          </UTable>
+        </div>
+      </UCard>
 
       <!-- 用户持久化数据 (IndexedDB) -->
-      <NCard
+      <UCard
         size="small"
         bordered
         :segmented="{ content: true }"
       >
         <template #header>
-          <NFlex align="center">
-            <NIcon :component="Database20Regular" />
+          <div align="center">
+            <UIcon name="i-lucide-circle" />
             <span>持久化数据 (IndexedDB)</span>
-            <NTag
+            <UBadge
               size="small"
               :bordered="false"
               type="info"
             >
               永久
-            </NTag>
-          </NFlex>
+            </UBadge>
+          </div>
         </template>
 
-        <NFlex
+        <div
           vertical
           :size="12"
         >
-          <NAlert
+          <UAlert
             type="info"
             :bordered="false"
             size="small"
           >
             这里显示通过 <code>getStorageData</code> / <code>setStorageData</code> 管理的数据。程序关闭后依然保留。
-          </NAlert>
+          </UAlert>
 
-          <NFlex
+          <div
             justify="space-between"
             align="center"
           >
-            <NInput
-              v-model:value="persistentSearch"
+            <UInput
+              v-model="persistentSearch"
               placeholder="搜索 Key..."
               size="small"
               style="width: 200px"
               clearable
             >
-              <template #prefix>
-                <NIcon :component="Search16Regular" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
-            </NInput>
+            </UInput>
 
-            <NFlex>
-              <NButton
+            <div>
+              <UButton
                 :loading="persistentLoading"
                 size="small"
                 @click="fetchPersistentData"
               >
-                <template #icon>
-                  <NIcon :component="ArrowClockwise16Filled" />
+                <template #leading>
+                  <UIcon name="i-lucide-circle" />
                 </template>
                 刷新
-              </NButton>
-              <NPopconfirm
-                positive-text="确认清除"
-                negative-text="取消"
-                @positive-click="clearPersistentData"
-              >
-                <template #trigger>
-                  <NButton
-                    type="error"
-                    ghost
-                    size="small"
-                    :disabled="persistentData.length === 0"
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete16Filled" />
-                    </template>
-                    清除所有
-                  </NButton>
+              </UButton>
+              <UPopover>
+                <UButton
+                  color="error"
+                  ghost
+                  size="sm"
+                  :disabled="persistentData.length === 0"
+                >
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
+                  </template>
+                  清除所有
+                </UButton>
+                <template #content="{ close }">
+                  <div class="space-y-3 p-3">
+                    <div>确定要清除所有由自动操作脚本存储的用户数据吗？应用配置不会被清除。此操作不可逆！</div>
+                    <div class="flex justify-end gap-2">
+                      <UButton
+                        size="xs"
+                        color="neutral"
+                        variant="ghost"
+                        @click="close"
+                        >取消</UButton
+                      >
+                      <UButton
+                        size="xs"
+                        color="error"
+                        @click="(close(), clearPersistentData)"
+                        >确认清除</UButton
+                      >
+                    </div>
+                  </div>
                 </template>
-                确定要清除所有由自动操作脚本存储的用户数据吗？应用配置不会被清除。此操作不可逆！
-              </NPopconfirm>
-            </NFlex>
-          </NFlex>
+              </UPopover>
+            </div>
+          </div>
 
-          <NDataTable
+          <UTable
             :columns="persistentColumns"
             :data="filteredPersistentData"
             :bordered="false"
@@ -533,13 +541,13 @@ onMounted(() => {
             scroll-x="800"
           >
             <template #empty>
-              <NEmpty description="脚本尚未存储任何持久化数据" />
+              <UEmpty description="脚本尚未存储任何持久化数据" />
             </template>
-          </NDataTable>
-        </NFlex>
-      </NCard>
-    </NFlex>
-  </NScrollbar>
+          </UTable>
+        </div>
+      </UCard>
+    </div>
+  </div>
 </template>
 
 <style scoped>

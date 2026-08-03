@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { PlayCircleOutline, RefreshOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NFlex, NSpin, NIcon } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ResponseUserIndexModel, UserInfo, VideoCollectVideo } from '@/api/api-models'
@@ -144,39 +143,38 @@ const containerStyle = computed(() => {
     </template>
 
     <div class="video-content">
-      <NSpin
-        :show="isLoading"
+      <div
+        :aria-busy="isLoading"
         size="small"
       >
-        <NAlert
+        <UAlert
           v-if="error"
-          type="error"
-          :show-icon="true"
+          color="error"
           class="remote-error"
         >
-          <div class="remote-error-content">
-            <span>{{ error }}</span>
-            <NButton
-              size="small"
-              secondary
-              @click="loadUserIndex(true)"
-            >
-              <template #icon>
-                <NIcon><RefreshOutline /></NIcon>
-              </template>
-              重试
-            </NButton>
-          </div>
-        </NAlert>
+          <template #description
+            ><div class="remote-error-content">
+              <span>{{ error }}</span>
+              <UButton
+                size="sm"
+                variant="soft"
+                @click="loadUserIndex(true)"
+              >
+                <template #leading>
+                  <span><RefreshOutline /></span>
+                </template>
+                重试
+              </UButton>
+            </div></template
+          >
+        </UAlert>
 
         <template v-else-if="cfg.source === 'userIndex'">
-          <NAlert
+          <UAlert
             v-if="videos.length === 0 && !isLoading"
-            type="info"
-            :show-icon="false"
+            color="info"
+            ><template #description> 暂无视频 </template></UAlert
           >
-            暂无视频
-          </NAlert>
           <div
             v-else
             class="video-list"
@@ -193,14 +191,12 @@ const containerStyle = computed(() => {
         </template>
 
         <template v-else>
-          <NAlert
+          <UAlert
             v-if="manualItems.length === 0"
-            type="info"
-            :show-icon="false"
+            color="info"
+            ><template #description> 未配置视频链接 </template></UAlert
           >
-            未配置视频链接
-          </NAlert>
-          <NFlex
+          <div
             v-else
             vertical
             style="gap: 8px"
@@ -215,7 +211,7 @@ const containerStyle = computed(() => {
               :aria-label="`${it.title || '打开视频'}（新窗口打开）`"
             >
               <div class="manual-icon">
-                <NIcon><PlayCircleOutline /></NIcon>
+                <span><PlayCircleOutline /></span>
               </div>
               <div class="manual-content">
                 <strong class="manual-title">
@@ -226,9 +222,9 @@ const containerStyle = computed(() => {
                 </span>
               </div>
             </a>
-          </NFlex>
+          </div>
         </template>
-      </NSpin>
+      </div>
     </div>
   </BlockCard>
 </template>

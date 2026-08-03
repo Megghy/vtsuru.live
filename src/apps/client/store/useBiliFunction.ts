@@ -1,7 +1,7 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http' // 引入 Body
 import md5 from 'md5'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { computed, h, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { isDev } from '@/shared/config'
@@ -172,7 +172,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     // 开发环境下只显示通知，不实际发送
     if (isDev) {
       console.log(`[开发环境] 模拟发送弹幕到房间 ${roomId}: ${message}`)
-      window.$notification.info({
+      useToast().add({
+        color: 'info',
         title: '开发环境 - 弹幕未实际发送',
         description: `房间: ${roomId}, 内容: ${message}`,
         duration: 10000,
@@ -213,22 +214,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       }
       const json = await response.json()
       if (json.code !== 0) {
-        window.$notification.error({
+        useToast().add({
+          color: 'error',
           title: '发送弹幕失败',
-          description: `内容: ${message}`,
-          meta: () =>
-            h(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  width: '100%',
-                },
-              },
-              `错误: ${json.code} - ${json.message || json.msg}`,
-            ),
+          description: `内容: ${message}；错误: ${json.code} - ${json.message || json.msg}`,
           duration: 0,
         })
         console.error(
@@ -319,7 +308,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     if (!message || message.trim().length === 0) {
       const error = '尝试发送空私信，已阻止。'
       console.warn(error)
-      window.$notification.error({
+      useToast().add({
+        color: 'error',
         title: '发送私信失败',
         description: `尝试发送空私信给 ${receiverId}, 已阻止`,
         duration: 0,
@@ -330,7 +320,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     // 开发环境下只显示通知，不实际发送
     if (isDev) {
       console.log(`[开发环境] 模拟发送私信到用户 ${receiverId}: ${message}`)
-      window.$notification.info({
+      useToast().add({
+        color: 'info',
         title: '开发环境 - 私信未实际发送',
         description: `接收者: ${receiverId}, 内容: ${message}`,
         duration: 10000,

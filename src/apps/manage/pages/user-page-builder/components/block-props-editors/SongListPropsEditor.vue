@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NInputNumber, NSelect, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -11,44 +9,41 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="builder-form">
     <PropsGrid>
-      <NFormItem label="样式">
-        <NSelect
-          v-model:value="blockProps.variant"
-          :options="[
+      <UFormField label="样式">
+        <USelect
+          v-model="blockProps.variant"
+          :items="[
             { label: '紧凑', value: 'compact' },
             { label: '完整', value: 'full' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="最多显示">
-        <NInputNumber
-          v-model:value="blockProps.maxItems"
+      </UFormField>
+      <UFormField label="最多显示">
+        <UInputNumber
+          v-model="blockProps.maxItems"
           :min="3"
           :max="30"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="显示搜索">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showSearch"
+      </UFormField>
+      <UFormField label="显示搜索">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showSearch"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示点歌方式">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showRequestStatus"
+        </div>
+      </UFormField>
+      <UFormField label="显示点歌方式">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showRequestStatus"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
+        </div>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

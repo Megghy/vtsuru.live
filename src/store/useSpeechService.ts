@@ -1,5 +1,4 @@
 import EasySpeech from 'easy-speech'
-import { useMessage } from 'naive-ui'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { clearInterval, clearTimeout, setInterval, setTimeout } from 'worker-timers'
 
@@ -14,6 +13,7 @@ import {
   hasVoiceProvider,
 } from '@/apps/open-live/voice-providers'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { showErrorToast, showSuccessToast } from '@/shared/services/toast'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface SpeechInfo {
@@ -361,7 +361,6 @@ function ensureProviderDefaults(settings: SpeechSettings) {
 let speechServiceInstance: ReturnType<typeof createSpeechService> | null = null
 
 function createSpeechService() {
-  const message = useMessage()
   const accountInfo = useAccount()
   const danmakuClient = useDanmakuClient()
   const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
@@ -486,7 +485,7 @@ function createSpeechService() {
       console.log('[TTS] 语音服务初始化完成')
     } catch (error) {
       console.error('[TTS] 初始化失败:', error)
-      message.error('语音服务初始化失败')
+      showErrorToast('语音服务初始化失败')
     }
   }
 
@@ -662,7 +661,7 @@ function createSpeechService() {
   function buildApiUrl(text: string): string | null {
     const provider = getCurrentProvider()
     if (!provider || !provider.buildAudioUrl) {
-      message.error('当前语音提供商不支持音频 URL 构建')
+      showErrorToast('当前语音提供商不支持音频 URL 构建')
       return null
     }
 
@@ -676,7 +675,7 @@ function createSpeechService() {
       if (isVtsuruAPI) {
         tempURL.searchParams.set('vtsuruId', accountInfo.value?.id.toString() ?? '-1')
         if ([...segmenter.segment(tempURL.searchParams.get('text') ?? '')].length > 100) {
-          message.error('本站提供的测试接口字数不允许超过 100 字')
+          showErrorToast('本站提供的测试接口字数不允许超过 100 字')
           return null
         }
         return tempURL.toString()
@@ -702,7 +701,7 @@ function createSpeechService() {
     if (checkTimer) clearTimeout(checkTimer)
     checkTimer = setTimeout(() => {
       if (runId !== speechRunId) return
-      message.error('语音播放超时')
+      showErrorToast('语音播放超时')
       cancelSpeech()
     }, 30000)
 
@@ -714,7 +713,7 @@ function createSpeechService() {
       loadingTimeoutTimer = setTimeout(() => {
         if (runId === speechRunId && speechState.isApiAudioLoading) {
           console.error('[TTS] 音频加载超时 (25秒)')
-          message.error('音频加载超时，请检查网络连接或API状态')
+          showErrorToast('音频加载超时，请检查网络连接或API状态')
           cancelSpeech()
         }
       }, 25000)
@@ -735,7 +734,7 @@ function createSpeechService() {
           .catch((error) => {
             if (runId !== speechRunId) return
             console.error('[TTS] 获取音频失败:', error)
-            message.error(`语音合成失败: ${error instanceof Error ? error.message : '未知错误'}`)
+            showErrorToast(`语音合成失败: ${error instanceof Error ? error.message : '未知错误'}`)
             cancelSpeech()
           })
       } else if (provider.buildAudioUrl) {
@@ -749,7 +748,7 @@ function createSpeechService() {
           speechState.apiAudioSrc = url
         }, 0)
       } else {
-        message.error('当前语音提供商未实现音频获取')
+        showErrorToast('当前语音提供商未实现音频获取')
         cancelSpeech()
       }
     } else {
@@ -760,7 +759,7 @@ function createSpeechService() {
         .catch((error) => {
           if (runId !== speechRunId) return
           console.error('[TTS] 播放错误:', error)
-          message.error(`无法播放语音: ${error instanceof Error ? error.message : '未知错误'}`)
+          showErrorToast(`无法播放语音: ${error instanceof Error ? error.message : '未知错误'}`)
           cancelSpeech()
         })
     }
@@ -1057,7 +1056,7 @@ function createSpeechService() {
 
   function startSpeech() {
     speechState.canSpeech = true
-    message.success('服务已启动')
+    showSuccessToast('服务已启动')
   }
 
   function startTimedBroadcast() {
@@ -1091,7 +1090,7 @@ function createSpeechService() {
     pendingGifts.clear()
     cancelSpeech()
     stopTimedBroadcast()
-    message.success('已停止监听')
+    showSuccessToast('已停止监听')
   }
 
   async function downloadConfig() {
@@ -1102,15 +1101,15 @@ function createSpeechService() {
         settings.value = migrateLegacySettings(result.data)
         await nextTick()
         _cloudSyncSuppressed = false
-        message.success('已获取配置文件')
+        showSuccessToast('已获取配置文件')
       } else if (result.status === 'notfound') {
-        message.error('未上传配置文件')
+        showErrorToast('未上传配置文件')
       } else {
-        message.error(`获取失败: ${result.msg}`)
+        showErrorToast(`获取失败: ${result.msg}`)
       }
     } catch (error) {
       console.error('[TTS] 下载配置失败:', error)
-      message.error(`获取失败: ${error instanceof Error ? error.message : '未知错误'}`)
+      showErrorToast(`获取失败: ${error instanceof Error ? error.message : '未知错误'}`)
     }
   }
 
@@ -1124,7 +1123,7 @@ function createSpeechService() {
   async function previewVoice(text = '你好，这是一段试听'): Promise<void> {
     const provider = getCurrentProvider()
     if (!provider) {
-      message.error('未选择语音提供商')
+      showErrorToast('未选择语音提供商')
       return
     }
 
@@ -1132,7 +1131,7 @@ function createSpeechService() {
       try {
         await provider.speak(text)
       } catch (error) {
-        message.error(`试听失败: ${error instanceof Error ? error.message : '未知错误'}`)
+        showErrorToast(`试听失败: ${error instanceof Error ? error.message : '未知错误'}`)
       }
       return
     }
@@ -1160,7 +1159,7 @@ function createSpeechService() {
     } catch (error) {
       if (createdObjectUrl && audioUrl) URL.revokeObjectURL(audioUrl)
       console.error('[TTS] 试听失败:', error)
-      message.error(`试听失败: ${error instanceof Error ? error.message : '未知错误'}`)
+      showErrorToast(`试听失败: ${error instanceof Error ? error.message : '未知错误'}`)
     }
   }
 

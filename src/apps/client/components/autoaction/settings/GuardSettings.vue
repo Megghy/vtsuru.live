@@ -1,20 +1,4 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
-import {
-  NButton,
-  NDivider,
-  NInput,
-  NSelect,
-  NFlex,
-  NSwitch,
-  NTag,
-  useMessage,
-  NForm,
-  NFormItem,
-  NText,
-  NTooltip,
-  NIcon,
-} from 'naive-ui'
 import { ref } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
@@ -27,7 +11,10 @@ const props = defineProps({
   },
 })
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 
 // 舰长礼品码相关
 const tempGiftCodeLevel = ref(3) // 默认为舰长等级
@@ -56,7 +43,7 @@ function addGiftCode() {
     levelCodes.codes.push(code)
     tempGiftCode.value = ''
   } else {
-    message.warning('此礼品码已存在')
+    feedback('warning', '此礼品码已存在')
   }
 }
 
@@ -96,97 +83,96 @@ function getGuardLevelName(level: number): string {
     v-if="action.triggerType === TriggerType.GUARD"
     class="guard-trigger-settings"
   >
-    <NForm
+    <UForm
       label-placement="left"
       :label-width="140"
       size="small"
       :show-feedback="false"
     >
-      <NFlex
+      <div
         vertical
         :size="16"
       >
-        <NFormItem label="防止重复发送">
+        <UFormField label="防止重复发送">
           <template #label>
-            <NTooltip trigger="hover">
-              <template #trigger>
-                <span
-                  >防止重复
-                  <NIcon
-                    :component="Info16Regular"
-                    style="vertical-align: -2px"
-                /></span>
-              </template>
-              同一用户在单次直播中多次上舰仅触发一次
-            </NTooltip>
+            <UTooltip>
+              <span
+                >防止重复
+                <UIcon
+                  name="i-lucide-circle"
+                  style="vertical-align: -2px"
+              /></span>
+              <template #content> 同一用户在单次直播中多次上舰仅触发一次 </template>
+            </UTooltip>
           </template>
-          <NSwitch
-            v-model:value="action.triggerConfig.preventRepeat"
+          <USwitch
+            v-model="action.triggerConfig.preventRepeat"
             size="small"
           />
-        </NFormItem>
+        </UFormField>
 
         <transition name="fade">
           <div
             v-if="action.actionType === ActionType.SEND_PRIVATE_MSG"
             class="gift-codes-section"
           >
-            <NDivider
+            <USeparator
               title-placement="left"
               style="margin-top: 0"
             >
-              <NText
+              <span
                 strong
                 depth="2"
               >
                 私信礼品码库
-              </NText>
-            </NDivider>
+              </span>
+            </USeparator>
 
-            <NFlex
+            <div
               vertical
               :size="12"
             >
-              <NText
+              <span
                 depth="3"
                 style="font-size: 12px"
               >
                 当操作类型为“发送私信”时，可以设置在私信中发放礼品码。
-              </NText>
+              </span>
 
-              <NFlex :wrap="false">
-                <NSelect
-                  v-model:value="tempGiftCodeLevel"
+              <div :wrap="false">
+                <USelectMenu
+                  v-model="tempGiftCodeLevel"
                   style="width: 100px"
                   size="small"
-                  :options="[
+                  :items="[
                     { label: '总督', value: 1 },
                     { label: '提督', value: 2 },
                     { label: '舰长', value: 3 },
                     { label: '通用', value: 0 },
                   ]"
+                  value-key="value"
                 />
-                <NInput
-                  v-model:value="tempGiftCode"
+                <UInput
+                  v-model="tempGiftCode"
                   placeholder="输入礼品码..."
                   size="small"
                   @keyup.enter="addGiftCode"
                 />
-                <NButton
+                <UButton
                   size="small"
-                  type="primary"
-                  secondary
+                  color="primary"
+                  variant="soft"
                   @click="addGiftCode"
                 >
                   添加
-                </NButton>
-              </NFlex>
+                </UButton>
+              </div>
 
               <div
                 v-if="action.triggerConfig.giftCodes && action.triggerConfig.giftCodes.length > 0"
                 class="codes-display"
               >
-                <NFlex
+                <div
                   vertical
                   :size="8"
                 >
@@ -196,19 +182,19 @@ function getGuardLevelName(level: number): string {
                     class="level-group"
                   >
                     <div class="level-label">
-                      <NTag
+                      <UBadge
                         size="tiny"
                         :type="levelCodes.level === 3 ? 'info' : levelCodes.level === 0 ? 'default' : 'warning'"
                         :bordered="false"
                       >
                         {{ getGuardLevelName(levelCodes.level) }}
-                      </NTag>
+                      </UBadge>
                     </div>
-                    <NFlex
+                    <div
                       :size="6"
                       style="flex: 1"
                     >
-                      <NTag
+                      <UBadge
                         v-for="(code, codeIndex) in levelCodes.codes"
                         :key="codeIndex"
                         closable
@@ -216,24 +202,24 @@ function getGuardLevelName(level: number): string {
                         @close="removeGiftCode(levelIndex, codeIndex)"
                       >
                         {{ code }}
-                      </NTag>
-                    </NFlex>
+                      </UBadge>
+                    </div>
                   </div>
-                </NFlex>
+                </div>
               </div>
-              <NText
+              <span
                 v-else
                 depth="3"
                 italic
                 style="font-size: 12px; text-align: center; padding: 12px"
               >
                 暂无库存礼品码
-              </NText>
-            </NFlex>
+              </span>
+            </div>
           </div>
         </transition>
-      </NFlex>
-    </NForm>
+      </div>
+    </UForm>
   </div>
 </template>
 

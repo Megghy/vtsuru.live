@@ -263,7 +263,7 @@ export const useOBSStore = defineStore('obs', () => {
   // 切换推流状态
   async function handleObsToggleStream() {
     if (!obs || !obsConnected.value) {
-      window.$message.error('请先连接 OBS')
+      useToast().add({ title: '请先连接 OBS', color: 'error' })
       return
     }
 
@@ -273,11 +273,11 @@ export const useOBSStore = defineStore('obs', () => {
       if (typeof result?.outputActive === 'boolean') {
         obsStreamActive.value = result.outputActive
       }
-      window.$message.success(obsStreamActive.value ? '已开始 OBS 推流' : '已停止 OBS 推流')
+      useToast().add({ title: obsStreamActive.value ? '已开始 OBS 推流' : '已停止 OBS 推流', color: 'success' })
       void updateObsStats()
     } catch (err: any) {
       console.error('切换 OBS 推流状态失败:', err)
-      window.$message.error(`切换 OBS 推流状态失败: ${err?.message || err}`)
+      useToast().add({ title: `切换 OBS 推流状态失败: ${err?.message || err}`, color: 'error' })
     } finally {
       isTogglingObsStream.value = false
     }
@@ -299,12 +299,12 @@ export const useOBSStore = defineStore('obs', () => {
       isTogglingObsStream.value = true
       await obs.call('StartStream')
       obsStreamActive.value = true
-      window.$message.success('已开始 OBS 推流')
+      useToast().add({ title: '已开始 OBS 推流', color: 'success' })
       void updateObsStats()
       return true
     } catch (err: any) {
       console.error('开始 OBS 推流失败:', err)
-      window.$message.error(`开始 OBS 推流失败: ${err?.message || err}`)
+      useToast().add({ title: `开始 OBS 推流失败: ${err?.message || err}`, color: 'error' })
       return false
     } finally {
       isTogglingObsStream.value = false
@@ -327,12 +327,12 @@ export const useOBSStore = defineStore('obs', () => {
       isTogglingObsStream.value = true
       await obs.call('StopStream')
       obsStreamActive.value = false
-      window.$message.success('已停止 OBS 推流')
+      useToast().add({ title: '已停止 OBS 推流', color: 'success' })
       void updateObsStats()
       return true
     } catch (err: any) {
       console.error('停止 OBS 推流失败:', err)
-      window.$message.error(`停止 OBS 推流失败: ${err?.message || err}`)
+      useToast().add({ title: `停止 OBS 推流失败: ${err?.message || err}`, color: 'error' })
       return false
     } finally {
       isTogglingObsStream.value = false
@@ -342,7 +342,7 @@ export const useOBSStore = defineStore('obs', () => {
   // 同步推流码到 OBS
   async function syncStreamKeyToObs(server: string, key: string) {
     if (!obs || !obsConnected.value) {
-      window.$message.error('请先连接 OBS')
+      useToast().add({ title: '请先连接 OBS', color: 'error' })
       return false
     }
 
@@ -360,11 +360,11 @@ export const useOBSStore = defineStore('obs', () => {
         },
       })
 
-      window.$message.success('推流码已同步到 OBS')
+      useToast().add({ title: '推流码已同步到 OBS', color: 'success' })
       return true
     } catch (err: any) {
       console.error('同步推流码到 OBS 失败:', err)
-      window.$message.error(`同步推流码失败: ${err?.message || err}`)
+      useToast().add({ title: `同步推流码失败: ${err?.message || err}`, color: 'error' })
       return false
     }
   }
@@ -398,12 +398,12 @@ export const useOBSStore = defineStore('obs', () => {
   // 切换到指定场景
   async function switchToScene(sceneName: string): Promise<boolean> {
     if (!obs || !obsConnected.value) {
-      window.$message.error('OBS未连接')
+      useToast().add({ title: 'OBS未连接', color: 'error' })
       return false
     }
 
     if (!sceneName || !obsScenes.value.includes(sceneName)) {
-      window.$message.error('无效的场景名称')
+      useToast().add({ title: '无效的场景名称', color: 'error' })
       return false
     }
 
@@ -423,12 +423,12 @@ export const useOBSStore = defineStore('obs', () => {
 
       currentObsScene.value = sceneName
       console.log(`已切换到场景: ${sceneName}`)
-      window.$message.success(`已切换到场景: ${sceneName}`)
+      useToast().add({ title: `已切换到场景: ${sceneName}`, color: 'success' })
       return true
     } catch (err: any) {
       console.error('切换场景失败:', err)
       obsSceneError.value = err?.message || '切换场景失败'
-      window.$message.error(`切换场景失败: ${err?.message || err}`)
+      useToast().add({ title: `切换场景失败: ${err?.message || err}`, color: 'error' })
       return false
     } finally {
       isSwitchingScene.value = false

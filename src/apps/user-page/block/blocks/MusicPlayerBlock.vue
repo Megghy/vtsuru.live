@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -55,13 +54,11 @@ const embed = computed(() => {
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <NAlert
+    <UAlert
       v-if="!embed"
-      type="info"
-      :show-icon="false"
+      color="info"
+      ><template #description> 未配置可用的音乐链接 </template></UAlert
     >
-      未配置可用的音乐链接
-    </NAlert>
     <iframe
       v-else
       :src="embed.src"

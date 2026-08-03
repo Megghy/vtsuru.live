@@ -20,8 +20,8 @@ import {
   NTabs,
   NTag,
   NTime,
-  useMessage,
 } from 'naive-ui'
+import { showSuccessToast, showWarningToast } from '@/shared/services/toast'
 import { h, onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -39,7 +39,6 @@ import { useForumStore } from '@/store/useForumStore'
 
 const useForum = useForumStore()
 const accountInfo = useAccount()
-const message = useMessage()
 const { run } = useApiAction()
 
 const managedForums = ref((await useForum.GetManagedForums()) ?? [])
@@ -86,11 +85,11 @@ const levels = [
 
 async function createForum() {
   if (!readedAgreement.value) {
-    message.warning('请先阅读并同意服务协议')
+    showWarningToast('请先阅读并同意服务协议')
     return
   }
   if (!create_Name.value) {
-    message.warning('请输入名称')
+    showWarningToast('请输入名称')
     return
   }
   const data = await run(() => QueryPostAPI<ForumModel>(`${FORUM_API_URL}create`, { name: create_Name.value }), {
@@ -132,7 +131,7 @@ const applyingColumns: DataTableColumns<ForumUserModel> = [
           type: 'success',
           onClick: () =>
             useForum.ConfirmApply(currentForum.value.owner.id, row.id).then((success) => {
-              if (success) message.success('操作成功')
+              if (success) showSuccessToast('操作成功')
               currentForum.value.applying = currentForum.value.applying.filter((u) => u.id != row.id)
             }),
         },

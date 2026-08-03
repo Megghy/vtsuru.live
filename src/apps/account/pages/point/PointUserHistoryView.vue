@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ArrowDownload24Regular, ArrowSync24Regular } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
-import { NButton, NDatePicker, NFlex, NIcon, NRadioButton, NRadioGroup, NSelect, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 import type { ResponsePointHisrotyModel } from '@/api/api-models'
@@ -15,7 +13,7 @@ import { useBiliAuth } from '@/store/useBiliAuth'
 
 const emit = defineEmits<{ dataLoaded: [] }>()
 const auth = useBiliAuth()
-const message = useMessage()
+const toast = useToast()
 const histories = ref<ResponsePointHisrotyModel[]>([])
 const loading = ref(false)
 const loaded = ref(false)
@@ -24,17 +22,25 @@ let request: { generation: number; promise: Promise<void> } | undefined
 
 const streamer = ref<string | null>(null)
 const direction = ref<'all' | 'increase' | 'decrease'>('all')
-const dateRange = ref<[number, number] | null>(null)
+const dateStart = ref('')
+const dateEnd = ref('')
+const directionItems = [
+  { label: '全部', value: 'all' },
+  { label: '增加', value: 'increase' },
+  { label: '减少', value: 'decrease' },
+]
 
-const filteredHistories = computed(() =>
-  histories.value.filter((item) => {
+const filteredHistories = computed(() => {
+  const startAt = dateStart.value ? new Date(dateStart.value).getTime() : -Infinity
+  const endAt = dateEnd.value ? new Date(dateEnd.value).getTime() : Infinity
+  return histories.value.filter((item) => {
     const matchesStreamer = !streamer.value || item.extra?.user?.name === streamer.value
     const matchesDirection =
       direction.value === 'all' || (direction.value === 'increase' ? item.point > 0 : item.point < 0)
-    const matchesDate = !dateRange.value || (item.createAt >= dateRange.value[0] && item.createAt <= dateRange.value[1])
+    const matchesDate = item.createAt >= startAt && item.createAt <= endAt
     return matchesStreamer && matchesDirection && matchesDate
-  }),
-)
+  })
+})
 
 const streamerOptions = computed(() =>
   [...new Set(histories.value.map((item) => item.extra?.user?.name).filter((name): name is string => !!name))]
@@ -81,7 +87,7 @@ async function loadHistories(force = false) {
     await promise
   } catch (error) {
     if (currentGeneration === generation) {
-      message.error(error instanceof Error ? error.message : `获取积分记录失败: ${error}`)
+      toast.add({ title: error instanceof Error ? error.message : `获取积分记录失败: ${error}`, color: 'error' })
     }
   } finally {
     if (request?.promise === promise) {
@@ -109,7 +115,7 @@ function exportHistories() {
     new Blob([bom, new TextEncoder().encode(csv)], { type: 'text/csv;charset=utf-8;' }),
     `积分记录_${format(Date.now(), 'yyyy-MM-dd_HH-mm-ss')}.csv`,
   )
-  message.success(`已导出 ${filteredHistories.value.length} 条记录`)
+  toast.add({ title: `已导出 ${filteredHistories.value.length} 条记录`, color: 'success' })
 }
 
 function refresh() {
@@ -123,7 +129,8 @@ function reset() {
   loading.value = false
   streamer.value = null
   direction.value = 'all'
-  dateRange.value = null
+  dateStart.value = ''
+  dateEnd.value = ''
 }
 
 defineExpose({ getHistories: loadHistories, reset })
@@ -132,71 +139,102 @@ onMounted(() => void loadHistories())
 </script>
 
 <template>
-  <NSpin :show="loading">
+  <div :aria-busy="loading">
     <AccountDataPanel :stats="stats">
       <template #toolbar>
-        <NFlex
-          class="history-toolbar"
-          align="center"
-          justify="space-between"
-          wrap
-          :gap="8"
-        >
-          <NFlex
-            class="history-filters"
-            align="center"
-            wrap
-            :gap="8"
-          >
-            <NSelect
-              v-model:value="streamer"
-              :options="streamerOptions"
-              clearable
-              filterable
+        <div class="history-toolbar">
+          <div class="history-filters">
+            <USelectMenu
+              v-model="streamer"
+              class="history-filter-control history-filter-control--streamer"
+              :items="streamerOptions"
+              value-key="value"
+              clear
               placeholder="全部主播"
-              style="width: 160px"
             />
-            <NRadioGroup v-model:value="direction">
-              <NRadioButton value="all">全部</NRadioButton>
-              <NRadioButton value="increase">增加</NRadioButton>
-              <NRadioButton value="decrease">减少</NRadioButton>
-            </NRadioGroup>
-            <NDatePicker
-              v-model:value="dateRange"
-              type="datetimerange"
-              clearable
-              placeholder="选择时间范围"
-              style="width: 330px"
+            <URadioGroup
+              v-model="direction"
+              :items="directionItems"
+              value-key="value"
+              variant="table"
+              orientation="horizontal"
             />
+            <div class="history-date-range">
+              <UInput
+                v-model="dateStart"
+                type="datetime-local"
+                aria-label="开始时间"
+              />
+              <span>至</span>
+              <UInput
+                v-model="dateEnd"
+                type="datetime-local"
+                aria-label="结束时间"
+              />
+            </div>
             <span class="filter-result">显示 {{ filteredHistories.length }} / {{ histories.length }} 条</span>
-          </NFlex>
+          </div>
 
-          <NFlex :gap="8">
-            <NButton
-              secondary
+          <div class="history-actions">
+            <UButton
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-download"
               :disabled="filteredHistories.length === 0"
               @click="exportHistories"
             >
-              <template #icon><NIcon :component="ArrowDownload24Regular" /></template>
               导出
-            </NButton>
-            <NButton
-              secondary
+            </UButton>
+            <UButton
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-refresh-cw"
+              :loading="loading"
               @click="refresh"
             >
-              <template #icon><NIcon :component="ArrowSync24Regular" /></template>
               刷新
-            </NButton>
-          </NFlex>
-        </NFlex>
+            </UButton>
+          </div>
+        </div>
       </template>
     </AccountDataPanel>
 
-    <PointHistoryCard :histories="filteredHistories" />
-  </NSpin>
+    <UEmpty
+      v-if="loading"
+      loading
+      title="正在加载积分记录"
+    />
+    <PointHistoryCard
+      v-else
+      :histories="filteredHistories"
+    />
+  </div>
 </template>
 
 <style scoped>
+.history-toolbar,
+.history-filters,
+.history-actions,
+.history-date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-toolbar,
+.history-filters {
+  flex-wrap: wrap;
+}
+
+.history-toolbar {
+  justify-content: space-between;
+}
+
+.history-filter-control--streamer {
+  width: 160px;
+}
+
+.history-date-range span,
 .filter-result {
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
@@ -204,13 +242,23 @@ onMounted(() => void loadHistories())
 
 @media (max-width: 768px) {
   .history-toolbar,
-  .history-filters {
+  .history-filters,
+  .history-actions,
+  .history-date-range,
+  .history-date-range :deep(input) {
     width: 100%;
   }
 
-  .history-filters :deep(.n-select),
-  .history-filters :deep(.n-date-picker) {
-    width: 100% !important;
+  .history-date-range {
+    flex-wrap: wrap;
+  }
+
+  .history-date-range span {
+    display: none;
+  }
+
+  .history-filter-control--streamer {
+    width: 100%;
   }
 }
 </style>

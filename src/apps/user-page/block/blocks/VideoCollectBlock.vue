@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { OpenOutline, RefreshOutline, TimerOutline, VideocamOutline } from '@vicons/ionicons5'
 import { useNow } from '@vueuse/core'
-import { NAlert, NButton, NEmpty, NIcon, NProgress, NSpin, NTime } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -9,6 +8,7 @@ import type { UserInfo } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
 import { fetchPublicActiveVideoCollect } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
+import PublicTime from '@/apps/user-page/PublicTime.vue'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 
 import BlockCard from '../BlockCard.vue'
@@ -71,7 +71,7 @@ watch(
     <template #header>
       <div class="collect-header">
         <span class="collect-heading"
-          ><NIcon><VideocamOutline /></NIcon>当前视频征集</span
+          ><span><VideocamOutline /></span>当前视频征集</span
         >
         <RouterLink
           v-if="props.userInfo?.name"
@@ -79,54 +79,54 @@ watch(
           :to="{ name: 'user-video-collect', params: { id: props.userInfo.name } }"
           custom
         >
-          <NButton
-            text
-            type="primary"
-            size="small"
+          <UButton
+            variant="link"
+            color="primary"
+            size="sm"
             @click="navigate"
           >
-            全部活动<template #icon>
-              <NIcon><OpenOutline /></NIcon>
+            全部活动<template #leading>
+              <span><OpenOutline /></span>
             </template>
-          </NButton>
+          </UButton>
         </RouterLink>
       </div>
     </template>
 
-    <NAlert
+    <UAlert
       v-if="!enabled"
-      type="info"
-      :show-icon="false"
+      color="info"
+      ><template #description> 视频征集未开放 </template></UAlert
     >
-      视频征集未开放
-    </NAlert>
-    <NAlert
+    <UAlert
       v-else-if="query.status.value === 'error'"
-      type="error"
-      :show-icon="true"
+      color="error"
     >
-      <div class="error-row">
-        <span>视频征集加载失败</span
-        ><NButton
-          size="small"
-          secondary
-          @click="load(true)"
-        >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon> </template
-          >重试
-        </NButton>
-      </div>
-    </NAlert>
-    <NSpin
+      <template #description
+        ><div class="error-row">
+          <span>视频征集加载失败</span
+          ><UButton
+            size="sm"
+            variant="soft"
+            @click="load(true)"
+          >
+            <template #leading>
+              <span><RefreshOutline /></span> </template
+            >重试
+          </UButton>
+        </div></template
+      >
+    </UAlert>
+    <div
       v-else
-      :show="query.status.value === 'loading' || query.status.value === 'idle'"
+      :aria-busy="query.status.value === 'loading' || query.status.value === 'idle'"
       size="small"
     >
-      <NEmpty
+      <UEmpty
         v-if="query.status.value === 'success' && !activities.length"
-        size="small"
+        size="sm"
         description="暂无正在进行的征集"
+        class="public-empty"
       />
       <div
         v-else
@@ -144,7 +144,7 @@ watch(
               {{ item.description }}
             </p>
             <span class="deadline"
-              ><NIcon><TimerOutline /></NIcon>截止 <NTime :time="item.endAt"
+              ><span><TimerOutline /></span>截止 <PublicTime :time="item.endAt"
             /></span>
           </div>
           <div
@@ -152,19 +152,18 @@ watch(
             class="collect-progress"
           >
             <span>{{ item.videoCount }} / {{ item.maxVideoCount }}</span>
-            <NProgress
-              type="line"
-              :percentage="progress(item.videoCount, item.maxVideoCount)"
-              :show-indicator="false"
-              :height="6"
+            <UProgress
+              :model-value="progress(item.videoCount, item.maxVideoCount)"
+              :max="100"
+              size="sm"
             />
           </div>
-          <NIcon class="open-icon">
+          <span class="open-icon">
             <OpenOutline />
-          </NIcon>
+          </span>
         </RouterLink>
       </div>
-    </NSpin>
+    </div>
   </BlockCard>
 </template>
 

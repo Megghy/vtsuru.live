@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { CodeSlashOutline } from '@vicons/ionicons5'
-import { NButton, NFlex, NFormItem, NIcon, NInputNumber, NRadioButton, NRadioGroup, NText } from 'naive-ui'
 import { computed, defineAsyncComponent, ref } from 'vue'
 
 import {
@@ -43,64 +41,62 @@ const maxHeight = computed({
 </script>
 
 <template>
-  <NFlex
-    vertical
-    size="small"
-  >
-    <NButton
-      type="primary"
-      secondary
+  <div class="builder-stack">
+    <UButton
+      color="primary"
+      variant="soft"
       block
       @click="editorOpen = true"
     >
       <template #icon>
-        <NIcon><CodeSlashOutline /></NIcon>
+        <UIcon name="i-lucide-code-xml" />
       </template>
       打开代码编辑器
-    </NButton>
-    <NText
-      depth="3"
+    </UButton>
+    <span
+      class="builder-text"
       style="font-size: 12px"
     >
       HTML + CSS {{ codeBytes }} bytes · {{ config.assets.length }} 个资源
-    </NText>
+    </span>
 
     <PropsGrid :row-gap="0">
-      <NFormItem label="高度方式">
-        <NRadioGroup
-          v-model:value="heightMode"
-          size="small"
-        >
-          <NRadioButton value="auto"> 自动 </NRadioButton>
-          <NRadioButton value="fixed"> 固定 </NRadioButton>
-        </NRadioGroup>
-      </NFormItem>
-      <NFormItem
+      <UFormField label="高度方式">
+        <URadioGroup
+          v-model="heightMode"
+          :items="[
+            { label: '自动', value: 'auto' },
+            { label: '固定', value: 'fixed' },
+          ]"
+          orientation="horizontal"
+        />
+      </UFormField>
+      <UFormField
         v-if="heightMode === 'fixed'"
         label="固定高度"
       >
-        <NInputNumber
-          v-model:value="fixedHeight"
-          :min="CUSTOM_HTML_MIN_HEIGHT"
-          :max="CUSTOM_HTML_MAX_HEIGHT"
-          :step="20"
-        >
-          <template #suffix> px </template>
-        </NInputNumber>
-      </NFormItem>
-      <NFormItem
+        <div class="builder-row">
+          <UInputNumber
+            v-model="fixedHeight"
+            :min="CUSTOM_HTML_MIN_HEIGHT"
+            :max="CUSTOM_HTML_MAX_HEIGHT"
+            :step="20"
+          /><span>px</span>
+        </div>
+      </UFormField>
+      <UFormField
         v-else
         label="最大高度"
       >
-        <NInputNumber
-          v-model:value="maxHeight"
-          :min="CUSTOM_HTML_MIN_AUTO_HEIGHT"
-          :max="CUSTOM_HTML_MAX_HEIGHT"
-          :step="20"
-        >
-          <template #suffix> px </template>
-        </NInputNumber>
-      </NFormItem>
+        <div class="builder-row">
+          <UInputNumber
+            v-model="maxHeight"
+            :min="CUSTOM_HTML_MIN_AUTO_HEIGHT"
+            :max="CUSTOM_HTML_MAX_HEIGHT"
+            :step="20"
+          /><span>px</span>
+        </div>
+      </UFormField>
     </PropsGrid>
 
     <CustomHtmlEditorModal
@@ -108,5 +104,5 @@ const maxHeight = computed({
       v-model:show="editorOpen"
       :block="props.block"
     />
-  </NFlex>
+  </div>
 </template>

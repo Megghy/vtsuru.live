@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { OpenOutline, RefreshOutline, TrophyOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NEmpty, NIcon, NSpin } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -63,7 +62,7 @@ watch(
     <template #header>
       <div class="ranking-header">
         <span class="ranking-heading">
-          <NIcon><TrophyOutline /></NIcon>
+          <span><TrophyOutline /></span>
           签到排行
         </span>
         <RouterLink
@@ -72,56 +71,56 @@ watch(
           :to="{ name: 'user-checkin', params: { id: props.userInfo.name } }"
           custom
         >
-          <NButton
-            text
-            type="primary"
-            size="small"
+          <UButton
+            variant="link"
+            color="primary"
+            size="sm"
             @click="navigate"
           >
             完整排行
-            <template #icon>
-              <NIcon><OpenOutline /></NIcon>
+            <template #leading>
+              <span><OpenOutline /></span>
             </template>
-          </NButton>
+          </UButton>
         </RouterLink>
       </div>
     </template>
 
-    <NAlert
+    <UAlert
       v-if="!enabled"
-      type="info"
-      :show-icon="false"
+      color="info"
+      ><template #description> 签到排行未开放 </template></UAlert
     >
-      签到排行未开放
-    </NAlert>
-    <NAlert
+    <UAlert
       v-else-if="query.status.value === 'error'"
-      type="error"
-      :show-icon="true"
+      color="error"
     >
-      <div class="error-row">
-        <span>签到排行加载失败</span>
-        <NButton
-          size="small"
-          secondary
-          @click="load(true)"
-        >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon>
-          </template>
-          重试
-        </NButton>
-      </div>
-    </NAlert>
-    <NSpin
+      <template #description
+        ><div class="error-row">
+          <span>签到排行加载失败</span>
+          <UButton
+            size="sm"
+            variant="soft"
+            @click="load(true)"
+          >
+            <template #leading>
+              <span><RefreshOutline /></span>
+            </template>
+            重试
+          </UButton>
+        </div></template
+      >
+    </UAlert>
+    <div
       v-else
-      :show="query.status.value === 'loading' || query.status.value === 'idle'"
+      :aria-busy="query.status.value === 'loading' || query.status.value === 'idle'"
       size="small"
     >
-      <NEmpty
+      <UEmpty
         v-if="query.status.value === 'success' && !query.data.value?.length"
-        size="small"
+        size="sm"
         description="暂无签到记录"
+        class="public-empty"
       />
       <ol
         v-else
@@ -151,7 +150,7 @@ watch(
           >
         </li>
       </ol>
-    </NSpin>
+    </div>
   </BlockCard>
 </template>
 

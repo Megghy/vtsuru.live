@@ -16,6 +16,7 @@ import { onReceivedNotification } from '@/apps/client/data/notification'
 import { QueryBiliAPI } from '@/apps/client/data/utils'
 import { BASE_HUB_URL, isDev, isTauri } from '@/shared/config'
 import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
+import { showErrorToast, showToast } from '@/shared/services/toast'
 
 import { useDanmakuClient } from './useDanmakuClient'
 import { useWebRTC } from './useRTC'
@@ -104,10 +105,11 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
       let danmakuResult = await connectDanmakuClient(type, directAuthInfo)
       if (!danmakuResult?.success) {
-        window.$notification?.create({
+        showToast({
           title: '弹幕客户端启动失败',
-          content: danmakuResult?.message || '无法连接到弹幕服务器',
-          type: 'error',
+          description: danmakuResult?.message || '无法连接到弹幕服务器',
+          color: 'error',
+          icon: 'i-lucide-circle-x',
           duration: 5000,
         })
       }
@@ -228,7 +230,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     console.log(`${prefix.value}被服务器断开连接: ${message}`)
     disconnectedByServer = true
     serverDisconnectReason.value = message
-    window.$message.error(`被服务器要求断开连接: ${message}`)
+    showErrorToast(`被服务器要求断开连接: ${message}`)
     state.value = 'disconnected'
     signalRClient.value = undefined
     signalRConnectionId.value = undefined

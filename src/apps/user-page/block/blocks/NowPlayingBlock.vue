@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { MusicalNotesOutline, OpenOutline, RefreshOutline } from '@vicons/ionicons5'
 import { useIntervalFn } from '@vueuse/core'
-import { NAlert, NButton, NEmpty, NIcon, NSpin } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -67,7 +66,7 @@ useIntervalFn(() => {
     <template #header>
       <div class="playing-header">
         <span class="playing-heading"
-          ><NIcon><MusicalNotesOutline /></NIcon>当前播放</span
+          ><span><MusicalNotesOutline /></span>当前播放</span
         >
         <RouterLink
           v-if="props.userInfo?.name"
@@ -75,48 +74,47 @@ useIntervalFn(() => {
           :to="{ name: 'user-songList', params: { id: props.userInfo.name } }"
           custom
         >
-          <NButton
-            text
-            type="primary"
-            size="small"
+          <UButton
+            variant="link"
+            color="primary"
+            size="sm"
             @click="navigate"
           >
-            完整点歌页<template #icon>
-              <NIcon><OpenOutline /></NIcon>
+            完整点歌页<template #leading>
+              <span><OpenOutline /></span>
             </template>
-          </NButton>
+          </UButton>
         </RouterLink>
       </div>
     </template>
 
-    <NAlert
+    <UAlert
       v-if="!enabled"
-      type="info"
-      :show-icon="false"
+      color="info"
+      ><template #description> 点歌功能未开放 </template></UAlert
     >
-      点歌功能未开放
-    </NAlert>
-    <NAlert
+    <UAlert
       v-else-if="query.status.value === 'error'"
-      type="error"
-      :show-icon="true"
+      color="error"
     >
-      <div class="error-row">
-        <span>当前点歌状态加载失败</span
-        ><NButton
-          size="small"
-          secondary
-          @click="load(true)"
-        >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon> </template
-          >重试
-        </NButton>
-      </div>
-    </NAlert>
-    <NSpin
+      <template #description
+        ><div class="error-row">
+          <span>当前点歌状态加载失败</span
+          ><UButton
+            size="sm"
+            variant="soft"
+            @click="load(true)"
+          >
+            <template #leading>
+              <span><RefreshOutline /></span> </template
+            >重试
+          </UButton>
+        </div></template
+      >
+    </UAlert>
+    <div
       v-else
-      :show="query.status.value === 'loading' || query.status.value === 'idle'"
+      :aria-busy="query.status.value === 'loading' || query.status.value === 'idle'"
       size="small"
     >
       <div
@@ -124,7 +122,7 @@ useIntervalFn(() => {
         class="playing-content"
       >
         <div class="playing-icon">
-          <NIcon><MusicalNotesOutline /></NIcon>
+          <span><MusicalNotesOutline /></span>
         </div>
         <div class="playing-copy">
           <span class="status">正在演唱</span>
@@ -144,9 +142,10 @@ useIntervalFn(() => {
         v-else-if="query.status.value === 'success'"
         class="playing-empty"
       >
-        <NEmpty
-          size="small"
+        <UEmpty
+          size="sm"
           description="当前没有正在演唱的歌曲"
+          class="public-empty"
         />
         <span
           v-if="waitingCount"
@@ -154,7 +153,7 @@ useIntervalFn(() => {
           >队列中还有 {{ waitingCount }} 首歌曲</span
         >
       </div>
-    </NSpin>
+    </div>
   </BlockCard>
 </template>
 

@@ -1,19 +1,4 @@
 <script setup lang="ts">
-import {
-  NButton,
-  NCard,
-  NColorPicker,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGi,
-  NGrid,
-  NInput,
-  NModal,
-  NSelect,
-  NSwitch,
-  NText,
-} from 'naive-ui'
 import { computed, onUnmounted, reactive, ref } from 'vue'
 
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
@@ -233,94 +218,95 @@ const grouped = computed(() => {
 
 <template>
   <component
-    :is="props.embedded ? 'div' : NCard"
+    :is="props.embedded ? 'div' : 'UCard'"
     v-bind="props.embedded ? {} : { size: 'small', bordered: true, title: '表情与动作' }"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NFlex
+      <div
         v-if="isSearchVisible || (isModelNameVisible && modelName)"
         justify="space-between"
         align="center"
         :wrap="true"
         :size="8"
       >
-        <NFlex
+        <div
           v-if="isSearchVisible"
           align="center"
           :wrap="true"
           :size="8"
         >
-          <NInput
-            v-model:value="query"
+          <UInput
+            v-model="query"
             placeholder="搜索名称 / 描述 / 类型"
             style="min-width: 260px"
           />
-          <NSwitch
-            v-model:value="onlyFavorites"
+          <USwitch
+            v-model="onlyFavorites"
             size="small"
           >
-            <template #checked> 收藏 </template>
-            <template #unchecked> 收藏 </template>
-          </NSwitch>
-          <NSwitch
-            v-model:value="onlyPinned"
+            <template v-if="false"> 收藏 </template>
+            <template v-if="false"> 收藏 </template>
+          </USwitch>
+          <USwitch
+            v-model="onlyPinned"
             size="small"
           >
-            <template #checked> 置顶 </template>
-            <template #unchecked> 置顶 </template>
-          </NSwitch>
-          <NSwitch
-            v-model:value="safeClick"
+            <template v-if="false"> 置顶 </template>
+            <template v-if="false"> 置顶 </template>
+          </USwitch>
+          <USwitch
+            v-model="safeClick"
             size="small"
-            @update:value="disarm"
+            @update:model-value="disarm"
           >
-            <template #checked> 防误触 </template>
-            <template #unchecked> 防误触 </template>
-          </NSwitch>
-          <NSelect
-            v-model:value="groupMode"
+            <template v-if="false"> 防误触 </template>
+            <template v-if="false"> 防误触 </template>
+          </USwitch>
+          <USelectMenu
+            v-model="groupMode"
             size="small"
             style="width: 130px"
-            :options="groupModeOptions as any"
+            :items="groupModeOptions as any"
+            value-key="value"
           />
-          <NSwitch
+          <USwitch
             v-if="!props.embedded"
-            v-model:value="deckMode"
+            v-model="deckMode"
             size="small"
           >
-            <template #checked> 大图标 </template>
-            <template #unchecked> 大图标 </template>
-          </NSwitch>
-          <NButton
+            <template v-if="false"> 大图标 </template>
+            <template v-if="false"> 大图标 </template>
+          </USwitch>
+          <UButton
             size="small"
             @click="emit('refresh')"
           >
             刷新
-          </NButton>
-        </NFlex>
-        <NText
+          </UButton>
+        </div>
+        <span
           v-if="isModelNameVisible && modelName"
           depth="3"
         >
           当前模型: {{ modelName }}
-        </NText>
-      </NFlex>
+        </span>
+      </div>
 
-      <NEmpty
+      <UEmpty
         v-if="filtered.length === 0"
         description="暂无可用表情/动作"
       />
 
       <template v-else-if="groupMode === 'flat'">
-        <NGrid
+        <div
           x-gap="8"
           y-gap="8"
           :cols="deckMode ? Math.min(cols, 4) : cols"
         >
-          <NGi
+          <div
             v-for="hk in filtered"
             :key="hk.hotkeyID"
           >
@@ -336,8 +322,8 @@ const grouped = computed(() => {
               @toggle-pinned="togglePinned(hk)"
               @toggle-favorite="toggleFavorite(hk)"
             />
-          </NGi>
-        </NGrid>
+          </div>
+        </div>
       </template>
 
       <template v-else>
@@ -345,25 +331,25 @@ const grouped = computed(() => {
           v-for="[key, list] in grouped"
           :key="key"
         >
-          <NFlex
+          <div
             align="center"
             justify="space-between"
             :size="8"
           >
-            <NText strong>
+            <span strong>
               {{ key }}
-            </NText>
-            <NText depth="3">
+            </span>
+            <span depth="3">
               {{ list.length }}
-            </NText>
-          </NFlex>
-          <NDivider style="margin: 6px 0" />
-          <NGrid
+            </span>
+          </div>
+          <USeparator style="margin: 6px 0" />
+          <div
             x-gap="8"
             y-gap="8"
             :cols="deckMode ? Math.min(cols, 4) : cols"
           >
-            <NGi
+            <div
               v-for="hk in list"
               :key="hk.hotkeyID"
             >
@@ -379,68 +365,68 @@ const grouped = computed(() => {
                 @toggle-pinned="togglePinned(hk)"
                 @toggle-favorite="toggleFavorite(hk)"
               />
-            </NGi>
-          </NGrid>
+            </div>
+          </div>
         </div>
       </template>
-    </NFlex>
+    </div>
   </component>
 
-  <NModal
-    v-model:show="showEdit"
+  <UModal
+    v-model:open="showEdit"
     preset="card"
     title="自定义 Hotkey"
     style="width: 600px"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NText depth="3"> ID: {{ editForm.hotkeyID }} </NText>
+      <span depth="3"> ID: {{ editForm.hotkeyID }} </span>
 
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="12"
       >
-        <NSwitch
-          v-model:value="editForm.favorite"
+        <USwitch
+          v-model="editForm.favorite"
           size="small"
         >
-          <template #checked> 收藏 </template>
-          <template #unchecked> 收藏 </template>
-        </NSwitch>
-        <NSwitch
-          v-model:value="editForm.pinned"
+          <template v-if="false"> 收藏 </template>
+          <template v-if="false"> 收藏 </template>
+        </USwitch>
+        <USwitch
+          v-model="editForm.pinned"
           size="small"
         >
-          <template #checked> 置顶 </template>
-          <template #unchecked> 置顶 </template>
-        </NSwitch>
-        <NInput
-          v-model:value="editForm.group"
+          <template v-if="false"> 置顶 </template>
+          <template v-if="false"> 置顶 </template>
+        </USwitch>
+        <UInput
+          v-model="editForm.group"
           placeholder="分组"
           style="width: 140px"
         />
-        <NInput
-          v-model:value="editForm.displayName"
+        <UInput
+          v-model="editForm.displayName"
           placeholder="显示名称"
           style="width: 200px"
         />
-        <NColorPicker
-          v-model:value="editForm.color"
+        <UColorPicker
+          v-model="editForm.color"
           :modes="['hex']"
           :show-alpha="false"
           style="width: 180px"
         />
-      </NFlex>
+      </div>
 
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="12"
       >
-        <NButton
+        <UButton
           size="small"
           tag="label"
         >
@@ -451,42 +437,42 @@ const grouped = computed(() => {
             style="display: none"
             @change="onIconFileChange"
           />
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="small"
           :disabled="!editForm.iconDataUrl"
           @click="editForm.iconDataUrl = ''"
         >
           清除图标
-        </NButton>
+        </UButton>
         <img
           v-if="editForm.iconDataUrl"
           class="hotkey-icon-preview"
           :src="editForm.iconDataUrl"
           alt=""
         />
-      </NFlex>
+      </div>
 
-      <NFlex
+      <div
         justify="end"
         :size="8"
       >
-        <NButton @click="showEdit = false"> 取消 </NButton>
-        <NButton
-          type="error"
+        <UButton @click="showEdit = false"> 取消 </UButton>
+        <UButton
+          color="error"
           @click="clearCustomization"
         >
           重置
-        </NButton>
-        <NButton
-          type="primary"
+        </UButton>
+        <UButton
+          color="primary"
           @click="saveEdit"
         >
           保存
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+        </UButton>
+      </div>
+    </div>
+  </UModal>
 </template>
 
 <style scoped>

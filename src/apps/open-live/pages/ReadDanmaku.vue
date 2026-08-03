@@ -1,26 +1,4 @@
 <script setup lang="ts">
-import {
-  CloudArrowDown20Filled,
-  Mic24Filled,
-  MicOff24Filled,
-  Next20Filled,
-  Pause20Filled,
-  Play20Filled,
-} from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NFlex,
-  NIcon,
-  NPopconfirm,
-  NSpin,
-  NStatistic,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
 import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -47,7 +25,10 @@ const props = withDefaults(
   },
 )
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const accountInfo = useAccount()
 const client = useDanmakuClient()
 const speechService = useSpeechService()
@@ -73,7 +54,7 @@ function onAudioCanPlay() {
 function onAudioError() {
   speechService.clearLoadingTimeout()
   if (!speechState.apiAudioSrc) return
-  message.error('音频加载失败')
+  feedback('error', '音频加载失败')
   speechService.cancelSpeech()
 }
 
@@ -151,7 +132,7 @@ onDeactivated(() => {
 </script>
 
 <template>
-  <NAlert
+  <UAlert
     v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis"
     type="error"
     title="不支持语音功能"
@@ -159,7 +140,7 @@ onDeactivated(() => {
     :bordered="false"
   >
     你的浏览器不支持语音功能，请使用现代浏览器
-  </NAlert>
+  </UAlert>
 
   <div
     v-else
@@ -170,62 +151,79 @@ onDeactivated(() => {
         title="弹幕朗读"
         description="将弹幕/事件转为语音"
       >
-        <template #actions>
-          <NFlex
+        <template #footers>
+          <div
             :size="6"
             :wrap="true"
           >
-            <NButton
-              :type="speechState.canSpeech ? 'error' : 'success'"
+            <UButton
+              :color="speechState.canSpeech ? 'error' : 'success'"
               size="small"
               :loading="speechState.isApiAudioLoading"
               :class="{ 'start-ripple': !speechState.canSpeech && !speechState.isApiAudioLoading }"
               @click="speechState.canSpeech ? speechService.stopSpeech() : speechService.startSpeech()"
             >
-              <template #icon>
-                <NIcon :component="speechState.canSpeech ? MicOff24Filled : Mic24Filled" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
               {{ speechState.canSpeech ? '停止' : '开始' }}
-            </NButton>
+            </UButton>
 
-            <NButton
+            <UButton
               v-if="speechState.canSpeech"
-              :type="isPaused ? 'warning' : 'default'"
+              :color="isPaused ? 'warning' : 'neutral'"
               size="small"
               @click="speechService.togglePause()"
             >
-              <template #icon>
-                <NIcon :component="isPaused ? Play20Filled : Pause20Filled" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
               {{ isPaused ? '恢复' : '暂停' }}
-            </NButton>
+            </UButton>
 
-            <NButton
+            <UButton
               v-if="speechState.isSpeaking"
               size="small"
               @click="speechService.skipCurrent()"
             >
-              <template #icon>
-                <NIcon :component="Next20Filled" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
               跳过
-            </NButton>
+            </UButton>
 
-            <NPopconfirm @positive-click="speechService.downloadConfig()">
-              <template #trigger>
-                <NButton
-                  size="small"
-                  :disabled="!accountInfo?.id"
-                >
-                  <template #icon>
-                    <NIcon :component="CloudArrowDown20Filled" />
-                  </template>
-                  从云端同步
-                </NButton>
+            <UPopover>
+              <UButton
+                size="sm"
+                :disabled="!accountInfo?.id"
+              >
+                <template #leading>
+                  <UIcon name="i-lucide-circle" />
+                </template>
+                从云端同步
+              </UButton>
+              <template #content="{ close }">
+                <div class="space-y-3 p-3">
+                  <div>这将覆盖当前设置, 确定?</div>
+                  <div class="flex justify-end gap-2">
+                    <UButton
+                      size="xs"
+                      color="neutral"
+                      variant="ghost"
+                      @click="close"
+                      >取消</UButton
+                    >
+                    <UButton
+                      size="xs"
+                      color="primary"
+                      @click="(close(), speechService.downloadConfig())"
+                      >确认</UButton
+                    >
+                  </div>
+                </div>
               </template>
-              这将覆盖当前设置, 确定?
-            </NPopconfirm>
-          </NFlex>
+            </UPopover>
+          </div>
         </template>
       </OpenLivePageHeader>
     </div>
@@ -233,31 +231,31 @@ onDeactivated(() => {
     <div class="main">
       <aside class="settings">
         <section class="card">
-          <NTabs
+          <div
             type="line"
             size="small"
             animated
             class="settings-tabs"
           >
-            <NTabPane
+            <section
               name="voice"
               tab="语音引擎"
             >
               <VoiceSettingsPanel />
-            </NTabPane>
-            <NTabPane
+            </section>
+            <section
               name="template"
               tab="消息模板"
             >
               <TemplateSettingsPanel />
-            </NTabPane>
-            <NTabPane
+            </section>
+            <section
               name="filter"
               tab="过滤规则"
             >
               <FilterSettingsPanel />
-            </NTabPane>
-            <NTabPane
+            </section>
+            <section
               name="advanced"
               tab="高级"
             >
@@ -266,8 +264,8 @@ onDeactivated(() => {
                 :audio-output-devices-loading="audioOutputDevicesLoading"
                 @device-change="setAudioOutputDevice"
               />
-            </NTabPane>
-          </NTabs>
+            </section>
+          </div>
         </section>
       </aside>
 
@@ -277,93 +275,93 @@ onDeactivated(() => {
           class="card status-card"
         >
           <div class="stats">
-            <NStatistic label="当前">
-              <template #prefix>
-                <NSpin
+            <div label="当前">
+              <span class="status-prefix">
+                <div
                   v-if="speechState.isApiAudioLoading"
                   :size="14"
                 />
-                <NIcon
+                <UIcon
+                  name="i-lucide-circle"
                   v-else
-                  :component="Mic24Filled"
                   :size="16"
                   :color="speechState.isSpeaking ? 'var(--vtsuru-success)' : 'var(--vtsuru-fg-muted)'"
                 />
-              </template>
-              <NText
+              </span>
+              <span
                 :type="speechState.isSpeaking ? 'success' : isPaused ? 'warning' : 'default'"
                 style="font-size: 14px"
               >
                 {{ isPaused ? '已暂停' : speechState.isSpeaking ? '朗读中' : '待机' }}
-              </NText>
-            </NStatistic>
-            <NStatistic
+              </span>
+            </div>
+            <div
               label="队列"
               :value="queueStats.total"
             />
-            <NStatistic
+            <div
               label="已读取"
               :value="readedDanmaku"
             />
           </div>
-          <NText
+          <span
             v-if="speechState.isSpeaking && speechState.speakingText"
             class="speaking-text"
           >
             {{ speechState.speakingText }}
-          </NText>
-          <NFlex
+          </span>
+          <div
             :size="4"
             :wrap="true"
             style="margin-top: 8px"
           >
-            <NTag
+            <UBadge
               :type="client.connected ? 'success' : 'warning'"
               :bordered="false"
               size="small"
             >
               {{ client.connectionStatus }}
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="lastEventTime"
               :bordered="false"
               size="small"
             >
               最近收到 {{ lastEventTime }}
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="client.reconnectCount"
               type="warning"
               :bordered="false"
               size="small"
             >
               已重连 {{ client.reconnectCount }} 次
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="isPaused"
               type="warning"
               :bordered="false"
               size="small"
             >
               暂停中
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="queueStats.messages > 0"
               type="info"
               :bordered="false"
               size="small"
             >
               弹幕 {{ queueStats.messages }}
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="queueStats.gifts > 0"
               type="success"
               :bordered="false"
               size="small"
             >
               礼物 {{ queueStats.gifts }}
-            </NTag>
-          </NFlex>
+            </UBadge>
+          </div>
         </section>
 
         <section class="card">
@@ -440,7 +438,7 @@ onDeactivated(() => {
     grid-template-columns: 1fr;
   }
 }
-.settings-tabs :deep(.n-tabs-tab) {
+.settings-tabs :deep(.u-tabs-tab) {
   flex: 1;
   justify-content: center;
   padding: 8px 0;

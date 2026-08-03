@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NCard, NEmpty, NList, NListItem, NModal, NScrollbar, NFlex, NTime, NAvatar } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { LotteryHistory } from '@/apps/open-live/components/lottery/lotteryTypes'
@@ -22,79 +21,79 @@ const showModel = computed({
 </script>
 
 <template>
-  <NModal
-    v-model:show="showModel"
+  <UModal
+    v-model:open="showModel"
     preset="card"
     title="抽奖结果"
     style="width: 900px; max-width: 90vw"
     closable
   >
     <template #header-extra>
-      <NButton
-        type="error"
-        secondary
+      <UButton
+        color="error"
+        variant="soft"
         size="small"
         @click="emit('clear')"
       >
         清空
-      </NButton>
+      </UButton>
     </template>
-    <NScrollbar
+    <div
       v-if="history.length > 0"
       style="max-height: 80vh"
     >
-      <NList
+      <ul
         size="small"
         bordered
       >
-        <NListItem
+        <li
           v-for="item in history"
           :key="item.time"
         >
-          <NCard
+          <UCard
             size="small"
             bordered
           >
             <template #header>
-              <NTime :time="item.time" />
+              <time :time="item.time" />
             </template>
             <template #header-extra>
-              <NButton
-                type="error"
-                secondary
+              <UButton
+                color="error"
+                variant="soft"
                 size="small"
                 @click="emit('remove', item.time)"
               >
                 删除
-              </NButton>
+              </UButton>
             </template>
-            <NFlex
+            <div
               vertical
               :size="10"
             >
-              <NFlex
+              <div
                 v-for="user in item.users"
                 :key="user.openId"
                 align="center"
                 :size="10"
               >
-                <NAvatar
+                <UAvatar
                   round
                   lazy
                   :src="`${user.avatar}@64w_64h`"
                   :img-props="{ referrerpolicy: 'no-referrer' }"
                 />
                 {{ user.name }}
-              </NFlex>
-            </NFlex>
-          </NCard>
-        </NListItem>
-      </NList>
-    </NScrollbar>
-    <NEmpty
+              </div>
+            </div>
+          </UCard>
+        </li>
+      </ul>
+    </div>
+    <UEmpty
       v-else
       description="暂无记录"
       size="small"
     />
-  </NModal>
+  </UModal>
 </template>

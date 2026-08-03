@@ -1,491 +1,58 @@
 <script setup lang="ts">
-import {
-  ChevronDown,
-  ChevronUp,
-  MusicalNote,
-  Pause,
-  Play,
-  PlayBack,
-  PlayForward,
-  TrashBin,
-  VolumeHigh,
-} from '@vicons/ionicons5'
 import { useElementSize } from '@vueuse/core'
-import {
-  NButton,
-  NCard,
-  NFlex,
-  NIcon,
-  NLayoutFooter,
-  NSlider,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
 
+import { showSuccessToast } from '@/shared/services/toast'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
-const emit = defineEmits<{
-  (e: 'heightChange', height: number): void
-}>()
-
-const message = useMessage()
-const themeVars = useThemeVars()
+const emit = defineEmits<{ heightChange: [height: number] }>()
 const musicRquestStore = useMusicRequestProvider()
-
 const musicPlayerCardRef = ref<HTMLElement | null>(null)
 const { height: musicPlayerCardHeight } = useElementSize(musicPlayerCardRef)
-
-const isPlayerVisible = computed(
-  () => musicRquestStore.originMusics.length > 0 || musicRquestStore.waitingMusics.length > 0,
-)
-
+const isPlayerVisible = computed(() => musicRquestStore.originMusics.length > 0 || musicRquestStore.waitingMusics.length > 0)
 const isPlayerMinimized = usePersistedStorage('Settings.MusicPlayer.Minimized', false)
-
-const playerVolume = computed({
-  get: () => musicRquestStore.settings.volume,
-  set: (value) => (musicRquestStore.settings.volume = value),
-})
-
+const playerVolume = computed({ get: () => musicRquestStore.settings.volume, set: (value) => (musicRquestStore.settings.volume = value) })
 const aplayer = ref<any>()
-watch(aplayer, () => {
-  musicRquestStore.aplayerRef = aplayer.value
-})
-
+const isPaused = computed(() => aplayer.value?.audio?.paused !== false)
 const currentPlayingInfo = computed(() => {
-  if (musicRquestStore.currentOriginMusic && musicRquestStore.isPlayingOrderMusic) {
-    return {
-      type: 'request',
-      info: `正在播放 ${musicRquestStore.currentOriginMusic.from.name} 点的歌`,
-    } as const
-  } else if (musicRquestStore.currentMusic && musicRquestStore.currentMusic.title) {
-    return {
-      type: 'normal',
-      info: '正在播放背景音乐',
-    } as const
-  }
-  return null
+  if (musicRquestStore.currentOriginMusic && musicRquestStore.isPlayingOrderMusic) return { type: 'success' as const, info: `正在播放 ${musicRquestStore.currentOriginMusic.from.name} 点的歌` }
+  return musicRquestStore.currentMusic?.title ? { type: 'info' as const, info: '正在播放背景音乐' } : null
 })
+const footerHeight = computed(() => isPlayerVisible.value ? musicPlayerCardHeight.value + 16 : 0)
+watch(aplayer, () => { musicRquestStore.aplayerRef = aplayer.value })
+watch(footerHeight, (value) => emit('heightChange', value), { immediate: true })
 
-const footerHeight = computed(() => {
-  if (!isPlayerVisible.value) return 0
-  return musicPlayerCardHeight.value + 16
-})
-
-watch(footerHeight, (val) => emit('heightChange', val), { immediate: true })
-
-function onNextMusic() {
-  musicRquestStore.nextMusic()
-}
-
-function togglePlay() {
-  if (!aplayer.value) return
-  const audio = aplayer.value.audio
-  if (audio.paused) aplayer.value.play()
-  else aplayer.value.pause()
-}
-
+function togglePlay() { if (isPaused.value) aplayer.value?.play(); else aplayer.value?.pause() }
+function onNextMusic() { musicRquestStore.nextMusic() }
 function onPreviousMusic() {
   if (!aplayer.value) return
-  if (aplayer.value.audio.currentTime > 3) {
-    aplayer.value.audio.currentTime = 0
-    return
-  }
-  const currentIndex = musicRquestStore.aplayerMusics.findIndex(
-    (music) => music.id === musicRquestStore.currentMusic.id,
-  )
-  if (currentIndex > 0) {
-    musicRquestStore.currentMusic = musicRquestStore.aplayerMusics[currentIndex - 1]
-    aplayer.value.thenPlay()
-  }
+  if (aplayer.value.audio.currentTime > 3) { aplayer.value.audio.currentTime = 0; return }
+  const index = musicRquestStore.aplayerMusics.findIndex((music) => music.id === musicRquestStore.currentMusic.id)
+  if (index > 0) { musicRquestStore.currentMusic = musicRquestStore.aplayerMusics[index - 1]; aplayer.value.thenPlay() }
 }
-
-function clearWaitingQueue() {
-  musicRquestStore.waitingMusics.splice(0)
-  message.success('已清空等待队列')
-}
-
-function togglePlayerMinimize() {
-  isPlayerMinimized.value = !isPlayerMinimized.value
-}
+function clearWaitingQueue() { musicRquestStore.waitingMusics.splice(0); showSuccessToast('已清空等待队列') }
 </script>
 
 <template>
-  <NLayoutFooter
-    v-if="isPlayerVisible"
-    :style="`height: ${footerHeight}px; overflow: hidden; transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);`"
-    class="music-player-footer"
-  >
-    <NCard
-      ref="musicPlayerCardRef"
-      :bordered="false"
-      embedded
-      :content-style="isPlayerMinimized ? 'padding: 0' : undefined"
-      size="small"
-      class="music-player-card"
-      style="margin: 8px"
-    >
+  <footer v-if="isPlayerVisible" class="music-player-footer" :style="{ height: `${footerHeight}px` }">
+    <UCard ref="musicPlayerCardRef" class="music-player-card" :ui="{ body: isPlayerMinimized ? 'p-0' : 'p-3' }">
       <template #header>
-        <NFlex
-          justify="space-between"
-          align="center"
-          style="padding: 0"
-        >
-          <NFlex
-            align="center"
-            size="small"
-          >
-            <NIcon
-              :component="MusicalNote"
-              size="16"
-              :style="{ color: themeVars.primaryColor }"
-            />
-            <NText
-              :depth="2"
-              style="font-size: 13px; font-weight: 500"
-            >
-              音乐播放器
-            </NText>
-            <NTag
-              v-if="currentPlayingInfo && !isPlayerMinimized"
-              :type="currentPlayingInfo.type === 'request' ? 'success' : 'info'"
-              size="small"
-              round
-              :bordered="false"
-              style="font-size: 11px; padding: 2px 8px"
-            >
-              {{ currentPlayingInfo.info }}
-            </NTag>
-
-            <template v-if="isPlayerMinimized">
-              <NText
-                v-if="musicRquestStore.currentMusic.title"
-                style="font-size: 13px; max-width: 250px; margin-left: 12px"
-                :ellipsis="{ tooltip: true }"
-              >
-                {{ musicRquestStore.currentMusic.title }} - {{ musicRquestStore.currentMusic.artist }}
-              </NText>
-              <NText
-                v-else
-                depth="3"
-                style="font-size: 13px; margin-left: 12px"
-              >
-                暂无播放
-              </NText>
-            </template>
-          </NFlex>
-
-          <NFlex
-            align="center"
-            size="small"
-          >
-            <template v-if="isPlayerMinimized">
-              <NTag
-                v-if="musicRquestStore.waitingMusics.length > 0"
-                type="warning"
-                size="small"
-                round
-                :bordered="false"
-              >
-                {{ musicRquestStore.waitingMusics.length }}
-              </NTag>
-
-              <NButton
-                circle
-                size="tiny"
-                tertiary
-                :disabled="musicRquestStore.aplayerMusics.length === 0"
-                @click.stop="togglePlay"
-              >
-                <template #icon>
-                  <NIcon
-                    :component="aplayer?.audio?.paused !== false ? Play : Pause"
-                    size="14"
-                  />
-                </template>
-              </NButton>
-
-              <NButton
-                circle
-                size="tiny"
-                tertiary
-                :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
-                @click.stop="onNextMusic"
-              >
-                <template #icon>
-                  <NIcon
-                    :component="PlayForward"
-                    size="14"
-                  />
-                </template>
-              </NButton>
-            </template>
-
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  :type="isPlayerMinimized ? 'primary' : 'default'"
-                  tertiary
-                  size="small"
-                  circle
-                  @click="togglePlayerMinimize"
-                >
-                  <template #icon>
-                    <NIcon :component="isPlayerMinimized ? ChevronUp : ChevronDown" />
-                  </template>
-                </NButton>
-              </template>
-              {{ isPlayerMinimized ? '展开播放器' : '收起播放器' }}
-            </NTooltip>
-          </NFlex>
-        </NFlex>
+        <div class="music-header">
+          <div class="music-header__title"><UIcon name="i-lucide-music-2" /><strong>音乐播放器</strong><UBadge v-if="currentPlayingInfo && !isPlayerMinimized" :color="currentPlayingInfo.type" variant="subtle">{{ currentPlayingInfo.info }}</UBadge><span v-if="isPlayerMinimized" class="music-title">{{ musicRquestStore.currentMusic.title ? `${musicRquestStore.currentMusic.title} - ${musicRquestStore.currentMusic.artist}` : '暂无播放' }}</span></div>
+          <div class="music-header__actions"><UBadge v-if="isPlayerMinimized && musicRquestStore.waitingMusics.length" color="warning" variant="subtle">{{ musicRquestStore.waitingMusics.length }}</UBadge><template v-if="isPlayerMinimized"><UButton size="xs" color="neutral" variant="ghost" square :disabled="!musicRquestStore.aplayerMusics.length" @click.stop="togglePlay"><UIcon :name="isPaused ? 'i-lucide-play' : 'i-lucide-pause'" /></UButton><UButton size="xs" color="neutral" variant="ghost" square :disabled="!musicRquestStore.waitingMusics.length && musicRquestStore.aplayerMusics.length <= 1" @click.stop="onNextMusic"><UIcon name="i-lucide-skip-forward" /></UButton></template><UTooltip :text="isPlayerMinimized ? '展开播放器' : '收起播放器'"><UButton size="xs" color="neutral" variant="ghost" square @click="isPlayerMinimized = !isPlayerMinimized"><UIcon :name="isPlayerMinimized ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" /></UButton></UTooltip></div>
+        </div>
       </template>
-
-      <div v-show="!isPlayerMinimized">
-        <NFlex
-          align="center"
-          :wrap="false"
-          style="gap: 12px"
-        >
-          <div style="flex: 1; min-width: 280px">
-            <APlayer
-              ref="aplayer"
-              v-model:music="musicRquestStore.currentMusic"
-              v-model:volume="playerVolume"
-              v-model:shuffle="musicRquestStore.settings.shuffle"
-              v-model:repeat="musicRquestStore.settings.repeat"
-              :list="musicRquestStore.aplayerMusics"
-              list-max-height="200"
-              mutex
-              list-folded
-              :style="{ borderRadius: themeVars.borderRadius }"
-              @ended="musicRquestStore.onMusicEnd"
-              @play="musicRquestStore.onMusicPlay"
-            />
-          </div>
-
-          <div class="music-control-panel">
-            <NFlex
-              vertical
-              size="small"
-              align="center"
-              style="min-width: 100px"
-            >
-              <NText
-                depth="3"
-                style="font-size: 12px; margin-bottom: 4px"
-              >
-                播放控制
-              </NText>
-              <NFlex
-                size="small"
-                justify="center"
-              >
-                <NTooltip>
-                  <template #trigger>
-                    <NButton
-                      circle
-                      secondary
-                      size="small"
-                      :disabled="musicRquestStore.aplayerMusics.length === 0"
-                      @click="onPreviousMusic"
-                    >
-                      <template #icon>
-                        <NIcon :component="PlayBack" />
-                      </template>
-                    </NButton>
-                  </template>
-                  上一首 / 重播
-                </NTooltip>
-
-                <NTooltip>
-                  <template #trigger>
-                    <NButton
-                      circle
-                      type="primary"
-                      size="small"
-                      :disabled="musicRquestStore.aplayerMusics.length === 0"
-                      @click="togglePlay"
-                    >
-                      <template #icon>
-                        <NIcon :component="aplayer?.audio?.paused !== false ? Play : Pause" />
-                      </template>
-                    </NButton>
-                  </template>
-                  {{ aplayer?.audio?.paused !== false ? '播放' : '暂停' }}
-                </NTooltip>
-
-                <NTooltip>
-                  <template #trigger>
-                    <NButton
-                      circle
-                      secondary
-                      size="small"
-                      :disabled="
-                        musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1
-                      "
-                      @click="onNextMusic"
-                    >
-                      <template #icon>
-                        <NIcon :component="PlayForward" />
-                      </template>
-                    </NButton>
-                  </template>
-                  下一首
-                </NTooltip>
-              </NFlex>
-            </NFlex>
-
-            <NFlex
-              vertical
-              size="small"
-              align="center"
-              style="min-width: 100px"
-            >
-              <NText
-                depth="3"
-                style="font-size: 12px; margin-bottom: 4px"
-              >
-                队列管理
-              </NText>
-              <NFlex
-                vertical
-                size="small"
-                align="center"
-              >
-                <NTag
-                  :bordered="false"
-                  :type="musicRquestStore.waitingMusics.length > 0 ? 'warning' : 'info'"
-                  size="small"
-                  round
-                  style="min-width: 80px; text-align: center"
-                >
-                  等待: {{ musicRquestStore.waitingMusics.length }}
-                </NTag>
-
-                <NTag
-                  :bordered="false"
-                  type="success"
-                  size="small"
-                  round
-                  style="min-width: 80px; text-align: center"
-                >
-                  歌单: {{ musicRquestStore.originMusics.length }}
-                </NTag>
-
-                <NTooltip v-if="musicRquestStore.waitingMusics.length > 0">
-                  <template #trigger>
-                    <NButton
-                      size="tiny"
-                      type="error"
-                      secondary
-                      @click="clearWaitingQueue"
-                    >
-                      <template #icon>
-                        <NIcon
-                          :component="TrashBin"
-                          size="12"
-                        />
-                      </template>
-                      清空队列
-                    </NButton>
-                  </template>
-                  清空所有等待中的点歌
-                </NTooltip>
-              </NFlex>
-            </NFlex>
-
-            <NFlex
-              vertical
-              size="small"
-              align="center"
-              style="min-width: 100px"
-            >
-              <NFlex
-                align="center"
-                size="small"
-              >
-                <NIcon
-                  :component="VolumeHigh"
-                  size="14"
-                  :depth="3"
-                />
-                <NText
-                  depth="3"
-                  style="font-size: 12px"
-                >
-                  音量
-                </NText>
-              </NFlex>
-              <NSlider
-                v-model:value="playerVolume"
-                :min="0"
-                :max="1"
-                :step="0.01"
-                style="width: 80px"
-                :tooltip="false"
-                size="small"
-              />
-              <NText
-                depth="3"
-                style="font-size: 11px"
-              >
-                {{ Math.round(playerVolume * 100) }}%
-              </NText>
-            </NFlex>
-          </div>
-        </NFlex>
+      <div v-show="!isPlayerMinimized" class="music-body">
+        <APlayer ref="aplayer" v-model:music="musicRquestStore.currentMusic" v-model:volume="playerVolume" v-model:shuffle="musicRquestStore.settings.shuffle" v-model:repeat="musicRquestStore.settings.repeat" :list="musicRquestStore.aplayerMusics" list-max-height="200" mutex list-folded @ended="musicRquestStore.onMusicEnd" @play="musicRquestStore.onMusicPlay" />
+        <div class="music-controls"><section><small>播放控制</small><div><UTooltip text="上一首 / 重播"><UButton size="xs" color="neutral" variant="soft" square :disabled="!musicRquestStore.aplayerMusics.length" @click="onPreviousMusic"><UIcon name="i-lucide-skip-back" /></UButton></UTooltip><UTooltip :text="isPaused ? '播放' : '暂停'"><UButton size="xs" square :disabled="!musicRquestStore.aplayerMusics.length" @click="togglePlay"><UIcon :name="isPaused ? 'i-lucide-play' : 'i-lucide-pause'" /></UButton></UTooltip><UTooltip text="下一首"><UButton size="xs" color="neutral" variant="soft" square :disabled="!musicRquestStore.waitingMusics.length && musicRquestStore.aplayerMusics.length <= 1" @click="onNextMusic"><UIcon name="i-lucide-skip-forward" /></UButton></UTooltip></div></section><section><small>队列管理</small><UBadge :color="musicRquestStore.waitingMusics.length ? 'warning' : 'info'" variant="subtle">等待: {{ musicRquestStore.waitingMusics.length }}</UBadge><UBadge color="success" variant="subtle">歌单: {{ musicRquestStore.originMusics.length }}</UBadge><UButton v-if="musicRquestStore.waitingMusics.length" size="xs" color="error" variant="soft" label="清空队列" @click="clearWaitingQueue" /></section><section><small><UIcon name="i-lucide-volume-2" /> 音量</small><USlider v-model="playerVolume" :min="0" :max="1" :step="0.01" class="volume-slider" /><small>{{ Math.round(playerVolume * 100) }}%</small></section></div>
       </div>
-    </NCard>
-  </NLayoutFooter>
+    </UCard>
+  </footer>
 </template>
 
 <style scoped>
-.music-control-panel {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  min-width: 300px;
-}
-
-@media (max-width: 768px) {
-  .music-control-panel {
-    min-width: auto;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .music-control-panel > div {
-    min-width: auto !important;
-    flex: 1;
-  }
-}
-
-@media (max-width: 480px) {
-  .music-player-card {
-    margin: 4px !important;
-  }
-
-  .music-control-panel {
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-  }
-
-  .music-control-panel > div {
-    width: 100% !important;
-    min-width: auto !important;
-  }
-}
+.music-player-footer { overflow:hidden; transition:height .3s cubic-bezier(.4,0,.2,1); }.music-player-card { margin:8px; }.music-header,.music-header__title,.music-header__actions,.music-body,.music-controls,.music-controls section,.music-controls section > div { display:flex; align-items:center; gap:8px; }.music-header { justify-content:space-between; }.music-header__title { min-width:0; }.music-header__title :deep(svg) { color:var(--vtsuru-brand); }.music-title { max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--vtsuru-fg-muted); font-size:13px; }.music-body { align-items:flex-start; gap:12px; }.music-body > :first-child { flex:1; min-width:280px; }.music-controls { flex-wrap:wrap; min-width:300px; align-items:flex-start; }.music-controls section { flex-direction:column; min-width:96px; }.music-controls small { display:flex; align-items:center; gap:4px; color:var(--vtsuru-fg-muted); font-size:12px; }.volume-slider { width:80px; }@media(max-width:768px){.music-body{flex-direction:column}.music-body>:first-child,.music-controls{width:100%;min-width:0}.music-controls{justify-content:space-around}}@media(max-width:480px){.music-player-card{margin:4px}.music-header__title .music-title{max-width:140px}}
 </style>

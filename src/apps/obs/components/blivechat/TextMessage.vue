@@ -1,5 +1,4 @@
 <script setup>
-import { NBadge } from 'naive-ui'
 import { computed } from 'vue'
 
 import AuthorChip from './AuthorChip.vue'
@@ -101,31 +100,34 @@ const repeatedMarkColor = computed(() => {
             referrerpolicy="no-referrer"
           />
         </template>
-        <NBadge
+        <sup
           v-if="repeated > 1"
-          :value="repeated"
-          :max="99"
-          class="style-scope yt-live-chat-text-message-renderer"
+          class="repeat-badge style-scope yt-live-chat-text-message-renderer"
           :style="{ '--repeated-mark-color': repeatedMarkColor }"
-        />
+        >
+          {{ repeated > 99 ? '99+' : repeated }}
+        </sup>
       </span>
     </div>
   </yt-live-chat-text-message-renderer>
 </template>
 
 <style>
-yt-live-chat-text-message-renderer > #content > #message > .el-badge {
+yt-live-chat-text-message-renderer > #content > #message > .repeat-badge {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
   margin-left: 10px;
-}
-
-yt-live-chat-text-message-renderer > #content > #message > .el-badge .el-badge__content {
+  padding: 0 5px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
   font-size: 12px !important;
   line-height: 18px !important;
   text-shadow: none !important;
   font-family: sans-serif !important;
   color: #fff !important;
   background-color: var(--repeated-mark-color) !important;
-  border: none;
 }
 </style>
 

@@ -1,33 +1,11 @@
 <script setup lang="ts">
-import {
-  ArrowDown24Regular,
-  ArrowUp24Regular,
-  Edit16Regular,
-  Add16Regular,
-  Copy16Regular,
-  Delete16Regular,
-  MoreHorizontal24Regular,
-  Search16Regular,
-  CheckmarkCircle16Regular,
-  DismissCircle16Regular,
-} from '@vicons/fluent'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NButton,
-  NDataTable,
-  NDropdown,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-  NSwitch,
-  NInput,
-  useDialog,
-} from 'naive-ui'
-import { computed, h, nextTick, ref } from 'vue'
+const ArrowUp24Regular = 'i-lucide-circle'
+const ArrowDown24Regular = 'i-lucide-circle'
+const Edit16Regular = 'i-lucide-circle'
+const Copy16Regular = 'i-lucide-circle'
+const Delete16Regular = 'i-lucide-circle'
+const MoreHorizontal24Regular = 'i-lucide-circle'
+import { computed, h, nextTick, ref, resolveComponent } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { ActionType, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
@@ -47,11 +25,20 @@ const emit = defineEmits<{
 }>()
 
 const autoActionStore = useAutoAction()
-const message = useMessage()
-const dialog = useDialog()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const biliCookieStore = useBiliCookie()
 
 const searchText = ref('')
+const deleteTarget = ref<AutoActionItem>()
+const deleteOpen = computed({
+  get: () => Boolean(deleteTarget.value),
+  set: (open) => {
+    if (!open) deleteTarget.value = undefined
+  },
+})
 
 const enabledTriggerTypes = computed(() => autoActionStore.enabledTriggerTypes)
 
@@ -88,7 +75,7 @@ function handleBatchEnable(enabled: boolean) {
   actionsToUpdate.forEach((a) => {
     autoActionStore.toggleAutoAction(a.id, enabled)
   })
-  message.success(`已${enabled ? '启用' : '禁用'} ${actionsToUpdate.length} 条操作`)
+  feedback('success', `已${enabled ? '启用' : '禁用'} ${actionsToUpdate.length} 条操作`)
 }
 
 function getStatusTag(action: AutoActionItem) {
@@ -124,17 +111,17 @@ function getStatusTag(action: AutoActionItem) {
   return { type: 'success' as const, text: '运行中', tooltip: '正常运行' }
 }
 
-const columns = computed<DataTableColumns<AutoActionItem>>(() => {
-  const base: DataTableColumns<AutoActionItem> = [
+const columns = computed<any[]>(() => {
+  const base: any[] = [
     {
       title: '名称',
       key: 'name',
       render: (row: any) => {
         return h('div', { class: 'action-name-cell' }, [
-          h(NText, { strong: true }, { default: () => row.name || '未命名操作' }),
+          h('span', { strong: true }, { default: () => row.name || '未命名操作' }),
           row.description
             ? h(
-                NText,
+                'span',
                 { depth: 3, size: 'small', style: 'display: block; font-size: 12px;' },
                 { default: () => row.description },
               )
@@ -150,7 +137,7 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
       render: (row: any) => {
         const status = getStatusTag(row)
         return h(
-          NDropdown,
+          resolveComponent('UDropdownMenu'),
           {
             trigger: 'click',
             options: [
@@ -160,7 +147,7 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
                 props: {
                   onClick: () => {
                     autoActionStore.toggleAutoAction(row.id, !row.enabled)
-                    message.success(`已${!row.enabled ? '启用' : '禁用'}: ${row.name}`)
+                    feedback('success', `已${!row.enabled ? '启用' : '禁用'}: ${row.name}`)
                   },
                 },
               },
@@ -170,7 +157,7 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
                 props: {
                   onClick: () => {
                     row.triggerConfig.onlyDuringLive = !row.triggerConfig.onlyDuringLive
-                    message.success('已更新触发条件')
+                    feedback('success', '已更新触发条件')
                   },
                 },
               },
@@ -179,12 +166,12 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
           {
             default: () =>
               h(
-                NTooltip,
+                resolveComponent('UTooltip'),
                 { trigger: 'hover' },
                 {
                   trigger: () =>
                     h(
-                      NTag,
+                      resolveComponent('UBadge'),
                       { type: status.type, size: 'small', round: true, style: 'cursor: pointer' },
                       { default: () => status.text },
                     ),
@@ -204,7 +191,7 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
       width: 120,
       align: 'center',
       render: (row: any) => {
-        if (!typeEnabled.value || !row.enabled) return h(NText, { depth: 3 }, { default: () => '-' })
+        if (!typeEnabled.value || !row.enabled) return h('span', { depth: 3 }, { default: () => '-' })
         return h(TimerCountdown, { actionId: row.id })
       },
     })
@@ -223,7 +210,7 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
       if (props.triggerType === TriggerType.SCHEDULED) {
         buttons.push(
           h(
-            NButton,
+            resolveComponent('UButton'),
             {
               size: 'tiny',
               tertiary: true,
@@ -231,10 +218,10 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
               disabled: index === 0,
               onClick: () => autoActionStore.moveAction(row.id, 'up'),
             },
-            { icon: () => h(NIcon, { component: ArrowUp24Regular }) },
+            { icon: () => h(resolveComponent('UIcon'), { component: ArrowUp24Regular }) },
           ),
           h(
-            NButton,
+            resolveComponent('UButton'),
             {
               size: 'tiny',
               tertiary: true,
@@ -242,29 +229,37 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
               disabled: index === orderedActions.value.length - 1,
               onClick: () => autoActionStore.moveAction(row.id, 'down'),
             },
-            { icon: () => h(NIcon, { component: ArrowDown24Regular }) },
+            { icon: () => h(resolveComponent('UIcon'), { component: ArrowDown24Regular }) },
           ),
         )
       }
 
       buttons.push(
         h(
-          NButton,
+          resolveComponent('UButton'),
           {
             size: 'small',
             secondary: true,
             type: 'primary',
             onClick: () => emit('edit', row.id),
           },
-          { icon: () => h(NIcon, { component: Edit16Regular }), default: () => '编辑' },
+          { icon: () => h(resolveComponent('UIcon'), { component: Edit16Regular }), default: () => '编辑' },
         ),
         h(
-          NDropdown,
+          resolveComponent('UDropdownMenu'),
           {
             trigger: 'hover',
             options: [
-              { label: '复制', key: 'duplicate', icon: () => h(NIcon, { component: Copy16Regular }) },
-              { label: '删除', key: 'delete', icon: () => h(NIcon, { component: Delete16Regular }) },
+              {
+                label: '复制',
+                key: 'duplicate',
+                icon: () => h(resolveComponent('UIcon'), { component: Copy16Regular }),
+              },
+              {
+                label: '删除',
+                key: 'delete',
+                icon: () => h(resolveComponent('UIcon'), { component: Delete16Regular }),
+              },
             ],
             onSelect: (key) => {
               if (key === 'duplicate') duplicateAction(row)
@@ -274,15 +269,15 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
           {
             default: () =>
               h(
-                NButton,
+                resolveComponent('UButton'),
                 { size: 'small', quaternary: true, circle: true },
-                { icon: () => h(NIcon, { component: MoreHorizontal24Regular }) },
+                { icon: () => h(resolveComponent('UIcon'), { component: MoreHorizontal24Regular }) },
               ),
           },
         ),
       )
 
-      return h(NFlex, { size: 4, align: 'center', justify: 'end' }, { default: () => buttons })
+      return h('div', { size: 4, align: 'center', justify: 'end' }, { default: () => buttons })
     },
   })
 
@@ -325,26 +320,24 @@ function duplicateAction(action: AutoActionItem) {
       }
     })
   }
-  message.success('已复制')
+  feedback('success', '已复制')
 }
 
 function deleteAction(action: AutoActionItem) {
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除操作「${action.name || '未命名操作'}」吗？此操作不可撤销。`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      autoActionStore.removeAutoAction(action.id)
-      message.success('已删除')
-    },
-  })
+  deleteTarget.value = action
+}
+
+function confirmDelete() {
+  if (!deleteTarget.value) return
+  autoActionStore.removeAutoAction(deleteTarget.value.id)
+  deleteTarget.value = undefined
+  feedback('success', '已删除')
 }
 
 function exportActions() {
   const actionsToExport = filteredActions.value
   if (actionsToExport.length === 0) {
-    message.warning('没有可导出的操作')
+    feedback('warning', '没有可导出的操作')
     return
   }
   const data = JSON.stringify(actionsToExport, null, 2)
@@ -355,7 +348,7 @@ function exportActions() {
   a.download = `autoaction-${props.triggerType}-${Date.now()}.json`
   a.click()
   URL.revokeObjectURL(url)
-  message.success(`已导出 ${actionsToExport.length} 条操作`)
+  feedback('success', `已导出 ${actionsToExport.length} 条操作`)
 }
 
 function importActions() {
@@ -376,9 +369,9 @@ function importActions() {
         autoActionStore.autoActions.push(item)
         count++
       }
-      message.success(`已导入 ${count} 条操作`)
+      feedback('success', `已导入 ${count} 条操作`)
     } catch (err) {
-      message.error(`导入失败: ${(err as Error).message}`)
+      feedback('error', `导入失败: ${(err as Error).message}`)
     }
   }
   input.click()
@@ -388,107 +381,107 @@ function importActions() {
 <template>
   <div class="action-list">
     <div class="action-list-header">
-      <NFlex
+      <div
         justify="space-between"
         align="center"
       >
-        <NFlex
+        <div
           align="center"
           :size="16"
         >
-          <NFlex align="center">
-            <NSwitch
-              v-model:value="typeEnabled"
+          <div align="center">
+            <USwitch
+              v-model="typeEnabled"
               size="small"
             >
-              <template #checked> 已启用 </template>
-              <template #unchecked> 已禁用 </template>
-            </NSwitch>
-            <NText
+              <template v-if="false"> 已启用 </template>
+              <template v-if="false"> 已禁用 </template>
+            </USwitch>
+            <span
               :depth="typeEnabled ? 1 : 3"
               strong
             >
               {{ typeEnabled ? '已启用' : '已禁用' }}{{ title }}
-            </NText>
-          </NFlex>
+            </span>
+          </div>
 
           <div
             v-if="filteredActions.length > 0"
             class="batch-actions"
           >
-            <NButton
+            <UButton
               size="tiny"
-              quaternary
+              variant="ghost"
               @click="handleBatchEnable(true)"
             >
-              <template #icon>
-                <NIcon :component="CheckmarkCircle16Regular" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
               全部启用
-            </NButton>
-            <NButton
+            </UButton>
+            <UButton
               size="tiny"
-              quaternary
+              variant="ghost"
               @click="handleBatchEnable(false)"
             >
-              <template #icon>
-                <NIcon :component="DismissCircle16Regular" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
               全部禁用
-            </NButton>
+            </UButton>
           </div>
-        </NFlex>
+        </div>
 
-        <NFlex align="center">
-          <NInput
-            v-model:value="searchText"
+        <div align="center">
+          <UInput
+            v-model="searchText"
             placeholder="搜索操作..."
             size="small"
             style="width: 180px"
             clearable
           >
-            <template #prefix>
-              <NIcon :component="Search16Regular" />
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
             </template>
-          </NInput>
+          </UInput>
           <slot name="extra-actions" />
-          <NDropdown
+          <UDropdownMenu
             trigger="hover"
-            :options="[
+            :items="[
               { label: '导出配置', key: 'export' },
               { label: '导入配置', key: 'import' },
             ]"
             @select="(key: string) => (key === 'export' ? exportActions() : importActions())"
           >
-            <NButton
+            <UButton
               size="small"
-              quaternary
+              variant="ghost"
             >
-              <template #icon>
-                <NIcon :component="MoreHorizontal24Regular" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
-            </NButton>
-          </NDropdown>
-          <NButton
+            </UButton>
+          </UDropdownMenu>
+          <UButton
             size="small"
-            secondary
-            type="warning"
+            variant="soft"
+            color="warning"
             @click="$emit('test')"
           >
             测试
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             size="small"
-            type="primary"
+            color="primary"
             @click="$emit('add')"
           >
-            <template #icon>
-              <NIcon :component="Add16Regular" />
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
             </template>
             添加{{ title }}
-          </NButton>
-        </NFlex>
-      </NFlex>
+          </UButton>
+        </div>
+      </div>
     </div>
 
     <slot name="header-content" />
@@ -498,31 +491,31 @@ function importActions() {
         name="fade"
         mode="out-in"
       >
-        <NEmpty
+        <UEmpty
           v-if="filteredActions.length === 0"
           :description="searchText ? '没有匹配的搜索结果' : '暂无操作'"
           style="margin-top: 60px"
         >
           <template #extra>
-            <NButton
+            <UButton
               v-if="!searchText"
-              type="primary"
+              color="primary"
               dashed
               @click="$emit('add')"
             >
               创建第一个{{ title }}
-            </NButton>
-            <NButton
+            </UButton>
+            <UButton
               v-else
-              quaternary
+              variant="ghost"
               @click="searchText = ''"
             >
               重置搜索
-            </NButton>
+            </UButton>
           </template>
-        </NEmpty>
+        </UEmpty>
 
-        <NDataTable
+        <UTable
           v-else
           :key="triggerType"
           :columns="columns"
@@ -538,6 +531,25 @@ function importActions() {
       </transition>
     </div>
   </div>
+  <UModal
+    v-model:open="deleteOpen"
+    title="确认删除"
+  >
+    <template #body> 确定要删除操作「{{ deleteTarget?.name || '未命名操作' }}」吗？此操作不可撤销。 </template>
+    <template #footer>
+      <UButton
+        color="neutral"
+        variant="outline"
+        @click="deleteOpen = false"
+        >取消</UButton
+      >
+      <UButton
+        color="error"
+        @click="confirmDelete"
+        >删除</UButton
+      >
+    </template>
+  </UModal>
 </template>
 
 <style scoped>
@@ -554,11 +566,11 @@ function importActions() {
   margin-bottom: 12px;
 }
 
-.action-table :deep(.n-data-table-td) {
+.action-table :deep(.u-data-table-td) {
   padding: 10px 8px;
 }
 
-.action-table :deep(.n-data-table-tr:hover) {
+.action-table :deep(.u-data-table-tr:hover) {
   background-color: var(--vtsuru-bg-muted);
 }
 

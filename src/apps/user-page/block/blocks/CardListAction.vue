@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -34,25 +33,24 @@ const router = useRouter()
 </script>
 
 <template>
-  <NButton
+  <UButton
     v-if="label && internalPath"
-    size="small"
-    :type="secondary ? 'default' : 'primary'"
+    size="sm"
+    :color="secondary ? 'neutral' : 'primary'"
     :secondary="secondary"
     @click="router.push(internalPath)"
   >
     {{ label }}
-  </NButton>
-  <NButton
+  </UButton>
+  <UButton
     v-else-if="label && url"
-    tag="a"
-    size="small"
-    :type="secondary ? 'default' : 'primary'"
+    size="sm"
+    :color="secondary ? 'neutral' : 'primary'"
     :secondary="secondary"
     :href="url"
     target="_blank"
     rel="noopener noreferrer"
   >
     {{ label }}
-  </NButton>
+  </UButton>
 </template>

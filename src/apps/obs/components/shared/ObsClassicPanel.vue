@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NDivider, NEmpty } from 'naive-ui'
 import { computed, toRef } from 'vue'
 
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
@@ -38,11 +37,11 @@ const {
     <p class="obs-classic-header">
       {{ title }}
     </p>
-    <NDivider class="obs-classic-divider">
+    <div class="obs-classic-divider">
       <p class="obs-classic-count">
         {{ countText }}
       </p>
-    </NDivider>
+    </div>
 
     <div
       class="obs-classic-current"
@@ -126,7 +125,9 @@ const {
         v-else
         class="obs-classic-empty-wrapper"
       >
-        <NEmpty :description="emptyText" />
+        <p class="obs-classic-empty">
+          {{ emptyText }}
+        </p>
       </div>
     </div>
 
@@ -184,10 +185,9 @@ const {
 }
 
 .obs-classic-divider {
-  margin: 0 auto;
-  margin-top: -15px;
-  margin-bottom: -15px;
+  margin: -15px auto;
   width: 90%;
+  border-bottom: 1px solid #ffffffd5;
 }
 
 .obs-classic-current {
@@ -254,10 +254,6 @@ const {
   100% {
     transform: rotate(360deg);
   }
-}
-
-.n-divider__line {
-  background-color: #ffffffd5;
 }
 
 .obs-classic-content {
@@ -433,6 +429,12 @@ const {
 .obs-classic-empty-wrapper {
   position: relative;
   top: 20%;
+}
+
+.obs-classic-empty {
+  margin: 0;
+  color: #ffffffbe;
+  text-align: center;
 }
 
 .obs-classic-footer {

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NResult } from 'naive-ui'
 import { onErrorCaptured, ref } from 'vue'
 
 const props = defineProps<{
@@ -20,15 +19,15 @@ onErrorCaptured((e) => {
 
 <template>
   <div v-if="capturedError">
-    <NResult
+    <UEmpty
       status="error"
       :title="props.title || '渲染失败'"
       :description="capturedError.message || String(capturedError)"
     >
       <template #footer>
-        <NButton @click="reset"> 重试 </NButton>
+        <UButton @click="reset"> 重试 </UButton>
       </template>
-    </NResult>
+    </UEmpty>
   </div>
   <slot v-else />
 </template>

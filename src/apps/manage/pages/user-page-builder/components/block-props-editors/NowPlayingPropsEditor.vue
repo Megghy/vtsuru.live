@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -11,19 +9,16 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="builder-form">
     <PropsGrid>
-      <NFormItem label="显示点歌用户">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showRequester"
+      <UFormField label="显示点歌用户">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showRequester"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
+        </div>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

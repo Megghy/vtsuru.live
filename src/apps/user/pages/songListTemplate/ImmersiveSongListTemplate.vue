@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { CloudAdd20Filled, MusicNote224Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
-import { NButton, NEmpty, NIcon, NInput, NTag, NTooltip } from 'naive-ui'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -125,9 +124,9 @@ function requestSong(song: SongsInfo) {
           :alt="selectedSong.name"
           referrerpolicy="no-referrer"
         />
-        <NIcon
+        <component
           v-else
-          :component="MusicNote224Filled"
+          :is="MusicNote224Filled"
           class="stage-cover-icon"
         />
       </div>
@@ -153,83 +152,83 @@ function requestSong(song: SongsInfo) {
           v-if="selectedSong.language?.length || selectedSong.tags?.length"
           class="stage-tags"
         >
-          <NTag
+          <UBadge
             v-for="lang in selectedSong.language ?? []"
             :key="`l-${lang}`"
-            size="small"
+            size="sm"
             :bordered="false"
-            type="info"
+            color="info"
           >
             {{ lang }}
-          </NTag>
-          <NTag
+          </UBadge>
+          <UBadge
             v-for="tag in (selectedSong.tags ?? []).slice(0, 4)"
             :key="`t-${tag}`"
-            size="small"
+            size="sm"
             :bordered="false"
           >
             {{ tag }}
-          </NTag>
+          </UBadge>
         </div>
 
         <div
           v-if="selectedSong.options"
           class="stage-tags"
         >
-          <NTag
+          <UBadge
             v-if="selectedSong.options.scMinPrice"
-            size="small"
+            size="sm"
             :bordered="false"
-            type="error"
+            color="error"
           >
             SC ¥{{ selectedSong.options.scMinPrice }}
-          </NTag>
-          <NTag
+          </UBadge>
+          <UBadge
             v-if="selectedSong.options.fanMedalMinLevel"
-            size="small"
+            size="sm"
             :bordered="false"
-            type="warning"
+            color="warning"
           >
             粉丝牌 {{ selectedSong.options.fanMedalMinLevel }}
-          </NTag>
-          <NTag
+          </UBadge>
+          <UBadge
             v-if="selectedSong.options.needZongdu"
-            size="small"
+            size="sm"
             :bordered="false"
-            :color="{ color: GetGuardColor(1) }"
+            :style="{ backgroundColor: GetGuardColor(1), color: '#fff' }"
           >
             总督
-          </NTag>
-          <NTag
+          </UBadge>
+          <UBadge
             v-if="selectedSong.options.needTidu"
-            size="small"
+            size="sm"
             :bordered="false"
-            :color="{ color: GetGuardColor(2) }"
+            :style="{ backgroundColor: GetGuardColor(2), color: '#fff' }"
           >
             提督
-          </NTag>
-          <NTag
+          </UBadge>
+          <UBadge
             v-if="selectedSong.options.needJianzhang"
-            size="small"
+            size="sm"
             :bordered="false"
-            :color="{ color: GetGuardColor(3) }"
+            :style="{ backgroundColor: GetGuardColor(3), color: '#fff' }"
           >
             舰长
-          </NTag>
+          </UBadge>
         </div>
 
-        <NButton
+        <UButton
           v-if="!isSelf"
           class="stage-request"
-          :type="getSongRequestButtonType(selectedSong, liveRequestSettings, requestAuthState)"
+          :color="getSongRequestButtonType(selectedSong, liveRequestSettings, requestAuthState)"
           :loading="requestingKey === selectedSong.key"
           @click="requestSong(selectedSong)"
         >
-          <template #icon>
-            <NIcon :component="CloudAdd20Filled" />
+          <template #leading>
+            <component :is="CloudAdd20Filled" />
           </template>
           {{ getSongRequestTooltip(selectedSong, liveRequestSettings, requestAuthState) }}
-        </NButton>
+        </UButton>
 
         <SongPlayer
           v-if="selectedSong.url"
@@ -242,21 +241,22 @@ function requestSong(song: SongsInfo) {
 
     <!-- 右侧曲库列表 -->
     <section class="library">
-      <NInput
-        v-model:value="searchKeyword"
+      <UInput
+        v-model="searchKeyword"
         class="library-search"
         clearable
         placeholder="搜索曲库…"
       >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
+        <template #leading>
+          <component :is="Search24Regular" />
         </template>
-      </NInput>
+      </UInput>
 
-      <NEmpty
+      <UEmpty
         v-if="filteredSongs.length === 0"
         description="暂无曲目"
         style="margin-top: 48px"
+        class="public-empty"
       />
 
       <div
@@ -309,22 +309,21 @@ function requestSong(song: SongsInfo) {
               class="lib-flag queued"
               >排队</span
             >
-            <NTooltip v-if="!isSelf">
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  circle
-                  :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
-                  :loading="requestingKey === song.key"
-                  @click.stop="requestSong(song)"
-                >
-                  <template #icon>
-                    <NIcon :component="CloudAdd20Filled" />
-                  </template>
-                </NButton>
-              </template>
-              {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-            </NTooltip>
+            <UTooltip v-if="!isSelf">
+              <UButton
+                size="xs"
+                square
+                :color="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
+                :loading="requestingKey === song.key"
+                @click.stop="requestSong(song)"
+              >
+                <template #leading>
+                  <component :is="CloudAdd20Filled" />
+                </template>
+              </UButton>
+
+              <template #content>{{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}</template>
+            </UTooltip>
           </button>
         </div>
       </div>

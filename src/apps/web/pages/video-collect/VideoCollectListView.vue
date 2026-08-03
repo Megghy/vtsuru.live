@@ -1,14 +1,4 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise24Regular,
-  ArrowRight24Regular,
-  ArrowSwap24Regular,
-  CheckmarkCircle24Regular,
-  Clock24Regular,
-  Person24Regular,
-  Video24Regular,
-} from '@vicons/fluent'
-import { NButton, NIcon, NProgress, NRadioButton, NRadioGroup, NResult, NSpin, NTag, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -17,6 +7,7 @@ import { VideoStatus } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { formatDuration } from '@/apps/manage/composables/formatters'
 import { VIDEO_COLLECT_API_URL } from '@/shared/config'
+import { showErrorToast } from '@/shared/services/toast'
 
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
 import VideoCollectResultCard from './VideoCollectResultCard.vue'
@@ -26,7 +17,6 @@ type ViewMode = 'list' | 'draw' | 'sequence' | 'flip'
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
 
 const videoDetail = ref<VideoCollectDetail | null>()
 const isLoading = ref(false)
@@ -105,7 +95,7 @@ async function loadData() {
   } catch (error) {
     console.error('获取视频征集结果失败', error)
     videoDetail.value = null
-    message.error(error instanceof Error ? error.message : '结果加载失败')
+    showErrorToast(error instanceof Error ? error.message : '结果加载失败')
   } finally {
     isLoading.value = false
   }
@@ -202,10 +192,10 @@ function resetProgress() {
 <template>
   <VideoCollectPageShell :table="table">
     <main class="result-page">
-      <NSpin :show="isLoading">
-        <NResult
+      <div :aria-busy="isLoading">
+        <UEmpty
           v-if="videoDetail === null && !isLoading"
-          status="404"
+          icon="i-lucide-file-question"
           title="视频征集不存在"
           description="链接可能有误，或该征集已被删除。"
         />
@@ -218,29 +208,29 @@ function resetProgress() {
                 class="owner-link"
                 @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
               >
-                <NIcon :component="Person24Regular" />
+                <UIcon name="i-lucide-user-round" />
                 {{ table.owner.name }} 的视频征集
               </button>
               <div class="title-row">
                 <h1>{{ table.name }}</h1>
-                <NTag
+                <UBadge
                   size="small"
-                  :type="isCollecting ? 'success' : 'default'"
-                  :bordered="false"
+                  :color="isCollecting ? 'success' : 'neutral'"
+                  variant="soft"
                 >
                   {{ isCollecting ? '征集中' : '已结束' }}
-                </NTag>
+                </UBadge>
               </div>
               <p>{{ table.description || '未填写征集说明' }}</p>
             </div>
-            <NButton
+            <UButton
               v-if="isCollecting"
-              secondary
+              variant="soft"
+              trailing-icon="i-lucide-arrow-right"
               @click="router.push({ name: 'video-collect', params: { id: table.shortId } })"
             >
               推荐视频
-              <template #icon><NIcon :component="ArrowRight24Regular" /></template>
-            </NButton>
+            </UButton>
           </header>
 
           <section
@@ -248,17 +238,17 @@ function resetProgress() {
             aria-label="观看进度"
           >
             <div class="summary-stat">
-              <NIcon :component="Video24Regular" />
+              <UIcon name="i-lucide-video" />
               <span>通过视频</span>
               <strong>{{ acceptedVideos.length }}</strong>
             </div>
             <div class="summary-stat">
-              <NIcon :component="Clock24Regular" />
+              <UIcon name="i-lucide-clock-3" />
               <span>总时长</span>
               <strong>{{ formatDuration(totalDuration) }}</strong>
             </div>
             <div class="summary-stat">
-              <NIcon :component="CheckmarkCircle24Regular" />
+              <UIcon name="i-lucide-circle-check" />
               <span>已观看</span>
               <strong>{{ watchedVideos.length }} / {{ acceptedVideos.length }}</strong>
             </div>
@@ -267,45 +257,46 @@ function resetProgress() {
                 <span>观看进度</span>
                 <strong>{{ progressPercentage }}%</strong>
               </div>
-              <NProgress
-                type="line"
-                :percentage="progressPercentage"
-                :height="7"
-                :show-indicator="false"
-                :status="progressPercentage === 100 ? 'success' : 'default'"
+              <UProgress
+                :model-value="progressPercentage"
+                :color="progressPercentage === 100 ? 'success' : 'primary'"
               />
             </div>
           </section>
 
           <section class="result-workspace">
             <div class="mode-toolbar">
-              <NRadioGroup
-                v-model:value="mode"
-                name="result-view-mode"
+              <URadioGroup
+                v-model="mode"
+                :items="[
+                  { label: '全部视频', value: 'list' },
+                  { label: '随机抽取', value: 'draw' },
+                  { label: '逐个观看', value: 'sequence' },
+                  { label: '随机翻牌', value: 'flip' },
+                ]"
+                orientation="horizontal"
+                variant="card"
                 class="mode-selector"
-              >
-                <NRadioButton value="list">全部视频</NRadioButton>
-                <NRadioButton value="draw">随机抽取</NRadioButton>
-                <NRadioButton value="sequence">逐个观看</NRadioButton>
-                <NRadioButton value="flip">随机翻牌</NRadioButton>
-              </NRadioGroup>
+              />
               <div class="mode-actions">
-                <NButton
+                <UButton
                   v-if="mode === 'flip'"
-                  secondary
+                  color="neutral"
+                  variant="soft"
+                  icon="i-lucide-shuffle"
                   @click="shuffleDeck"
                 >
-                  <template #icon><NIcon :component="ArrowSwap24Regular" /></template>
                   重新洗牌
-                </NButton>
-                <NButton
+                </UButton>
+                <UButton
                   v-if="watchedIds.length > 0"
-                  quaternary
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-rotate-ccw"
                   @click="resetProgress"
                 >
-                  <template #icon><NIcon :component="ArrowClockwise24Regular" /></template>
                   重置进度
-                </NButton>
+                </UButton>
               </div>
             </div>
 
@@ -317,9 +308,9 @@ function resetProgress() {
                 :key="acceptedVideos.length === 0 ? 'empty' : mode"
                 class="mode-content"
               >
-                <NResult
+                <UEmpty
                   v-if="acceptedVideos.length === 0"
-                  status="info"
+                  icon="i-lucide-video-off"
                   title="暂无通过的视频"
                   description="审核通过后，视频会显示在这里。"
                 />
@@ -352,26 +343,26 @@ function resetProgress() {
                       class="draw-placeholder"
                       @click="drawRandomVideo"
                     >
-                      <NIcon :component="ArrowSwap24Regular" />
+                      <UIcon name="i-lucide-shuffle" />
                       <strong>随机抽取</strong>
                     </button>
                   </div>
                   <div class="draw-actions">
-                    <NButton
+                    <UButton
                       v-if="drawnVideo"
-                      secondary
+                      color="neutral"
+                      variant="soft"
                       @click="openVideo(drawnVideo)"
                     >
                       打开视频
-                    </NButton>
-                    <NButton
-                      type="primary"
+                    </UButton>
+                    <UButton
+                      icon="i-lucide-shuffle"
                       :loading="isDrawing"
                       @click="drawRandomVideo"
                     >
-                      <template #icon><NIcon :component="ArrowSwap24Regular" /></template>
                       {{ drawnVideo ? '继续抽取' : '开始抽取' }}
-                    </NButton>
+                    </UButton>
                   </div>
                 </div>
 
@@ -394,31 +385,31 @@ function resetProgress() {
                       @select="openSequenceVideo"
                     />
                     <div class="sequence-actions">
-                      <NButton @click="skipSequenceVideo">跳过</NButton>
-                      <NButton
-                        type="primary"
+                      <UButton
+                        color="neutral"
+                        variant="soft"
+                        @click="skipSequenceVideo"
+                      >
+                        跳过
+                      </UButton>
+                      <UButton
+                        trailing-icon="i-lucide-arrow-right"
                         @click="openSequenceVideo"
                       >
                         打开并显示下一个
-                        <template #icon><NIcon :component="ArrowRight24Regular" /></template>
-                      </NButton>
+                      </UButton>
                     </div>
                   </div>
-                  <NResult
+                  <UEmpty
                     v-else
-                    status="success"
+                    icon="i-lucide-circle-check"
                     title="本轮已完成"
                     :description="`已观看 ${watchedVideos.length} 个视频，共 ${formatDuration(watchedDuration)}`"
                   >
                     <template #footer>
-                      <NButton
-                        type="primary"
-                        @click="restartSequence"
-                      >
-                        再看一轮
-                      </NButton>
+                      <UButton @click="restartSequence"> 再看一轮 </UButton>
                     </template>
-                  </NResult>
+                  </UEmpty>
                 </template>
 
                 <TransitionGroup
@@ -445,7 +436,7 @@ function resetProgress() {
             </Transition>
           </section>
         </template>
-      </NSpin>
+      </div>
     </main>
   </VideoCollectPageShell>
 </template>

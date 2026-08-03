@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Chat24Regular } from '@vicons/fluent'
-import { NAvatar, NEmpty, NIcon, NImage, NPagination, NSpin, NTime } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
+import PublicTime from '@/apps/user-page/PublicTime.vue'
 import { AVATAR_URL } from '@/shared/config'
 
 const props = defineProps<{
@@ -71,7 +71,7 @@ watch(
       </div>
     </div>
 
-    <NSpin :show="isLoading">
+    <div :aria-busy="isLoading">
       <TransitionGroup
         v-if="pagedQuestions.length"
         name="question-thread"
@@ -85,11 +85,11 @@ watch(
           :style="{ '--thread-index': index }"
         >
           <div class="question-marker">
-            <NIcon :component="Chat24Regular" />
+            <component :is="Chat24Regular" />
           </div>
           <div class="thread-content">
             <div class="question-meta">
-              <NTime
+              <PublicTime
                 :time="item.sendAt"
                 type="relative"
               />
@@ -100,11 +100,12 @@ watch(
               v-if="item.questionImages?.length"
               class="thread-images"
             >
-              <NImage
+              <img
                 v-for="image in item.questionImages"
                 :key="image.path"
                 :src="image.path"
-                object-fit="cover"
+                alt="提问附图"
+                loading="lazy"
               />
             </div>
 
@@ -113,8 +114,7 @@ watch(
               class="answer-block"
             >
               <div class="answer-author">
-                <NAvatar
-                  round
+                <UAvatar
                   :size="28"
                   :src="
                     userInfo?.faceUrl ||
@@ -125,7 +125,7 @@ watch(
                 />
                 <strong>{{ userInfo?.name || '主播' }}</strong>
                 <span>的回复</span>
-                <NTime
+                <PublicTime
                   v-if="item.answer.createdAt"
                   :time="item.answer.createdAt"
                   type="relative"
@@ -136,11 +136,12 @@ watch(
                 v-if="item.answerImages?.length"
                 class="thread-images"
               >
-                <NImage
+                <img
                   v-for="image in item.answerImages"
                   :key="image.path"
                   :src="image.path"
-                  object-fit="cover"
+                  alt="回复附图"
+                  loading="lazy"
                 />
               </div>
             </div>
@@ -148,18 +149,18 @@ watch(
         </article>
       </TransitionGroup>
 
-      <NEmpty
+      <UEmpty
         v-else-if="!isLoading"
-        class="feed-empty"
+        class="public-empty feed-empty"
         :description="selectedTag ? '该话题暂无公开回复' : '暂无公开回复'"
       />
-    </NSpin>
+    </div>
 
-    <NPagination
+    <UPagination
       v-if="filteredQuestions.length > pageSize"
       v-model:page="page"
-      :item-count="filteredQuestions.length"
-      :page-size="pageSize"
+      :total="filteredQuestions.length"
+      :items-per-page="pageSize"
       class="feed-pagination"
     />
   </section>
@@ -389,7 +390,7 @@ watch(
   white-space: nowrap;
 }
 
-.answer-author .n-time {
+.answer-author time {
   margin-left: auto;
   color: var(--feed-subtle);
 }
@@ -407,7 +408,7 @@ watch(
   margin-top: 11px;
 }
 
-.thread-images :deep(.n-image) {
+.thread-images :deep(img) {
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
@@ -467,7 +468,7 @@ watch(
     flex-wrap: wrap;
   }
 
-  .answer-author .n-time {
+  .answer-author time {
     width: 100%;
     margin-left: 34px;
   }

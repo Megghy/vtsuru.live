@@ -1,21 +1,4 @@
 <script setup lang="ts">
-import { CopyOutline, RefreshOutline, TrashOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NModal,
-  NScrollbar,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useDialog,
-} from 'naive-ui'
 import { computed, inject, reactive, watch } from 'vue'
 
 import { UploadStage } from '@/shared/services/fileUpload'
@@ -28,7 +11,6 @@ const show = defineModel<boolean>('show', { required: true })
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const dialog = useDialog()
 const imageDimensions = reactive<Record<number, string>>({})
 const resources = useBuilderResources({
   fileRefs: editor.fileRefs,
@@ -86,263 +68,241 @@ function confirmDelete(resource: BuilderResource) {
   const referenceSummary = resource.locations.length
     ? `该资源正在被 ${resource.locations.length} 处配置引用。删除后这些位置的图片或媒体会失效：${resource.locations.slice(0, 4).join('；')}${resource.locations.length > 4 ? '；以及其他位置' : ''}`
     : '该资源没有被当前用户页面引用。'
-  dialog.warning({
-    title: '删除资源',
-    content: `${referenceSummary}\n\n此操作会删除服务器文件，无法撤销。`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: () => resources.deleteResource(resource),
-  })
+  if (window.confirm(`${referenceSummary}\n\n此操作会删除服务器文件，无法撤销。`))
+    void resources.deleteResource(resource)
 }
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
+  <UModal
+    v-model:open="show"
     title="资源管理"
     style="width: 900px; max-width: 95vw"
-    :auto-focus="false"
   >
-    <NFlex
-      vertical
-      size="large"
-    >
-      <NAlert
-        v-if="editor.uploadQueue.value.length"
-        :type="uploadAlertType"
-        :show-icon="true"
-      >
-        <NFlex
-          vertical
-          size="small"
+    <template #body
+      ><div class="builder-stack">
+        <UAlert
+          v-if="editor.uploadQueue.value.length"
+          :type="uploadAlertType"
+          :show-icon="true"
         >
-          <NFlex
-            v-for="item in editor.uploadQueue.value"
-            :key="item.name"
-            align="center"
-            justify="space-between"
-          >
-            <NText>{{ item.name }}</NText>
-            <NTag
-              :type="uploadStageType(item.stage)"
-              size="small"
+          <div class="builder-stack">
+            <div
+              class="builder-row"
+              v-for="item in editor.uploadQueue.value"
+              :key="item.name"
             >
-              {{ item.stage }}
-            </NTag>
-          </NFlex>
-        </NFlex>
-      </NAlert>
+              <span class="builder-text">{{ item.name }}</span>
+              <UBadge
+                :type="uploadStageType(item.stage)"
+                size="sm"
+              >
+                {{ item.stage }}
+              </UBadge>
+            </div>
+          </div>
+        </UAlert>
 
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
-        <NText depth="3">
-          服务器资源 {{ resources.resources.value.length - resources.missingCount.value }} 个，引用中
-          {{ resources.usedCount.value }} 个<template v-if="resources.missingCount.value">
-            ，失效引用 {{ resources.missingCount.value }} 个
-          </template>
-        </NText>
-        <NFlex
-          :wrap="false"
-          size="small"
-        >
-          <NButton
-            size="small"
-            secondary
-            @click="editor.normalizeRichTextImagesFile"
-          >
-            整理富文本引用
-          </NButton>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                size="small"
-                circle
-                secondary
+        <div class="builder-row">
+          <span class="builder-text">
+            服务器资源 {{ resources.resources.value.length - resources.missingCount.value }} 个，引用中
+            {{ resources.usedCount.value }} 个<template v-if="resources.missingCount.value">
+              ，失效引用 {{ resources.missingCount.value }} 个
+            </template>
+          </span>
+          <div class="builder-row">
+            <UButton
+              size="sm"
+              variant="soft"
+              @click="editor.normalizeRichTextImagesFile"
+            >
+              整理富文本引用
+            </UButton>
+            <UTooltip>
+              <UButton
+                size="sm"
+                square
+                variant="soft"
                 :loading="resources.isLoading.value"
                 aria-label="刷新资源"
                 @click="resources.loadResources"
               >
                 <template #icon>
-                  <NIcon><RefreshOutline /></NIcon>
+                  <UIcon name="i-lucide-refresh-cw" />
                 </template>
-              </NButton>
-            </template>
-            刷新资源
-          </NTooltip>
-        </NFlex>
-      </NFlex>
+              </UButton>
+              <template #content> 刷新资源 </template></UTooltip
+            >
+          </div>
+        </div>
 
-      <NTabs
-        v-model:value="resources.currentView.value"
-        type="segment"
-        size="small"
-        animated
-      >
-        <NTabPane
-          name="all"
-          :tab="`全部 ${resources.resources.value.length}`"
+        <UTabs
+          v-model="resources.currentView.value"
+          :items="[
+            { label: `全部 ${resources.resources.value.length}`, value: 'all' },
+            { label: `引用中 ${resources.usedCount.value}`, value: 'used' },
+            { label: `未使用 ${resources.unusedCount.value}`, value: 'unused' },
+          ]"
+          size="sm"
         />
-        <NTabPane
-          name="used"
-          :tab="`引用中 ${resources.usedCount.value}`"
-        />
-        <NTabPane
-          name="unused"
-          :tab="`未使用 ${resources.unusedCount.value}`"
-        />
-      </NTabs>
 
-      <NAlert
-        v-if="resources.loadError.value"
-        type="error"
-        :show-icon="true"
-      >
-        {{ resources.loadError.value }}
-      </NAlert>
+        <UAlert
+          v-if="resources.loadError.value"
+          type="error"
+          :show-icon="true"
+        >
+          {{ resources.loadError.value }}
+        </UAlert>
 
-      <NSpin :show="resources.isLoading.value">
-        <NScrollbar style="max-height: 62vh">
-          <NFlex
-            v-if="resources.visibleResources.value.length"
-            vertical
-            size="small"
+        <div class="resource-loading-host">
+          <UIcon
+            v-if="resources.isLoading.value"
+            name="i-lucide-loader-circle"
+            class="resource-loading-icon"
+          />
+          <div
+            class="builder-scroll"
+            style="max-height: 62vh"
           >
             <div
-              v-for="file in resources.visibleResources.value"
-              :key="file.id"
-              class="resource-row"
+              class="builder-stack"
+              v-if="resources.visibleResources.value.length"
             >
-              <NFlex
-                align="center"
-                justify="space-between"
-                :wrap="false"
-                style="gap: 12px"
+              <div
+                v-for="file in resources.visibleResources.value"
+                :key="file.id"
+                class="resource-row"
               >
-                <NFlex
-                  align="center"
-                  :wrap="false"
-                  style="gap: 10px; min-width: 0"
+                <div
+                  class="builder-row"
+                  style="gap: 12px"
                 >
-                  <img
-                    v-if="isImagePath(file.path) && !file.missing"
-                    :src="file.path"
-                    :alt="file.name || `资源 ${file.id}`"
-                    referrerpolicy="no-referrer"
-                    loading="lazy"
-                    decoding="async"
-                    class="resource-thumbnail"
-                    @load="readImageDimensions(file.id, $event)"
-                  />
                   <div
-                    v-else
-                    class="resource-thumbnail resource-placeholder"
+                    class="builder-row"
+                    style="gap: 10px; min-width: 0"
                   >
-                    #{{ file.id }}
+                    <img
+                      v-if="isImagePath(file.path) && !file.missing"
+                      :src="file.path"
+                      :alt="file.name || `资源 ${file.id}`"
+                      referrerpolicy="no-referrer"
+                      loading="lazy"
+                      decoding="async"
+                      class="resource-thumbnail"
+                      @load="readImageDimensions(file.id, $event)"
+                    />
+                    <div
+                      v-else
+                      class="resource-thumbnail resource-placeholder"
+                    >
+                      #{{ file.id }}
+                    </div>
+                    <div class="resource-main">
+                      <div class="builder-row">
+                        <span class="builder-text">
+                          {{ file.name || `资源 #${file.id}` }}
+                        </span>
+                        <UBadge
+                          v-if="file.missing"
+                          type="error"
+                          size="sm"
+                        >
+                          文件已失效
+                        </UBadge>
+                        <UBadge
+                          v-else
+                          :type="file.locations.length ? 'success' : 'default'"
+                          size="sm"
+                        >
+                          {{ file.locations.length ? `引用 ${file.locations.length} 处` : '未使用' }}
+                        </UBadge>
+                      </div>
+                      <span class="builder-text resource-meta">
+                        #{{ file.id }} · {{ formatBytes(file.size)
+                        }}<template v-if="imageDimensions[file.id]"> · {{ imageDimensions[file.id] }} </template>
+                      </span>
+                      <span class="builder-text resource-path">
+                        {{ file.path || '无公开地址' }}
+                      </span>
+                    </div>
                   </div>
-                  <div class="resource-main">
-                    <NFlex
-                      align="center"
-                      size="small"
-                    >
-                      <NText strong>
-                        {{ file.name || `资源 #${file.id}` }}
-                      </NText>
-                      <NTag
-                        v-if="file.missing"
-                        type="error"
-                        size="small"
-                      >
-                        文件已失效
-                      </NTag>
-                      <NTag
-                        v-else
-                        :type="file.locations.length ? 'success' : 'default'"
-                        size="small"
-                      >
-                        {{ file.locations.length ? `引用 ${file.locations.length} 处` : '未使用' }}
-                      </NTag>
-                    </NFlex>
-                    <NText
-                      depth="3"
-                      class="resource-meta"
-                    >
-                      #{{ file.id }} · {{ formatBytes(file.size)
-                      }}<template v-if="imageDimensions[file.id]"> · {{ imageDimensions[file.id] }} </template>
-                    </NText>
-                    <NText
-                      depth="3"
-                      class="resource-path"
-                    >
-                      {{ file.path || '无公开地址' }}
-                    </NText>
-                  </div>
-                </NFlex>
 
-                <NFlex
-                  v-if="!file.missing"
-                  :wrap="false"
-                  size="small"
-                >
-                  <NTooltip v-if="file.path">
-                    <template #trigger>
-                      <NButton
-                        circle
-                        secondary
-                        size="small"
+                  <div
+                    class="builder-row"
+                    v-if="!file.missing"
+                  >
+                    <UTooltip v-if="file.path">
+                      <UButton
+                        square
+                        variant="soft"
+                        size="sm"
                         aria-label="复制资源链接"
                         @click="copyResourcePath(file.path)"
                       >
                         <template #icon>
-                          <NIcon><CopyOutline /></NIcon>
+                          <UIcon name="i-lucide-copy" />
                         </template>
-                      </NButton>
-                    </template>
-                    复制资源链接
-                  </NTooltip>
-                  <NTooltip>
-                    <template #trigger>
-                      <NButton
-                        circle
-                        secondary
-                        type="error"
-                        size="small"
+                      </UButton>
+                      <template #content> 复制资源链接 </template></UTooltip
+                    >
+                    <UTooltip>
+                      <UButton
+                        square
+                        variant="soft"
+                        color="error"
+                        size="sm"
                         aria-label="删除资源"
                         :loading="resources.deletingId.value === file.id"
                         @click="confirmDelete(file)"
                       >
                         <template #icon>
-                          <NIcon><TrashOutline /></NIcon>
+                          <UIcon name="i-lucide-trash-2" />
                         </template>
-                      </NButton>
-                    </template>
-                    删除资源
-                  </NTooltip>
-                </NFlex>
-              </NFlex>
+                      </UButton>
+                      <template #content> 删除资源 </template></UTooltip
+                    >
+                  </div>
+                </div>
 
-              <NText
-                v-if="file.locations.length"
-                depth="3"
-                class="resource-locations"
-              >
-                {{ file.locations.join('；') }}
-              </NText>
+                <span
+                  v-if="file.locations.length"
+                  class="builder-text resource-locations"
+                >
+                  {{ file.locations.join('；') }}
+                </span>
+              </div>
             </div>
-          </NFlex>
-          <NEmpty
-            v-else-if="!resources.isLoading.value"
-            description="当前分类没有资源"
-          />
-        </NScrollbar>
-      </NSpin>
-    </NFlex>
-  </NModal>
+            <UEmpty
+              v-else-if="!resources.isLoading.value"
+              description="当前分类没有资源"
+            />
+          </div>
+        </div></div
+    ></template>
+  </UModal>
 </template>
 
 <style scoped>
+.resource-loading-host {
+  position: relative;
+  min-height: 80px;
+}
+
+.resource-loading-icon {
+  position: absolute;
+  z-index: 2;
+  top: 24px;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  animation: resource-spin 0.8s linear infinite;
+}
+
+@keyframes resource-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .resource-row {
   padding: 12px 0;
   border-bottom: 1px solid var(--vtsuru-border);

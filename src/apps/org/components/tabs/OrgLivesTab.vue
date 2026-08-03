@@ -1,29 +1,4 @@
 <script setup lang="ts">
-import {
-  ChatbubblesOutline,
-  DownloadOutline,
-  PeopleOutline,
-  SearchOutline,
-  TimeOutline,
-  WalletOutline,
-} from '@vicons/ionicons5'
-import {
-  NAvatar,
-  NButton,
-  NCard,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NImage,
-  NInput,
-  NSelect,
-  NSkeleton,
-  NFlex,
-  NTag,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
 import { computed, onMounted } from 'vue'
 
 import { injectOrgLives } from '../../composables/useOrgLives'
@@ -31,17 +6,19 @@ import { injectOrgStreamers } from '../../composables/useOrgStreamers'
 import { exportCsv, withImageSize } from '../../utils'
 
 const { loading, view, streamerFilter, sortKey, search, load } = injectOrgLives()
-const { options: streamerOptions } = injectOrgStreamers()
-
+const { options } = injectOrgStreamers()
+const streamerOptions = computed(() => [{ label: '全部主播', value: 0 }, ...options.value])
 const sortOptions = [
   { label: '按时间', value: 'startAt' },
   { label: '按营收', value: 'income' },
   { label: '按互动', value: 'interaction' },
   { label: '按弹幕', value: 'danmaku' },
 ]
-
-const streamerSelectOptions = computed(() => [{ label: '全部主播', value: 0 }, ...streamerOptions.value])
-
+const formatTime = (timestamp: number, options?: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat(
+    'zh-CN',
+    options ?? { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' },
+  ).format(timestamp)
 function exportLives() {
   exportCsv(
     `直播记录_${Date.now()}.csv`,
@@ -50,7 +27,7 @@ function exportLives() {
       streamer.name,
       live.title,
       `${live.parentArea}/${live.area}`,
-      new Date(live.startAt).toLocaleString(),
+      formatTime(live.startAt),
       live.totalIncomeWithGuard.toFixed(2),
       live.interactionCount,
       live.danmakusCount,
@@ -58,211 +35,160 @@ function exportLives() {
     ]),
   )
 }
-
 onMounted(() => load())
 </script>
 
 <template>
-  <NFlex
-    align="center"
-    wrap
-    style="margin-bottom: 12px"
-  >
-    <NInput
-      v-model:value="search"
-      placeholder="搜索标题/主播"
-      size="small"
-      style="width: 200px"
+  <div class="lives-tab">
+    <div class="toolbar">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+        placeholder="搜索标题/主播"
+        class="toolbar__search"
+      /><USelectMenu
+        v-model="streamerFilter"
+        :items="streamerOptions"
+        value-key="value"
+        class="toolbar__select"
+      /><USelectMenu
+        v-model="sortKey"
+        :items="sortOptions"
+        value-key="value"
+        class="toolbar__select"
+      /><UButton
+        color="neutral"
+        variant="soft"
+        size="sm"
+        icon="i-lucide-download"
+        :disabled="!view.length"
+        @click="exportLives"
+        >导出 CSV</UButton
+      ><span>共 {{ view.length }} 场</span>
+    </div>
+    <div
+      v-if="loading"
+      class="loading-state"
     >
-      <template #prefix>
-        <NIcon :component="SearchOutline" />
-      </template>
-    </NInput>
-    <NSelect
-      v-model:value="streamerFilter"
-      :options="streamerSelectOptions"
-      size="small"
-      style="width: 160px"
-      :consistent-menu-width="false"
+      <UIcon
+        name="i-lucide-loader-circle"
+        class="size-5 animate-spin"
+      />
+    </div>
+    <UEmpty
+      v-else-if="!view.length"
+      icon="i-lucide-radio-tower"
+      description="暂无直播记录"
     />
-    <NSelect
-      v-model:value="sortKey"
-      :options="sortOptions"
-      size="small"
-      style="width: 120px"
-    />
-    <NButton
-      size="small"
-      secondary
-      :disabled="view.length === 0"
-      @click="exportLives"
+    <div
+      v-else
+      class="live-grid"
     >
-      <template #icon>
-        <NIcon :component="DownloadOutline" />
-      </template>
-      导出 CSV
-    </NButton>
-    <span style="opacity: 0.6; font-size: 12px">共 {{ view.length }} 场</span>
-  </NFlex>
-
-  <NSkeleton
-    v-if="loading"
-    text
-    :repeat="6"
-  />
-  <NEmpty
-    v-else-if="view.length === 0"
-    description="暂无直播记录"
-  />
-  <NGrid
-    v-else
-    :x-gap="12"
-    :y-gap="12"
-    cols="1 600:2 1100:3"
-    item-responsive
-  >
-    <NGridItem
-      v-for="item in view"
-      :key="item.live.liveId"
-    >
-      <NCard
-        hoverable
-        size="small"
+      <UCard
+        v-for="item in view"
+        :key="item.live.liveId"
         class="live-card"
+        :ui="{ body: 'p-0 sm:p-0', footer: 'p-3' }"
       >
-        <template #cover>
-          <div class="live-cover">
-            <NImage
-              v-if="item.live.coverUrl"
-              :src="withImageSize(item.live.coverUrl, '@140h')"
-              object-fit="cover"
-              :img-props="{ referrerpolicy: 'no-referrer' }"
-              style="width: 100%; height: 100%"
-              preview-disabled
-            />
-            <div
-              v-else
-              class="live-cover-empty"
+        <div class="live-cover">
+          <img
+            v-if="item.live.coverUrl"
+            :src="withImageSize(item.live.coverUrl, '@140h')"
+            :alt="item.live.title"
+            referrerpolicy="no-referrer"
+          /><UIcon
+            v-else
+            name="i-lucide-image-off"
+            class="size-12"
+          />
+          <div class="live-badge">
+            <UBadge
+              :color="item.live.isFinish ? 'neutral' : 'success'"
+              variant="solid"
+              size="xs"
+              >{{ item.live.isFinish ? '已结束' : 'LIVE' }}</UBadge
             >
-              <NIcon
-                size="48"
-                :component="TimeOutline"
-              />
-            </div>
-            <div class="live-badge">
-              <NTag
-                v-if="!item.live.isFinish"
-                type="success"
-                size="small"
-              >
-                LIVE
-              </NTag>
-              <NTag
-                v-else
-                :color="{ color: '#00000080' }"
-                text-color="#fff"
-                :bordered="false"
-                size="small"
-              >
-                已结束
-              </NTag>
-            </div>
-            <div class="live-streamer">
-              <NAvatar
-                v-if="item.streamer.faceUrl"
-                round
-                :size="20"
-                :src="withImageSize(item.streamer.faceUrl, '@20w')"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
-                style="margin-right: 6px; border: 1px solid rgba(255, 255, 255, 0.5)"
-              />
-              {{ item.streamer.name }}
-            </div>
           </div>
-        </template>
-
-        <NTooltip trigger="hover">
-          <template #trigger>
-            <div class="live-card-title text-ellipsis-2">
-              {{ item.live.title }}
-            </div>
-          </template>
-          {{ item.live.title }}
-        </NTooltip>
-
-        <div class="live-card-meta">
-          <div>{{ item.live.parentArea }} / {{ item.live.area }}</div>
-          <div>
-            <NTime
-              :time="item.live.startAt"
-              format="MM-dd HH:mm"
-            />
-            <template v-if="item.live.stopAt">
-              -
-              <NTime
-                :time="item.live.stopAt"
-                format="HH:mm"
-              />
-            </template>
-            <template v-else> - Now </template>
+          <div class="live-streamer">
+            <UAvatar
+              v-if="item.streamer.faceUrl"
+              :src="withImageSize(item.streamer.faceUrl, '@20w')"
+              size="2xs"
+            />{{ item.streamer.name }}
           </div>
         </div>
-
-        <template #footer>
-          <NFlex
-            justify="space-between"
-            size="small"
-            style="font-size: 12px; opacity: 0.9"
+        <div class="live-body">
+          <UTooltip :text="item.live.title"
+            ><p class="live-title">{{ item.live.title }}</p></UTooltip
           >
-            <span title="营收">
-              <NIcon
-                :component="WalletOutline"
-                style="vertical-align: -2px"
-              />
-              {{ item.live.totalIncomeWithGuard.toFixed(0) }}
-            </span>
-            <span title="互动">
-              <NIcon
-                :component="PeopleOutline"
-                style="vertical-align: -2px"
-              />
-              {{ item.live.interactionCount }}
-            </span>
-            <span title="弹幕">
-              <NIcon
-                :component="ChatbubblesOutline"
-                style="vertical-align: -2px"
-              />
-              {{ item.live.danmakusCount }}
-            </span>
-          </NFlex>
-        </template>
-      </NCard>
-    </NGridItem>
-  </NGrid>
+          <div class="live-meta">
+            <div>{{ item.live.parentArea }} / {{ item.live.area }}</div>
+            <div>
+              {{ formatTime(item.live.startAt) }} -
+              {{ item.live.stopAt ? formatTime(item.live.stopAt, { hour: '2-digit', minute: '2-digit' }) : 'Now' }}
+            </div>
+          </div>
+        </div>
+        <template #footer
+          ><div class="live-stats">
+            <span title="营收"><UIcon name="i-lucide-wallet" /> {{ item.live.totalIncomeWithGuard.toFixed(0) }}</span
+            ><span title="互动"><UIcon name="i-lucide-users" /> {{ item.live.interactionCount }}</span
+            ><span title="弹幕"><UIcon name="i-lucide-message-circle" /> {{ item.live.danmakusCount }}</span>
+          </div></template
+        >
+      </UCard>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.live-card {
-  height: 100%;
-  border: 1px solid var(--vtsuru-border);
+.lives-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-.live-card:hover {
-  border-color: var(--vtsuru-primary);
-}
-.live-cover {
-  height: 140px;
-  overflow: hidden;
-  position: relative;
-  background: var(--vtsuru-bg-inset);
-}
-.live-cover-empty {
-  width: 100%;
-  height: 100%;
+.toolbar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.toolbar__search {
+  width: 200px;
+}
+.toolbar__select {
+  width: 150px;
+}
+.toolbar > span {
   color: var(--vtsuru-fg-muted);
+  font-size: 0.75rem;
+}
+.loading-state {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+}
+.live-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.live-card {
+  overflow: hidden;
+}
+.live-cover {
+  position: relative;
+  display: grid;
+  height: 140px;
+  place-items: center;
+  background: var(--vtsuru-bg-muted);
+  color: var(--vtsuru-fg-muted);
+}
+.live-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .live-badge {
   position: absolute;
@@ -271,33 +197,48 @@ onMounted(() => load())
 }
 .live-streamer {
   position: absolute;
+  right: 0;
   bottom: 0;
   left: 0;
-  right: 0;
-  padding: 4px 8px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-  color: #fff;
-  font-size: 12px;
   display: flex;
   align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  color: #fff;
+  font-size: 0.75rem;
 }
-.live-card-title {
-  font-weight: 600;
-  margin-bottom: 6px;
-  height: 44px;
-  line-height: 22px;
+.live-body {
+  padding: 12px;
 }
-.text-ellipsis-2 {
-  overflow: hidden;
-  text-overflow: ellipsis;
+.live-title {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  min-height: 44px;
+  margin: 0 0 6px;
+  overflow: hidden;
+  font-weight: 600;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
-.live-card-meta {
-  font-size: 12px;
-  opacity: 0.75;
-  margin-bottom: 8px;
+.live-meta {
+  color: var(--vtsuru-fg-muted);
+  font-size: 0.75rem;
+}
+.live-stats {
+  display: flex;
+  justify-content: space-between;
+  color: var(--vtsuru-fg-muted);
+  font-size: 0.8125rem;
+}
+.live-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+@media (max-width: 600px) {
+  .toolbar__search,
+  .toolbar__select {
+    width: 100%;
+  }
 }
 </style>

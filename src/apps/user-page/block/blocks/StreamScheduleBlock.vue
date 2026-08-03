@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CalendarNumberOutline, RefreshOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NIcon, NSpin, NTag } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ScheduleDayInfo, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
@@ -148,39 +147,40 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
     >
       <header class="schedule-header">
         <div class="header-title-wrap">
-          <NIcon size="20">
+          <span size="20">
             <CalendarNumberOutline />
-          </NIcon>
+          </span>
           <h2 id="schedule-title">直播日程</h2>
         </div>
         <span class="week-count">未来 {{ cfg.weeksCount }} 周</span>
       </header>
 
       <div class="schedule-body">
-        <NSpin
-          :show="loading"
+        <div
+          :aria-busy="loading"
           size="small"
         >
-          <NAlert
+          <UAlert
             v-if="failed"
-            type="error"
-            :show-icon="true"
+            color="error"
           >
-            <div class="remote-state">
-              <span>日程加载失败，请稍后重试</span>
-              <NButton
-                size="small"
-                type="primary"
-                secondary
-                @click="loadSchedule(true)"
-              >
-                <template #icon>
-                  <NIcon><RefreshOutline /></NIcon>
-                </template>
-                重试
-              </NButton>
-            </div>
-          </NAlert>
+            <template #description
+              ><div class="remote-state">
+                <span>日程加载失败，请稍后重试</span>
+                <UButton
+                  size="sm"
+                  color="primary"
+                  variant="soft"
+                  @click="loadSchedule(true)"
+                >
+                  <template #leading>
+                    <span><RefreshOutline /></span>
+                  </template>
+                  重试
+                </UButton>
+              </div></template
+            >
+          </UAlert>
           <div
             v-else-if="!userInfo?.id"
             class="empty-state"
@@ -218,28 +218,28 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
                   <td>{{ row.year }} 年第 {{ row.week }} 周</td>
                   <td>
                     {{ dayLabel(row.dayIndex) }}
-                    <NTag
+                    <UBadge
                       v-if="cfg.highlightToday && row.isToday"
-                      type="primary"
-                      size="small"
+                      color="primary"
+                      size="sm"
                       :bordered="false"
                     >
                       今天
-                    </NTag>
+                    </UBadge>
                   </td>
                   <td class="time">
                     {{ row.time }}
                   </td>
                   <td>
                     {{ row.title }}
-                    <NTag
+                    <UBadge
                       v-if="cfg.showTag && row.tag"
-                      size="small"
+                      size="sm"
                       :bordered="false"
                       :style="{ color: row.tagColor || undefined }"
                     >
                       {{ row.tag }}
-                    </NTag>
+                    </UBadge>
                   </td>
                 </tr>
               </tbody>
@@ -262,14 +262,14 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
               <div class="timeline-content">
                 <div class="item-heading">
                   <strong>{{ row.title }}</strong>
-                  <NTag
+                  <UBadge
                     v-if="cfg.highlightToday && row.isToday"
-                    type="primary"
-                    size="small"
+                    color="primary"
+                    size="sm"
                     :bordered="false"
                   >
                     今天
-                  </NTag>
+                  </UBadge>
                 </div>
                 <div class="item-meta">
                   <span
@@ -282,7 +282,7 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
               </div>
             </article>
           </div>
-        </NSpin>
+        </div>
       </div>
       <ScheduleSubscription
         v-if="cfg.showIcs && icsUrl"
@@ -313,7 +313,7 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
   gap: 9px;
   min-width: 0;
 }
-.header-title-wrap :deep(.n-icon) {
+.header-title-wrap :deep(svg) {
   color: var(--vtsuru-page-primary-readable, var(--vtsuru-block-fg));
 }
 .header-title-wrap h2 {

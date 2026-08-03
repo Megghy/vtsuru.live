@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-// ConfigItemType is imported in the script block above
-// import { ConfigItemDefinition, ConfigItemType, ExtractConfigData, defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes';
-import { NAlert, NButton, NCard, NForm, NFormItem, NInput, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
+import { showInfoToast, showSuccessToast } from '@/shared/services/toast'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
 
@@ -77,9 +75,6 @@ defineExpose({
 // --- Emits (可选，如果子组件需要通知父组件配置更改) ---
 // const emits = defineEmits(['update:config']);
 
-const message = useMessage()
-
-// --- 本地状态 ---
 const refreshCount = ref(0)
 const dynamicTitle = ref(props.config?.title || '默认标题')
 
@@ -97,22 +92,14 @@ watch(
   (newValue, oldValue) => {
     if (newValue !== undefined && newValue !== oldValue) {
       refreshCount.value++
-      message.success(`'示例 OBS 组件' 已刷新 (信号: ${newValue})`)
-      // 在这里执行组件的刷新逻辑，例如重新获取数据、重置状态等
-      // fetchData();
+      showSuccessToast(`'示例 OBS 组件' 已刷新 (信号: ${newValue})`)
     }
   },
 )
 
 // --- 方法 ---
 function updateTitle() {
-  if (props.config) {
-    // 这是直接修改 prop，Vue 会发出警告。在实际应用中，应该通过 emit 更新父组件的配置
-    // (props.config as any).title = dynamicTitle.value;
-    message.info('标题已在本地临时更改。若要保存，请通过父组件的配置面板。')
-    // 要正确更新，应该 emit事件，例如：
-    // emits('update:config', { ...localConfig.value, title: dynamicTitle.value });
-  }
+  showInfoToast('标题已在本地临时更改。若要保存，请通过父组件的配置面板。')
 }
 
 // --- Expose (使得父组件可以通过 ref 访问 Config 和 DefaultConfig) ---
@@ -139,12 +126,10 @@ watch(
 </script>
 
 <template>
-  <NCard
-    :title="localConfig.title || '示例 OBS 组件'"
-    class="example-obs-component"
-  >
-    <NAlert
-      :type="(localConfig.alertType as any) || 'info'"
+  <section class="example-obs-component">
+    <h2>{{ localConfig.title || '示例 OBS 组件' }}</h2>
+    <UAlert
+      :color="(localConfig.alertType as 'info' | 'success' | 'warning' | 'error') || 'info'"
       :title="localConfig.alertTitle || '组件信息'"
     >
       <p>{{ localConfig.contentText || '这是示例 OBS 组件的内容。' }}</p>
@@ -154,24 +139,40 @@ watch(
         当前配置:
         <pre>{{ JSON.stringify(localConfig, null, 2) }}</pre>
       </div>
-    </NAlert>
+    </UAlert>
 
-    <NForm style="margin-top: 20px">
-      <NFormItem label="动态修改组件标题 (仅限本地，不保存)">
-        <NInput
-          v-model:value="dynamicTitle"
+    <form
+      class="example-form"
+      @submit.prevent="updateTitle"
+    >
+      <UFormField label="动态修改组件标题 (仅限本地，不保存)">
+        <UInput
+          v-model="dynamicTitle"
           placeholder="输入新标题"
         />
-      </NFormItem>
-      <NButton @click="updateTitle"> 更新标题 </NButton>
-    </NForm>
-  </NCard>
+      </UFormField>
+      <UButton type="submit">更新标题</UButton>
+    </form>
+  </section>
 </template>
 
 <style scoped>
 .example-obs-component {
   border: 1px dashed var(--vtsuru-border);
   padding: 16px;
+  border-radius: var(--vtsuru-radius);
+}
+
+.example-obs-component h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.example-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  justify-items: start;
 }
 
 pre {

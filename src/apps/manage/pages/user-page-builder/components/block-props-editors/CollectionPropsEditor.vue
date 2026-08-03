@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NDatePicker, NFlex, NForm, NFormItem, NInput, NSelect, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -9,70 +7,54 @@ import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
 const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor(() => props.block)
-
-function parseLocalDate(value: unknown) {
-  if (typeof value !== 'string') return null
-  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim())
-  if (!parts) return null
-  return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])).getTime()
-}
-
-function formatLocalDate(timestamp: number) {
-  const date = new Date(timestamp)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
 </script>
 
 <template>
-  <NForm
+  <div
+    class="builder-form"
     v-if="props.block.type === 'tags'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('borderTitle')"
         label="边框标题"
       >
-        <NInput
-          v-model:value="blockProps.borderTitle"
+        <UInput
+          v-model="blockProps.borderTitle"
           placeholder="例如：标签"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('borderTitleAlign')"
         label="标题对齐"
       >
-        <NSelect
-          v-model:value="blockProps.borderTitleAlign"
-          :options="[
+        <USelect
+          v-model="blockProps.borderTitleAlign"
+          :items="[
             { label: '左', value: 'left' },
             { label: '中', value: 'center' },
             { label: '右', value: 'right' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="大小">
-        <NSelect
-          v-model:value="blockProps.size"
-          :options="[
+      </UFormField>
+      <UFormField label="大小">
+        <USelect
+          v-model="blockProps.size"
+          :items="[
             { label: 'small', value: 'small' },
             { label: 'medium', value: 'medium' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="圆角">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.rounded"
+      </UFormField>
+      <UFormField label="圆角">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.rounded"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         class="span-full"
         label="标签项"
       >
@@ -86,58 +68,55 @@ function formatLocalDate(timestamp: number) {
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="文本">
-                <NInput
-                  v-model:value="item.text"
+              <UFormField label="文本">
+                <UInput
+                  v-model="item.text"
                   placeholder="#标签"
                 />
-              </NFormItem>
-              <NFormItem label="类型">
-                <NSelect
-                  v-model:value="item.type"
-                  :options="
-                    ['default', 'info', 'success', 'warning', 'error'].map((value) => ({ label: value, value }))
-                  "
+              </UFormField>
+              <UFormField label="类型">
+                <USelect
+                  v-model="item.type"
+                  :items="['default', 'info', 'success', 'warning', 'error'].map((value) => ({ label: value, value }))"
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="自定义颜色"
               >
-                <NInput
-                  v-model:value="item.color"
+                <UInput
+                  v-model="item.color"
                   placeholder="#fb7299，可选"
                 />
-              </NFormItem>
+              </UFormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'milestone'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="区块标题">
-        <NInput
-          v-model:value="blockProps.title"
+      <UFormField label="区块标题">
+        <UInput
+          v-model="blockProps.title"
           placeholder="里程碑"
         />
-      </NFormItem>
-      <NFormItem label="展示方式">
-        <NSelect
-          v-model:value="blockProps.mode"
-          :options="[
+      </UFormField>
+      <UFormField label="展示方式">
+        <USelect
+          v-model="blockProps.mode"
+          :items="[
             { label: 'timeline', value: 'timeline' },
             { label: 'list', value: 'list' },
           ]"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="条目"
       >
@@ -151,54 +130,45 @@ function formatLocalDate(timestamp: number) {
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="日期">
-                <NDatePicker
-                  :value="parseLocalDate(item.date)"
+              <UFormField label="日期">
+                <UInput
+                  v-model="item.date"
                   type="date"
-                  clearable
-                  style="width: 100%"
-                  @update:value="
-                    (value) => {
-                      item.date = value == null ? '' : formatLocalDate(value)
-                    }
-                  "
                 />
-              </NFormItem>
-              <NFormItem label="标题">
-                <NInput v-model:value="item.title" />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField label="标题">
+                <UInput v-model="item.title" />
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="内容"
               >
-                <NInput
-                  v-model:value="item.description"
-                  type="textarea"
+                <UTextarea
+                  v-model="item.description"
                   :autosize="{ minRows: 2, maxRows: 4 }"
                 />
-              </NFormItem>
+              </UFormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'faq'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="手风琴模式">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.accordion"
+      <UFormField label="手风琴模式">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.accordion"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         class="span-full"
         label="问答"
       >
@@ -212,49 +182,46 @@ function formatLocalDate(timestamp: number) {
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem
+              <UFormField
                 class="span-full"
                 label="问题"
               >
-                <NInput v-model:value="item.q" />
-              </NFormItem>
-              <NFormItem
+                <UInput v-model="item.q" />
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="回答"
               >
-                <NInput
-                  v-model:value="item.a"
-                  type="textarea"
+                <UTextarea
+                  v-model="item.a"
                   :autosize="{ minRows: 2, maxRows: 6 }"
                 />
-              </NFormItem>
+              </UFormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'supporter'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="标题">
-        <NInput v-model:value="blockProps.title" />
-      </NFormItem>
-      <NFormItem
+      <UFormField label="标题">
+        <UInput v-model="blockProps.title" />
+      </UFormField>
+      <UFormField
         class="span-full"
         label="描述"
       >
-        <NInput
-          v-model:value="blockProps.description"
-          type="textarea"
+        <UTextarea
+          v-model="blockProps.description"
           :autosize="{ minRows: 2, maxRows: 6 }"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="赞助平台"
       >
@@ -268,31 +235,31 @@ function formatLocalDate(timestamp: number) {
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="平台">
-                <NSelect
-                  v-model:value="item.platform"
-                  :options="['afdian', 'kofi', 'patreon', 'paypal', 'other'].map((value) => ({ label: value, value }))"
+              <UFormField label="平台">
+                <USelect
+                  v-model="item.platform"
+                  :items="['afdian', 'kofi', 'patreon', 'paypal', 'other'].map((value) => ({ label: value, value }))"
                 />
-              </NFormItem>
-              <NFormItem label="显示名">
-                <NInput
-                  v-model:value="item.label"
+              </UFormField>
+              <UFormField label="显示名">
+                <UInput
+                  v-model="item.label"
                   placeholder="可选"
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="链接"
               >
-                <NInput
-                  v-model:value="item.url"
+                <UInput
+                  v-model="item.url"
                   placeholder="https://..."
                 />
-              </NFormItem>
+              </UFormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

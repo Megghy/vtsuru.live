@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { Add16Regular, Edit16Regular, Delete16Regular, Search16Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSpin, useDialog } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useAssistantStore } from '../store/useAssistantStore'
 
 const store = useAssistantStore()
-const dialog = useDialog()
 
 const editingId = ref<number | null>(null)
 const editingTitle = ref('')
 /** 会话标题搜索关键词 (本地过滤已加载的会话) */
 const keyword = ref('')
+const deleteTarget = ref<{ id: number; title: string }>()
 
 const filteredConversations = computed(() => {
   const kw = keyword.value.trim().toLowerCase()
@@ -33,13 +31,13 @@ async function commitRename() {
 }
 
 function confirmDelete(id: number, title: string) {
-  dialog.warning({
-    title: '删除会话',
-    content: `确定删除「${title}」? 该会话的聊天记录将被清除。`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: () => store.deleteConversationById(id),
-  })
+  deleteTarget.value = { id, title }
+}
+
+async function deleteConversation() {
+  if (!deleteTarget.value) return
+  await store.deleteConversationById(deleteTarget.value.id)
+  deleteTarget.value = undefined
 }
 
 /** 触底时加载下一页 (搜索状态下不自动加载, 避免与本地过滤混淆) */
@@ -54,42 +52,35 @@ function onScroll(e: Event) {
 
 <template>
   <div class="conv-list">
-    <NButton
+    <UButton
       class="conv-list__new"
-      dashed
       block
+      variant="outline"
+      icon="i-lucide-plus"
       @click="store.newConversation"
     >
-      <template #icon>
-        <NIcon :component="Add16Regular" />
-      </template>
       新对话
-    </NButton>
+    </UButton>
 
-    <NInput
-      v-model:value="keyword"
-      size="small"
-      clearable
+    <UInput
+      v-model="keyword"
+      size="sm"
       placeholder="搜索会话"
+      icon="i-lucide-search"
       class="conv-list__search"
-    >
-      <template #prefix>
-        <NIcon :component="Search16Regular" />
-      </template>
-    </NInput>
+    />
 
-    <NScrollbar
+    <div
       class="conv-list__scroll"
       @scroll="onScroll"
     >
-      <NSpin
+      <UIcon
         v-if="store.conversationsLoading && !store.conversations.length"
-        size="small"
-        class="conv-list__spin"
+        name="i-lucide-loader-circle"
+        class="conv-list__spin animate-spin"
       />
-      <NEmpty
+      <UEmpty
         v-else-if="!filteredConversations.length"
-        size="small"
         :description="keyword.trim() ? '无匹配会话' : '暂无历史'"
         class="conv-list__empty"
       />
@@ -101,10 +92,10 @@ function onScroll(e: Event) {
         :class="{ 'conv-item--active': conv.id === store.currentConversationId }"
         @click="store.switchConversation(conv.id)"
       >
-        <NInput
+        <UInput
           v-if="editingId === conv.id"
-          v-model:value="editingTitle"
-          size="tiny"
+          v-model="editingTitle"
+          size="xs"
           autofocus
           @blur="commitRename"
           @keydown.enter="commitRename"
@@ -116,39 +107,58 @@ function onScroll(e: Event) {
             class="conv-item__actions"
             @click.stop
           >
-            <NButton
-              size="tiny"
-              quaternary
-              circle
+            <UButton
+              size="xs"
+              variant="ghost"
+              square
+              icon="i-lucide-pencil"
               title="重命名"
               @click="startRename(conv.id, conv.title)"
-            >
-              <template #icon>
-                <NIcon :component="Edit16Regular" />
-              </template>
-            </NButton>
-            <NButton
-              size="tiny"
-              quaternary
-              circle
-              type="error"
+            />
+            <UButton
+              size="xs"
+              variant="ghost"
+              square
+              color="error"
+              icon="i-lucide-trash-2"
               title="删除"
               @click="confirmDelete(conv.id, conv.title)"
-            >
-              <template #icon>
-                <NIcon :component="Delete16Regular" />
-              </template>
-            </NButton>
+            />
           </span>
         </template>
       </div>
 
-      <NSpin
+      <UIcon
         v-if="store.conversationsLoadingMore"
-        size="small"
-        class="conv-list__more-spin"
+        name="i-lucide-loader-circle"
+        class="conv-list__more-spin animate-spin"
       />
-    </NScrollbar>
+    </div>
+
+    <UModal
+      :open="Boolean(deleteTarget)"
+      title="删除会话"
+      :description="deleteTarget ? `确定删除「${deleteTarget.title}」? 该会话的聊天记录将被清除。` : ''"
+      @update:open="(open) => !open && (deleteTarget = undefined)"
+    >
+      <template #footer>
+        <div class="conv-list__confirm-actions">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="deleteTarget = undefined"
+          >
+            取消
+          </UButton>
+          <UButton
+            color="error"
+            @click="deleteConversation"
+          >
+            删除
+          </UButton>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
 
@@ -169,15 +179,17 @@ function onScroll(e: Event) {
 .conv-list__scroll {
   flex: 1 1 0;
   min-height: 0;
+  overflow-y: auto;
 }
 .conv-list__spin,
 .conv-list__empty {
+  display: flex;
   margin-top: 24px;
+  margin-inline: auto;
 }
 .conv-list__more-spin {
-  display: flex;
-  justify-content: center;
-  padding: 8px 0;
+  display: block;
+  margin: 8px auto;
 }
 .conv-item {
   --conv-item-bg: transparent;
@@ -222,5 +234,12 @@ function onScroll(e: Event) {
 }
 .conv-item:hover .conv-item__actions {
   display: flex;
+}
+
+.conv-list__confirm-actions {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>

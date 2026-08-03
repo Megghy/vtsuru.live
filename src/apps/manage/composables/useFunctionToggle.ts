@@ -1,4 +1,3 @@
-import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
@@ -10,7 +9,7 @@ import type { FunctionTypes } from '@/api/api-models'
  */
 export function useFunctionToggle(functionType: FunctionTypes, label: string) {
   const accountInfo = useAccount()
-  const message = useMessage()
+  const toast = useToast()
   const loading = ref(false)
 
   async function setEnable(enable: boolean) {
@@ -18,10 +17,10 @@ export function useFunctionToggle(functionType: FunctionTypes, label: string) {
     try {
       const success = enable ? await EnableFunction(functionType) : await DisableFunction(functionType)
       if (!success) {
-        message.error(`无法${enable ? '启用' : '禁用'}${label}功能`)
+        toast.add({ title: `无法${enable ? '启用' : '禁用'}${label}功能`, color: 'error' })
         return
       }
-      message.success(`${label}功能已${enable ? '启用' : '禁用'}`)
+      toast.add({ title: `${label}功能已${enable ? '启用' : '禁用'}`, color: 'success' })
       const list = accountInfo.value?.settings?.enableFunctions
       if (list) {
         const idx = list.indexOf(functionType)
@@ -29,7 +28,7 @@ export function useFunctionToggle(functionType: FunctionTypes, label: string) {
         else if (!enable && idx > -1) list.splice(idx, 1)
       }
     } catch (err) {
-      message.error(`操作失败: ${String(err)}`)
+      toast.add({ title: `操作失败: ${String(err)}`, color: 'error' })
     } finally {
       loading.value = false
     }

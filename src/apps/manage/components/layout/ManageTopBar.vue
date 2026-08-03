@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Bot24Regular } from '@vicons/fluent'
-import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/ionicons5'
-import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ThemeType } from '@/api/api-models'
@@ -22,7 +19,6 @@ const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 const defaultCollapsed = window.innerWidth < 750
 const siderCollapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
 
-const themeToggleIcon = computed(() => (isDarkMode.value ? Sunny : Moon))
 const themeToggleTitle = computed(() => (isDarkMode.value ? '切换到亮色主题' : '切换到暗色主题'))
 
 function toggleTheme() {
@@ -52,10 +48,7 @@ async function goToUserPage(accountName?: string) {
         :title="siderCollapsed ? '展开侧栏' : '收起侧栏'"
         @click="siderCollapsed = !siderCollapsed"
       >
-        <component
-          :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
-          class="manage-header__icon"
-        />
+        <UIcon :name="siderCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-left'" class="manage-header__icon" />
       </button>
       <img
         class="manage-header__logo"
@@ -79,10 +72,7 @@ async function goToUserPage(accountName?: string) {
         title="VTsuru 助手"
         @click="openAssistant"
       >
-        <component
-          :is="Bot24Regular"
-          class="manage-header__icon"
-        />
+        <UIcon name="i-lucide-bot" class="manage-header__icon" />
         <span class="manage-header__assistant-text">助手</span>
       </button>
 
@@ -94,10 +84,7 @@ async function goToUserPage(accountName?: string) {
         :title="themeToggleTitle"
         @click="toggleTheme"
       >
-        <component
-          :is="themeToggleIcon"
-          class="manage-header__icon"
-        />
+        <UIcon :name="isDarkMode ? 'i-lucide-sun' : 'i-lucide-moon'" class="manage-header__icon" />
       </button>
 
       <button

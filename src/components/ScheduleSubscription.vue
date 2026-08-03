@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { CalendarNumberOutline, CheckmarkOutline, CopyOutline, OpenOutline } from '@vicons/ionicons5'
-import { NButton, NIcon } from 'naive-ui'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 const props = defineProps<{ url: string }>()
@@ -43,7 +41,7 @@ onBeforeUnmount(() => {
         class="subscription-icon"
         aria-hidden="true"
       >
-        <NIcon size="20"><CalendarNumberOutline /></NIcon>
+        <UIcon name="i-lucide-calendar-days" />
       </span>
       <span class="subscription-text">
         <strong>订阅直播日程</strong>
@@ -59,33 +57,23 @@ onBeforeUnmount(() => {
         @focus="selectUrl"
         @click="selectUrl"
       />
-      <NButton
-        tag="a"
-        :href="webcalUrl"
-        size="small"
-        type="primary"
-        secondary
-      >
-        <template #icon
-          ><NIcon><OpenOutline /></NIcon
-        ></template>
-        打开日历
-      </NButton>
-      <NButton
-        size="small"
-        type="primary"
-        secondary
+      <UButton
+        :to="webcalUrl"
+        size="sm"
+        color="primary"
+        variant="soft"
+        icon="i-lucide-external-link"
+        label="打开日历"
+      />
+      <UButton
+        size="sm"
+        color="primary"
+        variant="soft"
+        :icon="copyState === 'success' ? 'i-lucide-check' : 'i-lucide-copy'"
+        :label="copyState === 'success' ? '已复制' : copyState === 'error' ? '复制失败' : '复制链接'"
         :disabled="copyState === 'success'"
         @click="copyUrl"
-      >
-        <template #icon>
-          <NIcon>
-            <CheckmarkOutline v-if="copyState === 'success'" />
-            <CopyOutline v-else />
-          </NIcon>
-        </template>
-        {{ copyState === 'success' ? '已复制' : copyState === 'error' ? '复制失败' : '复制链接' }}
-      </NButton>
+      />
     </div>
     <span
       class="sr-only"
@@ -228,7 +216,8 @@ onBeforeUnmount(() => {
   .subscription-action input {
     flex: 1 1 100%;
   }
-  .subscription-action :deep(.n-button) {
+  .subscription-action :deep(button),
+  .subscription-action :deep(a) {
     flex: 1 1 0;
   }
 }

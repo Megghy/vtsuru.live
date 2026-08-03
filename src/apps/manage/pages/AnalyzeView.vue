@@ -38,9 +38,9 @@ import {
   NTag,
   NTime,
   NTooltip,
-  useMessage,
   useThemeVars,
 } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { QueryGetAPI } from '@/api/query'
@@ -115,7 +115,6 @@ interface AnalyzeData {
 // 状态管理
 const loading = ref(true)
 const refreshing = ref(false)
-const message = useMessage()
 const analyzeData = ref<AnalyzeData>()
 const summaryData = computed(() => analyzeData.value?.summary)
 const themeVars = useThemeVars()
@@ -333,13 +332,13 @@ async function fetchAnalyzeData(isRefresh = false) {
       lastUpdateTime.value = Date.now()
       nextTick(() => initChart())
       if (isRefresh) {
-        message.success('数据已刷新')
+        showSuccessToast('数据已刷新')
       }
     } else {
-      message.error(`获取数据失败: ${data.message}`)
+      showErrorToast(`获取数据失败: ${data.message}`)
     }
   } catch (error) {
-    message.error(`获取数据出错:${(error as Error).message}`)
+    showErrorToast(`获取数据出错:${(error as Error).message}`)
     console.error('获取数据出错:', error)
   } finally {
     loading.value = false

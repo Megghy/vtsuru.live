@@ -1,29 +1,5 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise24Regular,
-  BookCoins20Filled,
-  Chat24Filled,
-  ChevronLeft24Regular,
-  ChevronRight24Regular,
-  Info24Filled,
-  Lottery24Filled,
-  MoreHorizontal24Filled,
-  PersonFeedback24Filled,
-  TabletSpeaker24Filled,
-  VehicleShip24Filled,
-  VideoAdd20Filled,
-} from '@vicons/fluent'
-import {
-  AnalyticsSharp,
-  BrowsersOutline,
-  Calendar,
-  Chatbox,
-  ListCircle,
-  MusicalNote,
-  OpenOutline,
-} from '@vicons/ionicons5'
 import { useResizeObserver } from '@vueuse/core'
-import { NButton, NIcon, NNumberAnimation, NTooltip } from 'naive-ui'
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -40,104 +16,104 @@ const functions = [
   {
     name: '直播事件记录',
     desc: '能够记录并查询上舰和SC记录',
-    icon: VehicleShip24Filled,
+    icon: 'i-lucide-anchor',
     route: 'manage-event',
   },
   {
     name: '积分兑换',
     desc: '通过上舰, Superchat, 赠送礼物等操作可以获取积分, 并通过积分兑换虚拟或者实体礼物',
-    icon: BookCoins20Filled,
+    icon: 'i-lucide-coins',
     route: 'manage-point',
   },
   {
     name: '弹幕机（OBS）',
     desc: '在 OBS 上显示直播间弹幕、礼物和互动内容，兼容 blivechat 样式（开发中）',
-    icon: Chat24Filled,
+    icon: 'i-lucide-message-square',
     route: 'manage-danmuji',
   },
   {
     name: '日程表',
     desc: '提供多种样式的日程表',
-    icon: Calendar,
+    icon: 'i-lucide-calendar-days',
     route: 'manage-schedule',
   },
   {
     name: '自定义页面',
     desc: '用区块编辑器搭建个人主页/投稿页/赞助页等，自定义布局与样式',
-    icon: BrowsersOutline,
+    icon: 'i-lucide-panels-top-left',
     route: 'manage-userPageBuilder',
     badge: 'NEW',
   },
   {
     name: '歌单',
     desc: '可以放自己的歌单或者能唱的歌, 支持多种样式',
-    icon: MusicalNote,
+    icon: 'i-lucide-music',
     route: 'manage-songList',
   },
   {
     name: '棉花糖（提问箱）',
     desc: '一个简单易用的提问箱',
-    icon: Chatbox,
+    icon: 'i-lucide-message-circle-question',
     route: 'manage-questionBox',
   },
   {
     name: '动态抽奖',
     desc: '从动态评论区抽取评论或者转发的用户',
-    icon: Lottery24Filled,
+    icon: 'i-lucide-dices',
     route: 'manage-lottery',
   },
   {
     name: '直播抽奖',
     desc: '从直播间弹幕或礼物抽取用户',
-    icon: Lottery24Filled,
+    icon: 'i-lucide-trophy',
     route: 'manage-liveLottery',
   },
   {
     name: '弹幕点歌（歌势）',
     desc: '可以让弹幕进行点歌, 然后自己唱',
-    icon: ListCircle,
+    icon: 'i-lucide-list-music',
     route: 'manage-musicRequest',
   },
   {
     name: '弹幕点歌（点播）',
     desc: '可以让弹幕进行点歌, 进行搜索后直接播放',
-    icon: ListCircle,
+    icon: 'i-lucide-list-video',
     route: 'manage-liveRequest',
   },
   {
     name: '弹幕排队',
     desc: '通过发送弹幕和礼物加入队列, 允许设置多种条件',
-    icon: ListCircle,
+    icon: 'i-lucide-list-ordered',
     route: 'manage-liveQueue',
   },
   {
     name: '读弹幕',
     desc: '通过浏览器自带的tts服务念出弹幕 (此功能需要 Chrome, Edge 等现代浏览器!)',
-    icon: TabletSpeaker24Filled,
+    icon: 'i-lucide-volume-2',
     route: 'manage-speech',
   },
   {
     name: '视频征集',
     desc: '创建用来收集视频链接的页面, 可以从动态爬取(画饼), 也可以提前对视频进行筛选',
-    icon: VideoAdd20Filled,
+    icon: 'i-lucide-video',
     route: 'manage-videoCollect',
   },
   {
     name: '直播场次记录',
     desc: '记录每场直播的数据以及弹幕等内容',
-    icon: VehicleShip24Filled,
+    icon: 'i-lucide-radio',
     route: 'manage-live',
   },
   {
     name: '数据跟踪',
     desc: '绑定账号后查看粉丝 舰长 观看数 等数据的历史记录',
-    icon: AnalyticsSharp,
+    icon: 'i-lucide-chart-no-axes-combined',
     route: 'manage-history',
   },
   {
     name: '还有更多',
     desc: '更多功能仍在开发中. 有其他合理需求或者建议, 或者有想要添加的样式? 向我提出!',
-    icon: MoreHorizontal24Filled,
+    icon: 'i-lucide-ellipsis',
     route: 'manage-tools-dashboard',
   },
 ]
@@ -241,75 +217,57 @@ onMounted(() => {
             <p class="hero-tagline">一个给主播提供便利功能的网站 😊</p>
 
             <div class="entry-grid">
-              <NTooltip placement="bottom">
-                <template #trigger>
+              <UTooltip text="进入主播后台，管理直播相关工具与设置">
                   <button
                     type="button"
                     class="entry-card tone-cyan"
                     @click="$router.push({ name: 'manage-index' })"
                   >
-                    <NIcon
-                      :component="PersonFeedback24Filled"
-                      size="36"
-                    />
+                    <UIcon name="i-lucide-radio-tower" class="entry-card__icon" />
                     <strong>我是主播</strong>
                     <span>开始使用</span>
                   </button>
-                </template>
-                进入主播后台，管理直播相关工具与设置
-              </NTooltip>
+              </UTooltip>
 
-              <NTooltip placement="bottom">
-                <template #trigger>
+              <UTooltip text="进入 Bilibili 账户中心，查看积分与互动记录">
                   <button
                     type="button"
                     class="entry-card tone-yellow"
                     @click="$router.push({ name: 'bili-user-points' })"
                   >
-                    <NIcon
-                      :component="Chat24Filled"
-                      size="36"
-                    />
+                    <UIcon name="i-lucide-circle-user-round" class="entry-card__icon" />
                     <strong>我是观众</strong>
                     <span>账户中心</span>
                   </button>
-                </template>
-                进入 Bilibili 账户中心，查看积分与互动记录
-              </NTooltip>
+              </UTooltip>
             </div>
 
             <div class="hero-actions">
-              <NButton
-                secondary
+              <UButton
+                color="neutral"
+                variant="soft"
                 @click="$router.push('/@Megghy')"
               >
                 展示
-              </NButton>
-              <NButton
-                type="primary"
-                tag="a"
-                href="https://play-live.bilibili.com/details/1698742711771"
+              </UButton>
+              <UButton
+                color="primary"
+                to="https://play-live.bilibili.com/details/1698742711771"
                 target="_blank"
               >
                 幻星平台
-              </NButton>
-              <NButton
-                type="info"
+              </UButton>
+              <UButton
+                color="info"
                 @click="$router.push({ name: 'about' })"
               >
                 关于
-              </NButton>
+              </UButton>
             </div>
 
             <div class="hero-stat">
               <span>注册用户</span>
-              <strong>
-                <NNumberAnimation
-                  :from="0"
-                  :to="indexData?.userCount ?? 0"
-                  show-separator
-                />
-              </strong>
+              <strong>{{ (indexData?.userCount ?? 0).toLocaleString() }}</strong>
             </div>
           </div>
         </div>
@@ -331,10 +289,7 @@ onMounted(() => {
           >
             <span class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="item.icon"
-                  size="24"
-                />
+                <UIcon :name="item.icon" />
               </span>
               <span class="feature-card-title">{{ item.name }}</span>
               <span
@@ -365,18 +320,21 @@ onMounted(() => {
               <li>支持区块组合、拖拽排序、组件级样式与预览</li>
             </ul>
             <div class="section-actions">
-              <NButton
-                type="primary"
+              <UButton
+                color="primary"
+                icon="i-lucide-panels-top-left"
                 @click="$router.push({ name: 'manage-userPageBuilder' })"
               >
                 打开编辑器
-              </NButton>
-              <NButton
-                secondary
+              </UButton>
+              <UButton
+                color="neutral"
+                variant="soft"
+                icon="i-lucide-external-link"
                 @click="$router.push('/@Megghy')"
               >
                 查看示例
-              </NButton>
+              </UButton>
             </div>
           </div>
           <div class="userpage-intro-media">
@@ -400,10 +358,7 @@ onMounted(() => {
           <article class="feature-card tone-coral">
             <div class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="PersonFeedback24Filled"
-                  size="24"
-                />
+                <UIcon name="i-lucide-bot" />
               </span>
               <span class="feature-card-title">自动操作</span>
             </div>
@@ -416,10 +371,7 @@ onMounted(() => {
           <article class="feature-card tone-cyan">
             <div class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="Chat24Filled"
-                  size="24"
-                />
+                <UIcon name="i-lucide-message-square" />
               </span>
               <span class="feature-card-title">弹幕机（客户端）</span>
             </div>
@@ -427,33 +379,30 @@ onMounted(() => {
           </article>
         </div>
         <div class="section-actions centered-actions">
-          <NButton
-            type="primary"
-            tag="a"
-            href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
+          <UButton
+            color="primary"
+            icon="i-lucide-info"
+            to="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
             target="_blank"
           >
-            <template #icon>
-              <NIcon :component="Info24Filled" />
-            </template>
             客户端安装说明
-          </NButton>
-          <NButton
-            ghost
-            tag="a"
-            href="https://github.com/Megghy/vtsuru-fetvher-client"
+          </UButton>
+          <UButton
+            color="neutral"
+            variant="outline"
+            to="https://github.com/Megghy/vtsuru-fetvher-client"
             target="_blank"
           >
             客户端代码
-          </NButton>
-          <NButton
-            ghost
-            tag="a"
-            href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
+          </UButton>
+          <UButton
+            color="neutral"
+            variant="outline"
+            to="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
             target="_blank"
           >
             逻辑代码
-          </NButton>
+          </UButton>
         </div>
       </section>
 
@@ -463,69 +412,44 @@ onMounted(() => {
           <div class="streamers-heading">
             <h2 class="section-title">
               正在使用本站的主播们
-              <NTooltip>
-                <template #trigger>
-                  <NIcon
-                    :component="Info24Filled"
-                    size="16"
-                    class="section-info-icon"
-                  />
-                </template>
-                随机展示不分先后，仅粉丝数大于 500 的主播；展示其直播间信息与开播状态
-              </NTooltip>
+              <UTooltip text="随机展示不分先后，仅粉丝数大于 500 的主播；展示其直播间信息与开播状态">
+                <UIcon name="i-lucide-info" class="section-info-icon" />
+              </UTooltip>
             </h2>
             <p class="section-subtitle">感谢支持</p>
           </div>
 
           <div class="streamers-controls">
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
+            <UTooltip text="向左滚动">
+                <UButton
+                  icon="i-lucide-chevron-left"
+                  color="neutral"
+                  variant="ghost"
                   aria-label="向左滚动"
                   :disabled="!canScrollRoomsLeft"
                   @click="scrollRooms(-1)"
-                >
-                  <template #icon>
-                    <NIcon :component="ChevronLeft24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              向左滚动
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
+                />
+            </UTooltip>
+            <UTooltip text="向右滚动">
+                <UButton
+                  icon="i-lucide-chevron-right"
+                  color="neutral"
+                  variant="ghost"
                   aria-label="向右滚动"
                   :disabled="!canScrollRoomsRight"
                   @click="scrollRooms(1)"
-                >
-                  <template #icon>
-                    <NIcon :component="ChevronRight24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              向右滚动
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
+                />
+            </UTooltip>
+            <UTooltip text="刷新主播列表">
+                <UButton
+                  icon="i-lucide-refresh-cw"
+                  color="neutral"
+                  variant="ghost"
                   aria-label="刷新主播列表"
                   :loading="isRefreshingRooms"
                   @click="loadIndexData"
-                >
-                  <template #icon>
-                    <NIcon :component="ArrowClockwise24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              刷新主播列表
-            </NTooltip>
+                />
+            </UTooltip>
           </div>
         </header>
 
@@ -593,10 +517,7 @@ onMounted(() => {
                         title="打开直播间"
                         @click.stop
                       >
-                        <NIcon
-                          :component="OpenOutline"
-                          size="16"
-                        />
+                        <UIcon name="i-lucide-external-link" />
                       </a>
                     </div>
                   </div>
@@ -625,19 +546,16 @@ onMounted(() => {
           <!-- 底部信息 -->
           <div class="streamers-footer">
             <div class="streamers-note">
-              <NIcon
-                :component="Info24Filled"
-                size="14"
-              />
+              <UIcon name="i-lucide-info" />
               <span>
                 不想被展示？前往
-                <NButton
-                  text
-                  size="tiny"
+                <UButton
+                  variant="link"
+                  size="xs"
                   @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
                 >
                   设置页面（渲染模式-传统-允许展示在主页）
-                </NButton>
+                </UButton>
                 关闭展示
               </span>
             </div>
@@ -648,14 +566,14 @@ onMounted(() => {
     <footer class="footer">
       <span>
         BY
-        <NButton
-          tag="a"
-          href="https://space.bilibili.com/10021741"
+        <UButton
+          to="https://space.bilibili.com/10021741"
           target="_blank"
-          text
+          variant="link"
+          size="xs"
         >
           Megghy
-        </NButton>
+        </UButton>
       </span>
     </footer>
   </div>
@@ -760,7 +678,9 @@ onMounted(() => {
     border-color: var(--card-accent);
     box-shadow: 0 10px 26px var(--card-shadow);
 
-.entry-card .n-icon
+.entry-card__icon
+    width: 36px;
+    height: 36px;
     color: var(--card-accent);
 
 .entry-card strong
@@ -1005,7 +925,7 @@ article.feature-card
     font-size: 0.8rem;
     text-align: center;
 
-.streamers-note .n-button
+.streamers-note :deep(a)
     padding: 0 4px;
     font-size: 0.8rem;
     text-decoration: underline;

@@ -27,8 +27,8 @@ import {
   NSwitch,
   NTag,
   NTooltip,
-  useMessage,
 } from 'naive-ui'
+import { showErrorToast } from '@/shared/services/toast'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -78,7 +78,6 @@ const emit = defineEmits<{
 }>()
 
 const accountInfo = useAccount()
-const message = useMessage()
 
 const isLoading = ref(false)
 const showModal = ref(false)
@@ -333,7 +332,7 @@ function OnNameClick(uId: number, ouId: string) {
     }
     case 'space': {
       if (!uId) {
-        message.error('从开放平台获取的弹幕已不再支持前往用户空间')
+        showErrorToast('从开放平台获取的弹幕已不再支持前往用户空间')
         return
       }
       showModal.value = false

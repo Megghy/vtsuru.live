@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NCard, NCheckbox, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { format, formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { ref } from 'vue'
 
 import type { QAInfo } from '@/api/api-models'
@@ -11,175 +12,205 @@ const props = defineProps<{
   selected?: boolean
 }>()
 
-const emit = defineEmits<{ (e: 'select', id: number): void }>()
-const useQA = useQuestionBox()
-
+const emit = defineEmits<{ select: [id: number] }>()
+const questionBox = useQuestionBox()
 const isViolation = props.item.reviewResult?.isApproved === false
 const showContent = ref(!isViolation)
 
 function getScoreColor(score: number | undefined): string {
-  if (score === undefined) return 'grey'
+  if (score === undefined) return 'var(--vtsuru-bg-muted)'
   const clamped = Math.max(0, Math.min(100, score))
-  const hue = 120 * (clamped / 100)
-  return `hsl(${hue}, 50%, 45%)`
+  return `hsl(${120 * (clamped / 100)}, 50%, 45%)`
+}
+
+function formatRelativeTime(timestamp: number) {
+  return formatDistanceToNow(timestamp, { addSuffix: true, locale: zhCN })
+}
+
+function formatTime(timestamp: number) {
+  return format(timestamp, 'yyyy-MM-dd HH:mm:ss')
 }
 </script>
 
 <template>
-  <NCard
+  <UCard
     v-if="item"
-    :embedded="!item.isReaded"
-    hoverable
-    size="small"
-    :bordered="false"
+    class="question-item"
+    :class="{ 'question-item--unread': !item.isReaded }"
   >
     <template #header>
-      <NFlex
-        :size="[4, 4]"
-        align="center"
-        wrap
-      >
-        <NCheckbox
-          v-if="selectable"
-          :checked="selected"
-          style="margin-right: 4px"
-          @update:checked="emit('select', item.id)"
-          @click.stop
-        />
-        <NTag
-          v-if="!item.isReaded"
-          type="warning"
-          size="tiny"
-        >
-          未读
-        </NTag>
-        <NDivider
-          v-if="!item.isReaded"
-          vertical
-        />
-        <NText :depth="item.isAnonymous ? 3 : 1">
-          {{ item.isAnonymous ? item.anonymousName || '匿名用户' : item.sender?.name }}
-        </NText>
-        <NTag
-          v-if="item.isSenderRegisted"
-          size="small"
-          type="info"
-          :bordered="false"
-        >
-          已注册
-        </NTag>
-        <NTag
-          v-if="item.isPublic"
-          size="small"
-          type="success"
-          :bordered="false"
-        >
-          公开
-        </NTag>
-        <NTooltip v-if="item.tag">
-          <template #trigger>
-            <NTag
-              size="small"
-              type="success"
-            >
-              {{ item.tag }}
-            </NTag>
-          </template>
-          标签/话题
-        </NTooltip>
-        <NDivider vertical />
-        <NText
-          depth="3"
-          style="font-size: small"
-        >
-          <NTooltip>
-            <template #trigger>
-              <NTime
-                :time="item.sendAt"
-                :to="Date.now()"
-                type="relative"
-              />
-            </template>
-            <NTime :time="item.sendAt" />
-          </NTooltip>
-        </NText>
-        <template v-if="item.reviewResult && item.reviewResult.violationType?.length > 0">
-          <NDivider vertical />
-          <NFlex
-            size="small"
-            wrap
+      <div class="question-item__header">
+        <div class="question-item__meta">
+          <UCheckbox
+            v-if="selectable"
+            :model-value="selected"
+            @update:model-value="emit('select', item.id)"
+            @click.stop
+          />
+          <UBadge
+            v-if="!item.isReaded"
+            color="warning"
+            variant="subtle"
+            size="xs"
+            label="未读"
+          />
+          <span :class="{ 'question-item__sender--muted': item.isAnonymous }">
+            {{ item.isAnonymous ? item.anonymousName || '匿名用户' : item.sender?.name }}
+          </span>
+          <UBadge
+            v-if="item.isSenderRegisted"
+            color="info"
+            variant="subtle"
+            size="xs"
+            label="已注册"
+          />
+          <UBadge
+            v-if="item.isPublic"
+            color="success"
+            variant="subtle"
+            size="xs"
+            label="公开"
+          />
+          <UTooltip
+            v-if="item.tag"
+            text="标签/话题"
           >
-            <NTag
-              v-for="v in item.reviewResult.violationType"
-              :key="v"
-              size="small"
-              type="error"
-              :bordered="false"
+            <UBadge
+              color="success"
+              variant="soft"
+              size="xs"
+              :label="item.tag"
+            />
+          </UTooltip>
+          <UTooltip :text="formatTime(item.sendAt)">
+            <time class="question-item__time">{{ formatRelativeTime(item.sendAt) }}</time>
+          </UTooltip>
+          <template v-if="item.reviewResult?.violationType?.length">
+            <UBadge
+              v-for="violationType in item.reviewResult.violationType"
+              :key="violationType"
+              color="error"
+              variant="subtle"
+              size="xs"
+              :label="questionBox.getViolationString(violationType)"
+            />
+          </template>
+          <UTooltip
+            v-if="item.reviewResult?.saftyScore !== undefined"
+            text="审查得分，满分100，越低越安全"
+          >
+            <span
+              class="question-item__score"
+              :style="{ background: getScoreColor(item.reviewResult.saftyScore) }"
             >
-              {{ useQA.getViolationString(v) }}
-            </NTag>
-          </NFlex>
-        </template>
-        <template v-if="item.reviewResult && item.reviewResult.saftyScore !== undefined">
-          <NDivider vertical />
-          <NTooltip>
-            <template #trigger>
-              <NTag
-                size="small"
-                :style="{
-                  backgroundColor: getScoreColor(item.reviewResult.saftyScore),
-                  color: 'white',
-                  borderColor: 'transparent',
-                }"
-              >
-                得分: {{ item.reviewResult.saftyScore }}
-              </NTag>
-            </template>
-            审查得分, 满分100, 越低越安全
-          </NTooltip>
-        </template>
-      </NFlex>
+              得分: {{ item.reviewResult.saftyScore }}
+            </span>
+          </UTooltip>
+        </div>
+        <slot
+          name="header-extra"
+          :item="item"
+        />
+      </div>
     </template>
+
+    <div
+      v-if="item.questionImages?.length"
+      class="question-item__images"
+    >
+      <a
+        v-for="(image, index) in item.questionImages"
+        :key="index"
+        :href="image.path"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <img
+          :src="image.path"
+          alt="提问图片"
+          loading="lazy"
+        />
+      </a>
+    </div>
+
+    <p
+      class="question-item__message"
+      :class="{ 'question-item__message--hidden': isViolation && !showContent }"
+      @click="isViolation && (showContent = !showContent)"
+    >
+      {{ item.question?.message }}
+    </p>
+
+    <template v-if="item.answer">
+      <USeparator />
+      <p class="question-item__answer">{{ item.answer.message }}</p>
+    </template>
+
     <template #footer>
       <slot
         name="footer"
         :item="item"
       />
     </template>
-    <template #header-extra>
-      <slot
-        name="header-extra"
-        :item="item"
-      />
-    </template>
-    <template v-if="item.questionImages && item.questionImages.length > 0">
-      <NFlex size="small">
-        <NImage
-          v-for="(img, index) in item.questionImages"
-          :key="index"
-          :src="img.path"
-          height="100"
-          lazy
-        />
-      </NFlex>
-    </template>
-
-    <NText
-      :style="{
-        filter: isViolation && !showContent ? 'blur(3.7px)' : '',
-        cursor: isViolation && !showContent ? 'pointer' : '',
-        whiteSpace: 'pre-wrap',
-      }"
-      @click="isViolation ? (showContent = !showContent) : null"
-    >
-      {{ item.question?.message }}
-    </NText>
-
-    <template v-if="item.answer">
-      <NDivider style="margin: 10px 0" />
-      <NText depth="3">
-        {{ item.answer.message }}
-      </NText>
-    </template>
-  </NCard>
+  </UCard>
 </template>
+
+<style scoped>
+.question-item--unread {
+  box-shadow: inset 3px 0 var(--vtsuru-brand);
+}
+
+.question-item__header,
+.question-item__meta,
+.question-item__images {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.question-item__header {
+  justify-content: space-between;
+}
+
+.question-item__sender--muted,
+.question-item__time,
+.question-item__answer {
+  color: var(--vtsuru-fg-muted);
+}
+
+.question-item__time {
+  font-size: 12px;
+}
+
+.question-item__score {
+  padding: 2px 6px;
+  border-radius: var(--vtsuru-radius-control);
+  color: var(--vtsuru-fg-inverted);
+  font-size: 12px;
+}
+
+.question-item__images {
+  margin-bottom: 12px;
+}
+
+.question-item__images img {
+  display: block;
+  width: auto;
+  height: 100px;
+  max-width: min(100%, 220px);
+  object-fit: cover;
+  border-radius: var(--vtsuru-radius-control);
+}
+
+.question-item__message,
+.question-item__answer {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.question-item__message--hidden {
+  cursor: pointer;
+  filter: blur(3.7px);
+}
+</style>

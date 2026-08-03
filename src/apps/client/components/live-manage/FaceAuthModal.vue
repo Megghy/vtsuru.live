@@ -6,20 +6,20 @@ const c = props.control
 </script>
 
 <template>
-  <NModal
-    v-model:show="c.showFaceAuthModal.value"
+  <UModal
+    v-model:open="c.showFaceAuthModal.value"
     preset="card"
     title="人脸认证"
     style="width: 400px"
     :closable="true"
     @close="c.closeFaceAuthModal"
   >
-    <NFlex
+    <div
       vertical
       align="center"
       :size="16"
     >
-      <NText> 请使用B站APP扫描下方二维码进行人脸认证 </NText>
+      <span> 请使用B站APP扫描下方二维码进行人脸认证 </span>
 
       <div
         v-if="c.faceAuthQrCode.value"
@@ -37,14 +37,14 @@ const c = props.control
         />
       </div>
 
-      <NText depth="3"> 认证完成后，请关闭此窗口并重新点击"开始直播" </NText>
+      <span depth="3"> 认证完成后，请关闭此窗口并重新点击"开始直播" </span>
 
-      <NButton
-        type="primary"
+      <UButton
+        color="primary"
         @click="c.closeFaceAuthModal"
       >
         关闭
-      </NButton>
-    </NFlex>
-  </NModal>
+      </UButton>
+    </div>
+  </UModal>
 </template>

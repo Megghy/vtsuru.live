@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Add20Regular, ArrowRight24Regular, ArrowSync24Regular, Search24Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NProgress, NSelect, NSpin, NTag, NTime, useMessage } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -14,8 +13,6 @@ import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
 import VideoCollectFormModal from './VideoCollectFormModal.vue'
 
 type StatusFilter = 'all' | 'active' | 'finished'
-
-const message = useMessage()
 const router = useRouter()
 const accountInfo = useAccount()
 
@@ -25,6 +22,8 @@ const isCreating = ref(false)
 const createModalVisible = ref(false)
 const keyword = ref('')
 const statusFilter = ref<StatusFilter>('all')
+const statusOptions = [{ label: '全部状态', value: 'all' }, { label: '进行中', value: 'active' }, { label: '已结束', value: 'finished' }]
+const formatTime = (value: number) => new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(value)
 
 const videoCollectUrl = computed(() =>
   accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/video-collect` : '',
@@ -62,7 +61,7 @@ async function loadTables() {
     videoTables.value = response.data
   } catch (error) {
     console.error(error)
-    message.error('视频征集列表加载失败')
+    showErrorToast('视频征集列表加载失败')
   } finally {
     isLoading.value = false
   }
@@ -75,10 +74,10 @@ async function createTable(model: VideoCollectCreateModel) {
     if (response.code !== 200) throw new Error(response.message)
     videoTables.value.unshift(response.data)
     createModalVisible.value = false
-    message.success('征集已创建')
+    showSuccessToast('征集已创建')
   } catch (error) {
     console.error(error)
-    message.error(error instanceof Error ? error.message : '创建失败')
+    showErrorToast(error instanceof Error ? error.message : '创建失败')
   } finally {
     isCreating.value = false
   }
@@ -95,25 +94,21 @@ async function createTable(model: VideoCollectCreateModel) {
       :links="[{ label: '公开展示页', value: videoCollectUrl }]"
     >
       <template #action>
-        <NButton
-          secondary
+        <UButton
+          color="neutral"
+          variant="soft"
           :loading="isLoading"
           @click="loadTables"
         >
-          <template #icon>
-            <NIcon><ArrowSync24Regular /></NIcon>
-          </template>
+          <template #leading><UIcon name="i-lucide-refresh-cw" /></template>
           刷新
-        </NButton>
-        <NButton
-          type="primary"
+        </UButton>
+        <UButton
           @click="createModalVisible = true"
         >
-          <template #icon>
-            <NIcon><Add20Regular /></NIcon>
-          </template>
+          <template #leading><UIcon name="i-lucide-plus" /></template>
           新建征集
-        </NButton>
+        </UButton>
       </template>
     </ManagePageHeader>
 
@@ -136,45 +131,38 @@ async function createTable(model: VideoCollectCreateModel) {
     </section>
 
     <div class="collection-toolbar">
-      <NInput
-        v-model:value="keyword"
+      <UInput
+        v-model="keyword"
         clearable
         placeholder="搜索名称或说明"
         class="collection-search"
       >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
-        </template>
-      </NInput>
-      <NSelect
-        v-model:value="statusFilter"
+        <template #leading><UIcon name="i-lucide-search" /></template>
+      </UInput>
+      <USelect
+        v-model="statusFilter"
         class="status-filter"
-        :options="[
-          { label: '全部状态', value: 'all' },
-          { label: '进行中', value: 'active' },
-          { label: '已结束', value: 'finished' },
-        ]"
+        :items="statusOptions"
       />
     </div>
 
-    <NSpin :show="isLoading">
-      <NEmpty
+    <div :aria-busy="isLoading">
+      <UEmpty
         v-if="!isLoading && filteredTables.length === 0"
-        :description="videoTables.length === 0 ? '暂无视频征集' : '没有符合条件的征集'"
+        :title="videoTables.length === 0 ? '暂无视频征集' : '没有符合条件的征集'"
         class="collection-empty"
       >
         <template
           v-if="videoTables.length === 0"
           #extra
         >
-          <NButton
-            type="primary"
+          <UButton
             @click="createModalVisible = true"
           >
             新建征集
-          </NButton>
+          </UButton>
         </template>
-      </NEmpty>
+      </UEmpty>
 
       <div
         v-else
@@ -189,13 +177,12 @@ async function createTable(model: VideoCollectCreateModel) {
         >
           <div class="collection-main">
             <div class="collection-title-row">
-              <NTag
-                size="small"
-                :type="isActive(table) ? 'success' : 'default'"
-                :bordered="false"
+              <UBadge
+                :color="isActive(table) ? 'success' : 'neutral'"
+                variant="subtle"
               >
                 {{ isActive(table) ? '进行中' : '已结束' }}
-              </NTag>
+              </UBadge>
               <strong class="collection-title">{{ table.name }}</strong>
             </div>
             <p class="collection-description">
@@ -205,10 +192,7 @@ async function createTable(model: VideoCollectCreateModel) {
 
           <div class="collection-deadline">
             <span class="collection-meta-label">截止时间</span>
-            <NTime
-              :time="table.endAt"
-              format="yyyy-MM-dd HH:mm"
-            />
+            <time>{{ formatTime(table.endAt) }}</time>
           </div>
 
           <div class="collection-capacity">
@@ -216,23 +200,13 @@ async function createTable(model: VideoCollectCreateModel) {
               <span>提交进度</span>
               <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
             </div>
-            <NProgress
-              type="line"
-              :percentage="capacityPercentage(table)"
-              :height="5"
-              :border-radius="3"
-              :show-indicator="false"
-              :status="table.videoCount >= table.maxVideoCount ? 'success' : 'default'"
-            />
+            <UProgress :model-value="capacityPercentage(table)" size="xs" />
           </div>
 
-          <NIcon
-            :component="ArrowRight24Regular"
-            class="collection-arrow"
-          />
+          <UIcon name="i-lucide-chevron-right" class="collection-arrow" />
         </button>
       </div>
-    </NSpin>
+    </div>
 
     <VideoCollectFormModal
       v-model:show="createModalVisible"

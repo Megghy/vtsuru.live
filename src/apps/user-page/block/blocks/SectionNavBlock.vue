@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
-import { NEmpty } from 'naive-ui'
 import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -70,10 +69,11 @@ onBeforeUnmount(() => observer?.disconnect())
       :class="`section-nav--${layout}`"
       aria-label="页面目录"
     >
-      <NEmpty
+      <UEmpty
         v-if="!sections.length"
-        size="small"
+        size="sm"
         description="当前页面没有匹配的标题"
+        class="public-empty"
       />
       <a
         v-for="(section, index) in sections"

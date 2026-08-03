@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Delete24Regular, History24Regular, Image24Regular, LockClosed24Regular } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
-import { NButton, NDrawer, NDrawerContent, NEmpty, NIcon, NPopconfirm, NTag, NTime } from 'naive-ui'
 import { computed } from 'vue'
+
+import PublicTime from '@/apps/user-page/PublicTime.vue'
 
 import type { LocalQuestion } from './questionBoxHistory'
 
@@ -16,25 +17,29 @@ const emit = defineEmits<{
 const show = defineModel<boolean>('show', { required: true })
 const { width } = useWindowSize()
 const drawerWidth = computed(() => Math.min(440, width.value))
+
+function clearHistory() {
+  if (window.confirm('清空后无法恢复，确定继续吗？')) emit('clear')
+}
 </script>
 
 <template>
-  <NDrawer
-    v-model:show="show"
-    :width="drawerWidth"
-    placement="right"
+  <UDrawer
+    v-model:open="show"
+    direction="right"
+    :style="{ '--question-drawer-width': `${drawerWidth}px` }"
+    :ui="{ content: 'w-[var(--question-drawer-width)] max-w-full' }"
   >
-    <NDrawerContent closable>
-      <template #header>
-        <div class="drawer-heading">
-          <span class="drawer-icon"><NIcon :component="History24Regular" /></span>
-          <div>
-            <strong>本地提问记录</strong>
-            <span>仅保存在当前浏览器</span>
-          </div>
+    <template #header>
+      <div class="drawer-heading">
+        <span class="drawer-icon"><component :is="History24Regular" /></span>
+        <div>
+          <strong>本地提问记录</strong>
+          <span>仅保存在当前浏览器</span>
         </div>
-      </template>
-
+      </div>
+    </template>
+    <template #body>
       <div
         v-if="questions.length"
         class="history-list"
@@ -46,62 +51,58 @@ const drawerWidth = computed(() => Math.min(440, width.value))
         >
           <div class="history-meta">
             <span>提给 {{ item.targetUserName }}</span>
-            <NTime
+            <PublicTime
               :time="item.sendAt"
               type="relative"
             />
           </div>
           <p>{{ item.message }}</p>
           <div class="history-tags">
-            <NTag
+            <UBadge
               v-if="item.tag"
-              size="small"
+              size="sm"
               :bordered="false"
             >
               {{ item.tag }}
-            </NTag>
-            <span v-if="item.hasImage"><NIcon :component="Image24Regular" />包含图片</span>
-            <span v-if="item.anonymousName"><NIcon :component="LockClosed24Regular" />{{ item.anonymousName }}</span>
+            </UBadge>
+            <span v-if="item.hasImage"><component :is="Image24Regular" />包含图片</span>
+            <span v-if="item.anonymousName"><component :is="LockClosed24Regular" />{{ item.anonymousName }}</span>
           </div>
-          <NButton
-            quaternary
-            circle
-            size="small"
+          <UButton
+            variant="ghost"
+            square
+            size="sm"
             class="delete-action"
             aria-label="删除这条本地记录"
             title="删除这条本地记录"
             @click="emit('remove', item.id)"
           >
-            <template #icon><NIcon :component="Delete24Regular" /></template>
-          </NButton>
+            <template #leading><component :is="Delete24Regular" /></template>
+          </UButton>
         </article>
       </div>
 
-      <NEmpty
+      <UEmpty
         v-else
-        class="history-empty"
+        class="public-empty history-empty"
         description="还没有本地提问记录"
       />
+    </template>
 
-      <template
-        v-if="questions.length"
-        #footer
+    <template
+      v-if="questions.length"
+      #footer
+    >
+      <UButton
+        color="error"
+        variant="soft"
+        @click="clearHistory"
       >
-        <NPopconfirm @positive-click="emit('clear')">
-          <template #trigger>
-            <NButton
-              secondary
-              type="error"
-            >
-              <template #icon><NIcon :component="Delete24Regular" /></template>
-              清空本地记录
-            </NButton>
-          </template>
-          清空后无法恢复
-        </NPopconfirm>
-      </template>
-    </NDrawerContent>
-  </NDrawer>
+        <template #leading><component :is="Delete24Regular" /></template>
+        清空本地记录
+      </UButton>
+    </template>
+  </UDrawer>
 </template>
 
 <style scoped>

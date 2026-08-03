@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ArrowRight24Regular, ArrowSync24Regular, Gift24Regular, Wallet24Regular } from '@vicons/fluent'
-import { NAvatar, NButton, NEmpty, NIcon, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -14,7 +12,7 @@ interface PointAccount {
 }
 
 const auth = useBiliAuth()
-const message = useMessage()
+const toast = useToast()
 const router = useRouter()
 const isLoading = ref(false)
 const points = ref<PointAccount[]>([])
@@ -28,7 +26,10 @@ async function loadPoints() {
     if (response.code !== 200) throw new Error(response.message)
     points.value = response.data
   } catch (error) {
-    message.error(`获取积分失败：${error instanceof Error ? error.message : String(error)}`)
+    toast.add({
+      title: `获取积分失败：${error instanceof Error ? error.message : String(error)}`,
+      color: 'error',
+    })
   } finally {
     isLoading.value = false
   }
@@ -45,26 +46,33 @@ onMounted(loadPoints)
         <h1>我的积分</h1>
         <p>查看你在不同主播频道中的积分余额。</p>
       </div>
-      <NButton
-        secondary
+      <UButton
+        color="neutral"
+        variant="soft"
+        icon="i-lucide-refresh-cw"
         :loading="isLoading"
         @click="loadPoints"
       >
-        <template #icon><NIcon :component="ArrowSync24Regular" /></template>
         刷新
-      </NButton>
+      </UButton>
     </div>
 
     <div class="summary-grid">
       <div class="summary-item summary-item--primary">
-        <span class="summary-icon"><NIcon :component="Wallet24Regular" /></span>
+        <UIcon
+          class="summary-icon"
+          name="i-lucide-wallet"
+        />
         <div>
           <small>积分总计</small>
           <strong>{{ totalPoints.toLocaleString() }}</strong>
         </div>
       </div>
       <div class="summary-item">
-        <span class="summary-icon"><NIcon :component="Gift24Regular" /></span>
+        <UIcon
+          class="summary-icon"
+          name="i-lucide-gift"
+        />
         <div>
           <small>已加入频道</small>
           <strong>{{ points.length }}</strong>
@@ -80,46 +88,46 @@ onMounted(loadPoints)
         </div>
       </div>
 
-      <NSpin :show="isLoading">
-        <NEmpty
-          v-if="!isLoading && points.length === 0"
-          size="large"
-        >
-          <template #extra>参与主播互动后，积分会显示在这里。</template>
-        </NEmpty>
+      <UEmpty
+        v-if="!isLoading && points.length === 0"
+        class="balance-empty"
+        icon="i-lucide-wallet-cards"
+        title="还没有积分记录"
+        description="参与主播互动后，积分会显示在这里。"
+      />
 
-        <div
-          v-else
-          class="balance-list"
+      <div
+        v-else
+        class="balance-list"
+        :aria-busy="isLoading"
+      >
+        <article
+          v-for="item in points"
+          :key="item.owner.id"
+          class="balance-row"
         >
-          <article
-            v-for="item in points"
-            :key="item.owner.id"
-            class="balance-row"
+          <UAvatar
+            :src="item.owner.faceUrl"
+            :alt="item.owner.name"
+            :text="item.owner.name.slice(0, 1)"
+            size="lg"
+          />
+          <div class="balance-owner">
+            <strong>{{ item.owner.name }}</strong>
+            <span>频道积分</span>
+          </div>
+          <strong class="balance-value">{{ item.points.toLocaleString() }}</strong>
+          <UButton
+            color="neutral"
+            variant="soft"
+            size="sm"
+            trailing-icon="i-lucide-arrow-right"
+            @click="router.push({ name: 'user-goods', params: { id: item.owner.name } })"
           >
-            <NAvatar
-              :src="item.owner.faceUrl"
-              round
-              :size="42"
-            >
-              {{ item.owner.name.slice(0, 1) }}
-            </NAvatar>
-            <div class="balance-owner">
-              <strong>{{ item.owner.name }}</strong>
-              <span>频道积分</span>
-            </div>
-            <strong class="balance-value">{{ item.points.toLocaleString() }}</strong>
-            <NButton
-              secondary
-              size="small"
-              @click="router.push({ name: 'user-goods', params: { id: item.owner.name } })"
-            >
-              查看兑换
-              <template #icon><NIcon :component="ArrowRight24Regular" /></template>
-            </NButton>
-          </article>
-        </div>
-      </NSpin>
+            查看兑换
+          </UButton>
+        </article>
+      </div>
     </section>
   </div>
 </template>
@@ -190,15 +198,13 @@ onMounted(loadPoints)
 }
 
 .summary-icon {
-  display: grid;
   width: 42px;
   height: 42px;
   flex: 0 0 auto;
-  place-items: center;
+  padding: 10px;
   border-radius: var(--vtsuru-radius-control);
   color: var(--vtsuru-primary);
   background: var(--vtsuru-brand-soft);
-  font-size: 22px;
 }
 
 .summary-item div {
@@ -234,16 +240,14 @@ onMounted(loadPoints)
   font-size: 16px;
 }
 
-.balance-panel :deep(.n-spin-container) {
+.balance-empty {
   min-height: 180px;
-}
-
-.balance-panel :deep(.n-empty) {
   padding: 38px 16px;
 }
 
 .balance-list {
   display: flex;
+  min-height: 180px;
   flex-direction: column;
 }
 
@@ -305,7 +309,7 @@ onMounted(loadPoints)
   .summary-icon {
     width: 36px;
     height: 36px;
-    font-size: 19px;
+    padding: 8px;
   }
 
   .summary-item strong {
@@ -322,7 +326,7 @@ onMounted(loadPoints)
     font-size: 16px;
   }
 
-  .balance-row .n-button {
+  .balance-row :deep(.u-button) {
     grid-column: 2 / -1;
     justify-self: stretch;
   }

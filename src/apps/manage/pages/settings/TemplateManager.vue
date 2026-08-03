@@ -14,8 +14,8 @@ import {
   NTag,
   NText,
   NTooltip,
-  useMessage,
 } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import { computed, h, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
 
 import { downloadConfigDirect, SaveAccountSettings, useAccount } from '@/api/account'
@@ -48,7 +48,6 @@ interface TemplateGroup {
 }
 
 const accountInfo = useAccount()
-const message = useMessage()
 
 const isSaving = ref(false)
 
@@ -256,10 +255,10 @@ async function loadConfig() {
       // 无远端配置, 用组件默认配置兜底
       configDataCache.value[name] = previewRef.value?.DefaultConfig ?? {}
     } else {
-      message.error(`获取模板配置失败: ${response.message}`)
+      showErrorToast(`获取模板配置失败: ${response.message}`)
     }
   } catch (err) {
-    message.error(`获取模板配置失败: ${err}`)
+    showErrorToast(`获取模板配置失败: ${err}`)
   } finally {
     loadingConfig.value = false
   }
@@ -285,10 +284,10 @@ async function setAsDisplayTemplate() {
       accountInfo.value.settings.scheduleTemplate = selectedKey.value
     }
     const response = await SaveAccountSettings()
-    if (response.code === 200) message.success('已设为展示模板')
-    else message.error('保存失败')
+    if (response.code === 200) showSuccessToast('已设为展示模板')
+    else showErrorToast('保存失败')
   } catch (err) {
-    message.error(`保存失败: ${err}`)
+    showErrorToast(`保存失败: ${err}`)
   } finally {
     isSaving.value = false
   }

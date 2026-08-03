@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NEmpty, NSpin, NTabPane, NTabs, useMessage, useThemeVars } from 'naive-ui'
+import { showErrorToast } from '@/shared/services/toast'
 import { computed, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -16,9 +16,6 @@ interface ResponseLiveDetail {
   live: ResponseLiveInfoModel
   danmakus: DanmakuModel[]
 }
-
-const message = useMessage()
-const themeVars = useThemeVars()
 const route = useRoute()
 const router = useRouter()
 const hub = useVTsuruHub()
@@ -36,27 +33,6 @@ const pageSubtitle = computed(() => {
   return id ? `LiveID: ${id}` : undefined
 })
 
-const receivingPillStyle = computed(() => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  padding: '4px 12px',
-  background: themeVars.value.successColorSuppl,
-  border: `1px solid ${themeVars.value.successColor}`,
-  borderRadius: '9999px',
-  color: themeVars.value.successColor,
-  fontSize: '13px',
-  fontWeight: 500,
-}))
-
-const receivingDotStyle = computed(() => ({
-  display: 'inline-block',
-  width: '6px',
-  height: '6px',
-  background: themeVars.value.successColor,
-  borderRadius: '50%',
-  marginRight: '6px',
-}))
-
 async function get() {
   isLoading.value = true
   loadError.value = null
@@ -69,13 +45,13 @@ async function get() {
       return data.data
     } else {
       const msg = `无法获取数据: ${data.message}`
-      message.error(msg)
+      showErrorToast(msg)
       loadError.value = data.message
       return undefined
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : '无法获取数据'
-    message.error(msg)
+    showErrorToast(msg)
     loadError.value = msg
   } finally {
     isLoading.value = false
@@ -130,38 +106,34 @@ onBeforeUnmount(async () => {
 </script>
 
 <template>
-  <NSpin :show="isLoading">
+  <div :aria-busy="isLoading">
     <template v-if="!isLoading">
       <ManagePageHeader
         :title="pageTitle"
         :subtitle="pageSubtitle"
       >
         <template #action>
-          <NButton
-            secondary
-            size="small"
+          <UButton
+            color="neutral"
+            variant="soft"
+            size="sm"
             @click="router.push({ name: 'manage-live' })"
           >
             返回
-          </NButton>
-          <span :style="receivingPillStyle">
-            <span :style="receivingDotStyle" />
+          </UButton>
+          <span class="receiving-pill"><span class="receiving-dot" />
             实时接收中
           </span>
         </template>
       </ManagePageHeader>
-      <NTabs
+      <UTabs
         v-if="liveInfo"
-        :value="activeTab"
-        type="segment"
-        size="small"
-        animated
-        @update:value="handleTabChange"
-      >
-        <NTabPane
-          name="danmaku"
-          tab="弹幕记录"
-        >
+        v-model="activeTab"
+        :items="[{ label: '弹幕记录', value: 'danmaku' }, { label: '语音转写', value: 'transcript' }]"
+        :content="false"
+        @update:model-value="handleTabChange"
+      />
+      <section v-if="liveInfo" v-show="activeTab === 'danmaku'">
           <DanmakuContainer
             ref="danmakuContainerRef"
             :current-live="liveInfo.live"
@@ -176,30 +148,29 @@ onBeforeUnmount(async () => {
             :item-range="100"
             :item-height="25"
           />
-        </NTabPane>
-        <NTabPane
-          name="transcript"
-          tab="语音转写"
-        >
+      </section>
+      <section v-if="liveInfo" v-show="activeTab === 'transcript'">
           <LiveTranscriptPanel
             ref="transcriptPanelRef"
             :live-id="liveInfo.live.liveId"
           />
-        </NTabPane>
-      </NTabs>
-      <NEmpty
+      </section>
+      <UEmpty
         v-else
         description="无数据"
       >
         <template #extra>
-          <NButton
-            type="primary"
+          <UButton
             @click="loadInitialData"
           >
             重试
-          </NButton>
+          </UButton>
         </template>
-      </NEmpty>
+      </UEmpty>
     </template>
-  </NSpin>
+  </div>
 </template>
+
+<style scoped>
+.receiving-pill { display:inline-flex; align-items:center; padding:4px 12px; color:var(--vtsuru-success); font-size:13px; font-weight:500; background:var(--vtsuru-success-soft); border:1px solid var(--vtsuru-success); border-radius:999px; }.receiving-dot { width:6px; height:6px; margin-right:6px; background:var(--vtsuru-success); border-radius:50%; }
+</style>

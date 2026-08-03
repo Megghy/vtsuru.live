@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NTag } from 'naive-ui'
-
 import type { DanmakuUserInfo } from '@/api/api-models'
 import { getGuardColor } from '@/shared/utils/queue'
 
@@ -20,14 +18,14 @@ const GUARD_NAME: Record<number, string> = { 1: '总督', 2: '提督', 3: '舰�
 </script>
 
 <template>
-  <NTag
+  <UBadge
     v-if="showFanMedal && user?.fans_medal_wearing_status"
     :size="size"
     round
     :bordered="false"
     style="padding: 0 6px 0 0"
   >
-    <NTag
+    <UBadge
       :size="size"
       round
       :bordered="false"
@@ -35,16 +33,17 @@ const GUARD_NAME: Record<number, string> = { 1: '总督', 2: '提督', 3: '舰�
       style="margin-right: 4px"
     >
       {{ user?.fans_medal_level }}
-    </NTag>
+    </UBadge>
     <span style="color: var(--vtsuru-info)">{{ user?.fans_medal_name }}</span>
-  </NTag>
+  </UBadge>
 
-  <NTag
+  <UBadge
     v-if="(user?.guard_level ?? 0) > 0"
     :size="size"
     :bordered="false"
-    :color="{ textColor: 'white', color: getGuardColor(user?.guard_level) }"
+    color="neutral"
+    :style="{ backgroundColor: getGuardColor(user?.guard_level), color: 'white' }"
   >
     {{ GUARD_NAME[user?.guard_level ?? 0] }}
-  </NTag>
+  </UBadge>
 </template>

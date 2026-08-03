@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@theme static {
+  --font-sans: InterVariable, Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --ui-primary: var(--vtsuru-brand);
+  --ui-text-dimmed: var(--vtsuru-fg-disabled);
+  --ui-text-muted: var(--vtsuru-fg-muted);
+  --ui-text-toned: var(--vtsuru-fg-toned);
+  --ui-text: var(--vtsuru-fg);
+  --ui-text-highlighted: var(--vtsuru-fg-highlighted);
+  --ui-text-inverted: var(--vtsuru-fg-inverted);
+  --ui-bg: var(--vtsuru-bg);
+  --ui-bg-muted: var(--vtsuru-bg-muted);
+  --ui-bg-elevated: var(--vtsuru-bg-elevated);
+  --ui-bg-accented: var(--vtsuru-bg-accented);
+  --ui-bg-inverted: var(--vtsuru-bg-inverted);
+  --ui-border: var(--vtsuru-border);
+  --ui-border-muted: var(--vtsuru-border-muted);
+  --ui-border-accented: var(--vtsuru-border-accented);
+  --ui-border-inverted: var(--vtsuru-border-inverted);
+  --ui-radius: var(--vtsuru-radius-control);
+}

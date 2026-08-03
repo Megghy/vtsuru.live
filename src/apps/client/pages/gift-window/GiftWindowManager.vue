@@ -1,33 +1,13 @@
 <script setup lang="ts">
-import { ResizeTable24Filled } from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NColorPicker,
-  NFlex,
-  NFormItem,
-  NGi,
-  NGrid,
-  NIcon,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSlider,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NText,
-  useMessage,
-} from 'naive-ui'
-
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 
 const giftWindow = useGiftWindow()
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 
 const filterOptions = [
   { label: '礼物', value: 'Gift' },
@@ -65,27 +45,27 @@ const presets = {
 function applyPreset(preset: keyof typeof presets) {
   Object.assign(giftWindow.settings, presets[preset])
   const names = { dark: '暗黑', warm: '暖色', purple: '紫色' } as const
-  message.success(`已应用${names[preset]}主题`)
+  feedback('success', `已应用${names[preset]}主题`)
 }
 
 function resetWindowPosition() {
   giftWindow.setPosition(0, 0)
-  message.success('位置已重置')
+  feedback('success', '位置已重置')
 }
 
 function clearRank() {
   giftWindow.clearRank()
-  message.success('排行数据已清空')
+  feedback('success', '排行数据已清空')
 }
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
     class="client-readable"
   >
-    <NCard
+    <UCard
       size="small"
       bordered
     >
@@ -93,432 +73,422 @@ function clearRank() {
         title="礼物与排行"
         description="礼物浮窗和高能排行榜，同窗口显示，可独立开关"
       >
-        <template #actions>
-          <NButton
+        <template #footers>
+          <UButton
             size="small"
-            :type="giftWindow.isGiftWindowOpen ? 'warning' : 'primary'"
+            :color="giftWindow.isGiftWindowOpen ? 'warning' : 'primary'"
             @click="giftWindow.isGiftWindowOpen ? giftWindow.closeWindow() : giftWindow.openWindow()"
           >
             {{ giftWindow.isGiftWindowOpen ? '关闭窗口' : '打开窗口' }}
-          </NButton>
+          </UButton>
         </template>
       </ClientPageHeader>
-    </NCard>
+    </UCard>
 
-    <NCard
+    <UCard
       size="small"
       bordered
     >
-      <NTabs
+      <div
         type="line"
         animated
       >
-        <NTabPane
+        <section
           name="filter"
           tab="筛选与排序"
         >
-          <NFlex
+          <div
             vertical
             :size="12"
           >
-            <NCard
+            <UCard
               title="显示类型"
               size="small"
               embedded
             >
-              <NCheckboxGroup v-model:value="giftWindow.settings.filterTypes">
-                <NFlex
-                  vertical
-                  :size="6"
-                >
-                  <NCheckbox
-                    v-for="opt in filterOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    :label="opt.label"
-                  />
-                </NFlex>
-              </NCheckboxGroup>
-            </NCard>
-            <NCard
+              <UCheckboxGroup
+                v-model="giftWindow.settings.filterTypes"
+                :items="filterOptions"
+              />
+            </UCard>
+            <UCard
               title="排序方式"
               size="small"
               embedded
             >
-              <NFlex
+              <div
                 vertical
                 :size="8"
               >
-                <NRadioGroup v-model:value="giftWindow.settings.sortBy">
-                  <NRadioButton
-                    v-for="opt in sortOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                  >
-                    {{ opt.label }}
-                  </NRadioButton>
-                </NRadioGroup>
+                <URadioGroup
+                  v-model="giftWindow.settings.sortBy"
+                  :items="sortOptions"
+                  orientation="horizontal"
+                />
                 <LabelItem label="倒序排列">
-                  <NSwitch v-model:value="giftWindow.settings.reverseOrder" />
+                  <USwitch v-model="giftWindow.settings.reverseOrder" />
                 </LabelItem>
-              </NFlex>
-            </NCard>
-            <NCard
+              </div>
+            </UCard>
+            <UCard
               title="过滤条件"
               size="small"
               embedded
             >
-              <NFormItem
+              <UFormField
                 label="最低金额"
                 label-placement="left"
               >
-                <NInputNumber
-                  v-model:value="giftWindow.settings.minPrice"
-                  :min="0"
-                  :step="100"
-                >
-                  <template #suffix> 金瓜子 </template>
-                </NInputNumber>
-              </NFormItem>
-              <NText
+                <div class="flex items-center gap-2">
+                  <UInputNumber
+                    v-model="giftWindow.settings.minPrice"
+                    :min="0"
+                    :step="100"
+                  />
+                  <span class="text-sm text-[var(--vtsuru-fg-muted)]">金瓜子</span>
+                </div>
+              </UFormField>
+              <span
                 depth="3"
                 style="font-size: 12px"
               >
                 按金瓜子计价（1000 金瓜子 =
                 ¥1），礼物按单价×数量，SC/上舰按其金额。低于此值的礼物、SC、上舰都不会显示，设为 0 不过滤
-              </NText>
-            </NCard>
-          </NFlex>
-        </NTabPane>
+              </span>
+            </UCard>
+          </div>
+        </section>
 
-        <NTabPane
+        <section
           name="layout"
           tab="布局"
         >
-          <NFlex
+          <div
             vertical
             :size="12"
           >
-            <NCard
+            <UCard
               title="窗口尺寸与位置"
               size="small"
               embedded
             >
-              <NGrid
+              <div
                 cols="1 m:2"
                 responsive="screen"
                 :x-gap="12"
                 :y-gap="4"
               >
-                <NGi>
-                  <NFormItem
+                <div>
+                  <UFormField
                     label="宽度"
                     label-placement="left"
                   >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.width"
+                    <UInputNumber
+                      v-model="giftWindow.settings.width"
                       :min="200"
                       :max="2000"
                       @update:value="(v) => giftWindow.setSize(v as number, giftWindow.settings.height)"
                     />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
+                  </UFormField>
+                </div>
+                <div>
+                  <UFormField
                     label="高度"
                     label-placement="left"
                   >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.height"
+                    <UInputNumber
+                      v-model="giftWindow.settings.height"
                       :min="200"
                       :max="2000"
                       @update:value="(v) => giftWindow.setSize(giftWindow.settings.width, v as number)"
                     />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
+                  </UFormField>
+                </div>
+                <div>
+                  <UFormField
                     label="X"
                     label-placement="left"
                   >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.x"
+                    <UInputNumber
+                      v-model="giftWindow.settings.x"
                       :min="0"
                       @update:value="() => giftWindow.updateWindowPosition()"
                     />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
+                  </UFormField>
+                </div>
+                <div>
+                  <UFormField
                     label="Y"
                     label-placement="left"
                   >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.y"
+                    <UInputNumber
+                      v-model="giftWindow.settings.y"
                       :min="0"
                       @update:value="() => giftWindow.updateWindowPosition()"
                     />
-                  </NFormItem>
-                </NGi>
-              </NGrid>
-              <NFlex
+                  </UFormField>
+                </div>
+              </div>
+              <div
                 justify="end"
                 style="margin-top: 8px"
               >
-                <NButton
-                  secondary
+                <UButton
+                  variant="soft"
                   size="small"
                   @click="resetWindowPosition"
                 >
-                  <template #icon>
-                    <NIcon :component="ResizeTable24Filled" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
                   重置位置
-                </NButton>
-              </NFlex>
-            </NCard>
-            <NCard
+                </UButton>
+              </div>
+            </UCard>
+            <UCard
               title="窗口行为"
               size="small"
               embedded
             >
-              <NFlex
+              <div
                 vertical
                 :size="4"
               >
                 <LabelItem label="总是置顶">
-                  <NSwitch v-model:value="giftWindow.settings.alwaysOnTop" />
+                  <USwitch v-model="giftWindow.settings.alwaysOnTop" />
                 </LabelItem>
                 <LabelItem label="鼠标穿透">
-                  <NSwitch v-model:value="giftWindow.settings.interactive" />
+                  <USwitch v-model="giftWindow.settings.interactive" />
                 </LabelItem>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NTabPane>
+              </div>
+            </UCard>
+          </div>
+        </section>
 
-        <NTabPane
+        <section
           name="appearance"
           tab="外观"
         >
-          <NFlex
+          <div
             vertical
             :size="12"
           >
-            <NCard
+            <UCard
               title="颜色"
               size="small"
               embedded
             >
-              <NGrid
+              <div
                 cols="1 m:2"
                 responsive="screen"
                 :x-gap="12"
                 :y-gap="4"
               >
-                <NGi>
-                  <NFormItem
+                <div>
+                  <UFormField
                     label="卡片背景"
                     label-placement="left"
                   >
-                    <NColorPicker
-                      v-model:value="giftWindow.settings.backgroundColor"
+                    <UColorPicker
+                      v-model="giftWindow.settings.backgroundColor"
                       :show-alpha="true"
                     />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
+                  </UFormField>
+                </div>
+                <div>
+                  <UFormField
                     label="窗口背景"
                     label-placement="left"
                   >
-                    <NColorPicker
-                      v-model:value="giftWindow.settings.windowBackgroundColor"
+                    <UColorPicker
+                      v-model="giftWindow.settings.windowBackgroundColor"
                       :show-alpha="true"
                     />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
+                  </UFormField>
+                </div>
+                <div>
+                  <UFormField
                     label="文字颜色"
                     label-placement="left"
                   >
-                    <NColorPicker
-                      v-model:value="giftWindow.settings.textColor"
+                    <UColorPicker
+                      v-model="giftWindow.settings.textColor"
                       :show-alpha="true"
                     />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
+                  </UFormField>
+                </div>
+                <div>
+                  <UFormField
                     label="金额高亮色"
                     label-placement="left"
                   >
-                    <NColorPicker
-                      v-model:value="giftWindow.settings.highlightColor"
+                    <UColorPicker
+                      v-model="giftWindow.settings.highlightColor"
                       :show-alpha="true"
                     />
-                  </NFormItem>
-                </NGi>
-              </NGrid>
-              <NFlex
+                  </UFormField>
+                </div>
+              </div>
+              <div
                 style="margin-top: 8px"
                 :size="8"
               >
-                <NButton
+                <UButton
                   size="small"
                   @click="applyPreset('dark')"
                 >
                   暗黑
-                </NButton>
-                <NButton
+                </UButton>
+                <UButton
                   size="small"
                   @click="applyPreset('warm')"
                 >
                   暖色
-                </NButton>
-                <NButton
+                </UButton>
+                <UButton
                   size="small"
                   @click="applyPreset('purple')"
                 >
                   紫色
-                </NButton>
-              </NFlex>
-            </NCard>
-            <NCard
+                </UButton>
+              </div>
+            </UCard>
+            <UCard
               title="样式"
               size="small"
               embedded
             >
-              <NFlex
+              <div
                 vertical
                 :size="4"
               >
-                <NFormItem
+                <UFormField
                   label="透明度"
                   label-placement="left"
                 >
-                  <NSlider
-                    v-model:value="giftWindow.settings.opacity"
+                  <USlider
+                    v-model="giftWindow.settings.opacity"
                     :min="0"
                     :max="1"
                     :step="0.05"
                     style="max-width: 300px"
                   />
-                </NFormItem>
-                <NFormItem
+                </UFormField>
+                <UFormField
                   label="字体大小"
                   label-placement="left"
                 >
-                  <NSlider
-                    v-model:value="giftWindow.settings.fontSize"
+                  <USlider
+                    v-model="giftWindow.settings.fontSize"
                     :min="10"
                     :max="24"
                     :step="1"
                     style="max-width: 300px"
                   />
-                </NFormItem>
-                <NFormItem
+                </UFormField>
+                <UFormField
                   label="圆角"
                   label-placement="left"
                 >
-                  <NSlider
-                    v-model:value="giftWindow.settings.borderRadius"
+                  <USlider
+                    v-model="giftWindow.settings.borderRadius"
                     :min="0"
                     :max="20"
                     :step="1"
                     style="max-width: 300px"
                   />
-                </NFormItem>
-                <NFormItem
+                </UFormField>
+                <UFormField
                   label="项目间距"
                   label-placement="left"
                 >
-                  <NSlider
-                    v-model:value="giftWindow.settings.itemSpacing"
+                  <USlider
+                    v-model="giftWindow.settings.itemSpacing"
                     :min="0"
                     :max="20"
                     :step="1"
                     style="max-width: 300px"
                   />
-                </NFormItem>
+                </UFormField>
                 <LabelItem label="显示头像">
-                  <NSwitch v-model:value="giftWindow.settings.showAvatar" />
+                  <USwitch v-model="giftWindow.settings.showAvatar" />
                 </LabelItem>
                 <LabelItem label="显示金额">
-                  <NSwitch v-model:value="giftWindow.settings.showPrice" />
+                  <USwitch v-model="giftWindow.settings.showPrice" />
                 </LabelItem>
                 <LabelItem label="显示时间">
-                  <NSwitch v-model:value="giftWindow.settings.showTime" />
+                  <USwitch v-model="giftWindow.settings.showTime" />
                 </LabelItem>
                 <LabelItem label="紧凑模式">
-                  <NSwitch v-model:value="giftWindow.settings.compactMode" />
+                  <USwitch v-model="giftWindow.settings.compactMode" />
                 </LabelItem>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NTabPane>
+              </div>
+            </UCard>
+          </div>
+        </section>
 
-        <NTabPane
+        <section
           name="behavior"
           tab="行为"
         >
-          <NFlex
+          <div
             vertical
             :size="12"
           >
-            <NCard
+            <UCard
               title="合并与消失"
               size="small"
               embedded
             >
-              <NFlex
+              <div
                 vertical
                 :size="4"
               >
-                <NFormItem
+                <UFormField
                   label="合并时间窗口"
                   label-placement="left"
                 >
-                  <NInputNumber
-                    v-model:value="giftWindow.settings.mergeWindowSeconds"
-                    :min="0"
-                    :max="60"
-                    :step="5"
-                  >
-                    <template #suffix> 秒 </template>
-                  </NInputNumber>
-                </NFormItem>
-                <NText
+                  <div class="flex items-center gap-2">
+                    <UInputNumber
+                      v-model="giftWindow.settings.mergeWindowSeconds"
+                      :min="0"
+                      :max="60"
+                      :step="5"
+                    />
+                    <span class="text-sm text-[var(--vtsuru-fg-muted)]">秒</span>
+                  </div>
+                </UFormField>
+                <span
                   depth="3"
                   style="font-size: 12px"
                 >
                   同一用户在此时间内送出的相同礼物会合并为一条
-                </NText>
-                <NFormItem
+                </span>
+                <UFormField
                   label="最大条目数"
                   label-placement="left"
                 >
-                  <NInputNumber
-                    v-model:value="giftWindow.settings.maxItemCount"
+                  <UInputNumber
+                    v-model="giftWindow.settings.maxItemCount"
                     :min="5"
                     :max="100"
                   />
-                </NFormItem>
-                <NFormItem
+                </UFormField>
+                <UFormField
                   label="自动消失时间"
                   label-placement="left"
                 >
-                  <NInputNumber
-                    v-model:value="giftWindow.settings.autoDisappearTime"
-                    :min="0"
-                    :max="600"
-                    :step="5"
-                  >
-                    <template #suffix> 秒 </template>
-                  </NInputNumber>
-                </NFormItem>
-                <NText
+                  <div class="flex items-center gap-2">
+                    <UInputNumber
+                      v-model="giftWindow.settings.autoDisappearTime"
+                      :min="0"
+                      :max="600"
+                      :step="5"
+                    />
+                    <span class="text-sm text-[var(--vtsuru-fg-muted)]">秒</span>
+                  </div>
+                </UFormField>
+                <span
                   depth="3"
                   style="font-size: 12px"
                 >
@@ -527,122 +497,122 @@ function clearRank() {
                       ? `礼物将在 ${giftWindow.settings.autoDisappearTime} 秒后消失`
                       : '设为 0 则不自动消失'
                   }}
-                </NText>
-              </NFlex>
-            </NCard>
-            <NCard
+                </span>
+              </div>
+            </UCard>
+            <UCard
               title="调试"
               size="small"
               embedded
             >
-              <NFlex
+              <div
                 :size="8"
                 wrap
               >
-                <NButton
+                <UButton
                   size="small"
-                  type="info"
+                  color="info"
                   @click="giftWindow.sendTestGift()"
                 >
                   发送测试礼物
-                </NButton>
-                <NButton
+                </UButton>
+                <UButton
                   size="small"
-                  type="warning"
+                  color="warning"
                   @click="giftWindow.clearGifts()"
                 >
                   清空礼物
-                </NButton>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NTabPane>
+                </UButton>
+              </div>
+            </UCard>
+          </div>
+        </section>
 
-        <NTabPane
+        <section
           name="ranking"
           tab="排行榜"
         >
-          <NFlex
+          <div
             vertical
             :size="12"
           >
-            <NCard
+            <UCard
               title="显示控制"
               size="small"
               embedded
             >
-              <NFlex
+              <div
                 vertical
                 :size="8"
               >
                 <LabelItem label="显示礼物列表">
-                  <NSwitch v-model:value="giftWindow.settings.showGiftList" />
+                  <USwitch v-model="giftWindow.settings.showGiftList" />
                 </LabelItem>
                 <LabelItem label="显示排行榜">
-                  <NSwitch v-model:value="giftWindow.settings.showRanking" />
+                  <USwitch v-model="giftWindow.settings.showRanking" />
                 </LabelItem>
-              </NFlex>
-            </NCard>
-            <NCard
+              </div>
+            </UCard>
+            <UCard
               title="排行规则"
               size="small"
               embedded
             >
-              <NFlex
+              <div
                 vertical
                 :size="8"
               >
-                <NFormItem
+                <UFormField
                   label="显示人数"
                   label-placement="left"
                 >
-                  <NInputNumber
-                    v-model:value="giftWindow.settings.rankDisplayCount"
+                  <UInputNumber
+                    v-model="giftWindow.settings.rankDisplayCount"
                     :min="5"
                     :max="100"
                   />
-                </NFormItem>
-                <NText
+                </UFormField>
+                <span
                   depth="3"
                   style="font-size: 12px"
                 >
                   按本场直播付费总金额排序
-                </NText>
-              </NFlex>
-            </NCard>
-            <NCard
+                </span>
+              </div>
+            </UCard>
+            <UCard
               title="数据"
               size="small"
               embedded
             >
-              <NFlex
+              <div
                 vertical
                 :size="8"
               >
-                <NText
+                <span
                   depth="3"
                   style="font-size: 12px"
                 >
                   当前已记录 {{ giftWindow.rankMap.size }} 位用户（本场直播）
-                </NText>
-                <NButton
+                </span>
+                <UButton
                   size="small"
-                  type="warning"
+                  color="warning"
                   @click="clearRank"
                 >
                   清空排行数据
-                </NButton>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NTabPane>
-      </NTabs>
-    </NCard>
-  </NFlex>
+                </UButton>
+              </div>
+            </UCard>
+          </div>
+        </section>
+      </div>
+    </UCard>
+  </div>
 </template>
 
 <style scoped>
-.n-form-item {
+.u-form-item {
   margin-bottom: 4px;
 }
 </style>

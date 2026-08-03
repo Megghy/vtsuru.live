@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Clock16Regular } from '@vicons/fluent'
-import { NTooltip, NTag, NIcon } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
@@ -129,26 +127,26 @@ const isCountingDown = computed(() => {
 
 <template>
   <div class="timer-countdown">
-    <NTooltip trigger="hover">
-      <template #trigger>
-        <NTag
-          :type="isCountingDown ? 'primary' : 'default'"
-          size="small"
-          round
-          :bordered="false"
-          class="countdown-tag"
-        >
-          <template #icon>
-            <NIcon :component="Clock16Regular" />
-          </template>
-          <span class="timer-text">{{ remainingSecondsDisplay }}</span>
-        </NTag>
+    <UTooltip>
+      <UBadge
+        :type="isCountingDown ? 'primary' : 'default'"
+        size="small"
+        round
+        :bordered="false"
+        class="countdown-tag"
+      >
+        <template #leading>
+          <UIcon name="i-lucide-circle" />
+        </template>
+        <span class="timer-text">{{ remainingSecondsDisplay }}</span>
+      </UBadge>
+      <template #content>
+        <div v-if="isCountingDown">距离下次触发还剩 {{ remainingSecondsDisplay }}</div>
+        <div v-else>
+          {{ targetAction?.triggerConfig.useGlobalTimer ? '正在等待全局计时器触发' : '独立计时器未启动或已停止' }}
+        </div>
       </template>
-      <div v-if="isCountingDown">距离下次触发还剩 {{ remainingSecondsDisplay }}</div>
-      <div v-else>
-        {{ targetAction?.triggerConfig.useGlobalTimer ? '正在等待全局计时器触发' : '独立计时器未启动或已停止' }}
-      </div>
-    </NTooltip>
+    </UTooltip>
   </div>
 </template>
 

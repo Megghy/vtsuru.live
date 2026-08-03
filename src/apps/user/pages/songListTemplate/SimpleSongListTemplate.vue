@@ -2,25 +2,6 @@
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { throttle } from 'lodash'
-import {
-  NButton,
-  NCard,
-  NCollapseTransition,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NPopover,
-  NScrollbar,
-  NSelect,
-  NFlex,
-  NTag,
-  NText,
-  NTooltip,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -102,40 +83,41 @@ function handleRequestSong(song: SongsInfo) {
       width: '100%',
     }"
   >
-    <NCard
+    <UCard
+      class="user-page-card"
       size="small"
       :style="{ width: windowSize.width.value > 900 ? '400px' : '100%' }"
     >
-      <NCollapseTransition>
+      <Transition>
         <SongPlayer
           v-if="selectedSong"
           v-model:is-lrc-loading="isLrcLoading"
           :song="selectedSong"
         />
-      </NCollapseTransition>
-      <NDivider> 标签 </NDivider>
-      <NFlex>
-        <NButton
+      </Transition>
+      <USeparator> 标签 </USeparator>
+      <div>
+        <UButton
           v-for="tag in tags"
           :key="tag"
-          size="small"
-          secondary
-          :type="selectedTag === tag ? 'primary' : 'default'"
+          size="sm"
+          variant="soft"
+          :color="selectedTag === tag ? 'primary' : 'neutral'"
           @click="selectedTag === tag ? (selectedTag = '') : (selectedTag = tag)"
         >
           {{ tag }}
-        </NButton>
-      </NFlex>
-      <NDivider> 搜索歌曲 </NDivider>
-      <NFlex vertical>
-        <NInput
-          v-model:value="searchKeyword"
+        </UButton>
+      </div>
+      <USeparator> 搜索歌曲 </USeparator>
+      <div vertical>
+        <UInput
+          v-model="searchKeyword"
           placeholder="歌名"
           clearable
         />
-        <NSelect
-          v-model:value="selectedAuthor"
-          :options="
+        <USelect
+          v-model="selectedAuthor"
+          :items="
             authors.map((a) => {
               return { label: a, value: a }
             })
@@ -143,16 +125,17 @@ function handleRequestSong(song: SongsInfo) {
           placeholder="选择歌手"
           clearable
         />
-        <NDivider />
+        <USeparator />
         <LiveRequestOBS v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.LiveRequest)" />
-      </NFlex>
-    </NCard>
-    <NEmpty
+      </div>
+    </UCard>
+    <UEmpty
       v-if="!data || songs?.length === 0"
       description="暂无曲目"
       style="max-width: 0 auto"
+      class="public-empty"
     />
-    <NScrollbar
+    <div
       v-else
       ref="container"
       :style="{
@@ -163,31 +146,32 @@ function handleRequestSong(song: SongsInfo) {
       }"
       @scroll="onScroll"
     >
-      <NGrid
+      <div
         cols="1 600:2 900:3 1200:4"
         x-gap="10"
         y-gap="10"
         responsive="self"
       >
-        <NGridItem
+        <div
           v-for="item in songs"
           :key="item.key"
         >
-          <NCard
+          <UCard
+            class="user-page-card"
             size="small"
             style="height: 200px; min-width: 300px"
           >
             <template #header>
-              <NFlex
+              <div
                 :wrap="false"
                 align="center"
               >
                 <div
                   :style="`border-radius: 4px; background-color: ${singingSongKeySet.has(item.key) ? '#f0a040' : item.options ? '#bd5757' : '#577fb8'}; width: 7px; height: 20px`"
                 />
-                <NEllipsis>
+                <span>
                   {{ item.name }}
-                </NEllipsis>
+                </span>
                 <span
                   v-if="singingSongKeySet.has(item.key)"
                   style="flex-shrink: 0; font-size: 11px; color: #f0a040; font-weight: 600"
@@ -200,19 +184,19 @@ function handleRequestSong(song: SongsInfo) {
                 >
                   排队中
                 </span>
-              </NFlex>
+              </div>
             </template>
-            <NFlex vertical>
-              <NText
+            <div vertical>
+              <span
                 v-if="item.translateName"
                 depth="3"
                 style="font-size: 13px; margin-bottom: 2px"
               >
-                <NEllipsis>
+                <span>
                   {{ item.translateName }}
-                </NEllipsis>
-              </NText>
-              <NFlex
+                </span>
+              </span>
+              <div
                 v-if="(item.author?.length ?? 0) > 0"
                 :size="0"
               >
@@ -220,166 +204,163 @@ function handleRequestSong(song: SongsInfo) {
                   v-for="(author, authorIndex) in item.author"
                   :key="author"
                 >
-                  <NButton
-                    size="small"
-                    text
+                  <UButton
+                    size="sm"
+                    variant="link"
                     @click="selectedAuthor === author ? (selectedAuthor = undefined) : (selectedAuthor = author)"
                   >
-                    <NText
+                    <span
                       depth="3"
                       :style="{ color: selectedAuthor === author ? '#82bcd3' : '' }"
                     >
                       {{ author }}
-                    </NText>
-                    <NDivider
+                    </span>
+                    <USeparator
                       v-if="authorIndex < (item.author?.length ?? 0) - 1"
                       vertical
                     />
-                  </NButton>
+                  </UButton>
                 </div>
-              </NFlex>
-            </NFlex>
-            <template #footer>
-              <NFlex vertical>
-                <NEllipsis>
+              </div>
+            </div>
+            <div class="song-card-meta">
+              <div vertical>
+                <span>
                   {{ item.description }}
-                </NEllipsis>
+                </span>
                 <template v-if="item.options">
-                  <NFlex>
-                    <NTag
+                  <div>
+                    <UBadge
                       v-if="item.options?.scMinPrice"
-                      size="small"
-                      type="error"
+                      size="sm"
+                      color="error"
                       :bordered="false"
                     >
                       SC | {{ item.options?.scMinPrice }}
-                    </NTag>
-                    <NTag
+                    </UBadge>
+                    <UBadge
                       v-if="item.options?.fanMedalMinLevel"
-                      size="small"
-                      type="info"
+                      size="sm"
+                      color="info"
                       :bordered="false"
                     >
                       粉丝牌 | {{ item.options?.fanMedalMinLevel }}
-                    </NTag>
-                    <NTag
+                    </UBadge>
+                    <UBadge
                       v-if="item.options?.needZongdu"
-                      size="small"
-                      :color="{ color: GetGuardColor(1) }"
+                      size="sm"
+                      :style="{ backgroundColor: GetGuardColor(1), color: '#fff' }"
                     >
                       总督
-                    </NTag>
-                    <NTag
+                    </UBadge>
+                    <UBadge
                       v-if="item.options?.needTidu"
-                      size="small"
-                      :color="{ color: GetGuardColor(2) }"
+                      size="sm"
+                      :style="{ backgroundColor: GetGuardColor(2), color: '#fff' }"
                     >
                       提督
-                    </NTag>
-                    <NTag
+                    </UBadge>
+                    <UBadge
                       v-if="item.options?.needJianzhang"
-                      size="small"
-                      :color="{ color: GetGuardColor(3) }"
+                      size="sm"
+                      :style="{ backgroundColor: GetGuardColor(3), color: '#fff' }"
                     >
                       舰长
-                    </NTag>
-                  </NFlex>
+                    </UBadge>
+                  </div>
                 </template>
-              </NFlex>
-            </template>
-            <template #action>
-              <NFlex
+              </div>
+            </div>
+            <template #footer>
+              <div
                 align="center"
                 :wrap="false"
               >
-                <NTooltip v-if="item.url">
-                  <template #trigger>
-                    <NButton
-                      size="small"
-                      type="success"
-                      :loading="isLrcLoading === item.key"
-                      @click="selectedSong = item"
-                    >
-                      <template #icon>
-                        <NIcon :component="Play24Filled" />
-                      </template>
-                    </NButton>
-                  </template>
-                  试听
-                </NTooltip>
-                <NTooltip>
-                  <template #trigger>
-                    <NButton
-                      size="small"
-                      :type="getSongRequestButtonType(item, liveRequestSettings, requestAuthState)"
-                      :loading="isLoading === item.key"
-                      @click="() => handleRequestSong(item)"
-                    >
-                      <template #icon>
-                        <NIcon :component="CloudAdd20Filled" />
-                      </template>
-                    </NButton>
-                  </template>
-                  {{ getSongRequestTooltip(item, liveRequestSettings, requestAuthState) }}
-                </NTooltip>
+                <UTooltip v-if="item.url">
+                  <UButton
+                    size="sm"
+                    color="success"
+                    :loading="isLrcLoading === item.key"
+                    @click="selectedSong = item"
+                  >
+                    <template #leading>
+                      <component :is="Play24Filled" />
+                    </template>
+                  </UButton>
+                  <template #content> 试听 </template></UTooltip
+                >
+                <UTooltip>
+                  <UButton
+                    size="sm"
+                    :color="getSongRequestButtonType(item, liveRequestSettings, requestAuthState)"
+                    :loading="isLoading === item.key"
+                    @click="() => handleRequestSong(item)"
+                  >
+                    <template #leading>
+                      <component :is="CloudAdd20Filled" />
+                    </template>
+                  </UButton>
 
-                <NPopover
+                  <template #content>{{ getSongRequestTooltip(item, liveRequestSettings, requestAuthState) }}</template>
+                </UTooltip>
+
+                <UPopover
                   v-if="(item.tags?.length ?? 0) > 3"
                   trigger="hover"
                 >
-                  <template #trigger>
-                    <NButton
-                      size="small"
-                      secondary
-                      :type="item.tags?.includes(selectedTag) ? 'primary' : 'default'"
-                    >
-                      标签
-                    </NButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
+                    :color="item.tags?.includes(selectedTag) ? 'primary' : 'neutral'"
+                  >
+                    标签
+                  </UButton>
+                  <template #content>
+                    <div :wrap="false">
+                      <UButton
+                        v-for="tag in item.tags"
+                        :key="tag"
+                        size="xs"
+                        :color="selectedTag === tag ? 'primary' : 'neutral'"
+                        @click="() => (selectedTag === tag ? (selectedTag = '') : (selectedTag = tag))"
+                      >
+                        <span style="max-width: 50px">
+                          {{ tag }}
+                        </span>
+                      </UButton>
+                    </div>
                   </template>
-                  <NFlex :wrap="false">
-                    <NButton
-                      v-for="tag in item.tags"
-                      :key="tag"
-                      size="tiny"
-                      :type="selectedTag === tag ? 'primary' : 'default'"
-                      @click="() => (selectedTag === tag ? (selectedTag = '') : (selectedTag = tag))"
-                    >
-                      <NEllipsis style="max-width: 50px">
-                        {{ tag }}
-                      </NEllipsis>
-                    </NButton>
-                  </NFlex>
-                </NPopover>
-                <NFlex
+                </UPopover>
+                <div
                   v-else
                   :wrap="false"
                 >
-                  <NButton
+                  <UButton
                     v-for="tag in item.tags"
                     :key="tag"
-                    size="tiny"
-                    :type="selectedTag === tag ? 'primary' : 'default'"
+                    size="xs"
+                    :color="selectedTag === tag ? 'primary' : 'neutral'"
                     @click="() => (selectedTag === tag ? (selectedTag = '') : (selectedTag = tag))"
                   >
-                    <NEllipsis style="max-width: 50px">
+                    <span style="max-width: 50px">
                       {{ tag }}
-                    </NEllipsis>
-                  </NButton>
-                </NFlex>
-              </NFlex>
+                    </span>
+                  </UButton>
+                </div>
+              </div>
             </template>
-          </NCard>
-        </NGridItem>
-      </NGrid>
-      <NDivider />
-      <NFlex justify="center">
-        <NButton
+          </UCard>
+        </div>
+      </div>
+      <USeparator />
+      <div justify="center">
+        <UButton
           v-if="data.length > index"
           @click="loadMore"
         >
           加载更多
-        </NButton>
-      </NFlex>
-    </NScrollbar>
+        </UButton>
+      </div>
+    </div>
   </div>
 </template>

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
+import { useElementSize, useEventBus } from '@vueuse/core'
 import { List } from 'linqts'
-import { NDivider, NEmpty, NMessageProvider } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 
@@ -10,6 +9,7 @@ import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
 import { QueueSortType, SongRequestFrom } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/shared/config'
+import { obsUpdateEventKey } from '@/app/events'
 
 const props = defineProps<{
   id?: number
@@ -18,12 +18,12 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
+const obsUpdateBus = useEventBus(obsUpdateEventKey)
 const currentId = computed<string>(() => {
   const v = props.id ?? (Array.isArray(route.query.id) ? route.query.id[0] : route.query.id)
   return v === undefined || v === null ? '' : String(v)
 })
 
-const cardRef = ref()
 const listContainerRef = ref()
 const { height, width } = useElementSize(listContainerRef)
 const itemHeight = 40
@@ -98,28 +98,21 @@ async function update() {
 
 onMounted(() => {
   update()
-  window.$mitt.on('onOBSComponentUpdate', () => {
-    update()
-  })
-})
-onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate')
+  obsUpdateBus.on(update)
 })
 </script>
 
 <template>
-  <NMessageProvider :to="cardRef" />
   <div
-    ref="cardRef"
     class="live-request-background"
     v-bind="$attrs"
   >
     <p class="live-request-header">
       {{ settings.obsTitleToday ?? '今日已唱' }}
     </p>
-    <NDivider class="live-request-divider">
+    <div class="live-request-divider">
       <p class="live-request-header-count">{{ songs.length ?? 0 }} 条</p>
-    </NDivider>
+    </div>
     <div
       ref="listContainerRef"
       class="live-request-content"
@@ -164,10 +157,9 @@ onUnmounted(() => {
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </div>
-          <NDivider
+          <hr
             v-if="isMoreThanContainer"
             class="live-request-footer-divider"
-            style="margin: 10px 0 10px 0"
           />
         </Vue3Marquee>
       </template>
@@ -175,10 +167,7 @@ onUnmounted(() => {
         v-else
         style="position: relative; top: 20%"
       >
-        <NEmpty
-          class="live-request-empty"
-          description="今日暂无"
-        />
+        <p class="live-request-empty">今日暂无</p>
       </div>
     </div>
   </div>
@@ -217,10 +206,9 @@ onUnmounted(() => {
 }
 
 .live-request-divider {
-  margin: 0 auto;
-  margin-top: -15px;
-  margin-bottom: -15px;
+  margin: -15px auto;
   width: 90%;
+  border-bottom: 1px solid #ffffffd5;
 }
 
 @keyframes rotate {
@@ -231,10 +219,6 @@ onUnmounted(() => {
   100% {
     transform: rotate(360deg);
   }
-}
-
-.n-divider__line {
-  background-color: #ffffffd5;
 }
 
 .live-request-content {
@@ -248,6 +232,19 @@ onUnmounted(() => {
 
 .marquee {
   justify-items: left;
+}
+
+.live-request-footer-divider {
+  width: 100%;
+  margin: 10px 0;
+  border: 0;
+  border-top: 1px solid #ffffffd5;
+}
+
+.live-request-empty {
+  margin: 0;
+  color: #ffffffbd;
+  text-align: center;
 }
 
 .live-request-list-item {

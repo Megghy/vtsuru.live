@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -142,7 +141,7 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
     :border-title="framed ? borderTitle : ''"
     :border-title-align="borderTitleAlign"
   >
-    <NFlex
+    <div
       :vertical="direction === 'vertical'"
       :wrap="direction === 'horizontal'"
       :justify="flexJustify"
@@ -154,11 +153,10 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
         v-for="(it, idx) in normalizedItems"
         :key="idx"
       >
-        <NButton
+        <UButton
           v-if="it.kind === 'external'"
-          size="small"
-          tag="a"
-          :type="buttonType as any"
+          size="sm"
+          :color="buttonType as any"
           :secondary="variant === 'secondary'"
           :tertiary="variant === 'tertiary'"
           :quaternary="variant === 'quaternary'"
@@ -170,11 +168,11 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
           :style="fullWidth ? 'width: 100%' : undefined"
         >
           {{ it.label }}
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           v-else
-          size="small"
-          :type="buttonType as any"
+          size="sm"
+          :color="buttonType as any"
           :secondary="variant === 'secondary'"
           :tertiary="variant === 'tertiary'"
           :quaternary="variant === 'quaternary'"
@@ -184,9 +182,9 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
           @click="it.kind === 'back' ? router.back() : router.push(it.to || route.fullPath)"
         >
           {{ it.label }}
-        </NButton>
+        </UButton>
       </template>
-    </NFlex>
+    </div>
   </BlockCard>
 </template>
 

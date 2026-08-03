@@ -1,137 +1,111 @@
 <script setup lang="ts">
-import { NButton, NCard, NEmpty, NFlex, NList, NListItem, NText, useMessage } from 'naive-ui'
-
 import { DelBiliBlackList, DelBlackList, useAccount } from '@/api/account'
+import { showErrorToast, showSuccessToast } from '@/shared/services/toast'
 
-const accountInfo = useAccount()
-const message = useMessage()
+const account = useAccount()
 
-function unblockBiliUser(id: number) {
-  DelBiliBlackList(id)
-    .then((data) => {
-      if (data.code === 200) {
-        message.success(`[${id}] 已移除黑名单`)
-        if (accountInfo.value) delete accountInfo.value.biliBlackList[id]
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => message.error(err))
+async function unblockBiliUser(id: number) {
+  try {
+    const response = await DelBiliBlackList(id)
+    if (response.code !== 200) throw new Error(response.message)
+    delete account.value.biliBlackList[id]
+    showSuccessToast(`[${id}] 已移除黑名单`)
+  } catch (error) {
+    showErrorToast(error instanceof Error ? error.message : String(error))
+  }
 }
 
-function unblockUser(id: number) {
-  DelBlackList(id)
-    .then((data) => {
-      if (data.code === 200) {
-        message.success(`[${id}] 已移除黑名单`)
-        if (accountInfo.value) accountInfo.value.blackList = accountInfo.value.blackList.filter((u) => u.id !== id)
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => message.error(err))
+async function unblockUser(id: number) {
+  try {
+    const response = await DelBlackList(id)
+    if (response.code !== 200) throw new Error(response.message)
+    account.value.blackList = account.value.blackList.filter((user) => user.id !== id)
+    showSuccessToast(`[${id}] 已移除黑名单`)
+  } catch (error) {
+    showErrorToast(error instanceof Error ? error.message : String(error))
+  }
 }
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-  >
-    <NCard
-      title="B 站黑名单"
-      size="small"
-      bordered
-      :segmented="{ content: true }"
-    >
-      <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
-        <NListItem
-          v-for="item in Object.entries(accountInfo.biliBlackList)"
-          :key="item[0]"
+  <div class="blacklist-grid">
+    <UCard title="B 站黑名单">
+      <div
+        v-if="Object.keys(account.biliBlackList ?? {}).length"
+        class="blacklist-items"
+      >
+        <div
+          v-for="[id, name] in Object.entries(account.biliBlackList)"
+          :key="id"
+          class="blacklist-row"
         >
-          <NFlex
-            align="center"
-            justify="space-between"
-            :wrap="true"
-            :size="12"
+          <span
+            ><strong>{{ name }}</strong
+            ><code>{{ id }}</code></span
           >
-            <NFlex
-              align="center"
-              :wrap="true"
-              :size="8"
-            >
-              <NText>{{ item[1] }}</NText>
-              <NText
-                depth="3"
-                code
-              >
-                {{ item[0] }}
-              </NText>
-            </NFlex>
-            <NButton
-              type="error"
-              size="small"
-              secondary
-              @click="unblockBiliUser(Number(item[0]))"
-            >
-              移除
-            </NButton>
-          </NFlex>
-        </NListItem>
-      </NList>
-      <NEmpty
+          <UButton
+            color="error"
+            variant="soft"
+            @click="unblockBiliUser(Number(id))"
+            >移除</UButton
+          >
+        </div>
+      </div>
+      <UEmpty
         v-else
-        size="small"
-        description="暂无 B 站黑名单"
+        icon="i-lucide-user-x"
+        title="暂无 B 站黑名单"
       />
-    </NCard>
-
-    <NCard
-      title="站内黑名单"
-      size="small"
-      bordered
-      :segmented="{ content: true }"
-    >
-      <NList v-if="accountInfo.blackList && accountInfo.blackList.length > 0">
-        <NListItem
-          v-for="item in accountInfo.blackList"
-          :key="item.id"
+    </UCard>
+    <UCard title="站内黑名单">
+      <div
+        v-if="account.blackList?.length"
+        class="blacklist-items"
+      >
+        <div
+          v-for="user in account.blackList"
+          :key="user.id"
+          class="blacklist-row"
         >
-          <NFlex
-            align="center"
-            justify="space-between"
-            :wrap="true"
-            :size="12"
+          <span
+            ><strong>{{ user.name }}</strong
+            ><code>{{ user.id }}</code></span
           >
-            <NFlex
-              align="center"
-              :wrap="true"
-              :size="8"
-            >
-              <NText>{{ item.name }}</NText>
-              <NText
-                depth="3"
-                code
-              >
-                {{ item.id }}
-              </NText>
-            </NFlex>
-            <NButton
-              type="error"
-              size="small"
-              secondary
-              @click="unblockUser(Number(item.id))"
-            >
-              移除
-            </NButton>
-          </NFlex>
-        </NListItem>
-      </NList>
-      <NEmpty
+          <UButton
+            color="error"
+            variant="soft"
+            @click="unblockUser(user.id)"
+            >移除</UButton
+          >
+        </div>
+      </div>
+      <UEmpty
         v-else
-        size="small"
-        description="暂无站内黑名单"
+        icon="i-lucide-user-x"
+        title="暂无站内黑名单"
       />
-    </NCard>
-  </NFlex>
+    </UCard>
+  </div>
 </template>
+
+<style scoped>
+.blacklist-grid,
+.blacklist-items {
+  display: grid;
+  gap: 12px;
+}
+.blacklist-row,
+.blacklist-row span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.blacklist-row {
+  padding-block: 8px;
+  border-bottom: 1px solid var(--vtsuru-border-muted);
+}
+.blacklist-row code {
+  color: var(--vtsuru-fg-muted);
+}
+</style>

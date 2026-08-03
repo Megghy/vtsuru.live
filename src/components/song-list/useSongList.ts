@@ -1,5 +1,4 @@
 import { refDebounced } from '@vueuse/core'
-import { useMessage } from 'naive-ui'
 import type { Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
 
@@ -8,7 +7,7 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { SONG_API_URL } from '@/shared/config'
 
 export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
-  const message = useMessage()
+  const toast = useToast()
   const songsInternal = ref<SongsInfo[]>([...props.songs])
   const isLoading = ref(false)
   const playingSong = ref<SongsInfo>()
@@ -84,7 +83,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
   // CRUD 操作
   async function updateSong(song: SongsInfo) {
     if (songsInternal.value.some((s) => s.name === song.name && s.key !== song.key)) {
-      message.error('已存在相同名称的歌曲')
+      toast.add({ title: '已存在相同名称的歌曲', color: 'error' })
       return false
     }
     isLoading.value = true
@@ -100,10 +99,10 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       if (code === 200 && data) {
         const idx = songsInternal.value.findIndex((s) => s.key === data.key)
         if (idx !== -1) songsInternal.value.splice(idx, 1, data)
-        message.success('已更新歌曲信息')
+        toast.add({ title: '已更新歌曲信息', color: 'success' })
         return true
       }
-      message.error(`未能更新: ${err}`)
+      toast.add({ title: `未能更新: ${err}`, color: 'error' })
       return false
     } finally {
       isLoading.value = false
@@ -112,7 +111,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
 
   async function updateSongs(songs: SongsInfo[], label: string) {
     if (songs.length === 0) {
-      message.warning('请先选择歌曲')
+      toast.add({ title: '请先选择歌曲', color: 'warning' })
       return false
     }
     isLoading.value = true
@@ -122,10 +121,10 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       if (code === 200 && data) {
         const updated = new Map(data.map((song) => [song.key, song]))
         songsInternal.value = songsInternal.value.map((song) => updated.get(song.key) ?? song)
-        message.success(`已为 ${data.length} 首歌曲更新${label}`)
+        toast.add({ title: `已为 ${data.length} 首歌曲更新${label}`, color: 'success' })
         return true
       }
-      message.error(`批量更新失败: ${err}`)
+      toast.add({ title: `批量更新失败: ${err}`, color: 'error' })
       return false
     } finally {
       isLoading.value = false
@@ -138,12 +137,12 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       const { code, message: err } = await QueryGetAPI<SongsInfo>(`${SONG_API_URL}del`, { key: song.key })
       if (code === 200) {
         songsInternal.value = songsInternal.value.filter((s) => s.key !== song.key)
-        message.success(`已删除《${song.name}》`)
+        toast.add({ title: `已删除《${song.name}》`, color: 'success' })
         if (playingSong.value?.key === song.key) playingSong.value = undefined
         selectedKeys.value = selectedKeys.value.filter((k) => k !== song.key)
         return true
       }
-      message.error(`未能删除: ${err}`)
+      toast.add({ title: `未能删除: ${err}`, color: 'error' })
       return false
     } finally {
       isLoading.value = false
@@ -152,7 +151,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
 
   async function deleteBatch() {
     if (selectedKeys.value.length === 0) {
-      message.warning('请先选择歌曲')
+      toast.add({ title: '请先选择歌曲', color: 'warning' })
       return false
     }
     isLoading.value = true
@@ -161,12 +160,12 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       if (code === 200) {
         const ids = new Set(selectedKeys.value)
         songsInternal.value = songsInternal.value.filter((s) => !ids.has(s.key))
-        message.success(`已删除 ${ids.size} 首歌曲`)
+        toast.add({ title: `已删除 ${ids.size} 首歌曲`, color: 'success' })
         if (playingSong.value && ids.has(playingSong.value.key)) playingSong.value = undefined
         selectedKeys.value = []
         return true
       }
-      message.error(`批量删除失败: ${err}`)
+      toast.add({ title: `批量删除失败: ${err}`, color: 'error' })
       return false
     } finally {
       isLoading.value = false
@@ -175,7 +174,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
 
   async function batchUpdate(endpoint: string, field: keyof SongsInfo, data: unknown, label: string) {
     if (selectedKeys.value.length === 0) {
-      message.warning('请先选择歌曲')
+      toast.add({ title: '请先选择歌曲', color: 'warning' })
       return false
     }
     isLoading.value = true
@@ -183,13 +182,13 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       const payload = { ids: selectedKeys.value, data }
       const { code, message: err } = await QueryPostAPI(`${SONG_API_URL}${endpoint}`, payload)
       if (code === 200) {
-        message.success(`已为 ${selectedKeys.value.length} 首歌曲更新${label}`)
+        toast.add({ title: `已为 ${selectedKeys.value.length} 首歌曲更新${label}`, color: 'success' })
         songsInternal.value = songsInternal.value.map((song) =>
           selectedKeys.value.includes(song.key) ? { ...song, [field]: data } : song,
         )
         return true
       }
-      message.error(`更新失败: ${err}`)
+      toast.add({ title: `更新失败: ${err}`, color: 'error' })
       return false
     } finally {
       isLoading.value = false

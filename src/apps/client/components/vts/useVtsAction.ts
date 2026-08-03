@@ -1,17 +1,15 @@
-import { useMessage } from 'naive-ui'
-
 export function useVtsAction() {
-  const message = useMessage()
+  const toast = useToast()
 
   async function run<T>(fn: () => T | Promise<T>, successMsg?: string): Promise<T | undefined> {
     try {
       const result = await fn()
-      if (successMsg) message.success(successMsg)
+      if (successMsg) toast.add({ title: successMsg, color: 'success' })
       return result
     } catch (err) {
-      message.error(err instanceof Error ? err.message : String(err))
+      toast.add({ title: err instanceof Error ? err.message : String(err), color: 'error' })
     }
   }
 
-  return { run, message }
+  return { run }
 }

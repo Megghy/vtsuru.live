@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NColorPicker, NForm, NFormItem, NInput, NInputNumber, NSelect } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -18,74 +16,70 @@ const levelOptions = [
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="builder-form">
     <PropsGrid>
-      <NFormItem
+      <UFormField
         class="span-full"
         label="内容"
         required
       >
-        <NInput
-          v-model:value="blockProps.content"
-          type="textarea"
+        <UTextarea
+          v-model="blockProps.content"
           maxlength="500"
           show-count
           :autosize="{ minRows: 2, maxRows: 6 }"
           placeholder="文本或 https 链接"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="标题"
       >
-        <NInput
-          v-model:value="blockProps.title"
+        <UInput
+          v-model="blockProps.title"
           maxlength="100"
           show-count
           placeholder="可选"
         />
-      </NFormItem>
-      <NFormItem label="尺寸">
-        <NInputNumber
-          v-model:value="blockProps.size"
+      </UFormField>
+      <UFormField label="尺寸">
+        <UInputNumber
+          v-model="blockProps.size"
           :min="128"
           :max="512"
           :step="16"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="纠错等级">
-        <NSelect
-          v-model:value="blockProps.level"
-          :options="levelOptions"
+      </UFormField>
+      <UFormField label="纠错等级">
+        <USelect
+          v-model="blockProps.level"
+          :items="levelOptions"
         />
-      </NFormItem>
-      <NFormItem label="前景色">
-        <NColorPicker
-          v-model:value="blockProps.foreground"
+      </UFormField>
+      <UFormField label="前景色">
+        <UColorPicker
+          v-model="blockProps.foreground"
           :show-alpha="false"
           :modes="['hex']"
         />
-      </NFormItem>
-      <NFormItem label="背景色">
-        <NColorPicker
-          v-model:value="blockProps.background"
+      </UFormField>
+      <UFormField label="背景色">
+        <UColorPicker
+          v-model="blockProps.background"
           :show-alpha="false"
           :modes="['hex']"
         />
-      </NFormItem>
-      <NFormItem label="边距">
-        <NInputNumber
-          v-model:value="blockProps.margin"
+      </UFormField>
+      <UFormField label="边距">
+        <UInputNumber
+          v-model="blockProps.margin"
           :min="0"
           :max="32"
           :step="1"
           style="width: 100%"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

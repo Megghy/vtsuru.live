@@ -1,40 +1,9 @@
 <script setup lang="ts">
-import {
-  DesktopOutline,
-  HandLeftOutline,
-  NavigateOutline,
-  OpenOutline,
-  OptionsOutline,
-  PhonePortraitOutline,
-  TabletPortraitOutline,
-} from '@vicons/ionicons5'
 import { useNow } from '@vueuse/core'
-import type { GlobalThemeOverrides } from 'naive-ui'
-import {
-  darkTheme,
-  NAlert,
-  NButton,
-  NButtonGroup,
-  NCard,
-  NConfigProvider,
-  NDatePicker,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NPopover,
-  NSelect,
-  NTooltip,
-} from 'naive-ui'
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 
 import { fetchBiliProfile } from '@/apps/user-page/api'
-import {
-  getPageBackgroundCssVars,
-  getUserPageNaiveThemeOverrides,
-  getUserPageThemeCssVars,
-  resolvePageBackground,
-} from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
@@ -56,11 +25,21 @@ const previewRoot = ref<HTMLElement | null>(null)
 const previewMode = ref<'select' | 'interact'>('select')
 const simulatedLiveState = ref<'actual' | 'live' | 'offline'>('actual')
 const simulatedNow = ref<number | null>(null)
+const simulatedNowInput = computed({
+  get: () => {
+    if (simulatedNow.value === null) return ''
+    const date = new Date(simulatedNow.value)
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+  },
+  set: (value: string) => {
+    simulatedNow.value = value ? new Date(value).getTime() : null
+  },
+})
 const actualNow = useNow({ interval: 30_000 })
-const viewportOptions: Array<{ value: PreviewViewport; label: string; icon: typeof PhonePortraitOutline }> = [
-  { value: 'phone', label: '手机', icon: PhonePortraitOutline },
-  { value: 'tablet', label: '平板', icon: TabletPortraitOutline },
-  { value: 'desktop', label: '桌面', icon: DesktopOutline },
+const viewportOptions: Array<{ value: PreviewViewport; label: string; icon: string }> = [
+  { value: 'phone', label: '手机', icon: 'i-lucide-smartphone' },
+  { value: 'tablet', label: '平板', icon: 'i-lucide-tablet' },
+  { value: 'desktop', label: '桌面', icon: 'i-lucide-monitor' },
 ]
 
 const biliProfileQuery = useUserPageRuntimeQuery<any | null>({
@@ -121,8 +100,6 @@ const previewEffectiveIsDark = computed(() => {
   return resolvePageThemeIsDark(mode, isDarkMode.value)
 })
 
-const previewNaiveTheme = computed(() => (previewEffectiveIsDark.value ? darkTheme : null))
-
 const previewBg = computed(() => {
   const pageOverride = resolvePageBackground((editor.currentPage.value as any)?.background)
   if (pageOverride) return pageOverride
@@ -138,40 +115,6 @@ const previewBgVars = computed(() => {
 })
 
 const previewUiVars = computed(() => getUserPageThemeCssVars(previewMergedTheme.value, previewEffectiveIsDark.value))
-
-const previewUserThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  return getUserPageNaiveThemeOverrides(previewMergedTheme.value, previewUiVars.value, previewEffectiveIsDark.value)
-})
-
-const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const bg = previewBg.value
-  if (!bg || bg.blurMode === 'none') return {}
-  const vars = previewUiVars.value
-  const borderColor = vars['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
-  return {
-    common: {
-      borderColor,
-      dividerColor: borderColor,
-    },
-    List: {
-      color: 'transparent',
-      listItemColor: 'transparent',
-      borderColor,
-    },
-  }
-})
-
-const previewThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const user = previewUserThemeOverrides.value
-  const surface = previewSurfaceThemeOverrides.value
-  return {
-    ...user,
-    ...surface,
-    common: { ...user.common, ...surface.common },
-    Card: { ...user.Card, ...surface.Card },
-    List: { ...user.List, ...surface.List },
-  }
-})
 
 const previewBgClass = computed(() => ({
   'preview-bg-host': true,
@@ -208,205 +151,173 @@ watch(
 </script>
 
 <template>
-  <NCard
-    class="pane-card"
-    :title="`预览 - ${editor.currentLabel.value}`"
-    content-style="display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden"
-  >
-    <template #header-extra>
-      <NFlex
-        align="center"
-        :wrap="false"
-        size="small"
-      >
-        <NButtonGroup size="small">
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                :type="previewMode === 'select' ? 'primary' : 'default'"
-                :secondary="previewMode === 'select'"
+  <UCard class="pane-card">
+    <template #header>
+      <div class="preview-header">
+        <strong>预览 - {{ editor.currentLabel.value }}</strong>
+        <div class="builder-row">
+          <UButtonGroup size="sm">
+            <UTooltip text="选择区块">
+              <UButton
+                icon="i-lucide-mouse-pointer-2"
+                :variant="previewMode === 'select' ? 'solid' : 'ghost'"
+                square
                 aria-label="选择区块"
                 @click="previewMode = 'select'"
-              >
-                <template #icon>
-                  <NIcon><NavigateOutline /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            选择区块
-          </NTooltip>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                :type="previewMode === 'interact' ? 'primary' : 'default'"
-                :secondary="previewMode === 'interact'"
+              />
+            </UTooltip>
+            <UTooltip text="操作页面">
+              <UButton
+                icon="i-lucide-hand"
+                :variant="previewMode === 'interact' ? 'solid' : 'ghost'"
+                square
                 aria-label="操作页面"
                 @click="previewMode = 'interact'"
-              >
-                <template #icon>
-                  <NIcon><HandLeftOutline /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            操作页面
-          </NTooltip>
-        </NButtonGroup>
-        <NButtonGroup size="small">
-          <NTooltip
-            v-for="option in viewportOptions"
-            :key="option.value"
-          >
-            <template #trigger>
-              <NButton
-                :type="viewport === option.value ? 'primary' : 'default'"
-                :secondary="viewport === option.value"
+              />
+            </UTooltip>
+          </UButtonGroup>
+          <UButtonGroup size="sm">
+            <UTooltip
+              v-for="option in viewportOptions"
+              :key="option.value"
+              :text="`${option.label}预览`"
+            >
+              <UButton
+                :icon="option.icon"
+                :variant="viewport === option.value ? 'solid' : 'ghost'"
+                square
                 :aria-label="`${option.label}预览`"
                 @click="viewport = option.value"
-              >
-                <template #icon>
-                  <NIcon><component :is="option.icon" /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            {{ option.label }}预览
-          </NTooltip>
-        </NButtonGroup>
-        <NPopover
-          trigger="click"
-          placement="bottom-end"
-        >
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="small"
+              />
+            </UTooltip>
+          </UButtonGroup>
+          <UPopover>
+            <UButton
+              icon="i-lucide-sliders-horizontal"
+              variant="ghost"
+              square
+              size="sm"
               aria-label="预览条件"
-            >
-              <template #icon>
-                <NIcon><OptionsOutline /></NIcon>
-              </template>
-            </NButton>
-          </template>
-          <NForm
-            label-placement="top"
-            size="small"
-            style="width: 260px"
-          >
-            <NFormItem label="直播状态">
-              <NSelect
-                v-model:value="simulatedLiveState"
-                :options="[
-                  { label: '使用真实状态', value: 'actual' },
-                  { label: '模拟直播中', value: 'live' },
-                  { label: '模拟未开播', value: 'offline' },
-                ]"
-              />
-            </NFormItem>
-            <NFormItem label="预览时间">
-              <NDatePicker
-                v-model:value="simulatedNow"
-                type="datetime"
-                clearable
-                style="width: 100%"
-              />
-            </NFormItem>
-          </NForm>
-        </NPopover>
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="small"
+            />
+            <template #content>
+              <div class="preview-conditions">
+                <UFormField label="直播状态">
+                  <USelect
+                    v-model="simulatedLiveState"
+                    :items="[
+                      { label: '使用真实状态', value: 'actual' },
+                      { label: '模拟直播中', value: 'live' },
+                      { label: '模拟未开播', value: 'offline' },
+                    ]"
+                  />
+                </UFormField>
+                <UFormField label="预览时间">
+                  <UInput
+                    v-model="simulatedNowInput"
+                    type="datetime-local"
+                  />
+                </UFormField>
+                <UButton
+                  v-if="simulatedNow !== null"
+                  label="使用当前时间"
+                  variant="ghost"
+                  size="sm"
+                  @click="simulatedNow = null"
+                />
+              </div>
+            </template>
+          </UPopover>
+          <UTooltip text="在真实页面中预览草稿">
+            <UButton
+              icon="i-lucide-external-link"
+              variant="ghost"
+              square
+              size="sm"
               aria-label="在真实页面中预览草稿"
               @click="editor.openPreview"
-            >
-              <template #icon>
-                <NIcon><OpenOutline /></NIcon>
-              </template>
-            </NButton>
-          </template>
-          在真实页面中预览草稿
-        </NTooltip>
-      </NFlex>
+            />
+          </UTooltip>
+        </div>
+      </div>
     </template>
     <div
       ref="previewRoot"
       class="preview-pane-content"
     >
-      <NConfigProvider
-        abstract
-        :theme="null"
-        :theme-overrides="null"
+      <PhonePreview
+        :style="[previewUiVars, previewBgVars]"
+        :is-dark="previewEffectiveIsDark"
+        :transparent="!!previewBg"
+        :viewport="viewport"
       >
-        <NConfigProvider
-          abstract
-          :theme="previewNaiveTheme"
-          :theme-overrides="previewThemeOverrides"
-        >
-          <PhonePreview
-            :style="[previewUiVars, previewBgVars]"
-            :is-dark="previewEffectiveIsDark"
-            :transparent="!!previewBg"
-            :viewport="viewport"
-          >
-            <template #background>
-              <div :class="previewBgClass" />
-            </template>
+        <template #background>
+          <div :class="previewBgClass" />
+        </template>
 
-            <Transition
-              name="fade-slide"
-              mode="out-in"
-            >
-              <div
-                :key="
-                  editor.currentPage.value.mode === 'block' && editor.currentProject.value
-                    ? 'block'
-                    : editor.currentPage.value.mode
-                "
-                class="preview-content"
-              >
-                <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
-                  <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
-                    <BlockPageRenderer
-                      :project="previewMergedProject"
-                      :user-info="editor.account.value"
-                      :bili-info="biliProfileQuery.data.value"
-                      :bili-status="biliProfileStatus"
-                      :is-dark="previewEffectiveIsDark"
-                      :extra-theme-overrides="previewSurfaceThemeOverrides"
-                      :highlight-block-id="previewHighlightBlockId"
-                      :selected-block-ids="editor.selectedBlockIds.value"
-                      :editor-mode="previewMode"
-                      :visibility-context="previewVisibilityContext"
-                      @select-block="selectPreviewBlock"
-                      @hover-block="editor.hoveredBlockId.value = $event"
-                    />
-                  </div>
-                </template>
-                <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                  <DefaultIndexTemplate
-                    :user-info="editor.account.value as any"
-                    :bili-info="biliProfileQuery.data.value"
-                  />
-                </template>
-                <NAlert
-                  v-else
-                  type="warning"
-                  :show-icon="true"
-                >
-                  当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}，非区块页，不展示预览。
-                </NAlert>
+        <Transition
+          name="fade-slide"
+          mode="out-in"
+        >
+          <div
+            :key="
+              editor.currentPage.value.mode === 'block' && editor.currentProject.value
+                ? 'block'
+                : editor.currentPage.value.mode
+            "
+            class="preview-content"
+          >
+            <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
+              <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
+                <BlockPageRenderer
+                  :project="previewMergedProject"
+                  :user-info="editor.account.value"
+                  :bili-info="biliProfileQuery.data.value"
+                  :bili-status="biliProfileStatus"
+                  :is-dark="previewEffectiveIsDark"
+                  :highlight-block-id="previewHighlightBlockId"
+                  :selected-block-ids="editor.selectedBlockIds.value"
+                  :editor-mode="previewMode"
+                  :visibility-context="previewVisibilityContext"
+                  @select-block="selectPreviewBlock"
+                  @hover-block="editor.hoveredBlockId.value = $event"
+                />
               </div>
-            </Transition>
-          </PhonePreview>
-        </NConfigProvider>
-      </NConfigProvider>
+            </template>
+            <template v-else-if="editor.currentPage.value.mode === 'legacy'">
+              <DefaultIndexTemplate
+                :user-info="editor.account.value as any"
+                :bili-info="biliProfileQuery.data.value"
+              />
+            </template>
+            <UAlert
+              v-else
+              color="warning"
+              icon="i-lucide-triangle-alert"
+              :description="`当前页模式：${editor.getPageModeLabel(editor.currentPage.value.mode)}，非区块页，不展示预览。`"
+            />
+          </div>
+        </Transition>
+      </PhonePreview>
     </div>
-  </NCard>
+  </UCard>
 </template>
 
 <style scoped>
+.preview-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.preview-conditions {
+  display: grid;
+  gap: 12px;
+  width: 260px;
+  padding: 12px;
+}
+
 .preview-pane-content {
   display: flex;
   flex: 1;

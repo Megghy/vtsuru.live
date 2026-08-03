@@ -1,35 +1,9 @@
 <script setup lang="ts">
-import {
-  BookCoins20Filled,
-  CalendarClock24Filled,
-  Info24Filled,
-  Live24Filled,
-  Lottery24Filled,
-  PeopleQueue24Filled,
-  Person48Filled,
-  PersonFeedback24Filled,
-  TabletSpeaker24Filled,
-  VehicleShip24Filled,
-  VideoAdd20Filled,
-} from '@vicons/fluent'
-import {
-  AnalyticsSharp,
-  Bookmark,
-  BookmarkOutline,
-  Chatbox,
-  ChatbubbleEllipsesOutline,
-  DocumentTextOutline,
-  Eye,
-  GridOutline,
-  MusicalNote,
-  MusicalNotesOutline,
-  PlayCircleOutline,
-} from '@vicons/ionicons5'
-import { NButton, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui'
 import { computed, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import type { AccountInfo } from '@/api/api-models'
+import { showErrorToast } from '@/shared/services/toast'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { NavigateToNewTab } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -44,14 +18,13 @@ type ManageNavGroupKey = `group-${ManageNavGroupId}`
 type ManageNavItem = {
   key: string
   label: string
-  icon: any
+  icon: string
   to?: { name: string }
   disabled?: boolean
   disabledReason?: string
   group: Exclude<ManageNavGroupId, 'favorites'>
 }
 
-const message = useMessage()
 const route = useRoute()
 const router = useRouter()
 
@@ -83,7 +56,7 @@ const needsEmailVerified = computed(() => props.accountInfo?.isEmailVerified ===
 
 function gotoAuthPage() {
   if (!props.accountInfo?.biliUserAuthInfo) {
-    message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
+    showErrorToast('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
     return
   }
   void useBiliAuth()
@@ -104,7 +77,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-history',
       label: '历史',
-      icon: AnalyticsSharp,
+      icon: 'i-lucide-history',
       to: { name: 'manage-history' },
       disabled: emailDisabled,
       group: 'common',
@@ -112,7 +85,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-live',
       label: '直播记录',
-      icon: Live24Filled,
+      icon: 'i-lucide-radio',
       to: { name: 'manage-live' },
       disabled: emailDisabled,
       group: 'common',
@@ -120,7 +93,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-analyze',
       label: '直播数据',
-      icon: Eye,
+      icon: 'i-lucide-chart-no-axes-combined',
       to: { name: 'manage-analyze' },
       disabled: emailDisabled,
       group: 'common',
@@ -128,7 +101,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'org-index',
       label: '组织',
-      icon: PeopleQueue24Filled,
+      icon: 'i-lucide-building-2',
       to: { name: 'org-index' },
       disabled: emailDisabled,
       group: 'common',
@@ -137,7 +110,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-event',
       label: '舰长和SC',
-      icon: VehicleShip24Filled,
+      icon: 'i-lucide-ship-wheel',
       to: { name: 'manage-event' },
       disabled: emailDisabled,
       group: 'data',
@@ -145,7 +118,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-point',
       label: '积分和礼物',
-      icon: BookCoins20Filled,
+      icon: 'i-lucide-coins',
       to: { name: 'manage-point' },
       disabled: emailDisabled,
       group: 'data',
@@ -154,7 +127,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-schedule',
       label: '日程',
-      icon: CalendarClock24Filled,
+      icon: 'i-lucide-calendar-clock',
       to: { name: 'manage-schedule' },
       disabled: emailDisabled,
       group: 'tools',
@@ -162,7 +135,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-songList',
       label: '歌单',
-      icon: MusicalNote,
+      icon: 'i-lucide-music-2',
       to: { name: 'manage-songList' },
       disabled: emailDisabled,
       group: 'tools',
@@ -170,7 +143,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-questionBox',
       label: '棉花糖 (提问箱)',
-      icon: Chatbox,
+      icon: 'i-lucide-message-circle-question',
       to: { name: 'manage-questionBox' },
       disabled: emailDisabled,
       group: 'tools',
@@ -178,7 +151,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-videoCollect',
       label: '视频征集',
-      icon: VideoAdd20Filled,
+      icon: 'i-lucide-video',
       to: { name: 'manage-videoCollect' },
       disabled: emailDisabled,
       group: 'tools',
@@ -186,7 +159,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-lottery',
       label: '动态抽奖',
-      icon: Lottery24Filled,
+      icon: 'i-lucide-ticket-check',
       to: { name: 'manage-lottery' },
       disabled: emailDisabled,
       group: 'tools',
@@ -194,7 +167,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-tools-dashboard',
       label: '工具箱',
-      icon: GridOutline,
+      icon: 'i-lucide-grid-2x2',
       to: { name: 'manage-tools-dashboard' },
       disabled: emailDisabled,
       group: 'tools',
@@ -203,7 +176,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-danmuji',
       label: '弹幕机',
-      icon: ChatbubbleEllipsesOutline,
+      icon: 'i-lucide-messages-square',
       to: { name: 'manage-danmuji' },
       disabled: biliDisabled,
       disabledReason: biliReason,
@@ -212,7 +185,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-liveRequest',
       label: '点播',
-      icon: PlayCircleOutline,
+      icon: 'i-lucide-circle-play',
       to: { name: 'manage-liveRequest' },
       disabled: biliDisabled,
       disabledReason: biliReason,
@@ -221,7 +194,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-liveLottery',
       label: '抽奖',
-      icon: Lottery24Filled,
+      icon: 'i-lucide-dices',
       to: { name: 'manage-liveLottery' },
       disabled: biliDisabled,
       disabledReason: biliReason,
@@ -230,7 +203,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-musicRequest',
       label: '点歌机',
-      icon: MusicalNotesOutline,
+      icon: 'i-lucide-list-music',
       to: { name: 'manage-musicRequest' },
       disabled: biliDisabled,
       disabledReason: biliReason,
@@ -239,7 +212,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-liveQueue',
       label: '排队',
-      icon: PeopleQueue24Filled,
+      icon: 'i-lucide-list-ordered',
       to: { name: 'manage-liveQueue' },
       disabled: biliDisabled,
       disabledReason: biliReason,
@@ -248,7 +221,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     {
       key: 'manage-speech',
       label: '读弹幕',
-      icon: TabletSpeaker24Filled,
+      icon: 'i-lucide-audio-lines',
       to: { name: 'manage-speech' },
       disabled: biliDisabled,
       disabledReason: biliReason,
@@ -340,96 +313,74 @@ async function go(name: string) {
   >
     <div class="manage-sider__top">
       <div class="manage-sider__top-row">
-        <NButton
+        <UButton
           class="sider-top-btn sider-top-btn--panel"
           size="small"
-          secondary
-          :circle="collapsed"
+          color="neutral"
+          variant="soft"
+          :square="collapsed"
+          icon="i-lucide-layout-dashboard"
           :title="collapsed ? '面板' : undefined"
           @click="go('manage-index')"
         >
-          <template #icon>
-            <component
-              :is="GridOutline"
-              class="sider-icon"
-            />
-          </template>
           <span
             v-if="!collapsed"
             class="sider-top-label"
             >面板</span
           >
-        </NButton>
+        </UButton>
 
-        <NButton
+        <UButton
           v-if="!collapsed"
           class="sider-top-icon-btn"
           size="small"
-          quaternary
-          circle
+          color="neutral"
+          variant="ghost"
+          square
+          icon="i-lucide-message-square-heart"
           :title="collapsed ? '反馈' : '反馈'"
           @click="go('manage-feedback')"
-        >
-          <template #icon>
-            <component
-              :is="PersonFeedback24Filled"
-              class="sider-icon"
-            />
-          </template>
-        </NButton>
+        />
       </div>
 
-      <NButton
+      <UButton
         class="sider-top-btn"
         size="small"
-        type="primary"
-        secondary
-        strong
-        :circle="collapsed"
+        variant="soft"
+        :square="collapsed"
         :block="!collapsed"
+        icon="i-lucide-file-pen-line"
         :title="collapsed ? '自定义页面' : undefined"
         @click="go('manage-userPageBuilder')"
       >
-        <template #icon>
-          <component
-            :is="DocumentTextOutline"
-            class="sider-icon"
-          />
-        </template>
         <span
           v-if="!collapsed"
           class="sider-btn-label"
           >自定义页面</span
         >
-      </NButton>
+      </UButton>
 
-      <NButton
+      <UButton
         v-if="accountInfo.biliUserAuthInfo"
         class="sider-top-btn"
         size="small"
-        type="info"
-        secondary
-        strong
-        :circle="collapsed"
+        color="info"
+        variant="soft"
+        :square="collapsed"
         :block="!collapsed"
+        icon="i-lucide-circle-user-round"
         :title="collapsed ? '认证用户主页' : undefined"
         @click="gotoAuthPage()"
       >
-        <template #icon>
-          <component
-            :is="Person48Filled"
-            class="sider-icon"
-          />
-        </template>
         <span
           v-if="!collapsed"
           class="sider-btn-label"
           >认证用户主页</span
         >
-      </NButton>
+      </UButton>
     </div>
 
-    <NScrollbar class="manage-sider__nav">
+    <div class="manage-sider__nav">
       <nav
         class="manage-sider__nav-inner"
         :class="{ collapsed }"
@@ -456,11 +407,9 @@ async function go(name: string) {
                 >
               </button>
 
-              <NTooltip
+              <UTooltip
                 v-if="g.key === 'group-danmaku'"
-                placement="right"
-                :show-arrow="false"
-                trigger="hover"
+                :text="g.hint"
               >
                 <template #trigger>
                   <button
@@ -468,47 +417,13 @@ async function go(name: string) {
                     type="button"
                     :title="g.hint || '提示'"
                   >
-                    <component
-                      :is="Info24Filled"
+                    <UIcon
+                      name="i-lucide-info"
                       class="nav-group__info-icon"
                     />
                   </button>
                 </template>
-                <div class="danmaku-tooltip">
-                  <div class="danmaku-tooltip__title">可用性警告</div>
-                  <div class="danmaku-tooltip__body">
-                    当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作（详见
-                    <a
-                      href="https://developer.chrome.com/blog/background_tabs/"
-                      target="_blank"
-                      rel="noreferrer"
-                      >此文章</a
-                    >）。 为避免遗漏事件，建议使用
-                    <a
-                      href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-                      target="_blank"
-                      rel="noreferrer"
-                      >VtsuruEventFetcher</a
-                    >
-                    或尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。
-                    <div style="margin-top: 6px">
-                      <a
-                        href="https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Chrome: 让特定网站保持活动状态</a
-                      >
-                      ，
-                      <a
-                        href="https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Edge: 永远不想进入睡眠状态的网站</a
-                      >
-                    </div>
-                  </div>
-                </div>
-              </NTooltip>
+              </UTooltip>
             </div>
 
             <div
@@ -528,8 +443,8 @@ async function go(name: string) {
                   :title="collapsed ? item.label : undefined"
                   @click="(ev: any) => onClickNavItem(ev, item)"
                 >
-                  <component
-                    :is="item.icon"
+                  <UIcon
+                    :name="item.icon"
                     class="nav-item__icon"
                   />
                   <span
@@ -546,12 +461,10 @@ async function go(name: string) {
                     :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
                   >
-                    <NIcon
+                    <UIcon
+                      name="i-lucide-bookmark"
                       class="nav-item__fav-icon"
                       :class="{ active: isFavorite(item.key) }"
-                      :size="12"
-                      :component="Bookmark"
-                      :color="isFavorite(item.key) ? '#f59e0b' : '#777'"
                     />
                   </button>
                 </RouterLink>
@@ -561,8 +474,8 @@ async function go(name: string) {
                   class="nav-item nav-item--disabled"
                   :title="item.disabledReason || item.label"
                 >
-                  <component
-                    :is="item.icon"
+                  <UIcon
+                    :name="item.icon"
                     class="nav-item__icon"
                   />
                   <span
@@ -578,12 +491,11 @@ async function go(name: string) {
                     :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
                   >
-                    <NIcon
+                    <UIcon
+                      :name="isFavorite(item.key) ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
                       class="nav-item__fav-icon"
                       :class="{ active: isFavorite(item.key) }"
-                    >
-                      <component :is="isFavorite(item.key) ? Bookmark : BookmarkOutline" />
-                    </NIcon>
+                    />
                   </button>
                 </div>
               </div>
@@ -591,7 +503,7 @@ async function go(name: string) {
           </div>
         </template>
       </nav>
-    </NScrollbar>
+    </div>
 
     <div
       v-if="!collapsed"
@@ -599,24 +511,22 @@ async function go(name: string) {
     >
       <div class="footer-line">
         有更多功能建议请
-        <NButton
-          text
-          type="primary"
+        <UButton
+          variant="link"
           size="tiny"
           @click="go('manage-feedback')"
         >
           反馈
-        </NButton>
+        </UButton>
       </div>
       <div class="footer-line">
-        <NButton
-          text
-          type="primary"
+        <UButton
+          variant="link"
           size="tiny"
           @click="go('about')"
         >
           关于本站
-        </NButton>
+        </UButton>
       </div>
       <div class="footer-by">By Megghy</div>
     </div>
@@ -683,14 +593,6 @@ async function go(name: string) {
   padding: 0;
   justify-content: center;
   margin: 0 auto;
-}
-
-.sider-top-btn :deep(.n-button__content) {
-  gap: 10px;
-}
-
-.manage-sider.collapsed .sider-top-btn :deep(.n-button__content) {
-  gap: 0;
 }
 
 .sider-icon {

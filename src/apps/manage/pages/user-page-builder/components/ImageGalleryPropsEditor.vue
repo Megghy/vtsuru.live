@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { AddOutline, ImageOutline, TrashOutline } from '@vicons/ionicons5'
-import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -75,232 +73,225 @@ function propertyAvailable(property: string) {
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="builder-form">
     <PropsGrid>
-      <NFormItem label="样式">
-        <NSelect
-          v-model:value="gallery.layout"
-          :options="[
+      <UFormField label="样式">
+        <USelect
+          v-model="gallery.layout"
+          :items="[
             { label: '网格', value: 'grid' },
             { label: '瀑布流', value: 'masonry' },
             { label: '轮播', value: 'carousel' },
           ]"
         />
-      </NFormItem>
+      </UFormField>
 
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('columns')"
         label="列数"
       >
-        <NInputNumber
-          v-model:value="gallery.columns"
+        <UInputNumber
+          v-model="gallery.columns"
           :min="1"
           :max="12"
           style="width: 100%"
         />
-      </NFormItem>
+      </UFormField>
 
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('gap')"
         label="间距 px"
       >
-        <NInputNumber
-          v-model:value="gallery.gap"
+        <UInputNumber
+          v-model="gallery.gap"
           :min="0"
           :max="80"
           style="width: 100%"
         />
-      </NFormItem>
+      </UFormField>
 
-      <NFormItem label="最大宽度">
-        <NInput
-          v-model:value="gallery.maxWidth"
+      <UFormField label="最大宽度">
+        <UInput
+          v-model="gallery.maxWidth"
           placeholder="例如 100% 或 720px"
         />
-      </NFormItem>
+      </UFormField>
 
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('maxHeight')"
         label="图片最大高度"
       >
-        <NInput
-          v-model:value="gallery.maxHeight"
+        <UInput
+          v-model="gallery.maxHeight"
           placeholder="例如 320px"
         />
-      </NFormItem>
+      </UFormField>
 
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('fit')"
         label="图片裁剪方式"
       >
-        <NSelect
-          v-model:value="gallery.fit"
-          :options="[
+        <USelect
+          v-model="gallery.fit"
+          :items="[
             { label: '裁剪铺满 - cover', value: 'cover' },
             { label: '完整显示 - contain', value: 'contain' },
           ]"
         />
-      </NFormItem>
+      </UFormField>
 
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('autoplay')"
         label="自动轮播"
       >
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="gallery.autoplay"
+        <div class="builder-row">
+          <USwitch
+            v-model="gallery.autoplay"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
+        </div>
+      </UFormField>
     </PropsGrid>
 
     <template v-if="gallery.layout === 'carousel'">
       <PropsGrid>
-        <NFormItem
+        <UFormField
           v-if="propertyAvailable('effect')"
           label="切换动效"
         >
-          <NSelect
-            v-model:value="gallery.effect"
-            :options="[
+          <USelect
+            v-model="gallery.effect"
+            :items="[
               { label: '滑动 - slide', value: 'slide' },
               { label: '淡入淡出 - fade', value: 'fade' },
               { label: '卡片 - card', value: 'card' },
             ]"
           />
-        </NFormItem>
+        </UFormField>
 
-        <NFormItem
+        <UFormField
           v-if="propertyAvailable('interval')"
           label="轮播间隔 ms"
         >
-          <NInputNumber
-            v-model:value="gallery.interval"
+          <UInputNumber
+            v-model="gallery.interval"
             :min="1000"
             :max="20000"
             style="width: 100%"
           />
-        </NFormItem>
+        </UFormField>
 
-        <NFormItem
+        <UFormField
           v-if="propertyAvailable('showDots')"
           label="显示指示点"
         >
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.showDots"
+          <div class="builder-row">
+            <USwitch
+              v-model="gallery.showDots"
               size="small"
             />
-          </NFlex>
-        </NFormItem>
+          </div>
+        </UFormField>
 
-        <NFormItem
+        <UFormField
           v-if="propertyAvailable('showArrow')"
           label="显示切换箭头"
         >
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.showArrow"
+          <div class="builder-row">
+            <USwitch
+              v-model="gallery.showArrow"
               size="small"
             />
-          </NFlex>
-        </NFormItem>
+          </div>
+        </UFormField>
 
-        <NFormItem
+        <UFormField
           v-if="propertyAvailable('dotType')"
           label="指示点样式"
         >
-          <NSelect
-            v-model:value="gallery.dotType"
-            :options="[
+          <USelect
+            v-model="gallery.dotType"
+            :items="[
               { label: '短线', value: 'line' },
               { label: '圆点', value: 'dot' },
             ]"
           />
-        </NFormItem>
+        </UFormField>
 
-        <NFormItem
+        <UFormField
           v-if="propertyAvailable('dotPlacement')"
           label="指示点位置"
         >
-          <NSelect
-            v-model:value="gallery.dotPlacement"
-            :options="[
+          <USelect
+            v-model="gallery.dotPlacement"
+            :items="[
               { label: '底部', value: 'bottom' },
               { label: '顶部', value: 'top' },
               { label: '左侧', value: 'left' },
               { label: '右侧', value: 'right' },
             ]"
           />
-        </NFormItem>
+        </UFormField>
 
-        <NFormItem label="循环播放">
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.loop"
+        <UFormField label="循环播放">
+          <div class="builder-row">
+            <USwitch
+              v-model="gallery.loop"
               size="small"
             />
-          </NFlex>
-        </NFormItem>
+          </div>
+        </UFormField>
 
-        <NFormItem label="鼠标拖拽切换">
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.draggable"
+        <UFormField label="鼠标拖拽切换">
+          <div class="builder-row">
+            <USwitch
+              v-model="gallery.draggable"
               size="small"
             />
-          </NFlex>
-        </NFormItem>
+          </div>
+        </UFormField>
 
-        <NFormItem label="触屏滑动切换">
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.touchable"
+        <UFormField label="触屏滑动切换">
+          <div class="builder-row">
+            <USwitch
+              v-model="gallery.touchable"
               size="small"
             />
-          </NFlex>
-        </NFormItem>
+          </div>
+        </UFormField>
 
-        <NFormItem label="切换触发方式">
-          <NSelect
-            v-model:value="gallery.trigger"
-            :options="[
+        <UFormField label="切换触发方式">
+          <USelect
+            v-model="gallery.trigger"
+            :items="[
               { label: '点击', value: 'click' },
               { label: '悬停', value: 'hover' },
             ]"
           />
-        </NFormItem>
+        </UFormField>
       </PropsGrid>
     </template>
 
-    <NFormItem label="图片列表">
-      <NFlex
-        vertical
+    <UFormField label="图片列表">
+      <div
+        class="builder-stack"
         style="width: 100%"
       >
-        <NFlex
-          justify="space-between"
-          align="center"
-          :wrap="false"
-        >
-          <NText depth="3"> 可拖拽排序 </NText>
-          <NButton
-            size="tiny"
-            type="info"
-            secondary
+        <div class="builder-row">
+          <span class="builder-text"> 可拖拽排序 </span>
+          <UButton
+            size="xs"
+            color="info"
+            variant="soft"
             :loading="props.editor.isUploading.value"
             @click="props.editor.triggerUploadGalleryBulk(props.block)"
           >
             <template #icon>
-              <NIcon><ImageOutline /></NIcon>
+              <UIcon name="i-lucide-image" />
             </template>
             批量上传
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
         <VueDraggable
           v-model="itemsModel"
           handle=".drag-handle"
@@ -311,22 +302,17 @@ function propertyAvailable(property: string) {
             :key="getItemKey(element)"
             style="border: 1px solid var(--vtsuru-border); border-radius: 10px; padding: 10px"
           >
-            <NFlex
-              align="center"
-              justify="space-between"
-            >
-              <NFlex
-                align="center"
-                :wrap="false"
+            <div class="builder-row">
+              <div
+                class="builder-row"
                 style="gap: 10px; min-width: 0"
               >
-                <NText
-                  depth="3"
-                  class="drag-handle"
+                <span
+                  class="builder-text drag-handle"
                   style="cursor: grab; user-select: none"
                 >
                   ≡
-                </NText>
+                </span>
                 <img
                   v-if="getItemPreviewSrc(element)"
                   :src="getItemPreviewSrc(element)"
@@ -341,83 +327,82 @@ function propertyAvailable(property: string) {
                     flex: 0 0 auto;
                   "
                 />
-                <NText
-                  depth="3"
+                <span
+                  class="builder-text"
                   style="white-space: nowrap"
                 >
                   #{{ index + 1 }}
-                </NText>
-              </NFlex>
-              <NFlex
-                align="center"
-                :wrap="false"
+                </span>
+              </div>
+              <div
+                class="builder-row"
                 style="gap: 8px"
               >
-                <NButton
-                  size="tiny"
+                <UButton
+                  size="xs"
                   :loading="props.editor.isUploading.value"
                   @click="props.editor.triggerUploadItemImage(props.block, index)"
                 >
                   <template #icon>
-                    <NIcon><ImageOutline /></NIcon>
+                    <UIcon name="i-lucide-image" />
                   </template>
                   上传
-                </NButton>
-                <NButton
-                  size="tiny"
-                  secondary
+                </UButton>
+                <UButton
+                  size="xs"
+                  variant="soft"
                   @click="props.editor.clearUploadedItemImage(props.block, index)"
                 >
                   清除
-                </NButton>
-                <NButton
-                  size="tiny"
-                  type="error"
-                  secondary
+                </UButton>
+                <UButton
+                  size="xs"
+                  color="error"
+                  variant="soft"
                   @click="removeItem(index)"
                 >
                   <template #icon>
-                    <NIcon><TrashOutline /></NIcon>
+                    <UIcon name="i-lucide-trash-2" />
                   </template>
                   删除
-                </NButton>
-              </NFlex>
-            </NFlex>
+                </UButton>
+              </div>
+            </div>
 
             <div style="margin-top: 10px">
-              <NFormItem
+              <UFormField
                 label="替代文本"
                 :show-feedback="false"
               >
-                <NInput
-                  v-model:value="ensureItem(index).alt"
+                <UInput
+                  v-model="ensureItem(index).alt"
                   placeholder="说明图片内容；装饰图片可留空"
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 label="图片描述"
                 :show-feedback="false"
               >
-                <NInput
-                  v-model:value="ensureItem(index).desc"
+                <UInput
+                  v-model="ensureItem(index).desc"
                   placeholder="可选，显示在图片下方"
                 />
-              </NFormItem>
+              </UFormField>
             </div>
           </div>
         </VueDraggable>
 
-        <NButton
-          type="info"
-          secondary
+        <UButton
+          color="info"
+          variant="soft"
           @click="addItem"
         >
           <template #icon>
-            <NIcon><AddOutline /></NIcon>
+            <UIcon name="i-lucide-plus" />
           </template>
           添加图片
-        </NButton>
-      </NFlex>
-    </NFormItem>
-  </NForm>
+        </UButton>
+      </div>
+    </UFormField>
+  </div>
 </template>

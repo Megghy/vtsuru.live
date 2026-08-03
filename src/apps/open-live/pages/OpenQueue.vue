@@ -1,33 +1,9 @@
 <script setup lang="ts">
-import { Checkmark12Regular, Copy24Regular, Delete24Filled, PeopleQueue24Filled, Search24Regular } from '@vicons/fluent'
-import { ReloadCircleSharp } from '@vicons/ionicons5'
+const Delete24Filled = 'i-lucide-circle'
+const ReloadCircleSharp = 'i-lucide-circle'
 import { isSameDay } from 'date-fns'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDataTable,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
 import type { VNodeChild } from 'vue'
-import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch, resolveComponent } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { OpenLiveInfo, ResponseQueueModel } from '@/api/api-models'
@@ -78,13 +54,13 @@ const statusFilterOptions = computed(() =>
     .map((t) => ({ label: STATUS_MAP[t], value: t })),
 )
 
-const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
+const columns = computed<any[]>(() => [
   {
     title: '用户名',
     key: 'user.name',
     render: (data) =>
       h(
-        NTooltip,
+        resolveComponent('UTooltip'),
         { trigger: 'hover' },
         {
           trigger: () => data.user?.name || '未知用户',
@@ -113,9 +89,11 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
             [QueueFrom.Manual]: 'default',
           } as const
         )[data.from] ?? 'default'
-      const tag = h(NTag, { size: 'small', type: fromType, bordered: false }, () => getQueueSourceText(data))
+      const tag = h(resolveComponent('UBadge'), { size: 'small', type: fromType, bordered: false }, () =>
+        getQueueSourceText(data),
+      )
       const detailText = getQueuePaymentMeta(data).detailText
-      return detailText ? h(NTooltip, null, { trigger: () => tag, default: () => detailText }) : tag
+      return detailText ? h(resolveComponent('UTooltip'), null, { trigger: () => tag, default: () => detailText }) : tag
     },
   },
   {
@@ -133,14 +111,18 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
           [QueueStatus.Cancel]: 'error',
         } as const
       )[data.status]
-      return h(NTag, { type: statusType, size: 'small', bordered: false }, () => STATUS_MAP[data.status] ?? '未知状态')
+      return h(
+        resolveComponent('UBadge'),
+        { type: statusType, size: 'small', bordered: false },
+        () => STATUS_MAP[data.status] ?? '未知状态',
+      )
     },
   },
   {
     title: '时间',
     key: 'createAt',
     sorter: true,
-    render: (data) => h(NTime, { time: data.createAt, type: 'datetime' }),
+    render: (data) => h('time', { time: data.createAt, type: 'datetime' }),
   },
   {
     title: '操作',
@@ -151,10 +133,10 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
       const buttons: VNodeChild[] = []
       if (data.status === QueueStatus.Finish || data.status === QueueStatus.Cancel) {
         buttons.push(
-          h(NTooltip, null, {
+          h(resolveComponent('UTooltip'), null, {
             trigger: () =>
               h(
-                NButton,
+                resolveComponent('UButton'),
                 {
                   size: 'tiny',
                   type: 'info',
@@ -166,7 +148,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
                   },
                   style: 'margin: 0 2px;',
                 },
-                { icon: () => h(NIcon, { component: ReloadCircleSharp }) },
+                { icon: () => h(resolveComponent('UIcon'), { component: ReloadCircleSharp }) },
               ),
             default: () => '重新放回等待',
           }),
@@ -174,14 +156,14 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
       }
       buttons.push(
         h(
-          NPopconfirm,
+          resolveComponent('UPopover'),
           { onPositiveClick: () => store.deleteQueue([data]) },
           {
             trigger: () =>
-              h(NTooltip, null, {
+              h(resolveComponent('UTooltip'), null, {
                 trigger: () =>
                   h(
-                    NButton,
+                    resolveComponent('UButton'),
                     {
                       size: 'tiny',
                       type: 'error',
@@ -190,7 +172,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
                       onClick: () => (store.queueDataBeingManaged = data.id),
                       style: 'margin: 0 2px;',
                     },
-                    { icon: () => h(NIcon, { component: Delete24Filled }) },
+                    { icon: () => h(resolveComponent('UIcon'), { component: Delete24Filled }) },
                   ),
                 default: () => '删除记录',
               }),
@@ -198,7 +180,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
           },
         ),
       )
-      return h(NFlex, { justify: 'center', size: 4 }, () => buttons)
+      return h('div', { justify: 'center', size: 4 }, () => buttons)
     },
   },
 ])
@@ -249,26 +231,24 @@ onUnmounted(() => {
   >
     <template
       v-if="accountInfo?.id"
-      #actions
+      #footers
     >
-      <NTooltip :disabled="store.configCanEdit">
-        <template #trigger>
-          <NButton
-            type="primary"
-            size="small"
-            class="open-live-action-btn"
-            :disabled="!store.configCanEdit"
-            @click="showOBSModal = true"
-          >
-            OBS 组件
-          </NButton>
-        </template>
-        登录后可使用 OBS 组件功能
-      </NTooltip>
+      <UTooltip :disabled="store.configCanEdit">
+        <UButton
+          color="primary"
+          size="small"
+          class="open-live-action-btn"
+          :disabled="!store.configCanEdit"
+          @click="showOBSModal = true"
+        >
+          OBS 组件
+        </UButton>
+        <template #content> 登录后可使用 OBS 组件功能 </template>
+      </UTooltip>
     </template>
 
     <template #switch-extra>
-      <NAlert
+      <UAlert
         type="info"
         size="small"
         :bordered="false"
@@ -276,24 +256,24 @@ onUnmounted(() => {
         style="margin-top: 10px"
       >
         如果没有部署
-        <NButton
-          text
-          type="primary"
+        <UButton
+          variant="link"
+          color="primary"
           tag="a"
           href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
           target="_blank"
         >
           VtsuruEventFetcher
-        </NButton>
+        </UButton>
         则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 (部署了则不影响)
-      </NAlert>
+      </UAlert>
     </template>
 
-    <NCard
+    <UCard
       size="small"
       bordered
     >
-      <NTabs
+      <div
         v-if="!accountInfo.id || store.enabled"
         type="line"
         animated
@@ -302,134 +282,150 @@ onUnmounted(() => {
         pane-style="padding-top: 10px;"
       >
         <!-- 当前队列 -->
-        <NTabPane
+        <section
           name="list"
           tab="当前队列"
         >
-          <NCard
+          <UCard
             size="small"
             :bordered="false"
           >
-            <NFlex
+            <div
               align="center"
               justify="space-between"
               wrap
               :item-style="{ marginBottom: '8px' }"
             >
-              <NFlex align="center">
-                <NTag
+              <div align="center">
+                <UBadge
                   type="info"
                   :bordered="false"
                   round
                 >
-                  <template #icon>
-                    <NIcon :component="PeopleQueue24Filled" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
                   等待中: {{ waitingCount }} 人
-                </NTag>
-                <NTag
+                </UBadge>
+                <UBadge
                   type="success"
                   :bordered="false"
                   round
                 >
-                  <template #icon>
-                    <NIcon :component="Checkmark12Regular" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
                   今日已处理: {{ todayFinishedCount }} 人
-                </NTag>
-              </NFlex>
+                </UBadge>
+              </div>
 
-              <NInputGroup style="max-width: 250px">
-                <NInput
-                  v-model:value="store.activeFilterName"
+              <div style="max-width: 250px">
+                <UInput
+                  v-model="store.activeFilterName"
                   placeholder="搜索当前队列用户"
                   clearable
                 >
-                  <template #prefix>
-                    <NIcon :component="Search24Regular" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
-                </NInput>
-              </NInputGroup>
+                </UInput>
+              </div>
 
-              <NInputGroup style="max-width: 250px">
-                <NInput
-                  v-model:value="store.newQueueName"
+              <div style="max-width: 250px">
+                <UInput
+                  v-model="store.newQueueName"
                   placeholder="手动添加用户"
                   clearable
                   @keyup.enter="store.addManual"
                 />
-                <NButton
-                  type="primary"
+                <UButton
+                  color="primary"
                   ghost
                   :disabled="!store.newQueueName"
                   @click="store.addManual"
                 >
                   添加
-                </NButton>
-              </NInputGroup>
+                </UButton>
+              </div>
 
-              <NFlex align="center">
-                <NTooltip>
-                  <template #trigger>
-                    <NButton
-                      size="small"
-                      ghost
-                      :disabled="store.queue.length === 0"
-                      @click="copyQueueList"
-                    >
-                      <template #icon>
-                        <NIcon :component="Copy24Regular" />
-                      </template>
-                      复制名单
-                    </NButton>
+              <div align="center">
+                <UTooltip>
+                  <UButton
+                    size="small"
+                    ghost
+                    :disabled="store.queue.length === 0"
+                    @click="copyQueueList"
+                  >
+                    <template #leading>
+                      <UIcon name="i-lucide-circle" />
+                    </template>
+                    复制名单
+                  </UButton>
+                  <template #content> 复制当前队列为文本名单 </template>
+                </UTooltip>
+                <UPopover>
+                  <UButton
+                    color="error"
+                    size="sm"
+                    ghost
+                  >
+                    全部取消
+                  </UButton>
+                  <template #content="{ close }">
+                    <div class="space-y-3 p-3">
+                      <div>确定要取消所有等待中和处理中的队列项吗?</div>
+                      <div class="flex justify-end gap-2">
+                        <UButton
+                          size="xs"
+                          color="neutral"
+                          variant="ghost"
+                          @click="close"
+                          >取消</UButton
+                        >
+                        <UButton
+                          size="xs"
+                          color="error"
+                          @click="(close(), store.deactiveAllSongs)"
+                          >确认</UButton
+                        >
+                      </div>
+                    </div>
                   </template>
-                  复制当前队列为文本名单
-                </NTooltip>
-                <NPopconfirm @positive-click="store.deactiveAllSongs">
-                  <template #trigger>
-                    <NButton
-                      type="error"
-                      size="small"
-                      ghost
-                    >
-                      全部取消
-                    </NButton>
-                  </template>
-                  确定要取消所有等待中和处理中的队列项吗?
-                </NPopconfirm>
-                <NRadioGroup
-                  v-model:value="store.settings.sortType"
+                </UPopover>
+                <URadioGroup
+                  v-model="store.settings.sortType"
                   :disabled="!store.configCanEdit"
-                  size="small"
-                  @update:value="store.saveSettings"
-                >
-                  <NRadioButton :value="QueueSortType.TimeFirst"> 时间 </NRadioButton>
-                  <NRadioButton :value="QueueSortType.PaymentFist"> 付费 </NRadioButton>
-                  <NRadioButton :value="QueueSortType.GuardFirst"> 舰长 </NRadioButton>
-                  <NRadioButton :value="QueueSortType.FansMedalFirst"> 粉丝牌 </NRadioButton>
-                </NRadioGroup>
-                <NCheckbox
+                  :items="[
+                    { label: '时间', value: QueueSortType.TimeFirst },
+                    { label: '付费', value: QueueSortType.PaymentFist },
+                    { label: '舰长', value: QueueSortType.GuardFirst },
+                    { label: '粉丝牌', value: QueueSortType.FansMedalFirst },
+                  ]"
+                  orientation="horizontal"
+                  @update:model-value="store.saveSettings"
+                />
+                <UCheckbox
                   v-if="store.configCanEdit"
-                  v-model:checked="store.settings.isReverse"
+                  v-model="store.settings.isReverse"
                   size="small"
-                  @update:checked="store.saveSettings"
+                  @update:model-value="store.saveSettings"
                 >
                   倒序
-                </NCheckbox>
-                <NCheckbox
+                </UCheckbox>
+                <UCheckbox
                   v-else
-                  v-model:checked="store.localIsReverse"
+                  v-model="store.localIsReverse"
                   size="small"
                 >
                   倒序
-                </NCheckbox>
-              </NFlex>
-            </NFlex>
-          </NCard>
+                </UCheckbox>
+              </div>
+            </div>
+          </UCard>
 
-          <NDivider style="margin: 10px 0" />
+          <USeparator style="margin: 10px 0" />
 
-          <NSpin :show="store.isLoading && store.originQueue.length === 0">
+          <div :show="store.isLoading && store.originQueue.length === 0">
             <div
               v-if="store.queue.length > 0"
               class="queue-list-container"
@@ -447,65 +443,65 @@ onUnmounted(() => {
                 </div>
               </TransitionGroup>
             </div>
-            <NEmpty
+            <UEmpty
               v-else
               description="当前队列为空"
               style="margin-top: 50px"
             />
-          </NSpin>
-        </NTabPane>
+          </div>
+        </section>
 
         <!-- 历史记录 -->
-        <NTabPane
+        <section
           name="history"
           tab="历史记录"
         >
-          <NCard
+          <UCard
             size="small"
             :bordered="false"
             style="margin-bottom: 10px"
           >
-            <NFlex
+            <div
               align="center"
               justify="space-between"
             >
-              <NFlex align="center">
-                <NInputGroup style="width: 300px">
-                  <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
-                  <NInput
-                    v-model:value="store.filterName"
+              <div align="center">
+                <div style="width: 300px">
+                  <span> 筛选用户 </span>
+                  <UInput
+                    v-model="store.filterName"
                     clearable
                     placeholder="输入用户名"
                   />
-                </NInputGroup>
-                <NCheckbox v-model:checked="store.filterNameContains"> 模糊匹配 </NCheckbox>
-              </NFlex>
-              <NButton
+                </div>
+                <UCheckbox v-model="store.filterNameContains"> 模糊匹配 </UCheckbox>
+              </div>
+              <UButton
                 size="small"
-                type="error"
+                color="error"
                 ghost
                 :disabled="store.historySongs.length === 0"
                 @click="store.deleteQueue(store.historySongs)"
               >
                 清空所有历史记录
-              </NButton>
-            </NFlex>
-          </NCard>
-          <NDataTable
+              </UButton>
+            </div>
+          </UCard>
+          <UTable
             ref="table"
             size="small"
             :columns="columns"
             :data="store.historySongs"
-            :pagination="{ pageSize: 20, showSizePicker: true, pageSizes: [20, 50, 100] }"
+            :pagination="{ pageIndex: 1, pageSize: 20 }"
             :loading="store.isLoading"
             remote
             :row-key="(row) => row.id"
             striped
           />
-        </NTabPane>
+        </section>
 
         <!-- 设置 -->
-        <NTabPane
+        <section
           name="setting"
           tab="设置"
           :disabled="!store.configCanEdit"
@@ -515,9 +511,9 @@ onUnmounted(() => {
             :settings="store.settings"
             @change="store.saveSettings"
           />
-        </NTabPane>
-      </NTabs>
-      <NAlert
+        </section>
+      </div>
+      <UAlert
         v-else
         title="功能未启用"
         type="info"
@@ -525,8 +521,8 @@ onUnmounted(() => {
         :bordered="false"
       >
         请在页面顶部的开关处启用弹幕队列功能。
-      </NAlert>
-    </NCard>
+      </UAlert>
+    </UCard>
   </OpenLivePageLayout>
 
   <ObsConfigModal
@@ -559,7 +555,7 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-.n-data-table-td {
+.u-data-table-td {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

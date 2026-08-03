@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { MusicalNotesOutline, OpenOutline, RefreshOutline, SearchOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NEmpty, NIcon, NInput, NSpin, NTag } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -96,7 +95,7 @@ function requestStatus(song: SongsInfo) {
     <template #header>
       <div class="song-header">
         <span class="song-heading">
-          <NIcon><MusicalNotesOutline /></NIcon>
+          <span><MusicalNotesOutline /></span>
           歌单与点歌
         </span>
         <RouterLink
@@ -105,68 +104,68 @@ function requestStatus(song: SongsInfo) {
           :to="{ name: 'user-songList', params: { id: props.userInfo.name } }"
           custom
         >
-          <NButton
-            text
-            type="primary"
-            size="small"
+          <UButton
+            variant="link"
+            color="primary"
+            size="sm"
             @click="navigate"
           >
             完整歌单
-            <template #icon>
-              <NIcon><OpenOutline /></NIcon>
+            <template #leading>
+              <span><OpenOutline /></span>
             </template>
-          </NButton>
+          </UButton>
         </RouterLink>
       </div>
     </template>
 
-    <NAlert
+    <UAlert
       v-if="!songListEnabled"
-      type="info"
-      :show-icon="false"
+      color="info"
+      ><template #description> 歌单功能未启用 </template></UAlert
     >
-      歌单功能未启用
-    </NAlert>
-    <NAlert
+    <UAlert
       v-else-if="query.status.value === 'error'"
-      type="error"
-      :show-icon="true"
+      color="error"
     >
-      <div class="error-row">
-        <span>歌单加载失败</span>
-        <NButton
-          size="small"
-          secondary
-          @click="load(true)"
-        >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon>
-          </template>
-          重试
-        </NButton>
-      </div>
-    </NAlert>
-    <NSpin
+      <template #description
+        ><div class="error-row">
+          <span>歌单加载失败</span>
+          <UButton
+            size="sm"
+            variant="soft"
+            @click="load(true)"
+          >
+            <template #leading>
+              <span><RefreshOutline /></span>
+            </template>
+            重试
+          </UButton>
+        </div></template
+      >
+    </UAlert>
+    <div
       v-else
-      :show="query.status.value === 'loading' || query.status.value === 'idle'"
+      :aria-busy="query.status.value === 'loading' || query.status.value === 'idle'"
       size="small"
     >
-      <NInput
+      <UInput
         v-if="showSearch"
-        v-model:value="search"
+        v-model="search"
         clearable
-        size="small"
+        size="sm"
         placeholder="搜索歌曲或歌手"
         class="song-search"
       >
-        <template #prefix>
-          <NIcon><SearchOutline /></NIcon>
+        <template #leading>
+          <span><SearchOutline /></span>
         </template>
-      </NInput>
-      <NEmpty
+      </UInput>
+      <UEmpty
         v-if="query.status.value === 'success' && filteredSongs.length === 0"
-        size="small"
+        size="sm"
         :description="search ? '没有匹配的歌曲' : '歌单暂时为空'"
+        class="public-empty"
       />
       <div
         v-else
@@ -197,27 +196,27 @@ function requestStatus(song: SongsInfo) {
             v-if="variant === 'full' && song.tags?.length"
             class="song-tags"
           >
-            <NTag
+            <UBadge
               v-for="tag in song.tags.slice(0, 4)"
               :key="tag"
-              size="small"
+              size="sm"
               :bordered="false"
             >
               {{ tag }}
-            </NTag>
+            </UBadge>
           </div>
-          <NTag
+          <UBadge
             v-if="showRequestStatus"
-            :type="requestStatus(song).type"
-            size="small"
+            :color="requestStatus(song).type"
+            size="sm"
             :bordered="false"
             class="request-status"
           >
             {{ requestStatus(song).label }}
-          </NTag>
+          </UBadge>
         </article>
       </div>
-    </NSpin>
+    </div>
   </BlockCard>
 </template>
 

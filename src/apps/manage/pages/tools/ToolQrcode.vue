@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
-import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NText } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { canvasToBlob } from '@/shared/utils'
-
-const message = useMessage()
 const account = useAccount()
 
 const text = ref('')
@@ -63,115 +61,73 @@ async function download() {
       size: size.value,
       transparent: isTransparent.value,
     })
-    message.success('已下载')
+    showSuccessToast('已下载')
   } catch {
-    message.error('导出失败')
+    showErrorToast('导出失败')
   }
 }
 </script>
 
 <template>
-  <NCard title="二维码生成器">
-    <NFlex
-      vertical
-      :size="16"
-    >
-      <NInput
-        v-model:value="text"
-        placeholder="输入链接或文本"
-        clearable
-      />
+  <UCard>
+    <template #header>二维码生成器</template>
+    <div class="tool-qrcode">
+      <UInput v-model="text" placeholder="输入链接或文本" />
 
       <div>
-        <NText
-          depth="3"
-          style="font-size: 12px; margin-bottom: 6px; display: block"
-        >
-          链接预设
-        </NText>
-        <NFlex :size="8">
-          <NButton
+        <p class="field-label">链接预设</p>
+        <div class="preset-list">
+          <UButton
             v-for="p in linkPresets"
             :key="p.label"
-            size="small"
-            secondary
+            size="sm"
+            variant="soft"
             @click="text = p.value"
           >
             {{ p.label }}
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
       </div>
 
       <div>
-        <NText
-          depth="3"
-          style="font-size: 12px; margin-bottom: 6px; display: block"
-        >
-          配色预设
-        </NText>
-        <NFlex
-          :size="8"
-          wrap
-        >
-          <NButton
+        <p class="field-label">配色预设</p>
+        <div class="preset-list">
+          <UButton
             v-for="s in stylePresets"
             :key="s.label"
-            size="small"
-            secondary
+            size="sm"
+            color="neutral"
+            variant="soft"
             @click="applyStyle(s)"
           >
-            <template #icon>
+            <template #leading>
               <span
                 class="color-dot"
                 :style="{ background: s.fg, boxShadow: `0 0 0 2px ${s.bg}` }"
               />
             </template>
             {{ s.label }}
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
       </div>
 
-      <NFlex
-        :size="16"
-        align="center"
-        wrap
-      >
-        <NFlex
-          vertical
-          :size="8"
-        >
-          <NText depth="3"> 尺寸 </NText>
-          <NInputNumber
-            v-model:value="size"
+      <div class="control-list">
+        <UFormField label="尺寸">
+          <UInputNumber
+            v-model="size"
             :min="128"
             :max="1024"
             :step="64"
             style="width: 100px"
           />
-        </NFlex>
-        <NFlex
-          vertical
-          :size="8"
-          class="color-picker-wrap"
-        >
-          <NText depth="3"> 前景色 </NText>
-          <NColorPicker
-            v-model:value="foreground"
-            :show-alpha="false"
-          />
-        </NFlex>
-        <NFlex
-          vertical
-          :size="8"
-          class="color-picker-wrap"
-        >
-          <NText depth="3"> 背景色 </NText>
-          <NColorPicker
-            v-model:value="background"
-            :show-alpha="true"
-          />
-        </NFlex>
-      </NFlex>
+        </UFormField>
+        <UFormField label="前景色" class="color-picker-wrap">
+          <UColorPicker v-model="foreground" />
+        </UFormField>
+        <UFormField label="背景色" class="color-picker-wrap">
+          <UColorPicker v-model="background" />
+        </UFormField>
+      </div>
 
       <div
         ref="qrContainer"
@@ -186,23 +142,17 @@ async function download() {
           :background="isTransparent ? 'transparent' : background"
           render-as="canvas"
         />
-        <NText
-          v-else
-          depth="3"
-        >
-          请输入内容
-        </NText>
+        <span v-else class="empty-text">请输入内容</span>
       </div>
 
-      <NButton
-        type="primary"
+      <UButton
         :disabled="!text"
         @click="download"
       >
         下载 PNG
-      </NButton>
-    </NFlex>
-  </NCard>
+      </UButton>
+    </div>
+  </UCard>
 </template>
 
 <style scoped>
@@ -216,6 +166,25 @@ async function download() {
 }
 .color-picker-wrap {
   width: 200px;
+}
+.tool-qrcode,
+.control-list,
+.preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.tool-qrcode {
+  flex-direction: column;
+}
+.preset-list {
+  gap: 8px;
+}
+.field-label,
+.empty-text {
+  margin: 0 0 6px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
 }
 .color-dot {
   display: inline-block;

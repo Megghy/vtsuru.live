@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
-import { NInputNumber, NSelect, NFlex, NSwitch, NForm, NFormItem, NTooltip, NIcon, NDivider } from 'naive-ui'
-
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 
@@ -27,100 +24,95 @@ const enterFilterModeOptions = [
     v-if="action.triggerType === TriggerType.ENTER"
     class="enter-trigger-settings"
   >
-    <NForm
+    <UForm
       label-placement="left"
       :label-width="140"
       size="small"
       :show-feedback="false"
     >
-      <NFlex
+      <div
         vertical
         :size="16"
       >
-        <NFormItem label="入场过滤模式">
-          <NSelect
-            v-model:value="action.triggerConfig.filterMode"
+        <UFormField label="入场过滤模式">
+          <USelectMenu
+            v-model="action.triggerConfig.filterMode"
             style="width: 240px"
-            :options="enterFilterModeOptions"
+            :items="enterFilterModeOptions"
+            value-key="value"
           />
-        </NFormItem>
+        </UFormField>
 
-        <NFormItem
+        <UFormField
           v-if="action.triggerConfig.filterMode === 'medal'"
           label="最低牌子等级"
         >
           <template #label>
-            <NTooltip trigger="hover">
-              <template #trigger>
-                <span
-                  >最低牌子等级
-                  <NIcon
-                    :component="Info16Regular"
-                    style="vertical-align: -2px"
-                /></span>
-              </template>
-              仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级
-            </NTooltip>
+            <UTooltip>
+              <span
+                >最低牌子等级
+                <UIcon
+                  name="i-lucide-circle"
+                  style="vertical-align: -2px"
+              /></span>
+              <template #content> 仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级 </template>
+            </UTooltip>
           </template>
-          <NInputNumber
-            v-model:value="action.triggerConfig.enterMedalMinLevel"
+          <UInputNumber
+            v-model="action.triggerConfig.enterMedalMinLevel"
             :min="0"
             :max="40"
             style="width: 140px"
             placeholder="0"
           />
-        </NFormItem>
+        </UFormField>
 
-        <NDivider style="margin: 0" />
+        <USeparator style="margin: 0" />
 
-        <NFlex
+        <div
           vertical
           :size="12"
         >
-          <NFormItem label="防止重复发送">
+          <UFormField label="防止重复发送">
             <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >防止重复
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                同一用户在单次直播中多次进入仅触发一次欢迎
-              </NTooltip>
+              <UTooltip>
+                <span
+                  >防止重复
+                  <UIcon
+                    name="i-lucide-circle"
+                    style="vertical-align: -2px"
+                /></span>
+                <template #content> 同一用户在单次直播中多次进入仅触发一次欢迎 </template>
+              </UTooltip>
             </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.preventRepeat"
+            <USwitch
+              v-model="action.triggerConfig.preventRepeat"
               size="small"
             />
-          </NFormItem>
+          </UFormField>
 
-          <NFormItem label="单次合并上限">
+          <UFormField label="单次合并上限">
             <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >单次合并上限
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                单条欢迎弹幕中最多合并展示的用户数量
-              </NTooltip>
+              <UTooltip>
+                <span
+                  >单次合并上限
+                  <UIcon
+                    name="i-lucide-circle"
+                    style="vertical-align: -2px"
+                /></span>
+                <template #content> 单条欢迎弹幕中最多合并展示的用户数量 </template>
+              </UTooltip>
             </template>
-            <NInputNumber
-              v-model:value="action.actionConfig.maxUsersPerMsg"
+            <UInputNumber
+              v-model="action.actionConfig.maxUsersPerMsg"
               :min="1"
               :max="50"
               style="width: 140px"
             />
-          </NFormItem>
-        </NFlex>
-      </NFlex>
-    </NForm>
+          </UFormField>
+        </div>
+      </div>
+    </UForm>
   </div>
 </template>
 

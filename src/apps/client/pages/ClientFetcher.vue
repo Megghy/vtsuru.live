@@ -14,11 +14,11 @@ const settings = useSettings()
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
   >
-    <NCard
+    <UCard
       size="small"
       bordered
     >
@@ -26,7 +26,7 @@ const settings = useSettings()
         title="EventFetcher"
         description="事件采集、登录状态与运行监控"
       />
-    </NCard>
+    </UCard>
 
     <FetcherSettingsCard class="client-readable" />
 
@@ -47,5 +47,5 @@ const settings = useSettings()
     <FetcherDailyStatsCard v-if="settings.settings.enableEventFetcher" />
 
     <FetcherSystemCard class="client-readable" />
-  </NFlex>
+  </div>
 </template>

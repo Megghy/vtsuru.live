@@ -1,27 +1,4 @@
 <script setup lang="ts">
-import {
-  Add24Filled,
-  Delete24Filled,
-  Pause24Filled,
-  Play24Filled,
-  Sparkle24Filled,
-  Target24Filled,
-} from '@vicons/fluent'
-import {
-  NButton,
-  NCheckbox,
-  NCollapseTransition,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NFlex,
-} from 'naive-ui'
-
 import type { LotteryOption } from '@/apps/open-live/components/lottery/lotteryTypes'
 defineProps<{
   option: LotteryOption
@@ -47,168 +24,174 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 <template>
   <div class="settings-wrapper">
     <div class="settings-header">
-      <NFlex align="center">
-        <NIcon
-          :component="Sparkle24Filled"
+      <div align="center">
+        <UIcon
+          name="i-lucide-circle"
           color="var(--vtsuru-warning)"
         />
         <span style="font-weight: bold; font-size: 16px">抽奖设置</span>
-      </NFlex>
-      <NButton
+      </div>
+      <UButton
         size="tiny"
-        secondary
+        variant="soft"
         :disabled="isStartLottery"
         @click="emit('reset')"
       >
         恢复默认
-      </NButton>
+      </UButton>
     </div>
 
     <div class="settings-layout">
       <div class="setting-column">
         <div class="setting-section">
           <div class="section-header">
-            <NIcon :component="Target24Filled" />
+            <UIcon name="i-lucide-circle" />
             参与规则
           </div>
-          <NForm
+          <UForm
             label-placement="left"
             label-width="80"
             size="small"
           >
-            <NFormItem label="参与方式">
-              <NRadioGroup
-                v-model:value="option.type"
+            <UFormField label="参与方式">
+              <URadioGroup
+                v-model="option.type"
                 :disabled="isLottering || isStartLottery"
-              >
-                <NRadioButton value="danmaku"> 弹幕 </NRadioButton>
-                <NRadioButton value="gift"> 礼物 </NRadioButton>
-              </NRadioGroup>
-            </NFormItem>
+                :items="[
+                  { label: '弹幕', value: 'danmaku' },
+                  { label: '礼物', value: 'gift' },
+                ]"
+                orientation="horizontal"
+              />
+            </UFormField>
 
             <template v-if="option.type === 'danmaku'">
-              <NFormItem label="弹幕内容">
-                <NInput
-                  v-model:value="option.danmakuKeyword"
+              <UFormField label="弹幕内容">
+                <UInput
+                  v-model="option.danmakuKeyword"
                   :disabled="isStartLottery"
                   placeholder="留空则任意弹幕"
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 v-if="option.danmakuKeyword"
                 label="匹配规则"
               >
-                <NRadioGroup
-                  v-model:value="option.danmakuFilterType"
+                <URadioGroup
+                  v-model="option.danmakuFilterType"
                   :disabled="isStartLottery"
-                >
-                  <NRadioButton value="all"> 完全一致 </NRadioButton>
-                  <NRadioButton value="contains"> 包含 </NRadioButton>
-                  <NRadioButton value="regex"> 正则 </NRadioButton>
-                </NRadioGroup>
-              </NFormItem>
+                  :items="[
+                    { label: '完全一致', value: 'all' },
+                    { label: '包含', value: 'contains' },
+                    { label: '正则', value: 'regex' },
+                  ]"
+                  orientation="horizontal"
+                />
+              </UFormField>
             </template>
 
             <template v-else-if="option.type === 'gift'">
-              <NFormItem label="礼物限制">
-                <NInputGroup>
-                  <NInputNumber
-                    v-model:value="option.giftMinPrice"
-                    :disabled="isStartLottery"
-                    placeholder="最低价格"
-                    :min="0"
-                    style="width: 50%"
-                  >
-                    <template #suffix> 元 </template>
-                  </NInputNumber>
-                  <NInput
-                    v-model:value="option.giftName"
+              <UFormField label="礼物限制">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <UInputNumber
+                      v-model="option.giftMinPrice"
+                      :disabled="isStartLottery"
+                      placeholder="最低价格"
+                      :min="0"
+                      style="width: 50%"
+                    />
+                    <span class="text-sm text-[var(--vtsuru-fg-muted)]">元</span>
+                  </div>
+                  <UInput
+                    v-model="option.giftName"
                     :disabled="isStartLottery"
                     placeholder="指定礼物名称"
                     style="width: 50%"
                   />
-                </NInputGroup>
-              </NFormItem>
+                </div>
+              </UFormField>
             </template>
 
-            <NFormItem label="身份限制">
-              <NFlex>
-                <NCheckbox
-                  v-model:checked="option.needGuard"
+            <UFormField label="身份限制">
+              <div>
+                <UCheckbox
+                  v-model="option.needGuard"
                   :disabled="isStartLottery"
                 >
                   舰长
-                </NCheckbox>
-                <NCheckbox
-                  v-model:checked="option.needFanMedal"
+                </UCheckbox>
+                <UCheckbox
+                  v-model="option.needFanMedal"
                   :disabled="isStartLottery"
                 >
                   粉丝牌
-                </NCheckbox>
-                <NCheckbox
-                  v-model:checked="option.needWearFanMedal"
+                </UCheckbox>
+                <UCheckbox
+                  v-model="option.needWearFanMedal"
                   :disabled="isStartLottery"
                 >
                   佩戴
-                </NCheckbox>
-              </NFlex>
-            </NFormItem>
+                </UCheckbox>
+              </div>
+            </UFormField>
 
-            <NCollapseTransition :show="option.needFanMedal">
-              <NFormItem label="粉丝牌等级">
-                <NInputNumber
-                  v-model:value="option.fanCardLevel"
+            <div :show="option.needFanMedal">
+              <UFormField label="粉丝牌等级">
+                <UInputNumber
+                  v-model="option.fanCardLevel"
                   :min="1"
                   :max="50"
                   :disabled="isStartLottery"
                 />
-              </NFormItem>
-            </NCollapseTransition>
-          </NForm>
+              </UFormField>
+            </div>
+          </UForm>
         </div>
       </div>
 
       <div class="setting-column">
         <div class="setting-section">
           <div class="section-header">
-            <NIcon :component="Sparkle24Filled" />
+            <UIcon name="i-lucide-circle" />
             玩法设置
           </div>
-          <NForm
+          <UForm
             label-placement="left"
             label-width="auto"
             size="small"
           >
             <div class="form-row">
-              <NFormItem
+              <UFormField
                 label="抽取人数"
                 style="flex: 1"
               >
-                <NInputNumber
-                  v-model:value="option.resultCount"
+                <UInputNumber
+                  v-model="option.resultCount"
                   :min="1"
                   :disabled="isStartLottery"
                   style="width: 100%"
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 label="动画速度"
                 style="flex: 1"
               >
-                <NInputNumber
-                  v-model:value="option.animationSpeed"
-                  :step="100"
-                  :min="100"
-                  :max="5000"
-                  :disabled="isLottering"
-                  style="width: 100%"
-                >
-                  <template #suffix> ms </template>
-                </NInputNumber>
-              </NFormItem>
+                <div class="flex items-center gap-2">
+                  <UInputNumber
+                    v-model="option.animationSpeed"
+                    :step="100"
+                    :min="100"
+                    :max="5000"
+                    :disabled="isLottering"
+                    style="width: 100%"
+                  />
+                  <span class="text-sm text-[var(--vtsuru-fg-muted)]">ms</span>
+                </div>
+              </UFormField>
             </div>
 
-            <NFormItem label="玩法模式">
+            <UFormField label="玩法模式">
               <div class="mode-selector-grid">
                 <div
                   v-for="(desc, key) in lotteryTypeDescriptions"
@@ -223,30 +206,30 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   "
                 >
                   <div class="mode-icon">
-                    <NIcon
+                    <UIcon
+                      name="i-lucide-circle"
                       v-if="key === 'single'"
-                      :component="Delete24Filled"
                     />
-                    <NIcon
+                    <UIcon
+                      name="i-lucide-circle"
                       v-else-if="key === 'half'"
-                      :component="Pause24Filled"
                       style="transform: rotate(90deg)"
                     />
-                    <NIcon
+                    <UIcon
+                      name="i-lucide-circle"
                       v-else-if="key === 'flip'"
-                      :component="Sparkle24Filled"
                     />
-                    <NIcon
+                    <UIcon
+                      name="i-lucide-circle"
                       v-else-if="key === 'wheel'"
-                      :component="Target24Filled"
                     />
-                    <NIcon
+                    <UIcon
+                      name="i-lucide-circle"
                       v-else-if="key === 'cards'"
-                      :component="Add24Filled"
                     />
-                    <NIcon
+                    <UIcon
+                      name="i-lucide-circle"
                       v-else-if="key === 'elimination'"
-                      :component="Play24Filled"
                     />
                   </div>
                   <div class="mode-info">
@@ -271,8 +254,8 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   </div>
                 </div>
               </div>
-            </NFormItem>
-          </NForm>
+            </UFormField>
+          </UForm>
         </div>
       </div>
     </div>

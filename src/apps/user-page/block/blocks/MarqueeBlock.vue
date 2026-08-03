@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { MegaphoneOutline } from '@vicons/ionicons5'
 import { useResizeObserver } from '@vueuse/core'
-import { NIcon } from 'naive-ui'
 import { computed, nextTick, ref, watch } from 'vue'
 import { Vue3Marquee } from 'vue3-marquee'
 
@@ -79,13 +78,13 @@ watch(
       class="row"
       :class="{ 'row--bare': !cfg.backgrounded }"
     >
-      <NIcon
+      <span
         size="18"
         depth="2"
         class="icon"
       >
         <MegaphoneOutline />
-      </NIcon>
+      </span>
       <div
         ref="hostRef"
         class="marquee-host"

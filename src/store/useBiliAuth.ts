@@ -1,4 +1,3 @@
-import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
@@ -6,6 +5,7 @@ import type { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
 import type { QueryParams, QueryRequestOptions } from '@/api/query'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { BILI_AUTH_API_URL, POINT_API_URL } from '@/shared/config'
+import { showErrorToast } from '@/shared/services/toast'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const useBiliAuth = defineStore('BiliAuth', () => {
@@ -123,7 +123,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     }
     return null
   }
-  async function GetGoods(id: number | undefined = undefined, message?: MessageApiInjection) {
+  async function GetGoods(id?: number) {
     if (!id) {
       return []
     }
@@ -134,11 +134,11 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
       if (resp.code == 200) {
         return resp.data
       } else {
-        message?.error(`无法获取数据: ${resp.message}`)
+        showErrorToast(`无法获取数据: ${resp.message}`)
         console.error(`无法获取数据: ${resp.message}`)
       }
     } catch (err) {
-      message?.error(`无法获取数据: ${err}`)
+      showErrorToast(`无法获取数据: ${err}`)
       console.error(`无法获取数据: ${err}`)
     }
     return []

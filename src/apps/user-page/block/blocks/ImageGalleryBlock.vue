@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NCarousel, NEmpty } from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -133,55 +132,50 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
       class="gallery"
       :style="containerStyle"
     >
-      <NEmpty
+      <UEmpty
         v-if="model.items.length === 0"
-        size="small"
+        size="sm"
         description="暂无图片"
+        class="public-empty"
       />
 
       <template v-else-if="model.layout === 'carousel'">
-        <NCarousel
-          class="carousel"
+        <UCarousel
+          class="public-carousel carousel"
           :style="carouselStyle"
-          :autoplay="model.autoplay && !reducedMotion"
-          :interval="model.interval"
-          :effect="model.effect"
-          :show-arrow="model.showArrow"
-          :show-dots="model.showDots"
-          :dot-type="model.dotType"
-          :dot-placement="model.dotPlacement"
+          :items="model.items"
+          :autoplay="model.autoplay && !reducedMotion ? { delay: model.interval } : false"
+          :fade="model.effect === 'fade'"
+          :arrows="model.showArrow"
+          :dots="model.showDots"
           :loop="model.loop"
-          :draggable="model.draggable"
-          :touchable="model.touchable"
-          :trigger="model.trigger"
-          @update:current-index="activeIndex = $event"
+          :watch-drag="model.draggable && model.touchable"
+          @select="activeIndex = $event"
         >
-          <div
-            v-for="(item, index) in model.items"
-            :key="`${item.src}-${index}`"
-            class="slide"
-          >
-            <div
-              class="image-state"
-              :class="{ hidden: loadedSources.has(item.src) && !failedSources.has(item.src) }"
-              role="status"
-            >
-              {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
+          <template #default="{ item, index }">
+            <div class="slide">
+              <div
+                class="image-state"
+                :class="{ hidden: loadedSources.has(item.src) && !failedSources.has(item.src) }"
+                role="status"
+              >
+                {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
+              </div>
+              <img
+                :src="item.src"
+                :alt="item.alt"
+                :loading="index === 0 ? 'eager' : 'lazy'"
+                decoding="async"
+                referrerpolicy="no-referrer"
+                class="image"
+                :class="{ loaded: loadedSources.has(item.src), failed: failedSources.has(item.src) }"
+                :style="{ objectFit: model.fit }"
+                @load="markLoaded(item.src)"
+                @error="markFailed(item.src)"
+              />
             </div>
-            <img
-              :src="item.src"
-              :alt="item.alt"
-              :loading="index === 0 ? 'eager' : 'lazy'"
-              decoding="async"
-              referrerpolicy="no-referrer"
-              class="image"
-              :class="{ loaded: loadedSources.has(item.src), failed: failedSources.has(item.src) }"
-              :style="{ objectFit: model.fit }"
-              @load="markLoaded(item.src)"
-              @error="markFailed(item.src)"
-            />
-          </div>
-        </NCarousel>
+          </template>
+        </UCarousel>
         <p
           v-if="activeCaption"
           class="carousel-caption"
@@ -328,12 +322,12 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
   min-height: 20px;
   padding-inline: 8px;
 }
-.carousel :deep(.n-carousel__arrow) {
+.carousel :deep(button) {
   color: var(--vtsuru-fg);
   background: var(--vtsuru-bg-elevated);
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
 }
-.carousel :deep(.n-carousel__arrow:focus-visible) {
+.carousel :deep(button:focus-visible) {
   outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
   outline-offset: 2px;
 }

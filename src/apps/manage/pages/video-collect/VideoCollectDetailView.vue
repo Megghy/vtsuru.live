@@ -30,8 +30,8 @@ import {
   NTag,
   NTime,
   useDialog,
-  useMessage,
 } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import Qrcode from 'qrcode.vue'
 import { computed, h, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -51,7 +51,6 @@ type SortOption = 'submitted-desc' | 'duration-desc' | 'duration-asc' | 'title'
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
 const dialog = useDialog()
 
 const videoDetail = ref<VideoCollectDetail>()
@@ -140,7 +139,7 @@ async function loadData() {
   } catch (error) {
     console.error(error)
     videoDetail.value = undefined
-    message.error(error instanceof Error ? error.message : '征集详情加载失败')
+    showErrorToast(error instanceof Error ? error.message : '征集详情加载失败')
   } finally {
     isLoading.value = false
   }
@@ -156,10 +155,10 @@ async function setStatus(status: VideoStatus, video: VideoInfo) {
     })
     if (response.code !== 200) throw new Error(response.message)
     video.status = status
-    message.success('审核状态已更新')
+    showSuccessToast('审核状态已更新')
   } catch (error) {
     console.error(error)
-    message.error(error instanceof Error ? error.message : '审核操作失败')
+    showErrorToast(error instanceof Error ? error.message : '审核操作失败')
   } finally {
     videoOperation.value = undefined
   }
@@ -175,10 +174,10 @@ async function updateTable(model: VideoCollectCreateModel) {
     if (response.code !== 200) throw new Error(response.message)
     if (videoDetail.value) videoDetail.value.table = response.data
     editModalVisible.value = false
-    message.success('征集信息已更新')
+    showSuccessToast('征集信息已更新')
   } catch (error) {
     console.error(error)
-    message.error(error instanceof Error ? error.message : '更新失败')
+    showErrorToast(error instanceof Error ? error.message : '更新失败')
   } finally {
     tableOperation.value = undefined
   }
@@ -192,10 +191,10 @@ async function toggleCollection() {
     const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}finish`, { id: table.value.id, finish })
     if (response.code !== 200) throw new Error(response.message)
     table.value.isFinish = finish
-    message.success(finish ? '征集已结束' : '征集已重新开启')
+    showSuccessToast(finish ? '征集已结束' : '征集已重新开启')
   } catch (error) {
     console.error(error)
-    message.error(error instanceof Error ? error.message : '状态更新失败')
+    showErrorToast(error instanceof Error ? error.message : '状态更新失败')
   } finally {
     tableOperation.value = undefined
   }
@@ -217,11 +216,11 @@ async function deleteTable() {
   try {
     const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}del`, { id: table.value.id })
     if (response.code !== 200) throw new Error(response.message)
-    message.success('征集已删除')
+    showSuccessToast('征集已删除')
     await router.replace({ name: 'manage-videoCollect' })
   } catch (error) {
     console.error(error)
-    message.error(error instanceof Error ? error.message : '删除失败')
+    showErrorToast(error instanceof Error ? error.message : '删除失败')
   } finally {
     tableOperation.value = undefined
   }

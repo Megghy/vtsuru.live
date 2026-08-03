@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Dismiss16Filled, MusicNote2Play20Filled, PresenceBlocked16Regular } from '@vicons/fluent'
-import { NButton, NCard, NFlex, NIcon, NTag, NText, NTooltip } from 'naive-ui'
 import type { CSSProperties } from 'vue'
 import { computed } from 'vue'
 
@@ -46,106 +44,100 @@ const indexStyle = computed<CSSProperties>(() => ({
 </script>
 
 <template>
-  <NCard
+  <UCard
     embedded
     size="small"
     content-style="padding: 8px 12px;"
   >
-    <NFlex
+    <div
       justify="space-between"
       align="center"
       :wrap="false"
     >
-      <NFlex
+      <div
         align="center"
         :size="8"
         :wrap="false"
         style="min-width: 0"
       >
         <span :style="indexStyle">{{ index }}</span>
-        <NText
+        <span
           strong
           style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
         >
           {{ music.name }}
-        </NText>
-        <NTag
+        </span>
+        <UBadge
           v-if="platformTag"
           size="tiny"
           :type="platformTag.type"
           :bordered="false"
         >
           {{ platformTag.label }}
-        </NTag>
-        <NText
+        </UBadge>
+        <span
           depth="3"
           style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
         >
           {{ music.author?.join('/') }}
-        </NText>
-        <NText
+        </span>
+        <span
           depth="2"
           style="font-size: 12px; white-space: nowrap"
         >
           点歌人: {{ fromName }}
-        </NText>
-      </NFlex>
+        </span>
+      </div>
 
-      <NFlex
+      <div
         justify="end"
         align="center"
         :size="6"
         :wrap="false"
         style="flex-shrink: 0"
       >
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="success"
-              ghost
-              @click="emit('play')"
-            >
-              <template #icon>
-                <NIcon :component="MusicNote2Play20Filled" />
-              </template>
-            </NButton>
-          </template>
-          播放
-        </NTooltip>
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="warning"
-              ghost
-              @click="emit('block')"
-            >
-              <template #icon>
-                <NIcon :component="PresenceBlocked16Regular" />
-              </template>
-            </NButton>
-          </template>
-          加入黑名单
-        </NTooltip>
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="error"
-              @click="emit('cancel')"
-            >
-              <template #icon>
-                <NIcon :component="Dismiss16Filled" />
-              </template>
-            </NButton>
-          </template>
-          取消
-        </NTooltip>
-      </NFlex>
-    </NFlex>
-  </NCard>
+        <UTooltip>
+          <UButton
+            square
+            size="small"
+            color="success"
+            ghost
+            @click="emit('play')"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content> 播放 </template>
+        </UTooltip>
+        <UTooltip>
+          <UButton
+            square
+            size="small"
+            color="warning"
+            ghost
+            @click="emit('block')"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content> 加入黑名单 </template>
+        </UTooltip>
+        <UTooltip>
+          <UButton
+            square
+            size="small"
+            color="error"
+            @click="emit('cancel')"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content> 取消 </template>
+        </UTooltip>
+      </div>
+    </div>
+  </UCard>
 </template>

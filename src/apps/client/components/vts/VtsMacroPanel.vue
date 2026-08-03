@@ -1,20 +1,8 @@
 <script setup lang="ts">
-import { AddOutline, CopyOutline, ReorderThreeOutline, TrashOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NDivider,
-  NDropdown,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NSwitch,
-  NText,
-} from 'naive-ui'
+const AddOutline = 'i-lucide-circle'
+const CopyOutline = 'i-lucide-circle'
+const ReorderThreeOutline = 'i-lucide-circle'
+const TrashOutline = 'i-lucide-circle'
 import { computed, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -193,32 +181,32 @@ function runMacro(macroId: string) {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="组合动作 (宏)"
   >
-    <NFlex
+    <div
       vertical
       :size="8"
     >
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="8"
       >
-        <NButton
+        <UButton
           size="small"
           @click="addMacro"
         >
           新建宏
-        </NButton>
-        <NText depth="3"> 按顺序执行所有步骤，任一步失败即终止 </NText>
-      </NFlex>
+        </UButton>
+        <span depth="3"> 按顺序执行所有步骤，任一步失败即终止 </span>
+      </div>
 
-      <NDivider style="margin: 4px 0" />
+      <USeparator style="margin: 4px 0" />
 
-      <NFlex
+      <div
         v-for="m in vts.macros"
         :key="m.id"
         align="center"
@@ -226,112 +214,129 @@ function runMacro(macroId: string) {
         :wrap="true"
         :size="8"
       >
-        <NFlex
+        <div
           align="center"
           :wrap="true"
           :size="8"
         >
-          <NText strong>
+          <span strong>
             {{ m.name }}
-          </NText>
-          <NText depth="3"> {{ m.steps?.length ?? 0 }} 步 </NText>
-        </NFlex>
-        <NFlex
+          </span>
+          <span depth="3"> {{ m.steps?.length ?? 0 }} 步 </span>
+        </div>
+        <div
           :wrap="true"
           :size="8"
         >
-          <NButton
+          <UButton
             size="small"
-            type="primary"
+            color="primary"
             :disabled="!vts.canOperate"
             @click="runMacro(m.id)"
           >
             运行
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             size="small"
             @click="openEdit(m)"
           >
             编辑
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             size="small"
             @click="cloneMacro(m)"
           >
-            <template #icon>
-              <NIcon><CopyOutline /></NIcon>
+            <template #leading>
+              <span><CopyOutline /></span>
             </template>
             克隆
-          </NButton>
-          <NPopconfirm @positive-click="vts.removeMacro(m.id)">
-            <template #trigger>
-              <NButton
-                size="small"
-                type="error"
-              >
-                删除
-              </NButton>
+          </UButton>
+          <UPopover>
+            <UButton
+              size="sm"
+              color="error"
+            >
+              删除
+            </UButton>
+            <template #content="{ close }">
+              <div class="space-y-3 p-3">
+                <div>确认删除此宏?</div>
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="close"
+                    >取消</UButton
+                  >
+                  <UButton
+                    size="xs"
+                    color="error"
+                    @click="(close(), vts.removeMacro(m.id))"
+                    >确认</UButton
+                  >
+                </div>
+              </div>
             </template>
-            确认删除此宏?
-          </NPopconfirm>
-        </NFlex>
-      </NFlex>
-    </NFlex>
-  </NCard>
+          </UPopover>
+        </div>
+      </div>
+    </div>
+  </UCard>
 
-  <NModal
-    v-model:show="showEdit"
+  <UModal
+    v-model:open="showEdit"
     preset="card"
     title="编辑宏"
     style="width: 720px"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NInput
-        v-model:value="macroName"
+      <UInput
+        v-model="macroName"
         placeholder="宏名称"
       />
-      <NFlex
+      <div
         align="center"
         justify="space-between"
         :wrap="true"
         :size="8"
       >
-        <NText depth="3"> 拖拽排序，串行执行 </NText>
-        <NDropdown
+        <span depth="3"> 拖拽排序，串行执行 </span>
+        <UDropdownMenu
           trigger="click"
-          :options="stepTypeOptions"
+          :items="stepTypeOptions"
           @select="(key: string) => addStep(key as StepType)"
         >
-          <NButton size="small">
-            <template #icon>
-              <NIcon><AddOutline /></NIcon>
+          <UButton size="small">
+            <template #leading>
+              <span><AddOutline /></span>
             </template>
             添加步骤
-          </NButton>
-        </NDropdown>
-      </NFlex>
+          </UButton>
+        </UDropdownMenu>
+      </div>
 
       <VueDraggable
         v-model="macroSteps"
         handle=".macro-step-handle"
         :animation="150"
       >
-        <NCard
+        <UCard
           v-for="(element, index) in macroSteps"
           :key="element.id"
           size="small"
           style="border-radius: var(--vtsuru-radius); margin-bottom: 8px"
         >
-          <NFlex
+          <div
             align="center"
             justify="space-between"
             :wrap="true"
             :size="8"
           >
-            <NFlex
+            <div
               align="center"
               :wrap="true"
               :size="8"
@@ -340,94 +345,97 @@ function runMacro(macroId: string) {
                 class="macro-step-handle"
                 title="拖拽排序"
               >
-                <NIcon><ReorderThreeOutline /></NIcon>
+                <span><ReorderThreeOutline /></span>
               </span>
-              <NText strong> {{ index + 1 }}. {{ stepLabelMap[element.step.type] ?? '未知' }} </NText>
-              <NSelect
+              <span strong> {{ index + 1 }}. {{ stepLabelMap[element.step.type] ?? '未知' }} </span>
+              <USelectMenu
                 size="small"
                 :value="element.step.type"
                 style="min-width: 180px"
-                :options="stepTypeOptions.map((o) => ({ label: o.label, value: o.key }))"
+                :items="stepTypeOptions.map((o) => ({ label: o.label, value: o.key }))"
                 @update:value="(v: StepType) => setStepType(element.id, v)"
+                value-key="value"
               />
-            </NFlex>
-            <NButton
+            </div>
+            <UButton
               size="small"
-              type="error"
-              secondary
+              color="error"
+              variant="soft"
               @click="removeStep(element.id)"
             >
-              <template #icon>
-                <NIcon><TrashOutline /></NIcon>
+              <template #leading>
+                <span><TrashOutline /></span>
               </template>
-            </NButton>
-          </NFlex>
+            </UButton>
+          </div>
 
-          <NDivider style="margin: 8px 0" />
+          <USeparator style="margin: 8px 0" />
 
-          <NFlex
+          <div
             v-if="element.step.type === 'hotkey'"
             :wrap="true"
             :size="12"
           >
-            <NSelect
+            <USelectMenu
               style="min-width: 380px"
               placeholder="选择热键"
-              :options="hotkeyOptions"
+              :items="hotkeyOptions"
               :value="element.step.hotkeyID"
               @update:value="(v: string) => upsertStep(element.id, { type: 'hotkey', hotkeyID: v })"
+              value-key="value"
             />
-          </NFlex>
+          </div>
 
-          <NFlex
+          <div
             v-else-if="element.step.type === 'preset'"
             :wrap="true"
             :size="12"
           >
-            <NSelect
+            <USelectMenu
               style="min-width: 380px"
               placeholder="选择预设"
-              :options="presetOptions"
+              :items="presetOptions"
               :value="element.step.presetId"
               @update:value="(v: string) => upsertStep(element.id, { type: 'preset', presetId: v })"
+              value-key="value"
             />
-          </NFlex>
+          </div>
 
-          <NFlex
+          <div
             v-else-if="element.step.type === 'wait'"
             align="center"
             :wrap="true"
             :size="12"
           >
-            <NText depth="3"> 等待 </NText>
-            <NInputNumber
+            <span depth="3"> 等待 </span>
+            <UInputNumber
               :value="element.step.seconds"
               :min="0"
               :step="0.1"
               style="width: 160px"
               @update:value="(v) => upsertStep(element.id, { type: 'wait', seconds: Number(v ?? 0) })"
             />
-            <NText depth="3"> 秒 </NText>
-          </NFlex>
+            <span depth="3"> 秒 </span>
+          </div>
 
-          <NFlex
+          <div
             v-else-if="element.step.type === 'injectParam'"
             :wrap="true"
             :size="12"
           >
-            <NInput
+            <UInput
               style="min-width: 220px"
               placeholder="参数 ID"
               :value="element.step.parameterId"
               @update:value="(v: string) => patchStep(element.id, { parameterId: v })"
             />
-            <NInputNumber
+            <UInputNumber
               style="width: 140px"
               placeholder="值"
               :value="element.step.value"
               @update:value="(v) => patchStep(element.id, { value: Number(v ?? 0) })"
             />
-            <NInputNumber
+            <UInputNumber
               style="width: 140px"
               placeholder="权重"
               :value="element.step.weight ?? 1"
@@ -435,56 +443,58 @@ function runMacro(macroId: string) {
               :step="0.1"
               @update:value="(v) => patchStep(element.id, { weight: Number(v ?? 1) })"
             />
-          </NFlex>
+          </div>
 
-          <NFlex
+          <div
             v-else-if="element.step.type === 'accessory'"
             align="center"
             :wrap="true"
             :size="12"
           >
-            <NSelect
+            <USelectMenu
               style="min-width: 320px"
               placeholder="选择配饰"
-              :options="accessoryOptions"
+              :items="accessoryOptions"
               :value="element.step.accessoryId"
               @update:value="(v: string) => patchStep(element.id, { accessoryId: v })"
+              value-key="value"
             />
-            <NSwitch
-              :value="element.step.visible"
-              @update:value="(v: boolean) => patchStep(element.id, { visible: v })"
+            <USwitch
+              :model-value="element.step.visible"
+              @update:model-value="(v: boolean) => patchStep(element.id, { visible: v })"
             >
-              <template #checked> 显示 </template>
-              <template #unchecked> 隐藏 </template>
-            </NSwitch>
-          </NFlex>
+              <template v-if="false"> 显示 </template>
+              <template v-if="false"> 隐藏 </template>
+            </USwitch>
+          </div>
 
-          <NFlex
+          <div
             v-else-if="element.step.type === 'prank'"
             :wrap="true"
             :size="12"
           >
-            <NSelect
+            <USelectMenu
               style="min-width: 380px"
               placeholder="选择整活"
-              :options="prankOptions"
+              :items="prankOptions"
               :value="element.step.prankId"
               @update:value="(v: string) => patchStep(element.id, { prankId: v })"
+              value-key="value"
             />
-          </NFlex>
+          </div>
 
-          <NFlex
+          <div
             v-else-if="element.step.type === 'playAudio'"
             :wrap="true"
             :size="12"
           >
-            <NInput
+            <UInput
               style="min-width: 320px"
               placeholder="音效 URL"
               :value="element.step.url"
               @update:value="(v: string) => patchStep(element.id, { url: v })"
             />
-            <NInputNumber
+            <UInputNumber
               style="width: 130px"
               placeholder="音量"
               :min="0"
@@ -493,45 +503,45 @@ function runMacro(macroId: string) {
               :value="element.step.volume ?? 0.8"
               @update:value="(v) => patchStep(element.id, { volume: Number(v ?? 0.8) })"
             />
-            <NSwitch
-              :value="element.step.waitForEnd ?? false"
-              @update:value="(v: boolean) => patchStep(element.id, { waitForEnd: v })"
+            <USwitch
+              :model-value="element.step.waitForEnd ?? false"
+              @update:model-value="(v: boolean) => patchStep(element.id, { waitForEnd: v })"
             >
-              <template #checked> 等待结束 </template>
-              <template #unchecked> 不等待 </template>
-            </NSwitch>
-          </NFlex>
-        </NCard>
+              <template v-if="false"> 等待结束 </template>
+              <template v-if="false"> 不等待 </template>
+            </USwitch>
+          </div>
+        </UCard>
       </VueDraggable>
 
-      <NDivider style="margin: 4px 0" />
+      <USeparator style="margin: 4px 0" />
 
-      <NFlex
+      <div
         align="center"
         justify="space-between"
         :wrap="true"
         :size="8"
       >
-        <NFlex
+        <div
           align="center"
           :size="8"
         >
-          <NSwitch
-            v-model:value="showAdvancedJson"
+          <USwitch
+            v-model="showAdvancedJson"
             size="small"
           />
-          <NText depth="3"> JSON 预览 </NText>
-        </NFlex>
-        <NButton
+          <span depth="3"> JSON 预览 </span>
+        </div>
+        <UButton
           size="small"
-          secondary
+          variant="soft"
           @click="macroSteps = []"
         >
           清空步骤
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
 
-      <NInput
+      <UInput
         v-if="showAdvancedJson"
         type="textarea"
         :rows="6"
@@ -539,20 +549,20 @@ function runMacro(macroId: string) {
         readonly
       />
 
-      <NFlex
+      <div
         justify="end"
         :size="8"
       >
-        <NButton @click="showEdit = false"> 取消 </NButton>
-        <NButton
-          type="primary"
+        <UButton @click="showEdit = false"> 取消 </UButton>
+        <UButton
+          color="primary"
           @click="saveMacro"
         >
           保存
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+        </UButton>
+      </div>
+    </div>
+  </UModal>
 </template>
 
 <style scoped>

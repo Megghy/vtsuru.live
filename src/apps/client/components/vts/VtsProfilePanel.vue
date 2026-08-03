@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NInput, NPopconfirm, NTag, NText } from 'naive-ui'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsProfile } from '@/apps/client/store/useVtsStore'
@@ -55,27 +54,27 @@ async function onImportFileChange(ev: Event) {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="配置包 (Profile)"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="8"
       >
-        <NButton
+        <UButton
           size="small"
           @click="addProfile"
         >
           从当前创建
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="small"
           tag="label"
         >
@@ -86,11 +85,11 @@ async function onImportFileChange(ev: Event) {
             style="display: none"
             @change="onImportFileChange"
           />
-        </NButton>
-        <NText depth="3"> 保存/恢复 VTS 控制配置 (不含连接信息) </NText>
-      </NFlex>
+        </UButton>
+        <span depth="3"> 保存/恢复 VTS 控制配置 (不含连接信息) </span>
+      </div>
 
-      <NFlex
+      <div
         v-for="p in vts.profiles"
         :key="p.id"
         align="center"
@@ -98,64 +97,98 @@ async function onImportFileChange(ev: Event) {
         :wrap="true"
         :size="12"
       >
-        <NFlex
+        <div
           align="center"
           :wrap="true"
           :size="12"
         >
-          <NTag
+          <UBadge
             v-if="vts.currentProfileId === p.id"
             type="success"
             size="small"
           >
             当前
-          </NTag>
-          <NInput
-            v-model:value="p.name"
+          </UBadge>
+          <UInput
+            v-model="p.name"
             placeholder="名称"
             style="width: 200px"
             @blur="renameProfile({ ...p })"
           />
-          <NText depth="3">
+          <span depth="3">
             预设={{ p.data.presets.length }} 宏={{ p.data.macros.length }} 参数={{ p.data.paramSlots.length }}
-          </NText>
-        </NFlex>
-        <NFlex
+          </span>
+        </div>
+        <div
           :wrap="true"
           :size="8"
         >
-          <NButton
+          <UButton
             size="small"
-            type="primary"
+            color="primary"
             @click="applyProfile(p.id)"
           >
             应用
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             size="small"
             @click="exportProfile(p)"
           >
             导出
-          </NButton>
-          <NPopconfirm @positive-click="captureToProfile(p.id)">
-            <template #trigger>
-              <NButton size="small"> 覆盖保存 </NButton>
+          </UButton>
+          <UPopover>
+            <UButton size="sm"> 覆盖保存 </UButton>
+            <template #content="{ close }">
+              <div class="space-y-3 p-3">
+                <div>用当前配置覆盖此 Profile?</div>
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="close"
+                    >取消</UButton
+                  >
+                  <UButton
+                    size="xs"
+                    color="primary"
+                    @click="(close(), captureToProfile(p.id))"
+                    >确认</UButton
+                  >
+                </div>
+              </div>
             </template>
-            用当前配置覆盖此 Profile?
-          </NPopconfirm>
-          <NPopconfirm @positive-click="vts.deleteProfile(p.id)">
-            <template #trigger>
-              <NButton
-                size="small"
-                type="error"
-              >
-                删除
-              </NButton>
+          </UPopover>
+          <UPopover>
+            <UButton
+              size="sm"
+              color="error"
+            >
+              删除
+            </UButton>
+            <template #content="{ close }">
+              <div class="space-y-3 p-3">
+                <div>确认删除?</div>
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="close"
+                    >取消</UButton
+                  >
+                  <UButton
+                    size="xs"
+                    color="error"
+                    @click="(close(), vts.deleteProfile(p.id))"
+                    >确认</UButton
+                  >
+                </div>
+              </div>
             </template>
-            确认删除?
-          </NPopconfirm>
-        </NFlex>
-      </NFlex>
-    </NFlex>
-  </NCard>
+          </UPopover>
+        </div>
+      </div>
+    </div>
+  </UCard>
 </template>

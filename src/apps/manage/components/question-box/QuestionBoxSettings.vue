@@ -18,9 +18,9 @@ import {
   NSlider,
   NTag,
   NTooltip,
-  useMessage,
   useThemeVars,
 } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import { h, ref, watch } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
@@ -28,7 +28,6 @@ import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
 const useQB = useQuestionBox()
-const message = useMessage()
 const themeVars = useThemeVars()
 
 const addTagName = ref('')
@@ -81,10 +80,10 @@ async function saveQuestionBoxSettings() {
   if (!accountInfo.value?.settings?.questionBox) return
   try {
     const success = await SaveSetting('QuestionBox', accountInfo.value.settings.questionBox)
-    if (success) message.success('设置已保存')
-    else message.error('保存设置失败')
+    if (success) showSuccessToast('设置已保存')
+    else showErrorToast('保存设置失败')
   } catch (err) {
-    message.error(`保存设置时出错: ${err}`)
+    showErrorToast(`保存设置时出错: ${err}`)
   }
 }
 
@@ -92,10 +91,10 @@ async function saveNotificationSetting() {
   if (!accountInfo.value?.settings?.sendEmail) return
   try {
     const response = await SaveAccountSettings()
-    if (response.code === 200) message.success('通知设置已保存')
-    else message.error(`修改通知设置失败: ${response.message}`)
+    if (response.code === 200) showSuccessToast('通知设置已保存')
+    else showErrorToast(`修改通知设置失败: ${response.message}`)
   } catch (err) {
-    message.error(`修改通知设置失败: ${err}`)
+    showErrorToast(`修改通知设置失败: ${err}`)
   }
 }
 

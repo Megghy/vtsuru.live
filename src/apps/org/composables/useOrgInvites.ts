@@ -1,8 +1,8 @@
-import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
+import { showErrorToast, showSuccessToast } from '@/shared/services/toast'
 
 import type { OrgInviteMemberListItem, OrgInviteResponseModel, OrgInviteStreamerListItem } from '../types'
 import type { OrgContext } from './useOrgContext'
@@ -21,7 +21,6 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
   ctx: OrgContext,
   kind: InviteKind,
 ) {
-  const message = useMessage()
   const invites = ref<T[]>([])
   const loading = ref(false)
   const creating = ref(false)
@@ -36,7 +35,7 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
         '加载邀请失败',
       )
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载邀请失败')
+      showErrorToast(err instanceof Error ? err.message : '加载邀请失败')
     } finally {
       loading.value = false
     }
@@ -54,7 +53,7 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
       await load()
       return data.joinUrl
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '生成邀请失败')
+      showErrorToast(err instanceof Error ? err.message : '生成邀请失败')
     } finally {
       creating.value = false
     }

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { NSpin } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
@@ -103,7 +102,7 @@ watch(
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="!setting"
     show
   />
@@ -241,14 +240,14 @@ body::-webkit-scrollbar {
 *::-webkit-scrollbar {
   display: none;
 }
-.n-layout {
+.u-layout {
   background: transparent;
 }
-.n-layout-content {
+.u-layout-content {
   overflow: hidden !important;
   background: transparent !important;
 }
-.n-element {
+.u-element {
   background: transparent !important;
 }
 

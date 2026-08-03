@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { PersonCircleOutline } from '@vicons/ionicons5'
-import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import RichTextEditor from '@/apps/user-page/editor/RichTextEditor.vue'
 
@@ -13,119 +10,112 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
-  <NForm
+  <div
+    class="builder-form"
     v-if="props.block.type === 'profile'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="显示名称">
-        <NInput
-          v-model:value="blockProps.displayName"
+      <UFormField label="显示名称">
+        <UInput
+          v-model="blockProps.displayName"
           placeholder="为空则显示账号名"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="头像图片"
       >
-        <NFlex align="center">
-          <NButton
-            size="small"
+        <div class="builder-row">
+          <UButton
+            size="sm"
             :loading="editor.isUploading.value"
             @click="editor.triggerUpload(props.block, 'avatarFile')"
           >
             <template #icon>
-              <NIcon><PersonCircleOutline /></NIcon>
+              <UIcon name="i-lucide-circle-user-round" />
             </template>
             上传头像
-          </NButton>
-          <NButton
-            size="small"
-            secondary
+          </UButton>
+          <UButton
+            size="sm"
+            variant="soft"
             :disabled="!blockProps.avatarFile"
             @click="editor.clearUploadedFile(props.block, 'avatarFile')"
           >
             清除
-          </NButton>
-          <NText depth="3">
+          </UButton>
+          <span class="builder-text">
             {{ blockProps.avatarFile?.name || blockProps.avatarFile?.path || '' }}
-          </NText>
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+          </span>
+        </div>
+      </UFormField>
+      <UFormField
         class="span-full"
         label="个人简介"
       >
-        <NInput
-          v-model:value="blockProps.bio"
-          type="textarea"
+        <UTextarea
+          v-model="blockProps.bio"
           :autosize="{ minRows: 2, maxRows: 6 }"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'heading'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="标题文字">
-        <NInput
-          v-model:value="blockProps.text"
+      <UFormField label="标题文字">
+        <UInput
+          v-model="blockProps.text"
           placeholder="请输入标题"
         />
-      </NFormItem>
-      <NFormItem label="标题级别 1/2/3">
-        <NInputNumber
-          v-model:value="blockProps.level"
+      </UFormField>
+      <UFormField label="标题级别 1/2/3">
+        <UInputNumber
+          v-model="blockProps.level"
           :min="1"
           :max="3"
           style="width: 100%"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'text'"
-    label-placement="top"
-    size="small"
   >
-    <NFormItem label="文本内容">
-      <NInput
-        v-model:value="blockProps.text"
-        type="textarea"
+    <UFormField label="文本内容">
+      <UTextarea
+        v-model="blockProps.text"
         :autosize="{ minRows: 6, maxRows: 14 }"
       />
-    </NFormItem>
-  </NForm>
+    </UFormField>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'richText'"
-    label-placement="top"
-    size="small"
   >
-    <NFormItem label="富文本内容">
+    <UFormField label="富文本内容">
       <RichTextEditor
         v-model:html="editor.ensureRichTextProps(props.block).html"
         v-model:images-file="editor.ensureRichTextProps(props.block).imagesFile"
       />
-    </NFormItem>
-  </NForm>
+    </UFormField>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'alert'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="提示类型">
-        <NSelect
-          v-model:value="blockProps.type"
-          :options="[
+      <UFormField label="提示类型">
+        <USelect
+          v-model="blockProps.type"
+          :items="[
             { label: '信息', value: 'info' },
             { label: '成功', value: 'success' },
             { label: '警告', value: 'warning' },
@@ -133,40 +123,39 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
             { label: '默认', value: 'default' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="标题">
-        <NInput
-          v-model:value="blockProps.title"
+      </UFormField>
+      <UFormField label="标题">
+        <UInput
+          v-model="blockProps.title"
           placeholder="可选"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="内容"
       >
-        <NInput
-          v-model:value="blockProps.text"
-          type="textarea"
+        <UTextarea
+          v-model="blockProps.text"
           :autosize="{ minRows: 3, maxRows: 8 }"
           placeholder="请输入提示内容"
         />
-      </NFormItem>
-      <NFormItem label="显示图标">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showIcon"
+      </UFormField>
+      <UFormField label="显示图标">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showIcon"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示边框">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.bordered"
+        </div>
+      </UFormField>
+      <UFormField label="显示边框">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.bordered"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
+        </div>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

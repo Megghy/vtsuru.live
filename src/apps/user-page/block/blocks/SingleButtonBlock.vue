@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -106,14 +105,14 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
     :framed="framed"
     :backgrounded="backgrounded"
   >
-    <NFlex
+    <div
       :justify="justify"
       align="center"
       style="width: 100%"
     >
-      <NButton
+      <UButton
         v-if="isBack || internalTarget"
-        :type="buttonType as any"
+        :color="buttonType as any"
         :secondary="variant === 'secondary'"
         :tertiary="variant === 'tertiary'"
         :quaternary="variant === 'quaternary'"
@@ -123,11 +122,10 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
         @click="handleClick"
       >
         {{ label }}
-      </NButton>
-      <NButton
+      </UButton>
+      <UButton
         v-else
-        tag="a"
-        :type="buttonType as any"
+        :color="buttonType as any"
         :secondary="variant === 'secondary'"
         :tertiary="variant === 'tertiary'"
         :quaternary="variant === 'quaternary'"
@@ -139,8 +137,8 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
         :style="fullWidth ? 'width: 100%' : undefined"
       >
         {{ label }}
-      </NButton>
-    </NFlex>
+      </UButton>
+    </div>
   </BlockCard>
 </template>
 

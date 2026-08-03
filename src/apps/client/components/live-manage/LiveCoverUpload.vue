@@ -4,23 +4,27 @@ import { roomInfo } from '@/apps/client/data/info'
 
 const props = defineProps<{ control: LiveControl }>()
 const c = props.control
+
+function selectCover(event: Event) {
+  c.handleCoverFileChange((event.target as HTMLInputElement).files?.[0])
+}
 </script>
 
 <template>
   <div>
-    <NText strong> 直播封面： </NText>
-    <NFlex
+    <span strong> 直播封面： </span>
+    <div
       :size="16"
       style="margin-top: 8px"
     >
       <!-- 现有封面显示 -->
       <div style="flex-shrink: 0">
-        <NText
+        <span
           depth="3"
           style="display: block; margin-bottom: 8px"
         >
           当前封面
-        </NText>
+        </span>
         <div
           style="
             width: 160px;
@@ -40,67 +44,43 @@ const c = props.control
             alt="当前直播封面"
             style="width: 100%; height: 100%; object-fit: cover"
           />
-          <NText
+          <span
             v-else
             depth="3"
             style="font-size: 12px"
           >
             暂无封面
-          </NText>
+          </span>
         </div>
       </div>
 
       <!-- 新封面上传和预览 -->
       <div style="flex: 1">
-        <NText
+        <span
           depth="3"
           style="display: block; margin-bottom: 8px"
         >
           上传新封面
-        </NText>
-        <NFlex
+        </span>
+        <div
           vertical
           :size="8"
         >
-          <NFlex :size="8">
-            <NUpload
-              :max="1"
+          <div :size="8">
+            <input
+              type="file"
               accept="image/jpeg,image/png,image/webp"
-              :file-list="
-                c.coverFile.value
-                  ? [
-                      {
-                        id: 'cover',
-                        name: c.coverFile.value.name,
-                        status: 'finished',
-                        file: c.coverFile.value,
-                      },
-                    ]
-                  : []
-              "
-              @change="
-                (options) => {
-                  const { file, fileList } = options
-                  if (fileList.length === 0) {
-                    c.handleCoverRemove()
-                  } else if (file) {
-                    c.handleCoverFileChange(file)
-                  }
-                }
-              "
-              @before-upload="() => false"
-            >
-              <NButton> 选择图片 </NButton>
-            </NUpload>
-            <NButton
-              type="primary"
+              @change="selectCover"
+            />
+            <UButton
+              color="primary"
               :loading="c.isUploadingCover.value"
               :disabled="!c.coverFile.value"
               @click="c.handleUploadCover"
             >
               上传并应用
-            </NButton>
-          </NFlex>
+            </UButton>
+          </div>
 
           <!-- 新封面预览 -->
           <div
@@ -119,14 +99,14 @@ const c = props.control
               style="width: 100%; height: 100%; object-fit: cover"
             />
           </div>
-          <NText
+          <span
             depth="3"
             style="font-size: 12px"
           >
             支持 JPG / PNG / WEBP，大小不超过 5MB
-          </NText>
-        </NFlex>
+          </span>
+        </div>
       </div>
-    </NFlex>
+    </div>
   </div>
 </template>

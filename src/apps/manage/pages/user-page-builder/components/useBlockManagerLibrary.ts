@@ -1,15 +1,4 @@
-import {
-  AddCircleOutline,
-  ArrowDownOutline,
-  ArrowUpOutline,
-  CopyOutline,
-  CreateOutline,
-  LayersOutline,
-  TrashOutline,
-} from '@vicons/ionicons5'
-import type { MenuOption } from 'naive-ui'
-import { NIcon, useDialog } from 'naive-ui'
-import { computed, h, inject, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 
 import { BLOCK_LIBRARY, createBlockNode } from '@/apps/user-page/block/registry'
 import type { BlockNode, BlockType } from '@/apps/user-page/block/schema'
@@ -29,6 +18,17 @@ interface PersonalBlockTemplate {
   id: string
   label: string
   blocks: BlockNode[]
+}
+
+export interface BuilderMenuItem {
+  label?: string
+  key?: string
+  type?: 'label' | 'separator' | 'link'
+  icon?: string
+  disabled?: boolean
+  children?: BuilderMenuItem[]
+  onSelect?: (event: Event) => void
+  class?: string
 }
 
 const blockTemplates: BlockTemplate[] = [
@@ -99,37 +99,40 @@ const blockGroups = [
   },
 ] as const
 
-function createBlockOption(item: (typeof BLOCK_LIBRARY)[number]): MenuOption {
+function createBlockOption(item: (typeof BLOCK_LIBRARY)[number]): BuilderMenuItem {
   return {
     label: item.label,
     key: item.type,
-    icon: item.icon ? () => h(NIcon, null, { default: () => h(item.icon) }) : undefined,
   }
 }
 
-function createGroupLabel(label: string, key: string): MenuOption {
+function createGroupLabel(label: string, key: string): BuilderMenuItem {
   return {
     key: `divider:${key}`,
-    label: () =>
-      h('div', { style: 'display:flex; align-items:center; gap: 10px; width: 100%;' }, [
-        h('span', { style: 'font-size: 12px; font-weight: 700; color: var(--vtsuru-fg-muted);' }, label),
-        h('div', { style: 'height: 1px; flex: 1; background: var(--vtsuru-border);' }),
-      ]),
+    label,
     disabled: true,
+    type: 'label',
   }
 }
 
 export function useBlockManagerLibrary() {
   const editor = inject(UserPageEditorKey)
   if (!editor) throw new Error('UserPageEditor context is missing')
-  const dialog = useDialog()
   const showAddMenu = ref(false)
   const blockSearch = ref('')
   const blockTypeSet = new Set<string>(BLOCK_LIBRARY.map((item) => item.type))
   const personalTemplates = usePersistedStorage<PersonalBlockTemplate[]>(USER_PAGE_BLOCK_TEMPLATES_KEY, [])
   const templateOptions = computed(() => [
-    ...blockTemplates.map((template) => ({ label: template.label, key: template.key })),
-    ...personalTemplates.value.map((template) => ({ label: template.label, key: `personal:${template.id}` })),
+    ...blockTemplates.map((template) => ({
+      label: template.label,
+      key: template.key,
+      onSelect: () => insertTemplate(template.key),
+    })),
+    ...personalTemplates.value.map((template) => ({
+      label: template.label,
+      key: `personal:${template.id}`,
+      onSelect: () => insertTemplate(`personal:${template.id}`),
+    })),
   ])
 
   const filteredLibrary = computed(() => {
@@ -140,9 +143,9 @@ export function useBlockManagerLibrary() {
     )
   })
 
-  const addBlockOptions = computed<MenuOption[]>(() => {
+  const addBlockOptions = computed<BuilderMenuItem[]>(() => {
     const available = new Map(filteredLibrary.value.map((item) => [item.type, item]))
-    const options: MenuOption[] = []
+    const options: BuilderMenuItem[] = []
     const used = new Set<BlockType>()
 
     for (const group of blockGroups) {
@@ -160,11 +163,13 @@ export function useBlockManagerLibrary() {
       .filter((item) => !used.has(item.type))
       .toSorted((a, b) => a.label.localeCompare(b.label))
     if (rest.length) options.push(createGroupLabel('其他', 'rest'), ...rest.map(createBlockOption))
-    return options
+    return options.map((item) =>
+      item.key && blockTypeSet.has(item.key) ? { ...item, onSelect: () => handleAddBlockMenuSelect(item.key!) } : item,
+    )
   })
 
-  const moveTargets = computed<MenuOption[]>(() => {
-    const layouts: MenuOption[] = []
+  const moveTargets = computed<BuilderMenuItem[]>(() => {
+    const layouts: BuilderMenuItem[] = []
     const visit = (blocks: BlockNode[]) =>
       blocks.forEach((block) => {
         if (block.type !== 'layout') return
@@ -176,35 +181,35 @@ export function useBlockManagerLibrary() {
     return [{ label: '页面顶部', key: 'move-to:top' }, { label: '页面底部', key: 'move-to:bottom' }, ...layouts]
   })
 
-  const blockActionOptions = computed<MenuOption[]>(() => [
-    { label: '上移', key: 'move-up', icon: () => h(NIcon, null, { default: () => h(ArrowUpOutline) }) },
-    { label: '下移', key: 'move-down', icon: () => h(NIcon, null, { default: () => h(ArrowDownOutline) }) },
+  const blockActionOptions = computed<BuilderMenuItem[]>(() => [
+    { label: '上移', key: 'move-up', icon: 'i-lucide-arrow-up' },
+    { label: '下移', key: 'move-down', icon: 'i-lucide-arrow-down' },
     {
       label: '移动到',
       key: 'move-to',
       children: moveTargets.value,
-      icon: () => h(NIcon, null, { default: () => h(LayersOutline) }),
+      icon: 'i-lucide-layers',
     },
-    { type: 'divider', key: 'movement-divider' },
-    { label: '重命名', key: 'rename', icon: () => h(NIcon, null, { default: () => h(CreateOutline) }) },
-    { label: '复制', key: 'copy', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
+    { type: 'separator', key: 'movement-divider' },
+    { label: '重命名', key: 'rename', icon: 'i-lucide-square-pen' },
+    { label: '复制', key: 'copy', icon: 'i-lucide-copy' },
     {
       label: '粘贴到下方',
       key: 'paste-after',
       disabled: editor.getClipboardBlocksCount() === 0,
-      icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }),
+      icon: 'i-lucide-plus',
     },
-    { type: 'divider', key: 'duplicate-divider' },
-    { label: '在上方插入副本', key: 'dup-up', icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
-    { label: '在下方插入副本', key: 'dup-down', icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
-    { type: 'divider', key: 'layout-divider' },
-    { label: '解散分组 - 仅布局', key: 'ungroup', icon: () => h(NIcon, null, { default: () => h(LayersOutline) }) },
-    { type: 'divider', key: 'delete-divider' },
+    { type: 'separator', key: 'duplicate-divider' },
+    { label: '在上方插入副本', key: 'dup-up', icon: 'i-lucide-plus' },
+    { label: '在下方插入副本', key: 'dup-down', icon: 'i-lucide-plus' },
+    { type: 'separator', key: 'layout-divider' },
+    { label: '解散分组 - 仅布局', key: 'ungroup', icon: 'i-lucide-layers' },
+    { type: 'separator', key: 'delete-divider' },
     {
       label: '删除区块',
       key: 'delete',
-      icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
-      props: { style: 'color: #d03050' },
+      icon: 'i-lucide-trash-2',
+      class: 'text-red-500',
     },
   ])
 
@@ -242,14 +247,8 @@ export function useBlockManagerLibrary() {
       applyTemplate(key, false)
       return
     }
-    dialog.warning({
-      title: '应用起始模板',
-      content: '当前页面已有区块，请选择追加模板内容或替换当前页面。',
-      positiveText: '追加',
-      negativeText: '替换',
-      onPositiveClick: () => applyTemplate(key, false),
-      onNegativeClick: () => applyTemplate(key, true),
-    })
+    if (window.confirm('当前页面已有区块，确定追加模板内容吗？取消将替换当前页面。')) applyTemplate(key, false)
+    else applyTemplate(key, true)
   }
 
   function handleAddBlockMenuSelect(key: string) {
@@ -260,14 +259,8 @@ export function useBlockManagerLibrary() {
       editor.addBlock(key as BlockType)
       return
     }
-    dialog.info({
-      title: '添加到布局附近',
-      content: '将新区块加入当前布局，或插入到布局下方。',
-      positiveText: '加入布局',
-      negativeText: '插到下方',
-      onPositiveClick: () => editor.addBlock(key as BlockType, 'inside'),
-      onNegativeClick: () => editor.addBlock(key as BlockType, 'after'),
-    })
+    if (window.confirm('将新区块加入当前布局吗？取消将插入到布局下方。')) editor.addBlock(key as BlockType, 'inside')
+    else editor.addBlock(key as BlockType, 'after')
   }
 
   function saveSelectionAsTemplate() {

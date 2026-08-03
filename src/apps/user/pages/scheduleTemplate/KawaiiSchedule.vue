@@ -423,7 +423,7 @@ defineExpose({ Config, DefaultConfig })
 
 /* --- Configuration UI specific styles --- */
 /* Add styles for the NCard and controls within the render function if needed */
-.n-card {
+.user-page-card {
   transition: border 0.2s ease-in-out;
 }
 </style>

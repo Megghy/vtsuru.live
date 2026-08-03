@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
-import { NCard, NFlex, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch, NText, NTooltip, NIcon } from 'naive-ui'
-
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
 
@@ -65,142 +62,141 @@ const priorityOptions = [
 </script>
 
 <template>
-  <NCard
+  <UCard
     title="常规设置"
     size="small"
     bordered
     embedded
     class="basic-settings-card"
   >
-    <NForm
+    <UForm
       label-placement="left"
       label-width="100"
       size="small"
       :show-feedback="false"
     >
-      <NGrid
+      <div
         cols="1 m:2"
         responsive="screen"
         :x-gap="16"
         :y-gap="12"
       >
-        <NGi
+        <div
           v-if="!hideName"
           span="1 m:2"
         >
-          <NFormItem label="操作名称">
-            <NFlex
+          <UFormField label="操作名称">
+            <div
               vertical
               :size="2"
               style="width: 100%"
             >
-              <NInput
-                v-model:value="action.name"
+              <UInput
+                v-model="action.name"
                 placeholder="例如：给礼物老板点赞"
                 :status="nameInvalid ? 'error' : undefined"
                 clearable
               />
-              <NText
+              <span
                 v-if="nameInvalid"
                 type="error"
                 style="font-size: 12px"
               >
                 操作名称不能为空
-              </NText>
-              <NText
+              </span>
+              <span
                 v-else-if="templateInvalid"
                 type="warning"
                 style="font-size: 12px"
               >
                 当前动作需要设置模板内容，否则不会生效
-              </NText>
-            </NFlex>
-          </NFormItem>
-        </NGi>
+              </span>
+            </div>
+          </UFormField>
+        </div>
 
-        <NGi v-if="!hideEnabled">
-          <NFormItem label="是否启用">
-            <NSwitch
-              v-model:value="action.enabled"
+        <div v-if="!hideEnabled">
+          <UFormField label="是否启用">
+            <USwitch
+              v-model="action.enabled"
               size="small"
             />
-          </NFormItem>
-        </NGi>
+          </UFormField>
+        </div>
 
-        <NGi>
-          <NFormItem>
+        <div>
+          <UFormField>
             <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >仅直播时
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                关闭直播后将不会触发此操作
-              </NTooltip>
+              <UTooltip>
+                <span
+                  >仅直播时
+                  <UIcon
+                    name="i-lucide-circle"
+                    style="vertical-align: -2px"
+                /></span>
+                <template #content> 关闭直播后将不会触发此操作 </template>
+              </UTooltip>
             </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.onlyDuringLive"
+            <USwitch
+              v-model="action.triggerConfig.onlyDuringLive"
               size="small"
             />
-          </NFormItem>
-        </NGi>
+          </UFormField>
+        </div>
 
-        <NGi>
-          <NFormItem>
+        <div>
+          <UFormField>
             <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >忽略天选
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                开启天选时刻期间暂停触发（防止被风控）
-              </NTooltip>
+              <UTooltip>
+                <span
+                  >忽略天选
+                  <UIcon
+                    name="i-lucide-circle"
+                    style="vertical-align: -2px"
+                /></span>
+                <template #content> 开启天选时刻期间暂停触发（防止被风控） </template>
+              </UTooltip>
             </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.ignoreTianXuan"
+            <USwitch
+              v-model="action.triggerConfig.ignoreTianXuan"
               size="small"
             />
-          </NFormItem>
-        </NGi>
+          </UFormField>
+        </div>
 
-        <NGi>
-          <NFormItem label="触发类型">
-            <NSelect
-              v-model:value="action.triggerType"
-              :options="triggerTypeOptions"
+        <div>
+          <UFormField label="触发类型">
+            <USelectMenu
+              v-model="action.triggerType"
+              :items="triggerTypeOptions"
               disabled
+              value-key="value"
             />
-          </NFormItem>
-        </NGi>
+          </UFormField>
+        </div>
 
-        <NGi>
-          <NFormItem label="执行动作">
-            <NSelect
-              v-model:value="action.actionType"
-              :options="actionTypeOptions"
+        <div>
+          <UFormField label="执行动作">
+            <USelectMenu
+              v-model="action.actionType"
+              :items="actionTypeOptions"
+              value-key="value"
             />
-          </NFormItem>
-        </NGi>
+          </UFormField>
+        </div>
 
-        <NGi>
-          <NFormItem label="执行优先级">
-            <NSelect
-              v-model:value="action.priority"
-              :options="priorityOptions"
+        <div>
+          <UFormField label="执行优先级">
+            <USelectMenu
+              v-model="action.priority"
+              :items="priorityOptions"
+              value-key="value"
             />
-          </NFormItem>
-        </NGi>
-      </NGrid>
-    </NForm>
-  </NCard>
+          </UFormField>
+        </div>
+      </div>
+    </UForm>
+  </UCard>
 </template>
 
 <style scoped>
@@ -208,7 +204,7 @@ const priorityOptions = [
   border-radius: var(--vtsuru-radius);
 }
 
-:deep(.n-form-item-label) {
+:deep(.u-form-item-label) {
   font-weight: 500;
 }
 </style>

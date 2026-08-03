@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NCard, NCollapse, NCollapseItem, NDivider, NFlex, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
@@ -99,7 +98,7 @@ function getAdvancedSummary() {
 </script>
 
 <template>
-  <NFlex
+  <div
     class="auto-action-editor"
     vertical
     :size="16"
@@ -112,7 +111,7 @@ function getAdvancedSummary() {
     />
 
     <!-- 2. 内容配置 (模板或VTS) -->
-    <NCard
+    <UCard
       v-if="showTemplate || showVtsSettings"
       size="small"
       embedded
@@ -129,23 +128,23 @@ function getAdvancedSummary() {
         v-if="showVtsSettings"
         :action="action"
       />
-    </NCard>
+    </UCard>
 
     <!-- 3. 高级设置 (触发器特定 & 通用高级) -->
-    <NCollapse>
-      <NCollapseItem
+    <div>
+      <details
         title="高级规则与触发条件"
         name="advanced"
       >
-        <template #header-extra>
-          <NText
+        <summary>
+          <span
             depth="3"
             style="font-size: 12px"
           >
             {{ getAdvancedSummary() }}
-          </NText>
-        </template>
-        <NFlex
+          </span>
+        </summary>
+        <div
           vertical
           :size="16"
           style="padding-top: 8px"
@@ -158,12 +157,12 @@ function getAdvancedSummary() {
             class="trigger-settings"
           />
 
-          <NDivider
+          <USeparator
             v-if="TriggerSettings"
             style="margin: 0"
           >
             通用高级设置
-          </NDivider>
+          </USeparator>
 
           <!-- 通用高级设置 -->
           <AdvancedSettings
@@ -171,10 +170,10 @@ function getAdvancedSummary() {
             :hide-user-filter="hideUserFilter"
             class="advanced-settings"
           />
-        </NFlex>
-      </NCollapseItem>
-    </NCollapse>
-  </NFlex>
+        </div>
+      </details>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -191,7 +190,7 @@ function getAdvancedSummary() {
   width: 100%;
 }
 
-:deep(.n-collapse-item__header) {
+:deep(.u-collapse-item__header) {
   font-weight: 500;
 }
 </style>

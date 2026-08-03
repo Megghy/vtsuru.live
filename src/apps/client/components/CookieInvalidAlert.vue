@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -38,7 +37,7 @@ const goToSettings = () => {
 </script>
 
 <template>
-  <NAlert
+  <UAlert
     v-if="biliCookie.hasBiliCookie && !biliCookie.isCookieValid"
     class="cookie-invalid-alert"
     type="error"
@@ -52,23 +51,23 @@ const goToSettings = () => {
       </p>
       <p>如果已经部署 CookieCloud，请尝试重新同步；否则请重新扫码登录。</p>
       <div class="cookie-invalid-alert__actions">
-        <NButton
+        <UButton
           size="small"
-          type="primary"
+          color="primary"
           @click="goToFetcher"
         >
           前往 EventFetcher
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="small"
-          tertiary
+          variant="soft"
           @click="goToSettings"
         >
           Cookie 设置
-        </NButton>
+        </UButton>
       </div>
     </div>
-  </NAlert>
+  </UAlert>
 </template>
 
 <style scoped>

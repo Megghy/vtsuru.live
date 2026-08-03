@@ -22,7 +22,6 @@ import {
   NText,
   NTime,
   NTooltip,
-  useMessage,
 } from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -40,13 +39,13 @@ import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey, TURNSTILE_KEY } from '@/shared/config'
+import { showErrorToast, showInfoToast, showSuccessToast } from '@/shared/services/toast'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 
 const token = ref('')
 const turnstile = ref()
 
 const accountInfo = useAccount()
-const message = useMessage()
 const route = useRoute()
 const router = useRouter()
 
@@ -88,7 +87,7 @@ const apiOptions = availableAPIs.map((api) => ({
 
 // 切换API
 function handleAPIChange(value: string) {
-  message.info(`正在切换到${availableAPIs.find((api) => api.key === value)?.name}...`)
+  showInfoToast(`正在切换到${availableAPIs.find((api) => api.key === value)?.name}...`)
   setTimeout(() => {
     location.reload()
   }, 500)
@@ -103,17 +102,17 @@ function resetBili() {
   QueryGetAPI(`${ACCOUNT_API_URL}reset-bili`)
     .then((data) => {
       if (data.code === 200) {
-        message.success('已解绑 Bilibili 主播账号')
+        showSuccessToast('已解绑 Bilibili 主播账号')
         setTimeout(() => {
           location.reload()
         }, 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
 }
 function resetBiliAuthBind() {
@@ -121,17 +120,17 @@ function resetBiliAuthBind() {
   QueryGetAPI(`${ACCOUNT_API_URL}reset-bili-auth`)
     .then((data) => {
       if (data.code === 200) {
-        message.success('已解绑 Bilibili 用户账号')
+        showSuccessToast('已解绑 Bilibili 用户账号')
         setTimeout(() => {
           location.reload()
         }, 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
 }
 function resetEmail() {
@@ -139,78 +138,78 @@ function resetEmail() {
   QueryGetAPI(`${ACCOUNT_API_URL}reset-email`, { email: newEmailAddress.value, code: newEmailVerifyCode.value })
     .then((data) => {
       if (data.code === 200) {
-        message.success(`已将邮箱改绑为 ${newEmailAddress.value}`)
+        showSuccessToast(`已将邮箱改绑为 ${newEmailAddress.value}`)
         setTimeout(() => {
           location.reload()
         }, 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
 }
 function sendEmailVerifyCode() {
   QueryGetAPI(`${ACCOUNT_API_URL}reset-email/code`, { email: newEmailAddress.value })
     .then((data) => {
       if (data.code === 200) {
-        message.success('发送成功, 请检查目标邮箱. 如果没有收到, 请检查垃圾邮件')
+        showSuccessToast('发送成功, 请检查目标邮箱. 如果没有收到, 请检查垃圾邮件')
         canSendEmailVerifyCode.value = false
         setTimeout(() => {
           canSendEmailVerifyCode.value = true
         }, 60 * 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
 }
 async function resetPassword() {
   if (newPassword.value !== newPassword2.value) {
-    message.error('两次密码不一致')
+    showErrorToast('两次密码不一致')
     return
   }
   await QueryGetAPI(`${ACCOUNT_API_URL}verify/reset-password`, { password: newPassword.value })
     .then(async (data) => {
       if (data.code === 200) {
-        message.success('密码已修改')
+        showSuccessToast('密码已修改')
         setTimeout(() => {
           location.reload()
         }, 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
 }
 async function resetName() {
   if (accountInfo.value?.name === newName.value) {
-    message.error('新用户名与旧用户名一致')
+    showErrorToast('新用户名与旧用户名一致')
     return
   }
   isLoading.value = true
   await QueryGetAPI(`${ACCOUNT_API_URL}change-name`, { name: newName.value })
     .then(async (data) => {
       if (data.code === 200) {
-        message.success('用户名已修改')
+        showSuccessToast('用户名已修改')
         setTimeout(() => {
           location.reload()
         }, 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
     .finally(() => {
       isLoading.value = false
@@ -221,15 +220,15 @@ async function resetToken() {
   await QueryPostAPI<string>(`${ACCOUNT_API_URL}reset-token`)
     .then(async (data) => {
       if (data.code === 200) {
-        message.success('已重新生成 Token')
+        showSuccessToast('已重新生成 Token')
 
         accountInfo.value.token = data.data
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
-      message.error(`发生错误: ${err}`)
+      showErrorToast(`发生错误: ${err}`)
     })
     .finally(() => {
       isLoading.value = false
@@ -237,7 +236,7 @@ async function resetToken() {
 }
 async function BindBili() {
   if (!biliCode.value) {
-    message.error('身份码不能为空')
+    showErrorToast('身份码不能为空')
     return
   }
   isLoading.value = true
@@ -249,17 +248,17 @@ async function BindBili() {
   }>(`${ACCOUNT_API_URL}bind-bili`, { code: biliCode.value }, [['Turnstile', token.value]])
     .then(async (data) => {
       if (data.code == 200) {
-        message.success('已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码')
+        showSuccessToast('已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码')
         setTimeout(() => {
           location.reload()
         }, 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
     .finally(() => {
       turnstile.value?.reset()
@@ -268,14 +267,14 @@ async function BindBili() {
 }
 async function BindBiliAuth() {
   if (!biliAuthText.value) {
-    message.error('认证链接不能为空')
+    showErrorToast('认证链接不能为空')
     return
   }
   let authToken: string
   try {
     authToken = parseBiliAuthCredential(biliAuthText.value)
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '认证链接格式无效')
+    showErrorToast(error instanceof Error ? error.message : '认证链接格式无效')
     return
   }
 
@@ -283,17 +282,17 @@ async function BindBiliAuth() {
   await QueryGetAPI<BiliAuthModel>(`${ACCOUNT_API_URL}bind-bili-auth`, { token: authToken })
     .then(async (data) => {
       if (data.code == 200) {
-        message.success(`已绑定用户: ${data.data.userId}`)
+        showSuccessToast(`已绑定用户: ${data.data.userId}`)
         setTimeout(() => {
           location.reload()
         }, 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
     .finally(() => {
       isLoading.value = false
@@ -301,7 +300,7 @@ async function BindBiliAuth() {
 }
 async function ChangeBili() {
   if (!biliCode.value) {
-    message.error('身份码不能为空')
+    showErrorToast('身份码不能为空')
     return
   }
   isLoading.value = true
@@ -313,17 +312,17 @@ async function ChangeBili() {
   }>(`${ACCOUNT_API_URL}change-bili`, { code: biliCode.value }, [['Turnstile', token.value]])
     .then(async (data) => {
       if (data.code == 200) {
-        message.success('已更新身份码')
+        showSuccessToast('已更新身份码')
         setTimeout(() => {
           location.reload()
         }, 1000)
       } else {
-        message.error(data.message)
+        showErrorToast(data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      showErrorToast('发生错误')
     })
     .finally(() => {
       turnstile.value?.reset()

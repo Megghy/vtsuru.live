@@ -1,18 +1,4 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDescriptions,
-  NDescriptionsItem,
-  NDivider,
-  NFlex,
-  NResult,
-  NSpin,
-  NTag,
-  NTime,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -20,6 +6,7 @@ import { isLoggedIn } from '@/api/account'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ORG_API_URL } from '@/shared/config'
+import { showErrorToast, showSuccessToast } from '@/shared/services/toast'
 
 import '@/apps/web/styles/web-page.css'
 
@@ -44,7 +31,6 @@ interface OrgInvitePreviewModel {
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
 
 const joinType = computed<JoinType | null>(() => {
   const t = String(route.query.type || '')
@@ -123,13 +109,13 @@ async function acceptMember() {
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName
-      message.success(`已加入组织: ${resp.data.orgName}`)
+      showSuccessToast(`已加入组织: ${resp.data.orgName}`)
       router.replace({ name: 'org-detail', params: { orgId: resp.data.orgId } })
     } else {
-      message.error(resp.message)
+      showErrorToast(resp.message)
     }
   } catch (err) {
-    message.error(err instanceof Error ? err.message : '加入失败')
+    showErrorToast(err instanceof Error ? err.message : '加入失败')
   } finally {
     isBusy.value = false
   }
@@ -147,13 +133,13 @@ async function acceptStreamer() {
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName
-      message.success(`已授权组织: ${resp.data.orgName}`)
+      showSuccessToast(`已授权组织: ${resp.data.orgName}`)
       router.replace({ name: 'org-detail', params: { orgId: resp.data.orgId } })
     } else {
-      message.error(resp.message)
+      showErrorToast(resp.message)
     }
   } catch (err) {
-    message.error(err instanceof Error ? err.message : '授权失败')
+    showErrorToast(err instanceof Error ? err.message : '授权失败')
   } finally {
     isBusy.value = false
   }
@@ -171,13 +157,13 @@ async function rejectStreamer() {
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName
-      message.success(`已拒绝授权: ${resp.data.orgName}`)
+      showSuccessToast(`已拒绝授权: ${resp.data.orgName}`)
       router.replace({ name: 'org-detail', params: { orgId: resp.data.orgId } })
     } else {
-      message.error(resp.message)
+      showErrorToast(resp.message)
     }
   } catch (err) {
-    message.error(err instanceof Error ? err.message : '操作失败')
+    showErrorToast(err instanceof Error ? err.message : '操作失败')
   } finally {
     isBusy.value = false
   }
@@ -186,148 +172,142 @@ async function rejectStreamer() {
 
 <template>
   <div class="web-page web-page--md">
-    <NCard
-      title="加入 / 授权"
-      :segmented="{ content: true }"
-      size="small"
-      bordered
-    >
+    <section class="join-page">
+      <h1>加入 / 授权</h1>
       <template v-if="!isValid">
-        <NResult
-          status="error"
+        <UEmpty
+          icon="i-lucide-link-2-off"
           title="无效链接"
           description="缺少必要参数：type / token"
         />
-        <NDivider />
-        <NAlert
-          type="info"
-          :bordered="false"
-        >
-          链接格式：/join?type=member|streamer&token=...
-        </NAlert>
+        <USeparator />
+        <UAlert color="info" description="链接格式：/join?type=member|streamer&token=..." />
       </template>
 
       <template v-else>
-        <NAlert
-          type="info"
-          :bordered="false"
+        <UAlert
+          color="info"
+          :description="
+            joinType === 'member'
+              ? '你正在通过邀请链接加入组织成为成员。'
+              : '你正在通过邀请链接授权组织读取你的直播数据。'
+          "
+        />
+
+        <USeparator />
+
+        <UIcon
+          v-if="previewLoading"
+          name="i-lucide-loader-circle"
+          class="join-page__spinner animate-spin"
+        />
+        <UEmpty
+          v-else-if="previewError"
+          icon="i-lucide-circle-x"
+          title="邀请不可用"
+          :description="previewError"
+        />
+        <dl
+          v-else-if="preview"
+          class="join-page__details"
         >
-          <template v-if="joinType === 'member'"> 你正在通过邀请链接加入组织成为成员。 </template>
-          <template v-else> 你正在通过邀请链接授权组织读取你的直播数据。 </template>
-        </NAlert>
-
-        <NDivider />
-
-        <NSpin :show="previewLoading">
-          <template v-if="previewError">
-            <NResult
-              status="error"
-              title="邀请不可用"
-              :description="previewError"
-            />
+          <dt>组织</dt><dd>{{ preview.orgName }} (ID: {{ preview.orgId }})</dd>
+          <dt>到期时间</dt><dd>{{ new Date(preview.expiresAt).toLocaleString('zh-CN') }}</dd>
+          <dt>邀请人</dt><dd>{{ preview.createdByUserName || `User ${preview.createdByUserId}` }}</dd>
+          <template v-if="preview.type === 'member'">
+            <dt>加入角色</dt><dd><UBadge color="info" variant="subtle">{{ roleLabel(preview.role) }}</UBadge></dd>
           </template>
-          <template v-else-if="preview">
-            <NDescriptions
-              size="small"
-              :column="1"
-            >
-              <NDescriptionsItem label="组织"> {{ preview.orgName }} (ID: {{ preview.orgId }}) </NDescriptionsItem>
-              <NDescriptionsItem label="到期时间">
-                <NTime
-                  :time="preview.expiresAt"
-                  format="yyyy-MM-dd HH:mm"
-                />
-              </NDescriptionsItem>
-              <NDescriptionsItem label="邀请人">
-                {{ preview.createdByUserName || `User ${preview.createdByUserId}` }}
-              </NDescriptionsItem>
-              <NDescriptionsItem
-                v-if="preview.type === 'member'"
-                label="加入角色"
-              >
-                <NTag
-                  size="small"
-                  :bordered="false"
-                  type="info"
-                >
-                  {{ roleLabel(preview.role) }}
-                </NTag>
-              </NDescriptionsItem>
-              <NDescriptionsItem
-                v-if="preview.targetUserId"
-                label="限制"
-              >
-                仅限指定用户接受
-              </NDescriptionsItem>
-              <NDescriptionsItem
-                v-if="preview.targetStreamerUserId"
-                label="限制"
-              >
-                仅限指定主播账号接受
-              </NDescriptionsItem>
-            </NDescriptions>
+          <template v-if="preview.targetUserId">
+            <dt>限制</dt><dd>仅限指定用户接受</dd>
           </template>
-        </NSpin>
+          <template v-if="preview.targetStreamerUserId">
+            <dt>限制</dt><dd>仅限指定主播账号接受</dd>
+          </template>
+        </dl>
 
-        <NDivider />
+        <USeparator />
 
         <template v-if="!isLoggedIn">
-          <NAlert
-            type="warning"
-            :bordered="false"
-            style="margin-bottom: 12px"
-          >
-            需要先登录才能继续。
-          </NAlert>
+          <UAlert color="warning" description="需要先登录才能继续。" />
           <RegisterAndLogin />
         </template>
 
         <template v-else>
-          <template v-if="done">
-            <NResult
-              status="success"
-              title="已完成"
-              :description="doneOrgName ? `组织：${doneOrgName}` : ''"
-            />
-          </template>
-          <template v-else>
-            <NFlex
-              v-if="canOperate"
-              vertical
-              :size="12"
-            >
+          <UEmpty
+            v-if="done"
+            icon="i-lucide-circle-check"
+            title="已完成"
+            :description="doneOrgName ? `组织：${doneOrgName}` : ''"
+          />
+          <div
+            v-else-if="canOperate"
+            class="join-page__actions"
+          >
               <template v-if="joinType === 'member'">
-                <NButton
-                  type="primary"
+                <UButton
                   :loading="isBusy"
                   @click="acceptMember"
                 >
                   确认加入
-                </NButton>
+                </UButton>
               </template>
 
               <template v-else>
-                <NFlex>
-                  <NButton
-                    type="primary"
+                  <UButton
                     :loading="isBusy"
                     @click="acceptStreamer"
                   >
                     授权
-                  </NButton>
-                  <NButton
-                    type="error"
+                  </UButton>
+                  <UButton
+                    color="error"
                     :loading="isBusy"
                     @click="rejectStreamer"
                   >
                     拒绝
-                  </NButton>
-                </NFlex>
+                  </UButton>
               </template>
-            </NFlex>
-          </template>
+          </div>
         </template>
       </template>
-    </NCard>
+    </section>
   </div>
 </template>
+
+<style scoped>
+.join-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.join-page h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.join-page__spinner {
+  display: block;
+  margin: 32px auto;
+}
+
+.join-page__details {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.join-page__details dt {
+  color: var(--vtsuru-fg-muted);
+}
+
+.join-page__details dd {
+  margin: 0;
+}
+
+.join-page__actions {
+  display: flex;
+  gap: 10px;
+}
+</style>

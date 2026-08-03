@@ -1,29 +1,7 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise16Filled,
-  CheckmarkCircle16Filled,
-  Delete16Filled,
-  DismissCircle16Filled,
-  History16Regular,
-} from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NDataTable,
-  NEmpty,
-  NIcon,
-  NPopconfirm,
-  NFlex,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
-import type { DataTableColumns } from 'naive-ui'
-import { h, onMounted, onUnmounted, ref } from 'vue'
+const CheckmarkCircle16Filled = 'i-lucide-circle'
+const DismissCircle16Filled = 'i-lucide-circle'
+import { h, onMounted, onUnmounted, ref, resolveComponent } from 'vue'
 
 import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
 import {
@@ -33,7 +11,10 @@ import {
   HistoryType,
 } from '../../store/autoAction/utils/historyLogger'
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const loading = ref(true)
 const activeTab = ref(HistoryType.DANMAKU)
 const historyData = ref<Record<HistoryType, HistoryItem[]>>({
@@ -53,7 +34,7 @@ const refreshInterval = 30000
 let refreshTimer: number | null = null
 
 // 列定义
-const columns: DataTableColumns<HistoryItem> = [
+const columns: any[] = [
   {
     title: '时间',
     key: 'timestamp',
@@ -61,11 +42,11 @@ const columns: DataTableColumns<HistoryItem> = [
     sorter: (a: HistoryItem, b: HistoryItem) => a.timestamp - b.timestamp,
     render: (row: HistoryItem) => {
       return h(
-        NTooltip,
+        resolveComponent('UTooltip'),
         {},
         {
           trigger: () =>
-            h(NTime, {
+            h('time', {
               time: row.timestamp,
               type: 'relative',
             }),
@@ -80,7 +61,7 @@ const columns: DataTableColumns<HistoryItem> = [
     width: 140,
     ellipsis: { tooltip: true },
     render: (row: HistoryItem) =>
-      h(NTag, { size: 'small', bordered: false }, { default: () => row.actionName || '未命名' }),
+      h(resolveComponent('UBadge'), { size: 'small', bordered: false }, { default: () => row.actionName || '未命名' }),
   },
   {
     title: '内容',
@@ -95,7 +76,9 @@ const columns: DataTableColumns<HistoryItem> = [
     width: 120,
     ellipsis: { tooltip: true },
     render: (row: HistoryItem) =>
-      row.target ? h(NTag, { size: 'small', type: 'info', bordered: false }, { default: () => row.target }) : '-',
+      row.target
+        ? h(resolveComponent('UBadge'), { size: 'small', type: 'info', bordered: false }, { default: () => row.target })
+        : '-',
   },
   {
     title: '状态',
@@ -105,21 +88,29 @@ const columns: DataTableColumns<HistoryItem> = [
     render: (row: HistoryItem) => {
       if (row.success) {
         return h(
-          NTooltip,
+          resolveComponent('UTooltip'),
           { trigger: 'hover' },
           {
             trigger: () =>
-              h(NIcon, { color: 'var(--vtsuru-success)', size: 20 }, { default: () => h(CheckmarkCircle16Filled) }),
+              h(
+                resolveComponent('UIcon'),
+                { color: 'var(--vtsuru-success)', size: 20 },
+                { default: () => h(CheckmarkCircle16Filled) },
+              ),
             default: () => '执行成功',
           },
         )
       } else {
         return h(
-          NTooltip,
+          resolveComponent('UTooltip'),
           { trigger: 'hover' },
           {
             trigger: () =>
-              h(NIcon, { color: 'var(--vtsuru-error)', size: 20 }, { default: () => h(DismissCircle16Filled) }),
+              h(
+                resolveComponent('UIcon'),
+                { color: 'var(--vtsuru-error)', size: 20 },
+                { default: () => h(DismissCircle16Filled) },
+              ),
             default: () => row.error || '执行失败',
           },
         )
@@ -146,7 +137,7 @@ async function loadHistory() {
     }
   } catch (error) {
     console.error('加载历史数据失败:', error)
-    message.error('加载历史数据失败')
+    feedback('error', '加载历史数据失败')
   } finally {
     loading.value = false
   }
@@ -157,10 +148,10 @@ async function handleClearHistory(type: HistoryType) {
   try {
     await clearHistory(type)
     historyData.value[type] = []
-    message.success(`已清空${typeNameMap[type]}历史`)
+    feedback('success', `已清空${typeNameMap[type]}历史`)
   } catch (error) {
     console.error('清除历史失败:', error)
-    message.error('清除历史失败')
+    feedback('error', '清除历史失败')
   }
 }
 
@@ -171,10 +162,10 @@ async function handleClearAllHistory() {
     Object.keys(historyData.value).forEach((type) => {
       historyData.value[type as HistoryType] = []
     })
-    message.success('已清空所有历史记录')
+    feedback('success', '已清空所有历史记录')
   } catch (error) {
     console.error('清除所有历史失败:', error)
-    message.error('清除所有历史失败')
+    feedback('error', '清除所有历史失败')
   }
 }
 
@@ -205,78 +196,90 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     :segmented="{ content: true }"
     class="history-viewer-card"
   >
     <template #header>
-      <NFlex align="center">
-        <NIcon :component="History16Regular" />
+      <div align="center">
+        <UIcon name="i-lucide-circle" />
         <span>执行历史记录</span>
-      </NFlex>
+      </div>
     </template>
 
     <template #header-extra>
-      <NFlex size="small">
-        <NButton
+      <div size="small">
+        <UButton
           size="small"
-          quaternary
+          variant="ghost"
           :loading="loading"
           @click="loadHistory"
         >
-          <template #icon>
-            <NIcon :component="ArrowClockwise16Filled" />
+          <template #leading>
+            <UIcon name="i-lucide-circle" />
           </template>
           刷新
-        </NButton>
-        <NPopconfirm
-          placement="bottom"
-          @positive-click="handleClearAllHistory"
-        >
-          <template #trigger>
-            <NButton
-              size="small"
-              type="error"
-              quaternary
-            >
-              <template #icon>
-                <NIcon :component="Delete16Filled" />
-              </template>
-              清空所有
-            </NButton>
+        </UButton>
+        <UPopover>
+          <UButton
+            size="sm"
+            color="error"
+            variant="ghost"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+            清空所有
+          </UButton>
+          <template #content="{ close }">
+            <div class="space-y-3 p-3">
+              <div>确定要清空所有类型的历史记录吗？此操作不可恢复。</div>
+              <div class="flex justify-end gap-2">
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  @click="close"
+                  >取消</UButton
+                >
+                <UButton
+                  size="xs"
+                  color="error"
+                  @click="(close(), handleClearAllHistory)"
+                  >确认</UButton
+                >
+              </div>
+            </div>
           </template>
-          确定要清空所有类型的历史记录吗？此操作不可恢复。
-        </NPopconfirm>
-      </NFlex>
+        </UPopover>
+      </div>
     </template>
 
-    <NTabs
-      v-model:value="activeTab"
-      type="line"
-      animated
-      pane-style="padding: 12px 0 0 0;"
-    >
-      <NTabPane
+    <div>
+      <UTabs
+        v-model="activeTab"
+        :items="Object.entries(typeNameMap).map(([value, label]) => ({ value, label }))"
+        :content="false"
+      />
+      <section
         v-for="(label, type) in typeNameMap"
         :key="type"
-        :name="type"
-        :tab="label"
+        v-show="activeTab === type"
       >
-        <NSpin :show="loading">
-          <NFlex
+        <div :show="loading">
+          <div
             vertical
             :size="12"
           >
-            <NDataTable
+            <UTable
               :columns="columns"
               :data="historyData[type as HistoryType]"
               :bordered="false"
               :pagination="{
+                pageIndex: 1,
                 pageSize: 10,
-                showSizePicker: true,
-                pageSizes: [10, 20, 50],
               }"
               :row-key="(row) => row.id"
               default-sort-order="descend"
@@ -284,38 +287,52 @@ onUnmounted(() => {
               scroll-x="800"
             >
               <template #empty>
-                <NEmpty description="暂无历史记录" />
+                <UEmpty description="暂无历史记录" />
               </template>
-            </NDataTable>
+            </UTable>
 
-            <NFlex
+            <div
               v-if="historyData[type as HistoryType].length > 0"
               justify="end"
             >
-              <NPopconfirm
-                placement="bottom"
-                @positive-click="() => handleClearHistory(type as HistoryType)"
-              >
-                <template #trigger>
-                  <NButton
-                    size="tiny"
-                    type="warning"
-                    quaternary
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete16Filled" />
-                    </template>
-                    清空{{ label }}历史
-                  </NButton>
+              <UPopover>
+                <UButton
+                  size="xs"
+                  color="warning"
+                  variant="ghost"
+                >
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
+                  </template>
+                  清空{{ label }}历史
+                </UButton>
+                <template #content="{ close }">
+                  <div class="space-y-3 p-3">
+                    <div>确定要清空所有{{ label }}历史记录吗？此操作不可恢复。</div>
+                    <div class="flex justify-end gap-2">
+                      <UButton
+                        size="xs"
+                        color="neutral"
+                        variant="ghost"
+                        @click="close"
+                        >取消</UButton
+                      >
+                      <UButton
+                        size="xs"
+                        color="warning"
+                        @click="(close(), handleClearHistory(type as HistoryType))"
+                        >确认</UButton
+                      >
+                    </div>
+                  </div>
                 </template>
-                确定要清空所有{{ label }}历史记录吗？此操作不可恢复。
-              </NPopconfirm>
-            </NFlex>
-          </NFlex>
-        </NSpin>
-      </NTabPane>
-    </NTabs>
-  </NCard>
+              </UPopover>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </UCard>
 </template>
 
 <style scoped>
@@ -325,27 +342,27 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-:deep(.n-card__content) {
+:deep(.u-card__content) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-:deep(.n-tabs) {
+:deep(.u-tabs) {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-:deep(.n-tab-pane) {
+:deep(.u-tab-pane) {
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-:deep(.n-spin-container),
-:deep(.n-spin-content) {
+:deep(.u-spin-container),
+:deep(.u-spin-content) {
   height: 100%;
   display: flex;
   flex-direction: column;

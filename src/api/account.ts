@@ -3,8 +3,8 @@ import { ref } from 'vue'
 
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { ACCOUNT_API_URL, USER_CONFIG_API_URL } from '@/shared/config'
+import { showToast } from '@/shared/services/toast'
 import { persistedRemoveItem } from '@/shared/storage/persist'
-import { createNaiveUIApi } from '@/shared/utils'
 
 import type { AccountInfo, APIRoot, FunctionTypes } from './api-models'
 import { cookie } from './auth'
@@ -14,8 +14,6 @@ export const isLoadingAccount = ref(true)
 export const isLoggedIn = computed<boolean>(() => {
   return ACCOUNT.value.id > 0
 })
-
-const { message } = createNaiveUIApi(['message'])
 
 export async function GetSelfAccount(token?: string) {
   if (cookie.value?.cookie || token) {
@@ -38,14 +36,14 @@ export async function GetSelfAccount(token?: string) {
       if (!token) {
         cookie.value = undefined
         console.warn('[vtsuru] Cookie 已失效, 需要重新登陆')
-        message.error('Cookie 已失效, 需要重新登陆')
+        showToast({ title: '登录已失效', description: '请重新登录', color: 'error' })
         setTimeout(() => {
           location.reload()
         }, 1500)
       }
     } else {
       console.warn(`[vtsuru] ${result.message}`)
-      message.error(result.message)
+      showToast({ title: '获取账户失败', description: result.message, color: 'error' })
     }
   }
   isLoadingAccount.value = false
@@ -57,7 +55,7 @@ export function UpdateAccountLoop() {
     if (urlParams.get('as')) {
       return
     }
-    if (ACCOUNT.value && window.$route?.name != 'question-display') {
+    if (ACCOUNT.value && location.pathname !== '/obs/question-display') {
       // 防止在问题详情页刷新
       GetSelfAccount()
     }
@@ -104,18 +102,27 @@ export async function UpdateFunctionEnable(func: FunctionTypes) {
     await SaveEnableFunctions(ACCOUNT.value?.settings.enableFunctions)
       .then((data) => {
         if (data.code == 200) {
-          message.success(`已${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}`)
+          showToast({
+            title: `已${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}`,
+            color: 'success',
+          })
         } else {
           if (ACCOUNT.value) {
             ACCOUNT.value.settings.enableFunctions = oldValue
           }
-          message.error(
-            `${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${data.message}`,
-          )
+          showToast({
+            title: `${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败`,
+            description: data.message,
+            color: 'error',
+          })
         }
       })
       .catch((err) => {
-        message.error(`${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${err}`)
+        showToast({
+          title: `${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败`,
+          description: String(err),
+          color: 'error',
+        })
       })
   }
 }

@@ -3,6 +3,7 @@ import { useDropZone, useFileDialog, useObjectUrl } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import { computed, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 
@@ -17,8 +18,6 @@ interface AdditionalItem {
   fit: FitMode
   height: number // 0 = auto (stretch to tile width, keep ratio)
 }
-
-const message = useMessage()
 
 const sourceFile = ref<File | null>(null)
 const sourceUrl = useObjectUrl(sourceFile)
@@ -67,7 +66,7 @@ async function onFilePicked(file: File) {
   finalBlobs.value = []
   cellImages.value = Array.from({ length: 9 }, () => [])
   croppedBlob.value = await applyCenterCrop(file)
-  message.success('图片已准备就绪')
+  showSuccessToast('图片已准备就绪')
 }
 
 // --- Image processing ---
@@ -96,7 +95,7 @@ async function handleCutDown(result: any) {
   sourceSquareSize.value = bmp.width
   bmp.close()
   croppedBlob.value = blob
-  message.success('已应用裁剪')
+  showSuccessToast('已应用裁剪')
 }
 
 // --- Tile generation ---
@@ -166,7 +165,7 @@ async function renderTile(src: ImageBitmap, index: number, cellSize: number): Pr
 
 async function generateTiles() {
   const blob = croppedBlob.value
-  if (!blob) return message.error('请先上传图片')
+  if (!blob) return showErrorToast('请先上传图片')
   isGenerating.value = true
   try {
     const src = await createImageBitmap(blob)
@@ -180,10 +179,10 @@ async function generateTiles() {
       cells: results.length,
       tile_size: exportSettings.tileSize,
     })
-    message.success('九宫格图片已生成')
+    showSuccessToast('九宫格图片已生成')
   } catch (e) {
     console.error(e)
-    message.error('生成失败，请重试')
+    showErrorToast('生成失败，请重试')
   } finally {
     isGenerating.value = false
   }
@@ -200,7 +199,7 @@ async function downloadZip() {
   const zip = new JSZip()
   finalBlobs.value.forEach((blob, i) => zip.file(getFileName(i), blob))
   saveAs(await zip.generateAsync({ type: 'blob' }), 'dynamic-nine-grid.zip')
-  message.success('ZIP 已开始下载')
+  showSuccessToast('ZIP 已开始下载')
 }
 
 // --- Cell image management ---

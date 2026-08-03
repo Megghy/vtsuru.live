@@ -1,20 +1,4 @@
 <script setup lang="ts">
-import { SearchOutline, TrashOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NEmpty,
-  NIcon,
-  NInput,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NSkeleton,
-  NFlex,
-  NSwitch,
-  NTag,
-  NTime,
-} from 'naive-ui'
 import { onMounted } from 'vue'
 
 import { useOrgContext } from '../../composables/useOrgContext'
@@ -32,6 +16,16 @@ const { loading, includeAll, search, filtered, load, remove } = injectOrgStreame
 const invites = useOrgInvites<OrgInviteStreamerListItem>(ctx, 'streamer')
 const detail = useStreamerDetail(ctx)
 
+function formatDate(timestamp: number) {
+  const date = new Date(timestamp > 1e10 ? timestamp : timestamp * 1000)
+  return date.toLocaleDateString('zh-CN')
+}
+
+function statusColor(status: number) {
+  const color = streamerStatusTagType(status)
+  return color === 'default' ? 'neutral' : color
+}
+
 onMounted(() => {
   if (isOrgAdmin.value) invites.load()
 })
@@ -42,11 +36,16 @@ async function onSaved() {
 </script>
 
 <template>
-  <NSkeleton
+  <div
     v-if="loading"
-    text
-    :repeat="6"
-  />
+    class="org-streamer-skeletons"
+  >
+    <USkeleton
+      v-for="index in 6"
+      :key="index"
+      class="org-streamer-skeleton"
+    />
+  </div>
   <template v-else>
     <OrgInviteManager
       v-if="isOrgAdmin"
@@ -58,128 +57,109 @@ async function onSaved() {
       @refresh="invites.load"
     />
 
-    <NCard
-      size="small"
-      style="margin-bottom: 12px; background: transparent"
-      :bordered="false"
+    <UCard
+      class="org-streamer-filter"
+      :ui="{ body: 'p-3' }"
     >
-      <NFlex
-        align="center"
-        justify="space-between"
-        wrap
-      >
-        <NInput
-          v-model:value="search"
-          placeholder="搜索主播名称或ID"
-          size="small"
-          style="width: 200px"
-        >
-          <template #prefix>
-            <NIcon :component="SearchOutline" />
-          </template>
-        </NInput>
-        <NFlex
+      <div class="org-streamer-filter__content">
+        <UInput
+          v-model="search"
+          placeholder="搜索主播名称或 ID"
+          icon="i-lucide-search"
+          size="sm"
+          class="org-streamer-search"
+        />
+        <UCheckbox
           v-if="isOrgAdmin"
-          align="center"
-        >
-          <span style="opacity: 0.8; font-size: 12px">包含非 Active 状态</span>
-          <NSwitch
-            v-model:value="includeAll"
-            size="small"
-          />
-        </NFlex>
-      </NFlex>
-    </NCard>
+          v-model="includeAll"
+          label="包含非 Active 状态"
+        />
+      </div>
+    </UCard>
 
-    <NEmpty
+    <UEmpty
       v-if="filtered.length === 0"
-      description="暂无主播"
+      icon="i-lucide-mic-vocal"
+      title="暂无主播"
     />
-    <NList
+    <div
       v-else
-      hoverable
-      clickable
+      class="org-streamer-list"
     >
-      <NListItem
-        v-for="s in filtered"
-        :key="s.streamer.id"
-        @click="detail.open(s.streamer.id)"
+      <UCard
+        v-for="streamer in filtered"
+        :key="streamer.streamer.id"
+        :ui="{ body: 'p-3' }"
+        class="org-streamer-card"
+        @click="detail.open(streamer.streamer.id)"
       >
-        <NFlex
-          align="center"
-          justify="space-between"
-          :wrap="false"
-        >
-          <NFlex align="center">
+        <div class="org-streamer-row">
+          <div class="org-streamer-identity">
             <OrgUserAvatar
-              :face-url="s.streamer.faceUrl"
+              :face-url="streamer.streamer.faceUrl"
               :size="48"
             />
-            <NFlex
-              vertical
-              :size="2"
-            >
-              <div style="font-weight: 600; font-size: 15px">
-                {{ s.streamer.name }}
-              </div>
-              <div style="font-size: 12px; opacity: 0.6">ID: {{ s.streamer.id }}</div>
-            </NFlex>
-            <NTag
-              :bordered="false"
-              :type="streamerStatusTagType(s.status)"
-              size="small"
-            >
-              {{ streamerStatusLabel(s.status) }}
-            </NTag>
-            <NTag
-              :bordered="false"
-              :type="s.streamer.isBiliAuthed ? 'success' : 'default'"
-              size="small"
-            >
-              {{ s.streamer.isBiliAuthed ? '已绑定B站' : '未绑定' }}
-            </NTag>
-          </NFlex>
-
-          <NFlex align="center">
-            <div style="font-size: 12px; opacity: 0.7; text-align: right">
-              <div>
-                加入:
-                <NTime
-                  :time="s.addedAt"
-                  format="yyyy-MM-dd"
-                />
-              </div>
-              <div v-if="s.respondedAt">
-                响应:
-                <NTime
-                  :time="s.respondedAt"
-                  format="yyyy-MM-dd"
-                />
-              </div>
+            <div>
+              <div class="org-streamer-name">{{ streamer.streamer.name }}</div>
+              <div class="org-streamer-id">ID: {{ streamer.streamer.id }}</div>
             </div>
-            <NPopconfirm
-              v-if="isOrgAdmin"
-              @positive-click="() => remove(s.streamer.id)"
+            <UBadge
+              :color="statusColor(streamer.status)"
+              variant="soft"
+              size="sm"
             >
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  type="error"
-                  ghost
-                  circle
-                  @click.stop
-                >
-                  <template #icon>
-                    <NIcon :component="TrashOutline" />
-                  </template>
-                </NButton>
+              {{ streamerStatusLabel(streamer.status) }}
+            </UBadge>
+            <UBadge
+              :color="streamer.streamer.isBiliAuthed ? 'success' : 'neutral'"
+              variant="soft"
+              size="sm"
+            >
+              {{ streamer.streamer.isBiliAuthed ? '已绑定 B 站' : '未绑定' }}
+            </UBadge>
+          </div>
+
+          <div class="org-streamer-actions">
+            <div class="org-streamer-date">
+              <div>加入: {{ formatDate(streamer.addedAt) }}</div>
+              <div v-if="streamer.respondedAt">响应: {{ formatDate(streamer.respondedAt) }}</div>
+            </div>
+            <UPopover v-if="isOrgAdmin">
+              <UButton
+                color="error"
+                variant="ghost"
+                size="xs"
+                icon="i-lucide-trash-2"
+                aria-label="移除主播"
+                @click.stop
+              />
+              <template #content="{ close }">
+                <div class="org-streamer-confirm">
+                  <span>确定要移除该主播吗？</span>
+                  <div>
+                    <UButton
+                      color="neutral"
+                      variant="ghost"
+                      size="xs"
+                      @click="close"
+                    >
+                      取消
+                    </UButton>
+                    <UButton
+                      color="error"
+                      size="xs"
+                      @click="(close(), remove(streamer.streamer.id))"
+                    >
+                      移除
+                    </UButton>
+                  </div>
+                </div>
               </template>
-              确定要移除该主播吗？
-            </NPopconfirm>
-          </NFlex>
-        </NFlex>
-      </NListItem>
-    </NList>
+            </UPopover>
+          </div>
+        </div>
+      </UCard>
+    </div>
   </template>
 
   <OrgStreamerDetailDrawer
@@ -187,3 +167,98 @@ async function onSaved() {
     @saved="onSaved"
   />
 </template>
+
+<style scoped>
+.org-streamer-skeletons,
+.org-streamer-list {
+  display: grid;
+  gap: 8px;
+}
+
+.org-streamer-skeleton {
+  height: 76px;
+}
+
+.org-streamer-filter {
+  margin-bottom: 12px;
+}
+
+.org-streamer-filter__content,
+.org-streamer-row,
+.org-streamer-identity,
+.org-streamer-actions,
+.org-streamer-confirm > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.org-streamer-filter__content,
+.org-streamer-actions {
+  justify-content: space-between;
+}
+
+.org-streamer-search {
+  max-width: 240px;
+}
+
+.org-streamer-card {
+  cursor: pointer;
+}
+
+.org-streamer-card:hover {
+  border-color: var(--vtsuru-brand);
+}
+
+.org-streamer-row {
+  justify-content: space-between;
+}
+
+.org-streamer-identity,
+.org-streamer-actions {
+  min-width: 0;
+}
+
+.org-streamer-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.org-streamer-id,
+.org-streamer-date {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.org-streamer-date {
+  text-align: right;
+}
+
+.org-streamer-confirm {
+  display: grid;
+  min-width: 210px;
+  gap: 12px;
+  padding: 12px;
+}
+
+.org-streamer-confirm > div {
+  justify-content: flex-end;
+}
+
+@media (max-width: 680px) {
+  .org-streamer-filter__content,
+  .org-streamer-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .org-streamer-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .org-streamer-date {
+    text-align: left;
+  }
+}
+</style>

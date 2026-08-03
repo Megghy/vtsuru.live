@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEventBus } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
@@ -7,6 +8,7 @@ import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { QUESTION_API_URL } from '@/shared/config'
 import { useWebRTC } from '@/store/useRTC'
+import { obsUpdateEventKey } from '@/app/events'
 
 defineProps<{
   id?: number
@@ -16,6 +18,7 @@ defineProps<{
 
 const hash = ref('')
 const token = useRouteQueryParam('token')
+const obsUpdateBus = useEventBus(obsUpdateEventKey)
 const tokenStr = computed(() => {
   const v = token.value
   return Array.isArray(v) ? (v[0] ?? '') : (v ?? '')
@@ -62,14 +65,11 @@ function handleScroll(value: { clientHeight: number; scrollHeight: number; scrol
   cardRef.value?.setScroll(value)
 }
 onMounted(() => {
-  window.$mitt.on('onOBSComponentUpdate', () => {
-    checkIfChanged()
-  })
+  obsUpdateBus.on(checkIfChanged)
 
   rtc?.on('function.question.sync-scroll', handleScroll)
 })
 onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate')
   rtc?.off('function.question.sync-scroll', handleScroll)
 })
 </script>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NConfigProvider } from 'naive-ui'
 import { toRef } from 'vue'
 
 import type { VideoCollectTable } from '@/api/api-models'
@@ -10,23 +9,19 @@ const props = defineProps<{
   table?: VideoCollectTable | null
 }>()
 
-const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageNaiveTheme, pageThemeOverrides, pageThemeVars } =
-  useVideoCollectPageTheme(toRef(props, 'table'))
+const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars } = useVideoCollectPageTheme(
+  toRef(props, 'table'),
+)
 </script>
 
 <template>
-  <NConfigProvider
-    :theme="pageNaiveTheme"
-    :theme-overrides="pageThemeOverrides"
+  <div
+    class="video-collect-page page-root"
+    :class="pageBackgroundClass"
+    :style="[pageThemeVars, pageBackgroundVars]"
   >
-    <div
-      class="video-collect-page page-root"
-      :class="pageBackgroundClass"
-      :style="[pageThemeVars, pageBackgroundVars]"
-    >
-      <slot :effective-is-dark="effectiveIsDark" />
-    </div>
-  </NConfigProvider>
+    <slot :effective-is-dark="effectiveIsDark" />
+  </div>
 </template>
 
 <style scoped>

@@ -2,7 +2,6 @@
 import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef } from 'vue'
 
 import type { APIRoot } from '@/api/api-models'
@@ -29,8 +28,7 @@ const props = defineProps({
     default: 10000,
   },
 })
-const message = useMessage()
-const themeVars = useThemeVars()
+const toast = useToast()
 
 const editorRef = shallowRef()
 const toolbarConfig: Partial<IToolbarConfig> = {
@@ -46,7 +44,7 @@ const editorConfig: Partial<IEditorConfig> = {
       maxNumberOfFiles: 10,
       async customUpload(file: File, insertFn: InsertFnType) {
         const formData = new FormData() // 创建一个FormData实例。
-        message.info('图片上传中')
+        toast.add({ title: '图片上传中', color: 'info' })
         formData.append('file', file)
         const resp = await fetch(`${VTSURU_API_URL}image/upload`, {
           method: 'POST',
@@ -58,10 +56,10 @@ const editorConfig: Partial<IEditorConfig> = {
           if (data.code == 200) {
             insertFn(data.data, '', '')
           } else {
-            message.error(`图片上传失败: ${data.message}`)
+            toast.add({ title: `图片上传失败: ${data.message}`, color: 'error' })
           }
         } else {
-          message.error(`图片上传失败: ${resp.statusText}`)
+          toast.add({ title: `图片上传失败: ${resp.statusText}`, color: 'error' })
         }
       },
       onProgress(progress: number) {
@@ -69,7 +67,7 @@ const editorConfig: Partial<IEditorConfig> = {
       },
       onSuccess(file: File, res: any) {
         console.log(`${file.name} 上传成功`, res)
-        message.success('图片上传成功')
+        toast.add({ title: '图片上传成功', color: 'success' })
       },
     },
   },
@@ -103,11 +101,11 @@ defineExpose({
 
 <template>
   <div
+    class="v-editor"
     :class="{ 'dark-theme': isDarkMode }"
-    :style="{ border: `1px solid ${themeVars.borderColor}`, borderRadius: themeVars.borderRadius, overflow: 'hidden' }"
   >
     <Toolbar
-      :style="{ borderBottom: `1px solid ${themeVars.borderColor}` }"
+      class="v-editor__toolbar"
       :editor="editorRef"
       :default-config="toolbarConfig"
       :mode="mode"
@@ -121,3 +119,15 @@ defineExpose({
     />
   </div>
 </template>
+
+<style scoped>
+.v-editor {
+  overflow: hidden;
+  border: var(--vtsuru-page-border, 1px solid var(--vtsuru-border));
+  border-radius: var(--vtsuru-page-radius, 8px);
+}
+
+.v-editor__toolbar {
+  border-bottom: var(--vtsuru-page-border, 1px solid var(--vtsuru-border));
+}
+</style>

@@ -1,14 +1,4 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise16Regular,
-  BrainCircuit20Regular,
-  ChevronDown12Regular,
-  Checkmark16Regular,
-  Copy16Regular,
-  Dismiss16Regular,
-  Edit16Regular,
-} from '@vicons/fluent'
-import { NButton, NCollapseTransition, NIcon, NInput, NText, NTooltip } from 'naive-ui'
 import { reactive } from 'vue'
 
 import { copyToClipboard } from '@/shared/utils'
@@ -138,15 +128,13 @@ function formatTokens(value?: number): string {
             class="msg-think__head"
             @click="toggleThinking(msg)"
           >
-            <NIcon
-              :component="BrainCircuit20Regular"
-              size="14"
+            <UIcon
+              name="i-lucide-brain-circuit"
               class="msg-think__icon"
             />
             <span class="msg-think__title">{{ thinkLabel(msg) }}</span>
-            <NIcon
-              :component="ChevronDown12Regular"
-              size="12"
+            <UIcon
+              name="i-lucide-chevron-down"
               class="msg-think__chevron"
               :class="{ 'is-open': isThinkingOpen(msg) }"
             />
@@ -158,17 +146,17 @@ function formatTokens(value?: number): string {
               :key="block.id"
             >
               <!-- 思考片段: 随折叠头展开/收起 -->
-              <NCollapseTransition
+              <Transition
                 v-if="block.type === 'reasoning'"
-                :show="isThinkingOpen(msg)"
+                name="msg-collapse"
               >
-                <NText
-                  depth="3"
+                <p
+                  v-if="isThinkingOpen(msg)"
                   class="msg-think__body"
                 >
                   {{ block.text }}
-                </NText>
-              </NCollapseTransition>
+                </p>
+              </Transition>
               <!-- 工具调用: 始终常驻可见, 不随思考折叠 -->
               <AssistantToolCallList
                 v-else
@@ -199,48 +187,45 @@ function formatTokens(value?: number): string {
             alt="附件"
           />
         </div>
-        <NText
+        <span
           v-else-if="msg.hasImage"
-          depth="3"
           class="msg-image-hint"
         >
           [图片]
-        </NText>
+        </span>
 
         <div
           v-if="isEditing(msg)"
           class="msg-editor"
         >
-          <NInput
-            v-model:value="editing[msg.id]"
-            type="textarea"
+          <UTextarea
+            v-model="editing[msg.id]"
             class="msg-editor__input"
-            :autosize="{ minRows: 2, maxRows: 8 }"
+            autoresize
+            :rows="2"
+            :maxrows="8"
             :disabled="busy"
           />
           <div class="msg-editor__actions">
-            <NButton
-              tertiary
-              size="tiny"
+            <UButton
+              variant="soft"
+              size="xs"
+              icon="i-lucide-check"
               :disabled="busy || !canSubmitEdit(msg)"
               @click="submitEditing(msg)"
             >
-              <template #icon>
-                <NIcon :component="Checkmark16Regular" />
-              </template>
               保存
-            </NButton>
-            <NButton
-              quaternary
-              size="tiny"
+            </UButton>
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-lucide-x"
               :disabled="busy"
               @click="cancelEditing(msg)"
             >
-              <template #icon>
-                <NIcon :component="Dismiss16Regular" />
-              </template>
               取消
-            </NButton>
+            </UButton>
           </div>
         </div>
 
@@ -250,12 +235,12 @@ function formatTokens(value?: number): string {
           :content="msg.text"
           :streaming="msg.status === 'sending'"
         />
-        <NText
+        <p
           v-else-if="msg.text && !isEditing(msg)"
           class="msg-text"
         >
           {{ msg.text }}
-        </NText>
+        </p>
 
         <div
           v-if="msg.role === 'assistant' && msg.usage"
@@ -271,76 +256,64 @@ function formatTokens(value?: number): string {
           v-if="(msg.text || msg.images?.length || msg.hasImage) && !isEditing(msg)"
           class="msg-actions"
         >
-          <NTooltip v-if="msg.text">
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                class="msg-action"
-                @click="copyMessage(msg)"
-              >
-                <template #icon>
-                  <NIcon :component="Copy16Regular" />
-                </template>
-              </NButton>
-            </template>
-            复制
-          </NTooltip>
-          <NTooltip v-if="msg.role === 'user'">
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                class="msg-action"
-                :disabled="busy || !canEditUser(msg)"
-                @click="startEditing(msg)"
-              >
-                <template #icon>
-                  <NIcon :component="Edit16Regular" />
-                </template>
-              </NButton>
-            </template>
-            编辑
-          </NTooltip>
-          <NTooltip v-if="msg.role === 'assistant'">
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                class="msg-action"
-                :disabled="busy"
-                @click="emit('rerun', msg.id)"
-              >
-                <template #icon>
-                  <NIcon :component="ArrowClockwise16Regular" />
-                </template>
-              </NButton>
-            </template>
-            重新生成
-          </NTooltip>
+          <UTooltip
+            v-if="msg.text"
+            text="复制"
+          >
+            <UButton
+              variant="ghost"
+              square
+              size="xs"
+              icon="i-lucide-copy"
+              class="msg-action"
+              @click="copyMessage(msg)"
+            />
+          </UTooltip>
+          <UTooltip
+            v-if="msg.role === 'user'"
+            text="编辑"
+          >
+            <UButton
+              variant="ghost"
+              square
+              size="xs"
+              icon="i-lucide-pencil"
+              class="msg-action"
+              :disabled="busy || !canEditUser(msg)"
+              @click="startEditing(msg)"
+            />
+          </UTooltip>
+          <UTooltip
+            v-if="msg.role === 'assistant'"
+            text="重新生成"
+          >
+            <UButton
+              variant="ghost"
+              square
+              size="xs"
+              icon="i-lucide-refresh-cw"
+              class="msg-action"
+              :disabled="busy"
+              @click="emit('rerun', msg.id)"
+            />
+          </UTooltip>
         </div>
 
         <div
           v-if="msg.status === 'error'"
           class="msg-error"
         >
-          <NText
-            type="error"
-            class="msg-error__text"
-          >
+          <span class="msg-error__text">
             {{ msg.error ?? '出错了' }}
-          </NText>
-          <NButton
-            size="tiny"
-            type="error"
-            tertiary
+          </span>
+          <UButton
+            size="xs"
+            color="error"
+            variant="soft"
             @click="emit('retry', msg.id)"
           >
             重试
-          </NButton>
+          </UButton>
         </div>
 
         <AssistantActionCard
@@ -414,6 +387,7 @@ function formatTokens(value?: number): string {
   width: 100%;
 }
 .msg-text {
+  margin: 0;
   color: inherit;
   font-size: 14px;
 }
@@ -490,6 +464,14 @@ function formatTokens(value?: number): string {
   background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.05));
   border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.14));
   color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
+}
+.msg-collapse-enter-active,
+.msg-collapse-leave-active {
+  transition: opacity 0.15s ease;
+}
+.msg-collapse-enter-from,
+.msg-collapse-leave-to {
+  opacity: 0;
 }
 .msg-images {
   display: flex;
@@ -596,5 +578,6 @@ function formatTokens(value?: number): string {
 }
 .msg-error__text {
   font-size: 13px;
+  color: var(--vtsuru-error);
 }
 </style>

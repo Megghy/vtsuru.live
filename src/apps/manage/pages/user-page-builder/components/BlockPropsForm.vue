@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NCollapse, NCollapseItem, NDatePicker, NFormItem, NInput, NSelect, NSwitch, NText } from 'naive-ui'
 import type { Component } from 'vue'
 import { computed, ref, watch } from 'vue'
 
@@ -26,6 +25,7 @@ import { useBlockPropsEditor } from './block-props-editors/useBlockPropsEditor'
 import VideoCollectPropsEditor from './block-props-editors/VideoCollectPropsEditor.vue'
 import ImageGalleryPropsEditor from './ImageGalleryPropsEditor.vue'
 import PropsGrid from './PropsGrid.vue'
+import UnixDateTimeRangeInput from './UnixDateTimeRangeInput.vue'
 
 const props = defineProps<{ block: BlockNode }>()
 const { editor, blockProps } = useBlockPropsEditor(() => props.block)
@@ -176,103 +176,91 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
       :key="props.block.id"
       :block="props.block"
     />
-    <NText
+    <span
+      class="builder-text"
       v-else
-      depth="3"
     >
       未知区块类型：{{ props.block.type }}
-    </NText>
+    </span>
 
-    <NCollapse
-      v-model:expanded-names="expandedCommonSections"
-      class="block-common-sections"
-    >
-      <NCollapseItem
-        title="默认属性"
-        name="defaults"
-      >
+    <div class="block-common-sections">
+      <details>
+        <summary>默认属性</summary>
         <PropsGrid :row-gap="0">
-          <NFormItem
+          <UFormField
             label="区块名称"
             style="justify-self: start; width: min(260px, 100%)"
             data-validation-field="name"
           >
-            <NInput
-              v-model:value="blockNameModel"
+            <UInput
+              v-model="blockNameModel"
               maxlength="50"
               show-count
               placeholder="例如：直播信息 · 紧凑"
             />
-          </NFormItem>
-          <NFormItem
+          </UFormField>
+          <UFormField
             v-if="propertyAvailable('framed')"
             label="显示边框"
             style="justify-self: start; width: min(180px, 100%)"
           >
-            <NSwitch
-              v-model:value="blockFramedModel"
+            <USwitch
+              v-model="blockFramedModel"
               size="small"
             />
-          </NFormItem>
-          <NFormItem
+          </UFormField>
+          <UFormField
             v-if="propertyAvailable('backgrounded')"
             label="显示背景"
             style="justify-self: start; width: min(180px, 100%)"
           >
-            <NSwitch
-              v-model:value="blockBackgroundedModel"
+            <USwitch
+              v-model="blockBackgroundedModel"
               size="small"
             />
-          </NFormItem>
+          </UFormField>
         </PropsGrid>
-      </NCollapseItem>
+      </details>
 
-      <NCollapseItem
-        title="显示条件"
-        name="visibility"
-      >
+      <details>
+        <summary>显示条件</summary>
         <PropsGrid :row-gap="0">
-          <NFormItem
+          <UFormField
             label="直播状态"
             data-validation-field="visibility.liveState"
           >
-            <NSelect
-              v-model:value="liveStateModel"
-              :options="[
+            <USelect
+              v-model="liveStateModel"
+              :items="[
                 { label: '始终显示', value: 'always' },
                 { label: '仅直播中', value: 'live' },
                 { label: '仅未开播', value: 'offline' },
               ]"
             />
-          </NFormItem>
-          <NFormItem
+          </UFormField>
+          <UFormField
             label="设备"
             data-validation-field="visibility.device"
           >
-            <NSelect
-              v-model:value="deviceModel"
-              :options="[
+            <USelect
+              v-model="deviceModel"
+              :items="[
                 { label: '所有设备', value: 'always' },
                 { label: '仅桌面端', value: 'desktop' },
                 { label: '仅移动端', value: 'mobile' },
               ]"
             />
-          </NFormItem>
-          <NFormItem
+          </UFormField>
+          <UFormField
             class="span-full"
             label="显示时间范围"
             data-validation-field="visibility.startsAt"
           >
-            <NDatePicker
-              v-model:value="dateRangeModel"
-              type="datetimerange"
-              clearable
-              style="width: 100%"
-            />
-          </NFormItem>
+            <UnixDateTimeRangeInput v-model="dateRangeModel" />
+          </UFormField>
         </PropsGrid>
-      </NCollapseItem>
-    </NCollapse>
+      </details>
+    </div>
 
     <div
       v-if="validationIssues.length"
@@ -280,7 +268,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
       role="status"
       aria-live="polite"
     >
-      <NAlert
+      <UAlert
         v-for="(issue, index) in validationIssues"
         :key="`${issue.fieldPath}:${index}`"
         type="error"
@@ -289,7 +277,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
       >
         <strong v-if="issue.fieldPath">{{ issue.fieldPath }}</strong>
         {{ issue.message }}
-      </NAlert>
+      </UAlert>
     </div>
   </div>
 </template>
@@ -305,14 +293,13 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
   background: var(--vtsuru-bg-muted);
 }
 
-.block-common-sections :deep(.n-collapse-item__header) {
+.block-common-sections summary {
   min-height: 20px;
   padding: 10px 0 !important;
   line-height: 20px;
 }
 
-.block-common-sections :deep(.n-collapse-item__header-main),
-.block-common-sections :deep(.n-collapse-item-arrow) {
+.block-common-sections summary > * {
   align-items: center;
   min-height: 20px;
 }

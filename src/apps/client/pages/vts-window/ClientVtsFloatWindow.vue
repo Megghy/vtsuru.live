@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { NAlert, NButton, NDivider, NFlex, NTabPane, NTabs, NTag, NText } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useVtsAction } from '@/apps/client/components/vts/useVtsAction'
@@ -14,6 +13,12 @@ const floatWindow = useVtsFloatWindow()
 const { run } = useVtsAction()
 
 const tab = ref<'hotkeys' | 'macros' | 'items' | 'panic'>('hotkeys')
+const tabItems = [
+  { label: '表情动作', value: 'hotkeys' },
+  { label: '宏', value: 'macros' },
+  { label: '道具', value: 'items' },
+  { label: '应急', value: 'panic' },
+]
 let bc: BroadcastChannel | undefined
 
 const connectionTag = computed(() => {
@@ -62,89 +67,87 @@ onUnmounted(() => {
       class="vts-float__header"
       data-tauri-drag-region
     >
-      <NFlex
+      <div
         align="center"
         justify="space-between"
         :wrap="false"
         :size="8"
         style="width: 100%"
       >
-        <NFlex
+        <div
           align="center"
           :wrap="false"
           :size="8"
         >
-          <NTag
+          <UBadge
             :type="connectionTag.type"
             size="small"
           >
             {{ connectionTag.text }}
-          </NTag>
-          <NText
+          </UBadge>
+          <span
             depth="3"
             style="font-size: 12px"
           >
             VTS 快捷面板
-          </NText>
-        </NFlex>
-        <NFlex
+          </span>
+        </div>
+        <div
           align="center"
           :wrap="false"
           :size="6"
         >
-          <NButton
+          <UButton
             size="tiny"
             :disabled="vts.connecting || vts.connected"
             @click="run(() => vts.connect())"
           >
             连接
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             size="tiny"
             :disabled="!vts.connected || vts.authenticated"
             @click="run(() => vts.authenticate())"
           >
             鉴权
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             size="tiny"
             :disabled="!vts.connected"
             @click="vts.disconnect"
           >
             断开
-          </NButton>
-        </NFlex>
-      </NFlex>
+          </UButton>
+        </div>
+      </div>
     </div>
 
-    <NAlert
+    <UAlert
       v-if="!isTauri()"
       type="error"
       :show-icon="false"
       style="margin: 8px"
     >
       仅支持桌面客户端环境
-    </NAlert>
-    <NAlert
+    </UAlert>
+    <UAlert
       v-else-if="vts.lastError"
       type="error"
       :show-icon="false"
       style="margin: 8px"
     >
       {{ vts.lastError }}
-    </NAlert>
+    </UAlert>
 
     <div class="vts-float__body">
-      <NTabs
-        v-model:value="tab"
-        type="line"
-        size="small"
-        animated
-      >
-        <NTabPane
-          name="hotkeys"
-          tab="表情动作"
-        >
+      <div>
+        <UTabs
+          v-model="tab"
+          :items="tabItems"
+          :content="false"
+          size="sm"
+        />
+        <section v-show="tab === 'hotkeys'">
           <VtsHotkeyBoard
             :hotkeys="vts.hotkeys"
             :model-name="vts.currentModelName"
@@ -157,107 +160,101 @@ onUnmounted(() => {
             @refresh="vts.refreshHotkeys"
             @trigger="vts.triggerHotkey"
           />
-        </NTabPane>
+        </section>
 
-        <NTabPane
-          name="macros"
-          tab="宏"
-        >
-          <NFlex
+        <section v-show="tab === 'macros'">
+          <div
             vertical
             :size="8"
           >
-            <NText
+            <span
               depth="3"
               style="font-size: 12px"
             >
               按顺序执行，任一步失败即终止
-            </NText>
-            <NDivider style="margin: 4px 0" />
-            <NFlex
+            </span>
+            <USeparator style="margin: 4px 0" />
+            <div
               v-for="m in vts.macros"
               :key="m.id"
               align="center"
               justify="space-between"
               :size="8"
             >
-              <NText>{{ m.name }}</NText>
-              <NButton
+              <span>{{ m.name }}</span>
+              <UButton
                 size="tiny"
-                type="primary"
+                color="primary"
                 :disabled="!vts.canOperate"
                 @click="run(() => vts.runMacro(m.id))"
               >
                 运行
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
+              </UButton>
+            </div>
+          </div>
+        </section>
 
-        <NTabPane
-          name="items"
-          tab="道具"
-        >
-          <NFlex
+        <section v-show="tab === 'items'">
+          <div
             vertical
             :size="10"
           >
-            <NText
+            <span
               depth="3"
               style="font-size: 12px"
             >
               配饰: 切换显隐 | 整活: 掉落道具
-            </NText>
-            <NDivider style="margin: 4px 0" />
-            <NFlex
+            </span>
+            <USeparator style="margin: 4px 0" />
+            <div
               vertical
               :size="8"
             >
-              <NText
+              <span
                 depth="3"
                 style="font-size: 12px"
               >
                 配饰
-              </NText>
-              <NFlex
+              </span>
+              <div
                 v-for="a in vts.accessories"
                 :key="a.id"
                 align="center"
                 justify="space-between"
                 :size="8"
               >
-                <NText>{{ a.name }}</NText>
-                <NButton
+                <span>{{ a.name }}</span>
+                <UButton
                   size="tiny"
                   :disabled="!vts.canOperate"
                   @click="run(() => vts.toggleAccessory(a.id, !a.visible))"
                 >
                   {{ a.visible ? '隐藏' : '显示' }}
-                </NButton>
-              </NFlex>
-            </NFlex>
-            <NDivider style="margin: 4px 0" />
-            <NFlex
+                </UButton>
+              </div>
+            </div>
+            <USeparator style="margin: 4px 0" />
+            <div
               vertical
               :size="8"
             >
-              <NText
+              <span
                 depth="3"
                 style="font-size: 12px"
               >
                 整活
-              </NText>
-              <NFlex
+              </span>
+              <div
                 v-for="p in vts.pranks"
                 :key="p.id"
                 align="center"
                 justify="space-between"
                 :size="8"
               >
-                <NText>{{ p.name }}</NText>
-                <NButton
+                <span>{{ p.name }}</span>
+                <UButton
                   size="tiny"
-                  type="warning"
+                  color="warning"
                   :disabled="!vts.canOperate"
                   @click="
                     run(() =>
@@ -266,50 +263,47 @@ onUnmounted(() => {
                   "
                 >
                   掉落
-                </NButton>
-              </NFlex>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
+                </UButton>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <NTabPane
-          name="panic"
-          tab="应急"
-        >
-          <NFlex
+        <section v-show="tab === 'panic'">
+          <div
             vertical
             :size="10"
           >
-            <NText
+            <span
               depth="3"
               style="font-size: 12px"
             >
               需要先在主界面配置对应热键
-            </NText>
-            <NFlex
+            </span>
+            <div
               :wrap="true"
               :size="8"
             >
-              <NButton
+              <UButton
                 size="small"
-                type="primary"
+                color="primary"
                 :disabled="!vts.canOperate"
                 @click="run(() => vts.panicCalibrate())"
               >
                 校准
-              </NButton>
-              <NButton
+              </UButton>
+              <UButton
                 size="small"
-                type="warning"
+                color="warning"
                 :disabled="!vts.canOperate"
                 @click="run(() => vts.panicResetPhysics())"
               >
                 重置物理
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
-      </NTabs>
+              </UButton>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </template>

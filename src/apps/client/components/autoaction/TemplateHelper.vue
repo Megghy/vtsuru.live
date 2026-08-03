@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Copy16Regular, Add16Regular, Search16Regular } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NInput, NScrollbar, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 const props = defineProps({
@@ -14,7 +12,10 @@ const emit = defineEmits<{
   (e: 'insert', value: string): void
 }>()
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const searchText = ref('')
 
 const filteredPlaceholders = computed(() => {
@@ -29,10 +30,10 @@ function copyToClipboard(text: string) {
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      message.success('已复制')
+      feedback('success', '已复制')
     })
     .catch(() => {
-      message.error('复制失败')
+      feedback('error', '复制失败')
     })
 }
 
@@ -43,23 +44,23 @@ function handleInsert(text: string) {
 
 <template>
   <div class="template-helper">
-    <NFlex
+    <div
       vertical
       :size="8"
     >
-      <NInput
-        v-model:value="searchText"
+      <UInput
+        v-model="searchText"
         placeholder="搜索变量..."
         size="small"
         clearable
       >
-        <template #prefix>
-          <NIcon :component="Search16Regular" />
+        <template #leading>
+          <UIcon name="i-lucide-circle" />
         </template>
-      </NInput>
+      </UInput>
 
-      <NScrollbar style="max-height: 200px">
-        <NFlex
+      <div style="max-height: 200px">
+        <div
           vertical
           :size="4"
         >
@@ -69,7 +70,7 @@ function handleInsert(text: string) {
             class="variable-item"
             @click="handleInsert(item.name)"
           >
-            <NFlex
+            <div
               justify="space-between"
               align="center"
             >
@@ -82,30 +83,30 @@ function handleInsert(text: string) {
                 </div>
               </div>
               <div class="variable-actions">
-                <NButton
+                <UButton
                   size="tiny"
-                  quaternary
-                  circle
+                  variant="ghost"
+                  square
                   title="复制"
                   @click.stop="copyToClipboard(item.name)"
                 >
-                  <template #icon>
-                    <NIcon :component="Copy16Regular" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
-                </NButton>
-                <NButton
+                </UButton>
+                <UButton
                   size="tiny"
-                  quaternary
-                  circle
+                  variant="ghost"
+                  square
                   title="插入"
                   @click.stop="handleInsert(item.name)"
                 >
-                  <template #icon>
-                    <NIcon :component="Add16Regular" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
-                </NButton>
+                </UButton>
               </div>
-            </NFlex>
+            </div>
           </div>
           <div
             v-if="filteredPlaceholders.length === 0"
@@ -113,9 +114,9 @@ function handleInsert(text: string) {
           >
             无匹配变量
           </div>
-        </NFlex>
-      </NScrollbar>
-    </NFlex>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

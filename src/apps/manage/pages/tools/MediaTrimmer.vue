@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // 可视化截取：播放器 + 时间轴双手柄拖拽，替代手动输入秒数。
-import { NButton, NText } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
@@ -149,32 +148,30 @@ const hasTrim = computed(() => start.value != null || end.value != null)
     </div>
 
     <div class="trim-actions">
-      <NButton
-        size="tiny"
+      <UButton
+        size="xs"
         @click="setStartHere"
       >
         设为入点
-      </NButton>
-      <NButton
-        size="tiny"
+      </UButton>
+      <UButton
+        size="xs"
         @click="setEndHere"
       >
         设为出点
-      </NButton>
-      <NText
-        depth="3"
-        class="trim-info"
-      >
+      </UButton>
+      <span class="trim-info">
         截取 {{ clock(startVal) }} - {{ clock(endVal) }}（{{ clock(endVal - startVal) }}）
-      </NText>
-      <NButton
+      </span>
+      <UButton
         v-if="hasTrim"
-        size="tiny"
-        quaternary
+        size="xs"
+        color="neutral"
+        variant="ghost"
         @click="reset"
       >
         重置
-      </NButton>
+      </UButton>
     </div>
   </div>
 </template>

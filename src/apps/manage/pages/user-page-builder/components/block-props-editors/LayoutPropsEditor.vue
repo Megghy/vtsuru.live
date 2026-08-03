@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
@@ -67,81 +66,78 @@ const verticalOptions = computed(() =>
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
-    <NText
-      strong
+  <div class="builder-form">
+    <span
+      class="builder-text"
       style="display: block; margin-bottom: 8px; font-size: 13px"
     >
       布局设置
-    </NText>
+    </span>
     <PropsGrid
       :col-gap="8"
       :row-gap="0"
     >
-      <NFormItem label="布局类型">
-        <NSelect
-          v-model:value="layout.layout"
-          :options="[
+      <UFormField label="布局类型">
+        <USelect
+          v-model="layout.layout"
+          :items="[
             { label: 'Row - 横向', value: 'row' },
             { label: 'Column - 纵向', value: 'column' },
             { label: 'Grid - 网格', value: 'grid' },
           ]"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="layout.layout === 'row'"
         label="允许换行"
       >
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="layout.wrap"
+        <div class="builder-row">
+          <USwitch
+            v-model="layout.wrap"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         v-if="layout.layout === 'grid'"
         label="列数"
       >
-        <NInputNumber
-          v-model:value="layout.columns"
+        <UInputNumber
+          v-model="layout.columns"
           :min="1"
           :max="12"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="间距">
-        <NInputNumber
-          v-model:value="layout.gap"
+      </UFormField>
+      <UFormField label="间距">
+        <UInputNumber
+          v-model="layout.gap"
           :min="0"
           :max="80"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="最大宽度">
-        <NInput
-          v-model:value="layout.maxWidth"
+      </UFormField>
+      <UFormField label="最大宽度">
+        <UInput
+          v-model="layout.maxWidth"
           placeholder="如 100% / 480px"
         />
-      </NFormItem>
-      <NFormItem label="横向对齐">
-        <NSelect
-          v-model:value="horizontalModel"
-          :options="horizontalOptions"
+      </UFormField>
+      <UFormField label="横向对齐">
+        <USelect
+          v-model="horizontalModel"
+          :items="horizontalOptions"
         />
-      </NFormItem>
-      <NFormItem label="纵向对齐">
-        <NSelect
-          v-model:value="verticalModel"
-          :options="verticalOptions"
+      </UFormField>
+      <UFormField label="纵向对齐">
+        <USelect
+          v-model="verticalModel"
+          :items="verticalOptions"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-    <NText
-      depth="3"
+    <span
+      class="builder-text"
       style="
         display: block;
         margin-top: 12px;
@@ -153,6 +149,6 @@ const verticalOptions = computed(() =>
       "
     >
       子区块请在「区块管理」中管理：选中多个区块点击「成组」按钮，或拖入已展开的组。
-    </NText>
-  </NForm>
+    </span>
+  </div>
 </template>

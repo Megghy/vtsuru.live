@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NDivider, NFlex, NSlider } from 'naive-ui'
 import { computed } from 'vue'
 
 import { useSpeechService } from '@/store/useSpeechService'
@@ -39,8 +38,8 @@ const providers = [
       label="音量"
       :value="`${(settings.speechInfo.volume * 100).toFixed(0)}%`"
     >
-      <NSlider
-        v-model:value="settings.speechInfo.volume"
+      <USlider
+        v-model="settings.speechInfo.volume"
         :min="0"
         :max="1"
         :step="0.01"
@@ -52,8 +51,8 @@ const providers = [
         label="音调"
         :value="settings.speechInfo.pitch.toFixed(2)"
       >
-        <NSlider
-          v-model:value="settings.speechInfo.pitch"
+        <USlider
+          v-model="settings.speechInfo.pitch"
           :min="0.5"
           :max="2"
           :step="0.01"
@@ -64,8 +63,8 @@ const providers = [
         label="语速"
         :value="settings.speechInfo.rate.toFixed(2)"
       >
-        <NSlider
-          v-model:value="settings.speechInfo.rate"
+        <USlider
+          v-model="settings.speechInfo.rate"
           :min="0.5"
           :max="2"
           :step="0.01"
@@ -73,10 +72,10 @@ const providers = [
       </SectionField>
     </template>
 
-    <NDivider style="margin: 4px 0" />
+    <USeparator style="margin: 4px 0" />
 
     <SectionField label="语音引擎">
-      <NFlex
+      <div
         :size="6"
         :wrap="true"
       >
@@ -90,7 +89,7 @@ const providers = [
           style="flex: 1 1 calc(50% - 3px); min-width: 140px"
           @click="settings.provider = p.id"
         />
-      </NFlex>
+      </div>
     </SectionField>
 
     <Transition

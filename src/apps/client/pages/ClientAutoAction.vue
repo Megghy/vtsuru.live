@@ -1,41 +1,5 @@
 <script setup lang="ts">
-import {
-  AppGeneric24Regular,
-  Chat24Regular,
-  Clock24Regular,
-  DataUsage24Regular,
-  Gift24Regular,
-  History24Regular,
-  PersonAdd24Regular,
-  Shield24Regular,
-  DoorArrowLeft24Regular,
-  Star24Regular,
-  Timer24Regular,
-  Settings24Regular,
-  Target24Filled,
-  Edit16Regular,
-} from '@vicons/fluent'
-import {
-  NAlert,
-  NBadge,
-  NButton,
-  NCard,
-  NDivider,
-  NFlex,
-  NIcon,
-  NInputNumber,
-  NLayout,
-  NLayoutContent,
-  NLayoutSider,
-  NMenu,
-  NModal,
-  NSelect,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
-import type { Component } from 'vue'
-import { computed, h, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import ActionHistoryViewer from '@/apps/client/components/autoaction/ActionHistoryViewer.vue'
@@ -53,7 +17,10 @@ import { useWebFetcher } from '@/store/useWebFetcher'
 
 const autoActionStore = useAutoAction()
 const accountStore = useAccount()
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const biliCookieStore = useBiliCookie()
 const webFetcherStore = useWebFetcher()
 const biliFunc = useBiliFunction()
@@ -71,139 +38,30 @@ const showTestModal = ref(false)
 const testUid = ref<number | undefined>(10004)
 const currentTestType = ref<TriggerType | null>(null)
 
-// 菜单配置
-function renderIcon(icon: Component) {
-  return () => h(NIcon, null, { default: () => h(icon) })
-}
-
-function renderMenuLabel(label: string, key: string) {
-  const isTriggerType = Object.values(TriggerType).includes(key as TriggerType)
-  const isCheckIn = key === 'check-in-settings'
-
-  if (!isTriggerType && !isCheckIn) return () => h('span', null, { default: () => label })
-
-  let isEnabled = false
-  let count = 0
-
-  if (isTriggerType) {
-    const type = key as TriggerType
-    isEnabled = autoActionStore.enabledTriggerTypes?.[type] ?? false
-    count = autoActionStore.autoActions.filter((a) => a.triggerType === type && a.enabled).length
-  } else if (isCheckIn) {
-    isEnabled = accountStore.value?.settings?.point?.enableCheckIn ?? false
-    // 签到只有开关状态，没有多个子条目概念，或者可以看做 1
-    count = isEnabled ? 1 : 0
-  }
-
-  return () =>
-    h(
-      NFlex,
-      {
-        align: 'center',
-        justify: 'space-between',
-        style: 'width: 100%; padding-right: 4px;',
-        wrap: false,
-      },
-      {
-        default: () => [
-          h(
-            'span',
-            { style: 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;' },
-            { default: () => label },
-          ),
-          h(
-            NFlex,
-            { align: 'center', size: 4, wrap: false, style: 'flex-shrink: 0;' },
-            {
-              default: () => [
-                count > 0 && isTriggerType
-                  ? h(NBadge, {
-                      value: count,
-                      type: isEnabled ? 'success' : 'default',
-                      showZero: false,
-                      style: 'transform: scale(0.85);',
-                    })
-                  : null,
-                h('div', {
-                  class: ['status-dot', isEnabled ? 'status-dot--active' : 'status-dot--inactive'],
-                }),
-              ],
-            },
-          ),
-        ],
-      },
-    )
-}
-
 const menuOptions = computed(() => [
   {
     label: '自动操作',
-    key: 'group-actions',
-    type: 'group',
-    children: [
-      {
-        label: renderMenuLabel('自动回复', TriggerType.DANMAKU),
-        key: TriggerType.DANMAKU,
-        icon: renderIcon(Chat24Regular),
-      },
-      { label: renderMenuLabel('礼物感谢', TriggerType.GIFT), key: TriggerType.GIFT, icon: renderIcon(Gift24Regular) },
-      {
-        label: renderMenuLabel('上舰感谢', TriggerType.GUARD),
-        key: TriggerType.GUARD,
-        icon: renderIcon(Shield24Regular),
-      },
-      {
-        label: renderMenuLabel('关注感谢', TriggerType.FOLLOW),
-        key: TriggerType.FOLLOW,
-        icon: renderIcon(PersonAdd24Regular),
-      },
-      {
-        label: renderMenuLabel('入场欢迎', TriggerType.ENTER),
-        key: TriggerType.ENTER,
-        icon: renderIcon(DoorArrowLeft24Regular),
-      },
-      {
-        label: renderMenuLabel('定时发送', TriggerType.SCHEDULED),
-        key: TriggerType.SCHEDULED,
-        icon: renderIcon(Timer24Regular),
-      },
-      {
-        label: renderMenuLabel('SC感谢', TriggerType.SUPER_CHAT),
-        key: TriggerType.SUPER_CHAT,
-        icon: renderIcon(Star24Regular),
-      },
-    ],
+    type: 'label' as const,
   },
+  { label: '自动回复', value: TriggerType.DANMAKU, icon: 'i-lucide-message-circle' },
+  { label: '礼物感谢', value: TriggerType.GIFT, icon: 'i-lucide-gift' },
+  { label: '上舰感谢', value: TriggerType.GUARD, icon: 'i-lucide-shield' },
+  { label: '关注感谢', value: TriggerType.FOLLOW, icon: 'i-lucide-user-round-plus' },
+  { label: '入场欢迎', value: TriggerType.ENTER, icon: 'i-lucide-log-in' },
+  { label: '定时发送', value: TriggerType.SCHEDULED, icon: 'i-lucide-timer' },
+  { label: 'SC感谢', value: TriggerType.SUPER_CHAT, icon: 'i-lucide-star' },
   {
     label: '功能设置',
-    key: 'group-settings',
-    type: 'group',
-    children: [
-      {
-        label: renderMenuLabel('签到设置', 'check-in-settings'),
-        key: 'check-in-settings',
-        icon: renderIcon(AppGeneric24Regular),
-      },
-      {
-        label: renderMenuLabel('消息队列', 'queue-settings'),
-        key: 'queue-settings',
-        icon: renderIcon(Settings24Regular),
-      },
-    ],
+    type: 'label' as const,
   },
+  { label: '签到设置', value: 'check-in-settings', icon: 'i-lucide-calendar-check' },
+  { label: '消息队列', value: 'queue-settings', icon: 'i-lucide-settings' },
   {
     label: '数据与记录',
-    key: 'group-data',
-    type: 'group',
-    children: [
-      {
-        label: renderMenuLabel('执行历史', 'action-history'),
-        key: 'action-history',
-        icon: renderIcon(History24Regular),
-      },
-      { label: renderMenuLabel('数据管理', 'data-manager'), key: 'data-manager', icon: renderIcon(DataUsage24Regular) },
-    ],
+    type: 'label' as const,
   },
+  { label: '执行历史', value: 'action-history', icon: 'i-lucide-history' },
+  { label: '数据管理', value: 'data-manager', icon: 'i-lucide-database' },
 ])
 
 // 标题映射
@@ -264,7 +122,7 @@ function addAutoAction() {
   showAddModal.value = false
   currentMenuKey.value = selectedTriggerType.value
   editingActionId.value = newAction.id
-  message.success('已添加新的自动操作')
+  feedback('success', '已添加新的自动操作')
 }
 
 function handleEdit(id: string) {
@@ -279,7 +137,7 @@ function backToOverview() {
 function handleTestClick(type: TriggerType) {
   const requiresLogin = [TriggerType.DANMAKU, TriggerType.GUARD, TriggerType.SUPER_CHAT].includes(type)
   if (requiresLogin && !biliCookieStore.isCookieValid) {
-    message.error('此测试需要登录B站账号，请先前往设置页面登录')
+    feedback('error', '此测试需要登录B站账号，请先前往设置页面登录')
     return
   }
 
@@ -295,13 +153,13 @@ function handleTestClick(type: TriggerType) {
 function confirmTest() {
   if (currentTestType.value === TriggerType.GUARD) {
     if (!biliCookieStore.isCookieValid) {
-      message.error('无法发送私信测试，请先登录B站账号')
+      feedback('error', '无法发送私信测试，请先登录B站账号')
       showTestModal.value = false
       return
     }
     const uid = Number(testUid.value)
     if (!Number.isFinite(uid) || uid <= 0) {
-      message.error('请输入有效的UID')
+      feedback('error', '请输入有效的UID')
       return
     }
     autoActionStore.triggerTestActionByType(currentTestType.value, uid)
@@ -318,7 +176,7 @@ function openSetNextModal() {
 function confirmSetNextAction() {
   if (targetNextActionId.value) {
     autoActionStore.setNextGlobalAction(targetNextActionId.value)
-    message.success('已指定下一条执行的操作')
+    feedback('success', '已指定下一条执行的操作')
   }
   showSetNextModal.value = false
 }
@@ -335,7 +193,7 @@ const triggerTypeOptions = [
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="0"
     class="full-height"
@@ -346,7 +204,7 @@ const triggerTypeOptions = [
         title="自动操作"
         description="管理自动回复、礼物感谢、入场欢迎、定时发送等规则"
       />
-      <NAlert
+      <UAlert
         v-if="!biliCookieStore.isCookieValid"
         type="warning"
         title="未登录B站账号"
@@ -355,31 +213,31 @@ const triggerTypeOptions = [
         style="margin-top: 12px"
       >
         部分需要发送弹幕或私信的自动操作（如自动回复、上舰感谢）将无法执行。请前往【设置】- 【账号设置】页面登录。
-      </NAlert>
+      </UAlert>
     </div>
 
     <!-- Main Content Area -->
     <div class="content-container">
-      <NLayout
+      <div
         has-sider
         class="inner-layout"
       >
-        <NLayoutSider
+        <aside
           bordered
           width="200"
           content-style="padding: 12px 0;"
           :native-scrollbar="false"
         >
-          <NMenu
-            :value="currentMenuKey"
-            :options="menuOptions"
+          <UNavigationMenu
+            :model-value="currentMenuKey"
+            :items="menuOptions"
             :indent="24"
-            @update:value="handleMenuUpdate"
+            @update:model-value="handleMenuUpdate"
           />
-        </NLayoutSider>
+        </aside>
 
-        <NLayoutContent content-style="padding: 16px; height: 100%;">
-          <NScrollbar class="main-scrollbar">
+        <main content-style="padding: 16px; height: 100%;">
+          <div class="main-scrollbar">
             <transition
               name="fade-slide"
               mode="out-in"
@@ -390,35 +248,35 @@ const triggerTypeOptions = [
                 :key="`edit-${editingActionId}`"
                 class="edit-mode-container"
               >
-                <NFlex
+                <div
                   vertical
                   :size="16"
                 >
-                  <NFlex align="center">
-                    <NButton
-                      secondary
+                  <div align="center">
+                    <UButton
+                      variant="soft"
                       size="small"
                       @click="backToOverview"
                     >
-                      <template #icon>
-                        <NIcon
-                          :component="Clock24Regular"
+                      <template #leading>
+                        <UIcon
+                          name="i-lucide-circle"
                           style="transform: rotate(90deg)"
                         />
                       </template>
                       返回列表
-                    </NButton>
-                    <NText
+                    </UButton>
+                    <span
                       strong
                       style="font-size: 16px"
                     >
                       编辑 {{ currentEditingAction.name }}
-                    </NText>
-                  </NFlex>
+                    </span>
+                  </div>
                   <div class="editor-wrapper">
                     <AutoActionEditor :action="currentEditingAction" />
                   </div>
-                </NFlex>
+                </div>
               </div>
 
               <!-- 列表模式 / 其他功能页面 -->
@@ -452,41 +310,41 @@ const triggerTypeOptions = [
                         "
                         class="next-action-display"
                       >
-                        <NFlex
+                        <div
                           align="center"
                           justify="space-between"
                         >
-                          <NText type="success">
-                            <NIcon
-                              :component="Target24Filled"
+                          <span type="success">
+                            <UIcon
+                              name="i-lucide-circle"
                               style="vertical-align: -0.15em; margin-right: 4px"
                             />
                             下一个执行:
-                            <NTag
+                            <UBadge
                               type="info"
                               size="small"
                               round
                             >
                               {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
-                            </NTag>
-                          </NText>
-                          <NButton
-                            text
+                            </UBadge>
+                          </span>
+                          <UButton
+                            variant="link"
                             icon-placement="right"
                             size="small"
                             @click="openSetNextModal"
                           >
-                            <template #icon>
-                              <NIcon :component="Edit16Regular" />
+                            <template #leading>
+                              <UIcon name="i-lucide-circle" />
                             </template>
                             手动指定
-                          </NButton>
-                        </NFlex>
+                          </UButton>
+                        </div>
                       </div>
                     </div>
 
                     <!-- 舰长专属提示 -->
-                    <NAlert
+                    <UAlert
                       v-if="currentMenuKey === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
                       type="warning"
                       title="功能限制提醒"
@@ -495,7 +353,7 @@ const triggerTypeOptions = [
                     >
                       当前连接模式 (OpenLive)
                       无法获取用户UID，因此无法执行【发送私信】操作。如需使用私信功能，请考虑切换至直连模式。
-                    </NAlert>
+                    </UAlert>
                   </template>
                 </ActionList>
 
@@ -504,48 +362,50 @@ const triggerTypeOptions = [
 
                 <!-- 消息队列设置 -->
                 <div v-else-if="currentMenuKey === 'queue-settings'">
-                  <NCard
+                  <UCard
                     title="全局消息队列设置"
                     size="small"
                     bordered
                   >
-                    <NFlex
+                    <div
                       vertical
                       :size="16"
                     >
                       <div class="setting-item">
                         <div class="label">弹幕队列间隔</div>
                         <div class="control">
-                          <NInputNumber
-                            v-model:value="biliFunc.danmakuInterval"
-                            :min="100"
-                            :step="100"
-                            style="width: 150px"
-                          >
-                            <template #suffix> ms </template>
-                          </NInputNumber>
+                          <div class="flex items-center gap-2">
+                            <UInputNumber
+                              v-model="biliFunc.danmakuInterval"
+                              :min="100"
+                              :step="100"
+                              style="width: 150px"
+                            />
+                            <span class="text-sm text-[var(--vtsuru-fg-muted)]">ms</span>
+                          </div>
                           <div class="desc">
                             两条弹幕之间的最小发送间隔，过短可能导致被B站吞弹幕。建议 1000ms 以上。
                           </div>
                         </div>
                       </div>
-                      <NDivider style="margin: 0" />
+                      <USeparator style="margin: 0" />
                       <div class="setting-item">
                         <div class="label">私信队列间隔</div>
                         <div class="control">
-                          <NInputNumber
-                            v-model:value="biliFunc.pmInterval"
-                            :min="1000"
-                            :step="500"
-                            style="width: 150px"
-                          >
-                            <template #suffix> ms </template>
-                          </NInputNumber>
+                          <div class="flex items-center gap-2">
+                            <UInputNumber
+                              v-model="biliFunc.pmInterval"
+                              :min="1000"
+                              :step="500"
+                              style="width: 150px"
+                            />
+                            <span class="text-sm text-[var(--vtsuru-fg-muted)]">ms</span>
+                          </div>
                           <div class="desc">私信发送频率限制，建议保持默认或更高以避免封控。</div>
                         </div>
                       </div>
-                    </NFlex>
-                  </NCard>
+                    </div>
+                  </UCard>
                 </div>
 
                 <!-- 执行历史 -->
@@ -555,72 +415,74 @@ const triggerTypeOptions = [
                 <DataManager v-else-if="currentMenuKey === 'data-manager'" />
               </div>
             </transition>
-          </NScrollbar>
-        </NLayoutContent>
-      </NLayout>
+          </div>
+        </main>
+      </div>
     </div>
 
     <!-- Modals -->
-    <NModal
-      v-model:show="showAddModal"
+    <UModal
+      v-model:open="showAddModal"
       preset="dialog"
       title="添加新的自动操作"
       positive-text="确认"
       negative-text="取消"
       @positive-click="addAutoAction"
     >
-      <NFlex vertical>
+      <div vertical>
         <div>请选择要添加的自动操作类型：</div>
-        <NSelect
-          v-model:value="selectedTriggerType"
-          :options="triggerTypeOptions"
+        <USelectMenu
+          v-model="selectedTriggerType"
+          :items="triggerTypeOptions"
+          value-key="value"
         />
-      </NFlex>
-    </NModal>
+      </div>
+    </UModal>
 
-    <NModal
-      v-model:show="showSetNextModal"
+    <UModal
+      v-model:open="showSetNextModal"
       preset="dialog"
       title="手动指定下一条 (顺序模式)"
       positive-text="确认指定"
       negative-text="取消"
       @positive-click="confirmSetNextAction"
     >
-      <NFlex vertical>
-        <NSelect
-          v-model:value="targetNextActionId"
-          :options="eligibleGlobalActions"
+      <div vertical>
+        <USelectMenu
+          v-model="targetNextActionId"
+          :items="eligibleGlobalActions"
           placeholder="选择操作"
           filterable
           clearable
+          value-key="value"
         />
-        <NText
+        <span
           type="info"
           :depth="3"
           style="font-size: 12px"
         >
           只会列出当前已启用、类型也已启用且使用全局定时器的操作。
-        </NText>
-      </NFlex>
-    </NModal>
+        </span>
+      </div>
+    </UModal>
 
-    <NModal
-      v-model:show="showTestModal"
+    <UModal
+      v-model:open="showTestModal"
       preset="dialog"
       title="测试舰长私信"
       positive-text="确认测试"
       negative-text="取消"
       @positive-click="confirmTest"
     >
-      <NFlex vertical>
+      <div vertical>
         <div>请输入私信接收者的UID：</div>
         <BiliUserSelector
-          v-model:value="testUid"
+          v-model="testUid"
           placeholder="请输入B站用户UID"
         />
-      </NFlex>
-    </NModal>
-  </NFlex>
+      </div>
+    </UModal>
+  </div>
 </template>
 
 <style scoped>
@@ -675,7 +537,7 @@ const triggerTypeOptions = [
   opacity: 0.6;
 }
 
-:deep(.n-menu-item-content) {
+:deep(.u-menu-item-content) {
   padding-right: 8px !important;
 }
 

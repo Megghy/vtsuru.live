@@ -15,6 +15,7 @@ import {
   NSlider,
   NText,
 } from 'naive-ui'
+import { showSuccessToast } from '@/shared/services/toast'
 import { computed, onMounted, reactive, ref } from 'vue'
 
 import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
@@ -22,8 +23,6 @@ import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/component
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-
-const message = useMessage()
 const editorRef = ref<InstanceType<typeof CanvasEditor>>()
 const blobSize = ref(0)
 
@@ -93,7 +92,7 @@ async function download() {
     format: opts.format,
     bytes: blob.size,
   })
-  message.success('已下载')
+  showSuccessToast('已下载')
 }
 
 const showRemoveBg = ref(false)
@@ -106,7 +105,7 @@ async function onRemoveBgConfirm(blob: Blob) {
   if (!editorRef.value || !selectedLayer.value) return
   await editorRef.value.replaceLayerImage(selectedLayer.value.id, blob)
   trackManageToolSuccess('StickerMaker', 'remove-bg')
-  message.success('已替换')
+  showSuccessToast('已替换')
 }
 </script>
 

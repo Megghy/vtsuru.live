@@ -1,4 +1,3 @@
-import { NButton, NFlex, NInput, NInputGroup, NInputGroupLabel, NTag } from 'naive-ui'
 import { h, ref } from 'vue'
 
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
@@ -42,46 +41,52 @@ export const Config = defineTemplateConfig([
     key: 'links',
     default: [{ name: '哔哩哔哩', url: 'https://www.bilibili.com/' }],
     render: (config) =>
-      h(NFlex, { align: 'center', wrap: true }, () => [
+      h('div', { class: 'traditional-link-editor' }, [
         config.links?.map((link: { name: string; url: string }) =>
-          h(
-            NTag,
-            {
-              closable: true,
-              onClose: () => {
-                config.links = config.links.filter((item: { name: string }) => item.name !== link.name)
+          h('span', { class: 'traditional-link-editor__tag' }, [
+            link.name,
+            h(
+              'button',
+              {
+                type: 'button',
+                title: `删除 ${link.name}`,
+                onClick: () => {
+                  config.links = config.links.filter((item: { name: string }) => item.name !== link.name)
+                },
               },
-            },
-            () => link.name,
-          ),
+              '×',
+            ),
+          ]),
         ),
-        h(NInputGroup, { size: 'small', style: { flex: '1 1 300px' } }, () => [
-          h(NInputGroupLabel, null, () => '名称'),
-          h(NInput, {
+        h('label', null, [
+          '名称',
+          h('input', {
             value: pendingLink.value.name,
             placeholder: '链接名称',
-            onUpdateValue: (value) => (pendingLink.value.name = value),
+            onInput: (event: Event) => (pendingLink.value.name = (event.target as HTMLInputElement).value),
           }),
-          h(NInputGroupLabel, null, () => '地址'),
-          h(NInput, {
+        ]),
+        h('label', null, [
+          '地址',
+          h('input', {
             value: pendingLink.value.url,
             placeholder: 'https://...',
-            onUpdateValue: (value) => (pendingLink.value.url = value),
+            onInput: (event: Event) => (pendingLink.value.url = (event.target as HTMLInputElement).value),
           }),
-          h(
-            NButton,
-            {
-              type: 'primary',
-              disabled: !pendingLink.value.name || !pendingLink.value.url,
-              onClick: () => {
-                config.links ??= []
-                config.links.push({ ...pendingLink.value })
-                pendingLink.value = { name: '', url: '' }
-              },
-            },
-            () => '添加',
-          ),
         ]),
+        h(
+          'button',
+          {
+            type: 'button',
+            disabled: !pendingLink.value.name || !pendingLink.value.url,
+            onClick: () => {
+              config.links ??= []
+              config.links.push({ ...pendingLink.value })
+              pendingLink.value = { name: '', url: '' }
+            },
+          },
+          '添加',
+        ),
       ]),
   },
 ])

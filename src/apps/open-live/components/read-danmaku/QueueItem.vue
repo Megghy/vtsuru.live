@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ArrowUp20Filled, Copy20Filled, Delete20Filled, Play20Filled, ReOrder24Filled } from '@vicons/fluent'
+const Play20Filled = 'i-lucide-circle'
+const ArrowUp20Filled = 'i-lucide-circle'
+const Copy20Filled = 'i-lucide-circle'
+const Delete20Filled = 'i-lucide-circle'
 import { useTimeAgo } from '@vueuse/core'
-import { NButton, NDropdown, NIcon, NTag, NText, NTooltip } from 'naive-ui'
-import { computed, h } from 'vue'
+import { computed, h, resolveComponent } from 'vue'
 
 import { EventDataTypes } from '@/api/api-models'
 import { copyToClipboard } from '@/shared/utils'
@@ -60,11 +62,23 @@ const absoluteTime = computed(() => {
 const speechText = computed(() => speechService.getTextFromDanmaku(props.item.data) ?? '')
 
 const dropdownOptions = computed(() => [
-  { label: '立即播放', key: 'play', icon: () => h(NIcon, null, { default: () => h(Play20Filled) }) },
-  { label: '置顶', key: 'pin', icon: () => h(NIcon, null, { default: () => h(ArrowUp20Filled) }) },
-  { label: '复制内容', key: 'copy', icon: () => h(NIcon, null, { default: () => h(Copy20Filled) }) },
-  { type: 'divider', key: 'd1' },
-  { label: '从队列移除', key: 'remove', icon: () => h(NIcon, null, { default: () => h(Delete20Filled) }) },
+  {
+    label: '立即播放',
+    key: 'play',
+    icon: () => h(resolveComponent('UIcon'), null, { default: () => h(Play20Filled) }),
+  },
+  { label: '置顶', key: 'pin', icon: () => h(resolveComponent('UIcon'), null, { default: () => h(ArrowUp20Filled) }) },
+  {
+    label: '复制内容',
+    key: 'copy',
+    icon: () => h(resolveComponent('UIcon'), null, { default: () => h(Copy20Filled) }),
+  },
+  { type: 'separator' as const },
+  {
+    label: '从队列移除',
+    key: 'remove',
+    icon: () => h(resolveComponent('UIcon'), null, { default: () => h(Delete20Filled) }),
+  },
 ])
 
 function handleSelect(key: string) {
@@ -86,10 +100,10 @@ function handleSelect(key: string) {
 </script>
 
 <template>
-  <NDropdown
+  <UDropdownMenu
     trigger="click"
     placement="bottom-start"
-    :options="dropdownOptions"
+    :items="dropdownOptions"
     @select="handleSelect"
   >
     <div
@@ -101,81 +115,81 @@ function handleSelect(key: string) {
         class="drag-handle"
         @click.stop
       >
-        <NIcon
-          :component="ReOrder24Filled"
+        <UIcon
+          name="i-lucide-circle"
           :size="14"
         />
       </div>
 
-      <NTag
+      <UBadge
         :type="tag.type"
         size="small"
         :bordered="false"
         class="type-tag"
       >
         {{ tag.text }}
-      </NTag>
+      </UBadge>
 
       <span class="uname">{{ item.data.uname }}</span>
 
-      <NText
+      <span
         depth="3"
         class="content"
       >
         {{ speechText }}
-      </NText>
+      </span>
 
-      <NTag
+      <UBadge
         v-if="item.data.type === EventDataTypes.Gift && item.combineCount"
         type="info"
         size="tiny"
         :bordered="false"
       >
         ×{{ item.combineCount }}
-      </NTag>
-      <NTag
+      </UBadge>
+      <UBadge
         v-else-if="item.data.type === EventDataTypes.Gift && settings.combineGiftDelay"
         type="success"
         size="tiny"
         :bordered="false"
       >
         合并中
-      </NTag>
+      </UBadge>
 
-      <NTooltip>
-        <template #trigger>
-          <span class="time">{{ timeAgo }}</span>
+      <UTooltip>
+        <span class="time">{{ timeAgo }}</span>
+        <template #content>
+          {{ absoluteTime }}
         </template>
-        {{ absoluteTime }}
-      </NTooltip>
+      </UTooltip>
 
       <div
         class="actions"
         @click.stop
       >
-        <NButton
+        <UButton
           size="tiny"
-          tertiary
-          circle
+          variant="soft"
+          square
           @click="speechService.forceSpeak(item.data)"
         >
-          <template #icon>
-            <NIcon :component="Play20Filled" />
+          <template #leading>
+            <UIcon name="i-lucide-circle" />
           </template>
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="tiny"
-          tertiary
-          circle
+          variant="soft"
+          square
           @click="speechService.removeFromQueue(item)"
         >
-          <template #icon>
-            <NIcon :component="Delete20Filled" />
+          <template #leading>
+            <UIcon name="i-lucide-circle" />
           </template>
-        </NButton>
+        </UButton>
       </div>
     </div>
-  </NDropdown>
+  </UDropdownMenu>
 </template>
 
 <style scoped>

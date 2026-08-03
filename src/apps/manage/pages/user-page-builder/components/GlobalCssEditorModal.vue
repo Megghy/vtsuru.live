@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NFlex, NModal, NTag, NText, useDialog } from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
 
 import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
@@ -12,7 +11,6 @@ const show = defineModel<boolean>('show', { required: true })
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const dialog = useDialog()
 const draft = ref('')
 const initialSnapshot = ref('')
 const codeEditor = ref<InstanceType<typeof CustomHtmlCodeEditor> | null>(null)
@@ -48,15 +46,7 @@ function closeEditor() {
     show.value = false
     return
   }
-  dialog.warning({
-    title: '放弃未应用修改',
-    content: '全局 CSS 中的修改尚未应用到公开页。',
-    positiveText: '放弃修改',
-    negativeText: '继续编辑',
-    onPositiveClick: () => {
-      show.value = false
-    },
-  })
+  if (window.confirm('全局 CSS 中的修改尚未应用到公开页。确定放弃修改吗？')) show.value = false
 }
 
 watch(
@@ -69,75 +59,65 @@ watch(
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
+  <UModal
+    v-model:open="show"
     title="全局 CSS"
     style="width: min(1100px, 94vw); height: min(720px, 88dvh)"
-    content-style="padding: 0; min-height: 0; overflow: hidden"
-    :auto-focus="false"
-    :mask-closable="false"
+    :dismissible="false"
   >
-    <template #header-extra>
-      <NFlex
-        align="center"
-        :wrap="false"
-        size="small"
-      >
-        <NTag
+    <template #actions>
+      <div class="builder-row">
+        <UBadge
           v-if="issues.length"
           type="error"
-          size="small"
+          size="sm"
         >
           {{ issues.length }} 个问题
-        </NTag>
-        <NButton
-          size="small"
-          secondary
+        </UBadge>
+        <UButton
+          size="sm"
+          variant="soft"
           @click="closeEditor"
         >
           取消
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
+        </UButton>
+        <UButton
+          size="sm"
+          color="primary"
           :disabled="!!issues.length"
           @click="applyChanges"
         >
           应用
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
     </template>
 
-    <div class="editor-shell">
-      <NAlert
-        type="info"
-        :show-icon="true"
-        class="editor-hint"
-      >
-        CSS 作用于公开用户页，可使用 --vtsuru-* 主题变量；不允许外部 URL、@import 和脚本相关属性。
-      </NAlert>
-      <NFlex
-        justify="space-between"
-        align="center"
-        class="editor-meta"
-      >
-        <NText depth="3"> 公开页全局样式 </NText>
-        <NText depth="3"> {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes </NText>
-      </NFlex>
-      <CustomHtmlCodeEditor
-        ref="codeEditor"
-        html=""
-        :css="draft"
-        active-language="css"
-        theme="vs"
-        :assets="[]"
-        :resources="[]"
-        :issues="issues"
-        @update:css="draft = $event"
-      />
-    </div>
-  </NModal>
+    <template #body
+      ><div class="editor-shell">
+        <UAlert
+          type="info"
+          :show-icon="true"
+          class="editor-hint"
+        >
+          CSS 作用于公开用户页，可使用 --vtsuru-* 主题变量；不允许外部 URL、@import 和脚本相关属性。
+        </UAlert>
+        <div class="builder-row editor-meta">
+          <span class="builder-text"> 公开页全局样式 </span>
+          <span class="builder-text"> {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes </span>
+        </div>
+        <CustomHtmlCodeEditor
+          ref="codeEditor"
+          html=""
+          :css="draft"
+          active-language="css"
+          theme="vs"
+          :assets="[]"
+          :resources="[]"
+          :issues="issues"
+          @update:css="draft = $event"
+        /></div
+    ></template>
+  </UModal>
 </template>
 
 <style scoped>

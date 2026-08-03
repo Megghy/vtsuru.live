@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CloudAdd20Filled, Play24Filled, Search24Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NSelect, NTag, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -77,22 +76,22 @@ function requestSong(song: SongsInfo) {
 <template>
   <div class="gallery-template">
     <div class="toolbar">
-      <NInput
-        v-model:value="searchKeyword"
+      <UInput
+        v-model="searchKeyword"
         class="search"
         clearable
         placeholder="搜索歌曲 / 歌手 / 标签…"
       >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
+        <template #leading>
+          <component :is="Search24Regular" />
         </template>
-      </NInput>
-      <NSelect
-        v-model:value="selectedTag"
+      </UInput>
+      <USelect
+        v-model="selectedTag"
         class="tag-select"
         clearable
         placeholder="标签"
-        :options="tagOptions"
+        :items="tagOptions"
       />
       <span class="count">{{ filteredSongs.length }} 首</span>
     </div>
@@ -104,10 +103,11 @@ function requestSong(song: SongsInfo) {
       class="preview-player"
     />
 
-    <NEmpty
+    <UEmpty
       v-if="filteredSongs.length === 0"
       description="暂无曲目"
       style="margin-top: 48px"
+      class="public-empty"
     />
 
     <div
@@ -156,37 +156,34 @@ function requestSong(song: SongsInfo) {
           >
 
           <div class="cover-overlay">
-            <NTooltip v-if="song.url">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="large"
-                  :loading="isLrcLoading === song.key"
-                  @click="previewSong = song"
-                >
-                  <template #icon>
-                    <NIcon :component="Play24Filled" />
-                  </template>
-                </NButton>
-              </template>
-              试听
-            </NTooltip>
-            <NTooltip v-if="!isSelf">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="large"
-                  :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
-                  :loading="requestingKey === song.key"
-                  @click="requestSong(song)"
-                >
-                  <template #icon>
-                    <NIcon :component="CloudAdd20Filled" />
-                  </template>
-                </NButton>
-              </template>
-              {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-            </NTooltip>
+            <UTooltip v-if="song.url">
+              <UButton
+                square
+                size="lg"
+                :loading="isLrcLoading === song.key"
+                @click="previewSong = song"
+              >
+                <template #leading>
+                  <component :is="Play24Filled" />
+                </template>
+              </UButton>
+              <template #content> 试听 </template></UTooltip
+            >
+            <UTooltip v-if="!isSelf">
+              <UButton
+                square
+                size="lg"
+                :color="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
+                :loading="requestingKey === song.key"
+                @click="requestSong(song)"
+              >
+                <template #leading>
+                  <component :is="CloudAdd20Filled" />
+                </template>
+              </UButton>
+
+              <template #content>{{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}</template>
+            </UTooltip>
           </div>
         </div>
 
@@ -220,38 +217,38 @@ function requestSong(song: SongsInfo) {
             "
             class="guard-row"
           >
-            <NTag
+            <UBadge
               v-if="song.options?.fanMedalMinLevel"
-              size="tiny"
+              size="xs"
               :bordered="false"
-              type="info"
+              color="info"
             >
               粉丝牌 {{ song.options.fanMedalMinLevel }}
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="song.options?.needZongdu"
-              size="tiny"
+              size="xs"
               :bordered="false"
-              :color="{ color: GetGuardColor(1) }"
+              :style="{ backgroundColor: GetGuardColor(1), color: '#fff' }"
             >
               总督
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="song.options?.needTidu"
-              size="tiny"
+              size="xs"
               :bordered="false"
-              :color="{ color: GetGuardColor(2) }"
+              :style="{ backgroundColor: GetGuardColor(2), color: '#fff' }"
             >
               提督
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="song.options?.needJianzhang"
-              size="tiny"
+              size="xs"
               :bordered="false"
-              :color="{ color: GetGuardColor(3) }"
+              :style="{ backgroundColor: GetGuardColor(3), color: '#fff' }"
             >
               舰长
-            </NTag>
+            </UBadge>
           </div>
         </div>
       </div>

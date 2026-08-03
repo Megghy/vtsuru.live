@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NInputNumber, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -11,36 +9,33 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="builder-form">
     <PropsGrid>
-      <NFormItem label="最多展示">
-        <NInputNumber
-          v-model:value="blockProps.count"
+      <UFormField label="最多展示">
+        <UInputNumber
+          v-model="blockProps.count"
           :min="1"
           :max="6"
           :precision="0"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="显示活动说明">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showDescription"
+      </UFormField>
+      <UFormField label="显示活动说明">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showDescription"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示投稿进度">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showProgress"
+        </div>
+      </UFormField>
+      <UFormField label="显示投稿进度">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showProgress"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
+        </div>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

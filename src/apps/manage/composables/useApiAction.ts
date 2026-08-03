@@ -1,4 +1,3 @@
-import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 import { unwrapOk } from '@/api/query'
@@ -15,7 +14,7 @@ interface RunOptions {
  * 失败时返回 undefined，由调用方决定兜底值。
  */
 export function useApiAction() {
-  const message = useMessage()
+  const toast = useToast()
   const loading = ref(false)
 
   async function run<T>(fn: () => Promise<ApiResponse<T>>, opts: RunOptions = {}): Promise<T | undefined> {
@@ -23,10 +22,10 @@ export function useApiAction() {
     loading.value = true
     try {
       const data = unwrapOk(await fn(), failPrefix)
-      if (opts.success) message.success(opts.success)
+      if (opts.success) toast.add({ title: opts.success, color: 'success' })
       return data
     } catch (err) {
-      message.error(`${failPrefix}: ${err instanceof Error ? err.message : String(err)}`)
+      toast.add({ title: `${failPrefix}: ${err instanceof Error ? err.message : String(err)}`, color: 'error' })
       return undefined
     } finally {
       loading.value = false

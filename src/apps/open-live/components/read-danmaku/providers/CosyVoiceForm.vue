@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { ArrowSync20Regular, LockClosed16Filled } from '@vicons/fluent'
-import type { SelectOption } from 'naive-ui'
-import { NAlert, NButton, NFlex, NIcon, NInput, NSelect, NText, NTooltip, useMessage } from 'naive-ui'
+const LockClosed16Filled = 'i-lucide-circle'
 import type { VNode } from 'vue'
-import { computed, h, ref, watch } from 'vue'
+import { computed, h, ref, watch, resolveComponent } from 'vue'
 
 import {
   COSYVOICE_LANGUAGE_HINTS,
@@ -18,10 +16,13 @@ import { useSpeechService } from '@/store/useSpeechService'
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const speechService = useSpeechService()
 
-// 下拉项会被 naive-ui teleport 到 body，scoped 样式失效，故用内联样式（消费 :root 上的主题变量）
+// 下拉项渲染到 body，使用主题变量确保与页面保持一致。
 const MODEL_STYLE = {
   option:
     'display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:var(--model-pad,5px 2px)',
@@ -49,16 +50,16 @@ const modelOptions = computed(() =>
   })),
 )
 
-function modelNote(option: SelectOption) {
+function modelNote(option: any) {
   return option.disabled ? '需要填写自己的 DashScope Key，并使用声音复刻/声音设计音色。' : (option.note as string)
 }
 
-function renderModelLabel(option: SelectOption) {
+function renderModelLabel(option: any) {
   const disabled = Boolean(option.disabled)
   return h('div', { class: 'model-option', style: MODEL_STYLE.option }, [
     h('div', { class: 'model-copy', style: MODEL_STYLE.copy }, [
       h('div', { style: MODEL_STYLE.head }, [
-        disabled ? h(NIcon, { component: LockClosed16Filled, style: MODEL_STYLE.lock }) : null,
+        disabled ? h(resolveComponent('UIcon'), { component: LockClosed16Filled, style: MODEL_STYLE.lock }) : null,
         h('span', { class: 'model-name', style: MODEL_STYLE.name(disabled) }, option.label as string),
       ]),
       h('span', { class: 'model-note', style: MODEL_STYLE.note }, modelNote(option)),
@@ -67,9 +68,9 @@ function renderModelLabel(option: SelectOption) {
   ])
 }
 
-function renderModelOption({ node, option }: { node: VNode; option: SelectOption }) {
+function renderModelOption({ node, option }: { node: VNode; option: any }) {
   return h(
-    NTooltip,
+    resolveComponent('UTooltip'),
     { placement: 'right', showArrow: false, delay: 300 },
     {
       trigger: () => node,
@@ -81,7 +82,7 @@ function renderModelOption({ node, option }: { node: VNode; option: SelectOption
 async function refreshCustomVoices() {
   const apiKey = cosyvoice.value.apiKey?.trim()
   if (!apiKey) {
-    message.warning('请先填写自己的 DashScope API Key')
+    feedback('warning', '请先填写自己的 DashScope API Key')
     return
   }
 
@@ -90,12 +91,12 @@ async function refreshCustomVoices() {
     const voices = await listCosyVoiceCustomVoices(apiKey)
     cosyvoice.value.customVoices = voices
     if (voices.length === 0) {
-      message.info('当前 Key 下没有可用的 CosyVoice 自定义音色')
+      feedback('info', '当前 Key 下没有可用的 CosyVoice 自定义音色')
     } else {
-      message.success(`已加载 ${voices.length} 个自定义音色`)
+      feedback('success', `已加载 ${voices.length} 个自定义音色`)
     }
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '拉取自定义音色失败')
+    feedback('error', error instanceof Error ? error.message : '拉取自定义音色失败')
   } finally {
     customVoiceLoading.value = false
   }
@@ -134,15 +135,15 @@ watch(hasUserKey, (value) => {
       label="DashScope API Key"
       hint="需要前往阿里云百炼创建语音服务实例并获取 API Key, 否则使用本站默认的共享 Key, 可能会遇到排队或调用失败的情况"
     >
-      <NInput
-        v-model:value="settings.providers.cosyvoice.apiKey"
+      <UInput
+        v-model="settings.providers.cosyvoice.apiKey"
         type="password"
         show-password-on="click"
         placeholder="sk-xxxx"
         size="small"
         :input-props="{ autocomplete: 'new-password' }"
       />
-      <NText
+      <span
         depth="3"
         style="font-size: 11px"
       >
@@ -154,25 +155,26 @@ watch(hasUserKey, (value) => {
         >
           前往阿里云百炼获取 API Key →
         </a>
-      </NText>
+      </span>
     </SectionField>
 
     <SectionField label="模型">
-      <NSelect
-        v-model:value="settings.providers.cosyvoice.model"
-        :options="modelOptions"
+      <USelectMenu
+        v-model="settings.providers.cosyvoice.model"
+        :items="modelOptions"
         :render-label="renderModelLabel"
         :render-option="renderModelOption"
         size="small"
+        value-key="value"
       />
     </SectionField>
 
     <SectionField label="音色">
-      <NFlex
+      <div
         vertical
         :size="6"
       >
-        <NFlex
+        <div
           :size="6"
           align="center"
           :wrap="false"
@@ -184,30 +186,28 @@ watch(hasUserKey, (value) => {
             placeholder="longanyang"
             style="flex: 1; min-width: 0"
           />
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                tertiary
-                :loading="customVoiceLoading"
-                :disabled="!hasUserKey"
-                @click="refreshCustomVoices"
-              >
-                <template #icon>
-                  <NIcon :component="ArrowSync20Regular" />
-                </template>
-              </NButton>
-            </template>
-            从当前用户 DashScope Key 拉取声音复刻/设计音色
-          </NTooltip>
-        </NFlex>
-        <NAlert
+          <UTooltip>
+            <UButton
+              variant="soft"
+              :loading="customVoiceLoading"
+              :disabled="!hasUserKey"
+              @click="refreshCustomVoices"
+            >
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
+              </template>
+            </UButton>
+            <template #content> 从当前用户 DashScope Key 拉取声音复刻/设计音色 </template>
+          </UTooltip>
+        </div>
+        <UAlert
           v-if="customVoiceOnly && customVoices.length === 0"
           type="warning"
           :bordered="false"
         >
           CosyVoice3.5 不支持系统音色。请刷新并选择声音复刻/声音设计音色。
-        </NAlert>
-        <NText
+        </UAlert>
+        <span
           depth="3"
           style="font-size: 11px"
         >
@@ -219,18 +219,19 @@ watch(hasUserKey, (value) => {
           >
             如何创建声音复刻 / 声音设计音色？查看百炼教程 →
           </a>
-        </NText>
-      </NFlex>
+        </span>
+      </div>
     </SectionField>
 
     <SectionField
       label="语言提示"
       hint="用于改善数字、缩写、符号或小语种读法。阿里云当前版本主要处理第一个语言提示。"
     >
-      <NSelect
-        v-model:value="settings.providers.cosyvoice.languageHint"
-        :options="COSYVOICE_LANGUAGE_HINTS"
+      <USelectMenu
+        v-model="settings.providers.cosyvoice.languageHint"
+        :items="COSYVOICE_LANGUAGE_HINTS"
         size="small"
+        value-key="value"
       />
     </SectionField>
   </div>
@@ -244,11 +245,11 @@ watch(hasUserKey, (value) => {
 }
 
 /* 选中后回填到输入框：隐藏说明，收成单行 */
-.form :deep(.n-base-selection-label .model-option) {
+.form :deep(.u-base-selection-label .model-option) {
   --model-pad: 0;
 }
 
-.form :deep(.n-base-selection-label .model-note) {
+.form :deep(.u-base-selection-label .model-note) {
   display: none;
 }
 </style>

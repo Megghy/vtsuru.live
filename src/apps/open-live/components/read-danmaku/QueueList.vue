@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Dismiss20Filled } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NScrollbar, NText } from 'naive-ui'
 import { ref } from 'vue'
 
 import { useSpeechService } from '@/store/useSpeechService'
@@ -40,40 +38,40 @@ function onDragEnd() {
 <template>
   <div class="queue-list">
     <div class="header">
-      <NText
+      <span
         strong
         style="font-size: 13px"
       >
         播报队列
-      </NText>
-      <NText
+      </span>
+      <span
         depth="3"
         style="font-size: 11px"
       >
         {{ speakQueue.length }} 项
-      </NText>
-      <NButton
+      </span>
+      <UButton
         v-if="speakQueue.length > 0"
-        size="tiny"
-        tertiary
-        type="error"
+        size="xs"
+        variant="ghost"
+        color="error"
         style="margin-left: auto"
         @click="speakQueue.splice(0)"
       >
-        <template #icon>
-          <NIcon :component="Dismiss20Filled" />
+        <template #leading>
+          <UIcon name="i-lucide-circle" />
         </template>
         清空
-      </NButton>
+      </UButton>
     </div>
 
-    <NEmpty
+    <UEmpty
       v-if="speakQueue.length === 0"
       description="队列为空"
       size="small"
     />
 
-    <NScrollbar
+    <div
       v-else
       style="max-height: 400px"
     >
@@ -95,7 +93,7 @@ function onDragEnd() {
           />
         </div>
       </div>
-    </NScrollbar>
+    </div>
   </div>
 </template>
 

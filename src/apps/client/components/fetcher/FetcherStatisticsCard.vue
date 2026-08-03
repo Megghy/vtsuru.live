@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { BarChartOutline } from '@vicons/ionicons5'
 import { BarChart, GaugeChart, LineChart, PieChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -13,7 +12,6 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { useThemeVars } from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import VChart from 'vue-echarts'
 
@@ -37,7 +35,6 @@ use([
 ])
 
 const webfetcher = useWebFetcher()
-const themeVars = useThemeVars()
 
 const isConnected = computed(() => webfetcher.state === 'connected')
 const showCharts = ref(false)
@@ -70,8 +67,8 @@ function updateGaugeChart() {
         progress: { show: true, width: 12 },
         axisLine: { lineStyle: { width: 12 } },
         axisTick: { show: false },
-        splitLine: { length: 8, lineStyle: { width: 2, color: themeVars.value.textColor3 } },
-        axisLabel: { distance: 15, color: themeVars.value.textColor3, fontSize: 12 },
+        splitLine: { length: 8, lineStyle: { width: 2, color: 'var(--vtsuru-fg-muted)' } },
+        axisLabel: { distance: 15, color: 'var(--vtsuru-fg-muted)', fontSize: 12 },
         anchor: { show: true, showAbove: true, size: 15, itemStyle: { borderWidth: 8 } },
         title: { show: false },
         detail: { valueAnimation: true, fontSize: 24, offsetCenter: [0, '60%'], formatter: '{value}/s' },
@@ -99,7 +96,7 @@ function updateTypeDistributionChart() {
         radius: ['40%', '70%'],
         center: ['40%', '50%'],
         avoidLabelOverlap: true,
-        itemStyle: { borderRadius: 5, borderColor: themeVars.value.cardColor, borderWidth: 1 },
+        itemStyle: { borderRadius: 5, borderColor: 'var(--vtsuru-bg-elevated)', borderWidth: 1 },
         label: { show: false, position: 'center' },
         emphasis: { label: { show: true, fontSize: '16', fontWeight: 'bold' } },
         labelLine: { show: false },
@@ -165,21 +162,21 @@ onUnmounted(stopSession)
 </script>
 
 <template>
-  <NCard
+  <UCard
     title="会话实时统计"
     size="small"
     bordered
     style="width: 100%"
   >
     <div v-if="isConnected && showCharts">
-      <NGrid
+      <div
         :x-gap="16"
         :y-gap="16"
         cols="1 s:2 l:3"
         responsive="screen"
       >
-        <NGi>
-          <NCard
+        <div>
+          <UCard
             title="实时速率"
             size="small"
             bordered
@@ -193,10 +190,10 @@ onUnmounted(stopSession)
                 autoresize
               />
             </div>
-          </NCard>
-        </NGi>
-        <NGi>
-          <NCard
+          </UCard>
+        </div>
+        <div>
+          <UCard
             title="事件类型分布"
             size="small"
             bordered
@@ -210,45 +207,43 @@ onUnmounted(stopSession)
                 autoresize
               />
             </div>
-          </NCard>
-        </NGi>
-        <NGi span="1 s:2 l:1">
-          <NCard
+          </UCard>
+        </div>
+        <div span="1 s:2 l:1">
+          <UCard
             title="会话摘要"
             size="small"
             bordered
             :segmented="{ content: true }"
             style="height: 100%"
           >
-            <NFlex
+            <div
               vertical
               justify="space-around"
               style="height: 100%"
             >
-              <NStatistic label="会话事件总数">
-                <NIcon :component="BarChartOutline" /> {{ webfetcher.sessionEventCount?.toLocaleString() ?? 0 }}
-              </NStatistic>
-              <NStatistic label="已发送">
-                {{ ((webfetcher.bytesSentSession ?? 0) / 1024 / 1024).toFixed(2) }} Mb
-              </NStatistic>
-            </NFlex>
-          </NCard>
-        </NGi>
-      </NGrid>
+              <div label="会话事件总数">
+                <UIcon name="i-lucide-circle" /> {{ webfetcher.sessionEventCount?.toLocaleString() ?? 0 }}
+              </div>
+              <div label="已发送">{{ ((webfetcher.bytesSentSession ?? 0) / 1024 / 1024).toFixed(2) }} Mb</div>
+            </div>
+          </UCard>
+        </div>
+      </div>
     </div>
-    <NEmpty
+    <UEmpty
       v-else-if="!isConnected"
       description="EventFetcher 未连接"
     />
-    <NFlex
+    <div
       v-else
       justify="center"
       style="padding: 16px 0"
     >
-      <NSpin
+      <div
         size="small"
         description="正在加载实时统计..."
       />
-    </NFlex>
-  </NCard>
+    </div>
+  </UCard>
 </template>

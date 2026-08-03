@@ -1,17 +1,4 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NFlex,
-  NInput,
-  NInputNumber,
-  NModal,
-  NSelect,
-  NText,
-} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -27,6 +14,7 @@ import { isTauri } from '@/shared/config'
 const settings = useSettings()
 const backup = useClientBackup()
 const router = useRouter()
+const toast = useToast()
 
 const showImportModal = ref(false)
 const importPreview = ref<ClientBackupPreview | null>(null)
@@ -50,6 +38,12 @@ const effectiveIntervalText = computed(() => {
   return `当前使用预设 ${backupSettings.value.presetHours} 小时`
 })
 
+function toggleImportModule(module: ClientBackupModule, checked: boolean) {
+  importModules.value = checked
+    ? [...new Set([...importModules.value, module])]
+    : importModules.value.filter((value) => value !== module)
+}
+
 watch(
   () => settings.settings.backup,
   () => {
@@ -68,19 +62,19 @@ async function handlePickDirectory() {
   try {
     const selected = await backup.pickBackupDirectory()
     if (selected) {
-      window.$message.success('备份目录已更新')
+      toast.add({ title: '备份目录已更新', color: 'success' })
     }
   } catch (error) {
-    window.$message.error(error instanceof Error ? error.message : String(error))
+    toast.add({ title: error instanceof Error ? error.message : String(error), color: 'error' })
   }
 }
 
 async function handleManualBackup() {
   try {
     const result = await backup.createBackup('manual')
-    window.$message.success(`备份完成: ${result.fileName}`)
+    toast.add({ title: `备份完成: ${result.fileName}`, color: 'success' })
   } catch (error) {
-    window.$message.error(error instanceof Error ? error.message : String(error))
+    toast.add({ title: error instanceof Error ? error.message : String(error), color: 'error' })
   }
 }
 
@@ -93,7 +87,7 @@ async function handleSelectImportFile() {
     importModules.value = CLIENT_BACKUP_MODULE_OPTIONS.map((option) => option.value)
     showImportModal.value = true
   } catch (error) {
-    window.$message.error(error instanceof Error ? error.message : String(error))
+    toast.add({ title: error instanceof Error ? error.message : String(error), color: 'error' })
   }
 }
 
@@ -102,35 +96,35 @@ async function handleConfirmImport() {
 
   try {
     await backup.importBackup(importPreview.value.filePath, importModules.value)
-    window.$message.success('导入完成，页面即将刷新')
+    toast.add({ title: '导入完成，页面即将刷新', color: 'success' })
     showImportModal.value = false
     importPreview.value = null
     setTimeout(() => location.reload(), 300)
   } catch (error) {
-    window.$message.error(error instanceof Error ? error.message : String(error))
+    toast.add({ title: error instanceof Error ? error.message : String(error), color: 'error' })
   }
 }
 </script>
 
 <template>
-  <NFlex
+  <div
     vertical
     :size="12"
   >
-    <NAlert
+    <UAlert
       v-if="!isTauri()"
       type="error"
       :bordered="false"
     >
       当前不是 Tauri 客户端环境，无法使用备份功能。
-    </NAlert>
+    </UAlert>
 
-    <NAlert
+    <UAlert
       v-else-if="!backup.isSupported"
       type="warning"
       :bordered="false"
     >
-      <NFlex
+      <div
         align="center"
         justify="space-between"
       >
@@ -138,80 +132,81 @@ async function handleConfirmImport() {
           >当前客户端版本为 {{ backup.currentVersion || '未知' }}，备份功能要求版本 >=
           {{ CLIENT_BACKUP_MIN_VERSION }}，请先更新客户端。</span
         >
-        <NButton
+        <UButton
           size="small"
-          type="warning"
+          color="warning"
           @click="router.push({ name: 'client-settings', query: { tab: 'about' } })"
         >
           检查更新
-        </NButton>
-      </NFlex>
-    </NAlert>
+        </UButton>
+      </div>
+    </UAlert>
 
     <template v-else>
-      <NAlert
+      <UAlert
         type="info"
         :bordered="false"
       >
         备份会生成单个 ZIP 文件，覆盖 Tauri Store 与客户端 IndexedDB 数据。自动备份仅在客户端运行期间生效。
-      </NAlert>
+      </UAlert>
 
-      <NCard
+      <UCard
         title="备份目录"
         size="small"
         bordered
       >
-        <NFlex
+        <div
           vertical
           :size="8"
         >
-          <NInput
+          <UInput
             :value="backupSettings.directory"
             readonly
             placeholder="尚未选择备份目录"
           />
-          <NFlex
+          <div
             justify="space-between"
             align="center"
           >
-            <NText depth="3"> 目录由系统对话框选择，定时备份和手动备份都写入这里。 </NText>
-            <NButton
+            <span depth="3"> 目录由系统对话框选择，定时备份和手动备份都写入这里。 </span>
+            <UButton
               size="small"
               @click="handlePickDirectory"
             >
               选择目录
-            </NButton>
-          </NFlex>
-        </NFlex>
-      </NCard>
+            </UButton>
+          </div>
+        </div>
+      </UCard>
 
-      <NCard
+      <UCard
         title="自动备份"
         size="small"
         bordered
       >
-        <NFlex
+        <div
           vertical
           :size="12"
         >
           <label class="setting-row">
             <span>启用定时备份</span>
-            <NCheckbox v-model:checked="backupSettings.scheduleEnabled" />
+            <UCheckbox v-model="backupSettings.scheduleEnabled" />
           </label>
 
           <label class="setting-row">
             <span>预设周期</span>
-            <NSelect
-              v-model:value="backupSettings.presetHours"
-              :options="presetOptions"
+            <USelectMenu
+              v-model="backupSettings.presetHours"
+              :items="presetOptions"
               style="width: 180px"
+              value-key="value"
             />
           </label>
 
           <label class="setting-row">
             <span>自定义周期（小时）</span>
-            <NInputNumber
-              v-model:value="backupSettings.customHours"
+            <UInputNumber
+              v-model="backupSettings.customHours"
               clearable
               :min="1"
               style="width: 180px"
@@ -220,117 +215,120 @@ async function handleConfirmImport() {
 
           <label class="setting-row">
             <span>最多保留份数</span>
-            <NInputNumber
-              v-model:value="backupSettings.keepCount"
+            <UInputNumber
+              v-model="backupSettings.keepCount"
               :min="1"
               :max="999"
               style="width: 180px"
             />
           </label>
 
-          <NText depth="3">
+          <span depth="3">
             {{ effectiveIntervalText }}
-          </NText>
-        </NFlex>
-      </NCard>
+          </span>
+        </div>
+      </UCard>
 
-      <NCard
+      <UCard
         title="操作"
         size="small"
         bordered
       >
-        <NFlex
+        <div
           vertical
           :size="8"
         >
-          <NText depth="3"> 上次备份: {{ lastBackupText }} </NText>
-          <NText depth="3"> 最近文件: {{ backupSettings.lastBackupFile || '无' }} </NText>
-          <NFlex>
-            <NButton
-              type="primary"
+          <span depth="3"> 上次备份: {{ lastBackupText }} </span>
+          <span depth="3"> 最近文件: {{ backupSettings.lastBackupFile || '无' }} </span>
+          <div>
+            <UButton
+              color="primary"
               :loading="backup.busy"
               :disabled="!canUseBackup || !backupSettings.directory"
               @click="handleManualBackup"
             >
               立即备份
-            </NButton>
-            <NButton
+            </UButton>
+            <UButton
               :loading="backup.busy"
               :disabled="!canUseBackup"
               @click="handleSelectImportFile"
             >
               导入备份
-            </NButton>
-          </NFlex>
-        </NFlex>
-      </NCard>
+            </UButton>
+          </div>
+        </div>
+      </UCard>
     </template>
 
-    <NModal
-      v-model:show="showImportModal"
+    <UModal
+      v-model:open="showImportModal"
       preset="card"
       title="导入备份"
       style="width: 680px; max-width: calc(100vw - 24px)"
       :mask-closable="false"
     >
-      <NFlex
+      <div
         v-if="importPreview"
         vertical
         :size="12"
       >
-        <NAlert
+        <UAlert
           type="warning"
           :bordered="false"
         >
           导入会覆盖已勾选模块的当前数据，未勾选模块保持不变。
-        </NAlert>
+        </UAlert>
 
-        <NText depth="3"> 备份时间: {{ new Date(importPreview.manifest.createdAt).toLocaleString() }} </NText>
-        <NText depth="3"> 备份客户端版本: {{ importPreview.manifest.clientVersion }} </NText>
+        <span depth="3"> 备份时间: {{ new Date(importPreview.manifest.createdAt).toLocaleString() }} </span>
+        <span depth="3"> 备份客户端版本: {{ importPreview.manifest.clientVersion }} </span>
 
-        <NCheckboxGroup v-model:value="importModules">
-          <NFlex
+        <div>
+          <div
             vertical
             :size="8"
           >
-            <NCard
+            <UCard
               v-for="option in CLIENT_BACKUP_MODULE_OPTIONS"
               :key="option.value"
               size="small"
               bordered
             >
-              <NFlex
+              <div
                 justify="space-between"
                 align="center"
               >
                 <div>
-                  <NCheckbox :value="option.value">
+                  <UCheckbox
+                    :model-value="importModules.includes(option.value)"
+                    @update:model-value="(checked) => toggleImportModule(option.value, checked === true)"
+                  >
                     {{ option.label }}
-                  </NCheckbox>
+                  </UCheckbox>
                   <div class="module-desc">
                     {{ option.description }}
                   </div>
                 </div>
-                <NText depth="3"> {{ importPreview.manifest.modules[option.value].count }} 项 </NText>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NCheckboxGroup>
+                <span depth="3"> {{ importPreview.manifest.modules[option.value].count }} 项 </span>
+              </div>
+            </UCard>
+          </div>
+        </div>
 
-        <NFlex justify="end">
-          <NButton @click="showImportModal = false"> 取消 </NButton>
-          <NButton
-            type="error"
+        <div justify="end">
+          <UButton @click="showImportModal = false"> 取消 </UButton>
+          <UButton
+            color="error"
             :loading="backup.busy"
             :disabled="importModules.length === 0"
             @click="handleConfirmImport"
           >
             确认导入并覆盖
-          </NButton>
-        </NFlex>
-      </NFlex>
-    </NModal>
-  </NFlex>
+          </UButton>
+        </div>
+      </div>
+    </UModal>
+  </div>
 </template>
 
 <style scoped>

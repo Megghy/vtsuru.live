@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NCard, NInput, NSpin } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
 import { QueryGetAPI, unwrapOk } from '@/api/query'
@@ -43,27 +42,36 @@ onMounted(loadLogs)
 </script>
 
 <template>
-  <NCard
-    title="操作审计"
-    size="small"
-  >
+  <UCard>
+    <template #header>
+      <h2 class="text-sm font-semibold">操作审计</h2>
+    </template>
     <div style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px">
-      <NInput
-        v-model:value="actionPrefix"
+      <UInput
+        v-model="actionPrefix"
         placeholder="按 action 前缀过滤（可选）"
         style="min-width: 220px; flex: 1"
         @keydown.enter="loadLogs"
       />
-      <NButton
-        type="primary"
+      <UButton
         :loading="isLoading"
         @click="loadLogs"
       >
         查询
-      </NButton>
+      </UButton>
     </div>
-    <NSpin :show="isLoading">
-      <OrgAuditList :logs="logs" />
-    </NSpin>
-  </NCard>
+    <div
+      v-if="isLoading"
+      class="flex min-h-40 items-center justify-center"
+    >
+      <UIcon
+        name="i-lucide-loader-circle"
+        class="size-5 animate-spin"
+      />
+    </div>
+    <OrgAuditList
+      v-else
+      :logs="logs"
+    />
+  </UCard>
 </template>

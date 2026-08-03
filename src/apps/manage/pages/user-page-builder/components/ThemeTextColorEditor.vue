@@ -1,24 +1,4 @@
 <script setup lang="ts">
-import { Info16Regular, TextFont24Regular } from '@vicons/fluent'
-import { SearchOutline } from '@vicons/ionicons5'
-import { useEventListener } from '@vueuse/core'
-import {
-  NButton,
-  NColorPicker,
-  NEmpty,
-  NFlex,
-  NFormItem,
-  NIcon,
-  NInput,
-  NModal,
-  NSelect,
-  NSpin,
-  NSwitch,
-  NTag,
-  NText,
-  NTooltip,
-  NVirtualList,
-} from 'naive-ui'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 import {
@@ -176,12 +156,12 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
 
 <template>
   <div class="text-color-editor">
-    <NFormItem label="字体">
+    <UFormField label="字体">
       <div class="font-field">
         <div class="font-picker">
-          <NSelect
-            v-model:value="fontFamily"
-            :options="fontOptions"
+          <USelect
+            v-model="fontFamily"
+            :items="fontOptions"
             :loading="googleFontsCatalogLoading"
             filterable
             clearable
@@ -189,21 +169,19 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
             @focus="loadFontCatalog()"
             @update:show="loadFontCatalog"
           />
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                quaternary
-                class="font-browser-button"
-                aria-label="浏览字体库"
-                @click="openFontBrowser"
-              >
-                <template #icon>
-                  <NIcon :component="TextFont24Regular" />
-                </template>
-              </NButton>
-            </template>
-            浏览字体库
-          </NTooltip>
+          <UTooltip>
+            <UButton
+              variant="ghost"
+              class="font-browser-button"
+              aria-label="浏览字体库"
+              @click="openFontBrowser"
+            >
+              <template #icon>
+                <UIcon name="i-lucide-type" />
+              </template>
+            </UButton>
+            <template #content> 浏览字体库 </template></UTooltip
+          >
         </div>
         <div
           v-if="fontFamily"
@@ -212,174 +190,165 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
         >
           春风又绿江南岸 Aa 123
         </div>
-        <NText
+        <span
+          class="builder-text"
           v-if="googleFontsCatalogError"
-          type="error"
-          depth="3"
         >
           {{ googleFontsCatalogError }}
-        </NText>
+        </span>
       </div>
-    </NFormItem>
-    <NModal
-      v-model:show="fontBrowserShown"
-      preset="card"
+    </UFormField>
+    <UModal
+      v-model:open="fontBrowserShown"
       title="Google Fonts"
       class="font-browser-modal"
       style="width: min(820px, 92vw)"
     >
-      <div class="font-browser-controls">
-        <NInput
-          v-model:value="fontSearch"
-          clearable
-          placeholder="搜索字体名称"
+      <template #body
+        ><div class="font-browser-controls">
+          <UInput
+            v-model="fontSearch"
+            icon="i-lucide-search"
+            placeholder="搜索字体名称"
+          />
+          <USelect
+            v-model="fontCategory"
+            :items="fontCategoryOptions"
+            clearable
+            placeholder="全部分类"
+          />
+        </div>
+        <span
+          v-if="googleFontsCatalogError"
+          class="builder-text font-browser-error"
         >
-          <template #prefix>
-            <NIcon :component="SearchOutline" />
-          </template>
-        </NInput>
-        <NSelect
-          v-model:value="fontCategory"
-          :options="fontCategoryOptions"
-          clearable
-          placeholder="全部分类"
-        />
-      </div>
-      <NText
-        v-if="googleFontsCatalogError"
-        class="font-browser-error"
-        type="error"
-      >
-        {{ googleFontsCatalogError }}
-      </NText>
-      <div class="font-browser-body">
-        <NVirtualList
-          v-if="browsableFonts.length"
-          class="font-browser-list"
-          :items="browsableFonts"
-          :item-size="46"
-          key-field="family"
-          @pointerdown.capture="handleFontBrowserPointerDown"
-          @scroll="handleFontBrowserScroll"
-        >
-          <template #default="{ item }">
+          {{ googleFontsCatalogError }}
+        </span>
+        <div class="font-browser-body">
+          <div
+            v-if="browsableFonts.length"
+            class="font-browser-list"
+            @pointerdown.capture="handleFontBrowserPointerDown"
+            @scroll="handleFontBrowserScroll"
+          >
             <GoogleFontBrowserRow
-              :font="item"
-              :active="activePreviewFamily === item.family"
-              :category-label="fontCategoryLabels[item.category] ?? item.category"
+              v-for="font in browsableFonts"
+              :key="font.family"
+              :font="font"
+              :active="activePreviewFamily === font.family"
+              :category-label="fontCategoryLabels[font.category] ?? font.category"
               :load-preview="fontRowPreviewEnabled"
               @select="fontPreviewFamily = $event"
             />
-          </template>
-        </NVirtualList>
-        <div
-          v-else-if="googleFontsCatalogLoading"
-          class="font-browser-empty"
-        >
-          <NSpin size="small" />
-        </div>
-        <NEmpty
-          v-else
-          class="font-browser-empty"
-          size="small"
-        />
-        <section
-          v-if="activePreviewFamily"
-          class="font-browser-preview"
-        >
-          <NText depth="3">
-            {{ activePreviewFamily }}
-          </NText>
-          <div
-            class="font-browser-preview__sample"
-            :style="browserPreviewStyle"
-          >
-            春风又绿江南岸<br />
-            The quick brown fox<br />
-            0123456789
           </div>
-          <NButton
-            type="primary"
-            :disabled="fontFamily === activePreviewFamily"
-            @click="applyPreviewFont"
+          <div
+            v-else-if="googleFontsCatalogLoading"
+            class="font-browser-empty"
           >
-            {{ fontFamily === activePreviewFamily ? '正在使用' : '使用此字体' }}
-          </NButton>
-        </section>
-      </div>
-    </NModal>
+            <UIcon
+              name="i-lucide-loader-circle"
+              class="font-browser-spinner"
+            />
+          </div>
+          <UEmpty
+            v-else
+            class="font-browser-empty"
+            size="small"
+          />
+          <section
+            v-if="activePreviewFamily"
+            class="font-browser-preview"
+          >
+            <span class="builder-text">
+              {{ activePreviewFamily }}
+            </span>
+            <div
+              class="font-browser-preview__sample"
+              :style="browserPreviewStyle"
+            >
+              春风又绿江南岸<br />
+              The quick brown fox<br />
+              0123456789
+            </div>
+            <UButton
+              color="primary"
+              :disabled="fontFamily === activePreviewFamily"
+              @click="applyPreviewFont"
+            >
+              {{ fontFamily === activePreviewFamily ? '正在使用' : '使用此字体' }}
+            </UButton>
+          </section>
+        </div></template
+      >
+    </UModal>
     <PropsGrid :min-item-width="220">
-      <NFormItem label="基础文字颜色">
-        <NColorPicker
-          v-model:value="textColor"
+      <UFormField label="基础文字颜色">
+        <UColorPicker
+          v-model="textColor"
           :show-alpha="false"
           :modes="['hex']"
           :actions="['clear']"
         />
-      </NFormItem>
-      <NFormItem>
+      </UFormField>
+      <UFormField>
         <template #label>
-          <NFlex
-            align="center"
-            :size="4"
-          >
+          <div class="builder-row">
             <span>自动保证对比度</span>
-            <NTooltip trigger="hover">
-              <template #trigger>
-                <NIcon
-                  :component="Info16Regular"
-                  :size="15"
-                  class="contrast-help"
-                  tabindex="0"
-                  aria-label="自动对比度说明"
-                />
-              </template>
-              根据亮色或暗色模式下最不利的页面背景微调最终显示颜色，至少保持 4.5:1
-              对比度。不会修改已选择的颜色，亮色或暗色覆盖色会优先于基础文字颜色。
-            </NTooltip>
-          </NFlex>
+            <UTooltip trigger="hover">
+              <UIcon
+                name="i-lucide-info"
+                class="contrast-help"
+                tabindex="0"
+                aria-label="自动对比度说明"
+              />
+              <template #content>
+                根据亮色或暗色模式下最不利的页面背景微调最终显示颜色，至少保持 4.5:1
+                对比度。不会修改已选择的颜色，亮色或暗色覆盖色会优先于基础文字颜色。
+              </template></UTooltip
+            >
+          </div>
         </template>
-        <NSwitch v-model:value="autoTextContrast" />
-      </NFormItem>
-      <NFormItem
+        <USwitch v-model="autoTextContrast" />
+      </UFormField>
+      <UFormField
         v-if="showLightColor"
         label="亮色模式覆盖"
       >
-        <NColorPicker
-          v-model:value="textColorLight"
+        <UColorPicker
+          v-model="textColorLight"
           :show-alpha="false"
           :modes="['hex']"
           :actions="['clear']"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="showDarkColor"
         label="暗色模式覆盖"
       >
-        <NColorPicker
-          v-model:value="textColorDark"
+        <UColorPicker
+          v-model="textColorDark"
           :show-alpha="false"
           :modes="['hex']"
           :actions="['clear']"
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-    <NFlex size="small">
-      <NTag
+    <div class="builder-row">
+      <UBadge
         v-if="showLightColor"
         :type="lightResult.contrast >= 4.5 ? 'success' : 'warning'"
-        size="small"
+        size="sm"
       >
         亮色 {{ lightResult.contrast.toFixed(2) }}:1{{ lightResult.adjusted ? ' · 已微调' : '' }}
-      </NTag>
-      <NTag
+      </UBadge>
+      <UBadge
         v-if="showDarkColor"
         :type="darkResult.contrast >= 4.5 ? 'success' : 'warning'"
-        size="small"
+        size="sm"
       >
         暗色 {{ darkResult.contrast.toFixed(2) }}:1{{ darkResult.adjusted ? ' · 已微调' : '' }}
-      </NTag>
-    </NFlex>
+      </UBadge>
+    </div>
   </div>
 </template>
 
@@ -436,8 +405,21 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
 
 .font-browser-list {
   height: 420px;
+  overflow: auto;
   border: 1px solid var(--vtsuru-border);
   border-radius: 6px;
+}
+
+.font-browser-spinner {
+  width: 22px;
+  height: 22px;
+  animation: font-spinner 0.8s linear infinite;
+}
+
+@keyframes font-spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .font-browser-empty {

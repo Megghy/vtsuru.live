@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
@@ -21,60 +20,62 @@ function setResetPhysicsHotkey(id: string) {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="应急控制"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NText depth="3"> 选择 VTS 中已配置的热键来绑定应急操作 </NText>
+      <span depth="3"> 选择 VTS 中已配置的热键来绑定应急操作 </span>
 
-      <NFlex
+      <div
         :wrap="true"
         :size="12"
         align="center"
       >
-        <NSelect
+        <USelectMenu
           style="width: 300px"
-          :options="hotkeyOptions"
+          :items="hotkeyOptions"
           :value="vts.panicConfig.calibrateHotkeyId"
           placeholder="绑定: 校准热键"
           @update:value="setCalibrateHotkey"
+          value-key="value"
         />
-        <NButton
+        <UButton
           size="small"
-          type="error"
+          color="error"
           :disabled="!vts.canOperate"
           @click="run(() => vts.panicCalibrate(), '已校准')"
         >
           一键校准
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
 
-      <NFlex
+      <div
         :wrap="true"
         :size="12"
         align="center"
       >
-        <NSelect
+        <USelectMenu
           style="width: 300px"
-          :options="hotkeyOptions"
+          :items="hotkeyOptions"
           :value="vts.panicConfig.resetPhysicsHotkeyId"
           placeholder="绑定: 重置物理热键"
           @update:value="setResetPhysicsHotkey"
+          value-key="value"
         />
-        <NButton
+        <UButton
           size="small"
-          type="error"
+          color="error"
           :disabled="!vts.canOperate"
           @click="run(() => vts.panicResetPhysics(), '已重置')"
         >
           重置物理
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NCard>
+        </UButton>
+      </div>
+    </div>
+  </UCard>
 </template>

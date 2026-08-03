@@ -1,58 +1,53 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
-import type { FormInst, FormRules, SelectOption } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NModal,
-  NSelect,
-  NTooltip,
-} from 'naive-ui'
 import { ref } from 'vue'
 
 import type { SongRequestOption, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 
+interface SelectItem {
+  label: string
+  value: string
+}
+
 defineProps<{
-  languageOptions: SelectOption[]
-  tagOptions: SelectOption[]
-  authorOptions: SelectOption[]
+  languageOptions: SelectItem[]
+  tagOptions: SelectItem[]
+  authorOptions: SelectItem[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'save', song: SongsInfo): void
+  save: [song: SongsInfo]
 }>()
 
 const show = ref(false)
 const model = ref<SongsInfo>({} as SongsInfo)
-const formRef = ref<FormInst | null>(null)
 const loading = ref(false)
-
-const rules: FormRules = {
-  name: [{ required: true, message: '请输入歌曲名称', trigger: ['input', 'blur'] }],
-}
+const nameError = ref('')
 
 function open(song: SongsInfo) {
-  model.value = JSON.parse(JSON.stringify(song))
+  model.value = structuredClone(song)
+  nameError.value = ''
   show.value = true
 }
 
-async function handleSave() {
-  try {
-    await formRef.value?.validate()
-    loading.value = true
-    emit('save', model.value)
-  } catch {
-    /* validation failed */
+function handleSave() {
+  if (!model.value.name.trim()) {
+    nameError.value = '请输入歌曲名称'
+    return
   }
+
+  loading.value = true
+  emit('save', model.value)
+}
+
+function setOptionEnabled(value: boolean | string) {
+  model.value.options =
+    value === true ? ({ needJianzhang: false, needTidu: false, needZongdu: false } as SongRequestOption) : undefined
+}
+
+function setMinimumEnabled(field: 'scMinPrice' | 'fanMedalMinLevel', value: boolean | string) {
+  if (!model.value.options) return
+  model.value.options[field] = value === true ? (field === 'scMinPrice' ? 30 : 1) : undefined
 }
 
 function close() {
@@ -64,207 +59,195 @@ defineExpose({ open, close, loading })
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
-    style="max-width: 600px"
+  <UModal
+    v-model:open="show"
     :title="`修改 - ${model.name}`"
-    :mask-closable="false"
+    :dismissible="false"
+    :ui="{ content: 'max-w-[min(600px,calc(100vw-32px))]' }"
   >
-    <NForm
-      ref="formRef"
-      :rules="rules"
-      :model="model"
-      label-placement="left"
-      label-width="auto"
-    >
-      <NFormItem
-        path="name"
-        label="名称"
-      >
-        <NInput
-          v-model:value="model.name"
-          placeholder="歌曲名称"
-          clearable
-        />
-      </NFormItem>
-      <NFormItem
-        path="translateName"
-        label="翻译名称"
-      >
-        <NInput
-          v-model:value="model.translateName"
-          placeholder="可选，翻译/别名"
-          clearable
-        />
-      </NFormItem>
-      <NFormItem
-        path="author"
-        label="作者"
-      >
-        <NSelect
-          v-model:value="model.author"
-          :options="authorOptions"
-          placeholder="选择或输入，回车确认"
-          filterable
-          multiple
-          tag
-          clearable
-        />
-      </NFormItem>
-      <NFormItem
-        path="description"
-        label="备注"
-      >
-        <NInput
-          v-model:value="model.description"
-          type="textarea"
-          placeholder="可选"
-          :maxlength="250"
-          show-count
-          clearable
-          autosize
-          style="min-width: 300px"
-        />
-      </NFormItem>
-      <NFormItem
-        path="language"
-        label="语言"
-      >
-        <NSelect
-          v-model:value="model.language"
-          :options="languageOptions"
-          placeholder="选择或输入，回车确认"
-          filterable
-          multiple
-          tag
-          clearable
-        />
-      </NFormItem>
-      <NFormItem
-        path="tags"
-        label="标签"
-      >
-        <NSelect
-          v-model:value="model.tags"
-          :options="tagOptions"
-          placeholder="选择或输入，回车确认"
-          filterable
-          multiple
-          tag
-          clearable
-        />
-      </NFormItem>
-      <NFormItem path="options">
-        <template #label>
-          <NFlex
-            align="center"
-            :size="4"
-          >
-            点歌要求
-            <NTooltip>
-              <template #trigger>
-                <NIcon
-                  :component="Info24Filled"
-                  style="cursor: help"
-                />
-              </template>
-              启用后将覆盖全局点歌设置，用于单独设置歌曲要求
-            </NTooltip>
-          </NFlex>
-        </template>
-        <NFlex vertical>
-          <NCheckbox
-            :checked="model.options != null"
-            @update:checked="
-              (v: boolean) =>
-                (model.options = v
-                  ? ({ needJianzhang: false, needTidu: false, needZongdu: false } as SongRequestOption)
-                  : undefined)
-            "
-          >
-            启用独立要求
-          </NCheckbox>
-          <template v-if="model.options">
-            <NFlex :size="12">
-              <NCheckbox v-model:checked="model.options!.needJianzhang"> 舰长 </NCheckbox>
-              <NCheckbox v-model:checked="model.options!.needTidu"> 提督 </NCheckbox>
-              <NCheckbox v-model:checked="model.options!.needZongdu"> 总督 </NCheckbox>
-            </NFlex>
-            <NFlex
-              align="center"
-              :size="8"
-            >
-              <NCheckbox
-                :checked="model.options!.scMinPrice != null"
-                @update:checked="(v: boolean) => (model.options!.scMinPrice = v ? 30 : undefined)"
-              >
-                SC
-              </NCheckbox>
-              <NInputGroup
-                v-if="model.options!.scMinPrice != null"
-                style="width: auto"
-              >
-                <NInputGroupLabel size="small"> ≥ </NInputGroupLabel>
-                <NInputNumber
-                  v-model:value="model.options!.scMinPrice"
-                  :min="1"
-                  size="small"
-                  style="width: 80px"
-                />
-                <NInputGroupLabel size="small"> 元 </NInputGroupLabel>
-              </NInputGroup>
-            </NFlex>
-            <NFlex
-              align="center"
-              :size="8"
-            >
-              <NCheckbox
-                :checked="model.options!.fanMedalMinLevel != null"
-                @update:checked="(v: boolean) => (model.options!.fanMedalMinLevel = v ? 1 : undefined)"
-              >
-                粉丝牌
-              </NCheckbox>
-              <NInputGroup
-                v-if="model.options!.fanMedalMinLevel != null"
-                style="width: auto"
-              >
-                <NInputGroupLabel size="small"> ≥ </NInputGroupLabel>
-                <NInputNumber
-                  v-model:value="model.options!.fanMedalMinLevel"
-                  :min="1"
-                  size="small"
-                  style="width: 80px"
-                />
-                <NInputGroupLabel size="small"> 级 </NInputGroupLabel>
-              </NInputGroup>
-            </NFlex>
-          </template>
-        </NFlex>
-      </NFormItem>
-      <NFormItem
-        path="url"
-        label="链接"
-      >
-        <NInput
-          v-model:value="model.url"
-          placeholder="可选，音频链接可试听"
-          clearable
-          :disabled="model.from !== SongFrom.Custom"
-        />
-      </NFormItem>
-    </NForm>
-    <template #footer>
-      <NFlex justify="end">
-        <NButton @click="show = false"> 取消 </NButton>
-        <NButton
-          type="primary"
-          :loading="loading"
-          @click="handleSave"
+    <template #body>
+      <div class="song-edit-modal__form">
+        <UFormField
+          label="名称"
+          :error="nameError"
         >
-          确认更新
-        </NButton>
-      </NFlex>
+          <UInput
+            v-model="model.name"
+            placeholder="歌曲名称"
+            @update:model-value="nameError = ''"
+          />
+        </UFormField>
+        <UFormField label="翻译名称">
+          <UInput
+            v-model="model.translateName"
+            placeholder="可选，翻译/别名"
+          />
+        </UFormField>
+        <UFormField label="作者">
+          <USelectMenu
+            v-model="model.author"
+            :items="authorOptions"
+            value-key="value"
+            placeholder="选择或输入，回车确认"
+            multiple
+            create-item
+            clear
+          />
+        </UFormField>
+        <UFormField label="备注">
+          <UTextarea
+            v-model="model.description"
+            placeholder="可选"
+            :maxlength="250"
+            autoresize
+          />
+        </UFormField>
+        <UFormField label="语言">
+          <USelectMenu
+            v-model="model.language"
+            :items="languageOptions"
+            value-key="value"
+            placeholder="选择或输入，回车确认"
+            multiple
+            create-item
+            clear
+          />
+        </UFormField>
+        <UFormField label="标签">
+          <USelectMenu
+            v-model="model.tags"
+            :items="tagOptions"
+            value-key="value"
+            placeholder="选择或输入，回车确认"
+            multiple
+            create-item
+            clear
+          />
+        </UFormField>
+        <UFormField label="点歌要求">
+          <div class="song-edit-modal__requirements">
+            <p>
+              启用后将覆盖全局点歌设置，用于单独设置歌曲要求
+              <UTooltip text="启用后将覆盖全局点歌设置，用于单独设置歌曲要求">
+                <UIcon name="i-lucide-info" />
+              </UTooltip>
+            </p>
+            <UCheckbox
+              :model-value="model.options != null"
+              label="启用独立要求"
+              @update:model-value="setOptionEnabled"
+            />
+            <template v-if="model.options">
+              <div class="song-edit-modal__checkboxes">
+                <UCheckbox
+                  v-model="model.options.needJianzhang"
+                  label="舰长"
+                />
+                <UCheckbox
+                  v-model="model.options.needTidu"
+                  label="提督"
+                />
+                <UCheckbox
+                  v-model="model.options.needZongdu"
+                  label="总督"
+                />
+              </div>
+              <div class="song-edit-modal__requirement-row">
+                <UCheckbox
+                  :model-value="model.options.scMinPrice != null"
+                  label="SC"
+                  @update:model-value="setMinimumEnabled('scMinPrice', $event)"
+                />
+                <UFieldGroup v-if="model.options.scMinPrice != null">
+                  <span class="song-edit-modal__addon">≥</span>
+                  <UInputNumber
+                    v-model="model.options.scMinPrice"
+                    :min="1"
+                  />
+                  <span class="song-edit-modal__addon">元</span>
+                </UFieldGroup>
+              </div>
+              <div class="song-edit-modal__requirement-row">
+                <UCheckbox
+                  :model-value="model.options.fanMedalMinLevel != null"
+                  label="粉丝牌"
+                  @update:model-value="setMinimumEnabled('fanMedalMinLevel', $event)"
+                />
+                <UFieldGroup v-if="model.options.fanMedalMinLevel != null">
+                  <span class="song-edit-modal__addon">≥</span>
+                  <UInputNumber
+                    v-model="model.options.fanMedalMinLevel"
+                    :min="1"
+                  />
+                  <span class="song-edit-modal__addon">级</span>
+                </UFieldGroup>
+              </div>
+            </template>
+          </div>
+        </UFormField>
+        <UFormField label="链接">
+          <UInput
+            v-model="model.url"
+            placeholder="可选，音频链接可试听"
+            :disabled="model.from !== SongFrom.Custom"
+          />
+        </UFormField>
+      </div>
     </template>
-  </NModal>
+    <template #footer>
+      <div class="song-edit-modal__footer">
+        <UButton
+          color="neutral"
+          variant="soft"
+          label="取消"
+          @click="close"
+        />
+        <UButton
+          color="primary"
+          :loading="loading"
+          label="确认更新"
+          @click="handleSave"
+        />
+      </div>
+    </template>
+  </UModal>
 </template>
+
+<style scoped>
+.song-edit-modal__form,
+.song-edit-modal__requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.song-edit-modal__requirements p {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+}
+
+.song-edit-modal__checkboxes,
+.song-edit-modal__requirement-row,
+.song-edit-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.song-edit-modal__footer {
+  justify-content: flex-end;
+}
+
+.song-edit-modal__addon {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+}
+</style>

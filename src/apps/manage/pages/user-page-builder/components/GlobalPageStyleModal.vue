@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NColorPicker, NDivider, NFlex, NForm, NFormItem, NModal, NScrollbar, NSelect } from 'naive-ui'
 import { computed, inject, ref } from 'vue'
 
 import { UserPageEditorKey } from '../context'
@@ -79,101 +78,97 @@ function clearTheme() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
+  <UModal
+    v-model:open="show"
     title="全局主题"
     style="width: 720px; max-width: 95vw"
-    :auto-focus="false"
   >
-    <NScrollbar style="max-height: min(78vh, 720px)">
-      <div class="modal-content">
-        <NAlert
-          type="info"
-          :show-icon="true"
-          style="margin-bottom: 12px"
-        >
-          全局背景和主题会应用到主页、子页面及内置页面，页面级设置可以覆盖这里的值。
-        </NAlert>
-        <NDivider style="margin: 10px 0"> 背景 </NDivider>
-        <BackgroundSettingsEditor
-          :target="backgroundTarget"
-          none-hint="未设置时使用站点默认背景。"
-        />
-        <NDivider style="margin: 10px 0"> 主题 </NDivider>
-        <NForm
-          label-placement="top"
-          size="small"
-        >
-          <NFlex
-            :wrap="true"
-            style="gap: 12px"
+    <template #body
+      ><div
+        class="builder-scroll"
+        style="max-height: min(78vh, 720px)"
+      >
+        <div class="modal-content">
+          <UAlert
+            type="info"
+            :show-icon="true"
+            style="margin-bottom: 12px"
           >
-            <NFormItem
-              label="主题色"
-              class="color-field"
+            全局背景和主题会应用到主页、子页面及内置页面，页面级设置可以覆盖这里的值。
+          </UAlert>
+          <USeparator style="margin: 10px 0"> 背景 </USeparator>
+          <BackgroundSettingsEditor
+            :target="backgroundTarget"
+            none-hint="未设置时使用站点默认背景。"
+          />
+          <USeparator style="margin: 10px 0"> 主题 </USeparator>
+          <div class="builder-form">
+            <div
+              class="builder-row"
+              style="gap: 12px"
             >
-              <NColorPicker
-                v-model:value="primaryColor"
-                :modes="['hex']"
-              />
-            </NFormItem>
-            <NFormItem
-              label="内容底色"
-              class="color-field"
+              <UFormField
+                label="主题色"
+                class="color-field"
+              >
+                <UColorPicker
+                  v-model="primaryColor"
+                  :modes="['hex']"
+                />
+              </UFormField>
+              <UFormField
+                label="内容底色"
+                class="color-field"
+              >
+                <UColorPicker
+                  v-model="backgroundColor"
+                  :modes="['hex']"
+                />
+              </UFormField>
+              <UFormField
+                label="主题模式"
+                class="color-field"
+              >
+                <USelect
+                  v-model="themeMode"
+                  :items="[
+                    { label: '跟随站点', value: 'auto' },
+                    { label: '亮色', value: 'light' },
+                    { label: '暗色', value: 'dark' },
+                  ]"
+                />
+              </UFormField>
+            </div>
+            <ThemeTextColorEditor :target="textColorTarget" />
+            <ThemeAdvancedOptions :target="appearanceTarget" />
+            <div class="builder-row">
+              <UButton
+                size="sm"
+                variant="soft"
+                :disabled="!(editor.settings.value as any).theme"
+                @click="clearTheme"
+              >
+                清除主题
+              </UButton>
+            </div>
+          </div>
+          <USeparator style="margin: 10px 0"> 自定义 CSS </USeparator>
+          <div class="builder-row">
+            <span class="css-status">
+              {{ editor.settings.value.customCss ? '已设置全局 CSS' : '未设置全局 CSS' }}
+            </span>
+            <UButton
+              size="sm"
+              variant="soft"
+              @click="cssEditorVisible = true"
             >
-              <NColorPicker
-                v-model:value="backgroundColor"
-                :modes="['hex']"
-              />
-            </NFormItem>
-            <NFormItem
-              label="主题模式"
-              class="color-field"
-            >
-              <NSelect
-                v-model:value="themeMode"
-                :options="[
-                  { label: '跟随站点', value: 'auto' },
-                  { label: '亮色', value: 'light' },
-                  { label: '暗色', value: 'dark' },
-                ]"
-              />
-            </NFormItem>
-          </NFlex>
-          <ThemeTextColorEditor :target="textColorTarget" />
-          <ThemeAdvancedOptions :target="appearanceTarget" />
-          <NFlex justify="end">
-            <NButton
-              size="small"
-              secondary
-              :disabled="!(editor.settings.value as any).theme"
-              @click="clearTheme"
-            >
-              清除主题
-            </NButton>
-          </NFlex>
-        </NForm>
-        <NDivider style="margin: 10px 0"> 自定义 CSS </NDivider>
-        <NFlex
-          justify="space-between"
-          align="center"
-          :wrap="false"
-        >
-          <span class="css-status">
-            {{ editor.settings.value.customCss ? '已设置全局 CSS' : '未设置全局 CSS' }}
-          </span>
-          <NButton
-            size="small"
-            secondary
-            @click="cssEditorVisible = true"
-          >
-            编辑全局 CSS
-          </NButton>
-        </NFlex>
-      </div>
-    </NScrollbar>
-  </NModal>
+              编辑全局 CSS
+            </UButton>
+          </div>
+        </div>
+      </div></template
+    >
+  </UModal>
   <GlobalCssEditorModal v-model:show="cssEditorVisible" />
 </template>
 

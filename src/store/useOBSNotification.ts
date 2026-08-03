@@ -1,6 +1,8 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import { showToast } from '@/shared/services/toast'
+
 import { useVTsuruHub } from './useVTsuruHub'
 
 export interface ObsNotificationPayload {
@@ -46,32 +48,19 @@ export const useOBSNotification = defineStore('obs-notification', () => {
   }
 
   function showNotification(payload: ObsNotificationPayload) {
-    const message = window.$message
-    if (!message) {
-      console.warn('[OBS] message instance missing')
-      return
-    }
     console.log('[OBS] 收到通知', payload)
 
-    const method = payload.Type === 'success' ? 'success' : 'error'
+    const color = payload.Type === 'success' ? 'success' : 'error'
     const title = resolveTitle(payload)
     const meta = resolveMeta(payload)
-    const prefix = [title, meta].filter(Boolean).join(' · ')
     const description = payload.Message || '未知通知'
-    const finalContent = prefix ? `${prefix}\n${description}` : description
-
-    if (typeof message[method] === 'function') {
-      message[method](finalContent, {
-        duration: method === 'error' ? 6000 : 4000,
-        closable: true,
-      })
-    } else {
-      message.create(finalContent, {
-        type: method,
-        duration: method === 'error' ? 6000 : 4000,
-        closable: true,
-      })
-    }
+    showToast({
+      title: meta ? `${title} · ${meta}` : title,
+      description,
+      color,
+      icon: color === 'success' ? 'i-lucide-check' : 'i-lucide-circle-x',
+      duration: color === 'error' ? 6000 : 4000,
+    })
   }
 
   /**

@@ -1,0 +1,61 @@
+.builder-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.builder-stack,
+.builder-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.builder-scroll {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.builder-text {
+  color: var(--vtsuru-fg-muted);
+}
+
+.builder-accordion,
+.advanced-options,
+.block-common-sections {
+  display: grid;
+  gap: 8px;
+}
+
+.builder-accordion details,
+.advanced-options details,
+.block-common-sections details,
+details.page-info-section,
+details.page-bg-section,
+details.page-theme-section {
+  border-bottom: 1px solid var(--vtsuru-border);
+}
+
+.builder-accordion summary,
+.advanced-options summary,
+.block-common-sections summary,
+details.page-info-section summary,
+details.page-bg-section summary,
+details.page-theme-section summary {
+  padding: 10px 0;
+  color: var(--vtsuru-fg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+details > summary + * {
+  padding-bottom: 12px;
+}
+
+.modal-actions {
+  width: 100%;
+  justify-content: flex-end;
+}

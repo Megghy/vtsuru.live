@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Bot24Regular } from '@vicons/fluent'
-import { NButton, NConfigProvider, NIcon, NScrollbar, useMessage } from 'naive-ui'
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -16,16 +14,15 @@ import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer
 import ManageSider from '@/apps/manage/components/layout/ManageSider.vue'
 import ManageTopBar from '@/apps/manage/components/layout/ManageTopBar.vue'
 import { selectedAPIKey } from '@/shared/config'
-import { buildManageTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
+import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
+import { showToast } from '@/shared/services/toast'
 import { isDarkMode } from '@/shared/utils'
 
 const accountInfo = useAccount()
-const message = useMessage()
 const route = useRoute()
 const assistant = useAssistantStore()
 const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
 const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
-const manageThemeOverrides = computed(() => getThemeOverrides(manageTokens.value))
 
 function openAssistant() {
   assistant.open({
@@ -37,23 +34,22 @@ function openAssistant() {
 
 onMounted(() => {
   if (selectedAPIKey.value !== 'main') {
-    message.warning('你当前使用的是备用API节点, 可能会速度比较慢')
+    showToast({ title: '当前使用备用 API 节点', description: '访问速度可能较慢', color: 'warning' })
   }
 
   setTimeout(() => {
     if (accountInfo.value?.biliAuthCodeStatus == BiliAuthCodeStatusType.Inactive) {
-      message.error('你的身份码已失效, 请及时更新', { duration: 5000, closable: true })
+      showToast({ title: '身份码已失效', description: '请及时更新', color: 'error' })
     }
   }, 500)
 })
 </script>
 
 <template>
-  <NConfigProvider :theme-overrides="manageThemeOverrides">
-    <div
-      class="manage-theme"
-      :style="manageCssVars"
-    >
+  <div
+    class="manage-theme"
+    :style="manageCssVars"
+  >
       <div
         v-if="accountInfo.id"
         class="manage-shell"
@@ -63,35 +59,31 @@ onMounted(() => {
 
           <div class="manage-shell__main">
             <ManageTopBar :account-name="accountInfo?.name" />
-            <NScrollbar class="manage-shell__scroll">
+            <div class="manage-shell__scroll">
               <div class="manage-shell__content">
                 <ManageContentGate :account-info="accountInfo" />
               </div>
-            </NScrollbar>
+            </div>
 
             <ManageMusicPlayer />
           </div>
         </div>
 
-        <NButton
-          circle
-          type="primary"
+        <UButton
+          square
+          color="primary"
           size="large"
+          icon="i-lucide-bot"
           class="assistant-fab"
           title="VTsuru 助手"
           @click="openAssistant"
-        >
-          <template #icon>
-            <NIcon :component="Bot24Regular" />
-          </template>
-        </NButton>
+        />
 
         <AssistantModal />
       </div>
 
       <ManageAuthGate v-else />
-    </div>
-  </NConfigProvider>
+  </div>
 </template>
 
 <style scoped>
@@ -135,10 +127,7 @@ onMounted(() => {
   flex: 1 1 0;
   min-height: 0;
   height: 0;
-}
-
-.manage-shell__scroll :deep(.n-scrollbar-container) {
-  min-height: 100%;
+  overflow-y: auto;
 }
 
 .manage-shell__content {

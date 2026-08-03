@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Image24Regular, Dismiss12Regular, Send24Filled, Stop24Filled, Mic24Regular, Mic24Filled } from '@vicons/fluent'
-import { NButton, NIcon, NInput, NTooltip } from 'naive-ui'
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 
 const props = defineProps<{ loading: boolean }>()
@@ -13,13 +11,13 @@ const text = ref('')
 /** 待发送图片 (base64 data URL) */
 const images = ref<string[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
-const inputRef = ref<InstanceType<typeof NInput> | null>(null)
+const inputRef = ref<{ textareaRef?: HTMLTextAreaElement | null }>()
 
 /** 把文本填入输入框并聚焦, 供预置操作点击使用 (不直接发送) */
 async function fill(value: string) {
   text.value = value
   await nextTick()
-  inputRef.value?.focus()
+  inputRef.value?.textareaRef?.focus()
 }
 
 defineExpose({ fill })
@@ -148,28 +146,22 @@ onBeforeUnmount(() => recognition?.abort())
           title="移除"
           @click="removeImage(i)"
         >
-          <NIcon :component="Dismiss12Regular" />
+          <UIcon name="i-lucide-x" />
         </button>
       </div>
     </div>
 
     <div class="composer__row">
-      <NTooltip>
-        <template #trigger>
-          <NButton
-            class="composer__attach"
-            quaternary
-            circle
-            :disabled="loading || images.length >= MAX_IMAGES"
-            @click="fileInput?.click()"
-          >
-            <template #icon>
-              <NIcon :component="Image24Regular" />
-            </template>
-          </NButton>
-        </template>
-        添加图片 (可粘贴截图), 最多 {{ MAX_IMAGES }} 张
-      </NTooltip>
+      <UTooltip :text="`添加图片 (可粘贴截图), 最多 ${MAX_IMAGES} 张`">
+        <UButton
+          class="composer__attach"
+          variant="ghost"
+          square
+          icon="i-lucide-image-plus"
+          :disabled="loading || images.length >= MAX_IMAGES"
+          @click="fileInput?.click()"
+        />
+      </UTooltip>
       <input
         ref="fileInput"
         type="file"
@@ -178,58 +170,51 @@ onBeforeUnmount(() => recognition?.abort())
         hidden
         @change="onPickFiles"
       />
-      <NTooltip v-if="speechSupported">
-        <template #trigger>
-          <NButton
-            class="composer__attach"
-            :class="{ 'composer__mic--on': listening }"
-            quaternary
-            circle
-            :disabled="loading"
-            @click="toggleSpeech"
-          >
-            <template #icon>
-              <NIcon :component="listening ? Mic24Filled : Mic24Regular" />
-            </template>
-          </NButton>
-        </template>
-        {{ listening ? '点击停止语音输入' : '语音输入 (说话转文字)' }}
-      </NTooltip>
-      <NInput
+      <UTooltip
+        v-if="speechSupported"
+        :text="listening ? '点击停止语音输入' : '语音输入 (说话转文字)'"
+      >
+        <UButton
+          class="composer__attach"
+          :class="{ 'composer__mic--on': listening }"
+          variant="ghost"
+          square
+          :icon="listening ? 'i-lucide-mic-vocal' : 'i-lucide-mic'"
+          :disabled="loading"
+          @click="toggleSpeech"
+        />
+      </UTooltip>
+      <UTextarea
         ref="inputRef"
-        v-model:value="text"
-        type="textarea"
+        v-model="text"
         placeholder="描述你想做的事, 或粘贴/上传日程截图让我识别"
-        :autosize="{ minRows: 1, maxRows: 4 }"
+        autoresize
+        :rows="1"
+        :maxrows="4"
         :disabled="loading"
         class="composer__input"
         @keydown="onKeydown"
         @paste="onPaste"
       />
-      <NButton
+      <UButton
         v-if="loading"
-        type="error"
-        tertiary
+        color="error"
+        variant="soft"
+        icon="i-lucide-square"
         class="composer__btn"
         @click="emit('stop')"
       >
-        <template #icon>
-          <NIcon :component="Stop24Filled" />
-        </template>
         停止
-      </NButton>
-      <NButton
+      </UButton>
+      <UButton
         v-else
-        type="primary"
+        icon="i-lucide-send"
         class="composer__btn"
         :disabled="!text.trim() && !images.length"
         @click="submit"
       >
-        <template #icon>
-          <NIcon :component="Send24Filled" />
-        </template>
         发送
-      </NButton>
+      </UButton>
     </div>
   </div>
 </template>

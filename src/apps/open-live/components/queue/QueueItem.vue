@@ -1,12 +1,4 @@
 <script setup lang="ts">
-import {
-  Checkmark12Regular,
-  ClipboardTextLtr24Filled,
-  Dismiss16Filled,
-  Info24Filled,
-  PresenceBlocked16Regular,
-} from '@vicons/fluent'
-import { NButton, NCard, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip } from 'naive-ui'
 import type { CSSProperties } from 'vue'
 import { computed } from 'vue'
 
@@ -73,20 +65,20 @@ const indexStyle = computed<CSSProperties>(() => {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     :theme-overrides="cardThemeOverrides"
     content-style="padding: 8px 12px;"
     bordered
     :style="isProcessing ? 'border-left: 4px solid var(--vtsuru-success);' : undefined"
   >
-    <NFlex
+    <div
       justify="space-between"
       align="center"
       :wrap="false"
     >
       <!-- 左侧信息 -->
-      <NFlex
+      <div
         align="center"
         :size="8"
         :wrap="false"
@@ -98,17 +90,17 @@ const indexStyle = computed<CSSProperties>(() => {
         >
           {{ index }}
         </span>
-        <NText
+        <span
           strong
           style="font-size: 16px"
         >
-          <NTooltip>
-            <template #trigger>
-              {{ queueData.user?.name }}
+          <UTooltip>
+            {{ queueData.user?.name }}
+            <template #content>
+              {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid}` }}
             </template>
-            {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid}` }}
-          </NTooltip>
-        </NText>
+          </UTooltip>
+        </span>
 
         <UserBadges
           :user="queueData.user"
@@ -117,162 +109,173 @@ const indexStyle = computed<CSSProperties>(() => {
         />
 
         <!-- 付费信息 -->
-        <NTooltip
+        <UTooltip
           v-if="store.settings.showPayment && paymentMeta.hasMysteryBoxPayment"
           placement="top"
         >
-          <template #trigger>
-            <NTag
-              size="small"
-              :bordered="false"
-              type="warning"
-            >
-              {{ paymentMeta.shortText }}
-            </NTag>
+          <UBadge
+            size="small"
+            :bordered="false"
+            type="warning"
+          >
+            {{ paymentMeta.shortText }}
+          </UBadge>
+          <template #content>
+            {{ paymentMeta.detailText }}
           </template>
-          {{ paymentMeta.detailText }}
-        </NTooltip>
-        <NTag
+        </UTooltip>
+        <UBadge
           v-if="store.settings.showPayment && paymentMeta.giftPriceText"
           size="small"
           :bordered="false"
           type="error"
         >
           ￥ {{ paymentMeta.giftPriceText }}
-        </NTag>
+        </UBadge>
 
         <!-- 附加内容 -->
-        <NTooltip
+        <UTooltip
           v-if="queueData.content"
           placement="right"
         >
-          <template #trigger>
-            <NIcon
-              :component="Info24Filled"
-              size="16"
-              style="cursor: help; color: var(--vtsuru-fg-muted)"
-            />
+          <UIcon
+            name="i-lucide-circle"
+            size="16"
+            style="cursor: help; color: var(--vtsuru-fg-muted)"
+          />
+          <template #content>
+            <UCard
+              size="small"
+              :bordered="false"
+              style="max-width: 300px"
+            >
+              <template #header>
+                <span style="font-size: small; color: gray">
+                  {{ `来自${queueData?.from === QueueFrom.Gift ? '礼物' : '弹幕'}: ` }}
+                </span>
+              </template>
+              {{ queueData?.content }}
+            </UCard>
           </template>
-          <NCard
-            size="small"
-            :bordered="false"
-            style="max-width: 300px"
-          >
-            <template #header>
-              <span style="font-size: small; color: gray">
-                {{ `来自${queueData?.from === QueueFrom.Gift ? '礼物' : '弹幕'}: ` }}
-              </span>
-            </template>
-            {{ queueData?.content }}
-          </NCard>
-        </NTooltip>
+        </UTooltip>
 
         <!-- 时间 -->
-        <NTooltip placement="bottom">
-          <template #trigger>
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              <NTime
-                :key="store.updateKey"
-                :time="queueData.createAt"
-                type="relative"
-              />
-            </NText>
+        <UTooltip placement="bottom">
+          <span
+            depth="3"
+            style="font-size: 12px"
+          >
+            <time
+              :key="store.updateKey"
+              :time="queueData.createAt"
+              type="relative"
+            />
+          </span>
+          <template #content>
+            <time
+              :time="queueData.createAt"
+              format="yyyy-MM-dd HH:mm:ss"
+            />
           </template>
-          <NTime
-            :time="queueData.createAt"
-            format="yyyy-MM-dd HH:mm:ss"
-          />
-        </NTooltip>
-      </NFlex>
+        </UTooltip>
+      </div>
 
       <!-- 右侧操作 -->
-      <NFlex
+      <div
         justify="end"
         align="center"
         :size="6"
         :wrap="false"
         style="flex-shrink: 0"
       >
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              :type="isProcessing ? 'warning' : 'primary'"
-              :ghost="isProcessing"
-              :disabled="hasOtherProcessing"
-              :loading="store.isLoading && isManaging"
-              @click="manage(isProcessing ? QueueStatus.Waiting : QueueStatus.Progressing)"
-            >
-              <template #icon>
-                <NIcon :component="ClipboardTextLtr24Filled" />
-              </template>
-            </NButton>
+        <UTooltip>
+          <UButton
+            square
+            size="small"
+            :color="isProcessing ? 'warning' : 'primary'"
+            :ghost="isProcessing"
+            :disabled="hasOtherProcessing"
+            :loading="store.isLoading && isManaging"
+            @click="manage(isProcessing ? QueueStatus.Waiting : QueueStatus.Progressing)"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content>
+            {{ hasOtherProcessing ? '已有其他用户正在处理中' : isProcessing ? '暂停处理 (返回等待)' : '开始处理' }}
           </template>
-          {{ hasOtherProcessing ? '已有其他用户正在处理中' : isProcessing ? '暂停处理 (返回等待)' : '开始处理' }}
-        </NTooltip>
+        </UTooltip>
 
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="success"
-              :loading="store.isLoading && isManaging"
-              @click="manage(QueueStatus.Finish)"
-            >
-              <template #icon>
-                <NIcon :component="Checkmark12Regular" />
-              </template>
-            </NButton>
-          </template>
-          标记为已完成
-        </NTooltip>
+        <UTooltip>
+          <UButton
+            square
+            size="small"
+            color="success"
+            :loading="store.isLoading && isManaging"
+            @click="manage(QueueStatus.Finish)"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content> 标记为已完成 </template>
+        </UTooltip>
 
-        <NTooltip v-if="canBlock">
-          <template #trigger>
-            <NPopconfirm @positive-click="store.blockUser(queueData)">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="small"
-                  type="warning"
-                  :loading="store.isLoading && isManaging"
-                  @click="store.queueDataBeingManaged = queueData.id"
-                >
-                  <template #icon>
-                    <NIcon :component="PresenceBlocked16Regular" />
-                  </template>
-                </NButton>
-              </template>
-              确定要将 {{ queueData.user?.name }} 加入 黑名单并取消排队吗？
-            </NPopconfirm>
-          </template>
-          拉黑用户 (B站)
-        </NTooltip>
-
-        <NTooltip>
-          <template #trigger>
-            <NButton
+        <UTooltip v-if="canBlock">
+          <UPopover>
+            <UButton
               circle
-              size="small"
-              type="error"
+              size="sm"
+              color="warning"
               :loading="store.isLoading && isManaging"
-              @click="manage(QueueStatus.Cancel)"
+              @click="store.queueDataBeingManaged = queueData.id"
             >
-              <template #icon>
-                <NIcon :component="Dismiss16Filled" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
-            </NButton>
-          </template>
-          取消排队
-        </NTooltip>
-      </NFlex>
-    </NFlex>
-  </NCard>
+            </UButton>
+            <template #content="{ close }">
+              <div class="space-y-3 p-3">
+                <div>确定要将 {{ queueData.user?.name }} 加入 黑名单并取消排队吗？</div>
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="close"
+                    >取消</UButton
+                  >
+                  <UButton
+                    size="xs"
+                    color="warning"
+                    @click="(close(), store.blockUser(queueData))"
+                    >确认</UButton
+                  >
+                </div>
+              </div>
+            </template>
+          </UPopover>
+          <template #content> 拉黑用户 (B站) </template>
+        </UTooltip>
+
+        <UTooltip>
+          <UButton
+            square
+            size="small"
+            color="error"
+            :loading="store.isLoading && isManaging"
+            @click="manage(QueueStatus.Cancel)"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content> 取消排队 </template>
+        </UTooltip>
+      </div>
+    </div>
+  </UCard>
 </template>
 
 <style scoped>

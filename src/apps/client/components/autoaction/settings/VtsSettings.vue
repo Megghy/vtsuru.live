@@ -1,18 +1,4 @@
 <script setup lang="ts">
-import { ArrowClockwise16Filled, Info16Regular } from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSwitch,
-  NTooltip,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
@@ -49,200 +35,207 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
 
 <template>
   <div v-if="isVtsAction">
-    <NCard
+    <UCard
       title="VTS 动作配置"
       size="small"
       bordered
       embedded
     >
       <template #header-extra>
-        <NTooltip trigger="hover">
-          <template #trigger>
-            <NIcon
-              :component="Info16Regular"
-              depth="3"
-            />
-          </template>
-          需要 VTS 已连接且已授权
-        </NTooltip>
+        <UTooltip>
+          <UIcon
+            name="i-lucide-circle"
+            depth="3"
+          />
+          <template #content> 需要 VTS 已连接且已授权 </template>
+        </UTooltip>
       </template>
 
-      <NForm
+      <UForm
         label-placement="left"
         :label-width="100"
         size="small"
         :show-feedback="false"
       >
-        <NFlex
+        <div
           vertical
           :size="12"
         >
-          <NFormItem
+          <UFormField
             v-if="action.actionType === ActionType.VTS_HOTKEY"
             label="热键"
           >
-            <NFlex
+            <div
               align="center"
               :wrap="false"
               style="width: 100%"
             >
-              <NSelect
-                v-model:value="action.actionConfig.vtsHotkeyId"
+              <USelectMenu
+                v-model="action.actionConfig.vtsHotkeyId"
                 filterable
                 clearable
                 placeholder="选择热键"
-                :options="hotkeyOptions"
+                :items="hotkeyOptions"
                 style="flex: 1"
+                value-key="value"
               />
-              <NButton
+              <UButton
                 size="small"
-                quaternary
-                circle
+                variant="ghost"
+                square
                 title="刷新"
                 @click="vts.refreshHotkeys()"
               >
-                <template #icon>
-                  <NIcon :component="ArrowClockwise16Filled" />
+                <template #leading>
+                  <UIcon name="i-lucide-circle" />
                 </template>
-              </NButton>
-            </NFlex>
-          </NFormItem>
+              </UButton>
+            </div>
+          </UFormField>
 
-          <NFormItem
+          <UFormField
             v-if="action.actionType === ActionType.VTS_PRESET"
             label="机位预设"
           >
-            <NSelect
-              v-model:value="action.actionConfig.vtsPresetId"
+            <USelectMenu
+              v-model="action.actionConfig.vtsPresetId"
               filterable
               clearable
               placeholder="选择预设"
-              :options="presetOptions"
+              :items="presetOptions"
+              value-key="value"
             />
-          </NFormItem>
+          </UFormField>
 
           <template v-if="action.actionType === ActionType.VTS_DROP_ITEM">
-            <NFormItem label="道具文件">
-              <NFlex
+            <UFormField label="道具文件">
+              <div
                 align="center"
                 :wrap="false"
                 style="width: 100%"
               >
-                <NSelect
-                  v-model:value="action.actionConfig.vtsItemFileName"
+                <USelectMenu
+                  v-model="action.actionConfig.vtsItemFileName"
                   filterable
                   clearable
                   placeholder="选择道具文件"
-                  :options="itemFileOptions"
+                  :items="itemFileOptions"
                   style="flex: 1"
+                  value-key="value"
                 />
-                <NButton
+                <UButton
                   size="small"
-                  quaternary
-                  circle
+                  variant="ghost"
+                  square
                   :disabled="!vts.canOperate"
                   title="刷新"
                   @click="vts.refreshItems({ includeFiles: true })"
                 >
-                  <template #icon>
-                    <NIcon :component="ArrowClockwise16Filled" />
+                  <template #leading>
+                    <UIcon name="i-lucide-circle" />
                   </template>
-                </NButton>
-              </NFlex>
-            </NFormItem>
-            <NFormItem label="位置与缩放">
-              <NFlex
+                </UButton>
+              </div>
+            </UFormField>
+            <UFormField label="位置与缩放">
+              <div
                 align="center"
                 :size="12"
               >
-                <NInputNumber
-                  v-model:value="action.actionConfig.vtsItemDropX"
-                  placeholder="X"
-                  :step="0.05"
-                  style="width: 130px"
-                >
-                  <template #prefix> X: </template>
-                </NInputNumber>
-                <NInputNumber
-                  v-model:value="action.actionConfig.vtsItemDropSize"
-                  placeholder="大小"
-                  :step="0.01"
-                  :min="0"
-                  :max="1"
-                  style="width: 130px"
-                >
-                  <template #prefix> S: </template>
-                </NInputNumber>
-              </NFlex>
-            </NFormItem>
+                <div class="flex items-center gap-2">
+                  <UInputNumber
+                    v-model="action.actionConfig.vtsItemDropX"
+                    placeholder="X"
+                    :step="0.05"
+                    style="width: 130px"
+                  />
+                  <span class="text-sm text-[var(--vtsuru-fg-muted)]">X:</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <UInputNumber
+                    v-model="action.actionConfig.vtsItemDropSize"
+                    placeholder="大小"
+                    :step="0.01"
+                    :min="0"
+                    :max="1"
+                    style="width: 130px"
+                  />
+                  <span class="text-sm text-[var(--vtsuru-fg-muted)]">S:</span>
+                </div>
+              </div>
+            </UFormField>
           </template>
 
           <template v-if="action.actionType === ActionType.VTS_PARAM_ADD">
-            <NFormItem label="参数 ID">
-              <NInput
-                v-model:value="action.actionConfig.vtsParamId"
+            <UFormField label="参数 ID">
+              <UInput
+                v-model="action.actionConfig.vtsParamId"
                 placeholder="如 Blush, EyeOpen"
               />
-            </NFormItem>
-            <NFormItem label="数值与权重">
-              <NFlex
+            </UFormField>
+            <UFormField label="数值与权重">
+              <div
                 align="center"
                 :size="12"
               >
-                <NInputNumber
-                  v-model:value="action.actionConfig.vtsParamValue"
-                  placeholder="值"
-                  :step="0.01"
-                  style="width: 130px"
-                >
-                  <template #prefix> 值: </template>
-                </NInputNumber>
-                <NInputNumber
-                  v-model:value="action.actionConfig.vtsParamWeight"
-                  placeholder="权重"
-                  :step="0.1"
-                  :min="0"
-                  :max="1"
-                  style="width: 130px"
-                >
-                  <template #prefix> W: </template>
-                </NInputNumber>
-              </NFlex>
-            </NFormItem>
+                <div class="flex items-center gap-2">
+                  <UInputNumber
+                    v-model="action.actionConfig.vtsParamValue"
+                    placeholder="值"
+                    :step="0.01"
+                    style="width: 130px"
+                  />
+                  <span class="text-sm text-[var(--vtsuru-fg-muted)]">值:</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <UInputNumber
+                    v-model="action.actionConfig.vtsParamWeight"
+                    placeholder="权重"
+                    :step="0.1"
+                    :min="0"
+                    :max="1"
+                    style="width: 130px"
+                  />
+                  <span class="text-sm text-[var(--vtsuru-fg-muted)]">W:</span>
+                </div>
+              </div>
+            </UFormField>
           </template>
 
-          <NFormItem
+          <UFormField
             v-if="action.actionType === ActionType.VTS_MACRO"
             label="宏"
           >
-            <NSelect
-              v-model:value="action.actionConfig.vtsMacroId"
+            <USelectMenu
+              v-model="action.actionConfig.vtsMacroId"
               filterable
               clearable
               placeholder="选择要运行的宏"
-              :options="macroOptions"
+              :items="macroOptions"
+              value-key="value"
             />
-          </NFormItem>
+          </UFormField>
 
           <template v-if="action.actionType === ActionType.VTS_ACCESSORY">
-            <NFormItem label="配饰">
-              <NSelect
-                v-model:value="action.actionConfig.vtsAccessoryId"
+            <UFormField label="配饰">
+              <USelectMenu
+                v-model="action.actionConfig.vtsAccessoryId"
                 filterable
                 clearable
                 placeholder="选择配饰"
-                :options="accessoryOptions"
+                :items="accessoryOptions"
+                value-key="value"
               />
-            </NFormItem>
-            <NFormItem label="操作">
-              <NSwitch v-model:value="action.actionConfig.vtsAccessoryVisible">
-                <template #checked> 显示 </template>
-                <template #unchecked> 隐藏 </template>
-              </NSwitch>
-            </NFormItem>
+            </UFormField>
+            <UFormField label="操作">
+              <USwitch v-model="action.actionConfig.vtsAccessoryVisible">
+                <template v-if="false"> 显示 </template>
+                <template v-if="false"> 隐藏 </template>
+              </USwitch>
+            </UFormField>
           </template>
-        </NFlex>
-      </NForm>
-    </NCard>
+        </div>
+      </UForm>
+    </UCard>
   </div>
 </template>

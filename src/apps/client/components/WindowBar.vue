@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import type { UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent' // Maximize 和 Restore 图标
-import { Close, RemoveOutline as Minus } from '@vicons/ionicons5' // Close 和 Minimize 图标
-import { NButton, NFlex } from 'naive-ui'
-// 显式导入 Naive UI 组件（好习惯）
 import { onMounted, onUnmounted, ref } from 'vue'
 
 const appWindow = getCurrentWindow()
@@ -66,17 +62,17 @@ const closeWindow = () => appWindow.hide()
 </script>
 
 <template>
-  <NFlex class="titlebar">
-    <NFlex
+  <div class="titlebar">
+    <div
       style="flex: 1; padding-left: 8px"
       align="center"
       @mousedown="handleTitlebarMouseDown"
     >
-      <NText>
+      <span>
         <span class="title">VTsuruEventFetcher</span>
-      </NText>
-    </NFlex>
-    <NFlex
+      </span>
+    </div>
+    <div
       data-tauri-drag-region="true"
       justify="flex-end"
       align="center"
@@ -84,46 +80,52 @@ const closeWindow = () => appWindow.hide()
     >
       <!-- 注意： data-tauri-drag-region 会使整个区域可拖动 -->
       <!-- 如果按钮区域不希望触发拖动（通常是这样），需要确保按钮本身不被拖动 -->
-      <!-- Naive UI 的 NButton 通常会阻止事件冒泡，所以一般没问题 -->
+      <!-- 按钮 通常会阻止事件冒泡，所以一般没问题 -->
       <!-- 如果使用普通 <button>，可能需要加 @mousedown.stop -->
 
-      <NButton
-        quaternary
-        circle
+      <UButton
+        variant="ghost"
+        square
         size="tiny"
         title="最小化"
         aria-label="Minimize"
         @click="minimizeWindow"
       >
-        <Minus class="icon" />
-      </NButton>
-      <NButton
-        quaternary
-        circle
+        <UIcon
+          name="i-lucide-minus"
+          class="icon"
+        />
+      </UButton>
+      <UButton
+        variant="ghost"
+        square
         size="tiny"
         :title="isMaximized ? '还原' : '最大化'"
         :aria-label="isMaximized ? 'Restore' : 'Maximize'"
         @click="toggleMaximizeWindow"
       >
         <!-- 根据 isMaximized 状态切换图标 -->
-        <component
-          :is="isMaximized ? SquareMultiple24Regular : Maximize24Filled"
+        <UIcon
+          name="i-lucide-circle"
           class="icon"
           style="width: 14px; height: 14px"
         />
-      </NButton>
-      <NButton
-        quaternary
-        circle
+      </UButton>
+      <UButton
+        variant="ghost"
+        square
         size="tiny"
         title="关闭"
         aria-label="Close"
         @click="closeWindow"
       >
-        <Close class="icon" />
-      </NButton>
-    </NFlex>
-  </NFlex>
+        <UIcon
+          name="i-lucide-x"
+          class="icon"
+        />
+      </UButton>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -136,8 +138,8 @@ const closeWindow = () => appWindow.hide()
   box-sizing: border-box;
 }
 
-/* 如果需要让按钮区域不可拖动（虽然 NButton 通常没问题），可以这样设置 */
-/* .titlebar > .n-button {
+/* 如果需要让按钮区域不可拖动（虽然 按钮通常没问题），可以这样设置 */
+/* .titlebar > .u-button {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 } */

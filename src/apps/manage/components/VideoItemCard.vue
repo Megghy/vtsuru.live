@@ -1,13 +1,6 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise24Regular,
-  Checkmark24Regular,
-  Clock24Regular,
-  Dismiss24Regular,
-  Open24Regular,
-  Person24Regular,
-} from '@vicons/fluent'
-import { NButton, NEllipsis, NIcon, NTag, NTime } from 'naive-ui'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
 import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
@@ -26,19 +19,19 @@ const emit = defineEmits<{
 const actions = computed(() => {
   if (props.videoInfo.status === VideoStatus.Pending) {
     return [
-      { label: '通过', status: VideoStatus.Accepted, type: 'success' as const, icon: Checkmark24Regular },
-      { label: '拒绝', status: VideoStatus.Rejected, type: 'error' as const, icon: Dismiss24Regular },
+      { label: '通过', status: VideoStatus.Accepted, type: 'success' as const, icon: 'i-lucide-check' },
+      { label: '拒绝', status: VideoStatus.Rejected, type: 'error' as const, icon: 'i-lucide-x' },
     ]
   }
   if (props.videoInfo.status === VideoStatus.Accepted) {
     return [
-      { label: '退回待审', status: VideoStatus.Pending, type: 'default' as const, icon: ArrowClockwise24Regular },
-      { label: '改为拒绝', status: VideoStatus.Rejected, type: 'error' as const, icon: Dismiss24Regular },
+      { label: '退回待审', status: VideoStatus.Pending, type: 'default' as const, icon: 'i-lucide-rotate-ccw' },
+      { label: '改为拒绝', status: VideoStatus.Rejected, type: 'error' as const, icon: 'i-lucide-x' },
     ]
   }
   return [
-    { label: '退回待审', status: VideoStatus.Pending, type: 'default' as const, icon: ArrowClockwise24Regular },
-    { label: '改为通过', status: VideoStatus.Accepted, type: 'success' as const, icon: Checkmark24Regular },
+    { label: '退回待审', status: VideoStatus.Pending, type: 'default' as const, icon: 'i-lucide-rotate-ccw' },
+    { label: '改为通过', status: VideoStatus.Accepted, type: 'success' as const, icon: 'i-lucide-check' },
   ]
 })
 
@@ -53,6 +46,10 @@ function formatDuration(seconds: number) {
 
 function openVideo() {
   window.open(`https://www.bilibili.com/video/${props.videoInfo.bvid}`, '_blank', 'noopener,noreferrer')
+}
+
+function formatRelativeTime(timestamp: number) {
+  return formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: zhCN })
 }
 </script>
 
@@ -70,7 +67,7 @@ function openVideo() {
         referrerpolicy="no-referrer"
       />
       <span class="duration-label">
-        <NIcon :component="Clock24Regular" />
+        <UIcon name="i-lucide-clock-3" />
         {{ formatDuration(videoData.length) }}
       </span>
     </button>
@@ -82,25 +79,25 @@ function openVideo() {
           class="video-title"
           @click="openVideo"
         >
-          <NEllipsis :line-clamp="2">
+          <span class="video-title__text">
             {{ videoData.title }}
-          </NEllipsis>
+          </span>
         </button>
-        <NButton
-          text
-          circle
+        <UButton
+          color="neutral"
+          variant="ghost"
+          square
           title="在哔哩哔哩打开"
+          aria-label="在哔哩哔哩打开"
           @click="openVideo"
         >
-          <template #icon>
-            <NIcon :component="Open24Regular" />
-          </template>
-        </NButton>
+          <UIcon name="i-lucide-external-link" />
+        </UButton>
       </div>
 
       <div class="video-meta">
         <span>
-          <NIcon :component="Person24Regular" />
+          <UIcon name="i-lucide-user" />
           {{ videoData.ownerName }}
         </span>
         <code>{{ videoInfo.bvid }}</code>
@@ -109,12 +106,12 @@ function openVideo() {
       <div class="recommendations">
         <div class="recommendations-heading">
           <span>推荐记录</span>
-          <NTag
-            size="tiny"
-            :bordered="false"
+          <UBadge
+            size="xs"
+            variant="subtle"
           >
             {{ videoInfo.senders.length }} 人
-          </NTag>
+          </UBadge>
         </div>
         <div class="recommendation-list">
           <div
@@ -125,10 +122,7 @@ function openVideo() {
             <div class="recommendation-author">
               <strong>{{ sender.sender || '匿名用户' }}</strong>
               <span v-if="sender.senderId">UID {{ sender.senderId }}</span>
-              <NTime
-                :time="sender.sendAt"
-                type="relative"
-              />
+              <time class="recommendation-time">{{ formatRelativeTime(sender.sendAt) }}</time>
             </div>
             <p v-if="sender.description">
               {{ sender.description }}
@@ -138,21 +132,18 @@ function openVideo() {
       </div>
 
       <div class="video-actions">
-        <NButton
+        <UButton
           v-for="action in actions"
           :key="action.status"
-          secondary
-          strong
-          size="small"
-          :type="action.type"
+          :color="action.type === 'default' ? 'neutral' : action.type"
+          variant="soft"
+          size="sm"
           :loading="loading"
           @click="emit('updateStatus', action.status, videoInfo)"
         >
-          <template #icon>
-            <NIcon :component="action.icon" />
-          </template>
+          <UIcon :name="action.icon" />
           {{ action.label }}
-        </NButton>
+        </UButton>
       </div>
     </div>
   </article>
@@ -239,6 +230,13 @@ function openVideo() {
   cursor: pointer;
 }
 
+.video-title__text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .video-title:hover {
   color: var(--vtsuru-brand);
 }
@@ -309,12 +307,12 @@ function openVideo() {
 }
 
 .recommendation-author span,
-.recommendation-author :deep(.n-time) {
+.recommendation-time {
   color: var(--vtsuru-fg-muted);
   font-size: 11px;
 }
 
-.recommendation-author :deep(.n-time) {
+.recommendation-time {
   margin-left: auto;
   white-space: nowrap;
 }

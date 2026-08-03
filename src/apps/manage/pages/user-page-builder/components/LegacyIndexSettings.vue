@@ -1,20 +1,4 @@
 <script setup lang="ts">
-import { Delete24Regular } from '@vicons/fluent'
-import { ArrowDownOutline, ArrowUpOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NModal,
-  NPopconfirm,
-  NTag,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { SaveSetting, useAccount } from '@/api/account'
@@ -23,7 +7,15 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { USER_INDEX_API_URL } from '@/shared/config'
 const accountInfo = useAccount()
-const message = useMessage()
+const toast = useToast()
+const message = {
+  success: (title: string) => toast.add({ title, color: 'success' }),
+  error: (title: string) => toast.add({ title, color: 'error' }),
+}
+
+function confirmRemoveLink(name: string) {
+  if (window.confirm('确定要删除这个链接吗？')) void removeLink(name)
+}
 
 const isLoading = ref(false)
 
@@ -231,256 +223,237 @@ await loadIndexInfo()
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-  >
-    <NDivider style="margin: 0"> 常规 </NDivider>
-    <NCheckbox
-      v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
+  <div class="builder-stack">
+    <USeparator style="margin: 0"> 常规 </USeparator>
+    <UCheckbox
+      v-model="accountInfo.settings.index.allowDisplayInIndex"
+      label="允许显示在网站主页"
       :disabled="isLoading"
-      @update:checked="updateUserIndexSettings"
-    >
-      允许显示在网站主页
-    </NCheckbox>
+      @update:model-value="updateUserIndexSettings"
+    />
 
-    <NDivider style="margin: 0"> 通知 </NDivider>
-    <NInput
-      v-model:value="accountInfo.settings.index.notification"
-      type="textarea"
+    <USeparator style="margin: 0"> 通知 </USeparator>
+    <UTextarea
+      v-model="accountInfo.settings.index.notification"
       placeholder="可选"
     />
-    <NFlex justify="end">
-      <NButton
-        type="primary"
-        size="small"
+    <div class="builder-row">
+      <UButton
+        color="primary"
+        size="sm"
         :loading="isLoading"
         @click="updateIndexSettings"
       >
         保存
-      </NButton>
-    </NFlex>
+      </UButton>
+    </div>
 
-    <NDivider style="margin: 0"> 展示视频 </NDivider>
-    <NButton
-      type="primary"
-      size="small"
+    <USeparator style="margin: 0"> 展示视频 </USeparator>
+    <UButton
+      color="primary"
+      size="sm"
       :disabled="isLoading"
       @click="showAddVideoModal = true"
     >
       添加视频
-    </NButton>
-    <NEmpty v-if="accountInfo.settings.index.videos.length === 0" />
-    <NFlex
+    </UButton>
+    <UEmpty v-if="accountInfo.settings.index.videos.length === 0" />
+    <div
+      class="builder-row"
       v-else
-      wrap
-      :size="12"
     >
-      <NTooltip
+      <UTooltip
         v-for="item in indexDisplayInfo?.videos ?? []"
         :key="item.id"
       >
-        <template #trigger>
-          <div>
-            <SimpleVideoCard :video="item" />
-            <NFlex style="margin-top: 6px">
-              <NButton
-                size="small"
-                secondary
-                :disabled="isLoading"
-                @click="moveVideo(item.id, 'up')"
-              >
-                上移
-              </NButton>
-              <NButton
-                size="small"
-                secondary
-                :disabled="isLoading"
-                @click="moveVideo(item.id, 'down')"
-              >
-                下移
-              </NButton>
-              <NButton
-                type="warning"
-                size="small"
-                :disabled="isLoading"
-                @click="removeVideo(item.id)"
-              >
-                删除
-              </NButton>
-            </NFlex>
+        <div>
+          <SimpleVideoCard :video="item" />
+          <div
+            class="builder-row"
+            style="margin-top: 6px"
+          >
+            <UButton
+              size="sm"
+              variant="soft"
+              :disabled="isLoading"
+              @click="moveVideo(item.id, 'up')"
+            >
+              上移
+            </UButton>
+            <UButton
+              size="sm"
+              variant="soft"
+              :disabled="isLoading"
+              @click="moveVideo(item.id, 'down')"
+            >
+              下移
+            </UButton>
+            <UButton
+              color="warning"
+              size="sm"
+              :disabled="isLoading"
+              @click="removeVideo(item.id)"
+            >
+              删除
+            </UButton>
           </div>
-        </template>
-        {{ item.title }}
-      </NTooltip>
-    </NFlex>
+        </div>
 
-    <NDivider style="margin: 0"> 其他链接 </NDivider>
-    <NButton
-      type="primary"
-      size="small"
+        <template #content>{{ item.title }}</template>
+      </UTooltip>
+    </div>
+
+    <USeparator style="margin: 0"> 其他链接 </USeparator>
+    <UButton
+      color="primary"
+      size="sm"
       :disabled="isLoading"
       @click="showAddLinkModal = true"
     >
       添加链接
-    </NButton>
-    <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
-    <NFlex
+    </UButton>
+    <UEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
+    <div
+      class="builder-row"
       v-else
       :key="linkKey"
-      wrap
-      :size="8"
     >
-      <NFlex
+      <div
+        class="builder-row"
         v-for="link in orderedLinks"
         :key="link[0]"
-        align="center"
       >
         <template v-if="editingLinkName === link[0]">
-          <NInput
-            v-model:value="newLinkName"
-            size="small"
+          <UInput
+            v-model="newLinkName"
+            size="sm"
             style="width: 120px"
           />
-          <NButton
-            size="tiny"
-            type="primary"
-            text
+          <UButton
+            size="xs"
+            color="primary"
+            variant="link"
             @click="confirmEditLink(link[0])"
           >
             保存
-          </NButton>
-          <NButton
-            size="tiny"
-            text
+          </UButton>
+          <UButton
+            size="xs"
+            variant="link"
             @click="cancelEditLink"
           >
             取消
-          </NButton>
+          </UButton>
         </template>
         <template v-else>
-          <NTooltip>
-            <template #trigger>
-              <NTag
-                :bordered="false"
-                size="small"
-                type="info"
+          <UTooltip>
+            <UBadge
+              :bordered="false"
+              size="sm"
+              type="info"
+            >
+              {{ link[0] }}
+            </UBadge>
+
+            <template #content>{{ link[1] }}</template>
+          </UTooltip>
+          <div class="builder-row">
+            <UTooltip>
+              <UButton
+                size="xs"
+                variant="soft"
+                aria-label="上移链接"
+                @click="moveLink(link[0], 'up')"
               >
-                {{ link[0] }}
-              </NTag>
-            </template>
-            {{ link[1] }}
-          </NTooltip>
-          <NFlex>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  secondary
-                  text
-                  aria-label="上移链接"
-                  @click="moveLink(link[0], 'up')"
-                >
-                  <template #icon>
-                    <NIcon><ArrowUpOutline /></NIcon>
-                  </template>
-                </NButton>
-              </template>
-              上移链接
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  secondary
-                  text
-                  aria-label="下移链接"
-                  @click="moveLink(link[0], 'down')"
-                >
-                  <template #icon>
-                    <NIcon><ArrowDownOutline /></NIcon>
-                  </template>
-                </NButton>
-              </template>
-              下移链接
-            </NTooltip>
-            <NButton
-              size="tiny"
-              text
+                <template #icon>
+                  <UIcon name="i-lucide-arrow-up" />
+                </template>
+              </UButton>
+              <template #content> 上移链接 </template></UTooltip
+            >
+            <UTooltip>
+              <UButton
+                size="xs"
+                variant="soft"
+                aria-label="下移链接"
+                @click="moveLink(link[0], 'down')"
+              >
+                <template #icon>
+                  <UIcon name="i-lucide-arrow-down" />
+                </template>
+              </UButton>
+              <template #content> 下移链接 </template></UTooltip
+            >
+            <UButton
+              size="xs"
+              variant="link"
               @click="startEditLink(link[0])"
             >
               改名
-            </NButton>
-            <NTooltip>
-              <template #trigger>
-                <NPopconfirm @positive-click="removeLink(link[0])">
-                  <template #trigger>
-                    <NButton
-                      type="error"
-                      text
-                      size="tiny"
-                      aria-label="删除链接"
-                    >
-                      <template #icon>
-                        <NIcon :component="Delete24Regular" />
-                      </template>
-                    </NButton>
-                  </template>
-                  确定要删除这个链接吗?
-                </NPopconfirm>
-              </template>
-              删除链接
-            </NTooltip>
-          </NFlex>
+            </UButton>
+            <UTooltip>
+              <UButton
+                icon="i-lucide-trash-2"
+                color="error"
+                variant="link"
+                size="xs"
+                aria-label="删除链接"
+                @click="confirmRemoveLink(link[0])"
+              />
+              <template #content> 删除链接 </template></UTooltip
+            >
+          </div>
         </template>
-      </NFlex>
-    </NFlex>
-  </NFlex>
+      </div>
+    </div>
+  </div>
 
-  <NModal
-    v-model:show="showAddVideoModal"
-    preset="card"
+  <UModal
+    v-model:open="showAddVideoModal"
     closable
     style="width: 600px; max-width: 90vw"
     title="添加视频"
   >
-    <NInput
-      v-model:value="addVideoUrl"
-      placeholder="请输入视频链接"
-    />
-    <NDivider />
-    <NButton
-      type="primary"
-      :loading="isLoading"
-      @click="addVideo"
+    <template #body
+      ><UInput
+        v-model="addVideoUrl"
+        placeholder="请输入视频链接"
+      />
+      <USeparator />
+      <UButton
+        color="primary"
+        :loading="isLoading"
+        @click="addVideo"
+      >
+        添加视频
+      </UButton></template
     >
-      添加视频
-    </NButton>
-  </NModal>
+  </UModal>
 
-  <NModal
-    v-model:show="showAddLinkModal"
-    preset="card"
+  <UModal
+    v-model:open="showAddLinkModal"
     closable
     style="width: 600px; max-width: 90vw"
     title="添加链接"
   >
-    <NFlex vertical>
-      <NInput
-        v-model:value="addLinkName"
-        placeholder="链接名称"
-      />
-      <NInput
-        v-model:value="addLinkUrl"
-        placeholder="链接地址"
-      />
-      <NButton
-        type="primary"
-        :loading="isLoading"
-        @click="addLink"
-      >
-        添加链接
-      </NButton>
-    </NFlex>
-  </NModal>
+    <template #body
+      ><div class="builder-stack">
+        <UInput
+          v-model="addLinkName"
+          placeholder="链接名称"
+        />
+        <UInput
+          v-model="addLinkUrl"
+          placeholder="链接地址"
+        />
+        <UButton
+          color="primary"
+          :loading="isLoading"
+          @click="addLink"
+        >
+          添加链接
+        </UButton>
+      </div></template
+    >
+  </UModal>
 </template>

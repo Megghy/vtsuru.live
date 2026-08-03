@@ -1,17 +1,4 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NColorPicker,
-  NDivider,
-  NFlex,
-  NForm,
-  NFormItem,
-  NInput,
-  NModal,
-  NScrollbar,
-  NSelect,
-} from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
 
 import type { BlockPageTheme, PageThemeMode } from '@/apps/user-page/block/schema'
@@ -158,166 +145,166 @@ function confirmImportJson() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
+  <UModal
+    v-model:open="show"
     title="页面主题"
     style="width: 720px; max-width: 95vw"
-    :auto-focus="false"
   >
-    <NScrollbar style="max-height: min(78vh, 720px)">
-      <div class="modal-content">
-        <NAlert
-          type="info"
-          :show-icon="true"
-          style="margin-bottom: 12px"
-        >
-          这里的设置仅应用于当前区块页，页面级和全局设置仍可覆盖对应选项。
-        </NAlert>
-
-        <NDivider style="margin: 10px 0"> 背景 </NDivider>
-        <BackgroundSettingsEditor
-          :target="backgroundTarget"
-          none-hint="未设置区块页背景时，将优先使用页面或全局背景，否则使用默认背景。"
-        />
-
-        <NDivider style="margin: 12px 0 10px"> 主题 </NDivider>
-        <NForm
-          label-placement="top"
-          size="small"
-        >
-          <NFormItem label="主题预设">
-            <NSelect
-              v-model:value="themePresetKey"
-              :options="themePresetOptions"
-              clearable
-              placeholder="选择后会覆盖主题颜色、圆角和密度"
-              @update:value="applyThemePreset"
-            />
-          </NFormItem>
-          <PropsGrid :min-item-width="240">
-            <NFormItem label="主题主色">
-              <NColorPicker
-                v-model:value="primaryColor"
-                :modes="['hex']"
-              />
-            </NFormItem>
-            <NFormItem label="页面主题模式">
-              <NSelect
-                v-model:value="pageThemeMode"
-                :options="[
-                  { label: '跟随站点', value: 'auto' },
-                  { label: '强制亮色', value: 'light' },
-                  { label: '强制暗色', value: 'dark' },
-                ]"
-              />
-            </NFormItem>
-            <NFormItem label="内容区域底色">
-              <NColorPicker
-                v-model:value="backgroundColor"
-                :modes="['hex']"
-              />
-            </NFormItem>
-          </PropsGrid>
-          <ThemeTextColorEditor :target="textColorTarget" />
-          <ThemeAdvancedOptions :target="appearanceTarget" />
-        </NForm>
-
-        <NDivider style="margin: 12px 0 10px"> 导入 / 导出 </NDivider>
-        <NFlex>
-          <NButton
-            size="small"
-            secondary
-            @click="openExportModal"
+    <template #body
+      ><div
+        class="builder-scroll"
+        style="max-height: min(78vh, 720px)"
+      >
+        <div class="modal-content">
+          <UAlert
+            type="info"
+            :show-icon="true"
+            style="margin-bottom: 12px"
           >
-            导出 JSON
-          </NButton>
-          <NButton
-            size="small"
-            secondary
-            @click="importModal = true"
-          >
-            导入 JSON
-          </NButton>
-        </NFlex>
-      </div>
-    </NScrollbar>
-  </NModal>
+            这里的设置仅应用于当前区块页，页面级和全局设置仍可覆盖对应选项。
+          </UAlert>
 
-  <NModal
-    v-model:show="exportModal"
-    preset="card"
+          <USeparator style="margin: 10px 0"> 背景 </USeparator>
+          <BackgroundSettingsEditor
+            :target="backgroundTarget"
+            none-hint="未设置区块页背景时，将优先使用页面或全局背景，否则使用默认背景。"
+          />
+
+          <USeparator style="margin: 12px 0 10px"> 主题 </USeparator>
+          <div class="builder-form">
+            <UFormField label="主题预设">
+              <USelect
+                v-model="themePresetKey"
+                :items="themePresetOptions"
+                clearable
+                placeholder="选择后会覆盖主题颜色、圆角和密度"
+                @update:model-value="applyThemePreset"
+              />
+            </UFormField>
+            <PropsGrid :min-item-width="240">
+              <UFormField label="主题主色">
+                <UColorPicker
+                  v-model="primaryColor"
+                  :modes="['hex']"
+                />
+              </UFormField>
+              <UFormField label="页面主题模式">
+                <USelect
+                  v-model="pageThemeMode"
+                  :items="[
+                    { label: '跟随站点', value: 'auto' },
+                    { label: '强制亮色', value: 'light' },
+                    { label: '强制暗色', value: 'dark' },
+                  ]"
+                />
+              </UFormField>
+              <UFormField label="内容区域底色">
+                <UColorPicker
+                  v-model="backgroundColor"
+                  :modes="['hex']"
+                />
+              </UFormField>
+            </PropsGrid>
+            <ThemeTextColorEditor :target="textColorTarget" />
+            <ThemeAdvancedOptions :target="appearanceTarget" />
+          </div>
+
+          <USeparator style="margin: 12px 0 10px"> 导入 / 导出 </USeparator>
+          <div class="builder-row">
+            <UButton
+              size="sm"
+              variant="soft"
+              @click="openExportModal"
+            >
+              导出 JSON
+            </UButton>
+            <UButton
+              size="sm"
+              variant="soft"
+              @click="importModal = true"
+            >
+              导入 JSON
+            </UButton>
+          </div>
+        </div>
+      </div></template
+    >
+  </UModal>
+
+  <UModal
+    v-model:open="exportModal"
     title="导出区块页 JSON"
     style="width: min(720px, 92vw)"
   >
-    <NFlex vertical>
-      <NAlert
-        type="info"
-        :show-icon="true"
-      >
-        这是当前页面的区块配置 JSON，仅包含当前页。导入到其他账号或页面时，图片等资源引用可能需要重新上传替换。
-      </NAlert>
-      <NInput
-        v-model:value="exportJson"
-        type="textarea"
-        :autosize="{ minRows: 10, maxRows: 18 }"
-        readonly
-      />
-      <NFlex justify="end">
-        <NButton
-          size="small"
-          secondary
-          @click="copyExportJson"
+    <template #body
+      ><div class="builder-stack">
+        <UAlert
+          type="info"
+          :show-icon="true"
         >
-          复制
-        </NButton>
-        <NButton
-          size="small"
-          secondary
-          @click="downloadExportJson"
-        >
-          下载
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+          这是当前页面的区块配置 JSON，仅包含当前页。导入到其他账号或页面时，图片等资源引用可能需要重新上传替换。
+        </UAlert>
+        <UTextarea
+          v-model="exportJson"
+          :autosize="{ minRows: 10, maxRows: 18 }"
+          readonly
+        />
+        <div class="builder-row">
+          <UButton
+            size="sm"
+            variant="soft"
+            @click="copyExportJson"
+          >
+            复制
+          </UButton>
+          <UButton
+            size="sm"
+            variant="soft"
+            @click="downloadExportJson"
+          >
+            下载
+          </UButton>
+        </div>
+      </div></template
+    >
+  </UModal>
 
-  <NModal
-    v-model:show="importModal"
-    preset="card"
+  <UModal
+    v-model:open="importModal"
     title="导入区块页 JSON"
     style="width: min(720px, 92vw)"
   >
-    <NFlex vertical>
-      <NAlert
-        type="warning"
-        :show-icon="true"
-      >
-        导入会覆盖当前页面的区块配置，不可自动回退，建议先导出备份。
-      </NAlert>
-      <NInput
-        v-model:value="importJson"
-        type="textarea"
-        :autosize="{ minRows: 10, maxRows: 18 }"
-        placeholder="粘贴导出的 JSON，支持 vtsuru-block-page 包装或直接 BlockPageProject"
-      />
-      <NFlex justify="end">
-        <NButton
-          secondary
-          @click="importModal = false"
+    <template #body
+      ><div class="builder-stack">
+        <UAlert
+          type="warning"
+          :show-icon="true"
         >
-          取消
-        </NButton>
-        <NButton
-          type="primary"
-          :disabled="!importJson.trim().length"
-          @click="confirmImportJson"
-        >
-          导入并覆盖
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+          导入会覆盖当前页面的区块配置，不可自动回退，建议先导出备份。
+        </UAlert>
+        <UTextarea
+          v-model="importJson"
+          :autosize="{ minRows: 10, maxRows: 18 }"
+          placeholder="粘贴导出的 JSON，支持 vtsuru-block-page 包装或直接 BlockPageProject"
+        />
+        <div class="builder-row">
+          <UButton
+            variant="soft"
+            @click="importModal = false"
+          >
+            取消
+          </UButton>
+          <UButton
+            color="primary"
+            :disabled="!importJson.trim().length"
+            @click="confirmImportJson"
+          >
+            导入并覆盖
+          </UButton>
+        </div>
+      </div></template
+    >
+  </UModal>
 </template>
 
 <style scoped>

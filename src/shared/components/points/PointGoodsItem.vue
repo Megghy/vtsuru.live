@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { Pin16Filled } from '@vicons/fluent'
-import { NCard, NEllipsis, NEmpty, NIcon, NImage, NTag } from 'naive-ui'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { ResponsePointGoodModel } from '@/api/api-models'
 import { GoodsTypes } from '@/api/api-models'
@@ -9,33 +7,34 @@ import { IMGUR_URL } from '@/shared/config'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel | undefined
-  contentStyle?: string | undefined
+  contentStyle?: string
   size?: 'small' | 'default'
   isManage?: boolean
 }>()
 
-// 默认封面图片
 const emptyCover = `${IMGUR_URL}None.png`
-
+const isCoverPreviewOpen = ref(false)
 const hasSubItems = computed(() => (props.goods?.subItems?.length ?? 0) > 0)
 const subItems = computed(() => props.goods?.subItems ?? [])
-const availableSubItemCount = computed(() => subItems.value.filter((s) => s.count == null || s.count > 0).length)
+const availableSubItemCount = computed(
+  () => subItems.value.filter((item) => item.count == null || item.count > 0).length,
+)
 const isSoldOut = computed(() => {
   if (!props.goods) return false
   if (!hasSubItems.value) return props.goods.count === 0
-  return subItems.value.length > 0 && subItems.value.every((s) => s.count === 0)
+  return subItems.value.length > 0 && subItems.value.every((item) => item.count === 0)
 })
 const priceMin = computed(() => {
   if (!props.goods) return 0
   if (!hasSubItems.value) return props.goods.price
-  const list = subItems.value.map((s) => s.price)
-  return list.length ? Math.min(...list) : props.goods.price
+  const prices = subItems.value.map((item) => item.price)
+  return prices.length ? Math.min(...prices) : props.goods.price
 })
 const priceMax = computed(() => {
   if (!props.goods) return 0
   if (!hasSubItems.value) return props.goods.price
-  const list = subItems.value.map((s) => s.price)
-  return list.length ? Math.max(...list) : props.goods.price
+  const prices = subItems.value.map((item) => item.price)
+  return prices.length ? Math.max(...prices) : props.goods.price
 })
 const priceRangeText = computed(() => {
   if (!props.goods) return ''
@@ -46,120 +45,98 @@ const priceRangeText = computed(() => {
 </script>
 
 <template>
-  <NEmpty
+  <div
     v-if="!goods"
-    description="已失效"
     class="empty-state"
-  />
-  <NCard
+  >
+    <UIcon
+      name="i-lucide-package-x"
+      class="empty-state__icon"
+    />
+    <span>已失效</span>
+  </div>
+  <UCard
     v-else
-    hoverable
-    :bordered="true"
-    size="small"
     class="goods-card"
     :class="{ 'is-pinned': goods.isPinned }"
-    :style="props.contentStyle"
-    content-style="padding: 12px;"
-    footer-style="padding: 0 12px 12px 12px;"
+    :style="contentStyle"
+    :ui="{ body: 'p-0 sm:p-0', footer: 'px-3 pb-3 pt-0 sm:px-3' }"
   >
-    <!-- 商品封面 -->
-    <template #cover>
-      <div class="cover-wrapper">
-        <div class="cover-image-container">
-          <NImage
-            :src="goods.cover ? goods.cover.path : emptyCover"
-            :fallback-src="emptyCover"
-            object-fit="cover"
-            :preview-disabled="!goods.cover"
-            class="cover-image"
-            lazy
-            :img-props="{ style: { width: '100%', height: '100%', objectFit: 'cover' } }"
+    <div class="cover-wrapper">
+      <div class="cover-image-container">
+        <img
+          class="cover-image"
+          :src="goods.cover?.path || emptyCover"
+          :alt="goods.name"
+          loading="lazy"
+          @error="($event.target as HTMLImageElement).src = emptyCover"
+          @click="goods.cover && (isCoverPreviewOpen = true)"
+        />
+      </div>
+      <div
+        v-if="isSoldOut"
+        class="sold-out-mask"
+      >
+        <span class="sold-out-text">已售完</span>
+      </div>
+      <div
+        v-if="goods.isPinned"
+        class="pin-badge"
+      >
+        <UIcon name="i-lucide-pin" />
+      </div>
+      <div class="cover-overlay">
+        <div class="overlay-tags">
+          <UBadge
+            size="xs"
+            variant="soft"
+            :color="goods.type === GoodsTypes.Physical ? 'success' : 'info'"
+            class="glass-tag"
+          >
+            {{ goods.type === GoodsTypes.Physical ? '实物' : '虚拟' }}
+          </UBadge>
+          <UBadge
+            v-if="hasSubItems"
+            size="xs"
+            variant="soft"
+            color="neutral"
+            label="多选"
+            class="glass-tag"
           />
+          <UBadge
+            v-if="goods.allowGuardLevel > 0"
+            size="xs"
+            variant="soft"
+            color="warning"
+            class="glass-tag tag-warning"
+          >
+            {{ goods.allowGuardLevel === 1 ? '总督' : goods.allowGuardLevel === 2 ? '提督' : '舰长' }}专属
+          </UBadge>
         </div>
-
-        <!-- 售罄遮罩 -->
-        <div
-          v-if="isSoldOut"
-          class="sold-out-mask"
-        >
-          <span class="sold-out-text">已售完</span>
-        </div>
-
-        <!-- 置顶标记 -->
-        <div
-          v-if="goods.isPinned"
-          class="pin-badge"
-        >
-          <NIcon :component="Pin16Filled" />
-        </div>
-
-        <!-- 底部浮层信息 -->
-        <div class="cover-overlay">
-          <!-- 左侧标签组 -->
-          <div class="overlay-tags">
-            <NTag
-              size="tiny"
-              :bordered="false"
-              class="glass-tag"
-              :class="goods.type === GoodsTypes.Physical ? 'tag-success' : 'tag-info'"
-            >
-              {{ goods.type === GoodsTypes.Physical ? '实物' : '虚拟' }}
-            </NTag>
-
-            <NTag
-              v-if="hasSubItems"
-              size="tiny"
-              :bordered="false"
-              class="glass-tag"
-            >
-              多选
-            </NTag>
-
-            <NTag
-              v-if="goods.allowGuardLevel > 0"
-              size="tiny"
-              :bordered="false"
-              class="glass-tag tag-warning"
-            >
-              {{ goods.allowGuardLevel === 1 ? '总督' : goods.allowGuardLevel === 2 ? '提督' : '舰长' }}专属
-            </NTag>
-          </div>
-
-          <!-- 右侧价格 -->
-          <div class="price-pill">
-            <span class="coin-icon">🪙</span>
-            <template v-if="goods.canFreeBuy && priceMax > 0">
-              <span class="price-original">{{ priceRangeText }}</span>
-              <span class="price-highlight">免费</span>
-            </template>
-            <template v-else>
-              <span class="price-current">{{ priceRangeText }}</span>
-            </template>
-          </div>
+        <div class="price-pill">
+          <span class="coin-icon">🪙</span>
+          <template v-if="goods.canFreeBuy && priceMax > 0">
+            <span class="price-original">{{ priceRangeText }}</span>
+            <span class="price-highlight">免费</span>
+          </template>
+          <span
+            v-else
+            class="price-current"
+            >{{ priceRangeText }}</span
+          >
         </div>
       </div>
-    </template>
+    </div>
 
-    <!-- 商品信息主体 -->
     <div class="card-content">
-      <!-- 标题行 -->
       <div class="header-row-container">
         <div class="title-main">
-          <NEllipsis
-            class="goods-title"
-            :line-clamp="1"
-            :tooltip="{ arrowPointToCenter: true }"
+          <span
+            class="goods-title goods-title-text"
+            :title="goods.name"
+            >{{ goods.name }}</span
           >
-            <span
-              class="goods-title-text"
-              style="font-weight: 800; font-size: 1.05rem; line-height: 1.25; letter-spacing: -0.015em"
-            >
-              {{ goods.name }}
-            </span>
-          </NEllipsis>
         </div>
-
-        <!-- 库存显示 -->
         <div
           class="stock-badge"
           :class="{
@@ -167,66 +144,51 @@ const priceRangeText = computed(() => {
             'stock-inf': hasSubItems ? availableSubItemCount > 0 : !goods.count && goods.count !== 0,
           }"
         >
-          <template v-if="isSoldOut"> 缺货 </template>
-          <template v-else-if="hasSubItems"> {{ availableSubItemCount }} 选 </template>
-          <template v-else-if="goods.count && goods.count > 0"> 余 {{ goods.count }} </template>
-          <template v-else> 无限 </template>
+          <template v-if="isSoldOut">缺货</template>
+          <template v-else-if="hasSubItems">{{ availableSubItemCount }} 选</template>
+          <template v-else-if="goods.count && goods.count > 0">余 {{ goods.count }}</template>
+          <template v-else>无限</template>
         </div>
       </div>
 
-      <!-- 描述文本 -->
-      <div class="description-container">
-        <NEllipsis
-          :line-clamp="2"
-          class="description-text"
-          :tooltip="{ arrowPointToCenter: true }"
-        >
-          {{ goods.description || '暂无描述' }}
-        </NEllipsis>
-      </div>
+      <p
+        class="description-text"
+        :title="goods.description || '暂无描述'"
+      >
+        {{ goods.description || '暂无描述' }}
+      </p>
 
-      <!-- 标签区域 (用户侧) -->
       <div
         v-if="!isManage"
         class="tags-row"
       >
-        <template v-if="goods.setting?.allowGuardLevel && goods.setting.allowGuardLevel > 0">
-          <!-- 已经在封面显示，此处可省略或重复强调，选择保留其他重要Tag -->
-        </template>
-
-        <NTag
+        <UBadge
           v-if="goods.canFreeBuy"
-          :bordered="false"
-          size="tiny"
-          type="success"
-          round
+          size="xs"
+          color="success"
+          variant="soft"
           class="mini-tag"
-        >
-          ⭐ 舰长免费
-        </NTag>
-        <NTag
+          label="⭐ 舰长免费"
+        />
+        <UBadge
           v-if="!goods.isAllowRebuy"
-          :bordered="false"
-          size="tiny"
-          type="error"
-          round
+          size="xs"
+          color="error"
+          variant="soft"
           class="mini-tag"
-        >
-          🔒 限购一次
-        </NTag>
-        <NTag
+          label="🔒 限购一次"
+        />
+        <UBadge
           v-for="tag in goods.tags"
           :key="tag"
-          :bordered="false"
-          size="tiny"
-          round
+          size="xs"
+          color="neutral"
+          variant="soft"
           class="mini-tag custom-tag"
-        >
-          {{ tag }}
-        </NTag>
+          :label="tag"
+        />
       </div>
 
-      <!-- 管理侧信息卡片 -->
       <div
         v-if="isManage"
         class="manage-info-grid"
@@ -243,9 +205,8 @@ const priceRangeText = computed(() => {
           <span
             class="value"
             :class="goods.isAllowRebuy ? 'text-success' : 'text-error'"
+            >{{ goods.isAllowRebuy ? '是' : '否' }}</span
           >
-            {{ goods.isAllowRebuy ? '是' : '否' }}
-          </span>
         </div>
         <div
           v-if="goods.type === GoodsTypes.Virtual && goods.virtualKeys?.length"
@@ -261,24 +222,41 @@ const priceRangeText = computed(() => {
           <span class="label">📮 地址</span>
           <span class="value">{{ goods.collectUrl ? '站外' : '本站' }}</span>
         </div>
-        <!-- 子商品简略信息 -->
         <div
           v-if="hasSubItems"
           class="info-cell sub-items-summary"
         >
           <span class="label">🎨 款式</span>
-          <NEllipsis class="value">
-            {{ subItems.map((s) => s.name).join(' / ') }}
-          </NEllipsis>
+          <span
+            class="value sub-item-names"
+            :title="subItems.map((item) => item.name).join(' / ')"
+            >{{ subItems.map((item) => item.name).join(' / ') }}</span
+          >
         </div>
       </div>
     </div>
 
-    <!-- 页脚插槽 -->
-    <template #footer>
+    <template
+      v-if="$slots.footer"
+      #footer
+    >
       <slot name="footer" />
     </template>
-  </NCard>
+  </UCard>
+
+  <UModal
+    v-if="goods?.cover"
+    v-model:open="isCoverPreviewOpen"
+    :title="goods.name"
+  >
+    <template #body>
+      <img
+        class="cover-preview"
+        :src="goods.cover.path"
+        :alt="goods.name"
+      />
+    </template>
+  </UModal>
 </template>
 
 <style scoped>
@@ -313,8 +291,8 @@ const priceRangeText = computed(() => {
 
 .goods-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--goods-shadow);
   border-color: var(--goods-accent);
+  box-shadow: var(--goods-shadow);
 }
 
 .is-pinned {
@@ -325,8 +303,7 @@ const priceRangeText = computed(() => {
 .cover-wrapper {
   position: relative;
   width: 100%;
-  height: 0;
-  padding-bottom: 56.25%;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: var(--goods-bg-soft);
 }
@@ -341,12 +318,15 @@ const priceRangeText = computed(() => {
 
 .cover-image {
   display: block;
+  object-fit: cover;
+  cursor: zoom-in;
 }
 
-.cover-image :deep(img) {
+.cover-preview {
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-height: 75vh;
+  object-fit: contain;
 }
 
 .sold-out-mask {
@@ -403,13 +383,7 @@ const priceRangeText = computed(() => {
   justify-content: space-between;
   gap: 8px;
   padding: 40px 12px 12px;
-  pointer-events: none;
   background: linear-gradient(to top, color-mix(in srgb, var(--goods-fg), transparent 15%), transparent);
-}
-
-.overlay-tags,
-.price-pill {
-  pointer-events: auto;
 }
 
 .overlay-tags {
@@ -426,17 +400,8 @@ const priceRangeText = computed(() => {
   backdrop-filter: blur(8px);
 }
 
-.tag-success {
-  background: color-mix(in srgb, var(--vtsuru-success), transparent 15%);
-}
-
-.tag-info {
-  background: color-mix(in srgb, var(--vtsuru-info), transparent 15%);
-}
-
 .tag-warning {
   color: var(--goods-fg);
-  background: color-mix(in srgb, var(--vtsuru-warning), transparent 15%);
 }
 
 .price-pill {
@@ -478,6 +443,7 @@ const priceRangeText = computed(() => {
 
 .card-content {
   min-width: 0;
+  padding: 12px;
 }
 
 .header-row-container {
@@ -494,8 +460,20 @@ const priceRangeText = computed(() => {
   flex: 1;
 }
 
+.goods-title,
+.sub-item-names {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .goods-title-text {
   color: var(--goods-fg);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
   transition: color 0.2s ease;
 }
 
@@ -527,11 +505,15 @@ const priceRangeText = computed(() => {
 }
 
 .description-text {
+  display: -webkit-box;
   min-height: 36px;
-  margin-bottom: 8px;
+  margin: 0 0 8px;
+  overflow: hidden;
   color: var(--goods-muted);
   font-size: 12px;
   line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .tags-row {
@@ -543,7 +525,6 @@ const priceRangeText = computed(() => {
 
 .mini-tag {
   height: 20px;
-  padding: 0 6px;
   font-size: 11px;
 }
 
@@ -595,5 +576,19 @@ const priceRangeText = computed(() => {
 
 .text-error {
   color: var(--vtsuru-error) !important;
+}
+
+.empty-state {
+  display: grid;
+  min-height: 180px;
+  place-content: center;
+  gap: 8px;
+  color: var(--vtsuru-fg-muted);
+  text-align: center;
+}
+
+.empty-state__icon {
+  margin: auto;
+  font-size: 28px;
 }
 </style>

@@ -1,20 +1,4 @@
 <script setup lang="ts">
-import { ArrowLeft24Regular, CheckmarkCircle24Regular, Send24Regular, Settings24Regular } from '@vicons/fluent'
-import {
-  NButton,
-  NCheckbox,
-  NEmpty,
-  NIcon,
-  NImage,
-  NImageGroup,
-  NInput,
-  NModal,
-  NPopconfirm,
-  NSpin,
-  NTag,
-  NTime,
-  useMessage,
-} from 'naive-ui'
 import { computed, nextTick, ref, watch } from 'vue'
 
 import type { SupportTicketDetail } from '@/api/api-models'
@@ -24,6 +8,8 @@ import {
   resolveSupportTicket,
   updateSupportTicketPreferences,
 } from '@/shared/services/supportTickets'
+
+import { formatTicketTime, ticketStatusColors, ticketStatusLabels } from './ticketPresentation'
 
 const props = defineProps<{
   ticket?: SupportTicketDetail
@@ -36,7 +22,7 @@ const emit = defineEmits<{
   refresh: []
 }>()
 
-const message = useMessage()
+const toast = useToast()
 const reply = ref('')
 const sending = ref(false)
 const resolving = ref(false)
@@ -45,11 +31,10 @@ const showPreferences = ref(false)
 const isPublic = ref(false)
 const emailOnStaffReply = ref(false)
 const timeline = ref<HTMLElement>()
+const isResolveConfirmOpen = ref(false)
+const imagePreview = ref<{ path: string; name: string }>()
 
-const statusLabels = ['待处理', '处理中', '等待你回复', '已解决']
-const statusTypes = ['default', 'info', 'warning', 'success'] as const
 const typeLabels = ['问题', '功能建议', '账号', '其他']
-
 const messages = computed(() => props.ticket?.messages ?? [])
 
 watch(
@@ -79,7 +64,7 @@ async function sendReply() {
     reply.value = ''
     emit('refresh')
   } catch (error) {
-    message.error((error as Error).message)
+    toast.add({ title: (error as Error).message, color: 'error' })
   } finally {
     sending.value = false
   }
@@ -90,10 +75,11 @@ async function resolve() {
   resolving.value = true
   try {
     await resolveSupportTicket(props.ticket.id)
-    message.success('工单已标记为已解决')
+    toast.add({ title: '工单已标记为已解决', color: 'success' })
+    isResolveConfirmOpen.value = false
     emit('refresh')
   } catch (error) {
-    message.error((error as Error).message)
+    toast.add({ title: (error as Error).message, color: 'error' })
   } finally {
     resolving.value = false
   }
@@ -108,10 +94,10 @@ async function savePreferences() {
       emailOnStaffReply: emailOnStaffReply.value,
     })
     showPreferences.value = false
-    message.success('工单设置已保存')
+    toast.add({ title: '工单设置已保存', color: 'success' })
     emit('refresh')
   } catch (error) {
-    message.error((error as Error).message)
+    toast.add({ title: (error as Error).message, color: 'error' })
   } finally {
     savingPreferences.value = false
   }
@@ -124,73 +110,75 @@ async function savePreferences() {
       v-if="loading"
       class="ticket-detail__state"
     >
-      <NSpin size="medium" />
+      <UIcon
+        name="i-lucide-loader-circle"
+        class="ticket-detail__spinner"
+      />
     </div>
-    <NEmpty
+    <div
       v-else-if="!ticket"
       class="ticket-detail__state"
-      description="选择一个工单查看详情"
-    />
+    >
+      <UIcon name="i-lucide-message-square-text" />
+      <span>选择一个工单查看详情</span>
+    </div>
     <template v-else>
       <header class="ticket-detail__header">
-        <NButton
+        <UButton
           class="ticket-detail__back"
-          quaternary
-          circle
-          title="返回工单列表"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-arrow-left"
+          aria-label="返回工单列表"
           @click="emit('back')"
-        >
-          <template #icon>
-            <NIcon :component="ArrowLeft24Regular" />
-          </template>
-        </NButton>
+        />
         <div class="ticket-detail__heading">
           <div class="ticket-detail__title-row">
             <h2>{{ ticket.title }}</h2>
-            <NTag
-              :type="statusTypes[ticket.status]"
-              :bordered="false"
-              size="small"
-            >
-              {{ statusLabels[ticket.status] }}
-            </NTag>
+            <UBadge
+              size="sm"
+              :color="ticketStatusColors[ticket.status]"
+              :label="ticketStatusLabels[ticket.status]"
+            />
           </div>
           <div class="ticket-detail__meta">
             <span>#{{ ticket.id }}</span>
             <span>{{ typeLabels[ticket.type] }}</span>
             <span v-if="ticket.isPublic">公开</span>
-            <span>创建于 <NTime :time="ticket.createTime" /></span>
+            <span>创建于 {{ new Date(ticket.createTime).toLocaleString() }}</span>
           </div>
         </div>
-        <NButton
+        <UButton
           v-if="editable"
-          quaternary
-          circle
-          title="工单设置"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-settings-2"
+          aria-label="工单设置"
           @click="showPreferences = true"
-        >
-          <template #icon>
-            <NIcon :component="Settings24Regular" />
-          </template>
-        </NButton>
+        />
       </header>
 
       <div
         ref="timeline"
         class="ticket-detail__timeline"
       >
-        <NImageGroup v-if="ticket.images.length">
-          <div class="ticket-images">
-            <NImage
-              v-for="image in ticket.images"
-              :key="image.id"
-              class="ticket-image"
-              object-fit="cover"
+        <div
+          v-if="ticket.images.length"
+          class="ticket-images"
+        >
+          <button
+            v-for="image in ticket.images"
+            :key="image.id"
+            type="button"
+            class="ticket-image"
+            @click="imagePreview = image"
+          >
+            <img
               :src="image.path"
               :alt="image.name"
             />
-          </div>
-        </NImageGroup>
+          </button>
+        </div>
 
         <div
           v-for="item in messages"
@@ -203,18 +191,12 @@ async function savePreferences() {
         >
           <template v-if="item.authorType === SupportTicketAuthorType.System">
             <span>{{ item.content }}</span>
-            <NTime
-              :time="item.createTime"
-              type="relative"
-            />
+            <span>{{ formatTicketTime(item.createTime) }}</span>
           </template>
           <template v-else>
             <div class="ticket-message__meta">
               <strong>{{ authorLabel(item.authorType) }}</strong>
-              <NTime
-                :time="item.createTime"
-                type="relative"
-              />
+              <span>{{ formatTicketTime(item.createTime) }}</span>
             </div>
             <p>{{ item.content }}</p>
           </template>
@@ -225,75 +207,103 @@ async function savePreferences() {
         v-if="editable"
         class="ticket-detail__composer"
       >
-        <NInput
-          v-model:value="reply"
-          type="textarea"
-          :autosize="{ minRows: 2, maxRows: 5 }"
+        <UTextarea
+          v-model="reply"
+          :rows="3"
+          :maxrows="5"
           maxlength="5000"
-          show-count
           placeholder="继续补充信息或回复站长"
           @keydown.ctrl.enter.prevent="sendReply"
         />
         <div class="ticket-detail__actions">
-          <NPopconfirm
+          <UModal
             v-if="ticket.status !== SupportTicketStatus.Resolved"
-            positive-text="确认解决"
-            negative-text="取消"
-            @positive-click="resolve"
+            v-model:open="isResolveConfirmOpen"
+            title="标记问题已解决"
           >
-            <template #trigger>
-              <NButton
-                secondary
-                :loading="resolving"
-              >
-                <template #icon>
-                  <NIcon :component="CheckmarkCircle24Regular" />
-                </template>
-                问题已解决
-              </NButton>
+            <UButton
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-circle-check"
+              :loading="resolving"
+              >问题已解决</UButton
+            >
+            <template #body>
+              <p>标记后仍可通过回复重新打开工单。</p>
             </template>
-            标记后仍可通过回复重新打开工单。
-          </NPopconfirm>
-          <NButton
-            type="primary"
+            <template #footer>
+              <div class="ticket-preferences__footer">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  @click="isResolveConfirmOpen = false"
+                  >取消</UButton
+                >
+                <UButton
+                  color="success"
+                  :loading="resolving"
+                  @click="resolve"
+                  >确认解决</UButton
+                >
+              </div>
+            </template>
+          </UModal>
+          <UButton
+            color="primary"
+            icon="i-lucide-send"
             :disabled="!reply.trim()"
             :loading="sending"
             @click="sendReply"
+            >回复</UButton
           >
-            <template #icon>
-              <NIcon :component="Send24Regular" />
-            </template>
-            回复
-          </NButton>
         </div>
       </footer>
     </template>
 
-    <NModal
-      v-model:show="showPreferences"
-      preset="card"
+    <UModal
+      v-model:open="showPreferences"
       title="工单设置"
-      class="ticket-preferences-modal"
     >
-      <div class="ticket-preferences">
-        <NCheckbox v-model:checked="isPublic"> 公开此工单 </NCheckbox>
-        <span>其他人可以查看工单内容和处理进度，不会公开你的身份信息。</span>
-        <NCheckbox v-model:checked="emailOnStaffReply"> 站长回复时发送邮件 </NCheckbox>
-        <span>站内通知不受此选项影响。</span>
-      </div>
-      <template #footer>
-        <div class="ticket-preferences__footer">
-          <NButton @click="showPreferences = false"> 取消 </NButton>
-          <NButton
-            type="primary"
-            :loading="savingPreferences"
-            @click="savePreferences"
-          >
-            保存
-          </NButton>
+      <template #body>
+        <div class="ticket-preferences">
+          <UCheckbox v-model="isPublic">公开此工单</UCheckbox>
+          <span>其他人可以查看工单内容和处理进度，不会公开你的身份信息。</span>
+          <UCheckbox v-model="emailOnStaffReply">站长回复时发送邮件</UCheckbox>
+          <span>站内通知不受此选项影响。</span>
         </div>
       </template>
-    </NModal>
+      <template #footer>
+        <div class="ticket-preferences__footer">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="showPreferences = false"
+            >取消</UButton
+          >
+          <UButton
+            color="primary"
+            :loading="savingPreferences"
+            @click="savePreferences"
+            >保存</UButton
+          >
+        </div>
+      </template>
+    </UModal>
+
+    <UModal
+      v-if="imagePreview"
+      :open="Boolean(imagePreview)"
+      :title="imagePreview.name"
+      @update:open="!$event && (imagePreview = undefined)"
+    >
+      <template #body>
+        <img
+          class="ticket-image-preview"
+          :src="imagePreview.path"
+          :alt="imagePreview.name"
+        />
+      </template>
+    </UModal>
   </section>
 </template>
 
@@ -308,6 +318,13 @@ async function savePreferences() {
   display: grid;
   flex: 1;
   place-content: center;
+  gap: 10px;
+  color: var(--vtsuru-fg-muted);
+  text-align: center;
+}
+.ticket-detail__spinner {
+  font-size: 24px;
+  animation: spin 0.8s linear infinite;
 }
 .ticket-detail__header {
   display: flex;
@@ -326,8 +343,8 @@ async function savePreferences() {
   gap: 10px;
 }
 .ticket-detail__title-row h2 {
-  overflow-wrap: anywhere;
   margin: 0;
+  overflow-wrap: anywhere;
   color: var(--vtsuru-fg);
   font-size: 18px;
   line-height: 1.4;
@@ -356,10 +373,23 @@ async function savePreferences() {
   margin-bottom: 20px;
 }
 .ticket-image {
-  width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
+  padding: 0;
+  border: 0;
   border-radius: 6px;
+  cursor: zoom-in;
+}
+.ticket-image img,
+.ticket-image-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ticket-image-preview {
+  max-height: 75vh;
+  object-fit: contain;
 }
 .ticket-message {
   width: fit-content;
@@ -368,8 +398,8 @@ async function savePreferences() {
 }
 .ticket-message__meta {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
   margin-bottom: 5px;
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
@@ -410,7 +440,8 @@ async function savePreferences() {
   border-top: 1px solid var(--vtsuru-border);
   background: var(--vtsuru-bg);
 }
-.ticket-detail__actions {
+.ticket-detail__actions,
+.ticket-preferences__footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -425,15 +456,11 @@ async function savePreferences() {
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
 }
-.ticket-preferences__footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
-:global(.ticket-preferences-modal) {
-  width: min(440px, calc(100vw - 32px));
-}
-
 @media (max-width: 760px) {
   .ticket-detail {
     height: calc(100dvh - 100px);

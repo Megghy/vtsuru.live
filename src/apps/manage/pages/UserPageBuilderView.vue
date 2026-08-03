@@ -1,25 +1,11 @@
 <script setup lang="ts">
-import { ReorderThreeOutline } from '@vicons/ionicons5'
 import { useEventListener } from '@vueuse/core'
-import {
-  NAlert,
-  NButton,
-  NButtonGroup,
-  NFlex,
-  NIcon,
-  NInputNumber,
-  NModal,
-  NResult,
-  NSpin,
-  NText,
-  useDialog,
-  useMessage,
-} from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { showWarningToast } from '@/shared/services/toast'
 
 import BlockPageThemeModal from './user-page-builder/components/BlockPageThemeModal.vue'
 import BuilderPaneHost from './user-page-builder/components/BuilderPaneHost.vue'
@@ -41,9 +27,9 @@ let stopColumnResizeEnd: (() => void) | null = null
 let stopColumnResizeCancel: (() => void) | null = null
 const route = useRoute()
 const router = useRouter()
-const dialog = useDialog()
-const message = useMessage()
 const keyboardStatus = ref('')
+const leaveModal = ref(false)
+let resolveLeave: ((allowed: boolean) => void) | undefined
 
 const layoutModal = ref(false)
 const globalBgModal = ref(false)
@@ -218,7 +204,7 @@ function handleEditorShortcut(event: KeyboardEvent) {
 
 function focusPublishValidationIssue(issue: UserPageValidationIssue) {
   if (!editor.focusValidationIssue(issue)) {
-    message.warning('该问题无法自动定位，请根据提示检查当前配置')
+    showWarningToast('该问题无法自动定位，请根据提示检查当前配置')
     return
   }
   editor.publishModal.value = false
@@ -264,17 +250,17 @@ onBeforeUnmount(() => {
 onBeforeRouteLeave(() => {
   if (!editor.isDirty.value) return true
   return new Promise<boolean>((resolve) => {
-    dialog.warning({
-      title: '离开编辑器',
-      content: '修改已保存在本机，但尚未同步到服务器。离开后仍可在当前浏览器恢复。',
-      positiveText: '离开',
-      negativeText: '继续编辑',
-      onPositiveClick: () => resolve(true),
-      onNegativeClick: () => resolve(false),
-      onClose: () => resolve(false),
-    })
+    resolveLeave?.(false)
+    resolveLeave = resolve
+    leaveModal.value = true
   })
 })
+
+function finishLeave(allowed: boolean) {
+  leaveModal.value = false
+  resolveLeave?.(allowed)
+  resolveLeave = undefined
+}
 </script>
 
 <template>
@@ -292,64 +278,61 @@ onBeforeRouteLeave(() => {
       </template>
     </ManagePageHeader>
 
-    <NSpin
+    <div
       class="builder-spin"
-      :show="editor.isLoading.value"
+      :aria-busy="editor.isLoading.value"
     >
-      <NResult
+      <UEmpty
         v-if="editor.loadStatus.value === 'error'"
-        status="error"
+        icon="i-lucide-circle-x"
         title="页面配置加载失败"
         :description="editor.error.value || '请检查网络连接后重试'"
         class="load-error"
       >
         <template #footer>
-          <NButton
-            type="primary"
+          <UButton
             :loading="editor.isLoading.value"
             @click="editor.init"
           >
             重试
-          </NButton>
+          </UButton>
         </template>
-      </NResult>
+      </UEmpty>
 
       <template v-else-if="editor.loadStatus.value === 'ready'">
-        <NAlert
+        <UAlert
           v-if="editor.error.value"
-          type="error"
-          :show-icon="true"
-          style="margin-bottom: 12px"
-        >
-          {{ editor.error.value }}
-        </NAlert>
+          color="error"
+          icon="i-lucide-circle-x"
+          :title="editor.error.value"
+        />
 
-        <NAlert
+        <UAlert
           v-if="editor.localDraftConflict.value"
-          type="warning"
-          :show-icon="true"
-          style="margin-bottom: 12px"
+          color="warning"
+          icon="i-lucide-triangle-alert"
+          title="检测到另一服务端版本上的本地修改"
+          description="当前显示服务端内容。"
         >
           <div>检测到另一服务端版本上的本地修改，当前显示服务端内容。</div>
-          <NFlex
-            size="small"
-            style="margin-top: 8px"
-          >
-            <NButton
-              size="tiny"
+          <template #actions>
+            <UButton
+              size="sm"
+              color="neutral"
+              variant="soft"
               @click="editor.discardConflictingLocalDraft"
             >
               放弃本地修改
-            </NButton>
-            <NButton
-              size="tiny"
-              type="warning"
+            </UButton>
+            <UButton
+              size="sm"
+              color="warning"
               @click="editor.restoreConflictingLocalDraft"
             >
               恢复本地修改
-            </NButton>
-          </NFlex>
-        </NAlert>
+            </UButton>
+          </template>
+        </UAlert>
 
         <div
           ref="builderBodyEl"
@@ -362,21 +345,20 @@ onBeforeRouteLeave(() => {
             aria-live="polite"
             >{{ keyboardStatus }}</span
           >
-          <NButtonGroup
+          <UFieldGroup
             v-if="workspaceMode !== 'wide' && responsivePaneIds.length > 1"
             class="workspace-tabs"
-            size="small"
           >
-            <NButton
+            <UButton
               v-for="id in responsivePaneIds"
               :key="id"
-              :type="selectedResponsivePane === id ? 'primary' : 'default'"
-              :secondary="selectedResponsivePane === id"
+              :color="selectedResponsivePane === id ? 'primary' : 'neutral'"
+              :variant="selectedResponsivePane === id ? 'solid' : 'soft'"
               @click="selectResponsivePane(id)"
             >
               {{ COLUMN_META[id].label }}
-            </NButton>
-          </NButtonGroup>
+            </UButton>
+          </UFieldGroup>
 
           <div
             class="builder-pane-grid"
@@ -419,116 +401,100 @@ onBeforeRouteLeave(() => {
           </div>
         </div>
 
-        <NModal
-          v-model:show="layoutModal"
-          preset="card"
+        <UModal
+          v-model:open="layoutModal"
           title="编辑器布局"
-          style="width: 520px; max-width: 95vw"
-          :auto-focus="false"
+          :ui="{ content: 'sm:max-w-xl' }"
         >
-          <NFlex
-            size="small"
-            style="margin-bottom: 12px"
-          >
-            <NButton
-              size="small"
-              secondary
-              @click="applyPreset('content')"
-            >
-              内容优先
-            </NButton>
-            <NButton
-              size="small"
-              secondary
-              @click="applyPreset('preview')"
-            >
-              预览优先
-            </NButton>
-            <NButton
-              size="small"
-              secondary
-              @click="applyPreset('compact')"
-            >
-              紧凑编辑
-            </NButton>
-          </NFlex>
-          <VueDraggable
-            v-model="layoutColumnsModel"
-            handle=".drag-handle"
-            :animation="160"
-          >
-            <div
-              v-for="id in layoutColumnsModel"
-              :key="id"
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 10px;
-                padding: 10px 12px;
-                border: 1px solid var(--vtsuru-border);
-                border-radius: 10px;
-                margin: 8px 0;
-              "
-            >
-              <div style="min-width: 0; display: flex; align-items: center; gap: 10px">
-                <NIcon
-                  class="drag-handle"
-                  size="18"
-                  style="cursor: grab"
-                >
-                  <ReorderThreeOutline />
-                </NIcon>
-                <NText strong>
-                  {{ COLUMN_META[id as any]?.label ?? id }}
-                </NText>
-              </div>
-              <NText
-                depth="3"
-                style="font-size: 12px; white-space: nowrap"
+          <template #body>
+            <div class="layout-presets">
+              <UButton
+                color="neutral"
+                variant="soft"
+                @click="applyPreset('content')"
               >
-                {{ id }}
-              </NText>
-              <NText
-                v-if="id === 'preview'"
-                depth="3"
-                style="width: 112px; text-align: center; font-size: 12px"
+                内容优先
+              </UButton>
+              <UButton
+                color="neutral"
+                variant="soft"
+                @click="applyPreset('preview')"
               >
-                自动填充
-              </NText>
-              <NInputNumber
-                v-else
-                :value="columnWidths[id]"
-                :min="COLUMN_META[id].minPx"
-                :max="COLUMN_META[id].maxPx"
-                :step="20"
-                size="small"
-                style="width: 112px"
-                @update:value="(value) => setColumnWidth(id, value)"
+                预览优先
+              </UButton>
+              <UButton
+                color="neutral"
+                variant="soft"
+                @click="applyPreset('compact')"
               >
-                <template #suffix> px </template>
-              </NInputNumber>
+                紧凑编辑
+              </UButton>
             </div>
-          </VueDraggable>
+            <VueDraggable
+              v-model="layoutColumnsModel"
+              handle=".drag-handle"
+              :animation="160"
+            >
+              <div
+                v-for="id in layoutColumnsModel"
+                :key="id"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 10px;
+                  padding: 10px 12px;
+                  border: 1px solid var(--vtsuru-border);
+                  border-radius: 10px;
+                  margin: 8px 0;
+                "
+              >
+                <div style="min-width: 0; display: flex; align-items: center; gap: 10px">
+                  <UIcon
+                    name="i-lucide-grip-vertical"
+                    class="drag-handle"
+                    style="cursor: grab"
+                  />
+                  <strong>
+                    {{ COLUMN_META[id as any]?.label ?? id }}
+                  </strong>
+                </div>
+                <small class="layout-id">
+                  {{ id }}
+                </small>
+                <small
+                  v-if="id === 'preview'"
+                  class="layout-auto"
+                >
+                  自动填充
+                </small>
+                <UFieldGroup v-else>
+                  <UInputNumber
+                    :model-value="columnWidths[id]"
+                    :min="COLUMN_META[id].minPx"
+                    :max="COLUMN_META[id].maxPx"
+                    :step="20"
+                    class="layout-width-input"
+                    @update:model-value="(value) => setColumnWidth(id, value)"
+                  />
+                  <span class="layout-unit">px</span>
+                </UFieldGroup>
+              </div>
+            </VueDraggable>
+          </template>
           <template #footer>
-            <NFlex justify="space-between">
-              <NButton
-                size="small"
-                secondary
+            <div class="layout-footer">
+              <UButton
+                color="neutral"
+                variant="soft"
                 @click="resetLayout"
               >
                 重置顺序和列宽
-              </NButton>
-              <NButton
-                size="small"
-                type="primary"
-                @click="layoutModal = false"
-              >
-                完成
-              </NButton>
-            </NFlex>
+              </UButton>
+              <UButton @click="layoutModal = false"> 完成 </UButton>
+            </div>
           </template>
-        </NModal>
+        </UModal>
 
         <BuilderResourcesModal v-model:show="editor.resourcesModal.value" />
 
@@ -536,78 +502,112 @@ onBeforeRouteLeave(() => {
 
         <BlockPageThemeModal v-model:show="editor.pageThemeModal.value" />
 
-        <NModal
-          v-model:show="editor.publishModal.value"
-          preset="card"
+        <UModal
+          v-model:open="editor.publishModal.value"
           title="发布前检查"
-          style="width: 720px; max-width: 95vw"
-          :auto-focus="false"
+          :ui="{ content: 'sm:max-w-3xl' }"
         >
-          <NFlex vertical>
-            <NText depth="3">
-              配置大小：{{ editor.publishCheckBytes.value }} bytes（后端上限 131072 bytes / 128KB）
-            </NText>
+          <template #body>
+            <div class="publish-checks">
+              <p class="publish-size">
+                配置大小：{{ editor.publishCheckBytes.value }} bytes（后端上限 131072 bytes / 128KB）
+              </p>
 
-            <NAlert
-              v-if="editor.publishCheckIssues.value.length"
-              type="error"
-              :show-icon="true"
-            >
-              <NButton
-                v-for="(issue, idx) in editor.publishCheckIssues.value"
-                :key="`${issue.pageKey}:${issue.blockId}:${issue.fieldPath}:${idx}`"
-                text
-                type="error"
-                class="validation-error-link"
-                @click="focusPublishValidationIssue(issue)"
+              <UAlert
+                v-if="editor.publishCheckIssues.value.length"
+                color="error"
+                icon="i-lucide-circle-x"
+                title="请先解决以下问题"
               >
-                {{ issue.message }}
-              </NButton>
-            </NAlert>
-            <NAlert
-              v-else
-              type="success"
-              :show-icon="true"
-            >
-              校验通过，可以发布
-            </NAlert>
+                <template #description>
+                  <UButton
+                    v-for="(issue, idx) in editor.publishCheckIssues.value"
+                    :key="`${issue.pageKey}:${issue.blockId}:${issue.fieldPath}:${idx}`"
+                    color="error"
+                    variant="link"
+                    class="validation-error-link"
+                    @click="focusPublishValidationIssue(issue)"
+                  >
+                    {{ issue.message }}
+                  </UButton>
+                </template>
+              </UAlert>
+              <UAlert
+                v-else
+                color="success"
+                icon="i-lucide-circle-check"
+                title="校验通过，可以发布"
+              />
 
-            <NAlert
-              v-if="editor.publishCheckWarnings.value.length"
-              type="warning"
-              :show-icon="true"
-            >
-              <div
-                v-for="(it, idx) in editor.publishCheckWarnings.value"
-                :key="idx"
+              <UAlert
+                v-if="editor.publishCheckWarnings.value.length"
+                color="warning"
+                icon="i-lucide-triangle-alert"
+                title="发布提醒"
               >
-                {{ it }}
-              </div>
-            </NAlert>
-            <NAlert
-              v-if="editor.publishError.value"
-              type="error"
-              :show-icon="true"
-            >
-              {{ editor.publishError.value }}
-            </NAlert>
-          </NFlex>
+                <template #description>
+                  <div
+                    v-for="(it, idx) in editor.publishCheckWarnings.value"
+                    :key="idx"
+                  >
+                    {{ it }}
+                  </div>
+                </template>
+              </UAlert>
+              <UAlert
+                v-if="editor.publishError.value"
+                color="error"
+                icon="i-lucide-circle-x"
+                :title="editor.publishError.value"
+              />
+            </div>
+          </template>
           <template #footer>
-            <NFlex justify="end">
-              <NButton @click="editor.publishModal.value = false"> 取消 </NButton>
-              <NButton
-                type="primary"
+            <div class="modal-actions">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                @click="editor.publishModal.value = false"
+              >
+                取消
+              </UButton>
+              <UButton
                 :disabled="editor.publishCheckIssues.value.length > 0"
                 :loading="editor.isSaving.value"
                 @click="editor.confirmPublish"
               >
                 确认发布
-              </NButton>
-            </NFlex>
+              </UButton>
+            </div>
           </template>
-        </NModal>
+        </UModal>
       </template>
-    </NSpin>
+    </div>
+
+    <UModal
+      v-model:open="leaveModal"
+      title="离开编辑器"
+      description="修改已保存在本机，但尚未同步到服务器。离开后仍可在当前浏览器恢复。"
+      @update:open="(open) => !open && finishLeave(false)"
+    >
+      <template #footer>
+        <div class="modal-actions">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="finishLeave(false)"
+          >
+            继续编辑
+          </UButton>
+          <UButton
+            color="error"
+            @click="finishLeave(true)"
+          >
+            离开
+          </UButton>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
 
@@ -636,10 +636,6 @@ onBeforeRouteLeave(() => {
   border: 0;
 }
 
-.user-page-builder :deep(.n-button .n-button__content) {
-  gap: 6px;
-}
-
 .user-page-builder {
   height: calc(100dvh - var(--vtsuru-header-height));
   width: 100%;
@@ -652,14 +648,6 @@ onBeforeRouteLeave(() => {
 }
 
 .builder-spin {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.builder-spin :deep(.n-spin-content) {
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -685,8 +673,63 @@ onBeforeRouteLeave(() => {
   overflow-x: auto;
 }
 
-.workspace-tabs :deep(.n-button) {
+.workspace-tabs :deep(button) {
   min-width: 72px;
+}
+
+.layout-presets,
+.layout-footer,
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.layout-presets {
+  margin-bottom: 12px;
+}
+
+.layout-footer {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+}
+
+.layout-id,
+.layout-auto,
+.publish-size {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.layout-id {
+  white-space: nowrap;
+}
+
+.layout-auto {
+  width: 112px;
+  text-align: center;
+}
+
+.layout-width-input {
+  width: 88px;
+}
+
+.layout-unit {
+  display: grid;
+  padding-inline: 10px;
+  color: var(--vtsuru-fg-muted);
+  background: var(--vtsuru-bg-muted);
+  border: 1px solid var(--vtsuru-border);
+  place-items: center;
+}
+
+.publish-checks {
+  display: grid;
+  gap: 12px;
 }
 
 .builder-pane-grid {

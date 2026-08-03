@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { DocumentText24Regular } from '@vicons/fluent'
-import { NButton, NIcon } from 'naive-ui'
 import { ref } from 'vue'
 
 import AccountAccessPanel from './settings/AccountAccessPanel.vue'
@@ -29,14 +27,15 @@ defineExpose({ reset })
         <span class="point-settings__eyebrow">ACCOUNT</span>
         <h1>账户设置</h1>
       </div>
-      <NButton
-        quaternary
-        size="small"
+      <UButton
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        icon="i-lucide-file-text"
         @click="showAgreement = true"
       >
-        <template #icon><NIcon :component="DocumentText24Regular" /></template>
         用户协议
-      </NButton>
+      </UButton>
     </header>
 
     <div class="point-settings__sections">
@@ -47,6 +46,6 @@ defineExpose({ reset })
       <AccountAccessPanel ref="accountPanel" />
     </div>
 
-    <AgreementDialog v-model:show="showAgreement" />
+    <AgreementDialog v-model:open="showAgreement" />
   </div>
 </template>

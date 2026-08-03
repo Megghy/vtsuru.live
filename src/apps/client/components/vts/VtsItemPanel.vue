@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInput, NSelect, NSwitch, NTabPane, NTabs, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
@@ -98,60 +97,60 @@ function dropPrank(p: VtsPrankBinding) {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="道具管理"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="8"
       >
-        <NButton
+        <UButton
           size="small"
           :loading="refreshing"
           :disabled="!vts.canOperate || refreshing"
           @click="refresh"
         >
           刷新列表
-        </NButton>
-        <NText depth="3">
+        </UButton>
+        <span depth="3">
           {{ vts.canLoadItems == null ? '状态未知' : vts.canLoadItems ? '可操作' : '当前不可操作 (VTS 有弹窗)' }}
-        </NText>
-      </NFlex>
+        </span>
+      </div>
 
-      <NTabs
+      <div
         type="line"
         animated
       >
-        <NTabPane
+        <section
           name="accessories"
           tab="配饰"
         >
-          <NFlex
+          <div
             vertical
             :size="8"
           >
-            <NFlex
+            <div
               align="center"
               :wrap="true"
               :size="8"
             >
-              <NButton
+              <UButton
                 size="small"
                 @click="addAccessory"
               >
                 添加配饰
-              </NButton>
-              <NText depth="3"> 绑定场景中的道具实例，通过透明度切换显隐 </NText>
-            </NFlex>
-            <NDivider style="margin: 4px 0" />
-            <NFlex
+              </UButton>
+              <span depth="3"> 绑定场景中的道具实例，通过透明度切换显隐 </span>
+            </div>
+            <USeparator style="margin: 4px 0" />
+            <div
               v-for="acc in vts.accessories"
               :key="acc.id"
               align="center"
@@ -159,67 +158,68 @@ function dropPrank(p: VtsPrankBinding) {
               :wrap="true"
               :size="12"
             >
-              <NFlex
+              <div
                 align="center"
                 :wrap="true"
                 :size="12"
               >
-                <NInput
-                  v-model:value="acc.name"
+                <UInput
+                  v-model="acc.name"
                   placeholder="名称"
                   style="width: 140px"
                   @blur="saveAccessory({ ...acc })"
                 />
-                <NSelect
+                <USelectMenu
                   style="width: 380px"
-                  :options="instanceOptions"
+                  :items="instanceOptions"
                   :value="acc.itemInstanceID"
                   placeholder="选择场景中的道具实例"
                   @update:value="(val) => saveAccessory({ ...acc, itemInstanceID: val as string })"
+                  value-key="value"
                 />
-                <NSwitch
-                  :value="acc.visible"
+                <USwitch
+                  :model-value="acc.visible"
                   :disabled="!vts.canOperate"
-                  @update:value="(val) => toggleAccessory(acc, val)"
+                  @update:model-value="(val) => toggleAccessory(acc, val)"
                 >
-                  <template #checked> 显示 </template>
-                  <template #unchecked> 隐藏 </template>
-                </NSwitch>
-              </NFlex>
-              <NButton
+                  <template v-if="false"> 显示 </template>
+                  <template v-if="false"> 隐藏 </template>
+                </USwitch>
+              </div>
+              <UButton
                 size="small"
-                type="error"
+                color="error"
                 @click="vts.removeAccessory(acc.id)"
               >
                 删除
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
+              </UButton>
+            </div>
+          </div>
+        </section>
 
-        <NTabPane
+        <section
           name="pranks"
           tab="整活"
         >
-          <NFlex
+          <div
             vertical
             :size="8"
           >
-            <NFlex
+            <div
               align="center"
               :wrap="true"
               :size="8"
             >
-              <NButton
+              <UButton
                 size="small"
                 @click="addPrank"
               >
                 添加整活
-              </NButton>
-              <NText depth="3"> 通过文件掉落或触发热键来丢道具 </NText>
-            </NFlex>
-            <NDivider style="margin: 4px 0" />
-            <NFlex
+              </UButton>
+              <span depth="3"> 通过文件掉落或触发热键来丢道具 </span>
+            </div>
+            <USeparator style="margin: 4px 0" />
+            <div
               v-for="p in vts.pranks"
               :key="p.id"
               align="center"
@@ -227,73 +227,75 @@ function dropPrank(p: VtsPrankBinding) {
               :wrap="true"
               :size="12"
             >
-              <NFlex
+              <div
                 align="center"
                 :wrap="true"
                 :size="12"
               >
-                <NInput
-                  v-model:value="p.name"
+                <UInput
+                  v-model="p.name"
                   placeholder="名称"
                   style="width: 140px"
                   @blur="savePrank({ ...p })"
                 />
-                <NSelect
+                <USelectMenu
                   style="width: 360px"
-                  :options="fileOptions"
+                  :items="fileOptions"
                   :value="p.fileName"
                   placeholder="选择道具文件"
                   @update:value="(val) => savePrank({ ...p, fileName: val as string })"
+                  value-key="value"
                 />
-                <NSelect
+                <USelectMenu
                   style="width: 360px"
-                  :options="hotkeyOptions"
+                  :items="hotkeyOptions"
                   :value="p.hotkeyID"
                   placeholder="或绑定热键 (可选)"
                   clearable
                   @update:value="
                     (val) => savePrank({ ...p, hotkeyID: typeof val === 'string' && val ? val : undefined })
                   "
+                  value-key="value"
                 />
-              </NFlex>
-              <NFlex
+              </div>
+              <div
                 :wrap="true"
                 :size="8"
               >
-                <NButton
+                <UButton
                   size="small"
                   :disabled="!vts.canOperate || !p.fileName"
                   @click="loadPrank(p)"
                 >
                   加载
-                </NButton>
-                <NButton
+                </UButton>
+                <UButton
                   size="small"
                   :disabled="!vts.canOperate || !p.fileName"
                   @click="unloadPrank(p)"
                 >
                   卸载
-                </NButton>
-                <NButton
+                </UButton>
+                <UButton
                   size="small"
-                  type="primary"
+                  color="primary"
                   :disabled="!vts.canOperate"
                   @click="dropPrank(p)"
                 >
                   掉落
-                </NButton>
-                <NButton
+                </UButton>
+                <UButton
                   size="small"
-                  type="error"
+                  color="error"
                   @click="vts.removePrank(p.id)"
                 >
                   删除
-                </NButton>
-              </NFlex>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
-      </NTabs>
-    </NFlex>
-  </NCard>
+                </UButton>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </UCard>
 </template>

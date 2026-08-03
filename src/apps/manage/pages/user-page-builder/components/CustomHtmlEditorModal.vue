@@ -1,30 +1,4 @@
 <script setup lang="ts">
-import {
-  CloudUploadOutline,
-  CodeWorkingOutline,
-  DesktopOutline,
-  FolderOpenOutline,
-  MoonOutline,
-  PhonePortraitOutline,
-  SunnyOutline,
-} from '@vicons/ionicons5'
-import { watchDebounced } from '@vueuse/core'
-import {
-  NButton,
-  NButtonGroup,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NModal,
-  NScrollbar,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useDialog,
-} from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
 
 import type { APIFileModel } from '@/api/api-models'
@@ -62,7 +36,6 @@ const show = defineModel<boolean>('show', { required: true })
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const dialog = useDialog()
 const draft = ref<CustomHtmlProps>(deepCloneJson(normalizeCustomHtmlProps(props.block.props)))
 const initialSnapshot = ref('')
 const activeLanguage = ref<'html' | 'css'>('html')
@@ -197,15 +170,7 @@ function closeEditor() {
     show.value = false
     return
   }
-  dialog.warning({
-    title: '放弃未应用修改',
-    content: '代码工作区中的修改尚未应用到区块。',
-    positiveText: '放弃修改',
-    negativeText: '继续编辑',
-    onPositiveClick: () => {
-      show.value = false
-    },
-  })
+  if (window.confirm('代码工作区中的修改尚未应用到区块。确定放弃修改吗？')) show.value = false
 }
 
 function updateShow(value: boolean) {
@@ -251,288 +216,246 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
 </script>
 
 <template>
-  <NModal
-    :show="show"
-    preset="card"
+  <UModal
+    :open="show"
     title="自定义 HTML/CSS"
     class="custom-code-modal"
     :style="{ width: 'min(1600px, 96vw)', height: 'min(920px, 94dvh)' }"
-    content-style="padding: 0; min-height: 0; overflow: hidden"
-    :auto-focus="false"
-    :mask-closable="false"
-    @update:show="updateShow"
+    :dismissible="false"
+    @update:open="updateShow"
   >
-    <template #header-extra>
-      <NFlex
-        align="center"
-        :wrap="false"
-        size="small"
-      >
-        <NTag
+    <template #actions>
+      <div class="builder-row">
+        <UBadge
           v-if="codeIssues.length"
           type="error"
-          size="small"
+          size="sm"
         >
           {{ codeIssues.length }} 个问题
-        </NTag>
-        <NButton
-          size="small"
-          secondary
+        </UBadge>
+        <UButton
+          size="sm"
+          variant="soft"
           @click="closeEditor"
         >
           取消
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
+        </UButton>
+        <UButton
+          size="sm"
+          color="primary"
           @click="applyChanges"
         >
           应用
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
     </template>
 
-    <div
-      class="workspace"
-      :class="{ 'resources-hidden': !resourcesVisible }"
-    >
-      <aside
-        v-if="resourcesVisible"
-        class="resources-pane"
+    <template #body
+      ><div
+        class="workspace"
+        :class="{ 'resources-hidden': !resourcesVisible }"
       >
-        <NFlex
-          vertical
-          size="small"
-          class="resources-toolbar"
+        <aside
+          v-if="resourcesVisible"
+          class="resources-pane"
         >
-          <NFlex
-            justify="space-between"
-            align="center"
-            :wrap="false"
-          >
-            <NText strong> 图片资源 </NText>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  secondary
-                  size="small"
+          <div class="builder-stack resources-toolbar">
+            <div class="builder-row">
+              <span class="builder-text"> 图片资源 </span>
+              <UTooltip>
+                <UButton
+                  square
+                  variant="soft"
+                  size="sm"
                   :loading="uploading"
                   aria-label="上传图片"
                   @click="uploadInput?.click()"
                 >
                   <template #icon>
-                    <NIcon><CloudUploadOutline /></NIcon>
+                    <UIcon name="i-lucide-cloud-upload" />
                   </template>
-                </NButton>
-              </template>
-              上传图片
-            </NTooltip>
-          </NFlex>
-          <NInput
-            v-model:value="resourceSearch"
-            size="small"
-            clearable
-            placeholder="搜索文件"
-          />
-          <input
-            ref="uploadInput"
-            type="file"
-            accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
-            hidden
-            @change="handleUpload"
-          />
-        </NFlex>
-        <NScrollbar class="resource-scroll">
-          <div
-            v-if="filteredResources.length"
-            class="resource-list"
-          >
-            <button
-              v-for="file in filteredResources"
-              :key="file.id"
-              type="button"
-              class="resource-row"
-              @click="attachResource(file)"
-            >
-              <img
-                :src="file.path"
-                alt=""
-                loading="lazy"
-                decoding="async"
-                referrerpolicy="no-referrer"
-              />
-              <span class="resource-copy">
-                <strong>{{ file.name || `资源 #${file.id}` }}</strong>
-                <small>#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small>
-              </span>
-            </button>
+                </UButton>
+                <template #content> 上传图片 </template></UTooltip
+              >
+            </div>
+            <UInput
+              v-model="resourceSearch"
+              size="sm"
+              clearable
+              placeholder="搜索文件"
+            />
+            <input
+              ref="uploadInput"
+              type="file"
+              accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
+              hidden
+              @change="handleUpload"
+            />
           </div>
-          <NEmpty
-            v-else-if="!resources.isLoading.value"
-            size="small"
-            description="没有可用图片"
-          />
-        </NScrollbar>
-      </aside>
+          <div class="builder-scroll resource-scroll">
+            <div
+              v-if="filteredResources.length"
+              class="resource-list"
+            >
+              <button
+                v-for="file in filteredResources"
+                :key="file.id"
+                type="button"
+                class="resource-row"
+                @click="attachResource(file)"
+              >
+                <img
+                  :src="file.path"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  referrerpolicy="no-referrer"
+                />
+                <span class="resource-copy">
+                  <strong>{{ file.name || `资源 #${file.id}` }}</strong>
+                  <small>#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small>
+                </span>
+              </button>
+            </div>
+            <UEmpty
+              v-else-if="!resources.isLoading.value"
+              size="small"
+              description="没有可用图片"
+            />
+          </div>
+        </aside>
 
-      <section class="code-pane">
-        <div class="pane-toolbar">
-          <NFlex
-            justify="space-between"
-            align="center"
-            :wrap="false"
-          >
-            <NTabs
-              v-model:value="activeLanguage"
-              type="segment"
-              size="small"
-              style="width: 190px"
-            >
-              <NTabPane
-                name="html"
-                tab="HTML"
+        <section class="code-pane">
+          <div class="pane-toolbar">
+            <div class="builder-row">
+              <UTabs
+                v-model="activeLanguage"
+                :items="[
+                  { label: 'HTML', value: 'html' },
+                  { label: 'CSS', value: 'css' },
+                ]"
+                size="sm"
+                class="language-tabs"
               />
-              <NTabPane
-                name="css"
-                tab="CSS"
-              />
-            </NTabs>
-            <NFlex
-              :wrap="false"
-              size="small"
-            >
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    circle
-                    secondary
-                    size="small"
+              <div class="builder-row">
+                <UTooltip>
+                  <UButton
+                    square
+                    variant="soft"
+                    size="sm"
                     aria-label="切换资源栏"
                     @click="resourcesVisible = !resourcesVisible"
                   >
                     <template #icon>
-                      <NIcon><FolderOpenOutline /></NIcon>
+                      <UIcon name="i-lucide-folder-open" />
                     </template>
-                  </NButton>
-                </template>
-                {{ resourcesVisible ? '收起资源栏' : '展开资源栏' }}
-              </NTooltip>
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    circle
-                    secondary
-                    size="small"
+                  </UButton>
+
+                  <template #content>{{ resourcesVisible ? '收起资源栏' : '展开资源栏' }}</template>
+                </UTooltip>
+                <UTooltip>
+                  <UButton
+                    square
+                    variant="soft"
+                    size="sm"
                     aria-label="格式化代码"
                     @click="codeEditor?.formatDocument()"
                   >
                     <template #icon>
-                      <NIcon><CodeWorkingOutline /></NIcon>
+                      <UIcon name="i-lucide-code-2" />
                     </template>
-                  </NButton>
-                </template>
-                格式化代码
-              </NTooltip>
-            </NFlex>
-          </NFlex>
-          <NText
-            depth="3"
-            class="byte-count"
-          >
-            HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes
-          </NText>
-        </div>
-        <CustomHtmlCodeEditor
-          ref="codeEditor"
-          :html="draft.html"
-          :css="draft.css"
-          :active-language="activeLanguage"
-          :theme="monacoTheme"
-          :assets="draft.assets"
-          :resources="imageResources"
-          :issues="codeIssues"
-          @update:html="draft.html = $event"
-          @update:css="draft.css = $event"
-        />
-      </section>
+                  </UButton>
+                  <template #content> 格式化代码 </template></UTooltip
+                >
+              </div>
+            </div>
+            <span class="builder-text byte-count">
+              HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }}
+              bytes
+            </span>
+          </div>
+          <CustomHtmlCodeEditor
+            ref="codeEditor"
+            :html="draft.html"
+            :css="draft.css"
+            :active-language="activeLanguage"
+            :theme="monacoTheme"
+            :assets="draft.assets"
+            :resources="imageResources"
+            :issues="codeIssues"
+            @update:html="draft.html = $event"
+            @update:css="draft.css = $event"
+          />
+        </section>
 
-      <section class="preview-pane">
-        <div class="pane-toolbar preview-toolbar">
-          <NText strong> 实时预览 </NText>
-          <NFlex
-            :wrap="false"
-            size="small"
-          >
-            <NButtonGroup size="small">
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    :type="previewDevice === 'desktop' ? 'primary' : 'default'"
-                    secondary
+        <section class="preview-pane">
+          <div class="pane-toolbar preview-toolbar">
+            <span class="builder-text"> 实时预览 </span>
+            <div class="builder-row">
+              <UButtonGroup size="small">
+                <UTooltip>
+                  <UButton
+                    :color="previewDevice === 'desktop' ? 'primary' : 'default'"
+                    variant="soft"
                     aria-label="桌面预览"
                     @click="previewDevice = 'desktop'"
                   >
                     <template #icon>
-                      <NIcon><DesktopOutline /></NIcon>
+                      <UIcon name="i-lucide-monitor" />
                     </template>
-                  </NButton>
-                </template>
-                桌面预览
-              </NTooltip>
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    :type="previewDevice === 'mobile' ? 'primary' : 'default'"
-                    secondary
+                  </UButton>
+                  <template #content> 桌面预览 </template></UTooltip
+                >
+                <UTooltip>
+                  <UButton
+                    :color="previewDevice === 'mobile' ? 'primary' : 'default'"
+                    variant="soft"
                     aria-label="移动预览"
                     @click="previewDevice = 'mobile'"
                   >
                     <template #icon>
-                      <NIcon><PhonePortraitOutline /></NIcon>
+                      <UIcon name="i-lucide-smartphone" />
                     </template>
-                  </NButton>
-                </template>
-                移动预览
-              </NTooltip>
-            </NButtonGroup>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  secondary
-                  size="small"
+                  </UButton>
+                  <template #content> 移动预览 </template></UTooltip
+                >
+              </UButtonGroup>
+              <UTooltip>
+                <UButton
+                  square
+                  variant="soft"
+                  size="sm"
                   :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
                   @click="previewDark = !previewDark"
                 >
                   <template #icon>
-                    <NIcon><SunnyOutline v-if="previewDark" /><MoonOutline v-else /></NIcon>
+                    <UIcon :name="previewDark ? 'i-lucide-sun' : 'i-lucide-moon'" />
                   </template>
-                </NButton>
-              </template>
-              {{ previewDark ? '亮色预览' : '暗色预览' }}
-            </NTooltip>
-          </NFlex>
-        </div>
-        <NScrollbar class="preview-scroll">
-          <div
-            class="preview-stage"
-            :class="{ dark: previewDark }"
-          >
-            <div
-              class="preview-content"
-              :style="previewStyle"
-            >
-              <CustomHtmlBlock
-                :block-props="draft"
-                :theme="previewTheme"
-              />
+                </UButton>
+
+                <template #content>{{ previewDark ? '亮色预览' : '暗色预览' }}</template>
+              </UTooltip>
             </div>
           </div>
-        </NScrollbar>
-      </section>
-    </div>
-  </NModal>
+          <div class="builder-scroll preview-scroll">
+            <div
+              class="preview-stage"
+              :class="{ dark: previewDark }"
+            >
+              <div
+                class="preview-content"
+                :style="previewStyle"
+              >
+                <CustomHtmlBlock
+                  :block-props="draft"
+                  :theme="previewTheme"
+                />
+              </div>
+            </div>
+          </div>
+        </section></div
+    ></template>
+  </UModal>
 </template>
 
 <style scoped>

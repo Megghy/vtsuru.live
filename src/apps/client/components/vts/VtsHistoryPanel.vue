@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NDataTable, NFlex, NTag } from 'naive-ui'
-import { computed, h } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+import { computed, h, resolveComponent } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsOpRecord } from '@/apps/client/store/useVtsStore'
@@ -21,55 +21,53 @@ const replayableKinds = new Set([
   'panicResetPhysics',
 ])
 
-const columns = computed(() => [
+const columns = computed<TableColumn<VtsOpRecord>[]>(() => [
   {
-    title: '时间',
-    key: 'ts',
-    width: 100,
-    render: (row: VtsOpRecord) => new Date(row.ts).toLocaleTimeString(),
+    header: '时间',
+    accessorKey: 'ts',
+    cell: ({ row }) => new Date(row.original.ts).toLocaleTimeString(),
   },
   {
-    title: '操作',
-    key: 'kind',
-    width: 120,
+    header: '操作',
+    accessorKey: 'kind',
   },
   {
-    title: '状态',
-    key: 'ok',
-    width: 80,
-    render: (row: VtsOpRecord) =>
-      h(NTag, { type: row.ok ? 'success' : 'error', size: 'small' }, { default: () => (row.ok ? 'OK' : '失败') }),
+    header: '状态',
+    accessorKey: 'ok',
+    cell: ({ row }) =>
+      h(
+        resolveComponent('UBadge'),
+        { color: row.original.ok ? 'success' : 'error', size: 'sm' },
+        { default: () => (row.original.ok ? 'OK' : '失败') },
+      ),
   },
   {
-    title: '耗时',
-    key: 'durationMs',
-    width: 80,
-    render: (row: VtsOpRecord) => (row.durationMs != null ? `${row.durationMs}ms` : '-'),
+    header: '耗时',
+    accessorKey: 'durationMs',
+    cell: ({ row }) => (row.original.durationMs != null ? `${row.original.durationMs}ms` : '-'),
   },
   {
-    title: '详情',
-    key: 'detail',
-    ellipsis: { tooltip: true as const },
-    render: (row: VtsOpRecord) => row.detail ?? '',
+    header: '详情',
+    accessorKey: 'detail',
+    cell: ({ row }) => row.original.detail ?? '',
   },
   {
-    title: '错误',
-    key: 'error',
-    ellipsis: { tooltip: true as const },
-    render: (row: VtsOpRecord) => row.error ?? '',
+    header: '错误',
+    accessorKey: 'error',
+    cell: ({ row }) => row.original.error ?? '',
   },
   {
-    title: '',
-    key: 'op',
-    width: 80,
-    render: (row: VtsOpRecord) => {
-      if (!row.payload || !replayableKinds.has(row.kind)) return ''
+    id: 'op',
+    header: '',
+    cell: ({ row }) => {
+      const record = row.original
+      if (!record.payload || !replayableKinds.has(record.kind)) return ''
       return h(
-        NButton,
+        resolveComponent('UButton'),
         {
-          size: 'tiny',
+          size: 'xs',
           disabled: !vts.canOperate,
-          onClick: () => run(() => vts.replayHistoryRecord(row.id), '已回放'),
+          onClick: () => run(() => vts.replayHistoryRecord(record.id), '已回放'),
         },
         { default: () => '回放' },
       )
@@ -79,31 +77,31 @@ const columns = computed(() => [
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="操作记录"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NFlex justify="end">
-        <NButton
+      <div justify="end">
+        <UButton
           size="small"
-          type="error"
+          color="error"
           @click="run(() => vts.clearHistory(), '已清空')"
         >
           清空
-        </NButton>
-      </NFlex>
-      <NDataTable
+        </UButton>
+      </div>
+      <UTable
         size="small"
         :columns="columns"
         :data="vts.history"
-        :pagination="{ pageSize: 10 }"
+        :pagination="{ pageIndex: 1, pageSize: 10 }"
         :bordered="false"
       />
-    </NFlex>
-  </NCard>
+    </div>
+  </UCard>
 </template>

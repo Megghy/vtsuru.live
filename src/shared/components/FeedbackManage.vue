@@ -1,22 +1,4 @@
 <script setup lang="ts">
-import { Add24Regular, ArrowClockwise24Regular, Image24Regular } from '@vicons/fluent'
-import type { UploadFileInfo } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NModal,
-  NSelect,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NUpload,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -37,7 +19,7 @@ import SupportTicketListItem from './support-ticket/SupportTicketListItem.vue'
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
+const toast = useToast()
 
 const view = ref<'mine' | 'public'>(isLoggedIn.value ? 'mine' : 'public')
 const tickets = ref<SupportTicketSummary[]>([])
@@ -46,7 +28,7 @@ const loadingList = ref(false)
 const loadingDetail = ref(false)
 const showCreate = ref(false)
 const creating = ref(false)
-const fileList = ref<UploadFileInfo[]>([])
+const files = ref<File[]>([])
 const draft = ref<CreateSupportTicketRequest>({
   title: '',
   content: '',
@@ -65,27 +47,30 @@ const editable = computed(
 )
 const isDetailRoute = computed(() => selectedId.value !== undefined)
 const showPublicCards = computed(() => view.value === 'public' && !isDetailRoute.value)
-
 const typeOptions = [
   { label: '产品问题', value: SupportTicketType.Bug },
   { label: '功能建议', value: SupportTicketType.Feature },
   { label: '账号问题', value: SupportTicketType.Account },
   { label: '其他', value: SupportTicketType.Other },
 ]
+const viewTabs = [
+  { label: '我的工单', value: 'mine' },
+  { label: '公开工单', value: 'public' },
+]
 
 async function loadTickets() {
   loadingList.value = true
   try {
     tickets.value = (view.value === 'mine' ? await getMySupportTickets() : await getPublicSupportTickets()).toSorted(
-      (a, b) => {
-        if (a.status === SupportTicketStatus.Resolved && b.status !== SupportTicketStatus.Resolved) return 1
-        if (a.status !== SupportTicketStatus.Resolved && b.status === SupportTicketStatus.Resolved) return -1
-        return b.lastMessageTime - a.lastMessageTime
+      (left, right) => {
+        if (left.status === SupportTicketStatus.Resolved && right.status !== SupportTicketStatus.Resolved) return 1
+        if (left.status !== SupportTicketStatus.Resolved && right.status === SupportTicketStatus.Resolved) return -1
+        return right.lastMessageTime - left.lastMessageTime
       },
     )
   } catch (error) {
     tickets.value = []
-    message.error((error as Error).message)
+    toast.add({ title: (error as Error).message, color: 'error' })
   } finally {
     loadingList.value = false
   }
@@ -101,7 +86,7 @@ async function loadDetail() {
     selectedTicket.value = await getSupportTicket(selectedId.value)
   } catch (error) {
     selectedTicket.value = undefined
-    message.error((error as Error).message)
+    toast.add({ title: (error as Error).message, color: 'error' })
   } finally {
     loadingDetail.value = false
   }
@@ -124,28 +109,34 @@ function resetDraft() {
     emailOnStaffReply: false,
     imageFileIds: [],
   }
-  fileList.value = []
+  files.value = []
 }
 
-function beforeUpload({ file }: { file: UploadFileInfo }) {
-  if (!file.file?.type.startsWith('image/')) {
-    message.error('只能上传图片文件')
-    return false
+function selectFiles(event: Event) {
+  const input = event.target as HTMLInputElement
+  const selectedFiles = [...(input.files ?? [])]
+  const invalidFile = selectedFiles.find((file) => !file.type.startsWith('image/'))
+  if (invalidFile) {
+    toast.add({ title: '只能上传图片文件', color: 'error' })
+    input.value = ''
+    return
   }
-  return true
+  files.value = [...files.value, ...selectedFiles].slice(0, 5)
+  input.value = ''
 }
 
 async function submitTicket() {
   const title = draft.value.title.trim()
   const content = draft.value.content.trim()
   if (!title || !content) {
-    message.error('请填写标题和详细内容')
+    toast.add({ title: '请填写标题和详细内容', color: 'error' })
     return
   }
   creating.value = true
   try {
-    const files = fileList.value.map((item) => item.file).filter((file): file is File => Boolean(file))
-    const uploaded = files.length ? await uploadFiles(files, UserFileTypes.Image, UserFileLocation.Local) : []
+    const uploaded = files.value.length
+      ? await uploadFiles(files.value, UserFileTypes.Image, UserFileLocation.Local)
+      : []
     const ticket = await createSupportTicket({
       ...draft.value,
       title,
@@ -157,9 +148,9 @@ async function submitTicket() {
     view.value = 'mine'
     await loadTickets()
     await openTicket(ticket.id)
-    message.success(`工单 #${ticket.id} 已创建`)
+    toast.add({ title: `工单 #${ticket.id} 已创建`, color: 'success' })
   } catch (error) {
-    message.error((error as Error).message)
+    toast.add({ title: (error as Error).message, color: 'error' })
   } finally {
     creating.value = false
   }
@@ -186,9 +177,7 @@ watch(selectedId, loadDetail, { immediate: true })
 watch(
   () => route.query.view,
   (routeView) => {
-    if (routeView === 'public' || (routeView === 'mine' && isLoggedIn.value)) {
-      view.value = routeView
-    }
+    if (routeView === 'public' || (routeView === 'mine' && isLoggedIn.value)) view.value = routeView
   },
   { immediate: true },
 )
@@ -197,51 +186,36 @@ watch(
 <template>
   <div class="ticket-page">
     <header class="ticket-page__toolbar">
-      <NTabs
+      <UTabs
         v-if="isLoggedIn"
-        v-model:value="view"
-        type="segment"
-        size="small"
+        v-model="view"
+        :items="viewTabs"
+        :content="false"
         class="ticket-page__tabs"
-      >
-        <NTabPane
-          name="mine"
-          tab="我的工单"
-        />
-        <NTabPane
-          name="public"
-          tab="公开工单"
-        />
-      </NTabs>
+      />
       <strong
         v-else
         class="ticket-page__title"
         >公开工单</strong
       >
-      <NButton
+      <UButton
         v-if="isLoggedIn"
-        type="primary"
-        size="small"
+        color="primary"
+        size="sm"
+        icon="i-lucide-plus"
         @click="showCreate = true"
+        >新建工单</UButton
       >
-        <template #icon>
-          <NIcon :component="Add24Regular" />
-        </template>
-        新建工单
-      </NButton>
-      <NButton
+      <UButton
         v-else
-        quaternary
-        circle
-        size="small"
-        title="刷新"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        icon="i-lucide-refresh-cw"
+        aria-label="刷新"
         :loading="loadingList"
         @click="loadTickets"
-      >
-        <template #icon>
-          <NIcon :component="ArrowClockwise24Regular" />
-        </template>
-      </NButton>
+      />
     </header>
 
     <div
@@ -252,13 +226,17 @@ watch(
         v-if="loadingList && !tickets.length"
         class="public-ticket-list__state"
       >
-        <NSpin size="small" />
+        <UIcon
+          class="ticket-page__spinner"
+          name="i-lucide-loader-circle"
+        />
       </div>
-      <NEmpty
+      <div
         v-else-if="!tickets.length"
         class="public-ticket-list__state"
-        description="暂无公开工单"
-      />
+      >
+        <UIcon name="i-lucide-message-square-text" /><span>暂无公开工单</span>
+      </div>
       <div
         v-else
         class="public-ticket-list__grid"
@@ -279,31 +257,32 @@ watch(
     >
       <aside class="ticket-list">
         <div class="ticket-list__header">
-          <span>{{ view === 'mine' ? '我的工单' : '公开工单' }}</span>
-          <NButton
-            quaternary
-            circle
-            size="small"
-            title="刷新"
+          <span>我的工单</span>
+          <UButton
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            icon="i-lucide-refresh-cw"
+            aria-label="刷新"
             :loading="loadingList"
             @click="loadTickets"
-          >
-            <template #icon>
-              <NIcon :component="ArrowClockwise24Regular" />
-            </template>
-          </NButton>
+          />
         </div>
         <div
           v-if="loadingList && !tickets.length"
           class="ticket-list__state"
         >
-          <NSpin size="small" />
+          <UIcon
+            class="ticket-page__spinner"
+            name="i-lucide-loader-circle"
+          />
         </div>
-        <NEmpty
+        <div
           v-else-if="!tickets.length"
           class="ticket-list__state"
-          :description="view === 'mine' ? '还没有工单' : '暂无公开工单'"
-        />
+        >
+          <UIcon name="i-lucide-message-square-text" /><span>还没有工单</span>
+        </div>
         <SupportTicketListItem
           v-for="ticket in tickets"
           v-else
@@ -313,7 +292,6 @@ watch(
           @click="openTicket(ticket.id)"
         />
       </aside>
-
       <SupportTicketDetailView
         class="ticket-workspace__detail"
         :ticket="selectedTicket"
@@ -334,91 +312,92 @@ watch(
       @refresh="refreshDetail"
     />
 
-    <NModal
-      v-model:show="showCreate"
-      preset="card"
+    <UModal
+      v-model:open="showCreate"
       title="新建工单"
-      class="ticket-create-modal"
-      :mask-closable="!creating"
-      @after-leave="resetDraft"
+      :dismissible="!creating"
+      @after:leave="resetDraft"
     >
-      <NForm
-        label-placement="top"
-        size="small"
-      >
-        <NFormItem
-          label="类型"
-          required
+      <template #body>
+        <form
+          class="ticket-create"
+          @submit.prevent="submitTicket"
         >
-          <NSelect
-            v-model:value="draft.type"
-            :options="typeOptions"
-          />
-        </NFormItem>
-        <NFormItem
-          label="标题"
-          required
-        >
-          <NInput
-            v-model:value="draft.title"
-            maxlength="160"
-            show-count
-            placeholder="用一句话概括问题"
-          />
-        </NFormItem>
-        <NFormItem
-          label="详细内容"
-          required
-        >
-          <NInput
-            v-model:value="draft.content"
-            type="textarea"
-            :autosize="{ minRows: 5, maxRows: 10 }"
-            maxlength="5000"
-            show-count
-            placeholder="说明发生了什么、如何复现，以及你期望的结果"
-          />
-        </NFormItem>
-        <NFormItem label="图片">
-          <NUpload
-            v-model:file-list="fileList"
-            accept="image/*"
-            list-type="image-card"
-            :default-upload="false"
-            :max="5"
-            multiple
-            :on-before-upload="beforeUpload"
+          <UFormField
+            label="类型"
+            required
           >
-            <NIcon
-              :component="Image24Regular"
-              size="24"
+            <USelect
+              v-model="draft.type"
+              :items="typeOptions"
             />
-          </NUpload>
-        </NFormItem>
-        <div class="ticket-create__preferences">
-          <NCheckbox v-model:checked="draft.isPublic"> 公开此工单 </NCheckbox>
-          <NCheckbox v-model:checked="draft.emailOnStaffReply"> 站长回复时发送邮件 </NCheckbox>
-        </div>
-      </NForm>
+          </UFormField>
+          <UFormField
+            label="标题"
+            required
+          >
+            <UInput
+              v-model="draft.title"
+              maxlength="160"
+              placeholder="用一句话概括问题"
+            />
+          </UFormField>
+          <UFormField
+            label="详细内容"
+            required
+          >
+            <UTextarea
+              v-model="draft.content"
+              :rows="6"
+              :maxrows="10"
+              maxlength="5000"
+              placeholder="说明发生了什么、如何复现，以及你期望的结果"
+            />
+          </UFormField>
+          <UFormField label="图片">
+            <div class="ticket-file-picker">
+              <UButton
+                as="label"
+                color="neutral"
+                variant="soft"
+                icon="i-lucide-image-plus"
+              >
+                选择图片
+                <input
+                  accept="image/*"
+                  multiple
+                  type="file"
+                  @change="selectFiles"
+                />
+              </UButton>
+              <span>{{ files.length ? `已选 ${files.length} 张图片` : '最多 5 张图片' }}</span>
+            </div>
+          </UFormField>
+          <div class="ticket-create__preferences">
+            <UCheckbox v-model="draft.isPublic">公开此工单</UCheckbox>
+            <UCheckbox v-model="draft.emailOnStaffReply">站长回复时发送邮件</UCheckbox>
+          </div>
+        </form>
+      </template>
       <template #footer>
         <div class="ticket-create__footer">
-          <NButton
+          <UButton
+            color="neutral"
+            variant="ghost"
             :disabled="creating"
             @click="showCreate = false"
+            >取消</UButton
           >
-            取消
-          </NButton>
-          <NButton
-            type="primary"
+          <UButton
+            color="primary"
             :loading="creating"
             :disabled="!draft.title.trim() || !draft.content.trim()"
             @click="submitTicket"
+            >创建工单</UButton
           >
-            创建工单
-          </NButton>
         </div>
       </template>
-    </NModal>
+    </UModal>
   </div>
 </template>
 
@@ -440,6 +419,9 @@ watch(
 .ticket-page__tabs {
   width: 220px;
 }
+.ticket-page__spinner {
+  animation: spin 0.8s linear infinite;
+}
 .public-ticket-list {
   min-height: 320px;
 }
@@ -448,12 +430,19 @@ watch(
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 12px;
 }
-.public-ticket-list__state {
+.public-ticket-list__state,
+.ticket-list__state {
   display: grid;
-  min-height: 320px;
   place-content: center;
+  gap: 10px;
+  color: var(--vtsuru-fg-muted);
+  text-align: center;
 }
-.public-ticket-detail {
+.public-ticket-list__state {
+  min-height: 320px;
+}
+.public-ticket-detail,
+.ticket-workspace {
   overflow: hidden;
   border: 1px solid var(--vtsuru-border);
   border-radius: 8px;
@@ -462,10 +451,6 @@ watch(
 .ticket-workspace {
   display: grid;
   grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  background: var(--vtsuru-bg);
 }
 .ticket-list {
   min-width: 0;
@@ -489,23 +474,37 @@ watch(
   font-weight: 600;
 }
 .ticket-list__state {
-  display: grid;
   min-height: 240px;
-  place-content: center;
 }
+.ticket-create,
 .ticket-create__preferences {
   display: grid;
+  gap: 12px;
+}
+.ticket-file-picker {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+.ticket-file-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 .ticket-create__footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
-:global(.ticket-create-modal) {
-  width: min(620px, calc(100vw - 32px));
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
-
 @media (max-width: 760px) {
   .ticket-page__tabs {
     width: 190px;
@@ -513,16 +512,14 @@ watch(
   .public-ticket-list__grid {
     grid-template-columns: 1fr;
   }
-  .public-ticket-detail {
+  .public-ticket-detail,
+  .ticket-workspace {
     border-right: 0;
     border-left: 0;
     border-radius: 0;
   }
   .ticket-workspace {
     display: block;
-    border-right: 0;
-    border-left: 0;
-    border-radius: 0;
   }
   .ticket-list {
     height: calc(100dvh - 150px);

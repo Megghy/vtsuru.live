@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Add20Filled, Delete20Filled, Edit20Filled, Mic20Filled, TextDescription20Filled } from '@vicons/fluent'
-import { NButton, NEmpty, NFlex, NIcon, NInput, NPopconfirm, NTag, NText, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -25,7 +23,10 @@ interface CustomVoice {
   createdAt: string
 }
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const account = useAccount()
 const speechService = useSpeechService()
 const { settings } = speechService
@@ -69,7 +70,7 @@ async function loadCustomVoices() {
       provider.setCustomVoices(resp.data as MimoCustomVoiceInfo[])
     }
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '加载自定义音色失败')
+    feedback('error', error instanceof Error ? error.message : '加载自定义音色失败')
   }
 }
 
@@ -92,10 +93,10 @@ async function deleteCustomVoice(id: number) {
         settings.value.providers.mimo.mimoVoice = '冰糖'
       }
       await deleteVoiceAudio(id)
-      message.success('已删除')
+      feedback('success', '已删除')
     }
   } catch {
-    message.error('删除失败')
+    feedback('error', '删除失败')
   }
 }
 
@@ -174,8 +175,8 @@ watch(
           </p>
         </div>
       </template>
-      <NInput
-        v-model:value="settings.providers.mimo.mimoStyleTag"
+      <UInput
+        v-model="settings.providers.mimo.mimoStyleTag"
         placeholder="(慵懒 磁性) 或 [开心]，可留空"
         size="small"
         :input-props="{ autocomplete: 'off' }"
@@ -186,15 +187,15 @@ watch(
       label="自定义 API Key (可选)"
       hint="填写后将直接从浏览器调用 MiMo API, 不经过本站服务器, 速度更快"
     >
-      <NInput
-        v-model:value="settings.providers.mimo.mimoApiKey"
+      <UInput
+        v-model="settings.providers.mimo.mimoApiKey"
         type="password"
         show-password-on="click"
         placeholder="sk-xxxx"
         size="small"
         :input-props="{ autocomplete: 'new-password' }"
       />
-      <NText
+      <span
         depth="3"
         style="font-size: 11px"
       >
@@ -206,37 +207,37 @@ watch(
         >
           前往 MiMo 开放平台获取 API Key →
         </a>
-      </NText>
+      </span>
     </SectionField>
 
     <!-- 自定义音色 -->
     <SectionField label="自定义音色">
-      <NFlex
+      <div
         justify="space-between"
         align="center"
         style="margin-bottom: 6px"
       >
-        <NText
+        <span
           depth="3"
           style="font-size: 11px"
         >
           {{ account.id ? `${customVoices.length} 个自定义音色` : '登录后可用' }}
-        </NText>
-        <NButton
+        </span>
+        <UButton
           size="tiny"
-          type="primary"
-          tertiary
+          color="primary"
+          variant="soft"
           :disabled="!account.id"
           @click="showCreateDialog = true"
         >
-          <template #icon>
-            <NIcon :component="Add20Filled" />
+          <template #leading>
+            <UIcon name="i-lucide-circle" />
           </template>
           新建
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
 
-      <NEmpty
+      <UEmpty
         v-if="customVoices.length === 0 && account.id"
         description="暂无自定义音色"
         size="small"
@@ -252,58 +253,75 @@ watch(
           class="voice-item"
           :class="{ active: isCustomSelected(v) }"
         >
-          <NIcon
-            :component="v.type === 'clone' ? Mic20Filled : TextDescription20Filled"
+          <UIcon
+            name="i-lucide-circle"
             :size="14"
             style="flex-shrink: 0"
           />
           <span class="voice-name">{{ v.name }}</span>
-          <NTag
+          <UBadge
             size="tiny"
             :bordered="false"
             :type="v.type === 'clone' ? 'info' : 'success'"
           >
             {{ v.type === 'clone' ? '克隆' : '描述' }}
-          </NTag>
+          </UBadge>
           <div class="voice-actions">
-            <NButton
+            <UButton
               size="tiny"
-              :type="isCustomSelected(v) ? 'primary' : 'default'"
-              tertiary
+              :color="isCustomSelected(v) ? 'primary' : 'neutral'"
+              variant="soft"
               @click="useCustomVoice(v)"
             >
               {{ isCustomSelected(v) ? '使用中' : '使用' }}
-            </NButton>
-            <NButton
+            </UButton>
+            <UButton
               size="tiny"
-              tertiary
+              variant="soft"
               @click="editCustomVoice(v)"
             >
-              <template #icon>
-                <NIcon :component="Edit20Filled" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
-            </NButton>
-            <NPopconfirm @positive-click="deleteCustomVoice(v.id)">
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  tertiary
-                  type="error"
-                >
-                  <template #icon>
-                    <NIcon :component="Delete20Filled" />
-                  </template>
-                </NButton>
+            </UButton>
+            <UPopover>
+              <UButton
+                size="xs"
+                variant="ghost"
+                color="error"
+              >
+                <template #leading>
+                  <UIcon name="i-lucide-circle" />
+                </template>
+              </UButton>
+              <template #content="{ close }">
+                <div class="space-y-3 p-3">
+                  <div>确定删除「{{ v.name }}」？</div>
+                  <div class="flex justify-end gap-2">
+                    <UButton
+                      size="xs"
+                      color="neutral"
+                      variant="ghost"
+                      @click="close"
+                      >取消</UButton
+                    >
+                    <UButton
+                      size="xs"
+                      color="error"
+                      @click="(close(), deleteCustomVoice(v.id))"
+                      >确认</UButton
+                    >
+                  </div>
+                </div>
               </template>
-              确定删除「{{ v.name }}」？
-            </NPopconfirm>
+            </UPopover>
           </div>
         </div>
       </div>
     </SectionField>
 
     <MimoCustomVoiceDialog
-      v-model:show="showCreateDialog"
+      v-model:open="showCreateDialog"
       :edit-voice="editingVoice"
       @created="loadCustomVoices"
       @update:show="

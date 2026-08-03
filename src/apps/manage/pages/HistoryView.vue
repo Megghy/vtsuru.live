@@ -24,9 +24,9 @@ import {
   NText,
   NTime,
   NTooltip,
-  useMessage,
   useThemeVars,
 } from 'naive-ui'
+import { showErrorToast } from '@/shared/services/toast'
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 
@@ -79,7 +79,6 @@ interface HistoryUpstatRecordModel {
 }
 
 const accountInfo = useAccount()
-const message = useMessage()
 const themeVars = useThemeVars()
 
 // 历史数据引用
@@ -144,10 +143,10 @@ async function getHistory() {
       guardUpdateAt.value = response.data.guard.updateAt
       upstatUpdateAt.value = response.data.upstat.updateAt
     } else {
-      message.error(`加载失败: ${response.message}`)
+      showErrorToast(`加载失败: ${response.message}`)
     }
   } catch {
-    message.error('加载失败')
+    showErrorToast('加载失败')
   }
 }
 

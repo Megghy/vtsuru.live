@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import * as monaco from 'monaco-editor'
-import { useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { configureMonacoEnvironment } from './monacoEnvironment'
@@ -19,7 +18,6 @@ const {
 }>()
 
 const value = defineModel<string>('value')
-const themeVars = useThemeVars()
 
 // 在创建编辑器前确保容器存在
 const ready = ref(false)
@@ -110,7 +108,7 @@ onBeforeUnmount(() => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: themeVars.textColor3,
+        color: 'var(--vtsuru-fg-muted)',
         textAlign: 'center',
         padding: '8px',
       }"
@@ -119,7 +117,7 @@ onBeforeUnmount(() => {
         <div>正在加载编辑器…</div>
         <div
           v-if="initError"
-          :style="{ marginTop: '6px', color: themeVars.errorColor, fontSize: '12px' }"
+          :style="{ marginTop: '6px', color: 'var(--vtsuru-error)', fontSize: '12px' }"
         >
           {{ initError }}
         </div>

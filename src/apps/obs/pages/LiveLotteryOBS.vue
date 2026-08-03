@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
-import { NDivider, NEmpty, NFlex, NText } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useElementSize, useEventBus } from '@vueuse/core'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 
@@ -9,12 +8,14 @@ import type { UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { OpenLiveLotteryType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL } from '@/shared/config'
+import { obsUpdateEventKey } from '@/app/events'
 
 const props = defineProps<{
   code?: string
 }>()
 
 const route = useRoute()
+const obsUpdateBus = useEventBus(obsUpdateEventKey)
 const currentCode = computed<string>(() => {
   const v = props.code ?? (Array.isArray(route.query.code) ? route.query.code[0] : route.query.code)
   return typeof v === 'string' ? v : ''
@@ -56,10 +57,7 @@ function handleObsUpdate() {
   void refreshUsers()
 }
 
-onMounted(() => window.$mitt.on('onOBSComponentUpdate', handleObsUpdate))
-onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate', handleObsUpdate)
-})
+onMounted(() => obsUpdateBus.on(handleObsUpdate))
 </script>
 
 <template>
@@ -68,12 +66,12 @@ onUnmounted(() => {
     v-bind="$attrs"
   >
     <p class="lottery-header">抽奖</p>
-    <NDivider
+    <div
       v-if="result.type === OpenLiveLotteryType.Waiting"
       class="lottery-divider"
     >
       <p class="lottery-header-count">已有 {{ users.length }} 人</p>
-    </NDivider>
+    </div>
     <div
       ref="listContainerRef"
       class="lottery-content"
@@ -109,7 +107,7 @@ onUnmounted(() => {
         v-else
         style="position: relative; top: 20%"
       >
-        <NEmpty description="暂无人参与" />
+        <p class="lottery-empty">暂无人参与</p>
       </div>
       <template v-if="result.type === OpenLiveLotteryType.Result">
         <p style="text-align: center; font-size: 20px; margin: 0; font-weight: bold; color: #eeabab">结果</p>
@@ -134,7 +132,7 @@ onUnmounted(() => {
               margin: 10px;
             "
           >
-            <NFlex vertical>
+            <div class="lottery-result-user">
               <img
                 height="50"
                 width="50"
@@ -143,15 +141,15 @@ onUnmounted(() => {
                 referrerpolicy="no-referrer"
                 @error="handleImageError"
               />
-              <NText style="font-size: large">
+              <span class="lottery-result-name">
                 {{ user.name }}
-              </NText>
-            </NFlex>
+              </span>
+            </div>
           </div>
         </Vue3Marquee>
-        <NFlex
+        <div
           v-else
-          justify="center"
+          class="lottery-results"
         >
           <div
             v-for="user in result.resultUsers"
@@ -177,11 +175,11 @@ onUnmounted(() => {
               referrerpolicy="no-referrer"
               @error="handleImageError"
             />
-            <NText style="font-size: large; margin-top: 10px">
+            <span class="lottery-result-name">
               {{ user.name }}
-            </NText>
+            </span>
           </div>
-        </NFlex>
+        </div>
       </template>
     </div>
   </div>
@@ -219,9 +217,7 @@ onUnmounted(() => {
 .lottery-divider {
   margin: -10px 10px -10px 10px !important;
   width: 90% !important;
-}
-.n-divider__line {
-  background-color: #ffffffd5 !important;
+  border-bottom: 1px solid #ffffffd5;
 }
 .lottery-content {
   background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2)) !important;
@@ -241,5 +237,27 @@ onUnmounted(() => {
 .lottery-avatar {
   height: 30px !important;
   border-radius: 50% !important;
+}
+
+.lottery-empty {
+  margin: 0;
+  color: #ffffffbd;
+  text-align: center;
+}
+
+.lottery-results,
+.lottery-result-user {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lottery-result-user {
+  flex-direction: column;
+}
+
+.lottery-result-name {
+  margin-top: 10px;
+  font-size: large;
 }
 </style>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CalendarOutline, GameControllerOutline, HomeOutline, PlayCircleOutline, TvOutline } from '@vicons/ionicons5'
-import { NAlert, NAvatar, NButton, NIcon } from 'naive-ui'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
@@ -134,13 +133,11 @@ const actionButtonProps = computed(() =>
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <NAlert
+    <UAlert
       v-if="!model.available"
-      type="info"
-      :show-icon="false"
+      color="info"
+      ><template #description> 直播信息暂不可用 </template></UAlert
     >
-      直播信息暂不可用
-    </NAlert>
 
     <article
       v-else
@@ -165,10 +162,9 @@ const actionButtonProps = computed(() =>
       <div class="content">
         <header class="header">
           <div class="identity">
-            <NAvatar
+            <UAvatar
               v-if="model.avatarUrl"
               :src="model.avatarUrl"
-              round
               :size="cfg.variant === 'compact' ? 34 : 42"
               :img-props="{ referrerpolicy: 'no-referrer', loading: 'lazy', alt: model.displayName }"
             />
@@ -199,7 +195,7 @@ const actionButtonProps = computed(() =>
             v-if="cfg.showArea && model.area"
             class="meta"
           >
-            <NIcon><GameControllerOutline /></NIcon>
+            <span><GameControllerOutline /></span>
             <span>{{ model.area }}</span>
           </div>
           <div
@@ -207,14 +203,14 @@ const actionButtonProps = computed(() =>
             class="meta"
             aria-live="polite"
           >
-            <NIcon><PlayCircleOutline /></NIcon>
+            <span><PlayCircleOutline /></span>
             <span>{{ durationText }}</span>
           </div>
           <div
             v-else-if="model.lastStreamAt"
             class="meta"
           >
-            <NIcon><CalendarOutline /></NIcon>
+            <span><CalendarOutline /></span>
             <span>上次直播：{{ formatTime(model.lastStreamAt) }}</span>
           </div>
         </div>
@@ -223,35 +219,33 @@ const actionButtonProps = computed(() =>
           v-if="cfg.showButtons && (model.spaceUrl || model.liveRoomUrl)"
           class="actions"
         >
-          <NButton
+          <UButton
             v-if="model.spaceUrl"
             v-bind="actionButtonProps"
-            tag="a"
             target="_blank"
             rel="noopener noreferrer"
             :href="model.spaceUrl"
             aria-label="打开主播主页（新窗口打开）"
           >
-            <template #icon>
-              <NIcon><HomeOutline /></NIcon>
+            <template #leading>
+              <span><HomeOutline /></span>
             </template>
             主页
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             v-if="model.liveRoomUrl"
-            :type="model.isStreaming ? 'primary' : 'default'"
+            :color="model.isStreaming ? 'primary' : 'neutral'"
             v-bind="actionButtonProps"
-            tag="a"
             target="_blank"
             rel="noopener noreferrer"
             :href="model.liveRoomUrl"
             aria-label="打开直播间（新窗口打开）"
           >
-            <template #icon>
-              <NIcon><TvOutline /></NIcon>
+            <template #leading>
+              <span><TvOutline /></span>
             </template>
             直播间
-          </NButton>
+          </UButton>
         </div>
       </div>
     </article>
@@ -358,7 +352,7 @@ const actionButtonProps = computed(() =>
   font-size: 13px;
   line-height: 1.4;
 }
-.meta .n-icon {
+.meta svg {
   flex: none;
 }
 .actions {

@@ -1,20 +1,7 @@
 <script setup lang="ts">
-import type { DataTableColumns, TagProps } from 'naive-ui'
-import {
-  NButton,
-  NDataTable,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NInput,
-  NModal,
-  NPagination,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
+import { computed, ref, watch } from 'vue'
 
 import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { EventDataTypes, PointFrom } from '@/api/api-models'
@@ -26,14 +13,13 @@ const props = defineProps<{
   histories: ResponsePointHisrotyModel[]
 }>()
 
-type TagType = NonNullable<TagProps['type']>
-
 const page = ref(1)
 const pageSize = 10
 const showGoodsModal = ref(false)
 const currentHistory = ref<ResponsePointHisrotyModel>()
 const currentGoods = computed(() => currentHistory.value?.extra?.goods)
 const selectedSubItems = computed(() => currentHistory.value?.extra?.selectedSubItems ?? [])
+const pageCount = computed(() => Math.ceil(props.histories.length / pageSize))
 const pagedHistories = computed(() => props.histories.slice((page.value - 1) * pageSize, page.value * pageSize))
 
 watch(
@@ -41,26 +27,25 @@ watch(
   () => (page.value = 1),
 )
 
-const sourceOptions = [
-  { label: '直播互动', value: PointFrom.Danmaku },
-  { label: '主播调整', value: PointFrom.Manual },
-  { label: '礼物兑换', value: PointFrom.Use },
-  { label: '签到', value: PointFrom.CheckIn },
-  { label: '首次互动', value: PointFrom.DailyFirstInteraction },
-]
+function formatHistoryTime(time: number | string | Date) {
+  return formatDistanceToNow(new Date(time), { addSuffix: true, locale: zhCN })
+}
 
-function sourceMeta(row: ResponsePointHisrotyModel): { label: string; type: TagType } {
+function sourceMeta(row: ResponsePointHisrotyModel): {
+  label: string
+  color: 'info' | 'success' | 'error' | 'warning'
+} {
   switch (row.from) {
     case PointFrom.Danmaku:
-      return { label: '直播互动', type: 'info' }
+      return { label: '直播互动', color: 'info' }
     case PointFrom.Manual:
-      return { label: row.point >= 0 ? '主播赠予' : '主播扣除', type: row.point >= 0 ? 'success' : 'error' }
+      return { label: row.point >= 0 ? '主播赠予' : '主播扣除', color: row.point >= 0 ? 'success' : 'error' }
     case PointFrom.Use:
-      return { label: '礼物兑换', type: 'warning' }
+      return { label: '礼物兑换', color: 'warning' }
     case PointFrom.CheckIn:
-      return { label: '签到', type: 'success' }
+      return { label: '签到', color: 'success' }
     case PointFrom.DailyFirstInteraction:
-      return { label: '首次互动', type: 'info' }
+      return { label: '首次互动', color: 'info' }
   }
 }
 
@@ -82,9 +67,8 @@ function detailText(row: ResponsePointHisrotyModel) {
     case PointFrom.Danmaku:
       if (row.type === EventDataTypes.Guard) return `上舰 · ${row.extra?.danmaku?.msg || '舰长支持'}`
       if (row.type === EventDataTypes.Gift) return giftDetail(row)
-      if (row.type === EventDataTypes.SC) {
+      if (row.type === EventDataTypes.SC)
         return `SC ￥${formatDanmakuPrice(row.extra?.danmaku?.price) ?? row.extra?.danmaku?.price ?? 0}`
-      }
       return row.extra?.danmaku?.msg || '直播互动'
     case PointFrom.Manual:
       return row.extra?.reason || '未填写调整备注'
@@ -103,83 +87,68 @@ function openGoods(row: ResponsePointHisrotyModel) {
   currentHistory.value = row
   showGoodsModal.value = true
 }
-
-function renderSource(row: ResponsePointHisrotyModel) {
-  const source = sourceMeta(row)
-  return h(NFlex, { align: 'center', gap: 6, wrap: false }, () => [
-    h(NTag, { type: source.type, bordered: false, size: 'small' }, () => source.label),
-    row.extra?.user?.name
-      ? h(
-          NButton,
-          { text: true, type: 'primary', tag: 'a', href: `/@${row.extra.user.name}`, target: '_blank' },
-          () => row.extra?.user?.name,
-        )
-      : null,
-  ])
-}
-
-function renderDetail(row: ResponsePointHisrotyModel) {
-  const content = detailText(row)
-  if (row.from === PointFrom.Use && row.extra?.goods) {
-    return h(NFlex, { vertical: true, gap: 2, align: 'start' }, () => [
-      h(NButton, { text: true, type: 'primary', onClick: () => openGoods(row) }, () => row.extra?.goods?.name),
-      content !== row.extra.goods.name ? h(NText, { depth: 3, style: { fontSize: '12px' } }, () => content) : null,
-    ])
-  }
-  return h(NTooltip, null, {
-    trigger: () => h('span', { class: 'history-detail-cell' }, content),
-    default: () => content,
-  })
-}
-
-const columns: DataTableColumns<ResponsePointHisrotyModel> = [
-  {
-    title: '时间',
-    key: 'createAt',
-    width: 130,
-    sorter: (left, right) => left.createAt - right.createAt,
-    render: (row) => h(NTime, { time: row.createAt, type: 'relative' }),
-  },
-  {
-    title: '积分变动',
-    key: 'point',
-    width: 104,
-    sorter: (left, right) => left.point - right.point,
-    render: (row) => {
-      const point = Number(row.point.toFixed(1))
-      return h(
-        'strong',
-        { class: point < 0 ? 'point-value point-value--out' : 'point-value point-value--in' },
-        `${point > 0 ? '+' : ''}${point}`,
-      )
-    },
-  },
-  {
-    title: '来源',
-    key: 'from',
-    width: 190,
-    filter: (value, row) => row.from === value,
-    filterOptions: sourceOptions,
-    render: renderSource,
-  },
-  { title: '详情', key: 'detail', minWidth: 220, render: renderDetail },
-]
 </script>
 
 <template>
-  <NEmpty
+  <div
     v-if="histories.length === 0"
-    description="暂无积分记录"
-  />
-
+    class="history-empty"
+  >
+    <UIcon name="i-lucide-history" />
+    <span>暂无积分记录</span>
+  </div>
   <template v-else>
-    <NDataTable
-      class="desktop-history-table"
-      :columns="columns"
-      :data="histories"
-      :pagination="{ defaultPageSize: 10, showSizePicker: true, pageSizes: [10, 25, 50, 100] }"
-      size="small"
-    />
+    <div class="history-table-wrap">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>积分变动</th>
+            <th>来源</th>
+            <th>详情</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="item in pagedHistories"
+            :key="`${item.ouId}-${item.createAt}-${item.from}`"
+          >
+            <td>{{ formatHistoryTime(item.createAt) }}</td>
+            <td>
+              <strong :class="item.point < 0 ? 'point-value--out' : 'point-value--in'"
+                >{{ item.point > 0 ? '+' : '' }}{{ Number(item.point.toFixed(1)) }}</strong
+              >
+            </td>
+            <td>
+              <div class="history-source">
+                <UBadge
+                  size="sm"
+                  :color="sourceMeta(item).color"
+                  :label="sourceMeta(item).label"
+                />
+                <a
+                  v-if="item.extra?.user?.name"
+                  :href="`/@${item.extra.user.name}`"
+                  target="_blank"
+                  >{{ item.extra.user.name }}</a
+                >
+              </div>
+            </td>
+            <td class="history-detail">
+              <button
+                v-if="item.from === PointFrom.Use && item.extra?.goods"
+                type="button"
+                class="history-link"
+                @click="openGoods(item)"
+              >
+                {{ item.extra.goods.name }}
+              </button>
+              <span :title="detailText(item)">{{ detailText(item) }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <div class="mobile-history-list">
       <article
@@ -188,150 +157,208 @@ const columns: DataTableColumns<ResponsePointHisrotyModel> = [
         class="mobile-history-card"
       >
         <div class="mobile-history-card__topline">
-          <NTag
-            :type="sourceMeta(item).type"
-            size="small"
-            :bordered="false"
-          >
-            {{ sourceMeta(item).label }}
-          </NTag>
-          <strong :class="item.point < 0 ? 'point-value--out' : 'point-value--in'">
-            {{ item.point > 0 ? '+' : '' }}{{ Number(item.point.toFixed(1)) }}
-          </strong>
-        </div>
-        <div class="mobile-history-card__detail">{{ detailText(item) }}</div>
-        <div class="mobile-history-card__meta">
-          <NButton
-            v-if="item.extra?.user?.name"
-            text
-            type="primary"
-            tag="a"
-            :href="`/@${item.extra.user.name}`"
-            target="_blank"
-          >
-            {{ item.extra.user.name }}
-          </NButton>
-          <span v-else />
-          <NTime
-            :time="item.createAt"
-            type="relative"
+          <UBadge
+            size="sm"
+            :color="sourceMeta(item).color"
+            :label="sourceMeta(item).label"
           />
+          <strong :class="item.point < 0 ? 'point-value--out' : 'point-value--in'"
+            >{{ item.point > 0 ? '+' : '' }}{{ Number(item.point.toFixed(1)) }}</strong
+          >
         </div>
-        <NButton
+        <button
           v-if="item.from === PointFrom.Use && item.extra?.goods"
-          size="small"
-          secondary
+          type="button"
+          class="history-link"
           @click="openGoods(item)"
         >
-          查看礼物快照
-        </NButton>
+          {{ item.extra.goods.name }}
+        </button>
+        <div class="mobile-history-card__detail">{{ detailText(item) }}</div>
+        <div class="mobile-history-card__meta">
+          <a
+            v-if="item.extra?.user?.name"
+            :href="`/@${item.extra.user.name}`"
+            target="_blank"
+            >{{ item.extra.user.name }}</a
+          >
+          <span v-else />
+          <span>{{ formatHistoryTime(item.createAt) }}</span>
+        </div>
       </article>
+    </div>
 
-      <NPagination
-        v-if="histories.length > pageSize"
-        v-model:page="page"
-        :page-size="pageSize"
-        :item-count="histories.length"
-        simple
-      />
+    <div
+      v-if="pageCount > 1"
+      class="history-pagination"
+    >
+      <UButton
+        color="neutral"
+        variant="outline"
+        size="sm"
+        :disabled="page === 1"
+        @click="page--"
+        >上一页</UButton
+      >
+      <span>{{ page }} / {{ pageCount }}</span>
+      <UButton
+        color="neutral"
+        variant="outline"
+        size="sm"
+        :disabled="page === pageCount"
+        @click="page++"
+        >下一页</UButton
+      >
     </div>
   </template>
 
-  <NModal
+  <UModal
     v-if="currentHistory"
-    v-model:show="showGoodsModal"
-    preset="card"
+    v-model:open="showGoodsModal"
     title="礼物快照"
-    class="history-goods-modal"
   >
-    <NFlex
-      vertical
-      :gap="12"
-    >
-      <PointGoodsItem
-        v-if="currentGoods"
-        :goods="currentGoods"
-        :show-footer="false"
-      />
-
-      <template v-if="selectedSubItems.length">
-        <NDivider>已选款式</NDivider>
-        <div class="history-variant-grid">
-          <div
-            v-for="item in selectedSubItems"
-            :key="item.subItemId"
-            class="history-variant"
-          >
-            <strong>{{ item.nameSnapshot }}</strong>
-            <span>x {{ item.quantity }}</span>
-            <NTag
-              size="tiny"
-              type="info"
-              :bordered="false"
-            >
-              {{ item.priceSnapshot }} 积分
-            </NTag>
-          </div>
-        </div>
-      </template>
-
-      <template v-if="currentGoods?.content">
-        <NDivider>礼物内容</NDivider>
-        <NInput
-          :value="currentGoods.content"
-          type="textarea"
-          readonly
-          :autosize="{ minRows: 2, maxRows: 8 }"
+    <template #body>
+      <div class="history-modal-content">
+        <PointGoodsItem
+          v-if="currentGoods"
+          :goods="currentGoods"
         />
-      </template>
-
-      <template v-if="currentHistory.extra?.remark">
-        <NDivider>兑换留言</NDivider>
-        <NText>{{ currentHistory.extra.remark }}</NText>
-      </template>
-    </NFlex>
-  </NModal>
+        <template v-if="selectedSubItems.length">
+          <USeparator label="已选款式" />
+          <div class="history-variant-grid">
+            <div
+              v-for="item in selectedSubItems"
+              :key="item.subItemId"
+              class="history-variant"
+            >
+              <strong>{{ item.nameSnapshot }}</strong
+              ><span>x {{ item.quantity }}</span
+              ><UBadge
+                size="xs"
+                color="info"
+                :label="`${item.priceSnapshot} 积分`"
+              />
+            </div>
+          </div>
+        </template>
+        <template v-if="currentGoods?.content">
+          <USeparator label="礼物内容" />
+          <UTextarea
+            :model-value="currentGoods.content"
+            readonly
+            :rows="3"
+            :maxrows="8"
+          />
+        </template>
+        <template v-if="currentHistory.extra?.remark">
+          <USeparator label="兑换留言" />
+          <p class="history-remark">{{ currentHistory.extra.remark }}</p>
+        </template>
+      </div>
+    </template>
+  </UModal>
 </template>
 
 <style scoped>
-:deep(.point-value),
-.mobile-history-card strong {
-  font-variant-numeric: tabular-nums;
+.history-empty {
+  display: grid;
+  min-height: 180px;
+  place-content: center;
+  gap: 10px;
+  color: var(--vtsuru-fg-muted);
+  text-align: center;
 }
-
-:deep(.point-value--in),
-.point-value--in {
-  color: var(--vtsuru-success);
+.history-empty :first-child {
+  font-size: 28px;
 }
-
-:deep(.point-value--out),
-.point-value--out {
-  color: var(--vtsuru-error);
+.history-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
 }
-
-:deep(.history-detail-cell) {
+.history-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  color: var(--vtsuru-fg);
+  font-size: 13px;
+}
+.history-table th,
+.history-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--vtsuru-border);
+  text-align: left;
+}
+.history-table th {
+  color: var(--vtsuru-fg-muted);
+  background: var(--vtsuru-bg-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.history-source,
+.mobile-history-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-source a,
+.mobile-history-card__meta a,
+.history-link {
+  color: var(--vtsuru-brand);
+  text-decoration: none;
+}
+.history-link {
   display: block;
   overflow: hidden;
   max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
+.history-detail > span {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.point-value--in {
+  color: var(--vtsuru-success);
+}
+.point-value--out {
+  color: var(--vtsuru-error);
+}
 .mobile-history-list {
   display: none;
 }
-
-:global(.history-goods-modal) {
-  width: min(520px, calc(100vw - 24px));
-  max-width: calc(100vw - 24px);
+.history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
 }
-
+.history-modal-content {
+  display: grid;
+  gap: 14px;
+}
 .history-variant-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
-
 .history-variant {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -341,22 +368,23 @@ const columns: DataTableColumns<ResponsePointHisrotyModel> = [
   border-radius: var(--vtsuru-radius);
   background: var(--vtsuru-bg-elevated);
 }
-
-.history-variant .n-tag {
+.history-variant :last-child {
   grid-column: 1 / -1;
   justify-self: start;
 }
-
+.history-remark {
+  margin: 0;
+  color: var(--vtsuru-fg);
+  white-space: pre-wrap;
+}
 @media (max-width: 768px) {
-  .desktop-history-table {
+  .history-table-wrap {
     display: none;
   }
-
   .mobile-history-list {
     display: grid;
     gap: 8px;
   }
-
   .mobile-history-card {
     display: grid;
     min-width: 0;
@@ -364,33 +392,21 @@ const columns: DataTableColumns<ResponsePointHisrotyModel> = [
     padding: 12px;
     border: 1px solid var(--vtsuru-border);
     border-radius: var(--vtsuru-radius);
-    background: var(--vtsuru-bg-surface);
+    background: var(--vtsuru-bg);
   }
-
   .mobile-history-card__topline,
   .mobile-history-card__meta {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 8px;
   }
-
   .mobile-history-card__detail {
     overflow-wrap: anywhere;
     color: var(--vtsuru-fg);
     line-height: 1.55;
   }
-
   .mobile-history-card__meta {
     color: var(--vtsuru-fg-muted);
     font-size: 12px;
   }
-
-  :global(.history-goods-modal) {
-    width: calc(100vw - 16px);
-    max-width: calc(100vw - 16px);
-  }
-
   .history-variant-grid {
     grid-template-columns: 1fr;
   }

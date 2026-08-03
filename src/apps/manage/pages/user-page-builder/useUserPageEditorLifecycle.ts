@@ -1,4 +1,3 @@
-import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import type { ComputedRef } from 'vue'
 import { computed, ref, watch } from 'vue'
 
@@ -7,6 +6,7 @@ import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { deepCloneJson, estimateUtf8Bytes, stableStringify } from './editorHelpers'
 import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'
 import { useUserPageAutoSave } from './useUserPageAutoSave'
+import type { EditorNotifier } from './useUserPageEditor'
 import type { UserPageEditorCore } from './useUserPageEditorCore'
 import { useUserPagePersistence } from './useUserPagePersistence'
 import { readUserPagesLocalDraft, useUserPagesLocalDraftStorage } from './useUserPagesLocalDraftStorage'
@@ -16,12 +16,12 @@ import { validateRenderableUserPagesSettings, validateUserPagesSettings } from '
 
 interface UseUserPageEditorLifecycleOptions {
   core: UserPageEditorCore
-  message: MessageApiInjection
+  message: EditorNotifier
   accountId: ComputedRef<number>
   maxConfigBytes: number
 }
 
-function createResourceApi(core: UserPageEditorCore, message: MessageApiInjection) {
+function createResourceApi(core: UserPageEditorCore, message: EditorNotifier) {
   const fileRefs = computed(() => collectFileRefsFromSettings(core.settings.value))
   function normalizeRichTextImagesFileAndNotify() {
     normalizeRichTextImagesFile(core.settings.value, core.blocks.ensurePropsObject)

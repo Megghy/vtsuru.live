@@ -1,12 +1,12 @@
 import { List } from 'linqts'
-import { NTime } from 'naive-ui'
-import { computed, h, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, useAccount } from '@/api/account'
 import type { EventModel, Setting_LiveRequest, SongRequestInfo, SongsInfo } from '@/api/api-models'
 import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/shared/config'
+import { showErrorToast, showSuccessToast, showToast } from '@/shared/services/toast'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { sortByQueueType } from '@/shared/utils/queue'
 
@@ -105,12 +105,12 @@ export const useLiveRequest = defineStore('songRequest', () => {
           console.log('[SONG-REQUEST] 已获取所有数据')
           return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
         } else {
-          window.$message.error(`无法获取数据: ${data.message}`)
+          showErrorToast(`无法获取数据: ${data.message}`)
           return []
         }
       } catch (_err) {
         console.error('[SONG-REQUEST] 无法获取数据', _err)
-        window.$message.error('无法获取数据')
+        showErrorToast('无法获取数据')
       }
       return []
     } else {
@@ -130,10 +130,11 @@ export const useLiveRequest = defineStore('songRequest', () => {
     const settings: Setting_LiveRequest = accountInfo.value?.settings?.songRequest
 
     if (settings.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
-      window.$notification.info({
+      showToast({
         title: `${danmaku.uname} 点播失败`,
         description: '当前未在直播中, 无法添加点播请求. 或者关闭设置中的仅允许直播时加入',
-        meta: () => h(NTime, { type: 'relative', time: Date.now(), key: updateKey.value }),
+        color: 'info',
+        icon: 'i-lucide-info',
       })
       return
     }
@@ -141,15 +142,15 @@ export const useLiveRequest = defineStore('songRequest', () => {
     if (isLoggedIn.value) {
       await QueryPostAPI<SongRequestInfo>(`${SONG_REQUEST_API_URL}try-add`, danmaku).then((data) => {
         if (data.code == 200) {
-          window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
+          showSuccessToast(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
           if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
         } else {
-          const time = Date.now()
-          window.$notification.warning({
+          showToast({
             title: `${danmaku.uname} 点播失败`,
             description: data.message,
+            color: 'warning',
+            icon: 'i-lucide-triangle-alert',
             duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: () => h(NTime, { type: 'relative', time, key: updateKey.value }),
           })
           console.log(`[SONG-REQUEST] [${danmaku.uname}] 添加曲目失败: ${data.message}`)
         }
@@ -177,13 +178,13 @@ export const useLiveRequest = defineStore('songRequest', () => {
       } as SongRequestInfo
 
       localActiveSongs.value.unshift(songData)
-      window.$message.success(`[${danmaku.uname}] 添加: ${songData.songName}`)
+      showSuccessToast(`[${danmaku.uname}] 添加: ${songData.songName}`)
     }
   }
 
   async function addSongManual() {
     if (!newSongName.value) {
-      window.$message.error('请输入名称')
+      showErrorToast('请输入名称')
       return
     }
 
@@ -192,12 +193,12 @@ export const useLiveRequest = defineStore('songRequest', () => {
         name: newSongName.value,
       }).then((data) => {
         if (data.code == 200) {
-          window.$message.success(`已手动添加: ${data.data.songName}`)
+          showSuccessToast(`已手动添加: ${data.data.songName}`)
           originSongs.value.unshift(data.data)
           newSongName.value = ''
           console.log(`[SONG-REQUEST] 已手动添加: ${data.data.songName}`)
         } else {
-          window.$message.error(`手动添加失败: ${data.message}`)
+          showErrorToast(`手动添加失败: ${data.message}`)
         }
       })
     } else {
@@ -214,7 +215,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       } as SongRequestInfo
 
       localActiveSongs.value.unshift(songData)
-      window.$message.success(`已手动添加: ${songData.songName}`)
+      showSuccessToast(`已手动添加: ${songData.songName}`)
       newSongName.value = ''
     }
   }
@@ -258,14 +259,14 @@ export const useLiveRequest = defineStore('songRequest', () => {
           if (status > SongRequestStatus.Singing) {
             song.finishAt = Date.now()
           }
-          window.$message.success(`已更新状态为: ${statusString2}`)
+          showSuccessToast(`已更新状态为: ${statusString2}`)
         } else {
           console.log(`[SONG-REQUEST] 更新状态失败: ${data.message}`)
-          window.$message.error(`更新状态失败: ${data.message}`)
+          showErrorToast(`更新状态失败: ${data.message}`)
         }
       })
       .catch((_err) => {
-        window.$message.error(`更新状态失败`)
+        showErrorToast(`更新状态失败`)
       })
       .finally(() => {
         isLoading.value = false
@@ -282,14 +283,14 @@ export const useLiveRequest = defineStore('songRequest', () => {
       )
 
       if (data.code == 200) {
-        window.$message.success('删除成功')
+        showSuccessToast('删除成功')
         originSongs.value = originSongs.value.filter((s) => !values.includes(s))
       } else {
-        window.$message.error(`删除失败: ${data.message}`)
+        showErrorToast(`删除失败: ${data.message}`)
       }
     } catch (_err) {
       console.error('[SONG-REQUEST] 删除请求失败', _err)
-      window.$message.error('删除失败')
+      showErrorToast('删除失败')
     } finally {
       isLoading.value = false
     }
@@ -302,18 +303,18 @@ export const useLiveRequest = defineStore('songRequest', () => {
       const data = await QueryGetAPI(`${SONG_REQUEST_API_URL}deactive`)
 
       if (data.code == 200) {
-        window.$message.success('已全部取消')
+        showSuccessToast('已全部取消')
         songs.value.forEach((s) => {
           if (s.status <= SongRequestStatus.Singing) {
             s.status = SongRequestStatus.Cancel
           }
         })
       } else {
-        window.$message.error(`取消失败: ${data.message}`)
+        showErrorToast(`取消失败: ${data.message}`)
       }
     } catch (_err) {
       console.error('[SONG-REQUEST] 取消全部失败', _err)
-      window.$message.error('取消失败')
+      showErrorToast('取消失败')
     } finally {
       isLoading.value = false
     }
@@ -335,12 +336,12 @@ export const useLiveRequest = defineStore('songRequest', () => {
           } else {
             originSongs.value.unshift(item)
             if (item.from == SongRequestFrom.Web) {
-              window.$message.success(`[${item.user?.name}] 直接从网页歌单点播: ${item.songName}`)
+              showSuccessToast(`[${item.user?.name}] 直接从网页歌单点播: ${item.songName}`)
             }
           }
         })
       } else {
-        window.$message.error(`无法获取点播队列: ${data.message}`)
+        showErrorToast(`无法获取点播队列: ${data.message}`)
       }
     } catch (_err) {
       console.error('[SONG-REQUEST] 更新活跃歌曲失败', _err)
@@ -349,7 +350,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
 
   async function blockUser(item: SongRequestInfo) {
     if (item.from != SongRequestFrom.Danmaku) {
-      window.$message.error(`[${item.user?.name}] 不是来自弹幕的用户`)
+      showErrorToast(`[${item.user?.name}] 不是来自弹幕的用户`)
       return
     }
 
@@ -358,14 +359,14 @@ export const useLiveRequest = defineStore('songRequest', () => {
         const data = await AddBiliBlackList(item.user.uid, item.user.name)
 
         if (data.code == 200) {
-          window.$message.success(`[${item.user?.name}] 已添加到黑名单`)
+          showSuccessToast(`[${item.user?.name}] 已添加到黑名单`)
           updateSongStatus(item, SongRequestStatus.Cancel)
         } else {
-          window.$message.error(data.message)
+          showErrorToast(data.message)
         }
       } catch (_err) {
         console.error('[SONG-REQUEST] 添加黑名单失败', _err)
-        window.$message.error('添加黑名单失败')
+        showErrorToast('添加黑名单失败')
       }
     }
   }

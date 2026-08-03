@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { CloudAdd20Filled, Play24Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
-import { NButton, NEmpty, NIcon, NInput, NSelect, NTag, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -69,31 +68,31 @@ function requestSong(song: SongsInfo) {
 <template>
   <div class="compact-template">
     <div class="toolbar">
-      <NInput
-        v-model:value="searchKeyword"
+      <UInput
+        v-model="searchKeyword"
         class="search"
         clearable
         placeholder="搜索歌曲 / 歌手 / 标签…"
       >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
+        <template #leading>
+          <component :is="Search24Regular" />
         </template>
-      </NInput>
-      <NSelect
-        v-model:value="selectedAuthor"
+      </UInput>
+      <USelect
+        v-model="selectedAuthor"
         class="filter"
         clearable
         filterable
         placeholder="歌手"
-        :options="authorOptions"
+        :items="authorOptions"
       />
-      <NSelect
-        v-model:value="selectedTag"
+      <USelect
+        v-model="selectedTag"
         class="filter"
         clearable
         filterable
         placeholder="标签"
-        :options="tagOptions"
+        :items="tagOptions"
       />
       <span class="count">{{ filteredSongs.length }} 首</span>
     </div>
@@ -105,10 +104,11 @@ function requestSong(song: SongsInfo) {
       class="preview-player"
     />
 
-    <NEmpty
+    <UEmpty
       v-if="filteredSongs.length === 0"
       description="暂无曲目"
       style="margin-top: 48px"
+      class="public-empty"
     />
 
     <div
@@ -156,30 +156,30 @@ function requestSong(song: SongsInfo) {
                 class="translate"
                 >{{ song.translateName }}</span
               >
-              <NTag
+              <UBadge
                 v-if="singingSongKeySet.has(song.key)"
-                size="tiny"
+                size="xs"
                 :bordered="false"
-                :color="{ color: 'rgba(240,160,64,0.15)', textColor: '#e08a20' }"
+                style="background: rgba(240, 160, 64, 0.15); color: #e08a20"
               >
                 演唱中
-              </NTag>
-              <NTag
+              </UBadge>
+              <UBadge
                 v-else-if="queuedSongKeySet.has(song.key)"
-                size="tiny"
+                size="xs"
                 :bordered="false"
-                type="success"
+                color="success"
               >
                 排队中
-              </NTag>
-              <NTag
+              </UBadge>
+              <UBadge
                 v-if="song.options?.scMinPrice"
-                size="tiny"
+                size="xs"
                 :bordered="false"
-                type="error"
+                color="error"
               >
                 SC ¥{{ song.options.scMinPrice }}
-              </NTag>
+              </UBadge>
             </div>
             <div
               v-if="song.author?.length"
@@ -190,47 +190,46 @@ function requestSong(song: SongsInfo) {
             </div>
           </div>
           <div class="row-tags">
-            <NTag
+            <UBadge
               v-for="tag in (song.tags ?? []).slice(0, 3)"
               :key="tag"
-              size="tiny"
+              size="xs"
               :bordered="false"
               class="clickable-tag"
               @click="selectedTag = selectedTag === tag ? null : tag"
             >
               {{ tag }}
-            </NTag>
+            </UBadge>
           </div>
           <div class="row-actions">
-            <NButton
+            <UButton
               v-if="song.url"
-              quaternary
-              circle
-              size="small"
+              variant="ghost"
+              square
+              size="sm"
               :loading="isLrcLoading === song.key"
               title="试听"
               @click="previewSong = song"
             >
-              <template #icon>
-                <NIcon :component="Play24Filled" />
+              <template #leading>
+                <component :is="Play24Filled" />
               </template>
-            </NButton>
-            <NTooltip v-if="!isSelf">
-              <template #trigger>
-                <NButton
-                  size="small"
-                  circle
-                  :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
-                  :loading="requestingKey === song.key"
-                  @click="requestSong(song)"
-                >
-                  <template #icon>
-                    <NIcon :component="CloudAdd20Filled" />
-                  </template>
-                </NButton>
-              </template>
-              {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-            </NTooltip>
+            </UButton>
+            <UTooltip v-if="!isSelf">
+              <UButton
+                size="sm"
+                square
+                :color="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
+                :loading="requestingKey === song.key"
+                @click="requestSong(song)"
+              >
+                <template #leading>
+                  <component :is="CloudAdd20Filled" />
+                </template>
+              </UButton>
+
+              <template #content>{{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}</template>
+            </UTooltip>
           </div>
         </div>
       </div>

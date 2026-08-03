@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { AlertCircleOutline, CheckmarkCircleOutline, TimeOutline, TimerOutline, WifiOutline } from '@vicons/ionicons5'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -106,84 +105,82 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard
+  <UCard
     title="运行状态 & 连接"
     size="small"
     bordered
     style="width: 100%"
   >
     <template #header-extra>
-      <NTag
+      <UBadge
         :type="connectionStatusType"
         size="small"
       >
-        <template #icon>
-          <NIcon :component="isConnected ? CheckmarkCircleOutline : AlertCircleOutline" />
+        <template #leading>
+          <UIcon name="i-lucide-circle" />
         </template>
         {{ connectionStatusText }}
-      </NTag>
+      </UBadge>
     </template>
-    <NDescriptions
+    <div
       label-placement="top"
       bordered
       :columns="2"
       size="small"
       style="overflow-x: auto"
     >
-      <NDescriptionsItem label="启动时间">
-        <NIcon :component="TimeOutline" /> {{ formattedStartedAt }}
-      </NDescriptionsItem>
-      <NDescriptionsItem label="运行时长"> <NIcon :component="TimerOutline" /> {{ uptime }} </NDescriptionsItem>
-      <NDescriptionsItem label="SignalR 服务">
-        <NFlex
+      <div label="启动时间"><UIcon name="i-lucide-circle" /> {{ formattedStartedAt }}</div>
+      <div label="运行时长"><UIcon name="i-lucide-circle" /> {{ uptime }}</div>
+      <div label="SignalR 服务">
+        <div
           align="center"
           size="small"
           :wrap="false"
         >
-          <NTag
+          <UBadge
             :type="connectionStatusType"
             size="tiny"
           >
             {{ signalRStateText }}
-          </NTag>
-          <NEllipsis style="max-width: 150px">
+          </UBadge>
+          <span style="max-width: 150px">
             {{ webfetcher.signalRId ?? 'N/A' }}
-          </NEllipsis>
-        </NFlex>
-      </NDescriptionsItem>
-      <NDescriptionsItem label="弹幕服务器">
-        <NFlex
+          </span>
+        </div>
+      </div>
+      <div label="弹幕服务器">
+        <div
           align="center"
           size="small"
           :wrap="false"
         >
-          <NTag
+          <UBadge
             :type="danmakuClientStateType"
             size="tiny"
           >
             {{ danmakuClientStateText }}
-          </NTag>
-          <NEllipsis style="max-width: 150px">
+          </UBadge>
+          <span style="max-width: 150px">
             {{ webfetcher.danmakuServerUrl ?? 'N/A' }}
-          </NEllipsis>
-        </NFlex>
-      </NDescriptionsItem>
-      <NDescriptionsItem label="网络状态">
-        <NFlex
+          </span>
+        </div>
+      </div>
+      <div label="网络状态">
+        <div
           align="center"
           size="small"
         >
-          <NTag
+          <UBadge
             :type="networkStatus === 'online' ? 'success' : 'error'"
             size="tiny"
           >
-            <template #icon>
-              <NIcon :component="WifiOutline" />
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
             </template>
             {{ networkStatus === 'online' ? '在线' : '离线' }}
-          </NTag>
-        </NFlex>
-      </NDescriptionsItem>
-    </NDescriptions>
-  </NCard>
+          </UBadge>
+        </div>
+      </div>
+    </div>
+  </UCard>
 </template>

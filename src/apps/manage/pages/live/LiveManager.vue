@@ -1,23 +1,6 @@
 <script setup lang="ts">
-import { ArrowSync24Filled, Search24Filled } from '@vicons/fluent'
 import { useSessionStorage } from '@vueuse/core'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NPagination,
-  NSelect,
-  NSkeleton,
-  NSwitch,
-  NText,
-  useMessage,
-} from 'naive-ui'
+import { showErrorToast } from '@/shared/services/toast'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -34,7 +17,6 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 defineOptions({ name: 'ManageLiveView' })
 
 const accountInfo = useAccount()
-const message = useMessage()
 const route = useRoute()
 const router = useRouter()
 
@@ -55,6 +37,10 @@ const sortKey = usePersistedStorage<'startAt' | 'danmakusCount' | 'totalIncome' 
   'startAt',
 )
 const sortOrder = usePersistedStorage<'desc' | 'asc'>('ManageLive.order', 'desc')
+const pageSizeOptions = [10, 20, 30, 40].map((value) => ({ label: `${value} 条/页`, value }))
+const statusOptions = [{ label: '全部状态', value: 'all' }, { label: '直播中', value: 'live' }, { label: '已结束', value: 'finished' }]
+const sortOptions = [{ label: '开始时间', value: 'startAt' }, { label: '弹幕数', value: 'danmakusCount' }, { label: '互动数', value: 'interactionCount' }, { label: '收益', value: 'totalIncome' }]
+const orderOptions = [{ label: '降序', value: 'desc' }, { label: '升序', value: 'asc' }]
 
 // refresh
 const enableAutoRefresh = usePersistedStorage<boolean>('ManageLive.autoRefresh', false)
@@ -107,12 +93,12 @@ async function getAll() {
     if (data.code == 200) {
       lives.value = data.data
     } else {
-      message.error(`无法获取数据: ${data.message}`)
+      showErrorToast(`无法获取数据: ${data.message}`)
       loadError.value = data.message
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : '无法获取数据'
-    message.error(msg)
+    showErrorToast(msg)
     loadError.value = msg
   } finally {
     isLoading.value = false
@@ -205,198 +191,137 @@ onBeforeUnmount(() => {
       :loading="isLoading"
     >
       <template #action>
-        <NButton
-          size="small"
-          secondary
+        <UButton
+          size="sm"
+          color="neutral"
+          variant="soft"
           :disabled="isLoading"
           @click="resetFilters"
         >
           重置筛选
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
+        </UButton>
+        <UButton
+          size="sm"
           :loading="isLoading"
           @click="getAll"
         >
-          <template #icon>
-            <NIcon :component="ArrowSync24Filled" />
-          </template>
+          <template #leading><UIcon name="i-lucide-refresh-cw" /></template>
           刷新
-        </NButton>
+        </UButton>
       </template>
 
       <div class="live-manager-alerts">
         <EventFetcherAlert />
         <EventFetcherStatusCard />
 
-        <NAlert
+        <UAlert
           v-if="!isVerified"
-          type="info"
+          color="info"
           title="未认证"
-          :bordered="false"
         >
           尚未进行 Bilibili 认证，部分功能可能受限。
-        </NAlert>
+        </UAlert>
 
-        <NAlert
+        <UAlert
           v-else-if="loadError"
-          type="error"
+          color="error"
           title="加载失败"
-          :bordered="false"
         >
           <div>{{ loadError }}</div>
           <div style="margin-top: 8px">
-            <NButton
-              size="small"
-              secondary
+            <UButton
+              size="sm"
+              color="neutral"
+              variant="soft"
               :loading="isLoading"
               @click="getAll"
             >
               重试
-            </NButton>
+            </UButton>
           </div>
-        </NAlert>
+        </UAlert>
       </div>
     </ManagePageHeader>
 
     <template v-if="isVerified">
-      <NCard
+      <UCard
         class="toolbar-card"
-        size="small"
-        :bordered="true"
-        content-style="padding: 12px;"
+        :ui="{ body: 'p-3' }"
       >
-        <NFlex
-          justify="space-between"
-          align="center"
-          wrap
-          :size="12"
-        >
-          <NFlex
-            align="center"
-            wrap
-            :size="10"
-          >
-            <NInput
-              v-model:value="keyword"
+        <div class="toolbar">
+          <div class="toolbar__group">
+            <UInput
+              v-model="keyword"
               placeholder="搜索标题或ID"
               clearable
               class="search-input"
             >
-              <template #prefix>
-                <NIcon :component="Search24Filled" />
-              </template>
-            </NInput>
+              <template #leading><UIcon name="i-lucide-search" /></template>
+            </UInput>
 
-            <NSelect
-              v-model:value="statusFilter"
-              :options="[
-                { label: '全部状态', value: 'all' },
-                { label: '直播中', value: 'live' },
-                { label: '已结束', value: 'finished' },
-              ]"
+            <USelect
+              v-model="statusFilter"
+              :items="statusOptions"
               class="status-select"
             />
-          </NFlex>
+          </div>
 
-          <NFlex
-            align="center"
-            wrap
-            :size="10"
-          >
+          <div class="toolbar__group">
             <span class="manage-kicker">排序</span>
-            <NSelect
-              v-model:value="sortKey"
+            <USelect
+              v-model="sortKey"
               size="small"
-              :options="[
-                { label: '开始时间', value: 'startAt' },
-                { label: '弹幕数', value: 'danmakusCount' },
-                { label: '互动数', value: 'interactionCount' },
-                { label: '收益', value: 'totalIncome' },
-              ]"
+              :items="sortOptions"
               class="sort-select"
             />
-            <NSelect
-              v-model:value="sortOrder"
+            <USelect
+              v-model="sortOrder"
               size="small"
-              :options="[
-                { label: '降序', value: 'desc' },
-                { label: '升序', value: 'asc' },
-              ]"
+              :items="orderOptions"
               class="order-select"
             />
 
-            <NDivider vertical />
+            <USeparator orientation="vertical" />
 
-            <NFlex
-              align="center"
-              wrap
-              :size="8"
-            >
-              <NSwitch
-                v-model:value="enableAutoRefresh"
-                size="small"
-              >
-                <template #checked> 自动刷新 </template>
-                <template #unchecked> 自动刷新 </template>
-              </NSwitch>
-              <NInputNumber
+            <div class="toolbar__group">
+              <USwitch v-model="enableAutoRefresh" label="自动刷新" />
+              <UInputNumber
                 v-if="enableAutoRefresh"
-                v-model:value="refreshSeconds"
-                size="small"
+                v-model="refreshSeconds"
+                size="sm"
                 class="refresh-seconds"
                 :min="10"
                 placeholder="秒"
-              >
-                <template #suffix> s </template>
-              </NInputNumber>
-            </NFlex>
-          </NFlex>
-        </NFlex>
+              />
+            </div>
+          </div>
+        </div>
 
-        <NDivider style="margin: 12px 0 0" />
-        <NFlex
-          justify="space-between"
-          align="center"
-          wrap
-          :size="12"
-          style="margin-top: 10px"
-        >
-          <NText
-            depth="3"
-            class="result-meta"
-          >
-            共 {{ totalCount }} 条记录
-          </NText>
-        </NFlex>
-      </NCard>
+        <USeparator class="toolbar-separator" />
+        <p class="result-meta">共 {{ totalCount }} 条记录</p>
+      </UCard>
 
-      <NSkeleton
+      <USkeleton
         v-if="isLoading && !lives.length"
         class="skeleton"
-        text
-        :repeat="6"
+        class="h-8 w-full"
       />
       <template v-else>
-        <NCard
+        <UCard
           v-if="!filteredAndSortedLives.length"
           class="empty-card"
-          size="small"
-          :bordered="true"
         >
-          <NEmpty description="没有找到符合条件的直播记录">
+          <UEmpty title="没有找到符合条件的直播记录">
             <template #extra>
-              <NButton
-                type="primary"
+              <UButton
                 :loading="isLoading"
                 @click="getAll"
               >
                 重新加载
-              </NButton>
+              </UButton>
             </template>
-          </NEmpty>
-        </NCard>
+          </UEmpty>
+        </UCard>
 
         <div
           v-else
@@ -416,14 +341,13 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="pagination">
-            <NPagination
+            <UPagination
               v-model:page="page"
-              v-model:page-size="pageSize"
-              show-quick-jumper
-              show-size-picker
-              :page-sizes="[10, 20, 30, 40]"
-              :item-count="filteredAndSortedLives.length"
+              :total="filteredAndSortedLives.length"
+              :items-per-page="pageSize"
+              :show-edges="false"
             />
+            <USelect v-model="pageSize" :items="pageSizeOptions" size="sm" class="page-size" />
           </div>
         </div>
       </template>
@@ -443,6 +367,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 10px;
 }
+.toolbar,.toolbar__group { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }.toolbar { justify-content:space-between; }.toolbar-separator { margin:12px 0 0; }.page-size { width:110px; }
 
 .search-input {
   width: 280px;

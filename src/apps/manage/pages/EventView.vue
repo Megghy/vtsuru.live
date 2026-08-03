@@ -37,9 +37,9 @@ import {
   NText,
   NTime,
   NUl,
-  useMessage,
   useThemeVars,
 } from 'naive-ui'
+import { showSuccessToast, showErrorToast, showWarningToast } from '@/shared/services/toast'
 import { computed, h, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -74,7 +74,6 @@ interface GuardStatsModel {
 }
 
 const accountInfo = useAccount()
-const message = useMessage()
 const { run } = useApiAction()
 const themeVars = useThemeVars()
 
@@ -136,7 +135,7 @@ async function applyUserFilter() {
     userFilterApplied.value = parseUserFilter(userFilterInput.value)
     await fetchData(true)
   } catch (e) {
-    message.error((e as Error).message)
+    showErrorToast((e as Error).message)
   }
 }
 
@@ -165,15 +164,15 @@ async function get(currentOffset: number, currentLimit: number) {
     })
     if (data.code == 200) {
       if (currentOffset === 0) {
-        message.success(`成功获取 ${data.data.length} 条数据`)
+        showSuccessToast(`成功获取 ${data.data.length} 条数据`)
       }
       return data.data
     } else {
-      message.error(`获取数据失败: ${data.message}`)
+      showErrorToast(`获取数据失败: ${data.message}`)
       return []
     }
   } catch (err) {
-    message.error(`获取数据失败: ${(err as Error).message}`)
+    showErrorToast(`获取数据失败: ${(err as Error).message}`)
     return []
   }
 }
@@ -243,13 +242,13 @@ async function addManualGuard() {
 
   const uname = manualGuardUname.value.trim()
   if (!uname) {
-    message.error('uname 不能为空')
+    showErrorToast('uname 不能为空')
     return
   }
 
   const userKey = manualGuardUserKey.value.trim()
   if (!userKey) {
-    message.error('请填写 uid 或 ouid')
+    showErrorToast('请填写 uid 或 ouid')
     return
   }
 
@@ -260,18 +259,18 @@ async function addManualGuard() {
     if ('uid' in parsed) uid = parsed.uid
     if ('ouid' in parsed) ouid = parsed.ouid
   } catch (e) {
-    message.error((e as Error).message)
+    showErrorToast((e as Error).message)
     return
   }
 
   if (!uid && !ouid) {
-    message.error('请填写 uid 或 ouid')
+    showErrorToast('请填写 uid 或 ouid')
     return
   }
 
   const num = manualGuardNum.value ?? 1
   if (num <= 0) {
-    message.error('num 必须大于 0')
+    showErrorToast('num 必须大于 0')
     return
   }
 
@@ -287,14 +286,14 @@ async function addManualGuard() {
       price: manualGuardPrice.value ?? undefined,
     })
     if (resp.code !== 200) {
-      message.error(`添加失败: ${resp.message}`)
+      showErrorToast(`添加失败: ${resp.message}`)
       return
     }
 
-    message.success('已添加')
+    showSuccessToast('已添加')
     await fetchData(true)
   } catch (e) {
-    message.error(`添加失败: ${(e as Error).message}`)
+    showErrorToast(`添加失败: ${(e as Error).message}`)
   } finally {
     manualGuardLoading.value = false
   }
@@ -302,7 +301,7 @@ async function addManualGuard() {
 
 async function deleteGuardEvent(item: EventModel) {
   if (!item.id) {
-    message.error('无法删除：缺少 id')
+    showErrorToast('无法删除：缺少 id')
     return
   }
   const ok = await run(() => QueryPostAPI<string>(`${EVENT_API_URL}guard/delete`, { id: item.id }), {
@@ -338,7 +337,7 @@ function GetGuardColor(price: number | null | undefined): string {
 // 导出数据功能
 function exportData() {
   if (hasMore.value) {
-    message.warning('当前导出的是已加载的部分数据，并非所有数据。')
+    showWarningToast('当前导出的是已加载的部分数据，并非所有数据。')
   }
   let text = ''
   const fileName = generateExportFileName()
@@ -469,16 +468,16 @@ async function loadGuardList() {
     if (listResponse.code === 200) {
       guardList.value = listResponse.data
     } else {
-      message.error(`加载舰长列表失败: ${listResponse.message}`)
+      showErrorToast(`加载舰长列表失败: ${listResponse.message}`)
     }
 
     if (statsResponse.code === 200) {
       guardStats.value = statsResponse.data
     } else {
-      message.error(`加载舰长统计失败: ${statsResponse.message}`)
+      showErrorToast(`加载舰长统计失败: ${statsResponse.message}`)
     }
   } catch (err) {
-    message.error('加载舰长数据失败')
+    showErrorToast('加载舰长数据失败')
     console.error(err)
   } finally {
     guardListLoading.value = false

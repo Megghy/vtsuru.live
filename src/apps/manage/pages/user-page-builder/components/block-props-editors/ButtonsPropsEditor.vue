@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NForm, NFormItem, NInput, NInputNumber, NSelect, NText } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -14,52 +12,49 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="builder-form">
     <PropsGrid>
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('borderTitle')"
         label="边框标题"
       >
-        <NInput
-          v-model:value="blockProps.borderTitle"
+        <UInput
+          v-model="blockProps.borderTitle"
           placeholder="例如：导航"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('borderTitleAlign')"
         label="标题对齐"
       >
-        <NSelect
-          v-model:value="blockProps.borderTitleAlign"
-          :options="[
+        <USelect
+          v-model="blockProps.borderTitleAlign"
+          :items="[
             { label: '左', value: 'left' },
             { label: '中', value: 'center' },
             { label: '右', value: 'right' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="排列方向">
-        <NSelect
-          v-model:value="blockProps.direction"
-          :options="[
+      </UFormField>
+      <UFormField label="排列方向">
+        <USelect
+          v-model="blockProps.direction"
+          :items="[
             { label: '竖向', value: 'vertical' },
             { label: '横向 - 自动换行', value: 'horizontal' },
           ]"
         />
-      </NFormItem>
+      </UFormField>
       <ButtonAppearanceFields :block="props.block" />
-      <NFormItem label="间距 px">
-        <NInputNumber
-          v-model:value="blockProps.gap"
+      <UFormField label="间距 px">
+        <UInputNumber
+          v-model="blockProps.gap"
           :min="0"
           :max="32"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="按钮项"
       >
@@ -73,45 +68,45 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="标题">
-                <NInput v-model:value="item.label" />
-              </NFormItem>
-              <NFormItem label="跳转类型">
-                <NSelect
+              <UFormField label="标题">
+                <UInput v-model="item.label" />
+              </UFormField>
+              <UFormField label="跳转类型">
+                <USelect
                   :value="getNavigationTargetType(item)"
-                  :options="[
+                  :items="[
                     { label: '页面', value: 'page' },
                     { label: '外链', value: 'external' },
                     { label: '返回', value: 'back' },
                   ]"
-                  @update:value="(value) => setNavigationTargetType(item, value)"
+                  @update:model-value="(value) => setNavigationTargetType(item, value as 'page' | 'external' | 'back')"
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="目标"
               >
-                <NSelect
+                <USelect
                   v-if="item.page"
-                  v-model:value="item.page"
-                  :options="internalPageOptions"
+                  v-model="item.page"
+                  :items="internalPageOptions"
                 />
-                <NInput
+                <UInput
                   v-else-if="!item.back"
-                  v-model:value="item.url"
+                  v-model="item.url"
                   placeholder="https://..."
                 />
-                <NText
+                <span
+                  class="builder-text"
                   v-else
-                  depth="3"
                 >
                   点击后返回上一页
-                </NText>
-              </NFormItem>
+                </span>
+              </UFormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

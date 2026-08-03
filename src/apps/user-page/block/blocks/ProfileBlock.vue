@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAvatar } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
@@ -41,7 +40,7 @@ const model = computed(() => {
   >
     <div class="profile-hero">
       <div class="avatar-container">
-        <NAvatar
+        <UAvatar
           v-if="model.avatarUrl"
           :src="model.avatarUrl"
           :img-props="{
@@ -50,7 +49,6 @@ const model = computed(() => {
             decoding: 'async',
             alt: model.displayName || '用户头像',
           }"
-          round
           :size="120"
           class="profile-avatar"
         />

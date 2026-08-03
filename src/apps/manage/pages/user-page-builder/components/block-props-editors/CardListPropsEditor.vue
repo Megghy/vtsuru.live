@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { ImageOutline } from '@vicons/ionicons5'
-import { NButton, NDynamicTags, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -22,32 +19,29 @@ function ensureAction(item: Record<string, any>, key: 'primaryAction' | 'seconda
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="builder-form">
     <PropsGrid>
-      <NFormItem label="布局">
-        <NSelect
-          v-model:value="blockProps.layout"
-          :options="[
+      <UFormField label="布局">
+        <USelect
+          v-model="blockProps.layout"
+          :items="[
             { label: '网格', value: 'grid' },
             { label: '列表', value: 'list' },
           ]"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('columns')"
         label="列数"
       >
-        <NInputNumber
-          v-model:value="blockProps.columns"
+        <UInputNumber
+          v-model="blockProps.columns"
           :min="1"
           :max="4"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         class="span-full"
         label="卡片"
       >
@@ -69,62 +63,61 @@ function ensureAction(item: Record<string, any>, key: 'primaryAction' | 'seconda
           </template>
           <template #default="{ item, index }">
             <PropsGrid>
-              <NFormItem
+              <UFormField
                 class="span-full"
                 label="图片"
               >
-                <NFlex align="center">
-                  <NButton
-                    size="small"
+                <div class="builder-row">
+                  <UButton
+                    size="sm"
                     :loading="editor.isUploading.value"
                     @click="editor.triggerUploadItemImage(props.block, index)"
                   >
                     <template #icon>
-                      <NIcon><ImageOutline /></NIcon>
+                      <UIcon name="i-lucide-image" />
                     </template>
                     选择图片
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </UButton>
+                  <UButton
+                    size="sm"
+                    variant="soft"
                     :disabled="!item.imageFile"
                     @click="editor.clearUploadedItemImage(props.block, index)"
                   >
                     清除
-                  </NButton>
+                  </UButton>
                   <img
                     v-if="item.imageFile?.path"
                     :src="item.imageFile.path"
                     alt=""
                     class="card-image-preview"
                   />
-                </NFlex>
-              </NFormItem>
-              <NFormItem label="标题">
-                <NInput
-                  v-model:value="item.title"
+                </div>
+              </UFormField>
+              <UFormField label="标题">
+                <UInput
+                  v-model="item.title"
                   maxlength="100"
                   show-count
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="正文"
               >
-                <NInput
-                  v-model:value="item.body"
-                  type="textarea"
+                <UTextarea
+                  v-model="item.body"
                   maxlength="1000"
                   show-count
                   :autosize="{ minRows: 3, maxRows: 8 }"
                 />
-              </NFormItem>
-              <NFormItem
+              </UFormField>
+              <UFormField
                 class="span-full"
                 label="标签"
               >
-                <NDynamicTags v-model:value="item.tags" />
-              </NFormItem>
+                <UInputTags v-model="item.tags" />
+              </UFormField>
             </PropsGrid>
             <CardActionEditor
               :action="ensureAction(item, 'primaryAction')"
@@ -138,9 +131,9 @@ function ensureAction(item: Record<string, any>, key: 'primaryAction' | 'seconda
             />
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>
 
 <style scoped>

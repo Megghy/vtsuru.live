@@ -19,8 +19,8 @@ import {
   NText,
   NTime,
   NTooltip,
-  useMessage,
 } from 'naive-ui'
+import { showSuccessToast } from '@/shared/services/toast'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -40,7 +40,6 @@ import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
 const route = useRoute()
-const message = useMessage()
 const useQB = useQuestionBox()
 
 const selectedTabItem = ref(route.query.send ? '1' : '0')
@@ -62,7 +61,7 @@ function onOpenReply(question: QAInfo) {
 async function refresh() {
   if (selectedTabItem.value === '0' || selectedTabItem.value === '2') await useQB.GetRecieveQAInfo()
   if (selectedTabItem.value === '1') await useQB.GetSendQAInfo()
-  message.success('已刷新')
+  showSuccessToast('已刷新')
 }
 
 // 按需加载发送数据

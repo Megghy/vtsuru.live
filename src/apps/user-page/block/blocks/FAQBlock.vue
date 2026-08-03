@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { HelpCircleOutline, ChevronDownOutline } from '@vicons/ionicons5'
-import { NCollapse, NCollapseItem, NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -52,18 +51,18 @@ const items = computed(() => {
     :backgrounded="cfg.backgrounded"
   >
     <template #header>
-      <NFlex
+      <div
         align="center"
         style="gap: 8px"
       >
-        <NIcon
+        <span
           size="18"
           depth="2"
         >
           <HelpCircleOutline />
-        </NIcon>
+        </span>
         <span>{{ cfg.title }}</span>
-      </NFlex>
+      </div>
     </template>
 
     <div
@@ -73,31 +72,27 @@ const items = computed(() => {
       暂无内容
     </div>
 
-    <NCollapse
+    <div
       v-else
-      :accordion="cfg.accordion"
       class="faq-collapse"
-      arrow-placement="right"
     >
-      <template #arrow>
-        <NIcon><ChevronDownOutline /></NIcon>
-      </template>
-      <NCollapseItem
+      <details
         v-for="(it, idx) in items"
         :key="idx"
-        :name="String(idx)"
+        :name="cfg.accordion ? 'vtsuru-faq' : undefined"
         class="faq-item"
       >
-        <template #header>
+        <summary class="faq-summary">
           <span class="faq-q">
             {{ it.q || `问题 ${idx + 1}` }}
           </span>
-        </template>
+          <ChevronDownOutline class="faq-arrow" />
+        </summary>
         <div class="faq-a">
           {{ it.a }}
         </div>
-      </NCollapseItem>
-    </NCollapse>
+      </details>
+    </div>
   </BlockCard>
 </template>
 
@@ -120,12 +115,32 @@ const items = computed(() => {
   overflow: hidden;
 }
 
-:deep(.faq-item.n-collapse-item--active) {
+.faq-item[open] {
   background: var(--vtsuru-bg-muted);
 }
 
-:deep(.faq-item .n-collapse-item__header) {
-  padding: 12px 16px !important;
+.faq-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-arrow {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.faq-item[open] .faq-arrow {
+  transform: rotate(180deg);
 }
 
 .faq-q {

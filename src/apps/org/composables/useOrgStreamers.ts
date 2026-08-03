@@ -1,15 +1,14 @@
-import { useMessage } from 'naive-ui'
 import { computed, inject, provide, ref } from 'vue'
 import type { InjectionKey } from 'vue'
 
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
+import { showErrorToast, showSuccessToast } from '@/shared/services/toast'
 
 import type { OrgStreamerDetailModel, OrgStreamerItem, StreamerOption } from '../types'
 import type { OrgContext } from './useOrgContext'
 
 export function useOrgStreamers(ctx: OrgContext) {
-  const message = useMessage()
   const streamers = ref<OrgStreamerItem[]>([])
   const loading = ref(false)
   const includeAll = ref(false)
@@ -37,7 +36,7 @@ export function useOrgStreamers(ctx: OrgContext) {
         '加载主播失败',
       )
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载主播失败')
+      showErrorToast(err instanceof Error ? err.message : '加载主播失败')
     } finally {
       loading.value = false
     }
@@ -51,10 +50,10 @@ export function useOrgStreamers(ctx: OrgContext) {
         }),
         '移除失败',
       )
-      message.success('移除成功')
+      showSuccessToast('移除成功')
       await load()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '移除失败')
+      showErrorToast(err instanceof Error ? err.message : '移除失败')
     }
   }
 
@@ -78,7 +77,6 @@ export function injectOrgStreamers(): OrgStreamersStore {
 }
 
 export function useStreamerDetail(ctx: OrgContext) {
-  const message = useMessage()
   const show = ref(false)
   const selectedId = ref<number | null>(null)
   const loading = ref(false)
@@ -121,7 +119,7 @@ export function useStreamerDetail(ctx: OrgContext) {
       editStatus.value = data.status
       editNote.value = data.note || ''
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载失败')
+      showErrorToast(err instanceof Error ? err.message : '加载失败')
     } finally {
       loading.value = false
     }
@@ -145,11 +143,11 @@ export function useStreamerDetail(ctx: OrgContext) {
         }),
         '保存失败',
       )
-      message.success('已保存')
+      showSuccessToast('已保存')
       await onSaved?.()
       await load(true)
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '保存失败')
+      showErrorToast(err instanceof Error ? err.message : '保存失败')
     } finally {
       saving.value = false
     }

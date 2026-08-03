@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
-import type { SelectOption } from 'naive-ui'
-import { NSelect } from 'naive-ui'
 import { ref, watch } from 'vue'
 
 import { QueryGetAPI } from '@/api/query'
@@ -16,9 +14,14 @@ interface UserAutocompleteInfo {
   streamerName?: string
 }
 
+interface UserOption {
+  label: string
+  value: number
+}
+
 const props = defineProps<{
   placeholder?: string
-  size?: 'small' | 'medium' | 'large'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   disabled?: boolean
   limit?: number
 }>()
@@ -28,21 +31,21 @@ const emit = defineEmits<{
 }>()
 
 const model = defineModel<number | null>('value')
-
 const loading = ref(false)
-const options = ref<SelectOption[]>([])
+const options = ref<UserOption[]>([])
 
-function toOption(u: UserAutocompleteInfo): SelectOption {
-  const bili = u.biliUid ? ` | UID: ${u.biliUid}` : ''
-  const streamer = u.streamerName ? ` | ${u.streamerName}` : ''
+function toOption(user: UserAutocompleteInfo): UserOption {
+  const bili = user.biliUid ? ` | UID: ${user.biliUid}` : ''
+  const streamer = user.streamerName ? ` | ${user.streamerName}` : ''
+
   return {
-    value: u.id,
-    label: `${u.name}${streamer}${bili} (ID: ${u.id})`,
+    value: user.id,
+    label: `${user.name}${streamer}${bili} (ID: ${user.id})`,
   }
 }
 
-async function fetchOptions(q: string) {
-  const keyword = q.trim()
+async function fetchOptions(query: string) {
+  const keyword = query.trim()
   if (!keyword) {
     options.value = []
     return
@@ -50,21 +53,21 @@ async function fetchOptions(q: string) {
 
   loading.value = true
   try {
-    const resp = await QueryGetAPI<UserAutocompleteInfo[]>(`${USER_API_URL}autocomplete`, {
+    const response = await QueryGetAPI<UserAutocompleteInfo[]>(`${USER_API_URL}autocomplete`, {
       q: keyword,
       limit: props.limit,
     })
 
-    if (resp.code !== 200) {
+    if (response.code !== 200) {
       options.value = []
-      emit('error', resp.message)
+      emit('error', response.message)
       return
     }
 
-    options.value = (resp.data ?? []).map(toOption)
-  } catch (err) {
+    options.value = (response.data ?? []).map(toOption)
+  } catch (error) {
     options.value = []
-    emit('error', err instanceof Error ? err.message : '搜索用户失败')
+    emit('error', error instanceof Error ? error.message : '搜索用户失败')
   } finally {
     loading.value = false
   }
@@ -72,32 +75,28 @@ async function fetchOptions(q: string) {
 
 const debouncedFetch = useDebounceFn(fetchOptions, 250)
 
-function handleSearch(query: string) {
-  debouncedFetch(query)
-}
-
 watch(
-  () => model.value,
-  async (v) => {
-    if (!v) return
-    if (options.value.some((o) => o.value === v)) return
-    await fetchOptions(String(v))
+  model,
+  async (userId) => {
+    if (!userId || options.value.some((option) => option.value === userId)) return
+    await fetchOptions(String(userId))
   },
   { immediate: true },
 )
 </script>
 
 <template>
-  <NSelect
-    v-model:value="model"
-    filterable
-    remote
-    clearable
+  <USelectMenu
+    v-model="model"
+    :items="options"
+    value-key="value"
     :disabled="disabled"
-    :size="size || 'small'"
-    :placeholder="placeholder || '输入B站UID/用户名搜索(可选)'"
+    :size="size ?? 'sm'"
+    :placeholder="placeholder ?? '输入B站UID/用户名搜索(可选)'"
     :loading="loading"
-    :options="options"
-    @search="handleSearch"
+    :search-input="{ placeholder: '输入B站UID/用户名搜索' }"
+    ignore-filter
+    clear
+    @update:search-term="debouncedFetch"
   />
 </template>

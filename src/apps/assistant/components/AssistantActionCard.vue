@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NDatePicker, NFlex, NPopconfirm, NPopover, NSpin, NTag, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
+
+import { showWarningToast } from '@/shared/services/toast'
 
 import type { ProposalEditItem } from '../api/assistant'
 import type { ActionStatus } from '../schemas/assistant'
@@ -46,17 +47,23 @@ const canEdit = computed(() => proposal.value.preview.some((it) => it.fields?.le
 /** 定时选择器: 弹层显隐与待选时间戳 (默认 1 小时后) */
 const schedulePicker = ref(false)
 const scheduleTs = ref<number | null>(null)
-/** 禁用过去时间 */
-function disablePastDate(ts: number) {
-  return ts < Date.now() - 60_000
-}
+const confirmHighRisk = ref(false)
+const scheduleInput = computed({
+  get: () =>
+    scheduleTs.value
+      ? new Date(scheduleTs.value - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+      : '',
+  set: (value: string) => {
+    scheduleTs.value = value ? new Date(value).getTime() : null
+  },
+})
 function openSchedulePicker() {
   scheduleTs.value = Date.now() + 60 * 60 * 1000
   schedulePicker.value = true
 }
 function confirmSchedule() {
   if (!scheduleTs.value || scheduleTs.value <= Date.now()) {
-    window.$message?.warning('请选择一个将来的时间')
+    showWarningToast('请选择一个将来的时间')
     return
   }
   emit('schedule', scheduleTs.value)
@@ -93,242 +100,225 @@ function saveEdit() {
   emit('save', editDraft.value)
   editing.value = false
 }
+
+function confirmAction() {
+  emit('confirm')
+  confirmHighRisk.value = false
+}
 </script>
 
 <template>
-  <NCard
-    size="small"
-    class="action-card"
-    :bordered="true"
-  >
-    <template #header>
-      <NFlex
-        align="center"
-        :size="8"
-        :wrap="false"
-        class="action-card__header"
+  <div class="action-card">
+    <header class="action-card__header">
+      <span class="action-card__title">{{ proposal.title }}</span>
+      <UBadge
+        size="sm"
+        :color="RISK_META[proposal.risk]?.type"
+        variant="subtle"
       >
-        <NText class="action-card__title">
-          {{ proposal.title }}
-        </NText>
-        <NTag
-          size="tiny"
-          :type="RISK_META[proposal.risk]?.type"
-          :bordered="false"
-        >
-          {{ RISK_META[proposal.risk]?.label }}
-        </NTag>
-      </NFlex>
-    </template>
-    <template #header-extra>
-      <NTag
-        size="small"
-        :type="STATUS_META[proposal.status].type"
-        :bordered="false"
+        {{ RISK_META[proposal.risk]?.label }}
+      </UBadge>
+      <UBadge
+        size="sm"
+        :color="STATUS_META[proposal.status].type === 'default' ? 'neutral' : STATUS_META[proposal.status].type"
+        variant="subtle"
+        class="action-card__status"
       >
         {{ STATUS_META[proposal.status].label }}
-      </NTag>
-    </template>
+      </UBadge>
+    </header>
 
-    <NText
+    <p
       v-if="proposal.summary"
-      depth="3"
       class="action-card__summary"
     >
       {{ proposal.summary }}
-    </NText>
+    </p>
 
-    <NSpin
-      :show="isRunning"
-      size="small"
-    >
+    <div class="action-card__content">
+      <UIcon
+        v-if="isRunning"
+        name="i-lucide-loader-circle"
+        class="action-card__spinner animate-spin"
+      />
       <AssistantActionRenderer
         v-model:draft="editDraft"
         :proposal="proposal"
         :editable="editing"
       />
-    </NSpin>
+    </div>
 
-    <NAlert
+    <UAlert
       v-if="proposal.status === 'failed' && proposal.error"
-      type="error"
-      :show-icon="false"
+      color="error"
+      variant="subtle"
+      :description="proposal.error"
       class="action-card__alert"
-    >
-      {{ proposal.error }}
-    </NAlert>
-    <NAlert
+    />
+    <UAlert
       v-else-if="isScheduled"
-      type="info"
-      :show-icon="false"
+      color="info"
+      variant="subtle"
+      :description="`已设定 ${scheduledText} 自动执行`"
       class="action-card__alert"
-    >
-      已设定 {{ scheduledText }} 自动执行
-    </NAlert>
-    <NAlert
+    />
+    <UAlert
       v-else-if="proposal.status === 'requires_confirmation' && isHighRisk && !editing"
-      type="warning"
-      :show-icon="false"
+      color="warning"
+      variant="subtle"
+      description="高风险操作, 请确认后执行"
       class="action-card__alert"
-    >
-      高风险操作, 请确认后执行
-    </NAlert>
+    />
 
-    <template
+    <footer
       v-if="editing"
-      #action
+      class="action-card__actions"
     >
-      <NFlex
-        justify="end"
-        :size="8"
+      <UButton
+        size="sm"
+        color="neutral"
+        variant="ghost"
+        @click="cancelEdit"
       >
-        <NButton
-          size="small"
-          tertiary
-          @click="cancelEdit"
-        >
-          放弃
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
-          @click="saveEdit"
-        >
-          保存
-        </NButton>
-      </NFlex>
-    </template>
-    <template
+        放弃
+      </UButton>
+      <UButton
+        size="sm"
+        @click="saveEdit"
+      >
+        保存
+      </UButton>
+    </footer>
+    <footer
       v-else-if="isScheduled"
-      #action
+      class="action-card__actions"
     >
-      <NFlex
-        justify="end"
-        :size="8"
+      <UButton
+        size="sm"
+        color="neutral"
+        variant="ghost"
+        @click="emit('cancel-schedule')"
       >
-        <NButton
-          size="small"
-          tertiary
-          @click="emit('cancel-schedule')"
-        >
-          取消定时
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
-          @click="emit('confirm')"
-        >
-          立即执行
-        </NButton>
-      </NFlex>
-    </template>
-    <template
+        取消定时
+      </UButton>
+      <UButton
+        size="sm"
+        @click="emit('confirm')"
+      >
+        立即执行
+      </UButton>
+    </footer>
+    <footer
       v-else-if="isPending || proposal.status === 'failed'"
-      #action
+      class="action-card__actions"
     >
-      <NFlex
-        justify="end"
-        :size="8"
+      <UButton
+        v-if="canEdit"
+        size="sm"
+        color="neutral"
+        variant="ghost"
+        @click="startEdit"
       >
-        <NButton
-          v-if="canEdit"
-          size="small"
-          tertiary
-          @click="startEdit"
+        修改
+      </UButton>
+      <UButton
+        size="sm"
+        color="neutral"
+        variant="ghost"
+        @click="emit('reject')"
+      >
+        取消
+      </UButton>
+      <UPopover v-model:open="schedulePicker">
+        <UButton
+          size="sm"
+          color="neutral"
+          variant="ghost"
+          @click="openSchedulePicker"
         >
-          修改
-        </NButton>
-        <NButton
-          size="small"
-          tertiary
-          @click="emit('reject')"
-        >
-          取消
-        </NButton>
-        <NPopover
-          v-model:show="schedulePicker"
-          trigger="manual"
-          placement="top"
-        >
-          <template #trigger>
-            <NButton
-              size="small"
-              tertiary
-              @click="openSchedulePicker"
-            >
-              定时
-            </NButton>
-          </template>
-          <NFlex
-            vertical
-            :size="8"
-            class="action-card__schedule"
-          >
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              选择自动执行时间
-            </NText>
-            <NDatePicker
-              v-model:value="scheduleTs"
-              type="datetime"
-              :is-date-disabled="disablePastDate"
-              clearable
+          定时
+        </UButton>
+        <template #content>
+          <div class="action-card__schedule">
+            <span class="action-card__schedule-label"> 选择自动执行时间 </span>
+            <UInput
+              v-model="scheduleInput"
+              type="datetime-local"
             />
-            <NFlex
-              justify="end"
-              :size="8"
-            >
-              <NButton
-                size="tiny"
-                tertiary
+            <div class="action-card__schedule-actions">
+              <UButton
+                size="xs"
+                color="neutral"
+                variant="ghost"
                 @click="schedulePicker = false"
               >
                 取消
-              </NButton>
-              <NButton
-                size="tiny"
-                type="primary"
+              </UButton>
+              <UButton
+                size="xs"
                 @click="confirmSchedule"
               >
                 确定
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NPopover>
-        <NPopconfirm
-          v-if="isHighRisk"
-          @positive-click="emit('confirm')"
-        >
-          <template #trigger>
-            <NButton
-              size="small"
-              type="error"
-            >
-              {{ proposal.status === 'failed' ? '重试' : '确认执行' }}
-            </NButton>
-          </template>
-          确认执行该高风险操作?
-        </NPopconfirm>
-        <NButton
-          v-else
-          size="small"
-          type="primary"
-          @click="emit('confirm')"
-        >
-          {{ proposal.status === 'failed' ? '重试' : '确认执行' }}
-        </NButton>
-      </NFlex>
-    </template>
-  </NCard>
+              </UButton>
+            </div>
+          </div>
+        </template>
+      </UPopover>
+      <UButton
+        v-if="isHighRisk"
+        size="sm"
+        color="error"
+        @click="confirmHighRisk = true"
+      >
+        {{ proposal.status === 'failed' ? '重试' : '确认执行' }}
+      </UButton>
+      <UButton
+        v-else
+        size="sm"
+        @click="emit('confirm')"
+      >
+        {{ proposal.status === 'failed' ? '重试' : '确认执行' }}
+      </UButton>
+    </footer>
+
+    <UModal
+      v-model:open="confirmHighRisk"
+      title="确认执行"
+      description="该操作风险较高，执行后可能无法撤销。"
+    >
+      <template #footer>
+        <div class="action-card__actions">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="confirmHighRisk = false"
+          >
+            取消
+          </UButton>
+          <UButton
+            color="error"
+            @click="confirmAction"
+          >
+            确认执行
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+  </div>
 </template>
 
 <style scoped>
 .action-card {
   margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  background: var(--vtsuru-bg-elevated);
 }
 .action-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
 .action-card__title {
@@ -341,13 +331,50 @@ function saveEdit() {
 .action-card__summary {
   font-size: 13px;
   display: block;
-  margin-bottom: 6px;
+  margin: 6px 0;
+  color: var(--vtsuru-fg-muted);
 }
 .action-card__alert {
   margin-top: 8px;
   font-size: 12px;
 }
 .action-card__schedule {
+  display: flex;
   width: 240px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.action-card__schedule-label {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.action-card__status {
+  margin-left: auto;
+}
+
+.action-card__content {
+  position: relative;
+}
+
+.action-card__spinner {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  right: 4px;
+}
+
+.action-card__actions,
+.action-card__schedule-actions {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.action-card__actions {
+  margin-top: 10px;
 }
 </style>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMessage } from 'naive-ui'
 import { ref, toRef, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
@@ -15,7 +14,7 @@ const props = defineProps<{
   embedded?: boolean
 }>()
 
-const message = useMessage()
+const toast = useToast()
 const target = toRef(props, 'userInfo')
 const history = useQuestionBoxHistory()
 const publicQuestions = ref<QAInfo[]>([])
@@ -50,7 +49,7 @@ async function loadPublicQuestions() {
     publicQuestions.value = response.data
   } catch (error) {
     console.error('加载公开回复失败', error)
-    message.error(error instanceof Error ? error.message : '加载公开回复失败')
+    toast.add({ title: error instanceof Error ? error.message : '加载公开回复失败', color: 'error' })
   } finally {
     isLoadingQuestions.value = false
   }
@@ -64,18 +63,18 @@ async function loadTags() {
     tags.value = response.data.map(normalizeTag)
   } catch (error) {
     console.error('加载提问话题失败', error)
-    message.error(error instanceof Error ? error.message : '加载提问话题失败')
+    toast.add({ title: error instanceof Error ? error.message : '加载提问话题失败', color: 'error' })
   }
 }
 
 function removeHistory(id: string) {
   history.remove(id)
-  message.success('已删除本地记录')
+  toast.add({ title: '已删除本地记录', color: 'success' })
 }
 
 function clearHistory() {
   history.clear()
-  message.success('已清空本地记录')
+  toast.add({ title: '已清空本地记录', color: 'success' })
 }
 </script>
 

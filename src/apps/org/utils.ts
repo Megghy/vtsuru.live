@@ -3,7 +3,6 @@ const DEFAULT_COVER = 'https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617
 
 export { DEFAULT_AVATAR, DEFAULT_COVER }
 
-/** 给 B 站头像/封面附加尺寸后缀，已带 `@` 的直接返回 */
 export function withImageSize(url: string | null | undefined, suffix: string): string {
   if (!url) return ''
   return url.includes('@') ? url : `${url}${suffix}`
@@ -65,7 +64,6 @@ export function formatDate(timestamp: number): string {
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
 }
 
-/** 导出 CSV，自动转义并加 BOM 以兼容 Excel 中文 */
 export function exportCsv(filename: string, headers: string[], rows: (string | number)[][]) {
   const escape = (v: string | number) => {
     const s = String(v ?? '')

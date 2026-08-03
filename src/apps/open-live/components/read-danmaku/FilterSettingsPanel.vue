@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Add20Filled, Delete20Filled } from '@vicons/fluent'
-import { NButton, NCheckbox, NDivider, NDynamicTags, NIcon, NInput, NInputNumber, NSwitch, NText } from 'naive-ui'
-
 import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from './SectionField.vue'
@@ -23,8 +20,8 @@ function removeReplacement(index: number) {
       label="屏蔽用户"
       hint="这些用户的弹幕/礼物不会播报"
     >
-      <NDynamicTags
-        v-model:value="settings.blacklistUsers"
+      <UInputTags
+        v-model="settings.blacklistUsers"
         size="small"
       />
     </SectionField>
@@ -33,20 +30,20 @@ function removeReplacement(index: number) {
       label="屏蔽关键词"
       hint="包含这些词的弹幕不会播报"
     >
-      <NDynamicTags
-        v-model:value="settings.blacklistKeywords"
+      <UInputTags
+        v-model="settings.blacklistKeywords"
         size="small"
       />
     </SectionField>
 
-    <NDivider style="margin: 4px 0" />
+    <USeparator style="margin: 4px 0" />
 
     <SectionField
       label="字数限制"
       hint="0 = 不限制，超出部分截断"
     >
-      <NInputNumber
-        v-model:value="settings.maxTextLength"
+      <UInputNumber
+        v-model="settings.maxTextLength"
         :min="0"
         :max="500"
         size="small"
@@ -59,8 +56,8 @@ function removeReplacement(index: number) {
       label="防刷屏间隔 (秒)"
       hint="同一用户在此间隔内只播报一条，0 = 不限制"
     >
-      <NInputNumber
-        v-model:value="settings.antiSpamInterval"
+      <UInputNumber
+        v-model="settings.antiSpamInterval"
         :min="0"
         :max="60"
         size="small"
@@ -69,11 +66,11 @@ function removeReplacement(index: number) {
       />
     </SectionField>
 
-    <NCheckbox v-model:checked="settings.deduplicateIdentical">
-      <NText style="font-size: 12px"> 去重：10 秒内完全相同的内容只播一次 </NText>
-    </NCheckbox>
+    <UCheckbox v-model="settings.deduplicateIdentical">
+      <span style="font-size: 12px"> 去重：10 秒内完全相同的内容只播一次 </span>
+    </UCheckbox>
 
-    <NDivider style="margin: 4px 0" />
+    <USeparator style="margin: 4px 0" />
 
     <SectionField
       label="文本替换规则"
@@ -85,54 +82,54 @@ function removeReplacement(index: number) {
           :key="i"
           class="rule-row"
         >
-          <NInput
-            v-model:value="rule.pattern"
+          <UInput
+            v-model="rule.pattern"
             placeholder="匹配"
             size="small"
             style="flex: 1"
           />
-          <NText
+          <span
             depth="3"
             style="font-size: 11px; flex-shrink: 0"
           >
             →
-          </NText>
-          <NInput
-            v-model:value="rule.replacement"
+          </span>
+          <UInput
+            v-model="rule.replacement"
             placeholder="替换为"
             size="small"
             style="flex: 1"
           />
-          <NSwitch
-            v-model:value="rule.isRegex"
+          <USwitch
+            v-model="rule.isRegex"
             size="small"
           >
-            <template #checked> 正则 </template>
-            <template #unchecked> 文本 </template>
-          </NSwitch>
-          <NButton
+            <template v-if="false"> 正则 </template>
+            <template v-if="false"> 文本 </template>
+          </USwitch>
+          <UButton
             size="tiny"
-            tertiary
-            type="error"
+            variant="soft"
+            color="error"
             @click="removeReplacement(i)"
           >
-            <template #icon>
-              <NIcon :component="Delete20Filled" />
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
             </template>
-          </NButton>
+          </UButton>
         </div>
       </div>
-      <NButton
+      <UButton
         size="tiny"
-        tertiary
-        type="primary"
+        variant="soft"
+        color="primary"
         @click="addReplacement"
       >
-        <template #icon>
-          <NIcon :component="Add20Filled" />
+        <template #leading>
+          <UIcon name="i-lucide-circle" />
         </template>
         添加规则
-      </NButton>
+      </UButton>
     </SectionField>
   </div>
 </template>

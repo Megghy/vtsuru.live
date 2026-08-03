@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NCard, NText } from 'naive-ui'
 import type { ComponentPublicInstance } from 'vue'
 import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 
@@ -114,7 +113,12 @@ const gamepad = useGamepadStore()
           :viewBox="effectiveViewBox"
           preserveAspectRatio="xMidYMid meet"
         />
-        <NText v-else> 无法加载手柄 SVG </NText>
+        <p
+          v-else
+          class="gp-empty"
+        >
+          无法加载手柄 SVG
+        </p>
       </div>
       <div
         v-if="useOverlayButtons"
@@ -141,12 +145,12 @@ const gamepad = useGamepadStore()
         </template>
       </div>
     </div>
-    <NCard
+    <div
       v-else
       class="gp-error"
     >
       无效的游戏手柄类型: {{ selectedType }}
-    </NCard>
+    </div>
   </div>
 </template>
 
@@ -204,5 +208,13 @@ const gamepad = useGamepadStore()
 }
 .gp-error {
   max-width: 400px;
+  padding: 16px;
+  color: var(--vtsuru-fg-muted);
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+}
+.gp-empty {
+  color: var(--vtsuru-fg-muted);
 }
 </style>

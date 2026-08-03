@@ -24,6 +24,7 @@ import {
   NTag,
   NText,
 } from 'naive-ui'
+import { showErrorToast, showInfoToast, showSuccessToast, showWarningToast } from '@/shared/services/toast'
 import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 
 import { formatDuration, formatFileSize } from '@/apps/manage/composables/formatters'
@@ -31,8 +32,6 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 
 import { buildCommands, defaultSettings, formatMap, formats, positive, presets } from './mediaConvert'
 import MediaTrimmer from './MediaTrimmer.vue'
-
-const message = useMessage()
 const ffmpeg = new FFmpeg()
 const ffmpegCoreVersion = '0.12.10'
 const ffmpegCoreBaseURL = `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${ffmpegCoreVersion}/dist/umd`
@@ -178,7 +177,7 @@ function isVideoFile(file: File) {
 function addFiles(files: File[]) {
   const mediaFiles = files.filter(isMediaFile)
   if (!mediaFiles.length) {
-    message.warning('未检测到可处理的音视频文件')
+    showWarningToast('未检测到可处理的音视频文件')
     return
   }
   for (const file of mediaFiles) {
@@ -242,7 +241,7 @@ function capturePoster(item: MediaItem, video: HTMLVideoElement) {
 function applyPreset(key: string) {
   const preset = presets.find((p) => p.key === key)!
   if (preset.videoOnly && items.value.length && !hasVideoSource.value) {
-    message.warning('当前没有视频源文件，无法使用该预设')
+    showWarningToast('当前没有视频源文件，无法使用该预设')
     return
   }
   Object.assign(settings, preset.patch)
@@ -262,11 +261,11 @@ async function loadCore() {
 async function processAll() {
   const queue = pendingItems.value
   if (!queue.length) {
-    message.warning('没有待处理的文件')
+    showWarningToast('没有待处理的文件')
     return
   }
   if (invalidItems.value.length) {
-    message.warning('当前输出为视频/GIF，只支持视频源文件；音频文件请选择音频输出格式')
+    showWarningToast('当前输出为视频/GIF，只支持视频源文件；音频文件请选择音频输出格式')
     return
   }
 
@@ -282,7 +281,7 @@ async function processAll() {
       processedCount.value++
     }
     if (canceled) {
-      message.info('已取消处理')
+      showInfoToast('已取消处理')
     } else {
       const failed = queue.filter((i) => i.status === 'error').length
       const succeeded = queue.filter((i) => i.status === 'done').length
@@ -292,10 +291,11 @@ async function processAll() {
           count: succeeded,
         })
       }
-      message[failed ? 'warning' : 'success'](failed ? `处理完成，${failed} 个文件失败` : '全部处理完成')
+      if (failed) showWarningToast(`处理完成，${failed} 个文件失败`)
+      else showSuccessToast('全部处理完成')
     }
   } catch (error) {
-    if (!canceled) message.error(`FFmpeg 执行失败：${error instanceof Error ? error.message : error}`)
+    if (!canceled) showErrorToast(`FFmpeg 执行失败：${error instanceof Error ? error.message : error}`)
   } finally {
     processing.value = false
     currentItem.value = null
@@ -366,7 +366,7 @@ function downloadOne(item: MediaItem) {
 
 async function downloadAll() {
   if (!doneItems.value.length) {
-    message.warning('没有可下载的文件')
+    showWarningToast('没有可下载的文件')
     return
   }
   const zip = new JSZip()

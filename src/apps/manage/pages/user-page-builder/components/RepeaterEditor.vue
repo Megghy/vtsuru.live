@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { AddOutline, ChevronDownOutline, CopyOutline, ReorderThreeOutline, TrashOutline } from '@vicons/ionicons5'
-import { NButton, NIcon, NPopconfirm, NText, NTooltip } from 'naive-ui'
 import { computed, ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -17,6 +15,10 @@ const itemsModel = computed({
   get: () => props.items,
   set: (items) => props.items.splice(0, props.items.length, ...items),
 })
+
+function removeItem(index: number) {
+  if (window.confirm('确定删除这个项目吗？')) itemsModel.value.splice(index, 1)
+}
 
 watchEffect(() => {
   props.items.forEach((item) => {
@@ -57,22 +59,22 @@ function duplicateItem(index: number) {
         class="repeater-item"
       >
         <header class="repeater-header">
-          <NIcon
+          <UIcon
             class="repeater-drag-handle"
             size="18"
             title="拖拽排序"
-          >
-            <ReorderThreeOutline />
-          </NIcon>
+            name="i-lucide-grip-vertical"
+          />
           <button
             class="repeater-toggle"
             type="button"
             @click="toggle(item._id)"
           >
-            <NIcon :class="{ expanded: expandedIds.has(item._id) }">
-              <ChevronDownOutline />
-            </NIcon>
-            <NText strong>
+            <UIcon
+              :class="{ expanded: expandedIds.has(item._id) }"
+              name="i-lucide-chevron-down"
+            />
+            <span class="builder-text">
               <slot
                 name="title"
                 :item="item"
@@ -80,44 +82,31 @@ function duplicateItem(index: number) {
               >
                 项目 {{ index + 1 }}
               </slot>
-            </NText>
+            </span>
           </button>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                aria-label="复制项目"
-                @click="duplicateItem(index)"
-              >
-                <template #icon>
-                  <NIcon><CopyOutline /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            复制项目
-          </NTooltip>
-          <NPopconfirm
-            positive-text="删除"
-            negative-text="取消"
-            @positive-click="itemsModel.splice(index, 1)"
+          <UTooltip>
+            <UButton
+              variant="ghost"
+              square
+              size="xs"
+              aria-label="复制项目"
+              @click="duplicateItem(index)"
+            >
+              <template #icon>
+                <UIcon name="i-lucide-copy" />
+              </template>
+            </UButton>
+            <template #content> 复制项目 </template></UTooltip
           >
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                type="error"
-                aria-label="删除项目"
-              >
-                <template #icon>
-                  <NIcon><TrashOutline /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            确定删除这个项目吗？
-          </NPopconfirm>
+          <UButton
+            icon="i-lucide-trash-2"
+            variant="ghost"
+            square
+            size="xs"
+            color="error"
+            aria-label="删除项目"
+            @click="removeItem(index)"
+          />
         </header>
         <div
           v-show="expandedIds.has(item._id)"
@@ -130,17 +119,17 @@ function duplicateItem(index: number) {
         </div>
       </section>
     </VueDraggable>
-    <NButton
+    <UButton
       block
-      secondary
-      type="primary"
+      variant="soft"
+      color="primary"
       @click="addItem"
     >
       <template #icon>
-        <NIcon><AddOutline /></NIcon>
+        <UIcon name="i-lucide-plus" />
       </template>
       {{ addText || '添加项目' }}
-    </NButton>
+    </UButton>
   </div>
 </template>
 
@@ -182,15 +171,15 @@ function duplicateItem(index: number) {
   text-align: left;
   cursor: pointer;
 }
-.repeater-toggle .n-icon {
+.repeater-toggle :deep(svg) {
   flex: none;
   transform: rotate(-90deg);
   transition: transform 140ms ease;
 }
-.repeater-toggle .n-icon.expanded {
+.repeater-toggle.expanded :deep(svg) {
   transform: rotate(0);
 }
-.repeater-toggle .n-text {
+.repeater-toggle .builder-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

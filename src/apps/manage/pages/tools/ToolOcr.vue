@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useClipboard, useDropZone, useEventListener, useFileDialog } from '@vueuse/core'
 import { NButton, NCard, NFlex, NSelect, NSpin, NText } from 'naive-ui'
+import { showInfoToast, showSuccessToast, showErrorToast, showWarningToast } from '@/shared/services/toast'
 import * as ort from 'onnxruntime-web'
 import { nextTick, ref } from 'vue'
 
@@ -9,8 +10,6 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 
 ort.env.wasm.numThreads = 1
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
-
-const message = useMessage()
 const { copy } = useClipboard()
 const { targetLang, translating, translate, mode, modeOptions } = useTranslate()
 
@@ -72,7 +71,7 @@ useEventListener('paste', (e: ClipboardEvent) => {
 
 function addFiles(files: File[]) {
   const imgs = files.filter((f) => f.type.startsWith('image/'))
-  if (!imgs.length) return message.warning('未检测到图片文件')
+  if (!imgs.length) return showWarningToast('未检测到图片文件')
   for (const file of imgs) {
     const task: ImageTask = {
       id: nextId++,
@@ -139,7 +138,7 @@ async function recognizeOne(task: ImageTask) {
     })
     return true
   } catch (e: any) {
-    message.error(`识别失败: ${e?.message ?? e}`)
+    showErrorToast(`识别失败: ${e?.message ?? e}`)
     return false
   } finally {
     task.processing = false
@@ -148,13 +147,13 @@ async function recognizeOne(task: ImageTask) {
 
 async function recognizeAll() {
   const pending = tasks.value.filter((t) => !t.lines.length && !t.processing)
-  if (!pending.length) return message.info('没有待识别的图片')
+  if (!pending.length) return showInfoToast('没有待识别的图片')
   let succeeded = 0
   for (const task of pending) {
     if (await recognizeOne(task)) succeeded++
   }
-  if (succeeded > 0) message.success(`已识别 ${succeeded} 张图片`)
-  else message.warning('没有图片识别成功')
+  if (succeeded > 0) showSuccessToast(`已识别 ${succeeded} 张图片`)
+  else showWarningToast('没有图片识别成功')
 }
 
 function drawOverlay(taskId: number, highlightIdx?: number | null) {
@@ -210,17 +209,17 @@ async function copyAll() {
     .join('\n\n')
   if (!allText) return
   await copy(allText)
-  message.success('已复制全部文字')
+  showSuccessToast('已复制全部文字')
 }
 
 async function copyOne(task: ImageTask) {
   if (!task.fullText) return
   await copy(task.fullText)
-  message.success('已复制')
+  showSuccessToast('已复制')
 }
 
 async function translateTask(task: ImageTask) {
-  if (!task.fullText) return message.warning('请先识别文字')
+  if (!task.fullText) return showWarningToast('请先识别文字')
   try {
     task.translatedText = await translate(task.fullText)
     trackManageToolSuccess('Ocr', 'translate', {
@@ -229,7 +228,7 @@ async function translateTask(task: ImageTask) {
       chars: task.fullText.length,
     })
   } catch (e: any) {
-    message.error(`翻译失败: ${e?.message ?? e}`)
+    showErrorToast(`翻译失败: ${e?.message ?? e}`)
   }
 }
 </script>

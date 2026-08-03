@@ -1,23 +1,11 @@
 <script setup lang="ts">
 import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
 import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
-import {
-  NAvatar,
-  NButton,
-  NCard,
-  NFlex,
-  NIcon,
-  NPopconfirm,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useThemeVars,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
+import PublicTime from '@/apps/user-page/PublicTime.vue'
 import { VTSURU_API_URL } from '@/shared/config'
 import { useForumStore } from '@/store/useForumStore'
 
@@ -33,10 +21,8 @@ const emits = defineEmits<{
 }>()
 const useForum = useForumStore()
 const accountInfo = useAccount()
-const themeVars = useThemeVars()
-
-const accentColor = computed(() => themeVars.value.errorColor)
-const mutedIconColor = computed(() => themeVars.value.textColor3)
+const accentColor = 'var(--ui-error)'
+const mutedIconColor = 'var(--vtsuru-surface-fg-subtle)'
 
 const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
@@ -56,6 +42,16 @@ function restoreComment(id: number) {
     }
   })
 }
+
+function confirmDeleteComment() {
+  const content =
+    props.item.isDeleted || props.topic.isAdmin ? '确定完全删除这条评论吗？这将无法恢复。' : '确定删除这条评论吗？'
+  if (window.confirm(content)) delComment(props.item.id)
+}
+
+function confirmRestoreComment() {
+  if (window.confirm('要恢复这条评论吗？')) restoreComment(props.item.id)
+}
 function delReply(id: number) {
   useForum.DelReply(id).then((success) => {
     if (success) {
@@ -66,50 +62,50 @@ function delReply(id: number) {
 </script>
 
 <template>
-  <NFlex>
-    <NAvatar
+  <div>
+    <UAvatar
       :src="`${VTSURU_API_URL}user-face/${item.user.id}?size=64`"
       :img-props="{ referrerpolicy: 'no-referrer' }"
     />
-    <NFlex
+    <div
       vertical
       style="flex: 1"
       :size="2"
     >
-      <NFlex align="center">
-        <NTag
+      <div align="center">
+        <UBadge
           v-if="item.isDeleted"
-          type="warning"
+          color="warning"
           :bordered="false"
         >
           已删除
-        </NTag>
-        <NText>
+        </UBadge>
+        <span>
           {{ item.user.name }}
-        </NText>
-        <NText depth="3">
-          <NTooltip>
-            <template #trigger>
-              <NTime
-                :time="item.sendAt"
-                type="relative"
-              />
-            </template>
-            <NTime :time="item.sendAt" />
-          </NTooltip>
-        </NText>
-      </NFlex>
+        </span>
+        <span depth="3">
+          <UTooltip>
+            <PublicTime
+              :time="item.sendAt"
+              type="relative"
+            />
+
+            <template #content><PublicTime :time="item.sendAt" /></template>
+          </UTooltip>
+        </span>
+      </div>
       <div
         class="editor-content-view"
         v-html="item.content"
       />
 
-      <NCard
+      <UCard
         v-if="item.replies.length > 0"
+        class="user-page-card"
         size="small"
         style="margin-bottom: 10px"
       >
-        <NFlex vertical>
+        <div vertical>
           <ForumReplyItem
             v-for="reply in item.replies"
             :key="reply.id"
@@ -121,102 +117,87 @@ function delReply(id: number) {
             :reply-to-id="reply.replyTo"
             @delete="delReply"
           />
-        </NFlex>
-      </NCard>
-      <NFlex>
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              size="small"
-              text
-              :loading="useForum.isLikeLoading"
-              :disabled="!canOprate"
-              @click="
-                useForum.LikeComment(item.id, !item.isLiked).then((success) => {
-                  if (success) {
-                    item.isLiked = !item.isLiked
-                    item.likeCount += item.isLiked ? 1 : -1
-                  }
-                })
-              "
-            >
-              <template #icon>
-                <NIcon
-                  :component="item.isLiked ? Heart : HeartOutline"
-                  :color="item.isLiked ? accentColor : undefined"
-                />
-              </template>
-              {{ item.likeCount }}
-            </NButton>
-          </template>
-          点赞
-        </NTooltip>
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              size="small"
-              text
-              :disabled="!canOprate"
-              @click="useForum.SetReplyingComment(item)"
-            >
-              <template #icon>
-                <NIcon :component="ArrowReply16Filled" />
-              </template>
-              {{ item.replies.length }}
-            </NButton>
-          </template>
-          回复
-        </NTooltip>
-        <NFlex
+        </div>
+      </UCard>
+      <div>
+        <UTooltip>
+          <UButton
+            size="sm"
+            variant="link"
+            :loading="useForum.isLikeLoading"
+            :disabled="!canOprate"
+            @click="
+              useForum.LikeComment(item.id, !item.isLiked).then((success) => {
+                if (success) {
+                  item.isLiked = !item.isLiked
+                  item.likeCount += item.isLiked ? 1 : -1
+                }
+              })
+            "
+          >
+            <template #leading>
+              <component
+                :is="item.isLiked ? Heart : HeartOutline"
+                :color="item.isLiked ? accentColor : undefined"
+              />
+            </template>
+            {{ item.likeCount }}
+          </UButton>
+          <template #content> 点赞 </template></UTooltip
+        >
+        <UTooltip>
+          <UButton
+            size="sm"
+            variant="link"
+            :disabled="!canOprate"
+            @click="useForum.SetReplyingComment(item)"
+          >
+            <template #leading>
+              <component :is="ArrowReply16Filled" />
+            </template>
+            {{ item.replies.length }}
+          </UButton>
+          <template #content> 回复 </template></UTooltip
+        >
+        <div
           style="flex: 1"
           justify="end"
         >
-          <NTooltip v-if="item.user.id === accountInfo.id || topic.isAdmin">
-            <template #trigger>
-              <NPopconfirm @positive-click="delComment(item.id)">
-                <template #trigger>
-                  <NButton
-                    size="small"
-                    text
-                    :disabled="!canOprate"
-                  >
-                    <template #icon>
-                      <NIcon
-                        :component="Delete24Filled"
-                        :color="item.isDeleted || topic.isAdmin ? accentColor : mutedIconColor"
-                      />
-                    </template>
-                  </NButton>
-                </template>
-                {{ item.isDeleted ? '确定完全删除这条评论吗? 这将无法恢复' : '确定删除这条评论吗' }}
-              </NPopconfirm>
-            </template>
-            {{ item.isDeleted || topic.isAdmin ? '完全' : '' }}删除
-          </NTooltip>
-          <NTooltip v-if="item.isDeleted && topic.isAdmin">
-            <template #trigger>
-              <NPopconfirm @positive-click="restoreComment(item.id)">
-                <template #trigger>
-                  <NButton
-                    size="small"
-                    text
-                    :disabled="!canOprate"
-                  >
-                    <template #icon>
-                      <NIcon
-                        :component="SyncCircleSharp"
-                        :color="mutedIconColor"
-                      />
-                    </template>
-                  </NButton>
-                </template>
-                要恢复这条评论吗?
-              </NPopconfirm>
-            </template>
-            恢复
-          </NTooltip>
-        </NFlex>
-      </NFlex>
-    </NFlex>
-  </NFlex>
+          <UTooltip v-if="item.user.id === accountInfo.id || topic.isAdmin">
+            <UButton
+              size="sm"
+              variant="link"
+              :disabled="!canOprate"
+              @click="confirmDeleteComment"
+            >
+              <template #leading>
+                <component
+                  :is="Delete24Filled"
+                  :color="item.isDeleted || topic.isAdmin ? accentColor : mutedIconColor"
+                />
+              </template>
+            </UButton>
+
+            <template #content>{{ item.isDeleted || topic.isAdmin ? '完全' : '' }}删除 </template></UTooltip
+          >
+          <UTooltip v-if="item.isDeleted && topic.isAdmin">
+            <UButton
+              size="sm"
+              variant="link"
+              :disabled="!canOprate"
+              @click="confirmRestoreComment"
+            >
+              <template #leading>
+                <component
+                  :is="SyncCircleSharp"
+                  :color="mutedIconColor"
+                />
+              </template>
+            </UButton>
+            <template #content> 恢复 </template></UTooltip
+          >
+        </div>
+      </div>
+    </div>
+  </div>
 </template>

@@ -1,17 +1,4 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFlex,
-  NInput,
-  NInputGroup,
-  NLi,
-  NModal,
-  NUl,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import LiveLotteryOBS from '@/apps/obs/pages/LiveLotteryOBS.vue'
@@ -40,8 +27,8 @@ const url = computed(() => {
 </script>
 
 <template>
-  <NModal
-    v-model:show="showModel"
+  <UModal
+    v-model:open="showModel"
     preset="card"
     title="OBS 组件"
     style="width: 900px; max-width: 90vw; max-height: 90vh"
@@ -49,64 +36,64 @@ const url = computed(() => {
     content-style="overflow: auto"
   >
     <template #header-extra>
-      <NButton
+      <UButton
         v-if="url"
         tag="a"
-        type="primary"
+        color="primary"
         size="small"
         target="_blank"
         :href="url"
       >
         浏览
-      </NButton>
+      </UButton>
     </template>
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NAlert
+      <UAlert
         title="这是什么？"
         type="info"
         size="small"
         :bordered="false"
       >
         将抽奖等待队列与结果显示在 OBS 的浏览器源中。
-      </NAlert>
+      </UAlert>
 
-      <NDivider style="margin: 0"> 预览 </NDivider>
+      <USeparator style="margin: 0"> 预览 </USeparator>
       <div class="lottery-obs-modal__preview">
         <LiveLotteryOBS :code="code" />
       </div>
 
-      <NInputGroup>
-        <NInput
+      <div>
+        <UInput
           :value="url"
           size="small"
           readonly
         />
-        <NButton
-          type="primary"
-          secondary
+        <UButton
+          color="primary"
+          variant="soft"
           size="small"
           :disabled="!url"
           @click="copyToClipboard(url)"
         >
           复制
-        </NButton>
-      </NInputGroup>
+        </UButton>
+      </div>
 
-      <NCollapse>
-        <NCollapseItem title="使用说明">
-          <NUl>
-            <NLi>在 OBS 来源中添加源，选择「浏览器」。</NLi>
-            <NLi>在 URL 栏填入上方链接。</NLi>
-            <NLi>根据自己的需要调整宽度和高度（这里是宽 250px 高 400px）。</NLi>
-            <NLi>完成。</NLi>
-          </NUl>
-        </NCollapseItem>
-      </NCollapse>
-    </NFlex>
-  </NModal>
+      <div>
+        <details title="使用说明">
+          <ul>
+            <li>在 OBS 来源中添加源，选择「浏览器」。</li>
+            <li>在 URL 栏填入上方链接。</li>
+            <li>根据自己的需要调整宽度和高度（这里是宽 250px 高 400px）。</li>
+            <li>完成。</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+  </UModal>
 </template>
 
 <style scoped>

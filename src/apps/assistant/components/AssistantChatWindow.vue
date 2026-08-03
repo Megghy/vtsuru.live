@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ArrowSync20Regular, Sparkle24Regular, Alert24Regular } from '@vicons/fluent'
-import { NIcon, NScrollbar, NSpin } from 'naive-ui'
 import { nextTick, onMounted, ref, watch } from 'vue'
 
 import { getDigest, type AssistantDigestItem } from '../api/assistant'
@@ -9,7 +7,7 @@ import AssistantComposer from './AssistantComposer.vue'
 import AssistantMessageList from './AssistantMessageList.vue'
 
 const store = useAssistantStore()
-const scrollRef = ref<InstanceType<typeof NScrollbar> | null>(null)
+const scrollRef = ref<HTMLDivElement>()
 const composerRef = ref<InstanceType<typeof AssistantComposer> | null>(null)
 
 /** 主动建议提示 (后台待办概览), 仅在欢迎页拉取一次 */
@@ -144,7 +142,7 @@ function onPickSuggestion(text: string) {
 
 <template>
   <div class="chat-window">
-    <NScrollbar
+    <div
       ref="scrollRef"
       class="chat-window__scroll"
       @scroll="onScroll"
@@ -166,16 +164,19 @@ function onPickSuggestion(text: string) {
         v-else-if="store.messagesLoading"
         class="chat-window__loading"
       >
-        <NSpin size="medium" />
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-6 animate-spin"
+        />
       </div>
       <div
         v-else
         class="chat-window__welcome"
       >
         <div class="chat-window__welcome-icon">
-          <NIcon
-            :component="Sparkle24Regular"
-            size="26"
+          <UIcon
+            name="i-lucide-sparkles"
+            class="size-7"
           />
         </div>
         <div class="chat-window__welcome-title">有什么可以帮你的?</div>
@@ -192,10 +193,7 @@ function onPickSuggestion(text: string) {
             :disabled="store.sending"
             @click="onPickSuggestion(d.prompt)"
           >
-            <NIcon
-              :component="Alert24Regular"
-              size="15"
-            />
+            <UIcon name="i-lucide-triangle-alert" />
             <span>{{ d.text }}</span>
           </button>
         </div>
@@ -217,15 +215,12 @@ function onPickSuggestion(text: string) {
             title="换一批"
             @click="rollSuggestions"
           >
-            <NIcon
-              :component="ArrowSync20Regular"
-              size="15"
-            />
+            <UIcon name="i-lucide-refresh-cw" />
             换一批
           </button>
         </div>
       </div>
-    </NScrollbar>
+    </div>
 
     <div class="chat-window__composer">
       <AssistantComposer
@@ -248,6 +243,7 @@ function onPickSuggestion(text: string) {
 .chat-window__scroll {
   flex: 1 1 0;
   min-height: 0;
+  overflow-y: auto;
 }
 .chat-window__loading {
   display: flex;

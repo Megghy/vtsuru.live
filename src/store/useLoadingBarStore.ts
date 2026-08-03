@@ -1,13 +1,11 @@
-import type { LoadingBarApi } from 'naive-ui'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export const useLoadingBarStore = defineStore('provider', () => {
-  const loadingBar = ref<LoadingBarApi>()
+export const useLoadingBarStore = defineStore('route-loading', () => {
+  const active = ref(false)
 
-  function setLoadingBar(b: LoadingBarApi) {
-    loadingBar.value = b
-  }
+  const start = () => (active.value = true)
+  const finish = () => (active.value = false)
 
-  return { loadingBar, setLoadingBar }
+  return { active, start, finish }
 })

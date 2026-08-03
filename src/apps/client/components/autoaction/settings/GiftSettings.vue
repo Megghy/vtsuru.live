@@ -1,20 +1,4 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
-import {
-  NButton,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NFlex,
-  NSwitch,
-  NTag,
-  useMessage,
-  NForm,
-  NFormItem,
-  NText,
-  NTooltip,
-  NIcon,
-} from 'naive-ui'
 import { ref } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
@@ -27,7 +11,10 @@ const props = defineProps({
   },
 })
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 
 // 礼物过滤模式选项
 const giftFilterModeOptions = [
@@ -54,7 +41,7 @@ function addGiftName() {
     props.action.triggerConfig.filterGiftNames.push(name)
     tempGiftName.value = ''
   } else {
-    message.warning('此礼物名称已存在')
+    feedback('warning', '此礼物名称已存在')
   }
 }
 
@@ -71,30 +58,31 @@ function removeGiftName(index: number) {
     v-if="action.triggerType === TriggerType.GIFT"
     class="gift-trigger-settings"
   >
-    <NForm
+    <UForm
       label-placement="left"
       :label-width="140"
       size="small"
       :show-feedback="false"
     >
-      <NFlex
+      <div
         vertical
         :size="16"
       >
-        <NFormItem label="礼物过滤模式">
-          <NSelect
-            v-model:value="action.triggerConfig.filterMode"
+        <UFormField label="礼物过滤模式">
+          <USelectMenu
+            v-model="action.triggerConfig.filterMode"
             style="width: 220px"
-            :options="giftFilterModeOptions"
+            :items="giftFilterModeOptions"
+            value-key="value"
           />
-        </NFormItem>
+        </UFormField>
 
         <transition name="fade">
           <div
             v-if="action.triggerConfig.filterMode === 'blacklist' || action.triggerConfig.filterMode === 'whitelist'"
             class="filter-group"
           >
-            <NText
+            <span
               depth="3"
               style="font-size: 12px; margin-bottom: 8px; display: block"
             >
@@ -103,36 +91,36 @@ function removeGiftName(index: number) {
                   ? '以下列表中的礼物将不会触发感谢'
                   : '仅当礼物在以下列表中时才会触发感谢'
               }}
-            </NText>
-            <NFlex
+            </span>
+            <div
               vertical
               :size="12"
             >
-              <NFlex :wrap="false">
-                <NInput
-                  v-model:value="tempGiftName"
+              <div :wrap="false">
+                <UInput
+                  v-model="tempGiftName"
                   placeholder="输入礼物名称..."
                   size="small"
                   @keyup.enter="addGiftName"
                 />
-                <NButton
+                <UButton
                   size="small"
-                  type="primary"
-                  secondary
+                  color="primary"
+                  variant="soft"
                   @click="addGiftName"
                 >
                   添加
-                </NButton>
-              </NFlex>
+                </UButton>
+              </div>
 
-              <NFlex
+              <div
                 :size="8"
                 class="tag-container"
               >
                 <template
                   v-if="action.triggerConfig.filterGiftNames && action.triggerConfig.filterGiftNames.length > 0"
                 >
-                  <NTag
+                  <UBadge
                     v-for="(giftName, index) in action.triggerConfig.filterGiftNames"
                     :key="index"
                     closable
@@ -140,111 +128,106 @@ function removeGiftName(index: number) {
                     @close="removeGiftName(index)"
                   >
                     {{ giftName }}
-                  </NTag>
+                  </UBadge>
                 </template>
-                <NText
+                <span
                   v-else
                   depth="3"
                   italic
                   style="font-size: 12px"
                 >
                   列表为空
-                </NText>
-              </NFlex>
-            </NFlex>
+                </span>
+              </div>
+            </div>
           </div>
         </transition>
 
         <transition name="fade">
-          <NFormItem
+          <UFormField
             v-if="action.triggerConfig.filterMode === 'value'"
             label="最低价值 (元)"
           >
-            <NInputNumber
-              v-model:value="action.triggerConfig.minValue"
-              :min="0"
-              style="width: 140px"
-              placeholder="0"
-            >
-              <template #suffix> 元 </template>
-            </NInputNumber>
-          </NFormItem>
+            <div class="flex items-center gap-2">
+              <UInputNumber
+                v-model="action.triggerConfig.minValue"
+                :min="0"
+                style="width: 140px"
+                placeholder="0"
+              />
+              <span class="text-sm text-[var(--vtsuru-fg-muted)]">元</span>
+            </div>
+          </UFormField>
         </transition>
 
-        <NDivider style="margin: 0" />
+        <USeparator style="margin: 0" />
 
-        <NFlex :size="24">
-          <NFormItem>
+        <div :size="24">
+          <UFormField>
             <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >包含数量
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                在感谢语中使用 {{ '\{\{gift.count\}\}' }} 变量显示礼物数量
-              </NTooltip>
+              <UTooltip>
+                <span
+                  >包含数量
+                  <UIcon
+                    name="i-lucide-circle"
+                    style="vertical-align: -2px"
+                /></span>
+                <template #content> 在感谢语中使用 {{ '\{\{gift.count\}\}' }} 变量显示礼物数量 </template>
+              </UTooltip>
             </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.includeQuantity"
+            <USwitch
+              v-model="action.triggerConfig.includeQuantity"
               size="small"
             />
-          </NFormItem>
-        </NFlex>
+          </UFormField>
+        </div>
 
-        <NFlex
+        <div
           vertical
           :size="12"
         >
-          <NFormItem label="单次合并上限">
+          <UFormField label="单次合并上限">
             <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >单次合并上限
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                单条感谢弹幕中最多合并展示的用户数量
-              </NTooltip>
+              <UTooltip>
+                <span
+                  >单次合并上限
+                  <UIcon
+                    name="i-lucide-circle"
+                    style="vertical-align: -2px"
+                /></span>
+                <template #content> 单条感谢弹幕中最多合并展示的用户数量 </template>
+              </UTooltip>
             </template>
-            <NInputNumber
-              v-model:value="action.actionConfig.maxUsersPerMsg"
+            <UInputNumber
+              v-model="action.actionConfig.maxUsersPerMsg"
               :min="1"
               :max="50"
               style="width: 140px"
             />
-          </NFormItem>
+          </UFormField>
 
-          <NFormItem label="单人礼物上限">
+          <UFormField label="单人礼物上限">
             <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >单人礼物上限
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                单个用户在同一次感谢中最多显示的礼物种类数
-              </NTooltip>
+              <UTooltip>
+                <span
+                  >单人礼物上限
+                  <UIcon
+                    name="i-lucide-circle"
+                    style="vertical-align: -2px"
+                /></span>
+                <template #content> 单个用户在同一次感谢中最多显示的礼物种类数 </template>
+              </UTooltip>
             </template>
-            <NInputNumber
-              v-model:value="action.actionConfig.maxItemsPerUser"
+            <UInputNumber
+              v-model="action.actionConfig.maxItemsPerUser"
               :min="1"
               :max="20"
               style="width: 140px"
             />
-          </NFormItem>
-        </NFlex>
-      </NFlex>
-    </NForm>
+          </UFormField>
+        </div>
+      </div>
+    </UForm>
   </div>
 </template>
 

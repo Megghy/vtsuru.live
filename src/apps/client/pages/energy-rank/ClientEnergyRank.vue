@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NSpin } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { EnergyRankBCData, EnergyRankSettings, RankEntry } from '@/apps/client/store/useEnergyRank'
@@ -60,7 +59,7 @@ watch(
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="!setting"
     show
   />
@@ -108,7 +107,7 @@ body {
   background: transparent;
   overflow: hidden;
 }
-.n-layout {
+.u-layout {
   background: transparent;
 }
 

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 import type { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
@@ -20,7 +19,7 @@ const componentType = computed(() => {
 })
 const currentData = ref<ScheduleWeekInfo[]>()
 const isLoading = ref(true)
-const message = useMessage()
+const toast = useToast()
 
 async function get() {
   isLoading.value = true
@@ -31,12 +30,12 @@ async function get() {
       if (data.code == 200) {
         currentData.value = data.data
       } else {
-        message.error(`加载失败: ${data.message}`)
+        toast.add({ title: `加载失败: ${data.message}`, color: 'error' })
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('加载失败')
+      toast.add({ title: '加载失败', color: 'error' })
     })
     .finally(() => {
       isLoading.value = false
@@ -54,7 +53,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="isLoading"
     show
   />

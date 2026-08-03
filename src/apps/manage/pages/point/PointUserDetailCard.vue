@@ -1,26 +1,4 @@
 <script setup lang="ts">
-import { AddSquare24Regular, Info24Filled } from '@vicons/fluent'
-import {
-  NAvatar,
-  NButton,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NSpin,
-  NStatistic,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 import type {
@@ -30,25 +8,20 @@ import type {
   ResponsePointUserModel,
 } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import { formatTime } from '@/apps/manage/composables/formatters'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
 import { POINT_API_URL } from '@/shared/config'
 
-const props = defineProps<{
-  user: ResponsePointUserModel
-  goods: ResponsePointGoodModel[]
-}>()
-
-const message = useMessage()
-
+const props = defineProps<{ user: ResponsePointUserModel; goods: ResponsePointGoodModel[] }>()
+const toast = useToast()
 const isLoading = ref(false)
 const orders = ref<ResponsePointOrder2OwnerModel[]>([])
 const pointHistory = ref<ResponsePointHisrotyModel[]>([])
-
 const showAddPointModal = ref(false)
 const addPointCount = ref(0)
-const addPointReason = ref<string>('')
-
+const addPointReason = ref('')
+const activeTab = ref('orders')
 const emptyOpenId = '00000000-0000-0000-0000-000000000000'
 
 type PointTarget =
@@ -58,141 +31,95 @@ type PointTarget =
 
 const pointTarget = computed<PointTarget | null>(() => {
   const info = props.user.info
-  if (!info) {
-    return null
-  }
-  if (info.id > 0) {
-    return { type: 'auth', authId: info.id }
-  }
-  if (info.userId > 0) {
-    return { type: 'uid', userId: info.userId }
-  }
-  if (info.openId && info.openId !== emptyOpenId) {
-    return { type: 'openid', openId: info.openId }
-  }
-  return null
+  if (info.id > 0) return { type: 'auth', authId: info.id }
+  if (info.userId > 0) return { type: 'uid', userId: info.userId }
+  return info.openId && info.openId !== emptyOpenId ? { type: 'openid', openId: info.openId } : null
 })
-
 const canAdjustPoint = computed(() => pointTarget.value !== null)
+const tabItems = [
+  { label: '订单记录', value: 'orders' },
+  { label: '积分流水', value: 'history' },
+]
+
+function notify(title: string, color: 'success' | 'error' = 'error') {
+  toast.add({ title, color })
+}
 
 function getHistoryParams(target: PointTarget) {
-  switch (target.type) {
-    case 'auth':
-      return { authId: target.authId }
-    case 'uid':
-      return { id: target.userId }
-    case 'openid':
-      return { id: target.openId }
-  }
+  return target.type === 'auth'
+    ? { authId: target.authId }
+    : target.type === 'uid'
+      ? { id: target.userId }
+      : { id: target.openId }
 }
 
 function getGivePointParams(target: PointTarget) {
-  switch (target.type) {
-    case 'auth':
-      return { authId: target.authId }
-    case 'uid':
-      return { uId: target.userId }
-    case 'openid':
-      return { oId: target.openId }
-  }
+  return target.type === 'auth'
+    ? { authId: target.authId }
+    : target.type === 'uid'
+      ? { uId: target.userId }
+      : { oId: target.openId }
 }
 
 async function getOrders() {
-  const info = props.user.info
-  if (!info || info.id <= 0) {
-    return []
-  }
-
+  if (props.user.info.id <= 0) return []
+  isLoading.value = true
   try {
-    isLoading.value = true
-    const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-user-orders`, {
-      authId: info.id,
+    const result = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-user-orders`, {
+      authId: props.user.info.id,
     })
-
-    if (data.code == 200) {
-      return data.data
-    } else {
-      message.error(`获取订单失败: ${data.message}`)
-      console.error(data)
-    }
-  } catch (err) {
-    message.error(`获取订单失败: ${err}`)
-    console.error(err)
+    if (result.code === 200) return result.data ?? []
+    notify(`获取订单失败: ${result.message}`)
+  } catch (error) {
+    console.error(error)
+    notify(`获取订单失败: ${String(error)}`)
   } finally {
     isLoading.value = false
   }
-
   return []
 }
 
 async function getPointHistory() {
+  const target = pointTarget.value
+  if (!target) return []
+  isLoading.value = true
   try {
-    isLoading.value = true
-
-    const target = pointTarget.value
-    if (!target) {
-      return []
-    }
-
-    const data = await QueryGetAPI<ResponsePointHisrotyModel[]>(
+    const result = await QueryGetAPI<ResponsePointHisrotyModel[]>(
       `${POINT_API_URL}get-user-histories`,
       getHistoryParams(target),
     )
-
-    if (data.code == 200) {
-      return data.data
-    } else {
-      message.error(`获取积分历史失败: ${data.message}`)
-      console.error(data)
-    }
-  } catch (err) {
-    message.error(`获取积分历史失败: ${err}`)
-    console.error(err)
+    if (result.code === 200) return result.data ?? []
+    notify(`获取积分历史失败: ${result.message}`)
+  } catch (error) {
+    console.error(error)
+    notify(`获取积分历史失败: ${String(error)}`)
   } finally {
     isLoading.value = false
   }
-
   return []
 }
 
 async function givePoint() {
-  if (addPointCount.value == 0) {
-    message.error('积分数量不能为 0')
-    return
-  }
-
+  if (!addPointCount.value) return notify('积分数量不能为 0')
+  const target = pointTarget.value
+  if (!target) return notify('无法识别积分目标用户')
   isLoading.value = true
   try {
-    const target = pointTarget.value
-    if (!target) {
-      message.error('无法识别积分目标用户')
-      return
-    }
-
-    const data = await QueryGetAPI(`${POINT_API_URL}give-point`, {
+    const result = await QueryGetAPI(`${POINT_API_URL}give-point`, {
       ...getGivePointParams(target),
       count: addPointCount.value,
       reason: addPointReason.value,
     })
-
-    if (data.code == 200) {
-      message.success('添加成功')
-      showAddPointModal.value = false
-      props.user.point = Number((props.user.point + addPointCount.value).toFixed(1))
-
-      setTimeout(async () => {
-        pointHistory.value = await getPointHistory()
-      }, 1500)
-
-      addPointCount.value = 0
-      addPointReason.value = ''
-    } else {
-      message.error(`添加积分失败: ${data.message}`)
-      console.error(data)
-    }
-  } catch (err) {
-    message.error(`添加积分失败: ${err}`)
-    console.error(err)
+    if (result.code !== 200) return notify(`添加积分失败: ${result.message}`)
+    props.user.point = Number((props.user.point + addPointCount.value).toFixed(1))
+    showAddPointModal.value = false
+    addPointCount.value = 0
+    addPointReason.value = ''
+    pointHistory.value = await getPointHistory()
+    notify('积分已调整', 'success')
+  } catch (error) {
+    console.error(error)
+    notify(`添加积分失败: ${String(error)}`)
   } finally {
     isLoading.value = false
   }
@@ -200,272 +127,198 @@ async function givePoint() {
 
 onMounted(async () => {
   pointHistory.value = await getPointHistory()
-
-  if ((props.user.info?.id ?? 0) > 0) {
-    orders.value = await getOrders()
-  }
+  orders.value = await getOrders()
 })
 </script>
 
 <template>
-  <div class="user-detail-container">
-    <!-- 用户基本信息 -->
-    <div class="user-header">
-      <NFlex
-        justify="space-between"
-        align="start"
-        :wrap="false"
-      >
-        <NFlex
-          :gap="16"
-          align="center"
-        >
-          <NAvatar
-            :src="user.info.avatar"
-            round
-            :size="64"
-            fallback-src="/img/no-face.png"
-            style="border: 1px solid var(--vtsuru-border)"
+  <div class="user-detail">
+    <section class="user-summary">
+      <div class="user-top">
+        <div class="identity">
+          <img
+            :src="user.info.avatar || '/img/no-face.png'"
+            :alt="user.info.name || '用户头像'"
           />
-          <div class="user-basic-info">
-            <NFlex
-              align="center"
-              :gap="8"
-              style="margin-bottom: 4px"
-            >
-              <span class="user-name">{{ user.info.name || '未知用户' }}</span>
-              <NTag
-                :type="user.isAuthed ? 'success' : 'warning'"
-                size="small"
-                round
-                :bordered="false"
-              >
-                {{ user.isAuthed ? '已认证' : '未认证' }}
-              </NTag>
-            </NFlex>
-            <NFlex
-              vertical
-              :gap="2"
-              class="user-ids"
-            >
-              <span v-if="user.info.userId > 0">UID: {{ user.info.userId }}</span>
-              <span v-if="user.info.openId && user.info.openId !== emptyOpenId">OpenId: {{ user.info.openId }}</span>
-            </NFlex>
+          <div>
+            <div class="name-line">
+              <strong>{{ user.info.name || '未知用户' }}</strong
+              ><UBadge
+                :color="user.isAuthed ? 'success' : 'warning'"
+                :label="user.isAuthed ? '已认证' : '未认证'"
+              />
+            </div>
+            <p v-if="user.info.userId > 0">UID: {{ user.info.userId }}</p>
+            <p v-if="user.info.openId && user.info.openId !== emptyOpenId">OpenId: {{ user.info.openId }}</p>
           </div>
-        </NFlex>
-
-        <NButton
-          type="primary"
-          secondary
+        </div>
+        <UButton
+          icon="i-lucide-circle-plus"
+          label="积分调整"
           :disabled="!canAdjustPoint"
           @click="showAddPointModal = true"
-        >
-          <template #icon>
-            <NIcon :component="AddSquare24Regular" />
-          </template>
-          积分调整
-        </NButton>
-      </NFlex>
-
-      <NDivider style="margin: 20px 0" />
-
-      <NGrid
-        cols="2 400:4"
-        :x-gap="24"
-        :y-gap="12"
-      >
-        <NGridItem>
-          <NStatistic
-            label="当前积分"
-            :value="user.point"
-            :precision="1"
-          />
-        </NGridItem>
-        <NGridItem>
-          <NStatistic
-            label="订单总数"
-            :value="user.orderCount"
-          />
-        </NGridItem>
-        <NGridItem>
-          <div class="info-item-static">
-            <div class="info-label">认证时间</div>
-            <div class="info-value">
-              <NTime
-                v-if="user.isAuthed"
-                :time="user.info.createAt"
-              />
-              <span v-else>--</span>
-            </div>
-          </div>
-        </NGridItem>
-      </NGrid>
-    </div>
-
-    <!-- 数据标签页 -->
-    <div class="data-tabs">
-      <NTabs
-        type="line"
-        animated
-        default-value="orders"
-      >
-        <NTabPane
-          name="orders"
-          tab="订单记录"
-        >
-          <NSpin :show="isLoading">
-            <NEmpty
-              v-if="orders.length === 0"
-              description="暂无订单"
-              class="empty-container"
-            />
-            <PointOrderCard
-              v-else
-              :order="orders"
-              type="owner"
-              :goods="goods"
-            />
-          </NSpin>
-        </NTabPane>
-        <NTabPane
-          name="history"
-          tab="积分流水"
-        >
-          <NSpin :show="isLoading">
-            <NEmpty
-              v-if="!pointHistory.length"
-              description="暂无积分记录"
-              class="empty-container"
-            />
-            <PointHistoryCard
-              v-else
-              :histories="pointHistory"
-            />
-          </NSpin>
-        </NTabPane>
-      </NTabs>
-    </div>
-
-    <!-- 积分调整弹窗 -->
-    <NModal
-      v-model:show="showAddPointModal"
-      preset="card"
-      style="width: 480px; max-width: 90vw"
-      title="给予/扣除积分"
-      :bordered="false"
-      size="small"
-    >
-      <NFlex
-        vertical
-        :gap="16"
-      >
-        <NFlex
-          align="center"
-          :wrap="false"
-          :gap="8"
-        >
-          <NInputNumber
-            v-model:value="addPointCount"
-            type="number"
-            placeholder="积分数量"
-            style="flex: 1"
-          >
-            <template #prefix>
-              <NIcon :component="AddSquare24Regular" />
-            </template>
-          </NInputNumber>
-
-          <NTooltip>
-            <template #trigger>
-              <NIcon
-                :component="Info24Filled"
-                class="info-icon"
-              />
-            </template>
-            正数为给予，负数为扣除
-          </NTooltip>
-        </NFlex>
-
-        <NInput
-          v-model:value="addPointReason"
-          placeholder="请输入备注 (可选)"
-          :maxlength="100"
-          show-count
-          clearable
-          type="textarea"
-          :autosize="{ minRows: 2, maxRows: 4 }"
         />
-
-        <div style="display: flex; justify-content: flex-end">
-          <NButton
-            type="primary"
-            :loading="isLoading"
-            :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0"
-            @click="givePoint"
-          >
-            {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '确认给予' : '确认扣除' }}
-          </NButton>
+      </div>
+      <USeparator />
+      <dl class="stats">
+        <div>
+          <dt>当前积分</dt>
+          <dd>{{ user.point.toFixed(1) }}</dd>
         </div>
-      </NFlex>
-    </NModal>
+        <div>
+          <dt>订单总数</dt>
+          <dd>{{ user.orderCount }}</dd>
+        </div>
+        <div>
+          <dt>认证时间</dt>
+          <dd>{{ user.isAuthed ? formatTime(user.info.createAt) : '--' }}</dd>
+        </div>
+      </dl>
+    </section>
+    <section
+      class="records"
+      :aria-busy="isLoading"
+    >
+      <UTabs
+        v-model="activeTab"
+        :items="tabItems"
+      />
+      <div
+        v-if="activeTab === 'orders'"
+        class="tab-content"
+      >
+        <UEmpty
+          v-if="!orders.length"
+          icon="i-lucide-package-open"
+          title="暂无订单"
+        /><PointOrderCard
+          v-else
+          :order="orders"
+          type="owner"
+          :goods="goods"
+        />
+      </div>
+      <div
+        v-else
+        class="tab-content"
+      >
+        <UEmpty
+          v-if="!pointHistory.length"
+          icon="i-lucide-list-x"
+          title="暂无积分记录"
+        /><PointHistoryCard
+          v-else
+          :histories="pointHistory"
+        />
+      </div>
+    </section>
   </div>
+  <UModal
+    v-model:open="showAddPointModal"
+    title="给予/扣除积分"
+    ><template #body
+      ><div class="adjust-form">
+        <UFormField
+          label="积分数量"
+          description="正数为给予，负数为扣除"
+          ><UInputNumber
+            v-model="addPointCount"
+            :min="-99999999"
+            :max="99999999" /></UFormField
+        ><UFormField label="备注"
+          ><UTextarea
+            v-model="addPointReason"
+            :maxlength="100"
+            :rows="3"
+            placeholder="可选"
+        /></UFormField></div></template
+    ><template #footer
+      ><div class="modal-actions">
+        <UButton
+          color="neutral"
+          variant="soft"
+          label="取消"
+          @click="showAddPointModal = false"
+        /><UButton
+          :color="addPointCount < 0 ? 'error' : 'primary'"
+          :label="addPointCount > 0 ? '确认给予' : addPointCount < 0 ? '确认扣除' : '确定'"
+          :loading="isLoading"
+          :disabled="!addPointCount"
+          @click="givePoint"
+        /></div></template
+  ></UModal>
 </template>
 
 <style scoped>
-.user-detail-container {
+.user-detail {
+  display: grid;
+  gap: 16px;
   padding: 20px;
 }
-
-.user-header {
-  background-color: var(--vtsuru-bg-surface);
+.user-summary,
+.records {
+  padding: 20px;
   border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 24px;
-  margin-bottom: 16px;
+  background: var(--vtsuru-bg-surface);
 }
-
-.user-name {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.user-ids {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.info-item-static {
+.user-top,
+.identity,
+.name-line,
+.modal-actions {
   display: flex;
-  flex-direction: column;
+  gap: 12px;
+  align-items: center;
 }
-
-.info-label {
-  font-size: 12px;
+.user-top {
+  justify-content: space-between;
+}
+.identity img {
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 999px;
+  object-fit: cover;
+}
+.name-line strong {
+  font-size: 18px;
+}
+.identity p {
+  margin: 3px 0;
   color: var(--vtsuru-fg-muted);
-  margin-bottom: 4px;
+  font-size: 12px;
 }
-
-.info-value {
-  font-size: 20px; /* match NStatistic value size approximately */
-  color: var(--vtsuru-fg);
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+}
+.stats dt {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+.stats dd {
+  margin: 5px 0 0;
+  font-size: 18px;
   font-variant-numeric: tabular-nums;
 }
-
-.data-tabs {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 16px 24px;
+.tab-content {
+  padding-top: 16px;
 }
-
-.empty-container {
-  margin: 32px 0;
-  min-height: 100px;
+.adjust-form {
+  display: grid;
+  gap: 16px;
 }
-
-.info-icon {
-  color: var(--vtsuru-fg-muted);
-  cursor: help;
+.modal-actions {
+  justify-content: flex-end;
+}
+@media (max-width: 640px) {
+  .user-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .stats {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

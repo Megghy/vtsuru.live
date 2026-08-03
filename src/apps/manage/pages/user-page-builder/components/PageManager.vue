@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { CopyOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NModal, NText, NTooltip } from 'naive-ui'
-import { computed, h, inject, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 
 import { UserPageEditorKey } from '../context'
 import { usePageEntries } from '../usePageEntries'
@@ -20,12 +18,12 @@ const deletePageModal = ref(false)
 const deletePageSlug = ref('')
 
 const pageActionOptions = [
-  { label: '复制', key: 'duplicate', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
+  { label: '复制', key: 'duplicate', icon: 'i-lucide-copy' },
   {
     label: '删除',
     key: 'delete',
-    icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
-    props: { style: 'color: #d03050' },
+    icon: 'i-lucide-trash-2',
+    class: 'text-red-500',
   },
 ]
 
@@ -81,32 +79,32 @@ function confirmDuplicatePage() {
 
 <template>
   <div>
-    <NFlex vertical>
-      <NButton
-        type="primary"
+    <div class="builder-stack">
+      <UButton
+        color="primary"
         @click="editor.currentKey.value = 'home'"
       >
         主页 /@{{ editor.account.value.name || '...' }}
-      </NButton>
-      <NDivider style="margin: 0" />
-      <NButton
-        type="info"
+      </UButton>
+      <USeparator style="margin: 0" />
+      <UButton
+        color="info"
         :disabled="!canCreateMorePages"
         @click="addPageModal = true"
       >
         新建子页面
-      </NButton>
-      <NFlex vertical>
+      </UButton>
+      <div class="builder-stack">
         <template
           v-for="section in pageSections"
           :key="section.key"
         >
-          <NText
-            depth="3"
+          <span
+            class="builder-text"
             :style="{ fontSize: '12px', marginTop: section.hidden ? '10px' : '4px' }"
           >
             {{ section.label }}
-          </NText>
+          </span>
           <div
             v-for="p in section.pages"
             :key="p.slug"
@@ -114,133 +112,136 @@ function confirmDuplicatePage() {
             :class="{ 'page-item--hidden': section.hidden }"
           >
             <div class="page-item__row">
-              <NButton
-                :type="editor.currentKey.value === p.slug ? 'primary' : 'default'"
+              <UButton
+                :color="editor.currentKey.value === p.slug ? 'primary' : 'default'"
                 class="page-item__main"
                 @click="editor.currentKey.value = p.slug"
               >
                 <span class="truncate-text">
                   {{ p.title }}
                 </span>
-              </NButton>
-              <NTooltip>
-                <template #trigger>
-                  <NDropdown
-                    trigger="click"
-                    :options="pageActionOptions"
-                    @select="(key) => handlePageAction(String(key), p.slug)"
+              </UButton>
+              <UTooltip>
+                <UDropdownMenu
+                  :items="
+                    pageActionOptions.map((item) => ({ ...item, onSelect: () => handlePageAction(item.key, p.slug) }))
+                  "
+                >
+                  <UButton
+                    variant="ghost"
+                    square
+                    size="sm"
+                    aria-label="更多页面操作"
                   >
-                    <NButton
-                      quaternary
-                      circle
-                      size="small"
-                      aria-label="更多页面操作"
-                    >
-                      <template #icon>
-                        <NIcon><EllipsisHorizontalOutline /></NIcon>
-                      </template>
-                    </NButton>
-                  </NDropdown>
-                </template>
-                更多页面操作
-              </NTooltip>
+                    <template #icon>
+                      <UIcon name="i-lucide-ellipsis" />
+                    </template>
+                  </UButton>
+                </UDropdownMenu>
+                <template #content> 更多页面操作 </template></UTooltip
+              >
             </div>
           </div>
         </template>
-      </NFlex>
-    </NFlex>
+      </div>
+    </div>
 
-    <NModal
-      v-model:show="addPageModal"
-      preset="card"
+    <UModal
+      v-model:open="addPageModal"
       title="新建子页面"
       style="width: 420px; max-width: 90vw"
-      :auto-focus="false"
     >
-      <NForm
-        size="small"
-        label-placement="top"
+      <template #body
+        ><div class="builder-form">
+          <UFormField
+            label="slug"
+            required
+          >
+            <UInput
+              v-model="newSlug"
+              placeholder="例如 links / sponsor / faq"
+            />
+          </UFormField>
+          <UAlert
+            type="info"
+            :show-icon="true"
+          >
+            创建后可访问：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
+          </UAlert>
+        </div></template
       >
-        <NFormItem
-          label="slug"
-          required
-        >
-          <NInput
-            v-model:value="newSlug"
-            placeholder="例如 links / sponsor / faq"
-          />
-        </NFormItem>
-        <NAlert
-          type="info"
-          :show-icon="true"
-        >
-          创建后可访问：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
-        </NAlert>
-      </NForm>
       <template #footer>
-        <NFlex justify="end">
-          <NButton @click="addPageModal = false"> 取消 </NButton>
-          <NButton
-            type="primary"
+        <div class="builder-row">
+          <UButton @click="addPageModal = false"> 取消 </UButton>
+          <UButton
+            color="primary"
             @click="createPage"
           >
             创建
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
       </template>
-    </NModal>
+    </UModal>
 
-    <NModal
-      v-model:show="duplicatePageModal"
-      preset="card"
+    <UModal
+      v-model:open="duplicatePageModal"
       title="复制子页面"
       style="width: 420px; max-width: 90vw"
-      :auto-focus="false"
     >
-      <NForm
-        size="small"
-        label-placement="top"
+      <template #body
+        ><div class="builder-form">
+          <UAlert
+            type="info"
+            :show-icon="true"
+          >
+            复制自：/{{ duplicateFromSlug || 'slug' }}
+          </UAlert>
+          <UFormField
+            label="新 slug"
+            required
+          >
+            <UInput
+              v-model="duplicateToSlug"
+              placeholder="例如 links-copy"
+            />
+          </UFormField>
+          <span class="builder-text"> 会自动为区块页生成新的 block.id，避免与原页面冲突。 </span>
+        </div></template
       >
-        <NAlert
-          type="info"
-          :show-icon="true"
-        >
-          复制自：/{{ duplicateFromSlug || 'slug' }}
-        </NAlert>
-        <NFormItem
-          label="新 slug"
-          required
-        >
-          <NInput
-            v-model:value="duplicateToSlug"
-            placeholder="例如 links-copy"
-          />
-        </NFormItem>
-        <NText depth="3"> 会自动为区块页生成新的 block.id，避免与原页面冲突。 </NText>
-      </NForm>
       <template #footer>
-        <NFlex justify="end">
-          <NButton @click="duplicatePageModal = false"> 取消 </NButton>
-          <NButton
-            type="primary"
+        <div class="builder-row">
+          <UButton @click="duplicatePageModal = false"> 取消 </UButton>
+          <UButton
+            color="primary"
             @click="confirmDuplicatePage"
           >
             确定
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
       </template>
-    </NModal>
+    </UModal>
 
-    <NModal
-      v-model:show="deletePageModal"
-      preset="dialog"
-      type="error"
+    <UModal
+      v-model:open="deletePageModal"
       title="删除子页面"
-      :content="`将删除 /${deletePageSlug} 及其中全部区块，此操作可通过撤销恢复。`"
-      positive-text="删除"
-      negative-text="取消"
-      @positive-click="confirmDeletePage"
-    />
+    >
+      <template #body>将删除 /{{ deletePageSlug }} 及其中全部区块，此操作可通过撤销恢复。</template>
+      <template #footer>
+        <div class="builder-row modal-actions">
+          <UButton
+            label="取消"
+            color="neutral"
+            variant="ghost"
+            @click="deletePageModal = false"
+          />
+          <UButton
+            label="删除"
+            color="error"
+            @click="confirmDeletePage"
+          />
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
 

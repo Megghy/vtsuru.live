@@ -1,19 +1,4 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
-import {
-  NDivider,
-  NInputNumber,
-  NRadio,
-  NRadioGroup,
-  NFlex,
-  NSwitch,
-  NText,
-  NForm,
-  NFormItem,
-  NTooltip,
-  NIcon,
-} from 'naive-ui'
-
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 
@@ -55,104 +40,91 @@ const schedulingModeOptions = [
     v-if="action.triggerType === TriggerType.SCHEDULED"
     class="scheduled-trigger-settings"
   >
-    <NForm
+    <UForm
       label-placement="left"
       :label-width="140"
       size="small"
       :show-feedback="false"
     >
-      <NFlex
+      <div
         vertical
         :size="16"
       >
-        <NFormItem label="使用全局设置">
+        <UFormField label="使用全局设置">
           <template #label>
-            <NTooltip trigger="hover">
-              <template #trigger>
-                <span
-                  >使用全局设置
-                  <NIcon
-                    :component="Info16Regular"
-                    style="vertical-align: -2px"
-                /></span>
-              </template>
-              开启后将遵循【自动化 -> 消息队列】中的全局定时设置
-            </NTooltip>
+            <UTooltip>
+              <span
+                >使用全局设置
+                <UIcon
+                  name="i-lucide-circle"
+                  style="vertical-align: -2px"
+              /></span>
+              <template #content> 开启后将遵循【自动化 -> 消息队列】中的全局定时设置 </template>
+            </UTooltip>
           </template>
-          <NSwitch v-model:value="useGlobalTimer">
-            <template #checked> 是 </template>
-            <template #unchecked> 否 </template>
-          </NSwitch>
-        </NFormItem>
+          <USwitch v-model="useGlobalTimer">
+            <template v-if="false"> 是 </template>
+            <template v-if="false"> 否 </template>
+          </USwitch>
+        </UFormField>
 
         <transition name="fade">
           <div
             v-if="useGlobalTimer"
             class="info-box"
           >
-            <NText
+            <span
               depth="3"
               style="font-size: 12px"
             >
               当前正在使用全局定时器。此操作将与其他全局任务共享发送频率和顺序。
               <br />修改全局间隔请前往：功能设置 -> 消息队列。
-            </NText>
+            </span>
           </div>
         </transition>
 
-        <NDivider
+        <USeparator
           title-placement="left"
           style="margin: 8px 0"
         >
-          <NText
+          <span
             strong
             depth="2"
           >
             独立定时设置
-          </NText>
-        </NDivider>
+          </span>
+        </USeparator>
 
         <div :class="{ 'disabled-overlay': useGlobalTimer }">
-          <NFlex
+          <div
             vertical
             :size="12"
           >
-            <NFormItem label="发送间隔 (秒)">
-              <NInputNumber
-                v-model:value="action.triggerConfig.intervalSeconds"
-                :min="10"
-                :max="86400"
-                style="width: 140px"
-                :disabled="useGlobalTimer"
-                placeholder="300"
-              >
-                <template #suffix> 秒 </template>
-              </NInputNumber>
-            </NFormItem>
+            <UFormField label="发送间隔 (秒)">
+              <div class="flex items-center gap-2">
+                <UInputNumber
+                  v-model="action.triggerConfig.intervalSeconds"
+                  :min="10"
+                  :max="86400"
+                  style="width: 140px"
+                  :disabled="useGlobalTimer"
+                  placeholder="300"
+                />
+                <span class="text-sm text-[var(--vtsuru-fg-muted)]">秒</span>
+              </div>
+            </UFormField>
 
-            <NFormItem label="发送模式">
-              <NRadioGroup
-                v-model:value="action.triggerConfig.schedulingMode"
+            <UFormField label="发送模式">
+              <URadioGroup
+                v-model="action.triggerConfig.schedulingMode"
                 :disabled="useGlobalTimer"
-              >
-                <NFlex
-                  vertical
-                  :size="8"
-                >
-                  <NRadio
-                    v-for="option in schedulingModeOptions"
-                    :key="option.value"
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </NRadio>
-                </NFlex>
-              </NRadioGroup>
-            </NFormItem>
-          </NFlex>
+                :items="schedulingModeOptions"
+              />
+            </UFormField>
+          </div>
         </div>
-      </NFlex>
-    </NForm>
+      </div>
+    </UForm>
   </div>
 </template>
 

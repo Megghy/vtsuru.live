@@ -1,18 +1,4 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
-import {
-  NCollapse,
-  NCollapseItem,
-  NInput,
-  NInputNumber,
-  NFlex,
-  NSwitch,
-  NForm,
-  NFormItem,
-  NText,
-  NTooltip,
-  NIcon,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import { createDefaultAutoAction } from '@/apps/client/store/autoAction/utils'
@@ -92,29 +78,29 @@ const customJsModified = computed(() => {
 
 <template>
   <div class="advanced-settings">
-    <NCollapse
+    <div
       :default-expanded-names="[]"
       accordion
     >
-      <NCollapseItem
+      <details
         v-if="showUserFilter"
         key="user-filter"
         name="user-filter"
         class="settings-section"
         :class="{ 'section-modified': userFilterModified }"
       >
-        <template #header>
-          <NFlex
+        <summary>
+          <div
             align="center"
             :size="8"
           >
-            <NText
+            <span
               strong
               :type="userFilterModified ? 'warning' : 'default'"
             >
               用户过滤条件
-            </NText>
-            <NTag
+            </span>
+            <UBadge
               v-if="userFilterModified"
               size="tiny"
               type="warning"
@@ -122,67 +108,67 @@ const customJsModified = computed(() => {
               border-weight="0"
             >
               已修改
-            </NTag>
-          </NFlex>
-        </template>
+            </UBadge>
+          </div>
+        </summary>
 
         <div class="section-content">
-          <NForm
+          <UForm
             label-placement="left"
             label-width="120"
             size="small"
             :show-feedback="false"
           >
-            <NFormItem label="启用过滤">
-              <NSwitch
-                v-model:value="action.triggerConfig.userFilterEnabled"
+            <UFormField label="启用过滤">
+              <USwitch
+                v-model="action.triggerConfig.userFilterEnabled"
                 size="small"
               />
-            </NFormItem>
+            </UFormField>
 
             <transition name="fade">
-              <NFlex
+              <div
                 v-if="action.triggerConfig.userFilterEnabled"
                 vertical
                 :size="8"
                 style="padding-top: 8px"
               >
-                <NFormItem label="要求本房勋章">
-                  <NSwitch
-                    v-model:value="action.triggerConfig.requireMedal"
+                <UFormField label="要求本房勋章">
+                  <USwitch
+                    v-model="action.triggerConfig.requireMedal"
                     size="small"
                   />
-                </NFormItem>
-                <NFormItem label="要求任意舰长">
-                  <NSwitch
-                    v-model:value="action.triggerConfig.requireCaptain"
+                </UFormField>
+                <UFormField label="要求任意舰长">
+                  <USwitch
+                    v-model="action.triggerConfig.requireCaptain"
                     size="small"
                   />
-                </NFormItem>
-              </NFlex>
+                </UFormField>
+              </div>
             </transition>
-          </NForm>
+          </UForm>
         </div>
-      </NCollapseItem>
+      </details>
 
-      <NCollapseItem
+      <details
         key="cooldown"
         name="cooldown"
         class="settings-section"
         :class="{ 'section-modified': cooldownModified }"
       >
-        <template #header>
-          <NFlex
+        <summary>
+          <div
             align="center"
             :size="8"
           >
-            <NText
+            <span
               strong
               :type="cooldownModified ? 'warning' : 'default'"
             >
               频率与延迟控制
-            </NText>
-            <NTag
+            </span>
+            <UBadge
               v-if="cooldownModified"
               size="tiny"
               type="warning"
@@ -190,78 +176,76 @@ const customJsModified = computed(() => {
               border-weight="0"
             >
               已修改
-            </NTag>
-          </NFlex>
-        </template>
+            </UBadge>
+          </div>
+        </summary>
 
         <div class="section-content">
-          <NForm
+          <UForm
             label-placement="left"
             label-width="120"
             size="small"
             :show-feedback="false"
           >
-            <NFormItem label="忽略全局冷却">
+            <UFormField label="忽略全局冷却">
               <template #label>
-                <NTooltip trigger="hover">
-                  <template #trigger>
-                    <span
-                      >忽略全局冷却
-                      <NIcon
-                        :component="Info16Regular"
-                        style="vertical-align: -2px"
-                    /></span>
-                  </template>
-                  开启后此操作不受全局发送频率限制的影响
-                </NTooltip>
+                <UTooltip>
+                  <span
+                    >忽略全局冷却
+                    <UIcon
+                      name="i-lucide-circle"
+                      style="vertical-align: -2px"
+                  /></span>
+                  <template #content> 开启后此操作不受全局发送频率限制的影响 </template>
+                </UTooltip>
               </template>
-              <NSwitch
-                v-model:value="action.ignoreCooldown"
+              <USwitch
+                v-model="action.ignoreCooldown"
                 size="small"
               />
-            </NFormItem>
+            </UFormField>
 
-            <NFormItem label="延迟执行(秒)">
-              <NInputNumber
-                v-model:value="action.actionConfig.delaySeconds"
+            <UFormField label="延迟执行(秒)">
+              <UInputNumber
+                v-model="action.actionConfig.delaySeconds"
                 :min="0"
                 :max="600"
                 style="width: 120px"
                 placeholder="0"
               />
-            </NFormItem>
+            </UFormField>
 
-            <NFormItem label="冷却时间(秒)">
-              <NInputNumber
-                v-model:value="action.actionConfig.cooldownSeconds"
+            <UFormField label="冷却时间(秒)">
+              <UInputNumber
+                v-model="action.actionConfig.cooldownSeconds"
                 :min="0"
                 :max="3600"
                 style="width: 120px"
                 placeholder="0"
               />
-            </NFormItem>
-          </NForm>
+            </UFormField>
+          </UForm>
         </div>
-      </NCollapseItem>
+      </details>
 
-      <NCollapseItem
+      <details
         key="logical-expression"
         name="logical-expression"
         class="settings-section"
         :class="{ 'section-modified': logicalExpressionModified }"
       >
-        <template #header>
-          <NFlex
+        <summary>
+          <div
             align="center"
             :size="8"
           >
-            <NText
+            <span
               strong
               :type="logicalExpressionModified ? 'warning' : 'default'"
             >
               逻辑判断表达式
-            </NText>
-            <NTag
+            </span>
+            <UBadge
               v-if="logicalExpressionModified"
               size="tiny"
               type="warning"
@@ -269,51 +253,51 @@ const customJsModified = computed(() => {
               border-weight="0"
             >
               已配置
-            </NTag>
-          </NFlex>
-        </template>
+            </UBadge>
+          </div>
+        </summary>
 
         <div class="section-content">
-          <NFlex
+          <div
             vertical
             :size="8"
           >
-            <NText
+            <span
               depth="3"
               style="font-size: 12px"
             >
               使用 JavaScript 语法，仅在返回值为真时执行。例如：
-              <NText code> user.guardLevel &gt; 0 || gift.price &gt;= 10 </NText>
-            </NText>
-            <NInput
-              v-model:value="action.logicalExpression"
+              <span code> user.guardLevel &gt; 0 || gift.price &gt;= 10 </span>
+            </span>
+            <UInput
+              v-model="action.logicalExpression"
               type="textarea"
               placeholder="输入表达式..."
               :autosize="{ minRows: 2, maxRows: 5 }"
               class="code-input"
             />
-          </NFlex>
+          </div>
         </div>
-      </NCollapseItem>
+      </details>
 
-      <NCollapseItem
+      <details
         key="custom-js"
         name="custom-js"
         class="settings-section"
         :class="{ 'section-modified': customJsModified }"
       >
-        <template #header>
-          <NFlex
+        <summary>
+          <div
             align="center"
             :size="8"
           >
-            <NText
+            <span
               strong
               :type="customJsModified ? 'warning' : 'default'"
             >
               自定义脚本 (JS)
-            </NText>
-            <NTag
+            </span>
+            <UBadge
               v-if="customJsModified"
               size="tiny"
               type="warning"
@@ -321,33 +305,33 @@ const customJsModified = computed(() => {
               border-weight="0"
             >
               已编写
-            </NTag>
-          </NFlex>
-        </template>
+            </UBadge>
+          </div>
+        </summary>
 
         <div class="section-content">
-          <NFlex
+          <div
             vertical
             :size="8"
           >
-            <NText
+            <span
               depth="3"
               style="font-size: 12px"
             >
               在操作执行前运行。可访问
-              <NText code> context </NText>, <NText code> event </NText>, <NText code> biliFunc </NText> 等变量。
-            </NText>
-            <NInput
-              v-model:value="action.executeCommand"
+              <span code> context </span>, <span code> event </span>, <span code> biliFunc </span> 等变量。
+            </span>
+            <UInput
+              v-model="action.executeCommand"
               type="textarea"
               placeholder="输入要执行的JS代码..."
               :autosize="{ minRows: 3, maxRows: 8 }"
               class="code-input"
             />
-          </NFlex>
+          </div>
         </div>
-      </NCollapseItem>
-    </NCollapse>
+      </details>
+    </div>
   </div>
 </template>
 
@@ -367,7 +351,7 @@ const customJsModified = computed(() => {
   border-radius: var(--vtsuru-radius);
 }
 
-.section-modified :deep(.n-collapse-item__header-main) {
+.section-modified :deep(.u-collapse-item__header-main) {
   font-weight: 500;
 }
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NCollapseItem, NColorPicker, NFlex, NForm, NFormItem, NSelect, NText } from 'naive-ui'
 import { computed, inject } from 'vue'
 
 import type { UserPageThemeConfigV1 } from '@/apps/user-page/types'
@@ -72,113 +71,104 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
 </script>
 
 <template>
-  <NCollapseItem
+  <details
     v-if="page.mode !== 'block'"
     class="page-bg-section"
-    title="页面背景"
-    name="page-bg"
   >
-    <NFlex
-      justify="space-between"
-      align="center"
+    <summary>页面背景</summary>
+    <div
+      class="builder-row"
       style="margin-bottom: 10px"
     >
-      <NText depth="3"> 不设置时将使用全局背景或默认背景。 </NText>
-      <NButton
-        size="small"
-        secondary
+      <span class="builder-text"> 不设置时将使用全局背景或默认背景。 </span>
+      <UButton
+        size="sm"
+        variant="soft"
         :disabled="!page.background"
         @click="page.background = undefined"
       >
         使用全局背景
-      </NButton>
-    </NFlex>
+      </UButton>
+    </div>
     <BackgroundSettingsEditor :target="backgroundTarget" />
-  </NCollapseItem>
+  </details>
 
-  <NCollapseItem
+  <details
     v-if="page.mode !== 'block'"
     class="page-theme-section"
-    title="页面主题"
-    name="page-theme"
   >
-    <NFlex
-      justify="space-between"
-      align="center"
+    <summary>页面主题</summary>
+    <div
+      class="builder-row"
       style="margin-bottom: 10px"
     >
-      <NText depth="3"> 不设置时将使用全局主题或站点主题。 </NText>
-      <NButton
-        size="small"
-        secondary
+      <span class="builder-text"> 不设置时将使用全局主题或站点主题。 </span>
+      <UButton
+        size="sm"
+        variant="soft"
         :disabled="!page.theme"
         @click="page.theme = undefined"
       >
         清除页面主题
-      </NButton>
-    </NFlex>
-    <NForm
-      label-placement="top"
-      size="small"
-    >
+      </UButton>
+    </div>
+    <div class="builder-form">
       <PropsGrid>
-        <NFormItem label="主题色 primary">
-          <NFlex
-            align="center"
-            :wrap="false"
+        <UFormField label="主题色 primary">
+          <div
+            class="builder-row"
             style="gap: 10px"
           >
             <div style="flex: 1; min-width: 0">
-              <NColorPicker
-                v-model:value="primaryColor"
+              <UColorPicker
+                v-model="primaryColor"
                 :modes="['hex']"
               />
             </div>
-            <NButton
-              size="tiny"
-              secondary
+            <UButton
+              size="xs"
+              variant="soft"
               :disabled="primaryColor == null"
               @click="primaryColor = undefined"
             >
               清除
-            </NButton>
-          </NFlex>
-        </NFormItem>
-        <NFormItem label="内容区域底色">
-          <NFlex
-            align="center"
-            :wrap="false"
+            </UButton>
+          </div>
+        </UFormField>
+        <UFormField label="内容区域底色">
+          <div
+            class="builder-row"
             style="gap: 10px"
           >
             <div style="flex: 1; min-width: 0">
-              <NColorPicker
-                v-model:value="backgroundColor"
+              <UColorPicker
+                v-model="backgroundColor"
                 :modes="['hex']"
               />
             </div>
-            <NButton
-              size="tiny"
-              secondary
+            <UButton
+              size="xs"
+              variant="soft"
               :disabled="backgroundColor == null"
               @click="backgroundColor = undefined"
             >
               清除
-            </NButton>
-          </NFlex>
-        </NFormItem>
-        <NFormItem label="页面主题模式">
-          <NSelect
-            v-model:value="themeMode"
-            :options="[
+            </UButton>
+          </div>
+        </UFormField>
+        <UFormField label="页面主题模式">
+          <USelect
+            v-model="themeMode"
+            :items="[
               { label: '跟随站点', value: 'auto' },
               { label: '强制亮色', value: 'light' },
               { label: '强制暗色', value: 'dark' },
             ]"
           />
-        </NFormItem>
+        </UFormField>
       </PropsGrid>
       <ThemeTextColorEditor :target="textColorTarget" />
       <ThemeAdvancedOptions :target="appearanceTarget" />
-    </NForm>
-  </NCollapseItem>
+    </div>
+  </details>
 </template>

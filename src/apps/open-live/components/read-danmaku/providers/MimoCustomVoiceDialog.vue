@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NInput, NModal, NRadioButton, NRadioGroup, NText, NUpload, useMessage } from 'naive-ui'
-import type { UploadFileInfo } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -22,7 +20,10 @@ const props = defineProps<{ editVoice?: EditVoice | null }>()
 const emit = defineEmits<{ (e: 'created'): void }>()
 const show = defineModel<boolean>('show', { default: false })
 
-const message = useMessage()
+const toast = useToast()
+const feedback = (color: 'success' | 'error' | 'warning' | 'info', title: string) => {
+  toast.add({ title, color })
+}
 const account = useAccount()
 const { settings } = useSpeechService()
 
@@ -33,7 +34,7 @@ const type = ref<'clone' | 'design'>('clone')
 const description = ref('')
 const directorNote = ref('')
 const previewText = ref('你好，这是一段试听')
-const audioFileList = ref<UploadFileInfo[]>([])
+const audioFileList = ref<any[]>([])
 const saving = ref(false)
 const previewing = ref(false)
 const previewAudio = ref<HTMLAudioElement | null>(null)
@@ -101,7 +102,7 @@ async function preview() {
     previewAudio.value = audio
     await audio.play()
   } catch (error: any) {
-    message.error(error.message ?? '试听失败')
+    feedback('error', error.message ?? '试听失败')
   } finally {
     previewing.value = false
   }
@@ -183,7 +184,7 @@ async function save() {
           name: name.value,
         })
       }
-      message.success('已更新')
+      feedback('success', '已更新')
     } else {
       const fd = buildFormData(false)
       fd.append('name', name.value)
@@ -198,13 +199,13 @@ async function save() {
           name: name.value,
         })
       }
-      message.success('自定义音色已保存')
+      feedback('success', '自定义音色已保存')
     }
     show.value = false
     emit('created')
     reset()
   } catch (error: any) {
-    message.error(error.message ?? '保存失败')
+    feedback('error', error.message ?? '保存失败')
   } finally {
     saving.value = false
   }
@@ -220,8 +221,8 @@ function reset() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
+  <UModal
+    v-model:open="show"
     preset="card"
     :title="isEdit ? '编辑自定义音色' : '新建自定义音色'"
     style="max-width: 480px"
@@ -230,14 +231,14 @@ function reset() {
   >
     <div class="form">
       <div class="field">
-        <NText
+        <span
           strong
           style="font-size: 12px"
         >
           名称
-        </NText>
-        <NInput
-          v-model:value="name"
+        </span>
+        <UInput
+          v-model="name"
           placeholder="给音色起个名字"
           size="small"
           :disabled="isEdit"
@@ -248,43 +249,44 @@ function reset() {
         v-if="!isEdit"
         class="field"
       >
-        <NText
+        <span
           strong
           style="font-size: 12px"
         >
           类型
-        </NText>
-        <NRadioGroup
-          v-model:value="type"
-          size="small"
-        >
-          <NRadioButton value="clone"> 音频克隆 </NRadioButton>
-          <NRadioButton value="design"> 文字描述 </NRadioButton>
-        </NRadioGroup>
+        </span>
+        <URadioGroup
+          v-model="type"
+          :items="[
+            { label: '音频克隆', value: 'clone' },
+            { label: '文字描述', value: 'design' },
+          ]"
+          orientation="horizontal"
+        />
       </div>
 
       <template v-if="type === 'clone'">
         <div class="field">
-          <NText
+          <span
             strong
             style="font-size: 12px"
           >
             参考音频{{ isEdit ? '（留空保持不变）' : '' }}
-          </NText>
-          <NUpload
+          </span>
+          <UFileUpload
             v-model:file-list="audioFileList"
             accept=".mp3,.wav"
             :max="1"
             :default-upload="false"
           >
-            <NButton
+            <UButton
               size="small"
-              tertiary
+              variant="soft"
             >
               选择文件 (mp3/wav, 最大 10MB)
-            </NButton>
-          </NUpload>
-          <NText
+            </UButton>
+          </UFileUpload>
+          <span
             v-if="!isEdit"
             depth="3"
             style="font-size: 11px; line-height: 1.5"
@@ -292,26 +294,26 @@ function reset() {
             要求：清晰的单人语音，时长 5~30 秒为佳，避免背景音乐/噪声/混响。
             <br />
             建议用手机录音 App 在安静环境下录一段正常语速的朗读。
-          </NText>
+          </span>
         </div>
       </template>
 
       <template v-if="type === 'design'">
         <div class="field">
-          <NText
+          <span
             strong
             style="font-size: 12px"
           >
             音色描述
-          </NText>
-          <NInput
-            v-model:value="description"
+          </span>
+          <UInput
+            v-model="description"
             type="textarea"
             :rows="3"
             placeholder="用自然语言描述想要的音色特征，1-4 句即可"
             size="small"
           />
-          <NText
+          <span
             depth="3"
             style="font-size: 11px; line-height: 1.6"
           >
@@ -320,25 +322,25 @@ function reset() {
             可选加入：角色人设、说话风格、场景描写。描述越具体越好，但避免矛盾特征。
             <br />
             示例：一位年迈的老先生，带北方口音，语速缓慢沉稳，嗓音略带沙哑和沧桑感，仿佛饱经风霜的老爷爷在讲故事
-          </NText>
+          </span>
         </div>
       </template>
 
       <div class="field">
-        <NText
+        <span
           strong
           style="font-size: 12px"
         >
           导演指令 (可选)
-        </NText>
-        <NInput
-          v-model:value="directorNote"
+        </span>
+        <UInput
+          v-model="directorNote"
           type="textarea"
           :rows="2"
           placeholder="像给演员写指导：语速、气息、停顿、重音、情绪起伏"
           size="small"
         />
-        <NText
+        <span
           depth="3"
           style="font-size: 11px; line-height: 1.6"
         >
@@ -347,65 +349,65 @@ function reset() {
           简单示例：用轻快上扬的语调，语速稍快，带着压抑不住的激动与小骄傲
           <br />
           导演模式：可从【角色】【场景】【指导】三个维度详细刻画，适合角色配音等高要求场景
-        </NText>
+        </span>
       </div>
 
       <div class="field">
-        <NText
+        <span
           strong
           style="font-size: 12px"
         >
           试听文本
-        </NText>
+        </span>
         <div style="display: flex; gap: 6px">
-          <NInput
-            v-model:value="previewText"
+          <UInput
+            v-model="previewText"
             size="small"
             style="flex: 1"
           />
-          <NButton
+          <UButton
             :disabled="!canPreview"
             :loading="previewing"
-            type="primary"
-            tertiary
+            color="primary"
+            variant="soft"
             size="small"
             @click="preview"
           >
             试听
-          </NButton>
+          </UButton>
         </div>
       </div>
 
-      <NAlert
+      <UAlert
         v-if="!account"
         type="warning"
         :bordered="false"
         size="small"
       >
         需要登录才能保存自定义音色
-      </NAlert>
+      </UAlert>
     </div>
 
-    <template #action>
+    <template #footer>
       <div style="display: flex; justify-content: flex-end; gap: 8px">
-        <NButton
+        <UButton
           size="small"
           @click="show = false"
         >
           取消
-        </NButton>
-        <NButton
-          type="primary"
+        </UButton>
+        <UButton
+          color="primary"
           size="small"
           :disabled="!canSave || !account"
           :loading="saving"
           @click="save"
         >
           {{ isEdit ? '更新' : '保存' }}
-        </NButton>
+        </UButton>
       </div>
     </template>
-  </NModal>
+  </UModal>
 </template>
 
 <style scoped>

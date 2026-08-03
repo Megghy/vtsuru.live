@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { MoreHorizontal24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { NButton, NDropdown, NIcon, NSpin, useMessage } from 'naive-ui'
+import { showErrorToast } from '@/shared/services/toast'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -16,8 +15,6 @@ import SongListAddSongModal from '@/apps/manage/components/song-list/SongListAdd
 import SongList from '@/components/SongList.vue'
 import { CURRENT_HOST, SONG_API_URL } from '@/shared/config'
 import { objectsToCSV } from '@/shared/utils'
-
-const message = useMessage()
 const router = useRouter()
 const accountInfo = useAccount()
 
@@ -34,7 +31,7 @@ async function getSongs() {
     const data = await QueryGetAPI<any>(`${SONG_API_URL}get`, { id: accountInfo.value?.id })
     if (data.code === 200) songs.value = data.data
   } catch (err) {
-    message.error(`获取歌曲失败: ${err}`)
+    showErrorToast(`获取歌曲失败: ${err}`)
   } finally {
     isLoading.value = false
   }
@@ -112,31 +109,22 @@ onMounted(getSongs)
     :links="[{ label: '展示页链接', value: songListUrl }]"
   >
     <template #action>
-      <NButton
-        type="primary"
+      <UButton
         @click="showModal = true"
       >
         添加歌曲
-      </NButton>
-      <NButton
+      </UButton>
+      <UButton
         :loading="isLoading"
-        secondary
+        color="neutral"
+        variant="soft"
         @click="getSongs"
       >
         刷新
-      </NButton>
-      <NDropdown
-        :options="moreActions"
-        trigger="click"
-        @select="handleMoreAction"
-      >
-        <NButton secondary>
-          <template #icon>
-            <NIcon :component="MoreHorizontal24Filled" />
-          </template>
-          更多
-        </NButton>
-      </NDropdown>
+      </UButton>
+      <UDropdownMenu :items="moreActions.map((item) => ({ ...item, onSelect: () => handleMoreAction(item.key) }))">
+        <UButton color="neutral" variant="soft" label="更多"><template #trailing><UIcon name="i-lucide-ellipsis" /></template></UButton>
+      </UDropdownMenu>
     </template>
   </ManagePageHeader>
 
@@ -146,10 +134,7 @@ onMounted(getSongs)
     @added="onSongsAdded"
   />
 
-  <NSpin
-    v-if="isLoading"
-    show
-  />
+  <div v-if="isLoading" class="song-list-loading"><USkeleton class="h-8 w-full" /></div>
   <SongList
     v-else
     :songs="songs"

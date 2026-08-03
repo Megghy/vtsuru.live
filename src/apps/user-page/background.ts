@@ -1,9 +1,5 @@
 import { formatRgb } from 'culori'
-import type { GlobalThemeOverrides } from 'naive-ui'
 
-import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
-import { resolveReadableForeground } from '@/shared/config/theme/contrast'
-import { getThemeOverrides } from '@/shared/config/theme/overrides'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { hexToRgba } from '@/shared/utils'
 
@@ -14,7 +10,7 @@ import type {
   PageBackgroundType,
 } from './block/schema'
 import { getGoogleFontFamilyCss } from './googleFonts'
-import { resolveUserPageControlOverlay, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
+import { resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
 import { normalizeUserPageColor, parseUserPageColor } from './themeColor'
 import { resolveUserPageAppearance } from './themeConfig'
 
@@ -235,183 +231,6 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--vtsuru-page-control-height-medium': appearance.controlHeights.medium,
     '--vtsuru-page-control-height-large': appearance.controlHeights.large,
   } as Record<string, string>
-}
-
-export function getUserPageNaiveThemeOverrides(
-  theme: unknown,
-  vars: Record<string, string>,
-  effectiveIsDark: boolean,
-): GlobalThemeOverrides {
-  const base = getThemeOverrides(buildSiteTokens(effectiveIsDark))
-  const primaryColor = readThemeColor(theme, 'primaryColor')
-  const appearance = resolveUserPageAppearance(theme)
-  const contentColor = vars['--vtsuru-page-content-color'] || vars['--user-page-ui-surface-bg']
-  const cardColor = vars['--vtsuru-page-card-bg']
-  const cardEmbeddedColor = vars['--vtsuru-page-card-bg-embedded']
-  const borderColor = vars['--vtsuru-card-border-color'] || vars['--user-page-border-color']
-  const textColor = vars['--vtsuru-page-text']
-  const mutedTextColor = vars['--vtsuru-surface-fg-muted']
-  const subtleTextColor = vars['--vtsuru-surface-fg-subtle']
-  const disabledTextColor = vars['--vtsuru-page-fg-disabled']
-  const disabledPlaceholderColor = vars['--vtsuru-page-placeholder-disabled']
-  const pagePrimary = vars['--vtsuru-page-primary']
-  const pagePrimaryFocus = vars['--vtsuru-page-primary-focus']
-  const pagePrimaryForeground = resolveReadableForeground(pagePrimary, contentColor, effectiveIsDark)
-  const controlOverlay = resolveUserPageControlOverlay(contentColor)
-  const radius = `${appearance.radius}px`
-  const border = `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`
-  const primaryBorder = `${appearance.borderWidth} ${appearance.borderStyle} ${primaryColor || borderColor}`
-
-  return {
-    ...base,
-    common: {
-      ...base.common,
-      fontFamily: vars['--vtsuru-page-font-family'],
-      borderColor,
-      dividerColor: borderColor,
-      textColorBase: textColor,
-      textColor1: textColor,
-      textColor2: mutedTextColor,
-      textColor3: subtleTextColor,
-      textColorDisabled: disabledTextColor,
-      cardColor,
-      modalColor: contentColor,
-      popoverColor: contentColor,
-      borderRadius: radius,
-      borderRadiusSmall: radius,
-      heightSmall: appearance.controlHeights.small,
-      heightMedium: appearance.controlHeights.medium,
-      heightLarge: appearance.controlHeights.large,
-      boxShadow1: appearance.shadow,
-      boxShadow2: appearance.shadow,
-      boxShadow3: appearance.shadow,
-      ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
-    },
-    Card: {
-      ...base.Card,
-      color: cardColor,
-      colorEmbedded: cardEmbeddedColor,
-      borderColor,
-      borderRadius: radius,
-      boxShadow: appearance.shadow,
-    },
-    Input: {
-      ...base.Input,
-      heightSmall: appearance.controlHeights.small,
-      heightMedium: appearance.controlHeights.medium,
-      heightLarge: appearance.controlHeights.large,
-      borderRadius: radius,
-      color: controlOverlay.color,
-      colorFocus: controlOverlay.focus,
-      colorDisabled: controlOverlay.disabled,
-      textColor,
-      textColorDisabled: disabledTextColor,
-      placeholderColor: subtleTextColor,
-      placeholderColorDisabled: disabledPlaceholderColor,
-      border,
-      borderHover: primaryBorder,
-      borderFocus: primaryBorder,
-    },
-    Select: {
-      ...base.Select,
-      peers: {
-        ...base.Select?.peers,
-        InternalSelection: {
-          ...base.Select?.peers?.InternalSelection,
-          heightSmall: appearance.controlHeights.small,
-          heightMedium: appearance.controlHeights.medium,
-          heightLarge: appearance.controlHeights.large,
-          borderRadius: radius,
-          border,
-          borderHover: primaryBorder,
-          borderFocus: primaryBorder,
-          colorDisabled: controlOverlay.disabled,
-          textColorDisabled: disabledTextColor,
-          placeholderColorDisabled: disabledPlaceholderColor,
-          arrowColorDisabled: disabledPlaceholderColor,
-        },
-        InternalSelectMenu: {
-          ...base.Select?.peers?.InternalSelectMenu,
-          borderRadius: radius,
-        },
-      },
-    },
-    Button: {
-      ...base.Button,
-      ...getAdaptiveButtonColors({
-        isDark: effectiveIsDark,
-        surface: contentColor,
-        color: controlOverlay.color,
-        colorHover: controlOverlay.focus,
-        colorPressed: controlOverlay.disabled,
-        secondary: {
-          color: controlOverlay.focus,
-          hover: controlOverlay.disabled,
-          pressed: controlOverlay.disabled,
-        },
-        textColor,
-        borderColor,
-        borderWidth: appearance.borderWidth,
-        borderStyle: appearance.borderStyle,
-        ...(primaryColor ? { primary: { color: primaryColor } } : {}),
-      }),
-      heightSmall: appearance.controlHeights.small,
-      heightMedium: appearance.controlHeights.medium,
-      heightLarge: appearance.controlHeights.large,
-      borderRadiusTiny: radius,
-      borderRadiusSmall: radius,
-      borderRadiusMedium: radius,
-      borderRadiusLarge: radius,
-    },
-    Popover: {
-      ...base.Popover,
-      borderRadius: radius,
-      boxShadow: appearance.shadow,
-    },
-    Dialog: {
-      ...base.Dialog,
-      borderRadius: radius,
-    },
-    Checkbox: {
-      ...base.Checkbox,
-      borderRadius: radius,
-      border,
-      borderChecked: primaryBorder,
-    },
-    Radio: {
-      ...base.Radio,
-      buttonBorderColor: borderColor,
-      buttonBorderColorActive: pagePrimary,
-      buttonBorderColorHover: pagePrimary,
-      buttonBoxShadowFocus: `inset 0 0 0 1px ${pagePrimary}, 0 0 0 2px ${pagePrimaryFocus}`,
-      buttonBoxShadowHover: `inset 0 0 0 1px ${pagePrimary}`,
-      buttonColor: controlOverlay.color,
-      buttonColorActive: pagePrimary,
-      buttonTextColor: textColor,
-      buttonTextColorActive: pagePrimaryForeground,
-      buttonTextColorHover: pagePrimary,
-      buttonBorderRadius: radius,
-      dotColorActive: pagePrimary,
-    },
-    Empty: {
-      ...base.Empty,
-      textColor: mutedTextColor,
-      iconColor: pagePrimary,
-      extraTextColor: mutedTextColor,
-    },
-    Tooltip: { ...base.Tooltip, borderRadius: radius, boxShadow: appearance.shadow },
-    Menu: { ...base.Menu, borderRadius: radius },
-    Dropdown: { ...base.Dropdown, borderRadius: radius },
-    Message: { ...base.Message, borderRadius: radius, border, boxShadow: appearance.shadow },
-    Notification: { ...base.Notification, borderRadius: radius, boxShadow: appearance.shadow },
-    Tag: { ...base.Tag, borderRadius: radius },
-    Alert: { ...base.Alert, borderRadius: radius },
-    List: { ...base.List, borderRadius: radius },
-    Pagination: {
-      ...base.Pagination,
-      itemBorderRadius: radius,
-    },
-  }
 }
 
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {

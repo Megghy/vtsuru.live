@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import { addSeconds } from 'date-fns'
-import { NButton, NModal, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { DownloadConfig, useAccount } from '@/api/account'
-import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
 import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
+import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
 import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/shared/config'
 import { SongListTemplateMap } from '@/shared/config/templates'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -69,7 +68,7 @@ const selectedTemplate = computed(() => {
 })
 
 const currentConfig = ref({}) // 当前配置
-const message = useMessage() // 消息提示
+const toast = useToast()
 const biliAuth = useBiliAuth() // B站授权
 const isLoggedIn = computed(() => !!accountInfo.value.id)
 
@@ -90,11 +89,11 @@ async function getSongRequestInfo() {
     if (data.code === 200) {
       return data.data
     } else {
-      message.warning(`获取点歌设置失败: ${data.message}`)
+      toast.add({ title: `获取点歌设置失败: ${data.message}`, color: 'warning' })
     }
   } catch (err) {
     console.error('获取点歌设置出错:', err)
-    message.error(`获取点歌设置出错: ${err instanceof Error ? err.message : String(err)}`)
+    toast.add({ title: `获取点歌设置出错: ${err instanceof Error ? err.message : String(err)}`, color: 'error' })
   }
 
   return { songs: [], setting: settings.value }
@@ -119,11 +118,11 @@ async function getSongs() {
     if (data.code === 200) {
       currentData.value = data.data || []
     } else {
-      message.error(`加载歌单失败: ${data.message}`)
+      toast.add({ title: `加载歌单失败: ${data.message}`, color: 'error' })
     }
   } catch (err) {
     console.error('加载歌单出错:', err)
-    message.error(`加载歌单失败: ${err instanceof Error ? err.message : String(err)}`)
+    toast.add({ title: `加载歌单失败: ${err instanceof Error ? err.message : String(err)}`, color: 'error' })
   } finally {
     isDataLoading.value = false
   }
@@ -156,7 +155,7 @@ async function getConfig() {
     }
   } catch (err) {
     console.error('加载配置出错:', err)
-    message.error(`加载配置失败: ${err instanceof Error ? err.message : String(err)}`)
+    toast.add({ title: `加载配置失败: ${err instanceof Error ? err.message : String(err)}`, color: 'error' })
     currentConfig.value = dynamicConfigRef.value?.DefaultConfig ?? {}
   } finally {
     isConfigLoading.value = false
@@ -171,12 +170,12 @@ function copyToClipboard(text: string, sendMessage: boolean = true) {
     .writeText(text)
     .then(() => {
       if (sendMessage) {
-        message.success('复制成功')
+        toast.add({ title: '复制成功', color: 'success' })
       }
     })
     .catch((err) => {
       console.error('复制失败:', err)
-      message.error('复制失败，请重试')
+      toast.add({ title: '复制失败，请重试', color: 'error' })
     })
 }
 
@@ -196,12 +195,12 @@ async function requestSong(song: SongsInfo) {
 
   if (check.shouldCopyOnly) {
     copyToClipboard(orderText, false)
-    message.info(check.reason)
+    toast.add({ title: check.reason, color: 'info' })
     return
   }
 
   if (!check.canRequest) {
-    message.warning(check.reason)
+    toast.add({ title: check.reason, color: 'warning' })
     return
   }
 
@@ -215,7 +214,7 @@ async function requestSong(song: SongsInfo) {
       : await QueryPostAPIWithParams(`${SONG_REQUEST_API_URL}add-from-web`, params)
 
     if (data.code === 200) {
-      message.success('点歌成功')
+      toast.add({ title: '点歌成功', color: 'success' })
       nextRequestTime.value = addSeconds(new Date(), minRequestTime)
       // 重新获取当前点歌列表，更新界面
       const songRequestInfo = await getSongRequestInfo()
@@ -223,11 +222,11 @@ async function requestSong(song: SongsInfo) {
         songsActive.value = songRequestInfo.songs
       }
     } else {
-      message.error(`点歌失败: ${data.message}`)
+      toast.add({ title: `点歌失败: ${data.message}`, color: 'error' })
     }
   } catch (err) {
     console.error('点歌出错:', err)
-    message.error(`点歌失败: ${err instanceof Error ? err.message : String(err)}`)
+    toast.add({ title: `点歌失败: ${err instanceof Error ? err.message : String(err)}`, color: 'error' })
   }
 }
 
@@ -274,7 +273,7 @@ onMounted(async () => {
       ])
     } catch (err) {
       console.error('初始化失败:', err)
-      message.error(`初始化失败: ${err instanceof Error ? err.message : String(err)}`)
+      toast.add({ title: `初始化失败: ${err instanceof Error ? err.message : String(err)}`, color: 'error' })
     } finally {
       isDataLoading.value = false
     }
@@ -293,7 +292,7 @@ onMounted(async () => {
 <template>
   <div class="song-list-surface">
     <!-- 加载中显示加载动画 -->
-    <NSpin :show="isLoading">
+    <div :aria-busy="isLoading">
       <component
         :is="selectedTemplate?.component"
         ref="dynamicConfigRef"
@@ -306,31 +305,32 @@ onMounted(async () => {
         v-bind="$attrs"
         @request-song="requestSong"
       />
-    </NSpin>
+    </div>
 
     <!-- 主播自定义按钮 -->
-    <NButton
+    <UButton
       v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id"
-      type="info"
-      size="small"
+      color="info"
+      size="sm"
       style="position: absolute; right: 32px; top: 20px; z-index: 1000"
       @click="showSettingModal = true"
     >
       自定义
-    </NButton>
+    </UButton>
 
     <!-- 设置弹窗 -->
-    <NModal
-      v-model:show="showSettingModal"
-      style="max-width: 90vw; width: 800px"
-      preset="card"
+    <UModal
+      v-model:open="showSettingModal"
       title="设置"
+      :ui="{ content: 'max-w-[800px]' }"
     >
-      <DynamicForm
-        :name="selectedTemplate?.settingName"
-        :config-data="currentConfig"
-        :config="selectedTemplateConfig"
-      />
-    </NModal>
+      <template #body>
+        <DynamicForm
+          :name="selectedTemplate?.settingName"
+          :config-data="currentConfig"
+          :config="selectedTemplateConfig"
+        />
+      </template>
+    </UModal>
   </div>
 </template>

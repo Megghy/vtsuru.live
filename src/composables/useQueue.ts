@@ -1,6 +1,5 @@
 import { List } from 'linqts'
-import { NTime } from 'naive-ui'
-import { computed, h, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import type { DanmakuUserInfo, EventModel, ResponseQueueModel, Setting_Queue } from '@/api/api-models'
@@ -15,6 +14,7 @@ import {
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { QUEUE_API_URL } from '@/shared/config'
+import { showErrorToast, showInfoToast, showSuccessToast, showToast } from '@/shared/services/toast'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { formatDanmakuPrice, getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 import { matchKeyword, sortByQueueType } from '@/shared/utils/queue'
@@ -201,10 +201,10 @@ export const useQueue = defineStore('queue', () => {
       if (data.code === 200) {
         return data.data ?? []
       }
-      window.$message.error(`无法获取队列数据: ${data.message}`)
+      showErrorToast(`无法获取队列数据: ${data.message}`)
       return []
     } catch (err: any) {
-      window.$message.error(`获取队列数据失败: ${err.message || err}`)
+      showErrorToast(`获取队列数据失败: ${err.message || err}`)
       return []
     } finally {
       isLoading.value = false
@@ -214,7 +214,7 @@ export const useQueue = defineStore('queue', () => {
   async function add(danmaku: EventModel) {
     if (!checkMessage(danmaku)) return
     if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming !== true) {
-      window.$message.info('当前未在直播中, 无法添加排队请求. 或者关闭设置中的仅允许直播时加入')
+      showInfoToast('当前未在直播中, 无法添加排队请求. 或者关闭设置中的仅允许直播时加入')
       return
     }
 
@@ -229,7 +229,7 @@ export const useQueue = defineStore('queue', () => {
             const oldPrice = originQueue.value[existingIndex]?.giftPrice ?? 0
             const newPrice = data.data?.giftPrice ?? 0
             if (newPrice > oldPrice) {
-              window.$message.info(
+              showInfoToast(
                 buildPaymentIncreaseMessage(
                   data.data.user?.name,
                   {
@@ -244,19 +244,19 @@ export const useQueue = defineStore('queue', () => {
             originQueue.value.splice(existingIndex, 1, data.data)
           } else {
             originQueue.value.push(data.data)
-            window.$message.success(`[${danmaku.uname}] 添加至队列`)
+            showSuccessToast(`[${danmaku.uname}] 添加至队列`)
           }
         } else {
-          const time = Date.now()
-          window.$notification.warning({
+          showToast({
             title: `${danmaku.uname} 排队失败`,
             description: data.message,
+            color: 'warning',
+            icon: 'i-lucide-triangle-alert',
             duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: () => h(NTime, { type: 'relative', time, key: updateKey.value }),
           })
         }
       } catch (err: any) {
-        window.$message.error(`[${danmaku.uname}] 添加队列时出错: ${err.message || err}`)
+        showErrorToast(`[${danmaku.uname}] 添加队列时出错: ${err.message || err}`)
       }
     } else {
       const songData = {
@@ -280,13 +280,13 @@ export const useQueue = defineStore('queue', () => {
         id: nextLocalId(),
       } as ResponseQueueModel
       localQueues.value.unshift(songData)
-      window.$message.success(`[${danmaku.uname}] 添加至本地队列`)
+      showSuccessToast(`[${danmaku.uname}] 添加至本地队列`)
     }
   }
 
   async function addManual() {
     if (!newQueueName.value) {
-      window.$message.error('请输入用户名')
+      showErrorToast('请输入用户名')
       return
     }
     if (isLoggedIn.value) {
@@ -295,14 +295,14 @@ export const useQueue = defineStore('queue', () => {
           name: newQueueName.value,
         })
         if (data.code === 200) {
-          window.$message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
+          showSuccessToast(`已手动添加用户至队列: ${data.data.user?.name}`)
           originQueue.value.unshift(data.data)
           newQueueName.value = ''
         } else {
-          window.$message.error(`手动添加失败: ${data.message}`)
+          showErrorToast(`手动添加失败: ${data.message}`)
         }
       } catch (err: any) {
-        window.$message.error(`手动添加时出错: ${err.message || err}`)
+        showErrorToast(`手动添加时出错: ${err.message || err}`)
       }
     } else {
       const songData = {
@@ -314,7 +314,7 @@ export const useQueue = defineStore('queue', () => {
         id: nextLocalId(),
       } as ResponseQueueModel
       localQueues.value.unshift(songData)
-      window.$message.success(`已手动添加用户至队列: ${newQueueName.value}`)
+      showSuccessToast(`已手动添加用户至队列: ${newQueueName.value}`)
       newQueueName.value = ''
     }
   }
@@ -325,7 +325,7 @@ export const useQueue = defineStore('queue', () => {
       if (localItem) {
         localItem.status = status
         if (status > QueueStatus.Progressing) localItem.finishAt = Date.now()
-        window.$message.success(`已更新本地 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
+        showSuccessToast(`已更新本地 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
       }
       return
     }
@@ -338,12 +338,12 @@ export const useQueue = defineStore('queue', () => {
           item.status = status
           if (status > QueueStatus.Progressing) item.finishAt = Date.now()
         }
-        window.$message.success(`已更新 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
+        showSuccessToast(`已更新 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
       } else {
-        window.$message.error(`更新队列状态失败: ${data.message}`)
+        showErrorToast(`更新队列状态失败: ${data.message}`)
       }
     } catch (err: any) {
-      window.$message.error(`更新队列状态时出错: ${err.message || err}`)
+      showErrorToast(`更新队列状态时出错: ${err.message || err}`)
     } finally {
       isLoading.value = false
       queueDataBeingManaged.value = null
@@ -358,20 +358,20 @@ export const useQueue = defineStore('queue', () => {
         const ids = values.map((s) => s.id)
         const data = await QueryPostAPI(`${QUEUE_API_URL}del`, ids)
         if (data.code === 200) {
-          window.$message.success(`成功删除 ${values.length} 条记录`)
+          showSuccessToast(`成功删除 ${values.length} 条记录`)
           originQueue.value = originQueue.value.filter((s) => !ids.includes(s.id))
         } else {
-          window.$message.error(`删除失败: ${data.message}`)
+          showErrorToast(`删除失败: ${data.message}`)
         }
       } catch (err: any) {
-        window.$message.error(`删除记录时出错: ${err.message || err}`)
+        showErrorToast(`删除记录时出错: ${err.message || err}`)
       } finally {
         isLoading.value = false
       }
     } else {
       const ids = new Set(values.map((v) => v.id))
       localQueues.value = localQueues.value.filter((q) => !ids.has(q.id))
-      window.$message.success(`成功删除 ${values.length} 条本地记录`)
+      showSuccessToast(`成功删除 ${values.length} 条本地记录`)
     }
   }
 
@@ -389,19 +389,19 @@ export const useQueue = defineStore('queue', () => {
       try {
         const data = await QueryGetAPI(`${QUEUE_API_URL}deactive`)
         if (data.code === 200) {
-          window.$message.success('已全部取消')
+          showSuccessToast('已全部取消')
           cancelLocal(originQueue.value)
         } else {
-          window.$message.error(`全部取消失败: ${data.message}`)
+          showErrorToast(`全部取消失败: ${data.message}`)
         }
       } catch (err: any) {
-        window.$message.error(`全部取消时出错: ${err.message || err}`)
+        showErrorToast(`全部取消时出错: ${err.message || err}`)
       } finally {
         isLoading.value = false
       }
     } else {
       cancelLocal(localQueues.value)
-      window.$message.success('已全部取消本地活动队列')
+      showSuccessToast('已全部取消本地活动队列')
     }
   }
 
@@ -425,7 +425,7 @@ export const useQueue = defineStore('queue', () => {
             const oldPrice = existing.giftPrice ?? 0
             const newPrice = item.giftPrice ?? 0
             if (newPrice > oldPrice) {
-              window.$message.info(
+              showInfoToast(
                 buildPaymentIncreaseMessage(
                   existing.user?.name,
                   {
@@ -444,9 +444,9 @@ export const useQueue = defineStore('queue', () => {
         } else {
           originQueue.value.unshift(item)
           if (item.from === QueueFrom.Web) {
-            window.$message.success(`[${item.user?.name}] 通过网页加入队列`)
+            showSuccessToast(`[${item.user?.name}] 通过网页加入队列`)
           } else if (item.from === QueueFrom.Gift && settings.value.sendGiftDirectJoin) {
-            window.$message.success(`[${item.user?.name}] 通过礼物加入队列`)
+            showSuccessToast(`[${item.user?.name}] 通过礼物加入队列`)
           }
         }
       })
@@ -457,11 +457,11 @@ export const useQueue = defineStore('queue', () => {
 
   async function blockUser(item: ResponseQueueModel) {
     if (item.from !== QueueFrom.Danmaku && item.from !== QueueFrom.Gift) {
-      window.$message.error(`[${item.user?.name}] 不是来自弹幕或礼物的用户，无法拉黑`)
+      showErrorToast(`[${item.user?.name}] 不是来自弹幕或礼物的用户，无法拉黑`)
       return
     }
     if (!item.user?.uid) {
-      window.$message.error(`用户 [${item.user?.name}] 没有有效的 UID，无法拉黑`)
+      showErrorToast(`用户 [${item.user?.name}] 没有有效的 UID，无法拉黑`)
       return
     }
     isLoading.value = true
@@ -469,13 +469,13 @@ export const useQueue = defineStore('queue', () => {
     try {
       const data = await AddBiliBlackList(item.user.uid, item.user.name)
       if (data.code === 200) {
-        window.$message.success(`[${item.user?.name}] 已添加到 B站黑名单`)
+        showSuccessToast(`[${item.user?.name}] 已添加到 B站黑名单`)
         await updateStatus(item, QueueStatus.Cancel)
       } else {
-        window.$message.error(`拉黑失败: ${data.message}`)
+        showErrorToast(`拉黑失败: ${data.message}`)
       }
     } catch (err: any) {
-      window.$message.error(`拉黑时发生错误: ${err.message || err}`)
+      showErrorToast(`拉黑时发生错误: ${err.message || err}`)
     } finally {
       isLoading.value = false
       queueDataBeingManaged.value = null
@@ -500,29 +500,29 @@ export const useQueue = defineStore('queue', () => {
     try {
       const data = await SaveEnableFunctions(accountInfo.value.settings.enableFunctions)
       if (data.code === 200) {
-        window.$message.success(`已${isEnabling ? '启用' : '禁用'}队列功能`)
+        showSuccessToast(`已${isEnabling ? '启用' : '禁用'}队列功能`)
       } else {
         accountInfo.value.settings.enableFunctions = old
-        window.$message.error(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${data.message}`)
+        showErrorToast(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${data.message}`)
       }
     } catch (err: any) {
       accountInfo.value.settings.enableFunctions = old
-      window.$message.error(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${err.message || err}`)
+      showErrorToast(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${err.message || err}`)
     }
   }
 
   async function saveSettings() {
     if (!accountInfo.value.id) {
-      window.$message.success('本地设置已更新 (未登录)')
+      showSuccessToast('本地设置已更新 (未登录)')
       return
     }
     isLoading.value = true
     try {
       const success = await SaveSetting('Queue', settings.value)
-      if (success) window.$message.success('设置已保存')
-      else window.$message.error('设置保存失败')
+      if (success) showSuccessToast('设置已保存')
+      else showErrorToast('设置保存失败')
     } catch (err: any) {
-      window.$message.error(`保存设置失败: ${err.message || err}`)
+      showErrorToast(`保存设置失败: ${err.message || err}`)
     } finally {
       isLoading.value = false
     }

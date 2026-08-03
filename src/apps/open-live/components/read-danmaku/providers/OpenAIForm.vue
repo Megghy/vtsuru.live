@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NInput, NSelect, NText } from 'naive-ui'
-
 import { OPENAI_PRESET_VOICES } from '@/apps/open-live/voice-providers/openai'
 import { useSpeechService } from '@/store/useSpeechService'
 
@@ -21,28 +19,28 @@ const formatOptions = [
 
 <template>
   <div class="form">
-    <NAlert
+    <UAlert
       type="info"
       :bordered="false"
       size="small"
     >
-      <NText style="font-size: 12px"> 请求由浏览器直连 API 服务方, 不经过 VTsuru 后端 (避免 IP 暴露和延迟) </NText>
-    </NAlert>
+      <span style="font-size: 12px"> 请求由浏览器直连 API 服务方, 不经过 VTsuru 后端 (避免 IP 暴露和延迟) </span>
+    </UAlert>
 
     <SectionField
       label="Base URL"
       hint="OpenAI 兼容服务的根路径，会自动追加 /v1/audio/speech"
     >
-      <NInput
-        v-model:value="settings.providers.openai.baseUrl"
+      <UInput
+        v-model="settings.providers.openai.baseUrl"
         placeholder="https://api.openai.com"
         size="small"
       />
     </SectionField>
 
     <SectionField label="API Key">
-      <NInput
-        v-model:value="settings.providers.openai.apiKey"
+      <UInput
+        v-model="settings.providers.openai.apiKey"
         type="password"
         show-password-on="click"
         placeholder="sk-xxxx"
@@ -51,8 +49,8 @@ const formatOptions = [
     </SectionField>
 
     <SectionField label="模型">
-      <NInput
-        v-model:value="settings.providers.openai.model"
+      <UInput
+        v-model="settings.providers.openai.model"
         placeholder="tts-1"
         size="small"
       />
@@ -67,10 +65,11 @@ const formatOptions = [
     </SectionField>
 
     <SectionField label="音频格式">
-      <NSelect
-        v-model:value="settings.providers.openai.format"
-        :options="formatOptions"
+      <USelectMenu
+        v-model="settings.providers.openai.format"
+        :items="formatOptions"
         size="small"
+        value-key="value"
       />
     </SectionField>
   </div>

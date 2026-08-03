@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -25,17 +24,16 @@ const backgrounded = computed(() =>
     :framed="framed"
     :backgrounded="backgrounded"
   >
-    <NFlex
+    <div
       justify="center"
       wrap
       style="gap: 10px"
     >
-      <NButton
+      <UButton
         v-for="(it, idx) in items"
         :key="idx"
-        tag="a"
-        type="info"
-        secondary
+        color="info"
+        variant="soft"
         target="_blank"
         rel="noopener noreferrer"
         :href="it.url"
@@ -43,8 +41,8 @@ const backgrounded = computed(() =>
         :aria-label="`${it.label || '打开链接'}（新窗口打开）`"
       >
         {{ it.label }}
-      </NButton>
-    </NFlex>
+      </UButton>
+    </div>
   </BlockCard>
 </template>
 

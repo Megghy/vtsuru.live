@@ -21,6 +21,9 @@ export interface ThemeTokens {
 
   // 文本与控件
   foreground: string
+  tonedForeground: string
+  highlightedForeground: string
+  invertedForeground: string
   mutedForeground: string
   control: string
   controlHover: string
@@ -29,6 +32,9 @@ export interface ThemeTokens {
   secondaryHover: string
   secondaryPressed: string
   borderColor: string
+  mutedBorderColor: string
+  accentedBorderColor: string
+  invertedBorderColor: string
   cardBorderColor: string
   inputBorderColor: string
   inputBorderHover: string
@@ -85,8 +91,12 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
   const radiusSmall = '2px'
 
   const foreground = isDark ? neutral[50] : neutral[950]
+  const tonedForeground = isDark ? neutral[300] : neutral[700]
+  const highlightedForeground = isDark ? '#ffffff' : neutral[950]
 
   const borderColor = isDark ? neutral[800] : neutral[300]
+  const mutedBorderColor = isDark ? neutral[800] : neutral[200]
+  const accentedBorderColor = isDark ? neutral[700] : neutral[400]
   const inputBorderColor = borderColor
   const inputBorderHover = isDark ? neutral[600] : neutral[400]
   const mutedForeground = isDark ? neutral[400] : neutral[600]
@@ -128,8 +138,14 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
     radiusSmall,
     ...surfaces,
     foreground,
+    tonedForeground,
+    highlightedForeground,
+    invertedForeground: primaryForeground,
     mutedForeground,
     borderColor,
+    mutedBorderColor,
+    accentedBorderColor,
+    invertedBorderColor: primary,
     inputBorderColor,
     inputBorderHover,
     placeholder: isDark ? neutral[600] : neutral[400],

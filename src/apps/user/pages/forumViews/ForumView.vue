@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NDivider, NFlex, NInput, NList, NListItem, NModal, NText, NTime } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { UserInfo } from '@/api/api-models'
 import type { ForumPostTopicModel, ForumTopicBaseModel } from '@/api/models/forum'
 import { ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'
+import PublicTime from '@/apps/user-page/PublicTime.vue'
 import TurnstileVerify from '@/apps/user/components/TurnstileVerify.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -86,134 +86,113 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard
+  <UCard
     v-if="!forumInfo"
+    class="user-page-card"
     size="small"
     bordered
   >
-    <NAlert
-      type="error"
-      size="small"
-      :bordered="false"
-    >
-      用户未创建粉丝讨论区
-    </NAlert>
-  </NCard>
-  <NCard
+    <UAlert color="error"><template #description> 用户未创建粉丝讨论区 </template></UAlert>
+  </UCard>
+  <UCard
     v-else-if="
       (forumInfo.level < ForumUserLevels.Member && forumInfo.settings.requireApply) ||
       forumInfo.settings.allowedViewerLevel > forumInfo.level
     "
+    class="user-page-card"
     size="small"
     bordered
   >
-    <NAlert
-      type="warning"
-      size="small"
-      :bordered="false"
-    >
-      你需要成为成员才能访问 {{ forumInfo.name }}
-    </NAlert>
+    <UAlert color="warning"
+      ><template #description> 你需要成为成员才能访问 {{ forumInfo.name }}</template>
+    </UAlert>
     <div style="height: 12px" />
-    <NAlert
+    <UAlert
       v-if="forumInfo.isApplied"
-      type="success"
-      size="small"
-      :bordered="false"
+      color="success"
+      ><template #description> 已申请, 正在等待管理员审核 </template></UAlert
     >
-      已申请, 正在等待管理员审核
-    </NAlert>
-    <NCard
+    <UCard
       v-else
       title="加入该讨论区"
+      class="user-page-card"
       size="small"
       bordered
     >
-      <NAlert
+      <UAlert
         v-if="!accountInfo.id"
-        type="error"
-        size="small"
-        :bordered="false"
+        color="error"
+        ><template #description> 需要登录后才能够加入 </template></UAlert
       >
-        需要登录后才能够加入
-      </NAlert>
-      <NAlert
+      <UAlert
         v-else-if="forumInfo.settings.requireApply"
-        type="warning"
-        size="small"
-        :bordered="false"
+        color="warning"
+        ><template #description> 申请需要审核 </template></UAlert
       >
-        申请需要审核
-      </NAlert>
-      <NAlert
+      <UAlert
         v-else
-        type="success"
-        size="small"
-        :bordered="false"
+        color="success"
+        ><template #description> 该讨论区可直接加入 </template></UAlert
       >
-        该讨论区可直接加入
-      </NAlert>
-      <NDivider />
-      <NButton
-        type="primary"
+      <USeparator />
+      <UButton
+        color="primary"
         :loading="useForum.isLoading"
         :disabled="!accountInfo.id"
         @click="ApplyToForum"
       >
         {{ forumInfo.settings.requireApply ? '申请' : '' }}加入
-      </NButton>
-    </NCard>
-  </NCard>
+      </UButton>
+    </UCard>
+  </UCard>
   <template v-else>
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NCard
+      <UCard
         size="small"
         bordered
         :title="forumInfo.name"
+        class="user-page-card"
       />
       <div class="forum-grid">
-        <NCard
-          class="forum-sidebar"
+        <UCard
+          class="user-page-card forum-sidebar"
           size="small"
           bordered
         >
-          <NFlex
+          <div
             vertical
             :size="8"
           >
-            <NButton
-              type="primary"
-              secondary
+            <UButton
+              color="primary"
+              variant="soft"
               @click="showPostTopicModal = true"
             >
               发布话题
-            </NButton>
-            <NAlert
+            </UButton>
+            <UAlert
               v-if="forumInfo.isAdmin"
-              type="info"
-              size="small"
-              :bordered="false"
+              color="info"
+              ><template #description> 你是管理员 </template></UAlert
             >
-              你是管理员
-            </NAlert>
-          </NFlex>
-        </NCard>
-        <NCard
-          class="forum-topics"
+          </div>
+        </UCard>
+        <UCard
+          class="user-page-card forum-topics"
           size="small"
           bordered
           content-style="padding: 0;"
         >
-          <NList
+          <ul
             style="width: 100%"
             size="small"
             hoverable
             clickable
           >
-            <NListItem
+            <li
               v-for="item in topics?.data ?? []"
               :key="item.id"
             >
@@ -227,49 +206,50 @@ onUnmounted(() => {
                   :forum="forumInfo"
                 />
               </a>
-            </NListItem>
-          </NList>
-        </NCard>
+            </li>
+          </ul>
+        </UCard>
       </div>
-    </NFlex>
-    <NModal
-      v-model:show="showPostTopicModal"
-      preset="card"
-      style="width: 800px; max-width: 95%"
+    </div>
+    <UModal
+      v-model:open="showPostTopicModal"
+      :ui="{ content: 'max-w-[800px]' }"
     >
       <template #header>
         发布话题
-        <NDivider vertical />
-        <NText
+        <USeparator vertical />
+        <span
           depth="3"
           style="font-size: small"
         >
           保存于
-          <NTime
+          <PublicTime
             :time="lastBackupTopic"
             format="HH:mm:ss"
           />
-        </NText>
+        </span>
       </template>
-      <NFlex vertical>
-        <NInput
-          v-model:value="currentPostTopicModel.title"
-          placeholder="标题"
-        />
-        <VEditor
-          ref="editor"
-          v-model:value="currentPostTopicModel.content"
-          :max-length="2333"
-        />
-        <NButton
-          type="primary"
-          :loading="!token || useForum.isLoading"
-          @click="postTopic"
-        >
-          发布
-        </NButton>
-      </NFlex>
-    </NModal>
+      <template #body>
+        <div vertical>
+          <UInput
+            v-model="currentPostTopicModel.title"
+            placeholder="标题"
+          />
+          <VEditor
+            ref="editor"
+            v-model:value="currentPostTopicModel.content"
+            :max-length="2333"
+          />
+          <UButton
+            color="primary"
+            :loading="!token || useForum.isLoading"
+            @click="postTopic"
+          >
+            发布
+          </UButton>
+        </div>
+      </template>
+    </UModal>
     <TurnstileVerify
       ref="turnstile"
       v-model="token"

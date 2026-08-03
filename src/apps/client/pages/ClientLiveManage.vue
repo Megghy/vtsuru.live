@@ -11,12 +11,12 @@ const control = useLiveControl()
 
 <template>
   <div class="live-manage-page">
-    <NFlex
+    <div
       vertical
       :size="12"
     >
       <!-- 页面标题 -->
-      <NCard
+      <UCard
         size="small"
         class="live-manage-card"
         bordered
@@ -25,35 +25,35 @@ const control = useLiveControl()
           title="直播管理"
           description="使用 OBS 直接推流到 B 站官方服务器，管理直播间信息和封面"
         />
-      </NCard>
+      </UCard>
 
-      <NTabs
+      <div
         type="line"
         animated
         default-value="control"
       >
-        <NTabPane
+        <section
           name="control"
           tab="直播控制"
         >
-          <NFlex
+          <div
             vertical
             :size="12"
             class="client-readable"
           >
             <LiveControlPanel :control="control" />
             <LiveStreamInfo :control="control" />
-          </NFlex>
-        </NTabPane>
+          </div>
+        </section>
 
-        <NTabPane
+        <section
           name="obs"
           tab="OBS 与统计"
         >
           <ObsControlPanel :control="control" />
-        </NTabPane>
-      </NTabs>
-    </NFlex>
+        </section>
+      </div>
+    </div>
 
     <!-- 人脸认证弹窗 -->
     <FaceAuthModal :control="control" />

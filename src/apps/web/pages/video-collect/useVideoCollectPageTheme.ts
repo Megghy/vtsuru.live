@@ -1,4 +1,3 @@
-import { darkTheme } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 
@@ -6,7 +5,6 @@ import type { VideoCollectTable } from '@/api/api-models'
 import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
 import {
   getPageBackgroundCssVars,
-  getUserPageNaiveThemeOverrides,
   getUserPageThemeCssVars,
   resolvePageBackground,
 } from '@/apps/user-page/background'
@@ -39,7 +37,6 @@ export function useVideoCollectPageTheme(table: Ref<VideoCollectTable | null | u
 
   const appearanceTheme = computed(() => ownerSettings.value?.theme)
   const effectiveIsDark = computed(() => resolvePageThemeIsDark(appearanceTheme.value?.pageThemeMode, isDarkMode.value))
-  const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
   const pageThemeVars = computed(() => getUserPageThemeCssVars(appearanceTheme.value, effectiveIsDark.value))
   const pageBackground = computed(() => resolvePageBackground(ownerSettings.value?.background))
   const pageBackgroundVars = computed(() =>
@@ -50,11 +47,6 @@ export function useVideoCollectPageTheme(table: Ref<VideoCollectTable | null | u
     'background-blur': pageBackground.value?.blurMode === 'background',
     'background-glass': pageBackground.value?.blurMode === 'glass',
   }))
-  const pageThemeOverrides = computed(() => ({
-    ...getUserPageNaiveThemeOverrides(appearanceTheme.value, pageThemeVars.value, effectiveIsDark.value),
-    Layout: { color: 'transparent' },
-  }))
-
   useGoogleFont(computed(() => appearanceTheme.value?.fontFamily))
   usePublicUserCustomCss(ownerSettings)
 
@@ -62,8 +54,6 @@ export function useVideoCollectPageTheme(table: Ref<VideoCollectTable | null | u
     effectiveIsDark,
     pageBackgroundClass,
     pageBackgroundVars,
-    pageNaiveTheme,
-    pageThemeOverrides,
     pageThemeVars,
   }
 }

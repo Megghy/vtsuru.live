@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NFormItem, NSelect, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -24,36 +22,36 @@ const variantOptions = ['solid', 'secondary', 'tertiary', 'quaternary', 'ghost']
 </script>
 
 <template>
-  <NFormItem
+  <UFormField
     v-if="propertyAvailable('align')"
     label="对齐方式"
   >
-    <NSelect
-      v-model:value="blockProps.align"
-      :options="alignOptions"
+    <USelect
+      v-model="blockProps.align"
+      :items="alignOptions"
     />
-  </NFormItem>
-  <NFormItem
+  </UFormField>
+  <UFormField
     v-if="propertyAvailable('fullWidth')"
     label="按钮铺满宽度"
   >
-    <NFlex justify="end">
-      <NSwitch
-        v-model:value="blockProps.fullWidth"
+    <div class="builder-row">
+      <USwitch
+        v-model="blockProps.fullWidth"
         size="small"
       />
-    </NFlex>
-  </NFormItem>
-  <NFormItem label="按钮类型">
-    <NSelect
-      v-model:value="blockProps.type"
-      :options="typeOptions"
+    </div>
+  </UFormField>
+  <UFormField label="按钮类型">
+    <USelect
+      v-model="blockProps.type"
+      :items="typeOptions"
     />
-  </NFormItem>
-  <NFormItem label="样式">
-    <NSelect
-      v-model:value="blockProps.variant"
-      :options="variantOptions"
+  </UFormField>
+  <UFormField label="样式">
+    <USelect
+      v-model="blockProps.variant"
+      :items="variantOptions"
     />
-  </NFormItem>
+  </UFormField>
 </template>

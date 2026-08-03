@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInput, NInputNumber, NModal, NPopconfirm, NText } from 'naive-ui'
 import { computed, reactive, ref } from 'vue'
 
 import type { VtsPreset } from '@/apps/client/store/useVtsStore'
@@ -58,38 +57,38 @@ function addFromCurrent() {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="机位预设"
   >
-    <NFlex
+    <div
       vertical
       :size="8"
     >
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="8"
       >
-        <NButton
+        <UButton
           size="small"
           @click="addPreset"
         >
           新建预设
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="small"
           :disabled="!canReadCurrent"
           @click="addFromCurrent"
         >
           从当前位置创建
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
 
-      <NDivider style="margin: 4px 0" />
+      <USeparator style="margin: 4px 0" />
 
-      <NFlex
+      <div
         v-for="p in vts.presets"
         :key="p.id"
         align="center"
@@ -97,75 +96,92 @@ function addFromCurrent() {
         :wrap="true"
         :size="8"
       >
-        <NFlex
+        <div
           align="center"
           :wrap="true"
           :size="8"
         >
-          <NText strong>
+          <span strong>
             {{ p.name }}
-          </NText>
-          <NText depth="3">
+          </span>
+          <span depth="3">
             x={{ p.positionX.toFixed(2) }} y={{ p.positionY.toFixed(2) }} rot={{ p.rotation.toFixed(1) }} size={{
               p.size.toFixed(1)
             }}
             t={{ p.timeInSeconds }}s
-          </NText>
-        </NFlex>
-        <NFlex
+          </span>
+        </div>
+        <div
           :wrap="true"
           :size="8"
         >
-          <NButton
+          <UButton
             size="small"
-            type="primary"
+            color="primary"
             :disabled="!vts.canOperate"
             @click="run(() => vts.applyPreset(p.id), '已应用')"
           >
             应用
-          </NButton>
-          <NButton
+          </UButton>
+          <UButton
             size="small"
             @click="openEdit(p)"
           >
             编辑
-          </NButton>
-          <NPopconfirm @positive-click="vts.removePreset(p.id)">
-            <template #trigger>
-              <NButton
-                size="small"
-                type="error"
-              >
-                删除
-              </NButton>
+          </UButton>
+          <UPopover>
+            <UButton
+              size="sm"
+              color="error"
+            >
+              删除
+            </UButton>
+            <template #content="{ close }">
+              <div class="space-y-3 p-3">
+                <div>确认删除此预设?</div>
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="close"
+                    >取消</UButton
+                  >
+                  <UButton
+                    size="xs"
+                    color="error"
+                    @click="(close(), vts.removePreset(p.id))"
+                    >确认</UButton
+                  >
+                </div>
+              </div>
             </template>
-            确认删除此预设?
-          </NPopconfirm>
-        </NFlex>
-      </NFlex>
-    </NFlex>
-  </NCard>
+          </UPopover>
+        </div>
+      </div>
+    </div>
+  </UCard>
 
-  <NModal
-    v-model:show="showEdit"
+  <UModal
+    v-model:open="showEdit"
     preset="card"
     title="编辑机位预设"
     style="width: 560px"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NInput
-        v-model:value="form.name"
+      <UInput
+        v-model="form.name"
         placeholder="预设名称"
       />
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="8"
       >
-        <NButton
+        <UButton
           size="small"
           :disabled="!canReadCurrent"
           @click="
@@ -175,57 +191,57 @@ function addFromCurrent() {
           "
         >
           填入当前位置
-        </NButton>
-        <NText depth="3"> 需要 VTS 已鉴权且模型有移动事件 </NText>
-      </NFlex>
-      <NFlex
+        </UButton>
+        <span depth="3"> 需要 VTS 已鉴权且模型有移动事件 </span>
+      </div>
+      <div
         :wrap="true"
         :size="12"
       >
-        <NInputNumber
-          v-model:value="form.timeInSeconds"
+        <UInputNumber
+          v-model="form.timeInSeconds"
           :min="0"
           :step="0.05"
           placeholder="过渡时间(s)"
           style="width: 150px"
         />
-        <NInputNumber
-          v-model:value="form.positionX"
+        <UInputNumber
+          v-model="form.positionX"
           :step="0.01"
           placeholder="X"
           style="width: 130px"
         />
-        <NInputNumber
-          v-model:value="form.positionY"
+        <UInputNumber
+          v-model="form.positionY"
           :step="0.01"
           placeholder="Y"
           style="width: 130px"
         />
-        <NInputNumber
-          v-model:value="form.rotation"
+        <UInputNumber
+          v-model="form.rotation"
           :step="0.1"
           placeholder="旋转"
           style="width: 130px"
         />
-        <NInputNumber
-          v-model:value="form.size"
+        <UInputNumber
+          v-model="form.size"
           :step="0.5"
           placeholder="大小"
           style="width: 130px"
         />
-      </NFlex>
-      <NFlex
+      </div>
+      <div
         justify="end"
         :size="8"
       >
-        <NButton @click="showEdit = false"> 取消 </NButton>
-        <NButton
-          type="primary"
+        <UButton @click="showEdit = false"> 取消 </UButton>
+        <UButton
+          color="primary"
           @click="saveEdit"
         >
           保存
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+        </UButton>
+      </div>
+    </div>
+  </UModal>
 </template>

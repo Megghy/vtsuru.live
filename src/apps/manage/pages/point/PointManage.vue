@@ -1,52 +1,14 @@
 <script setup lang="ts">
-import {
-  Add24Filled,
-  ArrowSync24Filled,
-  Delete24Filled,
-  Edit24Filled,
-  Eye24Filled,
-  Info24Filled,
-  ShoppingBag24Filled,
-} from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
-import type { UploadFileInfo } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NDynamicTags,
-  NEmpty,
-  NFlex,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NProgress,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSelect,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NText,
-  NTooltip,
-  NUpload,
-  useDialog,
-  useMessage,
-} from 'naive-ui'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ResponsePointGoodModel, UploadSubPointGoodsModel, UploadPointGoodsModel } from '@/api/api-models'
+import type {
+  PointGoodsSetting,
+  ResponsePointGoodModel,
+  UploadSubPointGoodsModel,
+  UploadPointGoodsModel,
+} from '@/api/api-models'
 import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode, UserFileLocation } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
@@ -55,7 +17,7 @@ import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
 import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
-import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
+import { uploadFiles } from '@/shared/services/fileUpload'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -63,62 +25,68 @@ import PointGuardDuplicateManage from './PointGuardDuplicateManage.vue'
 import PointTestPanel from './PointTestPanel.vue'
 import PointUserManage from './PointUserManage.vue'
 
-const message = useMessage()
-const accountInfo = useAccount()
-const dialog = useDialog()
-const biliAuth = useBiliAuth()
-const formRef = ref()
+type GoodsEditor = { goods: UploadPointGoodsModel; coverFile?: File; subCoverFiles: Record<string, File | undefined> }
+type ConfirmAction =
+  | { kind: 'shelf'; item: ResponsePointGoodModel; status: GoodsStatus }
+  | { kind: 'delete'; item: ResponsePointGoodModel }
+  | null
 
+const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
+const toast = useToast()
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)
-const showAddGoodsModal = ref(false)
-const uploadProgress = ref(0)
-const isUploadingCover = ref(false)
+const showGoodsModal = ref(false)
 const shouldWatermarkCover = ref(true)
-const goodsModalTab = ref<'basic' | 'exchange' | 'subItems' | 'advanced'>('basic')
+const goodsModalTab = ref('basic')
 const subItemsSortMode = ref<'manual' | 'name' | 'price' | 'stock'>('manual')
+const confirmAction = ref<ConfirmAction>(null)
 let tempSubItemIdSeed = -1
 
-// 路由哈希处理
 const realHash = useRouteHash('goods', { mode: 'replace' })
 const hash = computed({
-  get() {
-    return realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value || 'goods'
-  },
-  set(val) {
-    realHash.value = `#${val}`
+  get: () => realHash.value?.replace(/^#/, '') || 'goods',
+  set: (value) => {
+    realHash.value = `#${value}`
   },
 })
+const tabItems = [
+  { label: '礼物', value: 'goods' },
+  { label: '订单', value: 'orders' },
+  { label: '用户', value: 'users' },
+  { label: '重复上舰', value: 'guard-duplicates' },
+  { label: '设置', value: 'settings' },
+  { label: '测试', value: 'test' },
+]
 const currentPointSetting = computed(() => accountInfo.value?.settings.point)
 const goodsPageUrl = computed(() => (accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/goods` : ''))
-
-function openPointSourceSettings() {
-  hash.value = 'settings'
-  window.setTimeout(() => {
-    document.getElementById('point-source-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, 0)
-}
-
-// 商品数据及模型
-const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id, message))
-function sortGoods(a: ResponsePointGoodModel, b: ResponsePointGoodModel) {
-  if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1
-  return b.id - a.id
-}
+const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id))
 const onShelfGoods = computed(() =>
-  goods.value
-    .filter((g) => g.status !== GoodsStatus.Discontinued)
-    .slice()
-    .sort(sortGoods),
+  goods.value.filter((item) => item.status !== GoodsStatus.Discontinued).toSorted(sortGoods),
 )
 const offShelfGoods = computed(() =>
-  goods.value
-    .filter((g) => g.status === GoodsStatus.Discontinued)
-    .slice()
-    .sort(sortGoods),
+  goods.value.filter((item) => item.status === GoodsStatus.Discontinued).toSorted(sortGoods),
 )
+const existingTags = computed(() =>
+  [...new Set(goods.value.flatMap((item) => item.tags ?? []))].map((tag) => ({ label: tag, value: tag })),
+)
+const subItemsForDisplay = computed(() => {
+  const items = currentGoods.value.goods.subItems ?? []
+  if (subItemsSortMode.value === 'manual') return items
+  return [...items].sort((left, right) =>
+    subItemsSortMode.value === 'name'
+      ? left.name.localeCompare(right.name)
+      : subItemsSortMode.value === 'price'
+        ? left.price - right.price
+        : (left.stock ?? Infinity) - (right.stock ?? Infinity),
+  )
+})
+const currentGoods = ref<GoodsEditor>(defaultGoodsEditor())
 
-function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFileInfo[] } {
+function defaultSetting(): PointGoodsSetting {
+  return { allowGuardLevel: 0, allowGuardFreeMinLevel: 0 }
+}
+function defaultGoodsEditor(): GoodsEditor {
   return {
     goods: {
       type: GoodsTypes.Virtual,
@@ -126,10 +94,7 @@ function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFi
       maxBuyCount: 1,
       isAllowRebuy: false,
       isPinned: false,
-      setting: {
-        allowGuardLevel: 0,
-        allowGuardFreeMinLevel: 0,
-      },
+      setting: defaultSetting(),
       virtualKeys: [],
       keySelectionMode: KeySelectionMode.None,
       currentKeyIndex: 0,
@@ -138,2013 +103,987 @@ function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFi
       price: 0,
       tags: [],
       description: '',
-      cover: undefined,
-    } as UploadPointGoodsModel,
-    fileList: [],
+    },
+    subCoverFiles: {},
   }
 }
-const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }>(defaultGoodsModel())
-const subItemFileLists = ref<Record<string, UploadFileInfo[]>>({})
-
-function getSubItemKey(sub: UploadSubPointGoodsModel) {
-  return String(sub.id)
+function sortGoods(left: ResponsePointGoodModel, right: ResponsePointGoodModel) {
+  return left.isPinned !== right.isPinned ? (left.isPinned ? -1 : 1) : right.id - left.id
 }
-
+function notify(title: string, color: 'success' | 'error' | 'info' = 'info') {
+  toast.add({ title, color })
+}
+function openPointSourceSettings() {
+  hash.value = 'settings'
+  setTimeout(() =>
+    document.getElementById('point-source-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+  )
+}
+function getSubItemKey(subItem: UploadSubPointGoodsModel) {
+  return String(subItem.id)
+}
 function ensureSubItems() {
-  currentGoodsModel.value.goods.subItems ??= []
+  currentGoods.value.goods.subItems ??= []
 }
-
 function addSubItem() {
   ensureSubItems()
-  const parent = currentGoodsModel.value.goods
-  const tempId = tempSubItemIdSeed--
-  const sub: UploadSubPointGoodsModel = {
-    id: tempId,
-    name: '',
-    price: parent.price,
-    stock: undefined,
-    description: undefined,
-    type: undefined,
-    tags: undefined,
-    cover: undefined,
-    collectUrl: undefined,
-    embedCollectUrl: undefined,
-    isAllowRebuy: undefined,
-    maxBuyCount: undefined,
-    content: undefined,
-    virtualKeys: undefined,
-    keySelectionMode: undefined,
-    setting: undefined,
-  }
-  currentGoodsModel.value.goods.subItems!.push(sub)
-  subItemFileLists.value[getSubItemKey(sub)] = []
+  currentGoods.value.goods.subItems!.push({ id: tempSubItemIdSeed--, name: '', price: currentGoods.value.goods.price })
 }
-
-function removeSubItemByKey(subKey: string) {
-  ensureSubItems()
-  const list = currentGoodsModel.value.goods.subItems!
-  const index = list.findIndex((s) => getSubItemKey(s) === subKey)
-  if (index < 0) return
-  const sub = list[index]
-  if (sub) {
-    delete subItemFileLists.value[getSubItemKey(sub)]
-  }
-  list.splice(index, 1)
+function removeSubItem(key: string) {
+  currentGoods.value.goods.subItems = (currentGoods.value.goods.subItems ?? []).filter(
+    (item) => getSubItemKey(item) !== key,
+  )
+  delete currentGoods.value.subCoverFiles[key]
 }
-
-function updateSubItemFileList(subKey: string, list: UploadFileInfo[]) {
-  subItemFileLists.value[subKey] = list
-}
-
-function moveSubItemByKey(subKey: string, direction: -1 | 1) {
+function moveSubItem(key: string, direction: -1 | 1) {
   if (subItemsSortMode.value !== 'manual') return
-  ensureSubItems()
-  const list = currentGoodsModel.value.goods.subItems!
-  const index = list.findIndex((s) => getSubItemKey(s) === subKey)
-  if (index < 0) return
+  const items = currentGoods.value.goods.subItems ?? []
+  const index = items.findIndex((item) => getSubItemKey(item) === key)
   const nextIndex = index + direction
-  if (nextIndex < 0 || nextIndex >= list.length) return
-  const [item] = list.splice(index, 1)
-  list.splice(nextIndex, 0, item)
+  if (index < 0 || nextIndex < 0 || nextIndex >= items.length) return
+  const [item] = items.splice(index, 1)
+  items.splice(nextIndex, 0, item)
 }
-
-function resolveSubType(sub: UploadSubPointGoodsModel) {
-  return sub.type ?? currentGoodsModel.value.goods.type
+function resolveSubType(subItem: UploadSubPointGoodsModel) {
+  return subItem.type ?? currentGoods.value.goods.type
 }
-
-// 监听 fileList 变化，确保 cover 和 fileList 同步
-watch(
-  () => currentGoodsModel.value.fileList,
-  (newFileList, oldFileList) => {
-    if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
-      if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
-        currentGoodsModel.value.goods.cover = undefined
-      }
-    }
-  },
-  { deep: true },
-)
-
-// 计算属性
-const allowedYearOptions = computed(() => {
-  return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((item) => ({
-    label: `${item.toString()}年`,
-    value: item,
+function subCollectionMode(subItem: UploadSubPointGoodsModel) {
+  return subItem.collectUrl === undefined ? 0 : subItem.collectUrl === '' ? 1 : 2
+}
+function setSubCollectionMode(subItem: UploadSubPointGoodsModel, mode: number) {
+  subItem.collectUrl = mode === 0 ? undefined : mode === 1 ? '' : 'https://'
+}
+function setCover(event: Event, key?: string) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  if (file.size > 10 * 1024 * 1024) return notify('文件大小不能超过 10MB', 'error')
+  if (key) currentGoods.value.subCoverFiles[key] = file
+  else currentGoods.value.coverFile = file
+}
+function openNewGoods() {
+  currentGoods.value = defaultGoodsEditor()
+  isAllowedPrivacyPolicy.value = false
+  goodsModalTab.value = 'basic'
+  subItemsSortMode.value = 'manual'
+  showGoodsModal.value = true
+}
+function openEditGoods(item: ResponsePointGoodModel) {
+  const source = structuredClone(item)
+  const setting = source.setting ?? defaultSetting()
+  if (setting.allowGuardFreeMinLevel === undefined) setting.allowGuardFreeMinLevel = 0
+  if (!setting.guardFreeMonths && setting.guardFree) setting.guardFreeMonths = [setting.guardFree]
+  const parentCoverId = source.cover?.id
+  const subItems = (source.subItems ?? []).map((subItem) => ({
+    id: subItem.id,
+    name: subItem.name,
+    price: subItem.price,
+    stock: subItem.count,
+    description: subItem.description === source.description ? undefined : subItem.description,
+    type: subItem.type === source.type ? undefined : subItem.type,
+    tags: JSON.stringify(subItem.tags) === JSON.stringify(source.tags) ? undefined : subItem.tags,
+    cover: subItem.cover?.id === parentCoverId ? undefined : subItem.cover,
+    collectUrl: subItem.collectUrl === source.collectUrl ? undefined : subItem.collectUrl,
+    embedCollectUrl: subItem.embedCollectUrl === source.embedCollectUrl ? undefined : subItem.embedCollectUrl,
+    isAllowRebuy: subItem.isAllowRebuy === source.isAllowRebuy ? undefined : subItem.isAllowRebuy,
+    maxBuyCount: subItem.maxBuyCount === source.maxBuyCount ? undefined : subItem.maxBuyCount,
+    content: subItem.content === source.content ? undefined : subItem.content,
+    virtualKeys:
+      JSON.stringify(subItem.virtualKeys) === JSON.stringify(source.virtualKeys) ? undefined : subItem.virtualKeys,
+    keySelectionMode: subItem.keySelectionMode === source.keySelectionMode ? undefined : subItem.keySelectionMode,
+    setting: JSON.stringify(subItem.setting) === JSON.stringify(setting) ? undefined : subItem.setting,
   }))
-})
-
-const allowedMonthOptions = computed(() => {
-  return Array.from({ length: 12 }, (_, i) => i + 1).map((item) => ({
-    label: `${item.toString()}月`,
-    value: item,
-  }))
-})
-
-const existTags = computed(() => {
-  if (goods.value.length === 0) return []
-
-  const tempSet = new Set<string>()
-  for (const good of goods.value) {
-    if (!good.tags || good.tags.length === 0) continue
-    good.tags.forEach((tag) => tempSet.add(tag))
-  }
-
-  return Array.from(tempSet).map((tag) => ({ label: tag, value: tag }))
-})
-
-const subItemsForDisplay = computed(() => {
-  const list = currentGoodsModel.value.goods.subItems ?? []
-  if (subItemsSortMode.value === 'manual') return list
-  const cloned = list.slice()
-  if (subItemsSortMode.value === 'name') {
-    cloned.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-  } else if (subItemsSortMode.value === 'price') {
-    cloned.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0))
-  } else if (subItemsSortMode.value === 'stock') {
-    const toStock = (v: number | undefined) => (v === undefined ? Number.POSITIVE_INFINITY : Number(v))
-    cloned.sort((a, b) => toStock(a.stock) - toStock(b.stock))
-  }
-  return cloned
-})
-
-// 表单验证规则
-const rules = {
-  name: {
-    required: true,
-    message: '请输入礼物名称',
-  },
-  price: {
-    required: true,
-    message: '请输入礼物价格',
-  },
-  type: {
-    required: true,
-    message: '请选择是虚拟礼物或实物',
-  },
-}
-
-async function uploadCover(file: File) {
-  const uploadFile = shouldWatermarkCover.value ? await addVtsuruLiveWatermark(file) : file
-  return uploadFiles([uploadFile], undefined, UserFileLocation.Local, (stage: string) => {
-    if (stage === UploadStage.Uploading) {
-      uploadProgress.value = 0
-    }
-  })
-}
-
-async function updateGoods(e: MouseEvent) {
-  if (isUpdating.value || !formRef.value) return
-  e.preventDefault()
-  isUpdating.value = true
-  isUploadingCover.value = false
-  uploadProgress.value = 0
-
-  try {
-    if (currentGoodsModel.value.goods.setting?.guardFree !== undefined) {
-      currentGoodsModel.value.goods.setting.guardFree = undefined
-    }
-    if (currentGoodsModel.value.goods.setting?.guardFreeMonths) {
-      const months = currentGoodsModel.value.goods.setting.guardFreeMonths
-      if (months.length > 0) {
-        for (const m of months) {
-          if (!m?.year || !m?.month) {
-            throw new Error('请选择舰长免费兑换的年份和月份')
-          }
-        }
-      }
-    }
-
-    if (currentGoodsModel.value.goods.setting?.guardLevelMonths) {
-      const months = currentGoodsModel.value.goods.setting.guardLevelMonths
-      if (months.length > 0) {
-        for (const m of months) {
-          if (!m?.year || !m?.month) {
-            throw new Error('请选择最低兑换等级限制的年份和月份')
-          }
-        }
-      }
-    }
-
-    await formRef.value.validate()
-
-    // 父商品：实物且使用站外收集时，必须是合法 URL；使用本站收集时需要勾选隐私协议
-    if (currentGoodsModel.value.goods.type === GoodsTypes.Physical) {
-      const url = currentGoodsModel.value.goods.collectUrl
-      if (url !== undefined) {
-        try {
-          void new URL(url)
-        } catch {
-          throw new Error('请输入正确的收集链接')
-        }
-      } else if (!isAllowedPrivacyPolicy.value) {
-        throw new Error('需要阅读并同意本站隐私协议')
-      }
-      if ((currentGoodsModel.value.goods.maxBuyCount ?? 0) < 1) {
-        throw new Error('最大兑换数量必须大于 0')
-      }
-    } else if (currentGoodsModel.value.goods.type === GoodsTypes.Virtual) {
-      if ((currentGoodsModel.value.goods.content?.length ?? 0) === 0) {
-        throw new Error('请输入虚拟礼物的具体内容')
-      }
-    }
-
-    // 款式校验与“默认继承父商品”归一化（尽量不下发与父商品相同的字段）
-    ensureSubItems()
-    const parent = currentGoodsModel.value.goods
-    for (const sub of currentGoodsModel.value.goods.subItems ?? []) {
-      const name = (sub.name ?? '').trim()
-      if (!name) throw new Error('款式名称不能为空')
-      sub.name = name
-
-      if (sub.price === undefined || sub.price === null || Number(sub.price) < 0) {
-        throw new Error(`款式 ${name} 的积分价格不能小于0`)
-      }
-
-      if (sub.stock !== undefined && sub.stock !== null && Number(sub.stock) < 0) {
-        throw new Error(`款式 ${name} 的库存不能小于0`)
-      }
-
-      if (sub.maxBuyCount !== undefined && sub.maxBuyCount !== null && Number(sub.maxBuyCount) < 1) {
-        throw new Error(`款式 ${name} 的最大兑换数量必须大于0`)
-      }
-
-      // 外部收集链接：如果启用站外收集，则必须填写链接（\"\" 表示本站收集）
-      if (
-        sub.collectUrl !== undefined &&
-        sub.collectUrl !== null &&
-        sub.collectUrl !== '' &&
-        !String(sub.collectUrl).trim()
-      ) {
-        throw new Error(`款式 ${name} 的收集链接不能为空`)
-      }
-
-      if (sub.collectUrl !== undefined && sub.collectUrl !== '' && sub.collectUrl !== null) {
-        try {
-          void new URL(String(sub.collectUrl))
-        } catch {
-          throw new Error(`款式 ${name} 的收集链接不合法`)
-        }
-      }
-
-      // 归一化：与父商品一致则不下发，交给后端按“继承父商品”处理
-      if (sub.description !== undefined && (sub.description ?? '').trim() === '') sub.description = undefined
-      if (sub.description === parent.description) sub.description = undefined
-      if (sub.type === parent.type) sub.type = undefined
-      if (sub.isAllowRebuy === parent.isAllowRebuy) sub.isAllowRebuy = undefined
-      if (sub.maxBuyCount === parent.maxBuyCount) sub.maxBuyCount = undefined
-      if (sub.collectUrl === parent.collectUrl) sub.collectUrl = undefined
-      if (sub.collectUrl === undefined) sub.embedCollectUrl = undefined
-      if (sub.embedCollectUrl === parent.embedCollectUrl) sub.embedCollectUrl = undefined
-    }
-
-    const newFilesToUpload = currentGoodsModel.value.fileList.filter((f) => f.file && f.status !== 'finished')
-    if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
-      isUploadingCover.value = true
-      message.info(shouldWatermarkCover.value ? '正在添加封面水印并上传...' : '正在上传封面...')
-      const uploadResults = await uploadCover(newFilesToUpload[0].file)
-      isUploadingCover.value = false
-      if (uploadResults && uploadResults.length > 0) {
-        currentGoodsModel.value.goods.cover = uploadResults[0]
-        message.success('封面上传成功')
-        const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex((f) => f.id === newFilesToUpload[0].id)
-        if (uploadedFileIndex > -1) {
-          currentGoodsModel.value.fileList[uploadedFileIndex] = {
-            ...currentGoodsModel.value.fileList[uploadedFileIndex],
-            id: uploadResults[0].id.toString(),
-            status: 'finished',
-            thumbnailUrl: uploadResults[0].path,
-            url: uploadResults[0].path,
-          }
-        }
-      } else {
-        throw new Error('封面上传失败')
-      }
-    } else if (currentGoodsModel.value.fileList.length === 0 && currentGoodsModel.value.goods.id) {
-      currentGoodsModel.value.goods.cover = undefined
-    }
-
-    // 上传款式封面（如有）
-    ensureSubItems()
-    for (const sub of currentGoodsModel.value.goods.subItems ?? []) {
-      const key = getSubItemKey(sub)
-      const fileList = subItemFileLists.value[key] ?? []
-      const subFilesToUpload = fileList.filter((f) => f.file && f.status !== 'finished')
-      if (subFilesToUpload.length > 0 && subFilesToUpload[0].file) {
-        isUploadingCover.value = true
-        const uploadAction = shouldWatermarkCover.value ? '添加水印并上传' : '上传'
-        message.info(`正在${uploadAction}款式封面: ${sub.name || '未命名'}...`)
-        const uploadResults = await uploadCover(subFilesToUpload[0].file)
-        isUploadingCover.value = false
-        if (uploadResults && uploadResults.length > 0) {
-          sub.cover = uploadResults[0]
-          message.success(`款式封面上传成功: ${sub.name || uploadResults[0].name || '封面'}`)
-          // 同步 fileList 状态
-          subItemFileLists.value[key] = [
-            {
-              id: uploadResults[0].id.toString(),
-              name: uploadResults[0].name || '封面',
-              status: 'finished',
-              thumbnailUrl: uploadResults[0].path,
-              url: uploadResults[0].path,
-            },
-          ]
-        } else {
-          throw new Error(`款式封面上传失败: ${sub.name || '未命名'}`)
-        }
-      } else if (fileList.length === 0) {
-        // 清空封面 => 让后端按“继承父商品”处理
-        sub.cover = undefined
-      }
-    }
-
-    const {
-      code,
-      data,
-      message: errMsg,
-    } = await QueryPostAPI<ResponsePointGoodModel>(`${POINT_API_URL}update-goods`, currentGoodsModel.value.goods)
-
-    if (code === 200) {
-      message.success('商品信息保存成功')
-      showAddGoodsModal.value = false
-      currentGoodsModel.value = defaultGoodsModel()
-
-      const index = goods.value.findIndex((g) => g.id === data.id)
-      if (index >= 0) {
-        goods.value[index] = data
-      } else {
-        goods.value.push(data)
-      }
-    } else {
-      message.error(`商品信息保存失败: ${errMsg}`)
-    }
-  } catch (err: any) {
-    console.error(currentGoodsModel.value, err)
-    const errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : '表单验证失败或上传出错'
-    message.error(`失败: ${errorMsg}`)
-  } finally {
-    isUpdating.value = false
-    isUploadingCover.value = false
-  }
-}
-
-function OnFileListChange(files: UploadFileInfo[]) {
-  if (files.length === 1 && (files[0].file?.size ?? 0) > 10 * 1024 * 1024) {
-    message.error('文件大小不能超过10MB')
-    currentGoodsModel.value.fileList = []
-  } else {
-    currentGoodsModel.value.fileList = files
-  }
-}
-
-function onUpdateClick(item: ResponsePointGoodModel) {
-  const copiedItem = JSON.parse(JSON.stringify(item))
-  // 确保 setting 对象存在
-  if (!copiedItem.setting) {
-    copiedItem.setting = {
-      allowGuardLevel: 0,
-      allowGuardFreeMinLevel: 0,
-    }
-  }
-
-  if (copiedItem.setting?.allowGuardFreeMinLevel === undefined) {
-    copiedItem.setting.allowGuardFreeMinLevel = 0
-  }
-
-  if (copiedItem.setting?.guardFreeMonths === undefined && copiedItem.setting?.guardFree) {
-    copiedItem.setting.guardFreeMonths = [copiedItem.setting.guardFree]
-  }
-
-  if (copiedItem.count === null) copiedItem.count = undefined
-  if (copiedItem.collectUrl === null) copiedItem.collectUrl = undefined
-  if (copiedItem.embedCollectUrl === null) copiedItem.embedCollectUrl = undefined
-
-  const parentCoverId = item.cover?.id
-  const parentCollectUrl = copiedItem.collectUrl ?? undefined
-  const parentEmbedCollectUrl = copiedItem.embedCollectUrl ?? undefined
-  const parentType = copiedItem.type
-  const parentIsAllowRebuy = copiedItem.isAllowRebuy
-  const parentMaxBuyCount = copiedItem.maxBuyCount ?? 1
-  const parentDescription = copiedItem.description ?? undefined
-
-  // 款式：响应模型使用 count 表示库存，这里映射为 stock
-  if (Array.isArray(item.subItems)) {
-    copiedItem.subItems = item.subItems.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      price: s.price,
-      stock: s.count ?? undefined,
-      description: (s.description ?? undefined) === parentDescription ? undefined : (s.description ?? undefined),
-      type: s.type === parentType ? undefined : s.type,
-      tags: JSON.stringify(s.tags ?? []) === JSON.stringify(copiedItem.tags ?? []) ? undefined : s.tags,
-      cover: s.cover && parentCoverId && s.cover.id === parentCoverId ? undefined : s.cover,
-      collectUrl: (s.collectUrl ?? undefined) === parentCollectUrl ? undefined : (s.collectUrl ?? undefined),
-      embedCollectUrl:
-        (s.collectUrl ?? undefined) === parentCollectUrl
-          ? undefined
-          : (s.embedCollectUrl ?? undefined) === parentEmbedCollectUrl
-            ? undefined
-            : (s.embedCollectUrl ?? undefined),
-      isAllowRebuy: s.isAllowRebuy === parentIsAllowRebuy ? undefined : s.isAllowRebuy,
-      maxBuyCount: s.maxBuyCount === parentMaxBuyCount ? undefined : s.maxBuyCount,
-      content: (s.content ?? undefined) === (copiedItem.content ?? undefined) ? undefined : (s.content ?? undefined),
-      virtualKeys:
-        JSON.stringify(s.virtualKeys ?? []) === JSON.stringify(copiedItem.virtualKeys ?? [])
-          ? undefined
-          : s.virtualKeys,
-      keySelectionMode: s.keySelectionMode === copiedItem.keySelectionMode ? undefined : s.keySelectionMode,
-      setting: JSON.stringify(s.setting ?? {}) === JSON.stringify(copiedItem.setting ?? {}) ? undefined : s.setting,
-    })) as UploadSubPointGoodsModel[]
-  } else {
-    copiedItem.subItems = []
-  }
-
-  // 初始化款式封面上传列表
-  subItemFileLists.value = {}
-  for (const s of copiedItem.subItems as UploadSubPointGoodsModel[]) {
-    const key = getSubItemKey(s)
-    subItemFileLists.value[key] = s.cover
-      ? [
-          {
-            id: s.cover.id.toString(),
-            name: s.cover.name || '封面',
-            status: 'finished',
-            url: s.cover.path,
-            thumbnailUrl: s.cover.path,
-          },
-        ]
-      : []
-  }
-  currentGoodsModel.value = {
-    goods: copiedItem,
-    fileList: item.cover
-      ? [
-          {
-            id: item.cover.id.toString(),
-            name: item.cover.name || '封面',
-            status: 'finished',
-            url: item.cover.path,
-            thumbnailUrl: item.cover.path,
-          },
-        ]
-      : [],
+  currentGoods.value = {
+    goods: {
+      ...source,
+      count: source.count ?? undefined,
+      collectUrl: source.collectUrl ?? undefined,
+      embedCollectUrl: source.embedCollectUrl ?? undefined,
+      setting,
+      subItems,
+    },
+    subCoverFiles: {},
   }
   isAllowedPrivacyPolicy.value = true
-  shouldWatermarkCover.value = true
   goodsModalTab.value = 'basic'
   subItemsSortMode.value = 'manual'
-  showAddGoodsModal.value = true
+  showGoodsModal.value = true
 }
-
-async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus) {
-  const d = dialog.warning({
-    title: '警告',
-    content: `你确定要${status == GoodsStatus.Normal ? '重新上架' : '下架'}这个礼物吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      d.loading = true
-      const originStatus = item.status
-
-      try {
-        const { code, message: errMsg } = await QueryPostAPI(`${POINT_API_URL}update-goods-status`, {
-          ids: [item.id],
-          status,
-        })
-
-        if (code === 200) {
-          message.success('成功')
-          const index = goods.value.findIndex((g) => g.id === item.id)
-          if (index > -1) {
-            goods.value[index].status = status
-          }
-        } else {
-          message.error(`失败: ${errMsg}`)
-          item.status = originStatus
-          console.error(errMsg)
-        }
-      } catch (err) {
-        message.error(`失败: ${err}`)
-        item.status = originStatus
-        console.error(err)
-      } finally {
-        d.loading = false
-      }
-    },
-  })
-}
-
-function onDeleteClick(item: ResponsePointGoodModel) {
-  const d = dialog.warning({
-    title: '警告',
-    content: '你确定要删除这个礼物吗？',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      d.loading = true
-
-      try {
-        const { code, message: errMsg } = await QueryGetAPI(`${POINT_API_URL}delete-goods`, {
-          id: item.id,
-        })
-
-        if (code === 200) {
-          message.success('成功')
-          goods.value = goods.value.filter((g) => g.id !== item.id)
-        } else {
-          message.error(`失败: ${errMsg}`)
-          console.error(errMsg)
-        }
-      } catch (err) {
-        message.error(`失败: ${err}`)
-        console.error(err)
-      } finally {
-        d.loading = false
-      }
-    },
-  })
-}
-
-function onModalOpen() {
-  if (!currentGoodsModel.value.goods.id) {
-    resetGoods()
+function normalizeSubItems() {
+  const parent = currentGoods.value.goods
+  for (const subItem of parent.subItems ?? []) {
+    subItem.name = subItem.name.trim()
+    if (!subItem.name) throw new Error('款式名称不能为空')
+    if (subItem.price < 0) throw new Error(`款式 ${subItem.name} 的积分价格不能小于 0`)
+    if (subItem.stock !== undefined && subItem.stock < 0) throw new Error(`款式 ${subItem.name} 的库存不能小于 0`)
+    if (subItem.maxBuyCount !== undefined && subItem.maxBuyCount < 1)
+      throw new Error(`款式 ${subItem.name} 的最大兑换数量必须大于 0`)
+    if (subItem.collectUrl && subItem.collectUrl !== 'https://') new URL(subItem.collectUrl)
+    if (subItem.description?.trim() === '') subItem.description = undefined
+    if (subItem.description === parent.description) subItem.description = undefined
+    if (subItem.type === parent.type) subItem.type = undefined
+    if (subItem.isAllowRebuy === parent.isAllowRebuy) subItem.isAllowRebuy = undefined
+    if (subItem.maxBuyCount === parent.maxBuyCount) subItem.maxBuyCount = undefined
+    if (subItem.collectUrl === parent.collectUrl) subItem.collectUrl = undefined
+    if (subItem.collectUrl === undefined) subItem.embedCollectUrl = undefined
+    if (subItem.embedCollectUrl === parent.embedCollectUrl) subItem.embedCollectUrl = undefined
   }
-  goodsModalTab.value = 'basic'
-  subItemsSortMode.value = 'manual'
-  showAddGoodsModal.value = true
 }
-
-function resetGoods() {
-  currentGoodsModel.value = defaultGoodsModel()
-  subItemFileLists.value = {}
-  isAllowedPrivacyPolicy.value = false
-  shouldWatermarkCover.value = true
-  goodsModalTab.value = 'basic'
-  subItemsSortMode.value = 'manual'
+async function uploadCover(file: File) {
+  return uploadFiles(
+    [shouldWatermarkCover.value ? await addVtsuruLiveWatermark(file) : file],
+    undefined,
+    UserFileLocation.Local,
+  )
 }
-
-onMounted(() => {})
+async function saveGoods() {
+  if (isUpdating.value) return
+  isUpdating.value = true
+  try {
+    const payload = currentGoods.value.goods
+    if (!payload.name.trim()) throw new Error('请输入礼物名称')
+    if (payload.price < 0) throw new Error('礼物积分不能小于 0')
+    if (payload.type === GoodsTypes.Physical) {
+      if (payload.collectUrl && payload.collectUrl !== 'https://') new URL(payload.collectUrl)
+      else if (payload.collectUrl === undefined && !isAllowedPrivacyPolicy.value)
+        throw new Error('需要阅读并同意本站隐私协议')
+      if ((payload.maxBuyCount ?? 0) < 1) throw new Error('最大兑换数量必须大于 0')
+    } else if (!payload.content?.trim()) throw new Error('请输入虚拟礼物的具体内容')
+    for (const month of payload.setting.guardFreeMonths ?? [])
+      if (!month.year || !month.month) throw new Error('请选择舰长免费兑换的年份和月份')
+    for (const month of payload.setting.guardLevelMonths ?? [])
+      if (!month.year || !month.month) throw new Error('请选择最低兑换等级限制的年份和月份')
+    payload.setting.guardFree = undefined
+    normalizeSubItems()
+    if (currentGoods.value.coverFile) {
+      const [cover] = await uploadCover(currentGoods.value.coverFile)
+      if (!cover) throw new Error('封面上传失败')
+      payload.cover = cover
+    } else if (payload.id && !payload.cover) payload.cover = undefined
+    for (const subItem of payload.subItems ?? []) {
+      const file = currentGoods.value.subCoverFiles[getSubItemKey(subItem)]
+      if (file) {
+        const [cover] = await uploadCover(file)
+        if (!cover) throw new Error(`款式封面上传失败: ${subItem.name}`)
+        subItem.cover = cover
+      }
+    }
+    const result = await QueryPostAPI<ResponsePointGoodModel>(`${POINT_API_URL}update-goods`, payload)
+    if (result.code !== 200) throw new Error(result.message || '商品信息保存失败')
+    const index = goods.value.findIndex((item) => item.id === result.data.id)
+    if (index >= 0) goods.value[index] = result.data
+    else goods.value.push(result.data)
+    showGoodsModal.value = false
+    notify('商品信息保存成功', 'success')
+  } catch (error) {
+    console.error(error)
+    notify(error instanceof Error ? error.message : String(error), 'error')
+  } finally {
+    isUpdating.value = false
+  }
+}
+async function executeConfirmAction() {
+  const action = confirmAction.value
+  if (!action) return
+  try {
+    if (action.kind === 'delete') {
+      const result = await QueryGetAPI(`${POINT_API_URL}delete-goods`, { id: action.item.id })
+      if (result.code !== 200) throw new Error(result.message || '删除失败')
+      goods.value = goods.value.filter((item) => item.id !== action.item.id)
+    } else {
+      const result = await QueryPostAPI(`${POINT_API_URL}update-goods-status`, {
+        ids: [action.item.id],
+        status: action.status,
+      })
+      if (result.code !== 200) throw new Error(result.message || '更新失败')
+      action.item.status = action.status
+    }
+    confirmAction.value = null
+    notify('操作成功', 'success')
+  } catch (error) {
+    console.error(error)
+    notify(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+function setUnlimitedStock(value: boolean) {
+  currentGoods.value.goods.count = value ? undefined : 100
+}
+function setGuardFreeMonths(value: boolean) {
+  currentGoods.value.goods.setting.guardFreeMonths = value
+    ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
+    : undefined
+}
+function setGuardLevelMonths(value: boolean) {
+  currentGoods.value.goods.setting.guardLevelMonths = value
+    ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
+    : undefined
+}
+function addMonth(target: 'guardFreeMonths' | 'guardLevelMonths') {
+  currentGoods.value.goods.setting[target] ??= []
+  currentGoods.value.goods.setting[target]!.push({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 })
+}
+function removeMonth(target: 'guardFreeMonths' | 'guardLevelMonths', index: number) {
+  currentGoods.value.goods.setting[target]?.splice(index, 1)
+}
 </script>
 
 <template>
-  <!-- 头部 -->
   <ManagePageHeader
     title="积分管理"
     subtitle="礼物、订单、用户与配置"
     :function-type="FunctionTypes.Point"
     :links="[{ label: '礼物展示页链接', value: goodsPageUrl }]"
   />
-
-  <NCard
-    size="small"
-    :bordered="true"
-    content-style="padding: 12px;"
-    style="max-width: 800px"
+  <section class="status-strip">
+    <UAlert
+      v-if="!accountInfo.eventFetcherState.online"
+      color="warning"
+      icon="i-lucide-triangle-alert"
+      title="积分系统依赖 VtsuruEventFetcher"
+      description="事件监听器离线时，礼物、舰长等事件无法自动记录。"
+      ><template #actions
+        ><UButton
+          to="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+          target="_blank"
+          color="neutral"
+          variant="soft"
+          size="sm"
+          label="查看说明" /></template></UAlert
+    ><EventFetcherStatusCard />
+  </section>
+  <UTabs
+    v-model="hash"
+    :items="tabItems"
+    class="main-tabs"
+  />
+  <section
+    v-if="hash === 'goods'"
+    class="goods-page"
   >
-    <NFlex
-      justify="space-between"
-      align="center"
-      wrap
-      :gap="12"
-    >
-      <NAlert
-        v-if="!accountInfo.eventFetcherState.online"
-        :type="
-          accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
-            ? 'success'
-            : 'warning'
-        "
-        :bordered="false"
-        style="flex: 1; min-width: 300px"
-      >
-        <NFlex
-          align="center"
-          :gap="8"
-          wrap
-        >
-          <NText>
-            此功能依赖
-            <NButton
-              text
-              type="primary"
-              tag="a"
-              href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-              target="_blank"
-            >
-              VtsuruEventFetcher
-            </NButton>
-            (事件监听器), 否则将无法自动记录礼物/舰长等事件
-          </NText>
-          <NDivider vertical />
-          <NButton
-            text
-            type="info"
-            tag="a"
-            href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
-            target="_blank"
-          >
-            积分系统说明
-          </NButton>
-        </NFlex>
-      </NAlert>
-      <EventFetcherStatusCard />
-    </NFlex>
-  </NCard>
-
-  <!-- 主要内容标签页 -->
-  <NTabs
-    v-model:value="hash"
-    animated
-  >
-    <!-- 礼物管理标签页 -->
-    <NTabPane
-      name="goods"
-      tab="礼物"
-    >
-      <NFlex
-        justify="start"
-        :gap="12"
-        style="margin-bottom: 16px"
-      >
-        <NButton
-          type="primary"
-          size="medium"
-          @click="onModalOpen"
-        >
-          <template #icon>
-            <NIcon :component="Add24Filled" />
-          </template>
-          添加礼物
-        </NButton>
-        <NButton
-          secondary
-          size="medium"
-          @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })"
-        >
-          <template #icon>
-            <NIcon :component="Eye24Filled" />
-          </template>
-          前往展示页
-        </NButton>
-      </NFlex>
-
-      <!-- 上架礼物列表 -->
-      <NEmpty
-        v-if="onShelfGoods.length === 0"
-        description="暂无礼物"
+    <div class="page-actions">
+      <UButton
+        icon="i-lucide-plus"
+        label="添加礼物"
+        @click="openNewGoods"
+      /><UButton
+        color="neutral"
+        variant="soft"
+        icon="i-lucide-external-link"
+        label="前往展示页"
+        @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })"
       />
-      <NGrid
-        v-else
-        cols="1 500:2 700:3 1000:4 1200:5"
-        :x-gap="16"
-        :y-gap="16"
-      >
-        <NGridItem
-          v-for="item in onShelfGoods"
-          :key="item.id"
+    </div>
+    <UEmpty
+      v-if="!onShelfGoods.length"
+      icon="i-lucide-gift"
+      title="暂无礼物"
+    />
+    <div
+      v-else
+      class="goods-grid"
+    >
+      <PointGoodsItem
+        v-for="item in onShelfGoods"
+        :key="item.id"
+        :goods="item"
+        :is-manage="true"
+        ><template #footer
+          ><div class="goods-actions">
+            <span><UIcon name="i-lucide-shopping-bag" /> 积分: {{ item.price }}</span>
+            <div>
+              <UButton
+                size="xs"
+                color="info"
+                variant="soft"
+                icon="i-lucide-pencil"
+                label="修改"
+                @click="openEditGoods(item)"
+              /><UButton
+                size="xs"
+                color="warning"
+                variant="soft"
+                icon="i-lucide-package-x"
+                label="下架"
+                @click="confirmAction = { kind: 'shelf', item, status: GoodsStatus.Discontinued }"
+              /><UButton
+                size="xs"
+                color="error"
+                variant="soft"
+                icon="i-lucide-trash-2"
+                label="删除"
+                @click="confirmAction = { kind: 'delete', item }"
+              />
+            </div></div></template
+      ></PointGoodsItem>
+    </div>
+    <USeparator label="已下架" /><UEmpty
+      v-if="!offShelfGoods.length"
+      icon="i-lucide-package-open"
+      title="暂无已下架礼物"
+    />
+    <div
+      v-else
+      class="goods-grid"
+    >
+      <PointGoodsItem
+        v-for="item in offShelfGoods"
+        :key="item.id"
+        :goods="item"
+        :is-manage="true"
+        ><template #footer
+          ><div class="goods-actions">
+            <span><UIcon name="i-lucide-shopping-bag" /> 积分: {{ item.price }}</span>
+            <div>
+              <UButton
+                size="xs"
+                color="info"
+                variant="soft"
+                icon="i-lucide-pencil"
+                label="修改"
+                @click="openEditGoods(item)"
+              /><UButton
+                size="xs"
+                color="success"
+                variant="soft"
+                icon="i-lucide-package-check"
+                label="上架"
+                @click="confirmAction = { kind: 'shelf', item, status: GoodsStatus.Normal }"
+              /><UButton
+                size="xs"
+                color="error"
+                variant="soft"
+                icon="i-lucide-trash-2"
+                label="删除"
+                @click="confirmAction = { kind: 'delete', item }"
+              />
+            </div></div></template
+      ></PointGoodsItem>
+    </div>
+  </section>
+  <PointOrderManage
+    v-else-if="hash === 'orders'"
+    :goods="goods"
+  /><PointUserManage
+    v-else-if="hash === 'users'"
+    :goods="goods"
+    :point-setting="currentPointSetting"
+    @open-source-settings="openPointSourceSettings"
+  /><PointGuardDuplicateManage v-else-if="hash === 'guard-duplicates'" /><PointSettings
+    v-else-if="hash === 'settings'"
+    source-anchor-id="point-source-settings"
+  /><PointTestPanel v-else-if="hash === 'test'" />
+  <UModal
+    v-model:open="showGoodsModal"
+    :title="currentGoods.goods.id ? '编辑礼物' : '添加礼物'"
+    :dismissible="!isUpdating"
+    ><template #body
+      ><div class="goods-editor">
+        <UTabs
+          v-model="goodsModalTab"
+          :items="[
+            { label: '基础', value: 'basic' },
+            { label: '款式', value: 'sub-items' },
+            { label: '兑换', value: 'exchange' },
+            { label: '高级', value: 'advanced' },
+          ]"
+        />
+        <section
+          v-if="goodsModalTab === 'basic'"
+          class="editor-section"
         >
-          <PointGoodsItem
-            :goods="item"
-            :is-manage="true"
-            class="point-goods-card"
-          >
-            <template #footer>
-              <NFlex
-                vertical
-                :gap="8"
-                style="width: 100%"
-              >
-                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500">
-                  <NIcon
-                    :component="ShoppingBag24Filled"
-                    style="vertical-align: -0.15em; margin-right: 4px"
-                  />
-                  积分: {{ item.price }}
-                </NText>
-                <NFlex
-                  justify="space-between"
-                  :gap="8"
-                >
-                  <NButton
-                    type="info"
-                    size="small"
-                    style="flex: 1"
-                    @click="onUpdateClick(item)"
-                  >
-                    <template #icon>
-                      <NIcon :component="Edit24Filled" />
-                    </template>
-                    修改
-                  </NButton>
-                  <NButton
-                    type="warning"
-                    size="small"
-                    style="flex: 1"
-                    @click="onSetShelfClick(item, GoodsStatus.Discontinued)"
-                  >
-                    <template #icon>
-                      <NIcon :component="ArrowSync24Filled" />
-                    </template>
-                    下架
-                  </NButton>
-                  <NButton
-                    type="error"
-                    size="small"
-                    style="flex: 1"
-                    @click="onDeleteClick(item)"
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete24Filled" />
-                    </template>
-                    删除
-                  </NButton>
-                </NFlex>
-              </NFlex>
-            </template>
-          </PointGoodsItem>
-        </NGridItem>
-      </NGrid>
-
-      <!-- 下架礼物列表 -->
-      <NDivider style="margin: 24px 0 16px"> 已下架 </NDivider>
-      <NEmpty
-        v-if="offShelfGoods.length === 0"
-        description="暂无已下架的礼物"
-      />
-      <NGrid
-        v-else
-        cols="1 500:2 700:3 1000:4 1200:5"
-        :x-gap="16"
-        :y-gap="16"
-      >
-        <NGridItem
-          v-for="item in offShelfGoods"
-          :key="item.id"
+          <div class="form-grid">
+            <UFormField
+              label="名称"
+              required
+              ><UInput
+                v-model="currentGoods.goods.name"
+                placeholder="礼物名称" /></UFormField
+            ><UFormField
+              label="所需积分"
+              required
+              ><UInputNumber
+                v-model="currentGoods.goods.price"
+                :min="0" /></UFormField
+            ><UFormField label="库存"
+              ><div class="inline-field">
+                <UCheckbox
+                  :model-value="currentGoods.goods.count === undefined"
+                  label="不限"
+                  @update:model-value="setUnlimitedStock"
+                /><UInputNumber
+                  v-if="currentGoods.goods.count !== undefined"
+                  v-model="currentGoods.goods.count"
+                  :min="0"
+                /></div></UFormField
+            ><UCheckbox
+              v-model="currentGoods.goods.isPinned"
+              label="在礼物列表中置顶显示"
+            />
+          </div>
+          <USeparator label="详细描述" />
+          <div class="form-grid">
+            <UFormField label="描述"
+              ><UTextarea
+                v-model="currentGoods.goods.description"
+                :maxlength="500"
+                :rows="3" /></UFormField
+            ><UFormField label="标签"
+              ><USelectMenu
+                v-model="currentGoods.goods.tags"
+                :items="existingTags"
+                value-key="value"
+                multiple
+                create-item
+                searchable
+                placeholder="输入后按回车添加" /></UFormField
+            ><UFormField
+              label="封面"
+              description="小于 10MB"
+              ><input
+                type="file"
+                accept="image/*"
+                :disabled="isUpdating"
+                @change="setCover" /><img
+                v-if="currentGoods.coverFile"
+                :src="URL.createObjectURL(currentGoods.coverFile)"
+                class="cover-preview" /><img
+                v-else-if="currentGoods.goods.cover"
+                :src="currentGoods.goods.cover.path"
+                class="cover-preview" /><UCheckbox
+                v-model="shouldWatermarkCover"
+                label="添加 vtsuru.live 水印（同时应用于款式封面）"
+            /></UFormField>
+          </div>
+        </section>
+        <section
+          v-else-if="goodsModalTab === 'sub-items'"
+          class="editor-section"
         >
-          <PointGoodsItem
-            :goods="item"
-            :is-manage="true"
-            class="point-goods-card"
+          <UAlert
+            color="info"
+            title="款式 / 规格"
+            description="前台兑换时可多选款式；款式价格为最终价；库存按款式独立计算。未上传款式封面时默认沿用父商品封面。"
+          />
+          <div class="inline-field">
+            <UFormField label="最多可选款式数"
+              ><UInputNumber
+                v-model="currentGoods.goods.maxSubItemSelections"
+                :min="0" /></UFormField
+            ><span class="muted">0 或留空表示不限制</span>
+          </div>
+          <div class="sub-toolbar">
+            <span>已配置 {{ currentGoods.goods.subItems?.length ?? 0 }} 个款式</span>
+            <div>
+              <USelect
+                v-model="subItemsSortMode"
+                :items="[
+                  { label: '手动排序', value: 'manual' },
+                  { label: '按名称', value: 'name' },
+                  { label: '按价格', value: 'price' },
+                  { label: '按库存', value: 'stock' },
+                ]"
+              /><UButton
+                size="sm"
+                icon="i-lucide-plus"
+                label="添加款式"
+                @click="addSubItem"
+              />
+            </div>
+          </div>
+          <UEmpty
+            v-if="!currentGoods.goods.subItems?.length"
+            icon="i-lucide-list-plus"
+            title="暂无款式"
+            description="不影响父商品直接兑换"
+          />
+          <article
+            v-for="(subItem, index) in subItemsForDisplay"
+            v-else
+            :key="getSubItemKey(subItem)"
+            class="sub-item"
           >
-            <template #footer>
-              <NFlex
-                vertical
-                :gap="8"
-                style="width: 100%"
-              >
-                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500">
-                  <NIcon
-                    :component="ShoppingBag24Filled"
-                    style="vertical-align: -0.15em; margin-right: 4px"
-                  />
-                  积分: {{ item.price }}
-                </NText>
-                <NFlex
-                  justify="space-between"
-                  :gap="8"
-                >
-                  <NButton
-                    type="info"
-                    size="small"
-                    style="flex: 1"
-                    @click="onUpdateClick(item)"
-                  >
-                    <template #icon>
-                      <NIcon :component="Edit24Filled" />
-                    </template>
-                    修改
-                  </NButton>
-                  <NButton
-                    type="success"
-                    size="small"
-                    style="flex: 1"
-                    @click="onSetShelfClick(item, GoodsStatus.Normal)"
-                  >
-                    <template #icon>
-                      <NIcon :component="ArrowSync24Filled" />
-                    </template>
-                    上架
-                  </NButton>
-                  <NButton
-                    type="error"
-                    size="small"
-                    style="flex: 1"
-                    @click="onDeleteClick(item)"
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete24Filled" />
-                    </template>
-                    删除
-                  </NButton>
-                </NFlex>
-              </NFlex>
-            </template>
-          </PointGoodsItem>
-        </NGridItem>
-      </NGrid>
-    </NTabPane>
-
-    <!-- 订单管理标签页 -->
-    <NTabPane
-      name="orders"
-      tab="订单"
-      display-directive="show:lazy"
-    >
-      <PointOrderManage :goods="goods" />
-    </NTabPane>
-
-    <!-- 用户管理标签页 -->
-    <NTabPane
-      name="users"
-      tab="用户"
-      display-directive="show:lazy"
-    >
-      <PointUserManage
-        :goods="goods"
-        :point-setting="currentPointSetting"
-        @open-source-settings="openPointSourceSettings"
-      />
-    </NTabPane>
-
-    <NTabPane
-      name="guard-duplicates"
-      tab="重复上舰"
-      display-directive="show:lazy"
-    >
-      <PointGuardDuplicateManage />
-    </NTabPane>
-
-    <!-- 设置标签页 -->
-    <NTabPane
-      name="settings"
-      tab="设置"
-      display-directive="show:lazy"
-    >
-      <PointSettings source-anchor-id="point-source-settings" />
-    </NTabPane>
-
-    <!-- 测试标签页 -->
-    <NTabPane
-      name="test"
-      tab="测试"
-      display-directive="show:lazy"
-    >
-      <PointTestPanel />
-    </NTabPane>
-  </NTabs>
-
-  <!-- 添加/修改礼物模态框 -->
-  <NModal
-    v-model:show="showAddGoodsModal"
-    preset="card"
-    style="width: 920px; max-width: 96vw"
-    :title="currentGoodsModel.goods.id ? '编辑礼物' : '添加礼物'"
-    class="goods-modal"
-    :mask-closable="!isUpdating && !isUploadingCover"
-    :close-on-esc="!isUpdating && !isUploadingCover"
-    :segmented="{
-      content: 'soft',
-      footer: 'soft',
-    }"
-  >
-    <template #header-extra>
-      <NPopconfirm
-        v-if="!currentGoodsModel.goods.id"
-        @positive-click="resetGoods"
-      >
-        <template #trigger>
-          <NButton
-            type="warning"
-            size="small"
-          >
-            重置
-          </NButton>
-        </template>
-        确定要重置此页面内容?
-      </NPopconfirm>
-    </template>
-    <div class="scrollable-container">
-      <NScrollbar
-        style="max-height: 70vh; padding-right: 12px"
-        class="goods-scrollbar"
-      >
-        <NForm
-          ref="formRef"
-          :model="currentGoodsModel.goods"
-          :rules="rules"
-          style="width: 100%"
-        >
-          <NTabs
-            v-model:value="goodsModalTab"
-            type="segment"
-            animated
-          >
-            <NTabPane
-              name="basic"
-              tab="基础"
-            >
-              <!-- 基本信息分组 -->
-              <NDivider
-                title-placement="left"
-                style="margin: 8px 0 16px"
-              >
-                基本信息
-              </NDivider>
-              <NFormItem
-                path="name"
+            <div class="sub-head">
+              <strong>款式 #{{ index + 1 }}</strong>
+              <div>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-arrow-up"
+                  :disabled="subItemsSortMode !== 'manual'"
+                  @click="moveSubItem(getSubItemKey(subItem), -1)"
+                /><UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-arrow-down"
+                  :disabled="subItemsSortMode !== 'manual'"
+                  @click="moveSubItem(getSubItemKey(subItem), 1)"
+                /><UButton
+                  size="xs"
+                  color="error"
+                  variant="ghost"
+                  icon="i-lucide-trash-2"
+                  @click="removeSubItem(getSubItemKey(subItem))"
+                />
+              </div>
+            </div>
+            <div class="form-grid two">
+              <UFormField
                 label="名称"
                 required
-              >
-                <NInput
-                  v-model:value="currentGoodsModel.goods.name"
-                  placeholder="必填, 礼物名称"
-                />
-              </NFormItem>
-
-              <NFormItem
-                path="price"
-                label="所需积分"
+                ><UInput v-model="subItem.name" /></UFormField
+              ><UFormField
+                label="积分价格"
                 required
-              >
-                <NInputNumber
-                  v-model:value="currentGoodsModel.goods.price"
-                  placeholder="必填, 兑换所需要的积分"
-                  min="0"
-                />
-              </NFormItem>
-
-              <NFormItem
-                path="count"
-                label="库存"
-              >
-                <NFlex
-                  :gap="12"
-                  align="center"
-                >
-                  <NCheckbox
-                    :checked="currentGoodsModel.goods.count === undefined"
-                    @update:checked="(v) => (currentGoodsModel.goods.count = v ? undefined : 100)"
-                  >
-                    不限
-                  </NCheckbox>
-                  <NInputNumber
-                    v-if="currentGoodsModel.goods.count !== undefined"
-                    v-model:value="currentGoodsModel.goods.count"
-                    placeholder="礼物库存"
-                    min="0"
-                    style="max-width: 120px"
-                  />
-                </NFlex>
-              </NFormItem>
-
-              <NFormItem
-                path="isPinned"
-                label="置顶显示"
-              >
-                <NCheckbox v-model:checked="currentGoodsModel.goods.isPinned"> 在礼物列表中置顶显示 </NCheckbox>
-              </NFormItem>
-
-              <!-- 详细描述分组 -->
-              <NDivider
-                title-placement="left"
-                style="margin-top: 0"
-              >
-                详细描述
-              </NDivider>
-              <NFormItem
-                path="description"
-                label="描述"
-              >
-                <NInput
-                  v-model:value="currentGoodsModel.goods.description"
-                  placeholder="可选, 礼物描述"
-                  maxlength="500"
-                  type="textarea"
-                />
-              </NFormItem>
-
-              <NFormItem
-                path="tags"
-                label="标签"
-              >
-                <NSelect
-                  v-model:value="currentGoodsModel.goods.tags"
-                  filterable
-                  multiple
-                  clearable
-                  tag
-                  placeholder="可选，输入后按回车添加"
-                  :options="existTags"
-                />
-              </NFormItem>
-
-              <NFormItem
-                path="cover"
-                label="封面"
-                style="margin-bottom: 16px"
-              >
-                <NFlex
-                  vertical
-                  :gap="8"
-                >
-                  <NUpload
-                    v-model:file-list="currentGoodsModel.fileList"
-                    :max="1"
-                    accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tif,.tiff,.jfif,.jpe,.jp,.psd,."
-                    list-type="image-card"
-                    :default-upload="false"
-                    :disabled="isUploadingCover"
-                    @update:file-list="OnFileListChange"
-                  >
-                    <NFlex
-                      vertical
-                      align="center"
-                      justify="center"
-                      style="width: 100%; height: 100%"
-                    >
-                      <NIcon
-                        size="24"
-                        :depth="3"
-                      />
-                      <span>{{ currentGoodsModel.goods.cover ? '更换' : '上传' }}封面</span>
-                      <span style="font-size: 12px; color: grey">(小于10MB)</span>
-                    </NFlex>
-                  </NUpload>
-                  <NFlex
-                    align="center"
-                    :gap="8"
-                  >
-                    <NSwitch v-model:value="shouldWatermarkCover" />
-                    <NText depth="3"> 添加 vtsuru.live 水印（同时应用于款式封面） </NText>
-                  </NFlex>
-                  <NProgress
-                    v-if="isUploadingCover"
-                    type="line"
-                    :percentage="uploadProgress"
-                    indicator-placement="inside"
-                    processing
-                  />
-                </NFlex>
-              </NFormItem>
-            </NTabPane>
-            <NTabPane
-              name="subItems"
-              tab="款式配置"
-            >
-              <!-- 款式/规格 -->
-              <NDivider
-                title-placement="left"
-                style="margin: 16px 0"
-              >
-                款式 / 规格
-              </NDivider>
-
-              <NAlert
-                type="info"
-                :bordered="false"
-                style="margin-bottom: 12px"
-              >
-                前台兑换时可多选款式；款式价格为最终价；库存按款式独立计算。未上传款式封面时默认沿用父商品封面。
-              </NAlert>
-
-              <NFormItem
-                label="最多可选款式数"
-                style="margin-bottom: 16px"
-              >
-                <NFlex
-                  align="center"
-                  :gap="12"
-                >
-                  <NInputNumber
-                    v-model:value="currentGoodsModel.goods.maxSubItemSelections"
+                ><UInputNumber
+                  v-model="subItem.price"
+                  :min="0" /></UFormField
+              ><UFormField label="库存"
+                ><div class="inline-field">
+                  <UCheckbox
+                    :model-value="subItem.stock === undefined"
+                    label="不限"
+                    @update:model-value="(value) => (subItem.stock = value ? undefined : 100)"
+                  /><UInputNumber
+                    v-if="subItem.stock !== undefined"
+                    v-model="subItem.stock"
                     :min="0"
-                    placeholder="0表示不限制"
-                    style="width: 200px"
-                  >
-                    <template #suffix> 种 </template>
-                  </NInputNumber>
-                  <NText
-                    depth="3"
-                    style="font-size: 12px"
-                  >
-                    限制用户最多可以选择多少种不同的款式，0或留空表示不限制
-                  </NText>
-                </NFlex>
-              </NFormItem>
-
-              <NFlex
-                justify="space-between"
-                align="center"
-                style="margin-bottom: 8px"
-              >
-                <NText depth="2"> 已配置 {{ (currentGoodsModel.goods.subItems ?? []).length }} 个款式 </NText>
-                <NFlex
-                  align="center"
-                  :gap="12"
-                  wrap
-                >
-                  <NSelect
-                    v-model:value="subItemsSortMode"
-                    size="small"
-                    style="min-width: 160px"
-                    :options="[
-                      { label: '手动排序', value: 'manual' },
-                      { label: '按名称', value: 'name' },
-                      { label: '按价格', value: 'price' },
-                      { label: '按库存', value: 'stock' },
+                  /></div></UFormField
+              ><UFormField label="封面"
+                ><input
+                  type="file"
+                  accept="image/*"
+                  @change="setCover($event, getSubItemKey(subItem))" /><img
+                  v-if="currentGoods.subCoverFiles[getSubItemKey(subItem)]"
+                  :src="URL.createObjectURL(currentGoods.subCoverFiles[getSubItemKey(subItem)]!)"
+                  class="cover-preview" /><img
+                  v-else-if="subItem.cover"
+                  :src="subItem.cover.path"
+                  class="cover-preview"
+              /></UFormField>
+            </div>
+            <details>
+              <summary>独立配置</summary>
+              <div class="form-grid two nested">
+                <UFormField label="兑换类型"
+                  ><USelect
+                    v-model="subItem.type"
+                    :items="[
+                      { label: '继承父商品', value: undefined },
+                      { label: '虚拟', value: GoodsTypes.Virtual },
+                      { label: '实物', value: GoodsTypes.Physical },
+                    ]" /></UFormField
+                ><UFormField label="描述"
+                  ><UTextarea
+                    v-model="subItem.description"
+                    :rows="2" /></UFormField
+                ><UCheckbox
+                  v-model="subItem.isAllowRebuy"
+                  label="允许重复兑换"
+                /><UFormField label="最大兑换数量"
+                  ><UInputNumber
+                    v-model="subItem.maxBuyCount"
+                    :min="1"
+                    placeholder="继承父商品" /></UFormField
+                ><UFormField label="地址收集"
+                  ><URadioGroup
+                    :model-value="subCollectionMode(subItem)"
+                    :items="[
+                      { label: '继承父商品', value: 0 },
+                      { label: '本站收集', value: 1 },
+                      { label: '站外收集', value: 2 },
                     ]"
-                  />
-                  <NButton
-                    type="primary"
-                    secondary
-                    size="small"
-                    @click="addSubItem"
-                  >
-                    <template #icon>
-                      <NIcon :component="Add24Filled" />
-                    </template>
-                    添加款式
-                  </NButton>
-                </NFlex>
-              </NFlex>
-
-              <NEmpty
-                v-if="!(currentGoodsModel.goods.subItems ?? []).length"
-                description="暂无款式（不影响父商品直接兑换）"
-                style="margin-bottom: 12px"
+                    @update:model-value="setSubCollectionMode(subItem, $event as number)" /></UFormField
+                ><UFormField
+                  v-if="subCollectionMode(subItem) === 2"
+                  label="收集链接"
+                  ><UInput v-model="subItem.collectUrl" /><UCheckbox
+                    v-model="subItem.embedCollectUrl"
+                    label="尝试嵌入到网页中"
+                /></UFormField>
+              </div>
+              <template v-if="resolveSubType(subItem) === GoodsTypes.Virtual"
+                ><UFormField label="虚拟礼物内容"
+                  ><UTextarea
+                    v-model="subItem.content"
+                    :rows="3"
+                    placeholder="留空则继承父商品" /></UFormField
+                ><UFormField label="密钥选择模式"
+                  ><USelect
+                    v-model="subItem.keySelectionMode"
+                    :items="[
+                      { label: '继承父商品', value: undefined },
+                      { label: '不使用', value: KeySelectionMode.None },
+                      { label: '随机选择', value: KeySelectionMode.Random },
+                      { label: '顺序选择', value: KeySelectionMode.Sequential },
+                    ]" /></UFormField
+                ><UFormField
+                  v-if="subItem.keySelectionMode && subItem.keySelectionMode !== KeySelectionMode.None"
+                  label="礼物密钥"
+                  ><UInputTags v-model="subItem.virtualKeys" /></UFormField
+              ></template>
+            </details>
+          </article>
+        </section>
+        <section
+          v-else-if="goodsModalTab === 'exchange'"
+          class="editor-section"
+        >
+          <div class="form-grid">
+            <UFormField
+              label="礼物类型"
+              required
+              ><URadioGroup
+                v-model="currentGoods.goods.type"
+                :items="[
+                  { label: '虚拟礼物', value: GoodsTypes.Virtual },
+                  { label: '实体礼物', value: GoodsTypes.Physical },
+                ]" /></UFormField
+            ><UCheckbox
+              v-model="currentGoods.goods.isAllowRebuy"
+              label="允许重复兑换"
+            />
+          </div>
+          <USeparator label="舰长限制" />
+          <details>
+            <summary>展开舰长免费兑换与等级限制</summary>
+            <div class="settings-stack nested">
+              <UCheckbox
+                :model-value="Array.isArray(currentGoods.goods.setting.guardFreeMonths)"
+                label="限制舰长免费兑换月份"
+                @update:model-value="setGuardFreeMonths"
               />
-
-              <template v-else>
+              <div
+                v-if="currentGoods.goods.setting.guardFreeMonths"
+                class="month-stack"
+              >
+                <UCheckbox
+                  :model-value="!currentGoods.goods.setting.guardFreeMonths.length"
+                  label="当前在舰即可"
+                  @update:model-value="
+                    (value) => {
+                      currentGoods.goods.setting.guardFreeMonths = value
+                        ? []
+                        : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
+                    }
+                  "
+                />
                 <div
-                  v-for="(sub, idx) in subItemsForDisplay"
-                  :key="getSubItemKey(sub)"
-                  class="manage-sub-item-card"
+                  v-for="(month, index) in currentGoods.goods.setting.guardFreeMonths"
+                  :key="`free-${index}`"
+                  class="inline-field"
                 >
-                  <NFlex
-                    justify="space-between"
-                    align="center"
-                    style="margin-bottom: 8px"
-                  >
-                    <NText strong> 款式 #{{ idx + 1 }} </NText>
-                    <NFlex
-                      :gap="8"
-                      align="center"
-                    >
-                      <NButton
-                        quaternary
-                        size="small"
-                        :disabled="subItemsSortMode !== 'manual'"
-                        @click="moveSubItemByKey(getSubItemKey(sub), -1)"
-                      >
-                        上移
-                      </NButton>
-                      <NButton
-                        quaternary
-                        size="small"
-                        :disabled="subItemsSortMode !== 'manual'"
-                        @click="moveSubItemByKey(getSubItemKey(sub), 1)"
-                      >
-                        下移
-                      </NButton>
-                      <NButton
-                        type="error"
-                        secondary
-                        size="small"
-                        @click="removeSubItemByKey(getSubItemKey(sub))"
-                      >
-                        <template #icon>
-                          <NIcon :component="Delete24Filled" />
-                        </template>
-                        删除
-                      </NButton>
-                    </NFlex>
-                  </NFlex>
-
-                  <NFormItem
-                    label="名称"
-                    required
-                    style="margin-bottom: 10px"
-                  >
-                    <NInput
-                      v-model:value="sub.name"
-                      placeholder="如：吧唧 / 立牌 / 抱枕套"
-                    />
-                  </NFormItem>
-
-                  <NFlex
-                    :gap="12"
-                    align="center"
-                    style="margin-bottom: 10px"
-                  >
-                    <NFormItem
-                      label="所需积分"
-                      required
-                      style="flex: 1; margin-bottom: 0"
-                    >
-                      <NInputNumber
-                        v-model:value="sub.price"
-                        min="0"
-                        placeholder="款式最终价"
-                        style="width: 100%"
-                      />
-                    </NFormItem>
-                    <NFormItem
-                      label="库存"
-                      style="flex: 1; margin-bottom: 0"
-                    >
-                      <NFlex
-                        :gap="12"
-                        align="center"
-                      >
-                        <NCheckbox
-                          :checked="sub.stock === undefined"
-                          @update:checked="(v) => (sub.stock = v ? undefined : 100)"
-                        >
-                          不限
-                        </NCheckbox>
-                        <NInputNumber
-                          v-if="sub.stock !== undefined"
-                          v-model:value="sub.stock"
-                          min="0"
-                          placeholder="库存"
-                          style="max-width: 120px"
-                        />
-                      </NFlex>
-                    </NFormItem>
-                  </NFlex>
-
-                  <NFlex
-                    :gap="12"
-                    align="center"
-                    style="margin-bottom: 10px"
-                  >
-                    <NFormItem
-                      label="允许重购"
-                      style="flex: 1; margin-bottom: 0"
-                    >
-                      <NFlex
-                        vertical
-                        :gap="6"
-                      >
-                        <NCheckbox
-                          :checked="sub.isAllowRebuy === undefined"
-                          @update:checked="
-                            (v) => (sub.isAllowRebuy = v ? undefined : (currentGoodsModel.goods.isAllowRebuy ?? false))
-                          "
-                        >
-                          沿用父商品（父：{{ currentGoodsModel.goods.isAllowRebuy ? '允许' : '不允许' }}）
-                        </NCheckbox>
-                        <NCheckbox
-                          :checked="sub.isAllowRebuy ?? currentGoodsModel.goods.isAllowRebuy"
-                          :disabled="sub.isAllowRebuy === undefined"
-                          @update:checked="(v) => (sub.isAllowRebuy = v)"
-                        >
-                          允许重复兑换
-                        </NCheckbox>
-                      </NFlex>
-                    </NFormItem>
-                    <NFormItem
-                      label="最大兑换数量"
-                      style="flex: 1; margin-bottom: 0"
-                    >
-                      <NFlex
-                        vertical
-                        :gap="6"
-                        style="width: 100%"
-                      >
-                        <NCheckbox
-                          :checked="sub.maxBuyCount === undefined"
-                          @update:checked="
-                            (v) => (sub.maxBuyCount = v ? undefined : (currentGoodsModel.goods.maxBuyCount ?? 1))
-                          "
-                        >
-                          沿用父商品（父：{{ currentGoodsModel.goods.maxBuyCount ?? 1 }}）
-                        </NCheckbox>
-                        <NInputNumber
-                          :value="sub.maxBuyCount ?? currentGoodsModel.goods.maxBuyCount ?? 1"
-                          :disabled="sub.maxBuyCount === undefined"
-                          min="1"
-                          style="width: 100%"
-                          @update:value="(v) => (sub.maxBuyCount = v)"
-                        />
-                      </NFlex>
-                    </NFormItem>
-                  </NFlex>
-
-                  <NFlex
-                    :gap="12"
-                    align="center"
-                    style="margin-bottom: 10px"
-                  >
-                    <NFormItem
-                      label="类型"
-                      style="flex: 1; margin-bottom: 0"
-                    >
-                      <NFlex
-                        vertical
-                        :gap="6"
-                        style="width: 100%"
-                      >
-                        <NCheckbox
-                          :checked="sub.type === undefined"
-                          @update:checked="(v) => (sub.type = v ? undefined : currentGoodsModel.goods.type)"
-                        >
-                          沿用父商品（父：{{ currentGoodsModel.goods.type === GoodsTypes.Physical ? '实物' : '虚拟' }}）
-                        </NCheckbox>
-                        <NRadioGroup
-                          :value="sub.type ?? currentGoodsModel.goods.type"
-                          :disabled="sub.type === undefined"
-                          @update:value="(v) => (sub.type = v)"
-                        >
-                          <NRadioButton :value="GoodsTypes.Virtual"> 虚拟 </NRadioButton>
-                          <NRadioButton :value="GoodsTypes.Physical"> 实物 </NRadioButton>
-                        </NRadioGroup>
-                      </NFlex>
-                    </NFormItem>
-                    <NFormItem
-                      label="封面"
-                      style="flex: 1; margin-bottom: 0"
-                    >
-                      <NUpload
-                        :file-list="subItemFileLists[getSubItemKey(sub)] || []"
-                        :max="1"
-                        accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tif,.tiff,.jfif,.jpe,.jp,.psd,."
-                        list-type="image-card"
-                        :default-upload="false"
-                        :disabled="isUploadingCover"
-                        @update:file-list="(list) => updateSubItemFileList(getSubItemKey(sub), list)"
-                      />
-                    </NFormItem>
-                  </NFlex>
-
-                  <NFormItem
-                    label="描述(可选)"
-                    style="margin-bottom: 10px"
-                  >
-                    <NInput
-                      v-model:value="sub.description"
-                      type="textarea"
-                      placeholder="留空则沿用父商品描述"
-                      maxlength="500"
-                    />
-                  </NFormItem>
-
-                  <template v-if="resolveSubType(sub) === GoodsTypes.Physical">
-                    <NFormItem
-                      label="收货地址(可选)"
-                      style="margin-bottom: 0"
-                    >
-                      <NRadioGroup
-                        :value="sub.collectUrl === undefined ? 0 : sub.collectUrl === '' ? 1 : 2"
-                        @update:value="
-                          (v) => {
-                            if (v === 0) sub.collectUrl = undefined
-                            else if (v === 1) sub.collectUrl = ''
-                            else sub.collectUrl = sub.collectUrl && sub.collectUrl !== '' ? sub.collectUrl : 'https://'
-                          }
-                        "
-                      >
-                        <NRadioButton :value="0"> 沿用父商品 </NRadioButton>
-                        <NRadioButton :value="1"> 本站收集 </NRadioButton>
-                        <NRadioButton :value="2"> 站外收集 </NRadioButton>
-                      </NRadioGroup>
-                    </NFormItem>
-
-                    <template v-if="sub.collectUrl !== undefined && sub.collectUrl !== ''">
-                      <NFormItem
-                        label="收集链接"
-                        style="margin-top: 8px"
-                      >
-                        <NFlex
-                          vertical
-                          :gap="8"
-                          style="width: 100%"
-                        >
-                          <NInput
-                            v-model:value="sub.collectUrl"
-                            placeholder="用于给用户填写收货地址的表单分享链接"
-                            maxlength="300"
-                          />
-                          <NCheckbox v-model:checked="sub.embedCollectUrl"> 尝试将收集链接嵌入到网页中 </NCheckbox>
-                        </NFlex>
-                      </NFormItem>
-                    </template>
-                  </template>
+                  <USelect
+                    v-model="month.year"
+                    :items="
+                      Array.from({ length: new Date().getFullYear() - 2023 }, (_, i) => ({
+                        label: `${2024 + i}年`,
+                        value: 2024 + i,
+                      }))
+                    "
+                  /><USelect
+                    v-model="month.month"
+                    :items="Array.from({ length: 12 }, (_, i) => ({ label: `${i + 1}月`, value: i + 1 }))"
+                  /><UButton
+                    color="error"
+                    variant="ghost"
+                    icon="i-lucide-trash-2"
+                    @click="removeMonth('guardFreeMonths', index)"
+                  />
                 </div>
-              </template>
-            </NTabPane>
-            <NTabPane
-              name="exchange"
-              tab="兑换"
-            >
-              <!-- 兑换规则分组 -->
-              <NDivider
-                title-placement="left"
-                style="margin: 16px 0"
+                <UButton
+                  size="sm"
+                  color="neutral"
+                  variant="soft"
+                  label="添加月份"
+                  @click="addMonth('guardFreeMonths')"
+                />
+              </div>
+              <UFormField label="免费兑换最低舰长等级"
+                ><URadioGroup
+                  v-model="currentGoods.goods.setting.allowGuardFreeMinLevel"
+                  :items="[
+                    { label: '不限', value: 0 },
+                    { label: '总督', value: 1 },
+                    { label: '提督', value: 2 },
+                    { label: '舰长', value: 3 },
+                  ]" /></UFormField
+              ><UCheckbox
+                :model-value="Array.isArray(currentGoods.goods.setting.guardLevelMonths)"
+                label="限制最低兑换等级的上舰月份"
+                @update:model-value="setGuardLevelMonths"
+              />
+              <div
+                v-if="currentGoods.goods.setting.guardLevelMonths"
+                class="month-stack"
               >
-                兑换规则
-              </NDivider>
-              <NFormItem
-                path="type"
-                label="礼物类型"
-              >
-                <NRadioGroup v-model:value="currentGoodsModel.goods.type">
-                  <NRadioButton :value="GoodsTypes.Virtual"> 虚拟礼物 </NRadioButton>
-                  <NRadioButton :value="GoodsTypes.Physical"> 实体礼物 </NRadioButton>
-                </NRadioGroup>
-              </NFormItem>
-
-              <NFormItem
-                path="settings"
-                label="选项"
-              >
-                <NCheckbox v-model:checked="currentGoodsModel.goods.isAllowRebuy"> 允许重复兑换 </NCheckbox>
-              </NFormItem>
-
-              <NFormItem
-                label="特殊权限"
-                style="margin-bottom: 16px"
-              >
-                <NCollapse>
-                  <NCollapseItem
-                    title="展开配置"
-                    name="guard"
-                  >
-                    <NFlex
-                      vertical
-                      :gap="8"
-                    >
-                      <NCheckbox
-                        :checked="Array.isArray(currentGoodsModel.goods.setting?.guardFreeMonths)"
-                        @update:checked="
-                          (v) => {
-                            if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                            }
-                            currentGoodsModel.goods.setting.guardFreeMonths = v
-                              ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                              : undefined
-                          }
-                        "
-                      >
-                        允许舰长免费兑换
-                        <NTooltip>
-                          <template #trigger>
-                            <NIcon :component="Info24Filled" />
-                          </template>
-                          仅当
-                          <NButton
-                            type="info"
-                            text
-                            tag="a"
-                            href="/manage/event"
-                            target="_blank"
-                          >
-                            舰长和SC
-                          </NButton>
-                          中存在对应记录时才能生效
-                        </NTooltip>
-                      </NCheckbox>
-
-                      <NFlex
-                        v-if="currentGoodsModel.goods.setting?.guardFreeMonths"
-                        vertical
-                        :gap="8"
-                      >
-                        <NText> 免费兑换最低舰长等级 </NText>
-                        <NRadioGroup
-                          :value="currentGoodsModel.goods.setting?.allowGuardFreeMinLevel ?? 0"
-                          @update:value="
-                            (v) => {
-                              if (!currentGoodsModel.goods.setting) {
-                                currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                              }
-                              currentGoodsModel.goods.setting.allowGuardFreeMinLevel = v
-                            }
-                          "
-                        >
-                          <NRadioButton :value="0"> 不限 </NRadioButton>
-                          <NRadioButton :value="1"> 总督 </NRadioButton>
-                          <NRadioButton :value="2"> 提督 </NRadioButton>
-                          <NRadioButton :value="3"> 舰长 </NRadioButton>
-                        </NRadioGroup>
-
-                        <NCheckbox
-                          :checked="currentGoodsModel.goods.setting?.guardFreeMonths?.length === 0"
-                          @update:checked="
-                            (v) => {
-                              if (!currentGoodsModel.goods.setting) {
-                                currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                              }
-                              if (!currentGoodsModel.goods.setting.guardFreeMonths) {
-                                currentGoodsModel.goods.setting.guardFreeMonths = []
-                              }
-                              currentGoodsModel.goods.setting.guardFreeMonths = v
-                                ? []
-                                : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                            }
-                          "
-                        >
-                          当前在舰即可
-                        </NCheckbox>
-
-                        <NFlex
-                          v-if="currentGoodsModel.goods.setting.guardFreeMonths.length > 0"
-                          vertical
-                          :gap="8"
-                        >
-                          <NFlex
-                            v-for="(m, idx) in currentGoodsModel.goods.setting.guardFreeMonths"
-                            :key="`${m.year}-${m.month}-${idx}`"
-                            :gap="8"
-                            align="center"
-                          >
-                            <NSelect
-                              style="flex: 1"
-                              :value="m.year"
-                              :options="allowedYearOptions"
-                              placeholder="请选择年份"
-                              @update:value="
-                                (v) => {
-                                  if (currentGoodsModel.goods.setting?.guardFreeMonths) {
-                                    currentGoodsModel.goods.setting.guardFreeMonths[idx].year = v
-                                  }
-                                }
-                              "
-                            />
-                            <NSelect
-                              style="flex: 1"
-                              :value="m.month"
-                              :options="allowedMonthOptions"
-                              placeholder="请选择月份"
-                              @update:value="
-                                (v) => {
-                                  if (currentGoodsModel.goods.setting?.guardFreeMonths) {
-                                    currentGoodsModel.goods.setting.guardFreeMonths[idx].month = v
-                                  }
-                                }
-                              "
-                            />
-                            <NButton
-                              type="error"
-                              secondary
-                              @click="
-                                () => {
-                                  if (!currentGoodsModel.goods.setting?.guardFreeMonths) return
-                                  currentGoodsModel.goods.setting.guardFreeMonths.splice(idx, 1)
-                                  if (currentGoodsModel.goods.setting.guardFreeMonths.length === 0) {
-                                    currentGoodsModel.goods.setting.guardFreeMonths = [
-                                      { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
-                                    ]
-                                  }
-                                }
-                              "
-                            >
-                              删除
-                            </NButton>
-                          </NFlex>
-                        </NFlex>
-
-                        <NButton
-                          v-if="currentGoodsModel.goods.setting.guardFreeMonths.length > 0"
-                          secondary
-                          @click="
-                            () => {
-                              if (!currentGoodsModel.goods.setting?.guardFreeMonths) return
-                              currentGoodsModel.goods.setting.guardFreeMonths.push({
-                                year: new Date().getFullYear(),
-                                month: new Date().getMonth() + 1,
-                              })
-                            }
-                          "
-                        >
-                          添加月份
-                        </NButton>
-                      </NFlex>
-
-                      <NText>
-                        最低兑换等级
-                        <NTooltip>
-                          <template #trigger>
-                            <NIcon :component="Info24Filled" />
-                          </template>
-                          仅当
-                          <NButton
-                            type="info"
-                            text
-                            tag="a"
-                            href="/manage/event"
-                            target="_blank"
-                          >
-                            舰长和SC
-                          </NButton>
-                          中存在对应记录时才能生效
-                        </NTooltip>
-                      </NText>
-
-                      <NCheckbox
-                        :checked="Array.isArray(currentGoodsModel.goods.setting?.guardLevelMonths)"
-                        @update:checked="
-                          (v) => {
-                            if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                            }
-                            currentGoodsModel.goods.setting.guardLevelMonths = v
-                              ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                              : undefined
-                          }
-                        "
-                      >
-                        限制最低兑换等级的上舰月份
-                      </NCheckbox>
-
-                      <NFlex
-                        v-if="currentGoodsModel.goods.setting?.guardLevelMonths"
-                        vertical
-                        :gap="8"
-                      >
-                        <NCheckbox
-                          :checked="currentGoodsModel.goods.setting?.guardLevelMonths?.length === 0"
-                          @update:checked="
-                            (v) => {
-                              if (!currentGoodsModel.goods.setting) {
-                                currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                              }
-                              if (!currentGoodsModel.goods.setting.guardLevelMonths) {
-                                currentGoodsModel.goods.setting.guardLevelMonths = []
-                              }
-                              currentGoodsModel.goods.setting.guardLevelMonths = v
-                                ? []
-                                : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                            }
-                          "
-                        >
-                          当前在舰即可
-                        </NCheckbox>
-
-                        <NFlex
-                          v-if="currentGoodsModel.goods.setting.guardLevelMonths.length > 0"
-                          vertical
-                          :gap="8"
-                        >
-                          <NFlex
-                            v-for="(m, idx) in currentGoodsModel.goods.setting.guardLevelMonths"
-                            :key="`${m.year}-${m.month}-${idx}`"
-                            :gap="8"
-                            align="center"
-                          >
-                            <NSelect
-                              style="flex: 1"
-                              :value="m.year"
-                              :options="allowedYearOptions"
-                              placeholder="请选择年份"
-                              @update:value="
-                                (v) => {
-                                  if (currentGoodsModel.goods.setting?.guardLevelMonths) {
-                                    currentGoodsModel.goods.setting.guardLevelMonths[idx].year = v
-                                  }
-                                }
-                              "
-                            />
-                            <NSelect
-                              style="flex: 1"
-                              :value="m.month"
-                              :options="allowedMonthOptions"
-                              placeholder="请选择月份"
-                              @update:value="
-                                (v) => {
-                                  if (currentGoodsModel.goods.setting?.guardLevelMonths) {
-                                    currentGoodsModel.goods.setting.guardLevelMonths[idx].month = v
-                                  }
-                                }
-                              "
-                            />
-                            <NButton
-                              type="error"
-                              secondary
-                              @click="
-                                () => {
-                                  if (!currentGoodsModel.goods.setting?.guardLevelMonths) return
-                                  currentGoodsModel.goods.setting.guardLevelMonths.splice(idx, 1)
-                                  if (currentGoodsModel.goods.setting.guardLevelMonths.length === 0) {
-                                    currentGoodsModel.goods.setting.guardLevelMonths = [
-                                      { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
-                                    ]
-                                  }
-                                }
-                              "
-                            >
-                              删除
-                            </NButton>
-                          </NFlex>
-                        </NFlex>
-
-                        <NButton
-                          v-if="currentGoodsModel.goods.setting.guardLevelMonths.length > 0"
-                          secondary
-                          @click="
-                            () => {
-                              if (!currentGoodsModel.goods.setting?.guardLevelMonths) return
-                              currentGoodsModel.goods.setting.guardLevelMonths.push({
-                                year: new Date().getFullYear(),
-                                month: new Date().getMonth() + 1,
-                              })
-                            }
-                          "
-                        >
-                          添加月份
-                        </NButton>
-                      </NFlex>
-
-                      <NRadioGroup
-                        :value="currentGoodsModel.goods.setting?.allowGuardLevel ?? 0"
-                        @update:value="
-                          (v) => {
-                            if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                            }
-                            currentGoodsModel.goods.setting.allowGuardLevel = v
-                          }
-                        "
-                      >
-                        <NRadioButton :value="0"> 不限 </NRadioButton>
-                        <NRadioButton :value="1"> 总督 </NRadioButton>
-                        <NRadioButton :value="2"> 提督 </NRadioButton>
-                        <NRadioButton :value="3"> 舰长 </NRadioButton>
-                      </NRadioGroup>
-                    </NFlex>
-                  </NCollapseItem>
-                </NCollapse>
-              </NFormItem>
-
-              <!-- 礼物类型特定配置 -->
-              <template v-if="currentGoodsModel.goods.type === GoodsTypes.Physical">
-                <NDivider
-                  title-placement="left"
-                  style="margin: 16px 0"
+                <UCheckbox
+                  :model-value="!currentGoods.goods.setting.guardLevelMonths.length"
+                  label="当前在舰即可"
+                  @update:model-value="
+                    (value) => {
+                      currentGoods.goods.setting.guardLevelMonths = value
+                        ? []
+                        : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
+                    }
+                  "
+                />
+                <div
+                  v-for="(month, index) in currentGoods.goods.setting.guardLevelMonths"
+                  :key="`level-${index}`"
+                  class="inline-field"
                 >
-                  实物礼物配置
-                </NDivider>
-                <NFormItem
-                  path="maxBuyCount"
-                  label="最大兑换数量"
-                >
-                  <NInputNumber
-                    v-model:value="currentGoodsModel.goods.maxBuyCount"
-                    placeholder="必填, 最大兑换数量"
-                    min="1"
+                  <USelect
+                    v-model="month.year"
+                    :items="
+                      Array.from({ length: new Date().getFullYear() - 2023 }, (_, i) => ({
+                        label: `${2024 + i}年`,
+                        value: 2024 + i,
+                      }))
+                    "
+                  /><USelect
+                    v-model="month.month"
+                    :items="Array.from({ length: 12 }, (_, i) => ({ label: `${i + 1}月`, value: i + 1 }))"
+                  /><UButton
+                    color="error"
+                    variant="ghost"
+                    icon="i-lucide-trash-2"
+                    @click="removeMonth('guardLevelMonths', index)"
                   />
-                </NFormItem>
-
-                <NFormItem
-                  path="address"
-                  label="收货地址"
-                  style="margin-bottom: 16px"
-                >
-                  <NFlex
-                    vertical
-                    :gap="8"
-                  >
-                    <NRadioGroup
-                      :value="currentGoodsModel.goods.collectUrl === undefined ? 0 : 1"
-                      @update:value="
-                        (v) => {
-                          if (v === 0) currentGoodsModel.goods.collectUrl = undefined
-                          else
-                            currentGoodsModel.goods.collectUrl =
-                              currentGoodsModel.goods.collectUrl && currentGoodsModel.goods.collectUrl !== ''
-                                ? currentGoodsModel.goods.collectUrl
-                                : 'https://'
-                        }
-                      "
-                    >
-                      <NRadioButton :value="0"> 通过本站收集收货地址 </NRadioButton>
-                      <NRadioButton :value="1">
-                        使用站外链接收集地址
-                        <NTooltip>
-                          <template #trigger>
-                            <NIcon :component="Info24Filled" />
-                          </template>
-                          用腾讯文档等工具收集收货地址
-                        </NTooltip>
-                      </NRadioButton>
-                    </NRadioGroup>
-                  </NFlex>
-                </NFormItem>
-
-                <template v-if="currentGoodsModel.goods.collectUrl !== undefined">
-                  <NFormItem
-                    path="collectUrl"
-                    label="收集链接"
-                  >
-                    <NFlex
-                      vertical
-                      :gap="8"
-                      style="width: 100%"
-                    >
-                      <NInput
-                        v-model:value="currentGoodsModel.goods.collectUrl"
-                        placeholder="用于给用户填写自己收货地址的表格的分享链接"
-                        maxlength="300"
-                      />
-                      <NCheckbox v-model:checked="currentGoodsModel.goods.embedCollectUrl">
-                        尝试将收集链接嵌入到网页中
-                      </NCheckbox>
-                    </NFlex>
-                  </NFormItem>
-                </template>
-                <template v-else>
-                  <NFormItem
-                    path="privacy"
-                    label="隐私协议"
-                    required
-                  >
-                    <NCheckbox v-model:checked="isAllowedPrivacyPolicy"> 同意本站隐私协议 </NCheckbox>
-                  </NFormItem>
-                </template>
-              </template>
-              <template v-else>
-                <NDivider
-                  title-placement="left"
-                  style="margin: 16px 0"
-                >
-                  虚拟礼物配置
-                </NDivider>
-                <NFormItem
-                  path="keySelectionMode"
-                  label="密钥选择模式"
-                >
-                  <NRadioGroup v-model:value="currentGoodsModel.goods.keySelectionMode">
-                    <NRadioButton :value="KeySelectionMode.None"> 不使用 </NRadioButton>
-                    <NRadioButton :value="KeySelectionMode.Random"> 随机选择 </NRadioButton>
-                    <NRadioButton :value="KeySelectionMode.Sequential"> 顺序选择 </NRadioButton>
-                  </NRadioGroup>
-                </NFormItem>
-                <!-- 添加多Key支持配置 -->
-                <NFormItem
-                  v-if="currentGoodsModel.goods.keySelectionMode !== KeySelectionMode.None"
-                  path="virtualKeys"
-                  label="礼物密钥列表 (可选)"
-                >
-                  <template #label>
-                    礼物密钥列表
-                    <NTooltip>
-                      <template #trigger>
-                        <NIcon :component="Info24Filled" />
-                      </template>
-                      添加多个密钥，用户购买时会根据选择模式分配一个密钥. 可以留空
-                    </NTooltip>
-                  </template>
-                  <NFlex
-                    vertical
-                    :gap="8"
-                  >
-                    <NDynamicTags
-                      v-model:value="currentGoodsModel.goods.virtualKeys"
-                      placeholder="输入密钥后按Enter添加"
-                    />
-                    <NText
-                      depth="3"
-                      style="margin-top: 4px; display: block"
-                    >
-                      已添加 {{ (currentGoodsModel.goods.virtualKeys || []).length }} 个密钥
-                    </NText>
-                  </NFlex>
-                </NFormItem>
-
-                <NFormItem
-                  path="content"
-                  required
-                  style="margin-bottom: 16px"
-                >
-                  <template #label>
-                    礼物内容
-                    <NTooltip>
-                      <template #trigger>
-                        <NIcon :component="Info24Filled" />
-                      </template>
-                      虚拟礼物的具体内容，可使用 {key} 作为占位符
-                    </NTooltip>
-                  </template>
-                  <NInput
-                    v-model:value="currentGoodsModel.goods.content"
-                    type="textarea"
-                    placeholder="写这里咯，可使用 {key} 作为占位符，购买时会自动替换为上面密钥列表中的一个"
-                    maxlength="10000"
-                    show-count
-                    clearable
-                  />
-                </NFormItem>
-              </template>
-            </NTabPane>
-          </NTabs>
-        </NForm>
-        <!-- 添加一个底部间距，让滚动更自然 -->
-        <div style="height: 16px" />
-      </NScrollbar>
-    </div>
-    <template #footer>
-      <NFlex
-        justify="end"
-        :gap="12"
-      >
-        <NButton
-          secondary
-          size="large"
-          :disabled="isUpdating || isUploadingCover"
-          @click="showAddGoodsModal = false"
+                </div>
+                <UButton
+                  size="sm"
+                  color="neutral"
+                  variant="soft"
+                  label="添加月份"
+                  @click="addMonth('guardLevelMonths')"
+                />
+              </div>
+              <UFormField label="最低兑换等级"
+                ><URadioGroup
+                  v-model="currentGoods.goods.setting.allowGuardLevel"
+                  :items="[
+                    { label: '不限', value: 0 },
+                    { label: '总督', value: 1 },
+                    { label: '提督', value: 2 },
+                    { label: '舰长', value: 3 },
+                  ]"
+              /></UFormField>
+            </div>
+          </details>
+          <template v-if="currentGoods.goods.type === GoodsTypes.Physical"
+            ><USeparator label="实物礼物配置" />
+            <div class="form-grid">
+              <UFormField label="最大兑换数量"
+                ><UInputNumber
+                  v-model="currentGoods.goods.maxBuyCount"
+                  :min="1" /></UFormField
+              ><UFormField label="收货地址"
+                ><URadioGroup
+                  :model-value="currentGoods.goods.collectUrl === undefined ? 0 : 1"
+                  :items="[
+                    { label: '通过本站收集', value: 0 },
+                    { label: '使用站外链接', value: 1 },
+                  ]"
+                  @update:model-value="
+                    (value) =>
+                      (currentGoods.goods.collectUrl =
+                        value === 0 ? undefined : currentGoods.goods.collectUrl || 'https://')
+                  " /></UFormField
+              ><UFormField
+                v-if="currentGoods.goods.collectUrl !== undefined"
+                label="收集链接"
+                ><UInput v-model="currentGoods.goods.collectUrl" /><UCheckbox
+                  v-model="currentGoods.goods.embedCollectUrl"
+                  label="尝试将链接嵌入网页" /></UFormField
+              ><UCheckbox
+                v-else
+                v-model="isAllowedPrivacyPolicy"
+                label="同意本站隐私协议"
+              /></div></template
+          ><template v-else
+            ><USeparator label="虚拟礼物配置" />
+            <div class="form-grid">
+              <UFormField label="密钥选择模式"
+                ><URadioGroup
+                  v-model="currentGoods.goods.keySelectionMode"
+                  :items="[
+                    { label: '不使用', value: KeySelectionMode.None },
+                    { label: '随机选择', value: KeySelectionMode.Random },
+                    { label: '顺序选择', value: KeySelectionMode.Sequential },
+                  ]" /></UFormField
+              ><UFormField
+                v-if="currentGoods.goods.keySelectionMode !== KeySelectionMode.None"
+                label="礼物密钥列表"
+                ><UInputTags v-model="currentGoods.goods.virtualKeys" /></UFormField
+              ><UFormField
+                label="礼物内容"
+                required
+                ><UTextarea
+                  v-model="currentGoods.goods.content"
+                  :rows="6"
+                  :maxlength="10000"
+                  placeholder="可使用 {key} 作为占位符"
+              /></UFormField></div
+          ></template>
+        </section>
+        <section
+          v-else
+          class="editor-section"
         >
-          取消
-        </NButton>
-        <NButton
-          type="primary"
-          size="large"
-          :loading="isUpdating || isUploadingCover"
-          :disabled="isUploadingCover"
-          @click="updateGoods"
-        >
-          <span v-if="isUploadingCover">正在上传封面...</span>
-          <span v-else>{{ currentGoodsModel.goods.id ? '修改' : '创建' }}</span>
-        </NButton>
-      </NFlex>
-    </template>
-  </NModal>
+          <UAlert
+            color="info"
+            title="高级设置"
+            description="商品状态会在保存后生效。下架和删除使用礼物卡片上的操作。"
+          /><UCheckbox
+            v-model="currentGoods.goods.isPinned"
+            label="置顶显示"
+          />
+        </section></div></template
+    ><template #footer
+      ><div class="modal-actions">
+        <UButton
+          color="neutral"
+          variant="soft"
+          label="取消"
+          :disabled="isUpdating"
+          @click="showGoodsModal = false"
+        /><UButton
+          icon="i-lucide-save"
+          :label="currentGoods.goods.id ? '保存修改' : '创建礼物'"
+          :loading="isUpdating"
+          @click="saveGoods"
+        /></div></template
+  ></UModal>
+  <UModal
+    :open="confirmAction !== null"
+    :title="confirmAction?.kind === 'delete' ? '删除礼物' : '更新礼物状态'"
+    @update:open="(open) => !open && (confirmAction = null)"
+    ><template #body>{{
+      confirmAction?.kind === 'delete'
+        ? '确认删除这个礼物？此操作不可恢复。'
+        : `确认${confirmAction?.status === GoodsStatus.Normal ? '重新上架' : '下架'}这个礼物？`
+    }}</template
+    ><template #footer
+      ><div class="modal-actions">
+        <UButton
+          color="neutral"
+          variant="soft"
+          label="取消"
+          @click="confirmAction = null"
+        /><UButton
+          :color="confirmAction?.kind === 'delete' ? 'error' : 'primary'"
+          label="确认"
+          @click="executeConfirmAction"
+        /></div></template
+  ></UModal>
 </template>
 
 <style scoped>
-.point-goods-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.status-strip,
+.goods-page,
+.goods-editor,
+.editor-section,
+.settings-stack,
+.month-stack {
+  display: grid;
+  gap: 16px;
 }
-
-.point-goods-card :deep(.n-card-header) {
-  padding: 16px;
+.status-strip {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
 }
-
-.point-goods-card :deep(.n-card-content) {
-  padding: 16px;
-  flex-grow: 1;
+.main-tabs {
+  margin: 16px 0;
 }
-
-.point-goods-card :deep(.n-card-footer) {
-  padding: 12px 16px;
-}
-
-.goods-modal :deep(.n-card-header) {
-  padding: 16px 20px;
-}
-
-.goods-modal :deep(.n-card-content) {
-  padding: 0 20px 8px;
-}
-
-.goods-modal :deep(.n-card-footer) {
-  padding: 12px 20px 16px;
-  border-top: 1px solid var(--vtsuru-border);
-  background-color: var(--vtsuru-bg-inset);
-}
-
-.scrollable-container {
-  position: relative;
-  background-color: transparent;
-  border: none;
-  border-radius: var(--vtsuru-radius);
-  margin: 0;
-}
-
-.goods-scrollbar {
-  padding: 0;
-  border-radius: 0;
-  background-color: transparent;
-}
-
-.goods-scrollbar :deep(.n-scrollbar-rail) {
-  right: 0;
-}
-
-.goods-scrollbar :deep(.n-scrollbar-content) {
-  padding: 12px 0 8px;
-}
-
-.goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card) {
-  width: 104px;
-  height: 104px;
+.page-actions,
+.goods-actions,
+.goods-actions > div,
+.sub-toolbar,
+.sub-toolbar > div,
+.sub-head,
+.sub-head > div,
+.inline-field,
+.modal-actions {
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.goods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+}
+.goods-actions {
+  display: grid;
+  gap: 8px;
+}
+.goods-actions span {
+  color: var(--vtsuru-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.goods-actions > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.goods-actions :deep(.u-button) {
   justify-content: center;
 }
-
-.manage-sub-item-card {
-  margin-bottom: 12px;
+.goods-editor {
+  max-height: 70vh;
+  overflow: auto;
+  padding-right: 4px;
+}
+.editor-section {
+  padding-top: 16px;
+}
+.form-grid {
+  display: grid;
+  gap: 14px;
+}
+.form-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.cover-preview {
+  display: block;
+  width: 112px;
+  height: 112px;
+  border: 1px solid var(--vtsuru-border);
+  object-fit: cover;
+}
+.sub-toolbar,
+.sub-head {
+  justify-content: space-between;
+}
+.sub-item {
+  display: grid;
+  gap: 14px;
   padding: 16px;
   border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-bg-surface);
-  transition: all 0.3s var(--vtsuru-bezier);
+  background: var(--vtsuru-bg-muted);
 }
-
-.manage-sub-item-card:hover {
-  border-color: var(--vtsuru-primary);
-  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
+.nested {
+  margin-top: 14px;
+}
+.muted {
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+}
+.modal-actions {
+  justify-content: flex-end;
+}
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+@media (max-width: 720px) {
+  .status-strip {
+    grid-template-columns: 1fr;
+  }
+  .form-grid.two {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NResult, NText } from 'naive-ui'
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -131,20 +130,20 @@ const contentClass = computed(() => ({
           class="page-heading"
           :style="{ maxWidth: contentMaxWidth }"
         >
-          <NText
+          <span
             v-if="pageConfig.title"
             tag="h1"
             class="page-heading__title"
           >
             {{ pageConfig.title }}
-          </NText>
-          <NText
+          </span>
+          <span
             v-if="pageConfig.description"
             depth="3"
             class="page-heading__summary"
           >
             {{ pageConfig.description }}
-          </NText>
+          </span>
         </header>
 
         <DefaultIndexTemplate
@@ -154,11 +153,11 @@ const contentClass = computed(() => ({
         />
 
         <template v-else-if="renderMode === 'block'">
-          <NResult
+          <UEmpty
             v-if="blockValidation && !blockValidation.ok"
-            status="error"
             title="页面配置错误"
             description="该页面的发布配置无效，请联系页面所有者处理"
+            class="public-empty"
           />
           <BlockPageRenderer
             v-else-if="blockValidation?.ok && mergedBlockProject"
@@ -177,21 +176,21 @@ const contentClass = computed(() => ({
           :bili-info="biliInfo"
         />
 
-        <NResult
+        <UEmpty
           v-else-if="pageSlug"
-          status="404"
           title="页面不存在"
           description="该主播未配置此页面"
+          class="public-empty"
         >
           <template #footer>
-            <NButton
-              type="primary"
+            <UButton
+              color="primary"
               @click="$router.push({ name: 'user-index', params: { id: route.params.id } })"
             >
               返回主页
-            </NButton>
+            </UButton>
           </template>
-        </NResult>
+        </UEmpty>
       </main>
     </div>
   </div>

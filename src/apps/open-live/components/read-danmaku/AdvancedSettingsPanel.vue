@@ -1,16 +1,4 @@
 <script setup lang="ts">
-import {
-  NCheckbox,
-  NDivider,
-  NFlex,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NSelect,
-  NSlider,
-  NText,
-} from 'naive-ui'
-
 import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from './SectionField.vue'
@@ -40,95 +28,98 @@ const queueStrategyOptions = [
 <template>
   <div class="panel">
     <SectionField label="音频输出设备">
-      <NSelect
-        v-model:value="settings.outputDeviceId"
-        :options="audioOutputDevices"
+      <USelectMenu
+        v-model="settings.outputDeviceId"
+        :items="audioOutputDevices"
         :loading="audioOutputDevicesLoading"
         size="small"
         @update:value="emit('deviceChange')"
+        value-key="value"
       />
     </SectionField>
 
-    <NDivider style="margin: 4px 0" />
+    <USeparator style="margin: 4px 0" />
 
     <SectionField label="礼物合并">
-      <NFlex
+      <div
         align="center"
         :size="8"
       >
-        <NCheckbox
-          :checked="settings.combineGiftDelay != null"
-          @update:checked="(c: boolean) => (settings.combineGiftDelay = c ? 2 : undefined)"
+        <UCheckbox
+          :model-value="settings.combineGiftDelay != null"
+          @update:model-value="(c: boolean) => (settings.combineGiftDelay = c ? 2 : undefined)"
         >
-          <NText style="font-size: 12px"> 启用 </NText>
-        </NCheckbox>
-        <NInputGroup
+          <span style="font-size: 12px"> 启用 </span>
+        </UCheckbox>
+        <div
           v-if="settings.combineGiftDelay != null"
           size="small"
           style="max-width: 180px"
         >
-          <NInputGroupLabel size="small"> 间隔(秒) </NInputGroupLabel>
-          <NInputNumber
-            v-model:value="settings.combineGiftDelay"
+          <span size="small"> 间隔(秒) </span>
+          <UInputNumber
+            v-model="settings.combineGiftDelay"
             :min="1"
             :max="10"
             size="small"
           />
-        </NInputGroup>
-      </NFlex>
+        </div>
+      </div>
     </SectionField>
 
     <SectionField
       label="优先级插队"
       hint="这些事件类型会插到队列最前面"
     >
-      <NSelect
-        v-model:value="settings.priorityEvents"
-        :options="eventOptions"
+      <USelectMenu
+        v-model="settings.priorityEvents"
+        :items="eventOptions"
         multiple
         size="small"
         placeholder="选择优先事件类型"
+        value-key="value"
       />
     </SectionField>
 
-    <NDivider style="margin: 4px 0" />
+    <USeparator style="margin: 4px 0" />
 
     <SectionField label="提示音">
-      <NFlex
+      <div
         vertical
         :size="8"
       >
-        <NCheckbox v-model:checked="settings.notificationSound.enabled">
-          <NText style="font-size: 12px"> 播报前播放提示音 </NText>
-        </NCheckbox>
+        <UCheckbox v-model="settings.notificationSound.enabled">
+          <span style="font-size: 12px"> 播报前播放提示音 </span>
+        </UCheckbox>
         <template v-if="settings.notificationSound.enabled">
-          <NSelect
-            v-model:value="settings.notificationSound.events"
-            :options="eventOptions"
+          <USelectMenu
+            v-model="settings.notificationSound.events"
+            :items="eventOptions"
             multiple
             size="small"
             placeholder="哪些事件触发提示音"
+            value-key="value"
           />
           <SectionField
             label="提示音音量"
             :value="`${(settings.notificationSound.volume * 100).toFixed(0)}%`"
           >
-            <NSlider
-              v-model:value="settings.notificationSound.volume"
+            <USlider
+              v-model="settings.notificationSound.volume"
               :min="0"
               :max="1"
               :step="0.05"
             />
           </SectionField>
         </template>
-      </NFlex>
+      </div>
     </SectionField>
 
-    <NDivider style="margin: 4px 0" />
+    <USeparator style="margin: 4px 0" />
 
     <SectionField label="队列上限">
-      <NInputNumber
-        v-model:value="settings.maxQueueSize"
+      <UInputNumber
+        v-model="settings.maxQueueSize"
         :min="10"
         :max="200"
         size="small"
@@ -137,11 +128,12 @@ const queueStrategyOptions = [
     </SectionField>
 
     <SectionField label="队列满时策略">
-      <NSelect
-        v-model:value="settings.queueFullStrategy"
-        :options="queueStrategyOptions"
+      <USelectMenu
+        v-model="settings.queueFullStrategy"
+        :items="queueStrategyOptions"
         size="small"
         style="max-width: 180px"
+        value-key="value"
       />
     </SectionField>
   </div>

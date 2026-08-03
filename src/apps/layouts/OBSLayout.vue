@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { NSpin } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { useEventBus } from '@vueuse/core'
 
 import { useAccount } from '@/api/account'
 import { useOBSNotification } from '@/store/useOBSNotification'
 import { useWebFetcher } from '@/store/useWebFetcher'
+import { obsUpdateEventKey } from '@/app/events'
 
 const timer = ref<any>()
 const visible = ref(true)
@@ -12,15 +14,15 @@ const active = ref(true)
 const webfetcher = useWebFetcher()
 const accountInfo = useAccount()
 const _obsNotification = useOBSNotification()
+const route = useRoute()
+const obsUpdateBus = useEventBus(obsUpdateEventKey)
 
-const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : window.$route.query.code?.toString()
+const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : route.query.code?.toString()
 
 const transparentTargets = [
   () => document.documentElement,
   () => document.body,
   () => document.getElementById('app'),
-  () => document.querySelector('.n-layout-content'),
-  () => document.querySelector('.n-element'),
   () => document.querySelector('.obs-container'),
 ] as const
 
@@ -50,7 +52,7 @@ function restoreTransparentBackgrounds() {
 onMounted(async () => {
   timer.value = setInterval(() => {
     if (!visible.value || !active.value) return
-    window.$mitt.emit('onOBSComponentUpdate')
+    obsUpdateBus.emit()
   }, 1000)
 
   if (accountInfo.value.id) {
@@ -90,7 +92,12 @@ onUnmounted(() => {
             :code="code"
           />
           <template #fallback>
-            <NSpin show />
+            <div class="obs-loading">
+              <UIcon
+                name="i-lucide-loader-circle"
+                class="size-6 animate-spin"
+              />
+            </div>
           </template>
         </Suspense>
       </KeepAlive>
@@ -108,6 +115,13 @@ onUnmounted(() => {
   height: 100vh;
   overflow: hidden;
   position: relative;
+}
+
+.obs-loading {
+  display: grid;
+  height: 100vh;
+  place-items: center;
+  color: var(--vtsuru-fg-muted);
 }
 
 /* 确保OBS中不出现滚动条 */

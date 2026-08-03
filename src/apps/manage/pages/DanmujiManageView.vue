@@ -19,8 +19,8 @@ import {
   NSwitch,
   NTabPane,
   NTabs,
-  useMessage,
 } from 'naive-ui'
+import { showInfoToast, showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
@@ -36,7 +36,6 @@ import { isDarkMode } from '@/shared/utils'
 const accountInfo = useAccount()
 const css = usePersistedStorage('danmuji-css', defaultDanmujiCss)
 const danmujiObsRef = ref<InstanceType<typeof DanmujiOBS> | null>(null)
-const message = useMessage()
 const windowWidth = useWindowSize().width
 
 const testFormData = reactive({
@@ -159,7 +158,7 @@ function resetConfigToDefault() {
 
     emoticons: [],
   }
-  message.success('配置已重置为默认值')
+  showSuccessToast('配置已重置为默认值')
 }
 
 // 随机生成测试弹幕内容
@@ -497,13 +496,13 @@ async function downloadConfigFromServer() {
   const result = await DownloadConfig<DanmujiConfig>('danmuji-config')
   if (result.status === 'success' && result.data) {
     danmujiConfig.value = result.data
-    message.success('已从服务器获取弹幕姬配置')
+    showSuccessToast('已从服务器获取弹幕姬配置')
     return true
   } else if (result.status === 'notfound') {
-    // message.info('服务器上未找到弹幕姬配置，将使用本地配置');
+    // showInfoToast('服务器上未找到弹幕姬配置，将使用本地配置');
     uploadConfigToServer()
   } else {
-    message.error(`获取配置失败: ${result.msg}`)
+    showErrorToast(`获取配置失败: ${result.msg}`)
   }
   return false
 }
@@ -536,18 +535,18 @@ onUnmounted(() => {
 async function uploadConfigToServer() {
   const result = await UploadConfig('danmuji-config', danmujiConfig.value)
   if (result) {
-    message.success('弹幕姬配置已上传到服务器')
+    showSuccessToast('弹幕姬配置已上传到服务器')
   } else {
-    message.error('上传弹幕姬配置失败')
+    showErrorToast('上传弹幕姬配置失败')
   }
 }
 
 async function copyText(text: string, successMessage: string) {
   try {
     await navigator.clipboard.writeText(text)
-    message.success(successMessage)
+    showSuccessToast(successMessage)
   } catch {
-    message.error('复制失败，请手动复制')
+    showErrorToast('复制失败，请手动复制')
   }
 }
 

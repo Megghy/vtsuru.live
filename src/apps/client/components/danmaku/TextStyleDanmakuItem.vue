@@ -70,38 +70,38 @@ const {
       >{{ setting.textStyleNameSeparator }}</span
     >
 
-    <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
-      <template #trigger>
-        <span
-          class="mystery-box-text-mode"
-          :style="{ color: textModeColor }"
-          >盲盒 ￥{{ giftDisplay.mysteryBoxPriceText }}</span
-        >
+    <UTooltip v-if="giftDisplay.hasMysteryBoxGift">
+      <span
+        class="mystery-box-text-mode"
+        :style="{ color: textModeColor }"
+        >盲盒 ￥{{ giftDisplay.mysteryBoxPriceText }}</span
+      >
+      <template #content>
+        <div class="mystery-box-text-tooltip">
+          <div
+            v-if="giftDisplay.mysteryBoxName"
+            class="mystery-box-text-tooltip__row"
+          >
+            <span class="mystery-box-text-tooltip__label">来源</span>
+            <span class="mystery-box-text-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
+          </div>
+          <div
+            v-if="giftDisplay.mysteryBoxPriceText"
+            class="mystery-box-text-tooltip__row"
+          >
+            <span class="mystery-box-text-tooltip__label">盲盒价</span>
+            <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+          </div>
+          <div
+            v-if="giftDisplay.giftPriceText"
+            class="mystery-box-text-tooltip__row"
+          >
+            <span class="mystery-box-text-tooltip__label">开出价</span>
+            <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
+          </div>
+        </div>
       </template>
-      <div class="mystery-box-text-tooltip">
-        <div
-          v-if="giftDisplay.mysteryBoxName"
-          class="mystery-box-text-tooltip__row"
-        >
-          <span class="mystery-box-text-tooltip__label">来源</span>
-          <span class="mystery-box-text-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
-        </div>
-        <div
-          v-if="giftDisplay.mysteryBoxPriceText"
-          class="mystery-box-text-tooltip__row"
-        >
-          <span class="mystery-box-text-tooltip__label">盲盒价</span>
-          <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
-        </div>
-        <div
-          v-if="giftDisplay.giftPriceText"
-          class="mystery-box-text-tooltip__row"
-        >
-          <span class="mystery-box-text-tooltip__label">开出价</span>
-          <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
-        </div>
-      </div>
-    </NTooltip>
+    </UTooltip>
 
     <!-- 价格信息(如果有) -->
     <span

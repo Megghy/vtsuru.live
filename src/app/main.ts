@@ -1,3 +1,4 @@
+import ui from '@nuxt/ui/vue-plugin'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 // @ts-expect-error vue3-konva types
@@ -6,7 +7,7 @@ import VueKonva from 'vue3-konva'
 import { initPersistedStorage } from '@/shared/storage/persist'
 
 import App from './App.vue'
-import emitter from './mitt'
+import './main.css'
 import router from './router'
 
 // Monaco 的 worker 在编辑器组件中懒加载配置
@@ -18,7 +19,7 @@ async function bootstrapApp() {
   await initPersistedStorage()
 
   const app = createApp(App)
-  app.use(router).use(pinia).use(VueKonva).mount('#app')
+  app.use(router).use(pinia).use(VueKonva).use(ui).mount('#app')
 
   // 将初始化逻辑改为异步按需加载，避免把其依赖打入入口
   void import('@/app/bootstrap').then((m) => m.InitVTsuru())
@@ -35,8 +36,6 @@ async function bootstrapApp() {
       })
     })
   }
-
-  window.$mitt = emitter
 }
 
 void bootstrapApp()

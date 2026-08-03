@@ -1,14 +1,4 @@
 <script setup lang="ts">
-import {
-  AlertCircleOutline,
-  ChevronForwardOutline,
-  EllipsisHorizontalOutline,
-  EyeOffOutline,
-  EyeOutline,
-  LocateOutline,
-  ReorderThreeOutline,
-} from '@vicons/ionicons5'
-import { NButton, NDropdown, NIcon, NText, NTooltip } from 'naive-ui'
 import { computed, inject } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -52,9 +42,16 @@ const blocksModel = computed({
   },
 })
 
-const iconMap = new Map(BLOCK_LIBRARY.map((it) => [it.type, it.icon]))
-function getIcon(type: BlockNode['type']) {
-  return iconMap.get(type)
+function getIcon(_type: BlockNode['type']) {
+  return 'i-lucide-blocks'
+}
+
+function bindBlockActions(items: any[], blockId: string): any[] {
+  return items.map((item) => ({
+    ...item,
+    children: item.children ? bindBlockActions(item.children, blockId) : undefined,
+    onSelect: item.key && item.type !== 'separator' ? () => props.onBlockAction(String(item.key), blockId) : undefined,
+  }))
 }
 
 function getLayoutChildrenModel(layout: BlockNode): BlockNode[] {
@@ -158,8 +155,7 @@ function scrollToPreviewBlock(blockId: string) {
     return
   }
 
-  const scrollbar = previewRoot.closest('.n-scrollbar') as HTMLElement | null
-  const container = (scrollbar?.querySelector?.('.n-scrollbar-container') as HTMLElement | null) ?? null
+  const container = previewRoot.closest<HTMLElement>('.builder-scroll')
   if (!container) {
     el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
     return
@@ -260,36 +256,33 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
           :style="{ width: indentWidth }"
         />
 
-        <NIcon
+        <UIcon
           v-if="b.type === 'layout'"
           class="expand-toggle"
           :class="{ expanded: props.expandedLayoutIdSet.has(b.id) }"
           size="16"
           title="折叠/展开"
           @click.stop="props.onToggleExpanded(b.id)"
-        >
-          <ChevronForwardOutline />
-        </NIcon>
+          name="i-lucide-chevron-right"
+        />
         <div
           v-else
           class="expand-placeholder"
         />
 
-        <NIcon
+        <UIcon
           class="drag-handle"
           size="18"
           title="拖拽排序：靠近上下边缘；拖到区块中间松开：成组/加入组"
-        >
-          <ReorderThreeOutline />
-        </NIcon>
+          name="i-lucide-grip-vertical"
+        />
 
-        <NIcon
+        <UIcon
           v-if="getIcon(b.type)"
           class="type-icon"
           size="16"
-        >
-          <component :is="getIcon(b.type)!" />
-        </NIcon>
+          :name="getIcon(b.type)!"
+        />
         <div
           v-else
           class="type-icon-placeholder"
@@ -299,101 +292,86 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
           <span class="truncate-text">
             {{ getDisplayTitle(b) }}
           </span>
-          <NText
+          <span
             v-if="b.name && b.name.trim().length"
-            depth="3"
-            class="type-hint"
+            class="builder-text type-hint"
           >
             {{ getBlockLabel(b.type) }}
-          </NText>
-          <NText
+          </span>
+          <span
+            class="builder-text"
             v-if="b.type === 'layout'"
-            depth="3"
             style="margin-left: 6px; font-size: 12px"
           >
             ({{ getLayoutChildrenModel(b).length }})
-          </NText>
+          </span>
         </div>
 
         <Transition name="fade-scale">
-          <NText
+          <span
             v-if="props.dragGroupTargetId === b.id"
-            depth="3"
-            class="drag-group-hint"
+            class="builder-text drag-group-hint"
           >
             {{ props.dragGroupTargetMode === 'into-layout' ? '松开加入组' : '松开成组' }}
-          </NText>
+          </span>
         </Transition>
 
-        <NIcon
+        <UIcon
           v-if="props.invalidSet.has(b.id)"
           size="18"
           title="该区块配置有误"
           style="color: var(--vtsuru-error, #d03050)"
+          name="i-lucide-circle-alert"
+        />
+
+        <UTooltip>
+          <UButton
+            variant="ghost"
+            square
+            size="xs"
+            :color="b.hidden ? 'default' : 'primary'"
+            :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
+            @click.stop="b.hidden = !b.hidden"
+          >
+            <template #icon>
+              <UIcon :name="b.hidden ? 'i-lucide-eye-off' : 'i-lucide-eye'" />
+            </template>
+          </UButton>
+
+          <template #content>{{ b.hidden ? '显示区块' : '隐藏区块' }}</template>
+        </UTooltip>
+
+        <UTooltip>
+          <UButton
+            variant="ghost"
+            square
+            size="xs"
+            aria-label="在预览中定位"
+            @click.stop="scrollToPreviewBlock(b.id)"
+          >
+            <template #icon>
+              <UIcon name="i-lucide-locate-fixed" />
+            </template>
+          </UButton>
+          <template #content> 在预览中定位 </template></UTooltip
         >
-          <AlertCircleOutline />
-        </NIcon>
 
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="tiny"
-              :type="b.hidden ? 'default' : 'primary'"
-              :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
-              @click.stop="b.hidden = !b.hidden"
+        <UTooltip>
+          <UDropdownMenu :items="bindBlockActions(props.blockActionOptions, b.id)">
+            <UButton
+              variant="ghost"
+              square
+              size="xs"
+              aria-label="更多区块操作"
+              @click.stop
             >
               <template #icon>
-                <NIcon>
-                  <EyeOutline v-if="!b.hidden" />
-                  <EyeOffOutline v-else />
-                </NIcon>
+                <UIcon name="i-lucide-ellipsis" />
               </template>
-            </NButton>
-          </template>
-          {{ b.hidden ? '显示区块' : '隐藏区块' }}
-        </NTooltip>
-
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="tiny"
-              aria-label="在预览中定位"
-              @click.stop="scrollToPreviewBlock(b.id)"
-            >
-              <template #icon>
-                <NIcon><LocateOutline /></NIcon>
-              </template>
-            </NButton>
-          </template>
-          在预览中定位
-        </NTooltip>
-
-        <NTooltip>
-          <template #trigger>
-            <NDropdown
-              trigger="click"
-              :options="props.blockActionOptions"
-              @select="(key) => props.onBlockAction(String(key), b.id)"
-            >
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                aria-label="更多区块操作"
-                @click.stop
-              >
-                <template #icon>
-                  <NIcon><EllipsisHorizontalOutline /></NIcon>
-                </template>
-              </NButton>
-            </NDropdown>
-          </template>
-          更多区块操作
-        </NTooltip>
+            </UButton>
+          </UDropdownMenu>
+          <template #content> 更多区块操作 </template></UTooltip
+        >
       </div>
 
       <Transition

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -12,250 +10,246 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
 </script>
 
 <template>
-  <NForm
+  <div
+    class="builder-form"
     v-if="props.block.type === 'liveStatus'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="样式">
-        <NSelect
-          v-model:value="blockProps.variant"
-          :options="[
+      <UFormField label="样式">
+        <USelect
+          v-model="blockProps.variant"
+          :items="[
             { label: '大卡片', value: 'card' },
             { label: '紧凑', value: 'compact' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="显示标题">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showTitle"
+      </UFormField>
+      <UFormField label="显示标题">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showTitle"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示分区">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showArea"
+        </div>
+      </UFormField>
+      <UFormField label="显示分区">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showArea"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示封面">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showCover"
+        </div>
+      </UFormField>
+      <UFormField label="显示封面">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showCover"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示按钮">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showButtons"
+        </div>
+      </UFormField>
+      <UFormField label="显示按钮">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showButtons"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
+        </div>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'streamSchedule'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem
+      <UFormField
         v-if="propertyAvailable('layout')"
         label="布局"
       >
-        <NSelect
-          v-model:value="blockProps.layout"
-          :options="[
+        <USelect
+          v-model="blockProps.layout"
+          :items="[
             { label: '列表', value: 'list' },
             { label: '表格', value: 'table' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="展示周数 1~8">
-        <NInputNumber
-          v-model:value="blockProps.weeksCount"
+      </UFormField>
+      <UFormField label="展示周数 1~8">
+        <UInputNumber
+          v-model="blockProps.weeksCount"
           :min="1"
           :max="8"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="显示订阅(ICS)">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showIcs"
+      </UFormField>
+      <UFormField label="显示订阅(ICS)">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showIcs"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="高亮今天">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.highlightToday"
+        </div>
+      </UFormField>
+      <UFormField label="高亮今天">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.highlightToday"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示标签">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showTag"
+        </div>
+      </UFormField>
+      <UFormField label="显示标签">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showTag"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
+        </div>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'biliInfo'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="样式">
-        <NSelect
-          v-model:value="blockProps.variant"
-          :options="[
+      <UFormField label="样式">
+        <USelect
+          v-model="blockProps.variant"
+          :items="[
             { label: '大卡片', value: 'card' },
             { label: '紧凑', value: 'compact' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="显示头像">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showAvatar"
+      </UFormField>
+      <UFormField label="显示头像">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showAvatar"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示昵称">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showName"
+        </div>
+      </UFormField>
+      <UFormField label="显示昵称">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showName"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示签名">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showSign"
+        </div>
+      </UFormField>
+      <UFormField label="显示签名">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showSign"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示统计">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showStats"
+        </div>
+      </UFormField>
+      <UFormField label="显示统计">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showStats"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示按钮">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showButtons"
+        </div>
+      </UFormField>
+      <UFormField label="显示按钮">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showButtons"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('showLiveRoom')"
         label="显示直播间按钮"
       >
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showLiveRoom"
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showLiveRoom"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('spaceUrl')"
         class="span-full"
         label="个人主页链接"
       >
-        <NInput
-          v-model:value="blockProps.spaceUrl"
+        <UInput
+          v-model="blockProps.spaceUrl"
           placeholder="https://space.bilibili.com/..."
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'videoList'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="数据源">
-        <NSelect
-          v-model:value="blockProps.source"
-          :options="[
+      <UFormField label="数据源">
+        <USelect
+          v-model="blockProps.source"
+          :items="[
             { label: '手动列表', value: 'manual' },
             { label: '用户主页数据 - 近期视频', value: 'userIndex' },
           ]"
         />
-      </NFormItem>
-      <NFormItem label="布局">
-        <NSelect
-          v-model:value="blockProps.layout"
-          :options="[
+      </UFormField>
+      <UFormField label="布局">
+        <USelect
+          v-model="blockProps.layout"
+          :items="[
             { label: '网格', value: 'grid' },
             { label: '横向滚动', value: 'row' },
           ]"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('columns')"
         label="网格列数"
       >
-        <NInputNumber
-          v-model:value="blockProps.columns"
+        <UInputNumber
+          v-model="blockProps.columns"
           :min="1"
           :max="6"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="最多数量">
-        <NInputNumber
-          v-model:value="blockProps.maxItems"
+      </UFormField>
+      <UFormField label="最多数量">
+        <UInputNumber
+          v-model="blockProps.maxItems"
           :min="1"
           :max="50"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="显示标题栏">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showTitle"
+      </UFormField>
+      <UFormField label="显示标题栏">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.showTitle"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('title')"
         class="span-full"
         label="标题"
       >
-        <NInput
-          v-model:value="blockProps.title"
+        <UInput
+          v-model="blockProps.title"
           placeholder="例如：最近视频"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('items')"
         class="span-full"
         label="手动视频列表"
@@ -270,69 +264,68 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="标题">
-                <NInput
-                  v-model:value="item.title"
+              <UFormField label="标题">
+                <UInput
+                  v-model="item.title"
                   placeholder="可选"
                 />
-              </NFormItem>
-              <NFormItem label="链接">
-                <NInput
-                  v-model:value="item.url"
+              </UFormField>
+              <UFormField label="链接">
+                <UInput
+                  v-model="item.url"
                   placeholder="https://..."
                 />
-              </NFormItem>
+              </UFormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
+    class="builder-form"
     v-else-if="props.block.type === 'musicPlayer'"
-    label-placement="top"
-    size="small"
   >
     <PropsGrid>
-      <NFormItem label="平台">
-        <NSelect
-          v-model:value="blockProps.provider"
-          :options="[
+      <UFormField label="平台">
+        <USelect
+          v-model="blockProps.provider"
+          :items="[
             { label: 'netease', value: 'netease' },
             { label: 'spotify', value: 'spotify' },
             { label: 'custom', value: 'custom' },
           ]"
         />
-      </NFormItem>
-      <NFormItem
+      </UFormField>
+      <UFormField
         v-if="propertyAvailable('height')"
         label="高度 px"
       >
-        <NInputNumber
-          v-model:value="blockProps.height"
+        <UInputNumber
+          v-model="blockProps.height"
           :min="propertyNumberRange('height')?.min"
           :max="propertyNumberRange('height')?.max"
           style="width: 100%"
         />
-      </NFormItem>
-      <NFormItem label="紧凑模式">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.compact"
+      </UFormField>
+      <UFormField label="紧凑模式">
+        <div class="builder-row">
+          <USwitch
+            v-model="blockProps.compact"
             size="small"
           />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        </div>
+      </UFormField>
+      <UFormField
         class="span-full"
         label="链接"
       >
-        <NInput
-          v-model:value="blockProps.url"
+        <UInput
+          v-model="blockProps.url"
           placeholder="https://..."
         />
-      </NFormItem>
+      </UFormField>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

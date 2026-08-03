@@ -1,12 +1,4 @@
 <script setup lang="ts">
-import {
-  Checkmark12Regular,
-  Dismiss16Filled,
-  Mic24Filled,
-  Play24Filled,
-  PresenceBlocked16Regular,
-} from '@vicons/fluent'
-import { NButton, NCard, NIcon, NPopconfirm, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui'
 import type { CSSProperties } from 'vue'
 import { computed, inject } from 'vue'
 
@@ -92,20 +84,20 @@ const hasOtherSingSong = computed(() => {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     :theme-overrides="cardThemeOverrides"
     content-style="padding: 8px 12px;"
     bordered
     :style="isSingingStatus ? 'border-left: 4px solid var(--vtsuru-success);' : undefined"
   >
-    <NFlex
+    <div
       justify="space-between"
       align="center"
       :wrap="false"
     >
       <!-- 左侧信息 -->
-      <NFlex
+      <div
         align="center"
         :size="8"
         :wrap="false"
@@ -116,36 +108,34 @@ const hasOtherSingSong = computed(() => {
         </span>
 
         <!-- 歌曲名称 -->
-        <NText
+        <span
           strong
           style="font-size: 16px"
         >
           {{ song.songName }}
-        </NText>
+        </span>
 
         <!-- 用户信息 -->
         <template v-if="song.from === SongRequestFrom.Manual">
-          <NTag
+          <UBadge
             size="tiny"
             :bordered="false"
           >
             手动添加
-          </NTag>
+          </UBadge>
         </template>
         <template v-else>
-          <NTooltip>
-            <template #trigger>
-              <NTag
-                size="tiny"
-                :bordered="false"
-                type="info"
-                round
-              >
-                {{ song.user?.name || '未知用户' }}
-              </NTag>
-            </template>
-            UID: {{ song.user?.uid || '未知' }}
-          </NTooltip>
+          <UTooltip>
+            <UBadge
+              size="tiny"
+              :bordered="false"
+              type="info"
+              round
+            >
+              {{ song.user?.name || '未知用户' }}
+            </UBadge>
+            <template #content> UID: {{ song.user?.uid || '未知' }} </template>
+          </UTooltip>
         </template>
 
         <!-- 用户粉丝牌 / 舰长 -->
@@ -156,149 +146,181 @@ const hasOtherSingSong = computed(() => {
         />
 
         <!-- SC/礼物 -->
-        <NTag
+        <UBadge
           v-if="song.from === SongRequestFrom.SC"
           size="tiny"
-          :color="{ textColor: 'white', color: songRequest.getSCColor(song.price ?? 0) }"
+          color="neutral"
+          :style="{ backgroundColor: songRequest.getSCColor(song.price ?? 0), color: 'white' }"
         >
           SC{{ song.price ? ` | ${song.price}` : '' }}
-        </NTag>
-        <NTag
+        </UBadge>
+        <UBadge
           v-if="song.from === SongRequestFrom.Gift"
           size="tiny"
-          :color="{ textColor: 'white', color: songRequest.getSCColor(song.price ?? 0) }"
+          color="neutral"
+          :style="{ backgroundColor: songRequest.getSCColor(song.price ?? 0), color: 'white' }"
         >
           礼物{{ song.price ? ` | ${song.price}` : '' }}
-        </NTag>
+        </UBadge>
 
         <!-- 时间 -->
-        <NTooltip>
-          <template #trigger>
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              <NTime
-                :key="updateKey"
-                :time="song.createAt"
-                type="relative"
-              />
-            </NText>
+        <UTooltip>
+          <span
+            depth="3"
+            style="font-size: 12px"
+          >
+            <time
+              :key="updateKey"
+              :time="song.createAt"
+              type="relative"
+            />
+          </span>
+          <template #content>
+            <time :time="song.createAt" />
           </template>
-          <NTime :time="song.createAt" />
-        </NTooltip>
-      </NFlex>
+        </UTooltip>
+      </div>
 
       <!-- 右侧操作按钮 -->
-      <NFlex
+      <div
         justify="end"
         align="center"
         :size="6"
         :wrap="false"
       >
-        <NTooltip v-if="hasSong">
-          <template #trigger>
-            <NButton
+        <UTooltip v-if="hasSong">
+          <UButton
+            square
+            size="small"
+            color="success"
+            ghost
+            :loading="isLrcLoading === song?.song?.key"
+            @click="onSelectSong"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content> 试听 </template>
+        </UTooltip>
+
+        <UTooltip>
+          <UButton
+            square
+            size="small"
+            :color="song.status === SongRequestStatus.Singing ? 'warning' : 'primary'"
+            :ghost="song.status === SongRequestStatus.Singing"
+            :disabled="hasOtherSingSong"
+            :loading="isLoading"
+            @click="
+              onUpdateStatus(
+                song.status === SongRequestStatus.Singing ? SongRequestStatus.Waiting : SongRequestStatus.Singing,
+              )
+            "
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content>
+            {{
+              hasOtherSingSong
+                ? '还有其他正在演唱'
+                : song.status === SongRequestStatus.Waiting
+                  ? '开始演唱'
+                  : '暂停演唱'
+            }}
+          </template>
+        </UTooltip>
+
+        <UTooltip>
+          <UButton
+            square
+            size="small"
+            color="success"
+            :loading="isLoading"
+            @click="onUpdateStatus(SongRequestStatus.Finish)"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-circle" />
+            </template>
+          </UButton>
+          <template #content> 完成 </template>
+        </UTooltip>
+
+        <UTooltip>
+          <UPopover>
+            <UButton
               circle
-              size="small"
-              type="success"
+              size="sm"
+              color="error"
+              :loading="isLoading"
+            >
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
+              </template>
+            </UButton>
+            <template #content="{ close }">
+              <div class="space-y-3 p-3">
+                <div>确定取消?</div>
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="close"
+                    >取消</UButton
+                  >
+                  <UButton
+                    size="xs"
+                    color="error"
+                    @click="(close(), onUpdateStatus(SongRequestStatus.Cancel))"
+                    >确认</UButton
+                  >
+                </div>
+              </div>
+            </template>
+          </UPopover>
+          <template #content> 取消 </template>
+        </UTooltip>
+
+        <UTooltip v-if="song.from === SongRequestFrom.Danmaku && song.user?.uid">
+          <UPopover>
+            <UButton
+              circle
+              size="sm"
+              color="error"
               ghost
-              :loading="isLrcLoading === song?.song?.key"
-              @click="onSelectSong"
-            >
-              <template #icon>
-                <NIcon :component="Play24Filled" />
-              </template>
-            </NButton>
-          </template>
-          试听
-        </NTooltip>
-
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              :type="song.status === SongRequestStatus.Singing ? 'warning' : 'primary'"
-              :ghost="song.status === SongRequestStatus.Singing"
-              :disabled="hasOtherSingSong"
               :loading="isLoading"
-              @click="
-                onUpdateStatus(
-                  song.status === SongRequestStatus.Singing ? SongRequestStatus.Waiting : SongRequestStatus.Singing,
-                )
-              "
             >
-              <template #icon>
-                <NIcon :component="Mic24Filled" />
+              <template #leading>
+                <UIcon name="i-lucide-circle" />
               </template>
-            </NButton>
-          </template>
-          {{
-            hasOtherSingSong ? '还有其他正在演唱' : song.status === SongRequestStatus.Waiting ? '开始演唱' : '暂停演唱'
-          }}
-        </NTooltip>
-
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="success"
-              :loading="isLoading"
-              @click="onUpdateStatus(SongRequestStatus.Finish)"
-            >
-              <template #icon>
-                <NIcon :component="Checkmark12Regular" />
-              </template>
-            </NButton>
-          </template>
-          完成
-        </NTooltip>
-
-        <NTooltip>
-          <template #trigger>
-            <NPopconfirm @positive-click="onUpdateStatus(SongRequestStatus.Cancel)">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="small"
-                  type="error"
-                  :loading="isLoading"
-                >
-                  <template #icon>
-                    <NIcon :component="Dismiss16Filled" />
-                  </template>
-                </NButton>
-              </template>
-              确定取消?
-            </NPopconfirm>
-          </template>
-          取消
-        </NTooltip>
-
-        <NTooltip v-if="song.from === SongRequestFrom.Danmaku && song.user?.uid">
-          <template #trigger>
-            <NPopconfirm @positive-click="onBlockUser">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="small"
-                  type="error"
-                  ghost
-                  :loading="isLoading"
-                >
-                  <template #icon>
-                    <NIcon :component="PresenceBlocked16Regular" />
-                  </template>
-                </NButton>
-              </template>
-              确定拉黑此用户?
-            </NPopconfirm>
-          </template>
-          拉黑
-        </NTooltip>
-      </NFlex>
-    </NFlex>
-  </NCard>
+            </UButton>
+            <template #content="{ close }">
+              <div class="space-y-3 p-3">
+                <div>确定拉黑此用户?</div>
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="close"
+                    >取消</UButton
+                  >
+                  <UButton
+                    size="xs"
+                    color="error"
+                    @click="(close(), onBlockUser)"
+                    >确认</UButton
+                  >
+                </div>
+              </div>
+            </template>
+          </UPopover>
+          <template #content> 拉黑 </template>
+        </UTooltip>
+      </div>
+    </div>
+  </UCard>
 </template>

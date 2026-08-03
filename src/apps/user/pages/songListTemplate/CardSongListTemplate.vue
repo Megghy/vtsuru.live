@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { CloudAdd20Filled } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
-import { NButton, NEllipsis, NEmpty, NIcon, NInput, NFlex, NTag, NText, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -61,29 +60,30 @@ function getMetaText(song: SongsInfo) {
     <div class="search-row">
       <div class="search-input">
         <span class="search-icon" />
-        <NInput
-          v-model:value="inputKeyword"
+        <UInput
+          v-model="inputKeyword"
           class="search-field"
           clearable
           placeholder="搜索歌曲或歌手…"
           @keyup.enter="commitSearch"
         />
       </div>
-      <NButton
-        type="primary"
+      <UButton
+        color="primary"
         class="search-button"
         @click="commitSearch"
       >
         搜索
-      </NButton>
+      </UButton>
     </div>
 
     <div class="count-row">共 {{ filteredSongs.length }} 首歌曲</div>
 
-    <NEmpty
+    <UEmpty
       v-if="!data || filteredSongs.length === 0"
       description="暂无曲目"
       style="margin-top: 24px"
+      class="public-empty"
     />
 
     <div
@@ -102,36 +102,35 @@ function getMetaText(song: SongsInfo) {
         <div class="card-top">
           <div class="title-left">
             <div class="left-icon">
-              <NIcon :component="MusicalNote" />
+              <component :is="MusicalNote" />
             </div>
             <div class="title-block">
-              <NTooltip
+              <UTooltip
                 trigger="hover"
                 :disabled="isSelf"
               >
-                <template #trigger>
-                  <button
-                    class="song-title"
-                    type="button"
-                    :disabled="isSelf"
-                    @click="requestSong(song)"
-                  >
-                    <NEllipsis :tooltip="false">
-                      {{ song.name }}
-                    </NEllipsis>
-                  </button>
-                </template>
-                {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-              </NTooltip>
+                <button
+                  class="song-title"
+                  type="button"
+                  :disabled="isSelf"
+                  @click="requestSong(song)"
+                >
+                  <span :tooltip="false">
+                    {{ song.name }}
+                  </span>
+                </button>
+
+                <template #content>{{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}</template>
+              </UTooltip>
 
               <div class="sub">
                 <span
                   v-if="song.author?.length"
                   class="song-author"
                 >
-                  <NEllipsis :tooltip="false">
+                  <span :tooltip="false">
                     {{ song.author.join(' / ') }}
-                  </NEllipsis>
+                  </span>
                 </span>
                 <span class="dot">·</span>
                 <span class="meta">
@@ -164,22 +163,21 @@ function getMetaText(song: SongsInfo) {
               v-if="!isSelf"
               class="action"
             >
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    size="small"
-                    quaternary
-                    class="request-button"
-                    :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
-                    @click="requestSong(song)"
-                  >
-                    <template #icon>
-                      <NIcon :component="CloudAdd20Filled" />
-                    </template>
-                  </NButton>
-                </template>
-                {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-              </NTooltip>
+              <UTooltip>
+                <UButton
+                  size="sm"
+                  variant="ghost"
+                  class="request-button"
+                  :color="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
+                  @click="requestSong(song)"
+                >
+                  <template #leading>
+                    <component :is="CloudAdd20Filled" />
+                  </template>
+                </UButton>
+
+                <template #content>{{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}</template>
+              </UTooltip>
             </div>
           </div>
         </div>
@@ -191,68 +189,68 @@ function getMetaText(song: SongsInfo) {
               :key="tag"
               class="pill"
             >
-              <NEllipsis :tooltip="false">
+              <span :tooltip="false">
                 {{ tag }}
-              </NEllipsis>
+              </span>
             </span>
             <span
               v-for="lang in (song.language ?? []).slice(0, 2)"
               :key="lang"
               class="pill pill-muted"
             >
-              <NEllipsis :tooltip="false">
+              <span :tooltip="false">
                 {{ lang }}
-              </NEllipsis>
+              </span>
             </span>
           </div>
 
           <div class="desc">
-            <NText depth="3">
-              <NEllipsis :tooltip="false">
+            <span depth="3">
+              <span :tooltip="false">
                 {{ song.translateName || song.description || '' }}
-              </NEllipsis>
-            </NText>
+              </span>
+            </span>
           </div>
 
-          <NFlex
+          <div
             v-if="song.options"
             size="small"
             justify="end"
             class="badges"
           >
-            <NTag
+            <UBadge
               v-if="song.options?.fanMedalMinLevel"
-              size="small"
+              size="sm"
               :bordered="false"
-              type="default"
+              color="neutral"
             >
               粉丝牌 Lv{{ song.options.fanMedalMinLevel }}
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="song.options?.needZongdu"
-              size="small"
+              size="sm"
               :bordered="false"
-              :color="{ color: GetGuardColor(1) }"
+              :style="{ backgroundColor: GetGuardColor(1), color: '#fff' }"
             >
               总督
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="song.options?.needTidu"
-              size="small"
+              size="sm"
               :bordered="false"
-              :color="{ color: GetGuardColor(2) }"
+              :style="{ backgroundColor: GetGuardColor(2), color: '#fff' }"
             >
               提督
-            </NTag>
-            <NTag
+            </UBadge>
+            <UBadge
               v-if="song.options?.needJianzhang"
-              size="small"
+              size="sm"
               :bordered="false"
-              :color="{ color: GetGuardColor(3) }"
+              :style="{ backgroundColor: GetGuardColor(3), color: '#fff' }"
             >
               舰长
-            </NTag>
-          </NFlex>
+            </UBadge>
+          </div>
         </div>
       </div>
     </div>
@@ -313,7 +311,7 @@ html.dark .song-list-card-template {
   font-size: 13px;
 }
 
-.search-field :deep(.n-input__input) {
+.search-field :deep(input) {
   padding-left: 32px;
 }
 
@@ -531,7 +529,7 @@ html.dark .song-list-card-template {
   max-width: 160px;
 }
 
-.pill :deep(.n-ellipsis) {
+.pill :deep(.pill) {
   max-width: 120px;
 }
 

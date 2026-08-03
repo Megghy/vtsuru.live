@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NButton, NFlex, NPopover } from 'naive-ui'
-
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
 import type { VtsHotkeyCustomization } from '@/apps/client/store/useVtsStore'
 
@@ -22,89 +20,76 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <NPopover trigger="hover">
-    <template #trigger>
-      <NButton
-        block
-        :size="deck ? 'medium' : 'small'"
-        :disabled="disabled"
-        :type="safeClick && armed ? 'warning' : 'default'"
-        :class="{ 'hotkey-deck-btn': deck }"
-        @click="emit('trigger')"
-      >
-        <NFlex
-          v-if="deck"
-          vertical
-          align="center"
-          :size="4"
-          style="padding: 6px 0"
-        >
-          <img
-            v-if="custom?.iconDataUrl"
-            class="hotkey-deck-icon"
-            :src="custom.iconDataUrl"
-            alt=""
-          />
-          <span
-            v-else-if="custom?.color"
-            class="hotkey-deck-dot"
-            :style="{ backgroundColor: custom.color }"
-          />
-          <span class="hotkey-deck-label">{{ custom?.displayName || hk.name || hk.hotkeyID }}</span>
-        </NFlex>
-        <template v-else>
-          <span
-            v-if="custom?.color"
-            class="hotkey-color-dot"
-            :style="{ backgroundColor: custom.color }"
-          />
-          <img
-            v-if="custom?.iconDataUrl"
-            class="hotkey-icon"
-            :src="custom.iconDataUrl"
-            alt=""
-          />
-          <span>{{ custom?.displayName || hk.name || hk.hotkeyID }}</span>
-        </template>
-      </NButton>
-    </template>
-    <NFlex
-      vertical
-      :size="8"
-      style="max-width: 320px"
+  <UPopover>
+    <UButton
+      block
+      :size="deck ? 'md' : 'sm'"
+      :disabled="disabled"
+      :color="safeClick && armed ? 'warning' : 'neutral'"
+      :class="{ 'hotkey-deck-btn': deck }"
+      @click="emit('trigger')"
     >
-      <div>
-        <div>{{ hk.name }}</div>
-        <div v-if="hk.description">
-          {{ hk.description }}
-        </div>
-        <div v-if="hk.type">类型: {{ hk.type }}</div>
-      </div>
-      <NFlex
-        :wrap="true"
-        :size="8"
+      <div
+        v-if="deck"
+        class="flex flex-col items-center gap-1 py-1.5"
       >
-        <NButton
-          size="tiny"
-          @click="emit('edit')"
-        >
-          编辑
-        </NButton>
-        <NButton
-          size="tiny"
-          @click="emit('toggle-pinned')"
-        >
-          {{ custom?.pinned ? '取消置顶' : '置顶' }}
-        </NButton>
-        <NButton
-          size="tiny"
-          @click="emit('toggle-favorite')"
-        >
-          {{ custom?.favorite ? '取消收藏' : '收藏' }}
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NPopover>
+        <img
+          v-if="custom?.iconDataUrl"
+          class="hotkey-deck-icon"
+          :src="custom.iconDataUrl"
+          alt=""
+        />
+        <span
+          v-else-if="custom?.color"
+          class="hotkey-deck-dot"
+          :style="{ backgroundColor: custom.color }"
+        />
+        <span class="hotkey-deck-label">{{ custom?.displayName || hk.name || hk.hotkeyID }}</span>
+      </div>
+      <template v-else>
+        <span
+          v-if="custom?.color"
+          class="hotkey-color-dot"
+          :style="{ backgroundColor: custom.color }"
+        />
+        <img
+          v-if="custom?.iconDataUrl"
+          class="hotkey-icon"
+          :src="custom.iconDataUrl"
+          alt=""
+        />
+        <span>{{ custom?.displayName || hk.name || hk.hotkeyID }}</span>
+      </template>
+    </UButton>
+    <template #content>
+      <div class="flex max-w-80 flex-col gap-2 p-3">
+        <div>
+          <div>{{ hk.name }}</div>
+          <div v-if="hk.description">
+            {{ hk.description }}
+          </div>
+          <div v-if="hk.type">类型: {{ hk.type }}</div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <UButton
+            size="xs"
+            @click="emit('edit')"
+            >编辑</UButton
+          >
+          <UButton
+            size="xs"
+            @click="emit('toggle-pinned')"
+            >{{ custom?.pinned ? '取消置顶' : '置顶' }}</UButton
+          >
+          <UButton
+            size="xs"
+            @click="emit('toggle-favorite')"
+            >{{ custom?.favorite ? '取消收藏' : '收藏' }}</UButton
+          >
+        </div>
+      </div>
+    </template>
+  </UPopover>
 </template>
 
 <style scoped>

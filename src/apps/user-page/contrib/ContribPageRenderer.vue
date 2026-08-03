@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NResult, NSpin } from 'naive-ui'
 import { computed, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
 
@@ -42,12 +41,12 @@ watch(
 </script>
 
 <template>
-  <NSpin :show="isLoading">
-    <NResult
+  <div :aria-busy="isLoading">
+    <UEmpty
       v-if="error"
-      status="error"
       title="页面加载失败"
       :description="error"
+      class="public-empty"
     />
     <component
       :is="componentRef"
@@ -56,5 +55,5 @@ watch(
       :bili-info="biliInfo"
       :page-config="pageConfig"
     />
-  </NSpin>
+  </div>
 </template>

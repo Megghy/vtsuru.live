@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 // @ts-ignore
@@ -667,12 +666,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert
+  <div
     v-if="!$route.query.token && isOBS"
-    type="error"
+    class="danmuji-error"
+    role="alert"
   >
     未携带token参数
-  </NAlert>
+  </div>
   <MessageRender
     v-else
     ref="messageRender"
@@ -685,5 +685,13 @@ onUnmounted(() => {
 <style scoped>
 .body {
   background-color: transparent;
+}
+
+.danmuji-error {
+  padding: 12px 16px;
+  border: 1px solid var(--vtsuru-error, #ef4444);
+  border-radius: 6px;
+  color: var(--vtsuru-error, #ef4444);
+  background: var(--vtsuru-error-soft, rgba(239, 68, 68, 0.12));
 }
 </style>

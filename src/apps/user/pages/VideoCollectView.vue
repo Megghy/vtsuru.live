@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 import type { UserInfo, VideoCollectTable } from '@/api/api-models'
@@ -14,7 +13,7 @@ const props = defineProps<{
 }>()
 
 const isLoading = ref(true)
-const message = useMessage()
+const toast = useToast()
 
 const videoTables = ref<VideoCollectTable[]>(await get())
 async function get() {
@@ -27,12 +26,12 @@ async function get() {
       // videoTables.value = data.data
       return data.data
     } else {
-      message.error(`获取失败: ${data.message}`)
+      toast.add({ title: `获取失败: ${data.message}`, color: 'error' })
       return []
     }
   } catch (err) {
     console.error(err)
-    message.error('获取失败')
+    toast.add({ title: '获取失败', color: 'error' })
     return []
   } finally {
     isLoading.value = false
@@ -42,25 +41,29 @@ async function get() {
 
 <template>
   <div class="video-collect-view">
-    <NCard
+    <UCard
       size="small"
       :bordered="true"
       title="视频征集"
+      class="user-page-card"
     >
-      <NSpin :show="isLoading">
+      <div :aria-busy="isLoading">
         <template v-if="videoTables.length === 0">
-          <NFlex
+          <div
             justify="center"
             style="padding: 20px 0"
           >
-            <NEmpty description="没有正在进行的征集表" />
-          </NFlex>
+            <UEmpty
+              description="没有正在进行的征集表"
+              class="public-empty"
+            />
+          </div>
         </template>
-        <NList
+        <ul
           v-else
           class="video-collect-list"
         >
-          <NListItem
+          <li
             v-for="item in videoTables"
             :key="item.id"
           >
@@ -69,10 +72,10 @@ async function get() {
               can-click
               from="user"
             />
-          </NListItem>
-        </NList>
-      </NSpin>
-    </NCard>
+          </li>
+        </ul>
+      </div>
+    </UCard>
   </div>
 </template>
 
@@ -83,7 +86,7 @@ async function get() {
   gap: var(--vtsuru-page-spacing);
 }
 
-.video-collect-list :deep(.n-list-item__main) {
+.video-collect-list :deep(li) {
   width: 100%;
   min-width: 0;
 }

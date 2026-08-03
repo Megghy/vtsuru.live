@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NText, NTooltip, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -10,14 +8,13 @@ const router = useRouter()
 const route = useRoute()
 const speechService = useSpeechService()
 const { speechState, speakQueue, isPaused } = speechService
-const themeVars = useThemeVars()
 
 const isActive = computed(() => speechState.canSpeech && route.name !== 'client-read-danmaku')
 const queueCount = computed(() => speakQueue.value.length)
 const containerStyle = computed(() => ({
-  '--mini-bg': themeVars.value.popoverColor,
-  '--mini-border': themeVars.value.borderColor,
-  '--mini-badge-bg': themeVars.value.actionColor,
+  '--mini-bg': 'var(--vtsuru-bg-elevated)',
+  '--mini-border': 'var(--vtsuru-border)',
+  '--mini-badge-bg': 'var(--vtsuru-bg-muted)',
 }))
 
 function goToPage() {
@@ -32,77 +29,75 @@ function goToPage() {
       class="speech-mini-controller"
       :style="containerStyle"
     >
-      <NFlex
+      <div
         align="center"
         :size="8"
         :wrap="false"
         style="flex: 1; overflow: hidden"
       >
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              size="tiny"
-              quaternary
-              @click="goToPage"
-            >
-              <template #icon>
-                <NIcon
-                  :component="Mic24Filled"
-                  color="#18a058"
-                />
-              </template>
-            </NButton>
-          </template>
-          前往读弹幕页面
-        </NTooltip>
+        <UTooltip>
+          <UButton
+            size="tiny"
+            variant="ghost"
+            @click="goToPage"
+          >
+            <template #leading>
+              <UIcon
+                name="i-lucide-circle"
+                color="#18a058"
+              />
+            </template>
+          </UButton>
+          <template #content> 前往读弹幕页面 </template>
+        </UTooltip>
 
-        <NText
+        <span
           class="status-text"
           :type="speechState.isSpeaking ? 'success' : isPaused ? 'warning' : 'default'"
         >
           {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停' : '待机' }}
-        </NText>
+        </span>
 
-        <NText
+        <span
           v-if="queueCount > 0"
           depth="3"
           class="queue-badge"
         >
           {{ queueCount }}
-        </NText>
-      </NFlex>
-      <NFlex
+        </span>
+      </div>
+      <div
         :size="4"
         :wrap="false"
       >
-        <NButton
+        <UButton
           size="tiny"
-          :type="isPaused ? 'warning' : 'default'"
+          :color="isPaused ? 'warning' : 'neutral'"
           @click="speechService.togglePause()"
         >
-          <template #icon>
-            <NIcon :component="isPaused ? Play20Filled : Pause20Filled" />
+          <template #leading>
+            <UIcon name="i-lucide-circle" />
           </template>
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="tiny"
           :disabled="!speechState.isSpeaking"
           @click="speechService.skipCurrent()"
         >
-          <template #icon>
-            <NIcon :component="Next20Filled" />
+          <template #leading>
+            <UIcon name="i-lucide-circle" />
           </template>
-        </NButton>
-        <NButton
+        </UButton>
+        <UButton
           size="tiny"
-          type="error"
+          color="error"
           @click="speechService.stopSpeech()"
         >
-          <template #icon>
-            <NIcon :component="MicOff24Filled" />
+          <template #leading>
+            <UIcon name="i-lucide-circle" />
           </template>
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
     </div>
   </Teleport>
 </template>

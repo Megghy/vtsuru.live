@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal, NFlex } from 'naive-ui'
 import { computed, reactive, watch } from 'vue'
 
 import type { ManualUserFormModel } from '@/apps/open-live/components/lottery/lotteryTypes'
@@ -45,93 +44,93 @@ function submit() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="showModel"
+  <UModal
+    v-model:open="showModel"
     preset="card"
     title="手动添加用户"
     style="width: 520px; max-width: 90vw"
     closable
   >
-    <NForm
+    <UForm
       size="small"
       label-placement="left"
       label-width="80"
     >
-      <NFormItem
+      <UFormField
         label="用户名"
         required
       >
-        <NInput
-          v-model:value="form.name"
+        <UInput
+          v-model="form.name"
           size="small"
           :disabled="disabled"
           placeholder="请输入用户名"
         />
-      </NFormItem>
-      <NFormItem label="头像链接">
-        <NInput
-          v-model:value="form.avatar"
+      </UFormField>
+      <UFormField label="头像链接">
+        <UInput
+          v-model="form.avatar"
           size="small"
           :disabled="disabled"
           placeholder="请输入头像链接"
         />
-      </NFormItem>
-      <NFlex
+      </UFormField>
+      <div
         :wrap="true"
         :size="12"
       >
-        <NFormItem label="粉丝牌等级">
-          <NInputNumber
-            v-model:value="form.fans_medal_level"
+        <UFormField label="粉丝牌等级">
+          <UInputNumber
+            v-model="form.fans_medal_level"
             size="small"
             :disabled="disabled"
             :min="0"
             :max="50"
             class="lottery-add-user__narrow"
           />
-        </NFormItem>
-        <NFormItem label="粉丝牌名称">
-          <NInput
-            v-model:value="form.fans_medal_name"
+        </UFormField>
+        <UFormField label="粉丝牌名称">
+          <UInput
+            v-model="form.fans_medal_name"
             size="small"
             :disabled="disabled"
             placeholder="粉丝牌名称"
             class="lottery-add-user__medium"
           />
-        </NFormItem>
-      </NFlex>
-      <NFormItem label="舰长等级">
-        <NInputNumber
-          v-model:value="form.guard_level"
+        </UFormField>
+      </div>
+      <UFormField label="舰长等级">
+        <UInputNumber
+          v-model="form.guard_level"
           size="small"
           :disabled="disabled"
           :min="0"
           :max="3"
           class="lottery-add-user__narrow"
         />
-      </NFormItem>
-    </NForm>
+      </UFormField>
+    </UForm>
 
     <template #footer>
-      <NFlex justify="end">
-        <NButton
+      <div justify="end">
+        <UButton
           size="small"
           :disabled="disabled"
           @click="showModel = false"
         >
           取消
-        </NButton>
-        <NButton
-          type="primary"
+        </UButton>
+        <UButton
+          color="primary"
           size="small"
           :disabled="disabled"
           @click="submit"
         >
           添加用户
-        </NButton>
-      </NFlex>
+        </UButton>
+      </div>
     </template>
-  </NModal>
+  </UModal>
 </template>
 
 <style scoped>

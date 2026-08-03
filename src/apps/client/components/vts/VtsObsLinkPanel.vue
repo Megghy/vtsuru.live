@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, onUnmounted, watch } from 'vue'
 
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
@@ -63,60 +62,60 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard
+  <UCard
     size="small"
     bordered
     title="OBS 联动"
   >
-    <NFlex
+    <div
       vertical
       :size="12"
     >
-      <NFlex
+      <div
         align="center"
         :wrap="true"
         :size="12"
       >
-        <NSwitch
-          :value="vts.obsLinkConfig.enabled"
-          @update:value="setEnabled"
+        <USwitch
+          :model-value="vts.obsLinkConfig.enabled"
+          @update:model-value="setEnabled"
         >
-          <template #checked> 已启用 </template>
-          <template #unchecked> 未启用 </template>
-        </NSwitch>
-        <NInputNumber
+          <template v-if="false"> 已启用 </template>
+          <template v-if="false"> 未启用 </template>
+        </USwitch>
+        <UInputNumber
           :value="vts.obsLinkConfig.debounceMs"
           :min="0"
           :step="50"
           style="width: 140px"
           @update:value="(val) => setDebounceMs((val ?? 0) as number)"
         />
-        <NText depth="3"> 防抖 (ms) </NText>
-        <NButton
+        <span depth="3"> 防抖 (ms) </span>
+        <UButton
           size="small"
           :disabled="!obs.obsConnected"
           @click="obs.fetchObsScenes"
         >
           刷新场景
-        </NButton>
-        <NText depth="3"> 当前: {{ obs.currentObsScene || '未知' }} </NText>
-      </NFlex>
+        </UButton>
+        <span depth="3"> 当前: {{ obs.currentObsScene || '未知' }} </span>
+      </div>
 
-      <NDivider style="margin: 4px 0" />
+      <USeparator style="margin: 4px 0" />
 
-      <NText
+      <span
         v-if="sceneOptions.length === 0"
         depth="3"
       >
         未获取到 OBS 场景列表，请先连接 OBS 后点击"刷新场景"
-      </NText>
+      </span>
 
-      <NFlex
+      <div
         v-else
         vertical
         :size="8"
       >
-        <NFlex
+        <div
           v-for="scene in obs.obsScenes"
           :key="scene"
           align="center"
@@ -124,35 +123,36 @@ onUnmounted(() => {
           :wrap="true"
           :size="12"
         >
-          <NFlex
+          <div
             align="center"
             :wrap="true"
             :size="12"
           >
-            <NText
+            <span
               strong
               style="min-width: 120px"
             >
               {{ scene }}
-            </NText>
-            <NSelect
+            </span>
+            <USelectMenu
               style="width: 280px"
-              :options="presetOptions"
+              :items="presetOptions"
               :value="vts.obsLinkConfig.sceneToPresetId[scene]"
               placeholder="映射到 VTS 机位预设"
               clearable
               @update:value="(val) => (val ? setMapping(scene, val as string) : removeMapping(scene))"
+              value-key="value"
             />
-          </NFlex>
-          <NButton
+          </div>
+          <UButton
             size="small"
             :disabled="!vts.obsLinkConfig.sceneToPresetId[scene]"
             @click="removeMapping(scene)"
           >
             清除
-          </NButton>
-        </NFlex>
-      </NFlex>
-    </NFlex>
-  </NCard>
+          </UButton>
+        </div>
+      </div>
+    </div>
+  </UCard>
 </template>

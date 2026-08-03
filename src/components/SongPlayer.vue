@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NEmpty } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
@@ -122,9 +121,9 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
 </script>
 
 <template>
-  <NEmpty
+  <UEmpty
     v-if="!aplayerMusic.src"
-    :description="props.isLrcLoading ? '歌词加载中...' : '暂无歌曲'"
+    :title="props.isLrcLoading ? '歌词加载中...' : '暂无歌曲'"
   />
   <APlayer
     v-else

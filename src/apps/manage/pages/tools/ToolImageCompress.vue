@@ -3,12 +3,11 @@ import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { NButton, NCard, NFlex, NInputNumber, NSelect, NSlider, NText } from 'naive-ui'
+import { showErrorToast, showWarningToast } from '@/shared/services/toast'
 import { computed, ref } from 'vue'
 
 import { formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-
-const message = useMessage()
 
 interface ImageItem {
   file: File
@@ -39,7 +38,7 @@ onChange((files) => files && addFiles(Array.from(files)))
 
 function addFiles(files: File[]) {
   const imgs = files.filter((f) => f.type.startsWith('image/'))
-  if (!imgs.length) return message.warning('未检测到图片文件')
+  if (!imgs.length) return showWarningToast('未检测到图片文件')
   for (const file of imgs) {
     const thumb = URL.createObjectURL(file)
     items.value.push({
@@ -78,7 +77,7 @@ async function compressOne(item: ImageItem) {
     item.compressedBlob = blob
     item.compressedSize = blob.size
   } catch {
-    message.error(`处理失败: ${item.file.name}`)
+    showErrorToast(`处理失败: ${item.file.name}`)
   } finally {
     item.processing = false
   }
@@ -116,7 +115,7 @@ function downloadOne(item: ImageItem) {
 
 async function downloadAll() {
   const ready = items.value.filter((i) => i.compressedBlob)
-  if (!ready.length) return message.warning('没有可下载的文件')
+  if (!ready.length) return showWarningToast('没有可下载的文件')
   const zip = new JSZip()
   for (const item of ready) {
     const ext = format.value

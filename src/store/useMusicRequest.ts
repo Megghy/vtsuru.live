@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
+import { showErrorToast, showInfoToast, showSuccessToast } from '@/shared/services/toast'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export interface WaitMusicInfo {
@@ -74,8 +75,6 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     blacklist: [],
   })
 
-  const message = window.$message
-
   /** 记录一条点歌历史 (本地保留最多 200 条) */
   function pushHistory(info: WaitMusicInfo, status: MusicHistoryEntry['status']) {
     history.value.unshift({
@@ -109,10 +108,10 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       isPlayingOrderMusic.value = true
       pushHistory(info, 'played')
       console.log(`正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`)
-      message.success(`正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`)
+      showSuccessToast(`正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`)
     } else {
       waitingMusics.value.push(info)
-      message.success(`[${info.from.name}] 点了一首 ${info.music.name} - ${info.music.author?.join('/')}`)
+      showSuccessToast(`[${info.from.name}] 点了一首 ${info.music.name} - ${info.music.author?.join('/')}`)
     }
   }
   function onMusicEnd() {
@@ -123,7 +122,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       }
       setTimeout(() => {
         if (!settings.value.playMusicWhenFree) {
-          message.info('根据配置，已暂停播放音乐')
+          showInfoToast('根据配置，已暂停播放音乐')
           currentMusic.value = aplayerMusics.value[0]
           pauseMusic()
         }
@@ -134,7 +133,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   function playWaitingMusic() {
     const info = waitingMusics.value.shift()
     if (info) {
-      message.success(`正在播放 [${info.from.name}] 点的 ${info.music.name}`)
+      showSuccessToast(`正在播放 [${info.from.name}] 点的 ${info.music.name}`)
       console.log(`正在播放 [${info.from.name}] 点的 ${info.music.name}`)
       setTimeout(() => {
         isPlayingOrderMusic.value = true
@@ -178,7 +177,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       console.log(`设置音频输出设备为 ${settings.value.deviceId ?? '默认'}`)
     } catch (err) {
       console.error(err)
-      message.error(`设置音频输出设备失败: ${err}`)
+      showErrorToast(`设置音频输出设备失败: ${err}`)
     }
   }
   function nextMusic() {

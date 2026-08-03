@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NDivider, NInput, NInputGroup, NModal, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -14,7 +13,6 @@ import { useQuestionBox } from '@/store/useQuestionBox'
 const show = defineModel<boolean>('show', { required: true })
 const accountInfo = useAccount()
 const useQB = useQuestionBox()
-const themeVars = useThemeVars()
 const router = useRouter()
 
 const savedCardSize = usePersistedStorage<{ width: number; height: number }>('Settings.QuestionDisplay.CardSize', {
@@ -33,69 +31,87 @@ function openQuestionDisplay() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
-    closable
-    style="max-width: 90vw; width: auto"
+  <UModal
+    v-model:open="show"
     title="OBS 组件预览与链接"
-    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column;"
+    :ui="{ content: 'max-w-[90vw] w-fit' }"
   >
-    <NAlert
-      type="info"
-      :show-icon="false"
-      style="margin-bottom: 15px"
-    >
-      下方是实时预览效果。管理展示内容请前往
-      <NButton
-        text
-        type="primary"
-        @click="openQuestionDisplay"
-      >
-        展示管理页
-      </NButton>
-    </NAlert>
+    <template #body>
+      <div class="question-box-obs-modal__body">
+        <UAlert
+          color="info"
+          variant="soft"
+        >
+          <template #description>
+            下方是实时预览效果。管理展示内容请前往
+            <UButton
+              color="primary"
+              variant="link"
+              label="展示管理页"
+              @click="openQuestionDisplay"
+            />
+          </template>
+        </UAlert>
 
-    <div
-      :style="{
-        width: `${savedCardSize.width}px`,
-        height: `${savedCardSize.height}px`,
-        border: `1px dashed ${themeVars.borderColor}`,
-        overflow: 'hidden',
-        position: 'relative',
-      }"
-    >
-      <QuestionDisplayCard
-        :question="useQB.displayQuestion"
-        :setting="setting"
-      />
-    </div>
-
-    <NDivider
-      title-placement="left"
-      style="margin-top: 20px; margin-bottom: 10px"
-    >
-      OBS 浏览器源链接
-    </NDivider>
-    <NInputGroup>
-      <NInput
-        readonly
-        :value="`${CURRENT_HOST}obs/question-display?token=${accountInfo?.token}`"
-      />
-      <NButton
-        secondary
-        @click="copyToClipboard(`${CURRENT_HOST}obs/question-display?token=${accountInfo?.token}`)"
-      >
-        复制
-      </NButton>
-    </NInputGroup>
-
-    <NDivider style="margin-top: 20px; margin-bottom: 15px" />
-    <NButton
-      type="primary"
-      @click="openQuestionDisplay"
-    >
-      前往展示管理页
-    </NButton>
-  </NModal>
+        <div
+          :style="{
+            width: `${savedCardSize.width}px`,
+            height: `${savedCardSize.height}px`,
+            border: '1px dashed var(--vtsuru-border)',
+          }"
+          class="question-box-obs-modal__preview"
+        >
+          <QuestionDisplayCard
+            :question="useQB.displayQuestion"
+            :setting="setting"
+          />
+        </div>
+      </div>
+    </template>
+    <template #footer>
+      <div class="question-box-obs-modal__footer">
+        <UFieldGroup class="question-box-obs-modal__url">
+          <UInput
+            readonly
+            :model-value="`${CURRENT_HOST}obs/question-display?token=${accountInfo?.token}`"
+          />
+          <UButton
+            color="neutral"
+            variant="soft"
+            label="复制"
+            @click="copyToClipboard(`${CURRENT_HOST}obs/question-display?token=${accountInfo?.token}`)"
+          />
+        </UFieldGroup>
+        <UButton
+          color="primary"
+          label="前往展示管理页"
+          @click="openQuestionDisplay"
+        />
+      </div>
+    </template>
+  </UModal>
 </template>
+
+<style scoped>
+.question-box-obs-modal__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.question-box-obs-modal__preview {
+  position: relative;
+  overflow: hidden;
+}
+
+.question-box-obs-modal__footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.question-box-obs-modal__url {
+  flex: 1;
+}
+</style>

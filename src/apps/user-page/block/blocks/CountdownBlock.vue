@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { TimerOutline, HourglassOutline } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -89,12 +88,12 @@ const breakdown = computed(() => {
     >
       <!-- 集成式标题区 -->
       <div class="cd-header-integrated">
-        <NIcon
+        <span
           size="14"
           class="cd-icon"
         >
           <TimerOutline />
-        </NIcon>
+        </span>
         <span class="cd-title">{{ cfg.title || '倒计时' }}</span>
       </div>
 
@@ -110,12 +109,12 @@ const breakdown = computed(() => {
         class="done-display"
       >
         <div class="done-icon-wrapper">
-          <NIcon
+          <span
             size="32"
             color="var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)))"
           >
             <HourglassOutline />
-          </NIcon>
+          </span>
         </div>
         <div class="done-text">
           {{ cfg.doneText || '已到达' }}
@@ -194,10 +193,10 @@ const breakdown = computed(() => {
 }
 
 /* 移除默认 Header 占位影响 */
-.countdown-card.bold-mode :deep(.n-card-header) {
+.countdown-card.bold-mode :deep(.user-page-card) {
   display: none;
 }
-.countdown-card.bold-mode :deep(.n-card__content) {
+.countdown-card.bold-mode :deep(.user-page-card) {
   padding: 0 !important;
 }
 

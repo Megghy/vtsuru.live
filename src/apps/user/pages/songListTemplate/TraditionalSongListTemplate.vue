@@ -5,7 +5,6 @@ import {
   ArrowSortUp20Filled,
   SquareArrowForward24Filled,
 } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSelect, NTag, NTooltip } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -40,6 +39,7 @@ interface ProfileLink {
 
 const props = defineProps<SongListConfigTypeWithConfig<TraditionalConfigType>>()
 const emit = defineEmits<{ requestSong: [song: SongsInfo] }>()
+const toast = useToast()
 defineExpose({ Config, DefaultConfig })
 
 const accountInfo = useAccount()
@@ -178,34 +178,23 @@ function clearFilters() {
 function randomOrder() {
   const songs = filteredAndSortedSongs.value.length ? filteredAndSortedSongs.value : (props.data ?? [])
   if (!songs.length) {
-    window.$message?.warning('当前没有可选歌曲')
+    toast.add({ title: '当前没有可选歌曲', color: 'warning' })
     return
   }
   const song = songs[Math.floor(Math.random() * songs.length)]
-  window.$modal.create({
-    preset: 'dialog',
-    type: 'success',
-    title: '随机结果',
-    content: `${song.name}${song.author?.length ? ` · ${song.author.join(' / ')}` : ''}`,
-    positiveText: isSelf.value ? '知道了' : '点这首',
-    negativeText: isSelf.value ? undefined : '再看看',
-    onPositiveClick: () => {
-      if (!isSelf.value) emit('requestSong', song)
-    },
-  })
+  const result = `${song.name}${song.author?.length ? ` · ${song.author.join(' / ')}` : ''}`
+  if (isSelf.value) {
+    window.alert(result)
+  } else if (window.confirm(`随机结果：${result}\n\n要点这首歌吗？`)) {
+    emit('requestSong', song)
+  }
 }
 
 function requestSong(song: SongsInfo) {
   if (isSelf.value) return
   const tooltip = getSongRequestTooltip(song, props.liveRequestSettings, requestAuthState.value)
-  window.$modal.create({
-    preset: 'dialog',
-    title: '点歌',
-    content: `${getSongRequestConfirmText(song)}${tooltip === '点歌' ? '' : `\n${tooltip}`}`,
-    positiveText: '点歌',
-    negativeText: '取消',
-    onPositiveClick: () => emit('requestSong', song),
-  })
+  const content = `${getSongRequestConfirmText(song)}${tooltip === '点歌' ? '' : `\n${tooltip}`}`
+  if (window.confirm(content)) emit('requestSong', song)
 }
 
 function getRequestBadges(options?: SongRequestOption): RequestBadge[] {
@@ -312,75 +301,75 @@ function getSafeUrl(value?: string) {
 
       <main class="song-panel">
         <div class="filter-grid">
-          <NInput
-            v-model:value="searchQuery"
+          <UInput
+            v-model="searchQuery"
             clearable
             placeholder="搜索歌名、歌手、语言、标签或备注"
             class="search-input"
           />
-          <NSelect
-            v-model:value="selectedArtist"
-            :options="artistOptions"
+          <USelect
+            v-model="selectedArtist"
+            :items="artistOptions"
             filterable
             clearable
             placeholder="歌手"
           />
-          <NSelect
-            v-model:value="selectedLanguage"
-            :options="languageOptions"
+          <USelect
+            v-model="selectedLanguage"
+            :items="languageOptions"
             filterable
             clearable
             placeholder="语言"
           />
-          <NSelect
-            v-model:value="selectedTag"
-            :options="tagOptions"
+          <USelect
+            v-model="selectedTag"
+            :items="tagOptions"
             filterable
             clearable
             placeholder="标签"
           />
-          <NSelect
-            v-model:value="selectedOption"
-            :options="optionOptions"
+          <USelect
+            v-model="selectedOption"
+            :items="optionOptions"
             clearable
             placeholder="点歌条件"
           />
           <div class="sort-control">
-            <NSelect
-              v-model:value="sortKey"
-              :options="sortOptions"
+            <USelect
+              v-model="sortKey"
+              :items="sortOptions"
               placeholder="排序"
             />
-            <NButton
-              secondary
-              circle
+            <UButton
+              variant="soft"
+              square
               :disabled="!sortKey"
               :title="sortOrder === 'asc' ? '升序' : '降序'"
               @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
             >
-              <template #icon
-                ><NIcon :component="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
+              <template #leading
+                ><component :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
               /></template>
-            </NButton>
+            </UButton>
           </div>
         </div>
 
         <div class="result-toolbar">
           <span class="result-count">{{ filteredAndSortedSongs.length }} / {{ data?.length ?? 0 }} 首</span>
           <div class="toolbar-actions">
-            <NButton
-              quaternary
+            <UButton
+              variant="ghost"
               :disabled="!hasFilters"
               @click="clearFilters"
             >
-              <template #icon><NIcon :component="ArrowCounterclockwise20Filled" /></template>
+              <template #leading><component :is="ArrowCounterclockwise20Filled" /></template>
               清空
-            </NButton>
-            <NButton
-              type="primary"
-              secondary
+            </UButton>
+            <UButton
+              color="primary"
+              variant="soft"
               @click="randomOrder"
-              >随机一首</NButton
+              >随机一首</UButton
             >
           </div>
         </div>
@@ -389,13 +378,14 @@ function getSafeUrl(value?: string) {
           class="song-table-shell"
           :class="{ 'is-fixed': config?.fixedHeight }"
         >
-          <NScrollbar
+          <div
             class="song-table-scroller"
             style="max-height: var(--song-table-max-height)"
           >
-            <NEmpty
+            <UEmpty
               v-if="!filteredAndSortedSongs.length"
               :description="data?.length ? '没有符合条件的歌曲' : '歌单里还没有歌曲'"
+              class="public-empty"
             />
             <table
               v-else
@@ -413,9 +403,9 @@ function getSafeUrl(value?: string) {
                       @click="setSort(column.value as SortKey)"
                     >
                       {{ column.label.replace('按', '') }}
-                      <NIcon
+                      <component
                         v-if="sortKey === column.value"
-                        :component="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
+                        :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
                       />
                     </button>
                   </th>
@@ -442,30 +432,30 @@ function getSafeUrl(value?: string) {
                         class="status queued"
                         >排队中</span
                       >
-                      <NTooltip :disabled="isSelf">
-                        <template #trigger>
-                          <button
-                            class="song-title-button"
-                            type="button"
-                            :disabled="isSelf"
-                            @click="requestSong(song)"
-                          >
-                            {{ song.name }}
-                          </button>
-                        </template>
-                        {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-                      </NTooltip>
-                      <NButton
+                      <UTooltip :disabled="isSelf">
+                        <button
+                          class="song-title-button"
+                          type="button"
+                          :disabled="isSelf"
+                          @click="requestSong(song)"
+                        >
+                          {{ song.name }}
+                        </button>
+
+                        <template #content>{{
+                          getSongRequestTooltip(song, liveRequestSettings, requestAuthState)
+                        }}</template>
+                      </UTooltip>
+                      <UButton
                         v-if="getSongLink(song)"
-                        tag="a"
-                        text
+                        variant="link"
                         :href="getSongLink(song)"
                         target="_blank"
                         rel="noopener noreferrer"
                         title="打开歌曲链接"
                       >
-                        <template #icon><NIcon :component="SquareArrowForward24Filled" /></template>
-                      </NButton>
+                        <template #leading><component :is="SquareArrowForward24Filled" /></template>
+                      </UButton>
                     </div>
                   </td>
                   <td>
@@ -507,35 +497,33 @@ function getSafeUrl(value?: string) {
                   <td>
                     <span class="cell-label">标签</span>
                     <div class="tag-list">
-                      <NTag
+                      <UBadge
                         v-for="tag in song.tags"
                         :key="tag"
                         class="song-tag"
                         :class="{ active: selectedTag === tag }"
-                        size="small"
+                        size="sm"
                         checkable
-                        round
                         :bordered="false"
                         :checked="selectedTag === tag"
                         @update:checked="selectedTag = selectedTag === tag ? null : tag"
-                        >{{ tag }}</NTag
+                        >{{ tag }}</UBadge
                       >
                     </div>
                   </td>
                   <td>
                     <span class="cell-label">点歌条件</span>
                     <div class="tag-list">
-                      <NTag
+                      <UBadge
                         v-for="badge in getRequestBadges(song.options)"
                         :key="badge.label"
                         class="request-tag"
-                        size="small"
-                        :type="badge.type"
-                        round
+                        size="sm"
+                        :color="badge.type"
                         :bordered="false"
                       >
                         {{ badge.label }}
-                      </NTag>
+                      </UBadge>
                       <span
                         v-if="!getRequestBadges(song.options).length"
                         class="muted"
@@ -550,7 +538,7 @@ function getSafeUrl(value?: string) {
                 </tr>
               </tbody>
             </table>
-          </NScrollbar>
+          </div>
         </div>
       </main>
     </div>
@@ -757,7 +745,7 @@ function getSafeUrl(value?: string) {
   --song-table-max-height: 55vh;
 }
 
-.song-table-shell :deep(.n-empty) {
+.song-table-shell :deep(.public-empty) {
   padding: 72px 20px;
 }
 
@@ -845,7 +833,7 @@ function getSafeUrl(value?: string) {
   gap: 3px;
 }
 
-.sort-heading .n-icon {
+.sort-heading svg {
   color: var(--song-accent);
 }
 

@@ -9,7 +9,6 @@ import {
   LogoTwitch,
   LogoYoutube,
 } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -110,7 +109,7 @@ function getStyle(p: Platform) {
     <div class="supporter-block">
       <div class="block-header">
         <div class="header-icon">
-          <NIcon :component="HeartIcon" />
+          <component :is="HeartIcon" />
         </div>
         <span class="header-title">{{ cfg.title }}</span>
       </div>
@@ -142,14 +141,14 @@ function getStyle(p: Platform) {
         >
           <div class="card-glow" />
           <div class="icon-box">
-            <NIcon :component="getIcon(it.platform)" />
+            <component :is="getIcon(it.platform)" />
           </div>
           <div class="card-content">
             <span class="platform-name">{{ it.label || platformLabel(it.platform) }}</span>
             <span class="action-text">前往 {{ platformLabel(it.platform) }} 支持</span>
           </div>
           <div class="arrow-icon">
-            <NIcon :component="ArrowForwardOutline" />
+            <component :is="ArrowForwardOutline" />
           </div>
         </a>
       </div>

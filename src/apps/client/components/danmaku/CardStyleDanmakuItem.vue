@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Box24Regular, VehicleShip24Filled } from '@vicons/fluent'
-
 import { EventDataTypes } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
 
@@ -53,40 +51,40 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
           </span>
         </template>
         <template v-else-if="item.type === EventDataTypes.Gift">
-          <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
-            <template #trigger>
-              <span class="gift-box-badge">
-                <NIcon
-                  :component="Box24Regular"
-                  size="12"
-                />
-                <span v-if="giftDisplay.mysteryBoxPriceText">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
-              </span>
+          <UTooltip v-if="giftDisplay.hasMysteryBoxGift">
+            <span class="gift-box-badge">
+              <UIcon
+                name="i-lucide-circle"
+                size="12"
+              />
+              <span v-if="giftDisplay.mysteryBoxPriceText">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+            </span>
+            <template #content>
+              <div class="gift-box-tooltip">
+                <div
+                  v-if="giftDisplay.mysteryBoxName"
+                  class="gift-box-tooltip__row"
+                >
+                  <span class="gift-box-tooltip__label">来源</span>
+                  <span class="gift-box-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
+                </div>
+                <div
+                  v-if="giftDisplay.mysteryBoxPriceText"
+                  class="gift-box-tooltip__row"
+                >
+                  <span class="gift-box-tooltip__label">盲盒价</span>
+                  <span class="gift-box-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+                </div>
+                <div
+                  v-if="giftDisplay.giftPriceText"
+                  class="gift-box-tooltip__row"
+                >
+                  <span class="gift-box-tooltip__label">开出价</span>
+                  <span class="gift-box-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
+                </div>
+              </div>
             </template>
-            <div class="gift-box-tooltip">
-              <div
-                v-if="giftDisplay.mysteryBoxName"
-                class="gift-box-tooltip__row"
-              >
-                <span class="gift-box-tooltip__label">来源</span>
-                <span class="gift-box-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
-              </div>
-              <div
-                v-if="giftDisplay.mysteryBoxPriceText"
-                class="gift-box-tooltip__row"
-              >
-                <span class="gift-box-tooltip__label">盲盒价</span>
-                <span class="gift-box-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
-              </div>
-              <div
-                v-if="giftDisplay.giftPriceText"
-                class="gift-box-tooltip__row"
-              >
-                <span class="gift-box-tooltip__label">开出价</span>
-                <span class="gift-box-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
-              </div>
-            </div>
-          </NTooltip>
+          </UTooltip>
           <span
             class="gift-badge"
             :isPay="giftDisplay.hasPaidGift"
@@ -144,8 +142,8 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
           class="guard-icon"
           :style="{ backgroundColor: guardColor }"
         >
-          <NIcon
-            :component="VehicleShip24Filled"
+          <UIcon
+            name="i-lucide-circle"
             size="12"
           />
         </span>

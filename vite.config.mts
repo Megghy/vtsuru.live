@@ -1,11 +1,10 @@
 import path from 'node:path'
 
 // vite.config.ts
+import ui from '@nuxt/ui/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
-import AutoImport from 'unplugin-auto-import/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
-import Components from 'unplugin-vue-components/vite'
 import Markdown from 'unplugin-vue-markdown/vite'
 import { defineConfig } from 'vite'
 import svgLoader from 'vite-svg-loader'
@@ -53,6 +52,34 @@ export default defineConfig({
         },
       },
     }),
+    ui({
+      colorMode: false,
+      autoImport: {
+        imports: [
+          'vue',
+          'vue-router',
+          '@vueuse/core',
+          'pinia',
+          'date-fns',
+          {
+            'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'],
+          },
+        ],
+        dts: 'src/auto-imports.d.ts',
+      },
+      components: {
+        resolvers: [NaiveUiResolver()],
+        dts: 'src/components.d.ts',
+        extensions: ['vue', 'md'],
+        include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
+      },
+      ui: {
+        colors: {
+          primary: 'cyan',
+          neutral: 'zinc',
+        },
+      },
+    }),
     vueJsx(),
     svgLoader({
       svgoConfig: {
@@ -78,25 +105,6 @@ export default defineConfig({
       },
     }),
     Markdown(),
-    AutoImport({
-      imports: [
-        'vue',
-        'vue-router',
-        '@vueuse/core',
-        'pinia',
-        'date-fns',
-        {
-          'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'],
-        },
-      ],
-      dts: 'src/auto-imports.d.ts',
-    }),
-    Components({
-      resolvers: [NaiveUiResolver()],
-      dts: 'src/components.d.ts',
-      extensions: ['vue', 'md'],
-      include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
-    }),
   ],
   server: { port: 51000 },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },

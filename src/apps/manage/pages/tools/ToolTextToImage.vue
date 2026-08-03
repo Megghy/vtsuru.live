@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
 import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NSelect, NSlider, NSwitch, NText } from 'naive-ui'
+import { showSuccessToast, showErrorToast } from '@/shared/services/toast'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { canvasToBlob } from '@/shared/utils'
-
-const message = useMessage()
 
 const text = ref('')
 const canvasRef = ref<HTMLCanvasElement>()
@@ -131,9 +130,9 @@ async function download() {
       chars: text.value.length,
       width: style.maxWidth,
     })
-    message.success('已保存')
+    showSuccessToast('已保存')
   } catch {
-    message.error('导出失败')
+    showErrorToast('导出失败')
   }
 }
 </script>

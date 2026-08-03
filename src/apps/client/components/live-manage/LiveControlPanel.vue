@@ -9,123 +9,135 @@ const obsStore = c.obsStore
 </script>
 
 <template>
-  <NCard
+  <UCard
     title="直播控制"
     size="small"
     class="live-manage-card"
     bordered
   >
-    <NFlex
+    <div
       vertical
       :size="16"
     >
       <!-- 直播状态和操作 -->
       <div>
-        <NFlex
+        <div
           :size="12"
           align="center"
           wrap
           style="margin-bottom: 16px"
         >
-          <NTag
+          <UBadge
             :type="c.isLiving.value ? 'success' : 'default'"
             size="large"
             :bordered="false"
             style="padding: 8px 16px"
           >
-            <template #icon>
+            <template #leading>
               <div style="width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 8px" />
             </template>
             {{ c.isLiving.value ? '直播中' : '未开播' }}
-          </NTag>
+          </UBadge>
 
           <template v-if="!c.isLiving.value">
-            <NPopconfirm
-              v-if="c.needUpdateBeforeLive.value"
-              @positive-click="c.handleStartLiveWithUpdate"
-            >
-              <template #trigger>
-                <NButton
-                  type="success"
-                  size="large"
-                  :disabled="!c.liveAreaId.value"
-                >
-                  开始直播
-                </NButton>
+            <UPopover v-if="c.needUpdateBeforeLive.value">
+              <UButton
+                color="success"
+                size="large"
+                :disabled="!c.liveAreaId.value"
+              >
+                开始直播
+              </UButton>
+              <template #content="{ close }">
+                <div class="space-y-3 p-3">
+                  <div>检测到直播标题或分区已修改，是否先更新直播间信息再开播？</div>
+                  <div class="flex justify-end gap-2">
+                    <UButton
+                      size="xs"
+                      color="neutral"
+                      variant="ghost"
+                      @click="close"
+                      >取消</UButton
+                    >
+                    <UButton
+                      size="xs"
+                      color="primary"
+                      @click="(close(), c.handleStartLiveWithUpdate)"
+                      >确认</UButton
+                    >
+                  </div>
+                </div>
               </template>
-              检测到直播标题或分区已修改，是否先更新直播间信息再开播？
-            </NPopconfirm>
-            <NButton
+            </UPopover>
+            <UButton
               v-else
-              type="success"
+              color="success"
               size="large"
               :disabled="!c.liveAreaId.value"
               @click="c.handleStartLive"
             >
               开始直播
-            </NButton>
+            </UButton>
           </template>
-          <NButton
+          <UButton
             v-else
-            type="error"
+            color="error"
             size="large"
             @click="c.handleStopLive"
           >
             停止直播
-          </NButton>
+          </UButton>
 
           <!-- OBS 推流控制 -->
-          <NTooltip v-if="obsStore.obsConnected && !c.isLiving.value">
-            <template #trigger>
-              <NButton
-                :type="obsStore.obsStreamActive ? 'error' : 'primary'"
-                size="large"
-                disabled
-              >
-                {{ obsStore.obsStreamActive ? '停止 OBS 推流' : '开始 OBS 推流' }}
-              </NButton>
-            </template>
-            请先开始直播后再控制 OBS 推流
-          </NTooltip>
-          <NButton
+          <UTooltip v-if="obsStore.obsConnected && !c.isLiving.value">
+            <UButton
+              :color="obsStore.obsStreamActive ? 'error' : 'primary'"
+              size="large"
+              disabled
+            >
+              {{ obsStore.obsStreamActive ? '停止 OBS 推流' : '开始 OBS 推流' }}
+            </UButton>
+            <template #content> 请先开始直播后再控制 OBS 推流 </template>
+          </UTooltip>
+          <UButton
             v-else-if="obsStore.obsConnected && c.isLiving.value"
-            :type="obsStore.obsStreamActive ? 'error' : 'primary'"
+            :color="obsStore.obsStreamActive ? 'error' : 'primary'"
             size="large"
             :loading="obsStore.isTogglingObsStream"
             @click="obsStore.handleObsToggleStream"
           >
             {{ obsStore.obsStreamActive ? '停止 OBS 推流' : '开始 OBS 推流' }}
-          </NButton>
+          </UButton>
 
-          <NButton
+          <UButton
             v-if="!c.isLiving.value && c.liveTitle.value"
-            type="primary"
+            color="primary"
             :disabled="!c.liveAreaId.value && !c.liveTitle.value"
             @click="c.handleUpdateRoom"
           >
             更新直播间信息
-          </NButton>
-        </NFlex>
+          </UButton>
+        </div>
       </div>
 
-      <NDivider style="margin: 0" />
+      <USeparator style="margin: 0" />
 
       <!-- 直播间设置 -->
       <div>
-        <NText
+        <span
           strong
           style="font-size: 16px; display: block; margin-bottom: 12px"
         >
           直播间设置
-        </NText>
-        <NFlex
+        </span>
+        <div
           vertical
           :size="12"
         >
           <div>
-            <NText strong> 直播间标题 </NText>
-            <NInput
-              v-model:value="c.liveTitle.value"
+            <span strong> 直播间标题 </span>
+            <UInput
+              v-model="c.liveTitle.value"
               :status="c.titleChanged.value ? 'warning' : undefined"
               placeholder="输入直播间标题"
               maxlength="40"
@@ -137,29 +149,30 @@ const obsStore = c.obsStore
           </div>
 
           <div>
-            <NText strong> 直播分区 </NText>
-            <NCascader
-              v-model:value="c.liveAreaId.value"
+            <span strong> 直播分区 </span>
+            <USelectMenu
+              v-model="c.liveAreaId.value"
               :status="c.areaChanged.value ? 'warning' : undefined"
-              :options="c.areaOptions.value"
+              :items="c.areaOptions.value"
               placeholder="请选择直播分区"
               filterable
               check-strategy="child"
               size="large"
               style="margin-top: 8px"
               @update:value="c.markAreaEdited"
+              value-key="value"
             />
           </div>
-        </NFlex>
+        </div>
       </div>
 
-      <NDivider style="margin: 0" />
+      <USeparator style="margin: 0" />
 
       <!-- 直播间公告 -->
       <div>
-        <NText strong> 直播间公告 </NText>
-        <NInput
-          v-model:value="c.roomAnnouncement.value"
+        <span strong> 直播间公告 </span>
+        <UInput
+          v-model="c.roomAnnouncement.value"
           type="textarea"
           placeholder="输入直播间公告（最多60个字符）"
           maxlength="60"
@@ -168,19 +181,19 @@ const obsStore = c.obsStore
           style="margin-top: 8px"
           :autosize="{ minRows: 2, maxRows: 4 }"
         />
-        <NButton
+        <UButton
           style="margin-top: 8px"
-          type="primary"
+          color="primary"
           :loading="c.isUpdatingAnnouncement.value"
           @click="c.handleUpdateAnnouncement"
         >
           更新公告
-        </NButton>
+        </UButton>
       </div>
 
-      <NDivider style="margin: 0" />
+      <USeparator style="margin: 0" />
 
       <LiveCoverUpload :control="c" />
-    </NFlex>
-  </NCard>
+    </div>
+  </UCard>
 </template>

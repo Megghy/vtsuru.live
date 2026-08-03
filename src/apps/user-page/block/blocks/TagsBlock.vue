@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NTag } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -80,26 +79,24 @@ function getContrastColor(color: string) {
     :border-title="cfg.framed ? cfg.borderTitle : ''"
     :border-title-align="cfg.borderTitleAlign"
   >
-    <NFlex
+    <div
       justify="center"
       wrap
       style="gap: 8px"
     >
-      <NTag
+      <UBadge
         v-for="(it, idx) in items"
         :key="idx"
-        :type="it.type"
-        :round="cfg.rounded"
-        :size="cfg.size"
-        :bordered="false"
+        :color="it.type === 'default' ? 'neutral' : it.type"
+        :size="cfg.size === 'small' ? 'sm' : 'md'"
+        variant="soft"
         class="vtsuru-tag"
-        :color="
-          it.color ? { color: it.color, textColor: getContrastColor(it.color), borderColor: 'transparent' } : undefined
-        "
+        :class="{ 'vtsuru-tag--rounded': cfg.rounded }"
+        :style="it.color ? { backgroundColor: it.color, color: getContrastColor(it.color) } : undefined"
       >
         {{ it.text }}
-      </NTag>
-    </NFlex>
+      </UBadge>
+    </div>
   </BlockCard>
 </template>
 
@@ -112,14 +109,12 @@ function getContrastColor(color: string) {
   cursor: default;
 }
 
-/* Semi-transparent background for typed tags */
-:deep(.n-tag--default-type) {
-  background: var(--vtsuru-bg-muted) !important;
-  color: var(--vtsuru-fg-muted) !important;
+.vtsuru-tag:not(.vtsuru-tag--rounded) {
+  border-radius: var(--vtsuru-page-radius);
 }
 
-.vtsuru-tag:not(.n-tag--round) {
-  border-radius: var(--vtsuru-page-radius);
+.vtsuru-tag--rounded {
+  border-radius: 999px;
 }
 
 .vtsuru-tag:hover {

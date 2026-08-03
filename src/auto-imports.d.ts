@@ -54,6 +54,8 @@ declare global {
   const debouncedWatch: typeof import('@vueuse/core').debouncedWatch
   const defineAsyncComponent: typeof import('vue').defineAsyncComponent
   const defineComponent: typeof import('vue').defineComponent
+  const defineLocale: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/defineLocale').defineLocale
+  const defineShortcuts: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/defineShortcuts').defineShortcuts
   const defineStore: typeof import('pinia').defineStore
   const differenceInBusinessDays: typeof import('date-fns').differenceInBusinessDays
   const differenceInCalendarDays: typeof import('date-fns').differenceInCalendarDays
@@ -99,7 +101,9 @@ declare global {
   const endOfWeek: typeof import('date-fns').endOfWeek
   const endOfYear: typeof import('date-fns').endOfYear
   const endOfYesterday: typeof import('date-fns').endOfYesterday
+  const extendLocale: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/defineLocale').extendLocale
   const extendRef: typeof import('@vueuse/core').extendRef
+  const extractShortcuts: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/defineShortcuts').extractShortcuts
   const format: typeof import('date-fns').format
   const formatDistance: typeof import('date-fns').formatDistance
   const formatDistanceStrict: typeof import('date-fns').formatDistanceStrict
@@ -366,6 +370,7 @@ declare global {
   const until: typeof import('@vueuse/core').until
   const useActiveElement: typeof import('@vueuse/core').useActiveElement
   const useAnimate: typeof import('@vueuse/core').useAnimate
+  const useAppConfig: typeof import('../node_modules/@nuxt/ui/dist/runtime/vue/composables/useAppConfig.js').useAppConfig
   const useArrayDifference: typeof import('@vueuse/core').useArrayDifference
   const useArrayEvery: typeof import('@vueuse/core').useArrayEvery
   const useArrayFilter: typeof import('@vueuse/core').useArrayFilter
@@ -393,6 +398,7 @@ declare global {
   const useCloned: typeof import('@vueuse/core').useCloned
   const useColorMode: typeof import('@vueuse/core').useColorMode
   const useConfirmDialog: typeof import('@vueuse/core').useConfirmDialog
+  const useContentSearch: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useContentSearch').useContentSearch
   const useCountdown: typeof import('@vueuse/core').useCountdown
   const useCounter: typeof import('@vueuse/core').useCounter
   const useCssModule: typeof import('vue').useCssModule
@@ -428,8 +434,10 @@ declare global {
   const useFetch: typeof import('@vueuse/core').useFetch
   const useFileDialog: typeof import('@vueuse/core').useFileDialog
   const useFileSystemAccess: typeof import('@vueuse/core').useFileSystemAccess
+  const useFileUpload: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useFileUpload').useFileUpload
   const useFocus: typeof import('@vueuse/core').useFocus
   const useFocusWithin: typeof import('@vueuse/core').useFocusWithin
+  const useFormField: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useFormField').useFormField
   const useFps: typeof import('@vueuse/core').useFps
   const useFullscreen: typeof import('@vueuse/core').useFullscreen
   const useGamepad: typeof import('@vueuse/core').useGamepad
@@ -441,6 +449,7 @@ declare global {
   const useIntersectionObserver: typeof import('@vueuse/core').useIntersectionObserver
   const useInterval: typeof import('@vueuse/core').useInterval
   const useIntervalFn: typeof import('@vueuse/core').useIntervalFn
+  const useKbd: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useKbd').useKbd
   const useKeyModifier: typeof import('@vueuse/core').useKeyModifier
   const useLastChanged: typeof import('@vueuse/core').useLastChanged
   const useLink: typeof import('vue-router').useLink
@@ -466,6 +475,7 @@ declare global {
   const useObjectUrl: typeof import('@vueuse/core').useObjectUrl
   const useOffsetPagination: typeof import('@vueuse/core').useOffsetPagination
   const useOnline: typeof import('@vueuse/core').useOnline
+  const useOverlay: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useOverlay').useOverlay
   const usePageLeave: typeof import('@vueuse/core').usePageLeave
   const useParallax: typeof import('@vueuse/core').useParallax
   const useParentElement: typeof import('@vueuse/core').useParentElement
@@ -483,6 +493,7 @@ declare global {
   const usePrevious: typeof import('@vueuse/core').usePrevious
   const useRafFn: typeof import('@vueuse/core').useRafFn
   const useRefHistory: typeof import('@vueuse/core').useRefHistory
+  const useResizable: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useResizable').useResizable
   const useResizeObserver: typeof import('@vueuse/core').useResizeObserver
   const useRoute: typeof import('vue-router').useRoute
   const useRouter: typeof import('vue-router').useRouter
@@ -492,6 +503,8 @@ declare global {
   const useScriptTag: typeof import('@vueuse/core').useScriptTag
   const useScroll: typeof import('@vueuse/core').useScroll
   const useScrollLock: typeof import('@vueuse/core').useScrollLock
+  const useScrollShadow: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useScrollShadow').useScrollShadow
+  const useScrollspy: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useScrollspy').useScrollspy
   const useSessionStorage: typeof import('@vueuse/core').useSessionStorage
   const useShare: typeof import('@vueuse/core').useShare
   const useSlots: typeof import('vue').useSlots
@@ -521,7 +534,9 @@ declare global {
   const useTitle: typeof import('@vueuse/core').useTitle
   const useToNumber: typeof import('@vueuse/core').useToNumber
   const useToString: typeof import('@vueuse/core').useToString
+  const useToast: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useToast').useToast
   const useToggle: typeof import('@vueuse/core').useToggle
+  const useTour: typeof import('../node_modules/@nuxt/ui/dist/runtime/composables/useTour').useTour
   const useTransition: typeof import('@vueuse/core').useTransition
   const useUrlSearchParams: typeof import('@vueuse/core').useUrlSearchParams
   const useUserMedia: typeof import('@vueuse/core').useUserMedia

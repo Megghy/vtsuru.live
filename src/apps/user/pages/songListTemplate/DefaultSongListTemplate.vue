@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import UButton from '@nuxt/ui/components/Button.vue'
+import UTooltip from '@nuxt/ui/components/Tooltip.vue'
 import { ChevronLeft24Filled, ChevronRight24Filled, CloudAdd20Filled } from '@vicons/fluent'
-import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip } from 'naive-ui'
 import { h, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -70,16 +71,21 @@ function buttons(song: SongsInfo) {
   return [
     accountInfo.value?.id !== props.userInfo?.id
       ? h(
-          NTooltip,
-          { trigger: 'hover' },
+          UTooltip,
           {
-            trigger: () =>
+            text: getSongRequestTooltip(song, props.liveRequestSettings, {
+              isLoggedIn: !!accountInfo.value.id,
+              isBiliAuthed: biliAuth.isAuthed,
+            }),
+          },
+          {
+            default: () =>
               h(
-                NButton,
+                UButton,
                 {
-                  type: 'warning',
-                  size: 'small',
-                  circle: true,
+                  color: 'warning',
+                  size: 'sm',
+                  square: true,
                   loading: isLoading.value === song.key,
                   disabled: !accountInfo.value,
                   onClick: () => {
@@ -91,14 +97,9 @@ function buttons(song: SongsInfo) {
                   },
                 },
                 {
-                  icon: () => h(NIcon, { component: CloudAdd20Filled }),
+                  leading: () => h(CloudAdd20Filled),
                 },
               ),
-            default: () =>
-              getSongRequestTooltip(song, props.liveRequestSettings, {
-                isLoggedIn: !!accountInfo.value.id,
-                isBiliAuthed: biliAuth.isAuthed,
-              }),
           },
         )
       : undefined,
@@ -108,35 +109,35 @@ function buttons(song: SongsInfo) {
 
 <template>
   <div class="song-list-container">
-    <NDivider style="margin-top: 10px" />
+    <USeparator style="margin-top: 10px" />
     <!-- 左侧翻页按钮 -->
     <div class="page-button page-button-left">
-      <NButton
-        circle
-        secondary
-        size="large"
+      <UButton
+        square
+        variant="soft"
+        size="lg"
         title="上一页 (←)"
         @click="handlePrevPage"
       >
-        <template #icon>
-          <NIcon :component="ChevronLeft24Filled" />
+        <template #leading>
+          <component :is="ChevronLeft24Filled" />
         </template>
-      </NButton>
+      </UButton>
     </div>
 
     <!-- 右侧翻页按钮 -->
     <div class="page-button page-button-right">
-      <NButton
-        circle
-        secondary
-        size="large"
+      <UButton
+        square
+        variant="soft"
+        size="lg"
         title="下一页 (→)"
         @click="handleNextPage"
       >
-        <template #icon>
-          <NIcon :component="ChevronRight24Filled" />
+        <template #leading>
+          <component :is="ChevronRight24Filled" />
         </template>
-      </NButton>
+      </UButton>
     </div>
 
     <SongList
@@ -148,19 +149,28 @@ function buttons(song: SongsInfo) {
       :live-request-active="liveRequestActive"
       v-bind="$attrs"
     />
-    <NCollapse v-if="userInfo?.canRequestSong">
-      <NCollapseItem title="点歌列表">
-        <NCard
-          size="small"
-          embedded
-        >
-          <div style="height: 400px; width: 700px; max-width: 100%; position: relative; margin: 0 auto">
-            <LiveRequestOBS :id="userInfo?.id" />
-          </div>
-        </NCard>
-      </NCollapseItem>
-    </NCollapse>
-    <NDivider />
+    <div v-if="userInfo?.canRequestSong">
+      <UCollapsible>
+        <UButton
+          color="neutral"
+          variant="soft"
+          label="点歌列表"
+          trailing-icon="i-lucide-chevron-down"
+        />
+        <template #content>
+          <UCard
+            size="small"
+            variant="soft"
+            class="user-page-card"
+          >
+            <div style="height: 400px; width: 700px; max-width: 100%; position: relative; margin: 0 auto">
+              <LiveRequestOBS :id="userInfo?.id" />
+            </div>
+          </UCard>
+        </template>
+      </UCollapsible>
+    </div>
+    <USeparator />
   </div>
 </template>
 

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NEmpty, NScrollbar, NTabPane, NTabs, NText, NTime } from 'naive-ui'
-
 import { useSpeechService } from '@/store/useSpeechService'
 
 const { spokenHistory, rejectedHistory } = useSpeechService()
@@ -8,20 +6,20 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
 
 <template>
   <div class="history">
-    <NTabs
+    <div
       type="segment"
       size="small"
     >
-      <NTabPane
+      <section
         name="spoken"
         :tab="`已播报 (${spokenHistory.length})`"
       >
-        <NEmpty
+        <UEmpty
           v-if="spokenHistory.length === 0"
           description="暂无记录"
           size="small"
         />
-        <NScrollbar
+        <div
           v-else
           style="max-height: 260px"
         >
@@ -32,31 +30,31 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
               class="item"
             >
               <span class="uname">{{ item.uname }}</span>
-              <NText
+              <span
                 depth="3"
                 class="text"
               >
                 {{ item.text }}
-              </NText>
-              <NTime
+              </span>
+              <time
                 :time="item.time"
                 type="relative"
                 class="time"
               />
             </div>
           </div>
-        </NScrollbar>
-      </NTabPane>
-      <NTabPane
+        </div>
+      </section>
+      <section
         name="rejected"
         :tab="`已拒绝 (${rejectedHistory.length})`"
       >
-        <NEmpty
+        <UEmpty
           v-if="rejectedHistory.length === 0"
           description="暂无记录"
           size="small"
         />
-        <NScrollbar
+        <div
           v-else
           style="max-height: 260px"
         >
@@ -67,22 +65,22 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
               class="item"
             >
               <span class="uname">{{ item.uname }}</span>
-              <NText
+              <span
                 type="error"
                 class="reason"
               >
                 {{ item.reason }}
-              </NText>
-              <NTime
+              </span>
+              <time
                 :time="item.time"
                 type="relative"
                 class="time"
               />
             </div>
           </div>
-        </NScrollbar>
-      </NTabPane>
-    </NTabs>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 

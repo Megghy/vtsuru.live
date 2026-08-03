@@ -1,30 +1,6 @@
 <script setup lang="ts">
 import { ArrowCircleLeft12Regular, Comment24Regular, Delete24Filled, Eye24Regular } from '@vicons/fluent'
 import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
-import {
-  NAvatar,
-  NAvatarGroup,
-  NBackTop,
-  NButton,
-  NCard,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NList,
-  NListItem,
-  NModal,
-  NPagination,
-  NPopconfirm,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -33,6 +9,7 @@ import type { PaginationResponse, UserInfo } from '@/api/api-models'
 import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import { ForumCommentSortTypes } from '@/api/models/forum'
 import router from '@/app/router'
+import PublicTime from '@/apps/user-page/PublicTime.vue'
 import TurnstileVerify from '@/apps/user/components/TurnstileVerify.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { VTSURU_API_URL } from '@/shared/config'
@@ -59,12 +36,10 @@ const { userInfo } = defineProps<{
 }>()
 
 const route = useRoute()
-const message = useMessage()
+const toast = useToast()
 const accountInfo = useAccount()
-const themeVars = useThemeVars()
-
-const accentColor = computed(() => themeVars.value.errorColor)
-const mutedIconColor = computed(() => themeVars.value.textColor3)
+const accentColor = 'var(--ui-error)'
+const mutedIconColor = 'var(--vtsuru-surface-fg-subtle)'
 
 const topicId = ref(-1)
 const useForum = useForumStore()
@@ -91,7 +66,7 @@ const canOprate = computed(() => {
 async function postComment() {
   if (!topic.value.id) return
   if (!currentCommentContent.value.content) {
-    message.error('评论内容不能为空')
+    toast.add({ title: '评论内容不能为空', color: 'error' })
     return
   }
   currentCommentContent.value.topic = topic.value.id
@@ -113,7 +88,7 @@ async function postComment() {
 async function postReply() {
   if (!topic.value.id) return
   if (!currentReplyContent.value.content) {
-    message.error('回复内容不能为空')
+    toast.add({ title: '回复内容不能为空', color: 'error' })
     return
   }
   currentReplyContent.value.comment = useForum.replyingComment?.id ?? -1
@@ -138,6 +113,16 @@ function onDeleteComment(id: number) {
   if (comments.value) {
     comments.value.data = comments.value.data.filter((c) => c.id !== id)
   }
+}
+
+function confirmDeleteTopic() {
+  const content =
+    topic.value.isDeleted || topic.value.isAdmin ? '确定完全删除这个话题吗？这将无法恢复。' : '确定删除这个话题吗？'
+  if (window.confirm(content)) delTopic(topic.value.id)
+}
+
+function confirmRestoreTopic() {
+  if (window.confirm('要恢复这个话题吗？')) restoreTopic(topic.value.id)
 }
 async function delTopic(id: number) {
   useForum.DelTopic(id).then((success) => {
@@ -171,237 +156,222 @@ onMounted(async () => {
   <template v-if="!topic.id" />
   <template v-else>
     <div class="forum-topic-detail">
-      <NBackTop />
-      <NCard
+      <div />
+      <UCard
         size="small"
         bordered
+        class="user-page-card"
       >
         <template #header>
-          <NFlex
+          <div
             align="center"
             :wrap="false"
             :size="8"
           >
-            <NButton
-              text
-              size="small"
+            <UButton
+              variant="link"
+              size="sm"
               @click="() => $router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
             >
-              <template #icon>
-                <NIcon :component="ArrowCircleLeft12Regular" />
+              <template #leading>
+                <component :is="ArrowCircleLeft12Regular" />
               </template>
               返回讨论区
-            </NButton>
-            <NDivider vertical />
-            <NTag
+            </UButton>
+            <USeparator vertical />
+            <UBadge
               v-if="topic.isDeleted"
-              type="warning"
+              color="warning"
               :bordered="false"
             >
               已删除
-            </NTag>
-            <NText class="topic-title">
-              <NEllipsis style="max-width: 100%">
+            </UBadge>
+            <span class="topic-title">
+              <span style="max-width: 100%">
                 {{ topic.title }}
-              </NEllipsis>
-            </NText>
-          </NFlex>
+              </span>
+            </span>
+          </div>
         </template>
-      </NCard>
-      <NCard
+      </UCard>
+      <UCard
         size="small"
         bordered
+        class="user-page-card"
       >
         <template #header>
-          <NFlex
+          <div
             align="center"
             :size="5"
           >
-            <NAvatar
+            <UAvatar
               :src="`${VTSURU_API_URL}user-face/${topic?.user?.id}?size=64`"
               :img-props="{ referrerpolicy: 'no-referrer' }"
             />
-            <NDivider vertical />
+            <USeparator vertical />
             {{ topic.user?.name }}
-          </NFlex>
+          </div>
         </template>
         <template #header-extra>
-          <NTooltip>
-            <template #trigger>
-              <NText depth="3">
-                <NTime
-                  :time="topic.createAt"
-                  type="relative"
-                />
-              </NText>
-            </template>
-            <NTime :time="topic.createAt" />
-          </NTooltip>
+          <UTooltip>
+            <span depth="3">
+              <PublicTime
+                :time="topic.createAt"
+                type="relative"
+              />
+            </span>
+
+            <template #content><PublicTime :time="topic.createAt" /></template>
+          </UTooltip>
         </template>
         <template #footer>
-          <NAvatarGroup
+          <div
             :size="30"
             :options="topic.sampleLikedBy?.map((u) => ({ src: getUserAvatarUrl(u) })) ?? []"
             :img-props="{ referrerpolicy: 'no-referrer' }"
           />
-          <NDivider style="margin: 5px 0 10px 0" />
-          <NFlex>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="small"
-                  :bordered="topic.isLiked"
-                  text
-                >
-                  <template #icon>
-                    <NIcon :component="Eye24Regular" />
-                  </template>
-                  {{ topic.viewCount }}
-                </NButton>
-              </template>
-              浏览
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="small"
-                  :bordered="topic.isLiked"
-                  secondary
-                  :type="topic.isLiked ? 'primary' : 'default'"
-                  :loading="useForum.isLikeLoading"
-                  :disabled="!canOprate"
-                  @click="
-                    useForum.LikeTopic(topic.id, !topic.isLiked).then((success) => {
-                      if (success) {
-                        topic.isLiked = !topic.isLiked
-                        topic.likeCount += topic.isLiked ? 1 : -1
-                      }
-                    })
-                  "
-                >
-                  <template #icon>
-                    <NIcon
-                      :component="topic.isLiked ? Heart : HeartOutline"
-                      :color="topic.isLiked ? accentColor : undefined"
-                    />
-                  </template>
-                  {{ topic.likeCount }}
-                </NButton>
-              </template>
-              点赞
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="small"
-                  secondary
-                  :disabled="!canOprate"
-                  @click="showCommentModal = true"
-                >
-                  <template #icon>
-                    <NIcon :component="Comment24Regular" />
-                  </template>
-                  {{ topic.commentCount }}
-                </NButton>
-              </template>
-              评论
-            </NTooltip>
-            <NFlex
+          <USeparator style="margin: 5px 0 10px 0" />
+          <div>
+            <UTooltip>
+              <UButton
+                size="sm"
+                :bordered="topic.isLiked"
+                variant="link"
+              >
+                <template #leading>
+                  <component :is="Eye24Regular" />
+                </template>
+                {{ topic.viewCount }}
+              </UButton>
+              <template #content> 浏览 </template></UTooltip
+            >
+            <UTooltip>
+              <UButton
+                size="sm"
+                :bordered="topic.isLiked"
+                variant="soft"
+                :color="topic.isLiked ? 'primary' : 'neutral'"
+                :loading="useForum.isLikeLoading"
+                :disabled="!canOprate"
+                @click="
+                  useForum.LikeTopic(topic.id, !topic.isLiked).then((success) => {
+                    if (success) {
+                      topic.isLiked = !topic.isLiked
+                      topic.likeCount += topic.isLiked ? 1 : -1
+                    }
+                  })
+                "
+              >
+                <template #leading>
+                  <component
+                    :is="topic.isLiked ? Heart : HeartOutline"
+                    :color="topic.isLiked ? accentColor : undefined"
+                  />
+                </template>
+                {{ topic.likeCount }}
+              </UButton>
+              <template #content> 点赞 </template></UTooltip
+            >
+            <UTooltip>
+              <UButton
+                size="sm"
+                variant="soft"
+                :disabled="!canOprate"
+                @click="showCommentModal = true"
+              >
+                <template #leading>
+                  <component :is="Comment24Regular" />
+                </template>
+                {{ topic.commentCount }}
+              </UButton>
+              <template #content> 评论 </template></UTooltip
+            >
+            <div
               style="flex: 1"
               justify="end"
             >
-              <NTooltip v-if="topic?.user?.id === accountInfo.id || topic.isAdmin">
-                <template #trigger>
-                  <NPopconfirm @positive-click="delTopic(topic.id)">
-                    <template #trigger>
-                      <NButton
-                        size="small"
-                        text
-                        :disabled="!canOprate"
-                      >
-                        <template #icon>
-                          <NIcon
-                            :component="Delete24Filled"
-                            :color="topic.isDeleted || topic.isAdmin ? accentColor : mutedIconColor"
-                          />
-                        </template>
-                      </NButton>
-                    </template>
-                    {{ topic.isDeleted ? '确定完全删除这个话题吗? 这将无法恢复' : '确定删除这个话题吗' }}
-                  </NPopconfirm>
-                </template>
-                {{ topic.isDeleted || topic.isAdmin ? '完全' : '' }}删除
-              </NTooltip>
-              <NTooltip v-if="topic.isDeleted && topic.isAdmin">
-                <template #trigger>
-                  <NPopconfirm @positive-click="restoreTopic(topic.id)">
-                    <template #trigger>
-                      <NButton
-                        size="small"
-                        text
-                        :disabled="!canOprate"
-                      >
-                        <template #icon>
-                          <NIcon
-                            :component="SyncCircleSharp"
-                            :color="mutedIconColor"
-                          />
-                        </template>
-                      </NButton>
-                    </template>
-                    要恢复这个话题吗?
-                  </NPopconfirm>
-                </template>
-                恢复
-              </NTooltip>
-            </NFlex>
-          </NFlex>
+              <UTooltip v-if="topic?.user?.id === accountInfo.id || topic.isAdmin">
+                <UButton
+                  size="sm"
+                  variant="link"
+                  :disabled="!canOprate"
+                  @click="confirmDeleteTopic"
+                >
+                  <template #leading>
+                    <component
+                      :is="Delete24Filled"
+                      :color="topic.isDeleted || topic.isAdmin ? accentColor : mutedIconColor"
+                    />
+                  </template>
+                </UButton>
+
+                <template #content>{{ topic.isDeleted || topic.isAdmin ? '完全' : '' }}删除 </template></UTooltip
+              >
+              <UTooltip v-if="topic.isDeleted && topic.isAdmin">
+                <UButton
+                  size="sm"
+                  variant="link"
+                  :disabled="!canOprate"
+                  @click="confirmRestoreTopic"
+                >
+                  <template #leading>
+                    <component
+                      :is="SyncCircleSharp"
+                      :color="mutedIconColor"
+                    />
+                  </template>
+                </UButton>
+                <template #content> 恢复 </template></UTooltip
+              >
+            </div>
+          </div>
         </template>
         <div
           class="editor-content-view"
           v-html="topic.content"
         />
-      </NCard>
-      <NCard
+      </UCard>
+      <UCard
         size="small"
         bordered
+        class="user-page-card"
       >
         <template #header> 评论 </template>
         <template #header-extra>
-          <NButton
-            type="primary"
-            size="small"
+          <UButton
+            color="primary"
+            size="sm"
             :disabled="!canOprate"
             @click="showCommentModal = true"
           >
             发送评论
-          </NButton>
+          </UButton>
         </template>
-        <NFlex
+        <div
           align="center"
           justify="center"
           style="padding-top: 6px"
         >
-          <NPagination
+          <UPagination
             v-if="comments && (comments?.data?.length ?? 0) > 0"
             v-model:page="pn"
-            :item-count="comments?.data.length ?? 0"
-            :page-size="ps"
-            show-quick-jumper
+            :total="comments?.data.length ?? 0"
+            :items-per-page="ps"
             @update:page="refreshComments"
           />
-        </NFlex>
+        </div>
         <div style="height: 12px" />
-        <NEmpty
+        <UEmpty
           v-if="!comments || !comments.data || comments.data.length === 0"
           description="暂无评论"
+          class="public-empty"
         />
-        <NList
+        <ul
           v-else
           hoverable
           size="small"
         >
-          <NListItem
+          <li
             v-for="item in comments.data"
             :key="item.id"
           >
@@ -410,83 +380,84 @@ onMounted(async () => {
               :topic="topic"
               @delete="onDeleteComment"
             />
-          </NListItem>
-        </NList>
+          </li>
+        </ul>
         <div style="height: 12px" />
-        <NFlex
+        <div
           v-if="(comments?.data?.length ?? 0) > 5"
           align="center"
           justify="center"
         >
-          <NPagination
+          <UPagination
             v-if="comments && (comments?.data.length ?? 0) > 0"
             v-model:page="pn"
-            :item-count="comments?.data.length ?? 0"
-            :page-size="ps"
-            show-quick-jumper
+            :total="comments?.data.length ?? 0"
+            :items-per-page="ps"
             @update:page="refreshComments"
           />
-        </NFlex>
-      </NCard>
+        </div>
+      </UCard>
     </div>
   </template>
-  <NModal
-    v-model:show="showCommentModal"
-    preset="card"
-    style="width: 1000px; max-width: 90vw; height: auto"
+  <UModal
+    v-model:open="showCommentModal"
+    :ui="{ content: 'max-w-[1000px]' }"
   >
     <template #header> 发送评论 </template>
-    <VEditor
-      ref="editorRef"
-      v-model:value="currentCommentContent.content"
-      :max-length="1111"
-    />
-    <NButton
-      type="primary"
-      :loading="!token || useForum.isLoading"
-      @click="postComment"
-    >
-      发布
-    </NButton>
-  </NModal>
-  <NModal
-    v-model:show="useForum.showReplyModal"
-    preset="card"
-    style="width: 1000px; max-width: 90vw; height: auto"
+    <template #body>
+      <VEditor
+        ref="editorRef"
+        v-model:value="currentCommentContent.content"
+        :max-length="1111"
+      />
+      <UButton
+        color="primary"
+        :loading="!token || useForum.isLoading"
+        @click="postComment"
+      >
+        发布
+      </UButton>
+    </template>
+  </UModal>
+  <UModal
+    v-model:open="useForum.showReplyModal"
+    :ui="{ content: 'max-w-[1000px]' }"
   >
     <template #header> 发送回复 </template>
-    <template v-if="useForum.replyingReply">
-      <NCard
-        size="small"
-        title="正在回复"
-        embedded
+    <template #body>
+      <template v-if="useForum.replyingReply">
+        <UCard
+          size="small"
+          title="正在回复"
+          variant="soft"
+          class="user-page-card"
+        >
+          <ForumReplyItem
+            v-if="useForum.replyingReply && useForum.replyingComment"
+            :item="useForum.replyingReply"
+            :comment="useForum.replyingComment"
+            :topic="topic"
+            :show-reply-button="false"
+          />
+        </UCard>
+        <USeparator />
+      </template>
+      <UTextarea
+        v-model="currentReplyContent.content"
+        placeholder="回复内容"
+        maxlength="233"
+        show-count
+      />
+      <USeparator />
+      <UButton
+        color="primary"
+        :loading="!token || useForum.isLoading"
+        @click="postReply"
       >
-        <ForumReplyItem
-          v-if="useForum.replyingReply && useForum.replyingComment"
-          :item="useForum.replyingReply"
-          :comment="useForum.replyingComment"
-          :topic="topic"
-          :show-reply-button="false"
-        />
-      </NCard>
-      <NDivider />
+        发布
+      </UButton>
     </template>
-    <NInput
-      v-model:value="currentReplyContent.content"
-      type="textarea"
-      placeholder="回复内容"
-      maxlength="233"
-      show-count
-    />
-    <NDivider />
-    <NButton
-      type="primary"
-      :loading="!token || useForum.isLoading"
-      @click="postReply"
-    >
-      发布
-    </NButton>
-  </NModal>
+  </UModal>
   <TurnstileVerify
     ref="turnstile"
     v-model="token"

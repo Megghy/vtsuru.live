@@ -26,6 +26,6 @@
 }
 
 .song-list-surface > *,
-.song-list-surface :is(.n-flex, .n-grid, .n-grid-item) {
+.song-list-surface :is(.public-flex, .public-grid, .public-grid-item) {
   min-width: 0;
 }
