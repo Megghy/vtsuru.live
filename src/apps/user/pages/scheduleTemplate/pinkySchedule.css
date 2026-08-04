@@ -1,0 +1,290 @@
+.pinky-template {
+  container: pinky / inline-size;
+  width: min(100%, var(--vtsuru-page-max-width, 640px));
+  margin-inline: auto;
+}
+
+/* 软萌圆体字栈: 优先圆润无衬线 */
+.pinky-board {
+  --pinky-accent: #e59aa8;
+  --pinky-accent-2: #f5b8cd;
+  --pinky-ink: #a5706b;
+  --pinky-soft: #fdf3f5;
+  --pinky-card: #fffdfd;
+  --pinky-font-round: 'ZCOOL KuaiLe', 'Yuanti SC', 'YouYuan', '幼圆', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Source Han Sans SC', sans-serif;
+
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  padding: clamp(18px, 4.5vw, 32px);
+  overflow: hidden;
+  color: var(--pinky-ink);
+  background-color: var(--pinky-soft);
+  /* 软萌粉底 + 细网格 */
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: center;
+  border: 1px solid color-mix(in srgb, var(--pinky-accent) 40%, #fff 60%);
+  border-radius: calc(var(--vtsuru-page-radius, 14px) + 6px);
+  box-shadow:
+    0 12px 32px -8px color-mix(in srgb, var(--pinky-accent) 30%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--pinky-accent-2) 12%, transparent);
+}
+
+.pinky-board.has-background {
+  background-size: cover;
+}
+
+.pinky-board.has-background::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: color-mix(in srgb, var(--pinky-soft) 84%, transparent);
+  content: '';
+}
+
+/* 角落软萌点缀 */
+.pinky-board::after {
+  position: absolute;
+  z-index: 0;
+  top: 14px;
+  right: 18px;
+  color: color-mix(in srgb, var(--pinky-accent-2) 70%, #fff 30%);
+  font-size: 18px;
+  letter-spacing: 6px;
+  content: '♡ ♡ ♡';
+  pointer-events: none;
+}
+
+/* 顶部大标题 + 字距, 软萌原风 */
+.pinky-head {
+  position: relative;
+  z-index: 2;
+  margin-bottom: clamp(18px, 4vw, 26px);
+  text-align: center;
+}
+
+.pinky-head__title {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--pinky-font-round);
+  font-size: clamp(40px, 11vw, 66px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em; /* 字距居中补偿 */
+  background: linear-gradient(180deg, var(--pinky-accent) 30%, var(--pinky-accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.8));
+}
+
+/* 中文星期等也用圆体 */
+.pinky-day__week,
+.pinky-day__rest,
+.pinky-head__meta {
+  font-family: var(--pinky-font-round);
+}
+
+.pinky-head__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 4px 16px;
+  color: color-mix(in srgb, var(--pinky-accent) 88%, var(--pinky-ink));
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: color-mix(in srgb, var(--pinky-accent-2) 18%, #fff 82%);
+  border: 1px solid color-mix(in srgb, var(--pinky-accent-2) 45%, #fff 55%);
+  border-radius: 999px;
+}
+
+.pinky-art {
+  position: absolute;
+  z-index: 1;
+  right: 4px;
+  bottom: 4px;
+  width: clamp(120px, 26%, 200px);
+  height: 78%;
+  margin: 0;
+  pointer-events: none;
+}
+
+.pinky-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 10px 16px color-mix(in srgb, var(--pinky-accent) 32%, transparent));
+}
+
+.pinky-days {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 11px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 有立绘时给内容留出空间 */
+.has-artwork .pinky-days {
+  padding-right: clamp(120px, 26%, 200px);
+}
+
+.pinky-day {
+  min-width: 0;
+}
+
+/* 日期头: 圆头小胶囊 */
+.pinky-day__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  padding: 7px 6px 6px 14px;
+  color: var(--pinky-accent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pinky-accent-2) 30%, #fff 70%),
+    color-mix(in srgb, var(--pinky-accent-2) 16%, #fff 84%));
+  border: 1px solid color-mix(in srgb, var(--pinky-accent) 34%, #fff 66%);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+}
+
+.pinky-day__week {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.pinky-day__date {
+  color: color-mix(in srgb, var(--pinky-accent) 76%, var(--pinky-ink));
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.pinky-day__today {
+  margin-left: auto;
+  padding: 2px 10px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, var(--pinky-accent), var(--pinky-accent-2));
+  border-radius: 999px;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--pinky-accent) 40%, transparent);
+}
+
+/* 内容区: 柔白圆角卡 */
+.pinky-day__content {
+  min-width: 0;
+  padding: 11px 13px;
+  background: var(--pinky-card);
+  border: 1px solid color-mix(in srgb, var(--pinky-accent) 26%, #fff 74%);
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--pinky-accent-2) 20%, transparent);
+}
+
+.pinky-day.is-today .pinky-day__content {
+  border-color: color-mix(in srgb, var(--pinky-accent) 48%, #fff 52%);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--pinky-accent) 30%, transparent);
+}
+
+.pinky-day__events {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* 事件条目: 圆润小胶囊 */
+.pinky-event {
+  --event-tag-color: var(--pinky-accent);
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--event-tag-color) 8%, #fff 92%);
+  border: 1px solid color-mix(in srgb, var(--event-tag-color) 18%, #fff 82%);
+  border-radius: 999px;
+}
+
+.pinky-event time {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  color: #fff;
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: var(--event-tag-color);
+  border-radius: 999px;
+}
+
+.pinky-event strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--pinky-ink);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.pinky-event__tag {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 1px 9px;
+  color: color-mix(in srgb, var(--event-tag-color) 88%, var(--pinky-ink));
+  font-size: 10px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--event-tag-color) 16%, #fff 84%);
+  border-radius: 999px;
+}
+
+.pinky-day__rest {
+  display: block;
+  padding: 5px 0 3px;
+  color: color-mix(in srgb, var(--pinky-accent) 58%, #fff 42%);
+  font-size: 14px;
+  font-style: italic;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+@container pinky (max-width: 560px) {
+  .pinky-art {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    height: 180px;
+    margin: 4px 0 14px;
+  }
+
+  .has-artwork .pinky-days {
+    padding-right: 0;
+  }
+}
+
+@container pinky (max-width: 380px) {
+  .pinky-board {
+    padding: 16px 12px;
+  }
+
+  .pinky-head__title {
+    letter-spacing: 0.12em;
+  }
+
+  .pinky-art {
+    height: 150px;
+  }
+}

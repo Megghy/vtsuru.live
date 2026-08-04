@@ -71,11 +71,19 @@
   max-width: 720px;
   margin: 8px 0;
   overflow-wrap: anywhere;
-  color: var(--schedule-fg);
-  font-family: 'Trebuchet MS', 'Microsoft YaHei', sans-serif;
+  font-family: 'Baloo 2', 'Trebuchet MS', 'Microsoft YaHei', sans-serif;
   font-size: clamp(28px, 5vw, 56px);
   line-height: 0.95;
   letter-spacing: 0;
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--kawaii-accent) 62%, var(--schedule-fg)) 10%,
+    var(--kawaii-accent) 52%,
+    color-mix(in srgb, var(--kawaii-accent) 46%, #fff 54%) 92%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .week-meta {

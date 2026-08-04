@@ -118,11 +118,21 @@
 .signal-title h2 {
   margin: 3px 0 0;
   overflow-wrap: anywhere;
-  font-family: 'Bahnschrift', 'Microsoft YaHei', sans-serif;
+  font-family: 'Orbitron', 'Bahnschrift', 'Microsoft YaHei', sans-serif;
   font-size: clamp(24px, 4vw, 46px);
   font-weight: 750;
   line-height: 1;
   letter-spacing: 0;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--neon-signal) 78%, var(--schedule-fg)) 0%,
+    color-mix(in srgb, var(--neon-accent) 88%, var(--schedule-fg)) 60%,
+    var(--neon-accent) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--neon-accent) 34%, transparent));
 }
 
 .week-code {

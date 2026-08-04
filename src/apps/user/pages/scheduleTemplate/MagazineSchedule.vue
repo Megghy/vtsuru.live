@@ -8,6 +8,7 @@ import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigT
 
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
+import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
 
@@ -58,16 +59,9 @@ const DefaultConfig: MagazineConfig = {
 const posterRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { customPortraitUrl, portraitUrl, backgroundUrl } = useScheduleTemplateAssets(props, effectiveConfig)
 
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
-const customPortraitUrl = computed(() => effectiveConfig.value.portraitFile[0]?.path)
-const avatarUrl = computed(
-  () => props.userInfo?.faceUrl || props.userInfo?.streamerInfo?.faceUrl || props.biliInfo?.face || '',
-)
-const portraitUrl = computed(
-  () => customPortraitUrl.value || props.previewPortrait || (effectiveConfig.value.showAvatar ? avatarUrl.value : ''),
-)
-const backgroundUrl = computed(() => effectiveConfig.value.backgroundFile[0]?.path)
 const issueLabel = computed(() => {
   const week = currentWeek.value
   return week ? `${week.year} / WEEK ${String(week.week).padStart(2, '0')}` : 'NO SCHEDULE'

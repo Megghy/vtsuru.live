@@ -93,12 +93,19 @@
   max-width: 460px;
   margin: 0;
   overflow-wrap: anywhere;
-  color: var(--schedule-fg);
   font-family: 'BIZ UDPGothic', 'Yu Gothic UI', 'Microsoft YaHei', sans-serif;
   font-size: 42px;
   font-weight: 900;
   line-height: 0.98;
   letter-spacing: 0;
+  background: linear-gradient(
+    100deg,
+    var(--schedule-fg) 55%,
+    color-mix(in srgb, var(--magazine-accent) 72%, var(--schedule-fg)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .masthead-meta {

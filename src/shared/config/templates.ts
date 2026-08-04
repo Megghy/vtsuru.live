@@ -21,9 +21,11 @@ export const ScheduleTemplateMap: TemplateMapType = {
   },
   pinky: {
     name: '粉粉',
+    settingName: 'Template.Schedule.Pinky',
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/PinkySchedule.vue')),
     ),
+    capabilities: ['templateConfig'],
   },
   magazine: {
     name: '直播周刊',
@@ -46,6 +48,22 @@ export const ScheduleTemplateMap: TemplateMapType = {
     settingName: 'Template.Schedule.NeonStage',
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/NeonStageSchedule.vue')),
+    ),
+    capabilities: ['templateConfig'],
+  },
+  livePoster: {
+    name: '直播海报',
+    settingName: 'Template.Schedule.LivePoster',
+    component: markRaw(
+      defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/LivePosterSchedule.vue')),
+    ),
+    capabilities: ['templateConfig'],
+  },
+  prismStage: {
+    name: '霓虹舞台',
+    settingName: 'Template.Schedule.PrismStage',
+    component: markRaw(
+      defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/PrismStageSchedule.vue')),
     ),
     capabilities: ['templateConfig'],
   },

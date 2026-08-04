@@ -9,9 +9,13 @@ import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
 import { useScheduleWeek } from './scheduleTemplateUtils'
+import { ensureGoogleFont } from './scheduleFonts'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
+import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
+
+ensureGoogleFont('Orbitron:wght@700;900')
 
 interface NeonStageConfig {
   backgroundFile: UploadFileResponse[]
@@ -69,15 +73,7 @@ const DefaultConfig: NeonStageConfig = {
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
-const portraitUrl = computed(
-  () =>
-    effectiveConfig.value.portraitFile[0]?.path ||
-    props.previewPortrait ||
-    (effectiveConfig.value.showAvatar
-      ? props.userInfo?.faceUrl || props.userInfo?.streamerInfo?.faceUrl || props.biliInfo?.face
-      : ''),
-)
-const backgroundUrl = computed(() => effectiveConfig.value.backgroundFile[0]?.path)
+const { portraitUrl, backgroundUrl } = useScheduleTemplateAssets(props, effectiveConfig)
 const boardStyle = computed(() => ({
   '--neon-signal': rgbaToString(effectiveConfig.value.signalColor),
   '--neon-accent': rgbaToString(effectiveConfig.value.accentColor),
