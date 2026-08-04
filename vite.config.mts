@@ -98,7 +98,7 @@ export default defineConfig({
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
     }),
   ],
-  server: { port: 51000 },
+  server: { host: '0.0.0.0', port: 51000 },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   define: {
     'process.env': {},

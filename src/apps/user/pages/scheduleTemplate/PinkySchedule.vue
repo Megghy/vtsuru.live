@@ -4,14 +4,12 @@ import { computed, ref } from 'vue'
 import type { UploadFileResponse } from '@/api/api-models'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
-import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
+import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
-import { useScheduleWeek } from './scheduleTemplateUtils'
 import { ensureGoogleFont } from './scheduleFonts'
+import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
-
-ensureGoogleFont('ZCOOL+KuaiLe')
 
 interface PinkyConfig {
   backgroundFile: UploadFileResponse[]
@@ -23,20 +21,22 @@ interface PinkyConfig {
 
 const props = defineProps<ScheduleConfigTypeWithConfig<PinkyConfig>>()
 
+ensureGoogleFont('ZCOOL+KuaiLe')
+
 const Config = defineTemplateConfig([
   {
     name: '背景图片',
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.backgroundFile = files),
+    onUploaded: (files: UploadFileResponse[], config: PinkyConfig) => (config.backgroundFile = files),
   },
   {
     name: '角色立绘',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.portraitFile = files),
+    onUploaded: (files: UploadFileResponse[], config: PinkyConfig) => (config.portraitFile = files),
   },
   { name: '标题', type: 'string', key: 'heading', default: 'SCHEDULE' },
   {
@@ -60,11 +60,11 @@ const DefaultConfig: PinkyConfig = {
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
-const { portraitUrl, backgroundUrl, accentColor } = useScheduleTemplateAssets(props, effectiveConfig)
+const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 
 const boardStyle = computed(() => ({
-  '--pinky-accent': accentColor.value,
-  backgroundImage: backgroundUrl.value ? `url(${backgroundUrl.value})` : undefined,
+  '--pinky-accent': rgbaToString(effectiveConfig.value.accentColor),
+  ...backgroundImageStyle.value,
 }))
 
 defineExpose({ Config, DefaultConfig })

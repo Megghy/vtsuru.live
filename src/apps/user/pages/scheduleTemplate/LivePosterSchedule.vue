@@ -8,14 +8,12 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
-import { useScheduleWeek } from './scheduleTemplateUtils'
 import { ensureGoogleFont } from './scheduleFonts'
+import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
-
-ensureGoogleFont('Anton')
 
 interface LivePosterConfig {
   backgroundFile: UploadFileResponse[]
@@ -25,64 +23,74 @@ interface LivePosterConfig {
   accentColor: RGBAColor
   accentColor2: RGBAColor
   showAvatar: boolean
+  halftone: boolean
 }
 
 const props = defineProps<ScheduleConfigTypeWithConfig<LivePosterConfig>>()
 
+ensureGoogleFont('Anton')
+
 const Config = defineTemplateConfig([
   {
-    name: '背景图片',
+    name: '纸张底图',
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.backgroundFile = files),
+    onUploaded: (files: UploadFileResponse[], config: LivePosterConfig) => (config.backgroundFile = files),
   },
   {
-    name: '角色立绘',
+    name: '主视觉立绘',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.portraitFile = files),
+    onUploaded: (files: UploadFileResponse[], config: LivePosterConfig) => (config.portraitFile = files),
   },
-  { name: '主标题', type: 'string', key: 'heading', default: 'LIVE' },
-  { name: '副标题', type: 'string', key: 'subheading', default: 'WEEKLY STREAM' },
+  { name: '海报标题', type: 'string', key: 'heading', default: 'LIVE' },
+  { name: '海报副标题', type: 'string', key: 'subheading', default: 'WEEKLY TOUR' },
   {
-    name: '主强调色',
+    name: '套印主色',
     type: 'color',
     key: 'accentColor',
-    default: { r: 255, g: 82, b: 150, a: 1 } as RGBAColor,
+    default: { r: 205, g: 43, b: 45, a: 1 } as RGBAColor,
     showAlpha: false,
   },
   {
-    name: '副强调色',
+    name: '纸张强调色',
     type: 'color',
     key: 'accentColor2',
-    default: { r: 92, g: 226, b: 255, a: 1 } as RGBAColor,
+    default: { r: 246, g: 221, b: 157, a: 1 } as RGBAColor,
     showAlpha: false,
   },
-  { name: '未上传立绘时显示头像', type: 'boolean', key: 'showAvatar', default: true },
+  { name: '无立绘时显示头像', type: 'boolean', key: 'showAvatar', default: false },
+  {
+    name: '立绘单色印刷感',
+    type: 'boolean',
+    key: 'halftone',
+    default: true,
+    description: '对彩色立绘做去色套印处理, 关闭则保留原图色彩',
+  },
 ])
 
 const DefaultConfig: LivePosterConfig = {
   backgroundFile: [],
   portraitFile: [],
   heading: 'LIVE',
-  subheading: 'WEEKLY STREAM',
-  accentColor: { r: 255, g: 82, b: 150, a: 1 },
-  accentColor2: { r: 92, g: 226, b: 255, a: 1 },
-  showAvatar: true,
+  subheading: 'WEEKLY TOUR',
+  accentColor: { r: 205, g: 43, b: 45, a: 1 },
+  accentColor2: { r: 246, g: 221, b: 157, a: 1 },
+  showAvatar: false,
+  halftone: true,
 }
 
 const posterRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
-const { portraitUrl, backgroundUrl } = useScheduleTemplateAssets(props, effectiveConfig)
-
+const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
 const posterStyle = computed(() => ({
-  '--poster-accent': rgbaToString(effectiveConfig.value.accentColor),
-  '--poster-accent-2': rgbaToString(effectiveConfig.value.accentColor2),
-  backgroundImage: backgroundUrl.value ? `url(${backgroundUrl.value})` : undefined,
+  '--poster-red': rgbaToString(effectiveConfig.value.accentColor),
+  '--poster-paper': rgbaToString(effectiveConfig.value.accentColor2),
+  ...backgroundImageStyle.value,
 }))
 
 defineExpose({ Config, DefaultConfig })
@@ -94,7 +102,7 @@ defineExpose({ Config, DefaultConfig })
       v-model="selectedWeek"
       :weeks="props.data ?? []"
       :capture-target="posterRef"
-      :file-name="`直播海报_${selectedWeek || '本周'}_${streamerName}`"
+      :file-name="`巡演海报_${selectedWeek || '本周'}_${streamerName}`"
     />
 
     <article
@@ -104,45 +112,61 @@ defineExpose({ Config, DefaultConfig })
       :style="posterStyle"
       aria-labelledby="live-poster-title"
     >
-      <div class="poster-beams" />
-      <div class="poster-glow" />
+      <div
+        class="poster-registration"
+        aria-hidden="true"
+      />
 
       <header class="poster-top">
-        <div class="poster-live-badge">
-          <span class="poster-live-dot" />
-          ON AIR
+        <div class="poster-edition">
+          <span>VTSURU LIVE</span><strong>NO.{{ String(eventCount).padStart(2, '0') }}</strong>
         </div>
-        <div class="poster-week">
-          <span>{{ weekLabel }}</span>
-          <strong>{{ eventCount.toString().padStart(2, '0') }} STREAMS</strong>
-        </div>
+        <div class="poster-date">{{ weekLabel }}</div>
       </header>
 
       <div class="poster-hero">
-        <p class="poster-hero__presenter">{{ streamerName }} PRESENTS</p>
-        <h2
-          id="live-poster-title"
-          class="poster-hero__title"
-        >
-          {{ effectiveConfig.heading }}
-        </h2>
-        <p class="poster-hero__sub">{{ effectiveConfig.subheading }}</p>
-      </div>
+        <div class="poster-copy">
+          <p class="poster-kicker">{{ streamerName }} PRESENTS</p>
+          <h2
+            id="live-poster-title"
+            class="poster-hero__title"
+          >
+            {{ effectiveConfig.heading }}
+          </h2>
+          <p class="poster-hero__sub">{{ effectiveConfig.subheading }}</p>
+        </div>
 
-      <figure
-        v-if="portraitUrl"
-        class="poster-art"
-      >
-        <img
-          :src="portraitUrl"
-          :alt="`${streamerName}的形象`"
-        />
-      </figure>
+        <div
+          class="poster-mark"
+          aria-hidden="true"
+        >
+          <span class="poster-mark__signal">ON AIR</span>
+          <span class="poster-mark__tour">ON TOUR</span>
+        </div>
+
+        <figure
+          v-if="portraitUrl"
+          class="poster-art"
+          :class="{ 'no-halftone': !effectiveConfig.halftone }"
+        >
+          <img
+            :src="portraitUrl"
+            :alt="`${streamerName}的主视觉立绘`"
+          />
+        </figure>
+        <div
+          v-else
+          class="poster-no-art"
+          aria-hidden="true"
+        >
+          LIVE
+        </div>
+      </div>
 
       <div class="poster-schedule">
         <div class="poster-schedule__head">
           <NIcon><Live24Filled /></NIcon>
-          <span>THIS WEEK ON STREAM</span>
+          <span>WEEKLY RUNSHEET</span>
           <span class="poster-schedule__range">MON — SUN</span>
         </div>
 
@@ -158,7 +182,6 @@ defineExpose({ Config, DefaultConfig })
               <span>{{ day.label }}</span>
               <time>{{ day.date }}</time>
             </div>
-
             <div
               v-if="day.items.length"
               class="poster-day__events"
@@ -177,9 +200,8 @@ defineExpose({ Config, DefaultConfig })
             <span
               v-else
               class="poster-day__rest"
+              >OFF / REST</span
             >
-              OFF
-            </span>
           </li>
         </ol>
       </div>

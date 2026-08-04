@@ -2,14 +2,11 @@ import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
-import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
-import { rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
 /** 各风格化日程模板共用的素材配置字段 */
 export interface ScheduleTemplateAssetsConfig {
   backgroundFile: UploadFileResponse[]
   portraitFile: UploadFileResponse[]
-  accentColor: RGBAColor
   showAvatar: boolean
 }
 
@@ -28,10 +25,12 @@ export function useScheduleTemplateAssets<T extends ScheduleTemplateAssetsConfig
     () => props.userInfo?.faceUrl || props.userInfo?.streamerInfo?.faceUrl || props.biliInfo?.face || '',
   )
   const portraitUrl = computed(
-    () => customPortraitUrl.value || props.previewPortrait || (effectiveConfig.value.showAvatar ? avatarUrl.value : ''),
+    () => customPortraitUrl.value || (effectiveConfig.value.showAvatar ? props.previewPortrait || avatarUrl.value : ''),
   )
   const backgroundUrl = computed(() => effectiveConfig.value.backgroundFile[0]?.path)
-  const accentColor = computed(() => rgbaToString(effectiveConfig.value.accentColor))
-
-  return { customPortraitUrl, avatarUrl, portraitUrl, backgroundUrl, accentColor }
+  /** 供模板 :style 直接绑定的背景图样式, 无背景时为 undefined */
+  const backgroundImageStyle = computed(() =>
+    backgroundUrl.value ? { backgroundImage: `url(${backgroundUrl.value})` } : undefined,
+  )
+  return { customPortraitUrl, avatarUrl, portraitUrl, backgroundUrl, backgroundImageStyle }
 }

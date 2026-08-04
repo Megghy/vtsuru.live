@@ -8,14 +8,12 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
-import { useScheduleWeek } from './scheduleTemplateUtils'
 import { ensureGoogleFont } from './scheduleFonts'
+import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
-
-ensureGoogleFont('Baloo+2:wght@600;800')
 
 interface KawaiiConfig {
   backgroundFile: UploadFileResponse[]
@@ -30,23 +28,25 @@ interface KawaiiConfig {
 
 const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfig>>()
 
+ensureGoogleFont('Baloo+2:wght@600;800')
+
 const Config = defineTemplateConfig([
   {
     name: '背景图片',
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.backgroundFile = files),
+    onUploaded: (files: UploadFileResponse[], config: KawaiiConfig) => (config.backgroundFile = files),
   },
   {
-    name: '角色立绘',
+    name: '角色贴纸',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.portraitFile = files),
+    onUploaded: (files: UploadFileResponse[], config: KawaiiConfig) => (config.portraitFile = files),
   },
   {
-    name: '立绘位置',
+    name: '贴纸位置',
     type: 'select',
     key: 'portraitPosition',
     default: 'right',
@@ -55,9 +55,9 @@ const Config = defineTemplateConfig([
       { label: '左侧', value: 'left' },
     ],
   },
-  { name: '标题', type: 'string', key: 'heading', default: 'WEEKLY LIVE NOTE' },
+  { name: '手帐标题', type: 'string', key: 'heading', default: 'WEEKLY LIVE NOTE' },
   {
-    name: '强调色',
+    name: '主色',
     type: 'color',
     key: 'accentColor',
     default: { r: 238, g: 119, b: 158, a: 1 } as RGBAColor,
@@ -88,11 +88,11 @@ const DefaultConfig: KawaiiConfig = {
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
-const { portraitUrl, backgroundUrl } = useScheduleTemplateAssets(props, effectiveConfig)
+const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 const boardStyle = computed(() => ({
   '--kawaii-accent': rgbaToString(effectiveConfig.value.accentColor),
   '--kawaii-sheet': rgbaToString(effectiveConfig.value.sheetColor),
-  backgroundImage: backgroundUrl.value ? `url(${backgroundUrl.value})` : undefined,
+  ...backgroundImageStyle.value,
 }))
 
 defineExpose({ Config, DefaultConfig })
@@ -116,7 +116,14 @@ defineExpose({ Config, DefaultConfig })
       ]"
       :style="boardStyle"
     >
-      <div class="paper-grid" />
+      <div
+        class="doodle-field"
+        aria-hidden="true"
+      >
+        <span class="doodle-heart">♡</span>
+        <span class="doodle-star">✦</span>
+        <span class="doodle-line" />
+      </div>
 
       <div
         v-for="image in effectiveConfig.decorativeFile"
@@ -138,14 +145,18 @@ defineExpose({ Config, DefaultConfig })
       </div>
 
       <header class="kawaii-head">
+        <span
+          class="washi-tape tape-head"
+          aria-hidden="true"
+        />
         <div class="head-mark">
           <NIcon size="18"><Sparkle24Filled /></NIcon>
-          LIVE PLAN
+          MY WEEKLY SCRAPBOOK
         </div>
         <h2>{{ effectiveConfig.heading }}</h2>
         <div class="week-meta">
           <span>{{ weekLabel }}</span>
-          <span>{{ eventCount }} STREAMS</span>
+          <span>{{ eventCount }} 条记录</span>
         </div>
       </header>
 
@@ -153,32 +164,39 @@ defineExpose({ Config, DefaultConfig })
         v-if="portraitUrl"
         class="character-art"
       >
+        <span
+          class="washi-tape tape-art"
+          aria-hidden="true"
+        />
         <img
           :src="portraitUrl"
-          :alt="`${props.userInfo?.name || '主播'}的形象`"
+          :alt="`${props.userInfo?.name || '主播'}的贴纸形象`"
         />
         <figcaption>@{{ props.userInfo?.name || 'VTUBER' }}</figcaption>
       </figure>
 
-      <div class="day-grid">
+      <div class="scrapbook-layout">
         <article
-          v-for="day in days"
+          v-for="(day, dayIndex) in days"
           :key="day.english"
           class="day-note"
-          :class="{ 'is-today': day.isToday }"
+          :class="[`note-${dayIndex + 1}`, { 'is-today': day.isToday }]"
         >
+          <span
+            class="washi-tape"
+            aria-hidden="true"
+          />
           <header class="day-head">
             <span class="day-number">{{ day.shortLabel }}</span>
-            <span>
+            <div>
               <strong>{{ day.label }}</strong>
               <small>{{ day.english }} · {{ day.date }}</small>
-            </span>
+            </div>
             <span
               v-if="day.isToday"
               class="today-mark"
+              >今天</span
             >
-              TODAY
-            </span>
           </header>
 
           <div
@@ -193,7 +211,7 @@ defineExpose({ Config, DefaultConfig })
             >
               <time>{{ item.time || '待定' }}</time>
               <div class="event-copy">
-                <strong>{{ item.title || '未命名直播' }}</strong>
+                <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
                 <span v-if="item.tag"># {{ item.tag }}</span>
               </div>
             </div>
@@ -202,9 +220,16 @@ defineExpose({ Config, DefaultConfig })
             v-else
             class="schedule-empty-copy rest-note"
           >
-            OFF DAY · 好好休息
+            留白日 · 好好休息
           </p>
         </article>
+      </div>
+
+      <div
+        class="rubber-stamp"
+        aria-hidden="true"
+      >
+        LIVE<br />NOTES
       </div>
     </div>
   </section>

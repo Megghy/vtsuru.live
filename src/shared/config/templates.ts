@@ -44,14 +44,14 @@ export const ScheduleTemplateMap: TemplateMapType = {
     capabilities: ['templateConfig'],
   },
   neon: {
-    name: '霓虹信号台',
+    name: '信号播控台',
     settingName: 'Template.Schedule.NeonStage',
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/NeonStageSchedule.vue')),
     ),
     capabilities: ['templateConfig'],
   },
-  livePoster: {
+  liveposter: {
     name: '直播海报',
     settingName: 'Template.Schedule.LivePoster',
     component: markRaw(
@@ -59,11 +59,19 @@ export const ScheduleTemplateMap: TemplateMapType = {
     ),
     capabilities: ['templateConfig'],
   },
-  prismStage: {
-    name: '霓虹舞台',
+  prismstage: {
+    name: '七曜物候历',
     settingName: 'Template.Schedule.PrismStage',
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/PrismStageSchedule.vue')),
+    ),
+    capabilities: ['templateConfig'],
+  },
+  kinari: {
+    name: '白和纸手帖',
+    settingName: 'Template.Schedule.Kinari',
+    component: markRaw(
+      defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/KinariSchedule.vue')),
     ),
     capabilities: ['templateConfig'],
   },

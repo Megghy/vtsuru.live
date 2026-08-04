@@ -566,7 +566,11 @@ async function setAsDisplayTemplate() {
                     :bili-info="biliUserInfo"
                     :data="group.Data"
                     :config="currentConfigData"
-                    :preview-portrait="pageKey === 'schedule' ? nana7miPlaceholder : undefined"
+                    :preview-portrait="
+                      pageKey === 'schedule' && ['pinky', 'liveposter'].includes(selectedKey)
+                        ? nana7miPlaceholder
+                        : undefined
+                    "
                     @vue:mounted="onPreviewMounted"
                   />
                 </NConfigProvider>
@@ -692,6 +696,10 @@ async function setAsDisplayTemplate() {
 
 .template-preview-content > :deep(:only-child) {
   height: 100% !important;
+}
+
+.template-preview-content.schedule-template-surface > :deep(:only-child) {
+  height: auto !important;
 }
 
 /* 窄屏: 取消固定高度, 上下堆叠各自自然展开, 回退到页面整体滚动 */

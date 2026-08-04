@@ -29,11 +29,15 @@ function hasScheduleContent(item: ScheduleDayInfo) {
 export function useScheduleWeek(data: MaybeRefOrGetter<ScheduleWeekInfo[] | undefined>) {
   const selectedWeek = ref<string>()
   const weeks = computed(() => toValue(data) ?? [])
-  const currentWeekKey = `${getISOWeekYear(new Date())}-${getISOWeek(new Date())}`
+  // 在 computed 内求值, 跨零点挂载时"今天/本周"可随之刷新
+  const currentWeekKey = computed(() => {
+    const now = new Date()
+    return `${getISOWeekYear(now)}-${getISOWeek(now)}`
+  })
 
   const currentWeek = computed(() => {
     const selected = weeks.value.find((week) => `${week.year}-${week.week}` === selectedWeek.value)
-    return selected ?? weeks.value.find((week) => `${week.year}-${week.week}` === currentWeekKey) ?? weeks.value[0]
+    return selected ?? weeks.value.find((week) => `${week.year}-${week.week}` === currentWeekKey.value) ?? weeks.value[0]
   })
 
   watch(

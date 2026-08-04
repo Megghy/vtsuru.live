@@ -4,9 +4,11 @@ import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 import type { SelectOption, SelectProps } from 'naive-ui'
 import { NButton, NIcon, NSelect, useMessage } from 'naive-ui'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { ScheduleWeekInfo } from '@/api/api-models'
+
+import { getISOWeekStart } from './scheduleTemplateUtils'
 
 const props = defineProps<{
   weeks: ScheduleWeekInfo[]
@@ -16,6 +18,7 @@ const props = defineProps<{
 
 const selectedWeek = defineModel<string>()
 const message = useMessage()
+const saving = ref(false)
 
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' })
 
@@ -49,7 +52,8 @@ function moveWeek(offset: number) {
 }
 
 async function saveScheduleImage() {
-  if (!props.captureTarget) return
+  if (!props.captureTarget || saving.value) return
+  saving.value = true
   try {
     const canvas = await html2canvas(props.captureTarget, {
       width: props.captureTarget.clientWidth,
@@ -59,7 +63,8 @@ async function saveScheduleImage() {
       scrollY: 0,
       useCORS: true,
       allowTaint: true,
-      scale: window.devicePixelRatio,
+      // 封顶 2x, 避免高分屏 + 大模板下 canvas 过大导致 toBlob 失败或内存压力
+      scale: Math.min(window.devicePixelRatio, 2),
     })
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1))
     if (!blob) throw new Error('图片生成失败')
@@ -67,14 +72,9 @@ async function saveScheduleImage() {
   } catch (error) {
     console.error(error)
     message.error('保存图片失败')
+  } finally {
+    saving.value = false
   }
-}
-
-function getISOWeekStart(year: number, week: number) {
-  const januaryFourth = new Date(year, 0, 4)
-  const mondayOffset = (januaryFourth.getDay() + 6) % 7
-  januaryFourth.setDate(januaryFourth.getDate() - mondayOffset + (week - 1) * 7)
-  return januaryFourth
 }
 
 const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
@@ -157,6 +157,7 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       class="schedule-week-toolbar__save"
       type="primary"
       size="medium"
+      :loading="saving"
       @click="saveScheduleImage"
     >
       <template #icon>

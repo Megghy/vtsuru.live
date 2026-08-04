@@ -7,124 +7,176 @@
 .kawaii-board {
   --kawaii-accent: #ee779e;
   --kawaii-sheet: rgba(255, 249, 250, 0.9);
+  --kawaii-ink: color-mix(in srgb, #48313a 82%, var(--schedule-fg) 18%);
+  --kawaii-muted: color-mix(in srgb, #76636b 82%, var(--schedule-muted) 18%);
 
   position: relative;
   isolation: isolate;
   min-width: 0;
-  min-height: 650px;
-  padding: clamp(24px, 4vw, 54px);
+  min-height: 710px;
+  padding: clamp(28px, 5vw, 58px);
   overflow: hidden;
-  color: var(--schedule-fg);
+  color: var(--kawaii-ink);
   background-color: var(--kawaii-sheet);
   background-position: center;
   background-size: cover;
   border: var(--vtsuru-page-border);
-  border-radius: var(--vtsuru-page-radius, 16px);
+  border-radius: min(var(--vtsuru-page-radius, 8px), 10px);
   box-shadow: var(--vtsuru-page-shadow);
 }
 
 .kawaii-board.has-background::before {
   position: absolute;
-  z-index: -1;
+  z-index: -2;
   inset: 0;
-  background: color-mix(in srgb, var(--kawaii-sheet) 82%, transparent);
+  background: color-mix(in srgb, var(--kawaii-sheet) 80%, transparent);
   content: '';
 }
 
-.paper-grid {
+.kawaii-board::after {
   position: absolute;
-  z-index: -2;
+  z-index: -1;
+  inset: 13px;
+  border: 1px dashed color-mix(in srgb, var(--kawaii-accent) 35%, transparent);
+  content: '';
+  pointer-events: none;
+}
+
+.doodle-field {
+  position: absolute;
+  z-index: -1;
   inset: 0;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--kawaii-accent) 10%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--kawaii-accent) 10%, transparent) 1px, transparent 1px);
-  background-size: 24px 24px;
-  opacity: 0.75;
+  color: color-mix(in srgb, var(--kawaii-accent) 68%, var(--kawaii-ink));
+  pointer-events: none;
 }
 
-.kawaii-board.has-artwork.art-right {
-  padding-right: clamp(230px, 29%, 330px);
+.doodle-heart,
+.doodle-star {
+  position: absolute;
+  font-family: Georgia, serif;
 }
 
-.kawaii-board.has-artwork.art-left {
-  padding-left: clamp(230px, 29%, 330px);
+.doodle-heart {
+  top: 10%;
+  left: 4%;
+  font-size: 30px;
+  transform: rotate(-12deg);
+}
+
+.doodle-star {
+  right: 4%;
+  bottom: 12%;
+  font-size: 28px;
+  transform: rotate(15deg);
+}
+
+.doodle-line {
+  position: absolute;
+  right: 8%;
+  top: 22%;
+  width: 58px;
+  height: 16px;
+  border: 1px solid color-mix(in srgb, var(--kawaii-accent) 70%, var(--kawaii-ink));
+  border-left: 0;
+  clip-path: polygon(0 12%, 100% 0, 100% 88%, 0 100%);
+  transform: rotate(-8deg);
+}
+
+.doodle-line::after {
+  position: absolute;
+  right: 7px;
+  bottom: 4px;
+  width: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--kawaii-accent) 46%, transparent);
+  content: '';
 }
 
 .kawaii-head {
   position: relative;
   z-index: 2;
-  margin-bottom: clamp(22px, 3vw, 34px);
+  width: min(100%, 640px);
+  margin-bottom: 32px;
+  padding: 22px 24px 18px;
+  background: color-mix(in srgb, var(--kawaii-sheet) 92%, #fff);
+  border: 1px solid color-mix(in srgb, var(--kawaii-accent) 24%, var(--schedule-border));
+  box-shadow: 5px 7px 0 color-mix(in srgb, var(--kawaii-accent) 12%, transparent);
+  transform: rotate(-1.2deg);
+}
+
+.washi-tape {
+  position: absolute;
+  z-index: 3;
+  width: 76px;
+  height: 18px;
+  background: color-mix(in srgb, var(--kawaii-accent) 48%, #f9cf9d);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--kawaii-ink) 12%, transparent);
+  opacity: 0.88;
+  pointer-events: none;
+}
+
+.washi-tape::after {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 8px, color-mix(in srgb, #fff 38%, transparent) 8px 10px);
+  content: '';
+}
+
+.tape-head {
+  top: -9px;
+  left: 42%;
+  transform: rotate(3deg);
 }
 
 .head-mark,
 .week-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: color-mix(in srgb, var(--kawaii-accent) 78%, var(--schedule-fg));
-  font-size: 11px;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: color-mix(in srgb, var(--kawaii-accent) 82%, var(--kawaii-ink));
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
 }
 
 .kawaii-head h2 {
   max-width: 720px;
-  margin: 8px 0;
+  margin: 7px 0 9px;
   overflow-wrap: anywhere;
+  color: var(--kawaii-ink);
   font-family: 'Baloo 2', 'Trebuchet MS', 'Microsoft YaHei', sans-serif;
-  font-size: clamp(28px, 5vw, 56px);
+  font-size: clamp(30px, 5vw, 58px);
   line-height: 0.95;
   letter-spacing: 0;
-  background: linear-gradient(
-    110deg,
-    color-mix(in srgb, var(--kawaii-accent) 62%, var(--schedule-fg)) 10%,
-    var(--kawaii-accent) 52%,
-    color-mix(in srgb, var(--kawaii-accent) 46%, #fff 54%) 92%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 .week-meta {
-  flex-wrap: wrap;
-  color: var(--schedule-muted);
-  letter-spacing: 0.04em;
+  color: var(--kawaii-muted);
+  letter-spacing: 0.03em;
 }
 
 .week-meta span + span::before {
   margin-right: 8px;
   color: var(--kawaii-accent);
-  content: '✦';
+  content: '·';
 }
 
 .character-art {
   position: absolute;
-  z-index: 1;
-  right: 0;
-  bottom: 0;
-  width: clamp(230px, 29%, 330px);
-  height: 92%;
+  z-index: 4;
+  right: 5%;
+  bottom: 3%;
+  width: clamp(180px, 24%, 270px);
+  height: 47%;
   margin: 0;
   pointer-events: none;
+  transform: rotate(3deg);
 }
 
 .art-left .character-art {
   right: auto;
-  left: 0;
-}
-
-.character-art::before {
-  position: absolute;
-  z-index: -1;
-  right: 8%;
-  bottom: 10%;
-  width: 78%;
-  aspect-ratio: 1;
-  background: color-mix(in srgb, var(--kawaii-accent) 22%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--kawaii-accent) 45%, transparent);
-  border-radius: 50%;
-  content: '';
+  left: 5%;
+  transform: rotate(-3deg);
 }
 
 .character-art img {
@@ -132,66 +184,143 @@
   height: 100%;
   object-fit: contain;
   object-position: bottom center;
-  filter: drop-shadow(0 14px 24px rgba(34, 24, 32, 0.16));
+  filter: drop-shadow(5px 8px 0 color-mix(in srgb, var(--kawaii-accent) 22%, transparent));
+}
+
+.tape-art {
+  top: 4px;
+  left: 29%;
+  transform: rotate(-9deg);
 }
 
 .character-art figcaption {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
-  max-width: calc(100% - 36px);
+  right: 9px;
+  bottom: 4px;
+  max-width: calc(100% - 18px);
   overflow: hidden;
-  color: var(--schedule-fg);
-  font-size: 11px;
+  color: var(--kawaii-ink);
+  font-size: 10px;
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.day-grid {
+.scrapbook-layout {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 17px 14px;
   min-width: 0;
 }
 
 .day-note {
+  position: relative;
+  isolation: isolate;
   min-width: 0;
-  padding: 13px;
-  background: color-mix(in srgb, var(--schedule-panel) 88%, transparent);
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-border);
-  border-radius: min(var(--vtsuru-page-radius, 14px), 18px);
-  box-shadow: 3px 4px 0 color-mix(in srgb, var(--kawaii-accent) 13%, transparent);
+  min-height: 136px;
+  padding: 20px 15px 14px;
+  background:
+    linear-gradient(118deg, color-mix(in srgb, #fff 32%, transparent), transparent 30%),
+    color-mix(in srgb, var(--kawaii-sheet) 93%, #fff);
+  border: 1px solid color-mix(in srgb, var(--kawaii-accent) 18%, var(--schedule-border));
+  clip-path: polygon(0 2%, 98% 0, 100% 95%, 97% 100%, 3% 98%, 0 94%);
+  box-shadow:
+    3px 4px 0 color-mix(in srgb, var(--kawaii-accent) 12%, transparent),
+    7px 9px 0 color-mix(in srgb, var(--kawaii-ink) 8%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #fff 42%, transparent);
+  transform: rotate(-1deg);
+}
+
+.day-note::before {
+  position: absolute;
+  z-index: -1;
+  inset: 7px 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--kawaii-accent) 16%, transparent);
+  content: '';
+  pointer-events: none;
+  transform: rotate(0.7deg);
+}
+
+.day-note::after {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  width: 31px;
+  height: 7px;
+  border-top: 1px solid color-mix(in srgb, var(--kawaii-accent) 52%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--kawaii-accent) 32%, transparent);
+  content: '';
+  transform: rotate(-3deg);
+}
+
+.day-note .washi-tape {
+  top: -7px;
+  left: 31%;
+  width: 62px;
+  height: 16px;
+  transform: rotate(2deg);
+}
+
+.note-1 {
+  grid-column: span 4;
+  transform: rotate(-1.8deg);
+}
+
+.note-2 {
+  grid-column: span 2;
+  transform: rotate(1.4deg);
+}
+
+.note-3 {
+  grid-column: span 2;
+  transform: rotate(1.7deg);
+}
+
+.note-4,
+.note-5,
+.note-6,
+.note-7 {
+  grid-column: span 2;
+}
+
+.note-5 {
+  transform: rotate(-1.3deg);
+}
+
+.note-6 {
+  transform: rotate(1.1deg);
 }
 
 .day-note.is-today {
-  border-color: color-mix(in srgb, var(--kawaii-accent) 62%, var(--schedule-border));
-  box-shadow: 3px 4px 0 color-mix(in srgb, var(--kawaii-accent) 28%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--kawaii-accent) 68%, transparent);
+  outline-offset: 3px;
 }
 
 .day-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 9px;
   min-width: 0;
-  margin-bottom: 10px;
+  margin-bottom: 11px;
 }
 
 .day-number {
   display: grid;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
+  flex: 0 0 31px;
+  width: 31px;
+  height: 31px;
   place-items: center;
   color: var(--schedule-accent-readable);
-  font-weight: 900;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
   background: var(--kawaii-accent);
   border-radius: 50%;
 }
 
-.day-head > span:nth-child(2) {
+.day-head > div {
   min-width: 0;
 }
 
@@ -201,21 +330,26 @@
 }
 
 .day-head strong {
-  font-size: 13px;
+  font-family: 'Baloo 2', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.15;
 }
 
 .day-head small {
-  margin-top: 1px;
-  color: var(--schedule-muted);
+  margin-top: 2px;
+  color: var(--kawaii-muted);
   font-size: 9px;
   font-weight: 700;
 }
 
 .today-mark {
   margin-left: auto;
-  color: color-mix(in srgb, var(--kawaii-accent) 84%, var(--schedule-fg));
-  font-size: 9px;
+  padding: 2px 4px;
+  color: var(--kawaii-accent);
+  font-size: 8px;
   font-weight: 900;
+  border: 1px solid currentColor;
+  transform: rotate(4deg);
 }
 
 .event-list {
@@ -227,18 +361,18 @@
   --event-tag-color: var(--kawaii-accent);
 
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 9px;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 8px;
   min-width: 0;
-  padding: 8px 9px;
-  background: color-mix(in srgb, var(--schedule-panel-embedded) 86%, transparent);
-  border-left: 3px solid var(--event-tag-color);
-  border-radius: 6px;
+  padding: 5px 0 6px;
+  border-top: 1px solid color-mix(in srgb, var(--event-tag-color) 14%, transparent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--event-tag-color) 38%, var(--schedule-border));
 }
 
 .event-row time {
-  color: color-mix(in srgb, var(--event-tag-color) 78%, var(--schedule-fg));
-  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  padding-top: 1px;
+  color: color-mix(in srgb, var(--event-tag-color) 82%, var(--kawaii-ink));
+  font-family: 'Baloo 2', sans-serif;
   font-size: 11px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -255,18 +389,24 @@
 }
 
 .event-copy strong {
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .event-copy span {
-  margin-top: 2px;
-  color: var(--schedule-muted);
-  font-size: 10px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 3px;
+  padding: 1px 4px;
+  color: var(--kawaii-muted);
+  font-size: 9px;
+  line-height: 1.2;
+  background: color-mix(in srgb, var(--event-tag-color) 10%, transparent);
+  border-left: 2px solid color-mix(in srgb, var(--event-tag-color) 55%, transparent);
 }
 
 .rest-note {
-  margin: 2px 0 0 41px;
+  margin: 3px 0 0 40px;
   font-size: 10px;
 }
 
@@ -281,11 +421,84 @@
   height: auto;
 }
 
-@container kawaii (max-width: 760px) {
-  .kawaii-board.has-artwork.art-right,
-  .kawaii-board.has-artwork.art-left {
-    padding-right: clamp(18px, 5vw, 32px);
-    padding-left: clamp(18px, 5vw, 32px);
+.rubber-stamp {
+  position: absolute;
+  right: 4%;
+  top: 8%;
+  z-index: 3;
+  padding: 7px 8px;
+  color: color-mix(in srgb, var(--kawaii-accent) 76%, var(--kawaii-ink));
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 0.95;
+  text-align: center;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  transform: rotate(12deg);
+  opacity: 0.72;
+}
+
+@container kawaii (max-width: 820px) {
+  .kawaii-board {
+    padding: 34px 28px 42px;
+  }
+
+  .scrapbook-layout {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .note-1 {
+    grid-column: span 3;
+  }
+
+  .note-2,
+  .note-3,
+  .note-4,
+  .note-5,
+  .note-6,
+  .note-7 {
+    grid-column: span 2;
+  }
+
+  .character-art {
+    width: 190px;
+    height: 210px;
+  }
+}
+
+@container kawaii (max-width: 560px) {
+  .kawaii-board {
+    min-height: 0;
+    padding: 25px 16px 32px;
+  }
+
+  .kawaii-head {
+    margin-bottom: 28px;
+    padding: 19px 18px 15px;
+  }
+
+  .kawaii-head h2 {
+    font-size: clamp(29px, 10vw, 42px);
+  }
+
+  .scrapbook-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+
+  .note-1,
+  .note-2,
+  .note-3,
+  .note-4,
+  .note-5,
+  .note-6,
+  .note-7 {
+    grid-column: auto;
+  }
+
+  .day-note {
+    min-height: 0;
   }
 
   .character-art,
@@ -294,27 +507,24 @@
     right: auto;
     bottom: auto;
     left: auto;
-    width: 100%;
-    height: 230px;
-    margin: -10px 0 18px;
+    width: min(70%, 230px);
+    height: 190px;
+    margin: -8px auto 24px;
+    transform: rotate(2deg);
+  }
+
+  .rubber-stamp {
+    top: 4%;
+    right: 4%;
   }
 }
 
-@container kawaii (max-width: 520px) {
-  .kawaii-board {
-    min-height: 0;
-    padding: 22px 14px;
-  }
-
-  .kawaii-head h2 {
-    font-size: clamp(27px, 11vw, 40px);
-  }
-
-  .day-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .character-art {
-    height: 190px;
+@media (prefers-reduced-motion: reduce) {
+  .kawaii-board *,
+  .kawaii-board *::before,
+  .kawaii-board *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
   }
 }

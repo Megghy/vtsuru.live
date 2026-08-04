@@ -6,6 +6,7 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
@@ -22,55 +23,55 @@ interface MagazineConfig {
 
 const props = defineProps<ScheduleConfigTypeWithConfig<MagazineConfig>>()
 
+ensureGoogleFont('Noto+Serif+SC:wght@600;700;900')
+
 const Config = defineTemplateConfig([
   {
     name: '背景图片',
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.backgroundFile = files),
+    onUploaded: (files: UploadFileResponse[], config: MagazineConfig) => (config.backgroundFile = files),
   },
   {
-    name: '角色立绘',
+    name: '封面照片',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.portraitFile = files),
+    onUploaded: (files: UploadFileResponse[], config: MagazineConfig) => (config.portraitFile = files),
   },
-  { name: '海报标题', type: 'string', key: 'heading', default: 'WEEKLY ON AIR' },
+  { name: '刊头标题', type: 'string', key: 'heading', default: '本周放送特刊' },
   {
-    name: '强调色',
+    name: '印刷强调色',
     type: 'color',
     key: 'accentColor',
-    default: { r: 220, g: 102, b: 128, a: 1 } as RGBAColor,
+    default: { r: 177, g: 47, b: 38, a: 1 } as RGBAColor,
     showAlpha: false,
   },
-  { name: '未上传立绘时显示头像', type: 'boolean', key: 'showAvatar', default: true },
+  { name: '未上传照片时使用头像', type: 'boolean', key: 'showAvatar', default: false },
 ])
 
 const DefaultConfig: MagazineConfig = {
   backgroundFile: [],
   portraitFile: [],
-  heading: 'WEEKLY ON AIR',
-  accentColor: { r: 220, g: 102, b: 128, a: 1 },
-  showAvatar: true,
+  heading: '本周放送特刊',
+  accentColor: { r: 177, g: 47, b: 38, a: 1 },
+  showAvatar: false,
 }
 
 const posterRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
-const { customPortraitUrl, portraitUrl, backgroundUrl } = useScheduleTemplateAssets(props, effectiveConfig)
+const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
-const issueLabel = computed(() => {
-  const week = currentWeek.value
-  return week ? `${week.year} / WEEK ${String(week.week).padStart(2, '0')}` : 'NO SCHEDULE'
-})
+const issueNumber = computed(() => String(currentWeek.value?.week ?? 0).padStart(2, '0'))
+const issueYear = computed(() => currentWeek.value?.year ?? new Date().getFullYear())
+const leadDays = computed(() => days.value.slice(0, 3))
+const remainingDays = computed(() => days.value.slice(3))
 const posterStyle = computed(() => ({
-  '--magazine-accent': props.config?.accentColor
-    ? rgbaToString(effectiveConfig.value.accentColor)
-    : 'var(--schedule-accent)',
-  backgroundImage: backgroundUrl.value ? `url(${backgroundUrl.value})` : undefined,
+  '--magazine-accent': rgbaToString(effectiveConfig.value.accentColor),
+  ...backgroundImageStyle.value,
 }))
 
 defineExpose({ Config, DefaultConfig })
@@ -82,118 +83,169 @@ defineExpose({ Config, DefaultConfig })
       v-model="selectedWeek"
       :weeks="props.data ?? []"
       :capture-target="posterRef"
-      :file-name="`直播节目单_${selectedWeek || '本周'}_${streamerName}`"
+      :file-name="`直播特刊_${selectedWeek || '本周'}_${streamerName}`"
     />
 
     <article
       ref="posterRef"
       class="magazine-poster"
-      :class="{
-        'has-background': backgroundUrl,
-        'uses-avatar': portraitUrl && !customPortraitUrl && !props.previewPortrait,
-      }"
+      :class="{ 'has-background': backgroundUrl, 'has-cover': portraitUrl }"
       :style="posterStyle"
       aria-labelledby="magazine-poster-title"
     >
       <div
-        class="print-grid"
+        class="paper-grain"
         aria-hidden="true"
       />
 
       <header class="poster-head">
-        <div class="issue-column">
-          <span>VTB WEEKLY</span>
-          <strong>{{ issueLabel }}</strong>
+        <div class="publication-mark">
+          <span>VTB WEEKLY JOURNAL</span>
+          <strong>{{ issueYear }}</strong>
         </div>
 
         <div class="masthead">
-          <p>{{ streamerName }} presents</p>
+          <p>{{ streamerName }} · 编辑部发行</p>
           <h2 id="magazine-poster-title">{{ effectiveConfig.heading }}</h2>
           <div class="masthead-meta">
             <span>{{ weekLabel }}</span>
-            <span>{{ eventCount }} 场直播</span>
+            <span>本期 {{ eventCount }} 场</span>
           </div>
+        </div>
+
+        <div class="issue-block">
+          <span>ISSUE</span>
+          <strong>{{ issueNumber }}</strong>
         </div>
 
         <figure
           v-if="portraitUrl"
-          class="portrait"
+          class="cover-photo"
         >
           <img
             :src="portraitUrl"
-            :alt="customPortraitUrl || props.previewPortrait ? `${streamerName}的角色形象` : `${streamerName}的头像`"
+            :alt="`${streamerName}的本期封面`"
           />
+          <figcaption>THIS WEEK'S COVER</figcaption>
         </figure>
       </header>
 
-      <div class="section-rule">
-        <span>PROGRAM INDEX</span>
-        <span>MON - SUN</span>
+      <div class="edition-rule">
+        <span>直播 · 游戏 · 音乐 · 杂谈</span>
+        <strong>节目索引 / MON—SUN</strong>
       </div>
 
-      <ol
+      <div
         v-if="days.length"
-        class="program-list"
+        class="editorial-columns"
       >
-        <li
-          v-for="(day, dayIndex) in days"
-          :key="day.english"
-          class="program-day"
-          :class="{ 'is-today': day.isToday }"
-        >
-          <span class="day-index">{{ String(dayIndex + 1).padStart(2, '0') }}</span>
-
-          <header class="day-identity">
-            <span>{{ day.english }}</span>
-            <h3>{{ day.label }}</h3>
-            <time>{{ day.date }}</time>
-          </header>
-
-          <div
-            v-if="day.items.length"
-            class="day-events"
+        <ol class="program-column lead-column">
+          <li
+            v-for="(day, dayIndex) in leadDays"
+            :key="day.english"
+            class="program-day"
+            :class="{ 'is-today': day.isToday, 'is-lead': dayIndex === 0 }"
           >
+            <header class="day-identity">
+              <span class="day-index">0{{ dayIndex + 1 }}</span>
+              <div>
+                <span>{{ day.english }} / {{ day.date }}</span>
+                <h3>{{ day.label }}</h3>
+              </div>
+              <span
+                v-if="day.isToday"
+                class="today-stamp"
+                >今日</span
+              >
+            </header>
+
             <div
-              v-for="(item, itemIndex) in day.items"
-              :key="item.id || itemIndex"
-              class="event-line"
-              :style="item.tagColor ? { '--event-accent': item.tagColor } : undefined"
+              v-if="day.items.length"
+              class="day-events"
             >
-              <time>{{ item.time || '待定' }}</time>
-              <div class="event-copy">
-                <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
-                <span v-if="item.tag">{{ item.tag }}</span>
+              <div
+                v-for="(item, itemIndex) in day.items"
+                :key="item.id || itemIndex"
+                class="event-line"
+                :style="item.tagColor ? { '--event-accent': item.tagColor } : undefined"
+              >
+                <time>{{ item.time || '待定' }}</time>
+                <div class="event-copy">
+                  <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
+                  <span v-if="item.tag">{{ item.tag }}</span>
+                </div>
               </div>
             </div>
-          </div>
+            <p
+              v-else
+              class="schedule-empty-copy rest-copy"
+            >
+              本日休刊 / OFF AIR
+            </p>
+          </li>
+        </ol>
 
-          <p
-            v-else
-            class="schedule-empty-copy rest-copy"
+        <ol
+          class="program-column side-column"
+          start="4"
+        >
+          <li
+            v-for="(day, dayIndex) in remainingDays"
+            :key="day.english"
+            class="program-day"
+            :class="{ 'is-today': day.isToday }"
           >
-            OFF AIR / 休息日
-          </p>
+            <header class="day-identity">
+              <span class="day-index">0{{ dayIndex + 4 }}</span>
+              <div>
+                <span>{{ day.english }} / {{ day.date }}</span>
+                <h3>{{ day.label }}</h3>
+              </div>
+              <span
+                v-if="day.isToday"
+                class="today-stamp"
+                >今日</span
+              >
+            </header>
 
-          <span
-            v-if="day.isToday"
-            class="today-stamp"
-          >
-            TODAY
-          </span>
-        </li>
-      </ol>
+            <div
+              v-if="day.items.length"
+              class="day-events"
+            >
+              <div
+                v-for="(item, itemIndex) in day.items"
+                :key="item.id || itemIndex"
+                class="event-line"
+                :style="item.tagColor ? { '--event-accent': item.tagColor } : undefined"
+              >
+                <time>{{ item.time || '待定' }}</time>
+                <div class="event-copy">
+                  <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
+                  <span v-if="item.tag">{{ item.tag }}</span>
+                </div>
+              </div>
+            </div>
+            <p
+              v-else
+              class="schedule-empty-copy rest-copy"
+            >
+              本日休刊 / OFF AIR
+            </p>
+          </li>
+        </ol>
+      </div>
 
       <div
         v-else
         class="poster-empty"
       >
-        <span>NO PROGRAM</span>
-        <p class="schedule-empty-copy">本周还没有安排直播</p>
+        <span>休刊</span>
+        <p class="schedule-empty-copy">本周暂未排入节目</p>
       </div>
 
       <footer class="poster-foot">
         <strong>@{{ streamerName }}</strong>
-        <span>LIVE / TALK / GAME / MUSIC</span>
+        <span>每周发行 · 请以实际开播时间为准</span>
       </footer>
     </article>
   </section>

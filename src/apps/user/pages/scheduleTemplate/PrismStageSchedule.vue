@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Flash24Regular, MicSparkle24Regular } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
@@ -9,77 +7,61 @@ import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
 import { useScheduleWeek } from './scheduleTemplateUtils'
-import { ensureGoogleFont } from './scheduleFonts'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
-import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
 
-ensureGoogleFont('Monoton')
-
 interface PrismStageConfig {
   backgroundFile: UploadFileResponse[]
-  portraitFile: UploadFileResponse[]
   heading: string
-  accentColor: RGBAColor
-  beamColor: RGBAColor
-  showAvatar: boolean
+  goldColor: RGBAColor
+  sealColor: RGBAColor
 }
 
 const props = defineProps<ScheduleConfigTypeWithConfig<PrismStageConfig>>()
 
 const Config = defineTemplateConfig([
   {
-    name: '舞台背景',
+    name: '和纸背景',
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.backgroundFile = files),
+    onUploaded: (files: UploadFileResponse[], config: PrismStageConfig) => (config.backgroundFile = files),
   },
+  { name: '历笺标题', type: 'string', key: 'heading', default: '七曜物候' },
   {
-    name: '角色立绘',
-    type: 'file',
-    key: 'portraitFile',
-    fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => (config.portraitFile = files),
-  },
-  { name: '主标题', type: 'string', key: 'heading', default: 'ON STAGE' },
-  {
-    name: '霓虹主色',
+    name: '金箔色',
     type: 'color',
-    key: 'accentColor',
-    default: { r: 255, g: 47, b: 179, a: 1 } as RGBAColor,
+    key: 'goldColor',
+    default: { r: 213, g: 169, b: 76, a: 1 } as RGBAColor,
     showAlpha: false,
   },
   {
-    name: '光束颜色',
+    name: '朱印色',
     type: 'color',
-    key: 'beamColor',
-    default: { r: 122, g: 92, b: 255, a: 1 } as RGBAColor,
+    key: 'sealColor',
+    default: { r: 190, g: 67, b: 55, a: 1 } as RGBAColor,
     showAlpha: false,
   },
-  { name: '未上传立绘时显示头像', type: 'boolean', key: 'showAvatar', default: true },
 ])
 
 const DefaultConfig: PrismStageConfig = {
   backgroundFile: [],
-  portraitFile: [],
-  heading: 'ON STAGE',
-  accentColor: { r: 255, g: 47, b: 179, a: 1 },
-  beamColor: { r: 122, g: 92, b: 255, a: 1 },
-  showAvatar: true,
+  heading: '七曜物候',
+  goldColor: { r: 213, g: 169, b: 76, a: 1 },
+  sealColor: { r: 190, g: 67, b: 55, a: 1 },
 }
 
-const stageRef = ref<HTMLElement>()
+const scheduleRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
-const { portraitUrl, backgroundUrl } = useScheduleTemplateAssets(props, effectiveConfig)
-
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
-const stageStyle = computed(() => ({
-  '--prism-accent': rgbaToString(effectiveConfig.value.accentColor),
-  '--prism-beam': rgbaToString(effectiveConfig.value.beamColor),
-  backgroundImage: backgroundUrl.value ? `url(${backgroundUrl.value})` : undefined,
+const scheduleStyle = computed(() => ({
+  '--prism-gold': rgbaToString(effectiveConfig.value.goldColor),
+  '--prism-seal': rgbaToString(effectiveConfig.value.sealColor),
+  backgroundImage: effectiveConfig.value.backgroundFile[0]?.path
+    ? `url(${effectiveConfig.value.backgroundFile[0].path})`
+    : undefined,
 }))
 
 defineExpose({ Config, DefaultConfig })
@@ -90,106 +72,95 @@ defineExpose({ Config, DefaultConfig })
     <ScheduleWeekToolbar
       v-model="selectedWeek"
       :weeks="props.data ?? []"
-      :capture-target="stageRef"
-      :file-name="`霓虹舞台_${selectedWeek || '本周'}_${streamerName}`"
+      :capture-target="scheduleRef"
+      :file-name="`七曜物候_${selectedWeek || '本周'}_${streamerName}`"
     />
 
     <div
-      ref="stageRef"
+      ref="scheduleRef"
       class="prism-stage"
-      :class="{ 'has-background': backgroundUrl }"
-      :style="stageStyle"
+      :class="{ 'has-background': effectiveConfig.backgroundFile[0]?.path }"
+      :style="scheduleStyle"
     >
-      <div class="stage-rig">
-        <span class="stage-beam beam-1" />
-        <span class="stage-beam beam-2" />
-        <span class="stage-beam beam-3" />
-      </div>
-      <div class="stage-laser" />
-      <div class="stage-haze" />
-
+      <div
+        class="paper-grain"
+        aria-hidden="true"
+      />
       <header class="stage-head">
         <div class="stage-title">
-          <span class="stage-eyebrow">
-            <NIcon><MicSparkle24Regular /></NIcon>
-            {{ streamerName }} LIVE HOUSE
-          </span>
-          <h2 class="stage-title__neon">{{ effectiveConfig.heading }}</h2>
-          <p class="stage-title__meta">
-            {{ weekLabel }} · {{ eventCount.toString().padStart(2, '0') }} SHOWS · W{{
-              String(currentWeek?.week || '--').padStart(2, '0')
-            }}
-          </p>
+          <p class="stage-eyebrow">七曜和纸 · 物候历</p>
+          <h2 class="stage-title__kanji">{{ effectiveConfig.heading }}</h2>
+          <p class="stage-title__meta">{{ streamerName }} · {{ weekLabel }}</p>
         </div>
-
-        <figure
-          v-if="portraitUrl"
-          class="stage-art"
+        <div
+          class="stage-seal"
+          aria-hidden="true"
         >
-          <img
-            :src="portraitUrl"
-            :alt="`${streamerName}的形象`"
-          />
-        </figure>
+          暦
+        </div>
+        <div class="stage-count">
+          <strong>{{ String(eventCount).padStart(2, '0') }}</strong
+          ><span>场 · W{{ String(currentWeek?.week || '--').padStart(2, '0') }}</span>
+        </div>
       </header>
 
-      <div class="stage-program">
-        <div class="stage-program__head">
-          <NIcon><Flash24Regular /></NIcon>
-          <span>SET LIST · THIS WEEK</span>
-        </div>
-
-        <ol class="stage-days">
-          <li
-            v-for="(day, dayIndex) in days"
-            :key="day.english"
-            class="stage-day"
-            :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
-          >
-            <span class="stage-day__num">{{ String(dayIndex + 1).padStart(2, '0') }}</span>
-            <div class="stage-day__id">
-              <strong>{{ day.english }}</strong>
-              <time>{{ day.date }}</time>
-            </div>
-
-            <div
-              v-if="day.items.length"
-              class="stage-day__events"
-            >
-              <div
-                v-for="(item, itemIndex) in day.items"
-                :key="item.id || itemIndex"
-                class="stage-event"
-                :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
-              >
-                <time>{{ item.time || 'TBA' }}</time>
-                <div class="stage-event__copy">
-                  <strong>{{ item.title || '未命名直播' }}</strong>
-                  <span v-if="item.tag">{{ item.tag }}</span>
-                </div>
-              </div>
-            </div>
-            <span
-              v-else
-              class="stage-day__rest"
-            >
-              — INTERMISSION —
-            </span>
-
-            <span
-              v-if="day.isToday"
-              class="stage-day__live"
-            >
-              LIVE
-            </span>
-          </li>
-        </ol>
+      <div
+        class="lunar-rail"
+        aria-hidden="true"
+      >
+        <span class="lunar-moon lunar-moon--new" /><span class="lunar-moon lunar-moon--half" /><span
+          class="lunar-moon lunar-moon--full"
+        />
       </div>
 
+      <ol class="stage-days">
+        <li
+          v-for="(day, dayIndex) in days"
+          :key="day.english"
+          class="stage-day"
+          :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
+        >
+          <div class="stage-day__marker">
+            <span>{{ day.shortLabel }}</span
+            ><b>{{ String(dayIndex + 1).padStart(2, '0') }}</b>
+          </div>
+          <div class="stage-day__identity">
+            <strong>{{ day.label }}</strong
+            ><time>{{ day.date }} · {{ day.english }}</time>
+          </div>
+          <div
+            v-if="day.items.length"
+            class="stage-day__events"
+          >
+            <article
+              v-for="(item, itemIndex) in day.items"
+              :key="item.id || itemIndex"
+              class="stage-event"
+              :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
+            >
+              <time>{{ item.time || '待定' }}</time>
+              <div class="stage-event__copy">
+                <strong>{{ item.title || '未命名直播' }}</strong
+                ><span v-if="item.tag">{{ item.tag }}</span>
+              </div>
+            </article>
+          </div>
+          <span
+            v-else
+            class="stage-day__rest"
+            >留白 · 无排期</span
+          >
+          <span
+            v-if="day.isToday"
+            class="stage-day__live"
+            >今日</span
+          >
+        </li>
+      </ol>
+
       <footer class="stage-foot">
-        <span>VTSURU PRESENTS</span>
-        <span class="stage-foot__marquee">GOOD SHOW · GOOD SHOW · GOOD SHOW · GOOD SHOW</span>
-        <span>@{{ streamerName }}</span>
+        <span>七曜 · {{ streamerName }}</span
+        ><span>愿每一次相逢，都有好天气</span>
       </footer>
     </div>
   </section>
