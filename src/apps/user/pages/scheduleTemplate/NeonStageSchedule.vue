@@ -8,6 +8,7 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import { resolveScheduleCategory } from './scheduleCategories'
 import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
@@ -84,6 +85,7 @@ const boardStyle = computed(() => ({
   ...backgroundImageStyle.value,
 }))
 const loadStyle = (count: number) => ({ '--day-load': `${(count / peakLoad.value) * 100}%` })
+const eventType = (tag?: string | null) => resolveScheduleCategory(tag)?.key ?? 'other'
 
 defineExpose({ Config, DefaultConfig })
 </script>
@@ -122,6 +124,7 @@ defineExpose({ Config, DefaultConfig })
               v-if="portraitUrl"
               :src="portraitUrl"
               :alt="`${props.userInfo?.name || '主播'}的频道识别图`"
+              referrerpolicy="no-referrer"
             />
             <span
               v-else
@@ -194,8 +197,8 @@ defineExpose({ Config, DefaultConfig })
               class="program-day"
               :class="{ 'is-today': day.isToday }"
             >
+              <span class="queue-index">{{ String(dayIndex + 1).padStart(2, '0') }}</span>
               <div class="day-code">
-                <span>{{ String(dayIndex + 1).padStart(2, '0') }}</span>
                 <strong>{{ day.english }}</strong>
                 <small>{{ day.date }}</small>
               </div>
@@ -208,12 +211,16 @@ defineExpose({ Config, DefaultConfig })
                   v-for="(item, itemIndex) in day.items"
                   :key="item.id || itemIndex"
                   class="program-event"
-                  :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
+                  :data-type="eventType(item.tag)"
                 >
                   <time>{{ item.time || 'TBA' }}</time>
-                  <div>
+                  <div class="event-copy">
                     <strong>{{ item.title || '未命名直播' }}</strong>
-                    <span v-if="item.tag">{{ item.tag }}</span>
+                    <span
+                      v-if="item.tag"
+                      class="event-type"
+                      >[TYPE: {{ item.tag }}]</span
+                    >
                   </div>
                 </div>
               </div>

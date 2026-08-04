@@ -6,6 +6,8 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import { resolveScheduleCategory } from './scheduleCategories'
+import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 
@@ -19,6 +21,9 @@ interface PrismStageConfig {
 }
 
 const props = defineProps<ScheduleConfigTypeWithConfig<PrismStageConfig>>()
+
+ensureGoogleFont('Marcellus')
+ensureGoogleFont('Noto+Serif+SC:wght@500;600;700;900')
 
 const Config = defineTemplateConfig([
   {
@@ -63,6 +68,7 @@ const scheduleStyle = computed(() => ({
     ? `url(${effectiveConfig.value.backgroundFile[0].path})`
     : undefined,
 }))
+const eventType = (tag?: string | null) => resolveScheduleCategory(tag)?.key ?? 'other'
 
 defineExpose({ Config, DefaultConfig })
 </script>
@@ -92,15 +98,17 @@ defineExpose({ Config, DefaultConfig })
           <h2 class="stage-title__kanji">{{ effectiveConfig.heading }}</h2>
           <p class="stage-title__meta">{{ streamerName }} · {{ weekLabel }}</p>
         </div>
-        <div
-          class="stage-seal"
-          aria-hidden="true"
-        >
-          暦
-        </div>
-        <div class="stage-count">
-          <strong>{{ String(eventCount).padStart(2, '0') }}</strong
-          ><span>场 · W{{ String(currentWeek?.week || '--').padStart(2, '0') }}</span>
+        <div class="stage-index">
+          <div
+            class="stage-seal"
+            aria-hidden="true"
+          >
+            暦
+          </div>
+          <div class="stage-count">
+            <strong>{{ String(eventCount).padStart(2, '0') }}</strong
+            ><span>场 · W{{ String(currentWeek?.week || '--').padStart(2, '0') }}</span>
+          </div>
         </div>
       </header>
 
@@ -108,6 +116,12 @@ defineExpose({ Config, DefaultConfig })
         class="lunar-rail"
         aria-hidden="true"
       >
+        <svg
+          viewBox="0 0 1000 54"
+          preserveAspectRatio="none"
+        >
+          <path d="M 0 40 Q 500 4 1000 40 Q 500 8 0 40 Z" />
+        </svg>
         <span class="lunar-moon lunar-moon--new" /><span class="lunar-moon lunar-moon--half" /><span
           class="lunar-moon lunar-moon--full"
         />
@@ -136,7 +150,7 @@ defineExpose({ Config, DefaultConfig })
               v-for="(item, itemIndex) in day.items"
               :key="item.id || itemIndex"
               class="stage-event"
-              :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
+              :data-type="eventType(item.tag)"
             >
               <time>{{ item.time || '待定' }}</time>
               <div class="stage-event__copy">

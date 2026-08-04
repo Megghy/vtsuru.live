@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import html2canvas from 'html2canvas'
+import { snapdom } from '@zumer/snapdom'
 import {
   NButton,
   NDivider,
@@ -44,24 +44,14 @@ const modalShareUrl = computed(() => {
 
 function saveShareImage() {
   if (!shareCardRef.value || !accountInfo.value?.name) return
-  html2canvas(shareCardRef.value, {
-    width: shareCardRef.value.clientWidth,
-    height: shareCardRef.value.clientHeight,
-    backgroundColor: null,
-    scrollY: 0,
-    scrollX: 0,
-    useCORS: true,
-    scale: window.devicePixelRatio * 2,
-  })
-    .then((canvas) => {
-      canvas.toBlob(
-        (blob) => {
-          if (blob) saveAs(blob, `vtsuru-提问箱-${accountInfo.value?.name}.png`)
-          else message.error('无法生成图片')
-        },
-        'image/png',
-        1,
-      )
+  snapdom
+    .toBlob(shareCardRef.value, {
+      backgroundColor: null,
+      scale: 2,
+      type: 'png',
+    })
+    .then((blob) => {
+      saveAs(blob, `vtsuru-提问箱-${accountInfo.value?.name}.png`)
     })
     .catch((err) => {
       message.error(`生成分享卡片失败: ${err}`)

@@ -90,6 +90,17 @@ defineExpose({ Config, DefaultConfig })
         <p class="pinky-head__meta">{{ weekLabel }} · {{ eventCount }} 场直播</p>
       </header>
 
+      <div
+        class="pinky-charms"
+        aria-hidden="true"
+      >
+        <span class="pinky-charm pinky-charm--ticket">WEEKLY ♡</span>
+        <span class="pinky-charm pinky-charm--bow">୨୧</span>
+        <span class="pinky-charm pinky-charm--sparkle">✦</span>
+        <span class="pinky-charm pinky-charm--dots">● ● ●</span>
+        <span class="pinky-charm pinky-charm--note">sweet days!</span>
+      </div>
+
       <figure
         v-if="portraitUrl"
         class="pinky-art"
@@ -97,6 +108,7 @@ defineExpose({ Config, DefaultConfig })
         <img
           :src="portraitUrl"
           :alt="`${props.userInfo?.name || '主播'}的形象`"
+          referrerpolicy="no-referrer"
         />
       </figure>
 
@@ -108,13 +120,15 @@ defineExpose({ Config, DefaultConfig })
           :class="{ 'is-today': day.isToday }"
         >
           <header class="pinky-day__head">
-            <span class="pinky-day__week">{{ day.label }}</span>
-            <span class="pinky-day__date">{{ day.english }} · {{ day.date }}</span>
+            <span class="pinky-day__identity">
+              <span class="pinky-day__week">{{ day.label }}</span>
+              <span class="pinky-day__date">{{ day.english }} · {{ day.date }}</span>
+            </span>
             <span
               v-if="day.isToday"
               class="pinky-day__today"
             >
-              ♥ 今天
+              ♥ 今日
             </span>
           </header>
 
@@ -143,7 +157,9 @@ defineExpose({ Config, DefaultConfig })
               v-else
               class="pinky-day__rest"
             >
-              休息
+              <span class="pinky-day__sleep">( ˘ω˘ )</span>
+              <span>本日休息</span>
+              <small>Zzz...</small>
             </span>
           </div>
         </li>

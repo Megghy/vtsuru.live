@@ -8,6 +8,7 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import { resolveScheduleCategory, SCHEDULE_CATEGORIES, type ScheduleCategoryKey } from './scheduleCategories'
 import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
@@ -87,6 +88,39 @@ const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
+const categoryColors: Record<ScheduleCategoryKey, string> = {
+  talk: '#d64b4f',
+  music: '#e0a552',
+  radio: '#53789a',
+  game: '#8062a5',
+  project: '#8f374a',
+}
+
+function resolveTagColor(tag?: string | null, color?: string | null) {
+  const category = resolveScheduleCategory(tag)
+  return color || (category ? categoryColors[category.key] : 'var(--poster-red)')
+}
+
+const legendItems = computed(() => {
+  const items = new Map<string, { name: string; color: string }>()
+  for (const day of days.value) {
+    for (const item of day.items) {
+      if (!item.tag) continue
+      const category = resolveScheduleCategory(item.tag)
+      const key = category?.key ?? item.tag.trim().toLowerCase()
+      if (!items.has(key)) {
+        items.set(key, {
+          name: category?.name ?? item.tag.trim().toUpperCase(),
+          color: resolveTagColor(item.tag, item.tagColor),
+        })
+      }
+    }
+  }
+  return items.size
+    ? [...items.values()]
+    : SCHEDULE_CATEGORIES.map(({ key, name }) => ({ name, color: categoryColors[key] }))
+})
+
 const posterStyle = computed(() => ({
   '--poster-red': rgbaToString(effectiveConfig.value.accentColor),
   '--poster-paper': rgbaToString(effectiveConfig.value.accentColor2),
@@ -152,6 +186,7 @@ defineExpose({ Config, DefaultConfig })
           <img
             :src="portraitUrl"
             :alt="`${streamerName}的主视觉立绘`"
+            referrerpolicy="no-referrer"
           />
         </figure>
         <div
@@ -159,7 +194,16 @@ defineExpose({ Config, DefaultConfig })
           class="poster-no-art"
           aria-hidden="true"
         >
-          LIVE
+          SIGNAL
+        </div>
+        <div
+          v-if="!portraitUrl"
+          class="poster-archive"
+          aria-hidden="true"
+        >
+          <span>ARCHIVE / {{ String(eventCount).padStart(2, '0') }}</span>
+          <i class="poster-archive__barcode" />
+          <strong>NO PORTRAIT<br />NO PROBLEM</strong>
         </div>
       </div>
 
@@ -190,7 +234,7 @@ defineExpose({ Config, DefaultConfig })
                 v-for="(item, itemIndex) in day.items"
                 :key="item.id || itemIndex"
                 class="poster-event"
-                :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
+                :style="{ '--event-tag-color': resolveTagColor(item.tag, item.tagColor) }"
               >
                 <time>{{ item.time || 'TBA' }}</time>
                 <strong>{{ item.title || '未命名直播' }}</strong>
@@ -208,7 +252,18 @@ defineExpose({ Config, DefaultConfig })
 
       <footer class="poster-foot">
         <strong>@{{ streamerName }}</strong>
-        <span>LIVE · TALK · GAME · MUSIC</span>
+        <ul class="poster-legend">
+          <li
+            v-for="item in legendItems"
+            :key="item.name"
+          >
+            <i
+              class="poster-legend__swatch"
+              :style="{ backgroundColor: item.color }"
+            />
+            <span>{{ item.name }}</span>
+          </li>
+        </ul>
       </footer>
     </article>
   </section>

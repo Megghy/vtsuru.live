@@ -3,7 +3,7 @@ import { NAlert, NButton, NCard, NGrid, NGridItem, NModal, NPageHeader, NFlex, N
 import type { ComponentPublicInstance } from 'vue'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
+import { DownloadConfig, useAccount } from '@/api/account'
 import type { UserInfo } from '@/api/api-models'
 import type { OBSComponentDefinition } from '@/apps/obs-store/data/obsConstants'
 import { OBSComponentMap } from '@/apps/obs-store/data/obsConstants'
@@ -128,32 +128,10 @@ async function loadComponentConfig(settingName: string) {
   }
 }
 
-async function saveComponentConfig() {
-  if (!currentSelectedComponent.value?.settingName || !userInfo.value?.id) {
-    message.error('无法保存配置：组件配置名称或用户信息丢失。')
-    return
-  }
-  isLoading.value = true
-  try {
-    await UploadConfig(
-      currentSelectedComponent.value.settingName,
-      JSON.stringify(componentConfigForEditing.value), // 保存编辑后的配置
-      false,
-    ) // 或根据需要设置为 true);
-    message.success('配置保存成功！')
-    componentConfig.value = JSON.parse(JSON.stringify(componentConfigForEditing.value)) // 更新运行时配置
-    showSettingModal.value = false
-    refreshSignal.value++ // 触发子组件刷新
-  } catch (error) {
-    console.error('保存组件配置失败:', error)
-    message.error(`保存组件配置失败: ${error instanceof Error ? error.message : String(error)}`)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-function onDynamicFormUpdate(updatedConfig: any) {
-  componentConfigForEditing.value = updatedConfig
+function onDynamicFormSaved() {
+  componentConfig.value = structuredClone(componentConfigForEditing.value)
+  showSettingModal.value = false
+  refreshSignal.value++
 }
 
 function handleConfigUpdateFromChild(newConfig: any) {
@@ -380,19 +358,9 @@ onMounted(() => {
         :name="selectedComponentDefinitionForModal.settingName"
         :config-data="componentConfigForEditing"
         :config="selectedComponentDefinitionForModal.componentRef.Config"
-        @update:config-data="onDynamicFormUpdate"
+        :is-public="false"
+        @saved="onDynamicFormSaved"
       />
-      <template #footer>
-        <NFlex justify="end">
-          <NButton @click="showSettingModal = false"> 取消 </NButton>
-          <NButton
-            type="primary"
-            @click="saveComponentConfig"
-          >
-            保存配置
-          </NButton>
-        </NFlex>
-      </template>
     </NModal>
   </div>
 </template>

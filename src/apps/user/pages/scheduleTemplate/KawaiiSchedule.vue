@@ -8,6 +8,7 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import { resolveScheduleCategory, type ScheduleCategoryKey } from './scheduleCategories'
 import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
@@ -89,6 +90,23 @@ const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
+const activeDayCount = computed(() => days.value.filter((day) => day.items.length).length)
+const categoryColors: Record<ScheduleCategoryKey, string> = {
+  talk: '#b68d9d',
+  music: '#c6aa70',
+  radio: '#86a8a0',
+  game: '#929dc0',
+  project: '#ad8ba8',
+}
+const weeklyTags = computed(() =>
+  [...new Set(days.value.flatMap((day) => day.items.map((item) => item.tag).filter(Boolean)))].slice(0, 4),
+)
+
+function resolveEventColor(tag?: string | null) {
+  const category = resolveScheduleCategory(tag)
+  return category ? categoryColors[category.key] : '#b29ca5'
+}
+
 const boardStyle = computed(() => ({
   '--kawaii-accent': rgbaToString(effectiveConfig.value.accentColor),
   '--kawaii-sheet': rgbaToString(effectiveConfig.value.sheetColor),
@@ -150,8 +168,8 @@ defineExpose({ Config, DefaultConfig })
           aria-hidden="true"
         />
         <div class="head-mark">
-          <NIcon size="18"><Sparkle24Filled /></NIcon>
-          MY WEEKLY SCRAPBOOK
+          <NIcon size="13"><Sparkle24Filled /></NIcon>
+          <span>MY WEEKLY SCRAPBOOK</span>
         </div>
         <h2>{{ effectiveConfig.heading }}</h2>
         <div class="week-meta">
@@ -171,6 +189,7 @@ defineExpose({ Config, DefaultConfig })
         <img
           :src="portraitUrl"
           :alt="`${props.userInfo?.name || '主播'}的贴纸形象`"
+          referrerpolicy="no-referrer"
         />
         <figcaption>@{{ props.userInfo?.name || 'VTUBER' }}</figcaption>
       </figure>
@@ -207,7 +226,7 @@ defineExpose({ Config, DefaultConfig })
               v-for="(item, itemIndex) in day.items"
               :key="item.id || itemIndex"
               class="event-row"
-              :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
+              :style="{ '--event-tag-color': resolveEventColor(item.tag) }"
             >
               <time>{{ item.time || '待定' }}</time>
               <div class="event-copy">
@@ -223,6 +242,35 @@ defineExpose({ Config, DefaultConfig })
             留白日 · 好好休息
           </p>
         </article>
+
+        <aside class="week-note">
+          <span
+            class="washi-tape"
+            aria-hidden="true"
+          />
+          <p>WEEK NOTES</p>
+          <strong>{{ eventCount }} LIVE ENTRIES</strong>
+          <dl>
+            <div>
+              <dt>ON AIR</dt>
+              <dd>{{ activeDayCount }} DAYS</dd>
+            </div>
+            <div>
+              <dt>OFF</dt>
+              <dd>{{ days.length - activeDayCount }} DAYS</dd>
+            </div>
+          </dl>
+          <div
+            v-if="weeklyTags.length"
+            class="week-note__tags"
+          >
+            <span
+              v-for="tag in weeklyTags"
+              :key="tag"
+              ># {{ tag }}</span
+            >
+          </div>
+        </aside>
       </div>
 
       <div

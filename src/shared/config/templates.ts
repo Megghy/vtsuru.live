@@ -12,12 +12,30 @@ export interface TemplateMapType {
   }
 }
 
+const scheduleCoreCapabilities = [
+  'scheduleDate',
+  'todayHighlight',
+  'scheduleStats',
+  'weekSwitch',
+  'imageExport',
+] as const satisfies readonly TemplateCapability[]
+const scheduleConfigCapabilities = [
+  'templateConfig',
+  'customHeading',
+  'customColors',
+] as const satisfies readonly TemplateCapability[]
+const scheduleArtworkCapabilities = [
+  'characterArtwork',
+  'avatarFallback',
+] as const satisfies readonly TemplateCapability[]
+
 export const ScheduleTemplateMap: TemplateMapType = {
   '': {
     name: '默认',
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/DefaultScheduleTemplate.vue')),
     ),
+    capabilities: ['scheduleDate', 'todayHighlight'],
   },
   pinky: {
     name: '粉粉',
@@ -25,7 +43,12 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/PinkySchedule.vue')),
     ),
-    capabilities: ['templateConfig'],
+    capabilities: [
+      ...scheduleCoreCapabilities,
+      ...scheduleArtworkCapabilities,
+      ...scheduleConfigCapabilities,
+      'backgroundImage',
+    ],
   },
   magazine: {
     name: '直播周刊',
@@ -33,7 +56,13 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/MagazineSchedule.vue')),
     ),
-    capabilities: ['templateConfig'],
+    capabilities: [
+      ...scheduleCoreCapabilities,
+      'categorySummary',
+      ...scheduleArtworkCapabilities,
+      ...scheduleConfigCapabilities,
+      'backgroundImage',
+    ],
   },
   kawaii: {
     name: '梦色直播手帐',
@@ -41,7 +70,15 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/KawaiiSchedule.vue')),
     ),
-    capabilities: ['templateConfig'],
+    capabilities: [
+      ...scheduleCoreCapabilities,
+      'categorySummary',
+      ...scheduleArtworkCapabilities,
+      ...scheduleConfigCapabilities,
+      'backgroundImage',
+      'decorativeImages',
+      'artworkPosition',
+    ],
   },
   neon: {
     name: '信号播控台',
@@ -49,7 +86,13 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/NeonStageSchedule.vue')),
     ),
-    capabilities: ['templateConfig'],
+    capabilities: [
+      ...scheduleCoreCapabilities,
+      'categorySummary',
+      ...scheduleArtworkCapabilities,
+      ...scheduleConfigCapabilities,
+      'backgroundImage',
+    ],
   },
   liveposter: {
     name: '直播海报',
@@ -57,7 +100,14 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/LivePosterSchedule.vue')),
     ),
-    capabilities: ['templateConfig'],
+    capabilities: [
+      ...scheduleCoreCapabilities,
+      'categorySummary',
+      ...scheduleArtworkCapabilities,
+      ...scheduleConfigCapabilities,
+      'backgroundImage',
+      'artworkEffect',
+    ],
   },
   prismstage: {
     name: '七曜物候历',
@@ -65,7 +115,7 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/PrismStageSchedule.vue')),
     ),
-    capabilities: ['templateConfig'],
+    capabilities: [...scheduleCoreCapabilities, ...scheduleConfigCapabilities, 'backgroundImage'],
   },
   kinari: {
     name: '白和纸手帖',
@@ -73,7 +123,15 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/KinariSchedule.vue')),
     ),
-    capabilities: ['templateConfig'],
+    capabilities: [...scheduleCoreCapabilities, ...scheduleConfigCapabilities, 'backgroundImage'],
+  },
+  retrodesktop: {
+    name: 'Schedule.exe',
+    settingName: 'Template.Schedule.RetroDesktop',
+    component: markRaw(
+      defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/RetroDesktopSchedule.vue')),
+    ),
+    capabilities: [...scheduleCoreCapabilities, 'templateConfig', 'customHeading', 'appearancePreset'],
   },
 }
 

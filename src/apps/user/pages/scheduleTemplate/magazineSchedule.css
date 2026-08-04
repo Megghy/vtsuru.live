@@ -9,7 +9,7 @@
   --magazine-paper: color-mix(in srgb, #f2eadb 86%, var(--schedule-panel) 14%);
   --magazine-paper-deep: color-mix(in srgb, #ded2bd 82%, var(--schedule-panel-embedded) 18%);
   --magazine-ink: color-mix(in srgb, #17130f 86%, var(--schedule-fg) 14%);
-  --magazine-muted: color-mix(in srgb, #625b50 80%, var(--schedule-muted) 20%);
+  --magazine-muted: color-mix(in srgb, #514b43 84%, var(--schedule-muted) 16%);
   --magazine-rule: color-mix(in srgb, var(--magazine-ink) 28%, transparent);
 
   position: relative;
@@ -42,25 +42,10 @@
   z-index: -1;
   inset: 0;
   pointer-events: none;
-  background-image:
-    radial-gradient(
-      circle at 18% 21%,
-      color-mix(in srgb, var(--magazine-ink) 14%, transparent) 0 0.7px,
-      transparent 0.8px
-    ),
-    radial-gradient(
-      circle at 73% 64%,
-      color-mix(in srgb, var(--magazine-accent) 10%, transparent) 0 0.6px,
-      transparent 0.8px
-    );
-  background-position:
-    0 0,
-    5px 7px;
-  background-size:
-    9px 11px,
-    13px 15px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72 .9' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 .24'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='.55'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
   mix-blend-mode: multiply;
-  opacity: 0.28;
+  opacity: 0.24;
 }
 
 .poster-head {
@@ -74,11 +59,10 @@
 }
 
 .publication-mark {
-  display: flex;
+  display: grid;
   grid-row: 1 / -1;
-  align-items: flex-start;
-  flex-direction: column;
-  justify-content: space-between;
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
   min-width: 0;
   padding-right: 14px;
   border-right: 1px solid var(--magazine-rule);
@@ -94,6 +78,9 @@
 }
 
 .publication-mark strong {
+  align-self: end;
+  padding-top: 8px;
+  border-top: 2px solid var(--magazine-accent);
   color: var(--magazine-accent);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 17px;
@@ -145,7 +132,9 @@
 .issue-block {
   display: grid;
   align-self: stretch;
-  padding: 8px 7px 5px;
+  grid-template-rows: auto 1fr;
+  min-height: 112px;
+  padding: 13px 9px 8px;
   color: var(--magazine-paper);
   background: var(--magazine-accent);
   place-items: center;
@@ -153,8 +142,9 @@
 
 .issue-block span {
   align-self: start;
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 900;
+  letter-spacing: 0.12em;
 }
 
 .issue-block strong {
@@ -206,21 +196,51 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 9px 0 7px;
+  min-height: 29px;
+  padding: 8px 0;
   color: var(--magazine-muted);
   font-size: 9px;
   border-bottom: 1px solid var(--magazine-ink);
 }
 
 .edition-rule strong {
+  flex: 0 0 auto;
   color: var(--magazine-accent);
 }
 
+.edition-legend {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.edition-legend li {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 8px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.edition-legend i {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  box-shadow: 1px 1px 0 color-mix(in srgb, var(--magazine-ink) 20%, transparent);
+}
+
 .editorial-columns {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.16fr) minmax(0, 0.84fr);
   gap: 0;
   min-width: 0;
+  border-bottom: 1px solid var(--magazine-ink);
 }
 
 .program-column {
@@ -246,10 +266,15 @@
   border-bottom: 1px solid var(--magazine-rule);
 }
 
+.program-column .program-day:last-child {
+  border-bottom: 0;
+}
+
 .program-day.is-today::before {
   position: absolute;
   z-index: -1;
-  inset: 5px -8px;
+  inset: 5px 5px 5px 0;
+  border-left: 3px solid color-mix(in srgb, var(--magazine-accent) 58%, transparent);
   background: color-mix(in srgb, var(--magazine-accent) 9%, transparent);
   content: '';
 }
@@ -343,14 +368,17 @@
 
 .event-copy span {
   margin-top: 1px;
-  color: var(--magazine-muted);
+  color: color-mix(in srgb, var(--magazine-ink) 68%, var(--magazine-muted) 32%);
   font-size: 9px;
+  font-weight: 600;
 }
 
 .rest-copy {
   margin: 0 0 0 50px;
+  color: color-mix(in srgb, var(--magazine-ink) 62%, var(--magazine-muted) 38%);
   font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
   font-size: 10px;
+  font-weight: 600;
 }
 
 .poster-empty {
@@ -418,6 +446,10 @@
     border-right: 0;
   }
 
+  .lead-column .program-day:last-child {
+    border-bottom: 1px solid var(--magazine-rule);
+  }
+
   .side-column {
     padding-left: 0;
   }
@@ -463,6 +495,11 @@
     font-size: 34px;
   }
 
+  .issue-block {
+    min-height: 88px;
+    padding: 11px 6px 7px;
+  }
+
   .cover-photo {
     height: 112px;
   }
@@ -470,7 +507,18 @@
   .edition-rule {
     align-items: flex-start;
     flex-direction: column;
+    gap: 6px;
+  }
+
+  .edition-legend {
+    width: 100%;
+    gap: 0;
+    justify-content: space-between;
+  }
+
+  .edition-legend li {
     gap: 3px;
+    font-size: 7px;
   }
 
   .program-day {

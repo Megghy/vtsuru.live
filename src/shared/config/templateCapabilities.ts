@@ -54,6 +54,12 @@ export const TemplateCapabilities = {
   showDescription: { name: '显示备注', description: '展示歌曲备注 / 描述', category: 'display' },
   showCover: { name: '显示封面', description: '展示歌曲封面图', category: 'display' },
   songCount: { name: '数量统计', description: '展示当前歌曲数量', category: 'display' },
+  scheduleDate: { name: '日期范围', description: '展示该周日期范围和每天日期', category: 'display' },
+  todayHighlight: { name: '今日标记', description: '突出显示当前日期对应的日程', category: 'display' },
+  scheduleStats: { name: '日程统计', description: '展示直播场次、活跃天数等周统计', category: 'display' },
+  categorySummary: { name: '分类摘要', description: '汇总节目分类并展示图例或分类索引', category: 'display' },
+  characterArtwork: { name: '角色图片', description: '支持上传立绘、角色贴纸或频道识别图', category: 'display' },
+  avatarFallback: { name: '头像替代', description: '未上传角色图片时可使用主播头像', category: 'display' },
 
   // —— 筛选 ——
   search: { name: '搜索', description: '按关键词搜索歌曲', category: 'filter' },
@@ -68,6 +74,8 @@ export const TemplateCapabilities = {
   audioPreview: { name: '音频试听', description: '内置播放器试听歌曲', category: 'interaction' },
   keyboardNav: { name: '键盘导航', description: '支持键盘快捷键翻页 / 操作', category: 'interaction' },
   selfViewGuard: { name: '本人视图保护', description: '主播查看自己歌单时隐藏点歌按钮', category: 'interaction' },
+  weekSwitch: { name: '周次切换', description: '可切换并预览已有日程周次', category: 'interaction' },
+  imageExport: { name: '图片导出', description: '可将当前日程导出为高清图片', category: 'interaction' },
 
   // —— 点歌 ——
   requestSong: { name: '网页点播', description: '在网页直接发起点歌请求', category: 'request' },
@@ -87,6 +95,13 @@ export const TemplateCapabilities = {
 
   // —— 配置 ——
   templateConfig: { name: '自定义配置', description: '提供可视化配置项 (背景 / 链接 / 布局等)', category: 'config' },
+  customHeading: { name: '自定义标题', description: '可修改模板主标题或副标题', category: 'config' },
+  customColors: { name: '自定义配色', description: '可修改模板的主色、底色或强调色', category: 'config' },
+  backgroundImage: { name: '背景图片', description: '支持上传自定义背景或纸张底图', category: 'config' },
+  decorativeImages: { name: '自由装饰', description: '支持自由添加、缩放和摆放装饰图片', category: 'config' },
+  artworkPosition: { name: '图片位置', description: '可调整角色图片在版面中的位置', category: 'config' },
+  artworkEffect: { name: '图片效果', description: '可切换立绘的印刷或视觉处理效果', category: 'config' },
+  appearancePreset: { name: '外观预设', description: '提供多套背景、标题栏或版式外观', category: 'config' },
 } as const satisfies Record<string, TemplateCapabilityMeta>
 
 export type TemplateCapability = keyof typeof TemplateCapabilities

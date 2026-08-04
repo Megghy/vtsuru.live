@@ -31,12 +31,7 @@ import nana7miPlaceholder from '@/assets/images/schedule/nana7mi-placeholder.web
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { FETCH_API } from '@/shared/config'
 import type { TemplateCapability } from '@/shared/config/templateCapabilities'
-import {
-  CapabilityCategories,
-  getCategoryTagColor,
-  groupCapabilities,
-  TemplateCapabilities,
-} from '@/shared/config/templateCapabilities'
+import { CapabilityCategories, getCategoryTagColor, groupCapabilities } from '@/shared/config/templateCapabilities'
 import type { TemplateMapType } from '@/shared/config/templates'
 import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templates'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
@@ -64,6 +59,7 @@ const message = useMessage()
 const userPageSettings = ref<UserPagesSettings | null>(null)
 
 const isSaving = ref(false)
+const isFormSaving = ref(false)
 
 // 左侧配置栏折叠状态
 const configCollapsed = ref(false)
@@ -193,7 +189,8 @@ watch(pageKey, () => {
 
 // 能力多选下拉: 按分类分组
 const capabilityFilterOptions = computed<SelectGroupOption[]>(() => {
-  const byCategory = groupCapabilities(Object.keys(TemplateCapabilities) as TemplateCapability[])
+  const available = [...new Set(group.value.Options.flatMap((option) => option.capabilities))] as TemplateCapability[]
+  const byCategory = groupCapabilities(available)
   return byCategory.map((g) => ({
     type: 'group',
     label: CapabilityCategories[g.category].name,
@@ -377,6 +374,7 @@ async function setAsDisplayTemplate() {
         <NText depth="2"> 页面 </NText>
         <NSelect
           v-model:value="selectedPage"
+          :disabled="isFormSaving"
           size="small"
           :options="pageOptions"
           style="width: 140px"
@@ -386,6 +384,7 @@ async function setAsDisplayTemplate() {
           <template #trigger>
             <NSelect
               v-model:value="selectedKey"
+              :disabled="isFormSaving"
               size="small"
               style="width: 220px"
               :options="filteredTemplateOptions"
@@ -397,6 +396,7 @@ async function setAsDisplayTemplate() {
         </NTooltip>
         <NSelect
           v-model:value="capabilityFilter"
+          :disabled="isFormSaving"
           multiple
           clearable
           size="small"
@@ -537,6 +537,7 @@ async function setAsDisplayTemplate() {
               :config-data="currentConfigData"
               :config="configSchema"
               fill-height
+              @saving-change="isFormSaving = $event"
             />
           </div>
         </Transition>

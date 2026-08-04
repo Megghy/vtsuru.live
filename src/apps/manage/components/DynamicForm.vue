@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Info24Filled } from '@vicons/fluent'
+import { Info24Filled } from '@vicons/fluent'
 import type { SelectOption, UploadFileInfo } from 'naive-ui'
 import {
   NButton,
-  NCard,
   NCheckbox,
   NColorPicker,
   NEmpty,
@@ -22,9 +21,8 @@ import {
   NTooltip,
   NUpload,
   useMessage,
-  useThemeVars,
 } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import { UploadConfig } from '@/api/account'
 import type { UploadFileResponse } from '@/api/api-models'
@@ -33,22 +31,31 @@ import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
 import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import DecorativeImageEditor from './DecorativeImageEditor.vue'
+
 const props = defineProps<{
   name?: string
   configData: any
   config: ConfigItemDefinition[] | undefined
+  isPublic?: boolean
   // 撑满父容器高度: 表单区滚动, 提交按钮固定底部 (用于分栏布局)
   fillHeight?: boolean
 }>()
 
+const emit = defineEmits<{
+  'saving-change': [saving: boolean]
+  saved: []
+}>()
+
 const message = useMessage()
-const themeVars = useThemeVars()
 
 const fileList = ref<{ [key: string]: UploadFileInfo[] }>({})
-// 新增实际文件列表，用于存储待上传的文件
-const pendingFiles = ref<{ [key: string]: File[] }>({})
-// 新增装饰图片待上传文件
-const pendingDecorativeImages = ref<{ [key: string]: File[] }>({})
+const decorativeFileList = ref<{ [key: string]: UploadFileInfo[] }>({})
+const filePreviews = new Map<File, { key: string; data: UploadFileResponse }>()
+const decorativePreviews = new Map<File, { key: string; data: DecorativeImageProperties }>()
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const IMAGE_ACCEPT = '.png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tiff,.heic,.heif'
+let nextPreviewId = -1
 
 // 上传进度相关
 const showUploadModal = ref(false)
@@ -57,9 +64,8 @@ const uploadProgress = ref(0)
 const totalFilesToUpload = ref(0)
 const uploadedFilesCount = ref(0)
 
-const selectedImageId = ref<number | null>(null)
-
 const isUploading = ref(false)
+let isActive = true
 
 // 检查配置项是否应该显示
 function isItemVisible(item: ConfigItemDefinition): boolean {
@@ -87,23 +93,156 @@ function getSelectOptions(item: ConfigItemDefinition): SelectOption[] {
   return options || []
 }
 
-function OnFileListChange(key: string, files: UploadFileInfo[]) {
-  if (files.length == 1) {
-    const file = files[0]
-    if ((file.file?.size ?? 0) > 10 * 1024 * 1024) {
-      message.error('文件大小不能超过10MB')
-      fileList.value[key] = []
-      return
-    }
+function getUploadedFiles(key: string): UploadFileResponse[] {
+  const files = props.configData[key]
+  return Array.isArray(files) ? files : []
+}
 
-    // 存储文件以便于稍后上传
-    if (file.file) {
-      if (!pendingFiles.value[key]) {
-        pendingFiles.value[key] = []
-      }
-      pendingFiles.value[key].push(file.file)
-    }
+function toUploadFileList(files: UploadFileResponse[]): UploadFileInfo[] {
+  return files.map((file) => ({
+    id: String(file.id),
+    thumbnailUrl: file.path,
+    name: file.name || '',
+    status: 'finished',
+  }))
+}
+
+function syncUploadedFileList(key: string) {
+  fileList.value[key] = toUploadFileList(getUploadedFiles(key))
+}
+
+function createPreviewFile(file: File): UploadFileResponse {
+  return {
+    id: nextPreviewId--,
+    path: URL.createObjectURL(file),
+    name: file.name,
+    hash: '',
+    size: file.size,
   }
+}
+
+function releasePreview(preview: UploadFileResponse) {
+  URL.revokeObjectURL(preview.path)
+}
+
+function releaseUnusedPreviews<T extends { key: string; data: UploadFileResponse }>(
+  previews: Map<File, T>,
+  key: string,
+  activeFiles: Set<File>,
+) {
+  for (const [file, preview] of previews) {
+    if (preview.key !== key || activeFiles.has(file)) continue
+    releasePreview(preview.data)
+    previews.delete(file)
+  }
+}
+
+function releaseAllPreviews() {
+  for (const preview of filePreviews.values()) releasePreview(preview.data)
+  for (const preview of decorativePreviews.values()) releasePreview(preview.data)
+  filePreviews.clear()
+  decorativePreviews.clear()
+}
+
+function onFileListChange(item: ConfigItemDefinition, files: UploadFileInfo[]) {
+  if (isUploading.value) return
+  const extensions = item.type === 'file' && item.fileType?.length ? item.fileType : IMAGE_ACCEPT.split(',')
+  const allowedExtensions = new Set(extensions.map((extension) => extension.replace('.', '').toLowerCase()))
+  const fingerprints = new Set<string>()
+  const acceptedFiles = files.filter((file) => {
+    if (!file.file) return true
+    const extension = file.name.split('.').pop()?.toLowerCase()
+    const fingerprint = `${file.file.name}:${file.file.size}:${file.file.lastModified}`
+    if (fingerprints.has(fingerprint)) return false
+    fingerprints.add(fingerprint)
+    return file.file.size <= MAX_FILE_SIZE && !!extension && allowedExtensions.has(extension)
+  })
+  if (acceptedFiles.length !== files.length) message.error('仅支持指定格式且不超过 10MB 的文件')
+
+  const uploadedFiles = new Map(
+    getUploadedFiles(item.key)
+      .filter((file) => file.id >= 0)
+      .map((file) => [String(file.id), file]),
+  )
+  const activeLocalFiles = new Set(acceptedFiles.flatMap((file) => (file.file ? [file.file] : [])))
+  releaseUnusedPreviews(filePreviews, item.key, activeLocalFiles)
+  const previewFiles = acceptedFiles.map((file) => {
+    if (!file.file) return file
+    let preview = filePreviews.get(file.file)
+    if (!preview) {
+      preview = { key: item.key, data: createPreviewFile(file.file) }
+      filePreviews.set(file.file, preview)
+    }
+    return { ...file, url: preview.data.path, thumbnailUrl: preview.data.path }
+  })
+  fileList.value[item.key] = previewFiles
+  props.configData[item.key] = previewFiles.flatMap((file) => {
+    if (!file.file) {
+      const uploaded = uploadedFiles.get(String(file.id))
+      return uploaded ? [uploaded] : []
+    }
+    return [filePreviews.get(file.file)!.data]
+  })
+}
+
+function updateDecorativeFiles(key: string, files: UploadFileInfo[]) {
+  if (isUploading.value) return
+  const activeLocalFiles = new Set(files.flatMap((file) => (file.file ? [file.file] : [])))
+  releaseUnusedPreviews(decorativePreviews, key, activeLocalFiles)
+  const savedImages = getDecorativeImages(key).filter((image) => image.id >= 0)
+  const localImages = files.flatMap((item, index) => {
+    if (!item.file) return []
+    let preview = decorativePreviews.get(item.file)
+    if (!preview) {
+      preview = {
+        key,
+        data: {
+          ...createPreviewFile(item.file),
+          x: 10 + (savedImages.length + index) * 5,
+          y: 10 + (savedImages.length + index) * 5,
+          width: 20,
+          rotation: 0,
+          opacity: 1,
+          zIndex: savedImages.length + index + 1,
+        },
+      }
+      decorativePreviews.set(item.file, preview)
+    }
+    return [getDecorativeImages(key).find((image) => image.id === preview.data.id) ?? preview.data]
+  })
+  decorativeFileList.value[key] = files.map((item) => {
+    if (!item.file) return item
+    const path = decorativePreviews.get(item.file)!.data.path
+    return { ...item, url: path, thumbnailUrl: path }
+  })
+  props.configData[key] = [...savedImages, ...localImages]
+}
+
+function updateDecorativeImages(key: string, images: DecorativeImageProperties[]) {
+  props.configData[key] = images
+  const retainedIds = new Set(images.map((image) => image.id))
+  decorativeFileList.value[key] = (decorativeFileList.value[key] ?? []).filter((item) => {
+    if (!item.file) return false
+    const preview = decorativePreviews.get(item.file)
+    if (!preview || retainedIds.has(preview.data.id)) return true
+    releasePreview(preview.data)
+    decorativePreviews.delete(item.file)
+    return false
+  })
+}
+
+function getDecorativeImages(key: string): DecorativeImageProperties[] {
+  const images = props.configData[key]
+  return Array.isArray(images) ? images : []
+}
+
+function getPendingFiles(files: UploadFileInfo[]) {
+  return files.flatMap((item) => (item.file ? [item.file] : []))
+}
+
+function getFileAccept(item: ConfigItemDefinition) {
+  if (item.type !== 'file' || !item.fileType?.length) return IMAGE_ACCEPT
+  return item.fileType.map((extension) => (extension.startsWith('.') ? extension : `.${extension}`)).join(',')
 }
 
 // 更新上传进度
@@ -117,14 +256,14 @@ function updateUploadProgress(stage: string, done?: number, total?: number) {
 }
 
 async function uploadAllFiles() {
-  // 收集所有待上传分组 (普通文件 + 装饰图片)
   const uploadGroups: { key: string; files: File[]; decorative: boolean }[] = []
-  for (const key in pendingFiles.value) {
-    if (pendingFiles.value[key]?.length) uploadGroups.push({ key, files: pendingFiles.value[key], decorative: false })
+  for (const [key, files] of Object.entries(fileList.value)) {
+    const pendingFiles = getPendingFiles(files)
+    if (pendingFiles.length) uploadGroups.push({ key, files: pendingFiles, decorative: false })
   }
-  for (const key in pendingDecorativeImages.value) {
-    if (pendingDecorativeImages.value[key]?.length)
-      uploadGroups.push({ key, files: pendingDecorativeImages.value[key], decorative: true })
+  for (const [key, files] of Object.entries(decorativeFileList.value)) {
+    const pendingFiles = getPendingFiles(files)
+    if (pendingFiles.length) uploadGroups.push({ key, files: pendingFiles, decorative: true })
   }
 
   const total = uploadGroups.reduce((n, g) => n + g.files.length, 0)
@@ -137,64 +276,81 @@ async function uploadAllFiles() {
 
   let done = 0
   try {
-    // 串行上传, 每完成一组才推进进度, 保证进度条准确
-    for (const g of uploadGroups) {
-      const results = await uploadFiles(g.files, undefined, UserFileLocation.Local, (stage) => {
-        if (stage === UploadStage.Failed) message.error(`${g.key} 文件上传失败`)
-      })
+    for (const group of uploadGroups) {
+      for (const file of group.files) {
+        updateUploadProgress(`${file.name} · ${UploadStage.Preparing}`, done, total)
+        const results = await uploadFiles(file, undefined, UserFileLocation.Local, (stage) => {
+          updateUploadProgress(`${file.name} · ${stage}`, done, total)
+        })
+        if (results.length !== 1) throw new Error(`${file.name} 上传结果数量异常`)
+        const [result] = results
 
-      if (g.decorative) {
-        const current = (props.configData[g.key] as DecorativeImageProperties[]) || []
-        const newImages: DecorativeImageProperties[] = results.map((result, index) => ({
-          id: Number(result.id),
-          path: result.path,
-          name: result.name,
-          hash: result.hash,
-          src: result.path,
-          x: 10 + index * 5,
-          y: 10 + index * 5,
-          width: 20,
-          rotation: 0,
-          opacity: 1,
-          zIndex: current.length + index + 1,
-        }))
-        props.configData[g.key] = [...current, ...newImages]
-      } else {
-        props.configData[g.key] = results
+        if (group.decorative) {
+          const preview = decorativePreviews.get(file)
+          const current = getDecorativeImages(group.key)
+          const currentPreview = current.find((image) => image.id === preview?.data.id)
+          const nextImage: DecorativeImageProperties = {
+            ...result,
+            id: Number(result.id),
+            x: currentPreview?.x ?? 10 + current.length * 5,
+            y: currentPreview?.y ?? 10 + current.length * 5,
+            width: currentPreview?.width ?? 20,
+            rotation: currentPreview?.rotation ?? 0,
+            opacity: currentPreview?.opacity ?? 1,
+            zIndex: currentPreview?.zIndex ?? current.length + 1,
+          }
+          props.configData[group.key] = current.map((image) => (image.id === preview?.data.id ? nextImage : image))
+          decorativeFileList.value[group.key] = decorativeFileList.value[group.key].filter((item) => item.file !== file)
+          await nextTick()
+          if (preview) {
+            releasePreview(preview.data)
+            decorativePreviews.delete(file)
+          }
+        } else {
+          const preview = filePreviews.get(file)
+          props.configData[group.key] = getUploadedFiles(group.key).map((item) =>
+            item.id === preview?.data.id ? result : item,
+          )
+          const uploadedItem = toUploadFileList([result])[0]
+          fileList.value[group.key] = fileList.value[group.key].map((item) =>
+            item.file === file ? uploadedItem : item,
+          )
+          await nextTick()
+          if (preview) {
+            releasePreview(preview.data)
+            filePreviews.delete(file)
+          }
+        }
+
+        done++
+        updateUploadProgress(UploadStage.Success, done, total)
       }
-
-      done += g.files.length
-      updateUploadProgress(UploadStage.Success, done, total)
     }
 
-    setTimeout(() => {
-      showUploadModal.value = false
-    }, 500)
-    pendingFiles.value = {}
-    pendingDecorativeImages.value = {}
+    showUploadModal.value = false
     return true
   } catch (error) {
     message.error(`文件上传失败: ${error instanceof Error ? error.message : String(error)}`)
     updateUploadProgress(UploadStage.Failed)
-    setTimeout(() => {
-      showUploadModal.value = false
-    }, 2000)
     return false
   }
 }
 
 async function onSubmit() {
+  if (isUploading.value) return
+  if (!props.name) {
+    message.error('缺少配置名称，无法保存')
+    return
+  }
   try {
     isUploading.value = true
+    emit('saving-change', true)
 
-    // 先上传所有文件
     const uploadSuccess = await uploadAllFiles()
-    if (!uploadSuccess) {
-      isUploading.value = false
-      return
-    }
+    if (!uploadSuccess || !isActive) return
 
-    const success = await UploadConfig(props.name || '', props.configData, true)
+    const success = await UploadConfig(props.name, props.configData, props.isPublic ?? true)
+    if (!isActive) return
 
     if (success) {
       message.success('已保存设置')
@@ -202,6 +358,7 @@ async function onSubmit() {
         const onUploaded = item.onUploaded as undefined | ((data: any, config: any) => void)
         onUploaded?.(props.configData[item.key], props.configData)
       })
+      emit('saved')
     } else {
       message.error('保存失败')
     }
@@ -209,6 +366,7 @@ async function onSubmit() {
     message.error(`保存失败: ${err}`)
   } finally {
     isUploading.value = false
+    emit('saving-change', false)
   }
 }
 
@@ -243,257 +401,28 @@ function safeRgbaToString(color: RGBAColor | null | undefined): string {
   return rgbaToString(color ?? { r: 0, g: 0, b: 0, a: 1 })
 }
 
-// 装饰图片功能
-function updateImageProp(id: number, prop: keyof DecorativeImageProperties, value: any, key: string) {
-  const images = props.configData[key] as DecorativeImageProperties[]
-  const index = images.findIndex((img) => img.id === id)
-  if (index !== -1) {
-    const updatedImages = [...images]
-    updatedImages[index] = { ...updatedImages[index], [prop]: value }
-    props.configData[key] = updatedImages
-  }
-}
-
-function removeImage(id: number, key: string) {
-  const images = props.configData[key] as DecorativeImageProperties[]
-  props.configData[key] = images.filter((img) => img.id !== id)
-  if (selectedImageId.value === id) {
-    selectedImageId.value = null
-  }
-}
-
-function changeZIndex(id: number, direction: 'up' | 'down', key: string) {
-  const images = props.configData[key] as DecorativeImageProperties[]
-  const index = images.findIndex((img) => img.id === id)
-  if (index === -1) return
-  const newImages = [...images]
-  if (direction === 'up' && index < newImages.length - 1) {
-    ;[newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]]
-  } else if (direction === 'down' && index > 0) {
-    ;[newImages[index], newImages[index - 1]] = [newImages[index - 1], newImages[index]]
-  }
-  newImages.forEach((img, i) => (img.zIndex = i + 1))
-  props.configData[key] = newImages
-}
-
-function renderDecorativeImages(key: string) {
-  return h(NFlex, { vertical: true, size: 'large' }, () => [
-    // 上传按钮
-    h(
-      NUpload,
-      {
-        multiple: true,
-        accept: 'image/*',
-        showFileList: false,
-        'onUpdate:fileList': (uploadedFileList: UploadFileInfo[]) => {
-          if (uploadedFileList.length > 0) {
-            const filesToUpload = uploadedFileList.map((f) => f.file).filter((f): f is File => f instanceof File)
-            if (filesToUpload.length > 0) {
-              // 不立即上传，而是存储起来等待提交时上传
-              if (!pendingDecorativeImages.value[key]) {
-                pendingDecorativeImages.value[key] = []
-              }
-              pendingDecorativeImages.value[key].push(...filesToUpload)
-              message.success(`已选择 ${filesToUpload.length} 个装饰图片，提交时会自动上传`)
-            }
-          }
-          return []
-        },
-      },
-      { default: () => h(NButton, null, () => '添加装饰图片') },
-    ),
-
-    // 图片列表
-    h(NScrollbar, { style: { maxHeight: '300px', marginTop: '10px' } }, () => {
-      const images = (props.configData[key] as DecorativeImageProperties[]) || []
-      return images.length > 0
-        ? images.map((img: DecorativeImageProperties) => {
-            const isSelected = selectedImageId.value === img.id
-            return h(
-              NCard,
-              {
-                key: img.id,
-                size: 'small',
-                hoverable: true,
-                style: {
-                  marginBottom: '10px',
-                  cursor: 'pointer',
-                  border: isSelected
-                    ? `2px solid ${themeVars.value.primaryColor}`
-                    : `1px solid ${themeVars.value.borderColor}`,
-                },
-                onClick: () => (selectedImageId.value = img.id),
-              },
-              {
-                default: () =>
-                  h(NFlex, { justify: 'space-between', align: 'center' }, () => [
-                    h(NFlex, { align: 'center', size: 'small' }, () => [
-                      h('img', {
-                        src: img.path,
-                        style: {
-                          width: '40px',
-                          height: '40px',
-                          objectFit: 'contain',
-                          marginRight: '10px',
-                          backgroundColor: themeVars.value.inputColor,
-                        },
-                      }),
-                      h('span', `ID: ${img.id}`),
-                    ]),
-                    h(NFlex, null, () => [
-                      h(
-                        NButton,
-                        {
-                          size: 'tiny',
-                          circle: true,
-                          secondary: true,
-                          title: '上移一层',
-                          onClick: (e: Event) => {
-                            e.stopPropagation()
-                            changeZIndex(img.id, 'up', key)
-                          },
-                        },
-                        { icon: () => h(NIcon, { component: ArrowUp20Filled }) },
-                      ),
-                      h(
-                        NButton,
-                        {
-                          size: 'tiny',
-                          circle: true,
-                          secondary: true,
-                          title: '下移一层',
-                          onClick: (e: Event) => {
-                            e.stopPropagation()
-                            changeZIndex(img.id, 'down', key)
-                          },
-                        },
-                        { icon: () => h(NIcon, { component: ArrowDown20Filled }) },
-                      ),
-                      h(
-                        NButton,
-                        {
-                          size: 'tiny',
-                          circle: true,
-                          type: 'error',
-                          ghost: true,
-                          title: '删除',
-                          onClick: (e: Event) => {
-                            e.stopPropagation()
-                            removeImage(img.id, key)
-                          },
-                        },
-                        { icon: () => h(NIcon, { component: Delete20Filled }) },
-                      ),
-                    ]),
-                  ]),
-                footer: () =>
-                  isSelected
-                    ? h(NFlex, { vertical: true, size: 'small', style: { marginTop: '10px' } }, () => [
-                        h(NFlex, { align: 'center' }, () => [
-                          h('span', { style: { width: '50px' } }, 'X (%):'),
-                          h(NInputNumber, {
-                            value: img.x,
-                            size: 'small',
-                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'x', v ?? 0, key),
-                            min: 0,
-                            max: 100,
-                            step: 1,
-                          }),
-                        ]),
-                        h(NFlex, { align: 'center' }, () => [
-                          h('span', { style: { width: '50px' } }, 'Y (%):'),
-                          h(NInputNumber, {
-                            value: img.y,
-                            size: 'small',
-                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'y', v ?? 0, key),
-                            min: 0,
-                            max: 100,
-                            step: 1,
-                          }),
-                        ]),
-                        h(NFlex, { align: 'center' }, () => [
-                          h('span', { style: { width: '50px' } }, '宽度(%):'),
-                          h(NInputNumber, {
-                            value: img.width,
-                            size: 'small',
-                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'width', v ?? 1, key),
-                            min: 1,
-                            step: 1,
-                          }),
-                        ]),
-                        h(NFlex, { align: 'center' }, () => [
-                          h('span', { style: { width: '50px' } }, '旋转(°):'),
-                          h(NInputNumber, {
-                            value: img.rotation,
-                            size: 'small',
-                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'rotation', v ?? 0, key),
-                            min: -360,
-                            max: 360,
-                            step: 1,
-                          }),
-                          h(NSlider, {
-                            value: img.rotation,
-                            'onUpdate:value': (v: number | number[]) =>
-                              updateImageProp(img.id, 'rotation', Array.isArray(v) ? v[0] : (v ?? 0), key),
-                            min: -180,
-                            max: 180,
-                            step: 1,
-                            style: { marginLeft: '10px', flexGrow: 1 },
-                          }),
-                        ]),
-                        h(NFlex, { align: 'center' }, () => [
-                          h('span', { style: { width: '50px' } }, '透明度:'),
-                          h(NInputNumber, {
-                            value: img.opacity,
-                            size: 'small',
-                            'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'opacity', v ?? 0, key),
-                            min: 0,
-                            max: 1,
-                            step: 0.01,
-                          }),
-                          h(NSlider, {
-                            value: img.opacity,
-                            'onUpdate:value': (v: number | number[]) =>
-                              updateImageProp(img.id, 'opacity', Array.isArray(v) ? v[0] : (v ?? 0), key),
-                            min: 0,
-                            max: 1,
-                            step: 0.01,
-                            style: { marginLeft: '10px', flexGrow: 1 },
-                          }),
-                        ]),
-                        h(NFlex, { align: 'center' }, () => [
-                          h('span', { style: { width: '50px' } }, '层级:'),
-                          h(NInputNumber, { value: img.zIndex, size: 'small', readonly: true }),
-                        ]),
-                      ])
-                    : null,
-              },
-            )
-          })
-        : h(NEmpty, { description: '暂无装饰图片' })
-    }),
-  ])
-}
-
-onMounted(() => {
+function initializeForm() {
+  releaseAllPreviews()
+  fileList.value = {}
+  decorativeFileList.value = {}
   props.config?.forEach((item) => {
-    if (item.default && !(item.key in props.configData)) {
-      props.configData[item.key] = item.default
+    if (item.default !== undefined && !(item.key in props.configData)) {
+      props.configData[item.key] = structuredClone(item.default)
     }
     if (item.type === 'file') {
-      const configItem = props.configData[item.key]
-      if (configItem) {
-        fileList.value[item.key] = configItem.map((uploadedFile: UploadFileResponse) => ({
-          id: uploadedFile.id,
-          thumbnailUrl: uploadedFile.path,
-          name: uploadedFile.name || '',
-          status: 'finished',
-        }))
-      } else {
-        fileList.value[item.key] = []
-      }
+      syncUploadedFileList(item.key)
+    } else if (item.type === 'decorativeImages') {
+      decorativeFileList.value[item.key] = []
     }
   })
+}
+
+watch([() => props.name, () => props.configData, () => props.config], initializeForm, { immediate: true })
+
+onBeforeUnmount(() => {
+  isActive = false
+  releaseAllPreviews()
+  if (isUploading.value) emit('saving-change', false)
 })
 </script>
 
@@ -504,6 +433,7 @@ onMounted(() => {
   />
   <NForm
     v-else
+    :disabled="isUploading"
     :class="{ 'dynamic-form--fill': fillHeight }"
   >
     <div class="dynamic-form__footer">
@@ -516,7 +446,10 @@ onMounted(() => {
       </NButton>
     </div>
 
-    <NScrollbar class="dynamic-form__scroll">
+    <NScrollbar
+      class="dynamic-form__scroll"
+      :inert="isUploading"
+    >
       <NGrid
         x-gap="12"
         y-gap="16"
@@ -532,9 +465,14 @@ onMounted(() => {
             :is="item.render(configData)"
             v-if="item.type === 'render'"
           />
-          <component
-            :is="renderDecorativeImages(item.key)"
+          <DecorativeImageEditor
             v-else-if="item.type === 'decorativeImages'"
+            :images="getDecorativeImages(item.key)"
+            :pending-files="decorativeFileList[item.key] ?? []"
+            :disabled="isUploading"
+            :max-file-size="MAX_FILE_SIZE"
+            @update:images="updateDecorativeImages(item.key, $event)"
+            @update:pending-files="updateDecorativeFiles(item.key, $event)"
           />
           <NInput
             v-else-if="item.type === 'string'"
@@ -599,11 +537,11 @@ onMounted(() => {
           <NUpload
             v-else-if="item.type === 'file'"
             v-model:file-list="fileList[item.key]"
-            accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.mp3,.mp4,.pdf,.doc,.docx"
+            :accept="getFileAccept(item)"
             list-type="image-card"
             :default-upload="false"
             :max="item.fileLimit"
-            @update:file-list="(file) => OnFileListChange(item.key, file)"
+            @update:file-list="(files) => onFileListChange(item, files)"
           >
             上传文件
           </NUpload>
@@ -630,8 +568,15 @@ onMounted(() => {
           :percentage="uploadProgress"
           indicator-placement="inside"
           :show-indicator="true"
+          :status="uploadStage === UploadStage.Failed ? 'error' : undefined"
         />
         <NText v-if="totalFilesToUpload > 0"> {{ uploadedFilesCount }} / {{ totalFilesToUpload }} 个文件 </NText>
+        <NButton
+          v-if="uploadStage === UploadStage.Failed"
+          @click="showUploadModal = false"
+        >
+          关闭
+        </NButton>
       </NFlex>
     </NModal>
   </NForm>

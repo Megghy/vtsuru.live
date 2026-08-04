@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ArrowDownload20Regular, ChevronLeft20Regular, ChevronRight20Regular } from '@vicons/fluent'
+import { snapdom } from '@zumer/snapdom'
 import { saveAs } from 'file-saver'
-import html2canvas from 'html2canvas'
 import type { SelectOption, SelectProps } from 'naive-ui'
 import { NButton, NIcon, NSelect, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { ScheduleWeekInfo } from '@/api/api-models'
 
+import { scheduleFontStylesheetDomains, waitForScheduleFonts } from './scheduleFonts'
 import { getISOWeekStart } from './scheduleTemplateUtils'
 
 const props = defineProps<{
@@ -55,23 +56,22 @@ async function saveScheduleImage() {
   if (!props.captureTarget || saving.value) return
   saving.value = true
   try {
-    const canvas = await html2canvas(props.captureTarget, {
-      width: props.captureTarget.clientWidth,
-      height: props.captureTarget.clientHeight,
+    await waitForScheduleFonts()
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    const blob = await snapdom.toBlob(props.captureTarget, {
       backgroundColor: null,
-      scrollX: 0,
-      scrollY: 0,
-      useCORS: true,
-      allowTaint: true,
-      // 封顶 2x, 避免高分屏 + 大模板下 canvas 过大导致 toBlob 失败或内存压力
-      scale: Math.min(window.devicePixelRatio, 2),
+      type: 'png',
+      embedFonts: true,
+      fontStylesheetDomains: scheduleFontStylesheetDomains,
+      // 保底 2x, 避免 100% 缩放下导出仅 1x 导致海报低清; snapdom 自带超大 canvas 降级保护
+      dpr: Math.max(window.devicePixelRatio, 2),
     })
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1))
-    if (!blob) throw new Error('图片生成失败')
     saveAs(blob, `${props.fileName}.png`)
   } catch (error) {
     console.error(error)
-    message.error('保存图片失败')
+    message.error(
+      error instanceof Error && error.message.includes('字体') ? '字体加载失败，请稍后重试' : '保存图片失败',
+    )
   } finally {
     saving.value = false
   }

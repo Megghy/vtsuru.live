@@ -6,21 +6,25 @@
 
 .neon-board {
   --neon-signal: #b4ff3e;
-  --console-black: color-mix(in srgb, var(--schedule-page-bg) 70%, #080b0c 30%);
-  --console-metal: color-mix(in srgb, var(--schedule-panel) 78%, #171c1d 22%);
+  --console-black: color-mix(in srgb, var(--schedule-page-bg) 12%, #080b0c 88%);
+  --console-metal: color-mix(in srgb, var(--schedule-panel) 10%, #171c1d 90%);
+  --console-fg: #eef3ed;
+  --console-muted: #a3ada7;
+  --console-subtle: #77817b;
+  --console-line: #39443e;
 
   position: relative;
   isolation: isolate;
   min-width: 0;
   padding: clamp(18px, 3vw, 32px);
   overflow: hidden;
-  color: var(--schedule-fg);
+  color: var(--console-fg);
   font-family: 'IBM Plex Mono', 'Cascadia Mono', monospace;
   background-color: var(--console-black);
   background-position: center;
   background-size: cover;
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style)
-    color-mix(in srgb, var(--schedule-border) 72%, var(--neon-signal) 28%);
+    color-mix(in srgb, var(--console-line) 72%, var(--neon-signal) 28%);
   border-radius: min(var(--vtsuru-page-radius, 8px), 8px);
   box-shadow: var(--vtsuru-page-shadow);
 }
@@ -34,10 +38,10 @@
     linear-gradient(
       115deg,
       transparent 0 48%,
-      color-mix(in srgb, var(--schedule-fg) 3%, transparent) 49% 50%,
+      color-mix(in srgb, var(--console-fg) 3%, transparent) 49% 50%,
       transparent 51%
     ),
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--schedule-fg) 2%, transparent) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--console-fg) 2%, transparent) 0 1px, transparent 1px 4px),
     color-mix(in srgb, var(--console-black) 92%, transparent);
   content: '';
 }
@@ -53,7 +57,7 @@
   align-items: center;
   min-width: 0;
   padding-bottom: 18px;
-  border-bottom: 2px solid color-mix(in srgb, var(--schedule-border) 62%, var(--neon-signal) 38%);
+  border-bottom: 2px solid color-mix(in srgb, var(--console-line) 62%, var(--neon-signal) 38%);
 }
 
 .on-air {
@@ -62,11 +66,11 @@
   align-items: center;
   min-height: 34px;
   padding-inline: 11px;
-  color: color-mix(in srgb, var(--schedule-fg) 84%, var(--neon-signal));
+  color: color-mix(in srgb, var(--console-fg) 84%, var(--neon-signal));
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0;
-  border: 1px solid color-mix(in srgb, var(--neon-signal) 52%, var(--schedule-border));
+  border: 1px solid color-mix(in srgb, var(--neon-signal) 52%, var(--console-line));
 }
 
 .signal-dot {
@@ -91,7 +95,7 @@
 .program-head,
 .console-readings dt,
 .signal-foot {
-  color: var(--schedule-muted);
+  color: var(--console-muted);
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0;
@@ -100,11 +104,12 @@
 .signal-title h2 {
   margin: 4px 0 0;
   overflow-wrap: anywhere;
-  color: var(--schedule-fg);
+  color: var(--console-fg);
   font-size: 38px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0;
+  letter-spacing: -0.035em;
+  word-spacing: -0.14em;
 }
 
 .week-code {
@@ -114,7 +119,7 @@
 }
 
 .week-code span {
-  color: var(--schedule-muted);
+  color: var(--console-muted);
   font-size: 10px;
 }
 
@@ -135,8 +140,8 @@
   min-width: 0;
   padding: 14px;
   background: color-mix(in srgb, var(--console-metal) 92%, transparent);
-  border: 1px solid var(--schedule-border);
-  box-shadow: inset 0 1px color-mix(in srgb, var(--schedule-fg) 8%, transparent);
+  border: 2px solid var(--console-line);
+  box-shadow: inset 0 1px color-mix(in srgb, var(--console-fg) 8%, transparent);
 }
 
 .channel-identity {
@@ -146,7 +151,7 @@
   align-items: center;
   min-width: 0;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--schedule-border);
+  border-bottom: 1px solid var(--console-line);
 }
 
 .channel-identity img,
@@ -176,8 +181,8 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
   margin: 14px 0;
-  background: var(--schedule-border);
-  border: 1px solid var(--schedule-border);
+  background: var(--console-line);
+  border: 1px solid var(--console-line);
 }
 
 .console-readings div {
@@ -193,7 +198,7 @@
 .console-readings dd {
   margin: 5px 0 0;
   overflow-wrap: anywhere;
-  color: color-mix(in srgb, var(--neon-signal) 72%, var(--schedule-fg));
+  color: color-mix(in srgb, var(--neon-signal) 72%, var(--console-fg));
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -203,13 +208,13 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 9px;
+  margin-bottom: 15px;
 }
 
 .load-monitor,
 .tag-monitor {
   padding-top: 13px;
-  border-top: 1px solid var(--schedule-border);
+  border-top: 1px solid var(--console-line);
 }
 
 .load-bars {
@@ -219,13 +224,14 @@
   height: 78px;
   padding: 8px;
   background: var(--console-black);
-  border-bottom: 3px solid color-mix(in srgb, var(--schedule-border) 68%, var(--neon-signal));
+  border: 1px solid var(--console-line);
+  border-bottom: 3px solid color-mix(in srgb, var(--console-line) 68%, var(--neon-signal));
 }
 
 .load-bars > span {
   position: relative;
   min-width: 0;
-  background: color-mix(in srgb, var(--schedule-fg) 5%, transparent);
+  background: color-mix(in srgb, var(--console-fg) 5%, transparent);
 }
 
 .load-bars i {
@@ -233,7 +239,7 @@
   inset: auto 0 0;
   height: var(--day-load);
   min-height: 2px;
-  background: color-mix(in srgb, var(--schedule-muted) 36%, transparent);
+  background: color-mix(in srgb, var(--console-muted) 36%, transparent);
 }
 
 .load-bars .is-active i {
@@ -259,7 +265,7 @@
   min-width: 0;
   padding-bottom: 4px;
   font-size: 10px;
-  border-bottom: 1px dotted color-mix(in srgb, var(--schedule-border) 75%, transparent);
+  border-bottom: 1px dotted color-mix(in srgb, var(--console-line) 75%, transparent);
 }
 
 .tag-monitor li span {
@@ -273,7 +279,7 @@
 
 .tag-monitor p {
   margin: 0;
-  color: var(--schedule-subtle);
+  color: var(--console-subtle);
   font-size: 10px;
 }
 
@@ -287,8 +293,8 @@
   justify-content: space-between;
   gap: 12px;
   padding: 0 2px 10px;
-  color: color-mix(in srgb, var(--neon-signal) 62%, var(--schedule-fg));
-  border-bottom: 1px solid var(--schedule-border);
+  color: color-mix(in srgb, var(--neon-signal) 62%, var(--console-fg));
+  border-bottom: 2px solid var(--console-line);
 }
 
 .program-head > span:last-child {
@@ -303,32 +309,30 @@
 
 .program-day {
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
-  gap: 15px;
+  grid-template-columns: 34px 72px minmax(0, 1fr);
+  column-gap: 12px;
   min-width: 0;
-  padding: 12px 2px;
-  border-bottom: 1px solid var(--schedule-border);
+  padding: 13px 2px 13px 11px;
+  border-bottom: 1px solid var(--console-line);
 }
 
 .program-day.is-today {
-  padding-inline: 9px;
   background: color-mix(in srgb, var(--neon-signal) 7%, transparent);
-  border-left: 3px solid var(--neon-signal);
+  box-shadow: inset 3px 0 var(--neon-signal);
 }
 
 .day-code {
   display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 7px;
   align-content: start;
   font-variant-numeric: tabular-nums;
 }
 
-.day-code span {
-  grid-row: 1 / 3;
+.queue-index {
   color: var(--neon-signal);
   font-size: 19px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .day-code strong {
@@ -336,34 +340,72 @@
 }
 
 .day-code small {
-  color: var(--schedule-muted);
+  color: var(--console-muted);
   font-size: 9px;
 }
 
 .program-events {
   display: grid;
-  gap: 7px;
+  grid-column: 3 / -1;
+  gap: 11px;
   min-width: 0;
 }
 
 .program-event {
-  --event-tag-color: var(--neon-signal);
+  --event-type-color: var(--console-muted);
 
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 12px;
   min-width: 0;
 }
 
+.program-event[data-type='talk'] {
+  --event-type-color: #48d9e6;
+}
+
+.program-event[data-type='music'] {
+  --event-type-color: #b4ff3e;
+}
+
+.program-event[data-type='radio'] {
+  --event-type-color: #66aaff;
+}
+
+.program-event[data-type='game'] {
+  --event-type-color: #ffd447;
+}
+
+.program-event[data-type='project'] {
+  --event-type-color: #ff7a45;
+}
+
 .program-event time {
-  color: color-mix(in srgb, var(--event-tag-color) 76%, var(--schedule-fg));
-  font-size: 10px;
+  color: var(--console-fg);
+  font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  line-height: 1.45;
+}
+
+.event-copy {
+  position: relative;
+  min-width: 0;
+  padding-left: 12px;
+}
+
+.event-copy::before {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 3px;
+  background: var(--event-type-color);
+  content: '';
 }
 
 .program-event strong,
-.program-event span {
+.event-type {
   display: block;
   overflow-wrap: anywhere;
 }
@@ -373,15 +415,27 @@
   line-height: 1.4;
 }
 
-.program-event span {
-  margin-top: 2px;
-  color: var(--schedule-muted);
+.event-type {
+  width: max-content;
+  max-width: 100%;
+  margin-top: 4px;
+  padding: 1px 4px;
+  color: color-mix(in srgb, var(--event-type-color) 72%, var(--console-fg));
   font-size: 9px;
+  font-weight: 600;
+  line-height: 1.35;
+  border: 1px solid color-mix(in srgb, var(--event-type-color) 48%, var(--console-line));
 }
 
 .offline-copy {
   align-self: center;
+  grid-column: 3 / -1;
+  min-height: 20px;
+  margin-left: 74px;
+  padding-left: 12px;
+  color: var(--console-muted);
   font-size: 10px;
+  border-left: 3px solid var(--console-line);
 }
 
 .signal-foot {
@@ -390,8 +444,8 @@
   gap: 8px 20px;
   justify-content: space-between;
   padding-top: 13px;
-  color: var(--schedule-subtle);
-  border-top: 1px solid var(--schedule-border);
+  color: var(--console-subtle);
+  border-top: 1px solid var(--console-line);
 }
 
 @keyframes signal-pulse {
@@ -450,12 +504,15 @@
     grid-column: auto;
   }
   .program-day {
-    grid-template-columns: 58px minmax(0, 1fr);
-    gap: 8px;
+    grid-template-columns: 28px 54px minmax(0, 1fr);
+    column-gap: 7px;
   }
   .program-event {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1px;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 7px;
+  }
+  .offline-copy {
+    margin-left: 55px;
   }
 }
 

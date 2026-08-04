@@ -1,34 +1,68 @@
-// Google Fonts 按需注入, 随模板懒加载; 主用官方域名, 失败时浏览器自然回退到字体栈
 const FONT_HOSTS = ['https://font.webcache.cn', 'https://fonts.googleapis.com']
+const FONT_LOAD_TIMEOUT = 8_000
+const fontLoads = new Map<string, Promise<void>>()
+let fontLoadError: Error | undefined
 
-const loadedFonts = new Set<string>()
+function getFontDefinition(family: string) {
+  const [name, variation] = family.split(':')
+  const weights = variation?.match(/wght@([\d;]+)/)?.[1].split(';') ?? ['400']
+  return { name: name.replaceAll('+', ' '), weights }
+}
+
+async function loadFontStylesheet(family: string, hostIndex = 0): Promise<void> {
+  if (hostIndex >= FONT_HOSTS.length) throw new Error(`字体 ${family} 加载失败`)
+
+  await new Promise<void>((resolve, reject) => {
+    const link = document.createElement('link')
+    const timeout = window.setTimeout(() => link.onerror?.(new Event('timeout')), FONT_LOAD_TIMEOUT)
+    link.rel = 'stylesheet'
+    link.href = `${FONT_HOSTS[hostIndex]}/css2?family=${family}&display=swap`
+    link.onload = () => {
+      window.clearTimeout(timeout)
+      resolve()
+    }
+    link.onerror = () => {
+      window.clearTimeout(timeout)
+      link.remove()
+      loadFontStylesheet(family, hostIndex + 1).then(resolve, reject)
+    }
+    document.head.appendChild(link)
+  })
+}
 
 /** 按 family 声明加载一款 Google 字体, 幂等。family 形如 'ZCOOL+KuaiLe' 或 'Orbitron:wght@700;900' */
-export function ensureGoogleFont(family: string) {
-  if (loadedFonts.has(family)) return
-  loadedFonts.add(family)
+export async function ensureGoogleFont(family: string) {
+  const existing = fontLoads.get(family)
+  if (existing) return existing
 
-  const head = document.head
-  const preconnect = (host: string) => {
+  if (!document.querySelector('link[data-schedule-font-preconnect]')) {
     const link = document.createElement('link')
+    link.dataset.scheduleFontPreconnect = ''
     link.rel = 'preconnect'
-    link.href = host
+    link.href = 'https://fonts.gstatic.com'
     link.crossOrigin = 'anonymous'
-    head.appendChild(link)
+    document.head.appendChild(link)
   }
-  preconnect('https://fonts.gstatic.com')
 
-  // 依次尝试各镜像, 首个成功返回 CSS 的生效
-  const tryHost = (index: number) => {
-    if (index >= FONT_HOSTS.length) return
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = `${FONT_HOSTS[index]}/css2?family=${family}&display=swap`
-    link.onerror = () => {
-      link.remove()
-      tryHost(index + 1)
-    }
-    head.appendChild(link)
-  }
-  tryHost(0)
+  const { name, weights } = getFontDefinition(family)
+  const loading = loadFontStylesheet(family)
+    .then(async () => {
+      await Promise.all(
+        weights.map(async (weight) => document.fonts.load(`${weight} 16px "${name}"`, 'SCHEDULE 0123456789')),
+      )
+    })
+    .then(() => undefined)
+    .catch((error: unknown) => {
+      fontLoadError = error instanceof Error ? error : new Error(`字体 ${family} 加载失败`)
+    })
+  fontLoads.set(family, loading)
+  await loading
 }
+
+export async function waitForScheduleFonts() {
+  await Promise.all(fontLoads.values())
+  if (fontLoadError) throw fontLoadError
+  await document.fonts.ready
+}
+
+export const scheduleFontStylesheetDomains = FONT_HOSTS.map((host) => new URL(host).hostname)

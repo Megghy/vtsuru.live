@@ -103,9 +103,19 @@ defineExpose({ Config, DefaultConfig })
           <div class="kinari-head__rule"><span /> <span /> <span /></div>
         </div>
         <div class="kinari-head__date">
-          <strong>{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
-          <span>WEEK</span>
-          <small>{{ eventCount }} 场安排</small>
+          <div class="kinari-head__date-copy">
+            <strong>{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
+            <span>WEEK</span>
+            <small>{{ eventCount }} 场安排</small>
+          </div>
+          <div
+            class="kinari-head__date-copy kinari-head__date-copy--sun"
+            aria-hidden="true"
+          >
+            <strong>{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
+            <span>WEEK</span>
+            <small>{{ eventCount }} 场安排</small>
+          </div>
         </div>
       </header>
 
@@ -117,10 +127,10 @@ defineExpose({ Config, DefaultConfig })
 
       <ol class="kinari-days">
         <li
-          v-for="day in days"
+          v-for="(day, dayIndex) in days"
           :key="day.english"
           class="kinari-day"
-          :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
+          :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length, 'is-featured': dayIndex === 6 }"
         >
           <div class="kinari-day__tab">
             <span>{{ day.shortLabel }}</span>
@@ -161,6 +171,14 @@ defineExpose({ Config, DefaultConfig })
               class="kinari-day__rest"
               >本日休息 · また明日</span
             >
+            <div
+              v-if="dayIndex === 6"
+              class="kinari-day__motif"
+              aria-hidden="true"
+            >
+              <span>日和</span>
+              <small>HIYORI TV · CH 07</small>
+            </div>
           </div>
         </li>
       </ol>

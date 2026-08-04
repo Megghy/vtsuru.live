@@ -6,6 +6,19 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 12,
+    date: '2026.8.4',
+    items: [
+      {
+        type: 'optimize',
+        title: '日程表更新',
+        content: [
+          ['加了一堆日程表样式'],
+        ],
+      }
+    ],
+  },
+  {
     ver: 11,
     date: '2026.5.27',
     items: [

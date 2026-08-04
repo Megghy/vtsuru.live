@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import html2canvas from 'html2canvas'
+import { snapdom } from '@zumer/snapdom'
 import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NText } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { canvasToBlob } from '@/shared/utils'
 
 const message = useMessage()
 const account = useAccount()
@@ -54,11 +53,13 @@ const isTransparent = computed(() => background.value.endsWith('00') || backgrou
 async function download() {
   if (!qrContainer.value) return
   try {
-    const canvas = await html2canvas(qrContainer.value, {
+    const blob = await snapdom.toBlob(qrContainer.value, {
       backgroundColor: isTransparent.value ? null : background.value,
       scale: 2,
+      dpr: 1,
+      type: 'png',
     })
-    saveAs(await canvasToBlob(canvas), 'qrcode.png')
+    saveAs(blob, 'qrcode.png')
     trackManageToolSuccess('Qrcode', 'download', {
       size: size.value,
       transparent: isTransparent.value,

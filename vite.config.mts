@@ -166,8 +166,8 @@ export default defineConfig({
               priority: -20,
             },
             {
-              name: 'html2canvas-vendor',
-              test: /[\\/]node_modules[\\/]html2canvas[\\/]/,
+              name: 'snapdom-vendor',
+              test: /[\\/]node_modules[\\/]@zumer[\\/]snapdom[\\/]/,
               priority: -20,
             },
           ],

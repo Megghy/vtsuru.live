@@ -6,6 +6,7 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import { resolveScheduleCategory, type ScheduleCategoryKey } from './scheduleCategories'
 import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
@@ -69,6 +70,37 @@ const issueNumber = computed(() => String(currentWeek.value?.week ?? 0).padStart
 const issueYear = computed(() => currentWeek.value?.year ?? new Date().getFullYear())
 const leadDays = computed(() => days.value.slice(0, 3))
 const remainingDays = computed(() => days.value.slice(3))
+const categoryColors: Record<ScheduleCategoryKey, string> = {
+  talk: '#627981',
+  music: '#ad8237',
+  radio: '#6e7d62',
+  game: '#984d43',
+  project: '#765866',
+}
+
+function resolveEventColor(tag?: string | null) {
+  const category = resolveScheduleCategory(tag)
+  return category ? categoryColors[category.key] : '#746d62'
+}
+
+const categoryLegend = computed(() => {
+  const categories = new Map<string, { name: string; color: string }>()
+  for (const day of days.value) {
+    for (const item of day.items) {
+      if (!item.tag) continue
+      const category = resolveScheduleCategory(item.tag)
+      const key = category?.key ?? item.tag.trim().toLowerCase()
+      if (!categories.has(key)) {
+        categories.set(key, {
+          name: category?.name ?? item.tag.trim().toUpperCase(),
+          color: resolveEventColor(item.tag),
+        })
+      }
+    }
+  }
+  return [...categories.values()]
+})
+
 const posterStyle = computed(() => ({
   '--magazine-accent': rgbaToString(effectiveConfig.value.accentColor),
   ...backgroundImageStyle.value,
@@ -125,14 +157,27 @@ defineExpose({ Config, DefaultConfig })
           <img
             :src="portraitUrl"
             :alt="`${streamerName}的本期封面`"
+            referrerpolicy="no-referrer"
           />
           <figcaption>THIS WEEK'S COVER</figcaption>
         </figure>
       </header>
 
       <div class="edition-rule">
-        <span>直播 · 游戏 · 音乐 · 杂谈</span>
-        <strong>节目索引 / MON—SUN</strong>
+        <ul
+          v-if="categoryLegend.length"
+          class="edition-legend"
+        >
+          <li
+            v-for="category in categoryLegend"
+            :key="category.name"
+          >
+            <i :style="{ backgroundColor: category.color }" />
+            <span>{{ category.name }}</span>
+          </li>
+        </ul>
+        <span v-else>本期节目索引</span>
+        <strong>节目索引 / MON–SUN</strong>
       </div>
 
       <div
@@ -167,7 +212,7 @@ defineExpose({ Config, DefaultConfig })
                 v-for="(item, itemIndex) in day.items"
                 :key="item.id || itemIndex"
                 class="event-line"
-                :style="item.tagColor ? { '--event-accent': item.tagColor } : undefined"
+                :style="{ '--event-accent': resolveEventColor(item.tag) }"
               >
                 <time>{{ item.time || '待定' }}</time>
                 <div class="event-copy">
@@ -216,7 +261,7 @@ defineExpose({ Config, DefaultConfig })
                 v-for="(item, itemIndex) in day.items"
                 :key="item.id || itemIndex"
                 class="event-line"
-                :style="item.tagColor ? { '--event-accent': item.tagColor } : undefined"
+                :style="{ '--event-accent': resolveEventColor(item.tag) }"
               >
                 <time>{{ item.time || '待定' }}</time>
                 <div class="event-copy">

@@ -4,9 +4,9 @@ import { NButton, NModal, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { DownloadConfig, useAccount } from '@/api/account'
-import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
 import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
+import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
 import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/shared/config'
 import { SongListTemplateMap } from '@/shared/config/templates'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -327,6 +327,7 @@ onMounted(async () => {
       title="设置"
     >
       <DynamicForm
+        :key="selectedTemplate?.settingName"
         :name="selectedTemplate?.settingName"
         :config-data="currentConfig"
         :config="selectedTemplateConfig"
