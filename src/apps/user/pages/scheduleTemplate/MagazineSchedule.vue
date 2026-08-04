@@ -1,188 +1,208 @@
 <script setup lang="ts">
-import { getISOWeek, getISOWeekYear } from 'date-fns'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import type { ScheduleConfigType } from '@/shared/types/TemplateTypes'
+import type { UploadFileResponse } from '@/api/api-models'
+import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
+import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
+import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 
-const props = defineProps<ScheduleConfigType>()
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-const table = ref()
+import './scheduleTemplateTheme.css'
 
-const currentWeek = computed(() => {
-  if (props.data?.length == 1) {
-    return props.data[0]
-  }
-  return props.data?.find((item) => {
-    if (selectedDate.value) {
-      return `${item.year}-${item.week}` === selectedDate.value
-    }
-    return isTodayInWeek(item.year, item.week)
-  })
-})
-
-const formattedDays = computed(() => {
-  const weekData = currentWeek.value
-  if (!weekData || !Array.isArray(weekData.days)) return []
-
-  return weekData.days.map((dayList) => {
-    // 取每天第一个行程展示
-    if (Array.isArray(dayList) && dayList.length > 0) {
-      return dayList[0]
-    }
-    return { time: '', tag: '', title: '', tagColor: '', id: null }
-  })
-})
-const selectedDate = ref<string>()
-
-function isTodayInWeek(year: number, week: number): boolean {
-  const today = new Date()
-  return getISOWeekYear(today) === year && getISOWeek(today) === week
+interface MagazineConfig {
+  backgroundFile: UploadFileResponse[]
+  portraitFile: UploadFileResponse[]
+  heading: string
+  accentColor: RGBAColor
+  showAvatar: boolean
 }
 
-onMounted(() => {
-  if (currentWeek.value) {
-    selectedDate.value = `${currentWeek.value.year}-${currentWeek.value.week}`
-  }
+const props = defineProps<ScheduleConfigTypeWithConfig<MagazineConfig>>()
+
+const Config = defineTemplateConfig([
+  {
+    name: '背景图片',
+    type: 'file',
+    key: 'backgroundFile',
+    fileLimit: 1,
+    onUploaded: (files: UploadFileResponse[], config: any) => (config.backgroundFile = files),
+  },
+  {
+    name: '角色立绘',
+    type: 'file',
+    key: 'portraitFile',
+    fileLimit: 1,
+    onUploaded: (files: UploadFileResponse[], config: any) => (config.portraitFile = files),
+  },
+  { name: '海报标题', type: 'string', key: 'heading', default: 'WEEKLY ON AIR' },
+  {
+    name: '强调色',
+    type: 'color',
+    key: 'accentColor',
+    default: { r: 220, g: 102, b: 128, a: 1 } as RGBAColor,
+    showAlpha: false,
+  },
+  { name: '未上传立绘时显示头像', type: 'boolean', key: 'showAvatar', default: true },
+])
+
+const DefaultConfig: MagazineConfig = {
+  backgroundFile: [],
+  portraitFile: [],
+  heading: 'WEEKLY ON AIR',
+  accentColor: { r: 220, g: 102, b: 128, a: 1 },
+  showAvatar: true,
+}
+
+const posterRef = ref<HTMLElement>()
+const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
+const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+
+const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
+const customPortraitUrl = computed(() => effectiveConfig.value.portraitFile[0]?.path)
+const avatarUrl = computed(
+  () => props.userInfo?.faceUrl || props.userInfo?.streamerInfo?.faceUrl || props.biliInfo?.face || '',
+)
+const portraitUrl = computed(
+  () => customPortraitUrl.value || props.previewPortrait || (effectiveConfig.value.showAvatar ? avatarUrl.value : ''),
+)
+const backgroundUrl = computed(() => effectiveConfig.value.backgroundFile[0]?.path)
+const issueLabel = computed(() => {
+  const week = currentWeek.value
+  return week ? `${week.year} / WEEK ${String(week.week).padStart(2, '0')}` : 'NO SCHEDULE'
 })
+const posterStyle = computed(() => ({
+  '--magazine-accent': props.config?.accentColor
+    ? rgbaToString(effectiveConfig.value.accentColor)
+    : 'var(--schedule-accent)',
+  backgroundImage: backgroundUrl.value ? `url(${backgroundUrl.value})` : undefined,
+}))
+
+defineExpose({ Config, DefaultConfig })
 </script>
 
 <template>
-  <ScheduleWeekToolbar
-    v-model="selectedDate"
-    :weeks="props.data ?? []"
-    :capture-target="table"
-    :file-name="`周表_${selectedDate}_${props.userInfo?.name}`"
-  />
-  <div
-    ref="table"
-    class="schedule-template pinky container"
-  >
-    <div class="schedule-template pinky day-container">
+  <section class="schedule-template-surface magazine-template">
+    <ScheduleWeekToolbar
+      v-model="selectedWeek"
+      :weeks="props.data ?? []"
+      :capture-target="posterRef"
+      :file-name="`直播节目单_${selectedWeek || '本周'}_${streamerName}`"
+    />
+
+    <article
+      ref="posterRef"
+      class="magazine-poster"
+      :class="{
+        'has-background': backgroundUrl,
+        'uses-avatar': portraitUrl && !customPortraitUrl && !props.previewPortrait,
+      }"
+      :style="posterStyle"
+      aria-labelledby="magazine-poster-title"
+    >
       <div
-        v-for="(item, index) in formattedDays"
-        :id="index.toString()"
-        :key="index"
-        class="schedule-template pinky day-item"
-      >
-        <div class="schedule-template pinky header">
-          <span class="schedule-template pinky week">
-            {{ days[index] }}
-          </span>
-          <span class="schedule-template pinky time">
-            {{ item?.time }}
-          </span>
-          <span class="schedule-template pinky tag">
-            {{ item?.tag }}
-          </span>
+        class="print-grid"
+        aria-hidden="true"
+      />
+
+      <header class="poster-head">
+        <div class="issue-column">
+          <span>VTB WEEKLY</span>
+          <strong>{{ issueLabel }}</strong>
         </div>
-        <div class="schedule-template pinky day-content-container">
-          <span
-            v-if="item?.tag"
-            id="work"
-            class="schedule-template pinky day-content"
-          >
-            {{ item.title }}
-          </span>
-          <span
-            v-else
-            id="rest"
-            class="schedule-template pinky day-content"
-          >
-            休息
-          </span>
+
+        <div class="masthead">
+          <p>{{ streamerName }} presents</p>
+          <h2 id="magazine-poster-title">{{ effectiveConfig.heading }}</h2>
+          <div class="masthead-meta">
+            <span>{{ weekLabel }}</span>
+            <span>{{ eventCount }} 场直播</span>
+          </div>
         </div>
+
+        <figure
+          v-if="portraitUrl"
+          class="portrait"
+        >
+          <img
+            :src="portraitUrl"
+            :alt="customPortraitUrl || props.previewPortrait ? `${streamerName}的角色形象` : `${streamerName}的头像`"
+          />
+        </figure>
+      </header>
+
+      <div class="section-rule">
+        <span>PROGRAM INDEX</span>
+        <span>MON - SUN</span>
       </div>
-    </div>
-    <div class="schedule-template pinky title-container">
-      <div class="schedule-template pinky title">S C H E D U L E</div>
-    </div>
-  </div>
+
+      <ol
+        v-if="days.length"
+        class="program-list"
+      >
+        <li
+          v-for="(day, dayIndex) in days"
+          :key="day.english"
+          class="program-day"
+          :class="{ 'is-today': day.isToday }"
+        >
+          <span class="day-index">{{ String(dayIndex + 1).padStart(2, '0') }}</span>
+
+          <header class="day-identity">
+            <span>{{ day.english }}</span>
+            <h3>{{ day.label }}</h3>
+            <time>{{ day.date }}</time>
+          </header>
+
+          <div
+            v-if="day.items.length"
+            class="day-events"
+          >
+            <div
+              v-for="(item, itemIndex) in day.items"
+              :key="item.id || itemIndex"
+              class="event-line"
+              :style="item.tagColor ? { '--event-accent': item.tagColor } : undefined"
+            >
+              <time>{{ item.time || '待定' }}</time>
+              <div class="event-copy">
+                <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
+                <span v-if="item.tag">{{ item.tag }}</span>
+              </div>
+            </div>
+          </div>
+
+          <p
+            v-else
+            class="schedule-empty-copy rest-copy"
+          >
+            OFF AIR / 休息日
+          </p>
+
+          <span
+            v-if="day.isToday"
+            class="today-stamp"
+          >
+            TODAY
+          </span>
+        </li>
+      </ol>
+
+      <div
+        v-else
+        class="poster-empty"
+      >
+        <span>NO PROGRAM</span>
+        <p class="schedule-empty-copy">本周还没有安排直播</p>
+      </div>
+
+      <footer class="poster-foot">
+        <strong>@{{ streamerName }}</strong>
+        <span>LIVE / TALK / GAME / MUSIC</span>
+      </footer>
+    </article>
+  </section>
 </template>
 
-<style scoped>
-.schedule-template.pinky.container {
-  --pinky-font-color-dark: #dba2a2c9;
-  --pinky-border-color-dark: #eeb9b9;
-  margin: 0 auto;
-  width: 540px;
-  height: 700px;
-  border-radius: var(--vtsuru-page-radius);
-  background-color: #faebeb;
-  background-image:
-    linear-gradient(90deg, #ffffff 10%, rgba(0, 0, 0, 0) 10%), linear-gradient(#ffffff 10%, rgba(0, 0, 0, 0) 10%);
-  background-size: 20px 20px;
-  border: var(--vtsuru-page-border);
-  box-shadow: var(--vtsuru-page-shadow);
-}
-.schedule-template.pinky.day-container {
-  display: flex;
-  width: 500px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-  flex-direction: column;
-  margin-left: 20px;
-}
-.schedule-template.pinky.day-content-container {
-  height: 50px;
-  border-radius: var(--vtsuru-page-radius);
-  border: var(--vtsuru-page-border);
-  border-top: none;
-  border-left: none;
-  background-color: #f5dadac9;
-}
-.schedule-template.pinky.header {
-  position: relative;
-  height: 30px;
-  font-size: 16px;
-  font-weight: bold;
-  color: #dba2a2c9;
-  top: 2px;
-}
-.schedule-template.pinky.week {
-  position: relative;
-  left: 5px;
-}
-.schedule-template.pinky.time {
-  position: relative;
-  left: 15px;
-}
-.schedule-template.pinky.tag {
-  position: absolute;
-  text-align: right;
-  right: 5px;
-}
-.schedule-template.pinky.day-content {
-  position: relative;
-  top: 10px;
-  left: 10px;
-  font-size: 18px;
-  font-weight: 550;
-  color: #af8080c9;
-}
-.schedule-template.pinky.day-content#rest {
-  color: #cfb7b7c9;
-  font-style: italic;
-}
-.schedule-template.pinky.title-container {
-  position: relative;
-  background: #fdf8f8c9;
-  width: 400px;
-  height: 70px;
-  left: 70px;
-  top: 20px;
-  border-radius: var(--vtsuru-page-radius);
-  border: var(--vtsuru-page-border);
-  box-shadow: var(--vtsuru-page-shadow);
-  border-top: none;
-  border-left: none;
-}
-.schedule-template.pinky.title {
-  position: relative;
-  top: -5px;
-  font-size: 50px;
-  text-align: center;
-  color: var(--pinky-font-color-dark);
-}
-</style>
+<style scoped src="./magazineSchedule.css"></style>

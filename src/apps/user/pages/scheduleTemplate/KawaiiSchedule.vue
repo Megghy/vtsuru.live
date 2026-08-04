@@ -1,429 +1,217 @@
-<script lang="ts"></script>
-
 <script setup lang="ts">
-import { getISOWeek, getISOWeekYear } from 'date-fns'
-import type { WritableComputedRef } from 'vue'
-import { computed, ref, watch } from 'vue'
+import { Sparkle24Filled } from '@vicons/fluent'
+import { NIcon } from 'naive-ui'
+import { computed, ref } from 'vue'
 
-import type { ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models'
-import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes' // Use base type
-import type { ExtractConfigData, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
+import type { UploadFileResponse } from '@/api/api-models'
+import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
+import type { DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
+import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 
-const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfigType>>()
+import './scheduleTemplateTheme.css'
+
+interface KawaiiConfig {
+  backgroundFile: UploadFileResponse[]
+  portraitFile: UploadFileResponse[]
+  portraitPosition: string
+  heading: string
+  accentColor: RGBAColor
+  sheetColor: RGBAColor
+  showAvatar: boolean
+  decorativeFile: DecorativeImageProperties[]
+}
+
+const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfig>>()
+
 const Config = defineTemplateConfig([
   {
-    name: '背景图', // Removed 'as const'
+    name: '背景图片',
     type: 'file',
-    key: 'backgroundFile', // Removed 'as const'
+    key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: any) => {
-      config.backgroundFile = files
-    },
+    onUploaded: (files: UploadFileResponse[], config: any) => (config.backgroundFile = files),
   },
   {
-    name: '容器背景色',
+    name: '角色立绘',
+    type: 'file',
+    key: 'portraitFile',
+    fileLimit: 1,
+    onUploaded: (files: UploadFileResponse[], config: any) => (config.portraitFile = files),
+  },
+  {
+    name: '立绘位置',
+    type: 'select',
+    key: 'portraitPosition',
+    default: 'right',
+    options: [
+      { label: '右侧', value: 'right' },
+      { label: '左侧', value: 'left' },
+    ],
+  },
+  { name: '标题', type: 'string', key: 'heading', default: 'WEEKLY LIVE NOTE' },
+  {
+    name: '强调色',
     type: 'color',
-    key: 'containerColor',
-    default: { r: 255, g: 255, b: 255, a: 0.8 } as RGBAColor,
+    key: 'accentColor',
+    default: { r: 238, g: 119, b: 158, a: 1 } as RGBAColor,
+    showAlpha: false,
+  },
+  {
+    name: '纸张底色',
+    type: 'color',
+    key: 'sheetColor',
+    default: { r: 255, g: 249, b: 250, a: 0.9 } as RGBAColor,
     showAlpha: true,
   },
-  {
-    name: '日期标签文字色',
-    type: 'color',
-    key: 'dayLabelColor',
-    default: { r: 126, g: 136, b: 184, a: 1 } as RGBAColor,
-    showAlpha: true,
-  },
-  {
-    name: '日程内容背景色',
-    type: 'color',
-    key: 'dayContentBgColor',
-    default: { r: 255, g: 255, b: 255, a: 1 } as RGBAColor,
-    showAlpha: true,
-  },
-  {
-    name: '日程内容文字色',
-    type: 'color',
-    key: 'dayContentTextColor',
-    default: { r: 100, g: 100, b: 100, a: 1 } as RGBAColor,
-    showAlpha: true,
-  },
-  {
-    name: '时间标签背景色',
-    type: 'color',
-    key: 'timeLabelBgColor',
-    default: { r: 245, g: 189, b: 189, a: 1 } as RGBAColor,
-    showAlpha: true,
-  },
-  {
-    name: '时间标签文字色',
-    type: 'color',
-    key: 'timeLabelTextColor',
-    default: { r: 255, g: 255, b: 255, a: 1 } as RGBAColor,
-    showAlpha: true,
-  },
-  {
-    name: '装饰图片',
-    type: 'decorativeImages',
-    key: 'decorativeFile',
-  },
+  { name: '显示主播头像', type: 'boolean', key: 'showAvatar', default: true },
+  { name: '自由装饰', type: 'decorativeImages', key: 'decorativeFile' },
 ])
-type KawaiiConfigType = ExtractConfigData<typeof Config>
 
-// --- 默认配置 ---
-const DefaultConfig: KawaiiConfigType = {
+const DefaultConfig: KawaiiConfig = {
   backgroundFile: [],
-  containerColor: { r: 255, g: 255, b: 255, a: 0.8 },
-  dayLabelColor: { r: 126, g: 136, b: 184, a: 1 },
-  dayContentBgColor: { r: 255, g: 255, b: 255, a: 1 },
-  dayContentTextColor: { r: 100, g: 100, b: 100, a: 1 },
-  timeLabelBgColor: { r: 245, g: 189, b: 189, a: 1 },
-  timeLabelTextColor: { r: 255, g: 255, b: 255, a: 1 },
+  portraitFile: [],
+  portraitPosition: 'right',
+  heading: 'WEEKLY LIVE NOTE',
+  accentColor: { r: 238, g: 119, b: 158, a: 1 },
+  sheetColor: { r: 255, g: 249, b: 250, a: 0.9 },
+  showAvatar: true,
   decorativeFile: [],
 }
 
-// --- 状态 ---
-const tableRef = ref<HTMLElement | null>(null)
-const _selectedDate = ref<string>() // Internal state
-
-// --- Computed Properties ---
-
-// 合并默认配置和传入的配置
-const effectiveConfig = computed(() => {
-  return { ...DefaultConfig, ...props.config }
-})
-
-// Writable computed for selectedDate to handle potential side effects safely
-const selectedDate: WritableComputedRef<string | undefined> = computed({
-  get: () => _selectedDate.value,
-  set: (val) => {
-    _selectedDate.value = val
-  },
-})
-
-// Find current/selected week data without side effects
-const currentWeekData = computed<ScheduleWeekInfo | null>(() => {
-  if (!props.data || props.data.length === 0) return null
-  const findPredicateSelected = (item: ScheduleWeekInfo) => `${item.year}-${item.week}` === _selectedDate.value
-  const findPredicateCurrent = (item: ScheduleWeekInfo) => isTodayInWeek(item.year, item.week)
-
-  let target = _selectedDate.value ? props.data.find(findPredicateSelected) : props.data.find(findPredicateCurrent)
-
-  // Fallback if target not found (e.g., selected date no longer exists)
-  if (!target) {
-    target = props.data.find(findPredicateCurrent) || props.data[0]
-  }
-  return target || null
-})
-
-// Watcher to initialize or update selectedDate based on available data
-watch(
-  [() => props.data, currentWeekData],
-  ([newDataArray, newCurrentWeek], [oldDataArray, oldCurrentWeek]) => {
-    const currentSelection = _selectedDate.value
-    const dataAvailable = newDataArray && newDataArray.length > 0
-
-    if (!currentSelection && newCurrentWeek) {
-      // Initialize selection if empty and current week data is available
-      _selectedDate.value = `${newCurrentWeek.year}-${newCurrentWeek.week}`
-    } else if (currentSelection && dataAvailable) {
-      // Check if the currently selected date still exists in the new data array
-      const selectionExists = newDataArray.some((d: ScheduleWeekInfo) => `${d.year}-${d.week}` === currentSelection)
-      if (!selectionExists) {
-        // If selection no longer exists, fallback to current week or first available
-        const fallbackWeek =
-          newDataArray.find((d: ScheduleWeekInfo) => isTodayInWeek(d.year, d.week)) || newDataArray[0]
-        _selectedDate.value = fallbackWeek ? `${fallbackWeek.year}-${fallbackWeek.week}` : undefined
-      }
-    } else if (!dataAvailable) {
-      // Clear selection if no data is available
-      _selectedDate.value = undefined
-    }
-  },
-  { immediate: true },
+const boardRef = ref<HTMLElement>()
+const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
+const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const portraitUrl = computed(
+  () =>
+    effectiveConfig.value.portraitFile[0]?.path ||
+    props.previewPortrait ||
+    (effectiveConfig.value.showAvatar
+      ? props.userInfo?.faceUrl || props.userInfo?.streamerInfo?.faceUrl || props.biliInfo?.face
+      : ''),
 )
+const backgroundUrl = computed(() => effectiveConfig.value.backgroundFile[0]?.path)
+const boardStyle = computed(() => ({
+  '--kawaii-accent': rgbaToString(effectiveConfig.value.accentColor),
+  '--kawaii-sheet': rgbaToString(effectiveConfig.value.sheetColor),
+  backgroundImage: backgroundUrl.value ? `url(${backgroundUrl.value})` : undefined,
+}))
 
-// Day mapping and order
-const dayMap: Record<string, string> = {
-  Mon: '周一',
-  Tue: '周二',
-  Wed: '周三',
-  Thu: '周四',
-  Fri: '周五',
-  Sat: '周六',
-  Sun: '周日',
-}
-const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
-// Formatted schedule data for display
-const formattedSchedule = computed(() => {
-  if (!currentWeekData.value || !Array.isArray(currentWeekData.value.days)) return []
-
-  return daysOfWeek.map((dayKey, index) => {
-    const dayList = currentWeekData.value!.days[index]
-    // 如果当天有多个行程，取第一个展示；如果没有则显示默认
-    const firstItem =
-      Array.isArray(dayList) && dayList.length > 0
-        ? dayList[0]
-        : { time: '', tag: '', title: '', tagColor: '', id: null }
-
-    return {
-      key: dayKey,
-      label: dayMap[dayKey] || dayKey,
-      data: firstItem,
-    }
-  })
-})
-
-// --- 方法 ---
-function isTodayInWeek(year: number, week: number): boolean {
-  const today = new Date()
-  return getISOWeekYear(today) === year && getISOWeek(today) === week
-}
-
-// --- Expose Config and DefaultConfig for template system ---
-// These need to be the actual constant values
 defineExpose({ Config, DefaultConfig })
 </script>
 
 <template>
-  <ScheduleWeekToolbar
-    v-model="selectedDate"
-    :weeks="props.data ?? []"
-    :capture-target="tableRef"
-    :file-name="`日程表_${selectedDate || '当前'}_${props.userInfo?.name || '用户'}`"
-  />
+  <section class="schedule-template-surface kawaii-template">
+    <ScheduleWeekToolbar
+      v-model="selectedWeek"
+      :weeks="props.data ?? []"
+      :capture-target="boardRef"
+      :file-name="`直播手帐_${selectedWeek || '本周'}_${props.userInfo?.name || '主播'}`"
+    />
 
-  <div
-    ref="tableRef"
-    class="kawaii-schedule-container"
-    :style="{
-      '--container-bg-color': rgbaToString(effectiveConfig.containerColor),
-      '--day-label-color': rgbaToString(effectiveConfig.dayLabelColor),
-      '--day-content-bg-color': rgbaToString(effectiveConfig.dayContentBgColor),
-      '--day-content-text-color': rgbaToString(effectiveConfig.dayContentTextColor),
-      '--time-label-bg-color': rgbaToString(effectiveConfig.timeLabelBgColor),
-      '--time-label-text-color': rgbaToString(effectiveConfig.timeLabelTextColor),
-      backgroundImage:
-        effectiveConfig.backgroundFile && effectiveConfig.backgroundFile.length > 0
-          ? `url(${effectiveConfig.backgroundFile[0].path})`
-          : 'none',
-    }"
-  >
-    <!-- 装饰图片渲染 -->
     <div
-      v-for="img in effectiveConfig.decorativeFile"
-      :key="img.id"
-      class="decorative-image"
-      :style="{
-        position: 'absolute',
-        left: `${img.x}%`,
-        top: `${img.y}%`,
-        width: `${img.width}%`,
-        height: 'auto',
-        transform: `translate(-50%, -50%) rotate(${img.rotation}deg)`,
-        transformOrigin: 'center center',
-        opacity: img.opacity,
-        zIndex: img.zIndex,
-        pointerEvents: 'none',
-      }"
+      ref="boardRef"
+      class="kawaii-board"
+      :class="[
+        `art-${effectiveConfig.portraitPosition}`,
+        { 'has-artwork': portraitUrl, 'has-background': backgroundUrl },
+      ]"
+      :style="boardStyle"
     >
-      <img
-        :src="img.path"
-        alt="decoration"
-        style="display: block; width: 100%; height: auto"
-      />
-    </div>
+      <div class="paper-grid" />
 
-    <!-- 日程表主体 -->
-    <div class="schedule-main-grid">
-      <!-- 左侧日程 -->
-      <div class="schedule-days-left">
-        <div
-          v-for="day in formattedSchedule.slice(0, 5)"
-          :key="day.key"
-          class="day-item-wrapper"
-        >
-          <div class="day-label">
-            {{ day.label }}
-          </div>
-          <div class="day-content">
-            <div
-              v-if="day.data?.time"
-              class="time-label"
-            >
-              {{ day.data.time }}
-            </div>
-            <div class="content-text">
-              {{ day.data?.title || '休息' }}
-            </div>
-          </div>
-        </div>
+      <div
+        v-for="image in effectiveConfig.decorativeFile"
+        :key="image.id"
+        class="free-decoration"
+        :style="{
+          left: `${image.x}%`,
+          top: `${image.y}%`,
+          width: `${image.width}%`,
+          transform: `translate(-50%, -50%) rotate(${image.rotation}deg)`,
+          opacity: image.opacity,
+          zIndex: image.zIndex,
+        }"
+      >
+        <img
+          :src="image.path"
+          alt=""
+        />
       </div>
-      <!-- 右侧日程 -->
-      <div class="schedule-days-right">
-        <div
-          v-for="day in formattedSchedule.slice(5)"
-          :key="day.key"
-          class="day-item-wrapper"
-        >
-          <div class="day-label">
-            {{ day.label }}
-          </div>
-          <div class="day-content">
-            <div
-              v-if="day.data?.time"
-              class="time-label"
-            >
-              {{ day.data.time }}
-            </div>
-            <div class="content-text">
-              {{ day.data?.title || '待定~' }}
-            </div>
-          </div>
+
+      <header class="kawaii-head">
+        <div class="head-mark">
+          <NIcon size="18"><Sparkle24Filled /></NIcon>
+          LIVE PLAN
         </div>
+        <h2>{{ effectiveConfig.heading }}</h2>
+        <div class="week-meta">
+          <span>{{ weekLabel }}</span>
+          <span>{{ eventCount }} STREAMS</span>
+        </div>
+      </header>
+
+      <figure
+        v-if="portraitUrl"
+        class="character-art"
+      >
+        <img
+          :src="portraitUrl"
+          :alt="`${props.userInfo?.name || '主播'}的形象`"
+        />
+        <figcaption>@{{ props.userInfo?.name || 'VTUBER' }}</figcaption>
+      </figure>
+
+      <div class="day-grid">
+        <article
+          v-for="day in days"
+          :key="day.english"
+          class="day-note"
+          :class="{ 'is-today': day.isToday }"
+        >
+          <header class="day-head">
+            <span class="day-number">{{ day.shortLabel }}</span>
+            <span>
+              <strong>{{ day.label }}</strong>
+              <small>{{ day.english }} · {{ day.date }}</small>
+            </span>
+            <span
+              v-if="day.isToday"
+              class="today-mark"
+            >
+              TODAY
+            </span>
+          </header>
+
+          <div
+            v-if="day.items.length"
+            class="event-list"
+          >
+            <div
+              v-for="(item, itemIndex) in day.items"
+              :key="item.id || itemIndex"
+              class="event-row"
+              :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
+            >
+              <time>{{ item.time || '待定' }}</time>
+              <div class="event-copy">
+                <strong>{{ item.title || '未命名直播' }}</strong>
+                <span v-if="item.tag"># {{ item.tag }}</span>
+              </div>
+            </div>
+          </div>
+          <p
+            v-else
+            class="schedule-empty-copy rest-note"
+          >
+            OFF DAY · 好好休息
+          </p>
+        </article>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
-<style scoped>
-/* Styles remain the same */
-/* --- Base Container --- */
-.kawaii-schedule-container {
-  position: relative;
-  /* Crucial for absolute positioned decorations */
-  width: 900px;
-  /* Adjust width as needed */
-  /* height: 650px; */
-  /* Let content determine height or set fixed */
-  min-height: 650px;
-  /* Ensure minimum height */
-  padding: 30px;
-  margin: 0 auto;
-  border-radius: var(--vtsuru-page-radius);
-  background-color: var(--container-bg-color, rgba(253, 240, 240, 0.8));
-  /* Default soft pinkish */
-  background-size: cover;
-  background-position: center;
-  box-shadow: var(--vtsuru-page-shadow);
-  border: var(--vtsuru-page-border);
-  overflow: hidden;
-  /* Clip decorations exceeding bounds */
-  box-sizing: border-box;
-  /* Add font later */
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  /* Example font */
-  color: #555;
-}
-
-/* Decorative image base style */
-.decorative-image {
-  /* Style defined inline via :style binding */
-}
-
-.decorative-image img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  /* Ensure image fits within its bounds */
-}
-
-/* --- Layout Grid --- */
-.schedule-main-grid {
-  position: relative;
-  /* Ensure content is above background decorations if needed */
-  z-index: 10;
-  /* Content above default decoration z-index */
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  /* Adjust column ratio as needed */
-  gap: 25px;
-  height: 100%;
-}
-
-.schedule-days-left,
-.schedule-days-right {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  /* Space between day items */
-}
-
-/* --- Day Item Styling --- */
-.day-item-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.day-label {
-  flex-shrink: 0;
-  width: 70px;
-  /* Adjust width */
-  height: 45px;
-  /* Adjust height */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #fdecec;
-  /* Light pink cloud */
-  border-radius: 15px 15px 15px 15px / 20px 20px 20px 20px;
-  /* Cloud shape */
-  color: var(--day-label-color);
-  font-weight: bold;
-  font-size: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.day-content {
-  flex-grow: 1;
-  position: relative;
-  /* For absolute positioning of time label */
-  background-color: var(--day-content-bg-color);
-  border-radius: var(--vtsuru-page-radius);
-  padding: 10px 15px;
-  min-height: 50px;
-  /* Ensure minimum height */
-  box-shadow: var(--vtsuru-page-shadow);
-  border: var(--vtsuru-page-border);
-  display: flex;
-  /* Use flex for content alignment if needed */
-  align-items: center;
-  /* Vertically center text */
-}
-
-.time-label {
-  position: absolute;
-  top: -10px;
-  /* Position above the content box */
-  right: 15px;
-  /* Align to the right */
-  background-color: var(--time-label-bg-color);
-  color: var(--time-label-text-color);
-  font-size: 11px;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.content-text {
-  color: var(--day-content-text-color);
-  font-size: 15px;
-  line-height: 1.4;
-  width: 100%;
-  /* Take full width */
-}
-
-/* --- Configuration UI specific styles --- */
-/* Add styles for the NCard and controls within the render function if needed */
-.n-card {
-  transition: border 0.2s ease-in-out;
-}
-</style>
+<style scoped src="./kawaiiSchedule.css"></style>

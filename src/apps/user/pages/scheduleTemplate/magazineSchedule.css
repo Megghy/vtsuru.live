@@ -1,0 +1,435 @@
+.magazine-template {
+  container: magazine / inline-size;
+  width: min(100%, var(--vtsuru-page-max-width, 960px));
+  margin-inline: auto;
+}
+
+.magazine-poster {
+  --magazine-accent: var(--schedule-accent);
+
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 760px);
+  min-width: 0;
+  min-height: 920px;
+  margin-inline: auto;
+  padding: 38px 42px 30px;
+  overflow: hidden;
+  color: var(--schedule-fg);
+  background-color: var(--schedule-panel);
+  background-position: center;
+  background-size: cover;
+  border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--schedule-border);
+  border-radius: var(--vtsuru-page-radius, 8px);
+  box-shadow: var(--vtsuru-page-shadow);
+}
+
+.magazine-poster.has-background::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: color-mix(in srgb, var(--schedule-panel) 88%, transparent);
+  content: '';
+}
+
+.print-grid {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--schedule-border) 54%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--schedule-border) 54%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+  opacity: 0.5;
+}
+
+.poster-head {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  gap: 22px;
+  min-width: 0;
+  min-height: 174px;
+  padding-bottom: 24px;
+  border-bottom: 6px solid var(--magazine-accent);
+}
+
+.issue-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 3px;
+  border-right: 1px solid var(--schedule-border);
+}
+
+.issue-column span,
+.issue-column strong {
+  display: block;
+  color: var(--schedule-muted);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.issue-column strong {
+  color: color-mix(in srgb, var(--magazine-accent) 58%, var(--schedule-fg));
+  font-variant-numeric: tabular-nums;
+}
+
+.masthead {
+  min-width: 0;
+  align-self: end;
+}
+
+.masthead p {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+  color: var(--schedule-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.masthead h2 {
+  max-width: 460px;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--schedule-fg);
+  font-family: 'BIZ UDPGothic', 'Yu Gothic UI', 'Microsoft YaHei', sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.masthead-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 13px;
+  color: var(--schedule-muted);
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.masthead-meta span + span::before {
+  margin-right: 18px;
+  color: var(--magazine-accent);
+  content: '/';
+}
+
+.portrait {
+  position: relative;
+  align-self: end;
+  width: 136px;
+  height: 174px;
+  margin: 0 -8px -24px 0;
+  overflow: hidden;
+  border-left: 1px solid var(--schedule-border);
+}
+
+.portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 10px 18px color-mix(in srgb, var(--schedule-fg) 18%, transparent));
+}
+
+.uses-avatar .portrait {
+  align-self: center;
+  width: 92px;
+  height: 92px;
+  margin: 0;
+  border: 5px solid var(--schedule-panel);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--magazine-accent);
+}
+
+.uses-avatar .portrait img {
+  object-fit: cover;
+}
+
+.section-rule {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0 8px;
+  color: color-mix(in srgb, var(--magazine-accent) 64%, var(--schedule-fg));
+  font-size: 10px;
+  font-weight: 900;
+  border-bottom: 1px solid var(--schedule-border);
+}
+
+.program-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.program-day {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px 106px minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--schedule-border);
+}
+
+.program-day.is-today {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--magazine-accent) 13%, transparent), transparent 82%);
+}
+
+.day-index {
+  color: var(--schedule-subtle);
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 19px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.day-identity {
+  min-width: 0;
+}
+
+.day-identity > span,
+.day-identity h3,
+.day-identity time {
+  display: block;
+}
+
+.day-identity > span {
+  color: color-mix(in srgb, var(--magazine-accent) 62%, var(--schedule-fg));
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.day-identity h3 {
+  margin: 1px 0 3px;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.day-identity time {
+  color: var(--schedule-muted);
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-events {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.event-line {
+  --event-accent: var(--magazine-accent);
+
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--event-accent);
+}
+
+.event-line > time {
+  padding-top: 1px;
+  color: var(--schedule-fg);
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-copy {
+  min-width: 0;
+}
+
+.event-copy strong,
+.event-copy span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.event-copy strong {
+  color: var(--schedule-fg);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.event-copy span {
+  margin-top: 2px;
+  color: var(--schedule-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.rest-copy {
+  align-self: center;
+  margin: 0;
+  font-size: 11px;
+}
+
+.today-stamp {
+  position: absolute;
+  top: 8px;
+  right: 0;
+  padding: 3px 6px;
+  color: var(--schedule-fg);
+  font-size: 8px;
+  font-weight: 900;
+  background: color-mix(in srgb, var(--magazine-accent) 18%, var(--schedule-panel));
+  border: 1px solid color-mix(in srgb, var(--magazine-accent) 46%, var(--schedule-border));
+}
+
+.poster-empty {
+  display: grid;
+  min-height: 480px;
+  place-content: center;
+  text-align: center;
+}
+
+.poster-empty > span {
+  color: color-mix(in srgb, var(--magazine-accent) 56%, var(--schedule-fg));
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.poster-empty p {
+  margin: 8px 0 0;
+}
+
+.poster-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding-top: 22px;
+  color: var(--schedule-muted);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.poster-foot strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--schedule-fg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@container magazine (max-width: 600px) {
+  .magazine-poster {
+    min-height: 0;
+    padding: 26px 22px 24px;
+  }
+
+  .poster-head {
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    gap: 14px;
+    min-height: 138px;
+  }
+
+  .masthead h2 {
+    font-size: 32px;
+  }
+
+  .portrait {
+    width: 92px;
+    height: 138px;
+  }
+
+  .uses-avatar .portrait {
+    width: 68px;
+    height: 68px;
+  }
+
+  .program-day {
+    grid-template-columns: 36px 88px minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+@container magazine (max-width: 420px) {
+  .magazine-poster {
+    padding: 22px 12px 20px;
+  }
+
+  .poster-head {
+    grid-template-columns: 42px minmax(0, 1fr);
+    min-height: 0;
+    padding-bottom: 18px;
+  }
+
+  .issue-column {
+    grid-row: 1 / span 2;
+  }
+
+  .masthead h2 {
+    font-size: 28px;
+  }
+
+  .masthead-meta {
+    display: grid;
+    gap: 4px;
+  }
+
+  .masthead-meta span + span::before {
+    display: none;
+  }
+
+  .portrait,
+  .uses-avatar .portrait {
+    grid-column: 2;
+    width: 100%;
+    height: 110px;
+    margin: 8px 0 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .uses-avatar .portrait img {
+    width: 72px;
+    height: 72px;
+    margin-inline: auto;
+    border: 3px solid var(--schedule-panel);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--magazine-accent);
+  }
+
+  .program-day {
+    grid-template-columns: 32px minmax(0, 1fr);
+    padding: 14px 0;
+  }
+
+  .day-identity,
+  .day-events,
+  .rest-copy {
+    grid-column: 2;
+  }
+
+  .day-events {
+    margin-top: 2px;
+  }
+
+  .event-line {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .today-stamp {
+    top: 12px;
+  }
+
+  .poster-foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}

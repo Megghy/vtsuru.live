@@ -25,11 +25,27 @@ export const ScheduleTemplateMap: TemplateMapType = {
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/PinkySchedule.vue')),
     ),
   },
+  magazine: {
+    name: '直播周刊',
+    settingName: 'Template.Schedule.Magazine',
+    component: markRaw(
+      defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/MagazineSchedule.vue')),
+    ),
+    capabilities: ['templateConfig'],
+  },
   kawaii: {
-    name: '可爱手帐 (未完成',
+    name: '梦色直播手帐',
     settingName: 'Template.Schedule.Kawaii',
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/KawaiiSchedule.vue')),
+    ),
+    capabilities: ['templateConfig'],
+  },
+  neon: {
+    name: '霓虹信号台',
+    settingName: 'Template.Schedule.NeonStage',
+    component: markRaw(
+      defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/NeonStageSchedule.vue')),
     ),
     capabilities: ['templateConfig'],
   },

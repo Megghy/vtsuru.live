@@ -1,3 +1,5 @@
+import { getISOWeek, getISOWeekYear } from 'date-fns'
+
 import type { ScheduleWeekInfo, SongRequestOption, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 
@@ -5,16 +7,19 @@ import { SongFrom } from '@/api/api-models'
 
 export const schedulePreviewData: ScheduleWeekInfo[] = [
   {
-    year: 2023,
-    week: 30,
+    year: getISOWeekYear(new Date()),
+    week: getISOWeek(new Date()),
     days: [
-      [{ title: '唱唱歌!', tag: '歌回', tagColor: '#61B589', time: '10:00 AM', id: null }],
-      [{ title: '玩点游戏', tag: '游戏', tagColor: '#A36565', time: '20:00 PM', id: null }],
-      [{ title: 'Title 3', tag: 'Tag 3', tagColor: '#7BCDEF', time: '11:00 PM', id: null }],
+      [{ title: '早安杂谈与新衣预告', tag: '杂谈', tagColor: '#E97A9B', time: '09:30', id: 'preview-1' }],
+      [{ title: '夏日歌回：听海的颜色', tag: '歌回', tagColor: '#3FB8B0', time: '20:00', id: 'preview-2' }],
+      [
+        { title: '午后电台', tag: '电台', tagColor: '#E4AA37', time: '14:00', id: 'preview-3' },
+        { title: '观众参加型小游戏', tag: '联机', tagColor: '#6C8BE7', time: '21:00', id: 'preview-4' },
+      ],
       [{ title: null, tag: null, tagColor: null, time: null, id: null }],
-      [{ title: null, tag: null, tagColor: null, time: null, id: null }],
-      [{ title: null, tag: null, tagColor: null, time: null, id: null }],
-      [{ title: null, tag: null, tagColor: null, time: null, id: null }],
+      [{ title: '主线剧情推进', tag: '游戏', tagColor: '#9B76D1', time: '19:30', id: 'preview-5' }],
+      [{ title: '深夜读棉花糖', tag: '杂谈', tagColor: '#E97A9B', time: '23:00', id: 'preview-6' }],
+      [{ title: '周末特别企划', tag: '企划', tagColor: '#E15C58', time: '20:00', id: 'preview-7' }],
     ],
   },
 ]

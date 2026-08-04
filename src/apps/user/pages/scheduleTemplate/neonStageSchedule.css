@@ -1,0 +1,432 @@
+@property --signal-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.neon-template {
+  container: neon-stage / inline-size;
+  width: min(100%, var(--vtsuru-page-max-width, 1180px));
+  margin-inline: auto;
+}
+
+.neon-board {
+  --neon-signal: #ff4a6d;
+  --neon-accent: #30c9d6;
+
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  padding: clamp(18px, 3vw, 34px);
+  overflow: hidden;
+  color: var(--schedule-fg);
+  background-color: color-mix(in srgb, var(--schedule-page-bg) 84%, #07111d 16%);
+  background-position: center;
+  background-size: cover;
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style)
+    color-mix(in srgb, var(--neon-accent) 55%, var(--schedule-border));
+  border-radius: var(--vtsuru-page-radius, 10px);
+  box-shadow: var(--vtsuru-page-shadow);
+}
+
+.neon-board.has-background::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: color-mix(in srgb, var(--schedule-page-bg) 80%, transparent);
+  content: '';
+}
+
+.neon-board::after {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  padding: 1px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--signal-angle),
+    transparent 0 62%,
+    color-mix(in srgb, var(--neon-accent) 82%, transparent) 70%,
+    var(--neon-signal) 76%,
+    transparent 84%
+  );
+  border-radius: inherit;
+  content: '';
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: signal-orbit 7s linear infinite;
+}
+
+.scan-grid {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--neon-accent) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--neon-accent) 8%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.signal-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(14px, 3vw, 30px);
+  align-items: center;
+  padding-bottom: 22px;
+  border-bottom: 1px solid color-mix(in srgb, var(--neon-accent) 45%, var(--schedule-border));
+}
+
+.on-air {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 13px;
+  color: var(--schedule-fg);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  border: 1px solid color-mix(in srgb, var(--neon-signal) 68%, var(--schedule-border));
+}
+
+.signal-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--neon-signal);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--neon-signal) 16%, transparent);
+  animation: signal-pulse 1.8s ease-in-out infinite;
+}
+
+.signal-title {
+  min-width: 0;
+}
+
+.signal-title span,
+.talent-name small,
+.program-head,
+.signal-data dt,
+.signal-foot {
+  color: var(--schedule-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.signal-title h2 {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  font-family: 'Bahnschrift', 'Microsoft YaHei', sans-serif;
+  font-size: clamp(24px, 4vw, 46px);
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.week-code {
+  display: grid;
+  justify-items: end;
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+}
+
+.week-code span {
+  color: var(--schedule-muted);
+  font-size: 11px;
+}
+
+.week-code strong {
+  color: color-mix(in srgb, var(--neon-accent) 78%, var(--schedule-fg));
+  font-size: 24px;
+}
+
+.stage-layout {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.7fr) minmax(0, 1.7fr);
+  gap: clamp(18px, 3vw, 34px);
+  min-width: 0;
+  padding-block: clamp(22px, 4vw, 40px);
+}
+
+.talent-panel,
+.program-panel {
+  min-width: 0;
+}
+
+.portrait-frame {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 360px;
+  place-items: center;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--neon-accent) 54%, var(--schedule-muted));
+  background: color-mix(in srgb, var(--schedule-panel) 86%, transparent);
+  border: 1px solid color-mix(in srgb, var(--neon-accent) 42%, var(--schedule-border));
+}
+
+.portrait-frame::after {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 7px;
+  height: 7px;
+  background: var(--neon-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--neon-accent);
+  content: '';
+}
+
+.portrait-frame img {
+  width: 100%;
+  height: 100%;
+  max-height: 430px;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(10px 12px 0 color-mix(in srgb, var(--neon-accent) 12%, transparent));
+}
+
+.frame-corner {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: var(--neon-accent);
+}
+
+.corner-top {
+  top: 9px;
+  left: 9px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+
+.corner-bottom {
+  right: 9px;
+  bottom: 9px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+}
+
+.talent-name {
+  padding: 14px 2px 16px;
+  border-bottom: 1px solid var(--schedule-border);
+}
+
+.talent-name strong {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  font-size: 18px;
+}
+
+.signal-data {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  margin: 14px 0 0;
+}
+
+.signal-data div {
+  min-width: 0;
+}
+
+.signal-data dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.program-panel {
+  padding: clamp(14px, 2vw, 22px);
+  background: color-mix(in srgb, var(--schedule-panel) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--neon-accent) 28%, var(--schedule-border));
+}
+
+.program-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 11px;
+  color: color-mix(in srgb, var(--neon-accent) 72%, var(--schedule-fg));
+  border-bottom: 1px solid var(--schedule-border);
+}
+
+.program-list {
+  display: grid;
+}
+
+.program-day {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 15px;
+  min-width: 0;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--schedule-border);
+}
+
+.program-day:last-child {
+  border-bottom: 0;
+}
+
+.program-day.is-today {
+  margin-inline: -8px;
+  padding-inline: 10px;
+  background: color-mix(in srgb, var(--neon-signal) 9%, transparent);
+  border-left: 2px solid var(--neon-signal);
+}
+
+.day-code {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 7px;
+  align-content: start;
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+}
+
+.day-code span {
+  grid-row: 1 / 3;
+  color: color-mix(in srgb, var(--neon-accent) 74%, var(--schedule-fg));
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.day-code strong {
+  font-size: 11px;
+}
+
+.day-code small {
+  color: var(--schedule-muted);
+  font-size: 9px;
+}
+
+.program-events {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.program-event {
+  --event-tag-color: var(--neon-accent);
+
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+.program-event time {
+  color: color-mix(in srgb, var(--event-tag-color) 72%, var(--schedule-fg));
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.program-event div {
+  min-width: 0;
+}
+
+.program-event strong,
+.program-event span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.program-event strong {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.program-event span {
+  margin-top: 2px;
+  color: var(--schedule-muted);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.offline-copy {
+  align-self: center;
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 10px;
+}
+
+.signal-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  justify-content: space-between;
+  padding-top: 14px;
+  color: var(--schedule-subtle);
+  border-top: 1px solid color-mix(in srgb, var(--neon-accent) 35%, var(--schedule-border));
+}
+
+@keyframes signal-pulse {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes signal-orbit {
+  to {
+    --signal-angle: 360deg;
+  }
+}
+
+@container neon-stage (max-width: 720px) {
+  .stage-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .talent-panel {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.65fr) minmax(0, 1fr);
+    gap: 0 16px;
+  }
+
+  .portrait-frame {
+    grid-row: 1 / 3;
+    min-height: 210px;
+  }
+}
+
+@container neon-stage (max-width: 480px) {
+  .neon-board {
+    padding: 14px;
+  }
+
+  .signal-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .on-air {
+    grid-column: 1 / -1;
+    width: max-content;
+  }
+
+  .talent-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portrait-frame {
+    grid-row: auto;
+    min-height: 230px;
+  }
+
+  .program-panel {
+    padding: 10px;
+  }
+
+  .program-day {
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .program-event {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}

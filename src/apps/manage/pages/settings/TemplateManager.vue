@@ -18,7 +18,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, h, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, h, onMounted, ref, shallowRef, watch } from 'vue'
 
 import { downloadConfigDirect, SaveAccountSettings, useAccount } from '@/api/account'
 import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
@@ -27,6 +27,7 @@ import { getUserPageNaiveThemeOverrides, getUserPageThemeCssVars } from '@/apps/
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { getUserPageAppearanceOverrides } from '@/apps/user-page/themeConfig'
 import type { UserPagesSettings } from '@/apps/user-page/types'
+import nana7miPlaceholder from '@/assets/images/schedule/nana7mi-placeholder.webp'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { FETCH_API } from '@/shared/config'
 import type { TemplateCapability } from '@/shared/config/templateCapabilities'
@@ -39,9 +40,10 @@ import {
 import type { TemplateMapType } from '@/shared/config/templates'
 import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templates'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
-import { isDarkMode } from '@/shared/utils'
 
 import '@/apps/user/pages/songListTemplate/songListTheme.css'
+
+import { isDarkMode } from '@/shared/utils'
 
 import { schedulePreviewData, songListPreviewData } from './templatePreviewData'
 
@@ -273,47 +275,65 @@ function renderTemplateOption({ node, option }: { node: any; option: SelectOptio
   )
 }
 
-// 预览组件实例: 通过 defineExpose 暴露 Config(schema 定义) 和 DefaultConfig
-const previewRef = shallowRef<{ Config?: ConfigItemDefinition[]; DefaultConfig?: unknown }>()
-const configSchema = computed<ConfigItemDefinition[] | undefined>(() => previewRef.value?.Config)
+interface PreviewTemplateInstance {
+  Config?: ConfigItemDefinition[]
+  DefaultConfig?: Record<string, unknown>
+}
 
-// 用户已保存的配置数据, 按 settingName 缓存 (修复同一页面下多个可配置模板串味的 bug)
-const configDataCache = ref<Record<string, unknown>>({})
-const loadingConfig = ref(false)
+interface FormContext {
+  name: string
+  schema: ConfigItemDefinition[]
+}
+
+// schema 必须和 settingName 来自同一个预览实例，避免切换期间旧 schema 读取新模板数据。
+const previewRef = shallowRef<PreviewTemplateInstance>()
+const formContext = shallowRef<FormContext>()
+const configDataCache = ref<Record<string, Record<string, unknown>>>({})
+const configSchema = computed(() =>
+  formContext.value?.name === settingName.value ? formContext.value.schema : undefined,
+)
 const currentConfigData = computed(() => (settingName.value ? configDataCache.value[settingName.value] : undefined))
 
-// 加载当前模板配置 (按 settingName 缓存, 命中则跳过)
-async function loadConfig() {
-  const name = settingName.value
-  if (!name || name in configDataCache.value) return
+function parseConfigData(data: string): Record<string, unknown> {
+  const parsed: unknown = JSON.parse(data)
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('模板配置格式无效')
+  return parsed as Record<string, unknown>
+}
 
-  loadingConfig.value = true
+async function loadConfig(name: string, defaults: Record<string, unknown>) {
+  if (name in configDataCache.value) return
+
   try {
     const response = await downloadConfigDirect(name)
     if (response.code === 200) {
-      configDataCache.value[name] = JSON.parse(response.data)
+      configDataCache.value[name] = { ...defaults, ...parseConfigData(response.data) }
     } else if (response.code === 404) {
-      // 无远端配置, 用组件默认配置兜底
-      configDataCache.value[name] = previewRef.value?.DefaultConfig ?? {}
+      configDataCache.value[name] = { ...defaults }
     } else {
       message.error(`获取模板配置失败: ${response.message}`)
     }
   } catch (err) {
     message.error(`获取模板配置失败: ${err}`)
-  } finally {
-    loadingConfig.value = false
   }
 }
 
-// 预览组件挂载完成 -> 拿到 schema -> 加载对应配置
 function onPreviewMounted() {
-  void loadConfig()
+  const name = settingName.value
+  const instance = previewRef.value
+  if (!name || !instance?.Config) return
+
+  formContext.value = { name, schema: instance.Config }
+  void loadConfig(name, instance.DefaultConfig ?? {})
 }
 
-// 切换模板时, schema 与配置都需重新解析
-watch(settingName, () => {
-  nextTick(() => void loadConfig())
-})
+watch(
+  settingName,
+  () => {
+    previewRef.value = undefined
+    formContext.value = undefined
+  },
+  { flush: 'sync' },
+)
 
 async function setAsDisplayTemplate() {
   if (!accountInfo.value) return
@@ -506,7 +526,7 @@ async function setAsDisplayTemplate() {
             class="template-config-pane"
           >
             <NSpin
-              v-if="loadingConfig || !configSchema"
+              v-if="!configSchema || !currentConfigData"
               show
               style="min-height: 200px"
             />
@@ -528,13 +548,16 @@ async function setAsDisplayTemplate() {
               v-if="previewComponent"
               :key="selectedKey"
               class="template-preview-content"
-              :class="{ 'song-list-surface': pageKey === 'songlist' }"
-              :style="pageKey === 'songlist' ? previewThemeVars : undefined"
+              :class="{
+                'song-list-surface': pageKey === 'songlist',
+                'schedule-template-surface': pageKey === 'schedule',
+              }"
+              :style="previewThemeVars"
             >
               <Suspense>
                 <NConfigProvider
-                  :theme="pageKey === 'songlist' ? previewNaiveTheme : undefined"
-                  :theme-overrides="pageKey === 'songlist' ? previewNaiveThemeOverrides : undefined"
+                  :theme="previewNaiveTheme"
+                  :theme-overrides="previewNaiveThemeOverrides"
                 >
                   <component
                     :is="previewComponent"
@@ -543,6 +566,7 @@ async function setAsDisplayTemplate() {
                     :bili-info="biliUserInfo"
                     :data="group.Data"
                     :config="currentConfigData"
+                    :preview-portrait="pageKey === 'schedule' ? nana7miPlaceholder : undefined"
                     @vue:mounted="onPreviewMounted"
                   />
                 </NConfigProvider>

@@ -15,6 +15,8 @@ export interface ScheduleConfigType {
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
   data: ScheduleWeekInfo[] | undefined
+  /** 管理页预览使用的占位形象, 公开页不传入 */
+  previewPortrait?: string
 }
 
 export interface ScheduleConfigTypeWithConfig<T> extends ScheduleConfigType {

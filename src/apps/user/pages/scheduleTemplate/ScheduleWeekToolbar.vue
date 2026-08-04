@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { ArrowDownload20Regular, ChevronLeft20Regular, ChevronRight20Regular } from '@vicons/fluent'
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 import type { SelectOption, SelectProps } from 'naive-ui'
-import { NButton, NSelect, useMessage } from 'naive-ui'
+import { NButton, NIcon, NSelect, useMessage } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { ScheduleWeekInfo } from '@/api/api-models'
@@ -85,7 +86,7 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       textColor: 'var(--schedule-toolbar-fg)',
       placeholderColor: 'var(--schedule-toolbar-muted)',
       arrowColor: 'var(--schedule-toolbar-muted)',
-      caretColor: 'var(--schedule-toolbar-accent-readable)',
+      caretColor: 'var(--schedule-toolbar-accent)',
       border: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-border)',
       borderHover: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-accent)',
       borderActive: 'var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--schedule-toolbar-accent)',
@@ -99,8 +100,8 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       color: 'var(--schedule-toolbar-bg)',
       optionTextColor: 'var(--schedule-toolbar-fg)',
       optionTextColorPressed: 'var(--schedule-toolbar-fg)',
-      optionTextColorActive: 'var(--schedule-toolbar-accent-readable)',
-      optionCheckColor: 'var(--schedule-toolbar-accent-readable)',
+      optionTextColorActive: 'var(--schedule-toolbar-fg)',
+      optionCheckColor: 'var(--schedule-toolbar-accent)',
       optionColorPending: 'var(--schedule-toolbar-control-bg)',
       optionColorActive: 'var(--schedule-toolbar-control-bg)',
       optionColorActivePending: 'var(--schedule-toolbar-control-bg-hover)',
@@ -120,7 +121,8 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       title="上一周"
       @click="moveWeek(-1)"
     >
-      ‹ 上一周
+      <NIcon><ChevronLeft20Regular /></NIcon>
+      <span>上一周</span>
     </button>
     <NSelect
       v-if="options.length"
@@ -130,6 +132,7 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       :theme-overrides="selectThemeOverrides"
       :to="false"
       placeholder="选择周次"
+      aria-label="选择日程周次"
       size="small"
     />
     <span
@@ -146,7 +149,8 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       title="下一周"
       @click="moveWeek(1)"
     >
-      下一周 ›
+      <span>下一周</span>
+      <NIcon><ChevronRight20Regular /></NIcon>
     </button>
     <NButton
       v-if="captureTarget"
@@ -155,6 +159,9 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
       size="medium"
       @click="saveScheduleImage"
     >
+      <template #icon>
+        <NIcon><ArrowDownload20Regular /></NIcon>
+      </template>
       保存图片
     </NButton>
   </div>
@@ -185,7 +192,6 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
     var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
   );
   --schedule-toolbar-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
-  --schedule-toolbar-accent-readable: var(--vtsuru-page-primary-readable, var(--schedule-toolbar-accent));
   --schedule-toolbar-focus: color-mix(in srgb, var(--schedule-toolbar-accent) 24%, transparent);
 
   display: flex;
@@ -216,6 +222,7 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
   padding: 0 9px;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   color: var(--schedule-toolbar-fg);
   font: inherit;
   font-size: 12px;
@@ -232,7 +239,7 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
 }
 
 .schedule-week-toolbar__step:hover:not(:disabled) {
-  color: var(--schedule-toolbar-accent-readable);
+  color: color-mix(in srgb, var(--schedule-toolbar-accent) 72%, var(--schedule-toolbar-fg));
   background: var(--schedule-toolbar-control-bg-hover);
   border-color: var(--schedule-toolbar-accent);
 }
@@ -261,8 +268,8 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
   .schedule-week-toolbar {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    width: calc(100vw - 20px);
-    max-width: calc(100vw - 20px);
+    width: 100%;
+    max-width: 100%;
     margin-right: 0;
     margin-left: 0;
   }
@@ -279,6 +286,10 @@ const selectThemeOverrides: NonNullable<SelectProps['themeOverrides']> = {
   .schedule-week-toolbar__save {
     grid-column: 1 / -1;
     width: 100%;
+  }
+
+  .schedule-week-toolbar__step span {
+    display: none;
   }
 }
 </style>

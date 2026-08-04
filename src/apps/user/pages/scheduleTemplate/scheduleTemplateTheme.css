@@ -1,0 +1,39 @@
+.schedule-template-surface {
+  --schedule-fg: var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg)));
+  --schedule-muted: var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)));
+  --schedule-subtle: var(--vtsuru-surface-fg-subtle, color-mix(in srgb, var(--schedule-muted) 72%, transparent));
+  --schedule-page-bg: var(--vtsuru-page-content-color, var(--vtsuru-bg-muted));
+  --schedule-panel: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--schedule-page-bg)));
+  --schedule-panel-embedded: var(
+    --vtsuru-page-card-bg-embedded,
+    color-mix(in srgb, var(--schedule-panel) 90%, var(--schedule-fg) 10%)
+  );
+  --schedule-panel-hover: var(
+    --user-page-theme-surface-bg-hover,
+    color-mix(in srgb, var(--schedule-panel) 88%, var(--schedule-fg) 12%)
+  );
+  --schedule-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)));
+  --schedule-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --schedule-accent-soft: var(--vtsuru-page-primary-soft, color-mix(in srgb, var(--schedule-accent) 16%, transparent));
+  --schedule-accent-border: var(
+    --vtsuru-page-primary-border,
+    color-mix(in srgb, var(--schedule-accent) 34%, var(--schedule-border))
+  );
+  --schedule-accent-readable: var(--vtsuru-page-primary-readable, var(--schedule-fg));
+  --schedule-spacing: var(--vtsuru-page-spacing, 16px);
+
+  min-width: 0;
+  color: var(--schedule-fg);
+  font-family: var(--vtsuru-page-font-family, sans-serif);
+}
+
+.schedule-template-surface *,
+.schedule-template-surface *::before,
+.schedule-template-surface *::after {
+  box-sizing: border-box;
+}
+
+.schedule-empty-copy {
+  color: var(--schedule-subtle);
+  font-style: italic;
+}
