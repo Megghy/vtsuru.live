@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import { CloseOutline } from '@vicons/ionicons5'
 import type { FormInst, FormItemInst, FormItemRule, FormRules } from 'naive-ui'
 import {
   NButton,
-  NCard,
   NCountdown,
-  NDivider,
   NFlex,
   NForm,
   NFormItem,
+  NIcon,
   NInput,
   NTabPane,
   NTabs,
@@ -190,7 +190,7 @@ const defaultFeedback = computed<{ tone: AuthFeedbackTone; text: string }>(() =>
 
   return {
     tone: 'info',
-    text: '输入账号和密码进行登陆',
+    text: '输入账号和密码进行登录',
   }
 })
 
@@ -200,11 +200,6 @@ const currentFeedbackTone = computed(() => {
 
 const currentFeedbackText = computed(() => {
   return progressState.value === 'idle' ? defaultFeedback.value.text : feedbackText.value
-})
-
-const currentFeedbackType = computed(() => {
-  if (progressState.value === 'idle') return undefined
-  return currentFeedbackTone.value
 })
 
 const loginButtonText = computed(() => {
@@ -536,282 +531,434 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard embedded>
-    <template #header>
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
-        <NText strong> 账号认证 </NText>
-        <NFlex
-          align="center"
-          size="small"
-        >
-          <slot name="header-extra" />
-          <NButton
-            v-if="props.closable"
-            text
-            @click="closePanel"
-          >
-            关闭
-          </NButton>
-        </NFlex>
-      </NFlex>
-    </template>
-
-    <template v-if="isLoggedInNow">
-      <NFlex
-        vertical
-        size="large"
-      >
-        <NText type="success"> 已以 {{ currentAccountName }} 登录，当前页面会自动解锁后续操作。 </NText>
-        <NFlex
+  <section class="account-auth">
+    <header class="account-auth__header">
+      <h2>账号认证</h2>
+      <div class="account-auth__header-actions">
+        <slot name="header-extra" />
+        <NButton
           v-if="props.closable"
-          justify="end"
+          circle
+          quaternary
+          size="small"
+          title="关闭"
+          aria-label="关闭"
+          @click="closePanel"
         >
-          <NButton
-            type="primary"
-            @click="closePanel"
-          >
-            继续
-          </NButton>
-        </NFlex>
-      </NFlex>
-    </template>
+          <template #icon><NIcon :component="CloseOutline" /></template>
+        </NButton>
+      </div>
+    </header>
 
-    <template v-else>
-      <NFlex
-        vertical
-        size="large"
+    <div
+      v-if="isLoggedInNow"
+      class="account-auth__success"
+    >
+      <NText type="success">已以 {{ currentAccountName }} 登录，当前页面会自动解锁后续操作。</NText>
+      <NButton
+        v-if="props.closable"
+        type="primary"
+        @click="closePanel"
       >
-        <NText
-          :type="currentFeedbackType"
-          :depth="currentFeedbackType ? undefined : 3"
+        继续
+      </NButton>
+    </div>
+
+    <div
+      v-else
+      class="account-auth__body"
+    >
+      <div
+        class="auth-feedback"
+        :class="`is-${currentFeedbackTone}`"
+        role="status"
+        aria-live="polite"
+      >
+        <span
+          class="auth-feedback__dot"
+          aria-hidden="true"
+        />
+        <NText :type="currentFeedbackTone">{{ currentFeedbackText }}</NText>
+      </div>
+
+      <NTabs
+        v-model:value="selectedTab"
+        class="auth-tabs"
+        type="line"
+        size="medium"
+        animated
+      >
+        <NTabPane
+          name="login"
+          tab="登录"
         >
-          {{ currentFeedbackText }}
-        </NText>
-
-        <NTabs
-          v-model:value="selectedTab"
-          size="large"
-          animated
-        >
-          <NTabPane
-            name="login"
-            tab="登录"
+          <NForm
+            ref="loginFormRef"
+            :rules="loginRules"
+            :model="loginModel"
           >
-            <NForm
-              ref="loginFormRef"
-              :rules="loginRules"
-              :model="loginModel"
-            >
-              <NFormItem
-                path="account"
-                label="用户名或邮箱"
-              >
-                <NInput
-                  v-model:value="loginModel.account"
-                  placeholder="输入用户名或邮箱"
-                />
-              </NFormItem>
-              <NFormItem
-                path="password"
-                label="密码"
-              >
-                <NInput
-                  v-model:value="loginModel.password"
-                  type="password"
-                  placeholder="输入密码"
-                  @keydown.enter="onLoginButtonClick"
-                />
-              </NFormItem>
-            </NForm>
-
-            <NFlex
-              vertical
-              size="medium"
-            >
-              <NButton
-                text
-                secondary
-                @click="onForgetPasswordClick"
-              >
-                忘记密码
-              </NButton>
-              <NFlex justify="end">
-                <NButton
-                  v-if="loginPending"
-                  secondary
-                  @click="cancelActiveRequest"
-                >
-                  取消
-                </NButton>
-                <NButton
-                  :loading="loginPending"
-                  :disabled="isBusy && !loginPending"
-                  type="primary"
-                  size="large"
-                  @click="onLoginButtonClick"
-                >
-                  {{ loginButtonText }}
-                </NButton>
-              </NFlex>
-            </NFlex>
-          </NTabPane>
-
-          <NTabPane
-            name="register"
-            tab="注册"
-          >
-            <NForm
-              ref="registerFormRef"
-              :rules="registerRules"
-              :model="registerModel"
-            >
-              <NFormItem
-                path="username"
-                label="用户名"
-              >
-                <NInput
-                  v-model:value="registerModel.username"
-                  placeholder="输入一个用户名，不允许纯数字"
-                />
-              </NFormItem>
-              <NFormItem
-                path="email"
-                label="邮箱"
-              >
-                <NInput
-                  v-model:value="registerModel.email"
-                  placeholder="请输入可接收邮件的邮箱"
-                />
-              </NFormItem>
-              <NFormItem
-                path="password"
-                label="密码"
-              >
-                <NInput
-                  v-model:value="registerModel.password"
-                  type="password"
-                  placeholder="输入密码，需要包含英文和数字"
-                  @input="onPasswordInput"
-                  @keydown.enter.prevent
-                />
-              </NFormItem>
-              <NFormItem
-                ref="rPasswordFormItemRef"
-                first
-                path="reenteredPassword"
-                label="重复密码"
-              >
-                <NInput
-                  v-model:value="registerModel.reenteredPassword"
-                  :disabled="!registerModel.password"
-                  type="password"
-                  placeholder="再次输入密码"
-                  @keydown.enter="onRegisterButtonClick"
-                />
-              </NFormItem>
-            </NForm>
-
-            <NFlex
-              vertical
-              size="medium"
-            >
-              <NFlex justify="end">
-                <NButton
-                  v-if="registerPending"
-                  secondary
-                  @click="cancelActiveRequest"
-                >
-                  取消
-                </NButton>
-                <NButton
-                  :loading="registerPending"
-                  :disabled="!canSubmitRegister"
-                  type="primary"
-                  size="large"
-                  @click="onRegisterButtonClick"
-                >
-                  {{ registerButtonText }}
-                </NButton>
-              </NFlex>
-            </NFlex>
-          </NTabPane>
-
-          <NTabPane
-            v-if="isForgetPassword"
-            name="forget"
-            tab="忘记密码"
-          >
-            <NFlex
-              vertical
-              size="medium"
+            <NFormItem
+              path="account"
+              label="用户名或邮箱"
             >
               <NInput
-                v-model:value="inputForgetPasswordValue"
-                placeholder="请输入邮箱"
-                maxlength="64"
+                v-model:value="loginModel.account"
+                clearable
+                placeholder="输入用户名或邮箱"
+                :input-props="{ autocomplete: 'username' }"
               />
+            </NFormItem>
+            <NFormItem
+              path="password"
+              label="密码"
+            >
+              <NInput
+                v-model:value="loginModel.password"
+                type="password"
+                show-password-on="click"
+                placeholder="输入密码"
+                :input-props="{ autocomplete: 'current-password' }"
+                @keydown.enter="onLoginButtonClick"
+              />
+            </NFormItem>
+          </NForm>
 
-              <NFlex
-                justify="space-between"
-                align="center"
+          <div class="form-actions">
+            <NButton
+              text
+              @click="onForgetPasswordClick"
+            >
+              忘记密码
+            </NButton>
+            <NFlex
+              justify="end"
+              :size="8"
+            >
+              <NButton
+                v-if="loginPending"
+                secondary
+                @click="cancelActiveRequest"
               >
-                <NButton
-                  text
-                  secondary
-                  @click="backToLogin"
-                >
-                  返回登录
-                </NButton>
-                <NFlex justify="end">
-                  <NButton
-                    v-if="forgetPending"
-                    secondary
-                    @click="cancelActiveRequest"
-                  >
-                    取消
-                  </NButton>
-                  <NButton
-                    :loading="forgetPending"
-                    :disabled="!canSubmitForget"
-                    type="primary"
-                    size="large"
-                    @click="onForgetPassword"
-                  >
-                    {{ forgetButtonText }}
-                  </NButton>
-                </NFlex>
-              </NFlex>
-
-              <NCountdown
-                v-if="!canSendForgetPassword"
-                :duration="60000"
-                @finish="canSendForgetPassword = true"
-              />
+                取消
+              </NButton>
+              <NButton
+                :loading="loginPending"
+                :disabled="isBusy && !loginPending"
+                type="primary"
+                class="primary-action"
+                @click="onLoginButtonClick"
+              >
+                {{ loginButtonText }}
+              </NButton>
             </NFlex>
-          </NTabPane>
-        </NTabs>
+          </div>
+        </NTabPane>
 
-        <template v-if="selectedTab !== 'login'">
-          <NDivider />
-          <NFlex
-            vertical
-            size="small"
+        <NTabPane
+          name="register"
+          tab="注册"
+        >
+          <NForm
+            ref="registerFormRef"
+            :rules="registerRules"
+            :model="registerModel"
           >
-            <NText depth="3">
-              {{ token ? '安全验证已完成，可以继续提交。' : '先完成人机验证，再解锁注册和密码找回操作。' }}
-            </NText>
-            <VueTurnstile
-              ref="turnstile"
-              v-model="token"
-              :site-key="TURNSTILE_KEY"
-              theme="auto"
+            <NFormItem
+              path="username"
+              label="用户名"
+            >
+              <NInput
+                v-model:value="registerModel.username"
+                clearable
+                placeholder="输入一个用户名，不允许纯数字"
+                :input-props="{ autocomplete: 'username' }"
+              />
+            </NFormItem>
+            <NFormItem
+              path="email"
+              label="邮箱"
+            >
+              <NInput
+                v-model:value="registerModel.email"
+                clearable
+                placeholder="请输入可接收邮件的邮箱"
+                :input-props="{ autocomplete: 'email' }"
+              />
+            </NFormItem>
+            <NFormItem
+              path="password"
+              label="密码"
+            >
+              <NInput
+                v-model:value="registerModel.password"
+                type="password"
+                show-password-on="click"
+                placeholder="输入密码，需要包含英文和数字"
+                :input-props="{ autocomplete: 'new-password' }"
+                @input="onPasswordInput"
+                @keydown.enter.prevent
+              />
+            </NFormItem>
+            <NFormItem
+              ref="rPasswordFormItemRef"
+              first
+              path="reenteredPassword"
+              label="重复密码"
+            >
+              <NInput
+                v-model:value="registerModel.reenteredPassword"
+                :disabled="!registerModel.password"
+                type="password"
+                show-password-on="click"
+                placeholder="再次输入密码"
+                :input-props="{ autocomplete: 'new-password' }"
+                @keydown.enter="onRegisterButtonClick"
+              />
+            </NFormItem>
+          </NForm>
+
+          <div class="form-actions form-actions--end">
+            <NButton
+              v-if="registerPending"
+              secondary
+              @click="cancelActiveRequest"
+            >
+              取消
+            </NButton>
+            <NButton
+              :loading="registerPending"
+              :disabled="!canSubmitRegister"
+              type="primary"
+              class="primary-action"
+              @click="onRegisterButtonClick"
+            >
+              {{ registerButtonText }}
+            </NButton>
+          </div>
+        </NTabPane>
+
+        <NTabPane
+          v-if="isForgetPassword"
+          name="forget"
+          tab="忘记密码"
+        >
+          <NFormItem label="注册邮箱">
+            <NInput
+              v-model:value="inputForgetPasswordValue"
+              clearable
+              placeholder="请输入邮箱"
+              maxlength="64"
+              :input-props="{ autocomplete: 'email' }"
             />
-          </NFlex>
-        </template>
-      </NFlex>
-    </template>
-  </NCard>
+          </NFormItem>
+
+          <div class="form-actions">
+            <NButton
+              text
+              @click="backToLogin"
+            >
+              返回登录
+            </NButton>
+            <NFlex
+              justify="end"
+              :size="8"
+            >
+              <NButton
+                v-if="forgetPending"
+                secondary
+                @click="cancelActiveRequest"
+              >
+                取消
+              </NButton>
+              <NButton
+                :loading="forgetPending"
+                :disabled="!canSubmitForget"
+                type="primary"
+                class="primary-action"
+                @click="onForgetPassword"
+              >
+                {{ forgetButtonText }}
+              </NButton>
+            </NFlex>
+          </div>
+
+          <NCountdown
+            v-if="!canSendForgetPassword"
+            :duration="60000"
+            class="forget-countdown"
+            @finish="canSendForgetPassword = true"
+          />
+        </NTabPane>
+      </NTabs>
+
+      <section
+        v-if="selectedTab !== 'login'"
+        class="verification-section"
+      >
+        <span>安全验证</span>
+        <div class="turnstile-wrap">
+          <VueTurnstile
+            ref="turnstile"
+            v-model="token"
+            :site-key="TURNSTILE_KEY"
+            theme="auto"
+          />
+        </div>
+      </section>
+    </div>
+  </section>
 </template>
+
+<style scoped>
+.account-auth {
+  min-width: 0;
+  color: var(--vtsuru-fg);
+}
+
+.account-auth__header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--vtsuru-border);
+}
+
+.account-auth__header h2 {
+  margin: 0;
+  color: var(--vtsuru-fg);
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.account-auth__header-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-auth__body,
+.account-auth__success {
+  min-width: 0;
+  margin-top: 16px;
+}
+
+.account-auth__success {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.auth-feedback {
+  --feedback-color: var(--vtsuru-brand);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 9px 11px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--feedback-color) 9%, transparent);
+}
+
+.auth-feedback.is-warning {
+  --feedback-color: #d89b26;
+}
+
+.auth-feedback.is-success {
+  --feedback-color: #26966c;
+}
+
+.auth-feedback.is-error {
+  --feedback-color: #d84a5f;
+}
+
+.auth-feedback__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--feedback-color);
+}
+
+.auth-tabs :deep(.n-tab-pane) {
+  padding-top: 18px;
+}
+
+.auth-tabs :deep(.n-tabs-nav-scroll-content) {
+  width: 100%;
+}
+
+.auth-tabs :deep(.n-tabs-tab) {
+  flex: 1;
+  justify-content: center;
+}
+
+.form-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.form-actions--end {
+  justify-content: flex-end;
+}
+
+.primary-action {
+  min-width: 132px;
+}
+
+.verification-section {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--vtsuru-border);
+}
+
+.verification-section > span {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.turnstile-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.forget-countdown {
+  display: block;
+  margin-top: 12px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 480px) {
+  .account-auth__success {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-actions > :deep(.n-flex) {
+    width: 100%;
+  }
+
+  .primary-action {
+    flex: 1;
+  }
+}
+</style>

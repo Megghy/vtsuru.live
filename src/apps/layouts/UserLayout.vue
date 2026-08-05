@@ -968,7 +968,7 @@ watch(
         align="center"
         size="small"
       >
-        <div style="text-align: center">如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录</div>
+        <div style="text-align: center">如果你不是主播且不发送棉花糖(提问)的话则不需要注册本站, 可以直接认证B站账号</div>
         <NFlex
           justify="center"
           style="width: 100%; margin-top: 8px"

@@ -1,26 +1,15 @@
 <script setup lang="ts">
 import { BrowsersOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NFlex,
-  NIcon,
-  NLayoutContent,
-  NSpin,
-  NText,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+import { NAlert, NButton, NFlex, NIcon, NSpin, NText, useMessage } from 'naive-ui'
 import { ref, watch } from 'vue'
 
 import { isLoadingAccount } from '@/api/account'
+import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { selectedAPIKey, setSelectedAPIKey } from '@/shared/config'
+import VtsuruLogo from '@/svgs/ic_vtuber.svg?component'
 
 const message = useMessage()
-const themeVars = useThemeVars()
 const showAPISwitchDialog = ref(false)
 let loadingTimer: number | null = null
 
@@ -55,167 +44,221 @@ async function switchToBackupAPI() {
 </script>
 
 <template>
-  <NLayoutContent
-    :style="{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      width: '100%',
-      backgroundColor: themeVars.bodyColor,
-      padding: '16px 0',
-      margin: 0,
-      boxSizing: 'border-box',
-    }"
-  >
-    <template v-if="!isLoadingAccount">
-      <NCard
-        class="login-card"
-        :bordered="false"
-      >
-        <template #header>
-          <NFlex
-            justify="center"
-            align="center"
-            style="padding: 12px 0"
-          >
-            <NText
-              strong
-              style="font-size: 1.8rem"
-            >
-              VTSURU CENTER
-            </NText>
-          </NFlex>
-        </template>
+  <main class="auth-page">
+    <HomeEmojiBackdrop />
 
+    <section
+      v-if="!isLoadingAccount"
+      class="auth-shell"
+      aria-labelledby="auth-title"
+    >
+      <header class="auth-header">
+        <VtsuruLogo class="auth-logo" />
+        <p class="auth-eyebrow">VTSURU CENTER</p>
+        <h1 id="auth-title">登录或创建账号</h1>
+      </header>
+
+      <NAlert
+        type="info"
+        :bordered="false"
+        class="auth-note"
+      >
         <NFlex
           vertical
-          size="large"
-          style="padding: 8px 0"
+          align="center"
+          :size="10"
         >
-          <NFlex
-            justify="center"
-            align="center"
+          <NText depth="3">普通观众无需注册，可以直接访问主播分享的功能页面。</NText>
+          <NButton
+            type="primary"
+            size="small"
+            @click="$router.push({ name: 'bili-user' })"
           >
-            <NText style="font-size: 16px; text-align: center"> 请登录或注册后使用 </NText>
-          </NFlex>
+            <template #icon>
+              <NIcon :component="BrowsersOutline" />
+            </template>
+            前往 Bilibili 认证用户主页
+          </NButton>
+        </NFlex>
+      </NAlert>
 
-          <NAlert type="info">
-            <NFlex
-              vertical
-              align="center"
-              size="small"
-            >
-              <div style="text-align: center">
-                如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录, 直接访问认证完成后给出的链接即可
-              </div>
-              <NFlex
-                justify="center"
-                style="width: 100%; margin-top: 8px"
-              >
-                <NButton
-                  type="primary"
-                  size="small"
-                  @click="$router.push({ name: 'bili-user' })"
-                >
-                  <template #icon>
-                    <NIcon :component="BrowsersOutline" />
-                  </template>
-                  前往 Bilibili 认证用户主页
-                </NButton>
-              </NFlex>
-            </NFlex>
-          </NAlert>
+      <div class="auth-form">
+        <RegisterAndLogin />
+      </div>
 
-          <NDivider style="margin: 8px 0" />
+      <NButton
+        secondary
+        tag="a"
+        href="/"
+        class="home-action"
+      >
+        回到主页
+      </NButton>
+    </section>
 
-          <RegisterAndLogin />
-
-          <NFlex justify="center">
+    <section
+      v-else
+      class="loading-panel"
+      aria-live="polite"
+    >
+      <NSpin
+        :loading="isLoadingAccount"
+        size="large"
+      >
+        <NText>正在请求账户数据...</NText>
+      </NSpin>
+      <NAlert
+        v-if="showAPISwitchDialog"
+        type="warning"
+        :bordered="false"
+        title="加载时间较长"
+      >
+        <NFlex vertical>
+          <NText>当前API响应较慢，是否切换到备用API？</NText>
+          <NFlex
+            justify="end"
+            :size="8"
+          >
             <NButton
-              secondary
-              tag="a"
-              href="/"
-              style="min-width: 100px"
+              size="small"
+              @click="showAPISwitchDialog = false"
             >
-              回到主页
+              继续等待
+            </NButton>
+            <NButton
+              type="primary"
+              size="small"
+              @click="switchToBackupAPI"
+            >
+              切换到备用API
             </NButton>
           </NFlex>
         </NFlex>
-      </NCard>
-    </template>
-
-    <template v-else>
-      <NCard
-        class="loading-card"
-        :bordered="false"
-      >
-        <NFlex
-          vertical
-          justify="center"
-          align="center"
-          style="padding: 20px 10px"
-        >
-          <NSpin
-            :loading="isLoadingAccount"
-            size="large"
-          >
-            <NText>正在请求账户数据...</NText>
-          </NSpin>
-          <NAlert
-            v-if="showAPISwitchDialog"
-            type="warning"
-            style="margin-top: 20px; max-width: 400px"
-            title="加载时间较长"
-          >
-            <NFlex vertical>
-              <NText>当前API响应较慢，是否切换到备用API？</NText>
-              <NFlex
-                justify="end"
-                :size="8"
-              >
-                <NButton
-                  size="small"
-                  @click="showAPISwitchDialog = false"
-                >
-                  继续等待
-                </NButton>
-                <NButton
-                  type="primary"
-                  size="small"
-                  @click="switchToBackupAPI"
-                >
-                  切换到备用API
-                </NButton>
-              </NFlex>
-            </NFlex>
-          </NAlert>
-        </NFlex>
-      </NCard>
-    </template>
-  </NLayoutContent>
+      </NAlert>
+    </section>
+  </main>
 </template>
 
 <style scoped>
-.login-card {
-  max-width: 520px;
-  width: 90%;
-  min-width: 300px;
-  margin: 16px;
+.auth-page {
+  position: relative;
+  display: grid;
+  min-height: 100vh;
+  min-width: 0;
+  place-items: center;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  padding: 48px 20px;
+  isolation: isolate;
+  background: var(--vtsuru-bg);
+  color: var(--vtsuru-fg);
 }
 
-.loading-card {
-  min-width: 280px;
-  width: 90%;
-  max-width: 400px;
-  margin: 16px;
+.auth-shell,
+.loading-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 520px);
+  min-width: 0;
+}
+
+.auth-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.auth-header {
+  text-align: center;
+}
+
+.auth-logo {
+  width: 72px;
+  height: 72px;
+  color: var(--vtsuru-brand);
+}
+
+.auth-eyebrow {
+  margin: 12px 0 5px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.auth-header h1 {
+  margin: 0;
+  color: var(--vtsuru-fg);
+  font-size: 30px;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.auth-note {
+  text-align: center;
+}
+
+.auth-form {
+  min-width: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--vtsuru-bg-elevated) 94%, transparent);
+  box-shadow: 0 18px 52px color-mix(in srgb, var(--vtsuru-fg) 10%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.home-action {
+  justify-self: center;
+  min-width: 112px;
+}
+
+.loading-panel {
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+  padding: 28px;
+  box-sizing: border-box;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--vtsuru-bg-elevated) 94%, transparent);
+  box-shadow: 0 18px 52px color-mix(in srgb, var(--vtsuru-fg) 10%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.loading-panel :deep(.n-alert) {
+  width: 100%;
 }
 
 @media (max-width: 480px) {
-  .login-card,
-  .loading-card {
-    width: 95%;
-    margin: 8px;
+  .auth-page {
+    align-items: start;
+    padding: 24px 12px 40px;
+  }
+
+  .auth-logo {
+    width: 58px;
+    height: 58px;
+  }
+
+  .auth-header h1 {
+    font-size: 26px;
+  }
+
+  .auth-form {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .auth-form,
+  .loading-panel {
+    background: var(--vtsuru-bg-elevated);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 </style>

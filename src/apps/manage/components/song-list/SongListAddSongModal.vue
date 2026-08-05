@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { NModal, NScrollbar, NSpin, NTabPane, NTabs } from 'naive-ui'
+import { Bot24Regular } from '@vicons/fluent'
+import { NAlert, NButton, NFlex, NIcon, NModal, NScrollbar, NSpin, NTabPane, NTabs } from 'naive-ui'
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 import type { SongsInfo } from '@/api/api-models'
+import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import SongListAddSongModalCustomTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalCustomTab.vue'
 import SongListAddSongModalDirectoryTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalDirectoryTab.vue'
 import SongListAddSongModalFileTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalFileTab.vue'
@@ -13,6 +16,9 @@ const props = defineProps<{
   show: boolean
   songs: SongsInfo[]
 }>()
+
+const route = useRoute()
+const assistant = useAssistantStore()
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
@@ -72,6 +78,15 @@ function onLoadingChange(value: boolean) {
 function bumpRenderKey() {
   modalRenderKey.value++
 }
+
+function openAssistant() {
+  showModel.value = false
+  assistant.open({
+    routeName: route.name?.toString() ?? '',
+    title: (route.meta?.title as string) ?? route.name?.toString() ?? '歌单管理',
+    path: route.path,
+  })
+}
 </script>
 
 <template>
@@ -84,6 +99,30 @@ function bumpRenderKey() {
     <template #header> 添加歌曲 </template>
     <NScrollbar style="max-height: 80vh">
       <NSpin :show="isModalLoading">
+        <NAlert
+          title="也可以使用 VTsuru 助手"
+          type="info"
+          :bordered="false"
+          style="margin-bottom: 12px"
+        >
+          <NFlex
+            align="center"
+            justify="space-between"
+          >
+            <span>上传歌曲信息截图，或直接粘贴歌曲信息，Agent 会自动识别并生成添加操作。</span>
+            <NButton
+              type="primary"
+              secondary
+              size="small"
+              @click="openAssistant"
+            >
+              <template #icon>
+                <NIcon :component="Bot24Regular" />
+              </template>
+              打开助手
+            </NButton>
+          </NFlex>
+        </NAlert>
         <NTabs
           default-value="custom"
           animated
