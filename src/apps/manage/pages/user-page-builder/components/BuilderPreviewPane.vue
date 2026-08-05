@@ -39,7 +39,7 @@ import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
-import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
+import { IndexTemplateMap } from '@/shared/config/templates'
 import { isDarkMode } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
@@ -56,6 +56,11 @@ const previewRoot = ref<HTMLElement | null>(null)
 const previewMode = ref<'select' | 'interact'>('select')
 const simulatedLiveState = ref<'actual' | 'live' | 'offline'>('actual')
 const simulatedNow = ref<number | null>(null)
+const legacyIndexTemplate = computed(
+  () =>
+    IndexTemplateMap[editor.account.value?.settings.indexTemplate || 'default']?.component ??
+    IndexTemplateMap.default.component,
+)
 const actualNow = useNow({ interval: 30_000 })
 const viewportOptions: Array<{ value: PreviewViewport; label: string; icon: typeof PhonePortraitOutline }> = [
   { value: 'phone', label: '手机', icon: PhonePortraitOutline },
@@ -385,7 +390,8 @@ watch(
                   </div>
                 </template>
                 <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                  <DefaultIndexTemplate
+                  <component
+                    :is="legacyIndexTemplate"
                     :user-info="editor.account.value as any"
                     :bili-info="biliProfileQuery.data.value"
                   />

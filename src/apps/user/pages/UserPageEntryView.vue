@@ -13,10 +13,10 @@ import { usePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import type { BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
-import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
+import { IndexTemplateMap } from '@/shared/config/templates'
 import { isDarkMode } from '@/shared/utils'
 
-defineProps<{
+const props = defineProps<{
   biliInfo: any | undefined
   biliStatus?: BiliProfileStatus
   userInfo: UserInfo | undefined
@@ -108,6 +108,11 @@ const contentBackgroundClass = computed(() => ({
   'bg-host': !!contentBackground.value,
   'bg-blur': contentBackground.value?.blurMode === 'background',
 }))
+const indexTemplateComponent = computed(
+  () =>
+    IndexTemplateMap[props.userInfo?.extra?.templateTypes?.index || 'default']?.component ??
+    IndexTemplateMap.default.component,
+)
 const contentClass = computed(() => ({
   'glass-surface': contentBackground.value?.blurMode === 'glass',
 }))
@@ -147,7 +152,8 @@ const contentClass = computed(() => ({
           </NText>
         </header>
 
-        <DefaultIndexTemplate
+        <component
+          :is="indexTemplateComponent"
           v-if="renderMode === 'legacy'"
           :user-info="userInfo"
           :bili-info="biliInfo"

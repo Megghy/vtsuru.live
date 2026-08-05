@@ -11,19 +11,31 @@ import {
   NInput,
   NModal,
   NPopconfirm,
+  NSelect,
   NTag,
   NTooltip,
   useMessage,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-import { SaveSetting, useAccount } from '@/api/account'
+import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { USER_INDEX_API_URL } from '@/shared/config'
+import { IndexTemplateMap } from '@/shared/config/templates'
 const accountInfo = useAccount()
 const message = useMessage()
+
+const selectedIndexTemplateKey = ref(accountInfo.value.settings.indexTemplate || 'default')
+const showTemplatePreview = ref(false)
+const indexTemplateOptions = Object.entries(IndexTemplateMap).map(([value, template]) => ({
+  label: template.name,
+  value,
+}))
+const selectedIndexTemplate = computed(
+  () => IndexTemplateMap[selectedIndexTemplateKey.value] ?? IndexTemplateMap.default,
+)
 
 const isLoading = ref(false)
 
@@ -79,6 +91,17 @@ async function updateUserIndexSettings() {
   } catch (e) {
     message.error(`保存失败: ${(e as Error).message || String(e)}`)
     throw e
+  }
+}
+
+async function saveIndexTemplate() {
+  accountInfo.value.settings.indexTemplate = selectedIndexTemplateKey.value
+  try {
+    const response = await SaveAccountSettings()
+    if (response.code !== 200) throw new Error(response.message || '保存失败')
+    message.success('主页模板已更新')
+  } catch (error) {
+    message.error(`保存失败: ${(error as Error).message || String(error)}`)
   }
 }
 
@@ -235,6 +258,28 @@ await loadIndexInfo()
     vertical
     :size="12"
   >
+    <NDivider style="margin: 0"> 主页模板 </NDivider>
+    <div class="index-template-picker">
+      <div class="index-template-picker__copy">
+        <strong>{{ selectedIndexTemplate.name }}</strong>
+        <span>支持头图、头像框、荣誉、直播状态和精选内容。</span>
+      </div>
+      <NSelect
+        v-model:value="selectedIndexTemplateKey"
+        size="small"
+        :options="indexTemplateOptions"
+        style="min-width: 150px"
+        @update:value="saveIndexTemplate"
+      />
+      <NButton
+        size="small"
+        secondary
+        @click="showTemplatePreview = true"
+      >
+        浏览预览
+      </NButton>
+    </div>
+
     <NDivider style="margin: 0"> 常规 </NDivider>
     <NCheckbox
       v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
@@ -483,4 +528,59 @@ await loadIndexInfo()
       </NButton>
     </NFlex>
   </NModal>
+
+  <NModal
+    v-model:show="showTemplatePreview"
+    preset="card"
+    title="主页模板预览"
+    style="width: min(960px, 94vw)"
+    :bordered="false"
+  >
+    <div class="index-template-preview">
+      <component
+        :is="selectedIndexTemplate.component"
+        :user-info="accountInfo"
+        :bili-info="undefined"
+      />
+    </div>
+  </NModal>
 </template>
+
+<style scoped>
+.index-template-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  background: var(--vtsuru-bg-muted);
+}
+.index-template-picker__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.index-template-picker__copy strong {
+  color: var(--vtsuru-fg);
+  font-size: 14px;
+}
+.index-template-picker__copy span {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.index-template-preview {
+  max-height: min(72vh, 760px);
+  overflow: auto;
+  margin: -12px;
+  background: var(--vtsuru-bg);
+}
+@media (max-width: 640px) {
+  .index-template-picker {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

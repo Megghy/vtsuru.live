@@ -906,7 +906,12 @@ watch(
           >
             <div
               class="viewer-page-content"
-              :class="layoutContentBgClass"
+              :class="[
+                layoutContentBgClass,
+                {
+                  'viewer-page-content--edge': route.name === 'user-index' && currentUserPageMode === 'legacy',
+                },
+              ]"
               :style="layoutContentBgVars"
             >
               <!-- 路由视图和动画 -->
@@ -1481,6 +1486,10 @@ watch(
   overflow-x: clip;
 }
 
+.viewer-page-content--edge {
+  padding: 0 10px;
+}
+
 .viewer-page-content.content-bg-host {
   min-height: calc(100vh - var(--vtsuru-header-height));
   background-color: transparent;
@@ -1586,6 +1595,10 @@ watch(
   .viewer-page-content {
     padding-left: 10px;
     padding-right: 12px;
+  }
+
+  .viewer-page-content--edge {
+    padding: 0 8px;
   }
 }
 

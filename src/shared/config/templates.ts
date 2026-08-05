@@ -135,6 +135,16 @@ export const ScheduleTemplateMap: TemplateMapType = {
   },
 }
 
+export const IndexTemplateMap: TemplateMapType = {
+  default: {
+    name: '直播档案',
+    component: markRaw(
+      defineAsyncComponent(async () => import('@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue')),
+    ),
+    capabilities: ['backgroundImage', 'characterArtwork', 'showName', 'showCover', 'songCount'],
+  },
+}
+
 export const SongListTemplateMap: TemplateMapType = {
   card: {
     name: '卡片列表',

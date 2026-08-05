@@ -15,6 +15,8 @@ export interface BiliProfile {
   name?: string
   face?: string
   sign?: string
+  top_photo?: string
+  top_photo_v2?: string
   fans?: number
   attention?: number
   friend?: number
@@ -23,7 +25,14 @@ export interface BiliProfile {
   pendant?: {
     image?: string
     image_enhance?: string
+    image_enhance_frame?: string
   }
+  nameplate?: { image?: string }
+  level_info?: { current_level?: number }
+  official?: { title?: string; desc?: string }
+  Official?: { title?: string; desc?: string }
+  official_verify?: { desc?: string }
+  vip?: { label?: { text?: string } }
 }
 
 export interface ContribPageRef {
