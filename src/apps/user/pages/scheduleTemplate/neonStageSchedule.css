@@ -1,7 +1,56 @@
 .neon-template {
+  --schedule-toolbar-font: 'IBM Plex Mono', 'Cascadia Mono', monospace;
+  --schedule-toolbar-fg: #eef3ed;
+  --schedule-toolbar-muted: #a3ada7;
+  --schedule-toolbar-bg: #080b0c;
+  --schedule-toolbar-control-bg: #171c1d;
+  --schedule-toolbar-control-bg-hover: #222a26;
+  --schedule-toolbar-border: #465248;
+  --schedule-toolbar-accent: #b4ff3e;
+  --schedule-toolbar-action-bg: #b4ff3e;
+  --schedule-toolbar-action-fg: #10150d;
+  --schedule-toolbar-label: 'WEEK INDEX / SYS';
+  --schedule-toolbar-radius: min(var(--vtsuru-page-radius, 8px), 8px);
+  --schedule-toolbar-shadow: 0 0 22px -12px rgb(180 255 62 / 72%);
+
   container: neon-stage / inline-size;
   width: min(100%, var(--vtsuru-page-max-width, 1180px));
   margin-inline: auto;
+}
+
+.neon-template :deep(.schedule-week-toolbar) {
+  position: relative;
+  overflow: hidden;
+  border-left: 3px solid #b4ff3e;
+  background-image: repeating-linear-gradient(0deg, transparent 0 3px, rgb(238 243 237 / 2.5%) 3px 4px);
+}
+
+.neon-template :deep(.schedule-week-toolbar::after) {
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  width: 5px;
+  height: 5px;
+  background: #b4ff3e;
+  border-radius: 50%;
+  box-shadow: 0 0 9px #b4ff3e;
+  content: '';
+}
+
+.neon-template :deep(.schedule-week-toolbar__meta) {
+  text-transform: uppercase;
+}
+
+.neon-template :deep(.schedule-week-toolbar__step),
+.neon-template :deep(.schedule-week-toolbar__save),
+.neon-template :deep(.schedule-week-toolbar__select .n-base-selection) {
+  border-radius: 1px;
+}
+
+.neon-template :deep(.schedule-week-toolbar__save) {
+  box-shadow:
+    inset 0 0 0 1px rgb(8 11 12 / 60%),
+    0 0 14px -7px #b4ff3e;
 }
 
 .neon-board {

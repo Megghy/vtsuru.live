@@ -1,7 +1,56 @@
 .magazine-template {
+  --schedule-toolbar-font: 'Noto Serif SC', 'Source Han Serif SC', serif;
+  --schedule-toolbar-fg: #211c17;
+  --schedule-toolbar-muted: #655d53;
+  --schedule-toolbar-bg: #f2eadb;
+  --schedule-toolbar-control-bg: #e7dcc9;
+  --schedule-toolbar-control-bg-hover: #ded0b9;
+  --schedule-toolbar-border: #918675;
+  --schedule-toolbar-accent: #a52c24;
+  --schedule-toolbar-action-bg: #211c17;
+  --schedule-toolbar-action-fg: #f2eadb;
+  --schedule-toolbar-label: 'ISSUE SELECTOR';
+  --schedule-toolbar-radius: min(var(--vtsuru-page-radius, 8px), 8px);
+  --schedule-toolbar-shadow: 0 12px 26px -20px rgb(33 28 23 / 52%);
+  --schedule-toolbar-max-width: 820px;
+
   container: magazine / inline-size;
   width: min(100%, var(--vtsuru-page-max-width, 960px));
   margin-inline: auto;
+}
+
+.magazine-template :deep(.schedule-week-toolbar) {
+  position: relative;
+  padding-top: 13px;
+  border-top: 5px solid #211c17;
+  border-bottom-color: color-mix(in srgb, #211c17 24%, transparent);
+  box-shadow: none;
+}
+
+.magazine-template :deep(.schedule-week-toolbar::before) {
+  position: absolute;
+  top: 4px;
+  right: 10px;
+  left: 10px;
+  height: 1px;
+  background: #211c17;
+  content: '';
+}
+
+.magazine-template :deep(.schedule-week-toolbar__meta) {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.magazine-template :deep(.schedule-week-toolbar__meta b) {
+  color: #a52c24;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.magazine-template :deep(.schedule-week-toolbar__save) {
+  text-transform: uppercase;
+  border-radius: 0;
 }
 
 .magazine-poster {
@@ -295,6 +344,10 @@
   font-weight: 700;
   line-height: 0.9;
   font-variant-numeric: lining-nums;
+}
+
+.program-day.is-today .day-index {
+  padding-inline-start: 12px;
 }
 
 .day-identity > div {

@@ -1,7 +1,51 @@
 .live-poster-template {
+  --schedule-toolbar-font: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --schedule-toolbar-fg: #201512;
+  --schedule-toolbar-muted: #6d5045;
+  --schedule-toolbar-bg: #f6dd9d;
+  --schedule-toolbar-control-bg: #fae9b9;
+  --schedule-toolbar-control-bg-hover: #f4d48b;
+  --schedule-toolbar-border: #201512;
+  --schedule-toolbar-accent: #bd282b;
+  --schedule-toolbar-action-bg: #bd282b;
+  --schedule-toolbar-action-fg: #fff8e8;
+  --schedule-toolbar-label: 'TOUR DATE / 週次';
+  --schedule-toolbar-radius: min(var(--vtsuru-page-radius, 8px), 8px);
+  --schedule-toolbar-shadow: 4px 4px 0 color-mix(in srgb, #201512 26%, transparent);
+
   container: live-poster / inline-size;
   width: min(100%, var(--vtsuru-page-max-width, 820px));
   margin-inline: auto;
+}
+
+.live-poster-template :deep(.schedule-week-toolbar) {
+  position: relative;
+  border-width: 2px;
+  background-image: repeating-linear-gradient(0deg, transparent 0 3px, rgb(32 21 18 / 5%) 3px 4px);
+}
+
+.live-poster-template :deep(.schedule-week-toolbar::before) {
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  right: 12px;
+  padding: 1px 8px;
+  color: #fff8e8;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  background: #201512;
+  content: 'LIVE SCHEDULE';
+}
+
+.live-poster-template :deep(.schedule-week-toolbar__step),
+.live-poster-template :deep(.schedule-week-toolbar__save),
+.live-poster-template :deep(.schedule-week-toolbar__select .n-base-selection) {
+  border-width: 2px;
+}
+
+.live-poster-template :deep(.schedule-week-toolbar__save) {
+  box-shadow: 3px 3px 0 #201512;
 }
 
 .live-poster {

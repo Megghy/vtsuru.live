@@ -1,7 +1,49 @@
 .prism-stage-template {
+  --schedule-toolbar-font: 'Noto Serif SC', 'Source Han Serif SC', serif;
+  --schedule-toolbar-fg: #f2ead8;
+  --schedule-toolbar-muted: #aaa58f;
+  --schedule-toolbar-bg: #151d3a;
+  --schedule-toolbar-control-bg: #202a4a;
+  --schedule-toolbar-control-bg-hover: #2a3453;
+  --schedule-toolbar-border: color-mix(in srgb, #d5a94c 54%, transparent);
+  --schedule-toolbar-accent: #d5a94c;
+  --schedule-toolbar-action-bg: #d5a94c;
+  --schedule-toolbar-action-fg: #171a29;
+  --schedule-toolbar-label: '七曜周历 / WEEKLY';
+  --schedule-toolbar-radius: var(--vtsuru-page-radius, 8px);
+  --schedule-toolbar-shadow: 0 18px 38px -24px rgb(5 9 26 / 76%);
+
   container: prism-stage / inline-size;
   width: min(100%, var(--vtsuru-page-max-width, 1080px));
   margin-inline: auto;
+}
+
+.prism-stage-template :deep(.schedule-week-toolbar) {
+  position: relative;
+  border-top: 3px solid #d5a94c;
+  background-image: repeating-linear-gradient(105deg, transparent 0 5px, rgb(242 234 216 / 2%) 5px 6px);
+}
+
+.prism-stage-template :deep(.schedule-week-toolbar::after) {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #be4337;
+  content: '';
+  transform: rotate(45deg);
+}
+
+.prism-stage-template :deep(.schedule-week-toolbar__meta b) {
+  color: #d5a94c;
+  font-family: 'Marcellus', 'Optima', serif;
+  letter-spacing: 0.08em;
+}
+
+.prism-stage-template :deep(.schedule-week-toolbar__save) {
+  border-color: color-mix(in srgb, #d5a94c 72%, #151d3a);
+  box-shadow: inset 0 0 0 1px rgb(242 234 216 / 18%);
 }
 .prism-stage {
   --prism-gold: #d5a94c;

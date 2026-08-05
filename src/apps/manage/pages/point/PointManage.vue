@@ -1057,6 +1057,7 @@ onMounted(() => {})
                 <NInput
                   v-model:value="currentGoodsModel.goods.name"
                   placeholder="必填, 礼物名称"
+                  maxlength="200"
                 />
               </NFormItem>
 
@@ -1327,6 +1328,7 @@ onMounted(() => {})
                     <NInput
                       v-model:value="sub.name"
                       placeholder="如：吧唧 / 立牌 / 抱枕套"
+                      maxlength="200"
                     />
                   </NFormItem>
 

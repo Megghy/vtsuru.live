@@ -1,7 +1,55 @@
 .pinky-template {
+  --schedule-toolbar-font: 'ZCOOL KuaiLe', 'Yuanti SC', 'YouYuan', '幼圆', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --schedule-toolbar-fg: #805d67;
+  --schedule-toolbar-muted: #a27f89;
+  --schedule-toolbar-bg: #fff3f6;
+  --schedule-toolbar-control-bg: #fff;
+  --schedule-toolbar-control-bg-hover: #ffe9ef;
+  --schedule-toolbar-border: #edb9c5;
+  --schedule-toolbar-accent: #d98196;
+  --schedule-toolbar-action-bg: #d98196;
+  --schedule-toolbar-action-fg: #fff;
+  --schedule-toolbar-label: 'SWEET WEEK ♡';
+  --schedule-toolbar-radius: calc(var(--vtsuru-page-radius, 14px) + 8px);
+  --schedule-toolbar-shadow:
+    0 12px 28px -18px rgb(128 93 103 / 40%), 0 0 0 4px color-mix(in srgb, #f4b7ca 12%, transparent);
+
   container: pinky / inline-size;
   width: min(100%, var(--vtsuru-page-max-width, 640px));
   margin-inline: auto;
+}
+
+.pinky-template :deep(.schedule-week-toolbar) {
+  position: relative;
+  background-image:
+    radial-gradient(circle at 12% 28%, rgb(255 255 255 / 92%) 0 16px, transparent 17px),
+    linear-gradient(90deg, rgb(255 255 255 / 48%) 1px, transparent 1px),
+    linear-gradient(rgb(255 255 255 / 48%) 1px, transparent 1px);
+  background-size:
+    auto,
+    18px 18px,
+    18px 18px;
+  border-width: 2px;
+}
+
+.pinky-template :deep(.schedule-week-toolbar::after) {
+  position: absolute;
+  top: -8px;
+  right: 22px;
+  color: #f4b7ca;
+  font-size: 11px;
+  letter-spacing: 3px;
+  content: '♡ ♡ ♡';
+  pointer-events: none;
+}
+
+.pinky-template :deep(.schedule-week-toolbar__step),
+.pinky-template :deep(.schedule-week-toolbar__save) {
+  border-radius: 999px;
+}
+
+.pinky-template :deep(.schedule-week-toolbar__save) {
+  box-shadow: 0 4px 0 color-mix(in srgb, #d98196 72%, #805d67 28%);
 }
 
 .pinky-board {

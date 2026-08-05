@@ -1,7 +1,41 @@
 .kinari-template {
+  --schedule-toolbar-font: 'Zen Maru Gothic', 'Noto Sans SC', sans-serif;
+  --schedule-toolbar-fg: #202d35;
+  --schedule-toolbar-muted: #536878;
+  --schedule-toolbar-bg: #fffdf5;
+  --schedule-toolbar-control-bg: #f8f1dc;
+  --schedule-toolbar-control-bg-hover: #f5e7c4;
+  --schedule-toolbar-border: color-mix(in srgb, #23435e 30%, transparent);
+  --schedule-toolbar-accent: #d94f30;
+  --schedule-toolbar-action-bg: #23435e;
+  --schedule-toolbar-action-fg: #fffdf5;
+  --schedule-toolbar-label: '今週の放送案内';
+  --schedule-toolbar-radius: var(--vtsuru-page-radius, 4px);
+  --schedule-toolbar-shadow: 0 14px 30px -22px rgb(35 67 94 / 42%);
+
   container: kinari / inline-size;
   width: min(100%, var(--vtsuru-page-max-width, 1040px));
   margin-inline: auto;
+}
+
+.kinari-template :deep(.schedule-week-toolbar) {
+  padding-left: 13px;
+  border-left: 5px solid var(--schedule-toolbar-accent);
+}
+
+.kinari-template :deep(.schedule-week-toolbar__meta) {
+  letter-spacing: 0.14em;
+}
+
+.kinari-template :deep(.schedule-week-toolbar__meta b) {
+  padding: 2px 7px;
+  color: #fffdf5;
+  background: #23435e;
+  border-radius: 2px;
+}
+
+.kinari-template :deep(.schedule-week-toolbar__save) {
+  border-bottom: 3px solid #d94f30;
 }
 
 .kinari-board {

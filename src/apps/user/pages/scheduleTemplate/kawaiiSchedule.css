@@ -1,7 +1,44 @@
 .kawaii-template {
+  --schedule-toolbar-font: 'ZCOOL KuaiLe', 'Yuanti SC', 'YouYuan', 'Microsoft YaHei', sans-serif;
+  --schedule-toolbar-fg: #48313a;
+  --schedule-toolbar-muted: #76636b;
+  --schedule-toolbar-bg: #fff9fa;
+  --schedule-toolbar-control-bg: #fff;
+  --schedule-toolbar-control-bg-hover: #fff0f4;
+  --schedule-toolbar-border: color-mix(in srgb, #ee779e 34%, #d8c9ce 66%);
+  --schedule-toolbar-accent: #d85f88;
+  --schedule-toolbar-action-bg: #d85f88;
+  --schedule-toolbar-action-fg: #fff;
+  --schedule-toolbar-label: 'WEEKLY PLANNER';
+  --schedule-toolbar-radius: calc(var(--vtsuru-page-radius, 8px) + 8px);
+  --schedule-toolbar-shadow: 0 12px 28px -20px rgb(90 49 64 / 48%);
+
   container: kawaii / inline-size;
   width: min(100%, var(--vtsuru-page-max-width, 1120px));
   margin-inline: auto;
+}
+
+.kawaii-template :deep(.schedule-week-toolbar) {
+  position: relative;
+  background-image: radial-gradient(color-mix(in srgb, #ee779e 25%, transparent) 0.8px, transparent 0.9px);
+  background-size: 11px 11px;
+  border-style: dashed;
+}
+
+.kawaii-template :deep(.schedule-week-toolbar::after) {
+  position: absolute;
+  top: -7px;
+  left: 22px;
+  width: 44px;
+  height: 13px;
+  background: rgb(255 210 222 / 68%);
+  content: '';
+  transform: rotate(-2deg);
+}
+
+.kawaii-template :deep(.schedule-week-toolbar__step),
+.kawaii-template :deep(.schedule-week-toolbar__save) {
+  border-radius: 999px;
 }
 
 .kawaii-board {

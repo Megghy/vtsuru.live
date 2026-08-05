@@ -18,8 +18,15 @@
   --schedule-toolbar-border: #000;
   --schedule-toolbar-accent: #000080;
   --schedule-toolbar-focus: rgb(0 0 128 / 32%);
+  --schedule-toolbar-action-bg: #c0c0c0;
+  --schedule-toolbar-action-fg: #000;
+  --schedule-toolbar-action-border: #000;
+  --schedule-toolbar-radius: 0px;
+  --schedule-toolbar-font: var(--retro-font);
+  --schedule-toolbar-label: 'Week Navigator';
+  --schedule-toolbar-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080, 3px 3px 0 rgb(0 0 0 / 28%);
 
-  width: max-content;
+  width: fit-content;
   max-width: 100%;
   margin: 0 auto 12px;
   padding: 3px;
@@ -41,6 +48,23 @@
     inset -1px -1px 0 #808080;
 }
 
+.retro-template :deep(.schedule-week-toolbar__meta) {
+  padding: 1px 4px;
+  color: #fff;
+  background: linear-gradient(90deg, #000080, #b01878);
+}
+
+.retro-template :deep(.schedule-week-toolbar__meta .n-icon),
+.retro-template :deep(.schedule-week-toolbar__meta b) {
+  color: #fff;
+}
+
+.retro-template :deep(.schedule-week-toolbar__save) {
+  box-shadow:
+    inset 1px 1px 0 #fff,
+    inset -1px -1px 0 #808080;
+}
+
 .retro-template :deep(.schedule-week-toolbar__step:active:not(:disabled)) {
   border-color: #000 #fff #fff #000;
   box-shadow: inset 1px 1px 0 #808080;
@@ -48,24 +72,6 @@
 
 .retro-template :deep(.schedule-week-toolbar__select .n-base-selection) {
   border-radius: 0;
-}
-
-.retro-template :deep(.schedule-week-toolbar__save) {
-  --n-border-radius: 0px !important;
-  --n-color: #c0c0c0 !important;
-  --n-color-hover: #dcdcdc !important;
-  --n-color-pressed: #a0a0a0 !important;
-  --n-text-color: #000 !important;
-  --n-text-color-hover: #000 !important;
-  --n-text-color-pressed: #000 !important;
-  --n-border: 1px solid #000 !important;
-  --n-border-hover: 1px solid #000 !important;
-  --n-border-pressed: 1px solid #000 !important;
-
-  border-radius: 0 !important;
-  box-shadow:
-    inset 1px 1px 0 #fff,
-    inset -1px -1px 0 #808080;
 }
 
 .retro-template :deep(.schedule-week-toolbar__save:active) {
