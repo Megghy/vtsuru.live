@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import VueKonva from 'vue3-konva'
 
 import { initPersistedStorage } from '@/shared/storage/persist'
+import { initializeAPISelection } from '@/shared/config'
 
 import App from './App.vue'
 import emitter from './mitt'
@@ -16,6 +17,7 @@ export const getPinia = () => pinia
 
 async function bootstrapApp() {
   await initPersistedStorage()
+  await initializeAPISelection()
 
   const app = createApp(App)
   app.use(router).use(pinia).use(VueKonva).mount('#app')

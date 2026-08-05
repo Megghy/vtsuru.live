@@ -14,7 +14,7 @@ import { cookie } from '@/api/auth'
 import { getEventType, recordEvent, streamingInfo } from '@/apps/client/data/info'
 import { onReceivedNotification } from '@/apps/client/data/notification'
 import { QueryBiliAPI } from '@/apps/client/data/utils'
-import { BASE_HUB_URL, isDev, isTauri } from '@/shared/config'
+import { BASE_HUB_URL, isDev, isTauri, mapToCurrentAPI } from '@/shared/config'
 import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 
 import { useDanmakuClient } from './useDanmakuClient'
@@ -262,7 +262,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       signalRConnectionId.value = undefined
       console.log(`${prefix.value}正在连接到 vtsuru 服务器...`)
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(`${BASE_HUB_URL}web-fetcher?token=${route.query.token ?? account.value.token}`, {
+        .withUrl(mapToCurrentAPI(`${BASE_HUB_URL}web-fetcher?token=${route.query.token ?? account.value.token}`), {
           // 使用 account.token
           headers: { Authorization: `Bearer ${cookie.value?.cookie}` },
           skipNegotiation: true,

@@ -1,4 +1,4 @@
-import { apiFail, mapToCurrentAPI } from '@/shared/config'
+import { apiFail, isManagedAPIUrl, mapToCurrentAPI, markAPIFailover, selectedAPIKey } from '@/shared/config'
 
 import type { APIRoot, PaginationResponse } from './api-models'
 import { cookie } from './auth'
@@ -186,8 +186,8 @@ async function QueryAPIInternal<T>(url: URL, init: RequestInit, options?: QueryR
   } catch (e) {
     console.error(`[${init.method}] API调用失败: ${e}`)
     const queryError = toQueryRequestError(e, false)
-    if (queryError.kind !== 'aborted' && !apiFail.value) {
-      apiFail.value = true
+    if (queryError.kind !== 'aborted' && isManagedAPIUrl(rawUrl) && selectedAPIKey.value === 'main' && !apiFail.value) {
+      markAPIFailover()
       console.log('默认API异常, 切换至故障转移节点')
       if (options?.retryOnFailover ?? true) {
         return request()

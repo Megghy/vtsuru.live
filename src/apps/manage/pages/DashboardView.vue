@@ -39,7 +39,7 @@ import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
-import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey, TURNSTILE_KEY } from '@/shared/config'
+import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey, setSelectedAPIKey, TURNSTILE_KEY } from '@/shared/config'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 
 const token = ref('')
@@ -87,11 +87,10 @@ const apiOptions = availableAPIs.map((api) => ({
 }))
 
 // 切换API
-function handleAPIChange(value: string) {
+async function handleAPIChange(value: string) {
   message.info(`正在切换到${availableAPIs.find((api) => api.key === value)?.name}...`)
-  setTimeout(() => {
-    location.reload()
-  }, 500)
+  await setSelectedAPIKey(value as 'main' | 'failover')
+  location.reload()
 }
 
 function logout() {

@@ -3,7 +3,14 @@ import { h } from 'vue'
 
 import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
-import { apiFail, BASE_API_URL, isTauri } from '@/shared/config'
+import {
+  BASE_API_URL,
+  clearAPIFailover,
+  getAPIUrl,
+  isAutomaticAPIFailover,
+  isTauri,
+  markAPIFailover,
+} from '@/shared/config'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
 import { createNaiveUIApi } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -15,6 +22,7 @@ let isHaveNewVersion = false
 const { notification } = createNaiveUIApi(['notification'])
 
 export function InitVTsuru() {
+  showAPIFailoverNotification()
   QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
     .then(async (version) => {
       if (version.code == 200) {
@@ -40,9 +48,50 @@ export function InitVTsuru() {
       await InitOther()
     })
     .catch(() => {
-      apiFail.value = true
+      markAPIFailover()
       console.log('默认API调用失败, 切换至故障转移节点')
     })
+}
+
+function showAPIFailoverNotification() {
+  if (!isAutomaticAPIFailover.value) return
+
+  let checking = false
+  const notificationRef = notification.warning({
+    title: '当前使用备用 API',
+    content: '上次启动时主 API 无法访问，可以现在测试并切回主 API。',
+    duration: 0,
+    action: () =>
+      h(
+        NButton,
+        {
+          type: 'primary',
+          size: 'small',
+          loading: checking,
+          onClick: async () => {
+            if (checking) return
+            checking = true
+            const controller = new AbortController()
+            const timeoutId = window.setTimeout(() => controller.abort(), 5000)
+            try {
+              const response = await fetch(`${getAPIUrl('main')}api/vtsuru/version`, {
+                signal: controller.signal,
+              })
+              if (!response.ok) throw new Error(`HTTP ${response.status}`)
+              clearAPIFailover()
+              notificationRef.destroy()
+              location.reload()
+            } catch (error) {
+              console.warn('[vtsuru] 主 API 探测失败，继续使用备用 API', error)
+              checking = false
+            } finally {
+              window.clearTimeout(timeoutId)
+            }
+          },
+        },
+        { default: () => '尝试主 API' },
+      ),
+  })
 }
 
 async function InitOther() {

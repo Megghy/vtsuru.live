@@ -5,7 +5,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { BASE_HUB_URL } from '@/shared/config'
+import { BASE_HUB_URL, mapToCurrentAPI } from '@/shared/config'
 
 export const useVTsuruHub = defineStore('VTsuruHub', () => {
   const signalRClient = ref<HubConnection>()
@@ -34,7 +34,7 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
     }
     // console.log('[Components-Event] 正在连接到 VTsuru 服务器...')
     const connection = new HubConnectionBuilder()
-      .withUrl(`${BASE_HUB_URL}main?token=${currentAccount.token}`, {
+      .withUrl(mapToCurrentAPI(`${BASE_HUB_URL}main?token=${currentAccount.token}`), {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets,
         logger: LogLevel.Error,

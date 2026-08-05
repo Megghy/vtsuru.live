@@ -17,7 +17,7 @@ import { ref, watch } from 'vue'
 
 import { isLoadingAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { selectedAPIKey } from '@/shared/config'
+import { selectedAPIKey, setSelectedAPIKey } from '@/shared/config'
 
 const message = useMessage()
 const themeVars = useThemeVars()
@@ -46,11 +46,11 @@ watch(
   { immediate: true },
 )
 
-function switchToBackupAPI() {
-  selectedAPIKey.value = 'failover'
+async function switchToBackupAPI() {
+  await setSelectedAPIKey('failover')
   message.info('已切换到备用API，正在重新加载...')
   showAPISwitchDialog.value = false
-  setTimeout(() => location.reload(), 500)
+  location.reload()
 }
 </script>
 
