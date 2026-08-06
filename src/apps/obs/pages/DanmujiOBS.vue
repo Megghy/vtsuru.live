@@ -16,6 +16,7 @@ import * as pronunciation from '@/apps/obs/components/blivechat/utils/pronunciat
 import * as trie from '@/apps/obs/components/blivechat/utils/trie'
 import { VTSURU_API_URL } from '@/shared/config'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
+import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -46,6 +47,7 @@ const props = defineProps<{
   active?: boolean
   visible?: boolean
   config?: DanmujiConfig
+  openLiveAuth?: AuthInfo
 }>()
 
 // 默认配置
@@ -78,7 +80,8 @@ const isOBS = computed(() => {
 })
 
 const messageRender = ref()
-const client = await useDanmakuClient().initOpenlive()
+const danmakuClient = useDanmakuClient()
+const client = danmakuClient.connected ? danmakuClient : await danmakuClient.initOpenlive(props.openLiveAuth)
 const pronunciationConverter = new pronunciation.PronunciationConverter()
 const accountInfo = useAccount()
 

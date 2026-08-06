@@ -3,6 +3,7 @@ import { NSpin } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
+import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { useOBSNotification } from '@/store/useOBSNotification'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
@@ -14,6 +15,7 @@ const accountInfo = useAccount()
 const _obsNotification = useOBSNotification()
 
 const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : window.$route.query.code?.toString()
+const openLiveAuth = accountInfo.value.id ? undefined : (window.$route.query as unknown as AuthInfo)
 
 const transparentTargets = [
   () => document.documentElement,
@@ -88,6 +90,7 @@ onUnmounted(() => {
             :active
             :visible
             :code="code"
+            :open-live-auth="openLiveAuth"
           />
           <template #fallback>
             <NSpin show />

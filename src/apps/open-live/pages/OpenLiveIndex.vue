@@ -24,12 +24,12 @@ const accountInfo = useAccount()
     >
       <OpenLivePageHeader
         title="开放平台"
-        description="弹幕抽奖、点歌、排队与读弹幕（基于开放平台连接）"
+        description="直播互动、弹幕姬与创作工具"
       />
     </NCard>
 
     <NGrid
-      cols="1 s:2 l:4"
+      cols="1 s:2 l:3"
       responsive="screen"
       :x-gap="12"
       :y-gap="12"
@@ -108,6 +108,46 @@ const accountInfo = useAccount()
               size="small"
               block
               @click="$router.push({ name: 'open-live-speech', query: $route.query })"
+            >
+              前往使用
+            </NButton>
+          </template>
+        </NCard>
+      </NGi>
+      <NGi>
+        <NCard
+          hoverable
+          bordered
+          size="small"
+          title="弹幕姬"
+        >
+          <NText depth="3"> 实时展示弹幕、礼物、舰长与醒目留言，可直接调整样式和过滤规则。 </NText>
+          <template #footer>
+            <NButton
+              type="primary"
+              size="small"
+              block
+              @click="$router.push({ name: 'open-live-danmuji', query: $route.query })"
+            >
+              前往使用
+            </NButton>
+          </template>
+        </NCard>
+      </NGi>
+      <NGi>
+        <NCard
+          hoverable
+          bordered
+          size="small"
+          title="直播工具箱"
+        >
+          <NText depth="3"> 图片、音视频、封面、二维码、OCR 等工具，无需登录即可在浏览器中使用。 </NText>
+          <template #footer>
+            <NButton
+              type="primary"
+              size="small"
+              block
+              @click="$router.push({ name: 'open-live-tools', query: $route.query })"
             >
               前往使用
             </NButton>

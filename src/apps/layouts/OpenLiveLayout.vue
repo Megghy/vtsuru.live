@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent' // 引入 Fluent UI 图标
-import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5' // 引入 Ionicons 图标
+import { ChatbubblesOutline, GridOutline, Moon, MusicalNote, Sunny } from '@vicons/ionicons5' // 引入 Ionicons 图标
 import { useElementSize } from '@vueuse/core' // 引入 VueUse 组合式函数
 import {
   NAlert,
@@ -26,7 +26,7 @@ import {
   useMessage,
 } from 'naive-ui'
 // 引入 Naive UI 组件
-import { computed, h, onMounted, ref } from 'vue' // 引入 Vue 相关 API
+import { computed, h, ref, watch } from 'vue' // 引入 Vue 相关 API
 import { RouterLink, useRoute, useRouter } from 'vue-router' // 引入 Vue Router 相关 API
 
 import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
@@ -52,72 +52,114 @@ const { width: siderWidth } = useElementSize(sider) // 实时获取侧边栏宽�
 // -- 认证与连接状态 --
 const authInfo = ref<AuthInfo>() // 存储从路由查询参数获取的认证信息
 const danmakuClientError = ref<string>() // 存储弹幕客户端初始化错误信息
+const needsOpenLiveAuth = computed(() => route.meta.openLiveAuth !== false)
+const routeComponentProps = computed(() =>
+  needsOpenLiveAuth.value
+    ? {
+        roomInfo: danmakuClient.authInfo,
+        code: authInfo.value?.Code,
+        openLiveAuth: authInfo.value,
+      }
+    : {},
+)
 
 // -- 菜单配置 --
 // 定义菜单项, 使用 h 函数渲染 RouterLink 以实现路由跳转
-const menuOptions = computed(() => [
-  // 改为 computed 以便将来可能动态修改
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'open-live-lottery',
-            query: route.query, // 保留查询参数
+const menuOptions = computed(() =>
+  [
+    // 改为 computed 以便将来可能动态修改
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'open-live-lottery',
+              query: route.query, // 保留查询参数
+            },
           },
-        },
-        { default: () => '弹幕抽奖' },
-      ),
-    key: 'open-live-lottery',
-    icon: renderIcon(Lottery24Filled),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'open-live-live-request',
-            query: route.query,
+          { default: () => '弹幕抽奖' },
+        ),
+      key: 'open-live-lottery',
+      icon: renderIcon(Lottery24Filled),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'open-live-live-request',
+              query: route.query,
+            },
           },
-        },
-        { default: () => '弹幕点歌' }, // 优化名称
-      ),
-    key: 'open-live-live-request',
-    icon: renderIcon(MusicalNote),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'open-live-queue',
-            query: route.query,
+          { default: () => '弹幕点歌' }, // 优化名称
+        ),
+      key: 'open-live-live-request',
+      icon: renderIcon(MusicalNote),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'open-live-queue',
+              query: route.query,
+            },
           },
-        },
-        { default: () => '弹幕排队' }, // 优化名称
-      ),
-    key: 'open-live-queue',
-    icon: renderIcon(PeopleQueue24Filled),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'open-live-speech',
-            query: route.query,
+          { default: () => '弹幕排队' }, // 优化名称
+        ),
+      key: 'open-live-queue',
+      icon: renderIcon(PeopleQueue24Filled),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'open-live-speech',
+              query: route.query,
+            },
           },
-        },
-        { default: () => '弹幕朗读' }, // 优化名称
-      ),
-    key: 'open-live-speech',
-    icon: renderIcon(TabletSpeaker24Filled),
-  },
-])
+          { default: () => '弹幕朗读' }, // 优化名称
+        ),
+      key: 'open-live-speech',
+      icon: renderIcon(TabletSpeaker24Filled),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'open-live-danmuji',
+              query: route.query,
+            },
+          },
+          { default: () => '弹幕姬' },
+        ),
+      key: 'open-live-danmuji',
+      icon: renderIcon(ChatbubblesOutline),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'open-live-tools',
+              query: route.query,
+            },
+          },
+          { default: () => '直播工具箱' },
+        ),
+      key: 'open-live-tools',
+      icon: renderIcon(GridOutline),
+    },
+  ].filter((item) => authInfo.value?.Code || item.key === 'open-live-tools'),
+)
 
 // -- 工具函数 --
 /**
@@ -136,42 +178,35 @@ const isDarkValue = computed({
   },
 })
 
-// -- 生命周期钩子 --
-onMounted(async () => {
-  // 1. 从路由查询参数解析认证信息
-  authInfo.value = route.query as unknown as AuthInfo
+watch(
+  [needsOpenLiveAuth, () => route.query.Code, () => route.query.Mid, () => route.query.Caller],
+  async () => {
+    authInfo.value = route.query as unknown as AuthInfo
+    danmakuClientError.value = undefined
 
-  // 2. 检查是否存在必要的 Code 参数
-  if (authInfo.value?.Code) {
+    if (!needsOpenLiveAuth.value) return
+    if (!authInfo.value.Code) {
+      authInfo.value = undefined
+      message.error('无效访问: 缺少必要的认证参数 (Code)。请通过幻星平台获取链接。')
+      return
+    }
+
     try {
-      // 3. 初始化开放平台弹幕客户端
-      await danmakuClient.initOpenlive(authInfo.value) // 改为 await 处理可能的异步初始化
-      // 可选: 初始化成功提示
-      // message.success('弹幕客户端连接中...')
-    } catch (error: any) {
-      // 4. 处理初始化错误
+      await danmakuClient.initOpenlive(authInfo.value)
+    } catch (error) {
       console.error('Danmaku client initialization failed:', error)
-      danmakuClientError.value = `弹幕客户端初始化失败: ${error.message || '未知错误'}`
+      danmakuClientError.value = `弹幕客户端初始化失败: ${error instanceof Error ? error.message : '未知错误'}`
       message.error(danmakuClientError.value)
     }
-  } else {
-    // 5. 如果缺少 Code, 显示错误信息
-    message.error('无效访问: 缺少必要的认证参数 (Code)。请通过幻星平台获取链接。')
-    // authInfo 清空, 触发 v-if 显示错误页
-    authInfo.value = undefined
-  }
-})
-
-// onUnmounted 清理 (如果需要)
-// onUnmounted(() => {
-//   danmakuClient.dispose(); // 示例: 如果有清理逻辑
-// })
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <!-- 情况一: 缺少认证信息, 显示错误提示页 -->
   <NLayoutContent
-    v-if="!authInfo?.Code"
+    v-if="needsOpenLiveAuth && !authInfo?.Code"
     style="height: 100vh; display: flex; align-items: center; justify-content: center"
     content-style="padding: 24px;"
   >
@@ -204,6 +239,7 @@ onMounted(async () => {
   >
     <!-- 顶部导航栏 -->
     <NLayoutHeader
+      class="open-live-header"
       style="height: 60px; display: flex; align-items: center; padding: 0 20px"
       bordered
     >
@@ -214,7 +250,7 @@ onMounted(async () => {
           <NButton
             text
             style="text-decoration: none"
-            @click="router.push({ name: 'open-live-index', query: route.query })"
+            @click="router.push({ name: authInfo?.Code ? 'open-live-index' : 'open-live-tools', query: route.query })"
           >
             <NText
               strong
@@ -248,6 +284,7 @@ onMounted(async () => {
           >
             <!-- 连接状态指示 -->
             <NTag
+              v-if="needsOpenLiveAuth"
               :type="danmakuClient.phase === 'error' ? 'error' : danmakuClient.connected ? 'success' : 'warning'"
               round
               size="small"
@@ -315,7 +352,7 @@ onMounted(async () => {
           </NFlex>
         </div>
         <NMenu
-          :default-value="$route.name?.toString()"
+          :value="($route.meta.parent ?? $route.name)?.toString()"
           :collapsed-width="64"
           :collapsed-icon-size="22"
           :options="menuOptions"
@@ -359,7 +396,7 @@ onMounted(async () => {
           <RouterView v-slot="{ Component, route: viewRoute }">
             <!-- 情况一: 认证信息加载中或连接中 -->
             <div
-              v-if="!danmakuClient.authInfo && !danmakuClientError"
+              v-if="needsOpenLiveAuth && !danmakuClient.authInfo && !danmakuClientError"
               style="display: flex; justify-content: center; align-items: center; height: 80%"
             >
               <NSpin size="large">
@@ -367,13 +404,12 @@ onMounted(async () => {
               </NSpin>
             </div>
             <!-- 情况二: 加载/连接成功, 渲染对应页面 -->
-            <KeepAlive v-else-if="Component && danmakuClient.authInfo">
+            <KeepAlive v-else-if="Component && (!needsOpenLiveAuth || danmakuClient.authInfo)">
               <template v-if="viewRoute.meta.pageContainer === 'none'">
                 <component
                   :is="Component"
                   :key="viewRoute.fullPath.split('#')[0]"
-                  :room-info="danmakuClient.authInfo"
-                  :code="authInfo.Code"
+                  v-bind="routeComponentProps"
                 />
               </template>
               <div
@@ -388,8 +424,7 @@ onMounted(async () => {
                 <component
                   :is="Component"
                   :key="viewRoute.fullPath.split('#')[0]"
-                  :room-info="danmakuClient.authInfo"
-                  :code="authInfo.Code"
+                  v-bind="routeComponentProps"
                 />
               </div>
             </KeepAlive>
@@ -449,11 +484,12 @@ onMounted(async () => {
 }
 /* 优化 NPageHeader 在窄屏幕下的表现 (可选) */
 @media (max-width: 768px) {
-  .n-page-header-wrapper {
+  .open-live-header {
     padding: 0 10px !important; /* 减少内边距 */
   }
-  .n-page-header__title {
-    font-size: 1.2rem !important; /* 缩小标题字号 */
+
+  :deep(.n-page-header__subtitle) {
+    display: none;
   }
 }
 

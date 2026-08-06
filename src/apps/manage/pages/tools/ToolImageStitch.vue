@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import './tool-page.css'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import {
@@ -439,7 +440,7 @@ onBeforeUnmount(clearAll)
 
           <div
             ref="dropZoneRef"
-            class="preview-shell manage-checkerboard"
+            class="preview-shell tool-checkerboard"
             :class="{ active: isOverDropZone }"
             @click.self="openFilePicker()"
           >

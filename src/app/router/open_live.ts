@@ -1,5 +1,7 @@
 import { RouterView } from 'vue-router'
 
+import { createToolRoutes } from './toolRoutes'
+
 export default {
   path: '/open-live',
   name: 'open-live',
@@ -50,5 +52,25 @@ export default {
         pageWidth: 'md',
       },
     },
+    {
+      path: 'danmuji',
+      name: 'open-live-danmuji',
+      component: async () => import('@/apps/manage/pages/DanmujiManageView.vue'),
+      meta: {
+        title: '弹幕姬',
+        pageWidth: 'full',
+      },
+    },
+    {
+      path: 'tools',
+      name: 'open-live-tools',
+      component: async () => import('@/apps/manage/pages/tools/ToolsDashboardView.vue'),
+      meta: {
+        title: '直播工具箱',
+        pageWidth: 'xl',
+        openLiveAuth: false,
+      },
+    },
+    ...createToolRoutes('open-live'),
   ],
 }

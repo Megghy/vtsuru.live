@@ -21,7 +21,7 @@ import {
   NTabs,
   useMessage,
 } from 'naive-ui'
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
@@ -30,14 +30,30 @@ import type { DanmujiConfig } from '@/apps/obs/pages/DanmujiOBS.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
+import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { isDarkMode } from '@/shared/utils'
+
+const props = defineProps<{
+  openLiveAuth?: AuthInfo
+}>()
 
 const accountInfo = useAccount()
 const css = usePersistedStorage('danmuji-css', defaultDanmujiCss)
 const danmujiObsRef = ref<InstanceType<typeof DanmujiOBS> | null>(null)
 const message = useMessage()
 const windowWidth = useWindowSize().width
+const obsUrl = computed(() => {
+  if (accountInfo.value?.id) return `${CURRENT_HOST}obs/danmuji?token=${accountInfo.value.token}`
+  if (!props.openLiveAuth?.Code) return ''
+
+  const query = new URLSearchParams()
+  for (const key of ['Timestamp', 'Code', 'Mid', 'Caller', 'CodeSign'] as const) {
+    const value = props.openLiveAuth[key]
+    if (value) query.set(key, value)
+  }
+  return `${CURRENT_HOST}obs/danmuji?${query}`
+})
 
 const testFormData = reactive({
   type: EventDataTypes.Message,
@@ -510,8 +526,7 @@ async function downloadConfigFromServer() {
 
 // 组件挂载后添加初始测试数据
 onMounted(async () => {
-  // 先尝试从服务器获取配置
-  await downloadConfigFromServer()
+  if (accountInfo.value?.id) await downloadConfigFromServer()
 
   // 添加初始测试数据
   addInitialTestMessages()
@@ -552,7 +567,7 @@ async function copyText(text: string, successMessage: string) {
 }
 
 function copyObsUrl() {
-  return copyText(`${CURRENT_HOST}obs/danmuji?token=${accountInfo.value.token}`, 'OBS 地址已复制到剪贴板')
+  return copyText(obsUrl.value, 'OBS 地址已复制到剪贴板')
 }
 
 function copyCss() {
@@ -595,7 +610,7 @@ function copyCss() {
                   size="small"
                   readonly
                   :allow-input="() => false"
-                  :value="`${CURRENT_HOST}obs/danmuji?token=${accountInfo.token}`"
+                  :value="obsUrl"
                   style="flex: 1; max-width: 400px"
                 >
                   <template #suffix>
@@ -714,6 +729,7 @@ function copyCss() {
                         <span>基本设置</span>
                         <NFlex>
                           <NButton
+                            v-if="accountInfo?.id"
                             size="small"
                             type="primary"
                             secondary
@@ -1166,6 +1182,7 @@ function copyCss() {
                 style="height: 100%; width: 100%"
                 :custom-css="css"
                 :config="danmujiConfig"
+                :open-live-auth="openLiveAuth"
               />
             </div>
           </div>

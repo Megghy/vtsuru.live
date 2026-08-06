@@ -1,5 +1,7 @@
 import { RouterView } from 'vue-router'
 
+import { createToolRoutes } from './toolRoutes'
+
 export default // 管理页面
 {
   path: '/manage',
@@ -249,116 +251,7 @@ export default // 管理页面
         pageWidth: 'xl',
       },
     },
-    {
-      path: 'tools/dynamic-nine-grid',
-      name: 'ManageToolDynamicNineGrid',
-      component: async () => import('@/apps/manage/pages/tools/ToolDynamicNineGrid.vue'),
-      meta: {
-        title: '动态九图生成器',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/image-stitch',
-      name: 'ManageToolImageStitch',
-      component: async () => import('@/apps/manage/pages/tools/ToolImageStitch.vue'),
-      meta: {
-        title: '图片拼接',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/media-convert',
-      name: 'ManageToolMediaConvert',
-      component: async () => import('@/apps/manage/pages/tools/ToolMediaConvert.vue'),
-      meta: {
-        title: '音视频转换/压缩',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/cover-maker',
-      name: 'ManageToolCoverMaker',
-      component: async () => import('@/apps/manage/pages/tools/ToolCoverMaker.vue'),
-      meta: {
-        title: '直播封面生成器',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/text-to-image',
-      name: 'ManageToolTextToImage',
-      component: async () => import('@/apps/manage/pages/tools/ToolTextToImage.vue'),
-      meta: {
-        title: '文字转图片',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/sticker-maker',
-      name: 'ManageToolStickerMaker',
-      component: async () => import('@/apps/manage/pages/tools/ToolStickerMaker.vue'),
-      meta: {
-        title: '表情包制作',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/image-compress',
-      name: 'ManageToolImageCompress',
-      component: async () => import('@/apps/manage/pages/tools/ToolImageCompress.vue'),
-      meta: {
-        title: '图片压缩',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/qrcode',
-      name: 'ManageToolQrcode',
-      component: async () => import('@/apps/manage/pages/tools/ToolQrcode.vue'),
-      meta: {
-        title: '二维码生成',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/remove-bg',
-      name: 'tools-remove-bg',
-      component: async () => import('@/apps/manage/pages/tools/ToolRemoveBg.vue'),
-      meta: {
-        title: '去背景',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/ocr',
-      name: 'ManageToolOcr',
-      component: async () => import('@/apps/manage/pages/tools/ToolOcr.vue'),
-      meta: {
-        title: '文字识别 (OCR)',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
-    {
-      path: 'tools/translate',
-      name: 'ManageToolTranslate',
-      component: async () => import('@/apps/manage/pages/tools/ToolTranslate.vue'),
-      meta: {
-        title: '翻译工具',
-        parent: 'manage-tools-dashboard',
-        pageWidth: 'xl',
-      },
-    },
+    ...createToolRoutes('manage'),
     {
       path: 'user-page-builder',
       name: 'manage-userPageBuilder',

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import './tool-page.css'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import { NButton, NCard, NFlex, NProgress, NSelect, NSlider, NSpin, NSwitch, NText, NTooltip } from 'naive-ui'
@@ -316,7 +317,7 @@ function download() {
               </NText>
               <img
                 :src="resultUrl"
-                class="preview-img manage-checkerboard"
+                class="preview-img tool-checkerboard"
               />
             </div>
           </div>

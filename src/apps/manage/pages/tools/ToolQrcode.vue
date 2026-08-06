@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { saveAs } from 'file-saver'
+import './tool-page.css'
 import { snapdom } from '@zumer/snapdom'
+import { saveAs } from 'file-saver'
 import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NText } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
@@ -176,7 +177,7 @@ async function download() {
 
       <div
         ref="qrContainer"
-        class="qr-preview manage-checkerboard"
+        class="qr-preview tool-checkerboard"
       >
         <QrcodeVue
           v-if="text"

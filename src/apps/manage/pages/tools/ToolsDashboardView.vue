@@ -15,19 +15,21 @@ import {
   VideocamOutline as CoverIcon,
 } from '@vicons/ionicons5'
 import { NGrid, NGridItem, NIcon, NText, NTooltip } from 'naive-ui'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
+import { getToolRouteName } from '@/app/router/toolRoutes'
+import type { ToolKey } from '@/app/router/toolRoutes'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
+const route = useRoute()
 const router = useRouter()
 
 type RunMode = 'local' | 'cloud' | 'both'
 
 interface ToolDefinition {
-  name: string
+  name: ToolKey
   displayName: string
   description: string
-  routeName: string
   icon?: any
   mode: RunMode
 }
@@ -45,7 +47,6 @@ const categories: ToolCategory[] = [
         name: 'MediaConvert',
         displayName: '音视频转换/压缩',
         description: '基于本地 FFmpeg 转换格式、压缩体积、截取片段和提取音频。',
-        routeName: 'ManageToolMediaConvert',
         icon: MediaIcon,
         mode: 'local',
       },
@@ -58,7 +59,6 @@ const categories: ToolCategory[] = [
         name: 'DynamicNineGrid',
         displayName: '动态九图生成器',
         description: '快速创建用于B站动态的九宫格图片，支持自定义拼接。',
-        routeName: 'ManageToolDynamicNineGrid',
         icon: NineGridIcon,
         mode: 'local',
       },
@@ -66,7 +66,6 @@ const categories: ToolCategory[] = [
         name: 'ImageStitch',
         displayName: '图片拼接',
         description: '可视化拖拽排序，生成长图、横向对比图和多列网格拼图。',
-        routeName: 'ManageToolImageStitch',
         icon: StitchIcon,
         mode: 'local',
       },
@@ -74,7 +73,6 @@ const categories: ToolCategory[] = [
         name: 'ImageCompress',
         displayName: '图片压缩/格式转换',
         description: '一站式处理图片尺寸和格式，适配B站各处限制。',
-        routeName: 'ManageToolImageCompress',
         icon: CompressIcon,
         mode: 'local',
       },
@@ -82,7 +80,6 @@ const categories: ToolCategory[] = [
         name: 'StickerMaker',
         displayName: '表情包制作',
         description: '裁剪、加文字、调整尺寸，导出符合B站表情包规格。',
-        routeName: 'ManageToolStickerMaker',
         icon: StickerIcon,
         mode: 'local',
       },
@@ -90,7 +87,6 @@ const categories: ToolCategory[] = [
         name: 'RemoveBg',
         displayName: '去背景',
         description: '通过 AI 在本地去除图片背景',
-        routeName: 'tools-remove-bg',
         icon: RemoveBgIcon,
         mode: 'local',
       },
@@ -103,7 +99,6 @@ const categories: ToolCategory[] = [
         name: 'CoverMaker',
         displayName: '直播封面生成器',
         description: '模板化制作直播封面，预设B站推荐尺寸，支持文字和立绘合成。',
-        routeName: 'ManageToolCoverMaker',
         icon: CoverIcon,
         mode: 'local',
       },
@@ -111,7 +106,6 @@ const categories: ToolCategory[] = [
         name: 'TextToImage',
         displayName: '文字转图片',
         description: '长文转图片发动态，自定义字体、背景和排版样式。',
-        routeName: 'ManageToolTextToImage',
         icon: TextIcon,
         mode: 'local',
       },
@@ -124,7 +118,6 @@ const categories: ToolCategory[] = [
         name: 'Qrcode',
         displayName: '二维码生成',
         description: '生成直播间、粉丝群等链接的二维码图片。',
-        routeName: 'ManageToolQrcode',
         icon: QrcodeIcon,
         mode: 'local',
       },
@@ -132,7 +125,6 @@ const categories: ToolCategory[] = [
         name: 'Ocr',
         displayName: '文字识别 (OCR)',
         description: '基于 PP-OCRv5，从图片中提取文字，支持中英日韩等多语言。',
-        routeName: 'ManageToolOcr',
         icon: OcrIcon,
         mode: 'local',
       },
@@ -140,7 +132,6 @@ const categories: ToolCategory[] = [
         name: 'Translate',
         displayName: '翻译工具',
         description: '支持浏览器内置翻译和云端 AI 翻译，中英日韩等多语言互译。',
-        routeName: 'ManageToolTranslate',
         icon: TranslateIcon,
         mode: 'both',
       },
@@ -148,8 +139,12 @@ const categories: ToolCategory[] = [
   },
 ]
 
-function navigateToTool(routeName: string) {
-  router.push({ name: routeName })
+function navigateToTool(key: ToolKey) {
+  const isOpenLive = route.path.startsWith('/open-live')
+  router.push({
+    name: getToolRouteName(key, isOpenLive ? 'open-live' : 'manage'),
+    query: isOpenLive ? route.query : undefined,
+  })
 }
 </script>
 
@@ -183,7 +178,7 @@ function navigateToTool(routeName: string) {
         >
           <div
             class="tool-card"
-            @click="navigateToTool(tool.routeName)"
+            @click="navigateToTool(tool.name)"
           >
             <div class="tool-card__icon">
               <NIcon
