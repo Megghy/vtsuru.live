@@ -71,12 +71,8 @@ export default abstract class DanmakuEventEmitter {
 
   /** 触发 'all' 事件监听器 (两套系统都触发) */
   public onRawMessage = (command: any) => {
-    try {
-      this.eventsAsModel.all?.forEach((listener) => listener(command))
-      this.eventsRaw.all?.forEach((listener) => listener(command))
-    } catch (err) {
-      console.error(`[${this.type}] 处理 'all' 事件监听器时出错:`, err, command)
-    }
+    this.notifyListeners('model:all', this.eventsAsModel.all, command)
+    this.notifyListeners('raw:all', this.eventsRaw.all, command)
   }
 
   /**
@@ -85,9 +81,20 @@ export default abstract class DanmakuEventEmitter {
    * 无需像 B站 client 那样解析原始命令。
    */
   protected emitModel(eventName: Exclude<keyof ModelEventListeners, 'all'>, data: EventModel) {
-    ;(this.eventsRaw[eventName] as ((d: EventModel) => void)[]).forEach((fn) => fn(data))
-    ;(this.eventsAsModel[eventName] as ((d: EventModel) => void)[]).forEach((fn) => fn(data))
-    this.eventsAsModel.all?.forEach((fn) => fn(data))
+    this.notifyListeners(`raw:${eventName}`, this.eventsRaw[eventName], data)
+    this.notifyListeners(`model:${eventName}`, this.eventsAsModel[eventName], data)
+    this.notifyListeners('raw:all', this.eventsRaw.all, data)
+    this.notifyListeners('model:all', this.eventsAsModel.all, data)
+  }
+
+  protected notifyListeners(eventName: string, listeners: readonly ((...args: any[]) => void)[], ...args: any[]) {
+    for (const listener of listeners) {
+      try {
+        listener(...args)
+      } catch (error) {
+        console.error(`[${this.type}] ${eventName} 监听器执行失败:`, error, args[0])
+      }
+    }
   }
 
   // --- 事件系统 1: onEvent/offEvent (EventModel) ---

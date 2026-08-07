@@ -55,7 +55,11 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
   function dispatch(eventName: DanmakuEventName, data: EventModel) {
     for (const [connId, events] of subscriptions) {
       if (!events.has(eventName)) continue
-      conns.get(connId)?.rpc.onDanmakuEvent(eventName, data)
+      try {
+        conns.get(connId)?.rpc.onDanmakuEvent(eventName, data)
+      } catch (error) {
+        console.error(`[FetcherRpcServer] 向连接 ${connId} 推送 ${eventName} 失败:`, error)
+      }
     }
   }
 

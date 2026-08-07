@@ -356,8 +356,20 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   }
 
   function emitLocalEvent(eventName: EventName, data: EventModel, command?: any) {
-    for (const listener of modelListeners[eventName]) listener(data, command)
-    for (const listener of modelListeners.all) listener(data)
+    for (const listener of modelListeners[eventName]) {
+      try {
+        listener(data, command)
+      } catch (error) {
+        console.error(`[DanmakuClient] ${eventName} 监听器执行失败:`, error, data)
+      }
+    }
+    for (const listener of modelListeners.all) {
+      try {
+        listener(data)
+      } catch (error) {
+        console.error('[DanmakuClient] all 监听器执行失败:', error, data)
+      }
+    }
   }
 
   async function restartConnection(reason: string) {

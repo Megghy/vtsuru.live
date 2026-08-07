@@ -8,6 +8,7 @@ import { EventDataTypes } from '@/api/api-models'
 import ClientDanmakuItem from '@/apps/client/components/danmaku/ClientDanmakuItem.vue'
 import type { DanmakuWindowBCData, DanmakuWindowSettings } from '@/apps/client/store/useDanmakuWindow'
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'
+import { getDanmakuWindowFilterType, removeDeletedSuperChats } from '@/shared/utils/danmakuWindowEvents'
 // 添加TransitionGroup导入
 
 type TempDanmakuType = EventModel & {
@@ -176,16 +177,13 @@ function scheduleBatchUpdate() {
 function addDanmaku(data: EventModel) {
   if (!setting.value) return
 
-  // Map EventDataTypes enum values to the string values used in filterTypes
-  const typeToStringMap: { [key in EventDataTypes]?: string } = {
-    [EventDataTypes.Message]: 'Message',
-    [EventDataTypes.Gift]: 'Gift',
-    [EventDataTypes.SC]: 'SC',
-    [EventDataTypes.Guard]: 'Guard',
-    [EventDataTypes.Enter]: 'Enter',
+  if (data.type === EventDataTypes.SCDel) {
+    danmakuList.value = removeDeletedSuperChats(danmakuList.value, data)
+    pendingDanmakuQueue.value = removeDeletedSuperChats(pendingDanmakuQueue.value, data)
+    return
   }
 
-  const typeStr = typeToStringMap[data.type]
+  const typeStr = getDanmakuWindowFilterType(data.type)
 
   // Check if the type should be filtered out
   if (!typeStr || !setting.value.filterTypes.includes(typeStr)) {

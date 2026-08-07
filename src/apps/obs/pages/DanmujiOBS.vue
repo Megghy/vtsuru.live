@@ -6,6 +6,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { DownloadConfig, GetConfigHash, useAccount } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
+import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { QueryGetAPI } from '@/api/query'
 // @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'
@@ -218,7 +219,7 @@ function onAddSuperChat(event: EventModel, _command: unknown) {
   }
 
   const message = {
-    id: `${event.type}-${new Date().getTime()}-${event.uid}`,
+    id: event.id === undefined ? `${event.type}-${new Date().getTime()}-${event.uid}` : String(event.id),
     type: constants.MESSAGE_TYPE_SUPER_CHAT,
     avatarUrl: event.uface,
     authorName: event.uname,
@@ -234,27 +235,10 @@ function onAddSuperChat(event: EventModel, _command: unknown) {
 /**
  * 处理SC撤回
  */
-function onDelSuperChat(event: EventModel, command: unknown) {
-  let messageIdsToDelete: string[] = []
-
-  // 尝试从command中获取需要删除的SC ID
-  if (command && typeof command === 'object' && 'data' in command) {
-    const commandData = command.data
-    if (commandData && typeof commandData === 'object') {
-      if ('message_ids' in commandData && Array.isArray(commandData.message_ids)) {
-        messageIdsToDelete = commandData.message_ids.map((id) => String(id))
-      } else if ('message_id' in commandData) {
-        messageIdsToDelete.push(String(commandData.message_id))
-      }
-    }
-  }
-  // 尝试使用消息内容作为ID
-  else if (event.msg) {
-    messageIdsToDelete.push(event.msg)
-  }
-
-  if (messageIdsToDelete.length > 0) {
-    console.log(`正在删除SC，ID: ${messageIdsToDelete.join(', ')}`)
+function onDelSuperChat(event: EventModel, _command: unknown) {
+  const messageIdsToDelete = getDeletedSuperChatIds(event)
+  if (messageIdsToDelete.size > 0) {
+    console.log(`正在删除SC，ID: ${[...messageIdsToDelete].join(', ')}`)
     messageIdsToDelete.forEach((id) => messageRender.value.deleteMessage(id))
   } else {
     console.warn('收到删除SC事件但无法确定要删除的消息ID', event, command)

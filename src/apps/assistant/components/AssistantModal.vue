@@ -17,9 +17,11 @@ const drawerVisible = ref(false)
 /** 当前支持的功能, 在帮助气泡中展示 */
 const features = [
   { title: '日程管理', desc: '用自然语言增加 / 修改 / 删除直播日程, 生成方案卡片待你确认' },
-  { title: '数据查询', desc: '随时问主播信息、积分商城、舰长情况、近期直播数据与粉丝趋势' },
+  { title: '数据查询', desc: '随时问主播信息、积分商城、舰长情况、点歌队列、近期直播数据与粉丝趋势' },
   { title: '提问箱回复', desc: '帮你起草棉花糖提问的回复, 确认后发布' },
+  { title: '上舰记录', desc: '查看最近的上舰记录, 采集漏报时帮你补录, 误录可删除' },
   { title: '视频征集 / 积分商品', desc: '发起视频征集表、上架积分商城商品, 生成方案待你确认' },
+  { title: '展示页概览', desc: '读取你已发布的展示页布局, 给出调整建议' },
   { title: '图片识别', desc: '上传或粘贴日程截图, 自动识别其中的日期、时间与标题' },
   { title: '上下文感知', desc: '结合当前页面与时间自动换算"下周三""这周末"等相对日期' },
   { title: '安全确认', desc: '所有变更都需你点击确认后才会执行, 不会直接改动数据' },
@@ -62,7 +64,7 @@ function onClose() {
         <NPopover
           trigger="hover"
           placement="bottom-start"
-          style="max-width: 280px"
+          style="max-width: 300px"
         >
           <template #trigger>
             <NButton

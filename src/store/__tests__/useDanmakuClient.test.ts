@@ -158,6 +158,30 @@ describe('useDanmakuClient event sharing', () => {
     expect(startMock).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps later listeners and cross-page readers alive when one listener throws', async () => {
+    const owner = await createStore()
+    await initUpstream(owner)
+    const laterListener = vi.fn()
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    owner.onEvent('gift', () => {
+      throw new Error('broken consumer')
+    })
+    owner.onEvent('gift', laterListener)
+
+    const reader = await createStore()
+    const remoteListener = vi.fn()
+    reader.onEvent('gift', remoteListener)
+    const ensurePromise = reader.ensureOpenlive({ connect: false })
+    await vi.advanceTimersByTimeAsync(600)
+    await ensurePromise
+
+    const event = makeEvent({ msg: '小花花' })
+    owner.danmakuClient.eventsAsModel.gift[0](event)
+
+    expect(laterListener).toHaveBeenCalledWith(event, undefined)
+    expect(remoteListener).toHaveBeenCalledWith(event, undefined)
+  })
+
   it('receives gift events from another local page without starting a new client', async () => {
     const owner = await createStore()
     await initUpstream(owner)

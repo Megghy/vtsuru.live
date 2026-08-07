@@ -118,7 +118,7 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     lastSavedSnapshot: core.lastSavedSnapshot,
     error: core.error,
     jsonSanitizedNotified,
-    validateAll: validateUserPagesSettings,
+    validateAll: validateRenderableUserPagesSettings,
     saveDraft: async () => persistence.saveDraftInternal(true),
     notifyError: message.error,
   })

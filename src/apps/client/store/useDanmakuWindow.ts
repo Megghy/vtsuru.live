@@ -296,6 +296,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     danmakuClient.onEvent('guard', (event) => onGetDanmakus(event))
     danmakuClient.onEvent('enter', (event) => onGetDanmakus(event))
     danmakuClient.onEvent('scDel', (event) => onGetDanmakus(event))
+    danmakuClient.onEvent('like', (event) => onGetDanmakus(event))
 
     watch(
       () => danmakuWindowSetting,

@@ -69,6 +69,9 @@ export default class OpenLiveClient extends BaseDanmakuClient {
           case 'LIVE_OPEN_PLATFORM_LIVE_ROOM_ENTER':
             this.onEnter(data)
             break
+          case 'LIVE_OPEN_PLATFORM_LIKE':
+            this.onLike(data)
+            break
           case 'LIVE_OPEN_PLATFORM_SUPER_CHAT_DEL':
             this.onScDel(data)
             break
@@ -329,8 +332,30 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     })
   }
 
-  public onLike(_command: any): void {
-    // OpenLiveClient does not support like events
+  public onLike(command: any): void {
+    const data = command.data as LikeInfo
+    this.eventsRaw.like.forEach((listener) => listener(data, command))
+    this.eventsAsModel.like.forEach((listener) => {
+      listener(
+        {
+          type: EventDataTypes.Like,
+          uname: data.uname,
+          uid: data.uid,
+          msg: data.like_text,
+          price: 0,
+          num: data.like_count,
+          time: data.timestamp,
+          guard_level: data.guard_level,
+          fans_medal_level: data.fans_medal_level,
+          fans_medal_name: data.fans_medal_name,
+          fans_medal_wearing_status: data.fans_medal_wearing_status,
+          uface: data.uface,
+          open_id: data.open_id,
+          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+        },
+        command,
+      )
+    })
   }
 
   public onScDel(command: any): void {
@@ -341,7 +366,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     this.eventsAsModel.scDel?.forEach((d) => {
       d(
         {
-          type: EventDataTypes.Enter,
+          type: EventDataTypes.SCDel,
           uname: '',
           msg: JSON.stringify(data.message_ids),
           price: 0,
@@ -452,7 +477,21 @@ export interface EnterInfo {
   timestamp: number
   room_id: number
 }
-// 假设的 SC 删除事件原始信息结构 (需要根据实际情况调整)
+export interface LikeInfo {
+  uid: number
+  open_id: string
+  uname: string
+  uface: string
+  timestamp: number
+  like_text: string
+  like_count: number
+  fans_medal_wearing_status: boolean
+  guard_level: number
+  fans_medal_name: string
+  fans_medal_level: number
+  msg_id: string
+  room_id: number
+}
 export interface SCDelInfo {
   room_id: number
   message_ids: number[] // 被删除的 SC 的 message_id

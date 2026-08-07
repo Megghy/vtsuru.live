@@ -32,24 +32,44 @@ const SUGGESTION_POOL: Suggestion[] = [
   { text: '帮我看看这周的直播日程', cat: 'schedule' },
   { text: '下周三晚上8点加一场杂谈', cat: 'schedule' },
   { text: '把这周末的直播都改到晚上9点', cat: 'schedule' },
+  { text: '看看这周的日程, 帮我补一场直播', cat: 'schedule' },
   // 数据分析
   { text: '最近30天的粉丝增长怎么样', cat: 'analyze' },
   { text: '分析一下最近7天的直播数据', cat: 'analyze' },
   { text: '这个月收益和上个月比如何', cat: 'analyze' },
   { text: '复盘一下我最近一场直播', cat: 'analyze' },
+  { text: '谁给我打赏最多', cat: 'analyze' },
+  { text: '查一下最近几天大家发了什么弹幕', cat: 'analyze' },
   // 舰长 / 积分
   { text: '看看我的舰长情况', cat: 'point' },
   { text: '积分商城现在有哪些商品', cat: 'point' },
   { text: '有没有待处理的积分兑换订单', cat: 'point' },
+  { text: '有哪些待发货的积分订单', cat: 'point' },
+  { text: '看看观众的积分排行榜', cat: 'point' },
   { text: '帮我上架一个积分新商品', cat: 'point' },
   // 提问箱
   { text: '提问箱里还有哪些没回复的', cat: 'qa' },
   { text: '帮我起草一条提问箱回复', cat: 'qa' },
   // 视频征集
   { text: '发起一个本周视频征集', cat: 'video' },
+  { text: '看看视频征集收到哪些投稿', cat: 'video' },
+  { text: '关闭这周的视频征集', cat: 'video' },
   // 歌单
   { text: '我的歌单里有哪些日语歌', cat: 'song' },
   { text: '帮我往歌单里加几首歌', cat: 'song' },
+  // 上舰记录
+  { text: '看看最近的上舰记录', cat: 'guard' },
+  { text: '帮我补录一条舰长上舰', cat: 'guard' },
+  // 点歌队列
+  { text: '现在点歌队列有什么', cat: 'request' },
+  { text: '今天唱了哪些歌', cat: 'request' },
+  // 展示页
+  { text: '我的主页上有哪些区块', cat: 'page' },
+  { text: '怎么把直播信息加到主页', cat: 'page' },
+  // 设置
+  { text: '把签到基础积分调大一点', cat: 'setting' },
+  { text: '给点歌设置加个冷却时间', cat: 'setting' },
+  { text: '帮我开启直播抽奖功能', cat: 'setting' },
   // 联网
   { text: '帮我查一下这首歌的歌手资料', cat: 'web' },
 ]
@@ -64,7 +84,10 @@ const ROUTE_CATEGORY: Record<string, string> = {
   questionBox: 'qa',
   videoCollect: 'video',
   songList: 'song',
-  musicRequest: 'song',
+  musicRequest: 'request',
+  liveRequest: 'request',
+  event: 'guard',
+  userPageBuilder: 'page',
 }
 
 /** 根据当前页面路由名找出偏好分类 (无匹配返回 null) */
