@@ -21,7 +21,7 @@ const data = {
   msg: 'hello',
 } as EventModel
 
-describe('DanmakuEventEmitter', () => {
+describe('danmaku event emitter', () => {
   it('isolates listener errors and continues every event channel', () => {
     const emitter = new TestEmitter()
     const rawAll = vi.fn()
@@ -38,7 +38,7 @@ describe('DanmakuEventEmitter', () => {
 
     emitter.emit(data)
 
-    expect(modelListener).toHaveBeenCalledWith(data)
+    expect(modelListener).toHaveBeenCalledWith(data, undefined)
     expect(rawAll).toHaveBeenCalledWith(data)
     expect(modelAll).toHaveBeenCalledWith(data)
   })

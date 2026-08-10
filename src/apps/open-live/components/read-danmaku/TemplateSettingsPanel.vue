@@ -2,6 +2,7 @@
 import { Add20Filled, Delete20Filled } from '@vicons/fluent'
 import {
   NButton,
+  NAlert,
   NCheckbox,
   NCollapse,
   NCollapseItem,
@@ -26,6 +27,10 @@ import {
   templateConstants,
   useSpeechService,
 } from '@/store/useSpeechService'
+
+withDefaults(defineProps<{ supportsFollow?: boolean }>(), {
+  supportsFollow: true,
+})
 
 const speechService = useSpeechService()
 const { settings, speechState } = speechService
@@ -150,8 +155,7 @@ function test(type: EventDataTypes) {
     [EventDataTypes.Gift]: { msg: '测试礼物', price: 5, num: 5 },
   }
   Object.assign(data, map[type] ?? {})
-  if (speechState.canSpeech) speechService.addToQueue(data)
-  else speechService.forceSpeak(data)
+  speechService.testEvent(data)
 }
 
 const mockTypeOptions = [
@@ -191,13 +195,21 @@ function fireMock() {
     open_id: '',
     ouid: '',
   }
-  if (speechState.canSpeech) speechService.addToQueue(data)
-  else speechService.forceSpeak(data)
+  speechService.testEvent(data)
 }
 </script>
 
 <template>
   <div class="panel">
+    <NAlert
+      v-if="!supportsFollow"
+      type="warning"
+      size="small"
+      :bordered="false"
+    >
+      开放平台不推送关注事件。关注播报需要使用桌面客户端的直连弹幕源。
+    </NAlert>
+
     <NText
       depth="3"
       style="font-size: 11px"
@@ -238,6 +250,7 @@ function fireMock() {
           >
             <NCheckbox
               :checked="settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents]"
+              :disabled="row.type === EventDataTypes.Follow && !supportsFollow"
               @update:checked="
                 (v: boolean) => (settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] = v)
               "
@@ -257,7 +270,10 @@ function fireMock() {
             size="tiny"
             type="primary"
             tertiary
-            :disabled="!settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents]"
+            :disabled="
+              !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] ||
+              (row.type === EventDataTypes.Follow && !supportsFollow)
+            "
             :loading="speechState.isApiAudioLoading"
             @click.stop="test(row.type)"
           >

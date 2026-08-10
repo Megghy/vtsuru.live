@@ -9,6 +9,10 @@ export interface GiftV2Data {
     level: number
     name: string
   }
+  mysteryBox?: {
+    name: string
+    price: number
+  }
   gifts: {
     id: number
     name: string
@@ -16,6 +20,16 @@ export interface GiftV2Data {
     price: number
     timestamp: number
   }[]
+}
+
+interface DecodedGiftV2 {
+  uid: number
+  uname: string
+  face: string
+  guardLevel: number
+  medal?: { level: number; medalName: string }
+  mysteryBox?: { boxName: string; boxPrice: number }
+  giftInfo: Array<{ giftId: number; giftName: string; num: number; price: number; timestamp: number }>
 }
 
 const medalType = new Type('MedalInfo')
@@ -51,7 +65,7 @@ export function decodeSendGiftV2(pb: string): GiftV2Data {
   const data = sendGiftType.toObject(sendGiftType.decode(bytes), {
     arrays: true,
     longs: Number,
-  })
+  }) as DecodedGiftV2
 
   return {
     uid: data.uid,
@@ -64,7 +78,13 @@ export function decodeSendGiftV2(pb: string): GiftV2Data {
           name: data.medal.medalName,
         }
       : undefined,
-    gifts: data.giftInfo.map((gift: any) => ({
+    mysteryBox: data.mysteryBox
+      ? {
+          name: data.mysteryBox.boxName,
+          price: data.mysteryBox.boxPrice,
+        }
+      : undefined,
+    gifts: data.giftInfo.map((gift) => ({
       id: gift.giftId,
       name: gift.giftName,
       num: gift.num,

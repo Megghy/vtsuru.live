@@ -36,6 +36,8 @@ export interface RawEventListeners {
   like: RawListener[]
 }
 
+type ModelEventName = Exclude<keyof ModelEventListeners, 'all'>
+
 export default abstract class DanmakuEventEmitter {
   constructor() {
     this.eventsAsModel = this.createEmptyEventModelListeners()
@@ -80,11 +82,15 @@ export default abstract class DanmakuEventEmitter {
    * 供数据源本身就是 EventModel 的 client 使用 (LocalRpc / BroadcastChannel),
    * 无需像 B站 client 那样解析原始命令。
    */
-  protected emitModel(eventName: Exclude<keyof ModelEventListeners, 'all'>, data: EventModel) {
-    this.notifyListeners(`raw:${eventName}`, this.eventsRaw[eventName], data)
-    this.notifyListeners(`model:${eventName}`, this.eventsAsModel[eventName], data)
+  protected emitModel(eventName: ModelEventName, data: EventModel) {
+    this.emitParsedEvent(eventName, data, data)
     this.notifyListeners('raw:all', this.eventsRaw.all, data)
     this.notifyListeners('model:all', this.eventsAsModel.all, data)
+  }
+
+  protected emitParsedEvent(eventName: ModelEventName, rawData: unknown, data: EventModel, command?: unknown) {
+    this.notifyListeners(`raw:${eventName}`, this.eventsRaw[eventName], rawData, command)
+    this.notifyListeners(`model:${eventName}`, this.eventsAsModel[eventName], data, command)
   }
 
   protected notifyListeners(eventName: string, listeners: readonly ((...args: any[]) => void)[], ...args: any[]) {

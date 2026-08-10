@@ -893,6 +893,10 @@ function createSpeechService() {
   function addToQueue(data: EventModel) {
     if (!speechState.canSpeech) return
 
+    enqueueEvent(data)
+  }
+
+  function enqueueEvent(data: EventModel) {
     const eventKey = getEventKey(data.type)
     if (eventKey && !settings.value.enabledEvents[eventKey]) {
       reject(data, '事件类型已关闭')
@@ -992,6 +996,10 @@ function createSpeechService() {
     } else {
       speakQueue.value.push(item)
     }
+  }
+
+  function testEvent(data: EventModel) {
+    enqueueEvent(data)
   }
 
   function getEventKey(type: EventDataTypes): keyof SpeechSettings['enabledEvents'] | null {
@@ -1177,6 +1185,7 @@ function createSpeechService() {
     initialize,
     destroy,
     addToQueue,
+    testEvent,
     forceSpeak,
     removeFromQueue,
     moveQueueItem,

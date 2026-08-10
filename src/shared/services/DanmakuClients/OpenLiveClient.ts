@@ -191,199 +191,181 @@ export default class OpenLiveClient extends BaseDanmakuClient {
 
   public onDanmaku(command: any) {
     const data = command.data as DanmakuInfo
-    this.eventsRaw.danmaku?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.danmaku?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Message,
-          uname: data.uname,
-          uid: data.uid,
-          msg: data.msg,
-          price: 0,
-          num: 0,
-          time: data.timestamp,
-          guard_level: data.guard_level,
-          fans_medal_level: data.fans_medal_level,
-          fans_medal_name: data.fans_medal_name,
-          fans_medal_wearing_status: data.fans_medal_wearing_status,
-          emoji: data.dm_type == 1 ? data.emoji_img_url : undefined,
-          uface: data.uface,
-          open_id: data.open_id,
-          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'danmaku',
+      data,
+      {
+        type: EventDataTypes.Message,
+        uname: data.uname,
+        uid: data.uid,
+        msg: data.msg,
+        price: 0,
+        num: 0,
+        time: data.timestamp,
+        guard_level: data.guard_level,
+        fans_medal_level: data.fans_medal_level,
+        fans_medal_name: data.fans_medal_name,
+        fans_medal_wearing_status: data.fans_medal_wearing_status,
+        emoji: data.dm_type == 1 ? data.emoji_img_url : undefined,
+        uface: data.uface,
+        open_id: data.open_id,
+        ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+      },
+      command,
+    )
   }
 
   public onGift(command: any) {
     const data = command.data as GiftInfo
     const price = (data.price * data.gift_num) / 1000
-    this.eventsRaw.gift?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.gift?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Gift,
-          uname: data.uname,
-          uid: data.uid,
-          msg: data.gift_name,
-          price: data.paid ? price : -price,
-          num: data.gift_num,
-          time: data.timestamp,
-          guard_level: data.guard_level,
-          fans_medal_level: data.fans_medal_level,
-          fans_medal_name: data.fans_medal_name,
-          fans_medal_wearing_status: data.fans_medal_wearing_status,
-          uface: data.uface,
-          open_id: data.open_id,
-          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
-          gift_icon: data.gift_icon,
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'gift',
+      data,
+      {
+        type: EventDataTypes.Gift,
+        uname: data.uname,
+        uid: data.uid,
+        msg: data.gift_name,
+        price: data.paid ? price : -price,
+        num: data.gift_num,
+        time: data.timestamp,
+        guard_level: data.guard_level,
+        fans_medal_level: data.fans_medal_level,
+        fans_medal_name: data.fans_medal_name,
+        fans_medal_wearing_status: data.fans_medal_wearing_status,
+        uface: data.uface,
+        open_id: data.open_id,
+        ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+        gift_icon: data.gift_icon,
+      },
+      command,
+    )
   }
 
   public onSC(command: any) {
     const data = command.data as SCInfo
-    this.eventsRaw.sc?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.sc?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.SC,
-          uname: data.uname,
-          uid: data.uid,
-          msg: data.message,
-          price: data.rmb,
-          num: 1,
-          time: data.timestamp,
-          guard_level: data.guard_level,
-          fans_medal_level: data.fans_medal_level,
-          fans_medal_name: data.fans_medal_name,
-          fans_medal_wearing_status: data.fans_medal_wearing_status,
-          uface: data.uface,
-          open_id: data.open_id,
-          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'sc',
+      data,
+      {
+        id: data.message_id,
+        type: EventDataTypes.SC,
+        uname: data.uname,
+        uid: data.uid,
+        msg: data.message,
+        price: data.rmb,
+        num: 1,
+        time: data.timestamp,
+        guard_level: data.guard_level,
+        fans_medal_level: data.fans_medal_level,
+        fans_medal_name: data.fans_medal_name,
+        fans_medal_wearing_status: data.fans_medal_wearing_status,
+        uface: data.uface,
+        open_id: data.open_id,
+        ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+      },
+      command,
+    )
   }
 
   public onGuard(command: any) {
     const data = command.data as GuardInfo
-    this.eventsRaw.guard?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.guard?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Guard,
-          uname: data.user_info.uname,
-          uid: data.user_info.uid,
-          msg: data.guard_level == 1 ? '总督' : data.guard_level == 2 ? '提督' : data.guard_level == 3 ? '舰长' : '',
-          price: data.price / 1000,
-          num: data.guard_num,
-          time: data.timestamp,
-          guard_level: data.guard_level,
-          fans_medal_level: data.fans_medal_level,
-          fans_medal_name: data.fans_medal_name,
-          fans_medal_wearing_status: data.fans_medal_wearing_status,
-          uface: data.user_info.uface,
-          open_id: data.user_info.open_id,
-          ouid: data.user_info.open_id ?? GuidUtils.numToGuid(data.user_info.uid),
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'guard',
+      data,
+      {
+        type: EventDataTypes.Guard,
+        uname: data.user_info.uname,
+        uid: data.user_info.uid,
+        msg: data.guard_level == 1 ? '总督' : data.guard_level == 2 ? '提督' : data.guard_level == 3 ? '舰长' : '',
+        price: data.price / 1000,
+        num: data.guard_num,
+        time: data.timestamp,
+        guard_level: data.guard_level,
+        fans_medal_level: data.fans_medal_level,
+        fans_medal_name: data.fans_medal_name,
+        fans_medal_wearing_status: data.fans_medal_wearing_status,
+        uface: data.user_info.uface,
+        open_id: data.user_info.open_id,
+        ouid: data.user_info.open_id ?? GuidUtils.numToGuid(data.user_info.uid),
+      },
+      command,
+    )
   }
 
   public onEnter(command: any): void {
     const data = command.data as EnterInfo
-    this.eventsRaw.enter?.forEach((d) => {
-      d(data)
-    })
-    this.eventsAsModel.enter?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Enter,
-          uname: data.uname,
-          msg: '',
-          price: 0,
-          num: 0,
-          time: data.timestamp,
-          guard_level: 0,
-          fans_medal_level: 0,
-          fans_medal_name: '',
-          fans_medal_wearing_status: false,
-          uface: data.uface,
-          open_id: data.open_id,
-          uid: 0,
-          ouid: data.open_id,
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'enter',
+      data,
+      {
+        type: EventDataTypes.Enter,
+        uname: data.uname,
+        msg: '',
+        price: 0,
+        num: 0,
+        time: data.timestamp,
+        guard_level: 0,
+        fans_medal_level: 0,
+        fans_medal_name: '',
+        fans_medal_wearing_status: false,
+        uface: data.uface,
+        open_id: data.open_id,
+        uid: 0,
+        ouid: data.open_id,
+      },
+      command,
+    )
   }
 
   public onLike(command: any): void {
     const data = command.data as LikeInfo
-    this.eventsRaw.like.forEach((listener) => listener(data, command))
-    this.eventsAsModel.like.forEach((listener) => {
-      listener(
-        {
-          type: EventDataTypes.Like,
-          uname: data.uname,
-          uid: data.uid,
-          msg: data.like_text,
-          price: 0,
-          num: data.like_count,
-          time: data.timestamp,
-          guard_level: data.guard_level,
-          fans_medal_level: data.fans_medal_level,
-          fans_medal_name: data.fans_medal_name,
-          fans_medal_wearing_status: data.fans_medal_wearing_status,
-          uface: data.uface,
-          open_id: data.open_id,
-          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'like',
+      data,
+      {
+        type: EventDataTypes.Like,
+        uname: data.uname,
+        uid: data.uid,
+        msg: data.like_text,
+        price: 0,
+        num: data.like_count,
+        time: data.timestamp,
+        guard_level: data.guard_level,
+        fans_medal_level: data.fans_medal_level,
+        fans_medal_name: data.fans_medal_name,
+        fans_medal_wearing_status: data.fans_medal_wearing_status,
+        uface: data.uface,
+        open_id: data.open_id,
+        ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+      },
+      command,
+    )
   }
 
   public onScDel(command: any): void {
     const data = command.data as SCDelInfo
-    this.eventsRaw.scDel?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.scDel?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.SCDel,
-          uname: '',
-          msg: JSON.stringify(data.message_ids),
-          price: 0,
-          num: 0,
-          time: Date.now(),
-          guard_level: 0,
-          fans_medal_level: 0,
-          fans_medal_name: '',
-          fans_medal_wearing_status: false,
-          uface: '',
-          open_id: '',
-          uid: 0,
-          ouid: '',
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'scDel',
+      data,
+      {
+        type: EventDataTypes.SCDel,
+        uname: '',
+        msg: JSON.stringify(data.message_ids),
+        price: 0,
+        num: 0,
+        time: Date.now(),
+        guard_level: 0,
+        fans_medal_level: 0,
+        fans_medal_name: '',
+        fans_medal_wearing_status: false,
+        uface: '',
+        open_id: '',
+        uid: 0,
+        ouid: '',
+      },
+      command,
+    )
   }
 }
 

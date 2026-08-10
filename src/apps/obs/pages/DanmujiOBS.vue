@@ -6,7 +6,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { DownloadConfig, GetConfigHash, useAccount } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { QueryGetAPI } from '@/api/query'
 // @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'
@@ -19,6 +18,7 @@ import { VTSURU_API_URL } from '@/shared/config'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface DanmujiConfig {
@@ -241,7 +241,7 @@ function onDelSuperChat(event: EventModel, _command: unknown) {
     console.log(`正在删除SC，ID: ${[...messageIdsToDelete].join(', ')}`)
     messageIdsToDelete.forEach((id) => messageRender.value.deleteMessage(id))
   } else {
-    console.warn('收到删除SC事件但无法确定要删除的消息ID', event, command)
+    console.warn('收到删除SC事件但无法确定要删除的消息ID', event)
   }
 }
 

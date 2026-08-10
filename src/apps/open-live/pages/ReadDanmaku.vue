@@ -65,6 +65,10 @@ const queueStats = computed(() => {
   return { total, gifts, messages }
 })
 const lastEventTime = computed(() => (client.lastEventAt ? new Date(client.lastEventAt).toLocaleTimeString() : ''))
+const supportsFollow = computed(() => {
+  const sourceType = client.danmakuClient?.type
+  return sourceType ? sourceType !== 'openlive' : !props.autoConnect
+})
 
 function onAudioCanPlay() {
   speechState.isApiAudioLoading = false
@@ -249,7 +253,7 @@ onDeactivated(() => {
               name="template"
               tab="消息模板"
             >
-              <TemplateSettingsPanel />
+              <TemplateSettingsPanel :supports-follow="supportsFollow" />
             </NTabPane>
             <NTabPane
               name="filter"

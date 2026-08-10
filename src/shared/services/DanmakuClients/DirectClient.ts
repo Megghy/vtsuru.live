@@ -1,3 +1,5 @@
+import type { LiveEventMap } from '@laplace.live/ws/browser'
+
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
 import { GuidUtils } from '@/shared/utils'
@@ -13,6 +15,8 @@ export interface DirectClientAuthInfo {
   tokenUserId: number
   buvid: string
 }
+
+type DirectCommand<T extends keyof LiveEventMap> = LiveEventMap[T] extends { data: infer TCommand } ? TCommand : never
 /**
  * 直播间弹幕客户端, 只能在vtsuru.client环境使用
  *
@@ -63,36 +67,36 @@ export default class DirectClient extends BaseDanmakuClient {
     }
   }
 
-  public onDanmaku(command: any): void {
+  public onDanmaku(command: DirectCommand<'DANMU_MSG'>): void {
     const info = command.info
-    this.eventsRaw?.danmaku?.forEach((d) => {
-      d(info, command)
-    })
-    this.eventsAsModel.danmaku?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Message,
-          uname: info[2][1],
-          uid: info[2][0],
-          msg: info[1],
-          price: 0,
-          num: 1,
-          time: Date.now(),
-          guard_level: info[7],
-          fans_medal_level: info[0][15].user.medal?.level,
-          fans_medal_name: info[0][15].user.medal?.name,
-          fans_medal_wearing_status: info[0][15].user.medal?.is_light === 1,
-          emoji: info[0]?.[13]?.url?.replace('http://', 'https://') || '',
-          uface: info[0][15].user.base.face.replace('http://', 'https://'),
-          open_id: '',
-          ouid: GuidUtils.numToGuid(info[2][0]),
-        },
-        command,
-      )
-    })
+    const uid = info[2][0]
+    const user = info[0][15].user
+    const emote = info[0][13]
+    this.emitParsedEvent(
+      'danmaku',
+      info,
+      {
+        type: EventDataTypes.Message,
+        uname: info[2][1],
+        uid,
+        msg: info[1],
+        price: 0,
+        num: 1,
+        time: Date.now(),
+        guard_level: info[7],
+        fans_medal_level: user?.medal?.level ?? 0,
+        fans_medal_name: user?.medal?.name ?? '',
+        fans_medal_wearing_status: user?.medal?.is_light === 1,
+        emoji: typeof emote === 'object' ? emote.url.replace('http://', 'https://') : '',
+        uface: user?.base.face.replace('http://', 'https://') || `${AVATAR_URL}${uid}`,
+        open_id: '',
+        ouid: GuidUtils.numToGuid(uid),
+      },
+      command,
+    )
   }
 
-  public onGift(command: any): void {
+  public onGift(command: DirectCommand<'SEND_GIFT'>): void {
     const data = command.data
     const medal = data.medal_info || undefined
     this.emitGift(
@@ -114,7 +118,7 @@ export default class DirectClient extends BaseDanmakuClient {
     )
   }
 
-  public onGiftV2(command: any): void {
+  public onGiftV2(command: DirectCommand<'SEND_GIFT_V2'>): void {
     const data = decodeSendGiftV2(command.data.pb)
     for (const gift of data.gifts) {
       this.emitGift(
@@ -130,6 +134,8 @@ export default class DirectClient extends BaseDanmakuClient {
           giftNum: gift.num,
           price: (gift.price * gift.num) / 1000,
           time: gift.timestamp ? gift.timestamp * 1000 : Date.now(),
+          mysteryBoxName: data.mysteryBox?.name,
+          mysteryBoxPrice: data.mysteryBox ? data.mysteryBox.price / 1000 : undefined,
         },
         gift,
         command,
@@ -137,88 +143,84 @@ export default class DirectClient extends BaseDanmakuClient {
     }
   }
 
-  private emitGift(data: DirectGiftData, rawData: any, command: any): void {
-    this.eventsRaw.gift.forEach((listener) => listener(rawData, command))
-    this.eventsAsModel.gift?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Gift,
-          uname: data.uname,
-          uid: data.uid,
-          msg: data.giftName,
-          price: data.price,
-          num: data.giftNum,
-          time: data.time,
-          guard_level: data.guardLevel,
-          fans_medal_level: data.medalLevel,
-          fans_medal_name: data.medalName,
-          fans_medal_wearing_status: data.medalWearing,
-          uface: data.face.replace('http://', 'https://') || `${AVATAR_URL}${data.uid}`,
-          open_id: '',
-          ouid: GuidUtils.numToGuid(data.uid),
-        },
-        command,
-      )
-    })
+  private emitGift(data: DirectGiftData, rawData: unknown, command: unknown): void {
+    this.emitParsedEvent(
+      'gift',
+      rawData,
+      {
+        type: EventDataTypes.Gift,
+        uname: data.uname,
+        uid: data.uid,
+        msg: data.giftName,
+        price: data.price,
+        num: data.giftNum,
+        time: data.time,
+        guard_level: data.guardLevel,
+        fans_medal_level: data.medalLevel,
+        fans_medal_name: data.medalName,
+        fans_medal_wearing_status: data.medalWearing,
+        uface: data.face.replace('http://', 'https://') || `${AVATAR_URL}${data.uid}`,
+        open_id: '',
+        ouid: GuidUtils.numToGuid(data.uid),
+        mystery_box_name: data.mysteryBoxName,
+        mystery_box_price: data.mysteryBoxPrice,
+      },
+      command,
+    )
   }
 
-  public onSC(command: any): void {
+  public onSC(command: DirectCommand<'SUPER_CHAT_MESSAGE'>): void {
     const data = command.data
-    this.eventsRaw?.sc?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.sc?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.SC,
-          uname: data.user_info.uname,
-          uid: data.uid,
-          msg: data.message,
-          price: data.price,
-          num: 1,
-          time: Date.now(),
-          guard_level: data.user_info.guard_level,
-          fans_medal_level: data.medal_info?.medal_level ?? 0,
-          fans_medal_name: data.medal_info?.medal_name ?? '',
-          fans_medal_wearing_status: data.medal_info !== null && data.medal_info !== undefined,
-          uface: data.user_info.face.replace('http://', 'https://'),
-          open_id: '',
-          ouid: GuidUtils.numToGuid(data.uid),
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'sc',
+      data,
+      {
+        id: data.id,
+        type: EventDataTypes.SC,
+        uname: data.user_info.uname,
+        uid: data.uid,
+        msg: data.message,
+        price: data.price,
+        num: 1,
+        time: Date.now(),
+        guard_level: data.user_info.guard_level,
+        fans_medal_level: data.medal_info?.medal_level ?? 0,
+        fans_medal_name: data.medal_info?.medal_name ?? '',
+        fans_medal_wearing_status: data.medal_info !== null && data.medal_info !== undefined,
+        uface: data.user_info.face.replace('http://', 'https://'),
+        open_id: '',
+        ouid: GuidUtils.numToGuid(data.uid),
+      },
+      command,
+    )
   }
 
   public onGuard(command: any): void {
     const data = command.data
-    this.eventsRaw?.guard?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.guard?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Guard,
-          uname: data.username,
-          uid: data.uid,
-          msg: data.gift_name,
-          price: data.price / 1000,
-          num: data.num,
-          time: Date.now(),
-          guard_level: data.guard_level,
-          fans_medal_level: 0,
-          fans_medal_name: '',
-          fans_medal_wearing_status: false,
-          uface: AVATAR_URL + data.uid,
-          open_id: '',
-          ouid: GuidUtils.numToGuid(data.uid),
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'guard',
+      data,
+      {
+        type: EventDataTypes.Guard,
+        uname: data.username,
+        uid: data.uid,
+        msg: data.gift_name,
+        price: data.price / 1000,
+        num: data.num,
+        time: Date.now(),
+        guard_level: data.guard_level,
+        fans_medal_level: 0,
+        fans_medal_name: '',
+        fans_medal_wearing_status: false,
+        uface: AVATAR_URL + data.uid,
+        open_id: '',
+        ouid: GuidUtils.numToGuid(data.uid),
+      },
+      command,
+    )
   }
 
-  public onEnter(command: any): void {
+  public onEnter(command: DirectCommand<'INTERACT_WORD'>): void {
     const data = command.data
     this.emitInteraction(
       {
@@ -240,11 +242,11 @@ export default class DirectClient extends BaseDanmakuClient {
     )
   }
 
-  private emitInteraction(data: InteractionData, command: any): void {
+  private emitInteraction(data: InteractionData, command: unknown): void {
     const event =
       data.msgType === 1
         ? { name: 'enter' as const, type: EventDataTypes.Enter, msg: '' }
-        : data.msgType === 2
+        : data.msgType === 2 || data.msgType === 4 || data.msgType === 5
           ? { name: 'follow' as const, type: EventDataTypes.Follow, msg: '关注了主播' }
           : undefined
     if (!event) return
@@ -266,64 +268,57 @@ export default class DirectClient extends BaseDanmakuClient {
       ouid: GuidUtils.numToGuid(data.uid),
     }
 
-    this.eventsRaw[event.name].forEach((listener) => listener(data, command))
-    this.eventsAsModel[event.name].forEach((listener) => listener(model, command))
+    this.emitParsedEvent(event.name, data, model, command)
   }
 
-  public onLike(command: any): void {
+  public onLike(command: DirectCommand<'LIKE_INFO_V3_CLICK'>): void {
     const data = command.data
-    this.eventsRaw?.like?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.like?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Like,
-          uname: data.uname,
-          uid: data.uid,
-          msg: '为直播间点赞',
-          price: 0,
-          num: 1,
-          time: Date.now(),
-          guard_level: data.uinfo.guard?.level ?? 0,
-          fans_medal_level: data.fans_medal?.medal_level ?? 0,
-          fans_medal_name: data.fans_medal?.medal_name ?? '',
-          fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
-          uface: data.uinfo.base.face.replace('http://', 'https://'),
-          open_id: '',
-          ouid: GuidUtils.numToGuid(data.uid),
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'like',
+      data,
+      {
+        type: EventDataTypes.Like,
+        uname: data.uname,
+        uid: data.uid,
+        msg: '为直播间点赞',
+        price: 0,
+        num: 1,
+        time: Date.now(),
+        guard_level: data.uinfo.guard?.level ?? 0,
+        fans_medal_level: data.fans_medal?.medal_level ?? 0,
+        fans_medal_name: data.fans_medal?.medal_name ?? '',
+        fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
+        uface: data.uinfo.base.face.replace('http://', 'https://'),
+        open_id: '',
+        ouid: GuidUtils.numToGuid(data.uid),
+      },
+      command,
+    )
   }
 
-  public onScDel(command: any): void {
+  public onScDel(command: DirectCommand<'SUPER_CHAT_MESSAGE_DELETE'>): void {
     const data = command.data
-    this.eventsRaw?.scDel?.forEach((d) => {
-      d(data, command)
-    })
-    this.eventsAsModel.scDel?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.SCDel,
-          uname: '',
-          uid: 0,
-          msg: JSON.stringify(data.ids),
-          price: 0,
-          num: 1,
-          time: Date.now(),
-          guard_level: 0,
-          fans_medal_level: 0,
-          fans_medal_name: '',
-          fans_medal_wearing_status: false,
-          uface: '',
-          open_id: '',
-          ouid: '',
-        },
-        command,
-      )
-    })
+    this.emitParsedEvent(
+      'scDel',
+      data,
+      {
+        type: EventDataTypes.SCDel,
+        uname: '',
+        uid: 0,
+        msg: JSON.stringify(data.ids),
+        price: 0,
+        num: 1,
+        time: Date.now(),
+        guard_level: 0,
+        fans_medal_level: 0,
+        fans_medal_name: '',
+        fans_medal_wearing_status: false,
+        uface: '',
+        open_id: '',
+        ouid: '',
+      },
+      command,
+    )
   }
 }
 
@@ -339,4 +334,6 @@ interface DirectGiftData {
   giftNum: number
   price: number
   time: number
+  mysteryBoxName?: string
+  mysteryBoxPrice?: number
 }

@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer'
+
 import { Field, Root, Type } from 'protobufjs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -72,9 +74,20 @@ const giftMessageType = new Type('GiftMessage')
   .add(new Field('face', 3, 'string'))
   .add(new Field('guardLevel', 5, 'int32'))
   .add(new Field('medal', 8, 'GiftMedal'))
+  .add(new Field('mysteryBox', 9, 'GiftMysteryBox'))
   .add(new Field('giftInfo', 10, 'GiftInfo', 'repeated'))
+const giftMysteryBoxType = new Type('GiftMysteryBox')
+  .add(new Field('boxName', 3, 'string'))
+  .add(new Field('boxPrice', 6, 'int32'))
 
-new Root().add(giftMedalType).add(giftInfoType).add(giftMessageType).resolveAll()
+new Root().add(giftMedalType).add(giftInfoType).add(giftMysteryBoxType).add(giftMessageType).resolveAll()
+
+const interactionType = new Type('Interaction')
+  .add(new Field('uid', 1, 'int64'))
+  .add(new Field('uname', 2, 'string'))
+  .add(new Field('msgType', 5, 'int64'))
+  .add(new Field('timestamp', 7, 'int64'))
+new Root().add(interactionType).resolveAll()
 
 function encodeGiftV2() {
   const bytes = giftMessageType
@@ -84,6 +97,7 @@ function encodeGiftV2() {
       face: 'http://example.com/avatar.jpg',
       guardLevel: 3,
       medal: { uid: 42, level: 8, medalName: '测试牌' },
+      mysteryBox: { boxName: '星光盲盒', boxPrice: 5000 },
       giftInfo: [
         { giftId: 1, giftName: '小花', num: 2, price: 1000, timestamp: 1_700_000_000 },
         { giftId: 2, giftName: '星星', num: 3, price: 2000, timestamp: 1_700_000_001 },
@@ -93,10 +107,16 @@ function encodeGiftV2() {
   return Buffer.from(bytes).toString('base64')
 }
 
+function encodeInteractionV2(msgType: number) {
+  return Buffer.from(
+    interactionType.encode({ uid: 43, uname: '互动用户', msgType, timestamp: 1_700_000_000 }).finish(),
+  ).toString('base64')
+}
+
 async function startClient(client: DirectClient | OpenLiveClient) {
   const startPromise = client.Start()
   await vi.waitFor(() => expect(mocks.KeepLiveWSMock.instances.length).toBeGreaterThan(0))
-  const socket = mocks.KeepLiveWSMock.instances.at(-1)!
+  const socket = mocks.KeepLiveWSMock.instances.at(-1)
   socket.emit('live')
   expect(await startPromise).toEqual({ success: true, message: '' })
   return socket
@@ -113,7 +133,15 @@ describe('direct danmaku event adapter', () => {
     const sc = vi.fn()
     const likes = vi.fn()
     const scDeletes = vi.fn()
-    client.onEvent('gift', gifts).onEvent('sc', sc).onEvent('like', likes).onEvent('scDel', scDeletes)
+    const danmakus = vi.fn()
+    const follows = vi.fn()
+    client
+      .onEvent('gift', gifts)
+      .onEvent('sc', sc)
+      .onEvent('like', likes)
+      .onEvent('scDel', scDeletes)
+      .onEvent('danmaku', danmakus)
+      .onEvent('follow', follows)
 
     const socket = await startClient(client)
     socket.emit('SEND_GIFT', {
@@ -133,6 +161,7 @@ describe('direct danmaku event adapter', () => {
     socket.emit('SUPER_CHAT_MESSAGE', {
       cmd: 'SUPER_CHAT_MESSAGE',
       data: {
+        id: 77,
         uid: 11,
         message: '无勋章 SC',
         price: 30,
@@ -153,6 +182,17 @@ describe('direct danmaku event adapter', () => {
       cmd: 'SUPER_CHAT_MESSAGE_DELETE',
       data: { ids: [100, 101] },
     })
+    const danmakuMeta: any[] = []
+    danmakuMeta[15] = { user: null }
+    const danmakuInfo: any[] = [danmakuMeta, '匿名弹幕', [13, '匿名用户']]
+    danmakuInfo[7] = 0
+    socket.emit('DANMU_MSG', { cmd: 'DANMU_MSG', info: danmakuInfo })
+    for (const msgType of [4, 5]) {
+      socket.emit('INTERACT_WORD', {
+        cmd: 'INTERACT_WORD',
+        data: { uid: 14, uname: '关注用户', msg_type: msgType, timestamp: 1_700_000_000 },
+      })
+    }
 
     expect(gifts).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -163,7 +203,7 @@ describe('direct danmaku event adapter', () => {
       expect.anything(),
     )
     expect(sc).toHaveBeenCalledWith(
-      expect.objectContaining({ fans_medal_level: 0, fans_medal_name: '', fans_medal_wearing_status: false }),
+      expect.objectContaining({ id: 77, fans_medal_level: 0, fans_medal_name: '', fans_medal_wearing_status: false }),
       expect.anything(),
     )
     expect(likes).toHaveBeenCalledWith(
@@ -179,6 +219,11 @@ describe('direct danmaku event adapter', () => {
       expect.objectContaining({ type: EventDataTypes.SCDel, msg: '[100,101]' }),
       expect.anything(),
     )
+    expect(danmakus).toHaveBeenCalledWith(
+      expect.objectContaining({ uface: expect.stringContaining('13') }),
+      expect.anything(),
+    )
+    expect(follows).toHaveBeenCalledTimes(2)
     client.Stop()
   })
 
@@ -205,13 +250,33 @@ describe('direct danmaku event adapter', () => {
         fans_medal_name: '测试牌',
         fans_medal_wearing_status: true,
         uface: 'https://example.com/avatar.jpg',
+        mystery_box_name: '星光盲盒',
+        mystery_box_price: 5,
       }),
+    )
+    client.Stop()
+  })
+
+  it('decodes an INTERACT_WORD_V2 follow payload', async () => {
+    const client = new DirectClient({ token: 'token', roomId: 1, tokenUserId: 2, buvid: 'buvid' })
+    const follows = vi.fn()
+    client.onEvent('follow', follows)
+
+    const socket = await startClient(client)
+    socket.emit('INTERACT_WORD_V2', {
+      cmd: 'INTERACT_WORD_V2',
+      data: { pb: encodeInteractionV2(2) },
+    })
+
+    expect(follows).toHaveBeenCalledWith(
+      expect.objectContaining({ type: EventDataTypes.Follow, uid: 43, uname: '互动用户' }),
+      expect.anything(),
     )
     client.Stop()
   })
 })
 
-describe('OpenLive danmaku event adapter', () => {
+describe('open live danmaku event adapter', () => {
   const authInfo: AuthInfo = {
     Timestamp: '123',
     Code: 'code',
@@ -238,7 +303,8 @@ describe('OpenLive danmaku event adapter', () => {
     const client = new OpenLiveClient(authInfo)
     const likes = vi.fn()
     const scDeletes = vi.fn()
-    client.onEvent('like', likes).onEvent('scDel', scDeletes)
+    const sc = vi.fn()
+    client.onEvent('like', likes).onEvent('scDel', scDeletes).onEvent('sc', sc)
 
     const socket = await startClient(client)
     socket.emit('msg', {
@@ -260,6 +326,26 @@ describe('OpenLive danmaku event adapter', () => {
       },
     })
     socket.emit('msg', {
+      cmd: 'LIVE_OPEN_PLATFORM_SUPER_CHAT',
+      data: {
+        uid: 0,
+        open_id: 'open-sc-user',
+        uname: 'SC 用户',
+        uface: 'https://example.com/open-sc.jpg',
+        message_id: 88,
+        message: 'SC 内容',
+        msg_id: 'sc-message',
+        rmb: 30,
+        timestamp: 1_700_000_000,
+        start_time: 1_700_000_000,
+        end_time: 1_700_000_060,
+        guard_level: 0,
+        fans_medal_level: 0,
+        fans_medal_name: '',
+        fans_medal_wearing_status: false,
+      },
+    })
+    socket.emit('msg', {
       cmd: 'LIVE_OPEN_PLATFORM_SUPER_CHAT_DEL',
       data: { room_id: 1, message_ids: [88], msg_id: 'delete-message' },
     })
@@ -278,6 +364,7 @@ describe('OpenLive danmaku event adapter', () => {
       expect.objectContaining({ type: EventDataTypes.SCDel, msg: '[88]' }),
       expect.anything(),
     )
+    expect(sc).toHaveBeenCalledWith(expect.objectContaining({ id: 88 }), expect.anything())
     client.Stop()
   })
 })
