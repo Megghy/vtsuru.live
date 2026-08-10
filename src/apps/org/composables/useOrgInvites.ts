@@ -1,7 +1,7 @@
 import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
-import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'
 
 import type { OrgInviteMemberListItem, OrgInviteResponseModel, OrgInviteStreamerListItem } from '../types'
@@ -60,5 +60,19 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
     }
   }
 
-  return { invites, loading, creating, lastUrl, load, create }
+  async function revoke(token: string) {
+    if (!ctx.isOrgAdmin.value || !ctx.orgId.value || !token) return
+    try {
+      unwrapOk(
+        await QueryPostAPIWithParams(`${ORG_API_URL}${ctx.orgId.value}/invite/revoke`, { type: kind, token }),
+        '撤销失败',
+      )
+      message.success('已撤销邀请')
+      await load()
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : '撤销失败')
+    }
+  }
+
+  return { invites, loading, creating, lastUrl, load, create, revoke }
 }

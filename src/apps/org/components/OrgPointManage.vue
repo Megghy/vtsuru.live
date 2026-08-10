@@ -80,7 +80,7 @@ async function loadData() {
       '加载积分商品失败',
     )
     auditLogs.value = unwrapOk(
-      await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/audit`, { take: 100 }),
+      await QueryGetAPI(`${ORG_API_URL}${orgId.value}/audit`, { take: 100 }),
       '加载操作审计失败',
     )
   } catch (err) {

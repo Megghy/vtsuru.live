@@ -2,8 +2,15 @@ import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 
-import type { EventModel } from '@/api/api-models'
+import type {
+  EventModel,
+  ResponseCurrentLiveModel,
+  ResponseLiveInfoModel,
+  ResponseLiveRankingEntryModel,
+} from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import { LIVE_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -67,11 +74,10 @@ export type GiftWindowBCData =
   | { type: 'clear' }
 
 export interface RankEntry {
-  uid: number
+  id: string
   uname: string
   uface: string
   totalPaid: number
-  danmakuCount: number
   score: number
 }
 
@@ -117,9 +123,11 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   const danmakuClient = useDanmakuClient()
   const isWindowOpened = ref(false)
   const giftList = ref<GiftEntry[]>([])
-  const rankMap = ref(new Map<number, RankEntry>())
+  const rankMap = ref(new Map<string, RankEntry>())
+  const currentLive = ref<ResponseLiveInfoModel | null>(null)
   let bc: BroadcastChannel | undefined
   let isInited = false
+  let isSyncingLive = false
 
   function closeWindow() {
     giftWindow.value?.hide()
@@ -160,7 +168,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     const filterKey = TYPE_TO_FILTER[data.type]
     if (!filterKey || !settings.value.filterTypes.includes(filterKey)) return
 
-    const price = data.type === EventDataTypes.Gift ? data.price * (data.num || 1) : data.price
+    const price = data.price
     if (price < settings.value.minPrice) return
 
     const now = Date.now()
@@ -232,23 +240,18 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   }
 
   function updateRank(data: EventModel) {
-    const uid = data.uid
-    if (!uid) return
-    let entry = rankMap.value.get(uid)
+    if (!currentLive.value) return
+    const id = data.ouid || (data.uid > 0 ? String(data.uid) : '')
+    if (!id) return
+    let entry = rankMap.value.get(id)
     if (!entry) {
-      entry = { uid, uname: data.uname, uface: data.uface, totalPaid: 0, danmakuCount: 0, score: 0 }
-      rankMap.value.set(uid, entry)
+      entry = { id, uname: data.uname, uface: data.uface, totalPaid: 0, score: 0 }
+      rankMap.value.set(id, entry)
     }
     entry.uname = data.uname || entry.uname
     entry.uface = data.uface || entry.uface
 
-    if (data.type === EventDataTypes.Message) {
-      entry.danmakuCount++
-    } else if (data.type === EventDataTypes.Gift) {
-      entry.totalPaid += data.price * (data.num || 1)
-    } else if (data.type === EventDataTypes.SC) {
-      entry.totalPaid += data.price
-    } else if (data.type === EventDataTypes.Guard) {
+    if (data.type === EventDataTypes.Gift || data.type === EventDataTypes.SC || data.type === EventDataTypes.Guard) {
       entry.totalPaid += data.price
     }
     entry.score = entry.totalPaid
@@ -265,9 +268,49 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     bc?.postMessage({ type: 'rank-list', data: toRaw(getRankedList()) } satisfies GiftWindowBCData)
   }
 
-  function clearRank() {
-    rankMap.value.clear()
+  function replaceRank(entries: ResponseLiveRankingEntryModel[]) {
+    rankMap.value = new Map(
+      entries.map((entry) => [
+        entry.ouId,
+        {
+          id: entry.ouId,
+          uname: entry.uName,
+          uface: entry.uFace ?? '',
+          totalPaid: entry.totalPaid,
+          score: entry.totalPaid,
+        },
+      ]),
+    )
     sendRankList()
+  }
+
+  async function syncCurrentLive() {
+    if (isSyncingLive) return
+    isSyncingLive = true
+    try {
+      const current = await QueryGetAPI<ResponseCurrentLiveModel>(`${LIVE_API_URL}current`)
+      if (current.code !== 200) throw new Error(current.message)
+
+      const nextLive = current.data.live
+      const liveChanged = currentLive.value?.liveId !== nextLive?.liveId
+      currentLive.value = nextLive
+      if (liveChanged) {
+        rankMap.value.clear()
+        sendRankList()
+      }
+      if (!nextLive) return
+
+      const ranking = await QueryGetAPI<ResponseLiveRankingEntryModel[]>(`${LIVE_API_URL}ranking`, {
+        liveId: nextLive.liveId,
+        limit: 100,
+      })
+      if (ranking.code !== 200) throw new Error(ranking.message)
+      replaceRank(ranking.data)
+    } catch (error) {
+      console.warn('[GiftWindow] 同步当前场次排行失败', error)
+    } finally {
+      isSyncingLive = false
+    }
   }
 
   function clearGifts() {
@@ -324,7 +367,6 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       onGiftEvent(e)
       updateRank(e)
     })
-    danmakuClient.onEvent('danmaku', (e) => updateRank(e))
 
     watch(
       () => settings,
@@ -337,6 +379,8 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     )
 
     setInterval(cleanupExpired, 1000)
+    void syncCurrentLive()
+    setInterval(() => void syncCurrentLive(), 30_000)
     isInited = true
   }
 
@@ -378,13 +422,13 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     isGiftWindowOpen: isWindowOpened,
     giftList,
     rankMap,
+    currentLive,
     openWindow,
     closeWindow,
     setSize,
     setPosition,
     updateWindowPosition,
     clearGifts,
-    clearRank,
     sendTestGift,
     init,
   }

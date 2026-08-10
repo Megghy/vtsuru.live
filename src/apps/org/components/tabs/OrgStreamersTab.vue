@@ -56,6 +56,7 @@ async function onSaved() {
       :creating="invites.creating.value"
       @create="invites.create"
       @refresh="invites.load"
+      @revoke="invites.revoke"
     />
 
     <NCard

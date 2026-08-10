@@ -148,7 +148,6 @@ async function acceptStreamer() {
       done.value = true
       doneOrgName.value = resp.data.orgName
       message.success(`已授权组织: ${resp.data.orgName}`)
-      router.replace({ name: 'org-detail', params: { orgId: resp.data.orgId } })
     } else {
       message.error(resp.message)
     }
@@ -172,7 +171,6 @@ async function rejectStreamer() {
       done.value = true
       doneOrgName.value = resp.data.orgName
       message.success(`已拒绝授权: ${resp.data.orgName}`)
-      router.replace({ name: 'org-detail', params: { orgId: resp.data.orgId } })
     } else {
       message.error(resp.message)
     }

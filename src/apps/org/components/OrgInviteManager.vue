@@ -48,6 +48,7 @@ const emit = defineEmits<{
     },
   ): void
   (e: 'refresh'): void
+  (e: 'revoke', token: string): void
 }>()
 
 const { copy } = useClipboard()
@@ -93,7 +94,6 @@ function submit() {
               style="width: 120px"
               size="small"
               :options="[
-                { label: 'Owner', value: 0 },
                 { label: 'Admin', value: 1 },
                 { label: 'Member', value: 2 },
               ]"
@@ -229,6 +229,21 @@ function submit() {
               </template>
               复制
             </NButton>
+            <NPopconfirm
+              v-if="!inv.isRevoked && inv.status !== 4"
+              @positive-click="emit('revoke', inv.token)"
+            >
+              <template #trigger>
+                <NButton
+                  size="small"
+                  tertiary
+                  type="error"
+                >
+                  撤销
+                </NButton>
+              </template>
+              确定撤销该邀请吗？撤销后链接立即失效。
+            </NPopconfirm>
           </NFlex>
         </NFlex>
       </NListItem>

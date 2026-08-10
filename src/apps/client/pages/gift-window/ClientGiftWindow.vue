@@ -61,9 +61,7 @@ async function startResize() {
 }
 
 function formatRankScore(score: number): string {
-  if (score >= 100000) return `${(score / 1000).toFixed(0)}k`
-  if (score >= 1000) return `${(score / 1000).toFixed(1)}k`
-  return `${score}`
+  return `¥${score.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
 }
 
 onMounted(() => {
@@ -196,7 +194,7 @@ watch(
         <div class="gw-rank-list">
           <div
             v-for="(r, idx) in rankList"
-            :key="r.uid"
+            :key="r.id"
             class="gw-rank-item"
             :class="{ 'gw-rank-top': idx < 3 }"
           >

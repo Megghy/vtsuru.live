@@ -26,7 +26,7 @@ import OrgUserAvatar from '../OrgUserAvatar.vue'
 
 const ctx = useOrgContext()
 const { isOrgAdmin, myRole, orgInfo } = ctx
-const { loading, search, filtered, load, remove, updateRole } = useOrgMembers(ctx)
+const { loading, search, filtered, load, remove, updateRole, transferOwner } = useOrgMembers(ctx)
 const invites = useOrgInvites<OrgInviteMemberListItem>(ctx, 'member')
 
 onMounted(async () => {
@@ -51,6 +51,7 @@ onMounted(async () => {
       :creating="invites.creating.value"
       @create="invites.create"
       @refresh="invites.load"
+      @revoke="invites.revoke"
     />
 
     <NCard
@@ -142,6 +143,18 @@ onMounted(async () => {
                   </NButton>
                 </template>
                 确定要将该成员设为 Member 吗？
+              </NPopconfirm>
+              <NPopconfirm @positive-click="() => transferOwner(m.user.id)">
+                <template #trigger>
+                  <NButton
+                    size="tiny"
+                    tertiary
+                    type="warning"
+                  >
+                    移交所有权
+                  </NButton>
+                </template>
+                确定将该成员设为新的 Owner 吗？你将降级为 Member。
               </NPopconfirm>
             </template>
 

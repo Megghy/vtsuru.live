@@ -62,5 +62,20 @@ export function useOrgMembers(ctx: OrgContext) {
     }
   }
 
-  return { members, loading, search, filtered, load, remove, updateRole }
+  async function transferOwner(userId: number) {
+    if (ctx.myRole.value !== 0 || userId <= 0) return
+    try {
+      unwrapOk(
+        await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/transfer-owner`, { targetUserId: userId }),
+        '移交失败',
+      )
+      message.success('已移交所有权')
+      await load()
+      await ctx.loadOrgInfo()
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : '移交失败')
+    }
+  }
+
+  return { members, loading, search, filtered, load, remove, updateRole, transferOwner }
 }

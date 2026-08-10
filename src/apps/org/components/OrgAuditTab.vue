@@ -28,7 +28,7 @@ async function loadLogs() {
   isLoading.value = true
   try {
     logs.value = unwrapOk(
-      await QueryGetAPI<OrgAuditItem[]>(`${ORG_API_URL}${orgId.value}/points/audit`, {
+      await QueryGetAPI<OrgAuditItem[]>(`${ORG_API_URL}${orgId.value}/audit`, {
         take: 50,
         actionPrefix: actionPrefix.value || undefined,
       }),

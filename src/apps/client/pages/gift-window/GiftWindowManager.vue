@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ResizeTable24Filled } from '@vicons/fluent'
+import { ArrowSync24Filled, ResizeTable24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
   NCheckbox,
   NCheckboxGroup,
   NColorPicker,
+  NEmpty,
   NFlex,
   NFormItem,
   NGi,
@@ -14,6 +15,8 @@ import {
   NInputNumber,
   NRadioButton,
   NRadioGroup,
+  NSelect,
+  NSpin,
   NSlider,
   NSwitch,
   NTabPane,
@@ -22,9 +25,12 @@ import {
   useMessage,
 } from 'naive-ui'
 
+import type { ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { LIVE_API_URL } from '@/shared/config'
 
 const giftWindow = useGiftWindow()
 const message = useMessage()
@@ -73,9 +79,67 @@ function resetWindowPosition() {
   message.success('位置已重置')
 }
 
-function clearRank() {
-  giftWindow.clearRank()
-  message.success('排行数据已清空')
+const historyLives = ref<ResponseLiveInfoModel[]>([])
+const historyRanking = ref<ResponseLiveRankingEntryModel[]>([])
+const selectedHistoryLiveId = ref<string | null>(null)
+const isHistoryLoading = ref(false)
+const isHistoryLoaded = ref(false)
+
+const historyLiveOptions = computed(() =>
+  historyLives.value.map((live) => ({
+    label: `${new Date(live.startAt).toLocaleString()} · ${live.title || '未命名直播'}`,
+    value: live.liveId,
+  })),
+)
+
+function formatPaid(totalPaid: number) {
+  return `¥${totalPaid.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+}
+
+async function loadHistoryRanking() {
+  if (!selectedHistoryLiveId.value) {
+    historyRanking.value = []
+    return
+  }
+
+  const response = await QueryGetAPI<ResponseLiveRankingEntryModel[]>(`${LIVE_API_URL}ranking`, {
+    liveId: selectedHistoryLiveId.value,
+    limit: 100,
+  })
+  if (response.code !== 200) throw new Error(response.message)
+  historyRanking.value = response.data
+}
+
+async function loadHistory() {
+  if (isHistoryLoading.value) return
+  isHistoryLoading.value = true
+  try {
+    const response = await QueryGetAPI<ResponseLiveInfoModel[]>(`${LIVE_API_URL}get-all`)
+    if (response.code !== 200) throw new Error(response.message)
+
+    historyLives.value = response.data.filter((live) => live.isFinish)
+    if (!historyLives.value.some((live) => live.liveId === selectedHistoryLiveId.value)) {
+      selectedHistoryLiveId.value = historyLives.value[0]?.liveId ?? null
+    }
+    await loadHistoryRanking()
+    isHistoryLoaded.value = true
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : '加载历史榜单失败')
+  } finally {
+    isHistoryLoading.value = false
+  }
+}
+
+async function onHistoryLiveChange() {
+  try {
+    await loadHistoryRanking()
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : '加载历史榜单失败')
+  }
+}
+
+function onTabChange(tab: string) {
+  if (tab === 'history' && !isHistoryLoaded.value) void loadHistory()
 }
 </script>
 
@@ -112,6 +176,7 @@ function clearRank() {
       <NTabs
         type="line"
         animated
+        @update:value="onTabChange"
       >
         <NTabPane
           name="filter"
@@ -623,15 +688,92 @@ function clearRank() {
                   depth="3"
                   style="font-size: 12px"
                 >
-                  当前已记录 {{ giftWindow.rankMap.size }} 位用户（本场直播）
+                  当前场次：{{ giftWindow.currentLive?.title || '等待站点确认' }}
                 </NText>
-                <NButton
-                  size="small"
-                  type="warning"
-                  @click="clearRank"
+                <NText
+                  depth="3"
+                  style="font-size: 12px"
                 >
-                  清空排行数据
+                  已记录 {{ giftWindow.rankMap.size }} 位用户；场次切换时会自动开始新的排行
+                </NText>
+              </NFlex>
+            </NCard>
+          </NFlex>
+        </NTabPane>
+
+        <NTabPane
+          name="history"
+          tab="历史榜单"
+        >
+          <NFlex
+            vertical
+            :size="12"
+          >
+            <NCard
+              title="选择直播场次"
+              size="small"
+              embedded
+            >
+              <NFlex
+                align="center"
+                :size="8"
+                wrap
+              >
+                <NSelect
+                  v-model:value="selectedHistoryLiveId"
+                  :options="historyLiveOptions"
+                  :loading="isHistoryLoading"
+                  placeholder="选择已结束的直播"
+                  style="min-width: 280px; max-width: 100%"
+                  @update:value="onHistoryLiveChange"
+                />
+                <NButton
+                  secondary
+                  size="small"
+                  :loading="isHistoryLoading"
+                  @click="loadHistory"
+                >
+                  <template #icon>
+                    <NIcon :component="ArrowSync24Filled" />
+                  </template>
+                  刷新
                 </NButton>
+              </NFlex>
+            </NCard>
+
+            <NCard
+              title="付费排行"
+              size="small"
+              embedded
+            >
+              <NSpin
+                v-if="isHistoryLoading"
+                size="small"
+              />
+              <NEmpty
+                v-else-if="historyRanking.length === 0"
+                description="该场次暂无付费记录"
+              />
+              <NFlex
+                v-else
+                vertical
+                :size="4"
+                class="history-rank-list"
+              >
+                <div
+                  v-for="(entry, index) in historyRanking"
+                  :key="entry.ouId"
+                  class="history-rank-item"
+                >
+                  <span class="history-rank-index">{{ index + 1 }}</span>
+                  <NText>{{ entry.uName }}</NText>
+                  <NText
+                    type="warning"
+                    strong
+                  >
+                    {{ formatPaid(entry.totalPaid) }}
+                  </NText>
+                </div>
               </NFlex>
             </NCard>
           </NFlex>
@@ -644,5 +786,26 @@ function clearRank() {
 <style scoped>
 .n-form-item {
   margin-bottom: 4px;
+}
+
+.history-rank-list {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.history-rank-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--vtsuru-border);
+}
+
+.history-rank-index {
+  color: var(--vtsuru-fg-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 </style>

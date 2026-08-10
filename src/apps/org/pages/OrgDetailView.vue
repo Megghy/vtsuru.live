@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOutOutline, Pencil, PeopleOutline, RefreshOutline } from '@vicons/ionicons5'
+import { LogOutOutline, Pencil, PeopleOutline, RefreshOutline, TrashOutline } from '@vicons/ionicons5'
 import {
   NAlert,
   NButton,
@@ -95,6 +95,17 @@ async function leaveOrg() {
   }
 }
 
+async function dissolveOrg() {
+  if (!orgId.value) return
+  try {
+    unwrapOk(await QueryPostAPI(`${ORG_API_URL}${orgId.value}/dissolve`), '解散失败')
+    message.success('组织已解散')
+    router.push({ name: 'org-index' })
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '解散失败')
+  }
+}
+
 function openRename() {
   newOrgName.value = orgName.value
   showRenameModal.value = true
@@ -145,7 +156,7 @@ function openRename() {
               返回控制台
             </NButton>
             <NPopconfirm
-              v-if="myRole !== 0"
+              v-if="myRole !== null && myRole !== 0"
               @positive-click="leaveOrg"
             >
               <template #trigger>
@@ -160,6 +171,23 @@ function openRename() {
                 </NButton>
               </template>
               确定要退出该组织吗？
+            </NPopconfirm>
+            <NPopconfirm
+              v-else-if="myRole === 0"
+              @positive-click="dissolveOrg"
+            >
+              <template #trigger>
+                <NButton
+                  type="error"
+                  ghost
+                >
+                  <template #icon>
+                    <NIcon :component="TrashOutline" />
+                  </template>
+                  解散组织
+                </NButton>
+              </template>
+              确定解散该组织吗？此操作不可恢复，将删除所有成员、主播、邀请与审计记录。
             </NPopconfirm>
             <NButton
               type="primary"

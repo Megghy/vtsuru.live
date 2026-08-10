@@ -659,6 +659,15 @@ export interface ResponseLiveInfoModel {
   paymentCount: number
   interactionCount: number
 }
+export interface ResponseCurrentLiveModel {
+  live: ResponseLiveInfoModel | null
+}
+export interface ResponseLiveRankingEntryModel {
+  ouId: string
+  uName: string
+  uFace?: string | null
+  totalPaid: number
+}
 export interface DanmakuModel {
   id: string
   uId: number
