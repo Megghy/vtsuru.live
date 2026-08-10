@@ -116,9 +116,6 @@ async function InitOther() {
   const account = useAccount()
   const useAuth = useBiliAuth()
   if (account.value.id) {
-    if (account.value.biliUserAuthInfo && !useAuth.currentToken) {
-      useAuth.currentToken = account.value.biliUserAuthInfo.token
-    }
     const HyperDX = (window as any).__HyperDX__
     HyperDX?.setGlobalAttributes({
       userId: account.value.id.toString(),

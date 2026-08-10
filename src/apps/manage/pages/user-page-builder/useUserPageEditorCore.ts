@@ -61,7 +61,10 @@ function createCoreState() {
   }
 }
 
-function watchCurrentPageSelection(state: ReturnType<typeof createCoreState>, clearSelection: () => void) {
+function watchCurrentPageSelection(
+  state: ReturnType<typeof createCoreState>,
+  blocks: Pick<ReturnType<typeof useUserPageBlocks>, 'clearSelection' | 'getBlockById'>,
+) {
   watch(
     [state.settings, state.currentKey],
     ([settings, key]) => {
@@ -69,7 +72,10 @@ function watchCurrentPageSelection(state: ReturnType<typeof createCoreState>, cl
         state.currentKey.value = 'home'
         return
       }
-      clearSelection()
+      const selectedIds = state.selectedBlockIds.value
+      const selectionStillValid =
+        selectedIds.length > 0 && selectedIds.every((id) => blocks.getBlockById(id) !== null)
+      if (!selectionStillValid) blocks.clearSelection()
       state.hoveredBlockId.value = null
     },
     { immediate: true, flush: 'sync' },
@@ -116,7 +122,7 @@ export function useUserPageEditorCore(options: UseUserPageEditorCoreOptions) {
     ensurePropsObject: blocks.ensurePropsObject,
     notify: { success: options.notify.success, error: options.notify.error },
   })
-  watchCurrentPageSelection(state, blocks.clearSelection)
+  watchCurrentPageSelection(state, blocks)
   const pages = useUserPagePages({
     settings: state.settings,
     currentKey: state.currentKey,

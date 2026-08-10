@@ -279,7 +279,7 @@ async function BindBiliAuth() {
   }
 
   isLoading.value = true
-  await QueryGetAPI<BiliAuthModel>(`${ACCOUNT_API_URL}bind-bili-auth`, { token: authToken })
+  await QueryPostAPI<BiliAuthModel>(`${ACCOUNT_API_URL}bind-bili-auth`, { token: authToken })
     .then(async (data) => {
       if (data.code == 200) {
         message.success(`已绑定用户: ${data.data.userId}`)

@@ -8,11 +8,12 @@ import {
   Receipt24Regular,
   Settings24Regular,
 } from '@vicons/fluent'
-import { NAvatar, NButton, NDropdown, NIcon, NResult, NSpin, NTag, useMessage } from 'naive-ui'
-import { computed, h, watch } from 'vue'
+import { NAvatar, NButton, NDropdown, NIcon, NInput, NModal, NResult, NSpin, NTag, useMessage } from 'naive-ui'
+import { computed, h, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
-import { hasBiliAuthInUrl, readBiliAuthFromUrl } from '@/apps/account/components/biliAuthCredential'
+import { createBiliAuthUrl, hasBiliAuthInUrl, readBiliAuthFromUrl } from '@/apps/account/components/biliAuthCredential'
+import { CURRENT_HOST } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const auth = useBiliAuth()
@@ -27,9 +28,12 @@ const navigation = [
   { name: 'bili-user-settings', label: '账户设置', icon: Settings24Regular },
 ]
 
-const isReady = computed(() => Boolean(auth.currentToken && !auth.isInvalid && auth.biliAuth.id > 0))
+const isReady = computed(() => !auth.isInvalid && auth.biliAuth.id > 0)
 const hasSavedAccounts = computed(() => auth.biliTokens.length > 0)
 const currentAccountId = computed(() => String(auth.biliAuth.id || ''))
+const isMigrating = ref(false)
+const migrationError = ref('')
+const migrationLink = computed(() => createBiliAuthUrl(CURRENT_HOST, auth.replacementToken ?? ''))
 const accountOptions = computed(() => [
   ...auth.biliTokens.map((account) => ({
     key: String(account.id),
@@ -90,11 +94,38 @@ async function openSavedAccount(accountId: number) {
   await switchAccount(String(accountId))
 }
 
+async function migrateLegacyAuth() {
+  if (isMigrating.value) return
+  isMigrating.value = true
+  migrationError.value = ''
+  try {
+    if (!await auth.migrateLegacyToken()) {
+      migrationError.value = '旧登录链接无法迁移，请重新认证'
+    }
+  } catch (error) {
+    migrationError.value = error instanceof Error ? error.message : '旧登录链接无法迁移，请重新认证'
+  } finally {
+    isMigrating.value = false
+  }
+}
+
+async function copyMigrationLink() {
+  try {
+    await navigator.clipboard.writeText(migrationLink.value)
+    message.success('已复制新的登录链接')
+  } catch {
+    message.warning('无法复制，请手动选择登录链接')
+  }
+}
+
 function isNavigationActive(name: string) {
   return route.name === name
 }
 
 watch(() => route.fullPath, consumeAuthToken, { immediate: true })
+watch(() => auth.legacyToken, (token) => {
+  if (token) void migrateLegacyAuth()
+})
 </script>
 
 <template>
@@ -268,6 +299,55 @@ watch(() => route.fullPath, consumeAuthToken, { immediate: true })
       </section>
     </div>
   </main>
+
+  <NModal
+    :show="auth.requiresLegacyMigration"
+    :mask-closable="false"
+    :closable="false"
+  >
+    <section class="legacy-migration-modal">
+      <template v-if="auth.replacementToken">
+        <p class="legacy-migration-modal__eyebrow">登录链接已更新</p>
+        <h2>保存新的登录链接</h2>
+        <p>新链接将长期有效。旧链接已失效。</p>
+        <NInput
+          :value="migrationLink"
+          readonly
+          type="password"
+          show-password-on="click"
+        />
+        <div class="legacy-migration-modal__actions">
+          <NButton @click="copyMigrationLink">复制链接</NButton>
+          <NButton
+            type="primary"
+            @click="auth.finishLegacyMigration()"
+          >
+            我已保存
+          </NButton>
+        </div>
+      </template>
+      <template v-else>
+        <p class="legacy-migration-modal__eyebrow">正在更新登录链接</p>
+        <h2>{{ migrationError ? '无法生成新链接' : '正在生成新的登录链接' }}</h2>
+        <p>{{ migrationError || '完成后会在这里显示新的长期登录链接。' }}</p>
+        <div
+          v-if="migrationError"
+          class="legacy-migration-modal__actions"
+        >
+          <NButton
+            type="primary"
+            @click="migrateLegacyAuth"
+          >
+            重试
+          </NButton>
+        </div>
+        <NSpin
+          v-else
+          size="small"
+        />
+      </template>
+    </section>
+  </NModal>
 </template>
 
 <style scoped src="../account/components/PointUserLayout.css"></style>

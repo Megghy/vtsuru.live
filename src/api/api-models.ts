@@ -906,7 +906,6 @@ export interface BiliAuthBaseModel {
 }
 export interface BiliAuthModel extends BiliAuthBaseModel {
   address?: AddressInfo[]
-  token: string
   guardInfo: Record<number, GuardLevel>
 }
 export interface ResponsePointUserModel {

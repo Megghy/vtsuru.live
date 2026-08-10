@@ -54,7 +54,9 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     const hasNewerChanges = JSON.stringify(opts.settings.value) !== requestSnapshot
     opts.lastSavedSnapshot.value = persistedSnapshot
     opts.localDraftBaseSnapshot.value = persistedSnapshot
-    if (!hasNewerChanges) opts.settings.value = deepCloneJson(persistedSettings)
+    if (!hasNewerChanges && JSON.stringify(opts.settings.value) !== persistedSnapshot) {
+      opts.settings.value = deepCloneJson(persistedSettings)
+    }
     opts.localDraftStorage.value = {
       settings: deepCloneJson(opts.settings.value),
       baseSnapshot: persistedSnapshot,

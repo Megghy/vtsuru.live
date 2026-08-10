@@ -32,7 +32,6 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import type { AccountInfo } from '@/api/api-models'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { NavigateToNewTab } from '@/shared/utils'
-import { useBiliAuth } from '@/store/useBiliAuth'
 
 const props = defineProps<{
   accountInfo: AccountInfo
@@ -86,11 +85,7 @@ function gotoAuthPage() {
     message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
     return
   }
-  void useBiliAuth()
-    .setCurrentAuth(props.accountInfo?.biliUserAuthInfo.token)
-    .then(() => {
-      NavigateToNewTab('/bili-user')
-    })
+  NavigateToNewTab('/bili-user')
 }
 
 const activeKey = computed(() => (route.meta.parent as string) ?? route.name?.toString() ?? '')

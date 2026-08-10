@@ -9,6 +9,10 @@ import { BILI_AUTH_API_URL, POINT_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const useBiliAuth = defineStore('BiliAuth', () => {
+  type SessionResponse = {
+    token: string
+    expiresAt: number | null
+  }
   const biliAuth = ref<BiliAuthModel>({} as BiliAuthModel)
 
   const biliTokens = usePersistedStorage<
@@ -28,8 +32,11 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   })
 
   const isLoading = ref(false)
-  const isAuthed = computed(() => currentToken.value != null && currentToken.value.length > 0)
+  const isAuthed = computed(() => biliAuth.value.id > 0 || Boolean(currentToken.value))
   const isInvalid = ref(false)
+  const legacyToken = ref<string | null>(null)
+  const replacementToken = ref<string | null>(null)
+  const requiresLegacyMigration = computed(() => Boolean(legacyToken.value || replacementToken.value))
 
   async function setCurrentAuth(token: string) {
     if (!token) {
@@ -39,43 +46,43 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     await currentTokenReady
     biliAuth.value = {} as BiliAuthModel
     currentToken.value = token
+    legacyToken.value = null
+    replacementToken.value = null
     await getAuthInfo()
   }
 
   async function getAuthInfo() {
     try {
       isLoading.value = true
-      if (!currentToken.value) return
       await QueryBiliAuthGetAPI<BiliAuthModel>(`${BILI_AUTH_API_URL}info`).then((data) => {
         if (data.code == 200) {
           biliAuth.value = data.data
           console.log('[bili-auth] 已获取 Bilibili 认证信息')
-          // 将token加入到biliTokens
-          const index = biliTokens.value.findIndex((t) => t.id == biliAuth.value.id)
-          if (index >= 0) {
-            biliTokens.value[index] = {
+          if (currentToken.value) {
+            const index = biliTokens.value.findIndex((t) => t.id == biliAuth.value.id)
+            const account = {
               id: biliAuth.value.id,
               token: currentToken.value,
               name: biliAuth.value.name,
               uId: biliAuth.value.userId,
             }
-            // console.log('更新已存在的认证账户: ' + biliAuth.value.userId)
-          } else {
-            biliTokens.value.push({
-              id: biliAuth.value.id,
-              token: currentToken.value,
-              name: biliAuth.value.name,
-              uId: biliAuth.value.userId,
-            })
-            console.log(`添加新的认证账户: ${biliAuth.value.userId}`)
+            if (index >= 0) {
+              biliTokens.value[index] = account
+            } else {
+              biliTokens.value.push(account)
+              console.log(`添加新的认证账户: ${biliAuth.value.userId}`)
+            }
           }
           isInvalid.value = false
           return true
         } else {
           console.error(`[bili-auth] 无法获取 Bilibili 认证信息: ${data.message}`)
           isInvalid.value = true
-          logout()
-          // message.error('无法获取 Bilibili 认证信息: ' + data.message)
+          if (currentToken.value && data.message === '旧版认证链接需要迁移') {
+            legacyToken.value = currentToken.value
+          } else {
+            logout()
+          }
         }
       })
     } catch (err) {
@@ -86,9 +93,31 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     }
     return false
   }
+  async function migrateLegacyToken() {
+    if (!legacyToken.value) return false
+    const response = await QueryPostAPI<SessionResponse>(`${BILI_AUTH_API_URL}migrate`, { token: legacyToken.value })
+    if (response.code !== 200) return false
+
+    currentToken.value = response.data.token
+    legacyToken.value = null
+    replacementToken.value = response.data.token
+    await getAuthInfo()
+    return true
+  }
+  function finishLegacyMigration() {
+    replacementToken.value = null
+  }
+  async function rotateSession() {
+    const response = await QueryBiliAuthPostAPI<SessionResponse>(`${BILI_AUTH_API_URL}session/rotate`)
+    if (response.code !== 200) return false
+
+    currentToken.value = response.data.token
+    await getAuthInfo()
+    return true
+  }
   function getBiliAuthHeaders(headers?: [string, string][]) {
     const result = [...(headers ?? [])]
-    if (result.find((h) => h[0].toLowerCase() == 'bili-auth') == null) {
+    if (currentToken.value && result.find((h) => h[0].toLowerCase() == 'bili-auth') == null) {
       result.push(['Bili-Auth', currentToken.value ?? ''])
     }
     return result
@@ -147,6 +176,8 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     biliAuth.value = {} as BiliAuthModel
     biliTokens.value = biliTokens.value.filter((t) => t.token != currentToken.value)
     currentToken.value = ''
+    legacyToken.value = null
+    replacementToken.value = null
     console.log('[bili-auth] 已登出 Bilibili 认证')
   }
 
@@ -157,6 +188,9 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     isLoading,
     isAuthed,
     isInvalid,
+    legacyToken,
+    replacementToken,
+    requiresLegacyMigration,
     currentToken,
     getAuthInfo,
     QueryBiliAuthGetAPI,
@@ -166,6 +200,9 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     GetSpecificPoint,
     GetGoods,
     setCurrentAuth,
+    migrateLegacyToken,
+    finishLegacyMigration,
+    rotateSession,
     logout,
   }
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Add24Regular, Copy24Regular, Delete24Regular, Key24Regular, Person24Regular } from '@vicons/fluent'
+import { Add24Regular, ArrowSync24Regular, Copy24Regular, Delete24Regular, Key24Regular, Person24Regular } from '@vicons/fluent'
 import { NAvatar, NButton, NEmpty, NIcon, NInput, NModal, NPopconfirm, NSpin, NTag, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
@@ -12,6 +12,7 @@ const message = useMessage()
 const adding = ref(false)
 const working = ref(false)
 const credentialInput = ref('')
+const refreshedLink = ref('')
 
 const accountCount = computed(() => auth.biliTokens.length)
 const maskedLoginUrl = computed(() => createBiliAuthUrl(CURRENT_HOST, '************'))
@@ -77,6 +78,20 @@ async function copyLoginUrl() {
     message.success('快捷登录链接已复制')
   } catch (error) {
     message.error(`复制失败：${errorText(error)}`)
+  }
+}
+
+async function rotateLoginUrl() {
+  working.value = true
+  try {
+    if (!await auth.rotateSession()) {
+      throw new Error('无法刷新登录链接')
+    }
+    refreshedLink.value = createBiliAuthUrl(CURRENT_HOST, auth.biliToken)
+  } catch (error) {
+    message.error(`刷新失败：${errorText(error)}`)
+  } finally {
+    working.value = false
   }
 }
 
@@ -192,6 +207,18 @@ defineExpose({ reset })
           <template #icon><NIcon :component="Copy24Regular" /></template>
           复制
         </NButton>
+        <NPopconfirm @positive-click="rotateLoginUrl">
+          <template #trigger>
+            <NButton
+              secondary
+              :disabled="!auth.biliAuth.id"
+            >
+              <template #icon><NIcon :component="ArrowSync24Regular" /></template>
+              刷新
+            </NButton>
+          </template>
+          刷新后当前登录链接会立即失效，确定继续吗？
+        </NPopconfirm>
       </div>
     </div>
   </section>
@@ -221,5 +248,29 @@ defineExpose({ reset })
         </NButton>
       </div>
     </NSpin>
+  </NModal>
+
+  <NModal
+    :show="Boolean(refreshedLink)"
+    preset="card"
+    title="新的快捷登录链接"
+    :mask-closable="false"
+    @update:show="(show) => { if (!show) refreshedLink = '' }"
+  >
+    <NInput
+      :value="refreshedLink"
+      readonly
+      type="password"
+      show-password-on="click"
+    />
+    <div class="point-settings__modal-actions">
+      <NButton @click="copyLoginUrl">复制链接</NButton>
+      <NButton
+        type="primary"
+        @click="refreshedLink = ''"
+      >
+        我已保存
+      </NButton>
+    </div>
   </NModal>
 </template>
