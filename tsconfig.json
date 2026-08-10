@@ -29,7 +29,7 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "sourceMap": true
-  },
+  }, 
   "references": [{ "path": "./tsconfig.node.json" }],
   "include": [
     "src/**/*.ts",
