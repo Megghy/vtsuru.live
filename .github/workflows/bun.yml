@@ -32,9 +32,6 @@ jobs:
       - name: Test
         run: bun run test
 
-      - name: 📦 Build
-        run: bun run build
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -62,6 +59,8 @@ jobs:
         with:
           context: .
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             ${{ env.GHCR_SLUG }}:latest
             ${{ env.GHCR_SLUG }}:${{ steps.time.outputs.formattedTime }}
