@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
-import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
+import { ArrowReply16Filled } from '@vicons/fluent'
+import { Heart, HeartOutline } from '@vicons/ionicons5'
 import {
   NAvatar,
   NButton,
   NCard,
   NFlex,
   NIcon,
-  NPopconfirm,
   NTag,
   NText,
   NTime,
@@ -18,9 +17,10 @@ import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
-import { VTSURU_API_URL } from '@/shared/config'
+import { getUserAvatarUrl } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
+import ForumActionBar from './ForumActionBar.vue'
 import ForumReplyItem from './ForumReplyItem.vue'
 
 const props = defineProps<{
@@ -36,7 +36,6 @@ const accountInfo = useAccount()
 const themeVars = useThemeVars()
 
 const accentColor = computed(() => themeVars.value.errorColor)
-const mutedIconColor = computed(() => themeVars.value.textColor3)
 
 const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
@@ -68,7 +67,7 @@ function delReply(id: number) {
 <template>
   <NFlex>
     <NAvatar
-      :src="`${VTSURU_API_URL}user-face/${item.user.id}?size=64`"
+      :src="getUserAvatarUrl(item.user.id)"
       :img-props="{ referrerpolicy: 'no-referrer' }"
     />
     <NFlex
@@ -171,50 +170,17 @@ function delReply(id: number) {
           style="flex: 1"
           justify="end"
         >
-          <NTooltip v-if="item.user.id === accountInfo.id || topic.isAdmin">
-            <template #trigger>
-              <NPopconfirm @positive-click="delComment(item.id)">
-                <template #trigger>
-                  <NButton
-                    size="small"
-                    text
-                    :disabled="!canOprate"
-                  >
-                    <template #icon>
-                      <NIcon
-                        :component="Delete24Filled"
-                        :color="item.isDeleted || topic.isAdmin ? accentColor : mutedIconColor"
-                      />
-                    </template>
-                  </NButton>
-                </template>
-                {{ item.isDeleted ? '确定完全删除这条评论吗? 这将无法恢复' : '确定删除这条评论吗' }}
-              </NPopconfirm>
-            </template>
-            {{ item.isDeleted || topic.isAdmin ? '完全' : '' }}删除
-          </NTooltip>
-          <NTooltip v-if="item.isDeleted && topic.isAdmin">
-            <template #trigger>
-              <NPopconfirm @positive-click="restoreComment(item.id)">
-                <template #trigger>
-                  <NButton
-                    size="small"
-                    text
-                    :disabled="!canOprate"
-                  >
-                    <template #icon>
-                      <NIcon
-                        :component="SyncCircleSharp"
-                        :color="mutedIconColor"
-                      />
-                    </template>
-                  </NButton>
-                </template>
-                要恢复这条评论吗?
-              </NPopconfirm>
-            </template>
-            恢复
-          </NTooltip>
+          <ForumActionBar
+            :can-operate="canOprate"
+            :can-manage="item.user.id === accountInfo.id || topic.isAdmin"
+            :is-deleted="item.isDeleted"
+            :is-admin="topic.isAdmin"
+            delete-confirm="确定删除这条评论吗"
+            hard-delete-confirm="确定完全删除这条评论吗? 这将无法恢复"
+            restore-confirm="要恢复这条评论吗?"
+            @delete="delComment(item.id)"
+            @restore="restoreComment(item.id)"
+          />
         </NFlex>
       </NFlex>
     </NFlex>

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import type { UserInfo, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
@@ -8,15 +8,14 @@ import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/shared/config'
 
 const props = defineProps<{
-  biliInfo: any | undefined
   userInfo: UserInfo
-  template?: string | undefined
 }>()
 
 const isLoading = ref(true)
 const message = useMessage()
 
-const videoTables = ref<VideoCollectTable[]>(await get())
+const videoTables = ref<VideoCollectTable[]>([])
+
 async function get() {
   try {
     isLoading.value = true
@@ -24,20 +23,21 @@ async function get() {
       id: props.userInfo.id,
     })
     if (data.code === 200) {
-      // videoTables.value = data.data
-      return data.data
+      videoTables.value = data.data ?? []
     } else {
       message.error(`获取失败: ${data.message}`)
-      return []
     }
   } catch (err) {
     console.error(err)
     message.error('获取失败')
-    return []
   } finally {
     isLoading.value = false
   }
 }
+
+onMounted(() => {
+  get()
+})
 </script>
 
 <template>

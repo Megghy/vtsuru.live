@@ -1,5 +1,5 @@
 import { useNow } from '@vueuse/core'
-import { computed, onUnmounted, ref, type Ref } from 'vue'
+import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { QAInfo, UserInfo } from '@/api/api-models'
@@ -61,7 +61,8 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
   const isDragging = ref(false)
   const isSent = ref(false)
   const nextSendAt = ref(Date.now())
-  const now = useNow({ interval: 1000 })
+  const { now, pause, resume } = useNow({ interval: 1000, controls: true })
+  pause()
 
   const isUserLoggedIn = computed(() => Boolean(accountInfo.value?.id))
   const isBiliAuthed = computed(() => biliAuth.isAuthed && Boolean(biliAuth.biliAuth?.userId))
@@ -80,6 +81,12 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
   const maxImages = computed(() => (isIdentified.value ? 9 : 3))
   const characterCount = computed(() => [...segmenter.segment(draft.value.message)].length)
   const cooldownSeconds = computed(() => Math.max(0, Math.ceil((nextSendAt.value - now.value.getTime()) / 1000)))
+
+  watch(cooldownSeconds, (val) => {
+    if (val > 0) resume()
+    else pause()
+  })
+
   const canSubmit = computed(
     () =>
       !isSelf.value &&

@@ -8,29 +8,23 @@ import {
 import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSelect, NTag, NTooltip } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
-import { useAccount } from '@/api/account'
-import type { SongRequestOption, SongsInfo } from '@/api/api-models'
+import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import { getUserAvatarUrl } from '@/shared/utils'
-import { useBiliAuth } from '@/store/useBiliAuth'
 import bilibili from '@/svgs/bilibili.svg'
 import douyin from '@/svgs/douyin.svg'
 import neteaseMusic from '@/svgs/neteaseMusic.svg'
 import qqMusic from '@/svgs/qqMusic.svg'
 
+import SongOptionBadges from './components/SongOptionBadges.vue'
+import SongStatusBadge from './components/SongStatusBadge.vue'
 import { Config, DefaultConfig, type TraditionalConfigType } from './traditionalSongListConfig'
 import { filterSongs, getSongFieldOptions } from './utils/songListData'
 import { getSongRequestConfirmText, getSongRequestTooltip } from './utils/songRequestUtils'
-import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
+import { useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 type SortKey = 'name' | 'author' | 'language' | 'tags' | 'options' | 'description'
-type TagType = 'default' | 'info' | 'success' | 'warning' | 'error'
-
-interface RequestBadge {
-  label: string
-  type: TagType
-}
 
 interface ProfileLink {
   label: string
@@ -42,8 +36,6 @@ const props = defineProps<SongListConfigTypeWithConfig<TraditionalConfigType>>()
 const emit = defineEmits<{ requestSong: [song: SongsInfo] }>()
 defineExpose({ Config, DefaultConfig })
 
-const accountInfo = useAccount()
-const biliAuth = useBiliAuth()
 const searchQuery = ref('')
 const selectedArtist = ref<string | null>(null)
 const selectedLanguage = ref<string | null>(null)
@@ -52,12 +44,11 @@ const selectedOption = ref<string | null>(null)
 const sortKey = ref<SortKey | null>(null)
 const sortOrder = ref<'asc' | 'desc'>('asc')
 
-const requestAuthState = computed(() => ({
-  isLoggedIn: !!accountInfo.value.id,
-  isBiliAuthed: biliAuth.isAuthed,
-}))
-const isSelf = computed(() => !!props.userInfo?.id && accountInfo.value.id === props.userInfo.id)
-const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
+const { requestAuthState, isSelf, singingSongKeys: singingSongKeySet, queuedSongKeys: queuedSongKeySet } =
+  useSongListTemplateCore({
+    userInfo: () => props.userInfo,
+    liveRequestActive: () => props.liveRequestActive,
+  })
 
 const artistOptions = computed(() => getSongFieldOptions(props.data, 'author'))
 const languageOptions = computed(() => [
@@ -206,19 +197,6 @@ function requestSong(song: SongsInfo) {
     negativeText: '取消',
     onPositiveClick: () => emit('requestSong', song),
   })
-}
-
-function getRequestBadges(options?: SongRequestOption): RequestBadge[] {
-  if (!options) return []
-  const badges: RequestBadge[] = []
-  if (options.needJianzhang) badges.push({ label: '舰长', type: 'info' })
-  if (options.needTidu) badges.push({ label: '提督', type: 'warning' })
-  if (options.needZongdu) badges.push({ label: '总督', type: 'error' })
-  if ((options.fanMedalMinLevel ?? 0) > 0) {
-    badges.push({ label: `粉丝牌 ${options.fanMedalMinLevel} 级`, type: 'success' })
-  }
-  if ((options.scMinPrice ?? 0) > 0) badges.push({ label: `SC ¥${options.scMinPrice}`, type: 'error' })
-  return badges
 }
 
 function getSongLink(song: SongsInfo) {
@@ -432,16 +410,12 @@ function getSafeUrl(value?: string) {
                 >
                   <td class="title-cell">
                     <div class="title-content">
-                      <span
-                        v-if="singingSongKeySet.has(song.key)"
-                        class="status singing"
-                        >演唱中</span
-                      >
-                      <span
-                        v-else-if="queuedSongKeySet.has(song.key)"
-                        class="status queued"
-                        >排队中</span
-                      >
+                      <SongStatusBadge
+                        :song-key="song.key"
+                        :singing-keys="singingSongKeySet"
+                        :queued-keys="queuedSongKeySet"
+                        variant="text"
+                      />
                       <NTooltip :disabled="isSelf">
                         <template #trigger>
                           <button
@@ -524,24 +498,11 @@ function getSafeUrl(value?: string) {
                   </td>
                   <td>
                     <span class="cell-label">点歌条件</span>
-                    <div class="tag-list">
-                      <NTag
-                        v-for="badge in getRequestBadges(song.options)"
-                        :key="badge.label"
-                        class="request-tag"
-                        size="small"
-                        :type="badge.type"
-                        round
-                        :bordered="false"
-                      >
-                        {{ badge.label }}
-                      </NTag>
-                      <span
-                        v-if="!getRequestBadges(song.options).length"
-                        class="muted"
-                        >无限制</span
-                      >
-                    </div>
+                    <SongOptionBadges
+                      :options="song.options"
+                      variant="semantic"
+                      empty-text="无限制"
+                    />
                   </td>
                   <td>
                     <span class="cell-label">备注</span>
@@ -882,25 +843,6 @@ function getSafeUrl(value?: string) {
 
 .song-title-button:disabled {
   cursor: default;
-}
-
-.status {
-  flex: 0 0 auto;
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.status.singing {
-  background: color-mix(in srgb, var(--vtsuru-success, #22c55e) 16%, transparent);
-  color: var(--vtsuru-success, #16a34a);
-}
-
-.status.queued {
-  background: color-mix(in srgb, var(--vtsuru-warning, #f59e0b) 16%, transparent);
-  color: var(--vtsuru-warning, #d97706);
 }
 
 .inline-list,

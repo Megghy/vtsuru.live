@@ -5,12 +5,13 @@ import { computed, ref, watch } from 'vue'
 import { DownloadConfig } from '@/api/account'
 import type { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import type { BiliProfile } from '@/apps/user-page/types'
 import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
 import { SCHEDULE_API_URL } from '@/shared/config'
 import { ScheduleTemplateMap } from '@/shared/config/templates'
 
 const props = defineProps<{
-  biliInfo: any | undefined
+  biliInfo: BiliProfile | undefined
   userInfo: UserInfo | undefined
   template?: string
   fakeData?: ScheduleWeekInfo[]

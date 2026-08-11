@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NDivider, NFlex, NInput, NList, NListItem, NModal, NText, NTime } from 'naive-ui'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { NAlert, NButton, NCard, NDivider, NFlex, NInput, NList, NListItem, NModal, NSpin, NText, NTime } from 'naive-ui'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { UserInfo } from '@/api/api-models'
@@ -28,15 +28,12 @@ const lastBackupTopic = ref(Date.now())
 
 const useForum = useForumStore()
 const ps = ref(20)
-const pn = ref(0)
+const pn = ref(1)
 const sort = ref(ForumTopicSortTypes.Time)
 
-const forumInfo = ref(await useForum.GetForumInfo(userInfo?.id ?? -1))
-const topics = ref<{ data: ForumTopicBaseModel[]; total: number; more: boolean } | undefined>({
-  data: [],
-  total: 0,
-  more: false,
-})
+const forumInfo = ref<Awaited<ReturnType<typeof useForum.GetForumInfo>>>()
+const forumLoading = ref(true)
+const topics = ref<{ data: ForumTopicBaseModel[]; total: number; more: boolean }>()
 
 async function ApplyToForum() {
   if (!forumInfo.value) return
@@ -68,26 +65,43 @@ function postTopic() {
     })
 }
 
-let timer: any
+let timer: ReturnType<typeof setInterval> | undefined
 onMounted(async () => {
+  forumInfo.value = await useForum.GetForumInfo(userInfo?.id ?? -1)
   if (forumInfo.value) {
     topics.value = await useForum.GetTopics(forumInfo.value.owner.id ?? -1, ps.value, pn.value, sort.value)
     if (postTopicBackup.value[forumInfo.value.owner.id ?? -1]) {
       currentPostTopicModel.value = postTopicBackup.value[forumInfo.value.owner.id ?? -1]
     }
-    timer = setInterval(async () => {
+  }
+  forumLoading.value = false
+})
+
+watch(showPostTopicModal, (open) => {
+  if (open) {
+    timer = setInterval(() => {
       backupTopic()
     }, 10000)
+  } else {
+    if (timer) {
+      clearInterval(timer)
+      timer = undefined
+    }
   }
 })
+
 onUnmounted(() => {
-  clearInterval(timer)
+  if (timer) clearInterval(timer)
 })
 </script>
 
 <template>
+  <NSpin
+    v-if="forumLoading"
+    show
+  />
   <NCard
-    v-if="!forumInfo"
+    v-else-if="!forumInfo"
     size="small"
     bordered
   >

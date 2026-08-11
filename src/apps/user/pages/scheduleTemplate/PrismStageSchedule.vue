@@ -10,6 +10,7 @@ import { resolveScheduleCategory } from './scheduleCategories'
 import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
+import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
 
@@ -60,14 +61,13 @@ const DefaultConfig: PrismStageConfig = {
 const scheduleRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, weekDirection, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
 const scheduleStyle = computed(() => ({
   '--prism-gold': rgbaToString(effectiveConfig.value.goldColor),
   '--prism-seal': rgbaToString(effectiveConfig.value.sealColor),
   '--week-dir': weekDirection.value || 1,
-  backgroundImage: effectiveConfig.value.backgroundFile[0]?.path
-    ? `url(${effectiveConfig.value.backgroundFile[0].path})`
-    : undefined,
+  ...backgroundImageStyle.value,
 }))
 const eventType = (tag?: string | null) => resolveScheduleCategory(tag)?.key ?? 'other'
 

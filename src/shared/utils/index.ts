@@ -167,9 +167,9 @@ export async function getImageUploadModel(
   }
   return result
 }
-export function getUserAvatarUrl(userId: number | undefined | null) {
+export function getUserAvatarUrl(userId: number | undefined | null, size = 64) {
   if (!userId) return ''
-  return `${VTSURU_API_URL}user-face/${userId}`
+  return `${VTSURU_API_URL}user-face/${userId}?size=${size}`
 }
 export function getOUIdAvatarUrl(ouid: string) {
   return `${VTSURU_API_URL}face/${ouid}`

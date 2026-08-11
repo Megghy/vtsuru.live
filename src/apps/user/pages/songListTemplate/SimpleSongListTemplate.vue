@@ -1,39 +1,42 @@
 <script setup lang="ts">
-import { CloudAdd20Filled, Play24Filled, Search24Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NSelect, NTag, NTooltip } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { Play24Filled, Search24Regular } from '@vicons/fluent'
+import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSelect } from 'naive-ui'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
-import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
-import { useBiliAuth } from '@/store/useBiliAuth'
 
+import SongOptionBadges from './components/SongOptionBadges.vue'
+import SongRequestButton from './components/SongRequestButton.vue'
+import SongStatusBadge from './components/SongStatusBadge.vue'
 import { filterSongs, getSongFieldOptions, getSongFieldValues } from './utils/songListData'
-import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
-import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
+import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
 const PAGE_SIZE = 20
 
-const accountInfo = useAccount()
-const biliAuth = useBiliAuth()
 const searchKeyword = ref('')
 const selectedTag = ref<string | null>(null)
 const selectedAuthor = ref<string | null>(null)
 const selectedSong = ref<SongsInfo>()
 const visibleCount = ref(PAGE_SIZE)
 const isLrcLoading = ref('')
-const requestingKey = ref('')
 
-const requestAuthState = computed(() => ({
-  isLoggedIn: !!accountInfo.value.id,
-  isBiliAuthed: biliAuth.isAuthed,
-}))
-const { singing: singingKeys, queued: queuedKeys } = useLiveRequestStatus(() => props.liveRequestActive)
+const {
+  requestAuthState,
+  requestingKey,
+  singingSongKeys: singingKeys,
+  queuedSongKeys: queuedKeys,
+  beginRequest,
+} = useSongListTemplateCore({
+  userInfo: () => props.userInfo,
+  liveRequestActive: () => props.liveRequestActive,
+})
+
 const tags = computed(() => getSongFieldValues(props.data, 'tags'))
 const authorOptions = computed(() => getSongFieldOptions(props.data, 'author'))
 const filteredSongs = computed(() =>
@@ -49,12 +52,13 @@ const showRequestQueue = computed(
   () => props.userInfo?.extra?.enableFunctions.includes(FunctionTypes.LiveRequest) ?? false,
 )
 
-const filterEpoch = ref(0)
-watch([searchKeyword, selectedTag, selectedAuthor], () => {
+const { listKey } = useFilterListKey({ tag: selectedTag, author: selectedAuthor })
+const loadMoreSentinel = ref<HTMLElement>()
+let loadMoreObserver: IntersectionObserver | undefined
+
+watch([selectedTag, selectedAuthor, searchKeyword], () => {
   visibleCount.value = PAGE_SIZE
-  filterEpoch.value += 1
 })
-const listKey = computed(() => `${selectedTag.value ?? 'all'}:${selectedAuthor.value ?? 'all'}:${filterEpoch.value}`)
 
 function toggleTag(tag: string) {
   selectedTag.value = selectedTag.value === tag ? null : tag
@@ -74,28 +78,59 @@ function loadMore() {
   visibleCount.value = Math.min(visibleCount.value + PAGE_SIZE, filteredSongs.value.length)
 }
 
-function handleScroll(event: Event) {
-  const element = event.currentTarget as HTMLElement
-  if (element.scrollTop + element.clientHeight >= element.scrollHeight - 48) loadMore()
+/** 找最近可滚动祖先；无则用视口 (root=null) */
+function findScrollRoot(el: HTMLElement): Element | null {
+  let node: HTMLElement | null = el.parentElement
+  while (node && node !== document.documentElement) {
+    const { overflowY } = getComputedStyle(node)
+    if (
+      (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') &&
+      node.scrollHeight > node.clientHeight + 1
+    ) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
 }
 
-function handleRequestSong(song: SongsInfo) {
-  requestingKey.value = song.key
+function tryLoadMoreWhileVisible() {
+  const el = loadMoreSentinel.value
+  if (!el || visibleCount.value >= filteredSongs.value.length) return
+  const root = findScrollRoot(el)
+  const elRect = el.getBoundingClientRect()
+  const rootRect = root?.getBoundingClientRect()
+  const bottom = rootRect ? rootRect.bottom + 120 : window.innerHeight + 120
+  const top = rootRect ? rootRect.top - 120 : -120
+  if (elRect.top < bottom && elRect.bottom > top) {
+    const before = visibleCount.value
+    loadMore()
+    if (visibleCount.value > before) {
+      requestAnimationFrame(tryLoadMoreWhileVisible)
+    }
+  }
+}
+
+function bindLoadMoreObserver(el: HTMLElement | null | undefined) {
+  loadMoreObserver?.disconnect()
+  loadMoreObserver = undefined
+  if (!el) return
+  const root = findScrollRoot(el)
+  loadMoreObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) tryLoadMoreWhileVisible()
+    },
+    { root, rootMargin: '120px 0px' },
+  )
+  loadMoreObserver.observe(el)
+}
+
+watch(loadMoreSentinel, (el) => bindLoadMoreObserver(el), { flush: 'post' })
+onBeforeUnmount(() => loadMoreObserver?.disconnect())
+
+function requestSong(song: SongsInfo) {
+  if (!beginRequest(song)) return
   emits('requestSong', song)
-  window.setTimeout(() => (requestingKey.value = ''), 2000)
-}
-
-function getBadges(song: SongsInfo) {
-  const options = song.options
-  if (!options) return []
-
-  return [
-    options.scMinPrice && { label: `SC ¥${options.scMinPrice}`, type: 'error' },
-    options.fanMedalMinLevel && { label: `粉丝牌 Lv${options.fanMedalMinLevel}`, type: 'info' },
-    options.needZongdu && { label: '总督', type: 'warning' },
-    options.needTidu && { label: '提督', type: 'info' },
-    options.needJianzhang && { label: '舰长', type: 'default' },
-  ].filter((badge): badge is { label: string; type: 'default' | 'error' | 'info' | 'warning' } => !!badge)
 }
 </script>
 
@@ -103,75 +138,79 @@ function getBadges(song: SongsInfo) {
   <div class="simple-template">
     <div class="simple-layout">
       <aside class="filter-panel">
-        <header class="filter-heading">
-          <div>
-            <strong>曲库筛选</strong>
-            <span>{{ filteredSongs.length }} / {{ data?.length ?? 0 }} 首</span>
+        <NScrollbar class="filter-panel-scroll">
+          <div class="filter-panel-body">
+            <header class="filter-heading">
+              <div>
+                <strong>曲库筛选</strong>
+                <span>{{ filteredSongs.length }} / {{ data?.length ?? 0 }} 首</span>
+              </div>
+              <NButton
+                v-if="hasFilters"
+                size="tiny"
+                quaternary
+                @click="clearFilters"
+              >
+                清除
+              </NButton>
+            </header>
+
+            <div class="filter-fields">
+              <NInput
+                v-model:value="searchKeyword"
+                clearable
+                placeholder="搜索歌名、歌手或标签"
+              >
+                <template #prefix><NIcon :component="Search24Regular" /></template>
+              </NInput>
+              <NSelect
+                v-model:value="selectedAuthor"
+                :options="authorOptions"
+                clearable
+                filterable
+                placeholder="筛选歌手"
+              />
+            </div>
+
+            <div
+              v-if="tags.length"
+              class="tag-list"
+            >
+              <NButton
+                v-for="tag in tags"
+                :key="tag"
+                size="tiny"
+                secondary
+                :type="selectedTag === tag ? 'primary' : 'default'"
+                :class="{ active: selectedTag === tag }"
+                :aria-pressed="selectedTag === tag"
+                @click="toggleTag(tag)"
+              >
+                {{ tag }}
+              </NButton>
+            </div>
+
+            <section
+              v-if="selectedSong"
+              class="sidebar-section"
+            >
+              <small>正在试听</small>
+              <strong>{{ selectedSong.name }}</strong>
+              <SongPlayer
+                v-model:is-lrc-loading="isLrcLoading"
+                :song="selectedSong"
+              />
+            </section>
+
+            <section
+              v-if="showRequestQueue"
+              class="sidebar-section"
+            >
+              <small>点歌队列</small>
+              <div class="queue-frame"><LiveRequestOBS /></div>
+            </section>
           </div>
-          <NButton
-            v-if="hasFilters"
-            size="tiny"
-            quaternary
-            @click="clearFilters"
-          >
-            清除
-          </NButton>
-        </header>
-
-        <div class="filter-fields">
-          <NInput
-            v-model:value="searchKeyword"
-            clearable
-            placeholder="搜索歌名、歌手或标签"
-          >
-            <template #prefix><NIcon :component="Search24Regular" /></template>
-          </NInput>
-          <NSelect
-            v-model:value="selectedAuthor"
-            :options="authorOptions"
-            clearable
-            filterable
-            placeholder="筛选歌手"
-          />
-        </div>
-
-        <div
-          v-if="tags.length"
-          class="tag-list"
-        >
-          <NButton
-            v-for="tag in tags"
-            :key="tag"
-            size="tiny"
-            secondary
-            :type="selectedTag === tag ? 'primary' : 'default'"
-            :class="{ active: selectedTag === tag }"
-            :aria-pressed="selectedTag === tag"
-            @click="toggleTag(tag)"
-          >
-            {{ tag }}
-          </NButton>
-        </div>
-
-        <section
-          v-if="selectedSong"
-          class="sidebar-section"
-        >
-          <small>正在试听</small>
-          <strong>{{ selectedSong.name }}</strong>
-          <SongPlayer
-            v-model:is-lrc-loading="isLrcLoading"
-            :song="selectedSong"
-          />
-        </section>
-
-        <section
-          v-if="showRequestQueue"
-          class="sidebar-section"
-        >
-          <small>点歌队列</small>
-          <div class="queue-frame"><LiveRequestOBS /></div>
-        </section>
+        </NScrollbar>
       </aside>
 
       <main class="song-content">
@@ -190,7 +229,6 @@ function getBadges(song: SongsInfo) {
             v-else
             :key="listKey"
             class="song-list"
-            @scroll="handleScroll"
           >
             <TransitionGroup
               name="song-card-item"
@@ -215,24 +253,12 @@ function getBadges(song: SongsInfo) {
                     {{ item.translateName }}
                   </small>
                 </div>
-                <NTag
-                  v-if="singingKeys.has(item.key)"
-                  class="status singing"
-                  size="tiny"
-                  type="warning"
-                  :bordered="false"
-                >
-                  演唱中
-                </NTag>
-                <NTag
-                  v-else-if="queuedKeys.has(item.key)"
-                  class="status queued"
-                  size="tiny"
-                  type="success"
-                  :bordered="false"
-                >
-                  排队中
-                </NTag>
+                <SongStatusBadge
+                  :song-key="item.key"
+                  :singing-keys="singingKeys"
+                  :queued-keys="queuedKeys"
+                  variant="tag"
+                />
               </header>
 
               <div
@@ -260,20 +286,10 @@ function getBadges(song: SongsInfo) {
                 {{ item.description }}
               </p>
 
-              <div
-                v-if="getBadges(item).length"
-                class="badge-list"
-              >
-                <NTag
-                  v-for="badge in getBadges(item)"
-                  :key="badge.label"
-                  size="small"
-                  :type="badge.type"
-                  :bordered="false"
-                >
-                  {{ badge.label }}
-                </NTag>
-              </div>
+              <SongOptionBadges
+                :options="item.options"
+                variant="semantic"
+              />
 
               <footer>
                 <div class="card-tags">
@@ -304,21 +320,13 @@ function getBadges(song: SongsInfo) {
                   >
                     <template #icon><NIcon :component="Play24Filled" /></template>
                   </NButton>
-                  <NTooltip>
-                    <template #trigger>
-                      <NButton
-                        circle
-                        size="small"
-                        :aria-label="`点歌《${item.name}》`"
-                        :type="getSongRequestButtonType(item, liveRequestSettings, requestAuthState)"
-                        :loading="requestingKey === item.key"
-                        @click="handleRequestSong(item)"
-                      >
-                        <template #icon><NIcon :component="CloudAdd20Filled" /></template>
-                      </NButton>
-                    </template>
-                    {{ getSongRequestTooltip(item, liveRequestSettings, requestAuthState) }}
-                  </NTooltip>
+                  <SongRequestButton
+                    :song="item"
+                    :live-request-settings="liveRequestSettings"
+                    :auth-state="requestAuthState"
+                    :loading="requestingKey === item.key"
+                    @request="requestSong"
+                  />
                 </div>
               </footer>
             </article>
@@ -326,6 +334,7 @@ function getBadges(song: SongsInfo) {
 
             <div
               v-if="visibleCount < filteredSongs.length"
+              ref="loadMoreSentinel"
               class="load-more"
             >
               <NButton
@@ -375,11 +384,22 @@ function getBadges(song: SongsInfo) {
 .filter-panel {
   position: sticky;
   top: 12px;
-  display: grid;
+  overflow: hidden;
+}
+
+.filter-panel-scroll {
   max-height: calc(100dvh - 32px);
+}
+
+.filter-panel-scroll :deep(.n-scrollbar-container) {
+  overflow-x: hidden !important;
+}
+
+.filter-panel-body {
+  display: grid;
   padding: var(--vtsuru-page-spacing, 16px);
-  overflow: auto;
   gap: 14px;
+  overflow-x: clip;
 }
 
 .filter-heading,
@@ -493,11 +513,8 @@ function getBadges(song: SongsInfo) {
 }
 
 .song-list {
-  max-height: min(82dvh, 960px);
   padding: 2px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
+  min-width: 0;
 }
 
 .song-grid {
@@ -603,13 +620,10 @@ function getBadges(song: SongsInfo) {
 
   .filter-panel {
     position: static;
-    max-height: none;
   }
 
-  .song-list {
+  .filter-panel-scroll {
     max-height: none;
-    overflow: visible;
-    scrollbar-gutter: auto;
   }
 }
 

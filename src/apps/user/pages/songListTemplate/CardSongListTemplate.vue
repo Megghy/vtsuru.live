@@ -1,24 +1,32 @@
 <script setup lang="ts">
-import { CloudAdd20Filled, Search24Regular } from '@vicons/fluent'
+import { Search24Regular } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
-import { NButton, NEllipsis, NEmpty, NFlex, NIcon, NInput, NTag, NTooltip } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { NButton, NEllipsis, NEmpty, NIcon, NInput, NTooltip } from 'naive-ui'
+import { computed, ref } from 'vue'
 
-import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
-import { GetGuardColor } from '@/shared/utils'
-import { useBiliAuth } from '@/store/useBiliAuth'
 
+import SongOptionBadges from './components/SongOptionBadges.vue'
+import SongRequestButton from './components/SongRequestButton.vue'
+import SongStatusBadge from './components/SongStatusBadge.vue'
 import { filterSongs } from './utils/songListData'
-import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
-import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
+import { getSongRequestTooltip } from './utils/songRequestUtils'
+import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
 
-const accountInfo = useAccount()
-const biliAuth = useBiliAuth()
+const {
+  requestAuthState,
+  isSelf,
+  activeSongKeys: activeSongKeySet,
+  singingSongKeys: singingSongKeySet,
+  beginRequest,
+} = useSongListTemplateCore({
+  userInfo: () => props.userInfo,
+  liveRequestActive: () => props.liveRequestActive,
+})
 
 const inputKeyword = ref('')
 const searchKeyword = ref('')
@@ -26,29 +34,14 @@ const searchKeyword = ref('')
 const filteredSongs = computed<SongsInfo[]>(() => {
   return filterSongs(props.data, { keyword: searchKeyword.value })
 })
-const filterEpoch = ref(0)
-watch(searchKeyword, () => {
-  filterEpoch.value += 1
-})
-const listKey = computed(() => `${searchKeyword.value}:${filterEpoch.value}`)
-
-const isSelf = computed(() => {
-  return !!props.userInfo?.id && accountInfo.value?.id === props.userInfo.id
-})
-
-const requestAuthState = computed(() => ({
-  isLoggedIn: !!accountInfo.value.id,
-  isBiliAuthed: biliAuth.isAuthed,
-}))
-
-const { active: activeSongKeySet, singing: singingSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
+const { listKey } = useFilterListKey({ committedKeyword: searchKeyword })
 
 function commitSearch() {
   searchKeyword.value = inputKeyword.value.trim()
 }
 
 function requestSong(song: SongsInfo) {
-  if (isSelf.value) return
+  if (!beginRequest(song)) return
   emits('requestSong', song)
 }
 
@@ -162,46 +155,21 @@ function getMetaText(song: SongsInfo) {
           </div>
 
           <div class="title-right">
-            <span
-              v-if="song.options?.scMinPrice"
-              class="badge badge-sc"
-            >
-              SC ¥{{ song.options.scMinPrice }}
-            </span>
-            <span
-              v-if="singingSongKeySet.has(song.key)"
-              class="badge badge-singing"
-            >
-              正在演唱
-            </span>
-            <span
-              v-else-if="activeSongKeySet.has(song.key)"
-              class="badge badge-active"
-            >
-              排队中
-            </span>
-            <div
-              v-if="!isSelf"
-              class="action"
-            >
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    size="small"
-                    quaternary
-                    class="request-button"
-                    :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
-                    :aria-label="`点歌：${song.name}`"
-                    @click="requestSong(song)"
-                  >
-                    <template #icon>
-                      <NIcon :component="CloudAdd20Filled" />
-                    </template>
-                  </NButton>
-                </template>
-                {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-              </NTooltip>
-            </div>
+            <SongStatusBadge
+              :song-key="song.key"
+              :singing-keys="singingSongKeySet"
+              :queued-keys="activeSongKeySet"
+              variant="text"
+            />
+            <SongRequestButton
+              :song="song"
+              :live-request-settings="liveRequestSettings"
+              :auth-state="requestAuthState"
+              :hidden="isSelf"
+              size="small"
+              :circle="false"
+              @request="requestSong"
+            />
           </div>
         </div>
 
@@ -227,51 +195,16 @@ function getMetaText(song: SongsInfo) {
             </span>
           </div>
 
+          <SongOptionBadges
+            :options="song.options"
+            variant="guard"
+          />
+
           <div class="desc">
             <NEllipsis :tooltip="false">
               {{ song.translateName || song.description || '' }}
             </NEllipsis>
           </div>
-
-          <NFlex
-            v-if="song.options"
-            size="small"
-            justify="end"
-            class="badges"
-          >
-            <NTag
-              v-if="song.options?.fanMedalMinLevel"
-              size="small"
-              :bordered="false"
-              type="default"
-            >
-              粉丝牌 Lv{{ song.options.fanMedalMinLevel }}
-            </NTag>
-            <NTag
-              v-if="song.options?.needZongdu"
-              size="small"
-              :bordered="false"
-              :color="{ color: GetGuardColor(1) }"
-            >
-              总督
-            </NTag>
-            <NTag
-              v-if="song.options?.needTidu"
-              size="small"
-              :bordered="false"
-              :color="{ color: GetGuardColor(2) }"
-            >
-              提督
-            </NTag>
-            <NTag
-              v-if="song.options?.needJianzhang"
-              size="small"
-              :bordered="false"
-              :color="{ color: GetGuardColor(3) }"
-            >
-              舰长
-            </NTag>
-          </NFlex>
         </div>
       </div>
       </TransitionGroup>
@@ -515,57 +448,6 @@ function getMetaText(song: SongsInfo) {
   white-space: nowrap;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  height: 22px;
-  padding: 0 10px;
-  overflow: hidden;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  user-select: none;
-  white-space: nowrap;
-  border: 1px solid var(--song-border);
-  color: var(--song-muted);
-  background: var(--song-panel-strong);
-}
-
-.badge-sc {
-  background: var(--song-accent-soft);
-  color: color-mix(in srgb, var(--song-accent) 72%, var(--song-fg));
-  border-color: color-mix(in srgb, var(--song-accent) 30%, var(--song-border));
-}
-
-.badge-active {
-  background: color-mix(in srgb, var(--song-success) 14%, transparent);
-  color: color-mix(in srgb, var(--song-success) 72%, var(--song-fg));
-  border-color: color-mix(in srgb, var(--song-success) 38%, var(--song-border));
-}
-
-.badge-singing {
-  background: color-mix(in srgb, var(--song-warning) 14%, transparent);
-  color: color-mix(in srgb, var(--song-warning) 74%, var(--song-fg));
-  border-color: color-mix(in srgb, var(--song-warning) 40%, var(--song-border));
-  animation: pulse-singing 2s ease-in-out infinite;
-}
-
-@keyframes pulse-singing {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.request-button {
-  border-radius: var(--vtsuru-page-radius, 8px);
-}
-
 .card-bottom {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -632,16 +514,8 @@ function getMetaText(song: SongsInfo) {
     padding-left: 46px;
   }
 
-  .action {
-    margin-left: auto;
-  }
-
   .card-bottom {
     grid-template-columns: 1fr;
-  }
-
-  .badges {
-    justify-content: flex-start;
   }
 }
 
@@ -681,8 +555,7 @@ function getMetaText(song: SongsInfo) {
 
 @media (prefers-reduced-motion: reduce) {
   .song-card,
-  .count-row.is-pulsing,
-  .badge-singing {
+  .count-row.is-pulsing {
     animation: none;
   }
 
@@ -691,8 +564,7 @@ function getMetaText(song: SongsInfo) {
   .card-item-enter-active,
   .card-item-leave-active,
   .card-item-move,
-  .song-card,
-  .badge-singing {
+  .song-card {
     transition: none;
   }
 

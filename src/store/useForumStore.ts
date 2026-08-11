@@ -73,7 +73,7 @@ export const useForumStore = defineStore('forum', () => {
       const data = await QueryGetPaginationAPI<ForumTopicBaseModel[]>(`${FORUM_API_URL}get-topics`, {
         owner,
         pageSize: ps,
-        page: pn,
+        pageNum: pn,
         sort,
         section,
       })
@@ -121,7 +121,7 @@ export const useForumStore = defineStore('forum', () => {
       const data = await QueryGetPaginationAPI<ForumCommentModel[]>(`${FORUM_API_URL}get-comments`, {
         topic,
         pageSize: ps,
-        page: pn,
+        pageNum: pn,
         sort,
       })
       if (data.code == 200) {

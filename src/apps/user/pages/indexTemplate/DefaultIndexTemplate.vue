@@ -12,11 +12,11 @@ import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
 import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
 
+import type { BiliProfile } from '@/apps/user-page/types'
+
 const props = defineProps<{
   userInfo: UserInfo | undefined
-  biliInfo: any | undefined
-  currentData?: any
-  config?: any
+  biliInfo: BiliProfile | undefined
 }>()
 defineExpose({ Config, DefaultConfig })
 

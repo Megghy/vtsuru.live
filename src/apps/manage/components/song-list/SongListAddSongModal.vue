@@ -35,8 +35,8 @@ const isModalLoading = ref(false)
 
 const activeTab = ref('custom')
 
+/** 非 custom 页脚按钮用：这些 tab 通过 defineExpose 提供 add/canAdd/label */
 type FooterTabRef =
-  | InstanceType<typeof SongListAddSongModalCustomTab>
   | InstanceType<typeof SongListAddSongModalNeteaseTab>
   | InstanceType<typeof SongListAddSongModalFileTab>
   | InstanceType<typeof SongListAddSongModalDirectoryTab>
@@ -49,13 +49,14 @@ const directoryTabRef = ref<InstanceType<typeof SongListAddSongModalDirectoryTab
 const footerConfig = computed<{ hint: string; tab: FooterTabRef | null }>(() => {
   switch (activeTab.value) {
     case 'custom':
-      return { hint: '填写上方表单后点击添加', tab: customTabRef.value }
+      // custom 有独立页脚 UI，不走通用 tab 按钮
+      return { hint: '填写上方表单后点击添加', tab: null }
     case 'netease':
-      return { hint: '选择歌曲后添加到歌单', tab: neteaseTabRef.value }
+      return { hint: '选择歌曲后添加到歌单', tab: neteaseTabRef.value ?? null }
     case 'file':
-      return { hint: '解析文件后在右侧勾选歌曲', tab: fileTabRef.value }
+      return { hint: '解析文件后在右侧勾选歌曲', tab: fileTabRef.value ?? null }
     case 'directory':
-      return { hint: '扫描文件夹后在右侧勾选歌曲', tab: directoryTabRef.value }
+      return { hint: '扫描文件夹后在右侧勾选歌曲', tab: directoryTabRef.value ?? null }
     default:
       return { hint: '在搜索结果表格中点击"添加"按钮将单曲加入歌单', tab: null }
   }

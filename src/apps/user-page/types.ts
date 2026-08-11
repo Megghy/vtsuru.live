@@ -18,16 +18,21 @@ export interface BiliProfile {
   top_photo?: string
   top_photo_v2?: string
   fans?: number
+  follower?: number
+  follower_count?: number
   attention?: number
   friend?: number
   archive_count?: number
   video?: number
+  likes?: number
+  like_num?: number
+  level?: number
   pendant?: {
     image?: string
     image_enhance?: string
     image_enhance_frame?: string
   }
-  nameplate?: { image?: string }
+  nameplate?: { image?: string; name?: string }
   level_info?: { current_level?: number }
   official?: { title?: string; desc?: string }
   Official?: { title?: string; desc?: string }

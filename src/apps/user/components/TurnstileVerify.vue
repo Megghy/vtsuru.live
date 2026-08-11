@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
 import { TURNSTILE_KEY } from '@/shared/config'
@@ -12,9 +12,7 @@ const token = defineModel<string>('token', {
 })
 
 // Set theme based on dark mode status
-const theme = computed(() => {
-  return isDarkMode ? 'dark' : 'light'
-})
+const theme = computed(() => (isDarkMode.value ? 'dark' : 'light'))
 onUnmounted(() => {
   turnstile.value?.remove()
 })

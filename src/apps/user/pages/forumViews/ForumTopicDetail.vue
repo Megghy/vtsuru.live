@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ArrowCircleLeft12Regular, Comment24Regular, Delete24Filled, Eye24Regular } from '@vicons/fluent'
-import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
+import { ArrowCircleLeft12Regular, Comment24Regular, Eye24Regular } from '@vicons/fluent'
+import { Heart, HeartOutline } from '@vicons/ionicons5'
 import {
   NAvatar,
   NAvatarGroup,
@@ -17,7 +17,6 @@ import {
   NListItem,
   NModal,
   NPagination,
-  NPopconfirm,
   NTag,
   NText,
   NTime,
@@ -35,10 +34,10 @@ import { ForumCommentSortTypes } from '@/api/models/forum'
 import router from '@/app/router'
 import TurnstileVerify from '@/apps/user/components/TurnstileVerify.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
-import { VTSURU_API_URL } from '@/shared/config'
 import { getUserAvatarUrl } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
+import ForumActionBar from './ForumActionBar.vue'
 import ForumCommentItem from './ForumCommentItem.vue'
 import ForumReplyItem from './ForumReplyItem.vue'
 
@@ -64,7 +63,6 @@ const accountInfo = useAccount()
 const themeVars = useThemeVars()
 
 const accentColor = computed(() => themeVars.value.errorColor)
-const mutedIconColor = computed(() => themeVars.value.textColor3)
 
 const topicId = ref(-1)
 const useForum = useForumStore()
@@ -81,8 +79,9 @@ const currentReplyContent = ref<PostReplyModel>({} as PostReplyModel)
 const topic = ref<ForumTopicModel>({ id: -1 } as ForumTopicModel)
 const comments = ref<PaginationResponse<ForumCommentModel[]>>()
 const ps = ref(20)
-const pn = ref(0)
+const pn = ref(1)
 const sort = ref(ForumCommentSortTypes.Time)
+const commentTotal = computed(() => comments.value?.total ?? 0)
 
 const canOprate = computed(() => {
   return !topic.value.isLocked && accountInfo.value.id > 0
@@ -218,7 +217,7 @@ onMounted(async () => {
             :size="5"
           >
             <NAvatar
-              :src="`${VTSURU_API_URL}user-face/${topic?.user?.id}?size=64`"
+              :src="getUserAvatarUrl(topic?.user?.id)"
               :img-props="{ referrerpolicy: 'no-referrer' }"
             />
             <NDivider vertical />
@@ -310,50 +309,17 @@ onMounted(async () => {
               style="flex: 1"
               justify="end"
             >
-              <NTooltip v-if="topic?.user?.id === accountInfo.id || topic.isAdmin">
-                <template #trigger>
-                  <NPopconfirm @positive-click="delTopic(topic.id)">
-                    <template #trigger>
-                      <NButton
-                        size="small"
-                        text
-                        :disabled="!canOprate"
-                      >
-                        <template #icon>
-                          <NIcon
-                            :component="Delete24Filled"
-                            :color="topic.isDeleted || topic.isAdmin ? accentColor : mutedIconColor"
-                          />
-                        </template>
-                      </NButton>
-                    </template>
-                    {{ topic.isDeleted ? '确定完全删除这个话题吗? 这将无法恢复' : '确定删除这个话题吗' }}
-                  </NPopconfirm>
-                </template>
-                {{ topic.isDeleted || topic.isAdmin ? '完全' : '' }}删除
-              </NTooltip>
-              <NTooltip v-if="topic.isDeleted && topic.isAdmin">
-                <template #trigger>
-                  <NPopconfirm @positive-click="restoreTopic(topic.id)">
-                    <template #trigger>
-                      <NButton
-                        size="small"
-                        text
-                        :disabled="!canOprate"
-                      >
-                        <template #icon>
-                          <NIcon
-                            :component="SyncCircleSharp"
-                            :color="mutedIconColor"
-                          />
-                        </template>
-                      </NButton>
-                    </template>
-                    要恢复这个话题吗?
-                  </NPopconfirm>
-                </template>
-                恢复
-              </NTooltip>
+              <ForumActionBar
+                :can-operate="canOprate"
+                :can-manage="topic?.user?.id === accountInfo.id || topic.isAdmin"
+                :is-deleted="topic.isDeleted"
+                :is-admin="topic.isAdmin"
+                delete-confirm="确定删除这个话题吗"
+                hard-delete-confirm="确定完全删除这个话题吗? 这将无法恢复"
+                restore-confirm="要恢复这个话题吗?"
+                @delete="delTopic(topic.id)"
+                @restore="restoreTopic(topic.id)"
+              />
             </NFlex>
           </NFlex>
         </template>
@@ -383,9 +349,9 @@ onMounted(async () => {
           style="padding-top: 6px"
         >
           <NPagination
-            v-if="comments && (comments?.data?.length ?? 0) > 0"
+            v-if="commentTotal > ps"
             v-model:page="pn"
-            :item-count="comments?.data.length ?? 0"
+            :item-count="commentTotal"
             :page-size="ps"
             show-quick-jumper
             @update:page="refreshComments"
@@ -414,14 +380,13 @@ onMounted(async () => {
         </NList>
         <div style="height: 12px" />
         <NFlex
-          v-if="(comments?.data?.length ?? 0) > 5"
+          v-if="commentTotal > ps"
           align="center"
           justify="center"
         >
           <NPagination
-            v-if="comments && (comments?.data.length ?? 0) > 0"
             v-model:page="pn"
-            :item-count="comments?.data.length ?? 0"
+            :item-count="commentTotal"
             :page-size="ps"
             show-quick-jumper
             @update:page="refreshComments"

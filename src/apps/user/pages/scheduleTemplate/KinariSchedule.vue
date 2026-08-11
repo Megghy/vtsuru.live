@@ -9,6 +9,7 @@ import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigT
 import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
+import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
 
@@ -58,15 +59,14 @@ const DefaultConfig: KinariConfig = {
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
 const { selectedWeek, weekDirection, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
 const boardStyle = computed(() => ({
   '--kinari-accent': rgbaToString(effectiveConfig.value.accentColor),
   '--kinari-indigo': rgbaToString(effectiveConfig.value.indigoColor),
   '--week-dir': weekDirection.value || 1,
-  backgroundImage: effectiveConfig.value.backgroundFile[0]?.path
-    ? `url(${effectiveConfig.value.backgroundFile[0].path})`
-    : undefined,
+  ...backgroundImageStyle.value,
 }))
 
 defineExpose({ Config, DefaultConfig })

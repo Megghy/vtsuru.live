@@ -21,9 +21,7 @@ import { QueryGetAPI } from '@/api/query'
 import { CHECKIN_API_URL } from '@/shared/config'
 
 const props = defineProps<{
-  biliInfo: any | undefined
   userInfo: UserInfo | undefined
-  template?: string | undefined
 }>()
 
 const isLoading = ref(false)
@@ -89,7 +87,7 @@ async function loadCheckInRanking() {
 
     if (response.code !== 200) {
       rankingData.value = []
-      window.$message?.error?.(`获取签到排行榜失败: ${response.message}`)
+      window.$message?.error(`获取签到排行榜失败: ${response.message}`)
       return
     }
 

@@ -64,11 +64,7 @@ const editorConfig: Partial<IEditorConfig> = {
           message.error(`图片上传失败: ${resp.statusText}`)
         }
       },
-      onProgress(progress: number) {
-        console.log(progress)
-      },
-      onSuccess(file: File, res: any) {
-        console.log(`${file.name} 上传成功`, res)
+      onSuccess() {
         message.success('图片上传成功')
       },
     },
@@ -82,17 +78,14 @@ onBeforeUnmount(() => {
   if (editor == null) return
   editor.destroy()
 })
-onMounted(() => {
-  // editorRef.value?.setHtml(props.defaultValue)
-})
 function handleCreated(editor: unknown) {
-  editorRef.value = editor // 记录 editor 实例，重要！
+  editorRef.value = editor
 }
 function getText() {
   return editorRef.value?.getText()
 }
 function getHtml() {
-  return editorRef.value?.getText()
+  return editorRef.value?.getHtml()
 }
 
 defineExpose({

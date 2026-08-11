@@ -1,4 +1,7 @@
 .user-page {
+  --vtsuru-page-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-fg)));
+  --vtsuru-page-fg-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted)));
+  --vtsuru-page-border: var(--vtsuru-block-border, var(--vtsuru-border));
   width: 100%;
   max-width: var(--vtsuru-page-max-width, 820px);
   margin: 0 auto;

@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { DownloadConfig, useAccount } from '@/api/account'
 import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
+import type { BiliProfile } from '@/apps/user-page/types'
 import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
 import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/shared/config'
 import { SongListTemplateMap } from '@/shared/config/templates'
@@ -19,7 +20,7 @@ import './songListTemplate/songListTheme.css'
 
 // 组件属性
 const props = defineProps<{
-  biliInfo: any | undefined // B站信息
+  biliInfo: BiliProfile | undefined
   userInfo: UserInfo | undefined // 用户信息
   template?: string | undefined // 模板名称
   fakeData?: SongsInfo[] // 测试数据
@@ -135,12 +136,6 @@ async function getSongs() {
 async function getConfig() {
   if (!selectedTemplate.value?.settingName) {
     isConfigLoading.value = false
-    return
-  }
-
-  if (!selectedTemplateConfig.value) {
-    // 等待模板配置加载完成后再获取配置
-    setTimeout(() => getConfig(), 100)
     return
   }
 

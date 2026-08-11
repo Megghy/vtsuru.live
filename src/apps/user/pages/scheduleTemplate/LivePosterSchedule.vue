@@ -8,10 +8,11 @@ import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
-import { resolveScheduleCategory, SCHEDULE_CATEGORIES, type ScheduleCategoryKey } from './scheduleCategories'
+import { resolveScheduleCategory, type ScheduleCategoryKey } from './scheduleCategories'
 import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
+import { useScheduleCategoryLegend } from './useScheduleCategoryLegend'
 import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
@@ -101,25 +102,7 @@ function resolveTagColor(tag?: string | null, color?: string | null) {
   return color || (category ? categoryColors[category.key] : 'var(--poster-red)')
 }
 
-const legendItems = computed(() => {
-  const items = new Map<string, { name: string; color: string }>()
-  for (const day of days.value) {
-    for (const item of day.items) {
-      if (!item.tag) continue
-      const category = resolveScheduleCategory(item.tag)
-      const key = category?.key ?? item.tag.trim().toLowerCase()
-      if (!items.has(key)) {
-        items.set(key, {
-          name: category?.name ?? item.tag.trim().toUpperCase(),
-          color: resolveTagColor(item.tag, item.tagColor),
-        })
-      }
-    }
-  }
-  return items.size
-    ? [...items.values()]
-    : SCHEDULE_CATEGORIES.map(({ key, name }) => ({ name, color: categoryColors[key] }))
-})
+const legendItems = useScheduleCategoryLegend(days, resolveTagColor, categoryColors)
 
 const posterStyle = computed(() => ({
   '--poster-red': rgbaToString(effectiveConfig.value.accentColor),

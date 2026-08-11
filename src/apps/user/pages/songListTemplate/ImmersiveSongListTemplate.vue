@@ -1,39 +1,38 @@
 <script setup lang="ts">
-import { CloudAdd20Filled, MusicNote224Filled, Search24Regular } from '@vicons/fluent'
+import { MusicNote224Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
-import { NButton, NEmpty, NIcon, NInput, NTag, NTooltip } from 'naive-ui'
+import { NEmpty, NIcon, NInput, NTag } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
-import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
-import { GetGuardColor } from '@/shared/utils'
-import { useBiliAuth } from '@/store/useBiliAuth'
 
+import SongOptionBadges from './components/SongOptionBadges.vue'
+import SongRequestButton from './components/SongRequestButton.vue'
+import SongStatusBadge from './components/SongStatusBadge.vue'
 import { filterSongs } from './utils/songListData'
-import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
-import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
+import { getSongRequestTooltip } from './utils/songRequestUtils'
+import { useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
 
-const accountInfo = useAccount()
-const biliAuth = useBiliAuth()
+const {
+  requestAuthState,
+  isSelf,
+  requestingKey,
+  singingSongKeys: singingSongKeySet,
+  queuedSongKeys: queuedSongKeySet,
+  beginRequest,
+} = useSongListTemplateCore({
+  userInfo: () => props.userInfo,
+  liveRequestActive: () => props.liveRequestActive,
+})
 
 const searchKeyword = ref('')
 const selectedSong = ref<SongsInfo>()
 const isLrcLoading = ref('')
-const requestingKey = ref('')
-
-const requestAuthState = computed(() => ({
-  isLoggedIn: !!accountInfo.value.id,
-  isBiliAuthed: biliAuth.isAuthed,
-}))
-
-const isSelf = computed(() => !!props.userInfo?.id && accountInfo.value?.id === props.userInfo.id)
-
-const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 const filteredSongs = computed<SongsInfo[]>(() => {
   return filterSongs(props.data, { keyword: searchKeyword.value })
@@ -61,13 +60,14 @@ function selectSong(song: SongsInfo) {
 }
 
 function requestSong(song: SongsInfo) {
-  if (isSelf.value) return
-  requestingKey.value = song.key
+  if (!beginRequest(song)) return
   emits('requestSong', song)
-  window.setTimeout(() => {
-    requestingKey.value = ''
-  }, 2000)
 }
+
+const stageRequestLabel = computed(() => {
+  if (!selectedSong.value) return '点歌'
+  return getSongRequestTooltip(selectedSong.value, props.liveRequestSettings, requestAuthState.value)
+})
 </script>
 
 <template>
@@ -148,64 +148,25 @@ function requestSong(song: SongsInfo) {
             </NTag>
           </div>
 
-          <div
+          <SongOptionBadges
             v-if="selectedSong.options"
-            class="stage-tags"
-          >
-            <NTag
-              v-if="selectedSong.options.scMinPrice"
-              size="small"
-              :bordered="false"
-              type="error"
-            >
-              SC ¥{{ selectedSong.options.scMinPrice }}
-            </NTag>
-            <NTag
-              v-if="selectedSong.options.fanMedalMinLevel"
-              size="small"
-              :bordered="false"
-              type="warning"
-            >
-              粉丝牌 {{ selectedSong.options.fanMedalMinLevel }}
-            </NTag>
-            <NTag
-              v-if="selectedSong.options.needZongdu"
-              size="small"
-              :bordered="false"
-              :color="{ color: GetGuardColor(1) }"
-            >
-              总督
-            </NTag>
-            <NTag
-              v-if="selectedSong.options.needTidu"
-              size="small"
-              :bordered="false"
-              :color="{ color: GetGuardColor(2) }"
-            >
-              提督
-            </NTag>
-            <NTag
-              v-if="selectedSong.options.needJianzhang"
-              size="small"
-              :bordered="false"
-              :color="{ color: GetGuardColor(3) }"
-            >
-              舰长
-            </NTag>
-          </div>
+            :options="selectedSong.options"
+            variant="guard"
+          />
 
-          <NButton
+          <SongRequestButton
             v-if="!isSelf"
             class="stage-request"
-            :type="getSongRequestButtonType(selectedSong, liveRequestSettings, requestAuthState)"
+            :song="selectedSong"
+            :live-request-settings="liveRequestSettings"
+            :auth-state="requestAuthState"
             :loading="requestingKey === selectedSong.key"
-            @click="requestSong(selectedSong)"
-          >
-            <template #icon>
-              <NIcon :component="CloudAdd20Filled" />
-            </template>
-            {{ getSongRequestTooltip(selectedSong, liveRequestSettings, requestAuthState) }}
-          </NButton>
+            :circle="false"
+            :secondary="false"
+            size="medium"
+            :label="stageRequestLabel"
+            @request="requestSong"
+          />
 
           <SongPlayer
             v-if="selectedSong.url"
@@ -290,33 +251,20 @@ function requestSong(song: SongsInfo) {
                 >
               </span>
             </button>
-            <span
-              v-if="singingSongKeySet.has(song.key)"
-              class="lib-flag singing"
-              >演唱中</span
-            >
-            <span
-              v-else-if="queuedSongKeySet.has(song.key)"
-              class="lib-flag queued"
-              >排队</span
-            >
-            <NTooltip v-if="!isSelf">
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  circle
-                  :aria-label="`点歌：${song.name}`"
-                  :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
-                  :loading="requestingKey === song.key"
-                  @click.stop="requestSong(song)"
-                >
-                  <template #icon>
-                    <NIcon :component="CloudAdd20Filled" />
-                  </template>
-                </NButton>
-              </template>
-              {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-            </NTooltip>
+            <SongStatusBadge
+              :song-key="song.key"
+              :singing-keys="singingSongKeySet"
+              :queued-keys="queuedSongKeySet"
+              variant="text"
+            />
+            <SongRequestButton
+              :song="song"
+              :live-request-settings="liveRequestSettings"
+              :auth-state="requestAuthState"
+              :loading="requestingKey === song.key"
+              :hidden="isSelf"
+              @request="requestSong"
+            />
           </div>
         </div>
       </div>
@@ -478,7 +426,16 @@ function requestSong(song: SongsInfo) {
 .stage-request {
   margin-top: 18px;
   width: 100%;
-  max-width: 240px;
+  max-width: 100%;
+}
+
+.stage-request :deep(.n-button) {
+  width: 100%;
+  height: auto;
+  min-height: 34px;
+  padding: 8px 12px;
+  white-space: normal;
+  line-height: 1.35;
 }
 
 .stage-player {
@@ -644,20 +601,6 @@ function requestSong(song: SongsInfo) {
   white-space: nowrap;
 }
 
-.lib-flag {
-  flex: 0 0 auto;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.lib-flag.singing {
-  color: var(--song-warning);
-}
-
-.lib-flag.queued {
-  color: var(--song-success);
-}
-
 @media (max-width: 860px) {
   .immersive-template {
     flex-direction: column;
@@ -689,10 +632,6 @@ function requestSong(song: SongsInfo) {
 
   .stage-cover {
     max-width: 220px;
-  }
-
-  .lib-flag {
-    display: none;
   }
 }
 

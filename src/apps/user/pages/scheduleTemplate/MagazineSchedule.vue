@@ -10,6 +10,7 @@ import { resolveScheduleCategory, type ScheduleCategoryKey } from './scheduleCat
 import { ensureGoogleFont } from './scheduleFonts'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
+import { useScheduleCategoryLegend } from './useScheduleCategoryLegend'
 import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 import './scheduleTemplateTheme.css'
@@ -83,23 +84,7 @@ function resolveEventColor(tag?: string | null) {
   return category ? categoryColors[category.key] : '#746d62'
 }
 
-const categoryLegend = computed(() => {
-  const categories = new Map<string, { name: string; color: string }>()
-  for (const day of days.value) {
-    for (const item of day.items) {
-      if (!item.tag) continue
-      const category = resolveScheduleCategory(item.tag)
-      const key = category?.key ?? item.tag.trim().toLowerCase()
-      if (!categories.has(key)) {
-        categories.set(key, {
-          name: category?.name ?? item.tag.trim().toUpperCase(),
-          color: resolveEventColor(item.tag),
-        })
-      }
-    }
-  }
-  return [...categories.values()]
-})
+const categoryLegend = useScheduleCategoryLegend(days, (tag) => resolveEventColor(tag))
 
 const posterStyle = computed(() => ({
   '--magazine-accent': rgbaToString(effectiveConfig.value.accentColor),

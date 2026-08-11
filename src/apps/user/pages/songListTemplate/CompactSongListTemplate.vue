@@ -1,40 +1,39 @@
 <script setup lang="ts">
-import { CloudAdd20Filled, Play24Filled, Search24Regular } from '@vicons/fluent'
+import { Play24Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
-import { NButton, NEmpty, NIcon, NInput, NSelect, NTag, NTooltip } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { NButton, NEmpty, NIcon, NInput, NSelect } from 'naive-ui'
+import { computed, ref } from 'vue'
 
-import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
-import { useBiliAuth } from '@/store/useBiliAuth'
 
+import SongOptionBadges from './components/SongOptionBadges.vue'
+import SongRequestButton from './components/SongRequestButton.vue'
+import SongStatusBadge from './components/SongStatusBadge.vue'
 import { filterSongs, getSongFieldOptions } from './utils/songListData'
-import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
-import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
+import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
 
-const accountInfo = useAccount()
-const biliAuth = useBiliAuth()
+const {
+  requestAuthState,
+  isSelf,
+  requestingKey,
+  singingSongKeys: singingSongKeySet,
+  queuedSongKeys: queuedSongKeySet,
+  beginRequest,
+} = useSongListTemplateCore({
+  userInfo: () => props.userInfo,
+  liveRequestActive: () => props.liveRequestActive,
+})
 
 const searchKeyword = ref('')
 const selectedTag = ref<string | null>(null)
 const selectedAuthor = ref<string | null>(null)
 const previewSong = ref<SongsInfo>()
 const isLrcLoading = ref('')
-const requestingKey = ref('')
-
-const requestAuthState = computed(() => ({
-  isLoggedIn: !!accountInfo.value.id,
-  isBiliAuthed: biliAuth.isAuthed,
-}))
-
-const isSelf = computed(() => !!props.userInfo?.id && accountInfo.value?.id === props.userInfo.id)
-
-const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 const tagOptions = computed(() => {
   return getSongFieldOptions(props.data, 'tags')
@@ -50,11 +49,8 @@ const filteredSongs = computed<SongsInfo[]>(() => {
     author: selectedAuthor.value,
   })
 })
-const filterEpoch = ref(0)
-watch([searchKeyword, selectedTag, selectedAuthor], () => {
-  filterEpoch.value += 1
-})
-const listKey = computed(() => `${selectedTag.value ?? 'all'}:${selectedAuthor.value ?? 'all'}:${filterEpoch.value}`)
+
+const { listKey } = useFilterListKey({ tag: selectedTag, author: selectedAuthor })
 
 const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
   itemHeight: 60,
@@ -62,12 +58,8 @@ const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
 })
 
 function requestSong(song: SongsInfo) {
-  if (isSelf.value) return
-  requestingKey.value = song.key
+  if (!beginRequest(song)) return
   emits('requestSong', song)
-  window.setTimeout(() => {
-    requestingKey.value = ''
-  }, 2000)
 }
 </script>
 
@@ -180,30 +172,17 @@ function requestSong(song: SongsInfo) {
                 class="translate"
                 >{{ song.translateName }}</span
               >
-              <NTag
-                v-if="singingSongKeySet.has(song.key)"
+              <SongStatusBadge
+                :song-key="song.key"
+                :singing-keys="singingSongKeySet"
+                :queued-keys="queuedSongKeySet"
+                variant="tag"
+              />
+              <SongOptionBadges
+                :options="song.options"
+                variant="semantic"
                 size="tiny"
-                :bordered="false"
-                type="warning"
-              >
-                演唱中
-              </NTag>
-              <NTag
-                v-else-if="queuedSongKeySet.has(song.key)"
-                size="tiny"
-                :bordered="false"
-                type="success"
-              >
-                排队中
-              </NTag>
-              <NTag
-                v-if="song.options?.scMinPrice"
-                size="tiny"
-                :bordered="false"
-                type="error"
-              >
-                SC ¥{{ song.options.scMinPrice }}
-              </NTag>
+              />
             </div>
             <div
               v-if="song.author?.length"
@@ -240,23 +219,14 @@ function requestSong(song: SongsInfo) {
                 <NIcon :component="Play24Filled" />
               </template>
             </NButton>
-            <NTooltip v-if="!isSelf">
-              <template #trigger>
-                <NButton
-                  size="small"
-                  circle
-                  :aria-label="`点歌：${song.name}`"
-                  :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
-                  :loading="requestingKey === song.key"
-                  @click="requestSong(song)"
-                >
-                  <template #icon>
-                    <NIcon :component="CloudAdd20Filled" />
-                  </template>
-                </NButton>
-              </template>
-              {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-            </NTooltip>
+            <SongRequestButton
+              :song="song"
+              :live-request-settings="liveRequestSettings"
+              :auth-state="requestAuthState"
+              :loading="requestingKey === song.key"
+              :hidden="isSelf"
+              @request="requestSong"
+            />
           </div>
         </div>
       </div>
@@ -439,6 +409,7 @@ function requestSong(song: SongsInfo) {
 
 .row-title {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   min-width: 0;

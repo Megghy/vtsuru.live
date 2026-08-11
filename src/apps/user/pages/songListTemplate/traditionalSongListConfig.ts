@@ -4,6 +4,7 @@ import { h, ref } from 'vue'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
 
+/** 配置面板输入态：放在 render 外，避免每次重渲染丢失 */
 const pendingLink = ref({ name: '', url: '' })
 
 export const Config = defineTemplateConfig([

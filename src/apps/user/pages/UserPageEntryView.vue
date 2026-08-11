@@ -12,12 +12,12 @@ import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
-import type { BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
+import type { BiliProfile, BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
 import { IndexTemplateMap } from '@/shared/config/templates'
 import { isDarkMode } from '@/shared/utils'
 
 const props = defineProps<{
-  biliInfo: any | undefined
+  biliInfo: BiliProfile | undefined
   biliStatus?: BiliProfileStatus
   userInfo: UserInfo | undefined
 }>()
