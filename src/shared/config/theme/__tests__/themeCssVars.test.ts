@@ -43,5 +43,23 @@ describe('getThemeCssVars', () => {
     expect(darkOverrides.Card?.colorEmbedded).toBe('#09090b')
     expect(darkOverrides.Alert?.colorInfo).toBe('rgba(96, 165, 250, 0.16)')
     expect(darkOverrides.Alert?.borderInfo).toBe('1px solid rgba(96, 165, 250, 0.42)')
+
+    // 暗色控件边框必须比 manage surface/control(800) 更亮，placeholder 不能过暗
+    expect(darkTokens.control).toBe('#27272a')
+    expect(darkTokens.borderColor).toBe('#3f3f46')
+    expect(darkTokens.inputBorderColor).toBe('#3f3f46')
+    expect(darkTokens.placeholder).toBe('#a1a1aa')
+    expect(darkOverrides.common?.borderColor).toBe('#3f3f46')
+    expect(darkOverrides.Select?.peers?.InternalSelection?.border).toBe('1px solid #3f3f46')
+    expect(darkOverrides.Select?.peers?.InternalSelection?.placeholderColor).toBe('#a1a1aa')
+    expect(darkOverrides.Select?.peers?.InternalSelection?.textColor).toBe('#fafafa')
+    expect(darkOverrides.Checkbox?.border).toBe('1px solid #3f3f46')
+    expect(darkOverrides.Radio?.boxShadow).toBe('inset 0 0 0 1px #3f3f46')
+    expect(darkOverrides.Radio?.buttonBorderColor).toBe('#3f3f46')
+    // Switch 关闭轨必须比 manage surface(800) 更亮
+    expect(darkOverrides.Switch?.railColor).toBe('#52525b')
+    expect(darkOverrides.Tag?.border).toBe('1px solid #3f3f46')
+    expect(darkOverrides.Pagination?.buttonBorder).toBe('1px solid #3f3f46')
+    expect(darkOverrides.ColorPicker?.border).toBe('1px solid #3f3f46')
   })
 })

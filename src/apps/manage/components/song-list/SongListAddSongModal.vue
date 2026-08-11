@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Bot24Regular } from '@vicons/fluent'
-import { NAlert, NButton, NFlex, NIcon, NModal, NScrollbar, NSpin, NTabPane, NTabs } from 'naive-ui'
+import { NAlert, NButton, NCheckbox, NFlex, NIcon, NModal, NScrollbar, NSpin, NTabPane, NTabs, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -17,13 +17,13 @@ const props = defineProps<{
   songs: SongsInfo[]
 }>()
 
-const route = useRoute()
-const assistant = useAssistantStore()
-
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'added', songs: SongsInfo[]): void
 }>()
+
+const route = useRoute()
+const assistant = useAssistantStore()
 
 const showModel = computed({
   get: () => props.show,
@@ -32,6 +32,34 @@ const showModel = computed({
 
 const modalRenderKey = ref(0)
 const isModalLoading = ref(false)
+
+const activeTab = ref('custom')
+
+type FooterTabRef =
+  | InstanceType<typeof SongListAddSongModalCustomTab>
+  | InstanceType<typeof SongListAddSongModalNeteaseTab>
+  | InstanceType<typeof SongListAddSongModalFileTab>
+  | InstanceType<typeof SongListAddSongModalDirectoryTab>
+
+const customTabRef = ref<InstanceType<typeof SongListAddSongModalCustomTab>>()
+const neteaseTabRef = ref<InstanceType<typeof SongListAddSongModalNeteaseTab>>()
+const fileTabRef = ref<InstanceType<typeof SongListAddSongModalFileTab>>()
+const directoryTabRef = ref<InstanceType<typeof SongListAddSongModalDirectoryTab>>()
+
+const footerConfig = computed<{ hint: string; tab: FooterTabRef | null }>(() => {
+  switch (activeTab.value) {
+    case 'custom':
+      return { hint: '填写上方表单后点击添加', tab: customTabRef.value }
+    case 'netease':
+      return { hint: '选择歌曲后添加到歌单', tab: neteaseTabRef.value }
+    case 'file':
+      return { hint: '解析文件后在右侧勾选歌曲', tab: fileTabRef.value }
+    case 'directory':
+      return { hint: '扫描文件夹后在右侧勾选歌曲', tab: directoryTabRef.value }
+    default:
+      return { hint: '在搜索结果表格中点击"添加"按钮将单曲加入歌单', tab: null }
+  }
+})
 
 const songSelectOption = [
   { label: '中文', value: '中文' },
@@ -97,7 +125,7 @@ function openAssistant() {
     preset="card"
   >
     <template #header> 添加歌曲 </template>
-    <NScrollbar style="max-height: 80vh">
+    <NScrollbar style="max-height: calc(80vh - 120px)">
       <NSpin :show="isModalLoading">
         <NAlert
           title="也可以使用 VTsuru 助手"
@@ -124,6 +152,7 @@ function openAssistant() {
           </NFlex>
         </NAlert>
         <NTabs
+          v-model:value="activeTab"
           default-value="custom"
           animated
         >
@@ -132,6 +161,7 @@ function openAssistant() {
             tab="手动录入"
           >
             <SongListAddSongModalCustomTab
+              ref="customTabRef"
               :existing-songs="songs"
               :authors="authors"
               :tags="tags"
@@ -146,6 +176,7 @@ function openAssistant() {
             tab="从网易云歌单导入"
           >
             <SongListAddSongModalNeteaseTab
+              ref="neteaseTabRef"
               :existing-songs="songs"
               @added="onAdded"
               @loading-change="onLoadingChange"
@@ -166,6 +197,7 @@ function openAssistant() {
             tab="从文件导入"
           >
             <SongListAddSongModalFileTab
+              ref="fileTabRef"
               :existing-songs="songs"
               @added="onAdded"
               @loading-change="onLoadingChange"
@@ -176,6 +208,7 @@ function openAssistant() {
             tab="从文件夹读取"
           >
             <SongListAddSongModalDirectoryTab
+              ref="directoryTabRef"
               :existing-songs="songs"
               :authors="authors"
               :tags="tags"
@@ -187,5 +220,48 @@ function openAssistant() {
         </NTabs>
       </NSpin>
     </NScrollbar>
+    <template #footer>
+      <NFlex
+        v-if="footerConfig"
+        align="center"
+        justify="space-between"
+      >
+        <NText depth="3">{{ footerConfig.hint }}</NText>
+        <NFlex
+          v-if="activeTab === 'custom' && customTabRef"
+          align="center"
+        >
+          <NCheckbox v-model:checked="customTabRef.onlyResetNameOnAdded">
+            添加完成时仅重置歌名和备注
+          </NCheckbox>
+          <NButton @click="customTabRef.resetAll()"> 还原 </NButton>
+          <NButton @click="customTabRef.resetName()"> 还原(仅歌名和备注) </NButton>
+          <NButton
+            type="primary"
+            :disabled="!customTabRef.canAdd"
+            :loading="isModalLoading"
+            @click="customTabRef.add()"
+          >
+            添加歌曲
+          </NButton>
+        </NFlex>
+        <NButton
+          v-else-if="footerConfig.tab"
+          type="primary"
+          :disabled="!footerConfig.tab.canAdd"
+          :loading="isModalLoading"
+          @click="footerConfig.tab.add()"
+        >
+          {{ footerConfig.tab.label }}
+        </NButton>
+        <NButton
+          v-else
+          type="primary"
+          disabled
+        >
+          在表格中点击添加
+        </NButton>
+      </NFlex>
+    </template>
   </NModal>
 </template>

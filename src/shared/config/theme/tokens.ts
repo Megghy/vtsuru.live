@@ -86,9 +86,11 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
 
   const foreground = isDark ? neutral[50] : neutral[950]
 
-  const borderColor = isDark ? neutral[800] : neutral[300]
+  // 暗色边框用 700：site surface=900 / manage surface=800 都能看见描边
+  // （旧值 800 在 manage 的 surface/control 上会与底色同色，边框“消失”）
+  const borderColor = isDark ? neutral[700] : neutral[300]
   const inputBorderColor = borderColor
-  const inputBorderHover = isDark ? neutral[600] : neutral[400]
+  const inputBorderHover = isDark ? neutral[500] : neutral[400]
   const mutedForeground = isDark ? neutral[400] : neutral[600]
 
   const ringColor = isDark ? neutral[300] : neutral[400]
@@ -132,8 +134,9 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
     borderColor,
     inputBorderColor,
     inputBorderHover,
-    placeholder: isDark ? neutral[600] : neutral[400],
-    placeholderDisabled: isDark ? neutral[700] : neutral[300],
+    // placeholder 用 muted 档，避免暗色下过暗（neutral[600] 在 800 底上看起来像“坏了的灰字”）
+    placeholder: isDark ? neutral[400] : neutral[500],
+    placeholderDisabled: isDark ? neutral[600] : neutral[400],
     disabledForeground: isDark ? neutral[500] : neutral[400],
     primary,
     primaryHover,

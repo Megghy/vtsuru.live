@@ -2,7 +2,6 @@
 import { Info24Filled } from '@vicons/fluent'
 import type { FormInst, FormRules, SelectOption } from 'naive-ui'
 import {
-  NButton,
   NCheckbox,
   NFlex,
   NForm,
@@ -16,7 +15,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { SongRequestOption, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
@@ -45,6 +44,14 @@ const addSongRules: FormRules = {
   name: [{ required: true, message: '请输入歌曲名称' }],
   password: [{ required: true, message: '请输入密码' }],
 }
+
+defineExpose({
+  add: addCustomSong,
+  canAdd: computed(() => Boolean(addSongModel.value.name?.trim())),
+  resetAll: () => resetAddingSong(),
+  resetName: () => resetAddingSong(true),
+  onlyResetNameOnAdded,
+})
 
 function resetAddingSong(onlyName = false) {
   if (onlyName) {
@@ -259,25 +266,4 @@ async function addCustomSong() {
       </NFlex>
     </NFormItem>
   </NForm>
-  <NFlex align="center">
-    <NButton
-      type="primary"
-      @click="addCustomSong"
-    >
-      添加
-    </NButton>
-    <NButton
-      type="warning"
-      @click="resetAddingSong()"
-    >
-      还原
-    </NButton>
-    <NButton
-      type="warning"
-      @click="resetAddingSong(true)"
-    >
-      还原(仅歌名和备注)
-    </NButton>
-    <NCheckbox v-model:checked="onlyResetNameOnAdded"> 添加完成时仅重置歌名和备注 </NCheckbox>
-  </NFlex>
 </template>

@@ -334,13 +334,11 @@ onBeforeUnmount(() => {
               wrap
               :size="8"
             >
+              <NText depth="3" style="font-size: 12px; white-space: nowrap">自动刷新</NText>
               <NSwitch
                 v-model:value="enableAutoRefresh"
                 size="small"
-              >
-                <template #checked> 自动刷新 </template>
-                <template #unchecked> 自动刷新 </template>
-              </NSwitch>
+              />
               <NInputNumber
                 v-if="enableAutoRefresh"
                 v-model:value="refreshSeconds"

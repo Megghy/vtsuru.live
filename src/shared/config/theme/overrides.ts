@@ -123,7 +123,7 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
           pressed: t.secondaryPressed,
         },
         textColor: t.foreground,
-        borderColor: t.borderColor,
+        borderColor: t.inputBorderColor,
         primary: { color: t.primary, hover: t.primaryHover, pressed: t.primaryPressed },
         info: { color: infoColor, hover: infoColorHover, pressed: infoColorPressed },
         success: { color: successColor, hover: successColorHover, pressed: successColorPressed },
@@ -144,44 +144,109 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
     },
     Input: {
       heightMedium: '30px',
-      heightSmall: '24px',
+      // 与 Button heightSmall 对齐，避免 NInputGroup 里输入框/按钮高低不一
+      heightSmall: '30px',
       heightLarge: '36px',
       borderRadius: t.radiusControl,
       border: `1px solid ${t.inputBorderColor}`,
       borderHover: `1px solid ${t.inputBorderHover}`,
       borderFocus: `1px solid ${t.inputBorderColor}`,
+      borderDisabled: `1px solid ${t.inputBorderColor}`,
+      groupLabelBorder: `1px solid ${t.inputBorderColor}`,
       boxShadowFocus: t.ringShadow,
       color: t.control,
       colorFocus: t.control,
       textColor: t.foreground,
       textColorDisabled: t.disabledForeground,
+      placeholderColor: t.placeholder,
       placeholderColorDisabled: t.placeholderDisabled,
       paddingMedium: '0 10px',
-      paddingSmall: '0 8px',
+      paddingSmall: '0 10px',
+      lineHeight: '1.4',
     },
     Select: {
       peers: {
         InternalSelection: {
           heightMedium: '30px',
-          heightSmall: '24px',
+          heightSmall: '30px',
           heightLarge: '36px',
           borderRadius: t.radiusControl,
           border: `1px solid ${t.inputBorderColor}`,
           borderHover: `1px solid ${t.inputBorderHover}`,
+          borderActive: `1px solid ${t.inputBorderHover}`,
           borderFocus: `1px solid ${t.inputBorderColor}`,
           boxShadowFocus: t.ringShadow,
           color: t.control,
+          colorActive: t.control,
           textColor: t.foreground,
           colorDisabled: t.inset,
           textColorDisabled: t.disabledForeground,
+          placeholderColor: t.placeholder,
           placeholderColorDisabled: t.placeholderDisabled,
+          arrowColor: t.mutedForeground,
           arrowColorDisabled: t.placeholderDisabled,
         },
         InternalSelectMenu: {
           borderRadius: t.radiusControl,
           color: t.elevated,
+          optionTextColor: t.foreground,
+          optionTextColorActive: t.foreground,
+          optionTextColorPressed: t.foreground,
           optionHeightMedium: '30px',
           optionHeightSmall: '26px',
+        },
+      },
+    },
+    // 其它走 InternalSelection 的选择类组件，边框与 Select 保持一致
+    Cascader: {
+      peers: {
+        InternalSelection: {
+          border: `1px solid ${t.inputBorderColor}`,
+          borderHover: `1px solid ${t.inputBorderHover}`,
+          borderActive: `1px solid ${t.inputBorderHover}`,
+          borderFocus: `1px solid ${t.inputBorderColor}`,
+          color: t.control,
+          textColor: t.foreground,
+          placeholderColor: t.placeholder,
+          arrowColor: t.mutedForeground,
+        },
+      },
+    },
+    TreeSelect: {
+      peers: {
+        InternalSelection: {
+          border: `1px solid ${t.inputBorderColor}`,
+          borderHover: `1px solid ${t.inputBorderHover}`,
+          borderActive: `1px solid ${t.inputBorderHover}`,
+          borderFocus: `1px solid ${t.inputBorderColor}`,
+          color: t.control,
+          textColor: t.foreground,
+          placeholderColor: t.placeholder,
+          arrowColor: t.mutedForeground,
+        },
+      },
+    },
+    AutoComplete: {
+      peers: {
+        Input: {
+          border: `1px solid ${t.inputBorderColor}`,
+          borderHover: `1px solid ${t.inputBorderHover}`,
+          borderFocus: `1px solid ${t.inputBorderColor}`,
+          color: t.control,
+          textColor: t.foreground,
+          placeholderColor: t.placeholder,
+        },
+      },
+    },
+    InputNumber: {
+      peers: {
+        Input: {
+          border: `1px solid ${t.inputBorderColor}`,
+          borderHover: `1px solid ${t.inputBorderHover}`,
+          borderFocus: `1px solid ${t.inputBorderColor}`,
+          color: t.control,
+          textColor: t.foreground,
+          placeholderColor: t.placeholder,
         },
       },
     },
@@ -228,34 +293,53 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
       padding: '8px 12px',
     },
     Switch: {
-      // 关闭态保持中性灰
-      railColor: isDark ? neutral[800] : neutral[200],
+      // 关闭轨要比 manage surface(800) 更亮，否则整轨“消失”
+      railColor: isDark ? neutral[600] : neutral[300],
       // 激活态使用品牌色。暗色下用深青(brand[600])而非亮青：
       // Switch 只有单一 textColor，无法区分开/关两态，必须让两态轨道
       // 同明度。暗色两态都是深底→统一白字；亮色两态都是浅底→统一深字。
       railColorActive: isDark ? brand[600] : brand[400],
       textColor: isDark ? '#fff' : neutral[950],
-      railHeightMedium: '20px',
-      railWidthMedium: '44px',
-      railHeightSmall: '16px',
-      railWidthSmall: '34px',
+      buttonColor: isDark ? neutral[50] : '#fff',
+      buttonBoxShadow: isDark
+        ? `0 1px 3px ${rgba(neutral[950], 0.55)}, inset 0 0 0 1px ${rgba(neutral[50], 0.12)}`
+        : '0 1px 3px rgba(0, 0, 0, 0.18)',
+      boxShadowFocus: t.ringShadow,
+      // 轨道加宽：中文 slot（已启用/已禁用）在默认 32–44px 会挤满
+      railHeightMedium: '22px',
+      railWidthMedium: '56px',
+      railHeightSmall: '18px',
+      railWidthSmall: '48px',
       buttonHeightMedium: '16px',
       buttonWidthMedium: '16px',
-      buttonHeightSmall: '12px',
-      buttonWidthSmall: '12px',
+      buttonHeightSmall: '14px',
+      buttonWidthSmall: '14px',
       loadingColor: t.brand,
     },
     Checkbox: {
       borderRadius: t.radiusSmall,
       color: t.control,
       colorChecked: t.primary,
-      border: `1px solid ${t.borderColor}`,
+      border: `1px solid ${t.inputBorderColor}`,
       borderChecked: `1px solid ${t.primary}`,
+      borderDisabled: `1px solid ${t.inputBorderColor}`,
+      borderFocus: `1px solid ${t.inputBorderHover}`,
       checkMarkColor: t.primaryForeground,
       sizeMedium: '16px',
     },
     Radio: {
-      buttonBorderColor: t.borderColor,
+      // 圆点单选：naive 用 inset boxShadow 画边框，必须显式覆盖
+      boxShadow: `inset 0 0 0 1px ${t.inputBorderColor}`,
+      boxShadowActive: `inset 0 0 0 1px ${t.primary}`,
+      boxShadowHover: `inset 0 0 0 1px ${t.inputBorderHover}`,
+      boxShadowFocus: `inset 0 0 0 1px ${t.inputBorderHover}`,
+      boxShadowDisabled: `inset 0 0 0 1px ${t.inputBorderColor}`,
+      color: t.control,
+      colorDisabled: t.inset,
+      textColor: t.foreground,
+      // 按钮组形态
+      buttonBorderColor: t.inputBorderColor,
+      buttonBorderColorHover: t.inputBorderHover,
       buttonBorderColorActive: t.primary,
       buttonTextColor: t.foreground,
       buttonTextColorActive: t.primaryForeground,
@@ -317,6 +401,9 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
     },
     Tag: {
       borderRadius: t.radiusControl,
+      border: `1px solid ${t.borderColor}`,
+      color: t.surfaceHover,
+      textColor: t.foreground,
       // primary tag 在中性 primary 下太淡，改用 brand 提供识别度
       colorPrimary: t.brandSoft,
       borderPrimary: `1px solid ${rgba(t.brand, 0.45)}`,
@@ -364,7 +451,8 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
       iconColorError: errorColor,
     },
     Progress: {
-      railColor: isDark ? neutral[800] : neutral[200],
+      // 轨道要比 surface 更可辨
+      railColor: isDark ? neutral[700] : neutral[200],
       // 默认 fillColor 跟随 type=primary，保持中性；线性进度可在使用处指定 type
     },
     Divider: {
@@ -388,7 +476,8 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
       tabPaddingSmallCard: '6px 12px',
       tabPaddingSmallBar: '6px 12px',
       colorSegment: t.inset,
-      tabColorSegment: isDark ? neutral[800] : '#ffffff',
+      tabColorSegment: isDark ? neutral[700] : '#ffffff',
+      tabBorderColor: t.borderColor,
       tabTextColorActiveSegment: t.foreground,
       tabTextColorHoverSegment: t.foreground,
       // line 模式下激活下划线使用品牌色，强化页面层级
@@ -424,6 +513,8 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
       itemHeightSmall: '24px',
       itemHeightMedium: '30px',
       itemHeightLarge: '36px',
+      borderColor: t.borderColor,
+      dividerColor: t.borderColor,
     },
     Upload: {
       draggerBorder: `1px dashed ${t.borderColor}`,
@@ -432,10 +523,13 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
     Slider: {
       railHeight: '4px',
       handleSize: '14px',
+      railColor: isDark ? neutral[700] : neutral[200],
+      railColorHover: isDark ? neutral[600] : neutral[300],
       // 滑块填充用品牌色，与 Switch 激活态保持一致
       fillColor: t.brand,
       fillColorHover: t.brandHover,
       handleColor: t.brand,
+      dotBorder: `2px solid ${isDark ? neutral[700] : neutral[200]}`,
       dotBorderActive: `2px solid ${t.brand}`,
     },
     DatePicker: {
@@ -444,18 +538,36 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
       itemCellHeight: '28px',
       itemCellWidth: '28px',
       panelActionPadding: '8px 12px',
+      peers: {
+        Input: {
+          border: `1px solid ${t.inputBorderColor}`,
+          borderHover: `1px solid ${t.inputBorderHover}`,
+          borderFocus: `1px solid ${t.inputBorderColor}`,
+        },
+      },
+    },
+    TimePicker: {
+      peers: {
+        Input: {
+          border: `1px solid ${t.inputBorderColor}`,
+          borderHover: `1px solid ${t.inputBorderHover}`,
+          borderFocus: `1px solid ${t.inputBorderColor}`,
+        },
+      },
     },
     ColorPicker: {
       heightMedium: '30px',
       fontSizeMedium: '13px',
-      heightSmall: '24px',
+      heightSmall: '30px',
       fontSizeSmall: '12px',
       heightLarge: '36px',
       fontSizeLarge: '15px',
+      border: `1px solid ${t.inputBorderColor}`,
+      borderRadius: t.radiusControl,
     },
     Skeleton: {
-      color: isDark ? neutral[800] : neutral[200],
-      colorEnd: isDark ? neutral[700] : neutral[300],
+      color: isDark ? neutral[700] : neutral[200],
+      colorEnd: isDark ? neutral[600] : neutral[300],
     },
     Statistic: {
       labelFontSize: '12px',
@@ -463,6 +575,7 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
     },
     List: {
       borderRadius: t.radiusSurface,
+      borderColor: t.borderColor,
     },
     Empty: {
       iconSizeSmall: '32px',
@@ -483,6 +596,10 @@ export function getThemeOverrides(t: ThemeTokens): GlobalThemeOverrides {
       itemBorderRadius: t.radiusControl,
       buttonIconSizeMedium: '16px',
       buttonIconSizeSmall: '14px',
+      buttonBorder: `1px solid ${t.borderColor}`,
+      buttonBorderHover: `1px solid ${t.inputBorderHover}`,
+      buttonBorderPressed: `1px solid ${t.borderColor}`,
+      itemBorderDisabled: `1px solid ${t.borderColor}`,
     },
     Descriptions: {
       thPaddingMedium: '10px 12px',

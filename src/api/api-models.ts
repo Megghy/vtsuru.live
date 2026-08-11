@@ -39,7 +39,6 @@ export interface UserInfo extends UserBasicInfo {
     enableFunctions: FunctionTypes[]
     isInBlackList: boolean
     templateTypes: { [key: string]: string }
-    streamerInfo?: StreamerModel
     allowCheckInRanking?: boolean // 是否允许查看签到排行
     allowQuestionBoxUploadImage?: boolean // 是否允许问题箱上传图片
   }

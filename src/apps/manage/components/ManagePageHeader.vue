@@ -144,11 +144,11 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
             <NInput
               :value="link.value"
               readonly
-              size="small"
+              size="medium"
             />
             <NButton
               secondary
-              size="small"
+              size="medium"
               @click="copyToClipboard(link.copyValue ?? link.value)"
             >
               <template #icon>
@@ -237,6 +237,18 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
 
 .manage-page-header__link-input {
   width: 100%;
+  display: flex;
+  align-items: stretch;
+}
+
+.manage-page-header__link-input :deep(.n-input),
+.manage-page-header__link-input :deep(.n-button) {
+  height: 30px;
+}
+
+.manage-page-header__link-input :deep(.n-input .n-input__input-el) {
+  height: 100%;
+  line-height: 30px;
 }
 
 .manage-page-header__links-extra {

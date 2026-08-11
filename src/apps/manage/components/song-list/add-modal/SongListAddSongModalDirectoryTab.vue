@@ -15,7 +15,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import type { Option } from 'naive-ui/es/transfer/src/interface'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
@@ -39,6 +39,12 @@ const folderSongs = ref<SongsInfo[]>([])
 const folderSongsOptions = ref<Option[]>([])
 const selectedFolderSongs = ref<string[]>([])
 const isScanningFolder = ref(false)
+
+defineExpose({
+  add: addFolderSongs,
+  canAdd: computed(() => selectedFolderSongs.value.length > 0),
+  label: computed(() => `添加到歌单 | ${selectedFolderSongs.value.length} 首`),
+})
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma', '.ape'])
 
@@ -336,15 +342,6 @@ async function selectFolder() {
         </NFlex>
       </NCollapseItem>
     </NCollapse>
-
-    <NDivider style="margin: 16px 0" />
-
-    <NButton
-      type="primary"
-      @click="addFolderSongs"
-    >
-      添加到歌单 | {{ selectedFolderSongs.length }} 首
-    </NButton>
 
     <NDivider style="margin: 16px 0" />
 

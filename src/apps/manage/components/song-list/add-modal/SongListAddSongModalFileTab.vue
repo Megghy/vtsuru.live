@@ -56,6 +56,12 @@ const uploadFiles = ref<UploadFileInfo[]>([])
 const uploadSongsFromFile = ref<SongsInfo[]>([])
 const selecteduploadSongs = ref<string[]>([])
 
+defineExpose({
+  add: addUploadFileSong,
+  canAdd: computed(() => selecteduploadSongs.value.length > 0),
+  label: computed(() => `添加到歌单 | ${selecteduploadSongs.value.length} 首`),
+})
+
 const uploadSongsOptions = computed<Option[]>(() => {
   return uploadSongsFromFile.value.map((s) => ({
     label: `${s.name} - ${!s.author ? '未知' : s.author.join('/')}`,
@@ -367,13 +373,6 @@ async function addUploadFileSong() {
     解析
   </NButton>
   <template v-if="uploadSongsOptions.length > 0">
-    <NDivider style="margin: 10px" />
-    <NButton
-      type="primary"
-      @click="addUploadFileSong"
-    >
-      添加到歌单 | {{ selecteduploadSongs.length }} 首
-    </NButton>
     <NDivider style="margin: 10px" />
     <NTransfer
       v-model:value="selecteduploadSongs"

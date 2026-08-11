@@ -25,6 +25,12 @@ const neteaseSongs = ref<SongsInfo[]>([])
 const neteaseSongsOptions = ref<Option[]>([])
 const selectedNeteaseSongs = ref<string[]>([])
 
+defineExpose({
+  add: addNeteaseSongs,
+  canAdd: computed(() => selectedNeteaseSongs.value.length > 0),
+  label: computed(() => `添加到歌单 | ${selectedNeteaseSongs.value.length} 首`),
+})
+
 const neteaseSongListId = computed<number | null>(() => {
   const input = String(neteaseIdInput.value ?? '').trim()
   if (!input) return null
@@ -137,12 +143,5 @@ async function addNeteaseSongs() {
       :options="neteaseSongsOptions"
       source-filterable
     />
-    <NDivider style="margin: 10px" />
-    <NButton
-      type="primary"
-      @click="addNeteaseSongs"
-    >
-      添加到歌单 | {{ selectedNeteaseSongs.length }} 首
-    </NButton>
   </template>
 </template>
