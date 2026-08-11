@@ -28,6 +28,7 @@ function hasScheduleContent(item: ScheduleDayInfo) {
 
 export function useScheduleWeek(data: MaybeRefOrGetter<ScheduleWeekInfo[] | undefined>) {
   const selectedWeek = ref<string>()
+  const weekDirection = ref(0)
   const weeks = computed(() => toValue(data) ?? [])
   // 在 computed 内求值, 跨零点挂载时"今天/本周"可随之刷新
   const currentWeekKey = computed(() => {
@@ -47,6 +48,16 @@ export function useScheduleWeek(data: MaybeRefOrGetter<ScheduleWeekInfo[] | unde
     },
     { immediate: true },
   )
+
+  watch(selectedWeek, (next, prev) => {
+    if (!next || !prev || next === prev) {
+      weekDirection.value = 0
+      return
+    }
+    const [nextYear, nextWeek] = next.split('-').map(Number)
+    const [prevYear, prevWeek] = prev.split('-').map(Number)
+    weekDirection.value = nextYear === prevYear ? Math.sign(nextWeek - prevWeek) : Math.sign(nextYear - prevYear)
+  })
 
   const days = computed(() => {
     const week = currentWeek.value
@@ -77,5 +88,5 @@ export function useScheduleWeek(data: MaybeRefOrGetter<ScheduleWeekInfo[] | unde
 
   const eventCount = computed(() => days.value.reduce((count, day) => count + day.items.length, 0))
 
-  return { selectedWeek, currentWeek, days, weekLabel, eventCount }
+  return { selectedWeek, currentWeek, days, weekLabel, eventCount, weekDirection }
 }

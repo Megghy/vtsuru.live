@@ -1,0 +1,274 @@
+.vtsuru-btn {
+  --btn-radius: var(--vtsuru-page-radius, 8px);
+  --btn-border-width: 0px;
+  --btn-border-color: var(--vtsuru-page-primary-border, var(--vtsuru-brand));
+  --btn-opacity: 1;
+  --btn-effect-scale: 1.03;
+  --btn-effect-glow: 0.42;
+  --btn-effect-duration: 1.8s;
+  border-radius: var(--btn-radius);
+  font-weight: 600;
+  opacity: var(--btn-opacity);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.vtsuru-btn.vtsuru-btn--bordered {
+  border: var(--btn-border-width) solid var(--btn-border-color) !important;
+}
+
+.vtsuru-btn.vtsuru-btn--custom {
+  --n-color: var(--btn-bg, var(--n-color)) !important;
+  --n-color-hover: color-mix(in srgb, var(--btn-bg, currentColor) 88%, #fff) !important;
+  --n-color-pressed: color-mix(in srgb, var(--btn-bg, currentColor) 82%, #000) !important;
+  --n-color-focus: var(--btn-bg, var(--n-color-focus)) !important;
+  --n-text-color: var(--btn-fg, var(--n-text-color)) !important;
+  --n-text-color-hover: var(--btn-fg, var(--n-text-color-hover)) !important;
+  --n-text-color-pressed: var(--btn-fg, var(--n-text-color-pressed)) !important;
+  --n-text-color-focus: var(--btn-fg, var(--n-text-color-focus)) !important;
+  --n-border: var(--btn-border-width, 1px) solid var(--btn-border-color, var(--btn-bg, transparent)) !important;
+  --n-border-hover: var(--btn-border-width, 1px) solid var(--btn-border-color, var(--btn-bg, transparent)) !important;
+  --n-border-pressed: var(--btn-border-width, 1px) solid var(--btn-border-color, var(--btn-bg, transparent)) !important;
+  --n-border-focus: var(--btn-border-width, 1px) solid var(--btn-border-color, var(--btn-bg, transparent)) !important;
+  color: var(--btn-fg, inherit) !important;
+  background: var(--btn-bg, inherit) !important;
+  border-color: var(--btn-border-color, var(--btn-bg, transparent)) !important;
+}
+
+.vtsuru-btn--size-sm {
+  --n-height: 28px !important;
+  --n-font-size: 12px !important;
+  --n-padding: 0 12px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+.vtsuru-btn--size-md {
+  --n-height: 38px !important;
+  --n-font-size: 14px !important;
+  --n-padding: 0 18px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 18px !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+.vtsuru-btn--size-lg {
+  --n-height: 50px !important;
+  --n-font-size: 16px !important;
+  --n-padding: 0 26px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  padding: 0 26px !important;
+  font-size: 16px !important;
+  font-weight: 700;
+  line-height: 1 !important;
+  letter-spacing: 0.02em;
+}
+
+.vtsuru-btn--full {
+  width: 100%;
+}
+
+.vtsuru-btn:not(.vtsuru-btn--full) {
+  width: auto;
+  max-width: 100%;
+}
+
+.vtsuru-btn--radius-default {
+  --btn-radius: var(--vtsuru-page-radius, 8px);
+}
+
+.vtsuru-btn--radius-pill {
+  --btn-radius: 999px;
+}
+
+.vtsuru-btn--radius-sharp {
+  --btn-radius: 0px;
+}
+
+.vtsuru-btn--radius-custom {
+  border-radius: var(--btn-radius);
+}
+
+.vtsuru-btn--intensity-low {
+  --btn-effect-scale: 1.02;
+  --btn-effect-glow: 0.28;
+  --btn-effect-duration: 2.4s;
+}
+
+.vtsuru-btn--intensity-mid {
+  --btn-effect-scale: 1.04;
+  --btn-effect-glow: 0.42;
+  --btn-effect-duration: 1.8s;
+}
+
+.vtsuru-btn--intensity-high {
+  --btn-effect-scale: 1.07;
+  --btn-effect-glow: 0.62;
+  --btn-effect-duration: 1.25s;
+}
+
+.vtsuru-btn--effect-pulse {
+  animation: vtsuru-btn-pulse var(--btn-effect-duration) ease-in-out infinite;
+}
+
+.vtsuru-btn--effect-breathe {
+  animation: vtsuru-btn-breathe var(--btn-effect-duration) ease-in-out infinite;
+}
+
+.vtsuru-btn--effect-bounce {
+  animation: vtsuru-btn-bounce calc(var(--btn-effect-duration) * 0.85) ease-in-out infinite;
+}
+
+.vtsuru-btn--effect-wiggle {
+  animation: vtsuru-btn-wiggle calc(var(--btn-effect-duration) * 0.7) ease-in-out infinite;
+}
+
+.vtsuru-btn--effect-glow {
+  animation: vtsuru-btn-glow var(--btn-effect-duration) ease-in-out infinite;
+}
+
+.vtsuru-btn--effect-rainbow {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.vtsuru-btn--effect-rainbow::before {
+  position: absolute;
+  z-index: -1;
+  inset: calc(-1 * (var(--btn-border-width, 0px) + 2px));
+  border-radius: inherit;
+  background: conic-gradient(from var(--btn-rainbow-angle, 0deg), #ff4d6d, #ffd166, #06d6a0, #4cc9f0, #b5179e, #ff4d6d);
+  content: '';
+  filter: blur(0.2px);
+  opacity: calc(0.55 + var(--btn-effect-glow) * 0.35);
+  animation: vtsuru-btn-rainbow-spin calc(var(--btn-effect-duration) * 1.4) linear infinite;
+}
+
+.vtsuru-btn--effect-rainbow::after {
+  position: absolute;
+  z-index: -1;
+  inset: 1px;
+  border-radius: inherit;
+  background: inherit;
+  content: '';
+}
+
+.vtsuru-btn:active {
+  transform: scale(0.98);
+}
+
+@keyframes vtsuru-btn-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(var(--btn-effect-scale));
+  }
+}
+
+@keyframes vtsuru-btn-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 0%, transparent);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px
+      color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) calc(var(--btn-effect-glow) * 100%), transparent);
+    filter: brightness(1.05);
+  }
+}
+
+@keyframes vtsuru-btn-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(calc((var(--btn-effect-scale) - 1) * -18px));
+  }
+  60% {
+    transform: translateY(calc((var(--btn-effect-scale) - 1) * -6px));
+  }
+}
+
+@keyframes vtsuru-btn-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(calc((var(--btn-effect-scale) - 1) * 120deg));
+  }
+  40% {
+    transform: rotate(calc((var(--btn-effect-scale) - 1) * -100deg));
+  }
+  60% {
+    transform: rotate(calc((var(--btn-effect-scale) - 1) * 70deg));
+  }
+  80% {
+    transform: rotate(calc((var(--btn-effect-scale) - 1) * -40deg));
+  }
+}
+
+@keyframes vtsuru-btn-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 0%, transparent),
+      0 0 12px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 16%, transparent),
+      0 0 22px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) calc(var(--btn-effect-glow) * 90%), transparent);
+  }
+}
+
+@keyframes vtsuru-btn-rainbow-spin {
+  to {
+    --btn-rainbow-angle: 360deg;
+  }
+}
+
+@property --btn-rainbow-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vtsuru-btn--effect-pulse,
+  .vtsuru-btn--effect-breathe,
+  .vtsuru-btn--effect-bounce,
+  .vtsuru-btn--effect-wiggle,
+  .vtsuru-btn--effect-glow,
+  .vtsuru-btn--effect-rainbow::before {
+    animation: none;
+  }
+
+  .vtsuru-btn {
+    transition: none;
+  }
+
+  .vtsuru-btn:active {
+    transform: none;
+  }
+
+  .vtsuru-btn--effect-glow,
+  .vtsuru-btn--effect-breathe {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 22%, transparent);
+  }
+}

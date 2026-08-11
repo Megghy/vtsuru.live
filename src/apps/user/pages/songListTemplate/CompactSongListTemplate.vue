@@ -2,7 +2,7 @@
 import { CloudAdd20Filled, Play24Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
 import { NButton, NEmpty, NIcon, NInput, NSelect, NTag, NTooltip } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
@@ -50,6 +50,11 @@ const filteredSongs = computed<SongsInfo[]>(() => {
     author: selectedAuthor.value,
   })
 })
+const filterEpoch = ref(0)
+watch([searchKeyword, selectedTag, selectedAuthor], () => {
+  filterEpoch.value += 1
+})
+const listKey = computed(() => `${selectedTag.value ?? 'all'}:${selectedAuthor.value ?? 'all'}:${filterEpoch.value}`)
 
 const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
   itemHeight: 60,
@@ -73,7 +78,12 @@ function requestSong(song: SongsInfo) {
         <span class="heading-kicker">QUICK INDEX</span>
         <h2>快速曲库</h2>
       </div>
-      <span class="count">{{ filteredSongs.length }} 首</span>
+      <span
+        :key="listKey"
+        class="count is-pulsing"
+      >
+        {{ filteredSongs.length }} 首
+      </span>
     </header>
 
     <div class="toolbar">
@@ -112,28 +122,35 @@ function requestSong(song: SongsInfo) {
       class="preview-player"
     />
 
-    <NEmpty
-      v-if="filteredSongs.length === 0"
-      description="暂无曲目"
-      style="margin-top: 48px"
-    />
-
-    <div
-      v-else
-      v-bind="containerProps"
-      class="list-container"
+    <Transition
+      name="compact-swap"
+      mode="out-in"
     >
-      <div v-bind="wrapperProps">
-        <div
-          v-for="{ data: song, index } in list"
-          :key="song.key"
-          class="row"
-          :class="{
-            'is-singing': singingSongKeySet.has(song.key),
-            'is-queued': queuedSongKeySet.has(song.key),
-            'is-odd': index % 2 === 1,
-          }"
-        >
+      <NEmpty
+        v-if="filteredSongs.length === 0"
+        :key="`empty-${listKey}`"
+        description="暂无曲目"
+        style="margin-top: 48px"
+      />
+
+      <div
+        v-else
+        :key="listKey"
+        v-bind="containerProps"
+        class="list-container"
+      >
+        <div v-bind="wrapperProps">
+          <div
+            v-for="{ data: song, index } in list"
+            :key="song.key"
+            class="row"
+            :class="{
+              'is-singing': singingSongKeySet.has(song.key),
+              'is-queued': queuedSongKeySet.has(song.key),
+              'is-odd': index % 2 === 1,
+              'is-tag-active': selectedTag && song.tags?.includes(selectedTag),
+            }"
+          >
           <div class="row-index">
             {{ index + 1 }}
           </div>
@@ -202,6 +219,7 @@ function requestSong(song: SongsInfo) {
               :key="tag"
               type="button"
               class="clickable-tag"
+              :class="{ 'is-active': selectedTag === tag }"
               :aria-pressed="selectedTag === tag"
               @click="selectedTag = selectedTag === tag ? null : tag"
             >
@@ -242,7 +260,8 @@ function requestSong(song: SongsInfo) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -308,6 +327,30 @@ function requestSong(song: SongsInfo) {
   font-variant-numeric: tabular-nums;
 }
 
+.count.is-pulsing {
+  animation: count-pop 0.38s cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+.compact-swap-enter-active,
+.compact-swap-leave-active {
+  transition:
+    opacity 0.26s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.26s ease;
+}
+
+.compact-swap-enter-from {
+  opacity: 0;
+  filter: blur(3px);
+  transform: translateY(12px);
+}
+
+.compact-swap-leave-to {
+  opacity: 0;
+  filter: blur(2px);
+  transform: translateY(-8px);
+}
+
 .preview-player {
   margin-bottom: 14px;
 }
@@ -330,7 +373,9 @@ function requestSong(song: SongsInfo) {
   padding: 0 14px;
   box-sizing: border-box;
   border-bottom: 1px solid color-mix(in srgb, var(--song-border) 64%, transparent);
-  transition: background-color 0.12s ease;
+  transition:
+    background-color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .row.is-odd {
@@ -339,6 +384,11 @@ function requestSong(song: SongsInfo) {
 
 .row:hover {
   background: var(--song-bg-hover);
+  transform: translateX(2px);
+}
+
+.row.is-tag-active {
+  background: color-mix(in srgb, var(--song-accent) 8%, transparent);
 }
 
 .row.is-singing {
@@ -445,6 +495,11 @@ function requestSong(song: SongsInfo) {
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
+  transition:
+    color 0.16s ease,
+    background-color 0.16s ease,
+    transform 0.2s cubic-bezier(0.22, 1.4, 0.36, 1),
+    box-shadow 0.2s ease;
 }
 
 .clickable-tag:hover,
@@ -452,6 +507,15 @@ function requestSong(song: SongsInfo) {
   background: var(--song-accent-soft);
   color: var(--song-accent);
   outline: none;
+  transform: translateY(-1px);
+}
+
+.clickable-tag.is-active {
+  color: var(--song-accent);
+  background: var(--song-accent-soft);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--song-accent) 18%, transparent);
+  transform: scale(1.06);
+  animation: tag-pop 0.34s cubic-bezier(0.22, 1.4, 0.36, 1);
 }
 
 .row-actions {
@@ -487,6 +551,51 @@ function requestSong(song: SongsInfo) {
   .list-container {
     height: min(620px, 68dvh);
     min-height: 320px;
+  }
+}
+
+@keyframes count-pop {
+  0% {
+    transform: scale(0.9);
+    color: var(--song-accent);
+  }
+  55% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tag-pop {
+  0% {
+    transform: scale(0.94);
+  }
+  55% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .count.is-pulsing,
+  .clickable-tag.is-active {
+    animation: none;
+  }
+
+  .compact-swap-enter-active,
+  .compact-swap-leave-active,
+  .row,
+  .clickable-tag {
+    transition: none;
+  }
+
+  .row:hover,
+  .clickable-tag:hover,
+  .clickable-tag.is-active {
+    transform: none;
   }
 }
 </style>

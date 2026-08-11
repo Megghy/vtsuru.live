@@ -7,6 +7,7 @@ import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
 import { ensureGoogleFont } from './scheduleFonts'
+import './scheduleTemplateTheme.css'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
@@ -59,11 +60,12 @@ const DefaultConfig: PinkyConfig = {
 
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
-const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { selectedWeek, weekDirection, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 
 const boardStyle = computed(() => ({
   '--pinky-accent': rgbaToString(effectiveConfig.value.accentColor),
+  '--week-dir': weekDirection.value || 1,
   ...backgroundImageStyle.value,
 }))
 
@@ -79,12 +81,17 @@ defineExpose({ Config, DefaultConfig })
       :file-name="`粉粉周表_${selectedWeek || '本周'}_${props.userInfo?.name || '主播'}`"
     />
 
-    <div
-      ref="boardRef"
-      class="pinky-board"
-      :class="{ 'has-background': backgroundUrl, 'has-artwork': portraitUrl }"
-      :style="boardStyle"
+    <Transition
+      name="schedule-week-swap"
+      mode="out-in"
     >
+      <div
+        :key="selectedWeek || 'empty'"
+        ref="boardRef"
+        class="pinky-board"
+        :class="{ 'has-background': backgroundUrl, 'has-artwork': portraitUrl }"
+        :style="boardStyle"
+      >
       <header class="pinky-head">
         <h2 class="pinky-head__title">{{ effectiveConfig.heading }}</h2>
         <p class="pinky-head__meta">{{ weekLabel }} · {{ eventCount }} 场直播</p>
@@ -112,12 +119,13 @@ defineExpose({ Config, DefaultConfig })
         />
       </figure>
 
-      <ol class="pinky-days">
+      <ol class="pinky-days schedule-day-stagger">
         <li
-          v-for="day in days"
+          v-for="(day, dayIndex) in days"
           :key="day.english"
           class="pinky-day"
           :class="{ 'is-today': day.isToday }"
+          :style="{ '--day-index': dayIndex }"
         >
           <header class="pinky-day__head">
             <span class="pinky-day__identity">
@@ -164,7 +172,8 @@ defineExpose({ Config, DefaultConfig })
           </div>
         </li>
       </ol>
-    </div>
+      </div>
+    </Transition>
   </section>
 </template>
 

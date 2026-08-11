@@ -4,7 +4,13 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import BlockCard from '../BlockCard.vue'
+import {
+  buttonAppearanceClass,
+  buttonAppearanceStyle,
+  normalizeButtonAppearance,
+} from '../buttonAppearance'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
+import '../buttonAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
@@ -37,23 +43,14 @@ const label = computed(() => {
   return typeof v === 'string' ? v : ''
 })
 
-const framed = computed(() => {
-  const v = propsObj.value.framed
-  if (typeof v === 'boolean') return v
-  return false
-})
-
-const backgrounded = computed(() => {
-  const v = propsObj.value.backgrounded
-  if (typeof v === 'boolean') return v
-  return false
-})
+const framed = computed(() => propsObj.value.framed === true)
+const backgrounded = computed(() => propsObj.value.backgrounded === true)
 
 const buttonType = computed(() => {
   const v = propsObj.value.type
   if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default')
     return v
-  return 'primary'
+  return 'default'
 })
 
 const variant = computed<'solid' | 'secondary' | 'tertiary' | 'quaternary' | 'ghost'>(() => {
@@ -69,11 +66,12 @@ const align = computed<'start' | 'center' | 'end'>(() => {
   return 'start'
 })
 
-const fullWidth = computed(() => {
-  const v = propsObj.value.fullWidth
-  if (typeof v === 'boolean') return v
-  return true
-})
+const fullWidth = computed(() => propsObj.value.fullWidth === true)
+
+const appearance = computed(() => normalizeButtonAppearance(propsObj.value))
+const btnClass = computed(() => buttonAppearanceClass(appearance.value, fullWidth.value))
+const btnStyle = computed(() => buttonAppearanceStyle(appearance.value))
+const naiveSize = computed(() => (appearance.value.size === 'sm' ? 'small' : appearance.value.size === 'lg' ? 'large' : 'medium'))
 
 const internalTarget = computed(() => {
   const v = propsObj.value.page
@@ -114,12 +112,13 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
       <NButton
         v-if="isBack || internalTarget"
         :type="buttonType as any"
+        :size="naiveSize"
         :secondary="variant === 'secondary'"
         :tertiary="variant === 'tertiary'"
         :quaternary="variant === 'quaternary'"
         :ghost="variant === 'ghost'"
-        class="vtsuru-btn"
-        :style="fullWidth ? 'width: 100%' : undefined"
+        :class="btnClass"
+        :style="btnStyle"
         @click="handleClick"
       >
         {{ label }}
@@ -128,6 +127,7 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
         v-else
         tag="a"
         :type="buttonType as any"
+        :size="naiveSize"
         :secondary="variant === 'secondary'"
         :tertiary="variant === 'tertiary'"
         :quaternary="variant === 'quaternary'"
@@ -135,32 +135,11 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
         target="_blank"
         rel="noopener noreferrer"
         :href="externalHref"
-        class="vtsuru-btn"
-        :style="fullWidth ? 'width: 100%' : undefined"
+        :class="btnClass"
+        :style="btnStyle"
       >
         {{ label }}
       </NButton>
     </NFlex>
   </BlockCard>
 </template>
-
-<style scoped>
-.vtsuru-btn {
-  border-radius: var(--vtsuru-page-radius);
-  font-weight: 600;
-  transition: transform 0.1s ease;
-}
-
-.vtsuru-btn:active {
-  transform: scale(0.98);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .vtsuru-btn {
-    transition: none;
-  }
-  .vtsuru-btn:active {
-    transform: none;
-  }
-}
-</style>

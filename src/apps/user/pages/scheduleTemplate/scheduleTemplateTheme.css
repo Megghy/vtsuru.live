@@ -37,3 +37,53 @@
   color: var(--schedule-subtle);
   font-style: italic;
 }
+
+.schedule-week-swap-enter-active,
+.schedule-week-swap-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.3s ease;
+}
+
+.schedule-week-swap-enter-from,
+.schedule-week-swap-leave-to {
+  opacity: 0;
+  filter: blur(4px);
+}
+
+.schedule-week-swap-enter-from {
+  transform: translateX(calc(var(--week-dir, 1) * 28px)) scale(0.985);
+}
+
+.schedule-week-swap-leave-to {
+  transform: translateX(calc(var(--week-dir, 1) * -22px)) scale(0.985);
+}
+
+.schedule-day-stagger > * {
+  animation: schedule-day-enter 0.42s calc(var(--day-index, 0) * 45ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes schedule-day-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-week-swap-enter-active,
+  .schedule-week-swap-leave-active {
+    transition: none;
+  }
+
+  .schedule-day-stagger > * {
+    animation: none;
+  }
+
+  .schedule-week-swap-enter-from,
+  .schedule-week-swap-leave-to {
+    filter: none;
+    transform: none;
+  }
+}

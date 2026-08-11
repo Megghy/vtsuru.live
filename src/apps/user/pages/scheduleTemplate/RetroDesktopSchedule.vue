@@ -52,7 +52,7 @@ const DefaultConfig: RetroDesktopConfig = {
 
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
-const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { selectedWeek, weekDirection, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
 
 defineExpose({ Config, DefaultConfig })
@@ -67,11 +67,17 @@ defineExpose({ Config, DefaultConfig })
       :file-name="`像素桌面周表_${selectedWeek || '本周'}_${streamerName}`"
     />
 
-    <div
-      ref="boardRef"
-      class="retro-board"
-      :class="`retro-board--${effectiveConfig.desktopStyle}`"
+    <Transition
+      name="schedule-week-swap"
+      mode="out-in"
     >
+      <div
+        :key="selectedWeek || 'empty'"
+        ref="boardRef"
+        class="retro-board"
+        :class="`retro-board--${effectiveConfig.desktopStyle}`"
+        :style="{ '--week-dir': weekDirection || 1 }"
+      >
       <div
         class="retro-scanlines"
         aria-hidden="true"
@@ -166,12 +172,13 @@ defineExpose({ Config, DefaultConfig })
             </dl>
           </header>
 
-          <ol class="retro-days">
+          <ol class="retro-days schedule-day-stagger">
             <li
-              v-for="day in days"
+              v-for="(day, dayIndex) in days"
               :key="day.english"
               class="retro-day"
               :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
+              :style="{ '--day-index': dayIndex }"
             >
               <header class="retro-day__folder">
                 <span
@@ -249,7 +256,8 @@ defineExpose({ Config, DefaultConfig })
         <span class="retro-task">S {{ effectiveConfig.windowTitle }}</span>
         <time>20:00</time>
       </div>
-    </div>
+      </div>
+    </Transition>
   </section>
 </template>
 

@@ -62,7 +62,7 @@ const DefaultConfig: MagazineConfig = {
 
 const posterRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
-const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { selectedWeek, weekDirection, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
@@ -103,6 +103,7 @@ const categoryLegend = computed(() => {
 
 const posterStyle = computed(() => ({
   '--magazine-accent': rgbaToString(effectiveConfig.value.accentColor),
+  '--week-dir': weekDirection.value || 1,
   ...backgroundImageStyle.value,
 }))
 
@@ -118,13 +119,18 @@ defineExpose({ Config, DefaultConfig })
       :file-name="`直播特刊_${selectedWeek || '本周'}_${streamerName}`"
     />
 
-    <article
-      ref="posterRef"
-      class="magazine-poster"
-      :class="{ 'has-background': backgroundUrl, 'has-cover': portraitUrl }"
-      :style="posterStyle"
-      aria-labelledby="magazine-poster-title"
+    <Transition
+      name="schedule-week-swap"
+      mode="out-in"
     >
+      <article
+        :key="selectedWeek || 'empty'"
+        ref="posterRef"
+        class="magazine-poster"
+        :class="{ 'has-background': backgroundUrl, 'has-cover': portraitUrl }"
+        :style="posterStyle"
+        aria-labelledby="magazine-poster-title"
+      >
       <div
         class="paper-grain"
         aria-hidden="true"
@@ -292,7 +298,8 @@ defineExpose({ Config, DefaultConfig })
         <strong>@{{ streamerName }}</strong>
         <span>每周发行 · 请以实际开播时间为准</span>
       </footer>
-    </article>
+      </article>
+    </Transition>
   </section>
 </template>
 

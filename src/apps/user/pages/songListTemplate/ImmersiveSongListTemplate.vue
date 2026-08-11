@@ -53,8 +53,11 @@ watch(
   { immediate: true },
 )
 
+const stageEpoch = ref(0)
 function selectSong(song: SongsInfo) {
+  if (selectedSong.value?.key === song.key) return
   selectedSong.value = song
+  stageEpoch.value += 1
 }
 
 function requestSong(song: SongsInfo) {
@@ -74,129 +77,144 @@ function requestSong(song: SongsInfo) {
   >
     <aside class="stage">
       <span class="stage-kicker">NOW SELECTED</span>
-      <div
-        class="stage-cover"
-        :class="{ 'is-empty': !selectedSong?.cover }"
+      <Transition
+        name="stage-cover"
+        mode="out-in"
       >
-        <img
-          v-if="selectedSong?.cover"
-          :src="selectedSong.cover"
-          :alt="selectedSong.name"
-          referrerpolicy="no-referrer"
-        />
-        <NIcon
-          v-else
-          :component="MusicNote224Filled"
-          class="stage-cover-icon"
-        />
-      </div>
-
-      <template v-if="selectedSong">
-        <div class="stage-title">
-          {{ selectedSong.name }}
-        </div>
         <div
-          v-if="selectedSong.translateName"
-          class="stage-subtitle"
+          :key="selectedSong?.key ?? 'empty'"
+          class="stage-cover"
+          :class="{ 'is-empty': !selectedSong?.cover }"
         >
-          {{ selectedSong.translateName }}
+          <img
+            v-if="selectedSong?.cover"
+            :src="selectedSong.cover"
+            :alt="selectedSong.name"
+            referrerpolicy="no-referrer"
+          />
+          <NIcon
+            v-else
+            :component="MusicNote224Filled"
+            class="stage-cover-icon"
+          />
         </div>
+      </Transition>
+
+      <Transition
+        name="stage-meta"
+        mode="out-in"
+      >
         <div
-          v-if="selectedSong.author?.length"
-          class="stage-author"
+          v-if="selectedSong"
+          :key="`${selectedSong.key}-${stageEpoch}`"
+          class="stage-meta"
         >
-          {{ selectedSong.author.join(' / ') }}
+          <div class="stage-title">
+            {{ selectedSong.name }}
+          </div>
+          <div
+            v-if="selectedSong.translateName"
+            class="stage-subtitle"
+          >
+            {{ selectedSong.translateName }}
+          </div>
+          <div
+            v-if="selectedSong.author?.length"
+            class="stage-author"
+          >
+            {{ selectedSong.author.join(' / ') }}
+          </div>
+
+          <div
+            v-if="selectedSong.language?.length || selectedSong.tags?.length"
+            class="stage-tags"
+          >
+            <NTag
+              v-for="lang in selectedSong.language ?? []"
+              :key="`l-${lang}`"
+              size="small"
+              :bordered="false"
+              type="info"
+            >
+              {{ lang }}
+            </NTag>
+            <NTag
+              v-for="tag in (selectedSong.tags ?? []).slice(0, 4)"
+              :key="`t-${tag}`"
+              size="small"
+              :bordered="false"
+            >
+              {{ tag }}
+            </NTag>
+          </div>
+
+          <div
+            v-if="selectedSong.options"
+            class="stage-tags"
+          >
+            <NTag
+              v-if="selectedSong.options.scMinPrice"
+              size="small"
+              :bordered="false"
+              type="error"
+            >
+              SC ¥{{ selectedSong.options.scMinPrice }}
+            </NTag>
+            <NTag
+              v-if="selectedSong.options.fanMedalMinLevel"
+              size="small"
+              :bordered="false"
+              type="warning"
+            >
+              粉丝牌 {{ selectedSong.options.fanMedalMinLevel }}
+            </NTag>
+            <NTag
+              v-if="selectedSong.options.needZongdu"
+              size="small"
+              :bordered="false"
+              :color="{ color: GetGuardColor(1) }"
+            >
+              总督
+            </NTag>
+            <NTag
+              v-if="selectedSong.options.needTidu"
+              size="small"
+              :bordered="false"
+              :color="{ color: GetGuardColor(2) }"
+            >
+              提督
+            </NTag>
+            <NTag
+              v-if="selectedSong.options.needJianzhang"
+              size="small"
+              :bordered="false"
+              :color="{ color: GetGuardColor(3) }"
+            >
+              舰长
+            </NTag>
+          </div>
+
+          <NButton
+            v-if="!isSelf"
+            class="stage-request"
+            :type="getSongRequestButtonType(selectedSong, liveRequestSettings, requestAuthState)"
+            :loading="requestingKey === selectedSong.key"
+            @click="requestSong(selectedSong)"
+          >
+            <template #icon>
+              <NIcon :component="CloudAdd20Filled" />
+            </template>
+            {{ getSongRequestTooltip(selectedSong, liveRequestSettings, requestAuthState) }}
+          </NButton>
+
+          <SongPlayer
+            v-if="selectedSong.url"
+            v-model:is-lrc-loading="isLrcLoading"
+            :song="selectedSong"
+            class="stage-player"
+          />
         </div>
-
-        <div
-          v-if="selectedSong.language?.length || selectedSong.tags?.length"
-          class="stage-tags"
-        >
-          <NTag
-            v-for="lang in selectedSong.language ?? []"
-            :key="`l-${lang}`"
-            size="small"
-            :bordered="false"
-            type="info"
-          >
-            {{ lang }}
-          </NTag>
-          <NTag
-            v-for="tag in (selectedSong.tags ?? []).slice(0, 4)"
-            :key="`t-${tag}`"
-            size="small"
-            :bordered="false"
-          >
-            {{ tag }}
-          </NTag>
-        </div>
-
-        <div
-          v-if="selectedSong.options"
-          class="stage-tags"
-        >
-          <NTag
-            v-if="selectedSong.options.scMinPrice"
-            size="small"
-            :bordered="false"
-            type="error"
-          >
-            SC ¥{{ selectedSong.options.scMinPrice }}
-          </NTag>
-          <NTag
-            v-if="selectedSong.options.fanMedalMinLevel"
-            size="small"
-            :bordered="false"
-            type="warning"
-          >
-            粉丝牌 {{ selectedSong.options.fanMedalMinLevel }}
-          </NTag>
-          <NTag
-            v-if="selectedSong.options.needZongdu"
-            size="small"
-            :bordered="false"
-            :color="{ color: GetGuardColor(1) }"
-          >
-            总督
-          </NTag>
-          <NTag
-            v-if="selectedSong.options.needTidu"
-            size="small"
-            :bordered="false"
-            :color="{ color: GetGuardColor(2) }"
-          >
-            提督
-          </NTag>
-          <NTag
-            v-if="selectedSong.options.needJianzhang"
-            size="small"
-            :bordered="false"
-            :color="{ color: GetGuardColor(3) }"
-          >
-            舰长
-          </NTag>
-        </div>
-
-        <NButton
-          v-if="!isSelf"
-          class="stage-request"
-          :type="getSongRequestButtonType(selectedSong, liveRequestSettings, requestAuthState)"
-          :loading="requestingKey === selectedSong.key"
-          @click="requestSong(selectedSong)"
-        >
-          <template #icon>
-            <NIcon :component="CloudAdd20Filled" />
-          </template>
-          {{ getSongRequestTooltip(selectedSong, liveRequestSettings, requestAuthState) }}
-        </NButton>
-
-        <SongPlayer
-          v-if="selectedSong.url"
-          v-model:is-lrc-loading="isLrcLoading"
-          :song="selectedSong"
-          class="stage-player"
-        />
-      </template>
+      </Transition>
     </aside>
 
     <section class="library">
@@ -336,6 +354,10 @@ function requestSong(song: SongsInfo) {
   opacity: 0.16;
   content: '';
   transform: scale(1.08);
+  transition:
+    opacity 0.45s ease,
+    filter 0.45s ease,
+    transform 0.8s ease;
 }
 
 .stage,
@@ -381,6 +403,38 @@ function requestSong(song: SongsInfo) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  animation: cover-kenburns 8s ease-in-out both;
+}
+
+.stage-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.stage-cover-enter-active,
+.stage-cover-leave-active,
+.stage-meta-enter-active,
+.stage-meta-leave-active {
+  transition:
+    opacity 0.32s ease,
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.32s ease;
+}
+
+.stage-cover-enter-from,
+.stage-meta-enter-from {
+  opacity: 0;
+  filter: blur(6px);
+  transform: translateY(14px) scale(0.96);
+}
+
+.stage-cover-leave-to,
+.stage-meta-leave-to {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(-10px) scale(0.98);
 }
 
 .stage-cover.is-empty {
@@ -639,6 +693,37 @@ function requestSong(song: SongsInfo) {
 
   .lib-flag {
     display: none;
+  }
+}
+
+@keyframes cover-kenburns {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-cover img {
+    animation: none;
+  }
+
+  .stage-cover-enter-active,
+  .stage-cover-leave-active,
+  .stage-meta-enter-active,
+  .stage-meta-leave-active,
+  .immersive-template::before {
+    transition: none;
+  }
+
+  .stage-cover-enter-from,
+  .stage-meta-enter-from,
+  .stage-cover-leave-to,
+  .stage-meta-leave-to {
+    filter: none;
+    transform: none;
   }
 }
 </style>

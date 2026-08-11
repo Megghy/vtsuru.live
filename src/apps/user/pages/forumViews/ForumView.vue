@@ -214,8 +214,9 @@ onUnmounted(() => {
             clickable
           >
             <NListItem
-              v-for="item in topics?.data ?? []"
+              v-for="(item, index) in topics?.data ?? []"
               :key="item.id"
+              :style="{ '--topic-index': index }"
             >
               <a
                 class="topic-link"
@@ -289,11 +290,41 @@ onUnmounted(() => {
   display: block;
   color: inherit;
   text-decoration: none;
+  transition: transform 0.18s ease;
+}
+
+.topic-link:hover {
+  transform: translateX(3px);
+}
+
+.forum-topics :deep(.n-list-item) {
+  animation: forum-topic-enter 0.4s calc(var(--topic-index, 0) * 40ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes forum-topic-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }
 
 @media (max-width: 900px) {
   .forum-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topic-link {
+    transition: none;
+  }
+
+  .forum-topics :deep(.n-list-item) {
+    animation: none;
+  }
+
+  .topic-link:hover {
+    transform: none;
   }
 }
 </style>

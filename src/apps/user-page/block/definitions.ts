@@ -156,6 +156,20 @@ function validateButtonAppearance(
   if (isBlockPropertyAvailable(type, props, 'fullWidth')) optionalBoolean(props, 'fullWidth', path, errors)
   if (isBlockPropertyAvailable(type, props, 'align'))
     optionalEnum(props, 'align', ['start', 'center', 'end'], path, errors)
+  optionalEnum(props, 'size', ['sm', 'md', 'lg'], path, errors)
+  optionalEnum(props, 'radius', ['default', 'pill', 'sharp', 'custom'], path, errors)
+  if (props.radius === 'custom') optionalNumber(props, 'radiusPx', 0, 48, path, errors)
+  optionalNumber(props, 'borderWidth', 0, 8, path, errors)
+  optionalNumber(props, 'opacity', 0.15, 1, path, errors)
+  for (const key of ['borderColor', 'color', 'textColor'] as const) {
+    const value = props[key]
+    if (value === undefined || value === null) continue
+    if (typeof value !== 'string') errors.push(`${path}: ${key} 必须是 string`, key)
+    else if (!/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value.trim()))
+      errors.push(`${path}: ${key} 必须是十六进制颜色`, key)
+  }
+  optionalEnum(props, 'effect', ['none', 'pulse', 'breathe', 'bounce', 'wiggle', 'glow', 'rainbow'], path, errors)
+  optionalEnum(props, 'effectIntensity', ['low', 'mid', 'high'], path, errors)
 }
 
 const validateButton = withProps((props, path, errors, context) => {
@@ -446,10 +460,12 @@ export const SHARED_BLOCK_DEFINITIONS = [
     '标题',
     'basic',
     ['标题', 'heading'],
-    { text: '标题', level: 2 },
+    { text: '标题', level: 2, textEffect: 'none', effectIntensity: 'mid' },
     withProps((p, path, errors, context) => {
       if (!context.hidden) requiredString(p, 'text', path, errors)
       optionalEnum(p, 'level', [1, 2, 3], path, errors)
+      optionalEnum(p, 'textEffect', ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'], path, errors)
+      optionalEnum(p, 'effectIntensity', ['low', 'mid', 'high'], path, errors)
     }),
     true,
   ),
@@ -458,9 +474,11 @@ export const SHARED_BLOCK_DEFINITIONS = [
     '文本',
     'basic',
     ['文字', '段落'],
-    { text: '' },
+    { text: '', textEffect: 'none', effectIntensity: 'mid' },
     withProps((p, path, errors) => {
       if (typeof p.text !== 'string') errors.push(`${path}: text 必须是 string`, 'text')
+      optionalEnum(p, 'textEffect', ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'], path, errors)
+      optionalEnum(p, 'effectIntensity', ['low', 'mid', 'high'], path, errors)
     }),
     true,
   ),
@@ -505,10 +523,17 @@ export const SHARED_BLOCK_DEFINITIONS = [
     {
       label: '按钮',
       page: 'home',
-      type: 'primary',
+      type: 'default',
       variant: 'solid',
-      fullWidth: true,
+      fullWidth: false,
       align: 'start',
+      size: 'md',
+      radius: 'default',
+      radiusPx: 12,
+      borderWidth: 0,
+      opacity: 1,
+      effect: 'none',
+      effectIntensity: 'mid',
       framed: false,
       backgrounded: false,
     },
@@ -523,11 +548,18 @@ export const SHARED_BLOCK_DEFINITIONS = [
     {
       items: [],
       direction: 'vertical',
-      type: 'primary',
+      type: 'default',
       variant: 'solid',
       gap: 10,
-      fullWidth: true,
+      fullWidth: false,
       align: 'start',
+      size: 'md',
+      radius: 'default',
+      radiusPx: 12,
+      borderWidth: 0,
+      opacity: 1,
+      effect: 'none',
+      effectIntensity: 'mid',
       framed: false,
       backgrounded: false,
     },
@@ -817,11 +849,13 @@ export const SHARED_BLOCK_DEFINITIONS = [
     '金句引用',
     'content',
     ['引用', '语录'],
-    { text: '', author: '', align: 'center' },
+    { text: '', author: '', align: 'center', textEffect: 'none', effectIntensity: 'mid' },
     withProps((p, path, errors) => {
       optionalString(p, 'text', path, errors)
       optionalString(p, 'author', path, errors)
       optionalEnum(p, 'align', ['left', 'center', 'right'], path, errors)
+      optionalEnum(p, 'textEffect', ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'], path, errors)
+      optionalEnum(p, 'effectIntensity', ['low', 'mid', 'high'], path, errors)
     }),
   ),
   definition(

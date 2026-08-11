@@ -85,7 +85,7 @@ const DefaultConfig: LivePosterConfig = {
 
 const posterRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
-const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { selectedWeek, weekDirection, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
 const categoryColors: Record<ScheduleCategoryKey, string> = {
@@ -124,6 +124,7 @@ const legendItems = computed(() => {
 const posterStyle = computed(() => ({
   '--poster-red': rgbaToString(effectiveConfig.value.accentColor),
   '--poster-paper': rgbaToString(effectiveConfig.value.accentColor2),
+  '--week-dir': weekDirection.value || 1,
   ...backgroundImageStyle.value,
 }))
 
@@ -139,13 +140,18 @@ defineExpose({ Config, DefaultConfig })
       :file-name="`巡演海报_${selectedWeek || '本周'}_${streamerName}`"
     />
 
-    <article
-      ref="posterRef"
-      class="live-poster"
-      :class="{ 'has-background': backgroundUrl, 'has-artwork': portraitUrl }"
-      :style="posterStyle"
-      aria-labelledby="live-poster-title"
+    <Transition
+      name="schedule-week-swap"
+      mode="out-in"
     >
+      <article
+        :key="selectedWeek || 'empty'"
+        ref="posterRef"
+        class="live-poster"
+        :class="{ 'has-background': backgroundUrl, 'has-artwork': portraitUrl }"
+        :style="posterStyle"
+        aria-labelledby="live-poster-title"
+      >
       <div
         class="poster-registration"
         aria-hidden="true"
@@ -265,7 +271,8 @@ defineExpose({ Config, DefaultConfig })
           </li>
         </ul>
       </footer>
-    </article>
+      </article>
+    </Transition>
   </section>
 </template>
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Chat24Regular } from '@vicons/fluent'
 import { NAvatar, NEmpty, NIcon, NImage, NPagination, NSpin, NTime } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
@@ -16,20 +16,68 @@ const props = defineProps<{
 const page = ref(1)
 const pageSize = 8
 const selectedTag = ref<string | null>(null)
+const filterPulse = ref(0)
+const listPhase = ref(0)
+const filterRail = ref<HTMLElement | null>(null)
+const indicatorStyle = ref({ width: '0px', transform: 'translateX(0px)', opacity: '0' })
+let indicatorFrame = 0
+
 const availableTags = computed(() => [...new Set(props.questions.map((item) => item.tag).filter(Boolean) as string[])])
 const filteredQuestions = computed(() =>
   selectedTag.value ? props.questions.filter((item) => item.tag === selectedTag.value) : props.questions,
 )
 const pagedQuestions = computed(() => filteredQuestions.value.slice((page.value - 1) * pageSize, page.value * pageSize))
+const displayCount = computed(() => filteredQuestions.value.length)
+const listKey = computed(() => `${selectedTag.value ?? 'all'}:${page.value}:${listPhase.value}`)
 
-watch(selectedTag, () => (page.value = 1))
+function selectTag(tag: string | null) {
+  if (selectedTag.value === tag) return
+  selectedTag.value = tag
+  filterPulse.value += 1
+  listPhase.value += 1
+}
+
+function updateIndicator() {
+  const rail = filterRail.value
+  if (!rail) {
+    indicatorStyle.value = { width: '0px', transform: 'translateX(0px)', opacity: '0' }
+    return
+  }
+  const active = rail.querySelector<HTMLElement>('.is-active')
+  if (!active) {
+    indicatorStyle.value = { ...indicatorStyle.value, opacity: '0' }
+    return
+  }
+  indicatorStyle.value = {
+    width: `${active.offsetWidth}px`,
+    transform: `translateX(${active.offsetLeft - rail.scrollLeft}px)`,
+    opacity: '1',
+  }
+}
+
+function scheduleIndicator() {
+  cancelAnimationFrame(indicatorFrame)
+  indicatorFrame = requestAnimationFrame(() => {
+    void nextTick(updateIndicator)
+  })
+}
+
+watch(selectedTag, () => {
+  page.value = 1
+  scheduleIndicator()
+})
 watch(
   () => props.questions.length,
   () => {
     const maxPage = Math.max(1, Math.ceil(filteredQuestions.value.length / pageSize))
     if (page.value > maxPage) page.value = maxPage
+    scheduleIndicator()
   },
 )
+watch(availableTags, scheduleIndicator, { flush: 'post' })
+watch(page, scheduleIndicator)
+
+onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
 </script>
 
 <template>
@@ -42,20 +90,36 @@ watch(
         <div>
           <span class="feed-kicker">PUBLIC REPLIES</span>
           <h2>公开问答</h2>
-          <p>{{ questions.length ? `已公开 ${questions.length} 条留言` : '还没有公开内容' }}</p>
+          <p>
+            <template v-if="!questions.length">还没有公开内容</template>
+            <template v-else-if="selectedTag">话题「{{ selectedTag }}」· {{ displayCount }} 条</template>
+            <template v-else>已公开 {{ questions.length }} 条留言</template>
+          </p>
         </div>
-        <span class="reply-count">{{ questions.length }}</span>
+        <span
+          :key="filterPulse"
+          class="reply-count"
+          :class="{ 'is-pulsing': filterPulse > 0 }"
+        >
+          {{ displayCount }}
+        </span>
       </header>
 
       <div
         v-if="availableTags.length > 1"
+        ref="filterRail"
         class="feed-filters"
         aria-label="按话题筛选"
+        @scroll.passive="scheduleIndicator"
       >
+        <span
+          class="filter-indicator"
+          :style="indicatorStyle"
+        />
         <button
           type="button"
           :class="{ 'is-active': selectedTag === null }"
-          @click="selectedTag = null"
+          @click="selectTag(null)"
         >
           全部
         </button>
@@ -64,7 +128,7 @@ watch(
           :key="tag"
           type="button"
           :class="{ 'is-active': selectedTag === tag }"
-          @click="selectedTag = tag"
+          @click="selectTag(tag)"
         >
           {{ tag }}
         </button>
@@ -72,87 +136,98 @@ watch(
     </div>
 
     <NSpin :show="isLoading">
-      <TransitionGroup
-        v-if="pagedQuestions.length"
-        name="question-thread"
-        tag="div"
-        class="thread-list"
+      <Transition
+        name="feed-swap"
+        mode="out-in"
       >
-        <article
-          v-for="(item, index) in pagedQuestions"
-          :key="item.id"
-          class="question-thread"
-          :style="{ '--thread-index': index }"
+        <div
+          v-if="pagedQuestions.length"
+          :key="listKey"
+          class="thread-stage"
         >
-          <div class="question-marker">
-            <NIcon :component="Chat24Regular" />
-          </div>
-          <div class="thread-content">
-            <div class="question-meta">
-              <NTime
-                :time="item.sendAt"
-                type="relative"
-              />
-              <span v-if="item.tag">{{ item.tag }}</span>
-            </div>
-            <p class="question-message">{{ item.question.message }}</p>
-            <div
-              v-if="item.questionImages?.length"
-              class="thread-images"
+          <TransitionGroup
+            name="question-thread"
+            tag="div"
+            class="thread-list"
+          >
+            <article
+              v-for="(item, index) in pagedQuestions"
+              :key="item.id"
+              class="question-thread"
+              :style="{ '--thread-index': index }"
             >
-              <NImage
-                v-for="image in item.questionImages"
-                :key="image.path"
-                :src="image.path"
-                object-fit="cover"
-              />
-            </div>
-
-            <div
-              v-if="item.answer"
-              class="answer-block"
-            >
-              <div class="answer-author">
-                <NAvatar
-                  round
-                  :size="28"
-                  :src="
-                    userInfo?.faceUrl ||
-                    userInfo?.streamerInfo?.faceUrl ||
-                    (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=64` : undefined)
-                  "
-                  :img-props="{ referrerpolicy: 'no-referrer', alt: `${userInfo?.name || '主播'} 的头像` }"
-                />
-                <strong>{{ userInfo?.name || '主播' }}</strong>
-                <span>的回复</span>
-                <NTime
-                  v-if="item.answer.createdAt"
-                  :time="item.answer.createdAt"
-                  type="relative"
-                />
+              <div class="question-marker">
+                <NIcon :component="Chat24Regular" />
               </div>
-              <p>{{ item.answer.message }}</p>
-              <div
-                v-if="item.answerImages?.length"
-                class="thread-images"
-              >
-                <NImage
-                  v-for="image in item.answerImages"
-                  :key="image.path"
-                  :src="image.path"
-                  object-fit="cover"
-                />
-              </div>
-            </div>
-          </div>
-        </article>
-      </TransitionGroup>
+              <div class="thread-content">
+                <div class="question-meta">
+                  <NTime
+                    :time="item.sendAt"
+                    type="relative"
+                  />
+                  <span v-if="item.tag">{{ item.tag }}</span>
+                </div>
+                <p class="question-message">{{ item.question.message }}</p>
+                <div
+                  v-if="item.questionImages?.length"
+                  class="thread-images"
+                >
+                  <NImage
+                    v-for="image in item.questionImages"
+                    :key="image.path"
+                    :src="image.path"
+                    object-fit="cover"
+                  />
+                </div>
 
-      <NEmpty
-        v-else-if="!isLoading"
-        class="feed-empty"
-        :description="selectedTag ? '该话题暂无公开回复' : '暂无公开回复'"
-      />
+                <div
+                  v-if="item.answer"
+                  class="answer-block"
+                >
+                  <div class="answer-author">
+                    <NAvatar
+                      round
+                      :size="28"
+                      :src="
+                        userInfo?.faceUrl ||
+                        userInfo?.streamerInfo?.faceUrl ||
+                        (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=64` : undefined)
+                      "
+                      :img-props="{ referrerpolicy: 'no-referrer', alt: `${userInfo?.name || '主播'} 的头像` }"
+                    />
+                    <strong>{{ userInfo?.name || '主播' }}</strong>
+                    <span>的回复</span>
+                    <NTime
+                      v-if="item.answer.createdAt"
+                      :time="item.answer.createdAt"
+                      type="relative"
+                    />
+                  </div>
+                  <p>{{ item.answer.message }}</p>
+                  <div
+                    v-if="item.answerImages?.length"
+                    class="thread-images"
+                  >
+                    <NImage
+                      v-for="image in item.answerImages"
+                      :key="image.path"
+                      :src="image.path"
+                      object-fit="cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            </article>
+          </TransitionGroup>
+        </div>
+
+        <NEmpty
+          v-else-if="!isLoading"
+          :key="`empty-${listKey}`"
+          class="feed-empty"
+          :description="selectedTag ? '该话题暂无公开回复' : '暂无公开回复'"
+        />
+      </Transition>
     </NSpin>
 
     <NPagination
@@ -260,7 +335,12 @@ watch(
   line-height: 1;
 }
 
+.reply-count.is-pulsing {
+  animation: count-pop 0.42s cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
 .feed-filters {
+  position: relative;
   display: flex;
   gap: 6px;
   padding-top: 13px;
@@ -272,7 +352,26 @@ watch(
   display: none;
 }
 
+.filter-indicator {
+  position: absolute;
+  top: 13px;
+  left: 0;
+  z-index: 0;
+  height: 29px;
+  background: var(--vtsuru-page-primary-soft);
+  border: 1px solid var(--vtsuru-page-primary-border, var(--feed-accent));
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--feed-accent) 12%, transparent);
+  pointer-events: none;
+  transition:
+    width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+}
+
 .feed-filters button {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   min-height: 29px;
   padding: 3px 10px;
@@ -284,16 +383,26 @@ watch(
   border-radius: 999px;
   cursor: pointer;
   transition:
-    color 0.16s ease,
-    background-color 0.16s ease,
-    border-color 0.16s ease;
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
-.feed-filters button:hover,
+.feed-filters button:hover {
+  color: var(--vtsuru-page-primary-readable, var(--feed-accent));
+  border-color: var(--vtsuru-page-primary-border, var(--feed-accent));
+  transform: translateY(-1px);
+}
+
 .feed-filters button.is-active {
   color: var(--vtsuru-page-primary-readable, var(--feed-accent));
-  background: var(--vtsuru-page-primary-soft);
-  border-color: var(--vtsuru-page-primary-border, var(--feed-accent));
+  background: transparent;
+  border-color: transparent;
+}
+
+.thread-stage {
+  min-width: 0;
 }
 
 .thread-list {
@@ -313,7 +422,7 @@ watch(
   box-shadow: var(--vtsuru-page-shadow);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  animation: thread-enter 0.38s calc(var(--thread-index) * 45ms) ease both;
+  animation: thread-enter 0.48s calc(var(--thread-index) * 55ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .question-marker {
@@ -434,17 +543,41 @@ watch(
   margin-top: 18px;
 }
 
+.feed-swap-enter-active,
+.feed-swap-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.28s ease;
+}
+
+.feed-swap-enter-from {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(18px) scale(0.985);
+}
+
+.feed-swap-leave-to {
+  opacity: 0;
+  filter: blur(3px);
+  transform: translateY(-12px) scale(0.98);
+}
+
 .question-thread-enter-active,
 .question-thread-leave-active {
   transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
+    opacity 0.28s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .question-thread-enter-from,
 .question-thread-leave-to {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(14px) scale(0.98);
+}
+
+.question-thread-move {
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @container (max-width: 480px) {
@@ -480,19 +613,45 @@ watch(
 @keyframes thread-enter {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+@keyframes count-pop {
+  0% {
+    transform: scale(0.86);
+    color: var(--feed-accent);
+  }
+  55% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .question-thread {
+  .question-thread,
+  .reply-count.is-pulsing {
     animation: none;
   }
 
+  .filter-indicator,
+  .feed-filters button,
+  .feed-swap-enter-active,
+  .feed-swap-leave-active,
   .question-thread-enter-active,
   .question-thread-leave-active,
-  .feed-filters button {
+  .question-thread-move {
     transition: none;
+  }
+
+  .feed-swap-enter-from,
+  .feed-swap-leave-to,
+  .question-thread-enter-from,
+  .question-thread-leave-to {
+    filter: none;
+    transform: none;
   }
 }
 </style>

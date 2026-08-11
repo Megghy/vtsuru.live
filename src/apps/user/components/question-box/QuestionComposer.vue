@@ -203,6 +203,23 @@ async function submit() {
             <span>选择话题</span>
             <small>可选</small>
           </div>
+          <Transition name="topic-banner">
+            <div
+              v-if="draft.tag"
+              :key="draft.tag"
+              class="topic-banner"
+            >
+              <span class="topic-banner-kicker">CURRENT TOPIC</span>
+              <strong>{{ draft.tag }}</strong>
+              <button
+                type="button"
+                class="topic-banner-clear"
+                @click="draft = { ...draft, tag: null }"
+              >
+                取消
+              </button>
+            </div>
+          </Transition>
           <div class="topic-list">
             <button
               v-for="tag in tags"

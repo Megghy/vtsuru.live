@@ -4,6 +4,8 @@ import { NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
+import { normalizeTextAppearance, textAppearanceClass } from '../textAppearance'
+import '../textAppearance.css'
 
 interface BlockConfig {
   text?: string
@@ -15,11 +17,14 @@ interface BlockConfig {
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
+const propsObj = computed(() =>
+  props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+    ? (props.blockProps as Record<string, unknown>)
+    : {},
+)
+
 const cfg = computed<BlockConfig>(() => {
-  const o =
-    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
-      ? (props.blockProps as any)
-      : {}
+  const o = propsObj.value as any
   const align = o.align === 'left' || o.align === 'center' || o.align === 'right' ? o.align : 'center'
   return {
     text: typeof o.text === 'string' ? o.text : '',
@@ -29,6 +34,9 @@ const cfg = computed<BlockConfig>(() => {
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
+
+const appearance = computed(() => normalizeTextAppearance(propsObj.value))
+const fxClass = computed(() => textAppearanceClass(appearance.value))
 </script>
 
 <template>
@@ -48,6 +56,7 @@ const cfg = computed<BlockConfig>(() => {
       <div
         v-if="cfg.text"
         class="quote-text"
+        :class="fxClass"
       >
         “{{ cfg.text }}”
       </div>
@@ -100,7 +109,7 @@ const cfg = computed<BlockConfig>(() => {
 .quote-text {
   display: block;
   font-size: 20px;
-  font-family: serif; /* Elegant for quotes */
+  font-family: serif;
   font-weight: 700;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -122,5 +131,9 @@ const cfg = computed<BlockConfig>(() => {
   font-size: 14px;
   font-weight: 500;
   color: var(--vtsuru-fg-muted);
+}
+
+.quote-text.vtsuru-text-fx--typewriter {
+  white-space: nowrap;
 }
 </style>

@@ -21,6 +21,7 @@ import { QueryGetAPI } from '@/api/query'
 import { QUESTION_API_URL } from '@/shared/config'
 
 import PropsGrid from '../PropsGrid.vue'
+import TextAppearanceFields from './TextAppearanceFields.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
@@ -92,6 +93,7 @@ function enableFeedbackEmbed(enabled: boolean) {
           ]"
         />
       </NFormItem>
+      <TextAppearanceFields :block="props.block" />
     </PropsGrid>
   </NForm>
 

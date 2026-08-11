@@ -2,7 +2,7 @@
 import { CloudAdd20Filled, Search24Regular } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
 import { NButton, NEllipsis, NEmpty, NFlex, NIcon, NInput, NTag, NTooltip } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
@@ -26,6 +26,11 @@ const searchKeyword = ref('')
 const filteredSongs = computed<SongsInfo[]>(() => {
   return filterSongs(props.data, { keyword: searchKeyword.value })
 })
+const filterEpoch = ref(0)
+watch(searchKeyword, () => {
+  filterEpoch.value += 1
+})
+const listKey = computed(() => `${searchKeyword.value}:${filterEpoch.value}`)
 
 const isSelf = computed(() => {
   return !!props.userInfo?.id && accountInfo.value?.id === props.userInfo.id
@@ -79,27 +84,41 @@ function getMetaText(song: SongsInfo) {
       </NButton>
     </div>
 
-    <div class="count-row">共 {{ filteredSongs.length }} 首歌曲</div>
-
-    <NEmpty
-      v-if="!data || filteredSongs.length === 0"
-      class="empty-state"
-      description="暂无曲目"
-    />
-
     <div
-      v-else
-      class="song-cards"
+      :key="listKey"
+      class="count-row is-pulsing"
     >
-      <div
-        v-for="song in filteredSongs"
-        :key="song.key"
-        class="song-card"
-        :class="{
-          'is-active': activeSongKeySet.has(song.key),
-          'is-singing': singingSongKeySet.has(song.key),
-        }"
+      共 {{ filteredSongs.length }} 首歌曲
+    </div>
+
+    <Transition
+      name="card-swap"
+      mode="out-in"
+    >
+      <NEmpty
+        v-if="!data || filteredSongs.length === 0"
+        :key="`empty-${listKey}`"
+        class="empty-state"
+        description="暂无曲目"
+      />
+
+      <TransitionGroup
+        v-else
+        :key="listKey"
+        name="card-item"
+        tag="div"
+        class="song-cards"
       >
+        <div
+          v-for="(song, index) in filteredSongs"
+          :key="song.key"
+          class="song-card"
+          :class="{
+            'is-active': activeSongKeySet.has(song.key),
+            'is-singing': singingSongKeySet.has(song.key),
+          }"
+          :style="{ '--card-index': index }"
+        >
         <div class="card-top">
           <div class="title-left">
             <div class="left-icon">
@@ -255,7 +274,8 @@ function getMetaText(song: SongsInfo) {
           </NFlex>
         </div>
       </div>
-    </div>
+      </TransitionGroup>
+    </Transition>
   </div>
 </template>
 
@@ -309,12 +329,53 @@ function getMetaText(song: SongsInfo) {
   margin-top: 28px;
 }
 
+.count-row.is-pulsing {
+  animation: count-pop 0.38s cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
 .song-cards {
   display: grid;
   gap: var(--vtsuru-page-spacing, 16px);
   width: 100%;
   max-width: var(--card-max-width);
   margin: 0 auto;
+}
+
+.card-swap-enter-active,
+.card-swap-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.28s ease;
+}
+
+.card-swap-enter-from {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(16px) scale(0.985);
+}
+
+.card-swap-leave-to {
+  opacity: 0;
+  filter: blur(3px);
+  transform: translateY(-10px) scale(0.98);
+}
+
+.card-item-enter-active,
+.card-item-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card-item-enter-from,
+.card-item-leave-to {
+  opacity: 0;
+  transform: translateY(14px) scale(0.97);
+}
+
+.card-item-move {
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .song-card {
@@ -330,10 +391,17 @@ function getMetaText(song: SongsInfo) {
   border-radius: var(--vtsuru-page-radius, 8px);
   background: var(--song-panel);
   box-shadow: var(--vtsuru-page-shadow);
+  animation: card-enter 0.42s calc(var(--card-index, 0) * 40ms) cubic-bezier(0.22, 1, 0.36, 1) both;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
-    transform 160ms ease;
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.song-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--song-fg) 8%, transparent);
 }
 
 .song-card.is-active {
@@ -550,14 +618,6 @@ function getMetaText(song: SongsInfo) {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .song-card,
-  .badge-singing {
-    transition: none;
-    animation: none;
-  }
-}
-
 @media (max-width: 560px) {
   .song-card {
     gap: 12px;
@@ -596,6 +656,48 @@ function getMetaText(song: SongsInfo) {
 
   .song-author {
     max-width: 40%;
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+@keyframes count-pop {
+  0% {
+    transform: scale(0.92);
+    color: var(--song-accent);
+  }
+  55% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .song-card,
+  .count-row.is-pulsing,
+  .badge-singing {
+    animation: none;
+  }
+
+  .card-swap-enter-active,
+  .card-swap-leave-active,
+  .card-item-enter-active,
+  .card-item-leave-active,
+  .card-item-move,
+  .song-card,
+  .badge-singing {
+    transition: none;
+  }
+
+  .song-card:hover {
+    transform: none;
   }
 }
 </style>

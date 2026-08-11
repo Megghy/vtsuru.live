@@ -88,7 +88,7 @@ const DefaultConfig: KawaiiConfig = {
 
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
-const { selectedWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { selectedWeek, weekDirection, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 const activeDayCount = computed(() => days.value.filter((day) => day.items.length).length)
 const categoryColors: Record<ScheduleCategoryKey, string> = {
@@ -110,6 +110,7 @@ function resolveEventColor(tag?: string | null) {
 const boardStyle = computed(() => ({
   '--kawaii-accent': rgbaToString(effectiveConfig.value.accentColor),
   '--kawaii-sheet': rgbaToString(effectiveConfig.value.sheetColor),
+  '--week-dir': weekDirection.value || 1,
   ...backgroundImageStyle.value,
 }))
 
@@ -125,15 +126,20 @@ defineExpose({ Config, DefaultConfig })
       :file-name="`直播手帐_${selectedWeek || '本周'}_${props.userInfo?.name || '主播'}`"
     />
 
-    <div
-      ref="boardRef"
-      class="kawaii-board"
-      :class="[
-        `art-${effectiveConfig.portraitPosition}`,
-        { 'has-artwork': portraitUrl, 'has-background': backgroundUrl },
-      ]"
-      :style="boardStyle"
+    <Transition
+      name="schedule-week-swap"
+      mode="out-in"
     >
+      <div
+        :key="selectedWeek || 'empty'"
+        ref="boardRef"
+        class="kawaii-board"
+        :class="[
+          `art-${effectiveConfig.portraitPosition}`,
+          { 'has-artwork': portraitUrl, 'has-background': backgroundUrl },
+        ]"
+        :style="boardStyle"
+      >
       <div
         class="doodle-field"
         aria-hidden="true"
@@ -194,12 +200,13 @@ defineExpose({ Config, DefaultConfig })
         <figcaption>@{{ props.userInfo?.name || 'VTUBER' }}</figcaption>
       </figure>
 
-      <div class="scrapbook-layout">
+      <div class="scrapbook-layout schedule-day-stagger">
         <article
           v-for="(day, dayIndex) in days"
           :key="day.english"
           class="day-note"
           :class="[`note-${dayIndex + 1}`, { 'is-today': day.isToday }]"
+          :style="{ '--day-index': dayIndex }"
         >
           <span
             class="washi-tape"
@@ -279,7 +286,8 @@ defineExpose({ Config, DefaultConfig })
       >
         LIVE<br />NOTES
       </div>
-    </div>
+      </div>
+    </Transition>
   </section>
 </template>
 

@@ -200,13 +200,19 @@ onMounted(() => {
           <span>最近签到</span>
         </div>
 
-        <div
-          v-for="item in pagedData"
-          :key="item.ouId"
-          class="ranking-row ranking-grid"
-          :class="{ 'top-three': item.rank <= 3 }"
-          role="row"
+        <TransitionGroup
+          name="ranking-row"
+          tag="div"
+          class="ranking-body"
         >
+          <div
+            v-for="(item, index) in pagedData"
+            :key="item.ouId"
+            class="ranking-row ranking-grid"
+            :class="{ 'top-three': item.rank <= 3 }"
+            :style="{ '--row-index': index }"
+            role="row"
+          >
           <div class="rank-cell">
             <span
               class="rank-number"
@@ -254,7 +260,8 @@ onMounted(() => {
               <NTime :time="item.lastCheckInTime" />
             </NTooltip>
           </div>
-        </div>
+          </div>
+        </TransitionGroup>
 
         <div class="ranking-footer">
           <NPagination

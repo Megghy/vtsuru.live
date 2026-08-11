@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CloudAdd20Filled, Play24Filled, Search24Regular } from '@vicons/fluent'
 import { NButton, NEmpty, NIcon, NInput, NSelect, NTag, NTooltip } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
@@ -45,6 +45,11 @@ const filteredSongs = computed<SongsInfo[]>(() => {
     tag: selectedTag.value,
   })
 })
+const filterEpoch = ref(0)
+watch([searchKeyword, selectedTag], () => {
+  filterEpoch.value += 1
+})
+const listKey = computed(() => `${selectedTag.value ?? 'all'}:${filterEpoch.value}`)
 
 function requestSong(song: SongsInfo) {
   if (isSelf.value) return
@@ -63,7 +68,12 @@ function requestSong(song: SongsInfo) {
         <span class="heading-kicker">COVER ARCHIVE</span>
         <h2>封面曲库</h2>
       </div>
-      <span class="count">{{ filteredSongs.length }} 首</span>
+      <span
+        :key="listKey"
+        class="count is-pulsing"
+      >
+        {{ filteredSongs.length }} 首
+      </span>
     </header>
 
     <div class="toolbar">
@@ -93,25 +103,34 @@ function requestSong(song: SongsInfo) {
       class="preview-player"
     />
 
-    <NEmpty
-      v-if="filteredSongs.length === 0"
-      description="暂无曲目"
-      style="margin-top: 48px"
-    />
-
-    <div
-      v-else
-      class="grid"
+    <Transition
+      name="gallery-swap"
+      mode="out-in"
     >
-      <div
-        v-for="(song, index) in filteredSongs"
-        :key="song.key"
-        class="cover-card"
-        :class="{
-          'is-singing': singingSongKeySet.has(song.key),
-          'is-queued': queuedSongKeySet.has(song.key),
-        }"
+      <NEmpty
+        v-if="filteredSongs.length === 0"
+        :key="`empty-${listKey}`"
+        description="暂无曲目"
+        style="margin-top: 48px"
+      />
+
+      <TransitionGroup
+        v-else
+        :key="listKey"
+        name="gallery-card"
+        tag="div"
+        class="grid"
       >
+        <div
+          v-for="(song, index) in filteredSongs"
+          :key="song.key"
+          class="cover-card"
+          :class="{
+            'is-singing': singingSongKeySet.has(song.key),
+            'is-queued': queuedSongKeySet.has(song.key),
+          }"
+          :style="{ '--card-index': index }"
+        >
         <div class="cover">
           <img
             v-if="song.cover"
@@ -247,7 +266,8 @@ function requestSong(song: SongsInfo) {
           </div>
         </div>
       </div>
-    </div>
+      </TransitionGroup>
+    </Transition>
   </div>
 </template>
 
@@ -313,6 +333,47 @@ function requestSong(song: SongsInfo) {
   font-variant-numeric: tabular-nums;
 }
 
+.count.is-pulsing {
+  animation: count-pop 0.38s cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+.gallery-swap-enter-active,
+.gallery-swap-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.28s ease;
+}
+
+.gallery-swap-enter-from {
+  opacity: 0;
+  filter: blur(5px);
+  transform: translateY(18px) scale(0.97);
+}
+
+.gallery-swap-leave-to {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(-12px) scale(0.97);
+}
+
+.gallery-card-enter-active,
+.gallery-card-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gallery-card-enter-from,
+.gallery-card-leave-to {
+  opacity: 0;
+  transform: translateY(16px) scale(0.94);
+}
+
+.gallery-card-move {
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .preview-player {
   margin-bottom: 16px;
 }
@@ -328,13 +389,15 @@ function requestSong(song: SongsInfo) {
   flex-direction: column;
   min-width: 0;
   border-radius: var(--vtsuru-page-radius);
+  animation: gallery-enter 0.46s calc(var(--card-index, 0) * 35ms) cubic-bezier(0.22, 1, 0.36, 1) both;
   transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease;
 }
 
 .cover-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--song-fg) 12%, transparent);
 }
 
 .cover {
@@ -352,6 +415,11 @@ function requestSong(song: SongsInfo) {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cover-card:hover .cover img {
+  transform: scale(1.06);
 }
 
 .cover-placeholder {
@@ -509,6 +577,48 @@ function requestSong(song: SongsInfo) {
     justify-content: flex-end;
     background: transparent;
     opacity: 1;
+  }
+}
+
+@keyframes gallery-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+}
+
+@keyframes count-pop {
+  0% {
+    transform: scale(0.9);
+    color: var(--song-accent);
+  }
+  55% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-card,
+  .count.is-pulsing {
+    animation: none;
+  }
+
+  .gallery-swap-enter-active,
+  .gallery-swap-leave-active,
+  .gallery-card-enter-active,
+  .gallery-card-leave-active,
+  .gallery-card-move,
+  .cover-card,
+  .cover img {
+    transition: none;
+  }
+
+  .cover-card:hover,
+  .cover-card:hover .cover img {
+    transform: none;
   }
 }
 </style>

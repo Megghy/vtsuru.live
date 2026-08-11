@@ -3,6 +3,8 @@ import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
 import { getHeadingAnchorId } from '../sectionNavigation'
+import { normalizeTextAppearance, textAppearanceClass } from '../textAppearance'
+import '../textAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; blockId?: string; userInfo?: unknown; biliInfo?: unknown }>()
 
@@ -19,6 +21,14 @@ const model = computed(() => {
   return { level, text, fontSize, framed, backgrounded }
 })
 
+const appearance = computed(() =>
+  normalizeTextAppearance(
+    props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
+      ? (props.blockProps as Record<string, unknown>)
+      : {},
+  ),
+)
+const fxClass = computed(() => textAppearanceClass(appearance.value))
 const headingTag = computed(() => `h${model.value.level}` as 'h1' | 'h2' | 'h3')
 const anchorId = computed(() => (props.blockId ? getHeadingAnchorId(props.blockId) : undefined))
 </script>
@@ -38,6 +48,7 @@ const anchorId = computed(() => (props.blockId ? getHeadingAnchorId(props.blockI
           :id="anchorId"
           data-user-page-section="true"
           class="heading-text"
+          :class="fxClass"
           :style="{ fontSize: model.fontSize }"
         >
           {{ model.text }}
@@ -72,7 +83,6 @@ const anchorId = computed(() => (props.blockId ? getHeadingAnchorId(props.blockI
   scroll-margin-top: 24px;
 }
 
-/* Subtle accent for H1/H2 */
 .level-1::before,
 .level-2::before {
   content: '';

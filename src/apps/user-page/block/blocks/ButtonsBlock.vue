@@ -4,7 +4,13 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import BlockCard from '../BlockCard.vue'
+import {
+  buttonAppearanceClass,
+  buttonAppearanceStyle,
+  normalizeButtonAppearance,
+} from '../buttonAppearance'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
+import '../buttonAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 
@@ -82,7 +88,7 @@ const buttonType = computed(() => {
   const v = propsObj.value.type
   if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default')
     return v
-  return 'primary'
+  return 'default'
 })
 
 const variant = computed<'solid' | 'secondary' | 'tertiary' | 'quaternary' | 'ghost'>(() => {
@@ -100,22 +106,11 @@ const align = computed<'start' | 'center' | 'end'>(() => {
 
 const fullWidth = computed(() => {
   if (!isBlockPropertyAvailable('buttons', propsObj.value, 'fullWidth')) return false
-  const v = propsObj.value.fullWidth
-  if (typeof v === 'boolean') return v
-  return direction.value === 'vertical'
+  return propsObj.value.fullWidth === true
 })
 
-const framed = computed(() => {
-  const v = propsObj.value.framed
-  if (typeof v === 'boolean') return v
-  return false
-})
-
-const backgrounded = computed(() => {
-  const v = propsObj.value.backgrounded
-  if (typeof v === 'boolean') return v
-  return false
-})
+const framed = computed(() => propsObj.value.framed === true)
+const backgrounded = computed(() => propsObj.value.backgrounded === true)
 
 const borderTitle = computed(() => {
   if (!isBlockPropertyAvailable('buttons', propsObj.value, 'borderTitle')) return ''
@@ -128,6 +123,11 @@ const borderTitleAlign = computed<'left' | 'center' | 'right'>(() => {
   if (v === 'center' || v === 'right' || v === 'left') return v
   return 'left'
 })
+
+const appearance = computed(() => normalizeButtonAppearance(propsObj.value))
+const btnClass = computed(() => buttonAppearanceClass(appearance.value, fullWidth.value))
+const btnStyle = computed(() => buttonAppearanceStyle(appearance.value))
+const naiveSize = computed(() => (appearance.value.size === 'sm' ? 'small' : appearance.value.size === 'lg' ? 'large' : 'medium'))
 
 const flexJustify = computed<'start' | 'center' | 'end'>(() =>
   direction.value === 'horizontal' ? align.value : 'start',
@@ -156,8 +156,8 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
       >
         <NButton
           v-if="it.kind === 'external'"
-          size="small"
           tag="a"
+          :size="naiveSize"
           :type="buttonType as any"
           :secondary="variant === 'secondary'"
           :tertiary="variant === 'tertiary'"
@@ -166,21 +166,21 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
           target="_blank"
           rel="noopener noreferrer"
           :href="it.href"
-          class="vtsuru-btn"
-          :style="fullWidth ? 'width: 100%' : undefined"
+          :class="btnClass"
+          :style="btnStyle"
         >
           {{ it.label }}
         </NButton>
         <NButton
           v-else
-          size="small"
+          :size="naiveSize"
           :type="buttonType as any"
           :secondary="variant === 'secondary'"
           :tertiary="variant === 'tertiary'"
           :quaternary="variant === 'quaternary'"
           :ghost="variant === 'ghost'"
-          class="vtsuru-btn"
-          :style="fullWidth ? 'width: 100%' : undefined"
+          :class="btnClass"
+          :style="btnStyle"
           @click="it.kind === 'back' ? router.back() : router.push(it.to || route.fullPath)"
         >
           {{ it.label }}
@@ -196,24 +196,5 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
   max-width: 100%;
   box-sizing: border-box;
   padding: 6px;
-}
-
-.vtsuru-btn {
-  border-radius: var(--vtsuru-page-radius);
-  font-weight: 600;
-  transition: transform 0.1s ease;
-}
-
-.vtsuru-btn:active {
-  transform: scale(0.98);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .vtsuru-btn {
-    transition: none;
-  }
-  .vtsuru-btn:active {
-    transform: none;
-  }
 }
 </style>

@@ -59,11 +59,12 @@ const DefaultConfig: PrismStageConfig = {
 
 const scheduleRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
-const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { selectedWeek, weekDirection, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
 const scheduleStyle = computed(() => ({
   '--prism-gold': rgbaToString(effectiveConfig.value.goldColor),
   '--prism-seal': rgbaToString(effectiveConfig.value.sealColor),
+  '--week-dir': weekDirection.value || 1,
   backgroundImage: effectiveConfig.value.backgroundFile[0]?.path
     ? `url(${effectiveConfig.value.backgroundFile[0].path})`
     : undefined,
@@ -82,12 +83,17 @@ defineExpose({ Config, DefaultConfig })
       :file-name="`七曜物候_${selectedWeek || '本周'}_${streamerName}`"
     />
 
-    <div
-      ref="scheduleRef"
-      class="prism-stage"
-      :class="{ 'has-background': effectiveConfig.backgroundFile[0]?.path }"
-      :style="scheduleStyle"
+    <Transition
+      name="schedule-week-swap"
+      mode="out-in"
     >
+      <div
+        :key="selectedWeek || 'empty'"
+        ref="scheduleRef"
+        class="prism-stage"
+        :class="{ 'has-background': effectiveConfig.backgroundFile[0]?.path }"
+        :style="scheduleStyle"
+      >
       <div
         class="paper-grain"
         aria-hidden="true"
@@ -127,12 +133,13 @@ defineExpose({ Config, DefaultConfig })
         />
       </div>
 
-      <ol class="stage-days">
+      <ol class="stage-days schedule-day-stagger">
         <li
           v-for="(day, dayIndex) in days"
           :key="day.english"
           class="stage-day"
           :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
+          :style="{ '--day-index': dayIndex }"
         >
           <div class="stage-day__marker">
             <span>{{ day.shortLabel }}</span
@@ -176,7 +183,8 @@ defineExpose({ Config, DefaultConfig })
         <span>七曜 · {{ streamerName }}</span
         ><span>愿每一次相逢，都有好天气</span>
       </footer>
-    </div>
+      </div>
+    </Transition>
   </section>
 </template>
 

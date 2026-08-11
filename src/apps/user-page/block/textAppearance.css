@@ -1,0 +1,156 @@
+.vtsuru-text-fx {
+  --text-fx-glow: 0.35;
+  --text-fx-duration: 2.4s;
+  --text-fx-gradient: linear-gradient(
+    120deg,
+    var(--vtsuru-page-primary, var(--vtsuru-brand)) 0%,
+    color-mix(in srgb, var(--vtsuru-page-primary, var(--vtsuru-brand)) 45%, #fff) 45%,
+    var(--vtsuru-page-primary, var(--vtsuru-brand)) 100%
+  );
+}
+
+.vtsuru-text-fx--intensity-low {
+  --text-fx-glow: 0.22;
+  --text-fx-duration: 3.2s;
+}
+
+.vtsuru-text-fx--intensity-mid {
+  --text-fx-glow: 0.38;
+  --text-fx-duration: 2.4s;
+}
+
+.vtsuru-text-fx--intensity-high {
+  --text-fx-glow: 0.58;
+  --text-fx-duration: 1.6s;
+}
+
+.vtsuru-text-fx--gradient {
+  background-image: var(--text-fx-gradient);
+  background-size: 100% 100%;
+  color: transparent !important;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.vtsuru-text-fx--glow {
+  text-shadow:
+    0 0 8px color-mix(in srgb, var(--vtsuru-page-primary, var(--vtsuru-brand)) calc(var(--text-fx-glow) * 80%), transparent),
+    0 0 18px color-mix(in srgb, var(--vtsuru-page-primary, var(--vtsuru-brand)) calc(var(--text-fx-glow) * 50%), transparent);
+}
+
+.vtsuru-text-fx--shine {
+  position: relative;
+  background-image: linear-gradient(
+    110deg,
+    currentColor 0%,
+    currentColor 38%,
+    color-mix(in srgb, #fff 85%, currentColor) 50%,
+    currentColor 62%,
+    currentColor 100%
+  );
+  background-size: 220% 100%;
+  color: transparent !important;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: vtsuru-text-shine var(--text-fx-duration) linear infinite;
+}
+
+.vtsuru-text-fx--breathe {
+  animation: vtsuru-text-breathe var(--text-fx-duration) ease-in-out infinite;
+}
+
+.vtsuru-text-fx--rainbow {
+  background-image: linear-gradient(
+    90deg,
+    #ff4d6d,
+    #ffd166,
+    #06d6a0,
+    #4cc9f0,
+    #b5179e,
+    #ff4d6d
+  );
+  background-size: 220% 100%;
+  color: transparent !important;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: vtsuru-text-rainbow var(--text-fx-duration) linear infinite;
+}
+
+.vtsuru-text-fx--typewriter {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid color-mix(in srgb, currentColor 55%, transparent);
+  animation:
+    vtsuru-text-typewriter calc(var(--text-fx-duration) * 1.8) steps(24, end) both,
+    vtsuru-text-caret 0.9s step-end infinite;
+}
+
+@keyframes vtsuru-text-shine {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes vtsuru-text-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 0 0 12px
+      color-mix(in srgb, var(--vtsuru-page-primary, var(--vtsuru-brand)) calc(var(--text-fx-glow) * 70%), transparent);
+  }
+}
+
+@keyframes vtsuru-text-rainbow {
+  to {
+    background-position: -220% 0;
+  }
+}
+
+@keyframes vtsuru-text-typewriter {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 100%;
+  }
+}
+
+@keyframes vtsuru-text-caret {
+  50% {
+    border-right-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vtsuru-text-fx--shine,
+  .vtsuru-text-fx--breathe,
+  .vtsuru-text-fx--rainbow,
+  .vtsuru-text-fx--typewriter {
+    animation: none;
+  }
+
+  .vtsuru-text-fx--typewriter {
+    border-right: 0;
+    white-space: normal;
+    max-width: none;
+    overflow: visible;
+  }
+
+  .vtsuru-text-fx--shine,
+  .vtsuru-text-fx--rainbow {
+    background-size: 100% 100%;
+  }
+
+  .vtsuru-text-fx--breathe {
+    opacity: 1;
+  }
+}

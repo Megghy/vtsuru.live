@@ -39,12 +39,16 @@ export const BLOCK_PROPERTY_CAPABILITY_RULES: Partial<Record<BlockType, BlockCap
   },
   button: {
     align: (props) => props.fullWidth !== true,
+    radiusPx: (props) => props.radius === 'custom',
+    effectIntensity: (props) => props.effect !== undefined && props.effect !== 'none',
   },
   buttons: {
     align: (props) => props.direction === 'horizontal' || props.fullWidth !== true,
     fullWidth: (props) => props.direction !== 'horizontal',
     borderTitle: (props) => props.framed === true,
     borderTitleAlign: (props) => props.framed === true && hasText(props.borderTitle),
+    radiusPx: (props) => props.radius === 'custom',
+    effectIntensity: (props) => props.effect !== undefined && props.effect !== 'none',
   },
   videoList: {
     layout: (props) => props.source === 'userIndex',

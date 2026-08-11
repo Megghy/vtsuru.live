@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
+import { normalizeTextAppearance, textAppearanceClass } from '../textAppearance'
+import '../textAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
 const propsObj = computed<Record<string, any>>(() => {
@@ -16,6 +18,8 @@ const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? prop
 const backgrounded = computed(() =>
   typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : true,
 )
+const appearance = computed(() => normalizeTextAppearance(propsObj.value))
+const fxClass = computed(() => textAppearanceClass(appearance.value))
 </script>
 
 <template>
@@ -23,7 +27,10 @@ const backgrounded = computed(() =>
     :framed="framed"
     :backgrounded="backgrounded"
   >
-    <div class="text-content">
+    <div
+      class="text-content"
+      :class="fxClass"
+    >
       {{ text }}
     </div>
   </BlockCard>
@@ -36,5 +43,9 @@ const backgrounded = computed(() =>
   line-height: 1.8;
   font-size: 14px;
   color: var(--vtsuru-page-text, var(--vtsuru-fg));
+}
+
+.text-content.vtsuru-text-fx--typewriter {
+  white-space: nowrap;
 }
 </style>

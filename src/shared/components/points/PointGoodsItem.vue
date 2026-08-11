@@ -404,7 +404,7 @@ const priceRangeText = computed(() => {
   gap: 8px;
   padding: 40px 12px 12px;
   pointer-events: none;
-  background: linear-gradient(to top, color-mix(in srgb, var(--goods-fg), transparent 15%), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
 }
 
 .overlay-tags,

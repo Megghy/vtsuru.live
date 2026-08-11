@@ -6,6 +6,7 @@ import type { BlockNode } from '@/apps/user-page/block/schema'
 import RichTextEditor from '@/apps/user-page/editor/RichTextEditor.vue'
 
 import PropsGrid from '../PropsGrid.vue'
+import TextAppearanceFields from './TextAppearanceFields.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
@@ -86,6 +87,7 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
           style="width: 100%"
         />
       </NFormItem>
+      <TextAppearanceFields :block="props.block" />
     </PropsGrid>
   </NForm>
 
@@ -94,13 +96,19 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
     label-placement="top"
     size="small"
   >
-    <NFormItem label="文本内容">
-      <NInput
-        v-model:value="blockProps.text"
-        type="textarea"
-        :autosize="{ minRows: 6, maxRows: 14 }"
-      />
-    </NFormItem>
+    <PropsGrid>
+      <NFormItem
+        class="span-full"
+        label="文本内容"
+      >
+        <NInput
+          v-model:value="blockProps.text"
+          type="textarea"
+          :autosize="{ minRows: 6, maxRows: 14 }"
+        />
+      </NFormItem>
+      <TextAppearanceFields :block="props.block" />
+    </PropsGrid>
   </NForm>
 
   <NForm

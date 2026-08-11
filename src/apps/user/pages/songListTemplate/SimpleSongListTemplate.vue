@@ -49,7 +49,12 @@ const showRequestQueue = computed(
   () => props.userInfo?.extra?.enableFunctions.includes(FunctionTypes.LiveRequest) ?? false,
 )
 
-watch([searchKeyword, selectedTag, selectedAuthor], () => (visibleCount.value = PAGE_SIZE))
+const filterEpoch = ref(0)
+watch([searchKeyword, selectedTag, selectedAuthor], () => {
+  visibleCount.value = PAGE_SIZE
+  filterEpoch.value += 1
+})
+const listKey = computed(() => `${selectedTag.value ?? 'all'}:${selectedAuthor.value ?? 'all'}:${filterEpoch.value}`)
 
 function toggleTag(tag: string) {
   selectedTag.value = selectedTag.value === tag ? null : tag
@@ -170,24 +175,35 @@ function getBadges(song: SongsInfo) {
       </aside>
 
       <main class="song-content">
-        <NEmpty
-          v-if="visibleSongs.length === 0"
-          class="empty-state"
-          :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
-        />
-
-        <div
-          v-else
-          class="song-list"
-          @scroll="handleScroll"
+        <Transition
+          name="song-filter-swap"
+          mode="out-in"
         >
-          <div class="song-grid">
-            <article
-              v-for="item in visibleSongs"
-              :key="item.key"
-              class="song-card"
-              :class="{ 'is-singing': singingKeys.has(item.key), 'is-queued': queuedKeys.has(item.key) }"
+          <NEmpty
+            v-if="visibleSongs.length === 0"
+            :key="`empty-${listKey}`"
+            class="empty-state"
+            :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
+          />
+
+          <div
+            v-else
+            :key="listKey"
+            class="song-list"
+            @scroll="handleScroll"
+          >
+            <TransitionGroup
+              name="song-card-item"
+              tag="div"
+              class="song-grid"
             >
+              <article
+                v-for="(item, index) in visibleSongs"
+                :key="item.key"
+                class="song-card"
+                :class="{ 'is-singing': singingKeys.has(item.key), 'is-queued': queuedKeys.has(item.key) }"
+                :style="{ '--card-index': index }"
+              >
               <header class="song-header">
                 <i />
                 <div>
@@ -306,20 +322,21 @@ function getBadges(song: SongsInfo) {
                 </div>
               </footer>
             </article>
-          </div>
+            </TransitionGroup>
 
-          <div
-            v-if="visibleCount < filteredSongs.length"
-            class="load-more"
-          >
-            <NButton
-              secondary
-              @click="loadMore"
+            <div
+              v-if="visibleCount < filteredSongs.length"
+              class="load-more"
             >
-              加载更多
-            </NButton>
+              <NButton
+                secondary
+                @click="loadMore"
+              >
+                加载更多
+              </NButton>
+            </div>
           </div>
-        </div>
+        </Transition>
       </main>
     </div>
   </div>
@@ -408,6 +425,50 @@ function getBadges(song: SongsInfo) {
   gap: 5px;
 }
 
+.tag-list :deep(.n-button.active),
+.author-list :deep(.n-button.active) {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--song-accent) 16%, transparent);
+  animation: tag-pop 0.34s cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+.song-filter-swap-enter-active,
+.song-filter-swap-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.28s ease;
+}
+
+.song-filter-swap-enter-from {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(16px) scale(0.985);
+}
+
+.song-filter-swap-leave-to {
+  opacity: 0;
+  filter: blur(3px);
+  transform: translateY(-10px) scale(0.98);
+}
+
+.song-card-item-enter-active,
+.song-card-item-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.song-card-item-enter-from,
+.song-card-item-leave-to {
+  opacity: 0;
+  transform: translateY(14px) scale(0.97);
+}
+
+.song-card-item-move {
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .sidebar-section {
   padding-top: 12px;
   border-top: 1px solid color-mix(in srgb, var(--song-border) 70%, transparent);
@@ -452,11 +513,19 @@ function getBadges(song: SongsInfo) {
   padding: var(--vtsuru-page-spacing, 16px);
   overflow: hidden;
   gap: 8px;
+  animation: card-enter 0.42s calc(var(--card-index, 0) * 40ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .song-card:hover {
   border-color: color-mix(in srgb, var(--song-accent) 38%, var(--song-border));
   background: color-mix(in srgb, var(--song-panel) 92%, var(--song-accent-soft));
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--song-fg) 8%, transparent);
 }
 
 .song-header {
@@ -541,6 +610,46 @@ function getBadges(song: SongsInfo) {
     max-height: none;
     overflow: visible;
     scrollbar-gutter: auto;
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+@keyframes tag-pop {
+  0% {
+    transform: scale(0.94);
+  }
+  55% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .song-card,
+  .tag-list :deep(.n-button.active),
+  .author-list :deep(.n-button.active) {
+    animation: none;
+  }
+
+  .song-filter-swap-enter-active,
+  .song-filter-swap-leave-active,
+  .song-card-item-enter-active,
+  .song-card-item-leave-active,
+  .song-card-item-move,
+  .song-card {
+    transition: none;
+  }
+
+  .song-card:hover {
+    transform: none;
   }
 }
 </style>

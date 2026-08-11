@@ -57,12 +57,13 @@ const DefaultConfig: KinariConfig = {
 
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
-const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { selectedWeek, weekDirection, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 
 const streamerName = computed(() => props.userInfo?.name || 'VTUBER')
 const boardStyle = computed(() => ({
   '--kinari-accent': rgbaToString(effectiveConfig.value.accentColor),
   '--kinari-indigo': rgbaToString(effectiveConfig.value.indigoColor),
+  '--week-dir': weekDirection.value || 1,
   backgroundImage: effectiveConfig.value.backgroundFile[0]?.path
     ? `url(${effectiveConfig.value.backgroundFile[0].path})`
     : undefined,
@@ -80,12 +81,17 @@ defineExpose({ Config, DefaultConfig })
       :file-name="`白和纸手帖_${selectedWeek || '本周'}_${streamerName}`"
     />
 
-    <div
-      ref="boardRef"
-      class="kinari-board"
-      :class="{ 'has-background': effectiveConfig.backgroundFile[0]?.path }"
-      :style="boardStyle"
+    <Transition
+      name="schedule-week-swap"
+      mode="out-in"
     >
+      <div
+        :key="selectedWeek || 'empty'"
+        ref="boardRef"
+        class="kinari-board"
+        :class="{ 'has-background': effectiveConfig.backgroundFile[0]?.path }"
+        :style="boardStyle"
+      >
       <div
         class="kinari-trim"
         aria-hidden="true"
@@ -125,12 +131,13 @@ defineExpose({ Config, DefaultConfig })
         <span>MON — SUN</span>
       </div>
 
-      <ol class="kinari-days">
+      <ol class="kinari-days schedule-day-stagger">
         <li
           v-for="(day, dayIndex) in days"
           :key="day.english"
           class="kinari-day"
           :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length, 'is-featured': dayIndex === 6 }"
+          :style="{ '--day-index': dayIndex }"
         >
           <div class="kinari-day__tab">
             <span>{{ day.shortLabel }}</span>
@@ -187,7 +194,8 @@ defineExpose({ Config, DefaultConfig })
         <span>{{ streamerName }}</span>
         <span>また来週、町角で</span>
       </footer>
-    </div>
+      </div>
+    </Transition>
   </section>
 </template>
 

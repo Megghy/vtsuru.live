@@ -64,7 +64,7 @@ const DefaultConfig: NeonStageConfig = {
 
 const boardRef = ref<HTMLElement>()
 const effectiveConfig = computed(() => ({ ...DefaultConfig, ...props.config }))
-const { selectedWeek, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
+const { selectedWeek, weekDirection, currentWeek, days, weekLabel, eventCount } = useScheduleWeek(() => props.data)
 const { portraitUrl, backgroundUrl, backgroundImageStyle } = useScheduleTemplateAssets(props, effectiveConfig)
 const activeDayCount = computed(() => days.value.filter((day) => day.items.length > 0).length)
 const peakLoad = computed(() => Math.max(1, ...days.value.map((day) => day.items.length)))
@@ -82,6 +82,7 @@ const tagSummary = computed(() => {
 })
 const boardStyle = computed(() => ({
   '--neon-signal': rgbaToString(effectiveConfig.value.signalColor),
+  '--week-dir': weekDirection.value || 1,
   ...backgroundImageStyle.value,
 }))
 const loadStyle = (count: number) => ({ '--day-load': `${(count / peakLoad.value) * 100}%` })
@@ -99,12 +100,17 @@ defineExpose({ Config, DefaultConfig })
       :file-name="`播控日程_${selectedWeek || '本周'}_${props.userInfo?.name || '主播'}`"
     />
 
-    <div
-      ref="boardRef"
-      class="neon-board"
-      :class="{ 'has-background': backgroundUrl }"
-      :style="boardStyle"
+    <Transition
+      name="schedule-week-swap"
+      mode="out-in"
     >
+      <div
+        :key="selectedWeek || 'empty'"
+        ref="boardRef"
+        class="neon-board"
+        :class="{ 'has-background': backgroundUrl }"
+        :style="boardStyle"
+      >
       <header class="signal-head">
         <div class="on-air"><span class="signal-dot" />CHANNEL READY</div>
         <div class="signal-title">
@@ -238,7 +244,8 @@ defineExpose({ Config, DefaultConfig })
         <span>MASTER OUTPUT / NOMINAL</span>
         <span>READY · SYNC · BROADCAST</span>
       </footer>
-    </div>
+      </div>
+    </Transition>
   </section>
 </template>
 
