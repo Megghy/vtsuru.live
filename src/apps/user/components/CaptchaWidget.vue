@@ -28,7 +28,7 @@ const turnstile = ref<{ reset?: () => void; remove?: () => void }>()
 const altchaState = ref<AltchaState>('unverified')
 /** 仅在需要人工交互（code / error）时展示 widget */
 const showAltchaUi = ref(false)
-const statusText = ref('安全验证中…')
+const statusText = ref('验证中…')
 
 const CHALLENGE_PROBE_MS = 6_000
 const ALTCHA_READY_MS = 20_000
@@ -38,14 +38,20 @@ let readyTimer: ReturnType<typeof setTimeout> | undefined
 let fallbackTriggered = false
 
 const turnstileTheme = computed(() => (isDarkMode.value ? 'dark' : 'light'))
-const showStatus = computed(
-  () => provider.value === 'altcha' && !showAltchaUi.value && !token.value && altchaState.value !== 'error',
+const isPassed = computed(() => Boolean(token.value))
+/** Altcha 无感验证中：展示自定义动画状态条 */
+const isVerifying = computed(
+  () =>
+    provider.value === 'altcha' &&
+    !isPassed.value &&
+    !showAltchaUi.value &&
+    altchaState.value !== 'error',
 )
 
 const altchaConfiguration = JSON.stringify({
   codeChallengeDisplay: 'overlay',
-  // 无感时尽量缩短 UI 闪现
-  minDuration: 0,
+  // 保留最短可见验证时长，让状态动画能被感知
+  minDuration: 900,
 })
 
 function clearReadyTimer() {
@@ -111,8 +117,8 @@ function onAltchaStateChange(ev: Event) {
   if (state === 'code' || state === 'error' || state === 'expired') {
     revealAltchaUi()
   }
-  if (state === 'verifying') {
-    statusText.value = '安全验证中…'
+  if (state === 'verifying' || state === 'unverified') {
+    statusText.value = '验证中…'
   }
   if (state === 'verified') {
     if (detail.payload) token.value = detail.payload
@@ -156,7 +162,7 @@ function reset() {
   if (provider.value === 'altcha') {
     altchaState.value = 'unverified'
     showAltchaUi.value = false
-    statusText.value = '安全验证中…'
+    statusText.value = '验证中…'
     fallbackTriggered = false
     altchaEl.value?.reset?.()
     void nextTick(() => {
@@ -199,18 +205,55 @@ defineExpose({
 </script>
 
 <template>
-  <div class="captcha-widget">
-    <template v-if="provider === 'altcha'">
-      <p
-        v-if="showStatus"
-        class="captcha-widget__status"
+  <div
+    class="captcha-widget"
+    :class="{
+      'captcha-widget--passed': isPassed,
+      'captcha-widget--verifying': isVerifying,
+    }"
+  >
+    <div class="captcha-status-slot">
+      <Transition
+        name="captcha-fade"
+        mode="out-in"
       >
-        {{ statusText }}
-      </p>
+        <!-- 通过：轻量文字态 -->
+        <p
+          v-if="isPassed"
+          key="passed"
+          class="captcha-status captcha-status--passed"
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            class="captcha-status__check"
+            aria-hidden="true"
+          />
+          <span>已通过</span>
+        </p>
+
+        <!-- 验证中 -->
+        <p
+          v-else-if="isVerifying"
+          key="verifying"
+          class="captcha-status captcha-status--verifying"
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            class="captcha-status__spinner"
+            aria-hidden="true"
+          />
+          <span>{{ statusText }}</span>
+        </p>
+      </Transition>
+    </div>
+
+    <template v-if="provider === 'altcha'">
       <div
         class="captcha-widget__altcha"
-        :class="{ 'captcha-widget__altcha--visible': showAltchaUi }"
-        :aria-hidden="showAltchaUi ? undefined : 'true'"
+        :class="{ 'captcha-widget__altcha--visible': showAltchaUi && !isPassed }"
+        :aria-hidden="showAltchaUi && !isPassed ? undefined : 'true'"
       >
         <altcha-widget
           ref="altchaEl"
@@ -224,8 +267,10 @@ defineExpose({
       </div>
     </template>
 
+    <!-- Turnstile：通过后隐藏，组件仍挂载以免卸载清掉 token -->
     <VueTurnstile
-      v-else
+      v-if="provider === 'turnstile'"
+      v-show="!isPassed"
       ref="turnstile"
       v-model="token"
       :site-key="TURNSTILE_KEY"
@@ -238,18 +283,80 @@ defineExpose({
 
 <style scoped>
 .captcha-widget {
+  position: relative;
   display: flex;
   min-width: 0;
+  max-width: 100%;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  overflow: hidden;
 }
 
-.captcha-widget__status {
+.captcha-status-slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 20px;
+  overflow: hidden;
+}
+
+.captcha-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
-  line-height: 1.4;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  /* 过渡时绝对定位，避免 out-in 高度塌陷把父级撑出滚动条 */
+  grid-area: 1 / 1;
+}
+
+.captcha-status--verifying {
+  color: var(--vtsuru-fg-muted);
+}
+
+.captcha-status--passed {
+  color: var(--vtsuru-success, #18a058);
+}
+
+.captcha-status__spinner {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-top-color: currentColor;
+  opacity: 0.85;
+  animation: captcha-spin 0.65s linear infinite;
+}
+
+.captcha-status__check {
+  position: relative;
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.captcha-status__check::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 3.5px;
+  width: 2.5px;
+  height: 5px;
+  border: solid #fff;
+  border-width: 0 1.4px 1.4px 0;
+  transform: rotate(45deg);
 }
 
 .captcha-widget__altcha {
@@ -257,16 +364,19 @@ defineExpose({
   max-width: 360px;
 }
 
-/* 默认不占布局；code/error 时由 overlay 弹出，外层也放开 */
+/* 无感阶段：裁剪进 1px 容器，避免 fixed 全屏/overflow:visible 触发原生滚动条 */
 .captcha-widget__altcha:not(.captcha-widget__altcha--visible) {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  width: 0;
-  height: 0;
-  overflow: visible;
-  pointer-events: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
   opacity: 0;
+  pointer-events: none;
 }
 
 .captcha-widget__altcha--visible {
@@ -274,12 +384,51 @@ defineExpose({
   z-index: 1;
   width: 100%;
   height: auto;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
   opacity: 1;
   pointer-events: auto;
 }
 
 .captcha-widget__turnstile {
   display: flex;
+  max-width: 100%;
   justify-content: center;
+  overflow: hidden;
+}
+
+/* 仅做透明度过渡，不用位移，避免瞬时溢出 */
+.captcha-fade-enter-active,
+.captcha-fade-leave-active {
+  transition: opacity 160ms ease;
+}
+
+.captcha-fade-enter-from,
+.captcha-fade-leave-to {
+  opacity: 0;
+}
+
+.captcha-fade-enter-to,
+.captcha-fade-leave-from {
+  opacity: 1;
+}
+
+@keyframes captcha-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .captcha-fade-enter-active,
+  .captcha-fade-leave-active {
+    transition-duration: 100ms;
+  }
+
+  .captcha-status__spinner {
+    animation-duration: 1.4s;
+  }
 }
 </style>

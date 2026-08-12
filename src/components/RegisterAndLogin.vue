@@ -792,7 +792,7 @@ onUnmounted(() => {
       </NTabs>
 
       <section
-        v-if="selectedTab !== 'login' && !token"
+        v-if="selectedTab !== 'login'"
         class="verification-section"
       >
         <span>安全验证</span>
@@ -930,7 +930,8 @@ onUnmounted(() => {
 
 .turnstile-wrap {
   min-width: 0;
-  overflow-x: auto;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .forget-countdown {
