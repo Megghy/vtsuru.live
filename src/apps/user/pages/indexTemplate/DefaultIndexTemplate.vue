@@ -27,19 +27,24 @@ const showHeaderImage = ref(true)
 const showAvatarFrame = ref(true)
 const indexInfo = ref<ResponseUserIndexModel>({ links: {}, videos: [], notification: '' })
 
-const avatar = computed(
-  () => props.userInfo?.streamerInfo?.faceUrl || props.userInfo?.faceUrl || props.biliInfo?.face || '',
-)
+// 未绑定 B 站时不展示头像（避免占位空头像）
+const hasBiliBinding = computed(() => !!props.userInfo?.biliId)
+const avatar = computed(() => {
+  if (!hasBiliBinding.value) return ''
+  return props.userInfo?.streamerInfo?.faceUrl || props.userInfo?.faceUrl || props.biliInfo?.face || ''
+})
 const headerImage = computed(
   () => props.biliInfo?.top_photo || props.biliInfo?.top_photo_v2 || props.userInfo?.streamerInfo?.coverUrl || '',
 )
-const avatarFrame = computed(
-  () =>
+const avatarFrame = computed(() => {
+  if (!hasBiliBinding.value) return ''
+  return (
     props.biliInfo?.pendant?.image_enhance_frame ||
     props.biliInfo?.pendant?.image_enhance ||
     props.biliInfo?.pendant?.image ||
-    '',
-)
+    ''
+  )
+})
 const nameplateText = computed(() => props.biliInfo?.nameplate?.name || '')
 const honorText = computed(
   () =>
@@ -134,8 +139,14 @@ export const Config = defineTemplateConfig([])
         </div>
 
         <div class="profile-summary">
-          <div class="profile-hub">
-            <div class="portrait-frame">
+          <div
+            class="profile-hub"
+            :class="{ 'profile-hub--no-avatar': !avatar }"
+          >
+            <div
+              v-if="avatar"
+              class="portrait-frame"
+            >
               <NAvatar
                 :src="avatar"
                 :size="156"
@@ -368,6 +379,14 @@ export const Config = defineTemplateConfig([])
   justify-content: space-between;
   gap: 20px;
 }
+.profile-hub--no-avatar {
+  justify-content: flex-end;
+  min-height: 0;
+}
+.profile-hub--no-avatar .profile-actions {
+  padding-top: 16px;
+  padding-bottom: 4px;
+}
 .portrait-frame {
   position: relative;
   display: grid;
@@ -430,6 +449,9 @@ export const Config = defineTemplateConfig([])
 .identity {
   min-width: 0;
   margin-top: 26px;
+}
+.profile-hub--no-avatar + .identity {
+  margin-top: 12px;
 }
 .identity__kicker {
   margin: 0 0 10px;

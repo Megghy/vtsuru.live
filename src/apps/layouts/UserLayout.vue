@@ -86,7 +86,21 @@ const isDesktop = useMediaQuery('(min-width: 768px)')
 const isMobileNav = useMediaQuery('(max-width: 520px)')
 const siderCollapsed = usePersistedStorage<boolean>('Settings.UserSiderCollapsed', !isDesktop.value)
 const siderAvatarSize = computed(() => (siderCollapsed.value ? 34 : 42))
-const siderPendantUrl = computed(() => biliUserInfo.value?.pendant?.image_enhance || biliUserInfo.value?.pendant?.image)
+// 未绑定 B 站不展示头像；有绑定才取 face / pendant
+const siderAvatarUrl = computed(() => {
+  if (!userInfo.value?.biliId) return ''
+  return userInfo.value.streamerInfo?.faceUrl || biliUserInfo.value?.face || ''
+})
+const siderPendantUrl = computed(() => {
+  if (!userInfo.value?.biliId) return ''
+  return biliUserInfo.value?.pendant?.image_enhance || biliUserInfo.value?.pendant?.image || ''
+})
+const showSiderProfile = computed(() => {
+  if (!userInfo.value) return false
+  // 收起时只在有头像时占位；展开时有昵称也可展示
+  if (siderAvatarUrl.value) return true
+  return !siderCollapsed.value && !!userInfo.value.streamerInfo
+})
 const mobileViewportHeight = ref('100dvh')
 
 function syncMobileViewportHeight() {
@@ -666,9 +680,9 @@ watch(
               </NTooltip>
             </div>
 
-            <!-- 用户头像和昵称 (加载完成后显示) -->
+            <!-- 用户头像和昵称 (加载完成后显示；未绑定 B 站不显示头像) -->
             <div
-              v-if="userInfo?.streamerInfo"
+              v-if="showSiderProfile"
               class="sider-profile"
             >
               <NFlex
@@ -677,15 +691,16 @@ watch(
                 align="center"
               >
                 <button
+                  v-if="siderAvatarUrl"
                   class="sider-avatar-button"
                   type="button"
                   title="前往用户B站主页"
-                  @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo.biliId}`)"
+                  @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo?.biliId}`)"
                 >
                   <NAvatar
                     class="sider-avatar"
-                    :class="{ 'streaming-avatar': userInfo.streamerInfo.isStreaming }"
-                    :src="userInfo.streamerInfo.faceUrl"
+                    :class="{ 'streaming-avatar': userInfo?.streamerInfo?.isStreaming }"
+                    :src="siderAvatarUrl"
                     :img-props="{ referrerpolicy: 'no-referrer' }"
                     :size="siderAvatarSize"
                     round
@@ -710,7 +725,7 @@ watch(
                     :wrap="false"
                   >
                     <NText>
-                      {{ userInfo?.streamerInfo.name }}
+                      {{ userInfo?.streamerInfo?.name || userInfo?.name }}
                     </NText>
                     <span
                       v-if="userInfo?.streamerInfo?.isStreaming"
@@ -1271,14 +1286,13 @@ watch(
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* 始终为右上角折叠按钮预留空间，避免无头像时与导航重叠 */
+  padding-top: 44px;
+  box-sizing: border-box;
 }
 
 .sider-profile {
-  margin-top: 12px;
-}
-
-.sider-shell.collapsed .sider-profile {
-  margin-top: 48px;
+  margin-top: 4px;
 }
 
 .sider-top {
@@ -1551,6 +1565,10 @@ watch(
     padding-bottom: env(safe-area-inset-bottom, 0px);
     border-top: 1px solid var(--vtsuru-border);
     border-right: 0;
+  }
+
+  .sider-shell {
+    padding-top: 0;
   }
 
   .sider-profile,
