@@ -12,11 +12,10 @@ import {
 import { NAvatar, NButton, NCheckbox, NIcon, NInput, NTag, useMessage } from 'naive-ui'
 import { onBeforeUnmount, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import VueTurnstile from 'vue-turnstile'
 
 import type { UserInfo } from '@/api/api-models'
-import { AVATAR_URL, TURNSTILE_KEY } from '@/shared/config'
-import { isDarkMode } from '@/shared/utils'
+import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
+import { AVATAR_URL } from '@/shared/config'
 
 import { useQuestionComposer } from './useQuestionComposer'
 
@@ -357,12 +356,9 @@ async function submit() {
           class="submit-row"
         >
           <div class="verification-box">
-            <VueTurnstile
+            <CaptchaWidget
               ref="turnstile"
               v-model="token"
-              :site-key="TURNSTILE_KEY"
-              :theme="isDarkMode ? 'dark' : 'light'"
-              size="flexible"
             />
           </div>
           <div class="submit-action">

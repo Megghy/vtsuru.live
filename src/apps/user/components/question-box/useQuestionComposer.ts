@@ -18,7 +18,7 @@ interface QuestionDraft {
   isAnonymous: boolean
 }
 
-interface TurnstileHandle {
+interface CaptchaHandle {
   remove: () => void
   reset: () => void
 }
@@ -55,7 +55,7 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
   )
   const selectedFiles = ref<File[]>([])
   const imagePreviewUrls = ref<string[]>([])
-  const turnstile = ref<TurnstileHandle>()
+  const turnstile = ref<CaptchaHandle>()
   const token = ref('')
   const isSending = ref(false)
   const isDragging = ref(false)

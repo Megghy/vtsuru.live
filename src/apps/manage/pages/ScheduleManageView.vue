@@ -755,7 +755,7 @@ onMounted(() => {
       </NButton>
       <NButton
         @click="
-          $router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'schedule' } })
+          $router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })
         "
       >
         修改模板

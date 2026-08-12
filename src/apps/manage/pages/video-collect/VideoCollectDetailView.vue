@@ -64,6 +64,8 @@ const activeStatus = ref(VideoStatus.Pending)
 const keyword = ref('')
 const sortOption = ref<SortOption>('submitted-desc')
 const qrCodeWrapper = ref<HTMLElement>()
+const selectedBvids = ref<string[]>([])
+const isBatchUpdating = ref(false)
 
 const table = computed(() => videoDetail.value?.table)
 const videos = computed(() => videoDetail.value?.videos ?? [])
@@ -120,6 +122,9 @@ const moreOptions = computed(() => [
 
 await loadData()
 watch(() => route.params.id, loadData)
+watch([activeStatus, keyword], () => {
+  selectedBvids.value = []
+})
 
 function currentId() {
   const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
@@ -156,12 +161,59 @@ async function setStatus(status: VideoStatus, video: VideoInfo) {
     })
     if (response.code !== 200) throw new Error(response.message)
     video.status = status
+    selectedBvids.value = selectedBvids.value.filter((id) => id !== video.bvid)
     message.success('审核状态已更新')
   } catch (error) {
     console.error(error)
     message.error(error instanceof Error ? error.message : '审核操作失败')
   } finally {
     videoOperation.value = undefined
+  }
+}
+
+function toggleSelect(bvid: string) {
+  const idx = selectedBvids.value.indexOf(bvid)
+  if (idx === -1) selectedBvids.value = [...selectedBvids.value, bvid]
+  else selectedBvids.value = selectedBvids.value.filter((id) => id !== bvid)
+}
+
+function selectAllVisible() {
+  selectedBvids.value = visibleVideos.value.map((item) => item.info.bvid)
+}
+
+function clearSelection() {
+  selectedBvids.value = []
+}
+
+async function batchSetStatus(status: VideoStatus) {
+  const targets = visibleVideos.value.filter((item) => selectedBvids.value.includes(item.info.bvid))
+  if (!targets.length) {
+    message.warning('请先选择视频')
+    return
+  }
+  isBatchUpdating.value = true
+  let success = 0
+  let failed = 0
+  try {
+    for (const item of targets) {
+      try {
+        const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}set-status`, {
+          id: currentId(),
+          bvid: item.info.bvid,
+          status,
+        })
+        if (response.code !== 200) throw new Error(response.message)
+        item.info.status = status
+        success++
+      } catch {
+        failed++
+      }
+    }
+    selectedBvids.value = []
+    if (failed === 0) message.success(`已批量更新 ${success} 条`)
+    else message.warning(`成功 ${success} 条，失败 ${failed} 条`)
+  } finally {
+    isBatchUpdating.value = false
   }
 }
 
@@ -471,6 +523,60 @@ function saveQrCode() {
             </NButton>
           </div>
 
+          <div
+            v-if="visibleVideos.length > 0"
+            class="batch-bar"
+          >
+            <NButton
+              size="small"
+              secondary
+              @click="selectAllVisible"
+            >
+              全选当前列表
+            </NButton>
+            <NButton
+              size="small"
+              secondary
+              :disabled="selectedBvids.length === 0"
+              @click="clearSelection"
+            >
+              清空选择
+            </NButton>
+            <span class="batch-count">已选 {{ selectedBvids.length }}</span>
+            <NButton
+              v-if="activeStatus !== VideoStatus.Accepted"
+              size="small"
+              type="success"
+              secondary
+              :loading="isBatchUpdating"
+              :disabled="selectedBvids.length === 0"
+              @click="batchSetStatus(VideoStatus.Accepted)"
+            >
+              批量通过
+            </NButton>
+            <NButton
+              v-if="activeStatus !== VideoStatus.Rejected"
+              size="small"
+              type="error"
+              secondary
+              :loading="isBatchUpdating"
+              :disabled="selectedBvids.length === 0"
+              @click="batchSetStatus(VideoStatus.Rejected)"
+            >
+              批量拒绝
+            </NButton>
+            <NButton
+              v-if="activeStatus !== VideoStatus.Pending"
+              size="small"
+              secondary
+              :loading="isBatchUpdating"
+              :disabled="selectedBvids.length === 0"
+              @click="batchSetStatus(VideoStatus.Pending)"
+            >
+              批量退回待审
+            </NButton>
+          </div>
+
           <NEmpty
             v-if="visibleVideos.length === 0"
             :description="keyword ? '没有符合条件的视频' : '此状态下暂无视频'"
@@ -485,8 +591,11 @@ function saveQrCode() {
               :key="item.info.bvid"
               :video-info="item.info"
               :video-data="item.video"
-              :loading="videoOperation === item.info.bvid"
+              :loading="videoOperation === item.info.bvid || isBatchUpdating"
+              selectable
+              :selected="selectedBvids.includes(item.info.bvid)"
               @update-status="setStatus"
+              @toggle-select="toggleSelect"
             />
           </div>
         </section>
@@ -695,6 +804,23 @@ function saveQrCode() {
 .review-toolbar {
   display: flex;
   gap: 10px;
+}
+
+.batch-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  background: var(--vtsuru-bg-muted);
+}
+
+.batch-count {
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+  margin-right: 4px;
 }
 
 .review-search {

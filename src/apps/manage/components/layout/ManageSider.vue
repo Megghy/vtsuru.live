@@ -8,6 +8,7 @@ import {
   PeopleQueue24Filled,
   Person48Filled,
   PersonFeedback24Filled,
+  StoreMicrosoft24Regular,
   TabletSpeaker24Filled,
   VehicleShip24Filled,
   VideoAdd20Filled,
@@ -24,6 +25,7 @@ import {
   MusicalNote,
   MusicalNotesOutline,
   PlayCircleOutline,
+  StatsChartOutline,
 } from '@vicons/ionicons5'
 import { NButton, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui'
 import { computed, watchEffect } from 'vue'
@@ -194,6 +196,14 @@ const baseItems = computed<ManageNavItem[]>(() => {
       disabled: emailDisabled,
       group: 'tools',
     },
+    {
+      key: 'manage-obsStore',
+      label: 'OBS 组件库',
+      icon: StoreMicrosoft24Regular,
+      to: { name: 'manage-obsStore' },
+      disabled: emailDisabled,
+      group: 'tools',
+    },
 
     {
       key: 'manage-danmuji',
@@ -215,7 +225,7 @@ const baseItems = computed<ManageNavItem[]>(() => {
     },
     {
       key: 'manage-liveLottery',
-      label: '抽奖',
+      label: '弹幕抽奖',
       icon: Lottery24Filled,
       to: { name: 'manage-liveLottery' },
       disabled: biliDisabled,
@@ -245,6 +255,15 @@ const baseItems = computed<ManageNavItem[]>(() => {
       label: '读弹幕',
       icon: TabletSpeaker24Filled,
       to: { name: 'manage-speech' },
+      disabled: biliDisabled,
+      disabledReason: biliReason,
+      group: 'danmaku',
+    },
+    {
+      key: 'manage-danmakuVote',
+      label: '弹幕投票',
+      icon: StatsChartOutline,
+      to: { name: 'manage-danmakuVote' },
       disabled: biliDisabled,
       disabledReason: biliReason,
       group: 'danmaku',
@@ -318,6 +337,14 @@ function onClickNavItem(ev: MouseEvent, item: ManageNavItem) {
   if (item.disabled) {
     ev.preventDefault()
     ev.stopPropagation()
+  }
+}
+
+function onClickDisabledItem(item: ManageNavItem) {
+  const reason = item.disabledReason || '当前无法使用此功能'
+  message.warning(reason)
+  if (!isBiliVerified.value) {
+    void router.push({ name: 'manage-index', query: { tab: 'info' } })
   }
 }
 
@@ -555,6 +582,8 @@ async function go(name: string) {
                   v-else
                   class="nav-item nav-item--disabled"
                   :title="item.disabledReason || item.label"
+                  role="button"
+                  @click="onClickDisabledItem(item)"
                 >
                   <component
                     :is="item.icon"
@@ -576,9 +605,10 @@ async function go(name: string) {
                     <NIcon
                       class="nav-item__fav-icon"
                       :class="{ active: isFavorite(item.key) }"
-                    >
-                      <component :is="isFavorite(item.key) ? Bookmark : BookmarkOutline" />
-                    </NIcon>
+                      :size="12"
+                      :component="isFavorite(item.key) ? Bookmark : BookmarkOutline"
+                      :color="isFavorite(item.key) ? '#f59e0b' : '#777'"
+                    />
                   </button>
                 </div>
               </div>
@@ -857,7 +887,12 @@ async function go(name: string) {
 
 .nav-item--disabled {
   opacity: 0.5;
-  cursor: not-allowed;
+  cursor: pointer;
+}
+
+.nav-item--disabled:hover {
+  background: rgba(127, 127, 127, 0.08);
+  opacity: 0.72;
 }
 
 .nav-item__icon {

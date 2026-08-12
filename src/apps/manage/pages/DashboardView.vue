@@ -24,11 +24,11 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import VueTurnstile from 'vue-turnstile'
+import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 
-import { useAccount } from '@/api/account'
+import { GetSelfAccount, useAccount } from '@/api/account'
 import type { BiliAuthModel } from '@/api/api-models'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { cookie } from '@/api/auth'
@@ -39,7 +39,8 @@ import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
-import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey, setSelectedAPIKey, TURNSTILE_KEY } from '@/shared/config'
+import { ACCOUNT_API_URL, availableAPIs, isDev, selectedAPIKey, setSelectedAPIKey } from '@/shared/config'
+import { copyToClipboard } from '@/shared/utils'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 
 const token = ref('')
@@ -55,9 +56,10 @@ const selectedTab = useRouteQueryParam('tab', 'info', { transform: String })
 watch(
   () => [selectedTab.value, route.query.setting] as const,
   ([tab, setting]) => {
-    if (tab !== 'setting') return
-    if (setting !== 'index') return
-    router.replace({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })
+    // 旧「主页设置」入口迁到自定义页面构建器
+    if (tab === 'setting' && setting === 'index') {
+      void router.replace({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })
+    }
   },
   { immediate: true },
 )
@@ -86,26 +88,29 @@ const apiOptions = availableAPIs.map((api) => ({
   value: api.key,
 }))
 
-// 切换API
+// 切换 API 节点会改变全局 baseURL，必须整页重载
 async function handleAPIChange(value: string) {
   message.info(`正在切换到${availableAPIs.find((api) => api.key === value)?.name}...`)
   await setSelectedAPIKey(value as 'main' | 'failover')
   location.reload()
 }
 
+// 登出后清空会话，必须整页重载
 function logout() {
   cookie.value = undefined
   window.location.reload()
 }
+async function refreshAccountState() {
+  await GetSelfAccount()
+}
+
 function resetBili() {
   isLoading.value = true
   QueryGetAPI(`${ACCOUNT_API_URL}reset-bili`)
-    .then((data) => {
+    .then(async (data) => {
       if (data.code === 200) {
         message.success('已解绑 Bilibili 主播账号')
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
+        await refreshAccountState()
       } else {
         message.error(data.message)
       }
@@ -113,17 +118,18 @@ function resetBili() {
     .catch((err) => {
       console.error(err)
       message.error('发生错误')
+    })
+    .finally(() => {
+      isLoading.value = false
     })
 }
 function resetBiliAuthBind() {
   isLoading.value = true
   QueryGetAPI(`${ACCOUNT_API_URL}reset-bili-auth`)
-    .then((data) => {
+    .then(async (data) => {
       if (data.code === 200) {
         message.success('已解绑 Bilibili 用户账号')
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
+        await refreshAccountState()
       } else {
         message.error(data.message)
       }
@@ -131,17 +137,19 @@ function resetBiliAuthBind() {
     .catch((err) => {
       console.error(err)
       message.error('发生错误')
+    })
+    .finally(() => {
+      isLoading.value = false
     })
 }
 function resetEmail() {
   isLoading.value = true
   QueryGetAPI(`${ACCOUNT_API_URL}reset-email`, { email: newEmailAddress.value, code: newEmailVerifyCode.value })
-    .then((data) => {
+    .then(async (data) => {
       if (data.code === 200) {
         message.success(`已将邮箱改绑为 ${newEmailAddress.value}`)
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
+        resetEmailModalVisiable.value = false
+        await refreshAccountState()
       } else {
         message.error(data.message)
       }
@@ -149,6 +157,9 @@ function resetEmail() {
     .catch((err) => {
       console.error(err)
       message.error('发生错误')
+    })
+    .finally(() => {
+      isLoading.value = false
     })
 }
 function sendEmailVerifyCode() {
@@ -174,21 +185,22 @@ async function resetPassword() {
     message.error('两次密码不一致')
     return
   }
-  await QueryGetAPI(`${ACCOUNT_API_URL}verify/reset-password`, { password: newPassword.value })
-    .then(async (data) => {
-      if (data.code === 200) {
-        message.success('密码已修改')
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
-    })
+  try {
+    const data = await QueryGetAPI(`${ACCOUNT_API_URL}verify/reset-password`, { password: newPassword.value })
+    if (data.code === 200) {
+      message.success('密码已修改')
+      resetPasswordModalVisiable.value = false
+      newPassword.value = ''
+      newPassword2.value = ''
+      // 密码修改不需要整页刷新；会话 cookie 仍有效
+      await refreshAccountState()
+    } else {
+      message.error(data.message)
+    }
+  } catch (err) {
+    console.error(err)
+    message.error('发生错误')
+  }
 }
 async function resetName() {
   if (accountInfo.value?.name === newName.value) {
@@ -196,24 +208,21 @@ async function resetName() {
     return
   }
   isLoading.value = true
-  await QueryGetAPI(`${ACCOUNT_API_URL}change-name`, { name: newName.value })
-    .then(async (data) => {
-      if (data.code === 200) {
-        message.success('用户名已修改')
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
+  try {
+    const data = await QueryGetAPI(`${ACCOUNT_API_URL}change-name`, { name: newName.value })
+    if (data.code === 200) {
+      message.success('用户名已修改')
+      resetNameModalVisiable.value = false
+      await GetSelfAccount()
+    } else {
+      message.error(data.message)
+    }
+  } catch (err) {
+    console.error(err)
+    message.error('发生错误')
+  } finally {
+    isLoading.value = false
+  }
 }
 async function resetToken() {
   isLoading.value = true
@@ -249,9 +258,9 @@ async function BindBili() {
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码')
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
+        bindBiliCodeModalVisiable.value = false
+        biliCode.value = ''
+        await refreshAccountState()
       } else {
         message.error(data.message)
       }
@@ -283,9 +292,9 @@ async function BindBiliAuth() {
     .then(async (data) => {
       if (data.code == 200) {
         message.success(`已绑定用户: ${data.data.userId}`)
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
+        bindBiliAuthModalVisiable.value = false
+        biliAuthText.value = ''
+        await refreshAccountState()
       } else {
         message.error(data.message)
       }
@@ -313,9 +322,9 @@ async function ChangeBili() {
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已更新身份码')
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
+        bindBiliCodeModalVisiable.value = false
+        biliCode.value = ''
+        await refreshAccountState()
       } else {
         message.error(data.message)
       }
@@ -643,14 +652,23 @@ onUnmounted(() => {
                 size="small"
                 :bordered="false"
               >
-                请注意保管, 这个东西可以完全操作你的账号
+                请注意保管，这个东西可以完全操作你的账号（EventFetcher / 部分 OBS 接口会用到）
                 <NInputGroup class="dashboard-token-group">
                   <NInput
                     type="password"
                     :value="accountInfo?.token"
                     show-password-on="click"
                     status="error"
+                    readonly
                   />
+                  <NButton
+                    size="small"
+                    secondary
+                    :disabled="!accountInfo?.token"
+                    @click="copyToClipboard(accountInfo?.token ?? '')"
+                  >
+                    复制
+                  </NButton>
                   <NPopconfirm @positive-click="resetToken">
                     <template #trigger>
                       <NButton
@@ -711,9 +729,11 @@ onUnmounted(() => {
       >
         <TemplateManager />
       </NTabPane>
+      <!-- 增值服务仍在开发中，仅开发环境显示入口 -->
       <NTabPane
+        v-if="isDev"
         name="billing"
-        tab="增值"
+        tab="增值 (dev)"
         display-directive="show:lazy"
       >
         <SettingPaymentView />
@@ -854,11 +874,9 @@ onUnmounted(() => {
       </NInputGroup>
     </NFlex>
     <NDivider />
-    <VueTurnstile
+    <CaptchaWidget
       ref="turnstile"
       v-model="token"
-      :site-key="TURNSTILE_KEY"
-      theme="auto"
       style="text-align: center"
     />
     <template #footer>
@@ -882,7 +900,7 @@ onUnmounted(() => {
         title="获取认证链接"
         type="info"
       >
-        因为部分功能如积分兑换等也需要对没有注册本站账户的用户开放, 所以需要现在另一个页面获取认证链接,
+        因为部分功能如积分兑换等也需要对没有注册本站账户的用户开放，所以需要在另一个页面获取认证链接，
         然后再回到这里绑定
       </NAlert>
       <NInputGroup>

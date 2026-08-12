@@ -29,16 +29,27 @@ async function SaveComboGroupSetting(
 ) {
   if (!accountInfo.value) return
   isSaving.value = true
+  const fn = meta.value as FunctionTypes
   try {
     const response = await SaveEnableFunctions(accountInfo.value.settings.enableFunctions)
     if (response.code !== 200) {
       message.error('修改失败')
-      accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
-        (f) => f !== (meta.value as FunctionTypes),
-      )
+      // 按操作类型回滚：check 失败则移除，uncheck 失败则加回
+      const list = accountInfo.value.settings.enableFunctions
+      if (meta.actionType === 'check') {
+        accountInfo.value.settings.enableFunctions = list.filter((f) => f !== fn)
+      } else if (!list.includes(fn)) {
+        list.push(fn)
+      }
     }
   } catch (err) {
     message.error(`修改失败: ${err}`)
+    const list = accountInfo.value.settings.enableFunctions
+    if (meta.actionType === 'check') {
+      accountInfo.value.settings.enableFunctions = list.filter((f) => f !== fn)
+    } else if (!list.includes(fn)) {
+      list.push(fn)
+    }
   } finally {
     isSaving.value = false
   }
@@ -86,12 +97,19 @@ async function SaveComboSetting() {
             v-model:value="accountInfo.settings.enableFunctions"
             @update:value="SaveComboGroupSetting"
           >
-            <NCheckbox :value="FunctionTypes.SongList"> 歌单 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.QuestionBox"> 提问箱(棉花糖 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.Schedule"> 日程 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.LiveRequest"> 点歌 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.Queue"> 排队 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.CheckInRanking"> 签到排行 </NCheckbox>
+            <NFlex
+              :size="8"
+              style="flex-wrap: wrap"
+            >
+              <NCheckbox :value="FunctionTypes.SongList"> 歌单 </NCheckbox>
+              <NCheckbox :value="FunctionTypes.QuestionBox"> 提问箱（棉花糖） </NCheckbox>
+              <NCheckbox :value="FunctionTypes.Schedule"> 日程 </NCheckbox>
+              <NCheckbox :value="FunctionTypes.LiveRequest"> 点播 </NCheckbox>
+              <NCheckbox :value="FunctionTypes.Queue"> 排队 </NCheckbox>
+              <NCheckbox :value="FunctionTypes.Point"> 积分和礼物 </NCheckbox>
+              <NCheckbox :value="FunctionTypes.VideoCollect"> 视频征集 </NCheckbox>
+              <NCheckbox :value="FunctionTypes.CheckInRanking"> 签到排行 </NCheckbox>
+            </NFlex>
           </NCheckboxGroup>
 
           <NDivider> 通知 </NDivider>

@@ -246,6 +246,24 @@ const sortOptions = [
           >
             设为公开
           </NButton>
+          <NButton
+            size="small"
+            @click="useQB.batchSetPublic(false)"
+          >
+            设为私密
+          </NButton>
+          <NButton
+            size="small"
+            @click="useQB.batchFavorite(true)"
+          >
+            收藏
+          </NButton>
+          <NButton
+            size="small"
+            @click="useQB.batchFavorite(false)"
+          >
+            取消收藏
+          </NButton>
           <NPopconfirm @positive-click="useQB.batchDelete()">
             <template #trigger>
               <NButton

@@ -5,7 +5,9 @@ import { computed, ref, watch } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { applySongOrder, moveSongInOrder } from '@/apps/manage/composables/songListCsv'
 import { SONG_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
   const message = useMessage()
@@ -13,6 +15,8 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
   const isLoading = ref(false)
   const playingSong = ref<SongsInfo>()
   const isLrcLoading = ref<string>()
+  // 后端暂无排序字段：用本机持久化 key 顺序；CRUD 后仍写回服务端歌曲本体
+  const songOrderKeys = usePersistedStorage<string[]>('vtsuru:settings:song-list:order-keys', [])
 
   // 筛选状态
   const searchKeyword = ref('')
@@ -72,14 +76,37 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     return [...authors].toSorted().map((t) => ({ label: t, value: t }))
   })
 
-  // 同步 props
+  function syncOrderKeys(list: SongsInfo[]) {
+    const keys = list.map((s) => s.key)
+    const prev = songOrderKeys.value ?? []
+    const merged = applySongOrder(
+      list,
+      prev.filter((k) => keys.includes(k)).concat(keys.filter((k) => !prev.includes(k))),
+    ).map((s) => s.key)
+    songOrderKeys.value = merged
+    return merged
+  }
+
+  // 同步 props + 应用本地排序
   watch(
     () => props.songs,
     (v) => {
-      songsInternal.value = [...v]
+      const ordered = applySongOrder([...v], songOrderKeys.value ?? [])
+      songsInternal.value = ordered
+      syncOrderKeys(ordered)
     },
-    { deep: true },
+    { deep: true, immediate: true },
   )
+
+  function moveSong(key: string, direction: -1 | 1) {
+    const order = songsInternal.value.map((s) => s.key)
+    const nextOrder = moveSongInOrder(order, key, direction)
+    if (nextOrder === order || nextOrder.join('|') === order.join('|')) return false
+    songOrderKeys.value = nextOrder
+    songsInternal.value = applySongOrder(songsInternal.value, nextOrder)
+    message.success('已调整顺序（本机保存；服务端暂无排序字段）')
+    return true
+  }
 
   // CRUD 操作
   async function updateSong(song: SongsInfo) {
@@ -226,6 +253,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     deleteSong,
     deleteBatch,
     batchUpdate,
+    moveSong,
     nextPage,
     prevPage,
   }

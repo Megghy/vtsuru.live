@@ -20,11 +20,13 @@ import {
 } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
+import { addDays, endOfDay, startOfDay } from 'date-fns'
 import {
   NButton,
   NCard,
   NCheckbox,
   NCheckboxGroup,
+  NDatePicker,
   NDescriptions,
   NDescriptionsItem,
   NEmpty,
@@ -46,6 +48,11 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import {
+  computeRangeSummary,
+  filterChartDataByRange,
+  type AnalyzeDayPoint,
+} from '@/apps/manage/composables/analyzeRange'
 import { formatCurrency, formatDate, formatNumber } from '@/apps/manage/composables/formatters'
 import { ANALYZE_API_URL } from '@/shared/config'
 
@@ -150,18 +157,43 @@ function getTrendType(value: number): 'success' | 'error' | 'info' {
   return 'info'
 }
 
+const dateRange = ref<[number, number] | null>(null)
+const dateShortcuts: Record<string, () => [number, number]> = {
+  最近7天: () => [startOfDay(addDays(new Date(), -6)).getTime(), endOfDay(new Date()).getTime()],
+  最近30天: () => [startOfDay(addDays(new Date(), -29)).getTime(), endOfDay(new Date()).getTime()],
+  最近60天: () => [startOfDay(addDays(new Date(), -59)).getTime(), endOfDay(new Date()).getTime()],
+}
+
 // 从ChartData对象转换为数组，并按时间戳排序
-function getChartDataArray() {
+function getChartDataArray(): Array<AnalyzeDayPoint & { date: string }> {
   if (!analyzeData.value?.chartData) return []
 
   return Object.entries(analyzeData.value.chartData)
     .map(([timestamp, data]) => ({
       timestamp: Number.parseInt(timestamp, 10),
       date: formatDate(Number.parseInt(timestamp, 10)),
-      ...data,
+      income: data.income,
+      interactionCount: data.interactionCount,
+      danmakuCount: data.danmakuCount,
+      payingUsers: data.payingUsers,
+      interactionUsers: data.interactionUsers,
+      liveMinutes: data.liveMinutes,
+      likeCount: data.likeCount,
     }))
     .toSorted((a, b) => a.timestamp - b.timestamp)
 }
+
+const filteredChartData = computed(() => {
+  const all = getChartDataArray()
+  if (!dateRange.value) return all
+  return filterChartDataByRange(all, dateRange.value[0], dateRange.value[1]).map((p) => ({
+    ...p,
+    date: formatDate(p.timestamp),
+  }))
+})
+
+const customRangeSummary = computed(() => computeRangeSummary(filteredChartData.value))
+const isCustomRange = computed(() => Boolean(dateRange.value))
 
 // 获取主题色配置
 function getThemeColors() {
@@ -176,17 +208,17 @@ function getThemeColors() {
 // 初始化图表
 function initChart() {
   if (!chartRef.value) return
-  const chartData = getChartDataArray()
+  const chartData = filteredChartData.value
   if (chartData.length === 0) return
 
-  mainChart = echarts.init(chartRef.value)
+  if (!mainChart) mainChart = echarts.init(chartRef.value)
   updateChartOption()
 }
 
 // 更新图表配置
 function updateChartOption() {
   if (!mainChart) return
-  const chartData = getChartDataArray()
+  const chartData = filteredChartData.value
   const dates = chartData.map((item) => item.date)
   const themeColors = getThemeColors()
 
@@ -318,6 +350,14 @@ watch(selectedMetrics, () => {
   updateChartOption()
 })
 
+// 自定义区间变化时重算图表
+watch(dateRange, () => {
+  nextTick(() => {
+    if (!mainChart && chartRef.value) initChart()
+    else updateChartOption()
+  })
+})
+
 // 获取分析数据
 async function fetchAnalyzeData(isRefresh = false) {
   try {
@@ -382,11 +422,21 @@ onUnmounted(() => {
 <template>
   <div class="analyze-view">
     <ManagePageHeader
-      title="数据分析"
-      subtitle="近7/30天汇总与趋势"
+      title="直播数据"
+      subtitle="近7/30天汇总；可自选区间重算趋势"
     >
       <template #action>
         <EventFetcherAlert />
+        <NDatePicker
+          v-model:value="dateRange"
+          type="daterange"
+          clearable
+          size="small"
+          :shortcuts="dateShortcuts"
+          start-placeholder="开始"
+          end-placeholder="结束"
+          style="width: 260px"
+        />
         <NTooltip v-if="lastUpdateTime > 0">
           <template #trigger>
             <NTag
@@ -470,6 +520,31 @@ onUnmounted(() => {
 
     <!-- 数据展示 -->
     <template v-else>
+      <NCard
+        v-if="isCustomRange"
+        size="small"
+        class="custom-range-card"
+        :bordered="true"
+      >
+        <NFlex
+          align="center"
+          wrap
+          :size="16"
+        >
+          <NTag
+            type="info"
+            size="small"
+            :bordered="false"
+            >自定义区间</NTag
+          >
+          <NText>收入 ¥{{ customRangeSummary.totalIncome.toFixed(2) }}</NText>
+          <NText>互动 {{ customRangeSummary.totalInteractions }}</NText>
+          <NText>弹幕 {{ customRangeSummary.totalDanmakuCount }}</NText>
+          <NText>直播 {{ customRangeSummary.totalLiveMinutes }} 分钟</NText>
+          <NText>有播天数 {{ customRangeSummary.activeLiveDays }}</NText>
+          <NText>日均收入 ¥{{ customRangeSummary.dailyAvgIncome.toFixed(0) }}</NText>
+        </NFlex>
+      </NCard>
       <!-- 核心指标卡片 -->
       <div class="core-metrics">
         <div :style="metricColorVars">
@@ -486,7 +561,7 @@ onUnmounted(() => {
               >
                 <div class="metric-content">
                   <div class="metric-header">
-                    <span class="metric-label">近30天收入</span>
+                    <span class="metric-label">{{ isCustomRange ? '区间收入' : '近30天收入' }}</span>
                     <NIcon
                       :component="WalletOutline"
                       class="metric-icon"
@@ -495,13 +570,16 @@ onUnmounted(() => {
                   <div class="metric-value">
                     <NNumberAnimation
                       :from="0"
-                      :to="summaryData?.last30Days?.totalIncome || 0"
+                      :to="isCustomRange ? customRangeSummary.totalIncome : summaryData?.last30Days?.totalIncome || 0"
                       :precision="2"
                     />
                     <span class="currency-symbol">¥</span>
                   </div>
                   <div class="metric-footer">
-                    <div class="trend-info">
+                    <div
+                      v-if="!isCustomRange"
+                      class="trend-info"
+                    >
                       <span :class="getTrendType(summaryData?.last30Days?.incomeTrend || 0)">
                         <NIcon
                           :component="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? TrendingUp : TrendingDown"
@@ -510,7 +588,15 @@ onUnmounted(() => {
                       </span>
                       <span class="trend-label">环比</span>
                     </div>
-                    <div class="sub-stat">日均 ¥{{ (summaryData?.last30Days?.dailyAvgIncome || 0).toFixed(0) }}</div>
+                    <div class="sub-stat">
+                      日均 ¥{{
+                        (
+                          isCustomRange
+                            ? customRangeSummary.dailyAvgIncome
+                            : summaryData?.last30Days?.dailyAvgIncome || 0
+                        ).toFixed(0)
+                      }}
+                    </div>
                   </div>
                 </div>
               </NCard>

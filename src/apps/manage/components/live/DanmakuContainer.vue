@@ -484,6 +484,9 @@ defineExpose({
               </NTooltip>
             </NRadioButton>
           </NRadioGroup>
+          <NCheckbox v-model:checked="onlyExportFilteredDanmakus">
+            仅导出当前筛选结果
+          </NCheckbox>
           <NButton
             type="primary"
             size="large"

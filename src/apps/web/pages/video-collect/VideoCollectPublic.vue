@@ -17,11 +17,11 @@ import {
 } from 'naive-ui'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import VueTurnstile from 'vue-turnstile'
 
 import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { TURNSTILE_KEY, VIDEO_COLLECT_API_URL } from '@/shared/config'
+import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
+import { VIDEO_COLLECT_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
@@ -34,11 +34,6 @@ interface AddVideoModel {
   description?: string
 }
 
-interface TurnstileInstance {
-  remove: () => void
-  reset: () => void
-}
-
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
@@ -46,7 +41,7 @@ const biliAuth = useBiliAuth()
 
 const table = ref<VideoCollectTable | null>()
 const formRef = ref<FormInst>()
-const turnstile = ref<TurnstileInstance>()
+const turnstile = ref<InstanceType<typeof CaptchaWidget>>()
 const token = ref('')
 const isLoading = ref(false)
 const isPageLoading = ref(false)
@@ -307,12 +302,9 @@ onUnmounted(() => turnstile.value?.remove())
                   />
                 </NFormItem>
 
-                <VueTurnstile
+                <CaptchaWidget
                   ref="turnstile"
                   v-model="token"
-                  :site-key="TURNSTILE_KEY"
-                  :theme="effectiveIsDark ? 'dark' : 'light'"
-                  size="flexible"
                   class="turnstile"
                 />
                 <NButton

@@ -24,6 +24,10 @@ const siderCollapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollaps
 
 const themeToggleIcon = computed(() => (isDarkMode.value ? Sunny : Moon))
 const themeToggleTitle = computed(() => (isDarkMode.value ? '切换到亮色主题' : '切换到暗色主题'))
+const pageTitle = computed(() => {
+  const title = route.meta?.title
+  return typeof title === 'string' && title.trim() ? title : ''
+})
 
 function toggleTheme() {
   themeType.value = isDarkMode.value ? ThemeType.Light : ThemeType.Dark
@@ -69,6 +73,13 @@ async function goToUserPage(accountName?: string) {
         class="manage-header__account"
       >
         / {{ accountName }}
+      </div>
+      <div
+        v-if="pageTitle"
+        class="manage-header__page-title"
+      >
+        <span class="manage-header__page-sep">·</span>
+        {{ pageTitle }}
       </div>
     </div>
 
@@ -154,6 +165,23 @@ async function goToUserPage(accountName?: string) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.manage-header__page-title {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.manage-header__page-sep {
+  margin-right: 6px;
+  color: var(--vtsuru-fg-muted);
+  font-weight: 400;
 }
 
 .manage-header__right {
@@ -281,6 +309,14 @@ async function goToUserPage(accountName?: string) {
   }
 
   .manage-header__brand {
+    display: none;
+  }
+
+  .manage-header__account {
+    display: none;
+  }
+
+  .manage-header__page-sep {
     display: none;
   }
 

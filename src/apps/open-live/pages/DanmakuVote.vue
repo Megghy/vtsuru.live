@@ -436,7 +436,7 @@ onMounted(async () => {
   onUnmounted(() => {
     clearInterval(pollInterval)
     clearInterval(tickInterval)
-    client.dispose()
+    // 不要 dispose 共享弹幕客户端，否则会打断其它弹幕页/标签的连接
   })
 })
 

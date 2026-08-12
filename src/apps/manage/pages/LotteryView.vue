@@ -34,14 +34,15 @@ import {
   useNotification,
 } from 'naive-ui'
 import { computed, h, onUnmounted, ref } from 'vue'
-import VueTurnstile from 'vue-turnstile'
 
 import type { LotteryUserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/shared/config'
+import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
+import { LOTTERY_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { NavigateToNewTab } from '@/shared/utils'
+import { NavigateToNewTab, copyToClipboard, objectsToCSV } from '@/shared/utils'
+import { saveAs } from 'file-saver'
 
 interface TempLotteryResponseModel {
   users: LotteryUserInfo[]
@@ -284,6 +285,33 @@ function onFinishLottery(winners: LotteryUserInfo[]) {
   })
   message.success('结果已保存至历史记录')
 }
+
+function copyWinnerNames() {
+  const winners = resultUsers.value
+  if (!winners?.length) return
+  copyToClipboard(winners.map((u) => u.name).join('\n'))
+}
+
+function copyWinnerList() {
+  const winners = resultUsers.value
+  if (!winners?.length) return
+  copyToClipboard(winners.map((u) => `${u.name}\t${u.uId}`).join('\n'))
+}
+
+function exportWinnersCsv() {
+  const winners = resultUsers.value
+  if (!winners?.length) return
+  const csv = objectsToCSV(
+    winners.map((u) => ({
+      name: u.name,
+      uId: u.uId,
+      level: u.level,
+    })),
+  )
+  saveAs(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }), `lottery-winners-${Date.now()}.csv`)
+  message.success('已导出 CSV')
+}
+
 function reset() {
   isLotteried.value = false
   eliminatedIds.value = new Set()
@@ -537,6 +565,33 @@ onUnmounted(() => {
         >
           恭喜以下 {{ resultUsers.length }} 位中奖
         </NText>
+        <NFlex
+          :size="8"
+          style="margin-left: auto"
+        >
+          <NButton
+            size="small"
+            secondary
+            @click="copyWinnerNames"
+          >
+            复制昵称
+          </NButton>
+          <NButton
+            size="small"
+            secondary
+            @click="copyWinnerList"
+          >
+            复制名单
+          </NButton>
+          <NButton
+            size="small"
+            type="primary"
+            secondary
+            @click="exportWinnersCsv"
+          >
+            导出 CSV
+          </NButton>
+        </NFlex>
       </NFlex>
       <NFlex
         :size="16"
@@ -555,9 +610,20 @@ onUnmounted(() => {
             :src="`${user.avatar}@88w_88h`"
             :img-props="{ referrerpolicy: 'no-referrer' }"
           />
-          <NText strong>
-            {{ user.name }}
-          </NText>
+          <NFlex
+            vertical
+            :size="2"
+          >
+            <NText strong>
+              {{ user.name }}
+            </NText>
+            <NText
+              depth="3"
+              style="font-size: 12px"
+            >
+              UID {{ user.uId }}
+            </NText>
+          </NFlex>
         </NFlex>
       </NFlex>
     </NCard>
@@ -789,11 +855,9 @@ onUnmounted(() => {
         description="暂无抽奖记录"
       />
     </NModal>
-    <VueTurnstile
+    <CaptchaWidget
       ref="turnstile"
       v-model="token"
-      :site-key="TURNSTILE_KEY"
-      theme="auto"
       style="text-align: center"
     />
   </div>

@@ -6,7 +6,7 @@ import { useAccount } from '@/api/account'
 import type { UserInfo } from '@/api/api-models'
 import type { ForumPostTopicModel, ForumTopicBaseModel } from '@/api/models/forum'
 import { ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'
-import TurnstileVerify from '@/apps/user/components/TurnstileVerify.vue'
+import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useForumStore } from '@/store/useForumStore'
@@ -285,7 +285,7 @@ onUnmounted(() => {
         </NButton>
       </NFlex>
     </NModal>
-    <TurnstileVerify
+    <CaptchaWidget
       ref="turnstile"
       v-model="token"
     />

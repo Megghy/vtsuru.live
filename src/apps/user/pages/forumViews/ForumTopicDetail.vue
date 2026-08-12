@@ -32,7 +32,7 @@ import type { PaginationResponse, UserInfo } from '@/api/api-models'
 import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import { ForumCommentSortTypes } from '@/api/models/forum'
 import router from '@/app/router'
-import TurnstileVerify from '@/apps/user/components/TurnstileVerify.vue'
+import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { getUserAvatarUrl } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
@@ -452,7 +452,7 @@ onMounted(async () => {
       发布
     </NButton>
   </NModal>
-  <TurnstileVerify
+  <CaptchaWidget
     ref="turnstile"
     v-model="token"
   />

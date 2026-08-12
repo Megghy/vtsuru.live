@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Delete24Filled, NotepadEdit20Filled, Play24Filled } from '@vicons/fluent'
+import {
+  ArrowDown24Filled,
+  ArrowUp24Filled,
+  Delete24Filled,
+  NotepadEdit20Filled,
+  Play24Filled,
+} from '@vicons/fluent'
 import type { DataTableColumns } from 'naive-ui'
 import {
   NButton,
@@ -57,6 +63,7 @@ const {
   deleteSong,
   deleteBatch,
   batchUpdate,
+  moveSong,
   nextPage,
   prevPage,
 } = state
@@ -104,7 +111,7 @@ function getGuardColor(level: number): string {
 }
 
 function actionWidth() {
-  let w = props.isSelf ? 80 : 40
+  let w = props.isSelf ? 160 : 40 // 自管理含上移/下移/编辑/删除
   if (showListenButton.value && hasAudio.value) w += 40
   if (showLinkButton.value && hasLinks.value) w += 50
   if (props.extraButton) w += 40
@@ -267,6 +274,38 @@ const columns = computed(() => {
             }),
           )
         if (props.isSelf) {
+          b.push(
+            h(NTooltip, null, {
+              trigger: () =>
+                h(
+                  NButton,
+                  {
+                    size: 'small',
+                    circle: true,
+                    secondary: true,
+                    onClick: () => moveSong(row.key, -1),
+                  },
+                  { icon: () => h(NIcon, { component: ArrowUp24Filled }) },
+                ),
+              default: () => '上移',
+            }),
+          )
+          b.push(
+            h(NTooltip, null, {
+              trigger: () =>
+                h(
+                  NButton,
+                  {
+                    size: 'small',
+                    circle: true,
+                    secondary: true,
+                    onClick: () => moveSong(row.key, 1),
+                  },
+                  { icon: () => h(NIcon, { component: ArrowDown24Filled }) },
+                ),
+              default: () => '下移',
+            }),
+          )
           b.push(
             h(NTooltip, null, {
               trigger: () =>

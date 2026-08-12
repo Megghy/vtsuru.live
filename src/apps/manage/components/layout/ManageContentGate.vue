@@ -23,6 +23,7 @@ import { RouterView } from 'vue-router'
 import type { AccountInfo } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI } from '@/api/query'
+import ManageDanmakuStatusBanner from '@/apps/manage/components/event-fetcher/ManageDanmakuStatusBanner.vue'
 import { ACCOUNT_API_URL } from '@/shared/config'
 
 const props = defineProps<{
@@ -73,41 +74,30 @@ function logout() {
       v-if="accountInfo?.isEmailVerified"
       v-slot="{ Component, route: viewRoute }"
     >
-      <template v-if="viewRoute.meta.keepAlive">
+      <div
+        class="manage-page"
+        :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
+      >
+        <ManageDanmakuStatusBanner v-if="viewRoute.meta.danmaku" />
         <Suspense>
           <template #default>
-            <KeepAlive>
-              <div
-                class="manage-page"
-                :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
-              >
-                <component :is="Component" />
-              </div>
-            </KeepAlive>
-          </template>
-          <template #fallback>
-            <NSpin show />
-          </template>
-        </Suspense>
-      </template>
-      <template v-else>
-        <Suspense>
-          <template #default>
-            <div
-              class="manage-page"
-              :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
-            >
+            <KeepAlive v-if="viewRoute.meta.keepAlive">
               <component
                 :is="Component"
-                :key="viewRoute.fullPath.split('#')[0]"
+                :key="String(viewRoute.name ?? viewRoute.path)"
               />
-            </div>
+            </KeepAlive>
+            <component
+              v-else
+              :is="Component"
+              :key="viewRoute.fullPath.split('#')[0]"
+            />
           </template>
           <template #fallback>
             <NSpin show />
           </template>
         </Suspense>
-      </template>
+      </div>
     </RouterView>
 
     <template v-else>

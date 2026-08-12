@@ -13,6 +13,8 @@ import { FunctionTypes, SongFrom } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import SongListAddSongModal from '@/apps/manage/components/song-list/SongListAddSongModal.vue'
+import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
+import { parseSongListCsv, parsedRowsToSongsInfo } from '@/apps/manage/composables/songListCsv'
 import SongList from '@/components/SongList.vue'
 import { CURRENT_HOST, SONG_API_URL } from '@/shared/config'
 import { objectsToCSV } from '@/shared/utils'
@@ -22,8 +24,10 @@ const router = useRouter()
 const accountInfo = useAccount()
 
 const isLoading = ref(true)
+const isImporting = ref(false)
 const showModal = ref(false)
 const songs = ref<SongsInfo[]>([])
+const csvInputRef = ref<HTMLInputElement | null>(null)
 const songListUrl = computed(() =>
   accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/song-list` : '',
 )
@@ -81,6 +85,7 @@ function exportData() {
 const moreActions = [
   { label: '修改展示模板', key: 'template' },
   { label: '导出为 CSV', key: 'export' },
+  { label: '从 CSV 导入', key: 'import' },
   { label: '前往点播管理页', key: 'live-request' },
   { label: '前往歌单展示页', key: 'song-list' },
 ]
@@ -88,10 +93,13 @@ const moreActions = [
 function handleMoreAction(key: string) {
   switch (key) {
     case 'template':
-      router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })
+      router.push({ name: 'manage-index', query: { tab: 'template', template: 'songlist' } })
       break
     case 'export':
       exportData()
+      break
+    case 'import':
+      csvInputRef.value?.click()
       break
     case 'live-request':
       router.push({ name: 'manage-liveRequest' })
@@ -99,6 +107,42 @@ function handleMoreAction(key: string) {
     case 'song-list':
       router.push({ name: 'user-songList', params: { id: accountInfo.value?.name } })
       break
+  }
+}
+
+async function onCsvFileChange(ev: Event) {
+  const input = ev.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  isImporting.value = true
+  try {
+    const text = await file.text()
+    const rows = parseSongListCsv(text)
+    if (!rows.length) {
+      message.warning('CSV 中没有可导入的歌曲')
+      return
+    }
+    const payload = parsedRowsToSongsInfo(rows)
+    // 按来源分组调用真实 add 接口
+    const groups = new Map<SongFrom, SongsInfo[]>()
+    for (const song of payload) {
+      const list = groups.get(song.from) ?? []
+      list.push(song)
+      groups.set(song.from, list)
+    }
+    const added: SongsInfo[] = []
+    for (const [from, list] of groups) {
+      const resp = await addSongsToSongList(list, from)
+      if (resp.code !== 200) throw new Error(resp.message || '导入失败')
+      if (resp.data?.length) added.push(...resp.data)
+    }
+    songs.value.push(...added)
+    message.success(`已导入 ${added.length} 首歌曲`)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : String(err))
+  } finally {
+    isImporting.value = false
   }
 }
 
@@ -119,7 +163,7 @@ onMounted(getSongs)
         添加歌曲
       </NButton>
       <NButton
-        :loading="isLoading"
+        :loading="isLoading || isImporting"
         secondary
         @click="getSongs"
       >
@@ -130,13 +174,23 @@ onMounted(getSongs)
         trigger="click"
         @select="handleMoreAction"
       >
-        <NButton secondary>
+        <NButton
+          secondary
+          :loading="isImporting"
+        >
           <template #icon>
             <NIcon :component="MoreHorizontal24Filled" />
           </template>
           更多
         </NButton>
       </NDropdown>
+      <input
+        ref="csvInputRef"
+        type="file"
+        accept=".csv,text/csv"
+        style="display: none"
+        @change="onCsvFileChange"
+      />
     </template>
   </ManagePageHeader>
 

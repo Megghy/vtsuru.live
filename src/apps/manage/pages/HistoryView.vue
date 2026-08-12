@@ -18,6 +18,7 @@ import {
   NCard,
   NDatePicker,
   NDivider,
+  NEmpty,
   NIcon,
   NFlex,
   NSpin,
@@ -150,6 +151,19 @@ async function getHistory() {
     message.error('加载失败')
   }
 }
+
+async function refreshHistory() {
+  isLoading.value = true
+  try {
+    await getHistory()
+    processAllChartOptions()
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const hasFansData = computed(() => (fansHistory.value?.length ?? 0) > 0)
+const hasGuardData = computed(() => (guardHistory.value?.length ?? 0) > 0)
 
 /**
  * 获取基础图表配置
@@ -506,8 +520,8 @@ function processAllChartOptions() {
 
 onMounted(async () => {
   if (accountInfo.value?.isBiliVerified === true) {
-    await getHistory()
-    processAllChartOptions()
+    await refreshHistory()
+  } else {
     isLoading.value = false
   }
 })
@@ -524,22 +538,33 @@ watch(
 <template>
   <div class="history-view">
     <ManagePageHeader
-      title="数据跟踪"
+      title="历史"
       subtitle="粉丝/舰长趋势（需 EventFetcher 提供数据）"
-    />
+    >
+      <template #action>
+        <NButton
+          v-if="accountInfo?.isBiliVerified === true"
+          secondary
+          size="small"
+          :loading="isLoading"
+          @click="refreshHistory"
+        >
+          刷新数据
+        </NButton>
+      </template>
+    </ManagePageHeader>
     <NAlert
       v-if="accountInfo?.isBiliVerified !== true"
       type="info"
       :bordered="false"
     >
-      尚未进行Bilibili认证
+      尚未进行 Bilibili 认证，无法加载历史数据。请前往面板完成绑定。
     </NAlert>
     <NSpin
-      v-else-if="isLoading"
-      show
-    />
-    <NCard
       v-else
+      :show="isLoading"
+    >
+    <NCard
       size="small"
       :bordered="true"
       class="history-card"
@@ -598,7 +623,11 @@ watch(
       </NTooltip>
       <br />
       <br />
-      <NFlex align="center">
+      <NFlex
+        align="center"
+        wrap
+        :size="10"
+      >
         <NText depth="3"> 日期范围： </NText>
         <NDatePicker
           v-model:value="dateRange"
@@ -616,7 +645,7 @@ watch(
         <NDivider>
           粉丝
           <NDivider vertical />
-          <NTooltip>
+          <NTooltip v-if="fansUpdateAt">
             <template #trigger>
               <span>
                 <NTime
@@ -630,14 +659,20 @@ watch(
           </NTooltip>
         </NDivider>
         <VChart
+          v-if="hasFansData && fansOption"
           :option="fansOption"
           :style="{ height: chartHeight }"
           class="chart"
         />
+        <NEmpty
+          v-else
+          description="暂无粉丝历史数据"
+          style="padding: 32px 0"
+        />
         <NDivider>
           舰长
           <NDivider vertical />
-          <NTooltip>
+          <NTooltip v-if="guardUpdateAt">
             <template #trigger>
               <span>
                 <NTime
@@ -651,13 +686,19 @@ watch(
           </NTooltip>
         </NDivider>
         <VChart
+          v-if="hasGuardData && guardsOption"
           :option="guardsOption"
           :style="{ height: chartHeight }"
           class="chart"
         />
+        <NEmpty
+          v-else
+          description="暂无舰长历史数据"
+          style="padding: 32px 0"
+        />
 
-        <NDivider />
-        <!-- <NDivider>
+        <!-- 投稿图表已下线：站点无法再爬取投稿数据，保留 upstat 字段兼容旧缓存
+        <NDivider>
         投稿播放量
         <NDivider vertical />
         <NTooltip>
@@ -702,6 +743,7 @@ watch(
       /> -->
       </NFlex>
     </NCard>
+    </NSpin>
   </div>
 </template>
 

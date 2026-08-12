@@ -52,7 +52,7 @@ export default // 管理页面
       name: 'manage-history',
       component: async () => import('@/apps/manage/pages/HistoryView.vue'),
       meta: {
-        title: '数据跟踪',
+        title: '历史',
         keepAlive: true,
         pageWidth: 'xl',
       },
@@ -102,7 +102,7 @@ export default // 管理页面
       name: 'manage-liveLottery',
       component: async () => import('@/apps/open-live/pages/OpenLottery.vue'),
       meta: {
-        title: '直播抽奖',
+        title: '弹幕抽奖',
         keepAlive: true,
         danmaku: true,
         pageWidth: 'xl',
@@ -157,7 +157,7 @@ export default // 管理页面
       name: 'manage-musicRequest',
       component: async () => import('@/apps/open-live/pages/request/MusicRequest.vue'),
       meta: {
-        title: '点歌',
+        title: '点歌机',
         keepAlive: true,
         danmaku: true,
         pageWidth: 'xl',
@@ -168,7 +168,7 @@ export default // 管理页面
       name: 'manage-danmuji',
       component: async () => import('@/apps/manage/pages/DanmujiManageView.vue'),
       meta: {
-        title: '弹幕姬',
+        title: '弹幕机',
         keepAlive: true,
         danmaku: true,
         isNew: true,
@@ -237,7 +237,7 @@ export default // 管理页面
       name: 'manage-analyze',
       component: async () => import('@/apps/manage/pages/AnalyzeView.vue'),
       meta: {
-        title: '数据分析',
+        title: '直播数据',
         pageWidth: 'xl',
       },
     },

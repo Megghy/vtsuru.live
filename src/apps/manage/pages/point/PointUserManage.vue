@@ -84,6 +84,15 @@ const settings = usePersistedStorage<PointUserSettings>(
 const pn = ref(1)
 const ps = ref(25)
 
+function onUpdateUserPage(page: number) {
+  pn.value = page
+}
+
+function onUpdateUserPageSize(pageSize: number) {
+  ps.value = pageSize
+  pn.value = 1
+}
+
 // 弹窗控制
 const showModal = ref(false)
 const showGivePointModal = ref(false)
@@ -168,26 +177,26 @@ const updateSearch = useDebounceFn((value: string) => {
 
 watch(searchKeyword, (newVal) => {
   updateSearch(newVal)
+  pn.value = 1
 })
 
-// 根据筛选条件过滤后的用户
+watch(
+  () => settings.value.onlyAuthed,
+  () => {
+    pn.value = 1
+  },
+)
+
+// 根据筛选条件过滤后的用户（认证筛选与搜索同时生效）
 const filteredUsers = computed(() => {
+  const keyword = debouncedSearchKeyword.value.trim().toLowerCase()
   return users.value
     .filter((user) => {
-      // 筛选已认证用户
-      if (settings.value.onlyAuthed) {
-        return user.isAuthed
-      }
-
-      // 根据关键词搜索
-      if (debouncedSearchKeyword.value) {
-        const keyword = debouncedSearchKeyword.value.toLowerCase()
-        return user.info.name?.toLowerCase().includes(keyword) === true || user.info.userId?.toString() === keyword
-      }
-
-      return true
+      if (settings.value.onlyAuthed && !user.isAuthed) return false
+      if (!keyword) return true
+      return user.info.name?.toLowerCase().includes(keyword) === true || user.info.userId?.toString() === keyword
     })
-    .toSorted((a, b) => b.updateAt - a.updateAt) // 按更新时间降序排序
+    .toSorted((a, b) => b.updateAt - a.updateAt)
 })
 
 // 用户统计
@@ -632,8 +641,8 @@ onMounted(async () => {
         pageSize: ps,
         showSizePicker: true,
         pageSizes: [10, 25, 50, 100],
-        onUpdatePage: (page) => (pn = page),
-        onUpdatePageSize: (pageSize) => (ps = pageSize),
+        onUpdatePage: onUpdateUserPage,
+        onUpdatePageSize: onUpdateUserPageSize,
       }"
       :loading="isLoading"
     />

@@ -132,7 +132,7 @@ const danmujiConfig = usePersistedStorage<DanmujiConfig>('danmuji-config', {
 const activeTab = usePersistedStorage('danmuji-active-tab', 'style')
 
 // 自动生成弹幕设置
-const isAutoGenerating = ref(true)
+const isAutoGenerating = ref(false)
 const autoGenerateInterval = ref(1) // 默认间隔3秒
 let autoGenerateTimer: ReturnType<typeof setTimeout> | null = null
 

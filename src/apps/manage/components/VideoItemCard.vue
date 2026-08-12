@@ -7,7 +7,7 @@ import {
   Open24Regular,
   Person24Regular,
 } from '@vicons/fluent'
-import { NButton, NEllipsis, NIcon, NTag, NTime } from 'naive-ui'
+import { NButton, NCheckbox, NEllipsis, NIcon, NTag, NTime } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
@@ -17,10 +17,13 @@ const props = defineProps<{
   videoInfo: VideoInfo
   videoData: VideoCollectVideo
   loading?: boolean
+  selectable?: boolean
+  selected?: boolean
 }>()
 
 const emit = defineEmits<{
   updateStatus: [status: VideoStatus, video: VideoInfo]
+  toggleSelect: [bvid: string]
 }>()
 
 const actions = computed(() => {
@@ -57,7 +60,10 @@ function openVideo() {
 </script>
 
 <template>
-  <article class="video-item">
+  <article
+    class="video-item"
+    :class="{ 'video-item--selected': selected }"
+  >
     <button
       type="button"
       class="video-cover"
@@ -69,6 +75,17 @@ function openVideo() {
         :alt="videoData.title"
         referrerpolicy="no-referrer"
       />
+      <span
+        v-if="selectable"
+        class="select-check"
+        @click.stop.prevent="emit('toggleSelect', videoInfo.bvid)"
+      >
+        <NCheckbox
+          :checked="selected"
+          @update:checked="emit('toggleSelect', videoInfo.bvid)"
+          @click.stop
+        />
+      </span>
       <span class="duration-label">
         <NIcon :component="Clock24Regular" />
         {{ formatDuration(videoData.length) }}
@@ -167,6 +184,22 @@ function openVideo() {
   overflow: hidden;
   background: var(--vtsuru-bg-elevated);
   border: 1px solid var(--vtsuru-border);
+  border-radius: 6px;
+}
+
+.video-item--selected {
+  border-color: color-mix(in srgb, var(--vtsuru-primary) 55%, var(--vtsuru-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vtsuru-primary) 35%, transparent);
+}
+
+.select-check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: inline-flex;
+  padding: 2px 4px;
+  background: rgb(0 0 0 / 45%);
   border-radius: 6px;
 }
 

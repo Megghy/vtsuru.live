@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { NAlert, NButton } from 'naive-ui'
+import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 
 const accountInfo = useAccount()
+const router = useRouter()
+
+function goBindBili() {
+  void router.push({ name: 'manage-index', query: { tab: 'info' } })
+}
 </script>
 
 <template>
@@ -11,12 +17,13 @@ const accountInfo = useAccount()
     v-if="!accountInfo?.isBiliVerified"
     type="warning"
   >
-    使用此功能前你需要先<NButton
+    使用此功能前你需要先
+    <NButton
       type="info"
       text
-      @click="$router.push({ name: 'manage-biliVerify' })"
+      @click="goBindBili"
     >
-      认证Bilibili账号
+      在面板绑定 Bilibili 账号
     </NButton>
   </NAlert>
   <NAlert

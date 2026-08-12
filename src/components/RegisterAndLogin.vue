@@ -15,13 +15,13 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, onUnmounted, ref, watch } from 'vue'
-import VueTurnstile from 'vue-turnstile'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
 import type { AccountInfo } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI, QueryRequestError } from '@/api/query'
-import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/shared/config'
+import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
+import { ACCOUNT_API_URL } from '@/shared/config'
 
 interface RegisterModel {
   username: string
@@ -69,7 +69,7 @@ const loginModel = ref<LoginModel>({
 })
 
 const token = ref('')
-const turnstile = ref<{ reset?: () => void; remove?: () => void }>()
+const turnstile = ref<InstanceType<typeof CaptchaWidget>>()
 
 const selectedTab = ref<'login' | 'register' | 'forget'>('login')
 const inputForgetPasswordValue = ref('')
@@ -792,16 +792,14 @@ onUnmounted(() => {
       </NTabs>
 
       <section
-        v-if="selectedTab !== 'login'"
+        v-if="selectedTab !== 'login' && !token"
         class="verification-section"
       >
         <span>安全验证</span>
         <div class="turnstile-wrap">
-          <VueTurnstile
+          <CaptchaWidget
             ref="turnstile"
             v-model="token"
-            :site-key="TURNSTILE_KEY"
-            theme="auto"
           />
         </div>
       </section>

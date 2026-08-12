@@ -379,7 +379,21 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       if (q) q.isPublic = pub
     })
     clearSelection()
-    message.success(`已批量${pub ? '公开' : '取消公开'}`)
+    message.success(`已批量${pub ? '公开' : '设为私密'}`)
+  }
+
+  async function batchFavorite(fav: boolean) {
+    const ids = [...selectedIds.value]
+    if (!ids.length) return
+    await Promise.allSettled(
+      ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}favorite`, { id, favorite: fav })),
+    )
+    ids.forEach((id) => {
+      const q = recieveQuestions.value.find((item) => item.id === id)
+      if (q) q.isFavorite = fav
+    })
+    clearSelection()
+    message.success(`已批量${fav ? '收藏' : '取消收藏'}`)
   }
 
   // --- 工具方法 ---
@@ -426,6 +440,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     batchRead,
     batchDelete,
     batchSetPublic,
+    batchFavorite,
     // API
     GetRecieveQAInfo,
     GetSendQAInfo,

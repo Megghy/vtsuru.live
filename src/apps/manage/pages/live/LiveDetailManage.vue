@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NEmpty, NSpin, NTabPane, NTabs, useMessage, useThemeVars } from 'naive-ui'
-import { computed, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
@@ -36,23 +36,30 @@ const pageSubtitle = computed(() => {
   return id ? `LiveID: ${id}` : undefined
 })
 
-const receivingPillStyle = computed(() => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  padding: '4px 12px',
-  background: themeVars.value.successColorSuppl,
-  border: `1px solid ${themeVars.value.successColor}`,
-  borderRadius: '9999px',
-  color: themeVars.value.successColor,
-  fontSize: '13px',
-  fontWeight: 500,
-}))
+const isLiveFinished = computed(() => liveInfo.value?.live?.isFinish === true)
+const receivingLabel = computed(() => (isLiveFinished.value ? '历史归档' : '实时接收中'))
+
+const receivingPillStyle = computed(() => {
+  const tone = isLiveFinished.value ? themeVars.value.infoColor : themeVars.value.successColor
+  const toneSoft = isLiveFinished.value ? themeVars.value.infoColorSuppl : themeVars.value.successColorSuppl
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '4px 12px',
+    background: toneSoft,
+    border: `1px solid ${tone}`,
+    borderRadius: '9999px',
+    color: tone,
+    fontSize: '13px',
+    fontWeight: 500,
+  }
+})
 
 const receivingDotStyle = computed(() => ({
   display: 'inline-block',
   width: '6px',
   height: '6px',
-  background: themeVars.value.successColor,
+  background: isLiveFinished.value ? themeVars.value.infoColor : themeVars.value.successColor,
   borderRadius: '50%',
   marginRight: '6px',
 }))
@@ -91,12 +98,11 @@ async function loadInitialData() {
 }
 
 function onNewDanmaku(event: DanmakuModel) {
-  if (!liveInfo.value) return
-  console.log('New Danmaku:', event)
+  // 已结束场次不写入实时流，避免串场或误更新统计
+  if (!liveInfo.value || liveInfo.value.live.isFinish) return
 
   danmakuContainerRef.value?.InsertDanmakus([event])
 
-  // 更新统计信息
   if (event.price && event.price > 0) {
     liveInfo.value.live.totalIncome += event.price
   }
@@ -146,7 +152,7 @@ onBeforeUnmount(async () => {
           </NButton>
           <span :style="receivingPillStyle">
             <span :style="receivingDotStyle" />
-            实时接收中
+            {{ receivingLabel }}
           </span>
         </template>
       </ManagePageHeader>

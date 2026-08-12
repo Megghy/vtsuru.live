@@ -146,9 +146,22 @@ async function clearUserFilter() {
   await fetchData(true)
 }
 
-// 根据类型过滤事件
+// 服务端已按 type 过滤；本地再兜底一次，避免脏数据
 const selectedEvents = computed(() => {
   return events.value.filter((e) => e.type == selectedType.value)
+})
+
+const eventSummary = computed(() => {
+  const list = selectedEvents.value
+  const uniqueUsers = new Set(list.map((e) => e.ouid || String(e.uid) || e.uname)).size
+  const totalPrice = list.reduce((sum, e) => sum + (Number(e.price) || 0), 0)
+  const totalNum = list.reduce((sum, e) => sum + (Number(e.num) || 0), 0)
+  return {
+    count: list.length,
+    uniqueUsers,
+    totalPrice,
+    totalNum,
+  }
 })
 
 // API请求获取数据
@@ -159,6 +172,7 @@ async function get(currentOffset: number, currentLimit: number) {
       end: selectedDate.value[1],
       offset: currentOffset,
       limit: currentLimit,
+      type: selectedType.value,
       uid: userFilterApplied.value.uid,
       ouid: userFilterApplied.value.ouid,
       uname: userFilterApplied.value.uname,
@@ -364,7 +378,9 @@ function exportData() {
     }
   }
 
-  saveAs(new Blob([text], { type: 'text/plain;charset=utf-8' }), fileName)
+  // CSV 加 BOM，避免 Excel 中文乱码
+  const payload = exportType.value === 'csv' ? `\uFEFF${text}` : text
+  saveAs(new Blob([payload], { type: 'text/plain;charset=utf-8' }), fileName)
 }
 
 // 生成导出文件名
@@ -672,10 +688,35 @@ async function onTabChange(value: string) {
               <NFlex
                 justify="space-between"
                 align="center"
+                wrap
+                :size="10"
               >
-                <NText depth="3">
-                  共加载 {{ selectedEvents.length }} 条 {{ hasMore ? '(滚动加载更多...)' : '' }}
-                </NText>
+                <NFlex
+                  align="center"
+                  wrap
+                  :size="12"
+                >
+                  <NText depth="3">
+                    已加载 {{ eventSummary.count }} 条{{ hasMore ? '（可继续加载）' : '' }}
+                  </NText>
+                  <NTag
+                    size="small"
+                    :bordered="false"
+                    >人数 {{ eventSummary.uniqueUsers }}</NTag
+                  >
+                  <NTag
+                    size="small"
+                    type="warning"
+                    :bordered="false"
+                    >金额合计 {{ eventSummary.totalPrice }}</NTag
+                  >
+                  <NTag
+                    v-if="selectedType === EventDataTypes.Guard"
+                    size="small"
+                    :bordered="false"
+                    >数量合计 {{ eventSummary.totalNum }}</NTag
+                  >
+                </NFlex>
                 <NRadioGroup
                   v-model:value="displayMode"
                   size="small"
@@ -828,83 +869,105 @@ async function onTabChange(value: string) {
                     </NInfiniteScroll>
                   </div>
 
-                  <!-- 表格视图 -->
-                  <NTable
+                  <!-- 表格视图：同样支持加载更多 -->
+                  <div
                     v-else-if="!isLoading && selectedEvents.length > 0"
-                    striped
+                    class="event-table-wrap"
                   >
-                    <thead>
-                      <tr>
-                        <th>用户名</th>
-                        <th>OUID</th>
-                        <th>时间</th>
-                        <th v-if="selectedType === EventDataTypes.Guard">类型</th>
-                        <th>价格</th>
-                        <th v-if="selectedType === EventDataTypes.SC">内容</th>
-                        <th v-if="selectedType === EventDataTypes.Guard">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="item in selectedEvents"
-                        :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
-                      >
-                        <td>{{ item.uname }}</td>
-                        <td>
-                          {{ GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid }}
-                        </td>
-                        <td>
-                          <NTime
-                            :time="item.time"
-                            format="yyyy-MM-dd HH:mm:ss"
-                          />
-                        </td>
-                        <td v-if="selectedType === EventDataTypes.Guard">
-                          {{ item.msg }}
-                        </td>
-                        <td>
-                          <NTag
-                            size="small"
-                            :bordered="false"
-                            :color="{
-                              color:
-                                selectedType === EventDataTypes.Guard
-                                  ? GetGuardColor(item.price)
-                                  : GetSCColor(item.price),
-                              textColor: 'white',
-                            }"
-                          >
-                            {{ item.price }}
-                          </NTag>
-                        </td>
-                        <td v-if="selectedType === EventDataTypes.SC">
-                          <NEllipsis style="max-width: 300px">
+                    <NTable striped>
+                      <thead>
+                        <tr>
+                          <th>用户名</th>
+                          <th>OUID</th>
+                          <th>时间</th>
+                          <th v-if="selectedType === EventDataTypes.Guard">类型</th>
+                          <th>价格</th>
+                          <th v-if="selectedType === EventDataTypes.SC">内容</th>
+                          <th v-if="selectedType === EventDataTypes.Guard">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="item in selectedEvents"
+                          :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
+                        >
+                          <td>{{ item.uname }}</td>
+                          <td>
+                            {{ GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid }}
+                          </td>
+                          <td>
+                            <NTime
+                              :time="item.time"
+                              format="yyyy-MM-dd HH:mm:ss"
+                            />
+                          </td>
+                          <td v-if="selectedType === EventDataTypes.Guard">
                             {{ item.msg }}
-                          </NEllipsis>
-                        </td>
-                        <td v-if="selectedType === EventDataTypes.Guard">
-                          <NPopconfirm
-                            v-if="item.id"
-                            :show-icon="false"
-                            positive-text="删除"
-                            negative-text="取消"
-                            @positive-click="deleteGuardEvent(item)"
-                          >
-                            <template #trigger>
-                              <NButton
-                                size="small"
-                                secondary
-                                type="error"
-                              >
-                                删除
-                              </NButton>
-                            </template>
-                            确定删除这条上舰记录？
-                          </NPopconfirm>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </NTable>
+                          </td>
+                          <td>
+                            <NTag
+                              size="small"
+                              :bordered="false"
+                              :color="{
+                                color:
+                                  selectedType === EventDataTypes.Guard
+                                    ? GetGuardColor(item.price)
+                                    : GetSCColor(item.price),
+                                textColor: 'white',
+                              }"
+                            >
+                              {{ item.price }}
+                            </NTag>
+                          </td>
+                          <td v-if="selectedType === EventDataTypes.SC">
+                            <NEllipsis style="max-width: 300px">
+                              {{ item.msg }}
+                            </NEllipsis>
+                          </td>
+                          <td v-if="selectedType === EventDataTypes.Guard">
+                            <NPopconfirm
+                              v-if="item.id"
+                              :show-icon="false"
+                              positive-text="删除"
+                              negative-text="取消"
+                              @positive-click="deleteGuardEvent(item)"
+                            >
+                              <template #trigger>
+                                <NButton
+                                  size="small"
+                                  secondary
+                                  type="error"
+                                >
+                                  删除
+                                </NButton>
+                              </template>
+                              确定删除这条上舰记录？
+                            </NPopconfirm>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </NTable>
+                    <NFlex
+                      justify="center"
+                      style="margin-top: 12px"
+                    >
+                      <NButton
+                        v-if="hasMore"
+                        secondary
+                        type="primary"
+                        :loading="isLoadingMore"
+                        @click="loadMore"
+                      >
+                        加载更多
+                      </NButton>
+                      <NText
+                        v-else
+                        depth="3"
+                      >
+                        已全部加载
+                      </NText>
+                    </NFlex>
+                  </div>
 
                   <!-- 无数据提示 -->
                   <NAlert
