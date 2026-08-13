@@ -6,6 +6,9 @@
   --btn-effect-scale: 1.03;
   --btn-effect-glow: 0.42;
   --btn-effect-duration: 1.8s;
+  /* NButton 默认 content-box；全宽 + 自定义 padding 时会超出容器被 BlockCard 裁切 */
+  box-sizing: border-box;
+  max-width: 100%;
   border-radius: var(--btn-radius);
   font-weight: 600;
   opacity: var(--btn-opacity);
@@ -75,11 +78,11 @@
 
 .vtsuru-btn--full {
   width: 100%;
+  min-width: 0;
 }
 
 .vtsuru-btn:not(.vtsuru-btn--full) {
   width: auto;
-  max-width: 100%;
 }
 
 .vtsuru-btn--radius-default {
