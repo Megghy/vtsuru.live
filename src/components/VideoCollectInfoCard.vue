@@ -94,7 +94,7 @@ function onClick() {
             <template #trigger>
               <NText> {{ item.videoCount }} / {{ item.maxVideoCount }} </NText>
             </template>
-            已征集数量 / 最大征集数量
+            已占用名额 / 最大视频数（待审核 + 已通过）
           </NTooltip>
         </NFlex>
         <template v-if="!item.isFinish">

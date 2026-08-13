@@ -213,7 +213,7 @@ onUnmounted(() => turnstile.value?.remove())
               v-if="submitted"
               status="success"
               title="推荐成功"
-              description="这个视频已经加入征集。"
+              description="已提交，主播审核通过后会进入结果页。"
             >
               <template #footer>
                 <NButton

@@ -423,7 +423,7 @@ function saveQrCode() {
             </div>
             <div class="capacity-progress">
               <div class="capacity-heading">
-                <span>提交进度</span>
+                <span>占用名额</span>
                 <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
               </div>
               <NProgress

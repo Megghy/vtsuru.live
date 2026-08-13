@@ -141,7 +141,7 @@ async function submit() {
         depth="3"
         class="collect-form-modal__hint"
       >
-        截止时间至少需要在当前时间一小时后。
+        截止时间至少需要在当前时间一小时后。最大视频数按待审核和已通过合计，拒绝后会释放名额。
       </NText>
     </NForm>
 

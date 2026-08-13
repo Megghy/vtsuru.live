@@ -321,7 +321,7 @@ function resetProgress() {
                   v-if="acceptedVideos.length === 0"
                   status="info"
                   title="暂无通过的视频"
-                  description="审核通过后，视频会显示在这里。"
+                  :description="isCollecting ? '征集进行中，主播审核通过后会显示在这里。' : '审核通过后，视频会显示在这里。'"
                 />
 
                 <div

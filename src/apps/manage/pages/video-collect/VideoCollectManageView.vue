@@ -213,7 +213,7 @@ async function createTable(model: VideoCollectCreateModel) {
 
           <div class="collection-capacity">
             <div class="collection-capacity-label">
-              <span>提交进度</span>
+              <span>占用名额</span>
               <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
             </div>
             <NProgress
