@@ -795,7 +795,6 @@ onUnmounted(() => {
         v-if="selectedTab !== 'login'"
         class="verification-section"
       >
-        <span>安全验证</span>
         <div class="turnstile-wrap">
           <CaptchaWidget
             ref="turnstile"
@@ -914,24 +913,18 @@ onUnmounted(() => {
 }
 
 .verification-section {
-  display: grid;
+  display: flex;
   min-width: 0;
-  gap: 10px;
+  justify-content: center;
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid var(--vtsuru-border);
 }
 
-.verification-section > span {
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-
 .turnstile-wrap {
   min-width: 0;
+  width: 100%;
   max-width: 100%;
-  overflow: hidden;
 }
 
 .forget-countdown {

@@ -50,6 +50,12 @@ function isActive(table: VideoCollectTable) {
   return !table.isFinish && table.endAt > Date.now()
 }
 
+function tableStatus(table: VideoCollectTable) {
+  if (!isActive(table)) return '已结束'
+  if (table.startAt > Date.now()) return '未开始'
+  return '进行中'
+}
+
 function capacityPercentage(table: VideoCollectTable) {
   return Math.min(100, Math.round((table.videoCount / table.maxVideoCount) * 100))
 }
@@ -126,7 +132,7 @@ async function createTable(model: VideoCollectCreateModel) {
         <strong>{{ videoTables.length }}</strong>
       </div>
       <div class="summary-item">
-        <span class="summary-label">进行中</span>
+        <span class="summary-label">未结束</span>
         <strong>{{ activeTables.length }}</strong>
       </div>
       <div class="summary-item">
@@ -151,7 +157,7 @@ async function createTable(model: VideoCollectCreateModel) {
         class="status-filter"
         :options="[
           { label: '全部状态', value: 'all' },
-          { label: '进行中', value: 'active' },
+          { label: '未结束', value: 'active' },
           { label: '已结束', value: 'finished' },
         ]"
       />
@@ -191,10 +197,12 @@ async function createTable(model: VideoCollectCreateModel) {
             <div class="collection-title-row">
               <NTag
                 size="small"
-                :type="isActive(table) ? 'success' : 'default'"
+                :type="
+                  tableStatus(table) === '进行中' ? 'success' : tableStatus(table) === '未开始' ? 'info' : 'default'
+                "
                 :bordered="false"
               >
-                {{ isActive(table) ? '进行中' : '已结束' }}
+                {{ tableStatus(table) }}
               </NTag>
               <strong class="collection-title">{{ table.name }}</strong>
             </div>
@@ -204,9 +212,9 @@ async function createTable(model: VideoCollectCreateModel) {
           </div>
 
           <div class="collection-deadline">
-            <span class="collection-meta-label">截止时间</span>
+            <span class="collection-meta-label">{{ tableStatus(table) === '未开始' ? '开放时间' : '截止时间' }}</span>
             <NTime
-              :time="table.endAt"
+              :time="tableStatus(table) === '未开始' ? table.startAt : table.endAt"
               format="yyyy-MM-dd HH:mm"
             />
           </div>

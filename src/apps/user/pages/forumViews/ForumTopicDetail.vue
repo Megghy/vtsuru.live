@@ -67,8 +67,10 @@ const accentColor = computed(() => themeVars.value.errorColor)
 const topicId = ref(-1)
 const useForum = useForumStore()
 
-const token = ref('')
-const turnstile = ref()
+const commentToken = ref('')
+const replyToken = ref('')
+const commentCaptcha = ref()
+const replyCaptcha = ref()
 const editorRef = ref()
 
 const showCommentModal = ref(false)
@@ -95,7 +97,7 @@ async function postComment() {
   }
   currentCommentContent.value.topic = topic.value.id
   useForum
-    .PostComment(currentCommentContent.value, token.value)
+    .PostComment(currentCommentContent.value, commentToken.value)
     .then(async (comment) => {
       if (comment) {
         setTimeout(async () => {
@@ -106,7 +108,8 @@ async function postComment() {
       }
     })
     .finally(() => {
-      turnstile.value?.reset()
+      commentToken.value = ''
+      commentCaptcha.value?.reset()
     })
 }
 async function postReply() {
@@ -118,7 +121,7 @@ async function postReply() {
   currentReplyContent.value.comment = useForum.replyingComment?.id ?? -1
   currentReplyContent.value.replyTo = useForum.replyingReply?.id
   useForum
-    .PostReply(currentReplyContent.value, token.value)
+    .PostReply(currentReplyContent.value, replyToken.value)
     .then(async (comment) => {
       if (comment) {
         refreshComments()
@@ -127,7 +130,8 @@ async function postReply() {
       }
     })
     .finally(() => {
-      turnstile.value?.reset()
+      replyToken.value = ''
+      replyCaptcha.value?.reset()
     })
 }
 async function refreshComments() {
@@ -406,13 +410,22 @@ onMounted(async () => {
       v-model:value="currentCommentContent.content"
       :max-length="1111"
     />
-    <NButton
-      type="primary"
-      :loading="!token || useForum.isLoading"
-      @click="postComment"
-    >
-      发布
-    </NButton>
+    <div class="forum-submit-row">
+      <CaptchaWidget
+        v-if="showCommentModal"
+        ref="commentCaptcha"
+        v-model="commentToken"
+        class="forum-captcha"
+      />
+      <NButton
+        type="primary"
+        :disabled="!commentToken"
+        :loading="useForum.isLoading"
+        @click="postComment"
+      >
+        发布
+      </NButton>
+    </div>
   </NModal>
   <NModal
     v-model:show="useForum.showReplyModal"
@@ -444,18 +457,23 @@ onMounted(async () => {
       show-count
     />
     <NDivider />
-    <NButton
-      type="primary"
-      :loading="!token || useForum.isLoading"
-      @click="postReply"
-    >
-      发布
-    </NButton>
+    <div class="forum-submit-row">
+      <CaptchaWidget
+        v-if="useForum.showReplyModal"
+        ref="replyCaptcha"
+        v-model="replyToken"
+        class="forum-captcha"
+      />
+      <NButton
+        type="primary"
+        :disabled="!replyToken"
+        :loading="useForum.isLoading"
+        @click="postReply"
+      >
+        发布
+      </NButton>
+    </div>
   </NModal>
-  <CaptchaWidget
-    ref="turnstile"
-    v-model="token"
-  />
 </template>
 
 <style scoped>
@@ -469,5 +487,28 @@ onMounted(async () => {
   width: 100%;
   font-size: 16px;
   font-weight: 700;
+}
+
+.forum-submit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.forum-captcha {
+  min-width: 0;
+}
+
+@media (max-width: 560px) {
+  .forum-submit-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .forum-submit-row :deep(.n-button) {
+    width: 100%;
+  }
 }
 </style>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import 'altcha'
 import 'altcha/i18n/zh-cn'
-
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
@@ -28,7 +27,6 @@ const turnstile = ref<{ reset?: () => void; remove?: () => void }>()
 const altchaState = ref<AltchaState>('unverified')
 /** 仅在需要人工交互（code / error）时展示 widget */
 const showAltchaUi = ref(false)
-const statusText = ref('验证中…')
 
 const CHALLENGE_PROBE_MS = 6_000
 const ALTCHA_READY_MS = 20_000
@@ -39,14 +37,17 @@ let fallbackTriggered = false
 
 const turnstileTheme = computed(() => (isDarkMode.value ? 'dark' : 'light'))
 const isPassed = computed(() => Boolean(token.value))
+const isInteractive = computed(() => provider.value === 'altcha' && showAltchaUi.value && !isPassed.value)
 /** Altcha 无感验证中：展示自定义动画状态条 */
 const isVerifying = computed(
-  () =>
-    provider.value === 'altcha' &&
-    !isPassed.value &&
-    !showAltchaUi.value &&
-    altchaState.value !== 'error',
+  () => provider.value === 'altcha' && !isPassed.value && !isInteractive.value && altchaState.value !== 'error',
 )
+const statusText = computed(() => {
+  if (isPassed.value) return '验证通过'
+  if (altchaState.value === 'error') return '验证失败，请按提示完成验证'
+  if (isInteractive.value) return '请完成验证'
+  return '正在进行安全验证'
+})
 
 const altchaConfiguration = JSON.stringify({
   codeChallengeDisplay: 'overlay',
@@ -118,15 +119,12 @@ function onAltchaStateChange(ev: Event) {
     revealAltchaUi()
   }
   if (state === 'verifying' || state === 'unverified') {
-    statusText.value = '验证中…'
+    showAltchaUi.value = false
   }
   if (state === 'verified') {
     if (detail.payload) token.value = detail.payload
     clearReadyTimer()
     showAltchaUi.value = false
-  }
-  if (state === 'error') {
-    statusText.value = '验证失败，请按提示完成验证'
   }
 }
 
@@ -162,7 +160,6 @@ function reset() {
   if (provider.value === 'altcha') {
     altchaState.value = 'unverified'
     showAltchaUi.value = false
-    statusText.value = '验证中…'
     fallbackTriggered = false
     altchaEl.value?.reset?.()
     void nextTick(() => {
@@ -212,7 +209,10 @@ defineExpose({
       'captcha-widget--verifying': isVerifying,
     }"
   >
-    <div class="captcha-status-slot">
+    <div
+      v-if="provider === 'altcha' || isPassed"
+      class="captcha-status-slot"
+    >
       <Transition
         name="captcha-fade"
         mode="out-in"
@@ -229,18 +229,24 @@ defineExpose({
             class="captcha-status__check"
             aria-hidden="true"
           />
-          <span>已通过</span>
+          <span>{{ statusText }}</span>
         </p>
 
-        <!-- 验证中 -->
+        <!-- 验证中、交互和错误 -->
         <p
-          v-else-if="isVerifying"
-          key="verifying"
-          class="captcha-status captcha-status--verifying"
+          v-else
+          :key="statusText"
+          class="captcha-status"
+          :class="{
+            'captcha-status--verifying': isVerifying,
+            'captcha-status--interactive': isInteractive,
+            'captcha-status--error': altchaState === 'error',
+          }"
           role="status"
           aria-live="polite"
         >
           <span
+            v-if="isVerifying"
             class="captcha-status__spinner"
             aria-hidden="true"
           />
@@ -290,7 +296,6 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  overflow: hidden;
 }
 
 .captcha-status-slot {
@@ -298,8 +303,7 @@ defineExpose({
   display: grid;
   place-items: center;
   width: 100%;
-  height: 20px;
-  overflow: hidden;
+  min-width: 0;
 }
 
 .captcha-status {
@@ -314,8 +318,9 @@ defineExpose({
   font-size: 12px;
   font-weight: 500;
   line-height: 1.2;
-  letter-spacing: 0.01em;
-  /* 过渡时绝对定位，避免 out-in 高度塌陷把父级撑出滚动条 */
+  letter-spacing: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
   grid-area: 1 / 1;
 }
 
@@ -325,6 +330,14 @@ defineExpose({
 
 .captcha-status--passed {
   color: var(--vtsuru-success, #18a058);
+}
+
+.captcha-status--interactive {
+  color: var(--vtsuru-brand, var(--vtsuru-fg-muted));
+}
+
+.captcha-status--error {
+  color: var(--vtsuru-error, #d03050);
 }
 
 .captcha-status__spinner {

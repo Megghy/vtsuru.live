@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
+import { useNow } from '@vueuse/core'
 import type { CountdownProps } from 'naive-ui'
 import { NCard, NCountdown, NDivider, NEllipsis, NIcon, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { computed } from 'vue'
 
 import type { VideoCollectTable } from '@/api/api-models'
 import router from '@/app/router'
@@ -13,6 +15,8 @@ const props = defineProps<{
   from: 'user' | 'owner'
   bordered?: boolean
 }>()
+const now = useNow({ interval: 1000 })
+const isUpcoming = computed(() => !props.item.isFinish && props.item.startAt > now.value.getTime())
 const renderCountdown: CountdownProps['render'] = (info: { hours: number; minutes: number; seconds: number }) => {
   return `${String(info.hours).padStart(2, '0')}时 ${String(info.minutes).padStart(2, '0')}分 ${String(info.seconds).padStart(2, '0')}秒`
 }
@@ -43,11 +47,13 @@ function onClick() {
   >
     <template #header>
       <NFlex :size="5">
+        <NTag v-if="item.isFinish"> 已结束 </NTag>
         <NTag
-          v-if="item.isFinish"
+          v-else-if="isUpcoming"
+          type="info"
           size="small"
         >
-          已结束
+          未开始
         </NTag>
         <NTag
           v-else
@@ -70,6 +76,15 @@ function onClick() {
       <NTime :time="item.createAt" />
     </NText>
     <br />
+    <NText
+      v-if="isUpcoming"
+      depth="3"
+      style="font-size: 13px"
+    >
+      开放:
+      <NTime :time="item.startAt" />
+    </NText>
+    <br v-if="isUpcoming" />
     <NText
       depth="3"
       style="font-size: 13px"
@@ -104,14 +119,15 @@ function onClick() {
             <NTooltip>
               <template #trigger>
                 <NText depth="3">
-                  剩余
+                  {{ isUpcoming ? '开放倒计时' : '剩余' }}
                   <NCountdown
-                    :duration="item.endAt - Date.now()"
+                    :duration="(isUpcoming ? item.startAt : item.endAt) - now.getTime()"
                     :render="renderCountdown"
                   />
                 </NText>
               </template>
-              结束于 <NTime :time="item.endAt" />
+              {{ isUpcoming ? '开放于' : '结束于' }}
+              <NTime :time="isUpcoming ? item.startAt : item.endAt" />
             </NTooltip>
           </NFlex>
         </template>

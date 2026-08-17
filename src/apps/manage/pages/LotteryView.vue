@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Games24Filled, History24Filled, Trophy24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
+import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import {
   NAvatar,
@@ -42,7 +43,6 @@ import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { LOTTERY_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { NavigateToNewTab, copyToClipboard, objectsToCSV } from '@/shared/utils'
-import { saveAs } from 'file-saver'
 
 interface TempLotteryResponseModel {
   users: LotteryUserInfo[]
@@ -511,14 +511,21 @@ onUnmounted(() => {
         </NFlex>
       </NCard>
       <NFlex
+        class="lottery-actions"
         justify="center"
         align="center"
         :size="12"
+        :wrap="true"
         style="margin-top: 16px"
       >
+        <CaptchaWidget
+          ref="turnstile"
+          v-model="token"
+          class="lottery-captcha"
+        />
         <NButton
           :disabled="!inputDynamicId || !isCommentCountDown || !token || isLottering"
-          :loading="!token || isLoading"
+          :loading="isLoading"
           type="primary"
           @click="onGet"
         >
@@ -855,11 +862,6 @@ onUnmounted(() => {
         description="暂无抽奖记录"
       />
     </NModal>
-    <CaptchaWidget
-      ref="turnstile"
-      v-model="token"
-      style="text-align: center"
-    />
   </div>
 </template>
 
@@ -868,6 +870,15 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.lottery-actions {
+  min-width: 0;
+}
+
+.lottery-captcha {
+  min-width: min(100%, 220px);
+  max-width: 300px;
 }
 
 /* 用户卡片 */

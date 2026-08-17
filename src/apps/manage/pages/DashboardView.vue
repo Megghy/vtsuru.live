@@ -26,7 +26,6 @@ import {
 } from 'naive-ui'
 import { onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
 import type { BiliAuthModel } from '@/api/api-models'
@@ -38,10 +37,11 @@ import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/Event
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
+import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { ACCOUNT_API_URL, availableAPIs, isDev, selectedAPIKey, setSelectedAPIKey } from '@/shared/config'
-import { copyToClipboard } from '@/shared/utils'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
+import { copyToClipboard } from '@/shared/utils'
 
 const token = ref('')
 const turnstile = ref()
@@ -873,16 +873,16 @@ onUnmounted(() => {
         </NTooltip>
       </NInputGroup>
     </NFlex>
-    <NDivider />
     <CaptchaWidget
       ref="turnstile"
       v-model="token"
-      style="text-align: center"
+      class="bind-captcha"
     />
     <template #footer>
       <NButton
         type="success"
-        :loading="!token || isLoading"
+        :disabled="!token"
+        :loading="isLoading"
         @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()"
       >
         确定
@@ -988,6 +988,10 @@ onUnmounted(() => {
 .dashboard-token-group {
   max-width: 560px;
   width: 100%;
+}
+
+.bind-captcha {
+  margin-top: 14px;
 }
 
 .dashboard-profile {

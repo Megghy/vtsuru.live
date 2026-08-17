@@ -452,12 +452,24 @@ export enum ThemeType {
   Light = 'light',
   Dark = 'dark',
 }
+export enum DuplicateVideoPolicy {
+  MergeRecommendations,
+  Reject,
+}
 export interface VideoCollectCreateModel {
   id?: string
   name: string
   description: string
+  startAt: number
   endAt: number
   maxVideoCount: number
+  minVideoDuration: number
+  maxVideoDuration: number
+  allowedPartitions: string[]
+  allowUnregisteredUser: boolean
+  maxVideoPerUser: number
+  requireDescription: boolean
+  duplicatePolicy: DuplicateVideoPolicy
 }
 export interface VideoCollectTable {
   id: string
@@ -465,10 +477,18 @@ export interface VideoCollectTable {
   name: string
   description: string
   createAt: number
+  startAt: number
   endAt: number
   isFinish: boolean
   videoCount: number
   maxVideoCount: number
+  minVideoDuration: number
+  maxVideoDuration: number
+  allowedPartitions: string[]
+  allowUnregisteredUser: boolean
+  maxVideoPerUser: number
+  requireDescription: boolean
+  duplicatePolicy: DuplicateVideoPolicy
   owner: UserBasicInfo
 }
 export interface VideoCollectVideo {
@@ -480,6 +500,8 @@ export interface VideoCollectVideo {
   ownerUId: number
   cover: string
   length: number
+  partitionId: number
+  partitionName: string
   watched?: boolean
 }
 export enum VideoFrom {

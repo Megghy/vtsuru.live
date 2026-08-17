@@ -1,5 +1,18 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NDivider, NFlex, NInput, NList, NListItem, NModal, NSpin, NText, NTime } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDivider,
+  NFlex,
+  NInput,
+  NList,
+  NListItem,
+  NModal,
+  NSpin,
+  NText,
+  NTime,
+} from 'naive-ui'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -61,6 +74,7 @@ function postTopic() {
       }
     })
     .finally(() => {
+      token.value = ''
       turnstile.value?.reset()
     })
 }
@@ -79,6 +93,7 @@ onMounted(async () => {
 
 watch(showPostTopicModal, (open) => {
   if (open) {
+    token.value = ''
     timer = setInterval(() => {
       backupTopic()
     }, 10000)
@@ -276,19 +291,24 @@ onUnmounted(() => {
           v-model:value="currentPostTopicModel.content"
           :max-length="2333"
         />
-        <NButton
-          type="primary"
-          :loading="!token || useForum.isLoading"
-          @click="postTopic"
-        >
-          发布
-        </NButton>
+        <div class="forum-submit-row">
+          <CaptchaWidget
+            v-if="showPostTopicModal"
+            ref="turnstile"
+            v-model="token"
+            class="forum-captcha"
+          />
+          <NButton
+            type="primary"
+            :disabled="!token"
+            :loading="useForum.isLoading"
+            @click="postTopic"
+          >
+            发布
+          </NButton>
+        </div>
       </NFlex>
     </NModal>
-    <CaptchaWidget
-      ref="turnstile"
-      v-model="token"
-    />
   </template>
 </template>
 
@@ -315,6 +335,18 @@ onUnmounted(() => {
   animation: forum-topic-enter 0.4s calc(var(--topic-index, 0) * 40ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.forum-submit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  width: 100%;
+}
+
+.forum-captcha {
+  min-width: 0;
+}
+
 @keyframes forum-topic-enter {
   from {
     opacity: 0;
@@ -325,6 +357,16 @@ onUnmounted(() => {
 @media (max-width: 900px) {
   .forum-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .forum-submit-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .forum-submit-row :deep(.n-button) {
+    width: 100%;
   }
 }
 

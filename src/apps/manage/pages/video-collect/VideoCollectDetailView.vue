@@ -37,7 +37,7 @@ import { computed, h, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoInfo } from '@/api/api-models'
-import { VideoStatus } from '@/api/api-models'
+import { DuplicateVideoPolicy, VideoStatus } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
@@ -71,6 +71,11 @@ const table = computed(() => videoDetail.value?.table)
 const videos = computed(() => videoDetail.value?.videos ?? [])
 const shareUrl = computed(() => (table.value ? `${CURRENT_HOST}video-collect/${table.value.shortId}` : ''))
 const isActive = computed(() => Boolean(table.value && !table.value.isFinish && table.value.endAt > Date.now()))
+const collectionStatus = computed(() => {
+  if (!isActive.value) return '已结束'
+  if (table.value && table.value.startAt > Date.now()) return '未开始'
+  return '进行中'
+})
 const pendingVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Pending))
 const acceptedVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Accepted))
 const rejectedVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Rejected))
@@ -81,8 +86,16 @@ const editValue = computed<VideoCollectCreateModel | undefined>(() => {
     id: table.value.id,
     name: table.value.name,
     description: table.value.description,
+    startAt: table.value.startAt,
     endAt: table.value.endAt,
     maxVideoCount: table.value.maxVideoCount,
+    minVideoDuration: table.value.minVideoDuration,
+    maxVideoDuration: table.value.maxVideoDuration,
+    allowedPartitions: [...(table.value.allowedPartitions ?? [])],
+    allowUnregisteredUser: table.value.allowUnregisteredUser,
+    maxVideoPerUser: table.value.maxVideoPerUser,
+    requireDescription: table.value.requireDescription,
+    duplicatePolicy: table.value.duplicatePolicy,
   }
 })
 const visibleVideos = computed(() => {
@@ -160,7 +173,7 @@ async function setStatus(status: VideoStatus, video: VideoInfo) {
       status,
     })
     if (response.code !== 200) throw new Error(response.message)
-    video.status = status
+    updateLocalStatus(video, status)
     selectedBvids.value = selectedBvids.value.filter((id) => id !== video.bvid)
     message.success('审核状态已更新')
   } catch (error) {
@@ -169,6 +182,15 @@ async function setStatus(status: VideoStatus, video: VideoInfo) {
   } finally {
     videoOperation.value = undefined
   }
+}
+
+function updateLocalStatus(video: VideoInfo, status: VideoStatus) {
+  if (table.value) {
+    const occupiedBefore = video.status !== VideoStatus.Rejected
+    const occupiedAfter = status !== VideoStatus.Rejected
+    table.value.videoCount += Number(occupiedAfter) - Number(occupiedBefore)
+  }
+  video.status = status
 }
 
 function toggleSelect(bvid: string) {
@@ -203,7 +225,7 @@ async function batchSetStatus(status: VideoStatus) {
           status,
         })
         if (response.code !== 200) throw new Error(response.message)
-        item.info.status = status
+        updateLocalStatus(item.info, status)
         success++
       } catch {
         failed++
@@ -392,10 +414,10 @@ function saveQrCode() {
           <div class="collection-copy">
             <div class="collection-state">
               <NTag
-                :type="isActive ? 'success' : 'default'"
+                :type="collectionStatus === '进行中' ? 'success' : collectionStatus === '未开始' ? 'info' : 'default'"
                 :bordered="false"
               >
-                {{ isActive ? '进行中' : '已结束' }}
+                {{ collectionStatus }}
               </NTag>
               <span>
                 创建于
@@ -407,6 +429,15 @@ function saveQrCode() {
             </div>
             <p>{{ table.description || '未填写征集说明' }}</p>
             <div class="collection-facts">
+              <div>
+                <span>开放时间</span>
+                <strong>
+                  <NTime
+                    :time="table.startAt"
+                    format="yyyy-MM-dd HH:mm"
+                  />
+                </strong>
+              </div>
               <div>
                 <span>截止时间</span>
                 <strong>
@@ -432,6 +463,56 @@ function saveQrCode() {
                 :height="6"
                 :show-indicator="false"
               />
+            </div>
+            <div class="rule-tags">
+              <NTag
+                size="small"
+                :bordered="false"
+              >
+                待审核 + 已通过占名额，拒绝后释放
+              </NTag>
+              <NTag
+                size="small"
+                :bordered="false"
+              >
+                {{ table.allowUnregisteredUser ? '允许游客投稿' : '仅限已绑定账号' }}
+              </NTag>
+              <NTag
+                v-if="table.minVideoDuration || table.maxVideoDuration"
+                size="small"
+                :bordered="false"
+              >
+                时长 {{ table.minVideoDuration ? formatDuration(table.minVideoDuration) : '不限' }} -
+                {{ table.maxVideoDuration ? formatDuration(table.maxVideoDuration) : '不限' }}
+              </NTag>
+              <NTag
+                v-if="table.maxVideoPerUser"
+                size="small"
+                :bordered="false"
+              >
+                每人最多 {{ table.maxVideoPerUser }} 个
+              </NTag>
+              <NTag
+                v-if="table.requireDescription"
+                size="small"
+                :bordered="false"
+              >
+                推荐理由必填
+              </NTag>
+              <NTag
+                size="small"
+                :bordered="false"
+              >
+                {{ table.duplicatePolicy === DuplicateVideoPolicy.Reject ? '拒绝重复视频' : '重复视频合并推荐人' }}
+              </NTag>
+              <NTag
+                v-for="partition in table.allowedPartitions"
+                :key="partition"
+                size="small"
+                :bordered="false"
+              >
+                {{ partition }}
+              </NTag>
             </div>
           </div>
           <div class="review-stats">
@@ -703,7 +784,7 @@ function saveQrCode() {
 
 .collection-facts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-block: 1px solid var(--vtsuru-border);
 }
 
@@ -740,6 +821,13 @@ function saveQrCode() {
   flex-direction: column;
   gap: 8px;
   margin-top: 14px;
+}
+
+.rule-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
 }
 
 .capacity-heading {
@@ -876,6 +964,16 @@ function saveQrCode() {
 }
 
 @media (max-width: 620px) {
+  .collection-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .collection-facts > div + div {
+    padding-left: 0;
+    border-top: 1px solid var(--vtsuru-border);
+    border-left: 0;
+  }
+
   .review-toolbar {
     flex-wrap: wrap;
   }
