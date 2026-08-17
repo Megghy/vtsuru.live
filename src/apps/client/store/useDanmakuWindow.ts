@@ -7,6 +7,7 @@ import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface DanmakuWindowSettings {
@@ -268,27 +269,25 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     bc.onmessage = (event: MessageEvent<DanmakuWindowBCData>) => {
       if (event.data.type === 'window-ready') {
         console.log(`[danmaku-window] 窗口已就绪`)
-        bc?.postMessage({
+        postBroadcastMessage(bc, {
           type: 'update-setting',
-          data: toRaw(danmakuWindowSetting.value),
-        })
+          data: danmakuWindowSetting.value,
+        } satisfies DanmakuWindowBCData)
       }
     }
-    bc.postMessage({
-      type: 'window-ready',
-    })
-    bc.postMessage({
+    postBroadcastMessage(bc, { type: 'window-ready' } satisfies DanmakuWindowBCData)
+    postBroadcastMessage(bc, {
       type: 'update-setting',
-      data: toRaw(danmakuWindowSetting.value),
-    })
+      data: danmakuWindowSetting.value,
+    } satisfies DanmakuWindowBCData)
 
-    bc?.postMessage({
+    postBroadcastMessage(bc, {
       type: 'danmaku',
       data: {
         type: EventDataTypes.Message,
         msg: '弹幕窗口已打开',
-      } as Partial<EventModel>,
-    })
+      } as EventModel,
+    } satisfies DanmakuWindowBCData)
 
     danmakuClient.onEvent('danmaku', (event) => onGetDanmakus(event))
     danmakuClient.onEvent('gift', (event) => onGetDanmakus(event))
@@ -302,10 +301,10 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       () => danmakuWindowSetting,
       async (newValue) => {
         if (danmakuWindow.value) {
-          bc?.postMessage({
+          postBroadcastMessage(bc, {
             type: 'update-setting',
-            data: toRaw(newValue.value),
-          })
+            data: newValue.value,
+          } satisfies DanmakuWindowBCData)
           await checkAndUseSetting(newValue.value)
         }
       },
@@ -354,10 +353,10 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
 
   function onGetDanmakus(data: EventModel) {
     if (!isWindowOpened.value || !bc) return
-    bc.postMessage({
+    postBroadcastMessage(bc, {
       type: 'danmaku',
       data,
-    })
+    } satisfies DanmakuWindowBCData)
   }
 
   // 新增：清空弹幕函数
@@ -366,9 +365,9 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       console.warn('[danmaku-window] 窗口未打开或 BC 未初始化，无法清空弹幕')
       return
     }
-    bc.postMessage({
+    postBroadcastMessage(bc, {
       type: 'clear-danmaku',
-    })
+    } satisfies DanmakuWindowBCData)
     console.log('[danmaku-window] 发送清空弹幕指令')
   }
 
@@ -379,10 +378,10 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       return
     }
     const testData = generateTestDanmaku()
-    bc.postMessage({
+    postBroadcastMessage(bc, {
       type: 'test-danmaku',
       data: testData,
-    })
+    } satisfies DanmakuWindowBCData)
     console.log('[danmaku-window] 发送测试弹幕指令:', testData)
   }
 

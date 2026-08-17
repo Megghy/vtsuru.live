@@ -8,6 +8,7 @@ import VtsHotkeyBoard from '@/apps/client/components/vts/VtsHotkeyBoard.vue'
 import { useVtsFloatWindow, VTS_FLOAT_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useVtsFloatWindow'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { isTauri } from '@/shared/config'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 
 const vts = useVtsStore()
 const floatWindow = useVtsFloatWindow()
@@ -42,8 +43,8 @@ onMounted(() => {
         await applyToCurrentWindow()
       }
     }
-    bc.postMessage({ type: 'window-ready' })
-    bc.postMessage({ type: 'update-setting', data: floatWindow.settings })
+    postBroadcastMessage(bc, { type: 'window-ready' })
+    postBroadcastMessage(bc, { type: 'update-setting', data: floatWindow.settings })
   })
 })
 

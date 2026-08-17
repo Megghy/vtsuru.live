@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { reactive } from 'vue'
 
 import type { EventModel } from '@/api/api-models'
 
 import { createDanmakuChannel } from '../danmakuChannel'
 
 // 跨标签页 BroadcastChannel 的内存 mock (同名 channel 互通, 不回送给自己)
+// postMessage 走 structuredClone, 与真实 BC 一致, 避免 Proxy 等问题被 mock 掩盖
 class BroadcastChannelMock {
   private static channels = new Map<string, Set<BroadcastChannelMock>>()
   private listeners = new Set<(event: MessageEvent) => void>()
@@ -24,9 +26,10 @@ class BroadcastChannelMock {
   }
 
   public postMessage(data: unknown) {
+    const cloned = structuredClone(data)
     for (const channel of BroadcastChannelMock.channels.get(this.name) ?? []) {
       if (channel === this) continue
-      for (const listener of channel.listeners) listener({ data } as MessageEvent)
+      for (const listener of channel.listeners) listener({ data: cloned } as MessageEvent)
     }
   }
 
@@ -73,7 +76,7 @@ describe('danmakuChannel', () => {
     a.publishEvent('room-1', 'gift', ev)
 
     expect(bRecv).toHaveBeenCalledWith('tab-a', 'room-1', 'gift', ev)
-    expect(aRecv).not.toHaveBeenCalled() // 不回送给自己
+    expect(aRecv).not.toHaveBeenCalled()
   })
 
   it('keeps the connection scope on every event', () => {
@@ -114,5 +117,34 @@ describe('danmakuChannel', () => {
     a.publishEvent('room-1', 'sc', makeEvent())
 
     expect(recv).not.toHaveBeenCalled()
+  })
+
+  it('publishes nested vue reactive payloads without DataCloneError', () => {
+    const a = createDanmakuChannel('tab-a')
+    const b = createDanmakuChannel('tab-b')
+    const bRecv = vi.fn()
+    b.onEvent(bRecv)
+
+    const event = reactive(
+      makeEvent({
+        uname: '永恒の楪祈',
+        msg: '锦书传意',
+        price: 19,
+        gift_icon: 'https://example.com/gift.png',
+      }),
+    )
+
+    expect(() => a.publishEvent('openlive:account:1', 'gift', event)).not.toThrow()
+    expect(bRecv).toHaveBeenCalledWith(
+      'tab-a',
+      'openlive:account:1',
+      'gift',
+      expect.objectContaining({
+        uname: '永恒の楪祈',
+        msg: '锦书传意',
+        price: 19,
+        gift_icon: 'https://example.com/gift.png',
+      }),
+    )
   })
 })

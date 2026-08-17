@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 
 import type { EventModel } from '@/api/api-models'
 
@@ -79,9 +79,11 @@ class BroadcastChannelMock {
   }
 
   public postMessage(data: unknown) {
+    // 与真实 BroadcastChannel 一致: 不可克隆对象在此失败
+    const cloned = structuredClone(data)
     for (const channel of BroadcastChannelMock.channels.get(this.name) ?? []) {
       if (channel === this) continue
-      channel.dispatch(data)
+      channel.dispatch(cloned)
     }
   }
 
@@ -216,21 +218,68 @@ describe('useDanmakuClient event sharing', () => {
     expect(startMock).toHaveBeenCalledTimes(1)
   })
 
-  it('ignores broadcast events from a different account', async () => {
+  it('does not deliver gift events from a different scope to the broadcast reader', async () => {
+    const owner = await createStore()
+    await initUpstream(owner)
+
     const reader = await createStore()
     const giftListener = vi.fn()
     reader.onEvent('gift', giftListener)
-    const ensurePromise = reader.ensureOpenlive({ connect: false })
+    const ensurePromise = reader.ensureOpenlive()
     await vi.advanceTimersByTimeAsync(600)
     await ensurePromise
 
-    new BroadcastChannelMock('vtsuru.danmaku.model-events.v1').postMessage({
+    // 错误 scope: 即使落在当前 v2 channel 上, 也不应进入 reader 的 model 监听
+    new BroadcastChannelMock('vtsuru.danmaku.model-events.v2').postMessage({
       kind: 'event',
-      sourceId: 'other-account-tab',
-      accountId: 2002,
+      sourceId: 'foreign-tab',
+      scope: 'openlive:account:9999',
       eventName: 'gift',
       data: makeEvent({ uname: 'Other' }),
     })
+
+    expect(giftListener).not.toHaveBeenCalled()
+  })
+
+  it('broadcasts reactive gift payloads across pages without clone errors', async () => {
+    const owner = await createStore()
+    await initUpstream(owner)
+
+    const reader = await createStore()
+    const giftListener = vi.fn()
+    reader.onEvent('gift', giftListener)
+    const ensurePromise = reader.ensureOpenlive()
+    await vi.advanceTimersByTimeAsync(600)
+    await ensurePromise
+
+    const event = reactive(
+      makeEvent({
+        uname: '永恒の楪祈',
+        msg: '锦书传意',
+        price: 19,
+        num: 1,
+      }),
+    )
+
+    expect(() => owner.danmakuClient.eventsAsModel.gift[0](event)).not.toThrow()
+    expect(giftListener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        uname: '永恒の楪祈',
+        msg: '锦书传意',
+        price: 19,
+      }),
+      undefined,
+    )
+  })
+
+  it('unregisters model listeners via offEvent', async () => {
+    const store = await createStore()
+    const giftListener = vi.fn()
+    store.onEvent('gift', giftListener)
+    store.offEvent('gift', giftListener)
+
+    await initUpstream(store)
+    store.danmakuClient.eventsAsModel.gift[0](makeEvent())
 
     expect(giftListener).not.toHaveBeenCalled()
   })

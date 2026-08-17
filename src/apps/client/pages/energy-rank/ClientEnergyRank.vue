@@ -4,6 +4,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { EnergyRankBCData, EnergyRankSettings, RankEntry } from '@/apps/client/store/useEnergyRank'
 import { ENERGY_RANK_BROADCAST_CHANNEL } from '@/apps/client/store/useEnergyRank'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 
 let bc: BroadcastChannel | undefined
 const setting = ref<EnergyRankSettings>()
@@ -29,7 +30,7 @@ function formatScore(score: number): string {
 
 onMounted(() => {
   bc = new BroadcastChannel(ENERGY_RANK_BROADCAST_CHANNEL)
-  bc.postMessage({ type: 'window-ready' })
+  postBroadcastMessage(bc, { type: 'window-ready' })
   bc.onmessage = (event) => {
     const data = event.data as EnergyRankBCData
     switch (data.type) {

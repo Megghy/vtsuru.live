@@ -7,6 +7,7 @@ import { ref, toRaw } from 'vue'
 import type { StoreTarget } from '@/apps/client/store/useTauriStore'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
 import { isTauri } from '@/shared/config'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 
 export interface VtsFloatWindowSettings {
   width: number
@@ -64,7 +65,7 @@ export const useVtsFloatWindow = defineStore('vtsFloatWindow', () => {
       bc = new BroadcastChannel(VTS_FLOAT_WINDOW_BROADCAST_CHANNEL)
       bc.onmessage = (event: MessageEvent<VtsFloatWindowBCData>) => {
         if (event.data.type === 'window-ready') {
-          bc?.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
+          postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies VtsFloatWindowBCData)
         }
       }
     }
@@ -73,7 +74,7 @@ export const useVtsFloatWindow = defineStore('vtsFloatWindow', () => {
   async function setSettings(next: Partial<VtsFloatWindowSettings>) {
     settings.value = { ...settings.value, ...next }
     await settingTarget.set(toRaw(settings.value))
-    bc?.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
+    postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies VtsFloatWindowBCData)
     await applyWindowFlags()
   }
 
@@ -147,7 +148,7 @@ export const useVtsFloatWindow = defineStore('vtsFloatWindow', () => {
     await applyWindowFlags()
     await w.show()
     opened.value = true
-    bc?.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
+    postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies VtsFloatWindowBCData)
   }
 
   async function close() {

@@ -8,6 +8,7 @@ import { EventDataTypes } from '@/api/api-models'
 import ClientDanmakuItem from '@/apps/client/components/danmaku/ClientDanmakuItem.vue'
 import type { DanmakuWindowBCData, DanmakuWindowSettings } from '@/apps/client/store/useDanmakuWindow'
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { getDanmakuWindowFilterType, removeDeletedSuperChats } from '@/shared/utils/danmakuWindowEvents'
 // 添加TransitionGroup导入
 
@@ -234,7 +235,7 @@ function checkAndRemoveExpiredDanmaku() {
 onMounted(() => {
   bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL)
   console.log(`[DanmakuWindow] BroadcastChannel 已创建: ${DANMAKU_WINDOW_BROADCAST_CHANNEL}`)
-  bc.postMessage({
+  postBroadcastMessage(bc, {
     type: 'window-ready',
   })
   bc.onmessage = (event) => {

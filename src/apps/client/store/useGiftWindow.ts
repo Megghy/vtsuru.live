@@ -12,6 +12,7 @@ import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { LIVE_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export type GiftSortBy = 'time' | 'price' | 'num'
@@ -236,7 +237,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   }
 
   function sendGiftList() {
-    bc?.postMessage({ type: 'gift-list', data: toRaw(getSortedList()) } satisfies GiftWindowBCData)
+    postBroadcastMessage(bc, { type: 'gift-list', data: getSortedList() } satisfies GiftWindowBCData)
   }
 
   function updateRank(data: EventModel) {
@@ -265,7 +266,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   }
 
   function sendRankList() {
-    bc?.postMessage({ type: 'rank-list', data: toRaw(getRankedList()) } satisfies GiftWindowBCData)
+    postBroadcastMessage(bc, { type: 'rank-list', data: getRankedList() } satisfies GiftWindowBCData)
   }
 
   function replaceRank(entries: ResponseLiveRankingEntryModel[]) {
@@ -315,7 +316,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
 
   function clearGifts() {
     giftList.value = []
-    bc?.postMessage({ type: 'clear' } satisfies GiftWindowBCData)
+    postBroadcastMessage(bc, { type: 'clear' } satisfies GiftWindowBCData)
   }
 
   function cleanupExpired() {
@@ -347,13 +348,13 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     bc = new BroadcastChannel(GIFT_WINDOW_BROADCAST_CHANNEL)
     bc.onmessage = (event: MessageEvent<GiftWindowBCData>) => {
       if (event.data.type === 'window-ready') {
-        bc?.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
+        postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
         sendGiftList()
         sendRankList()
       }
     }
-    bc.postMessage({ type: 'window-ready' })
-    bc.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
+    postBroadcastMessage(bc, { type: 'window-ready' } satisfies GiftWindowBCData)
+    postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
 
     danmakuClient.onEvent('gift', (e) => {
       onGiftEvent(e)
@@ -371,7 +372,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     watch(
       () => settings,
       (v) => {
-        bc?.postMessage({ type: 'update-setting', data: toRaw(v.value) })
+        postBroadcastMessage(bc, { type: 'update-setting', data: v.value } satisfies GiftWindowBCData)
         applyWindowSettings()
         sendGiftList()
       },

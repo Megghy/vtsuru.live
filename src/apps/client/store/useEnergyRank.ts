@@ -5,6 +5,7 @@ import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface EnergyRankSettings {
@@ -144,12 +145,12 @@ export const useEnergyRank = defineStore('energyRank', () => {
   }
 
   function sendRankList() {
-    bc?.postMessage({ type: 'rank-list', data: getRankedList() } satisfies EnergyRankBCData)
+    postBroadcastMessage(bc, { type: 'rank-list', data: getRankedList() } satisfies EnergyRankBCData)
   }
 
   function clearRank() {
     rankMap.value.clear()
-    bc?.postMessage({ type: 'clear' } satisfies EnergyRankBCData)
+    postBroadcastMessage(bc, { type: 'clear' } satisfies EnergyRankBCData)
   }
 
   async function init() {
@@ -169,12 +170,12 @@ export const useEnergyRank = defineStore('energyRank', () => {
     bc = new BroadcastChannel(ENERGY_RANK_BROADCAST_CHANNEL)
     bc.onmessage = (event: MessageEvent<EnergyRankBCData>) => {
       if (event.data.type === 'window-ready') {
-        bc?.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
+        postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies EnergyRankBCData)
         sendRankList()
       }
     }
-    bc.postMessage({ type: 'window-ready' })
-    bc.postMessage({ type: 'update-setting', data: toRaw(settings.value) })
+    postBroadcastMessage(bc, { type: 'window-ready' } satisfies EnergyRankBCData)
+    postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies EnergyRankBCData)
 
     danmakuClient.onEvent('danmaku', (e) => onEvent(e))
     danmakuClient.onEvent('gift', (e) => onEvent(e))
@@ -187,7 +188,7 @@ export const useEnergyRank = defineStore('energyRank', () => {
         rankMap.value.forEach((entry) => {
           entry.score = computeScore(entry)
         })
-        bc?.postMessage({ type: 'update-setting', data: toRaw(v.value) })
+        postBroadcastMessage(bc, { type: 'update-setting', data: v.value } satisfies EnergyRankBCData)
         sendRankList()
         applyWindowSettings()
       },

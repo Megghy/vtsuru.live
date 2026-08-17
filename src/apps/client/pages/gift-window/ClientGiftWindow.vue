@@ -6,6 +6,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import type { GiftEntry, GiftWindowBCData, GiftWindowSettings, RankEntry } from '@/apps/client/store/useGiftWindow'
 import { GIFT_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useGiftWindow'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 
 let bc: BroadcastChannel | undefined
 const setting = ref<GiftWindowSettings>()
@@ -66,7 +67,7 @@ function formatRankScore(score: number): string {
 
 onMounted(() => {
   bc = new BroadcastChannel(GIFT_WINDOW_BROADCAST_CHANNEL)
-  bc.postMessage({ type: 'window-ready' })
+  postBroadcastMessage(bc, { type: 'window-ready' })
   bc.onmessage = (event) => {
     const data = event.data as GiftWindowBCData
     switch (data.type) {

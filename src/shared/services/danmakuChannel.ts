@@ -1,6 +1,5 @@
-import { toRaw } from 'vue'
-
 import type { EventModel } from '@/api/api-models'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 
 const LOCAL_EVENT_CHANNEL = 'vtsuru.danmaku.model-events.v2'
 
@@ -72,17 +71,17 @@ export function createDanmakuChannel(sourceId: string): DanmakuChannel {
 
   return {
     publishEvent: (scope, eventName, data) =>
-      channel?.postMessage({ kind: 'event', sourceId, scope, eventName, data: toRaw(data) } satisfies Payload),
+      postBroadcastMessage(channel, { kind: 'event', sourceId, scope, eventName, data } satisfies Payload),
     publishState: (scope, state, clientType, meta) =>
-      channel?.postMessage({
+      postBroadcastMessage(channel, {
         kind: 'state',
         sourceId,
         scope,
         state,
         clientType,
-        meta: meta && toRaw(meta),
+        meta,
       } satisfies Payload),
-    requestState: (scope) => channel?.postMessage({ kind: 'state-request', sourceId, scope } satisfies Payload),
+    requestState: (scope) => postBroadcastMessage(channel, { kind: 'state-request', sourceId, scope } satisfies Payload),
     onEvent: (listener) => subscribe(eventListeners, listener),
     onState: (listener) => subscribe(stateListeners, listener),
     onStateRequest: (listener) => subscribe(requestListeners, listener),
