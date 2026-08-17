@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMessage } from 'naive-ui'
-import { ref, toRef, watch } from 'vue'
+import { computed, ref, toRef, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
@@ -24,6 +24,10 @@ const publicQuestions = ref<QAInfo[]>([])
 const tags = ref<string[]>([])
 const isLoadingQuestions = ref(false)
 const showHistory = ref(false)
+const showPublicReplies = computed(() => {
+  if (target.value?.extra?.showQuestionBoxPublicReplies === false) return false
+  return !props.embedded || props.showPublicQuestions !== false
+})
 
 watch(
   () => target.value?.id,
@@ -44,7 +48,7 @@ function normalizeTag(value: unknown) {
 }
 
 async function loadPublicQuestions() {
-  if (!target.value?.id) return
+  if (!target.value?.id || !showPublicReplies.value) return
   isLoadingQuestions.value = true
   try {
     const response = await QueryGetAPI<QAInfo[]>(`${QUESTION_API_URL}get-public`, { id: target.value.id })
@@ -95,7 +99,7 @@ function clearHistory() {
       @submitted="loadPublicQuestions"
     />
     <PublicQuestionFeed
-      v-if="!embedded || showPublicQuestions !== false"
+      v-if="showPublicReplies"
       :questions="publicQuestions"
       :is-loading="isLoadingQuestions"
       :user-info="userInfo"

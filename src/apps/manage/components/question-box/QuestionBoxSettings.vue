@@ -139,6 +139,18 @@ function addTag() {
             >
               允许上传图片
             </NCheckbox>
+            <NCheckbox
+              :checked="accountInfo.settings.questionBox.showPublicReplies !== false"
+              :disabled="useQB.isLoading"
+              @update:checked="
+                (checked) => {
+                  accountInfo.settings.questionBox.showPublicReplies = checked
+                  saveQuestionBoxSettings()
+                }
+              "
+            >
+              在提问页显示公开回复
+            </NCheckbox>
           </NFlex>
         </NCard>
 

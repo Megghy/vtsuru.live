@@ -41,6 +41,7 @@ export interface UserInfo extends UserBasicInfo {
     templateTypes: { [key: string]: string }
     allowCheckInRanking?: boolean // 是否允许查看签到排行
     allowQuestionBoxUploadImage?: boolean // 是否允许问题箱上传图片
+    showQuestionBoxPublicReplies?: boolean // 是否在提问页显示公开回复
   }
 }
 export interface EventFetcherStateModel {
@@ -121,6 +122,7 @@ export interface Setting_QuestionBox {
   allowUnregistedUser: boolean
   saftyLevel: SaftyLevels
   allowImageUpload: boolean
+  showPublicReplies?: boolean
 }
 export interface UserSetting {
   sendEmail: Setting_SendEmail
