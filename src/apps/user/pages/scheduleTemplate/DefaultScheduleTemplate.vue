@@ -196,11 +196,7 @@ const streamerName = computed(() => props.userInfo?.name || '主播')
     --vtsuru-block-bg-muted,
     var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted)))
   );
-  --default-card: var(--vtsuru-page-card-bg, color-mix(in srgb, var(--default-bg) 92%, var(--schedule-fg) 8%));
-  --default-card-embedded: var(
-    --vtsuru-page-card-bg-embedded,
-    color-mix(in srgb, var(--default-card) 90%, var(--schedule-fg) 10%)
-  );
+  --default-card: color-mix(in srgb, var(--schedule-accent) 6%, var(--default-bg));
   --default-line: var(--vtsuru-block-border, var(--schedule-border));
 
   display: grid;
@@ -335,7 +331,7 @@ const streamerName = computed(() => props.userInfo?.name || '主播')
   padding: 14px clamp(14px, 2vw, 20px);
   align-items: center;
   gap: 14px;
-  background: var(--default-card-embedded);
+  background: color-mix(in srgb, var(--schedule-accent) 3%, transparent);
   border-bottom: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--default-line);
 }
 
@@ -347,7 +343,7 @@ const streamerName = computed(() => props.userInfo?.name || '主播')
   justify-content: center;
   gap: 1px;
   color: color-mix(in srgb, var(--schedule-accent) 20%, var(--schedule-fg));
-  background: color-mix(in srgb, var(--schedule-accent) 18%, var(--default-card));
+  background: color-mix(in srgb, var(--schedule-accent) 10%, transparent);
   border: 1px solid var(--schedule-accent-border);
   border-radius: max(4px, calc(var(--vtsuru-page-radius, 8px) - 2px));
 }
@@ -463,7 +459,7 @@ const streamerName = computed(() => props.userInfo?.name || '主播')
   padding: 14px 10px 12px;
   flex-direction: column;
   gap: 12px;
-  background: var(--default-card);
+  background: transparent;
   border-right: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--default-line);
 }
 
@@ -472,7 +468,7 @@ const streamerName = computed(() => props.userInfo?.name || '主播')
 }
 
 .schedule-day.is-today {
-  background: color-mix(in srgb, var(--schedule-accent-soft) 62%, var(--default-card));
+  background: color-mix(in srgb, var(--schedule-accent) 8%, transparent);
   box-shadow: inset 0 3px var(--schedule-accent);
 }
 
@@ -539,7 +535,7 @@ const streamerName = computed(() => props.userInfo?.name || '主播')
   padding: 9px 8px 9px 11px;
   gap: 6px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--event-color) 5%, var(--default-card-embedded));
+  background: color-mix(in srgb, var(--event-color) 6%, transparent);
   border: 1px solid color-mix(in srgb, var(--event-color) 26%, var(--default-line));
   border-radius: max(4px, calc(var(--vtsuru-page-radius, 8px) - 3px));
 }
