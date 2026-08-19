@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Bot24Regular } from '@vicons/fluent'
 import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/ionicons5'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ThemeType } from '@/api/api-models'
@@ -21,6 +21,10 @@ const assistant = useAssistantStore()
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 const defaultCollapsed = window.innerWidth < 750
 const siderCollapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
+
+onMounted(() => {
+  if (window.innerWidth < 750) siderCollapsed.value = true
+})
 
 const themeToggleIcon = computed(() => (isDarkMode.value ? Sunny : Moon))
 const themeToggleTitle = computed(() => (isDarkMode.value ? '切换到亮色主题' : '切换到暗色主题'))
@@ -320,17 +324,10 @@ async function goToUserPage(accountName?: string) {
     display: none;
   }
 
-  .manage-header__assistant {
-    padding: 0 8px;
-    gap: 0;
-  }
-
-  .manage-header__assistant-text {
-    display: none;
-  }
-
+  .manage-header__page-title,
+  .manage-header__assistant,
   .manage-header__button {
-    padding: 0 8px;
+    display: none;
   }
 }
 </style>

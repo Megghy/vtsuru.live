@@ -146,4 +146,15 @@ onMounted(() => {
   min-width: 370px;
   box-sizing: border-box;
 }
+
+@media (max-width: 600px) {
+  .manage-shell__content {
+    min-width: 0;
+  }
+
+  .assistant-fab {
+    right: 12px;
+    bottom: 72px;
+  }
+}
 </style>
