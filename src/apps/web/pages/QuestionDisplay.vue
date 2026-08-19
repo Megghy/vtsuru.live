@@ -303,7 +303,6 @@ onBeforeUnmount(() => {
         >
           <div
             class="preview-frame"
-            :class="{ 'is-empty': !questionBox.displayQuestion }"
             :style="previewStyle"
           >
             <QuestionDisplayCard
@@ -312,12 +311,6 @@ onBeforeUnmount(() => {
               :status="questionBox.displayQuestion ? 'ready' : 'empty'"
               @scroll="syncScroll"
             />
-            <p
-              v-if="!questionBox.displayQuestion"
-              class="preview-empty-hint"
-            >
-              当前没有展示提问
-            </p>
           </div>
           <NTooltip>
             <template #trigger>
@@ -616,22 +609,6 @@ onBeforeUnmount(() => {
   border: 1px solid rgb(255 255 255 / 14%);
   box-shadow: 0 18px 50px rgb(0 0 0 / 28%);
   transform-origin: top left;
-}
-
-.preview-frame.is-empty {
-  border-style: dashed;
-  box-shadow: none;
-}
-
-.preview-empty-hint {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  margin: 0;
-  place-items: center;
-  color: rgb(255 255 255 / 38%);
-  font-size: 13px;
-  pointer-events: none;
 }
 
 .preview-resize-handle {

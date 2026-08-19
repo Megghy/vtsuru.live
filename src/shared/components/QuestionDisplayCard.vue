@@ -52,15 +52,13 @@ const imageLayout = computed(() =>
 )
 const rootStyle = computed<CSSProperties>(() => ({
   '--card-border-color': color(props.setting.borderColor),
-  '--card-border-width': `${hasQuestion.value ? Math.max(0, props.setting.borderWidth ?? 0) : 0}px`,
+  '--card-border-width': `${Math.max(0, props.setting.borderWidth ?? 0)}px`,
   '--card-radius': `${Math.max(0, props.setting.borderRadius ?? 16)}px`,
   '--card-padding': `${Math.max(0, props.setting.contentPadding ?? 24)}px`,
   '--card-image-max-height': `${Math.max(80, props.setting.imageMaxHeight || 320)}px`,
   '--card-fg': color(props.setting.fontColor),
-  '--card-background': hasQuestion.value
-    ? colorWithOpacity(props.setting.backgroundColor, props.setting.backgroundOpacity ?? 100)
-    : 'transparent',
-  '--card-shadow': hasQuestion.value ? shadow(props.setting.shadow) : 'none',
+  '--card-background': colorWithOpacity(props.setting.backgroundColor, props.setting.backgroundOpacity ?? 100),
+  '--card-shadow': shadow(props.setting.shadow),
 }))
 const contentStyle = computed<CSSProperties>(() => ({
   color: color(props.setting.fontColor),
@@ -187,8 +185,18 @@ defineExpose({ setScrollProgress })
           <span
             v-else
             class="question-display-empty"
-            aria-hidden="true"
-          />
+          >
+            <span>当前没有展示提问</span>
+            <span
+              class="question-display-empty-loader"
+              aria-hidden="true"
+            >
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+          </span>
         </div>
         <div
           v-if="hasQuestion && showBrand"
@@ -350,9 +358,65 @@ defineExpose({ setScrollProgress })
 }
 
 .question-display-empty {
-  display: block;
+  display: flex;
   flex: 1;
   min-height: 1px;
+  flex-direction: column;
+  color: color-mix(in srgb, var(--card-fg) 44%, transparent);
+  font-size: 0.9em;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  user-select: none;
+}
+
+.question-display-empty-loader {
+  display: flex;
+  width: 44px;
+  height: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.question-display-empty-loader i {
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: color-mix(in srgb, var(--card-fg) 46%, transparent);
+  border-radius: 50%;
+}
+
+.question-display-empty-loader i:first-child {
+  animation: question-display-empty-left 1.5s ease-in-out infinite;
+}
+
+.question-display-empty-loader i:last-child {
+  animation: question-display-empty-right 1.5s ease-in-out infinite;
+}
+
+@keyframes question-display-empty-left {
+  0%,
+  50%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-14px);
+  }
+}
+
+@keyframes question-display-empty-right {
+  0%,
+  50%,
+  100% {
+    transform: translateX(0);
+  }
+
+  75% {
+    transform: translateX(14px);
+  }
 }
 
 .question-display-brand {
@@ -404,8 +468,11 @@ defineExpose({ setScrollProgress })
   .question-display-slide-enter-active,
   .question-display-slide-leave-active,
   .question-display-scale-enter-active,
-  .question-display-scale-leave-active {
+  .question-display-scale-leave-active,
+  .question-display-empty-loader i:first-child,
+  .question-display-empty-loader i:last-child {
     transition: none;
+    animation: none;
   }
 }
 </style>
