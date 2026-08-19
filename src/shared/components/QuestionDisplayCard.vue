@@ -373,49 +373,43 @@ defineExpose({ setScrollProgress })
 
 .question-display-empty-loader {
   display: flex;
-  width: 44px;
-  height: 10px;
+  width: 58px;
+  height: 16px;
   align-items: center;
   justify-content: space-between;
 }
 
 .question-display-empty-loader i {
   display: block;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: color-mix(in srgb, var(--card-fg) 46%, transparent);
   border-radius: 50%;
+  animation: question-display-empty-bounce 1.1s ease-in-out infinite;
 }
 
-.question-display-empty-loader i:first-child {
-  animation: question-display-empty-left 1.5s ease-in-out infinite;
+.question-display-empty-loader i:nth-child(2) {
+  animation-delay: -0.825s;
 }
 
-.question-display-empty-loader i:last-child {
-  animation: question-display-empty-right 1.5s ease-in-out infinite;
+.question-display-empty-loader i:nth-child(3) {
+  animation-delay: -0.55s;
 }
 
-@keyframes question-display-empty-left {
+.question-display-empty-loader i:nth-child(4) {
+  animation-delay: -0.275s;
+}
+
+@keyframes question-display-empty-bounce {
   0%,
-  50%,
   100% {
-    transform: translateX(0);
+    opacity: 0.35;
+    transform: translateY(0) scale(0.78);
   }
 
-  25% {
-    transform: translateX(-14px);
-  }
-}
-
-@keyframes question-display-empty-right {
-  0%,
-  50%,
-  100% {
-    transform: translateX(0);
-  }
-
-  75% {
-    transform: translateX(14px);
+  50% {
+    opacity: 0.95;
+    transform: translateY(-6px) scale(1.12);
   }
 }
 
@@ -468,11 +462,8 @@ defineExpose({ setScrollProgress })
   .question-display-slide-enter-active,
   .question-display-slide-leave-active,
   .question-display-scale-enter-active,
-  .question-display-scale-leave-active,
-  .question-display-empty-loader i:first-child,
-  .question-display-empty-loader i:last-child {
+  .question-display-scale-leave-active {
     transition: none;
-    animation: none;
   }
 }
 </style>

@@ -225,10 +225,18 @@ onBeforeRouteLeave(async () => {
   return confirmLeave()
 })
 
-onMounted(async () => {
+watch(
+  () => accountInfo.value?.id,
+  (id) => {
+    if (!id) return
+    void questionBox.GetTags()
+    void questionBox.GetRecieveQAInfo()
+  },
+  { immediate: true },
+)
+
+onMounted(() => {
   window.addEventListener('beforeunload', onBeforeUnload)
-  await questionBox.GetTags()
-  await questionBox.GetRecieveQAInfo()
   void rtc.Init('master', { timeoutMs: 5000 }).catch((error) => {
     console.warn('[QuestionDisplay] RTC 滚动同步不可用', error)
   })

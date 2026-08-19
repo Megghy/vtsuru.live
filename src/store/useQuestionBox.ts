@@ -147,9 +147,12 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
 
   async function GetTags() {
+    const id = accountInfo.value?.id
+    if (!id) return
+
     isLoading.value = true
     try {
-      const resp = await QueryGetAPI<QATagInfo[]>(`${QUESTION_API_URL}get-tags`, { id: accountInfo.value?.id })
+      const resp = await QueryGetAPI<QATagInfo[]>(`${QUESTION_API_URL}get-tags`, { id })
       if (resp.code === 200) {
         tags.value = resp.data
       } else {
