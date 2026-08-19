@@ -16,7 +16,7 @@ import {
   NText,
   useThemeVars,
 } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { QAInfo } from '@/api/api-models'
@@ -36,6 +36,16 @@ const pagedQuestions = computed(() =>
   useQB.recieveQuestionsFiltered.slice((pn.value - 1) * ps.value, pn.value * ps.value),
 )
 
+const hasActiveFilters = computed(
+  () =>
+    Boolean(useQB.searchKeyword) ||
+    Boolean(useQB.displayTag) ||
+    useQB.sortMode !== 'default' ||
+    useQB.onlyFavorite ||
+    useQB.onlyPublic ||
+    useQB.onlyUnread,
+)
+
 const isAllSelected = computed(
   () => pagedQuestions.value.length > 0 && pagedQuestions.value.every((q) => useQB.selectedIds.includes(q.id)),
 )
@@ -44,6 +54,22 @@ function toggleSelectAll(checked: boolean) {
   if (checked) useQB.selectAll(pagedQuestions.value.map((q) => q.id))
   else useQB.selectedIds = useQB.selectedIds.filter((id) => !pagedQuestions.value.some((q) => q.id === id))
 }
+
+function clearFilters() {
+  useQB.searchKeyword = ''
+  useQB.displayTag = null
+  useQB.sortMode = 'default'
+  useQB.onlyFavorite = false
+  useQB.onlyPublic = false
+  useQB.onlyUnread = false
+}
+
+watch(
+  () => [useQB.searchKeyword, useQB.displayTag, useQB.sortMode, useQB.onlyFavorite, useQB.onlyPublic, useQB.onlyUnread],
+  () => {
+    pn.value = 1
+  },
+)
 
 const sortOptions = [
   { label: '默认排序', value: 'default' },
@@ -58,6 +84,7 @@ const sortOptions = [
 <template>
   <!-- 筛选栏 -->
   <NFlex
+    class="received-toolbar"
     align="center"
     justify="space-between"
     wrap
@@ -69,6 +96,7 @@ const sortOptions = [
       align="center"
     >
       <NButton
+        secondary
         type="primary"
         size="small"
         @click="router.push({ name: 'question-display' })"
@@ -112,6 +140,14 @@ const sortOptions = [
       <NCheckbox v-model:checked="useQB.onlyFavorite"> 收藏 </NCheckbox>
       <NCheckbox v-model:checked="useQB.onlyPublic"> 公开 </NCheckbox>
       <NCheckbox v-model:checked="useQB.onlyUnread"> 未读 </NCheckbox>
+      <NButton
+        v-if="hasActiveFilters"
+        text
+        size="small"
+        @click="clearFilters"
+      >
+        清除筛选
+      </NButton>
     </NFlex>
   </NFlex>
 
@@ -140,7 +176,7 @@ const sortOptions = [
       @select="useQB.toggleSelect"
     >
       <template #footer="{ item }">
-        <NFlex>
+        <NFlex class="question-actions">
           <NButton
             size="small"
             :type="item.isReaded ? 'warning' : 'info'"
@@ -190,9 +226,8 @@ const sortOptions = [
       <template #header-extra="{ item }">
         <NButton
           :type="item.answer ? 'primary' : 'info'"
-          :tertiary="item.isReaded"
+          :tertiary="item.isReaded && !item.answer"
           :secondary="!item.isReaded && !item.answer"
-          :ghost="!!item.answer"
           @click="emit('reply', item)"
         >
           {{ item.answer ? '查看/修改回复' : '回复' }}
@@ -289,6 +324,14 @@ const sortOptions = [
 </template>
 
 <style scoped>
+.received-toolbar {
+  margin-bottom: 12px;
+}
+
+.question-actions {
+  flex-wrap: wrap;
+}
+
 .batch-bar {
   position: fixed;
   bottom: 24px;
@@ -298,6 +341,40 @@ const sortOptions = [
   width: auto;
   max-width: 90vw;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 640px) {
+  .received-toolbar {
+    align-items: stretch;
+  }
+
+  .received-toolbar > :deep(.n-flex) {
+    width: 100%;
+  }
+
+  .received-toolbar :deep(.n-input),
+  .received-toolbar :deep(.n-base-selection) {
+    flex: 1 1 140px;
+    width: auto !important;
+  }
+
+  .batch-bar {
+    bottom: 12px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .batch-bar > :deep(.n-card__content) {
+    padding: 10px;
+  }
+
+  .batch-bar > :deep(.n-card__content > .n-flex) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .batch-bar > :deep(.n-card__content > .n-flex > .n-flex) {
+    flex-wrap: wrap;
+  }
 }
 .slide-up-enter-active,
 .slide-up-leave-active {

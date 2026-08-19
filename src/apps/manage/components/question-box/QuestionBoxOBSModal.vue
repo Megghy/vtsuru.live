@@ -1,34 +1,36 @@
 <script setup lang="ts">
-import { NAlert, NButton, NDivider, NInput, NInputGroup, NModal, useThemeVars } from 'naive-ui'
+import { Copy24Regular, Open24Regular } from '@vicons/fluent'
+import { NButton, NIcon, NInput, NModal, useMessage } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { Setting_QuestionDisplay } from '@/api/api-models'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { CURRENT_HOST } from '@/shared/config'
+import { normalizeQuestionDisplaySetting } from '@/shared/questionDisplay'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const show = defineModel<boolean>('show', { required: true })
 const accountInfo = useAccount()
-const useQB = useQuestionBox()
-const themeVars = useThemeVars()
+const questionBox = useQuestionBox()
 const router = useRouter()
+const message = useMessage()
 
-const savedCardSize = usePersistedStorage<{ width: number; height: number }>('Settings.QuestionDisplay.CardSize', {
-  width: 400,
-  height: 400,
-})
+const savedCardSize = usePersistedStorage('Settings.QuestionDisplay.CardSize', { width: 720, height: 480 })
+const setting = computed(() => normalizeQuestionDisplaySetting(accountInfo.value?.settings?.questionDisplay))
+const obsUrl = computed(() => `${CURRENT_HOST}obs/question-display?token=${accountInfo.value?.token ?? ''}`)
+const previewStyle = computed(() => ({ aspectRatio: `${savedCardSize.value.width} / ${savedCardSize.value.height}` }))
 
-const setting = computed((): Setting_QuestionDisplay => {
-  return accountInfo.value?.settings?.questionDisplay ?? ({} as Setting_QuestionDisplay)
-})
+async function copyUrl() {
+  await copyToClipboard(obsUrl.value)
+  message.success('OBS 链接已复制')
+}
 
-function openQuestionDisplay() {
+function openWorkbench() {
   show.value = false
-  router.push({ name: 'question-display' })
+  void router.push({ name: 'question-display' })
 }
 </script>
 
@@ -36,66 +38,96 @@ function openQuestionDisplay() {
   <NModal
     v-model:show="show"
     preset="card"
+    class="obs-quick-modal"
+    title="OBS 提问展示"
     closable
-    style="max-width: 90vw; width: auto"
-    title="OBS 组件预览与链接"
-    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column;"
   >
-    <NAlert
-      type="info"
-      :show-icon="false"
-      style="margin-bottom: 15px"
-    >
-      下方是实时预览效果。管理展示内容请前往
-      <NButton
-        text
-        type="primary"
-        @click="openQuestionDisplay"
-      >
-        展示管理页
-      </NButton>
-    </NAlert>
+    <div class="quick-layout">
+      <div class="quick-preview">
+        <div
+          class="preview-frame"
+          :style="previewStyle"
+        >
+          <QuestionDisplayCard
+            :question="questionBox.displayQuestion"
+            :setting="setting"
+            :status="questionBox.displayQuestion ? 'ready' : 'empty'"
+          />
+        </div>
+        <span>{{ savedCardSize.width }} × {{ savedCardSize.height }}</span>
+      </div>
 
-    <div
-      :style="{
-        width: `${savedCardSize.width}px`,
-        height: `${savedCardSize.height}px`,
-        border: `1px dashed ${themeVars.borderColor}`,
-        overflow: 'hidden',
-        position: 'relative',
-      }"
-    >
-      <QuestionDisplayCard
-        :question="useQB.displayQuestion"
-        :setting="setting"
-      />
+      <div class="quick-actions">
+        <label>
+          <span>浏览器源链接</span>
+          <NInput
+            readonly
+            type="password"
+            show-password-on="click"
+            :value="obsUrl"
+          />
+        </label>
+        <NButton
+          type="primary"
+          @click="copyUrl"
+        >
+          <template #icon><NIcon :component="Copy24Regular" /></template>
+          复制链接
+        </NButton>
+        <NButton
+          secondary
+          @click="openWorkbench"
+        >
+          <template #icon><NIcon :component="Open24Regular" /></template>
+          打开展示页
+        </NButton>
+      </div>
     </div>
-
-    <NDivider
-      title-placement="left"
-      style="margin-top: 20px; margin-bottom: 10px"
-    >
-      OBS 浏览器源链接
-    </NDivider>
-    <NInputGroup>
-      <NInput
-        readonly
-        :value="`${CURRENT_HOST}obs/question-display?token=${accountInfo?.token}`"
-      />
-      <NButton
-        secondary
-        @click="copyToClipboard(`${CURRENT_HOST}obs/question-display?token=${accountInfo?.token}`)"
-      >
-        复制
-      </NButton>
-    </NInputGroup>
-
-    <NDivider style="margin-top: 20px; margin-bottom: 15px" />
-    <NButton
-      type="primary"
-      @click="openQuestionDisplay"
-    >
-      前往展示管理页
-    </NButton>
   </NModal>
 </template>
+
+<style scoped>
+:global(.obs-quick-modal) {
+  width: min(760px, 92vw);
+}
+
+.quick-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.25fr) minmax(220px, 0.75fr);
+  gap: 20px;
+  align-items: center;
+}
+
+.quick-preview {
+  display: grid;
+  gap: 8px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.preview-frame {
+  width: 100%;
+  overflow: hidden;
+  background: #34383c;
+  border: 1px solid var(--vtsuru-border);
+}
+
+.quick-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.quick-actions label {
+  display: grid;
+  gap: 6px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .quick-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+</style>

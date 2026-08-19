@@ -6,7 +6,7 @@ export default [
     name: 'question-display',
     component: async () => import('@/apps/web/pages/QuestionDisplay.vue'),
     meta: {
-      title: '棉花糖展示页',
+      title: '提问展示',
     },
   },
   {

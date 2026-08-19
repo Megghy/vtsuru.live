@@ -21,7 +21,6 @@ export const PERSIST_LEGACY_KEY_MAP = {
   'Settings.OpenLive.LotteryOption': 'vtsuru:settings:open-live:lottery-option',
   'Settings.Point.Users': 'vtsuru:settings:point:users',
   'Settings.QuestionDisplay.CardSize': 'vtsuru:settings:question-display:card-size',
-  'Settings.QuestionDisplay.CustomCss': 'vtsuru:settings:question-display:custom-css',
   'Settings.Fonts': 'vtsuru:settings:fonts',
   'Settings.SelectedAPI': 'vtsuru:settings:selected-api',
   'Settings.Queue.DefaultKeyword': 'vtsuru:settings:queue:default-keyword',

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NCard, NCheckbox, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
-import { ref } from 'vue'
+import { NButton, NCard, NCheckbox, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { computed, ref } from 'vue'
 
 import type { QAInfo } from '@/api/api-models'
 import { useQuestionBox } from '@/store/useQuestionBox'
@@ -16,6 +16,9 @@ const useQA = useQuestionBox()
 
 const isViolation = props.item.reviewResult?.isApproved === false
 const showContent = ref(!isViolation)
+const showFullMessage = ref(false)
+const message = computed(() => props.item.question?.message ?? '')
+const shouldClampMessage = computed(() => message.value.length > 240)
 
 function getScoreColor(score: number | undefined): string {
   if (score === undefined) return 'grey'
@@ -28,10 +31,11 @@ function getScoreColor(score: number | undefined): string {
 <template>
   <NCard
     v-if="item"
-    :embedded="!item.isReaded"
+    class="question-item"
+    :class="{ 'is-unread': !item.isReaded }"
     hoverable
     size="small"
-    :bordered="false"
+    bordered
   >
     <template #header>
       <NFlex
@@ -153,7 +157,10 @@ function getScoreColor(score: number | undefined): string {
       />
     </template>
     <template v-if="item.questionImages && item.questionImages.length > 0">
-      <NFlex size="small">
+      <NFlex
+        class="question-item__images"
+        size="small"
+      >
         <NImage
           v-for="(img, index) in item.questionImages"
           :key="index"
@@ -165,6 +172,8 @@ function getScoreColor(score: number | undefined): string {
     </template>
 
     <NText
+      class="question-item__message"
+      :class="{ 'is-clamped': shouldClampMessage && !showFullMessage }"
       :style="{
         filter: isViolation && !showContent ? 'blur(3.7px)' : '',
         cursor: isViolation && !showContent ? 'pointer' : '',
@@ -172,8 +181,18 @@ function getScoreColor(score: number | undefined): string {
       }"
       @click="isViolation ? (showContent = !showContent) : null"
     >
-      {{ item.question?.message }}
+      {{ message }}
     </NText>
+
+    <NButton
+      v-if="shouldClampMessage"
+      class="question-item__message-toggle"
+      text
+      size="tiny"
+      @click="showFullMessage = !showFullMessage"
+    >
+      {{ showFullMessage ? '收起内容' : '展开全部' }}
+    </NButton>
 
     <template v-if="item.answer">
       <NDivider style="margin: 10px 0" />
@@ -183,3 +202,47 @@ function getScoreColor(score: number | undefined): string {
     </template>
   </NCard>
 </template>
+
+<style scoped>
+.question-item {
+  --question-item-bg: var(--vtsuru-bg-elevated);
+  --question-item-border: var(--vtsuru-border);
+  position: relative;
+  overflow: hidden;
+  border-color: var(--question-item-border);
+  background: var(--question-item-bg);
+}
+
+.question-item.is-unread {
+  --question-item-bg: color-mix(in srgb, var(--vtsuru-brand-tint) 32%, var(--vtsuru-bg-elevated));
+  --question-item-border: color-mix(in srgb, var(--vtsuru-brand) 32%, var(--vtsuru-border));
+}
+
+.question-item.is-unread::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--vtsuru-brand);
+  content: '';
+}
+
+.question-item__images {
+  margin-bottom: 8px;
+}
+
+.question-item__message {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.question-item__message.is-clamped {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+
+.question-item__message-toggle {
+  margin-top: 6px;
+}
+</style>

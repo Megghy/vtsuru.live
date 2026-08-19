@@ -70,12 +70,9 @@ watch(selectedTabItem, (tab) => {
   if (tab === '1' && useQB.sendQuestions.length === 0) useQB.GetSendQAInfo()
 })
 
-onMounted(() => {
-  useQB.GetTags()
-  useQB.GetRecieveQAInfo()
-  useQB.displayQuestion = useQB.recieveQuestions.find(
-    (s) => s.id === accountInfo.value?.settings?.questionDisplay?.currentQuestion,
-  )
+onMounted(async () => {
+  await useQB.GetTags()
+  await useQB.GetRecieveQAInfo()
 })
 </script>
 

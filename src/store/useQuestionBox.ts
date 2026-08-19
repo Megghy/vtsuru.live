@@ -101,10 +101,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
           return b.sendAt - a.sendAt
         })
         reviewing.value = resp.data.reviewCount
-        const displayId = accountInfo.value?.settings.questionDisplay.currentQuestion
-        if (displayId && displayQuestion.value?.id !== displayId) {
-          displayQuestion.value = recieveQuestions.value.find((q) => q.id === displayId)
-        }
+        const displayId = accountInfo.value?.currentQuestionId
+        displayQuestion.value = displayId ? recieveQuestions.value.find((q) => q.id === displayId) : undefined
         isRecieveGetted = true
       } else {
         message.error(resp.message)
@@ -246,9 +244,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}read`, { id: question.id, read: isRead ? 'true' : 'false' })
       if (resp.code === 200) {
         question.isReaded = isRead
-        if (isRead && displayQuestion.value?.id === question.id) {
-          setCurrentQuestion(question)
-        }
       } else {
         message.error(`修改失败: ${resp.message}`)
       }
@@ -319,14 +314,21 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
 
   async function setCurrentQuestion(item: QAInfo | undefined) {
-    const isCurrent = displayQuestion.value?.id === item?.id
-    displayQuestion.value = isCurrent ? undefined : item
+    const nextId = item?.id
+    const previousQuestion = displayQuestion.value
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}set-current`, isCurrent || !item ? null : { id: item.id })
-      if (resp.code !== 200) message.error(`设置失败: ${resp.message}`)
+      const resp = await QueryGetAPI(`${QUESTION_API_URL}set-current`, nextId ? { id: nextId } : null)
+      if (resp.code !== 200) throw new Error(resp.message)
+      displayQuestion.value = item
+      if (accountInfo.value) accountInfo.value.currentQuestionId = nextId
     } catch (err) {
-      message.error(`设置失败: ${err}`)
+      displayQuestion.value = previousQuestion
+      message.error(`设置失败: ${err instanceof Error ? err.message : err}`)
     }
+  }
+
+  async function clearCurrentQuestion() {
+    await setCurrentQuestion(undefined)
   }
 
   // --- 批量操作 ---
@@ -385,9 +387,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function batchFavorite(fav: boolean) {
     const ids = [...selectedIds.value]
     if (!ids.length) return
-    await Promise.allSettled(
-      ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}favorite`, { id, favorite: fav })),
-    )
+    await Promise.allSettled(ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}favorite`, { id, favorite: fav })))
     ids.forEach((id) => {
       const q = recieveQuestions.value.find((item) => item.id === id)
       if (q) q.isFavorite = fav
@@ -456,6 +456,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     blacklist,
     markAsNormal,
     setCurrentQuestion,
+    clearCurrentQuestion,
     getViolationString,
   }
 })

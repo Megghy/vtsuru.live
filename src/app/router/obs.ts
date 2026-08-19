@@ -56,7 +56,7 @@ export default {
       name: 'obs-question-display',
       component: async () => import('@/apps/obs/pages/QuestionDisplayOBS.vue'),
       meta: {
-        title: '棉花糖展示',
+        title: '提问展示',
         forceReload: true,
       },
     },

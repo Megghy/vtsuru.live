@@ -65,6 +65,7 @@ export interface AccountInfo extends UserInfo {
   biliVerifyCode?: string
   bindEmail?: string
   settings: UserSetting
+  currentQuestionId?: number
   consumptionSettings: UserConsumptionSetting
   token: string
   point: number
@@ -267,26 +268,46 @@ export interface Setting_QuestionDisplay {
   fontSize: number // Default is 20
   fontWeight: number
   nameFontSize: number // Default is 20
-  lineSpacing: number // Default is 0, 行间距
+  lineHeight: number
   fontColor?: string // Optional string, must exactly be 6 characters long
   nameFontColor?: string // Optional string, must exactly be 6 characters long
   nameFontWeight?: number
   backgroundColor?: string // Optional string, must exactly be 6 characters long
+  backgroundOpacity: number
+  contentPadding: number
+  borderRadius: number
+  imageMaxHeight: number
   showUserName: boolean // Default is true
+  showBrand: boolean
   align: QuestionDisplayAlign // Default is QuestionDisplayAlign.Left, 对齐
   showImage: boolean // Default is false
-
   borderColor?: string
   borderWidth?: number
+  transition: QuestionDisplayTransition
+  imageLayout: QuestionDisplayImageLayout
+  shadow: QuestionDisplayShadow
   syncScroll: boolean
-
-  currentQuestion?: number
 }
 
 export enum QuestionDisplayAlign {
   Left,
   Right,
   Center,
+}
+export enum QuestionDisplayTransition {
+  Fade,
+  Slide,
+  Scale,
+  None,
+}
+export enum QuestionDisplayImageLayout {
+  Contain,
+  Grid,
+}
+export enum QuestionDisplayShadow {
+  None,
+  Soft,
+  Strong,
 }
 export enum SettingPointGiftAllowType {
   All,

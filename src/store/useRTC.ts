@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { ref } from 'vue'
+import { readonly, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
@@ -9,8 +9,10 @@ import { MasterRTCClient, SlaveRTCClient } from '@/shared/services/RTCClient'
 
 export const useWebRTC = defineStore('WebRTC', () => {
   const client = ref<BaseRTCClient>()
+  const status = ref<'idle' | 'connecting' | 'ready' | 'error'>('idle')
+  const lastError = ref<string>()
   const accountInfo = useAccount()
-  let isInitializing = false
+  let initialization: Promise<void> | undefined
 
   function on(event: string, callback: (...args: any[]) => void) {
     client.value?.on(event, callback)
@@ -24,53 +26,59 @@ export const useWebRTC = defineStore('WebRTC', () => {
     client.value?.send(event, data)
   }
   const route = useRoute()
-  async function Init(type: 'master' | 'slave') {
-    if (isInitializing) {
+  async function Init(type: 'master' | 'slave', options: { timeoutMs?: number } = {}) {
+    if (client.value) {
+      status.value = 'ready'
       return useWebRTC()
     }
-    try {
-      isInitializing = true
-      await navigator.locks.request('rtcClientInit', { ifAvailable: true }, async (lock) => {
-        if (lock) {
-          if (!cookie.value?.cookie && !route.query.token) {
-            console.log('[RTC] 未登录, 跳过RTC初始化')
+    if (!initialization) {
+      status.value = 'connecting'
+      lastError.value = undefined
+      initialization = (async () => {
+        await navigator.locks.request('rtcClientInit', { ifAvailable: true }, async (lock) => {
+          if (!lock || client.value) return
+          const token = Array.isArray(route.query.token) ? route.query.token[0] : route.query.token
+          if (!cookie.value?.cookie && !token) {
+            status.value = 'idle'
             return
           }
-          // 当无 Cookie 但 url 上带 token 时，主动拉取账号信息，避免一直等待
-          if (!cookie.value?.cookie && route.query.token) {
-            try {
-              await GetSelfAccount(route.query.token as string)
-            } catch (e) {
-              console.error('[RTC] 获取账号信息失败:', e)
-            }
-          }
-          while (!accountInfo.value.id) {
-            await new Promise((resolve) => setTimeout(resolve, 500))
-          }
-          if (client.value) {
-            return client.value
-          }
-          if (type == 'master') {
-            client.value = new MasterRTCClient(accountInfo.value.id.toString(), accountInfo.value.token)
-          } else {
-            client.value = new SlaveRTCClient(accountInfo.value.id?.toString(), accountInfo.value.token)
-          }
+          if (!accountInfo.value?.id) await GetSelfAccount(token ? String(token) : undefined)
+          if (!accountInfo.value?.id) throw new Error('RTC 账号信息不可用')
+
+          client.value =
+            type === 'master'
+              ? new MasterRTCClient(accountInfo.value.id.toString(), accountInfo.value.token)
+              : new SlaveRTCClient(accountInfo.value.id.toString(), accountInfo.value.token)
           await client.value.Init()
-          return useWebRTC()
-        } else {
-          return useWebRTC()
-        }
+          status.value = 'ready'
+          lastError.value = undefined
+        })
+      })().finally(() => {
+        initialization = undefined
       })
-      return useWebRTC()
-    } catch (e) {
-      console.error(e)
-      throw e
-    } finally {
-      isInitializing = false
     }
+
+    const timeoutMs = options.timeoutMs ?? 10000
+    let timeoutId: number | undefined
+    try {
+      await Promise.race([
+        initialization,
+        new Promise<never>((_, reject) => {
+          timeoutId = window.setTimeout(() => reject(new Error(`RTC 初始化超时 (${timeoutMs}ms)`)), timeoutMs)
+        }),
+      ])
+      if (!client.value && status.value === 'connecting') status.value = 'idle'
+    } catch (error) {
+      status.value = 'error'
+      lastError.value = error instanceof Error ? error.message : String(error)
+      throw error
+    } finally {
+      window.clearTimeout(timeoutId)
+    }
+    return useWebRTC()
   }
 
-  return { Init, send, on, off }
+  return { Init, send, on, off, status: readonly(status), lastError: readonly(lastError) }
 })
 
 if (import.meta.hot) {

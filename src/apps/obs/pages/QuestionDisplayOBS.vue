@@ -1,77 +1,84 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, toRef, watch } from 'vue'
 
-import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { useQuestionDisplayOBS } from '@/apps/obs/composables/useQuestionDisplayOBS'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
-import { QUESTION_API_URL } from '@/shared/config'
 import { useWebRTC } from '@/store/useRTC'
 
-defineProps<{
-  id?: number
-  active?: boolean
-  visible?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    id?: number
+    active?: boolean
+    visible?: boolean
+  }>(),
+  { active: true, visible: true },
+)
 
-const hash = ref('')
 const token = useRouteQueryParam('token')
 const tokenStr = computed(() => {
   const v = token.value
-  return Array.isArray(v) ? (v[0] ?? '') : (v ?? '')
+  return String(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
 })
-const rtc = await useWebRTC().Init('slave')
+const { question, setting, state } = useQuestionDisplayOBS({
+  token: tokenStr,
+  active: toRef(props, 'active'),
+  visible: toRef(props, 'visible'),
+})
+const cardState = computed(() => (state.value === 'unauthorized' ? 'error' : state.value))
 
-const question = ref<QAInfo>()
-const setting = ref<Setting_QuestionDisplay>({} as Setting_QuestionDisplay)
+const cardRef = ref<{ setScrollProgress: (progress: number) => void }>()
+const rtc = useWebRTC()
+let rtcListening = false
+let lifecycle = 0
+let mounted = false
 
-const cardRef = ref()
+function handleScroll(progress: number) {
+  cardRef.value?.setScrollProgress(Math.min(1, Math.max(0, progress)))
+}
 
-async function checkIfChanged() {
+async function startRTC() {
+  const currentLifecycle = lifecycle
   try {
-    const data = await QueryGetAPI<string>(`${QUESTION_API_URL}get-hash`, {
-      token: tokenStr.value,
-    })
-    if (data.code == 200) {
-      if (data.data != hash.value) {
-        getQuestionAndSetting()
-      }
-      hash.value = data.data
-    }
-  } catch (err) {
-    console.log(err)
+    const initializedRTC = await rtc.Init('slave', { timeoutMs: 5000 })
+    if (currentLifecycle !== lifecycle || rtcListening) return
+    initializedRTC.on('function.question.sync-scroll', handleScroll)
+    rtcListening = true
+  } catch (error) {
+    console.warn('[QuestionDisplayOBS] RTC 滚动同步不可用', error)
   }
 }
-async function getQuestionAndSetting() {
-  try {
-    const data = await QueryGetAPI<{
-      question: QAInfo
-      setting: Setting_QuestionDisplay
-    }>(`${QUESTION_API_URL}get-current-and-settings`, {
-      token: tokenStr.value,
-    })
-    if (data.code == 200) {
-      question.value = data.data.question
-      setting.value = data.data.setting
-    }
-  } catch (err) {
-    console.log(err)
-  }
+
+function stopRTC() {
+  lifecycle++
+  if (!rtcListening) return
+  rtc.off('function.question.sync-scroll', handleScroll)
+  rtcListening = false
 }
-function handleScroll(value: { clientHeight: number; scrollHeight: number; scrollTop: number }) {
-  cardRef.value?.setScroll(value)
+
+function syncRTC() {
+  if (mounted && props.active && props.visible) void startRTC()
+  else stopRTC()
 }
+
 onMounted(() => {
-  window.$mitt.on('onOBSComponentUpdate', () => {
-    checkIfChanged()
-  })
-
-  rtc?.on('function.question.sync-scroll', handleScroll)
+  mounted = true
+  syncRTC()
+})
+onActivated(() => {
+  mounted = true
+  syncRTC()
+})
+onDeactivated(() => {
+  mounted = false
+  stopRTC()
 })
 onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate')
-  rtc?.off('function.question.sync-scroll', handleScroll)
+  mounted = false
+  stopRTC()
 })
+
+watch([() => props.active, () => props.visible], syncRTC)
 </script>
 
 <template>
@@ -79,5 +86,6 @@ onUnmounted(() => {
     ref="cardRef"
     :question="question"
     :setting="setting"
+    :status="cardState"
   />
 </template>

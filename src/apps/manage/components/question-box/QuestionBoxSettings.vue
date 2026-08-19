@@ -21,7 +21,7 @@ import {
   useMessage,
   useThemeVars,
 } from 'naive-ui'
-import { h, ref, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import { useQuestionBox } from '@/store/useQuestionBox'
@@ -33,6 +33,7 @@ const themeVars = useThemeVars()
 
 const addTagName = ref('')
 const tempSaftyLevel = ref(accountInfo.value?.settings?.questionBox?.saftyLevel ?? 0)
+const sortedTags = computed(() => useQB.tags.toSorted((a, b) => b.createAt - a.createAt))
 
 watch(
   () => accountInfo.value?.settings?.questionBox?.saftyLevel,
@@ -107,13 +108,18 @@ function addTag() {
 
 <template>
   <NGrid
+    class="question-box-settings-grid"
     x-gap="12"
     y-gap="12"
     cols="1 800:2"
   >
     <NGi>
-      <NFlex vertical>
+      <NFlex
+        class="question-box-settings-stack"
+        vertical
+      >
         <NCard
+          class="setting-card"
           title="基础设定"
           size="small"
           segmented
@@ -124,7 +130,10 @@ function addTag() {
               size="18"
             />
           </template>
-          <NFlex vertical>
+          <NFlex
+            class="question-box-settings-content"
+            vertical
+          >
             <NCheckbox
               v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
               :disabled="useQB.isLoading"
@@ -155,12 +164,13 @@ function addTag() {
         </NCard>
 
         <NCard
+          class="setting-card"
           title="内容审查"
           size="small"
           segmented
         >
-          <div style="padding: 0 10px 10px 10px">
-            <div style="margin-bottom: 15px; font-size: 13px; color: gray">设置过滤强度，自动拦截恶意提问</div>
+          <div class="question-box-safety-content">
+            <div class="question-box-help-text">设置过滤强度，自动拦截恶意提问</div>
             <NSlider
               v-model:value="tempSaftyLevel"
               :marks="remarkLevel"
@@ -180,11 +190,15 @@ function addTag() {
         </NCard>
 
         <NCard
+          class="setting-card"
           title="通知设置"
           size="small"
           segmented
         >
-          <NFlex vertical>
+          <NFlex
+            class="question-box-settings-content"
+            vertical
+          >
             <NCheckbox
               v-model:checked="accountInfo.settings.sendEmail.recieveQA"
               :disabled="useQB.isLoading"
@@ -206,9 +220,9 @@ function addTag() {
 
     <NGi>
       <NCard
+        class="setting-card question-box-tags-card"
         title="标签/话题管理"
         size="small"
-        style="height: 100%"
         segmented
       >
         <template #header-extra>
@@ -223,7 +237,7 @@ function addTag() {
           </NTooltip>
         </template>
 
-        <NInputGroup style="margin-bottom: 12px">
+        <NInputGroup class="question-box-tag-input">
           <NInput
             v-model:value="addTagName"
             placeholder="输入新标签名称"
@@ -248,13 +262,14 @@ function addTag() {
           v-else
           bordered
           hoverable
-          style="max-height: 500px; overflow-y: auto"
+          class="question-box-tag-list"
         >
           <NListItem
-            v-for="item in useQB.tags.sort((a, b) => b.createAt - a.createAt)"
+            v-for="item in sortedTags"
             :key="item.name"
           >
             <NFlex
+              class="question-box-tag-row"
               align="center"
               justify="space-between"
             >
@@ -265,7 +280,10 @@ function addTag() {
               >
                 {{ item.name }}
               </NTag>
-              <NFlex size="small">
+              <NFlex
+                class="question-box-tag-actions"
+                size="small"
+              >
                 <NTooltip placement="top">
                   <template #trigger>
                     <NPopconfirm @positive-click="useQB.updateTagVisiable(item.name, !item.visiable)">
@@ -312,3 +330,67 @@ function addTag() {
     </NGi>
   </NGrid>
 </template>
+
+<style scoped>
+.question-box-settings-grid {
+  --question-box-card-gap: 12px;
+}
+
+.question-box-settings-stack {
+  gap: var(--question-box-card-gap);
+}
+
+.question-box-settings-content {
+  gap: 10px;
+}
+
+.question-box-settings-grid :deep(.n-card__content) {
+  padding: 14px 16px 16px;
+}
+
+.question-box-safety-content {
+  padding: 0 2px 4px;
+}
+
+.question-box-help-text {
+  margin-bottom: 12px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+}
+
+.question-box-tags-card {
+  height: 100%;
+}
+
+.question-box-tag-input {
+  margin-bottom: 10px;
+}
+
+.question-box-tag-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.question-box-tag-row {
+  gap: 8px;
+}
+
+.question-box-tag-actions {
+  flex: none;
+  gap: 2px;
+}
+
+.question-box-tag-list :deep(.n-list-item) {
+  padding: 7px 10px;
+}
+
+@media (max-width: 520px) {
+  .question-box-settings-grid :deep(.n-card__content) {
+    padding: 12px;
+  }
+
+  .question-box-tag-list :deep(.n-list-item) {
+    padding: 6px 8px;
+  }
+}
+</style>
