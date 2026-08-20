@@ -8,8 +8,25 @@ import {
   QuestionDisplayImageLayout,
   QuestionDisplayShadow,
   QuestionDisplayTransition,
+  QuestionDisplayVerticalAlign,
 } from '@/api/api-models'
+import { normalizeGoogleFontFamily, useGoogleFont } from '@/apps/user-page/googleFonts'
 import { questionSenderLabel } from '@/shared/questionDisplay'
+
+const LOCAL_FONT_FAMILIES = new Set([
+  'sans-serif',
+  'serif',
+  'monospace',
+  'cursive',
+  'fantasy',
+  'Microsoft YaHei',
+  'Source Han Sans SC',
+])
+
+function resolveLoadableGoogleFont(value: string | undefined) {
+  if (!value || LOCAL_FONT_FAMILIES.has(value)) return undefined
+  return normalizeGoogleFontFamily(value) || undefined
+}
 
 type DisplayStatus = 'loading' | 'empty' | 'ready' | 'stale' | 'error'
 
@@ -41,6 +58,11 @@ const align = computed(() => {
   if (props.setting.align === QuestionDisplayAlign.Center) return 'center'
   return 'left'
 })
+const verticalAlign = computed(() => {
+  if (props.setting.verticalAlign === QuestionDisplayVerticalAlign.Center) return 'center'
+  if (props.setting.verticalAlign === QuestionDisplayVerticalAlign.Bottom) return 'end'
+  return 'start'
+})
 const transitionName = computed(() => {
   if (props.setting.transition === QuestionDisplayTransition.Slide) return 'question-display-slide'
   if (props.setting.transition === QuestionDisplayTransition.Scale) return 'question-display-scale'
@@ -50,12 +72,20 @@ const transitionName = computed(() => {
 const imageLayout = computed(() =>
   props.setting.imageLayout === QuestionDisplayImageLayout.Grid ? 'is-grid' : 'is-contain',
 )
+const contentMaxWidth = computed(() => {
+  const value = props.setting.contentMaxWidth ?? 34
+  return value > 0 ? `${value}em` : '100%'
+})
 const rootStyle = computed<CSSProperties>(() => ({
   '--card-border-color': color(props.setting.borderColor),
   '--card-border-width': `${Math.max(0, props.setting.borderWidth ?? 0)}px`,
   '--card-radius': `${Math.max(0, props.setting.borderRadius ?? 16)}px`,
   '--card-padding': `${Math.max(0, props.setting.contentPadding ?? 24)}px`,
   '--card-image-max-height': `${Math.max(80, props.setting.imageMaxHeight || 320)}px`,
+  '--card-content-max-width': contentMaxWidth.value,
+  '--card-content-justify': verticalAlign.value,
+  '--card-text-margin-inline':
+    align.value === 'right' ? 'auto 0' : align.value === 'center' ? 'auto' : '0 auto',
   '--card-fg': color(props.setting.fontColor),
   '--card-background': colorWithOpacity(props.setting.backgroundColor, props.setting.backgroundOpacity ?? 100),
   '--card-shadow': shadow(props.setting.shadow),
@@ -67,6 +97,8 @@ const contentStyle = computed<CSSProperties>(() => ({
   textAlign: align.value,
   fontFamily: props.setting.font || undefined,
   lineHeight: Math.max(1, props.setting.lineHeight ?? 1.5),
+  letterSpacing: `${props.setting.letterSpacing ?? 0}em`,
+  textShadow: textShadow(props.setting.textShadow),
 }))
 const nameStyle = computed<CSSProperties>(() => ({
   color: color(props.setting.nameFontColor),
@@ -74,7 +106,11 @@ const nameStyle = computed<CSSProperties>(() => ({
   fontWeight: props.setting.nameFontWeight || undefined,
   fontFamily: props.setting.nameFont || undefined,
   textAlign: align.value,
+  letterSpacing: `${props.setting.nameLetterSpacing ?? 0}em`,
+  textShadow: textShadow(props.setting.textShadow),
 }))
+useGoogleFont(computed(() => resolveLoadableGoogleFont(props.setting.font)))
+useGoogleFont(computed(() => resolveLoadableGoogleFont(props.setting.nameFont)))
 const visibleImages = computed(() =>
   (props.question?.questionImages ?? []).filter((image) => !failedImages.value.has(image.path)),
 )
@@ -97,6 +133,12 @@ function colorWithOpacity(value: string | undefined, opacity: number) {
 function shadow(value: QuestionDisplayShadow) {
   if (value === QuestionDisplayShadow.Strong) return '0 16px 48px rgb(0 0 0 / 35%)'
   if (value === QuestionDisplayShadow.Soft) return '0 8px 24px rgb(0 0 0 / 18%)'
+  return 'none'
+}
+
+function textShadow(value: QuestionDisplayShadow | undefined) {
+  if (value === QuestionDisplayShadow.Strong) return '0 2px 8px rgb(0 0 0 / 55%), 0 0 1px rgb(0 0 0 / 45%)'
+  if (value === QuestionDisplayShadow.Soft) return '0 1px 3px rgb(0 0 0 / 40%)'
   return 'none'
 }
 
@@ -185,8 +227,9 @@ defineExpose({ setScrollProgress })
           <span
             v-else
             class="question-display-empty"
+            role="status"
+            aria-label="当前没有展示提问"
           >
-            <span>当前没有展示提问</span>
             <span
               class="question-display-empty-loader"
               aria-hidden="true"
@@ -262,6 +305,7 @@ defineExpose({ setScrollProgress })
   min-width: 0;
   min-height: 0;
   flex-direction: column;
+  justify-content: var(--card-content-justify, start);
   gap: clamp(14px, 3cqh, 24px);
   padding: 0;
   overflow: auto;
@@ -295,8 +339,8 @@ defineExpose({ setScrollProgress })
 }
 
 .question-display-content:not(.has-images) .question-display-text {
-  width: min(100%, 34em);
-  margin-inline: auto;
+  width: min(100%, var(--card-content-max-width, 34em));
+  margin-inline: var(--card-text-margin-inline, 0 auto);
 }
 
 .question-display-images {
@@ -361,13 +405,8 @@ defineExpose({ setScrollProgress })
   display: flex;
   flex: 1;
   min-height: 1px;
-  flex-direction: column;
-  color: color-mix(in srgb, var(--card-fg) 44%, transparent);
-  font-size: 0.9em;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  text-align: center;
   user-select: none;
 }
 

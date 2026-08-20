@@ -4,6 +4,7 @@ import {
   QuestionDisplayImageLayout,
   QuestionDisplayShadow,
   QuestionDisplayTransition,
+  QuestionDisplayVerticalAlign,
 } from '@/api/api-models'
 
 export type QuestionDisplayVisualPreset = Omit<Setting_QuestionDisplay, 'syncScroll'>
@@ -24,6 +25,9 @@ export const MARSHMALLOW_QUESTION_DISPLAY_PRESET: QuestionDisplayVisualPreset = 
   borderRadius: 20,
   contentPadding: 28,
   lineHeight: 1.58,
+  letterSpacing: 0,
+  nameLetterSpacing: 0,
+  contentMaxWidth: 34,
   showUserName: true,
   showBrand: true,
   showImage: true,
@@ -31,7 +35,9 @@ export const MARSHMALLOW_QUESTION_DISPLAY_PRESET: QuestionDisplayVisualPreset = 
   imageMaxHeight: 360,
   transition: QuestionDisplayTransition.Fade,
   shadow: QuestionDisplayShadow.Soft,
+  textShadow: QuestionDisplayShadow.None,
   align: QuestionDisplayAlign.Left,
+  verticalAlign: QuestionDisplayVerticalAlign.Top,
 }
 
 export const QUESTION_DISPLAY_PRESETS: Array<{ name: string; value: QuestionDisplayVisualPreset }> = [
@@ -54,6 +60,9 @@ export const QUESTION_DISPLAY_PRESETS: Array<{ name: string; value: QuestionDisp
       borderRadius: 0,
       contentPadding: 0,
       lineHeight: 1.5,
+      letterSpacing: 0,
+      nameLetterSpacing: 0,
+      contentMaxWidth: 0,
       showUserName: false,
       showBrand: false,
       showImage: false,
@@ -61,7 +70,9 @@ export const QUESTION_DISPLAY_PRESETS: Array<{ name: string; value: QuestionDisp
       imageMaxHeight: 320,
       transition: QuestionDisplayTransition.None,
       shadow: QuestionDisplayShadow.None,
+      textShadow: QuestionDisplayShadow.Soft,
       align: QuestionDisplayAlign.Left,
+      verticalAlign: QuestionDisplayVerticalAlign.Center,
     },
   },
   {
@@ -82,6 +93,9 @@ export const QUESTION_DISPLAY_PRESETS: Array<{ name: string; value: QuestionDisp
       borderRadius: 12,
       contentPadding: 24,
       lineHeight: 1.55,
+      letterSpacing: 0,
+      nameLetterSpacing: 0,
+      contentMaxWidth: 34,
       showUserName: true,
       showBrand: true,
       showImage: true,
@@ -89,7 +103,9 @@ export const QUESTION_DISPLAY_PRESETS: Array<{ name: string; value: QuestionDisp
       imageMaxHeight: 320,
       transition: QuestionDisplayTransition.Fade,
       shadow: QuestionDisplayShadow.Soft,
+      textShadow: QuestionDisplayShadow.None,
       align: QuestionDisplayAlign.Left,
+      verticalAlign: QuestionDisplayVerticalAlign.Top,
     },
   },
   {
@@ -110,6 +126,9 @@ export const QUESTION_DISPLAY_PRESETS: Array<{ name: string; value: QuestionDisp
       borderRadius: 10,
       contentPadding: 28,
       lineHeight: 1.45,
+      letterSpacing: 0.02,
+      nameLetterSpacing: 0.04,
+      contentMaxWidth: 28,
       showUserName: true,
       showBrand: true,
       showImage: true,
@@ -117,7 +136,9 @@ export const QUESTION_DISPLAY_PRESETS: Array<{ name: string; value: QuestionDisp
       imageMaxHeight: 360,
       transition: QuestionDisplayTransition.Slide,
       shadow: QuestionDisplayShadow.Strong,
+      textShadow: QuestionDisplayShadow.Soft,
       align: QuestionDisplayAlign.Left,
+      verticalAlign: QuestionDisplayVerticalAlign.Top,
     },
   },
 ]

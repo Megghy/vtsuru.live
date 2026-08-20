@@ -263,12 +263,15 @@ export interface Setting_Point {
   checkInOnlyOnStreaming: boolean
 }
 export interface Setting_QuestionDisplay {
-  font?: string // Optional string, with a maximum length of 30 characters
-  nameFont: string // Optional string, with a maximum length of 30 characters
+  font?: string // Optional string, with a maximum length of 50 characters
+  nameFont: string // Optional string, with a maximum length of 50 characters
   fontSize: number // Default is 20
   fontWeight: number
   nameFontSize: number // Default is 20
   lineHeight: number
+  letterSpacing: number
+  nameLetterSpacing: number
+  contentMaxWidth: number
   fontColor?: string // Optional string, must exactly be 6 characters long
   nameFontColor?: string // Optional string, must exactly be 6 characters long
   nameFontWeight?: number
@@ -280,12 +283,14 @@ export interface Setting_QuestionDisplay {
   showUserName: boolean // Default is true
   showBrand: boolean
   align: QuestionDisplayAlign // Default is QuestionDisplayAlign.Left, 对齐
+  verticalAlign: QuestionDisplayVerticalAlign
   showImage: boolean // Default is false
   borderColor?: string
   borderWidth?: number
   transition: QuestionDisplayTransition
   imageLayout: QuestionDisplayImageLayout
   shadow: QuestionDisplayShadow
+  textShadow: QuestionDisplayShadow
   syncScroll: boolean
 }
 
@@ -293,6 +298,11 @@ export enum QuestionDisplayAlign {
   Left,
   Right,
   Center,
+}
+export enum QuestionDisplayVerticalAlign {
+  Top,
+  Center,
+  Bottom,
 }
 export enum QuestionDisplayTransition {
   Fade,

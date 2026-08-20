@@ -10,6 +10,7 @@ import {
   NSlider,
   NSwitch,
 } from 'naive-ui'
+import { computed } from 'vue'
 
 import type { Setting_QuestionDisplay } from '@/api/api-models'
 import {
@@ -17,17 +18,32 @@ import {
   QuestionDisplayImageLayout,
   QuestionDisplayShadow,
   QuestionDisplayTransition,
+  QuestionDisplayVerticalAlign,
 } from '@/api/api-models'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { QUESTION_DISPLAY_PRESETS, type QuestionDisplayVisualPreset } from '@/shared/questionDisplayPresets'
 
 const setting = defineModel<Setting_QuestionDisplay>({ required: true })
 
-const fontOptions = [
+const systemFontOptions = [
   { label: '系统黑体', value: 'sans-serif' },
   { label: '微软雅黑', value: 'Microsoft YaHei' },
   { label: '思源黑体', value: 'Source Han Sans SC' },
   { label: 'Noto Sans SC', value: 'Noto Sans SC' },
 ]
+
+const contentFont = computed<string | null>({
+  get: () => setting.value.font ?? null,
+  set(value) {
+    setting.value.font = value ?? undefined
+  },
+})
+const nameFont = computed<string | null>({
+  get: () => setting.value.nameFont ?? null,
+  set(value) {
+    setting.value.nameFont = value || 'Microsoft YaHei'
+  },
+})
 
 const transitionOptions = [
   { label: '淡入淡出', value: QuestionDisplayTransition.Fade },
@@ -40,6 +56,12 @@ const shadowOptions = [
   { label: '无阴影', value: QuestionDisplayShadow.None },
   { label: '柔和阴影', value: QuestionDisplayShadow.Soft },
   { label: '强阴影', value: QuestionDisplayShadow.Strong },
+]
+
+const textShadowOptions = [
+  { label: '无文字阴影', value: QuestionDisplayShadow.None },
+  { label: '柔和文字阴影', value: QuestionDisplayShadow.Soft },
+  { label: '强文字阴影', value: QuestionDisplayShadow.Strong },
 ]
 
 const imageLayoutOptions = [
@@ -93,23 +115,26 @@ function applyPreset(value: QuestionDisplayVisualPreset) {
 
     <section class="setting-section">
       <h3>文字</h3>
-      <div class="two-columns">
+      <div class="font-columns">
         <NFormItem label="内容字体">
-          <NSelect
-            v-model:value="setting.font"
-            :options="fontOptions"
-            filterable
-            tag
+          <GoogleFontPicker
+            v-model="contentFont"
+            :extra-options="systemFontOptions"
+            :show-preview="false"
+            placeholder="选择内容字体"
           />
         </NFormItem>
         <NFormItem label="昵称字体">
-          <NSelect
-            v-model:value="setting.nameFont"
-            :options="fontOptions"
-            filterable
-            tag
+          <GoogleFontPicker
+            v-model="nameFont"
+            :extra-options="systemFontOptions"
+            :clearable="false"
+            :show-preview="false"
+            placeholder="选择昵称字体"
           />
         </NFormItem>
+      </div>
+      <div class="two-columns">
         <NFormItem label="内容字号">
           <NInputNumber
             v-model:value="setting.fontSize"
@@ -153,12 +178,76 @@ function applyPreset(value: QuestionDisplayVisualPreset) {
           />
         </div>
       </NFormItem>
-      <NFormItem label="文字对齐">
-        <NRadioGroup v-model:value="setting.align">
-          <NRadioButton :value="QuestionDisplayAlign.Left">左</NRadioButton>
-          <NRadioButton :value="QuestionDisplayAlign.Center">中</NRadioButton>
-          <NRadioButton :value="QuestionDisplayAlign.Right">右</NRadioButton>
-        </NRadioGroup>
+      <NFormItem label="内容字间距">
+        <div class="slider-field">
+          <NSlider
+            v-model:value="setting.letterSpacing"
+            :min="-0.1"
+            :max="0.5"
+            :step="0.01"
+          />
+          <NInputNumber
+            v-model:value="setting.letterSpacing"
+            :min="-0.1"
+            :max="1"
+            :step="0.01"
+          />
+        </div>
+      </NFormItem>
+      <NFormItem label="昵称字间距">
+        <div class="slider-field">
+          <NSlider
+            v-model:value="setting.nameLetterSpacing"
+            :min="-0.1"
+            :max="0.5"
+            :step="0.01"
+          />
+          <NInputNumber
+            v-model:value="setting.nameLetterSpacing"
+            :min="-0.1"
+            :max="1"
+            :step="0.01"
+          />
+        </div>
+      </NFormItem>
+      <NFormItem label="内容最大宽度">
+        <div class="slider-field">
+          <NSlider
+            v-model:value="setting.contentMaxWidth"
+            :min="0"
+            :max="60"
+            :step="1"
+          />
+          <NInputNumber
+            v-model:value="setting.contentMaxWidth"
+            :min="0"
+            :max="80"
+            :step="1"
+          />
+        </div>
+      </NFormItem>
+      <p class="field-hint">单位 em；设为 0 表示不限制宽度</p>
+      <div class="two-columns">
+        <NFormItem label="水平对齐">
+          <NRadioGroup v-model:value="setting.align">
+            <NRadioButton :value="QuestionDisplayAlign.Left">左</NRadioButton>
+            <NRadioButton :value="QuestionDisplayAlign.Center">中</NRadioButton>
+            <NRadioButton :value="QuestionDisplayAlign.Right">右</NRadioButton>
+          </NRadioGroup>
+        </NFormItem>
+        <NFormItem label="垂直对齐">
+          <NRadioGroup v-model:value="setting.verticalAlign">
+            <NRadioButton :value="QuestionDisplayVerticalAlign.Top">上</NRadioButton>
+            <NRadioButton :value="QuestionDisplayVerticalAlign.Center">中</NRadioButton>
+            <NRadioButton :value="QuestionDisplayVerticalAlign.Bottom">下</NRadioButton>
+          </NRadioGroup>
+        </NFormItem>
+      </div>
+      <NFormItem label="文字阴影">
+        <NSelect
+          v-model:value="setting.textShadow"
+          :options="textShadowOptions"
+        />
       </NFormItem>
       <div class="color-grid">
         <NFormItem label="内容颜色">
@@ -320,6 +409,7 @@ function applyPreset(value: QuestionDisplayVisualPreset) {
   font-size: 13px;
 }
 
+.font-columns,
 .two-columns,
 .color-grid {
   display: grid;
@@ -345,12 +435,20 @@ function applyPreset(value: QuestionDisplayVisualPreset) {
   font-size: 13px;
 }
 
+.field-hint {
+  margin: -4px 0 8px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 :deep(.n-form-item) {
   min-width: 0;
 }
 
 @media (max-width: 420px) {
   .preset-grid,
+  .font-columns,
   .two-columns,
   .color-grid {
     grid-template-columns: minmax(0, 1fr);
