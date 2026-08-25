@@ -4,7 +4,6 @@ import {
   NConfigProvider,
   NDialogProvider,
   NElement,
-  NLayoutContent,
   NLoadingBarProvider,
   NMessageProvider,
   NModalProvider,
@@ -51,6 +50,9 @@ const layout = computed(() => {
 })
 const siteTokens = computed(() => buildSiteTokens(isDarkMode.value))
 const themeOverrides = computed(() => getThemeOverrides(siteTokens.value))
+const shellStyle = computed(() =>
+  layout.value === 'user' || layout.value === '' ? { minHeight: '100dvh' } : { height: '100dvh' },
+)
 
 watchEffect(() => {
   if (isDarkMode.value) {
@@ -66,7 +68,7 @@ watchEffect(() => {
   <NConfigProvider
     :theme-overrides="themeOverrides"
     :theme="theme"
-    style="height: 100vh"
+    :style="shellStyle"
     :locale="zhCN"
     :date-locale="dateZhCN"
   >
@@ -77,21 +79,19 @@ watchEffect(() => {
             <NModalProvider>
               <Suspense>
                 <TempComponent>
-                  <NLayoutContent>
-                    <NElement
-                      style="height: 100vh"
-                      :theme-overrides="themeOverrides"
-                    >
-                      <UserLayout v-if="layout === 'user'" />
-                      <ManageLayout v-else-if="layout === 'manage'" />
-                      <OpenLiveLayout v-else-if="layout === 'open-live'" />
-                      <OBSLayout v-else-if="layout === 'obs'" />
-                      <ClientLayout v-else-if="layout === 'client'" />
-                      <template v-else>
-                        <RouterView />
-                      </template>
-                    </NElement>
-                  </NLayoutContent>
+                  <NElement
+                    :style="shellStyle"
+                    :theme-overrides="themeOverrides"
+                  >
+                    <UserLayout v-if="layout === 'user'" />
+                    <ManageLayout v-else-if="layout === 'manage'" />
+                    <OpenLiveLayout v-else-if="layout === 'open-live'" />
+                    <OBSLayout v-else-if="layout === 'obs'" />
+                    <ClientLayout v-else-if="layout === 'client'" />
+                    <template v-else>
+                      <RouterView />
+                    </template>
+                  </NElement>
                 </TempComponent>
                 <template #fallback>
                   <NSpin
@@ -121,6 +121,36 @@ body {
     'calt' 1;
   --vtsuru-header-height: 50px;
   --vtsuru-content-padding: 12px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--vtsuru-fg) 22%, transparent) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--vtsuru-fg) 22%, transparent);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--vtsuru-fg) 40%, transparent);
 }
 
 /* 全局选区与文本链接：使用品牌色作低饱和度 tint */

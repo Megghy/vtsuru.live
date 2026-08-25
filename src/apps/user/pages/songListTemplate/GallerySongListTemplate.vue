@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Play24Filled, Search24Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NSelect, NTooltip } from 'naive-ui'
+import { useMediaQuery, useVirtualList } from '@vueuse/core'
+import { NButton, NEmpty, NIcon, NInput, NSelect } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
@@ -44,6 +45,22 @@ const filteredSongs = computed<SongsInfo[]>(() => {
   })
 })
 
+const isWide = useMediaQuery('(min-width: 900px)')
+const isNarrow = useMediaQuery('(max-width: 359px)')
+const galleryCols = computed(() => (isWide.value ? 3 : isNarrow.value ? 1 : 2))
+const galleryRows = computed(() => {
+  const cols = galleryCols.value
+  const songs = filteredSongs.value
+  const rows: { songs: SongsInfo[]; start: number }[] = []
+  for (let i = 0; i < songs.length; i += cols) {
+    rows.push({ songs: songs.slice(i, i + cols), start: i })
+  }
+  return rows
+})
+const { list, containerProps, wrapperProps } = useVirtualList(galleryRows, {
+  itemHeight: 304,
+  overscan: 4,
+})
 const { listKey } = useFilterListKey({ tag: selectedTag })
 
 function requestSong(song: SongsInfo) {
@@ -94,33 +111,34 @@ function requestSong(song: SongsInfo) {
       class="preview-player"
     />
 
-    <Transition
-      name="gallery-swap"
-      mode="out-in"
-    >
-      <NEmpty
-        v-if="filteredSongs.length === 0"
-        :key="`empty-${listKey}`"
-        description="暂无曲目"
-        style="margin-top: 48px"
-      />
+    <NEmpty
+      v-if="filteredSongs.length === 0"
+      :key="`empty-${listKey}`"
+      description="暂无曲目"
+      style="margin-top: 48px"
+    />
 
-      <TransitionGroup
-        v-else
-        :key="listKey"
-        name="gallery-card"
-        tag="div"
-        class="grid"
-      >
+    <div
+      v-else
+      :key="`${listKey}:${galleryCols}`"
+      v-bind="containerProps"
+      class="gallery-viewport"
+    >
+      <div v-bind="wrapperProps">
         <div
-          v-for="(song, index) in filteredSongs"
+          v-for="{ data: row } in list"
+          :key="row.start"
+          class="gallery-row"
+          :style="{ gridTemplateColumns: `repeat(${galleryCols}, minmax(0, 1fr))` }"
+        >
+        <div
+          v-for="(song, offset) in row.songs"
           :key="song.key"
           class="cover-card"
           :class="{
             'is-singing': singingSongKeySet.has(song.key),
             'is-queued': queuedSongKeySet.has(song.key),
           }"
-          :style="{ '--card-index': index }"
         >
         <div class="cover">
           <img
@@ -137,7 +155,7 @@ function requestSong(song: SongsInfo) {
             <span>{{ song.name.charAt(0) }}</span>
           </div>
 
-          <span class="cover-index">{{ String(index + 1).padStart(2, '0') }}</span>
+          <span class="cover-index">{{ String(row.start + offset + 1).padStart(2, '0') }}</span>
 
           <SongStatusBadge
             class="status-overlay"
@@ -153,22 +171,19 @@ function requestSong(song: SongsInfo) {
           >
 
           <div class="cover-overlay">
-            <NTooltip v-if="song.url">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="large"
-                  :aria-label="`试听：${song.name}`"
-                  :loading="isLrcLoading === song.key"
-                  @click="previewSong = song"
-                >
-                  <template #icon>
-                    <NIcon :component="Play24Filled" />
-                  </template>
-                </NButton>
+            <NButton
+              v-if="song.url"
+              circle
+              size="large"
+              title="试听"
+              :aria-label="`试听：${song.name}`"
+              :loading="isLrcLoading === song.key"
+              @click="previewSong = song"
+            >
+              <template #icon>
+                <NIcon :component="Play24Filled" />
               </template>
-              试听
-            </NTooltip>
+            </NButton>
             <SongRequestButton
               v-if="!isSelf"
               :song="song"
@@ -210,8 +225,9 @@ function requestSong(song: SongsInfo) {
           />
         </div>
       </div>
-      </TransitionGroup>
-    </Transition>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -322,9 +338,16 @@ function requestSong(song: SongsInfo) {
   margin-bottom: 16px;
 }
 
-.grid {
+.gallery-viewport {
+  height: min(720px, calc(100dvh - 220px));
+  min-height: 320px;
+}
+
+.gallery-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr));
+  height: 304px;
+  box-sizing: border-box;
+  padding-bottom: 16px;
   gap: clamp(12px, 2vw, 20px);
 }
 
@@ -332,8 +355,8 @@ function requestSong(song: SongsInfo) {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  overflow: hidden;
   border-radius: var(--vtsuru-page-radius);
-  animation: gallery-enter 0.46s calc(var(--card-index, 0) * 35ms) cubic-bezier(0.22, 1, 0.36, 1) both;
   transition:
     transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.22s ease;
@@ -520,11 +543,6 @@ function requestSong(song: SongsInfo) {
 @media (max-width: 520px) {
   .gallery-template {
     padding: 8px 0 16px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 10px;
   }
 
   .cover-placeholder span {

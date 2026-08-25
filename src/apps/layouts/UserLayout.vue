@@ -13,7 +13,6 @@ import {
   NIcon,
   NModal,
   NResult,
-  NScrollbar,
   NFlex,
   NSpin,
   NSwitch,
@@ -101,13 +100,6 @@ const showSiderProfile = computed(() => {
   if (siderAvatarUrl.value) return true
   return !siderCollapsed.value && !!userInfo.value.streamerInfo
 })
-const mobileViewportHeight = ref('100dvh')
-
-function syncMobileViewportHeight() {
-  mobileViewportHeight.value = isMobileNav.value
-    ? `${Math.round(window.visualViewport?.height ?? window.innerHeight)}px`
-    : '100dvh'
-}
 
 type UserNavItem = {
   key: string
@@ -288,9 +280,6 @@ const USERPAGE_HOST_CLASS = 'vtsuru-userpage-host'
 
 onMounted(() => {
   document.documentElement.classList.add(USERPAGE_HOST_CLASS)
-  syncMobileViewportHeight()
-  window.addEventListener('resize', syncMobileViewportHeight)
-  window.visualViewport?.addEventListener('resize', syncMobileViewportHeight)
   // 移动端进入用户页时默认收缩侧栏
   if (window.innerWidth < 768) siderCollapsed.value = true
 })
@@ -300,8 +289,6 @@ onBeforeUnmount(() => {
   clearUserPageRuntimeCache()
   customCssElement?.remove()
   customCssElement = null
-  window.removeEventListener('resize', syncMobileViewportHeight)
-  window.visualViewport?.removeEventListener('resize', syncMobileViewportHeight)
   if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
 })
 
@@ -561,7 +548,7 @@ watch(
     <div
       class="page-root"
       :class="layoutPageBgClass"
-      :style="[layoutUiVars, layoutPageBgVars, { '--user-page-viewport-height': mobileViewportHeight }]"
+      :style="[layoutUiVars, layoutPageBgVars]"
     >
       <!-- 顶部导航栏 -->
       <header class="layout-header">
@@ -748,7 +735,7 @@ watch(
             <NDivider style="margin: 0; margin-top: 5px" />
 
             <!-- 导航菜单 -->
-            <NScrollbar
+            <div
               class="sider-scroll"
               :class="{ disabled: isLoading }"
             >
@@ -854,7 +841,7 @@ watch(
                   </div>
                 </template>
               </nav>
-            </NScrollbar>
+            </div>
 
             <!-- 侧边栏底部链接 -->
             <div
@@ -915,7 +902,7 @@ watch(
             <NSpin size="large" />
           </div>
           <!-- 实际内容区域 (加载完成且找到用户时显示) -->
-          <NScrollbar
+          <div
             v-else-if="loadStatus === 'ready' && userInfo"
             class="viewer-scroll"
           >
@@ -929,9 +916,8 @@ watch(
               ]"
               :style="layoutContentBgVars"
             >
-              <!-- 路由视图和动画 -->
               <RouterView v-slot="{ Component, route: viewRoute }">
-                <KeepAlive>
+                <KeepAlive :max="4">
                   <template v-if="viewRoute.meta.pageContainer === 'none'">
                     <component
                       :is="Component"
@@ -957,12 +943,12 @@ watch(
                 </KeepAlive>
               </RouterView>
               <NBackTop
-                :right="40"
-                :bottom="40"
-                listen-to=".viewer-scroll .n-scrollbar-container"
+                :right="16"
+                :bottom="isMobileNav ? 80 : 40"
+                :listen-to="isMobileNav ? 'body' : '.viewer-scroll'"
               />
             </div>
-          </NScrollbar>
+          </div>
         </div>
       </div>
     </div>
@@ -1083,8 +1069,7 @@ watch(
 
 .page-root {
   font-family: var(--vtsuru-page-font-family);
-  height: 100vh;
-  height: var(--user-page-viewport-height, 100dvh);
+  height: 100dvh;
   width: 100%;
   max-width: 100%;
   display: flex;
@@ -1340,6 +1325,8 @@ watch(
 .sider-scroll {
   flex: 1;
   min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sider-scroll.disabled {
@@ -1476,19 +1463,10 @@ watch(
 .viewer-scroll {
   flex: 1;
   min-height: 0;
-}
-
-.viewer-scroll {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   touch-action: pan-y;
-}
-
-.viewer-scroll :deep(.n-scrollbar-container) {
-  overflow-x: hidden;
-}
-
-.viewer-scroll :deep(.n-scrollbar-content) {
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
 .viewer-page-content {
@@ -1555,11 +1533,58 @@ watch(
 }
 
 @media (max-width: 520px) {
+  :global(html.vtsuru-userpage-host),
+  :global(html.vtsuru-userpage-host body) {
+    height: auto;
+    overflow-x: clip;
+    overflow-y: auto;
+  }
+
+  .page-root {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  /* 背景模糊钉在视口，避免 document 变高后变成整页超大滤镜层 */
+  .page-root.bg-host::before,
+  .page-root.bg-host::after,
+  .content-bg-host::before,
+  .content-bg-host::after {
+    position: fixed;
+  }
+
+  .page-root.bg-host.glass .main-layout-body {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
   .main-layout-body {
-    flex-direction: column-reverse;
+    display: block;
+    overflow: visible;
+  }
+
+  .content-layout-container {
+    overflow: visible;
+  }
+
+  .viewer-scroll {
+    overflow: visible;
+    flex: none;
+    height: auto;
+  }
+
+  .layout-header {
+    position: sticky;
+    top: 0;
   }
 
   .user-sider {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
     width: 100% !important;
     height: calc(58px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -1578,13 +1603,9 @@ watch(
     display: none;
   }
 
-  .sider-scroll :deep(.n-scrollbar-container) {
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-  }
-
-  .sider-scroll :deep(.n-scrollbar-content) {
-    width: max-content;
+  .sider-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .sider-nav,
@@ -1613,6 +1634,7 @@ watch(
   .viewer-page-content {
     padding-left: 10px;
     padding-right: 12px;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   }
 
   .viewer-page-content--edge {

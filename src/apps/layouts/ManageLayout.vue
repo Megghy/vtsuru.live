@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Bot24Regular } from '@vicons/fluent'
-import { NButton, NConfigProvider, NIcon, NScrollbar, useMessage } from 'naive-ui'
+import { NButton, NConfigProvider, NIcon, useMessage } from 'naive-ui'
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -63,11 +63,11 @@ onMounted(() => {
 
           <div class="manage-shell__main">
             <ManageTopBar :account-name="accountInfo?.name" />
-            <NScrollbar class="manage-shell__scroll">
+            <div class="manage-shell__scroll">
               <div class="manage-shell__content">
                 <ManageContentGate :account-info="accountInfo" />
               </div>
-            </NScrollbar>
+            </div>
 
             <ManageMusicPlayer />
           </div>
@@ -134,11 +134,8 @@ onMounted(() => {
 .manage-shell__scroll {
   flex: 1 1 0;
   min-height: 0;
-  height: 0;
-}
-
-.manage-shell__scroll :deep(.n-scrollbar-container) {
-  min-height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .manage-shell__content {

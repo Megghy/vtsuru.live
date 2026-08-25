@@ -5,7 +5,8 @@ import {
   ArrowSortUp20Filled,
   SquareArrowForward24Filled,
 } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSelect, NTag, NTooltip } from 'naive-ui'
+import { useMediaQuery, useVirtualList } from '@vueuse/core'
+import { NButton, NEmpty, NIcon, NInput, NSelect, NTag } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
@@ -98,6 +99,12 @@ const filteredAndSortedSongs = computed(() => {
     const compared = compareSongs(left, right, sortKey.value as SortKey)
     return compared === 0 ? left.name.localeCompare(right.name, 'zh-CN') : compared * direction
   })
+})
+
+const isMobileList = useMediaQuery('(max-width: 640px)')
+const { list, containerProps, wrapperProps } = useVirtualList(filteredAndSortedSongs, {
+  itemHeight: () => (isMobileList.value ? 240 : 56),
+  overscan: 8,
 })
 
 const hasFilters = computed(
@@ -367,48 +374,45 @@ function getSafeUrl(value?: string) {
           class="song-table-shell"
           :class="{ 'is-fixed': config?.fixedHeight }"
         >
-          <NScrollbar
-            class="song-table-scroller"
-            style="max-height: var(--song-table-max-height)"
-          >
             <NEmpty
               v-if="!filteredAndSortedSongs.length"
               :description="data?.length ? '没有符合条件的歌曲' : '歌单里还没有歌曲'"
             />
-            <table
+            <div
               v-else
               class="song-table"
             >
-              <thead>
-                <tr>
-                  <th
+              <div class="song-table-head">
+                  <button
                     v-for="column in sortOptions.slice(1)"
                     :key="column.value"
+                    type="button"
+                    class="sort-heading"
+                    @click="setSort(column.value as SortKey)"
                   >
-                    <button
-                      type="button"
-                      class="sort-heading"
-                      @click="setSort(column.value as SortKey)"
-                    >
-                      {{ column.label.replace('按', '') }}
-                      <NIcon
-                        v-if="sortKey === column.value"
-                        :component="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
-                      />
-                    </button>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="song in filteredAndSortedSongs"
+                    {{ column.label.replace('按', '') }}
+                    <NIcon
+                      v-if="sortKey === column.value"
+                      :component="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
+                    />
+                  </button>
+              </div>
+              <div
+                :key="isMobileList ? 'm' : 'd'"
+                v-bind="containerProps"
+                class="song-table-body"
+              >
+                <div v-bind="wrapperProps">
+                <div
+                  v-for="{ data: song } in list"
                   :key="song.key || `${song.name}-${song.author?.join('/')}`"
+                  class="song-row"
                   :class="{
                     'is-singing': singingSongKeySet.has(song.key),
                     'is-queued': queuedSongKeySet.has(song.key),
                   }"
                 >
-                  <td class="title-cell">
+                  <div class="song-cell title-cell">
                     <div class="title-content">
                       <SongStatusBadge
                         :song-key="song.key"
@@ -416,19 +420,15 @@ function getSafeUrl(value?: string) {
                         :queued-keys="queuedSongKeySet"
                         variant="text"
                       />
-                      <NTooltip :disabled="isSelf">
-                        <template #trigger>
-                          <button
-                            class="song-title-button"
-                            type="button"
-                            :disabled="isSelf"
-                            @click="requestSong(song)"
-                          >
-                            {{ song.name }}
-                          </button>
-                        </template>
-                        {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-                      </NTooltip>
+                      <button
+                        class="song-title-button"
+                        type="button"
+                        :disabled="isSelf"
+                        :title="isSelf ? undefined : getSongRequestTooltip(song, liveRequestSettings, requestAuthState)"
+                        @click="requestSong(song)"
+                      >
+                        {{ song.name }}
+                      </button>
                       <NButton
                         v-if="getSongLink(song)"
                         tag="a"
@@ -441,8 +441,8 @@ function getSafeUrl(value?: string) {
                         <template #icon><NIcon :component="SquareArrowForward24Filled" /></template>
                       </NButton>
                     </div>
-                  </td>
-                  <td>
+                  </div>
+                  <div class="song-cell">
                     <span class="cell-label">歌手</span>
                     <span
                       v-if="song.author?.length"
@@ -463,8 +463,8 @@ function getSafeUrl(value?: string) {
                       class="muted"
                       >未知</span
                     >
-                  </td>
-                  <td>
+                  </div>
+                  <div class="song-cell">
                     <span class="cell-label">语言</span>
                     <span class="inline-list">
                       <button
@@ -477,8 +477,8 @@ function getSafeUrl(value?: string) {
                         {{ language }}
                       </button>
                     </span>
-                  </td>
-                  <td>
+                  </div>
+                  <div class="song-cell">
                     <span class="cell-label">标签</span>
                     <div class="tag-list">
                       <NTag
@@ -495,23 +495,23 @@ function getSafeUrl(value?: string) {
                         >{{ tag }}</NTag
                       >
                     </div>
-                  </td>
-                  <td>
+                  </div>
+                  <div class="song-cell">
                     <span class="cell-label">点歌条件</span>
                     <SongOptionBadges
                       :options="song.options"
                       variant="semantic"
                       empty-text="无限制"
                     />
-                  </td>
-                  <td>
+                  </div>
+                  <div class="song-cell">
                     <span class="cell-label">备注</span>
                     <span :class="{ muted: !song.description }">{{ song.description || '无' }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </NScrollbar>
+                  </div>
+                </div>
+                </div>
+              </div>
+            </div>
         </div>
       </main>
     </div>
@@ -705,17 +705,11 @@ function getSafeUrl(value?: string) {
 }
 
 .song-table-shell {
-  --song-table-max-height: none;
-
   min-width: 0;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--song-border) 78%, transparent);
   border-radius: var(--vtsuru-page-radius, 8px);
   background: color-mix(in srgb, var(--song-bg) 88%, transparent);
-}
-
-.song-table-shell.is-fixed {
-  --song-table-max-height: 55vh;
 }
 
 .song-table-shell :deep(.n-empty) {
@@ -725,72 +719,58 @@ function getSafeUrl(value?: string) {
 .song-table {
   width: 100%;
   min-width: 0;
-  border-spacing: 0;
-  table-layout: fixed;
 }
 
-.song-table th,
-.song-table td {
+.song-table-head,
+.song-row {
+  display: grid;
+  grid-template-columns: 28% 14% 10% 14% 17% minmax(0, 1fr);
   min-width: 0;
-  padding: 11px 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--song-border) 68%, transparent);
-  text-align: left;
-  vertical-align: middle;
 }
 
-.song-table th:first-child,
-.song-table td:first-child {
-  width: 28%;
-}
-
-.song-table th:nth-child(2),
-.song-table td:nth-child(2) {
-  width: 14%;
-}
-
-.song-table th:nth-child(3),
-.song-table td:nth-child(3) {
-  width: 10%;
-}
-
-.song-table th:nth-child(4),
-.song-table td:nth-child(4) {
-  width: 14%;
-}
-
-.song-table th:nth-child(5),
-.song-table td:nth-child(5) {
-  width: 17%;
-}
-
-.song-table th {
-  position: sticky;
-  z-index: 2;
-  top: 0;
+.song-table-head {
+  padding: 0 0 0;
   background: color-mix(in srgb, var(--song-bg) 94%, transparent);
   color: var(--song-muted);
   font-size: 12px;
   font-weight: 600;
-  backdrop-filter: blur(12px);
 }
 
-.song-table tbody tr:last-child td {
-  border-bottom: 0;
+.song-table-head .sort-heading {
+  padding: 11px 12px;
 }
 
-.song-table tbody tr {
-  transition: background-color 150ms ease;
+.song-table-body {
+  height: min(640px, calc(100dvh - 240px));
+  min-height: 280px;
 }
 
-.song-table tbody tr:hover {
+.song-table-shell.is-fixed .song-table-body {
+  height: 55vh;
+}
+
+.song-cell {
+  min-width: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--song-border) 68%, transparent);
+  display: flex;
+  align-items: center;
+}
+
+.song-row {
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.song-row:hover {
   background: var(--song-bg-hover);
 }
 
-.song-table tbody tr.is-singing {
+.song-row.is-singing {
   box-shadow: inset 3px 0 var(--vtsuru-success, #22c55e);
 }
 
-.song-table tbody tr.is-queued {
+.song-row.is-queued {
   box-shadow: inset 3px 0 var(--vtsuru-warning, #f59e0b);
 }
 
@@ -986,58 +966,42 @@ function getSafeUrl(value?: string) {
 
   .song-table-shell,
   .song-table-shell.is-fixed {
-    --song-table-max-height: none;
-
     border: 0;
     background: transparent;
   }
 
-  .song-table,
-  .song-table tbody {
-    display: block;
-    width: 100%;
-  }
-
-  .song-table thead {
+  .song-table-head {
     display: none;
   }
 
-  .song-table tbody {
-    display: grid;
-    gap: 8px;
+  .song-table-body,
+  .song-table-shell.is-fixed .song-table-body {
+    height: min(70dvh, calc(100dvh - 180px));
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
   }
 
-  .song-table tbody tr {
+  .song-row {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
+    height: 240px;
     min-width: 0;
     padding: 12px;
     overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--song-border) 72%, transparent);
     border-radius: var(--vtsuru-page-radius, 8px);
     background: color-mix(in srgb, var(--song-bg) 92%, transparent);
-    gap: 9px;
+    gap: 8px;
+    box-sizing: border-box;
   }
 
-  .song-table tbody tr.is-singing,
-  .song-table tbody tr.is-queued {
+  .song-row.is-singing,
+  .song-row.is-queued {
     padding-left: 14px;
   }
 
-  .song-table th,
-  .song-table td,
-  .song-table th:first-child,
-  .song-table td:first-child,
-  .song-table th:nth-child(2),
-  .song-table td:nth-child(2),
-  .song-table th:nth-child(3),
-  .song-table td:nth-child(3),
-  .song-table th:nth-child(4),
-  .song-table td:nth-child(4),
-  .song-table th:nth-child(5),
-  .song-table td:nth-child(5),
-  .song-table th:nth-child(6),
-  .song-table td:nth-child(6) {
+  .song-cell {
     display: flex;
     width: 100%;
     min-width: 0;
@@ -1067,7 +1031,7 @@ function getSafeUrl(value?: string) {
 
   .inline-list,
   .tag-list,
-  .song-table td > :last-child {
+  .song-cell > :last-child {
     min-width: 0;
   }
 }
@@ -1075,7 +1039,7 @@ function getSafeUrl(value?: string) {
 @media (prefers-reduced-motion: reduce) {
   .profile-icon-link,
   .custom-link,
-  .song-table tbody tr {
+  .song-row {
     transition: none;
   }
 }

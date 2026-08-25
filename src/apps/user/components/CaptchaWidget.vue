@@ -21,6 +21,7 @@ interface AltchaVerifiedDetail {
 
 const token = defineModel<string>({ default: '' })
 
+const canSolve = ref(false)
 const provider = ref<CaptchaProvider>('altcha')
 const altchaEl = shallowRef<HTMLElementTagNameMap['altcha-widget'] | null>(null)
 const turnstile = ref<{ reset?: () => void; remove?: () => void }>()
@@ -40,10 +41,16 @@ const isPassed = computed(() => Boolean(token.value))
 const isInteractive = computed(() => provider.value === 'altcha' && showAltchaUi.value && !isPassed.value)
 /** Altcha 无感验证中：展示自定义动画状态条 */
 const isVerifying = computed(
-  () => provider.value === 'altcha' && !isPassed.value && !isInteractive.value && altchaState.value !== 'error',
+  () =>
+    provider.value === 'altcha' &&
+    canSolve.value &&
+    !isPassed.value &&
+    !isInteractive.value &&
+    altchaState.value !== 'error',
 )
 const statusText = computed(() => {
   if (isPassed.value) return '验证通过'
+  if (!canSolve.value && provider.value === 'altcha') return ''
   if (altchaState.value === 'error') return '验证失败，请按提示完成验证'
   if (isInteractive.value) return '请完成验证'
   return '正在进行安全验证'
@@ -184,10 +191,16 @@ watch(altchaEl, (el, prev) => {
 })
 
 onMounted(() => {
-  if (provider.value === 'altcha') {
-    startReadyTimer()
-    void probeAltchaChallenge()
+  const start = () => {
+    canSolve.value = true
+    if (provider.value === 'altcha') {
+      startReadyTimer()
+      void probeAltchaChallenge()
+    }
   }
+  const idle = window.requestIdleCallback
+  if (idle) idle(start, { timeout: 2500 })
+  else window.setTimeout(start, 800)
 })
 
 onUnmounted(() => {
@@ -255,7 +268,7 @@ defineExpose({
       </Transition>
     </div>
 
-    <template v-if="provider === 'altcha'">
+    <template v-if="provider === 'altcha' && canSolve">
       <div
         class="captcha-widget__altcha"
         :class="{ 'captcha-widget__altcha--visible': showAltchaUi && !isPassed }"

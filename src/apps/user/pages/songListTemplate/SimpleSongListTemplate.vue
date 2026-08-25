@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Play24Filled, Search24Regular } from '@vicons/fluent'
+import { useVirtualList } from '@vueuse/core'
 import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSelect } from 'naive-ui'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
@@ -17,13 +18,11 @@ import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTe
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
-const PAGE_SIZE = 20
 
 const searchKeyword = ref('')
 const selectedTag = ref<string | null>(null)
 const selectedAuthor = ref<string | null>(null)
 const selectedSong = ref<SongsInfo>()
-const visibleCount = ref(PAGE_SIZE)
 const isLrcLoading = ref('')
 
 const {
@@ -46,18 +45,15 @@ const filteredSongs = computed(() =>
     author: selectedAuthor.value,
   }),
 )
-const visibleSongs = computed(() => filteredSongs.value.slice(0, visibleCount.value))
 const hasFilters = computed(() => !!searchKeyword.value.trim() || !!selectedTag.value || !!selectedAuthor.value)
 const showRequestQueue = computed(
   () => props.userInfo?.extra?.enableFunctions.includes(FunctionTypes.LiveRequest) ?? false,
 )
 
 const { listKey } = useFilterListKey({ tag: selectedTag, author: selectedAuthor })
-const loadMoreSentinel = ref<HTMLElement>()
-let loadMoreObserver: IntersectionObserver | undefined
-
-watch([selectedTag, selectedAuthor, searchKeyword], () => {
-  visibleCount.value = PAGE_SIZE
+const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
+  itemHeight: 190,
+  overscan: 6,
 })
 
 function toggleTag(tag: string) {
@@ -73,60 +69,6 @@ function clearFilters() {
   selectedTag.value = null
   selectedAuthor.value = null
 }
-
-function loadMore() {
-  visibleCount.value = Math.min(visibleCount.value + PAGE_SIZE, filteredSongs.value.length)
-}
-
-/** 找最近可滚动祖先；无则用视口 (root=null) */
-function findScrollRoot(el: HTMLElement): Element | null {
-  let node: HTMLElement | null = el.parentElement
-  while (node && node !== document.documentElement) {
-    const { overflowY } = getComputedStyle(node)
-    if (
-      (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') &&
-      node.scrollHeight > node.clientHeight + 1
-    ) {
-      return node
-    }
-    node = node.parentElement
-  }
-  return null
-}
-
-function tryLoadMoreWhileVisible() {
-  const el = loadMoreSentinel.value
-  if (!el || visibleCount.value >= filteredSongs.value.length) return
-  const root = findScrollRoot(el)
-  const elRect = el.getBoundingClientRect()
-  const rootRect = root?.getBoundingClientRect()
-  const bottom = rootRect ? rootRect.bottom + 120 : window.innerHeight + 120
-  const top = rootRect ? rootRect.top - 120 : -120
-  if (elRect.top < bottom && elRect.bottom > top) {
-    const before = visibleCount.value
-    loadMore()
-    if (visibleCount.value > before) {
-      requestAnimationFrame(tryLoadMoreWhileVisible)
-    }
-  }
-}
-
-function bindLoadMoreObserver(el: HTMLElement | null | undefined) {
-  loadMoreObserver?.disconnect()
-  loadMoreObserver = undefined
-  if (!el) return
-  const root = findScrollRoot(el)
-  loadMoreObserver = new IntersectionObserver(
-    (entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) tryLoadMoreWhileVisible()
-    },
-    { root, rootMargin: '120px 0px' },
-  )
-  loadMoreObserver.observe(el)
-}
-
-watch(loadMoreSentinel, (el) => bindLoadMoreObserver(el), { flush: 'post' })
-onBeforeUnmount(() => loadMoreObserver?.disconnect())
 
 function requestSong(song: SongsInfo) {
   if (!beginRequest(song)) return
@@ -214,12 +156,8 @@ function requestSong(song: SongsInfo) {
       </aside>
 
       <main class="song-content">
-        <Transition
-          name="song-filter-swap"
-          mode="out-in"
-        >
           <NEmpty
-            v-if="visibleSongs.length === 0"
+            v-if="filteredSongs.length === 0"
             :key="`empty-${listKey}`"
             class="empty-state"
             :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
@@ -228,19 +166,18 @@ function requestSong(song: SongsInfo) {
           <div
             v-else
             :key="listKey"
+            v-bind="containerProps"
             class="song-list"
           >
-            <TransitionGroup
-              name="song-card-item"
-              tag="div"
+            <div
+              v-bind="wrapperProps"
               class="song-grid"
             >
               <article
-                v-for="(item, index) in visibleSongs"
+                v-for="{ data: item } in list"
                 :key="item.key"
                 class="song-card"
                 :class="{ 'is-singing': singingKeys.has(item.key), 'is-queued': queuedKeys.has(item.key) }"
-                :style="{ '--card-index': index }"
               >
               <header class="song-header">
                 <i />
@@ -330,22 +267,8 @@ function requestSong(song: SongsInfo) {
                 </div>
               </footer>
             </article>
-            </TransitionGroup>
-
-            <div
-              v-if="visibleCount < filteredSongs.length"
-              ref="loadMoreSentinel"
-              class="load-more"
-            >
-              <NButton
-                secondary
-                @click="loadMore"
-              >
-                加载更多
-              </NButton>
             </div>
           </div>
-        </Transition>
       </main>
     </div>
   </div>
@@ -515,26 +438,25 @@ function requestSong(song: SongsInfo) {
 .song-list {
   padding: 2px;
   min-width: 0;
+  height: min(720px, calc(100dvh - 160px));
+  min-height: 320px;
 }
 
 .song-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-  gap: var(--vtsuru-page-spacing, 16px);
+  min-width: 0;
 }
 
 .song-card {
   display: flex;
-  min-height: 174px;
+  height: 178px;
+  box-sizing: border-box;
   flex-direction: column;
-  padding: var(--vtsuru-page-spacing, 16px);
+  padding: 12px 16px;
   overflow: hidden;
   gap: 8px;
-  animation: card-enter 0.42s calc(var(--card-index, 0) * 40ms) cubic-bezier(0.22, 1, 0.36, 1) both;
   transition:
     border-color 0.18s ease,
     background-color 0.18s ease,
-    transform 0.18s ease,
     box-shadow 0.18s ease;
 }
 

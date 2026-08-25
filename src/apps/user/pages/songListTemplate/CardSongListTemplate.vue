@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Search24Regular } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
-import { NButton, NEllipsis, NEmpty, NIcon, NInput, NTooltip } from 'naive-ui'
+import { useVirtualList } from '@vueuse/core'
+import { NButton, NEllipsis, NEmpty, NIcon, NInput } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
@@ -33,6 +34,10 @@ const searchKeyword = ref('')
 
 const filteredSongs = computed<SongsInfo[]>(() => {
   return filterSongs(props.data, { keyword: searchKeyword.value })
+})
+const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
+  itemHeight: 156,
+  overscan: 8,
 })
 const { listKey } = useFilterListKey({ committedKeyword: searchKeyword })
 
@@ -84,33 +89,28 @@ function getMetaText(song: SongsInfo) {
       共 {{ filteredSongs.length }} 首歌曲
     </div>
 
-    <Transition
-      name="card-swap"
-      mode="out-in"
-    >
-      <NEmpty
-        v-if="!data || filteredSongs.length === 0"
-        :key="`empty-${listKey}`"
-        class="empty-state"
-        description="暂无曲目"
-      />
+    <NEmpty
+      v-if="!data || filteredSongs.length === 0"
+      :key="`empty-${listKey}`"
+      class="empty-state"
+      description="暂无曲目"
+    />
 
-      <TransitionGroup
-        v-else
-        :key="listKey"
-        name="card-item"
-        tag="div"
-        class="song-cards"
-      >
+    <div
+      v-else
+      :key="listKey"
+      v-bind="containerProps"
+      class="song-cards"
+    >
+      <div v-bind="wrapperProps">
         <div
-          v-for="(song, index) in filteredSongs"
+          v-for="{ data: song } in list"
           :key="song.key"
           class="song-card"
           :class="{
             'is-active': activeSongKeySet.has(song.key),
             'is-singing': singingSongKeySet.has(song.key),
           }"
-          :style="{ '--card-index': index }"
         >
         <div class="card-top">
           <div class="title-left">
@@ -118,24 +118,17 @@ function getMetaText(song: SongsInfo) {
               <NIcon :component="MusicalNote" />
             </div>
             <div class="title-block">
-              <NTooltip
-                trigger="hover"
+              <button
+                class="song-title"
+                type="button"
                 :disabled="isSelf"
+                :title="isSelf ? undefined : getSongRequestTooltip(song, liveRequestSettings, requestAuthState)"
+                @click="requestSong(song)"
               >
-                <template #trigger>
-                  <button
-                    class="song-title"
-                    type="button"
-                    :disabled="isSelf"
-                    @click="requestSong(song)"
-                  >
-                    <NEllipsis :tooltip="false">
-                      {{ song.name }}
-                    </NEllipsis>
-                  </button>
-                </template>
-                {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-              </NTooltip>
+                <NEllipsis :tooltip="false">
+                  {{ song.name }}
+                </NEllipsis>
+              </button>
 
               <div class="sub">
                 <span
@@ -207,8 +200,8 @@ function getMetaText(song: SongsInfo) {
           </div>
         </div>
       </div>
-      </TransitionGroup>
-    </Transition>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -267,68 +260,31 @@ function getMetaText(song: SongsInfo) {
 }
 
 .song-cards {
-  display: grid;
-  gap: var(--vtsuru-page-spacing, 16px);
   width: 100%;
   max-width: var(--card-max-width);
+  height: min(720px, calc(100dvh - 200px));
+  min-height: 320px;
   margin: 0 auto;
-}
-
-.card-swap-enter-active,
-.card-swap-leave-active {
-  transition:
-    opacity 0.28s ease,
-    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.28s ease;
-}
-
-.card-swap-enter-from {
-  opacity: 0;
-  filter: blur(4px);
-  transform: translateY(16px) scale(0.985);
-}
-
-.card-swap-leave-to {
-  opacity: 0;
-  filter: blur(3px);
-  transform: translateY(-10px) scale(0.98);
-}
-
-.card-item-enter-active,
-.card-item-leave-active {
-  transition:
-    opacity 0.28s ease,
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.card-item-enter-from,
-.card-item-leave-to {
-  opacity: 0;
-  transform: translateY(14px) scale(0.97);
-}
-
-.card-item-move {
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .song-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   width: 100%;
+  height: 144px;
   min-width: 0;
-  padding: var(--vtsuru-page-spacing, 16px);
+  padding: 12px 16px;
   overflow: hidden;
+  box-sizing: border-box;
   border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--song-border);
   border-radius: var(--vtsuru-page-radius, 8px);
   background: var(--song-panel);
   box-shadow: var(--vtsuru-page-shadow);
-  animation: card-enter 0.42s calc(var(--card-index, 0) * 40ms) cubic-bezier(0.22, 1, 0.36, 1) both;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
-    transform 160ms ease,
     box-shadow 160ms ease;
 }
 
