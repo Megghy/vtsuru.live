@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Play24Filled, Search24Regular } from '@vicons/fluent'
-import { useMediaQuery, useVirtualList } from '@vueuse/core'
-import { NButton, NEmpty, NIcon, NInput, NSelect } from 'naive-ui'
+import { NButton, NEmpty, NIcon, NInput, NSelect, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
@@ -12,6 +11,7 @@ import SongOptionBadges from './components/SongOptionBadges.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
 import SongStatusBadge from './components/SongStatusBadge.vue'
 import { filterSongs, getSongFieldOptions } from './utils/songListData'
+import { useProgressiveList } from './utils/useProgressiveList'
 import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 const props = defineProps<SongListConfigType>()
@@ -45,22 +45,7 @@ const filteredSongs = computed<SongsInfo[]>(() => {
   })
 })
 
-const isWide = useMediaQuery('(min-width: 900px)')
-const isNarrow = useMediaQuery('(max-width: 359px)')
-const galleryCols = computed(() => (isWide.value ? 3 : isNarrow.value ? 1 : 2))
-const galleryRows = computed(() => {
-  const cols = galleryCols.value
-  const songs = filteredSongs.value
-  const rows: { songs: SongsInfo[]; start: number }[] = []
-  for (let i = 0; i < songs.length; i += cols) {
-    rows.push({ songs: songs.slice(i, i + cols), start: i })
-  }
-  return rows
-})
-const { list, containerProps, wrapperProps } = useVirtualList(galleryRows, {
-  itemHeight: 304,
-  overscan: 4,
-})
+const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 24)
 const { listKey } = useFilterListKey({ tag: selectedTag })
 
 function requestSong(song: SongsInfo) {
@@ -111,28 +96,24 @@ function requestSong(song: SongsInfo) {
       class="preview-player"
     />
 
-    <NEmpty
-      v-if="filteredSongs.length === 0"
-      :key="`empty-${listKey}`"
-      description="暂无曲目"
-      style="margin-top: 48px"
-    />
-
-    <div
-      v-else
-      :key="`${listKey}:${galleryCols}`"
-      v-bind="containerProps"
-      class="gallery-viewport"
+    <Transition
+      name="gallery-swap"
+      mode="out-in"
     >
-      <div v-bind="wrapperProps">
+      <NEmpty
+        v-if="filteredSongs.length === 0"
+        :key="`empty-${listKey}`"
+        description="暂无曲目"
+        style="margin-top: 48px"
+      />
+
+      <div
+        v-else
+        :key="listKey"
+        class="grid"
+      >
         <div
-          v-for="{ data: row } in list"
-          :key="row.start"
-          class="gallery-row"
-          :style="{ gridTemplateColumns: `repeat(${galleryCols}, minmax(0, 1fr))` }"
-        >
-        <div
-          v-for="(song, offset) in row.songs"
+          v-for="(song, index) in visibleItems"
           :key="song.key"
           class="cover-card"
           :class="{
@@ -140,94 +121,106 @@ function requestSong(song: SongsInfo) {
             'is-queued': queuedSongKeySet.has(song.key),
           }"
         >
-        <div class="cover">
-          <img
-            v-if="song.cover"
-            :src="song.cover"
-            :alt="song.name"
-            loading="lazy"
-            referrerpolicy="no-referrer"
-          />
-          <div
-            v-else
-            class="cover-placeholder"
-          >
-            <span>{{ song.name.charAt(0) }}</span>
+          <div class="cover">
+            <img
+              v-if="song.cover"
+              :src="song.cover"
+              :alt="song.name"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            />
+            <div
+              v-else
+              class="cover-placeholder"
+            >
+              <span>{{ song.name.charAt(0) }}</span>
+            </div>
+
+            <span class="cover-index">{{ String(index + 1).padStart(2, '0') }}</span>
+
+            <SongStatusBadge
+              class="status-overlay"
+              :song-key="song.key"
+              :singing-keys="singingSongKeySet"
+              :queued-keys="queuedSongKeySet"
+              variant="text"
+            />
+            <span
+              v-if="song.options?.scMinPrice"
+              class="status-flag flag-sc"
+              >SC ¥{{ song.options.scMinPrice }}</span
+            >
+
+            <div class="cover-overlay">
+              <NTooltip v-if="song.url">
+                <template #trigger>
+                  <NButton
+                    circle
+                    size="large"
+                    :aria-label="`试听：${song.name}`"
+                    :loading="isLrcLoading === song.key"
+                    @click="previewSong = song"
+                  >
+                    <template #icon>
+                      <NIcon :component="Play24Filled" />
+                    </template>
+                  </NButton>
+                </template>
+                试听
+              </NTooltip>
+              <SongRequestButton
+                v-if="!isSelf"
+                :song="song"
+                :live-request-settings="liveRequestSettings"
+                :auth-state="requestAuthState"
+                :loading="requestingKey === song.key"
+                :circle="true"
+                size="large"
+                @request="requestSong"
+              />
+            </div>
           </div>
 
-          <span class="cover-index">{{ String(row.start + offset + 1).padStart(2, '0') }}</span>
-
-          <SongStatusBadge
-            class="status-overlay"
-            :song-key="song.key"
-            :singing-keys="singingSongKeySet"
-            :queued-keys="queuedSongKeySet"
-            variant="text"
-          />
-          <span
-            v-if="song.options?.scMinPrice"
-            class="status-flag flag-sc"
-            >SC ¥{{ song.options.scMinPrice }}</span
-          >
-
-          <div class="cover-overlay">
-            <NButton
-              v-if="song.url"
-              circle
-              size="large"
-              title="试听"
-              :aria-label="`试听：${song.name}`"
-              :loading="isLrcLoading === song.key"
-              @click="previewSong = song"
+          <div class="info">
+            <div
+              class="title"
+              :title="song.name"
             >
-              <template #icon>
-                <NIcon :component="Play24Filled" />
-              </template>
-            </NButton>
-            <SongRequestButton
-              v-if="!isSelf"
-              :song="song"
-              :live-request-settings="liveRequestSettings"
-              :auth-state="requestAuthState"
-              :loading="requestingKey === song.key"
-              :circle="true"
-              size="large"
-              @request="requestSong"
+              {{ song.name }}
+            </div>
+            <div
+              v-if="song.translateName"
+              class="translate"
+              :title="song.translateName"
+            >
+              {{ song.translateName }}
+            </div>
+            <div
+              v-if="song.author?.length"
+              class="author"
+              :title="song.author.join(' / ')"
+            >
+              {{ song.author.join(' / ') }}
+            </div>
+
+            <SongOptionBadges
+              :options="song.options"
+              variant="guard"
             />
           </div>
         </div>
 
-        <div class="info">
-          <div
-            class="title"
-            :title="song.name"
-          >
-            {{ song.name }}
-          </div>
-          <div
-            v-if="song.translateName"
-            class="translate"
-            :title="song.translateName"
-          >
-            {{ song.translateName }}
-          </div>
-          <div
-            v-if="song.author?.length"
-            class="author"
-            :title="song.author.join(' / ')"
-          >
-            {{ song.author.join(' / ') }}
-          </div>
-
-          <SongOptionBadges
-            :options="song.options"
-            variant="guard"
-          />
-        </div>
+        <button
+          v-if="hasMore"
+          ref="loadMoreTrigger"
+          type="button"
+          class="load-more-trigger"
+          @click="loadMore"
+        >
+          加载更多
+        </button>
       </div>
-        </div>
-      </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -317,37 +310,13 @@ function requestSong(song: SongsInfo) {
   transform: translateY(-12px) scale(0.97);
 }
 
-.gallery-card-enter-active,
-.gallery-card-leave-active {
-  transition:
-    opacity 0.28s ease,
-    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.gallery-card-enter-from,
-.gallery-card-leave-to {
-  opacity: 0;
-  transform: translateY(16px) scale(0.94);
-}
-
-.gallery-card-move {
-  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 .preview-player {
   margin-bottom: 16px;
 }
 
-.gallery-viewport {
-  height: min(720px, calc(100dvh - 220px));
-  min-height: 320px;
-}
-
-.gallery-row {
+.grid {
   display: grid;
-  height: 304px;
-  box-sizing: border-box;
-  padding-bottom: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr));
   gap: clamp(12px, 2vw, 20px);
 }
 
@@ -355,8 +324,9 @@ function requestSong(song: SongsInfo) {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow: hidden;
   border-radius: var(--vtsuru-page-radius);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 290px;
   transition:
     transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.22s ease;
@@ -540,9 +510,29 @@ function requestSong(song: SongsInfo) {
   white-space: nowrap;
 }
 
+.load-more-trigger {
+  grid-column: 1 / -1;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--song-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.load-more-trigger:hover {
+  color: var(--song-accent);
+}
+
 @media (max-width: 520px) {
   .gallery-template {
     padding: 8px 0 16px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 10px;
   }
 
   .cover-placeholder span {
@@ -587,9 +577,6 @@ function requestSong(song: SongsInfo) {
 
   .gallery-swap-enter-active,
   .gallery-swap-leave-active,
-  .gallery-card-enter-active,
-  .gallery-card-leave-active,
-  .gallery-card-move,
   .cover-card,
   .cover img {
     transition: none;

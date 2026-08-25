@@ -1,7 +1,7 @@
 import { getISOWeek, getISOWeekYear } from 'date-fns'
 import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
-import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
+import type { BiliLiveReserveItem, ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 
 export const SCHEDULE_DAYS = [
   { label: '周一', shortLabel: '一', english: 'MON' },
@@ -24,6 +24,53 @@ export function getISOWeekStart(year: number, week: number) {
 
 function hasScheduleContent(item: ScheduleDayInfo) {
   return Boolean(item.title || item.time || item.tag)
+}
+
+const BILI_RESERVE_TAG = '预约'
+const BILI_RESERVE_COLOR = '#FB7299'
+
+export function mergeBiliReservesIntoWeeks(
+  weeks: ScheduleWeekInfo[],
+  items: BiliLiveReserveItem[],
+): ScheduleWeekInfo[] {
+  if (!items.length) return weeks
+  const now = Date.now() / 1000
+  const upcoming = items.filter((item) => item.planStart >= now - 2 * 3600)
+  if (!upcoming.length) return weeks
+
+  const cloned = weeks.map((week) => ({
+    ...week,
+    days: week.days.map((day) => day.map((item) => ({ ...item }))),
+  }))
+
+  for (const item of upcoming) {
+    let week = cloned.find((entry) => entry.year === item.year && entry.week === item.week)
+    if (!week) {
+      week = {
+        year: item.year,
+        week: item.week,
+        days: Array.from({ length: 7 }, () => [] as ScheduleDayInfo[]),
+      }
+      cloned.push(week)
+    }
+    const day = item.dayOfWeek
+    if (day < 0 || day > 6) continue
+    if (!Array.isArray(week.days[day])) week.days[day] = []
+    const exists = week.days[day].some(
+      (entry) => entry.tag === BILI_RESERVE_TAG && entry.time === item.time && entry.title === item.title,
+    )
+    if (exists) continue
+    week.days[day].push({
+      title: item.title,
+      tag: BILI_RESERVE_TAG,
+      tagColor: BILI_RESERVE_COLOR,
+      time: item.time,
+      id: `bili-${item.sid}`,
+    })
+  }
+
+  cloned.sort((a, b) => b.year - a.year || b.week - a.week)
+  return cloned
 }
 
 export function useScheduleWeek(data: MaybeRefOrGetter<ScheduleWeekInfo[] | undefined>) {

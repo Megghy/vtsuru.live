@@ -30,6 +30,7 @@ import { useRouter } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import { VTSURU_API_URL } from '@/shared/config'
+import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import vtb from '@/svgs/ic_vtuber.svg'
 
 const $router = useRouter()
@@ -155,6 +156,8 @@ interface IndexDataType {
     parentArea: string
     area: string
     liveStartedAt: number
+    reserveTitle?: string
+    reserveAt?: number
   }[]
 }
 
@@ -173,11 +176,32 @@ function formatDurationSeconds(totalSeconds: number) {
   return `${mm}:${ss.toString().padStart(2, '0')}`
 }
 
+function hasReserve(room: IndexDataType['streamers'][number]) {
+  return !room.isStreaming && !!room.reserveAt
+}
+
+function getRoomStatus(room: IndexDataType['streamers'][number]) {
+  if (room.isStreaming) return 'LIVE'
+  if (hasReserve(room)) return '预告'
+  return 'OFFLINE'
+}
+
+function getRoomTitle(room: IndexDataType['streamers'][number]) {
+  if (hasReserve(room) && room.reserveTitle) return room.reserveTitle
+  return room.title || '（暂无标题）'
+}
+
 function getRoomSubline(room: IndexDataType['streamers'][number]) {
   const area = [room.parentArea, room.area].filter(Boolean).join(' · ')
-  if (!room.isStreaming || !room.liveStartedAt) return area
-  const duration = formatDurationSeconds(Date.now() / 1000 - room.liveStartedAt)
-  return area ? `${area} · ${duration}` : duration
+  if (room.isStreaming && room.liveStartedAt) {
+    const duration = formatDurationSeconds(Date.now() / 1000 - room.liveStartedAt)
+    return area ? `${area} · ${duration}` : duration
+  }
+  if (hasReserve(room)) {
+    const when = formatBiliLiveReserveTime(room.reserveAt!)
+    return area ? `${area} · ${when}` : when
+  }
+  return area
 }
 
 function getRoomCoverSrc(room: IndexDataType['streamers'][number]) {
@@ -547,7 +571,7 @@ onMounted(() => {
               v-for="room in indexData.streamers"
               :key="room.roomId"
               class="room-mini-card"
-              :class="{ live: room.isStreaming }"
+              :class="{ live: room.isStreaming, reserve: hasReserve(room) }"
               @click="$router.push(`/@${room.name}`)"
             >
               <div class="room-mini-cover">
@@ -577,9 +601,9 @@ onMounted(() => {
                         </div>
                         <div
                           class="room-mini-status"
-                          :class="{ live: room.isStreaming }"
+                          :class="{ live: room.isStreaming, reserve: hasReserve(room) }"
                         >
-                          {{ room.isStreaming ? 'LIVE' : 'OFFLINE' }}
+                          {{ getRoomStatus(room) }}
                         </div>
                       </div>
                     </div>
@@ -589,8 +613,8 @@ onMounted(() => {
                         :href="`https://live.bilibili.com/${room.roomId}`"
                         target="_blank"
                         rel="noreferrer"
-                        aria-label="打开直播间"
-                        title="打开直播间"
+                        :aria-label="hasReserve(room) ? '打开直播间预告' : '打开直播间'"
+                        :title="hasReserve(room) ? '打开直播间预告' : '打开直播间'"
                         @click.stop
                       >
                         <NIcon
@@ -605,9 +629,9 @@ onMounted(() => {
                     <div class="room-mini-bottom__left">
                       <div
                         class="room-mini-title"
-                        :title="room.title"
+                        :title="getRoomTitle(room)"
                       >
-                        {{ room.title || '（暂无标题）' }}
+                        {{ getRoomTitle(room) }}
                       </div>
                       <div
                         class="room-mini-sub"
@@ -1161,6 +1185,14 @@ article.feature-card
     border-color: rgba(16, 185, 129, 0.28);
     box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.10), 0 1px 2px rgba(0, 0, 0, 0.35);
 
+.room-mini-card.reserve
+    border-color: rgba(251, 114, 153, 0.38);
+    box-shadow: 0 0 0 1px rgba(251, 114, 153, 0.10), 0 1px 2px rgba(9, 9, 11, 0.08);
+
+:global(.dark) .room-mini-card.reserve
+    border-color: rgba(251, 114, 153, 0.32);
+    box-shadow: 0 0 0 1px rgba(251, 114, 153, 0.12), 0 1px 2px rgba(0, 0, 0, 0.35);
+
 .room-mini-card:hover
     transform: translateY(-1px);
     box-shadow: 0 6px 14px rgba(9, 9, 11, 0.12);
@@ -1266,6 +1298,11 @@ article.feature-card
     background: rgba(16, 185, 129, 0.95);
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0);
     animation: live-dot-pulse 1.6s ease-out infinite;
+
+.room-mini-status.reserve
+    color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(251, 114, 153, 0.55);
+    background: rgba(251, 114, 153, 0.32);
 
 @media (prefers-reduced-motion: reduce)
     .room-mini-card.live

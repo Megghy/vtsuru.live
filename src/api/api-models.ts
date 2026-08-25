@@ -35,6 +35,7 @@ export interface UserInfo extends UserBasicInfo {
   biliRoomId?: number
   canRequestSong: boolean
   streamerInfo?: BaseStreamerModel
+  liveReserve?: LiveReserveInfo
   extra?: {
     enableFunctions: FunctionTypes[]
     isInBlackList: boolean
@@ -81,6 +82,29 @@ export interface AccountInfo extends UserInfo {
   biliBlackList: { [key: string]: string }
   streamerInfo?: StreamerModel
   biliUserAuthInfo?: BiliAuthModel
+}
+export interface LiveReserveInfo {
+  sid: number
+  title: string
+  planStart: number
+  total: number
+}
+export interface BiliLiveReserveItem {
+  sid: number
+  title: string
+  planStart: number
+  expire: number
+  total: number
+  year: number
+  week: number
+  dayOfWeek: number
+  time: string
+}
+export interface BiliLiveReserveModel {
+  items: BiliLiveReserveItem[]
+  fetchedAt: number
+  intervalMinutes: number
+  syncEnabled: boolean
 }
 export interface BaseStreamerModel {
   name: string
@@ -139,6 +163,7 @@ export interface UserSetting {
   indexTemplate: string | null
   songListTemplate: string | null
   scheduleTemplate: string | null
+  syncBiliLiveReserveToSchedule?: boolean
 }
 export interface Setting_Index {
   allowDisplayInIndex: boolean

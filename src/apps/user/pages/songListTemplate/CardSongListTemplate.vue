@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Search24Regular } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
-import { useVirtualList } from '@vueuse/core'
-import { NButton, NEllipsis, NEmpty, NIcon, NInput } from 'naive-ui'
+import { NButton, NEllipsis, NEmpty, NIcon, NInput, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
@@ -13,6 +12,7 @@ import SongRequestButton from './components/SongRequestButton.vue'
 import SongStatusBadge from './components/SongStatusBadge.vue'
 import { filterSongs } from './utils/songListData'
 import { getSongRequestTooltip } from './utils/songRequestUtils'
+import { useProgressiveList } from './utils/useProgressiveList'
 import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 const props = defineProps<SongListConfigType>()
@@ -35,10 +35,7 @@ const searchKeyword = ref('')
 const filteredSongs = computed<SongsInfo[]>(() => {
   return filterSongs(props.data, { keyword: searchKeyword.value })
 })
-const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
-  itemHeight: 156,
-  overscan: 8,
-})
+const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 24)
 const { listKey } = useFilterListKey({ committedKeyword: searchKeyword })
 
 function commitSearch() {
@@ -99,36 +96,41 @@ function getMetaText(song: SongsInfo) {
     <div
       v-else
       :key="listKey"
-      v-bind="containerProps"
       class="song-cards"
     >
-      <div v-bind="wrapperProps">
-        <div
-          v-for="{ data: song } in list"
-          :key="song.key"
-          class="song-card"
-          :class="{
-            'is-active': activeSongKeySet.has(song.key),
-            'is-singing': singingSongKeySet.has(song.key),
-          }"
-        >
+      <div
+        v-for="song in visibleItems"
+        :key="song.key"
+        class="song-card"
+        :class="{
+          'is-active': activeSongKeySet.has(song.key),
+          'is-singing': singingSongKeySet.has(song.key),
+        }"
+      >
         <div class="card-top">
           <div class="title-left">
             <div class="left-icon">
               <NIcon :component="MusicalNote" />
             </div>
             <div class="title-block">
-              <button
-                class="song-title"
-                type="button"
+              <NTooltip
+                trigger="hover"
                 :disabled="isSelf"
-                :title="isSelf ? undefined : getSongRequestTooltip(song, liveRequestSettings, requestAuthState)"
-                @click="requestSong(song)"
               >
-                <NEllipsis :tooltip="false">
-                  {{ song.name }}
-                </NEllipsis>
-              </button>
+                <template #trigger>
+                  <button
+                    class="song-title"
+                    type="button"
+                    :disabled="isSelf"
+                    @click="requestSong(song)"
+                  >
+                    <NEllipsis :tooltip="false">
+                      {{ song.name }}
+                    </NEllipsis>
+                  </button>
+                </template>
+                {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
+              </NTooltip>
 
               <div class="sub">
                 <span
@@ -200,6 +202,18 @@ function getMetaText(song: SongsInfo) {
           </div>
         </div>
       </div>
+
+      <div
+        v-if="hasMore"
+        ref="loadMoreTrigger"
+        class="load-more"
+      >
+        <NButton
+          secondary
+          @click="loadMore"
+        >
+          加载更多
+        </NButton>
       </div>
     </div>
   </div>
@@ -260,10 +274,10 @@ function getMetaText(song: SongsInfo) {
 }
 
 .song-cards {
+  display: grid;
+  gap: var(--vtsuru-page-spacing, 16px);
   width: 100%;
   max-width: var(--card-max-width);
-  height: min(720px, calc(100dvh - 200px));
-  min-height: 320px;
   margin: 0 auto;
 }
 
@@ -271,13 +285,13 @@ function getMetaText(song: SongsInfo) {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
   width: 100%;
-  height: 144px;
   min-width: 0;
-  padding: 12px 16px;
+  padding: var(--vtsuru-page-spacing, 16px);
   overflow: hidden;
-  box-sizing: border-box;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 150px;
   border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--song-border);
   border-radius: var(--vtsuru-page-radius, 8px);
   background: var(--song-panel);
@@ -285,6 +299,7 @@ function getMetaText(song: SongsInfo) {
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
+    transform 160ms ease,
     box-shadow 160ms ease;
 }
 
@@ -449,6 +464,12 @@ function getMetaText(song: SongsInfo) {
   font-size: 12px;
 }
 
+.load-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 2px;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .song-card:hover {
     background: var(--song-bg-hover);
@@ -489,13 +510,6 @@ function getMetaText(song: SongsInfo) {
   }
 }
 
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.97);
-  }
-}
-
 @keyframes count-pop {
   0% {
     transform: scale(0.92);
@@ -515,11 +529,6 @@ function getMetaText(song: SongsInfo) {
     animation: none;
   }
 
-  .card-swap-enter-active,
-  .card-swap-leave-active,
-  .card-item-enter-active,
-  .card-item-leave-active,
-  .card-item-move,
   .song-card {
     transition: none;
   }

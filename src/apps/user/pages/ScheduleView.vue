@@ -3,12 +3,14 @@ import { NSpin, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { DownloadConfig } from '@/api/account'
-import type { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
+import type { BiliLiveReserveModel, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import type { BiliProfile } from '@/apps/user-page/types'
+import BiliLiveReservePanel from '@/components/BiliLiveReservePanel.vue'
 import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
 import { SCHEDULE_API_URL } from '@/shared/config'
 import { ScheduleTemplateMap } from '@/shared/config/templates'
+import { mergeBiliReservesIntoWeeks } from '@/apps/user/pages/scheduleTemplate/scheduleTemplateUtils'
 
 const props = defineProps<{
   biliInfo: BiliProfile | undefined
@@ -22,6 +24,20 @@ const currentData = ref<ScheduleWeekInfo[]>([])
 const currentConfig = ref<Record<string, unknown>>({})
 const loadingData = ref(true)
 const loadingConfig = ref(true)
+const biliReserve = ref<BiliLiveReserveModel>({
+  items: [],
+  fetchedAt: 0,
+  intervalMinutes: 15,
+  syncEnabled: false,
+})
+const liveRoomUrl = computed(() =>
+  props.userInfo?.biliRoomId ? `https://live.bilibili.com/${props.userInfo.biliRoomId}` : undefined,
+)
+const displayData = computed(() =>
+  biliReserve.value.syncEnabled
+    ? mergeBiliReservesIntoWeeks(currentData.value, biliReserve.value.items)
+    : currentData.value,
+)
 
 const componentType = computed(
   () => props.template ?? props.userInfo?.extra?.templateTypes.schedule?.toLowerCase() ?? '',
@@ -72,7 +88,23 @@ async function loadTemplateConfig() {
   loadingConfig.value = false
 }
 
+async function loadBiliReserve() {
+  if (props.fakeData || !props.userInfo?.id) {
+    biliReserve.value = { items: [], fetchedAt: 0, intervalMinutes: 15, syncEnabled: false }
+    return
+  }
+  try {
+    const response = await QueryGetAPI<BiliLiveReserveModel>(`${SCHEDULE_API_URL}bili-reserve`, {
+      id: props.userInfo.id,
+    })
+    if (response.code === 200 && response.data) biliReserve.value = response.data
+  } catch (error) {
+    console.error('加载 B 站预约失败', error)
+  }
+}
+
 watch(() => [props.userInfo?.id, props.fakeData] as const, loadSchedule, { immediate: true })
+watch(() => [props.userInfo?.id, props.fakeData] as const, loadBiliReserve, { immediate: true })
 watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, loadTemplateConfig, { immediate: true })
 </script>
 
@@ -85,11 +117,18 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
     v-else
     class="schedule-page"
   >
+    <BiliLiveReservePanel
+      v-if="biliReserve.items.length"
+      :items="biliReserve.items"
+      :fetched-at="biliReserve.fetchedAt"
+      :interval-minutes="biliReserve.intervalMinutes"
+      :live-room-url="liveRoomUrl"
+    />
     <component
       :is="selectedTemplate.component"
       :bili-info="biliInfo"
       :user-info="userInfo"
-      :data="currentData"
+      :data="displayData"
       v-bind="selectedTemplate.settingName ? { config: currentConfig } : {}"
     />
     <ScheduleSubscription

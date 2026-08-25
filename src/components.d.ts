@@ -12,6 +12,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BiliLiveReservePanel: typeof import('./components/BiliLiveReservePanel.vue')['default']
     BiliUserSelector: typeof import('./components/common/BiliUserSelector.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NAvatar: typeof import('naive-ui')['NAvatar']
@@ -75,6 +76,7 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const BiliLiveReservePanel: typeof import('./components/BiliLiveReservePanel.vue')['default']
   const BiliUserSelector: typeof import('./components/common/BiliUserSelector.vue')['default']
   const NAlert: typeof import('naive-ui')['NAlert']
   const NAvatar: typeof import('naive-ui')['NAvatar']

@@ -23,10 +23,11 @@ import type { VNode } from 'vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
+import type { BiliLiveReserveModel, ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import BiliLiveReservePanel from '@/components/BiliLiveReservePanel.vue'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { CURRENT_HOST, SCHEDULE_API_URL } from '@/shared/config'
 
@@ -397,6 +398,71 @@ async function get() {
     .finally(() => (isLoading.value = false))
 }
 const isFetching = ref(false)
+const biliReserve = ref<BiliLiveReserveModel>({
+  items: [],
+  fetchedAt: 0,
+  intervalMinutes: 15,
+  syncEnabled: false,
+})
+const refreshingReserve = ref(false)
+const syncingReserve = ref(false)
+const liveRoomUrl = computed(() =>
+  accountInfo.value?.biliRoomId ? `https://live.bilibili.com/${accountInfo.value.biliRoomId}` : undefined,
+)
+
+async function loadBiliReserve() {
+  if (!accountInfo.value?.id) return
+  try {
+    const response = await QueryGetAPI<BiliLiveReserveModel>(`${SCHEDULE_API_URL}bili-reserve`, {
+      id: accountInfo.value.id,
+    })
+    if (response.code === 200 && response.data) {
+      biliReserve.value = response.data
+      if (accountInfo.value.settings)
+        accountInfo.value.settings.syncBiliLiveReserveToSchedule = response.data.syncEnabled
+    }
+  } catch {
+    message.error('加载 B 站预约失败')
+  }
+}
+
+async function refreshBiliReserve() {
+  refreshingReserve.value = true
+  try {
+    const response = await QueryPostAPI<BiliLiveReserveModel>(`${SCHEDULE_API_URL}bili-reserve/refresh`)
+    if (response.code === 200 && response.data) {
+      biliReserve.value = response.data
+      message.success('已刷新 B 站预约')
+    } else {
+      message.error(response.message || '刷新失败')
+    }
+  } catch {
+    message.error('刷新失败')
+  } finally {
+    refreshingReserve.value = false
+  }
+}
+
+async function setBiliReserveAutoSync(enable: boolean) {
+  syncingReserve.value = true
+  try {
+    const response = await QueryPostAPIWithParams<BiliLiveReserveModel>(`${SCHEDULE_API_URL}bili-reserve/auto-sync`, {
+      enable,
+    })
+    if (response.code === 200 && response.data) {
+      biliReserve.value = response.data
+      if (accountInfo.value?.settings)
+        accountInfo.value.settings.syncBiliLiveReserveToSchedule = response.data.syncEnabled
+      message.success(enable ? '已开启写入日程表' : '已关闭写入日程表')
+    } else {
+      message.error(response.message || '设置失败')
+    }
+  } catch {
+    message.error('设置失败')
+  } finally {
+    syncingReserve.value = false
+  }
+}
 async function addSchedule() {
   isFetching.value = true
   const emptyWeek = createEmptyWeek(selectedScheduleYear.value, selectedScheduleWeek.value)
@@ -728,6 +794,7 @@ function renderOption({ node, option }: { node: VNode; option: SelectOption }) {
 
 onMounted(() => {
   get()
+  loadBiliReserve()
 })
 </script>
 
@@ -1155,6 +1222,19 @@ onMounted(() => {
       确定
     </NButton>
   </NModal>
+  <BiliLiveReservePanel
+    style="margin: 12px 0"
+    manage
+    :items="biliReserve.items"
+    :fetched-at="biliReserve.fetchedAt"
+    :interval-minutes="biliReserve.intervalMinutes"
+    :live-room-url="liveRoomUrl"
+    :auto-sync="biliReserve.syncEnabled"
+    :refreshing="refreshingReserve"
+    :syncing="syncingReserve"
+    @refresh="refreshBiliReserve"
+    @update:auto-sync="setBiliReserveAutoSync"
+  />
   <NSpin
     v-if="isLoading"
     show

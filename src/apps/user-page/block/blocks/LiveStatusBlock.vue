@@ -4,6 +4,7 @@ import { NAlert, NAvatar, NButton, NIcon } from 'naive-ui'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
+import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -59,6 +60,7 @@ const model = computed(() => {
     lastStreamAt: typeof stream?.lastStreamAt === 'number' ? stream.lastStreamAt : 0,
     liveRoomUrl: roomId ? `https://live.bilibili.com/${roomId}` : '',
     spaceUrl: props.userInfo?.biliId ? `https://space.bilibili.com/${props.userInfo.biliId}` : '',
+    liveReserve: props.userInfo?.liveReserve,
   }
 })
 
@@ -180,12 +182,12 @@ const actionButtonProps = computed(() =>
 
           <div
             class="status"
-            :class="{ online: model.isStreaming }"
+            :class="{ online: model.isStreaming, reserve: !model.isStreaming && model.liveReserve }"
             aria-live="polite"
             aria-atomic="true"
           >
             <span class="status-dot" />
-            {{ model.isStreaming ? '直播中' : '未开播' }}
+            {{ model.isStreaming ? '直播中' : model.liveReserve ? '预告' : '未开播' }}
           </div>
         </header>
 
@@ -209,6 +211,23 @@ const actionButtonProps = computed(() =>
           >
             <NIcon><PlayCircleOutline /></NIcon>
             <span>{{ durationText }}</span>
+          </div>
+          <a
+            v-else-if="!model.isStreaming && model.liveReserve && model.liveRoomUrl"
+            class="meta meta-link"
+            :href="model.liveRoomUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <NIcon><CalendarOutline /></NIcon>
+            <span>下次直播 {{ formatBiliLiveReserveTime(model.liveReserve.planStart) }} · {{ model.liveReserve.title }}</span>
+          </a>
+          <div
+            v-else-if="!model.isStreaming && model.liveReserve"
+            class="meta"
+          >
+            <NIcon><CalendarOutline /></NIcon>
+            <span>下次直播 {{ formatBiliLiveReserveTime(model.liveReserve.planStart) }} · {{ model.liveReserve.title }}</span>
           </div>
           <div
             v-else-if="model.lastStreamAt"
@@ -342,6 +361,9 @@ const actionButtonProps = computed(() =>
 .status.online {
   color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
 }
+.status.reserve {
+  color: #fb7299;
+}
 .body {
   display: grid;
   gap: 8px;
@@ -360,6 +382,13 @@ const actionButtonProps = computed(() =>
 }
 .meta .n-icon {
   flex: none;
+}
+.meta-link {
+  color: inherit;
+  text-decoration: none;
+}
+.meta-link:hover {
+  color: #fb7299;
 }
 .actions {
   gap: 10px;
@@ -388,6 +417,9 @@ const actionButtonProps = computed(() =>
 }
 .immersive .status.online {
   color: #ff8a9c;
+}
+.immersive .status.reserve {
+  color: #ffb1c7;
 }
 
 .compact .content {

@@ -1075,7 +1075,7 @@ watch(
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--vtsuru-bg);
+  background-color: var(--user-page-theme-canvas-bg, var(--vtsuru-bg));
 }
 
 .page-root :deep(.n-card.n-card--bordered) {
@@ -1258,7 +1258,7 @@ watch(
 .user-sider {
   height: 100%;
   border-right: 1px solid var(--vtsuru-border);
-  background: var(--user-page-theme-surface-bg, var(--vtsuru-bg-surface));
+  background: transparent;
   box-sizing: border-box;
   overflow: hidden;
   flex: 0 0 auto;
@@ -1555,8 +1555,16 @@ watch(
   }
 
   .page-root.bg-host.glass .main-layout-body {
+    background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+
+  .page-root.bg-host.glass .layout-header,
+  .page-root.bg-host.glass .user-sider {
+    background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
+    backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+    -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   }
 
   .main-layout-body {
@@ -1574,9 +1582,10 @@ watch(
     height: auto;
   }
 
-  .layout-header {
+  .page-root.bg-host .layout-header {
     position: sticky;
     top: 0;
+    z-index: 20;
   }
 
   .user-sider {
@@ -1639,6 +1648,19 @@ watch(
 
   .viewer-page-content--edge {
     padding: 0 8px;
+  }
+}
+
+@media (max-width: 520px) and (prefers-reduced-transparency: reduce) {
+  .page-root.bg-host .layout-header,
+  .page-root.bg-host .user-sider {
+    background: var(--vtsuru-page-content-color);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .page-root.bg-host.glass .layout-header::after {
+    display: none;
   }
 }
 

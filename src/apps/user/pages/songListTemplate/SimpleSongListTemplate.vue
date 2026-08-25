@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Play24Filled, Search24Regular } from '@vicons/fluent'
-import { useVirtualList } from '@vueuse/core'
 import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSelect } from 'naive-ui'
 import { computed, ref } from 'vue'
 
@@ -14,6 +13,7 @@ import SongOptionBadges from './components/SongOptionBadges.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
 import SongStatusBadge from './components/SongStatusBadge.vue'
 import { filterSongs, getSongFieldOptions, getSongFieldValues } from './utils/songListData'
+import { useProgressiveList } from './utils/useProgressiveList'
 import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 const props = defineProps<SongListConfigType>()
@@ -51,10 +51,7 @@ const showRequestQueue = computed(
 )
 
 const { listKey } = useFilterListKey({ tag: selectedTag, author: selectedAuthor })
-const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
-  itemHeight: 190,
-  overscan: 6,
-})
+const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 24)
 
 function toggleTag(tag: string) {
   selectedTag.value = selectedTag.value === tag ? null : tag
@@ -156,29 +153,25 @@ function requestSong(song: SongsInfo) {
       </aside>
 
       <main class="song-content">
-          <NEmpty
-            v-if="filteredSongs.length === 0"
-            :key="`empty-${listKey}`"
-            class="empty-state"
-            :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
-          />
+        <NEmpty
+          v-if="filteredSongs.length === 0"
+          :key="`empty-${listKey}`"
+          class="empty-state"
+          :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
+        />
 
-          <div
-            v-else
-            :key="listKey"
-            v-bind="containerProps"
-            class="song-list"
-          >
-            <div
-              v-bind="wrapperProps"
-              class="song-grid"
+        <div
+          v-else
+          :key="listKey"
+          class="song-list"
+        >
+          <div class="song-grid">
+            <article
+              v-for="item in visibleItems"
+              :key="item.key"
+              class="song-card"
+              :class="{ 'is-singing': singingKeys.has(item.key), 'is-queued': queuedKeys.has(item.key) }"
             >
-              <article
-                v-for="{ data: item } in list"
-                :key="item.key"
-                class="song-card"
-                :class="{ 'is-singing': singingKeys.has(item.key), 'is-queued': queuedKeys.has(item.key) }"
-              >
               <header class="song-header">
                 <i />
                 <div>
@@ -267,8 +260,21 @@ function requestSong(song: SongsInfo) {
                 </div>
               </footer>
             </article>
-            </div>
           </div>
+
+          <div
+            v-if="hasMore"
+            ref="loadMoreTrigger"
+            class="load-more"
+          >
+            <NButton
+              secondary
+              @click="loadMore"
+            >
+              加载更多
+            </NButton>
+          </div>
+        </div>
       </main>
     </div>
   </div>
@@ -375,43 +381,6 @@ function requestSong(song: SongsInfo) {
   animation: tag-pop 0.34s cubic-bezier(0.22, 1.4, 0.36, 1);
 }
 
-.song-filter-swap-enter-active,
-.song-filter-swap-leave-active {
-  transition:
-    opacity 0.28s ease,
-    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.28s ease;
-}
-
-.song-filter-swap-enter-from {
-  opacity: 0;
-  filter: blur(4px);
-  transform: translateY(16px) scale(0.985);
-}
-
-.song-filter-swap-leave-to {
-  opacity: 0;
-  filter: blur(3px);
-  transform: translateY(-10px) scale(0.98);
-}
-
-.song-card-item-enter-active,
-.song-card-item-leave-active {
-  transition:
-    opacity 0.28s ease,
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.song-card-item-enter-from,
-.song-card-item-leave-to {
-  opacity: 0;
-  transform: translateY(14px) scale(0.97);
-}
-
-.song-card-item-move {
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 .sidebar-section {
   padding-top: 12px;
   border-top: 1px solid color-mix(in srgb, var(--song-border) 70%, transparent);
@@ -438,25 +407,27 @@ function requestSong(song: SongsInfo) {
 .song-list {
   padding: 2px;
   min-width: 0;
-  height: min(720px, calc(100dvh - 160px));
-  min-height: 320px;
 }
 
 .song-grid {
-  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: var(--vtsuru-page-spacing, 16px);
 }
 
 .song-card {
   display: flex;
-  height: 178px;
-  box-sizing: border-box;
+  min-height: 174px;
   flex-direction: column;
-  padding: 12px 16px;
+  padding: var(--vtsuru-page-spacing, 16px);
   overflow: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 190px;
   gap: 8px;
   transition:
     border-color 0.18s ease,
     background-color 0.18s ease,
+    transform 0.18s ease,
     box-shadow 0.18s ease;
 }
 
@@ -549,13 +520,6 @@ function requestSong(song: SongsInfo) {
   }
 }
 
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.97);
-  }
-}
-
 @keyframes tag-pop {
   0% {
     transform: scale(0.94);
@@ -575,11 +539,6 @@ function requestSong(song: SongsInfo) {
     animation: none;
   }
 
-  .song-filter-swap-enter-active,
-  .song-filter-swap-leave-active,
-  .song-card-item-enter-active,
-  .song-card-item-leave-active,
-  .song-card-item-move,
   .song-card {
     transition: none;
   }

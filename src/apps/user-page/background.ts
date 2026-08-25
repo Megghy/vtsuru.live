@@ -175,6 +175,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
   const surfaceHover = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
     : surfaceVars['--user-page-ui-surface-bg-hover']
+  const canvasColor = backgroundColor || siteTokens.surfaceHover
   const borderColor = surfaceVars['--vtsuru-card-border-color']
   const radius = `${appearance.radius}px`
 
@@ -221,6 +222,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--primary-color': pagePrimary,
     '--user-page-theme-surface-bg': surfaceColor,
     '--user-page-theme-surface-bg-hover': surfaceHover,
+    '--user-page-theme-canvas-bg': canvasColor,
     '--vtsuru-page-radius': radius,
     '--vtsuru-radius': radius,
     '--vtsuru-radius-control': radius,

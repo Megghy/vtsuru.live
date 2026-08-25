@@ -1,5 +1,12 @@
 <script lang="ts" setup>
-import { ArrowUpOutline, PlayOutline, RadioOutline, SettingsOutline, SparklesOutline } from '@vicons/ionicons5'
+import {
+  ArrowUpOutline,
+  CalendarOutline,
+  PlayOutline,
+  RadioOutline,
+  SettingsOutline,
+  SparklesOutline,
+} from '@vicons/ionicons5'
 import { NAvatar, NButton, NEmpty, NIcon, NSpin, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
@@ -8,6 +15,7 @@ import type { ResponseUserIndexModel, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { USER_INDEX_API_URL } from '@/shared/config'
+import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
 import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
@@ -74,6 +82,11 @@ const nameSizeClass = computed(() => {
 })
 const isOwner = computed(() => props.userInfo?.id === accountInfo.value?.id)
 const isStreaming = computed(() => props.userInfo?.streamerInfo?.isStreaming === true)
+const liveReserve = computed(() => props.userInfo?.liveReserve)
+const liveReserveLabel = computed(() => {
+  if (!liveReserve.value) return ''
+  return `${formatBiliLiveReserveTime(liveReserve.value.planStart)} · ${liveReserve.value.title}`
+})
 
 function formatCount(value: number) {
   return value >= 10000 ? `${(value / 10000).toFixed(1)}万` : value.toLocaleString()
@@ -166,6 +179,11 @@ export const Config = defineTemplateConfig([])
                 class="live-mark"
                 ><NIcon :component="RadioOutline" /> LIVE</span
               >
+              <span
+                v-else-if="liveReserve"
+                class="live-mark live-mark--reserve"
+                ><NIcon :component="CalendarOutline" /> 预告</span
+              >
             </div>
 
             <div class="profile-actions">
@@ -223,6 +241,11 @@ export const Config = defineTemplateConfig([])
                 >正在直播</span
               >
               <span
+                v-else-if="liveReserve"
+                class="meta-tag meta-reserve"
+                >下次 {{ formatBiliLiveReserveTime(liveReserve.planStart) }}</span
+              >
+              <span
                 v-if="level"
                 class="meta-tag"
                 >LV{{ level }}</span
@@ -252,6 +275,24 @@ export const Config = defineTemplateConfig([])
         </div>
       </header>
 
+      <a
+        v-if="!isStreaming && liveReserve && props.userInfo?.biliRoomId"
+        class="notice-strip notice-strip--reserve"
+        :href="`https://live.bilibili.com/${props.userInfo.biliRoomId}`"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <NIcon :component="CalendarOutline" />
+        <span>下次直播 {{ liveReserveLabel }}</span>
+        <em>打开直播间</em>
+      </a>
+      <section
+        v-else-if="!isStreaming && liveReserve"
+        class="notice-strip notice-strip--reserve"
+      >
+        <NIcon :component="CalendarOutline" />
+        <span>下次直播 {{ liveReserveLabel }}</span>
+      </section>
       <section
         v-if="indexInfo.notification"
         class="notice-strip"
@@ -431,6 +472,9 @@ export const Config = defineTemplateConfig([])
   font-weight: 800;
   letter-spacing: 0;
 }
+.live-mark--reserve {
+  background: #fb7299;
+}
 .profile-actions {
   display: flex;
   min-width: 0;
@@ -510,6 +554,34 @@ export const Config = defineTemplateConfig([])
   color: #f0445d;
   font-weight: 700;
 }
+.meta-reserve {
+  background: color-mix(in srgb, #fb7299 12%, var(--index-bg));
+  color: #fb7299;
+  font-weight: 700;
+}
+.notice-strip--reserve {
+  border-left-color: #fb7299;
+  background: color-mix(in srgb, #fb7299 9%, var(--index-bg));
+}
+.notice-strip--reserve :deep(.n-icon) {
+  color: #fb7299;
+}
+a.notice-strip--reserve {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+a.notice-strip--reserve:hover {
+  background: color-mix(in srgb, #fb7299 14%, var(--index-bg));
+}
+.notice-strip em {
+  margin-left: auto;
+  color: #fb7299;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 650;
+  white-space: nowrap;
+}
 .meta-honor {
   color: var(--index-accent);
   font-weight: 650;
@@ -563,6 +635,10 @@ export const Config = defineTemplateConfig([])
 .notice-strip :deep(.n-icon) {
   flex: none;
   color: var(--index-accent);
+}
+.notice-strip span {
+  min-width: 0;
+  flex: 1;
 }
 .main-content {
   width: min(100%, 1120px);
