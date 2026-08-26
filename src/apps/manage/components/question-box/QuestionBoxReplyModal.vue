@@ -48,10 +48,10 @@ async function submitReply() {
           v-model:value="replyMessage"
           placeholder="请输入回复内容..."
           type="textarea"
-          maxlength="1000"
+          maxlength="10000"
           show-count
           clearable
-          :autosize="{ minRows: 3, maxRows: 8 }"
+          :autosize="{ minRows: 3, maxRows: 12 }"
         />
         <NSpin :show="useQB.isChangingPublic">
           <NCheckbox

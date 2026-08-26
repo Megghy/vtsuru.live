@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NCheckbox, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { ChevronDown12Regular, ChevronUp12Regular } from '@vicons/fluent'
+import { NCard, NCheckbox, NDivider, NFlex, NIcon, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { QAInfo } from '@/api/api-models'
@@ -184,15 +185,18 @@ function getScoreColor(score: number | undefined): string {
       {{ message }}
     </NText>
 
-    <NButton
+    <button
       v-if="shouldClampMessage"
+      type="button"
       class="question-item__message-toggle"
-      text
-      size="tiny"
       @click="showFullMessage = !showFullMessage"
     >
+      <NIcon
+        :component="showFullMessage ? ChevronUp12Regular : ChevronDown12Regular"
+        :size="12"
+      />
       {{ showFullMessage ? '收起内容' : '展开全部' }}
-    </NButton>
+    </button>
 
     <template v-if="item.answer">
       <NDivider style="margin: 10px 0" />
@@ -243,6 +247,22 @@ function getScoreColor(score: number | undefined): string {
 }
 
 .question-item__message-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--vtsuru-brand);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.question-item__message-toggle:hover {
+  color: var(--vtsuru-brand-hover);
 }
 </style>
