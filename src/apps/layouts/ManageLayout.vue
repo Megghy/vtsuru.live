@@ -15,7 +15,7 @@ import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate
 import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer.vue'
 import ManageSider from '@/apps/manage/components/layout/ManageSider.vue'
 import ManageTopBar from '@/apps/manage/components/layout/ManageTopBar.vue'
-import { selectedAPIKey } from '@/shared/config'
+import { currentAPIKey } from '@/shared/config'
 import { buildManageTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
 import { isDarkMode } from '@/shared/utils'
 
@@ -36,7 +36,7 @@ function openAssistant() {
 }
 
 onMounted(() => {
-  if (selectedAPIKey.value !== 'main') {
+  if (currentAPIKey.value !== 'main') {
     message.warning('你当前使用的是备用API节点, 可能会速度比较慢')
   }
 

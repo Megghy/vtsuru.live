@@ -5,11 +5,10 @@ import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import {
   BASE_API_URL,
-  clearAPIFailover,
-  getAPIUrl,
   isAutomaticAPIFailover,
   isTauri,
   markAPIFailover,
+  setSelectedAPIKey,
 } from '@/shared/config'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
 import { createNaiveUIApi } from '@/shared/utils'
@@ -23,43 +22,50 @@ const { notification } = createNaiveUIApi(['notification'])
 
 export function InitVTsuru() {
   showAPIFailoverNotification()
-  QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
-    .then(async (version) => {
-      if (version.code == 200) {
-        currentVersion = version.data
-        const savedVersion = await persistedGetItemRaw('Version')
-        await persistedSetItemRaw('Version', currentVersion)
+  void loadVersionAndStart()
+}
 
-        if (currentVersion && savedVersion && savedVersion !== currentVersion) {
-          setTimeout(() => {
-            location.reload()
-          }, 1000)
-          // alert('发现新的版本更新, 请按 Ctrl+F5 强制刷新页面')
-          notification.info({
-            title: '发现新的版本更新',
-            content: '将自动刷新页面',
-            duration: 5000,
-            meta: () => h(NText, { depth: 3 }, () => currentVersion),
-          })
-        } else {
-          InitVersionCheck()
-        }
+async function loadVersionAndStart() {
+  try {
+    const version = await QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
+    if (version.code == 200) {
+      currentVersion = version.data
+      const savedVersion = await persistedGetItemRaw('Version')
+      await persistedSetItemRaw('Version', currentVersion)
+
+      if (currentVersion && savedVersion && savedVersion !== currentVersion) {
+        setTimeout(() => {
+          location.reload()
+        }, 1000)
+        notification.info({
+          title: '发现新的版本更新',
+          content: '将自动刷新页面',
+          duration: 5000,
+          meta: () => h(NText, { depth: 3 }, () => currentVersion),
+        })
+      } else {
+        InitVersionCheck()
       }
-      await InitOther()
-    })
-    .catch(() => {
-      markAPIFailover()
+    }
+    await InitOther()
+  } catch {
+    if (markAPIFailover()) {
       console.log('默认API调用失败, 切换至故障转移节点')
-    })
+      showAPIFailoverNotification()
+      await loadVersionAndStart()
+      return
+    }
+    console.log('默认API调用失败, 切换至故障转移节点')
+  }
 }
 
 function showAPIFailoverNotification() {
   if (!isAutomaticAPIFailover.value) return
 
-  let checking = false
+  let switching = false
   const notificationRef = notification.warning({
     title: '当前使用备用 API',
-    content: '上次启动时主 API 无法访问，可以现在测试并切回主 API。',
+    content: '上次启动时主 API 无法访问，点击按钮可切回主 API。',
     duration: 0,
     action: () =>
       h(
@@ -67,29 +73,21 @@ function showAPIFailoverNotification() {
         {
           type: 'primary',
           size: 'small',
-          loading: checking,
           onClick: async () => {
-            if (checking) return
-            checking = true
-            const controller = new AbortController()
-            const timeoutId = window.setTimeout(() => controller.abort(), 5000)
+            if (switching) return
+            switching = true
+            notificationRef.content = '正在切回主 API...'
             try {
-              const response = await fetch(`${getAPIUrl('main')}api/vtsuru/version`, {
-                signal: controller.signal,
-              })
-              if (!response.ok) throw new Error(`HTTP ${response.status}`)
-              clearAPIFailover()
-              notificationRef.destroy()
+              await setSelectedAPIKey('main')
               location.reload()
             } catch (error) {
-              console.warn('[vtsuru] 主 API 探测失败，继续使用备用 API', error)
-              checking = false
-            } finally {
-              window.clearTimeout(timeoutId)
+              console.warn('[vtsuru] 切回主 API 失败', error)
+              switching = false
+              notificationRef.content = '切回失败，请到管理页「API 设置」中手动切换。'
             }
           },
         },
-        { default: () => '尝试主 API' },
+        { default: () => '切回主 API' },
       ),
   })
 }

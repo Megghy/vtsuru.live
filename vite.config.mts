@@ -1,6 +1,5 @@
-import path from 'node:path'
-
 // vite.config.ts
+import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -24,17 +23,20 @@ function rewriteNInputNumberImports(): Plugin {
       if (file.endsWith('/shared/ui/NInputNumber.vue')) return
       if (!code.includes('NInputNumber') || !code.includes('naive-ui')) return
 
-      const next = code.replace(/import\s*\{([^}]*)\}\s*from\s*(['"])naive-ui\2/g, (full, spec: string, quote: string) => {
-        const names = spec
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean)
-        if (!names.some((name) => name === 'NInputNumber' || name.startsWith('NInputNumber '))) return full
-        const rest = names.filter((name) => name !== 'NInputNumber' && !name.startsWith('NInputNumber '))
-        const local = `import NInputNumber from ${quote}${nInputNumberFrom}${quote}`
-        if (rest.length === 0) return local
-        return `import { ${rest.join(', ')} } from ${quote}naive-ui${quote}\n${local}`
-      })
+      const next = code.replace(
+        /import\s*\{([^}]*)\}\s*from\s*(['"])naive-ui\2/g,
+        (full, spec: string, quote: string) => {
+          const names = spec
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean)
+          if (!names.some((name) => name === 'NInputNumber' || name.startsWith('NInputNumber '))) return full
+          const rest = names.filter((name) => name !== 'NInputNumber' && !name.startsWith('NInputNumber '))
+          const local = `import NInputNumber from ${quote}${nInputNumberFrom}${quote}`
+          if (rest.length === 0) return local
+          return `import { ${rest.join(', ')} } from ${quote}naive-ui${quote}\n${local}`
+        },
+      )
       if (next === code) return
       return { code: next, map: null }
     },
@@ -86,6 +88,11 @@ export default defineConfig({
       },
     }),
     vueJsx(),
+    legacy({
+      modernTargets: ['Chrome >= 90'],
+      modernPolyfills: true,
+      renderLegacyChunks: false,
+    }),
     svgLoader({
       svgoConfig: {
         plugins: [
@@ -136,7 +143,7 @@ export default defineConfig({
     }),
   ],
   server: { host: '0.0.0.0', port: 51000 },
-  resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+  resolve: { alias: { '@': import.meta.dirname + '/src' } },
   define: {
     'process.env': {},
     // 用 globalThis 而非 window：主线程/Web Worker/Node 均存在，避免 worker 内 window 未定义报错
@@ -150,7 +157,6 @@ export default defineConfig({
     manifest: true,
     // 生产环境建议关闭以减少产物体积与网络请求
     sourcemap: false,
-    target: 'esnext',
     minify: 'oxc',
     // 当前存在 Monaco 与部分按页面懒加载的大块产物，保留告警会持续产生已知噪音。
     chunkSizeWarningLimit: 4000,

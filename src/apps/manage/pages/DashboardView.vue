@@ -39,7 +39,7 @@ import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
-import { ACCOUNT_API_URL, availableAPIs, isDev, selectedAPIKey, setSelectedAPIKey } from '@/shared/config'
+import { ACCOUNT_API_URL, availableAPIs, currentAPIKey, isDev, setSelectedAPIKey } from '@/shared/config'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 import { copyToClipboard } from '@/shared/utils'
 
@@ -698,7 +698,7 @@ onUnmounted(() => {
               >
                 <NText>当前使用的API:</NText>
                 <NSelect
-                  v-model:value="selectedAPIKey"
+                  :value="currentAPIKey"
                   :options="apiOptions"
                   style="max-width: 220px"
                   @update:value="handleAPIChange"

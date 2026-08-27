@@ -86,11 +86,6 @@ export function isManagedAPIUrl(url: string): boolean {
   return url.startsWith(releaseAPI) || url.startsWith(failoverAPI)
 }
 
-export function clearAPIFailover() {
-  apiFail.value = false
-  sessionStorage.removeItem(API_FAILOVER_SESSION_KEY)
-}
-
 export function getCurrentAPIUrl(): string {
   if (import.meta.env.NODE_ENV === 'development') {
     return debugAPI

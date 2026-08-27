@@ -6,7 +6,7 @@ import { ref, watch } from 'vue'
 import { isLoadingAccount } from '@/api/account'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { selectedAPIKey, setSelectedAPIKey } from '@/shared/config'
+import { currentAPIKey, setSelectedAPIKey } from '@/shared/config'
 import VtsuruLogo from '@/svgs/ic_vtuber.svg?component'
 
 const message = useMessage()
@@ -19,7 +19,7 @@ watch(
     if (loading) {
       showAPISwitchDialog.value = false
       loadingTimer = window.setTimeout(() => {
-        if (isLoadingAccount.value && selectedAPIKey.value === 'main') {
+        if (isLoadingAccount.value && currentAPIKey.value === 'main') {
           showAPISwitchDialog.value = true
         }
       }, 3000)
