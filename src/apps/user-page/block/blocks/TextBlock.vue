@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
 import { normalizeTextAppearance, textAppearanceClass } from '../textAppearance'
+
 import '../textAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
@@ -42,7 +43,7 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
   display: block;
   line-height: 1.8;
   font-size: 14px;
-  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  color: var(--vtsuru-block-fg);
 }
 
 .text-content.vtsuru-text-fx--typewriter {

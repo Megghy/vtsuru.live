@@ -130,7 +130,7 @@ const items = computed(() => {
 
 .faq-q {
   font-size: 14px;
-  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  color: var(--vtsuru-block-fg);
 }
 
 .faq-a {

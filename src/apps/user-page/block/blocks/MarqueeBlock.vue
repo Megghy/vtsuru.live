@@ -129,13 +129,20 @@ watch(
 
 <style scoped>
 .row {
+  --marquee-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
+  --marquee-fg-muted: var(
+    --vtsuru-block-fg-muted,
+    var(--vtsuru-surface-fg-muted, var(--vtsuru-page-text-muted, var(--vtsuru-fg-muted)))
+  );
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  color: var(--marquee-fg);
 }
 
 .row--bare {
+  --marquee-fg: var(--vtsuru-surface-fg, var(--vtsuru-block-fg));
+  --marquee-fg-muted: var(--vtsuru-surface-fg-muted, var(--vtsuru-block-fg-muted));
   --marquee-surface: color-mix(
     in srgb,
     var(--vtsuru-page-content-color, var(--user-page-ui-surface-bg)) 62%,
@@ -151,7 +158,7 @@ watch(
 
 .icon {
   flex-shrink: 0;
-  color: var(--vtsuru-fg-muted);
+  color: var(--marquee-fg-muted);
 }
 
 .marquee-host {

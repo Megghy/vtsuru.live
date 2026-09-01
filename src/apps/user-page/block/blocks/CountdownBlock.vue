@@ -332,7 +332,7 @@ const breakdown = computed(() => {
   font-size: 24px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  color: var(--vtsuru-block-fg);
 }
 .inline-time.bold small {
   color: var(--vtsuru-fg-muted);

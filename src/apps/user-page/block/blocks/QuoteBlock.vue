@@ -5,6 +5,7 @@ import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
 import { normalizeTextAppearance, textAppearanceClass } from '../textAppearance'
+
 import '../textAppearance.css'
 
 interface BlockConfig {
@@ -114,7 +115,7 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
   line-height: 1.5;
   white-space: pre-wrap;
   font-style: italic;
-  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  color: var(--vtsuru-block-fg);
 }
 
 .quote-text.placeholder {

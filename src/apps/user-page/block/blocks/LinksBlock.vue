@@ -55,7 +55,7 @@ const backgrounded = computed(() =>
   font-weight: 500;
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
   background: var(--vtsuru-bg-elevated);
-  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  color: var(--vtsuru-block-fg);
   transition:
     background-color 0.2s ease,
     border-color 0.2s ease,

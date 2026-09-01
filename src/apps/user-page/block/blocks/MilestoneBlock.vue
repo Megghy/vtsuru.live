@@ -142,7 +142,7 @@ const items = computed(() => {
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  color: var(--vtsuru-block-fg);
 }
 
 .empty {
@@ -209,7 +209,7 @@ const items = computed(() => {
 .title {
   font-weight: 700;
   font-size: 14px;
-  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  color: var(--vtsuru-block-fg);
 }
 
 .desc {
