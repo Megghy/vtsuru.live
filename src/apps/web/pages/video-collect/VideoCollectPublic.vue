@@ -65,6 +65,28 @@ const capacityPercentage = computed(() => {
   if (!table.value) return 0
   return Math.min(100, Math.round((table.value.videoCount / table.value.maxVideoCount) * 100))
 })
+const submissionRequirements = computed(() => {
+  if (!table.value) return []
+
+  const requirements: string[] = []
+  const minMinutes = table.value.minVideoDuration ? Math.ceil(table.value.minVideoDuration / 60) : 0
+  const maxMinutes = table.value.maxVideoDuration ? Math.ceil(table.value.maxVideoDuration / 60) : 0
+
+  if (minMinutes && maxMinutes) requirements.push(`视频时长 ${minMinutes}–${maxMinutes} 分钟`)
+  else if (minMinutes) requirements.push(`视频不少于 ${minMinutes} 分钟`)
+  else if (maxMinutes) requirements.push(`视频不超过 ${maxMinutes} 分钟`)
+
+  if (table.value.maxVideoPerUser) requirements.push(`每人最多投稿 ${table.value.maxVideoPerUser} 个视频`)
+  if (table.value.requireDescription) requirements.push('需要填写推荐理由')
+  requirements.push(
+    table.value.duplicatePolicy === DuplicateVideoPolicy.Reject ? '同一视频请勿重复投稿' : '重复推荐将合并记录',
+  )
+  if (table.value.allowedPartitions.length) {
+    requirements.push(`仅接受 ${table.value.allowedPartitions.join('、')} 分区`)
+  }
+
+  return requirements
+})
 const rules: FormRules = {
   video: [
     { required: true, message: '请输入视频链接或 BV 号', trigger: ['input', 'blur'] },
@@ -230,63 +252,9 @@ onUnmounted(() => turnstile.value?.remove())
               :percentage="capacityPercentage"
               :height="7"
               :show-indicator="false"
+              color="var(--collect-accent)"
+              rail-color="var(--collect-border)"
             />
-            <div class="collect-rules">
-              <NTag
-                size="small"
-                :bordered="false"
-              >
-                待审核 + 已通过占名额，拒绝后释放
-              </NTag>
-              <NTag
-                size="small"
-                :bordered="false"
-              >
-                {{ table.allowUnregisteredUser ? '允许游客投稿' : '需要绑定 B 站账号' }}
-              </NTag>
-              <NTag
-                v-if="table.minVideoDuration"
-                size="small"
-                :bordered="false"
-              >
-                至少 {{ Math.ceil(table.minVideoDuration / 60) }} 分钟
-              </NTag>
-              <NTag
-                v-if="table.maxVideoDuration"
-                size="small"
-                :bordered="false"
-              >
-                最长 {{ Math.ceil(table.maxVideoDuration / 60) }} 分钟
-              </NTag>
-              <NTag
-                v-if="table.maxVideoPerUser"
-                size="small"
-                :bordered="false"
-              >
-                每人最多 {{ table.maxVideoPerUser }} 个
-              </NTag>
-              <NTag
-                v-if="table.requireDescription"
-                size="small"
-                :bordered="false"
-              >
-                推荐理由必填
-              </NTag>
-              <NTag
-                size="small"
-                :bordered="false"
-              >
-                {{ table.duplicatePolicy === DuplicateVideoPolicy.Reject ? '不接受重复视频' : '重复推荐会合并记录' }}
-              </NTag>
-              <NTag
-                v-for="partition in table.allowedPartitions"
-                :key="partition"
-                size="small"
-                :bordered="false"
-              >
-                {{ partition }}分区
-              </NTag>
-            </div>
           </section>
 
           <NCard
@@ -297,7 +265,7 @@ onUnmounted(() => turnstile.value?.remove())
               v-if="submitted"
               status="success"
               title="推荐成功"
-              description="已提交，主播审核通过后会进入结果页。"
+              description="你的视频推荐已经提交。"
             >
               <template #footer>
                 <NButton
@@ -329,7 +297,7 @@ onUnmounted(() => turnstile.value?.remove())
               <NResult
                 status="info"
                 title="投稿名额已满"
-                description="待审核和已通过的视频已达到数量上限；被拒绝的视频会释放名额。"
+                description="当前暂时无法提交新的视频。"
               />
             </template>
 
@@ -355,9 +323,23 @@ onUnmounted(() => turnstile.value?.remove())
                 <NIcon :component="CheckmarkCircle24Regular" />
                 <div>
                   <h2>推荐视频</h2>
-                  <p>填写哔哩哔哩视频信息</p>
+                  <p>
+                    {{ !isBiliAuthed && table.allowUnregisteredUser ? '无需登录也可投稿' : '填写哔哩哔哩视频信息' }}
+                  </p>
                 </div>
               </div>
+
+              <ul
+                class="submit-requirements"
+                aria-label="投稿要求"
+              >
+                <li
+                  v-for="requirement in submissionRequirements"
+                  :key="requirement"
+                >
+                  {{ requirement }}
+                </li>
+              </ul>
 
               <NForm
                 ref="formRef"
@@ -564,13 +546,6 @@ onUnmounted(() => turnstile.value?.remove())
   white-space: nowrap;
 }
 
-.collect-rules {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-
 .submit-panel {
   background: var(--collect-card);
   border: var(--vtsuru-page-border);
@@ -604,6 +579,32 @@ onUnmounted(() => turnstile.value?.remove())
   margin-top: 2px;
   color: var(--collect-muted);
   font-size: 12px;
+}
+
+.submit-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: -8px 0 20px;
+  padding: 0;
+  color: var(--collect-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  list-style: none;
+}
+
+.submit-requirements li {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.submit-requirements li::before {
+  width: 4px;
+  height: 4px;
+  background: var(--collect-accent);
+  border-radius: 50%;
+  content: '';
 }
 
 .identity-fields {
