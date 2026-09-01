@@ -61,6 +61,20 @@ const collectionStatus = computed(() => {
   if (isFull.value) return '名额已满'
   return '进行中'
 })
+const countdownLabel = computed(() => {
+  if (!table.value || isClosed.value || isFull.value) return ''
+
+  const target = isNotStarted.value ? table.value.startAt : table.value.endAt
+  const totalSeconds = Math.max(0, Math.ceil((target - now.value.getTime()) / 1000))
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+
+  if (days > 0) return `${isNotStarted.value ? '距开始' : '距截止'}还有 ${days} 天${hours ? ` ${hours} 小时` : ''}`
+
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  return `${isNotStarted.value ? '距开始' : '距截止'}还有 ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+})
 const capacityPercentage = computed(() => {
   if (!table.value) return 0
   return Math.min(100, Math.round((table.value.videoCount / table.value.maxVideoCount) * 100))
@@ -231,6 +245,12 @@ onUnmounted(() => turnstile.value?.remove())
                     :time="table.startAt"
                     format="yyyy-MM-dd HH:mm"
                 /></strong>
+                <small
+                  v-if="isNotStarted && countdownLabel"
+                  class="collect-countdown"
+                >
+                  {{ countdownLabel }}
+                </small>
               </div>
               <div>
                 <NIcon :component="Clock24Regular" />
@@ -240,6 +260,12 @@ onUnmounted(() => turnstile.value?.remove())
                     :time="table.endAt"
                     format="yyyy-MM-dd HH:mm"
                 /></strong>
+                <small
+                  v-if="!isNotStarted && countdownLabel"
+                  class="collect-countdown"
+                >
+                  {{ countdownLabel }}
+                </small>
               </div>
               <div>
                 <NIcon :component="Video24Regular" />
@@ -529,7 +555,7 @@ onUnmounted(() => turnstile.value?.remove())
 }
 
 .collect-meta .n-icon {
-  grid-row: 1 / 3;
+  grid-row: 1 / 4;
   align-self: center;
   color: var(--collect-accent);
 }
@@ -544,6 +570,13 @@ onUnmounted(() => turnstile.value?.remove())
   font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.collect-countdown {
+  color: var(--collect-accent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
 }
 
 .submit-panel {
