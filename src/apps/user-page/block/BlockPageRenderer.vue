@@ -19,6 +19,7 @@ const props = defineProps<{
   biliInfo: any | undefined
   biliStatus?: BiliProfileStatus
   isDark: boolean
+  canvasColor?: string
   extraThemeOverrides?: GlobalThemeOverrides
   highlightBlockId?: string | null
   selectedBlockIds?: string[]
@@ -31,7 +32,7 @@ const emit = defineEmits<{
   (event: 'hover-block', blockId: string | null): void
 }>()
 
-const userThemeVars = computed(() => getUserPageThemeCssVars(props.project.theme, props.isDark))
+const userThemeVars = computed(() => getUserPageThemeCssVars(props.project.theme, props.isDark, props.canvasColor))
 
 const naiveTheme = computed(() => {
   if (props.isDark) return darkTheme

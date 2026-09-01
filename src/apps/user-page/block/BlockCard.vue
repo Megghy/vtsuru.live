@@ -29,7 +29,7 @@ const isUnframed = computed(() => props.framed === false)
 const isUnbackgrounded = computed(() => props.backgrounded === false)
 
 const palette = computed(() => {
-  const foreground = 'var(--vtsuru-surface-fg)'
+  const foreground = isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)'
   return {
     foreground,
     muted: isUnbackgrounded.value

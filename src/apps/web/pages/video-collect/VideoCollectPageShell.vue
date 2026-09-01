@@ -31,14 +31,20 @@ const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageNaiveTheme
 
 <style scoped>
 .video-collect-page {
-  --collect-fg: var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg)));
-  --collect-muted: var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)));
-  --collect-subtle: var(--vtsuru-surface-fg-subtle, var(--collect-muted));
+  --collect-fg: var(--vtsuru-page-text, var(--vtsuru-surface-fg, var(--vtsuru-fg)));
+  --collect-muted: var(
+    --vtsuru-page-text-muted,
+    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)))
+  );
+  --collect-subtle: var(--vtsuru-page-text-subtle, var(--vtsuru-surface-fg-subtle, var(--collect-muted)));
   --collect-surface: var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-surface)));
   --collect-surface-hover: var(--user-page-theme-surface-bg-hover, var(--vtsuru-page-card-bg-embedded));
   --collect-card: var(--vtsuru-page-card-bg, var(--collect-surface));
   --collect-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)));
-  --collect-accent: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
+  --collect-accent: var(
+    --vtsuru-page-canvas-accent,
+    var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)))
+  );
 
   position: relative;
   min-width: 0;
@@ -50,6 +56,13 @@ const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageNaiveTheme
   color: var(--collect-fg);
   background: var(--vtsuru-page-content-color, var(--vtsuru-bg));
   font-family: var(--vtsuru-page-font-family);
+}
+
+.video-collect-page :deep(.collect-on-surface) {
+  --collect-fg: var(--vtsuru-surface-fg, var(--vtsuru-fg));
+  --collect-muted: var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)));
+  --collect-subtle: var(--vtsuru-surface-fg-subtle, var(--collect-muted));
+  --collect-accent: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
 }
 
 .video-collect-page.has-background {

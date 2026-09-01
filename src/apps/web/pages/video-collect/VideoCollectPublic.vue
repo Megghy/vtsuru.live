@@ -290,7 +290,7 @@ onUnmounted(() => turnstile.value?.remove())
           </section>
 
           <NCard
-            class="submit-panel"
+            class="submit-panel collect-on-surface"
             :bordered="true"
           >
             <NResult

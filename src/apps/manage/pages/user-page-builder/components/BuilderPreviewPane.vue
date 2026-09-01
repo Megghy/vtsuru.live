@@ -36,6 +36,7 @@ import {
   resolvePageBackground,
 } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
+import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
@@ -142,7 +143,10 @@ const previewBgVars = computed(() => {
   return getPageBackgroundCssVars(bg, previewEffectiveIsDark.value)
 })
 
-const previewUiVars = computed(() => getUserPageThemeCssVars(previewMergedTheme.value, previewEffectiveIsDark.value))
+const previewCanvasColor = usePageCanvasColor(previewBg, previewEffectiveIsDark)
+const previewUiVars = computed(() =>
+  getUserPageThemeCssVars(previewMergedTheme.value, previewEffectiveIsDark.value, previewCanvasColor.value),
+)
 
 const previewUserThemeOverrides = computed<GlobalThemeOverrides>(() => {
   return getUserPageNaiveThemeOverrides(previewMergedTheme.value, previewUiVars.value, previewEffectiveIsDark.value)
@@ -379,6 +383,7 @@ watch(
                       :bili-info="biliProfileQuery.data.value"
                       :bili-status="biliProfileStatus"
                       :is-dark="previewEffectiveIsDark"
+                      :canvas-color="previewCanvasColor"
                       :extra-theme-overrides="previewSurfaceThemeOverrides"
                       :highlight-block-id="previewHighlightBlockId"
                       :selected-block-ids="editor.selectedBlockIds.value"

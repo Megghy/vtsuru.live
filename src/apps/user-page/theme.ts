@@ -1,5 +1,5 @@
 import type { Rgb } from 'culori'
-import { formatRgb, interpolate, wcagContrast } from 'culori'
+import { formatRgb, interpolate, wcagContrast, wcagLuminance } from 'culori'
 
 import { compositeOpaque, ensureTextContrast, parseRgb, resolveOpaqueColor } from '@/shared/config/theme/contrast'
 
@@ -35,6 +35,13 @@ export function resolvePageThemeIsDark(mode: PageThemeMode | undefined, fallback
   if (mode === 'dark') return true
   if (mode === 'light') return false
   return fallbackIsDark
+}
+
+/** 相对亮度低于 0.45 视为深色画布，用来给直接铺在背景上的文字选色 */
+export function isUserPageColorDark(value: string) {
+  const color = parseRgb(value)
+  if (!color) return false
+  return wcagLuminance({ ...color, alpha: 1 }) < 0.45
 }
 
 function resolveSurface(isDark: boolean, surfaceColor?: string) {

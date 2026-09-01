@@ -14,7 +14,12 @@ import type {
   PageBackgroundType,
 } from './block/schema'
 import { getGoogleFontFamilyCss } from './googleFonts'
-import { resolveUserPageControlOverlay, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
+import {
+  isUserPageColorDark,
+  resolveUserPageControlOverlay,
+  resolveUserPageReadableAccent,
+  resolveUserPageTextPalette,
+} from './theme'
 import { normalizeUserPageColor, parseUserPageColor } from './themeColor'
 import { resolveUserPageAppearance } from './themeConfig'
 
@@ -147,7 +152,7 @@ function mixWithTransparent(value: string, amount: number) {
   return formatRgb({ ...color, alpha: (color.alpha ?? 1) * amount })
 }
 
-export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean) {
+export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean, canvasColor?: string) {
   const primaryColor = readThemeColor(theme, 'primaryColor')
   const backgroundColor = readThemeColor(theme, 'backgroundColor')
   const fontFamily = readThemeString(theme, 'fontFamily')
@@ -162,8 +167,20 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
   const contrastSurface =
     customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars['--user-page-ui-surface-bg'] : undefined)
   const textPalette = resolveUserPageTextPalette(asObject(theme) ?? undefined, effectiveIsDark, contrastSurface)
-  const pageText = textPalette.color
+  // 直接铺在背景图上的文字按画布亮度选色，卡片仍用表面色板
+  const canvasIsDark = canvasColor ? isUserPageColorDark(canvasColor) : effectiveIsDark
+  const canvasPalette = canvasColor
+    ? resolveUserPageTextPalette(asObject(theme) ?? undefined, canvasIsDark, canvasColor)
+    : textPalette
+  const pageText = canvasPalette.color
+  const surfaceText = textPalette.color
   const readablePrimary = resolveUserPageReadableAccent(pagePrimary, backgroundColor, effectiveIsDark, contrastSurface)
+  const canvasAccent = resolveUserPageReadableAccent(
+    pagePrimary,
+    canvasColor || backgroundColor,
+    canvasIsDark,
+    canvasColor || contrastSurface,
+  )
 
   const contentColor = customSurface || backgroundColor || surfaceVars['--user-page-ui-surface-bg']
   const defaultCardSurface = applyColorOpacity(
@@ -175,7 +192,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
   const surfaceHover = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
     : surfaceVars['--user-page-ui-surface-bg-hover']
-  const canvasColor = backgroundColor || siteTokens.surfaceHover
+  const themeCanvasBg = backgroundColor || siteTokens.surfaceHover
   const borderColor = surfaceVars['--vtsuru-card-border-color']
   const radius = `${appearance.radius}px`
 
@@ -194,13 +211,16 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--vtsuru-page-primary-border': `color-mix(in srgb, ${pagePrimary} 28%, transparent)`,
     '--vtsuru-page-primary-focus': `color-mix(in srgb, ${pagePrimary} 42%, transparent)`,
     '--vtsuru-page-primary-readable': readablePrimary,
+    '--vtsuru-page-canvas-accent': canvasAccent || readablePrimary,
     '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
     '--vtsuru-page-content-color': contentColor,
     '--vtsuru-page-card-bg': surfaceColor,
     '--vtsuru-page-card-bg-embedded': surfaceHover,
     '--vtsuru-page-text': pageText,
-    '--vtsuru-fg': pageText,
-    '--vtsuru-surface-fg': pageText,
+    '--vtsuru-page-text-muted': canvasPalette.muted,
+    '--vtsuru-page-text-subtle': canvasPalette.subtle,
+    '--vtsuru-fg': surfaceText,
+    '--vtsuru-surface-fg': surfaceText,
     '--vtsuru-fg-muted': textPalette.muted,
     '--vtsuru-surface-fg-muted': textPalette.muted,
     '--vtsuru-surface-fg-subtle': textPalette.subtle,
@@ -215,14 +235,14 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--vtsuru-border': borderColor,
     '--vtsuru-page-bg': backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : 'transparent',
     '--user-page-theme-content-bg': 'transparent',
-    '--text-color-base': pageText,
-    '--text-color-1': pageText,
+    '--text-color-base': surfaceText,
+    '--text-color-1': surfaceText,
     '--text-color-2': textPalette.muted,
     '--text-color-3': textPalette.subtle,
     '--primary-color': pagePrimary,
     '--user-page-theme-surface-bg': surfaceColor,
     '--user-page-theme-surface-bg-hover': surfaceHover,
-    '--user-page-theme-canvas-bg': canvasColor,
+    '--user-page-theme-canvas-bg': themeCanvasBg,
     '--vtsuru-page-radius': radius,
     '--vtsuru-radius': radius,
     '--vtsuru-radius-control': radius,
@@ -254,7 +274,7 @@ export function getUserPageNaiveThemeOverrides(
   const cardColor = vars['--vtsuru-page-card-bg']
   const cardEmbeddedColor = vars['--vtsuru-page-card-bg-embedded']
   const borderColor = vars['--vtsuru-card-border-color'] || vars['--user-page-border-color']
-  const textColor = vars['--vtsuru-page-text']
+  const textColor = vars['--vtsuru-surface-fg'] || vars['--vtsuru-page-text']
   const mutedTextColor = vars['--vtsuru-surface-fg-muted']
   const subtleTextColor = vars['--vtsuru-surface-fg-subtle']
   const disabledTextColor = vars['--vtsuru-page-fg-disabled']

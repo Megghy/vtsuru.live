@@ -7,6 +7,7 @@ import type { UserInfo } from '@/api/api-models'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
+import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import ContribPageRenderer from '@/apps/user-page/contrib/ContribPageRenderer.vue'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
@@ -92,15 +93,15 @@ const contentTheme = computed(
 
 useGoogleFont(computed(() => contentTheme.value.fontFamily))
 
-const contentThemeVars = computed(() => getUserPageThemeCssVars(contentTheme.value, effectiveIsDark.value))
-
 const pageBackground = computed(() => resolvePageBackground(pageConfig.value?.background))
 const globalBackground = computed(() => resolvePageBackground(settings.value?.background))
 const blockBackground = computed(() => resolvePageBackground(mergedBlockProject.value?.theme))
-const contentBackground = computed(() => {
-  const background = pageBackground.value ?? globalBackground.value ?? blockBackground.value
-  return background?.coverSidebar ? null : background
-})
+const visualBackground = computed(() => pageBackground.value ?? globalBackground.value ?? blockBackground.value)
+const contentBackground = computed(() => (visualBackground.value?.coverSidebar ? null : visualBackground.value))
+const canvasColor = usePageCanvasColor(visualBackground, effectiveIsDark)
+const contentThemeVars = computed(() =>
+  getUserPageThemeCssVars(contentTheme.value, effectiveIsDark.value, canvasColor.value),
+)
 const contentBackgroundVars = computed(() => {
   return contentBackground.value ? getPageBackgroundCssVars(contentBackground.value, effectiveIsDark.value) : {}
 })
@@ -173,6 +174,7 @@ const contentClass = computed(() => ({
             :bili-info="biliInfo"
             :bili-status="biliStatus"
             :is-dark="effectiveIsDark"
+            :canvas-color="canvasColor"
           />
         </template>
 
@@ -225,14 +227,14 @@ const contentClass = computed(() => ({
 
 .page-heading__title {
   margin: 0;
-  color: var(--vtsuru-fg);
+  color: var(--vtsuru-page-text);
   font-size: 18px;
   font-weight: 600;
 }
 
 .page-heading__summary {
   margin-top: 4px;
-  color: var(--vtsuru-fg);
+  color: var(--vtsuru-page-text-muted, var(--vtsuru-page-text));
 }
 
 .bg-host {

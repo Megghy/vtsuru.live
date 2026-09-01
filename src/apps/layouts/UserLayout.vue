@@ -34,6 +34,7 @@ import {
 } from '@/apps/user-page/background'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
+import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import {
   getEnabledUserFunctions,
   isUserFeatureEnabled,
@@ -366,7 +367,11 @@ const layoutContentBgClass = computed(() => ({
   'content-bg-glass': layoutContentBg.value?.blurMode === 'glass',
 }))
 
-const layoutUiVars = computed(() => getUserPageThemeCssVars(layoutTheme.value, effectiveIsDark.value))
+const layoutVisualBg = computed(() => layoutPageBg.value ?? layoutContentBg.value)
+const layoutCanvasColor = usePageCanvasColor(layoutVisualBg, effectiveIsDark)
+const layoutUiVars = computed(() =>
+  getUserPageThemeCssVars(layoutTheme.value, effectiveIsDark.value, layoutCanvasColor.value),
+)
 
 const mergedLayoutVars = computed(() => ({ ...layoutUiVars.value, ...layoutPageBgVars.value }))
 
@@ -969,7 +974,9 @@ watch(
         align="center"
         size="small"
       >
-        <div style="text-align: center">如果你不是主播且不发送棉花糖(提问)的话则不需要注册本站, 可以直接认证B站账号</div>
+        <div style="text-align: center">
+          如果你不是主播且不发送棉花糖(提问)的话则不需要注册本站, 可以直接认证B站账号
+        </div>
         <NFlex
           justify="center"
           style="width: 100%; margin-top: 8px"
@@ -1149,7 +1156,7 @@ watch(
 }
 
 .page-root.bg-host .sider-profile {
-  color: var(--vtsuru-page-text);
+  color: var(--vtsuru-surface-fg);
 }
 
 .page-root.bg-host.glass .layout-header,
@@ -1373,7 +1380,7 @@ watch(
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: var(--vtsuru-page-text);
+  color: var(--vtsuru-surface-fg);
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) transparent;
   background: transparent;
   transition: background-color 120ms ease, border-color 120ms ease;
