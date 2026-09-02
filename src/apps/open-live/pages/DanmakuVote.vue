@@ -17,6 +17,8 @@ import {
   NColorPicker,
   NDivider,
   NEmpty,
+  NGrid,
+  NGridItem,
   NIcon,
   NInput,
   NInputGroup,
@@ -963,132 +965,182 @@ function deleteTemplate(index: number) {
     v-model:show="showSettingsModal"
     preset="card"
     title="投票设置"
-    style="width: 900px; max-width: 90vw"
+    style="width: 720px; max-width: 95vw"
+    :segmented="{ content: 'soft', footer: 'soft' }"
   >
     <NSpin :show="isLoading">
       <NFlex
         vertical
-        :size="12"
+        :size="16"
       >
-        <NFlex
-          vertical
-          :size="10"
-        >
-          <NText strong> 基本设置 </NText>
-
-          <NInputGroup>
-            <NInputGroupLabel>命令前缀</NInputGroupLabel>
-            <NInput
-              v-model:value="voteConfig.voteCommand"
-              size="small"
-            />
-          </NInputGroup>
-
+        <!-- 1. 命令与基础规则 -->
+        <div>
+          <NText
+            strong
+            style="font-size: 14px; margin-bottom: 8px; display: block"
+          >
+            命令与基础规则
+          </NText>
+          <NGrid
+            cols="1 s:2"
+            :x-gap="12"
+            :y-gap="10"
+          >
+            <NGridItem>
+              <NInputGroup style="width: 100%">
+                <NInputGroupLabel style="min-width: 80px">命令前缀</NInputGroupLabel>
+                <NInput
+                  v-model:value="voteConfig.voteCommand"
+                  placeholder="如：投"
+                />
+              </NInputGroup>
+            </NGridItem>
+            <NGridItem>
+              <NInputGroup style="width: 100%">
+                <NInputGroupLabel style="min-width: 80px">结束命令</NInputGroupLabel>
+                <NInput
+                  v-model:value="voteConfig.voteEndCommand"
+                  placeholder="如：结束投票"
+                />
+              </NInputGroup>
+            </NGridItem>
+            <NGridItem>
+              <NInputGroup style="width: 100%">
+                <NInputGroupLabel style="min-width: 80px">默认标题</NInputGroupLabel>
+                <NInput
+                  v-model:value="voteConfig.voteTitle"
+                  placeholder="如：观众投票"
+                />
+              </NInputGroup>
+            </NGridItem>
+            <NGridItem>
+              <NInputGroup style="width: 100%">
+                <NInputGroupLabel style="min-width: 80px">默认时长</NInputGroupLabel>
+                <NInputNumber
+                  v-model:value="voteConfig.voteDurationSeconds"
+                  :min="10"
+                  style="width: 100%"
+                >
+                  <template #suffix> 秒 </template>
+                </NInputNumber>
+              </NInputGroup>
+            </NGridItem>
+          </NGrid>
           <NText
             depth="3"
-            style="font-size: 12px"
+            style="font-size: 12px; margin: 6px 0 10px; display: block"
           >
-            观众不输入命令前缀时，也可以直接发送选项编号或选项内容。
+            观众不输入命令前缀时，也可以直接发送选项编号或选项内容参与投票。
           </NText>
-
-          <NInputGroup>
-            <NInputGroupLabel>结束命令</NInputGroupLabel>
-            <NInput
-              v-model:value="voteConfig.voteEndCommand"
-              size="small"
-            />
-          </NInputGroup>
-
-          <NInputGroup>
-            <NInputGroupLabel>默认标题</NInputGroupLabel>
-            <NInput
-              v-model:value="voteConfig.voteTitle"
-              size="small"
-            />
-          </NInputGroup>
-
-          <NInputGroup>
-            <NInputGroupLabel>默认时长</NInputGroupLabel>
-            <NInputNumber
-              v-model:value="voteConfig.voteDurationSeconds"
-              :min="10"
-              size="small"
-            >
-              <template #suffix> 秒 </template>
-            </NInputNumber>
-          </NInputGroup>
-
-          <NCheckbox v-model:checked="voteConfig.showResults"> 实时显示投票结果 </NCheckbox>
-
-          <NCheckbox v-model:checked="voteConfig.allowMultipleVotes"> 允许重复投票 </NCheckbox>
-        </NFlex>
-
-        <NDivider style="margin: 0" />
-
-        <NFlex
-          vertical
-          :size="10"
-        >
-          <NText strong> 礼物投票 </NText>
-
-          <NCheckbox v-model:checked="voteConfig.allowGiftVoting"> 允许通过礼物投票 </NCheckbox>
-
-          <NInputGroup v-if="voteConfig.allowGiftVoting">
-            <NInputGroupLabel>最低礼物金额</NInputGroupLabel>
-            <NInputNumber
-              v-model:value="voteConfig.minGiftPrice"
-              :min="0.1"
-              :precision="1"
-              size="small"
-            >
-              <template #suffix> 元 </template>
-            </NInputNumber>
-          </NInputGroup>
-
-          <NRadioGroup v-model:value="voteConfig.voteResultMode">
-            <NFlex :size="12">
-              <NRadio :value="0"> 按人数计票 </NRadio>
-              <NRadio :value="1"> 按礼物价值 </NRadio>
-            </NFlex>
-          </NRadioGroup>
-        </NFlex>
-
-        <NDivider style="margin: 0" />
-
-        <NFlex
-          vertical
-          :size="10"
-        >
-          <NText strong> 显示设置 </NText>
-
           <NFlex
-            :wrap="true"
-            :size="12"
+            :size="16"
+            align="center"
           >
-            <NInputGroup>
-              <NInputGroupLabel>背景颜色</NInputGroupLabel>
-              <NColorPicker v-model:value="voteConfig.backgroundColor" />
-            </NInputGroup>
-
-            <NInputGroup>
-              <NInputGroupLabel>文本颜色</NInputGroupLabel>
-              <NColorPicker v-model:value="voteConfig.textColor" />
-            </NInputGroup>
-
-            <NInputGroup>
-              <NInputGroupLabel>选项颜色</NInputGroupLabel>
-              <NColorPicker v-model:value="voteConfig.optionColor" />
-            </NInputGroup>
+            <NCheckbox v-model:checked="voteConfig.showResults"> 实时显示投票结果 </NCheckbox>
+            <NCheckbox v-model:checked="voteConfig.allowMultipleVotes"> 允许重复投票 </NCheckbox>
           </NFlex>
+        </div>
+
+        <NDivider style="margin: 0" />
+
+        <!-- 2. 礼物投票规则 -->
+        <div>
+          <NFlex
+            align="center"
+            justify="space-between"
+            style="margin-bottom: 10px"
+          >
+            <NText strong style="font-size: 14px">礼物投票</NText>
+            <NCheckbox v-model:checked="voteConfig.allowGiftVoting"> 允许通过赠送礼物参与投票 </NCheckbox>
+          </NFlex>
+
+          <NGrid
+            v-if="voteConfig.allowGiftVoting"
+            cols="1 s:2"
+            :x-gap="12"
+            :y-gap="10"
+            style="padding: 12px; border-radius: var(--vtsuru-radius); background-color: var(--vtsuru-bg-inset)"
+          >
+            <NGridItem>
+              <NInputGroup style="width: 100%">
+                <NInputGroupLabel style="min-width: 96px">最低礼物金额</NInputGroupLabel>
+                <NInputNumber
+                  v-model:value="voteConfig.minGiftPrice"
+                  :min="0.1"
+                  :precision="1"
+                  style="width: 100%"
+                >
+                  <template #suffix> 元 </template>
+                </NInputNumber>
+              </NInputGroup>
+            </NGridItem>
+            <NGridItem>
+              <NFlex
+                align="center"
+                :gap="8"
+                style="height: 100%"
+              >
+                <NText depth="2">计票方式：</NText>
+                <NRadioGroup v-model:value="voteConfig.voteResultMode">
+                  <NRadioButton :value="0"> 按人数计票 </NRadioButton>
+                  <NRadioButton :value="1"> 按礼物价值 </NRadioButton>
+                </NRadioGroup>
+              </NFlex>
+            </NGridItem>
+          </NGrid>
+        </div>
+
+        <NDivider style="margin: 0" />
+
+        <!-- 3. 外观与展示 -->
+        <div>
+          <NText
+            strong
+            style="font-size: 14px; margin-bottom: 10px; display: block"
+          >
+            外观与展示
+          </NText>
+          <NGrid
+            cols="1 s:3"
+            :x-gap="12"
+            :y-gap="10"
+            style="margin-bottom: 10px"
+          >
+            <NGridItem>
+              <NInputGroup style="width: 100%">
+                <NInputGroupLabel style="min-width: 76px">背景色</NInputGroupLabel>
+                <NColorPicker
+                  v-model:value="voteConfig.backgroundColor"
+                  style="width: 100%"
+                />
+              </NInputGroup>
+            </NGridItem>
+            <NGridItem>
+              <NInputGroup style="width: 100%">
+                <NInputGroupLabel style="min-width: 76px">文本色</NInputGroupLabel>
+                <NColorPicker
+                  v-model:value="voteConfig.textColor"
+                  style="width: 100%"
+                />
+              </NInputGroup>
+            </NGridItem>
+            <NGridItem>
+              <NInputGroup style="width: 100%">
+                <NInputGroupLabel style="min-width: 76px">选项色</NInputGroupLabel>
+                <NColorPicker
+                  v-model:value="voteConfig.optionColor"
+                  style="width: 100%"
+                />
+              </NInputGroup>
+            </NGridItem>
+          </NGrid>
 
           <NFlex
             align="center"
-            :wrap="true"
-            :size="12"
+            :gap="16"
           >
             <NCheckbox v-model:checked="voteConfig.roundedCorners"> 圆角显示 </NCheckbox>
-
-            <NInputGroup>
+            <NInputGroup style="width: auto">
               <NInputGroupLabel>显示位置</NInputGroupLabel>
               <NSelect
                 v-model:value="voteConfig.displayPosition"
@@ -1099,32 +1151,33 @@ function deleteTemplate(index: number) {
                   { label: '底部', value: 'bottom' },
                 ]"
                 size="small"
-                style="width: 140px"
+                style="width: 120px"
               />
             </NInputGroup>
           </NFlex>
-        </NFlex>
-
-        <NFlex
-          justify="end"
-          :size="8"
-        >
-          <NButton
-            size="small"
-            @click="showSettingsModal = false"
-          >
-            取消
-          </NButton>
-          <NButton
-            type="primary"
-            size="small"
-            @click="saveVoteConfig"
-          >
-            保存
-          </NButton>
-        </NFlex>
+        </div>
       </NFlex>
     </NSpin>
+
+    <template #footer>
+      <NFlex
+        justify="end"
+        :size="12"
+      >
+        <NButton
+          secondary
+          @click="showSettingsModal = false"
+        >
+          取消
+        </NButton>
+        <NButton
+          type="primary"
+          @click="saveVoteConfig"
+        >
+          保存设置
+        </NButton>
+      </NFlex>
+    </template>
   </NModal>
 </template>
 

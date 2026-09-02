@@ -6,6 +6,8 @@ import {
   NFlex,
   NForm,
   NFormItem,
+  NGrid,
+  NGridItem,
   NIcon,
   NInput,
   NInputGroup,
@@ -102,168 +104,219 @@ async function addCustomSong() {
     ref="formRef"
     :rules="addSongRules"
     :model="addSongModel"
+    label-placement="top"
   >
-    <NFormItem
-      path="name"
-      label="名称"
+    <NGrid
+      cols="1 s:2"
+      :x-gap="16"
+      :y-gap="0"
     >
-      <NInput
-        v-model:value="addSongModel.name"
-        autosize
-        style="min-width: 200px"
-        placeholder="就是歌曲名称"
-        :status="existingSongs.findIndex((s) => s.name === addSongModel.name) > -1 ? 'error' : 'success'"
-      />
-    </NFormItem>
-    <NFormItem
-      path="author"
-      label="作者 (可多选)"
-    >
-      <NSelect
-        v-model:value="addSongModel.author"
-        :options="authors"
-        filterable
-        multiple
-        tag
-        placeholder="输入后按回车新增"
-      />
-    </NFormItem>
-    <NFormItem
-      path="description"
-      label="备注"
-    >
-      <NInput
-        v-model:value="addSongModel.description"
-        placeholder="可选"
-        :maxlength="250"
-        show-count
-        autosize
-        style="min-width: 300px"
-        clearable
-      />
-    </NFormItem>
-    <NFormItem
-      path="language"
-      label="语言 (可多选)"
-    >
-      <NSelect
-        v-model:value="addSongModel.language"
-        filterable
-        multiple
-        clearable
-        tag
-        placeholder="可选，输入后按回车新增"
-        :options="songSelectOption"
-      />
-    </NFormItem>
-    <NFormItem
-      path="tags"
-      label="标签 (可多选)"
-    >
-      <NSelect
-        v-model:value="addSongModel.tags"
-        filterable
-        multiple
-        clearable
-        tag
-        placeholder="可选，输入后按回车新增"
-        :options="tags"
-      />
-    </NFormItem>
-    <NFormItem
-      path="url"
-      label="链接"
-    >
-      <NInput
-        v-model:value="addSongModel.url"
-        placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
-      />
-    </NFormItem>
-    <NFormItem path="options">
-      <template #label>
-        点歌设置
-        <NTooltip>
-          <template #trigger>
-            <NIcon :component="Info24Filled" />
-          </template>
-          这个不是控制是否允许点歌的! 启用后将会覆盖点歌功能中的设置, 用于单独设置歌曲要求
-        </NTooltip>
-      </template>
-      <NFlex vertical>
-        <NCheckbox
-          :checked="addSongModel.options != null"
-          @update:checked="
-            (checked: boolean) => {
-              addSongModel.options = checked
-                ? ({
-                    needJianzhang: false,
-                    needTidu: false,
-                    needZongdu: false,
-                  } as SongRequestOption)
-                : undefined
-            }
-          "
+      <NGridItem>
+        <NFormItem
+          path="name"
+          label="歌曲名称"
+          required
         >
-          是否启用
-        </NCheckbox>
-        <template v-if="addSongModel.options != null">
-          <NFlex>
-            <NCheckbox v-model:checked="addSongModel.options.needJianzhang"> 需要舰长 </NCheckbox>
-            <NCheckbox v-model:checked="addSongModel.options.needTidu"> 需要提督 </NCheckbox>
-            <NCheckbox v-model:checked="addSongModel.options.needZongdu"> 需要总督 </NCheckbox>
-          </NFlex>
-          <NFlex align="center">
-            <NCheckbox
-              :checked="addSongModel.options.scMinPrice != null"
-              @update:checked="
-                (checked: boolean) => {
-                  if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
-                }
-              "
+          <NInput
+            v-model:value="addSongModel.name"
+            placeholder="请输入歌曲名称"
+            maxlength="200"
+            :status="existingSongs.findIndex((s) => s.name === addSongModel.name) > -1 ? 'error' : undefined"
+          />
+        </NFormItem>
+      </NGridItem>
+      <NGridItem>
+        <NFormItem
+          path="author"
+          label="作者 (可多选)"
+        >
+          <NSelect
+            v-model:value="addSongModel.author"
+            :options="authors"
+            filterable
+            multiple
+            tag
+            placeholder="输入后按回车新增"
+          />
+        </NFormItem>
+      </NGridItem>
+      <NGridItem>
+        <NFormItem
+          path="language"
+          label="语言 (可多选)"
+        >
+          <NSelect
+            v-model:value="addSongModel.language"
+            filterable
+            multiple
+            clearable
+            tag
+            placeholder="可选，输入后按回车新增"
+            :options="songSelectOption"
+          />
+        </NFormItem>
+      </NGridItem>
+      <NGridItem>
+        <NFormItem
+          path="tags"
+          label="标签 (可多选)"
+        >
+          <NSelect
+            v-model:value="addSongModel.tags"
+            filterable
+            multiple
+            clearable
+            tag
+            placeholder="可选，输入后按回车新增"
+            :options="tags"
+          />
+        </NFormItem>
+      </NGridItem>
+      <NGridItem>
+        <NFormItem
+          path="url"
+          label="试听 / 伴奏链接"
+        >
+          <NInput
+            v-model:value="addSongModel.url"
+            placeholder="可选，音频直链可直接播放"
+          />
+        </NFormItem>
+      </NGridItem>
+      <NGridItem>
+        <NFormItem
+          path="description"
+          label="备注说明"
+        >
+          <NInput
+            v-model:value="addSongModel.description"
+            placeholder="可选备注说明"
+            :maxlength="250"
+            show-count
+            clearable
+          />
+        </NFormItem>
+      </NGridItem>
+      <NGridItem :span="2">
+        <NFormItem path="options">
+          <template #label>
+            <NFlex
+              align="center"
+              :gap="4"
             >
-              需要SC
-            </NCheckbox>
-            <NInputGroup
-              v-if="addSongModel.options?.scMinPrice"
-              style="width: 200px"
-            >
-              <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
-              <NInputNumber
-                v-model:value="addSongModel.options.scMinPrice"
-                min="30"
-              />
-            </NInputGroup>
-          </NFlex>
-          <NFlex align="center">
-            <NCheckbox
-              :checked="addSongModel.options.fanMedalMinLevel != null"
-              @update:checked="
-                (checked: boolean) => {
-                  if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
-                }
-              "
-            >
-              需要粉丝牌
+              <span>独立点歌门槛设置</span>
               <NTooltip>
                 <template #trigger>
-                  <NIcon :component="Info24Filled" />
+                  <NIcon
+                    :component="Info24Filled"
+                    style="cursor: pointer; color: var(--vtsuru-fg-muted)"
+                  />
                 </template>
-                这个即使不开也会遵循全局点歌设置的粉丝牌等级
+                启用后将覆盖全局点歌要求，单独控制本首歌曲的点歌门槛。
               </NTooltip>
-            </NCheckbox>
-            <NInputGroup
-              v-if="addSongModel.options?.fanMedalMinLevel"
-              style="width: 200px"
+            </NFlex>
+          </template>
+          <NFlex
+            vertical
+            :gap="10"
+            style="width: 100%"
+          >
+            <NCheckbox
+              :checked="addSongModel.options != null"
+              @update:checked="
+                (checked: boolean) => {
+                  addSongModel.options = checked
+                    ? ({
+                        needJianzhang: false,
+                        needTidu: false,
+                        needZongdu: false,
+                      } as SongRequestOption)
+                    : undefined
+                }
+              "
             >
-              <NInputGroupLabel> 最低等级 </NInputGroupLabel>
-              <NInputNumber
-                v-model:value="addSongModel.options.fanMedalMinLevel"
-                min="0"
-              />
-            </NInputGroup>
+              为本首歌曲单独设置点歌门槛
+            </NCheckbox>
+            <div
+              v-if="addSongModel.options != null"
+              style="padding: 12px; border-radius: var(--vtsuru-radius); background-color: var(--vtsuru-bg-inset)"
+            >
+              <NFlex
+                vertical
+                :gap="12"
+              >
+                <NFlex :gap="16">
+                  <NCheckbox v-model:checked="addSongModel.options.needJianzhang"> 要求舰长 </NCheckbox>
+                  <NCheckbox v-model:checked="addSongModel.options.needTidu"> 要求提督 </NCheckbox>
+                  <NCheckbox v-model:checked="addSongModel.options.needZongdu"> 要求总督 </NCheckbox>
+                </NFlex>
+                <NGrid
+                  cols="1 s:2"
+                  :x-gap="16"
+                  :y-gap="8"
+                >
+                  <NGridItem>
+                    <NFlex
+                      align="center"
+                      :gap="8"
+                    >
+                      <NCheckbox
+                        :checked="addSongModel.options.scMinPrice != null"
+                        @update:checked="
+                          (checked: boolean) => {
+                            if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
+                          }
+                        "
+                      >
+                        需要 SC
+                      </NCheckbox>
+                      <NInputGroup
+                        v-if="addSongModel.options?.scMinPrice"
+                        style="width: 180px"
+                      >
+                        <NInputGroupLabel>最低金额</NInputGroupLabel>
+                        <NInputNumber
+                          v-model:value="addSongModel.options.scMinPrice"
+                          :min="30"
+                          style="width: 100%"
+                        />
+                      </NInputGroup>
+                    </NFlex>
+                  </NGridItem>
+                  <NGridItem>
+                    <NFlex
+                      align="center"
+                      :gap="8"
+                    >
+                      <NCheckbox
+                        :checked="addSongModel.options.fanMedalMinLevel != null"
+                        @update:checked="
+                          (checked: boolean) => {
+                            if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
+                          }
+                        "
+                      >
+                        需要粉丝牌
+                      </NCheckbox>
+                      <NInputGroup
+                        v-if="addSongModel.options?.fanMedalMinLevel"
+                        style="width: 180px"
+                      >
+                        <NInputGroupLabel>最低等级</NInputGroupLabel>
+                        <NInputNumber
+                          v-model:value="addSongModel.options.fanMedalMinLevel"
+                          :min="0"
+                          style="width: 100%"
+                        />
+                      </NInputGroup>
+                    </NFlex>
+                  </NGridItem>
+                </NGrid>
+              </NFlex>
+            </div>
           </NFlex>
-        </template>
-      </NFlex>
-    </NFormItem>
+        </NFormItem>
+      </NGridItem>
+    </NGrid>
   </NForm>
 </template>
