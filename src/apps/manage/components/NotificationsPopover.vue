@@ -17,7 +17,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
@@ -141,17 +141,11 @@ async function openNotif(item: any) {
   }
 }
 
-onMounted(() => {
-  if (accountInfo.value?.id) {
-    void notificationStore.refreshUnread().catch((err) => console.warn('[notification] refreshUnread failed', err))
-  }
-})
-
 watch(
   () => accountInfo.value?.id,
-  async (id) => {
+  (id) => {
     if (!id) return
-    await notificationStore.refreshUnread()
+    void notificationStore.refreshUnread()
   },
   { immediate: true },
 )

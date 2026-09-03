@@ -617,10 +617,12 @@ export async function initOpenLive() {
   return reuslt
 }
 function initNotificationHandler() {
-  onAction((event) => {
+  void onAction((event) => {
     if (event.extra?.type === 'question-box') {
-      openUrl(`${CN_HOST}/manage/question-box`)
+      void openUrl(`${CN_HOST}/manage/question-box`)
     }
+  }).catch((err) => {
+    warn(`[notification] 注册通知点击回调失败: ${err}`)
   })
 }
 

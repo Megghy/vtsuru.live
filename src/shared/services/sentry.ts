@@ -45,6 +45,8 @@ export function initSentry(app?: App) {
     app,
     dsn: BUGSINK_DSN,
     environment: import.meta.env.MODE || 'production',
+    ignoreErrors: [/^尚未完成邮箱验证$/, /^未登录$/, /takeRecords/, /register_listener not found/],
+    denyUrls: [/hyperdx-vendor/],
     initialScope: {
       tags: {
         app: 'vtsuru.live',

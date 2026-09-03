@@ -93,21 +93,37 @@ function showAPIFailoverNotification() {
   })
 }
 
-async function InitOther() {
-  if (import.meta.env.MODE !== 'development' && !window.$route.path.startsWith('/obs')) {
+function canInitHyperDX(): boolean {
+  if (import.meta.env.MODE === 'development') return false
+  if (window.$route.path.startsWith('/obs')) return false
+  // 夸克/UC 的 Observer 实现不完整, HyperDX 点击插桩会炸 takeRecords
+  if (/Quark|UCBrowser/i.test(navigator.userAgent)) return false
+  if (typeof MutationObserver === 'undefined' || typeof MutationObserver.prototype.takeRecords !== 'function') {
+    return false
+  }
+  return true
+}
+
+async function initHyperDX() {
+  if (!canInitHyperDX()) return
+  try {
     const mod = await import('@hyperdx/browser')
     const HyperDX = (mod as any).default ?? mod
     HyperDX.init({
       apiKey: '7d1eb66c-24b8-445e-a406-dc2329fa9423',
       service: 'vtsuru.live',
-      tracePropagationTargets: [/vtsuru.suki.club/i], // Set to link traces from frontend to backend requests
-      // consoleCapture: true, // Capture console logs (default false)
-      advancedNetworkCapture: true, // Capture full HTTP request/response headers and bodies (default false)
+      tracePropagationTargets: [/vtsuru.suki.club/i],
+      advancedNetworkCapture: true,
       ignoreUrls: [/localhost/i],
     })
-    // 将实例挂到窗口,便于后续设置全局属性(可选)
     ;(window as any).__HyperDX__ = HyperDX
+  } catch (err) {
+    console.warn('[hyperdx] 初始化失败', err)
   }
+}
+
+async function InitOther() {
+  await initHyperDX()
   // 加载其他数据
   void InitTTS()
   const routeToken = new URLSearchParams(window.location.search).get('token')?.trim() || undefined

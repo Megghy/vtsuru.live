@@ -44,12 +44,14 @@ export const useNotificationStore = defineStore('notification', () => {
   const isInited = ref(false)
 
   async function refreshUnread() {
-    const result = await QueryGetAPI<any[]>(`${NOTIFICATION_API_URL}get-unread`)
-    if (result.code === 200) {
-      unread.value = (result.data ?? []).map(normalizeNotification)
-      return
+    try {
+      const result = await QueryGetAPI<any[]>(`${NOTIFICATION_API_URL}get-unread`)
+      if (result.code === 200) {
+        unread.value = (result.data ?? []).map(normalizeNotification)
+      }
+    } catch (err) {
+      console.warn('[notification] refreshUnread failed', err)
     }
-    throw new Error(result.message)
   }
 
   async function refreshLatest(pn: number = 0, ps: number = 20, onlyUnread: boolean = false) {
@@ -93,12 +95,12 @@ export const useNotificationStore = defineStore('notification', () => {
       return
     }
 
-    void updateUnread().catch((err) => console.warn('[notification] refreshUnread failed', err))
+    void updateUnread()
     setInterval(() => {
       if (route?.name?.toString().startsWith('obs-')) {
         return
       }
-      void updateUnread().catch((err) => console.warn('[notification] refreshUnread failed', err))
+      void updateUnread()
     }, 10 * 1000)
     isInited.value = true
   }
