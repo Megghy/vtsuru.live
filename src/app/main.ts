@@ -5,6 +5,7 @@ import VueKonva from 'vue3-konva'
 
 import { initPersistedStorage } from '@/shared/storage/persist'
 import { initializeAPISelection } from '@/shared/config'
+import { initSentry } from '@/shared/services/sentry'
 
 import App from './App.vue'
 import emitter from './mitt'
@@ -20,6 +21,7 @@ async function bootstrapApp() {
   await initializeAPISelection()
 
   const app = createApp(App)
+  initSentry(app)
   app.use(router).use(pinia).use(VueKonva).mount('#app')
 
   // 将初始化逻辑改为异步按需加载，避免把其依赖打入入口

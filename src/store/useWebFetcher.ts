@@ -147,6 +147,10 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     state.value = 'disconnected' // 立即设置状态，防止重连逻辑触发
 
     // 清理定时器
+    if (drainTimer) {
+      clearTimeout(drainTimer)
+      drainTimer = undefined
+    }
     if (timer) {
       clearInterval(timer)
       timer = undefined
@@ -211,7 +215,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       danmakuClientState.value = 'connected' // 明确设置状态
       danmakuServerUrl.value = (client.danmakuClient as { serverUrl?: string }).serverUrl // 获取服务器地址 (仅 B站 client 有)
       // 启动事件发送定时器 (如果之前没有启动)
-      timer ??= setInterval(sendEvents, 2000) // 每 2 秒尝试发送一次事件
+      timer ??= setInterval(sendEvents, 1000) // 每 1 秒尝试发送一次事件
       return { success: true, message: '弹幕客户端已启动' }
     } else {
       console.error(`${prefix.value}弹幕客户端启动失败`)
@@ -425,11 +429,14 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     events.push(eventString)
   }
   let updateCount = 0
+  let isSending = false
+  let drainTimer: ReturnType<typeof setTimeout> | undefined
+
   /**
-   * 定期将队列中的事件发送到服务器
+   * 将队列中的事件发送到服务器 (支持弹性批量与积压自适应快速清空)
    */
   async function sendEvents() {
-    updateCount++
+    if (isSending) return
     // 确保 SignalR 已连接
     if (!signalRClient.value || signalRClient.value.state !== signalR.HubConnectionState.Connected) {
       return
@@ -438,18 +445,21 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     if (events.length === 0) {
       return
     }
-    if (updateCount % 60 == 0) {
-      // 每60秒更新一次连接信息
-      if (signalRClient.value) {
-        await sendSelfInfo(signalRClient.value)
-      }
-    }
 
-    // 批量处理事件，每次最多发送20条
-    const batchSize = 30
-    const batch = events.slice(0, batchSize)
-
+    isSending = true
     try {
+      updateCount++
+      if (updateCount % 60 == 0) {
+        // 每60次更新一次连接信息
+        if (signalRClient.value) {
+          await sendSelfInfo(signalRClient.value)
+        }
+      }
+
+      // 弹性批量：最高单批 150 条，避免超过后端 MaxBatchEvents (200)
+      const batchSize = Math.min(events.length, 150)
+      const batch = events.slice(0, batchSize)
+
       let result: { Success: boolean; Message: string } = { Success: false, Message: '' }
       let length = 0
       const eventCharLength = batch.map((event) => event.length).reduce((a, b) => a + b, 0) // 计算字符长度
@@ -473,6 +483,14 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         events.splice(0, batch.length) // 从队列中移除已成功发送的事件
         successfulUploads.value++
         bytesSentSession.value += length
+
+        // 若队列仍有积压事件，在 550ms（满足后端冷却）后立即继续派发下一批，避免积压排队
+        if (events.length > 0 && !drainTimer) {
+          drainTimer = setTimeout(() => {
+            drainTimer = undefined
+            void sendEvents()
+          }, 550)
+        }
       } else {
         failedUploads.value++
         console.error(`${prefix.value}上传弹幕失败: ${result?.Message}`)
@@ -480,6 +498,8 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     } catch (err) {
       failedUploads.value++
       console.error(`${prefix.value}发送事件时出错: ${err}`)
+    } finally {
+      isSending = false
     }
   }
 

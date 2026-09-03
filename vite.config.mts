@@ -199,6 +199,11 @@ export default defineConfig({
               priority: -20,
             },
             {
+              name: 'sentry-vendor',
+              test: /[\\/]node_modules[\\/](@sentry|@fingerprintjs)[\\/]/,
+              priority: -20,
+            },
+            {
               name: 'xlsx-vendor',
               test: /[\\/]node_modules[\\/]xlsx[\\/]/,
               priority: -20,

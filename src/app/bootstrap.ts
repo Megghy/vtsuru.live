@@ -11,6 +11,7 @@ import {
   setSelectedAPIKey,
 } from '@/shared/config'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
+import { setSentryUser } from '@/shared/services/sentry'
 import { createNaiveUIApi } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useNotificationStore } from '@/store/useNotificationStore'
@@ -114,6 +115,7 @@ async function InitOther() {
   const account = useAccount()
   const useAuth = useBiliAuth()
   if (account.value.id) {
+    setSentryUser(account.value)
     const HyperDX = (window as any).__HyperDX__
     HyperDX?.setGlobalAttributes({
       userId: account.value.id.toString(),
