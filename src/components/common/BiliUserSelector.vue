@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { useDebounceFn } from '@vueuse/core'
 import { NAutoComplete, NAvatar, NFlex, NText } from 'naive-ui'
 import type { AutoCompleteOption } from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { h, ref, watch } from 'vue'
 
 import { VTSURU_API_URL } from '@/shared/config'
 
@@ -37,102 +36,59 @@ const model = defineModel<number | undefined>('value')
 const inputValue = ref('')
 const options = ref<BiliUserSelectorOption[]>([])
 const loading = ref(false)
-const selectedUserInfo = ref<BiliUserInfo | null>(null)
-
-// 监听外部 v-model:value 变化，当外部设置了值时加载用户信息
+// 输入只负责同步 UID；查询由监听器统一防抖，并取消过期请求。
 watch(
-  () => model.value,
-  async (newValue) => {
-    if (newValue) {
-      inputValue.value = String(newValue)
-      if (!selectedUserInfo.value || selectedUserInfo.value.mid !== newValue) {
-        await loadUserInfo(newValue)
-      }
-    } else {
-      inputValue.value = ''
-      selectedUserInfo.value = null
-    }
+  model,
+  (uid, _, onCleanup) => {
+    inputValue.value = uid === undefined ? '' : String(uid)
+    options.value = []
+    loading.value = false
+    emit('userInfoLoaded', null)
+    if (uid === undefined) return
+
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => loadUserInfo(uid, controller.signal), 500)
+    onCleanup(() => {
+      window.clearTimeout(timer)
+      controller.abort()
+    })
   },
   { immediate: true },
 )
 
-// 加载用户信息
-async function loadUserInfo(uid: number) {
+async function loadUserInfo(uid: number, signal: AbortSignal) {
+  loading.value = true
   try {
-    loading.value = true
-    const response = await fetch(`${VTSURU_API_URL}bili-user-info/${uid}`)
+    const response = await fetch(`${VTSURU_API_URL}bili-user-info/${uid}`, { signal })
     const data: BiliApiResponse = await response.json()
+    if (signal.aborted) return
+    if (data.code !== 0 || !data.data?.card) return
 
-    if (data.code === 0 && data.data?.card) {
-      const userInfo = data.data.card
-      selectedUserInfo.value = userInfo
-
-      options.value = [
-        {
-          label: `${userInfo.name} (${userInfo.mid})`,
-          value: String(userInfo.mid),
-          userInfo,
-        },
-      ] as BiliUserSelectorOption[]
-
-      emit('userInfoLoaded', userInfo)
-    } else {
-      selectedUserInfo.value = null
-      emit('userInfoLoaded', null)
-    }
+    const userInfo = data.data.card
+    options.value = [
+      {
+        label: String(uid),
+        value: String(uid),
+        userInfo,
+      },
+    ]
+    emit('userInfoLoaded', userInfo)
   } catch (error) {
-    console.error('加载用户信息失败:', error)
-    selectedUserInfo.value = null
-    emit('userInfoLoaded', null)
+    if (!signal.aborted) console.error('加载用户信息失败:', error)
   } finally {
-    loading.value = false
+    if (!signal.aborted) loading.value = false
   }
 }
 
-// 防抖搜索函数
-const debouncedSearch = useDebounceFn(async (value: string) => {
-  const uid = Number.parseInt(value)
-  if (Number.isNaN(uid) || uid <= 0) {
-    options.value = []
-    return
-  }
-
-  await loadUserInfo(uid)
-}, 500)
-
-// 处理输入变化
-function handleInput(value: string) {
-  inputValue.value = value
-  const uid = Number.parseInt(value)
-
-  if (Number.isNaN(uid) || uid <= 0) {
-    model.value = undefined
-    selectedUserInfo.value = null
-    options.value = []
-    return
-  }
-
-  // 有效的数字输入时，立即同步给外部 v-model
-  model.value = uid
-
-  debouncedSearch(value)
-}
-
-// 处理选择
-function handleSelect(value: string) {
-  inputValue.value = value
-  const numeric = Number.parseInt(value)
-  model.value = Number.isNaN(numeric) ? undefined : numeric
-  const option = options.value.find((opt) => opt.value === value)
-  if (option?.userInfo) {
-    selectedUserInfo.value = option.userInfo
-    emit('userInfoLoaded', option.userInfo)
-  }
+function handleInput(value: string | null) {
+  inputValue.value = value ?? ''
+  const uid = Number(inputValue.value)
+  model.value = /^\d+$/.test(inputValue.value) && Number.isSafeInteger(uid) && uid > 0 ? uid : undefined
 }
 
 // 自定义渲染选项
-function renderOption(option: { option: BiliUserSelectorOption }) {
-  const { userInfo } = option.option
+function renderLabel(option: BiliUserSelectorOption) {
+  const { userInfo } = option
   if (!userInfo) {
     return h(NText, { depth: 3 }, { default: () => '加载中...' })
   }
@@ -164,24 +120,18 @@ function renderOption(option: { option: BiliUserSelectorOption }) {
     },
   )
 }
-
-// 计算当前显示的值 - 只显示UID
-const displayValue = computed(() => {
-  return inputValue.value
-})
 </script>
 
 <template>
   <NAutoComplete
-    :value="displayValue"
+    :value="inputValue"
     :options="options"
     :loading="loading"
     :placeholder="placeholder || '请输入B站用户UID'"
     :size="size || 'medium'"
     :disabled="disabled"
     clearable
-    :render-option="renderOption"
+    :render-label="renderLabel"
     @update:value="handleInput"
-    @select="handleSelect"
   />
 </template>

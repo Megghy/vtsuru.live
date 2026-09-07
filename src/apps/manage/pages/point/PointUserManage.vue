@@ -736,7 +736,7 @@ onMounted(async () => {
       <NButton
         type="primary"
         :loading="isLoading"
-        :disabled="!addPointCount || addPointCount === 0"
+        :disabled="!addPointTarget || !addPointCount"
         @click="givePoint"
       >
         {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '给予' : '扣除' }}
