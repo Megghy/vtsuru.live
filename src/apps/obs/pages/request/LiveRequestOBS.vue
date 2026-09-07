@@ -47,7 +47,7 @@ const panelComponent = computed(() => {
   }
 })
 
-const { title, countText, current, items, footerTags, update, initRTC } = useLiveRequestObsView(currentId.value)
+const { title, countText, current, items, footerTags, update, initRTC } = useLiveRequestObsView(currentId)
 
 const obsNotification = useOBSNotification()
 

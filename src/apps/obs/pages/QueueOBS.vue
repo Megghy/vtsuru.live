@@ -47,7 +47,7 @@ const panelComponent = computed(() => {
   }
 })
 
-const { title, countText, current, items, footerTags, update } = useQueueObsView(currentId.value)
+const { title, countText, current, items, footerTags, update } = useQueueObsView(currentId)
 
 const obsNotification = useOBSNotification()
 

@@ -1,5 +1,5 @@
 import { List } from 'linqts'
-import { computed, ref } from 'vue'
+import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
 import { QueueSortType, SongRequestStatus } from '@/api/api-models'
@@ -7,7 +7,7 @@ import { QueryGetAPI } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/shared/config'
 import { useWebRTC } from '@/store/useRTC'
 
-export function useLiveRequestData(currentId: string) {
+export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const rtc = ref<any>(null)
   const originSongs = ref<SongRequestInfo[]>([])
   const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
@@ -68,11 +68,13 @@ export function useLiveRequestData(currentId: string) {
   // 数据获取方法
   async function get() {
     try {
+      const rawId = toValue(currentId)
+      const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
+      const params = idStr ? { id: idStr } : {}
+
       const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
         `${SONG_REQUEST_API_URL}get-active-and-settings`,
-        {
-          id: currentId,
-        },
+        params,
       )
       if (data.code == 200) {
         return data.data
@@ -89,16 +91,20 @@ export function useLiveRequestData(currentId: string) {
   async function update() {
     const r = await get()
     if (r) {
-      const isCountChange = originSongs.value.length != r.songs.length
-      originSongs.value = r.songs.toSorted((a, b) => {
+      const isCountChange = originSongs.value.length != (r.songs?.length ?? 0)
+      originSongs.value = (r.songs ?? []).toSorted((a, b) => {
         return b.createAt - a.createAt
       })
-      settings.value = r.setting
+      settings.value = r.setting ?? ({} as Setting_LiveRequest)
       if (isCountChange) {
         key.value = Date.now()
       }
     }
   }
+
+  watch(() => toValue(currentId), () => {
+    void update()
+  })
 
   // RTC初始化
   async function initRTC() {

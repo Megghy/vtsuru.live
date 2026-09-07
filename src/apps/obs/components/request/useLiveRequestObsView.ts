@@ -1,11 +1,11 @@
-import { computed } from 'vue'
+import { computed, type MaybeRefOrGetter } from 'vue'
 
 import { SongRequestFrom } from '@/api/api-models'
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
 
 import { useLiveRequestData } from './useLiveRequestData'
 
-export function useLiveRequestObsView(currentId: string) {
+export function useLiveRequestObsView(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const data = useLiveRequestData(currentId)
 
   const title = computed(() => data.settings.value.obsTitle ?? '点播')

@@ -1,4 +1,4 @@
-import { computed } from 'vue'
+import { computed, type MaybeRefOrGetter } from 'vue'
 
 import { QueueFrom } from '@/api/api-models'
 import type { ResponseQueueModel } from '@/api/api-models'
@@ -23,7 +23,7 @@ function buildPaymentBadgeText(
   return getGiftPaymentDisplayMeta(item).compactText
 }
 
-export function useQueueObsView(currentId: string) {
+export function useQueueObsView(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const data = useQueueData(currentId)
 
   const title = computed(() => '排队')

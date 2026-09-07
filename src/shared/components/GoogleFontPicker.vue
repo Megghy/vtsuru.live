@@ -2,6 +2,7 @@
 import { TextFont24Regular } from '@vicons/fluent'
 import { SearchOutline } from '@vicons/ionicons5'
 import { useEventListener } from '@vueuse/core'
+import type { SelectOption } from 'naive-ui'
 import {
   NButton,
   NEmpty,
@@ -27,7 +28,7 @@ import {
 
 import GoogleFontBrowserRow from './GoogleFontBrowserRow.vue'
 
-export interface GoogleFontPickerOption {
+export interface GoogleFontPickerOption extends SelectOption {
   label: string
   value: string
 }

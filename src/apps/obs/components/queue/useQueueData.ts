@@ -1,12 +1,13 @@
 import { List } from 'linqts'
-import { computed, ref } from 'vue'
+import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { ResponseQueueModel, Setting_Queue } from '@/api/api-models'
-import { QueueFrom, QueueSortType, QueueStatus } from '@/api/api-models'
+import { QueueFrom, QueueStatus } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { QUEUE_API_URL } from '@/shared/config'
+import { sortByQueueType } from '@/shared/utils/queue'
 
-export function useQueueData(currentId: string) {
+export function useQueueData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const queue = ref<ResponseQueueModel[]>([])
   const settings = ref<Setting_Queue>({} as Setting_Queue)
 
@@ -15,42 +16,15 @@ export function useQueueData(currentId: string) {
   })
 
   const activeItems = computed(() => {
-    let list = new List(queue.value)
-      .Where((item) => item?.status === QueueStatus.Waiting)
-      .OrderByDescending((item) => item.from === QueueFrom.Manual)
-
-    switch (settings.value.sortType) {
-      case QueueSortType.TimeFirst: {
-        list = list.OrderBy((item) => item.createAt)
-        break
-      }
-      case QueueSortType.GuardFirst: {
-        list = list
-          .OrderBy((item) =>
-            item.user?.guard_level == null || item.user.guard_level === 0 ? 4 : item.user.guard_level,
-          )
-          .ThenBy((item) => item.createAt)
-        break
-      }
-      case QueueSortType.PaymentFist: {
-        list = list.OrderByDescending((item) => item.giftPrice ?? 0).ThenBy((item) => item.createAt)
-        break
-      }
-      case QueueSortType.FansMedalFirst: {
-        list = list
-          .OrderByDescending((item) => (item.user?.fans_medal_wearing_status ? 1 : 0))
-          .ThenByDescending((item) => item.user?.fans_medal_level ?? 0)
-          .ThenBy((item) => item.createAt)
-        break
-      }
-    }
-
-    if (settings.value.isReverse) {
-      list = list.Reverse()
-    }
-
-    list = list.OrderByDescending((item) => (item.status === QueueStatus.Progressing ? 1 : 0))
-    return list.ToArray()
+    const waiting = queue.value.filter((item) => item?.status === QueueStatus.Waiting)
+    const sorted = sortByQueueType(waiting, settings.value.sortType, settings.value.isReverse, {
+      createAt: (q) => q.createAt,
+      guardLevel: (q) => q.user?.guard_level,
+      price: (q) => q.giftPrice,
+      fansMedalLevel: (q) => q.user?.fans_medal_level,
+      fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
+    })
+    return new List(sorted).OrderByDescending((item) => (item.from === QueueFrom.Manual ? 1 : 0)).ToArray()
   })
 
   const allowGuardTypes = computed(() => {
@@ -113,11 +87,13 @@ export function useQueueData(currentId: string) {
 
   async function get() {
     try {
+      const rawId = toValue(currentId)
+      const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
+      const params = idStr ? { id: idStr } : {}
+
       const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(
         `${QUEUE_API_URL}get-active-and-settings`,
-        {
-          id: currentId,
-        },
+        params,
       )
 
       if (data.code === 200) {
@@ -135,9 +111,13 @@ export function useQueueData(currentId: string) {
 
   async function update() {
     const result = await get()
-    queue.value = result.queue.toSorted((a, b) => b.createAt - a.createAt)
-    settings.value = result.setting
+    queue.value = (result.queue ?? []).toSorted((a, b) => b.createAt - a.createAt)
+    settings.value = result.setting ?? ({} as Setting_Queue)
   }
+
+  watch(() => toValue(currentId), () => {
+    void update()
+  })
 
   return {
     queue,
