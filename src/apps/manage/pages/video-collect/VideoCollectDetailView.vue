@@ -699,6 +699,8 @@ function saveQrCode() {
       preset="card"
       title="分享视频征集"
       class="share-modal"
+      style="max-height: 90vh"
+      content-style="overflow-y: auto; max-height: calc(90vh - 110px);"
     >
       <div class="share-content">
         <div

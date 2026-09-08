@@ -46,7 +46,7 @@ const panelComponent = computed(() => {
   }
 })
 
-const { title, countText, current, items, footerTags, update } = useMusicRequestObsView(currentId.value)
+const { title, countText, current, items, footerTags, update } = useMusicRequestObsView(currentId)
 
 const obsNotification = useOBSNotification()
 

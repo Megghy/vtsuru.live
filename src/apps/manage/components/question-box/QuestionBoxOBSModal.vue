@@ -20,7 +20,11 @@ const message = useMessage()
 
 const savedCardSize = usePersistedStorage('Settings.QuestionDisplay.CardSize', { width: 720, height: 480 })
 const setting = computed(() => normalizeQuestionDisplaySetting(accountInfo.value?.settings?.questionDisplay))
-const obsUrl = computed(() => `${CURRENT_HOST}obs/question-display?token=${accountInfo.value?.token ?? ''}`)
+const obsUrl = computed(() => {
+  const token = accountInfo.value?.token ?? ''
+  const base = CURRENT_HOST.endsWith('/') ? CURRENT_HOST : `${CURRENT_HOST}/`
+  return `${base}obs/question-display?token=${token}`
+})
 const previewStyle = computed(() => ({ aspectRatio: `${savedCardSize.value.width} / ${savedCardSize.value.height}` }))
 
 async function copyUrl() {
@@ -40,6 +44,8 @@ function openWorkbench() {
     preset="card"
     class="obs-quick-modal"
     title="OBS 提问展示"
+    style="max-height: 90vh"
+    content-style="overflow-y: auto; max-height: calc(90vh - 110px);"
     closable
   >
     <div class="quick-layout">

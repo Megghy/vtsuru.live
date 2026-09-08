@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { Copy24Regular, Open24Regular } from '@vicons/fluent'
 import {
   NAlert,
   NButton,
   NCollapse,
   NCollapseItem,
-  NDivider,
-  NFlex,
+  NIcon,
   NInput,
   NInputGroup,
   NLi,
@@ -35,7 +35,8 @@ const showModel = computed({
 const url = computed(() => {
   if (!props.code) return ''
   const params = new URLSearchParams({ code: props.code })
-  return `${CURRENT_HOST}obs/live-lottery?${params.toString()}`
+  const base = CURRENT_HOST.endsWith('/') ? CURRENT_HOST : `${CURRENT_HOST}/`
+  return `${base}obs/live-lottery?${params.toString()}`
 })
 </script>
 
@@ -43,10 +44,11 @@ const url = computed(() => {
   <NModal
     v-model:show="showModel"
     preset="card"
+    class="lottery-obs-modal"
     title="OBS 组件"
-    style="width: 900px; max-width: 90vw; max-height: 90vh"
+    style="width: 820px; max-width: 95vw; max-height: 90vh"
     closable
-    content-style="overflow: auto"
+    content-style="overflow-y: auto; max-height: calc(90vh - 110px); padding: 16px 20px;"
   >
     <template #header-extra>
       <NButton
@@ -57,63 +59,124 @@ const url = computed(() => {
         target="_blank"
         :href="url"
       >
+        <template #icon>
+          <NIcon :component="Open24Regular" />
+        </template>
         浏览
       </NButton>
     </template>
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NAlert
-        title="这是什么？"
-        type="info"
-        size="small"
-        :bordered="false"
-      >
-        将抽奖等待队列与结果显示在 OBS 的浏览器源中。
-      </NAlert>
 
-      <NDivider style="margin: 0"> 预览 </NDivider>
-      <div class="lottery-obs-modal__preview">
-        <LiveLotteryOBS :code="code" />
+    <div class="lottery-obs-modal__body">
+      <!-- 左侧：链接与说明 -->
+      <div class="lottery-obs-modal__main">
+        <NAlert
+          type="info"
+          size="small"
+          :bordered="false"
+        >
+          将抽奖等待队列与结果显示在 OBS 的浏览器源中。
+        </NAlert>
+
+        <div class="lottery-obs-modal__section">
+          <div class="lottery-obs-modal__section-title">OBS 浏览器源链接</div>
+          <NInputGroup>
+            <NInput
+              :value="url"
+              readonly
+              placeholder="OBS 组件链接"
+            />
+            <NButton
+              type="primary"
+              :disabled="!url"
+              @click="copyToClipboard(url)"
+            >
+              <template #icon>
+                <NIcon :component="Copy24Regular" />
+              </template>
+              复制
+            </NButton>
+          </NInputGroup>
+        </div>
+
+        <NCollapse class="lottery-obs-modal__help">
+          <NCollapseItem title="OBS 使用说明">
+            <NUl style="padding-left: 18px; margin: 4px 0">
+              <NLi>在 OBS 来源中添加一个新的「浏览器」源。</NLi>
+              <NLi>将上方链接复制并粘贴到「URL」栏中。</NLi>
+              <NLi>推荐初始尺寸：宽 250px，高 400px（可按实际直播布局自由缩放）。</NLi>
+              <NLi>在右侧可实时预览组件视觉效果。</NLi>
+            </NUl>
+          </NCollapseItem>
+        </NCollapse>
       </div>
 
-      <NInputGroup>
-        <NInput
-          :value="url"
-          size="small"
-          readonly
-        />
-        <NButton
-          type="primary"
-          secondary
-          size="small"
-          :disabled="!url"
-          @click="copyToClipboard(url)"
-        >
-          复制
-        </NButton>
-      </NInputGroup>
-
-      <NCollapse>
-        <NCollapseItem title="使用说明">
-          <NUl>
-            <NLi>在 OBS 来源中添加源，选择「浏览器」。</NLi>
-            <NLi>在 URL 栏填入上方链接。</NLi>
-            <NLi>根据自己的需要调整宽度和高度（这里是宽 250px 高 400px）。</NLi>
-            <NLi>完成。</NLi>
-          </NUl>
-        </NCollapseItem>
-      </NCollapse>
-    </NFlex>
+      <!-- 右侧：实时预览 -->
+      <div class="lottery-obs-modal__side">
+        <div class="lottery-obs-modal__preview-label">实时预览 (250 × 400)</div>
+        <div class="lottery-obs-modal__preview">
+          <LiveLotteryOBS :code="code" />
+        </div>
+      </div>
+    </div>
   </NModal>
 </template>
 
 <style scoped>
+.lottery-obs-modal__body {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) 250px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 680px) {
+  .lottery-obs-modal__body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lottery-obs-modal__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.lottery-obs-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lottery-obs-modal__section-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vtsuru-fg);
+}
+
+.lottery-obs-modal__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.lottery-obs-modal__preview-label {
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+}
+
 .lottery-obs-modal__preview {
   height: 400px;
   width: 250px;
   position: relative;
-  margin: 0 auto;
+  border: 1px dashed var(--vtsuru-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--vtsuru-bg-muted);
+}
+
+.lottery-obs-modal__help {
+  margin-top: 4px;
 }
 </style>

@@ -1,4 +1,5 @@
-import { computed, ref } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
+import { computed, ref, toValue, watch } from 'vue'
 
 import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
@@ -14,7 +15,7 @@ interface WaitMusicInfo {
  * 点歌 OBS 展示数据, 复用与排队相同的展示面板契约 (current / items / footerTags),
  * 使其支持 classic / fresh / minimal 三种样式与滚动速度。
  */
-export function useMusicRequestObsView(currentId: string) {
+export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const playing = ref<WaitMusicInfo>()
   const waiting = ref<WaitMusicInfo[]>([])
 
@@ -48,9 +49,11 @@ export function useMusicRequestObsView(currentId: string) {
 
   async function get() {
     try {
+      const rawId = toValue(currentId)
+      const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
       const data = await QueryGetAPI<{ playing?: WaitMusicInfo; waiting: WaitMusicInfo[] }>(
         `${MUSIC_REQUEST_API_URL}get-waiting`,
-        { id: currentId },
+        idStr ? { id: idStr } : {},
       )
       if (data.code === 200) return data.data
     } catch (err) {
@@ -64,6 +67,13 @@ export function useMusicRequestObsView(currentId: string) {
     playing.value = result.playing
     waiting.value = result.waiting ?? []
   }
+
+  watch(
+    () => toValue(currentId),
+    () => {
+      void update()
+    },
+  )
 
   return {
     playing,

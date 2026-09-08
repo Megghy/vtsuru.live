@@ -38,8 +38,11 @@ const shareCardStyleVars = computed(() => ({
 }))
 
 const modalShareUrl = computed(() => {
-  const base = `${CURRENT_HOST}@${accountInfo.value?.name}/question-box`
-  return selectedShareTag.value ? `${base}?tag=${selectedShareTag.value}` : base
+  const name = accountInfo.value?.name
+  if (!name) return ''
+  const baseHost = CURRENT_HOST.endsWith('/') ? CURRENT_HOST : `${CURRENT_HOST}/`
+  const base = `${baseHost}@${encodeURIComponent(name)}/question-box`
+  return selectedShareTag.value ? `${base}?tag=${encodeURIComponent(selectedShareTag.value)}` : base
 })
 
 function saveShareImage() {
@@ -73,7 +76,8 @@ function saveQRCode() {
     v-model:show="show"
     preset="card"
     title="分享我的提问箱"
-    style="max-width: 95vw; width: 600px"
+    style="max-width: 95vw; width: 600px; max-height: 90vh"
+    content-style="overflow-y: auto; max-height: calc(90vh - 110px);"
   >
     <div
       ref="shareCardRef"
@@ -124,9 +128,11 @@ function saveQRCode() {
       <NInput
         :value="modalShareUrl"
         readonly
+        placeholder="提问箱链接"
       />
       <NButton
         secondary
+        :disabled="!modalShareUrl"
         @click="copyToClipboard(modalShareUrl)"
       >
         复制
