@@ -15,9 +15,16 @@ watch(show, (v) => {
 })
 
 async function submitReply() {
-  if (!useQB.currentQuestion) return
-  await useQB.reply(useQB.currentQuestion.id, replyMessage.value)
+  if (!useQB.currentQuestion || !replyMessage.value.trim() || useQB.isRepling) return
+  await useQB.reply(useQB.currentQuestion.id, replyMessage.value.trim())
   show.value = false
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault()
+    void submitReply()
+  }
 }
 </script>
 
@@ -25,34 +32,46 @@ async function submitReply() {
   <NModal
     v-model:show="show"
     preset="card"
-    style="max-width: 90vw; width: 500px"
+    style="max-width: 90vw; width: 520px"
     title="回复提问"
     :mask-closable="false"
   >
     <template v-if="useQB.currentQuestion">
-      <NText
-        >正在回复给:
-        {{ useQB.currentQuestion.sender?.name || useQB.currentQuestion.anonymousName || '匿名用户' }}</NText
-      >
+      <div class="reply-target-info">
+        <NText depth="3">正在回复给：</NText>
+        <NText strong>
+          {{ useQB.currentQuestion.sender?.name || useQB.currentQuestion.anonymousName || '匿名用户' }}
+        </NText>
+      </div>
+
       <NCard
         size="small"
         embedded
         :bordered="false"
-        style="margin-top: 5px"
+        style="margin-top: 8px; max-height: 140px; overflow-y: auto"
       >
-        {{ useQB.currentQuestion.question?.message }}
+        <NText style="white-space: pre-wrap">
+          {{ useQB.currentQuestion.question?.message }}
+        </NText>
       </NCard>
-      <NDivider style="margin: 15px 0" />
-      <NFlex vertical>
+
+      <NDivider style="margin: 16px 0 12px" />
+
+      <NFlex
+        vertical
+        :size="12"
+      >
         <NInput
           v-model:value="replyMessage"
-          placeholder="请输入回复内容..."
+          placeholder="请输入回复内容 (支持 Ctrl + Enter 快捷发送)..."
           type="textarea"
           maxlength="10000"
           show-count
           clearable
-          :autosize="{ minRows: 3, maxRows: 12 }"
+          :autosize="{ minRows: 4, maxRows: 12 }"
+          @keydown="handleKeydown"
         />
+
         <NSpin :show="useQB.isChangingPublic">
           <NCheckbox
             :checked="useQB.currentQuestion?.isPublic"
@@ -62,17 +81,41 @@ async function submitReply() {
           </NCheckbox>
         </NSpin>
       </NFlex>
-      <NDivider style="margin: 15px 0" />
-      <NFlex justify="end">
-        <NButton @click="show = false"> 取消 </NButton>
-        <NButton
-          :loading="useQB.isRepling"
-          type="primary"
-          @click="submitReply"
+
+      <NDivider style="margin: 16px 0 12px" />
+
+      <NFlex
+        justify="space-between"
+        align="center"
+      >
+        <NText
+          depth="3"
+          style="font-size: 11px"
         >
-          {{ useQB.currentQuestion?.answer ? '修改回复' : '发送回复' }}
-        </NButton>
+          按 Ctrl + Enter 快捷发送
+        </NText>
+
+        <NFlex :size="8">
+          <NButton @click="show = false"> 取消 </NButton>
+          <NButton
+            :loading="useQB.isRepling"
+            :disabled="!replyMessage.trim()"
+            type="primary"
+            @click="submitReply"
+          >
+            {{ useQB.currentQuestion?.answer ? '修改回复' : '发送回复' }}
+          </NButton>
+        </NFlex>
       </NFlex>
     </template>
   </NModal>
 </template>
+
+<style scoped>
+.reply-target-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+</style>

@@ -1,4 +1,5 @@
 import type { OpenLiveLotteryUserInfo } from '@/api/api-models'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 
 import type { LotteryOption } from './lotteryTypes'
 
@@ -52,4 +53,27 @@ export function getAvatarUrl(avatar: string): string {
     return avatar.replace(/@\w+/, '@96w_96h')
   }
   return `${avatar}@96w_96h`
+}
+
+/** 幻星 H5 身份码优先，管理端回退到已绑定的 B 站身份码 */
+export function resolveLotteryIdentityCode(propCode?: string, biliAuthCode?: string): string {
+  return propCode?.trim() || biliAuthCode?.trim() || ''
+}
+
+export function buildLotteryObsUrl(host: string, userId?: number | string | null, code?: string): string {
+  const idUrl = buildObsSourceUrl({
+    path: 'obs/live-lottery',
+    host,
+    credential: 'public-id',
+    userId,
+  })
+  if (idUrl) return idUrl
+  const trimmed = code?.trim()
+  if (!trimmed) return ''
+  return buildObsSourceUrl({
+    path: 'obs/live-lottery',
+    host,
+    credential: 'none',
+    params: { code: trimmed },
+  })
 }

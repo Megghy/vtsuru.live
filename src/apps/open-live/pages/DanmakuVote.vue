@@ -43,10 +43,12 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { clearInterval, setInterval } from 'worker-timers'
 
+import { useAccount } from '@/api/account'
 import type { OpenLiveInfo, RequestCreateBulletVote, ResponseVoteSession, VoteConfig } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
-import { VOTE_API_URL } from '@/shared/config'
+import { CURRENT_HOST, VOTE_API_URL } from '@/shared/config'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -59,6 +61,7 @@ defineProps<{
 
 // 账号信息
 const message = useMessage()
+const accountInfo = useAccount()
 const client = useDanmakuClient()
 
 // 投票配置
@@ -360,34 +363,19 @@ async function deleteVote(id: number) {
   }
 }
 
-// 复制OBS链接
 function copyObsLink() {
-  const baseUrl = window.location.origin
-
-  // 获取配置哈希
-  fetchVoteHash().then((hash) => {
-    if (hash) {
-      const obsUrl = `${baseUrl}/obs/danmaku-vote?hash=${hash}`
-      copyToClipboard(obsUrl)
-      message.success('OBS链接已复制到剪贴板')
-    }
+  const obsUrl = buildObsSourceUrl({
+    path: 'obs/danmaku-vote',
+    host: CURRENT_HOST,
+    credential: 'public-id',
+    userId: accountInfo.value?.id,
   })
-}
-
-// 获取投票配置哈希
-async function fetchVoteHash(): Promise<string | null> {
-  try {
-    const result = await QueryGetAPI<string>(`${VOTE_API_URL}get-hash`)
-
-    if (result.code === 200 && result.data) {
-      return result.data
-    }
-    return null
-  } catch (error) {
-    console.error('获取投票哈希失败:', error)
-    message.error('获取投票哈希失败')
-    return null
+  if (!obsUrl) {
+    message.error('请先登录后再复制 OBS 链接')
+    return
   }
+  copyToClipboard(obsUrl)
+  message.success('OBS链接已复制到剪贴板')
 }
 
 // 计算每个选项的百分比

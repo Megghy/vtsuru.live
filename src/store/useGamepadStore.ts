@@ -1,229 +1,268 @@
-import { useGamepad } from '@vueuse/core'
+import { useGamepad, useRafFn } from '@vueuse/core'
 import { defineStore } from 'pinia'
-// src/composables/useGamepad.ts
-import { computed, reactive, readonly, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
-import type { ButtonInputState, GamepadConnectionInfo, LogicalButton, NormalizedGamepadState } from '@/types/gamepad' // 使用 @ 指向 src 目录
+import type {
+  ButtonInputState,
+  GamepadConnectionInfo,
+  LogicalButton,
+  LogicalStickName,
+  NormalizedGamepadState,
+} from '@/types/gamepad'
 import { LogicalButtonsList } from '@/types/gamepad'
 
-// 定义事件处理函数类型
-type GamepadEventHandler = (gamepadInfo: GamepadConnectionInfo, index: number) => void
-
-// 标准按钮映射，根据标准布局将gamepad API的按钮索引映射到逻辑按钮
-const standardButtonMap: Partial<Record<number, LogicalButton>> = {
+// 标准按钮映射：将浏览器 Gamepad API 的按键索引映射到逻辑按键
+export const STANDARD_BUTTON_MAP: Partial<Record<number, LogicalButton>> = {
   0: 'ACTION_DOWN', // Xbox A / PS Cross / Nintendo B
   1: 'ACTION_RIGHT', // Xbox B / PS Circle / Nintendo A
   2: 'ACTION_LEFT', // Xbox X / PS Square / Nintendo Y
   3: 'ACTION_UP', // Xbox Y / PS Triangle / Nintendo X
-  4: 'LEFT_SHOULDER_1', // LB / L1
-  5: 'RIGHT_SHOULDER_1', // RB / R1
-  6: 'LEFT_SHOULDER_2', // LT / L2 (触发器)
-  7: 'RIGHT_SHOULDER_2', // RT / R2 (触发器)
-  8: 'SELECT', // Xbox View / PS Select / Nintendo -
-  9: 'START', // Xbox Menu / PS Start / Nintendo +
-  10: 'LEFT_STICK_PRESS', // 左摇杆按下
-  11: 'RIGHT_STICK_PRESS', // 右摇杆按下
-  12: 'DPAD_UP', // 方向键上
-  13: 'DPAD_DOWN', // 方向键下
-  14: 'DPAD_LEFT', // 方向键左
-  15: 'DPAD_RIGHT', // 方向键右
-  16: 'HOME', // Xbox Home / PS Home / Nintendo Home
-  17: 'PS_TOUCHPAD', // PS触摸板按下
-  // 18可能对应任天堂的截图按钮
-  18: 'NINTENDO_CAPTURE',
+  4: 'LEFT_SHOULDER_1', // LB / L1 / L
+  5: 'RIGHT_SHOULDER_1', // RB / R1 / R
+  6: 'LEFT_SHOULDER_2', // LT / L2 / ZL (线性触发器)
+  7: 'RIGHT_SHOULDER_2', // RT / R2 / ZR (线性触发器)
+  8: 'SELECT', // Xbox View / PS Share / Nintendo -
+  9: 'START', // Xbox Menu / PS Options / Nintendo +
+  10: 'LEFT_STICK_PRESS', // L3
+  11: 'RIGHT_STICK_PRESS', // R3
+  12: 'DPAD_UP', // 十字键 上
+  13: 'DPAD_DOWN', // 十字键 下
+  14: 'DPAD_LEFT', // 十字键 左
+  15: 'DPAD_RIGHT', // 十字键 右
+  16: 'HOME', // Xbox Guide / PS Button / Nintendo Home
+  17: 'PS_TOUCHPAD', // PS 触摸板点击
+  18: 'NINTENDO_CAPTURE', // 任天堂截图键
 }
 
-export const useGamepadStore = defineStore('gamepad', () => {
-  const { gamepads, onConnected, onDisconnected } = useGamepad()
+// 默认死区大小
+export const DEFAULT_AXIS_DEADZONE = 0.08
 
-  const connectedGamepadInfo = ref<GamepadConnectionInfo | null>(null)
-  const activeGamepadIndex = ref<number | null>(null)
+/**
+ * 带有死区重映射的摇杆轴数值过滤（平滑输出 0 ~ 1）
+ */
+export function applyAxisDeadzone(raw: number, deadzone = DEFAULT_AXIS_DEADZONE): number {
+  if (Math.abs(raw) < deadzone) return 0
+  const sign = Math.sign(raw)
+  const normalized = (Math.abs(raw) - deadzone) / (1 - deadzone)
+  return sign * Math.min(1, Math.max(0, normalized))
+}
 
-  // 存储自定义事件处理器
-  const connectedHandlers: Set<GamepadEventHandler> = new Set()
-  const disconnectedHandlers: Set<GamepadEventHandler> = new Set()
+/**
+ * 摇杆双轴圆周限幅（保证推杆在圆形轨道内，模长不超过 1）
+ */
+export function clampStickAxes(x: number, y: number): { x: number; y: number } {
+  const mag = Math.hypot(x, y)
+  if (mag <= 1) return { x, y }
+  return { x: x / mag, y: y / mag }
+}
 
-  // 初始化所有按钮状态
-  const initialButtonStates = LogicalButtonsList.reduce(
+export function createInitialButtonStates(): Record<LogicalButton, ButtonInputState> {
+  return LogicalButtonsList.reduce(
     (acc, key) => {
       acc[key] = { pressed: false, value: 0 }
       return acc
     },
     {} as Record<LogicalButton, ButtonInputState>,
   )
+}
 
-  // 手柄状态，包含按钮和摇杆
+export const useGamepadStore = defineStore('gamepad', () => {
+  const { gamepads, onConnected, onDisconnected } = useGamepad()
+
+  const activeGamepadIndex = ref<number | null>(null)
+  const deadzone = ref<number>(DEFAULT_AXIS_DEADZONE)
+
+  // 模拟/测试模式
+  const isSimulating = ref(false)
+
   const normalizedGamepadState = reactive<NormalizedGamepadState>({
-    buttons: initialButtonStates,
+    buttons: createInitialButtonStates(),
     sticks: {
       LEFT_STICK: { x: 0, y: 0 },
       RIGHT_STICK: { x: 0, y: 0 },
     },
   })
 
-  // 计算属性：手柄是否已连接
+  // 可用手柄列表
+  const connectedGamepadsList = computed<GamepadConnectionInfo[]>(() => {
+    return gamepads.value
+      .filter((gp): gp is Gamepad => Boolean(gp && gp.connected))
+      .map((gp) => ({
+        id: gp.id,
+        mapping: gp.mapping,
+        index: gp.index,
+      }))
+  })
+
+  const connectedGamepadInfo = computed<GamepadConnectionInfo | null>(() => {
+    if (activeGamepadIndex.value === null) return null
+    const gp = gamepads.value[activeGamepadIndex.value]
+    if (!gp || !gp.connected) return null
+    return {
+      id: gp.id,
+      mapping: gp.mapping,
+      index: gp.index,
+    }
+  })
+
   const isGamepadConnected = computed(
-    () => activeGamepadIndex.value !== null && !!gamepads.value[activeGamepadIndex.value]?.connected,
+    () => isSimulating.value || (activeGamepadIndex.value !== null && Boolean(gamepads.value[activeGamepadIndex.value]?.connected)),
   )
 
-  // 重置手柄状态
-  const resetNormalizedState = () => {
-    Object.keys(normalizedGamepadState.buttons).forEach((key) => {
-      const buttonKey = key as LogicalButton
-      if (normalizedGamepadState.buttons[buttonKey]) {
-        normalizedGamepadState.buttons[buttonKey].pressed = false
-        normalizedGamepadState.buttons[buttonKey].value = 0
-      }
-    })
-    normalizedGamepadState.sticks.LEFT_STICK = { x: 0, y: 0 }
-    normalizedGamepadState.sticks.RIGHT_STICK = { x: 0, y: 0 }
+  function resetNormalizedState() {
+    for (const key of LogicalButtonsList) {
+      normalizedGamepadState.buttons[key].pressed = false
+      normalizedGamepadState.buttons[key].value = 0
+    }
+    normalizedGamepadState.sticks.LEFT_STICK.x = 0
+    normalizedGamepadState.sticks.LEFT_STICK.y = 0
+    normalizedGamepadState.sticks.RIGHT_STICK.x = 0
+    normalizedGamepadState.sticks.RIGHT_STICK.y = 0
   }
 
-  // 更新手柄状态
-  const updateNormalizedState = (gamepad: Gamepad | undefined) => {
+  function updateFromGamepad(gamepad: Gamepad | undefined) {
+    if (isSimulating.value) return
     if (!gamepad || !gamepad.connected) {
       resetNormalizedState()
       return
     }
 
-    // 更新按钮状态
-    gamepad.buttons.forEach((button, index) => {
-      const logicalKey = standardButtonMap[index]
+    // 更新按钮状态与线性触发器模拟量
+    for (let i = 0; i < gamepad.buttons.length; i++) {
+      const button = gamepad.buttons[i]
+      const logicalKey = STANDARD_BUTTON_MAP[i]
       if (logicalKey && normalizedGamepadState.buttons[logicalKey]) {
-        normalizedGamepadState.buttons[logicalKey].pressed = button.pressed
-        normalizedGamepadState.buttons[logicalKey].value = button.value
+        const val = button.value ?? (button.pressed ? 1 : 0)
+        normalizedGamepadState.buttons[logicalKey].pressed = button.pressed || val > 0.15
+        normalizedGamepadState.buttons[logicalKey].value = val
       }
-    })
+    }
 
-    // 更新摇杆状态
-    normalizedGamepadState.sticks.LEFT_STICK.x = gamepad.axes[0] ?? 0
-    normalizedGamepadState.sticks.LEFT_STICK.y = gamepad.axes[1] ?? 0
-    normalizedGamepadState.sticks.RIGHT_STICK.x = gamepad.axes[2] ?? 0
-    normalizedGamepadState.sticks.RIGHT_STICK.y = gamepad.axes[3] ?? 0
+    // 更新左摇杆
+    const rawLx = gamepad.axes[0] ?? 0
+    const rawLy = gamepad.axes[1] ?? 0
+    const filteredL = clampStickAxes(
+      applyAxisDeadzone(rawLx, deadzone.value),
+      applyAxisDeadzone(rawLy, deadzone.value),
+    )
+    normalizedGamepadState.sticks.LEFT_STICK.x = filteredL.x
+    normalizedGamepadState.sticks.LEFT_STICK.y = filteredL.y
+
+    // 更新右摇杆
+    const rawRx = gamepad.axes[2] ?? 0
+    const rawRy = gamepad.axes[3] ?? 0
+    const filteredR = clampStickAxes(
+      applyAxisDeadzone(rawRx, deadzone.value),
+      applyAxisDeadzone(rawRy, deadzone.value),
+    )
+    normalizedGamepadState.sticks.RIGHT_STICK.x = filteredR.x
+    normalizedGamepadState.sticks.RIGHT_STICK.y = filteredR.y
   }
 
-  // 手柄连接事件处理
+  // --- 模拟/演示动画驱动 ---
+  let simulationTick = 0
+  const { pause: pauseSimLoop, resume: resumeSimLoop } = useRafFn(() => {
+    if (!isSimulating.value) return
+    simulationTick += 0.03
+
+    // 摇杆画圆动画
+    const lx = Math.cos(simulationTick) * 0.8
+    const ly = Math.sin(simulationTick) * 0.8
+    const rx = Math.cos(-simulationTick * 0.7) * 0.6
+    const ry = Math.sin(-simulationTick * 0.7) * 0.6
+
+    normalizedGamepadState.sticks.LEFT_STICK.x = lx
+    normalizedGamepadState.sticks.LEFT_STICK.y = ly
+    normalizedGamepadState.sticks.RIGHT_STICK.x = rx
+    normalizedGamepadState.sticks.RIGHT_STICK.y = ry
+
+    // 扳机周期性按压
+    const trigVal = (Math.sin(simulationTick * 1.5) + 1) / 2
+    normalizedGamepadState.buttons.LEFT_SHOULDER_2.value = trigVal
+    normalizedGamepadState.buttons.LEFT_SHOULDER_2.pressed = trigVal > 0.15
+    normalizedGamepadState.buttons.RIGHT_SHOULDER_2.value = 1 - trigVal
+    normalizedGamepadState.buttons.RIGHT_SHOULDER_2.pressed = (1 - trigVal) > 0.15
+
+    // 动作键交替按下
+    const cycle = Math.floor(simulationTick * 2) % 4
+    normalizedGamepadState.buttons.ACTION_DOWN.pressed = cycle === 0
+    normalizedGamepadState.buttons.ACTION_RIGHT.pressed = cycle === 1
+    normalizedGamepadState.buttons.ACTION_LEFT.pressed = cycle === 2
+    normalizedGamepadState.buttons.ACTION_UP.pressed = cycle === 3
+
+    // 方向键交替按下
+    const dpadCycle = Math.floor(simulationTick * 1.2) % 8
+    normalizedGamepadState.buttons.DPAD_UP.pressed = dpadCycle === 0
+    normalizedGamepadState.buttons.DPAD_RIGHT.pressed = dpadCycle === 2
+    normalizedGamepadState.buttons.DPAD_DOWN.pressed = dpadCycle === 4
+    normalizedGamepadState.buttons.DPAD_LEFT.pressed = dpadCycle === 6
+  }, { immediate: false })
+
+  function startSimulation() {
+    isSimulating.value = true
+    simulationTick = 0
+    resumeSimLoop()
+  }
+
+  function stopSimulation() {
+    isSimulating.value = false
+    pauseSimLoop()
+    resetNormalizedState()
+  }
+
+  function simulateButton(key: LogicalButton, pressed: boolean, value?: number) {
+    if (!normalizedGamepadState.buttons[key]) return
+    normalizedGamepadState.buttons[key].pressed = pressed
+    normalizedGamepadState.buttons[key].value = value ?? (pressed ? 1 : 0)
+  }
+
+  function simulateStick(stick: LogicalStickName, x: number, y: number) {
+    const clamped = clampStickAxes(x, y)
+    normalizedGamepadState.sticks[stick].x = clamped.x
+    normalizedGamepadState.sticks[stick].y = clamped.y
+  }
+
+  // --- 手柄事件监听 ---
   onConnected((index: number) => {
-    const gamepad = navigator.getGamepads()[index]
-    if (!gamepad) return
-
-    console.log('手柄已连接:', gamepad.id, '索引:', index)
-    // 如果当前没有活动的，或者连接的是同一个，则激活
-    if (activeGamepadIndex.value === null || activeGamepadIndex.value === index) {
+    if (activeGamepadIndex.value === null) {
       activeGamepadIndex.value = index
-      connectedGamepadInfo.value = {
-        id: gamepad.id,
-        mapping: gamepad.mapping,
-      }
-
-      // 触发外部注册的连接事件处理器
-      if (connectedGamepadInfo.value) {
-        connectedHandlers.forEach((handler) => {
-          try {
-            handler(connectedGamepadInfo.value, index)
-          } catch (err) {
-            console.error('手柄连接事件处理器执行错误:', err)
-          }
-        })
-      }
-    } else {
-      // 如果已有活动手柄，而新连接的手柄不是当前活动的，则忽略，或按需处理（例如允许切换）
-      console.log(`另一个手柄 (索引: ${activeGamepadIndex.value}) 已经处于活动状态`)
     }
   })
 
-  // 手柄断开连接事件处理
   onDisconnected((index: number) => {
-    const gamepadCache = gamepads.value[index]
-    if (!gamepadCache) return
-
-    console.log('手柄已断开连接:', gamepadCache.id)
-
-    // 保存断开连接前的信息，用于触发事件
-    const disconnectedInfo = connectedGamepadInfo.value ? { ...connectedGamepadInfo.value } : null
-
     if (activeGamepadIndex.value === index) {
       activeGamepadIndex.value = null
-      connectedGamepadInfo.value = null
       resetNormalizedState()
-
-      // 触发外部注册的断开连接事件处理器
-      if (disconnectedInfo) {
-        disconnectedHandlers.forEach((handler) => {
-          try {
-            handler(disconnectedInfo, index)
-          } catch (err) {
-            console.error('手柄断开连接事件处理器执行错误:', err)
-          }
-        })
-      }
-
-      // 尝试连接其他已连接的手柄 (VueUse 的 gamepads 数组会自动更新)
-      const nextGamepad = gamepads.value.find((gp) => gp && gp.connected)
-      if (nextGamepad) {
-        activeGamepadIndex.value = nextGamepad.index
-        connectedGamepadInfo.value = {
-          id: nextGamepad.id,
-          mapping: nextGamepad.mapping,
-        }
-
-        // 如果自动切换到其他手柄，也触发连接事件
-        connectedHandlers.forEach((handler) => {
-          try {
-            handler(connectedGamepadInfo.value, nextGamepad.index)
-          } catch (err) {
-            console.error('手柄连接事件处理器执行错误:', err)
-          }
-        })
+      const next = gamepads.value.find((gp) => gp && gp.connected)
+      if (next) {
+        activeGamepadIndex.value = next.index
       }
     }
   })
 
-  // 监视 VueUse 的 gamepads 数组中的活动手柄
-  // VueUse 内部使用 rAF 来更新 gamepads 数组中的状态
+  // 监听当前活跃手柄状态实时变化
   watch(
-    () => {
-      // 确保 activeGamepadIndex.value 不为 null，并且对应的 gamepad 存在
-      return activeGamepadIndex.value !== null && gamepads.value[activeGamepadIndex.value]
-        ? gamepads.value[activeGamepadIndex.value]
-        : undefined
+    () => (activeGamepadIndex.value !== null ? gamepads.value[activeGamepadIndex.value] : undefined),
+    (gamepad) => {
+      updateFromGamepad(gamepad)
     },
-    (activePad) => {
-      updateNormalizedState(activePad)
-    },
-    { deep: true, immediate: true }, // immediate: true 保证初始状态也被处理
+    { deep: true, immediate: true },
   )
 
-  // 对外提供的连接事件注册方法
-  const onGamepadConnected = (handler: GamepadEventHandler) => {
-    connectedHandlers.add(handler)
-
-    // 如果当前已有连接的手柄，立即触发一次事件
-    if (isGamepadConnected.value && connectedGamepadInfo.value && activeGamepadIndex.value !== null) {
-      handler(connectedGamepadInfo.value, activeGamepadIndex.value)
-    }
-
-    // 返回取消注册的函数
-    return () => {
-      connectedHandlers.delete(handler)
-    }
-  }
-
-  // 对外提供的断开连接事件注册方法
-  const onGamepadDisconnected = (handler: GamepadEventHandler) => {
-    disconnectedHandlers.add(handler)
-
-    // 返回取消注册的函数
-    return () => {
-      disconnectedHandlers.delete(handler)
-    }
-  }
-
   return {
-    connectedGamepadInfo: readonly(connectedGamepadInfo),
-    normalizedGamepadState: readonly(normalizedGamepadState),
-    isGamepadConnected: readonly(isGamepadConnected),
-    onConnected: onGamepadConnected,
-    onDisconnected: onGamepadDisconnected,
+    gamepads,
+    connectedGamepadsList,
+    connectedGamepadInfo,
+    activeGamepadIndex,
+    isGamepadConnected,
+    deadzone,
+    isSimulating,
+    normalizedGamepadState,
+    resetNormalizedState,
+    updateFromGamepad,
+    startSimulation,
+    stopSimulation,
+    simulateButton,
+    simulateStick,
   }
 })

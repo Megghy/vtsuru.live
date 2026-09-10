@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { CURRENT_HOST } from '@/shared/config'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { normalizeQuestionDisplaySetting } from '@/shared/questionDisplay'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
@@ -20,14 +21,21 @@ const message = useMessage()
 
 const savedCardSize = usePersistedStorage('Settings.QuestionDisplay.CardSize', { width: 720, height: 480 })
 const setting = computed(() => normalizeQuestionDisplaySetting(accountInfo.value?.settings?.questionDisplay))
-const obsUrl = computed(() => {
-  const token = accountInfo.value?.token ?? ''
-  const base = CURRENT_HOST.endsWith('/') ? CURRENT_HOST : `${CURRENT_HOST}/`
-  return `${base}obs/question-display?token=${token}`
-})
+const obsUrl = computed(() =>
+  buildObsSourceUrl({
+    path: 'obs/question-display',
+    host: CURRENT_HOST,
+    credential: 'public-id',
+    userId: accountInfo.value?.id,
+  }),
+)
 const previewStyle = computed(() => ({ aspectRatio: `${savedCardSize.value.width} / ${savedCardSize.value.height}` }))
 
 async function copyUrl() {
+  if (!obsUrl.value) {
+    message.error('请先登录后再复制 OBS 链接')
+    return
+  }
   await copyToClipboard(obsUrl.value)
   message.success('OBS 链接已复制')
 }
@@ -68,9 +76,8 @@ function openWorkbench() {
           <span>浏览器源链接</span>
           <NInput
             readonly
-            type="password"
-            show-password-on="click"
             :value="obsUrl"
+            placeholder="登录后可复制 OBS 链接"
           />
         </label>
         <NButton

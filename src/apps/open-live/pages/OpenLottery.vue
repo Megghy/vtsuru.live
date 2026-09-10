@@ -17,7 +17,7 @@ import {
   useMessage,
   useNotification,
 } from 'naive-ui'
-import { h, onMounted, onUnmounted, ref } from 'vue'
+import { computed, h, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { OpenLiveInfo, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
@@ -32,7 +32,13 @@ import type {
   LotteryOption,
   ManualUserFormModel,
 } from '@/apps/open-live/components/lottery/lotteryTypes'
-import { getAvatarUrl, getRandomInt, isUserValid, shuffleArray } from '@/apps/open-live/components/lottery/lotteryUtils'
+import {
+  getAvatarUrl,
+  getRandomInt,
+  isUserValid,
+  resolveLotteryIdentityCode,
+  shuffleArray,
+} from '@/apps/open-live/components/lottery/lotteryUtils'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 import { LOTTERY_API_URL } from '@/shared/config'
 import type { DanmakuInfo, GiftInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
@@ -66,6 +72,7 @@ const message = useMessage()
 const accountInfo = useAccount()
 const notification = useNotification()
 const client = await useDanmakuClient().initOpenlive()
+const lotteryCode = computed(() => resolveLotteryIdentityCode(props.code, accountInfo.value?.biliAuthCode))
 
 const originUsers = ref<OpenLiveLotteryUserInfo[]>([])
 const currentUsers = ref<OpenLiveLotteryUserInfo[]>([])
@@ -115,7 +122,7 @@ function syncCardStates(users: OpenLiveLotteryUserInfo[], options: { reset?: boo
 async function getUsers() {
   try {
     const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(`${LOTTERY_API_URL}live/get-users`, {
-      code: props.code,
+      code: lotteryCode.value,
     })
     if (data.code === 200) {
       return data.data
@@ -127,7 +134,7 @@ async function getUsers() {
 }
 function updateUsers() {
   QueryPostAPI(`${LOTTERY_API_URL}live/update-users`, {
-    code: props.code,
+    code: lotteryCode.value,
     users: originUsers.value,
     resultUsers: resultUsers.value,
     type: isLotteried.value ? OpenLiveLotteryType.Result : OpenLiveLotteryType.Waiting,
@@ -604,7 +611,7 @@ function continueLottery() {
 
 let timer: any
 onMounted(async () => {
-  if (props.code) {
+  if (lotteryCode.value) {
     const users = (await getUsers())?.users ?? []
     originUsers.value = users
     currentUsers.value = JSON.parse(JSON.stringify(users))
@@ -1013,7 +1020,8 @@ onUnmounted(() => {
   />
   <LotteryObsModal
     v-model:show="showOBSModal"
-    :code="code"
+    :code="lotteryCode"
+    :user-id="accountInfo?.id"
   />
   <LotteryAddUserModal
     v-model:show="showAddUserModal"

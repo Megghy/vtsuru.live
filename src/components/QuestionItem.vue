@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown12Regular, ChevronUp12Regular } from '@vicons/fluent'
+import { ChevronDown12Regular, ChevronUp12Regular, Tv20Regular } from '@vicons/fluent'
 import { NCard, NCheckbox, NDivider, NFlex, NIcon, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
@@ -15,8 +15,9 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'select', id: number): void }>()
 const useQA = useQuestionBox()
 
-const isViolation = props.item.reviewResult?.isApproved === false
-const showContent = ref(!isViolation)
+const isViolation = computed(() => props.item.reviewResult?.isApproved === false)
+const isDisplaying = computed(() => useQA.displayQuestion?.id === props.item.id)
+const showContent = ref(!isViolation.value)
 const showFullMessage = ref(false)
 const message = computed(() => props.item.question?.message ?? '')
 const shouldClampMessage = computed(() => message.value.length > 240)
@@ -33,14 +34,17 @@ function getScoreColor(score: number | undefined): string {
   <NCard
     v-if="item"
     class="question-item"
-    :class="{ 'is-unread': !item.isReaded }"
+    :class="{
+      'is-unread': !item.isReaded,
+      'is-displaying': isDisplaying,
+    }"
     hoverable
     size="small"
     bordered
   >
     <template #header>
       <NFlex
-        :size="[4, 4]"
+        :size="[6, 6]"
         align="center"
         wrap
       >
@@ -51,6 +55,20 @@ function getScoreColor(score: number | undefined): string {
           @update:checked="emit('select', item.id)"
           @click.stop
         />
+
+        <NTag
+          v-if="isDisplaying"
+          type="success"
+          size="small"
+          round
+          class="displaying-tag"
+        >
+          <template #icon>
+            <NIcon :component="Tv20Regular" />
+          </template>
+          OBS 展示中
+        </NTag>
+
         <NTag
           v-if="!item.isReaded"
           type="warning"
@@ -58,13 +76,19 @@ function getScoreColor(score: number | undefined): string {
         >
           未读
         </NTag>
+
         <NDivider
-          v-if="!item.isReaded"
+          v-if="!item.isReaded || isDisplaying"
           vertical
         />
-        <NText :depth="item.isAnonymous ? 3 : 1">
-          {{ item.isAnonymous ? item.anonymousName || '匿名用户' : item.sender?.name }}
+
+        <NText
+          :depth="item.isAnonymous ? 3 : 1"
+          strong
+        >
+          {{ item.isAnonymous ? item.anonymousName || '匿名用户' : item.sender?.name || '观众' }}
         </NText>
+
         <NTag
           v-if="item.isSenderRegisted"
           size="small"
@@ -73,6 +97,7 @@ function getScoreColor(score: number | undefined): string {
         >
           已注册
         </NTag>
+
         <NTag
           v-if="item.isPublic"
           size="small"
@@ -81,21 +106,24 @@ function getScoreColor(score: number | undefined): string {
         >
           公开
         </NTag>
+
         <NTooltip v-if="item.tag">
           <template #trigger>
             <NTag
               size="small"
-              type="success"
+              type="primary"
             >
               {{ item.tag }}
             </NTag>
           </template>
           标签/话题
         </NTooltip>
+
         <NDivider vertical />
+
         <NText
           depth="3"
-          style="font-size: small"
+          style="font-size: 12px"
         >
           <NTooltip>
             <template #trigger>
@@ -108,6 +136,7 @@ function getScoreColor(score: number | undefined): string {
             <NTime :time="item.sendAt" />
           </NTooltip>
         </NText>
+
         <template v-if="item.reviewResult && item.reviewResult.violationType?.length > 0">
           <NDivider vertical />
           <NFlex
@@ -125,6 +154,7 @@ function getScoreColor(score: number | undefined): string {
             </NTag>
           </NFlex>
         </template>
+
         <template v-if="item.reviewResult && item.reviewResult.saftyScore !== undefined">
           <NDivider vertical />
           <NTooltip>
@@ -140,23 +170,26 @@ function getScoreColor(score: number | undefined): string {
                 得分: {{ item.reviewResult.saftyScore }}
               </NTag>
             </template>
-            审查得分, 满分100, 越低越安全
+            审查得分, 满分100, 越高越安全
           </NTooltip>
         </template>
       </NFlex>
     </template>
+
     <template #footer>
       <slot
         name="footer"
         :item="item"
       />
     </template>
+
     <template #header-extra>
       <slot
         name="header-extra"
         :item="item"
       />
     </template>
+
     <template v-if="item.questionImages && item.questionImages.length > 0">
       <NFlex
         class="question-item__images"
@@ -200,9 +233,12 @@ function getScoreColor(score: number | undefined): string {
 
     <template v-if="item.answer">
       <NDivider style="margin: 10px 0" />
-      <NText depth="3">
-        {{ item.answer.message }}
-      </NText>
+      <div class="question-item__answer-box">
+        <span class="answer-label">我的回复：</span>
+        <NText depth="2">
+          {{ item.answer.message }}
+        </NText>
+      </div>
     </template>
   </NCard>
 </template>
@@ -215,54 +251,79 @@ function getScoreColor(score: number | undefined): string {
   overflow: hidden;
   border-color: var(--question-item-border);
   background: var(--question-item-bg);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.question-item.is-unread {
-  --question-item-bg: color-mix(in srgb, var(--vtsuru-brand-tint) 32%, var(--vtsuru-bg-elevated));
-  --question-item-border: color-mix(in srgb, var(--vtsuru-brand) 32%, var(--vtsuru-border));
+.question-item.is-displaying {
+  border-color: var(--vtsuru-brand);
+  box-shadow: 0 0 0 1px var(--vtsuru-brand);
 }
 
-.question-item.is-unread::before {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: var(--vtsuru-brand);
-  content: '';
+.displaying-tag {
+  font-weight: 600;
+  animation: pulse-soft 2s infinite ease-in-out;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
 }
 
 .question-item__images {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .question-item__message {
   display: block;
-  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .question-item__message.is-clamped {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 6;
+  -webkit-line-clamp: 4;
 }
 
 .question-item__message-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  margin-top: 6px;
+  gap: 4px;
   padding: 0;
-  border: 0;
-  background: none;
-  color: var(--vtsuru-brand);
-  font: inherit;
+  margin-top: 6px;
   font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
+  color: var(--vtsuru-brand);
+  background: none;
+  border: none;
   cursor: pointer;
 }
 
 .question-item__message-toggle:hover {
-  color: var(--vtsuru-brand-hover);
+  text-decoration: underline;
+}
+
+.question-item__answer-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--vtsuru-bg-muted);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.answer-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vtsuru-fg-muted);
 }
 </style>

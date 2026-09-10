@@ -15,12 +15,14 @@ import {
 import { computed } from 'vue'
 
 import LiveLotteryOBS from '@/apps/obs/pages/LiveLotteryOBS.vue'
+import { buildLotteryObsUrl } from '@/apps/open-live/components/lottery/lotteryUtils'
 import { CURRENT_HOST } from '@/shared/config'
 import { copyToClipboard } from '@/shared/utils'
 
 const props = defineProps<{
   show: boolean
   code?: string
+  userId?: number | string | null
 }>()
 
 const emit = defineEmits<{
@@ -32,12 +34,7 @@ const showModel = computed({
   set: (value) => emit('update:show', value),
 })
 
-const url = computed(() => {
-  if (!props.code) return ''
-  const params = new URLSearchParams({ code: props.code })
-  const base = CURRENT_HOST.endsWith('/') ? CURRENT_HOST : `${CURRENT_HOST}/`
-  return `${base}obs/live-lottery?${params.toString()}`
-})
+const url = computed(() => buildLotteryObsUrl(CURRENT_HOST, props.userId, props.code))
 </script>
 
 <template>
@@ -79,15 +76,21 @@ const url = computed(() => {
 
         <div class="lottery-obs-modal__section">
           <div class="lottery-obs-modal__section-title">OBS 浏览器源链接</div>
-          <NInputGroup>
+          <NAlert
+            v-if="!url"
+            type="warning"
+            size="small"
+            :bordered="false"
+          >
+            未获取到用户信息，无法生成 OBS 链接。请先登录，或通过幻星平台打开本页。
+          </NAlert>
+          <NInputGroup v-else>
             <NInput
               :value="url"
               readonly
-              placeholder="OBS 组件链接"
             />
             <NButton
               type="primary"
-              :disabled="!url"
               @click="copyToClipboard(url)"
             >
               <template #icon>
@@ -114,7 +117,10 @@ const url = computed(() => {
       <div class="lottery-obs-modal__side">
         <div class="lottery-obs-modal__preview-label">实时预览 (250 × 400)</div>
         <div class="lottery-obs-modal__preview">
-          <LiveLotteryOBS :code="code" />
+          <LiveLotteryOBS
+            :code="code"
+            :id="userId"
+          />
         </div>
       </div>
     </div>

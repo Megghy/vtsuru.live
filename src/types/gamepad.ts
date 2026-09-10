@@ -1,86 +1,84 @@
-// src/types/gamepad.ts
-
-import type { FunctionalComponent, SVGAttributes } from 'vue'
+import type { Component } from 'vue'
 
 export interface Position {
-  top: string // e.g., '50%'
-  left: string // e.g., '25%'
-  width: string // e.g., '15%'
-  height?: string // e.g., '10%', optional
+  top: string // 百分比，例如 '50%'
+  left: string // 百分比，例如 '25%'
+  width: string // 百分比，例如 '15%'
+  height?: string // 可选百分比，例如 '10%'
 }
 
-// 使用 as const 来获得更精确的字符串字面量类型，类似于枚举
+// 统一标准手柄逻辑按键定义
 export const LogicalButtonsList = [
-  'ACTION_DOWN',
-  'ACTION_RIGHT',
-  'ACTION_LEFT',
-  'ACTION_UP',
-  'LEFT_SHOULDER_1',
-  'RIGHT_SHOULDER_1',
-  'LEFT_SHOULDER_2',
-  'RIGHT_SHOULDER_2',
-  'SELECT',
-  'START',
-  'LEFT_STICK_PRESS',
-  'RIGHT_STICK_PRESS',
-  'DPAD_UP',
-  'DPAD_DOWN',
-  'DPAD_LEFT',
-  'DPAD_RIGHT',
-  'HOME',
-  'PS_TOUCHPAD',
-  'NINTENDO_CAPTURE',
+  'ACTION_DOWN', // Xbox A / PS Cross / Nintendo B
+  'ACTION_RIGHT', // Xbox B / PS Circle / Nintendo A
+  'ACTION_LEFT', // Xbox X / PS Square / Nintendo Y
+  'ACTION_UP', // Xbox Y / PS Triangle / Nintendo X
+  'LEFT_SHOULDER_1', // LB / L1 / L
+  'RIGHT_SHOULDER_1', // RB / R1 / R
+  'LEFT_SHOULDER_2', // LT / L2 / ZL (线性触发器)
+  'RIGHT_SHOULDER_2', // RT / R2 / ZR (线性触发器)
+  'SELECT', // Xbox View / PS Share/Create / Nintendo -
+  'START', // Xbox Menu / PS Options / Nintendo +
+  'LEFT_STICK_PRESS', // L3
+  'RIGHT_STICK_PRESS', // R3
+  'DPAD_UP', // 十字键 上
+  'DPAD_DOWN', // 十字键 下
+  'DPAD_LEFT', // 十字键 左
+  'DPAD_RIGHT', // 十字键 右
+  'HOME', // Guide / Home / PS
+  'PS_TOUCHPAD', // PS 触摸板点击
+  'NINTENDO_CAPTURE', // 任天堂截图键
 ] as const
 
-// 从上面的数组生成联合类型
 export type LogicalButton = (typeof LogicalButtonsList)[number]
 
-// 用于摇杆的特定逻辑名 (区别于按键的 LogicalButton)
 export type LogicalStickName = 'LEFT_STICK' | 'RIGHT_STICK'
 
-interface BaseComponentConfig {
-  svg: FunctionalComponent<SVGAttributes>
-  position: Position
-}
-
-export interface ButtonComponentConfig extends BaseComponentConfig {
+export interface ButtonComponentConfig {
   type: 'button'
-  logicalButton: LogicalButton // 对应 LogicalButtons 中的一个
-  name: string // 显示名称，如 "A", "Cross"
+  logicalButton: LogicalButton
+  name: string
+  svg: Component
+  position: Position
+  isTrigger?: boolean // 是否为线性扳机 (LT/RT/L2/R2)
 }
 
-export interface StickComponentConfig extends BaseComponentConfig {
+export interface StickComponentConfig {
   type: 'stick'
-  logicalButton: LogicalStickName // 'LEFT_STICK' or 'RIGHT_STICK'
+  logicalButton: LogicalStickName
+  pressLogicalButton?: LogicalButton // 摇杆下压关联逻辑键 (如 LEFT_STICK_PRESS)
+  svg: Component
+  pressSvg?: Component
+  position: Position
 }
 
 export type GamepadComponentConfig = ButtonComponentConfig | StickComponentConfig
 
 export interface GamepadConfig {
   name: string
-  bodySvg: FunctionalComponent<SVGAttributes>
-  aspectRatio: string // e.g., '1000/625'
-  components: GamepadComponentConfig[]
+  bodySvg: Component
+  aspectRatio: string // 宽高比，例如 '1543/956'
   defaultViewBox: string
+  components: GamepadComponentConfig[]
 }
 
-export type GamepadType = 'xbox' | 'ps' | 'nintendo' // 或者更通用的 string
+export type GamepadType = 'xbox' | 'ps' | 'nintendo'
 
 export type AllGamepadConfigs = Record<GamepadType, GamepadConfig>
 
-// --- Types for useGamepad composable ---
+// --- 输入状态模型 ---
+
 export interface ButtonInputState {
   pressed: boolean
-  value: number // For analog buttons/triggers
+  value: number // 0.0 ~ 1.0 (线性量)
 }
 
 export interface StickInputState {
-  x: number
-  y: number
+  x: number // -1.0 ~ 1.0
+  y: number // -1.0 ~ 1.0
 }
 
-export type NormalizedButtonsInputState = Partial<Record<LogicalButton, ButtonInputState>>
-// 使用 Partial 是因为并非所有手柄都会映射所有 LogicalButton
+export type NormalizedButtonsInputState = Record<LogicalButton, ButtonInputState>
 
 export interface NormalizedSticksInputState {
   LEFT_STICK: StickInputState
@@ -92,12 +90,8 @@ export interface NormalizedGamepadState {
   sticks: NormalizedSticksInputState
 }
 
-export interface RawGamepadState {
-  buttons: readonly GamepadButton[] // GamepadButton is a browser native type
-  axes: readonly number[]
-}
-
 export interface GamepadConnectionInfo {
   id: string
-  mapping: string // GamepadMappingType is a browser native type
+  mapping: string
+  index: number
 }

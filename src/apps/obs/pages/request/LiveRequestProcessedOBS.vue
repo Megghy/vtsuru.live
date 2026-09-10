@@ -70,9 +70,7 @@ async function get() {
   try {
     const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
       `${SONG_REQUEST_API_URL}get-today`,
-      {
-        id: currentId.value,
-      },
+      currentId.value ? { id: currentId.value } : {},
     )
     if (data.code === 200) {
       return data.data

@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
 
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import {
   QuestionDisplayAlign,
   QuestionDisplayImageLayout,
-  QuestionDisplayShadow,
   QuestionDisplayTransition,
   QuestionDisplayVerticalAlign,
 } from '@/api/api-models'
 import { normalizeGoogleFontFamily, useGoogleFont } from '@/apps/user-page/googleFonts'
-import { questionSenderLabel } from '@/shared/questionDisplay'
+import {
+  formatColor,
+  formatColorWithOpacity,
+  formatShadow,
+  formatTextShadow,
+  questionSenderLabel,
+} from '@/shared/questionDisplay'
 
 const LOCAL_FONT_FAMILIES = new Set([
   'sans-serif',
@@ -21,10 +26,17 @@ const LOCAL_FONT_FAMILIES = new Set([
   'fantasy',
   'Microsoft YaHei',
   'Source Han Sans SC',
+  'Source Han Serif SC',
+  'PingFang SC',
+  'STKaiti',
+  'KaiTi',
+  'SimSun',
+  'SimHei',
 ])
 
 function resolveLoadableGoogleFont(value: string | undefined) {
   if (!value || LOCAL_FONT_FAMILIES.has(value)) return undefined
+  if (value.includes(',')) return undefined
   return normalizeGoogleFontFamily(value) || undefined
 }
 
@@ -47,6 +59,8 @@ const emit = defineEmits<{
 
 const contentRef = ref<HTMLElement>()
 const failedImages = ref(new Set<string>())
+const isOverflowing = ref(false)
+const isScrolledToBottom = ref(false)
 
 const status = computed<DisplayStatus>(() => {
   if (props.status) return props.status
@@ -76,74 +90,77 @@ const contentMaxWidth = computed(() => {
   const value = props.setting.contentMaxWidth ?? 34
   return value > 0 ? `${value}em` : '100%'
 })
-const rootStyle = computed<CSSProperties>(() => ({
-  '--card-border-color': color(props.setting.borderColor),
-  '--card-border-width': `${Math.max(0, props.setting.borderWidth ?? 0)}px`,
-  '--card-radius': `${Math.max(0, props.setting.borderRadius ?? 16)}px`,
-  '--card-padding': `${Math.max(0, props.setting.contentPadding ?? 24)}px`,
-  '--card-image-max-height': `${Math.max(80, props.setting.imageMaxHeight || 320)}px`,
-  '--card-content-max-width': contentMaxWidth.value,
-  '--card-content-justify': verticalAlign.value,
-  '--card-text-margin-inline':
-    align.value === 'right' ? 'auto 0' : align.value === 'center' ? 'auto' : '0 auto',
-  '--card-fg': color(props.setting.fontColor),
-  '--card-background': colorWithOpacity(props.setting.backgroundColor, props.setting.backgroundOpacity ?? 100),
-  '--card-shadow': shadow(props.setting.shadow),
-}))
+
+const rootStyle = computed<CSSProperties>(() => {
+  const borderColor = formatColor(props.setting.borderColor) || 'transparent'
+  const fontColor = formatColor(props.setting.fontColor) || 'inherit'
+  return {
+    '--card-border-color': borderColor,
+    '--card-border-width': `${Math.max(0, props.setting.borderWidth ?? 0)}px`,
+    '--card-radius': `${Math.max(0, props.setting.borderRadius ?? 16)}px`,
+    '--card-padding': `${Math.max(0, props.setting.contentPadding ?? 24)}px`,
+    '--card-image-max-height': `${Math.max(80, props.setting.imageMaxHeight || 320)}px`,
+    '--card-content-max-width': contentMaxWidth.value,
+    '--card-content-justify': verticalAlign.value,
+    '--card-text-margin-inline':
+      align.value === 'right' ? 'auto 0' : align.value === 'center' ? 'auto' : '0 auto',
+    '--card-fg': fontColor,
+    '--card-background': formatColorWithOpacity(props.setting.backgroundColor, props.setting.backgroundOpacity ?? 100),
+    '--card-shadow': formatShadow(props.setting.shadow),
+  }
+})
+
 const contentStyle = computed<CSSProperties>(() => ({
-  color: color(props.setting.fontColor),
+  color: formatColor(props.setting.fontColor),
   fontSize: `${Math.max(1, props.setting.fontSize ?? 20)}px`,
   fontWeight: props.setting.fontWeight || undefined,
   textAlign: align.value,
   fontFamily: props.setting.font || undefined,
   lineHeight: Math.max(1, props.setting.lineHeight ?? 1.5),
-  letterSpacing: `${props.setting.letterSpacing ?? 0}em`,
-  textShadow: textShadow(props.setting.textShadow),
+  letterSpacing: props.setting.letterSpacing ? `${props.setting.letterSpacing}em` : undefined,
+  textShadow: formatTextShadow(props.setting.textShadow),
 }))
-const nameStyle = computed<CSSProperties>(() => ({
-  color: color(props.setting.nameFontColor),
-  fontSize: `${Math.max(1, props.setting.nameFontSize ?? 20)}px`,
-  fontWeight: props.setting.nameFontWeight || undefined,
-  fontFamily: props.setting.nameFont || undefined,
-  textAlign: align.value,
-  letterSpacing: `${props.setting.nameLetterSpacing ?? 0}em`,
-  textShadow: textShadow(props.setting.textShadow),
-}))
+
+const nameStyle = computed<CSSProperties>(() => {
+  const customColor = formatColor(props.setting.nameFontColor)
+  const fontColor = formatColor(props.setting.fontColor)
+  const fallbackColor = fontColor ? `color-mix(in srgb, ${fontColor} 75%, transparent)` : undefined
+
+  return {
+    color: customColor || fallbackColor,
+    fontSize: `${Math.max(1, props.setting.nameFontSize ?? 18)}px`,
+    fontWeight: props.setting.nameFontWeight || undefined,
+    textAlign: align.value,
+    fontFamily: props.setting.nameFont || undefined,
+    letterSpacing: props.setting.nameLetterSpacing ? `${props.setting.nameLetterSpacing}em` : undefined,
+    textShadow: formatTextShadow(props.setting.textShadow),
+  }
+})
+
 useGoogleFont(computed(() => resolveLoadableGoogleFont(props.setting.font)))
 useGoogleFont(computed(() => resolveLoadableGoogleFont(props.setting.nameFont)))
+
 const visibleImages = computed(() =>
-  (props.question?.questionImages ?? []).filter((image) => !failedImages.value.has(image.path)),
+  (props.question?.questionImages ?? []).filter((image) => image?.path && !failedImages.value.has(image.path)),
 )
 const displayedImages = computed(() => (props.setting.showImage ? visibleImages.value : []))
-const senderLabel = computed(() => (props.question ? questionSenderLabel(props.question) : ''))
+const senderLabel = computed(() => questionSenderLabel(props.question))
 const showBrand = computed(() => props.setting.showBrand !== false)
-
-function color(value: string | undefined) {
-  if (!value) return undefined
-  return value.startsWith('#') ? value : `#${value}`
-}
-
-function colorWithOpacity(value: string | undefined, opacity: number) {
-  const hex = value?.replace('#', '')
-  if (!hex || !/^[\da-f]{6}$/i.test(hex)) return 'transparent'
-  const channels = [0, 2, 4].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16))
-  return `rgb(${channels.join(' ')} / ${Math.max(0, Math.min(100, opacity))}%)`
-}
-
-function shadow(value: QuestionDisplayShadow) {
-  if (value === QuestionDisplayShadow.Strong) return '0 16px 48px rgb(0 0 0 / 35%)'
-  if (value === QuestionDisplayShadow.Soft) return '0 8px 24px rgb(0 0 0 / 18%)'
-  return 'none'
-}
-
-function textShadow(value: QuestionDisplayShadow | undefined) {
-  if (value === QuestionDisplayShadow.Strong) return '0 2px 8px rgb(0 0 0 / 55%), 0 0 1px rgb(0 0 0 / 45%)'
-  if (value === QuestionDisplayShadow.Soft) return '0 1px 3px rgb(0 0 0 / 40%)'
-  return 'none'
-}
 
 function onImageError(path: string) {
   failedImages.value = new Set(failedImages.value).add(path)
+}
+
+function updateOverflowState() {
+  const el = contentRef.value
+  if (!el) {
+    isOverflowing.value = false
+    isScrolledToBottom.value = false
+    return
+  }
+  const range = el.scrollHeight - el.clientHeight
+  isOverflowing.value = range > 4
+  isScrolledToBottom.value = isOverflowing.value && el.scrollTop >= range - 4
 }
 
 function emitScroll() {
@@ -151,6 +168,7 @@ function emitScroll() {
   if (!element) return
   const range = element.scrollHeight - element.clientHeight
   emit('scroll', range > 0 ? element.scrollTop / range : 0)
+  updateOverflowState()
 }
 
 function setScrollProgress(progress: number) {
@@ -161,12 +179,31 @@ function setScrollProgress(progress: number) {
     top: Math.max(0, Math.min(1, progress)) * range,
     behavior: 'auto',
   })
+  updateOverflowState()
 }
+
+let resizeObserver: ResizeObserver | undefined
+
+onMounted(() => {
+  if (typeof ResizeObserver !== 'undefined' && contentRef.value) {
+    resizeObserver = new ResizeObserver(updateOverflowState)
+    resizeObserver.observe(contentRef.value)
+  }
+  updateOverflowState()
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+})
 
 watch(
   () => props.question?.id,
   () => {
     failedImages.value = new Set()
+    if (contentRef.value) {
+      contentRef.value.scrollTop = 0
+    }
+    setTimeout(updateOverflowState, 50)
   },
 )
 
@@ -180,75 +217,91 @@ defineExpose({ setScrollProgress })
     :style="rootStyle"
     :aria-busy="status === 'loading'"
   >
-    <Transition
-      :name="transitionName"
-      mode="out-in"
-    >
-      <div
-        :key="question?.id ?? status"
-        class="question-display-frame"
-      >
-        <div
-          v-if="setting.showUserName && hasQuestion"
-          class="question-display-user-name"
-          :style="nameStyle"
+    <!-- 卡片外框/背景/边框/阴影固定在最外层，切题时卡片外壳常驻稳定 -->
+    <div class="question-display-frame">
+      <div class="question-display-body">
+        <!-- 内部内容区使用 Transition 平滑切换，只过渡文字/昵称/图片/空状态 -->
+        <Transition
+          :name="transitionName"
+          mode="out-in"
         >
-          {{ senderLabel }}
-        </div>
-
-        <div
-          ref="contentRef"
-          class="question-display-content"
-          :class="{
-            'has-images': displayedImages.length > 0,
-            'has-single-image': displayedImages.length === 1,
-          }"
-          :style="contentStyle"
-          @scroll="emitScroll"
-        >
-          <template v-if="hasQuestion && question">
-            <div class="question-display-text">{{ question.question.message }}</div>
+          <div
+            :key="question?.id ?? status"
+            class="question-display-inner"
+          >
             <div
-              v-if="displayedImages.length"
-              class="question-display-images"
-              :class="imageLayout"
+              v-if="setting.showUserName && hasQuestion"
+              class="question-display-user-name"
+              :style="nameStyle"
             >
-              <img
-                v-for="image in displayedImages"
-                :key="image.path"
-                class="question-display-image"
-                :src="image.path"
-                alt=""
-                loading="lazy"
-                @error="onImageError(image.path)"
+              {{ senderLabel }}
+            </div>
+
+            <div class="question-display-content-wrapper">
+              <div
+                ref="contentRef"
+                class="question-display-content"
+                :class="{
+                  'has-images': displayedImages.length > 0,
+                  'has-single-image': displayedImages.length === 1,
+                }"
+                :style="contentStyle"
+                @scroll="emitScroll"
+              >
+                <template v-if="hasQuestion && question">
+                  <div class="question-display-text">{{ question.question.message }}</div>
+                  <div
+                    v-if="displayedImages.length"
+                    class="question-display-images"
+                    :class="imageLayout"
+                  >
+                    <img
+                      v-for="image in displayedImages"
+                      :key="image.path"
+                      class="question-display-image"
+                      :src="image.path"
+                      alt=""
+                      loading="lazy"
+                      @error="onImageError(image.path)"
+                    />
+                  </div>
+                </template>
+                <span
+                  v-else
+                  class="question-display-empty"
+                  role="status"
+                  aria-label="当前没有展示提问"
+                >
+                  <span
+                    class="question-display-empty-loader"
+                    aria-hidden="true"
+                  >
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                </span>
+              </div>
+
+              <!-- 超长文本底部溢出遮罩指示 -->
+              <div
+                v-if="hasQuestion && isOverflowing && !isScrolledToBottom"
+                class="overflow-indicator"
+                aria-hidden="true"
               />
             </div>
-          </template>
-          <span
-            v-else
-            class="question-display-empty"
-            role="status"
-            aria-label="当前没有展示提问"
-          >
-            <span
-              class="question-display-empty-loader"
-              aria-hidden="true"
-            >
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-          </span>
-        </div>
-        <div
-          v-if="hasQuestion && showBrand"
-          class="question-display-brand"
-        >
-          vtsuru.live
-        </div>
+          </div>
+        </Transition>
       </div>
-    </Transition>
+
+      <div
+        v-if="showBrand"
+        class="question-display-brand"
+      >
+        vtsuru.live
+      </div>
+    </div>
   </div>
 </template>
 
@@ -267,13 +320,13 @@ defineExpose({ setScrollProgress })
 .question-display-frame {
   box-sizing: border-box;
   display: flex;
-  flex: none;
+  flex: 1 1 100%;
   width: 100%;
   height: 100%;
   min-width: 0;
   min-height: 0;
   flex-direction: column;
-  gap: clamp(12px, 3cqh, 22px);
+  gap: clamp(10px, 2.5cqh, 18px);
   padding: var(--card-padding);
   overflow: hidden;
   background: var(--card-background);
@@ -287,6 +340,26 @@ defineExpose({ setScrollProgress })
     box-shadow 0.2s ease;
 }
 
+.question-display-body {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.question-display-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: clamp(10px, 2.5cqh, 18px);
+}
+
 .question-display-user-name {
   flex: none;
   min-width: 0;
@@ -298,39 +371,42 @@ defineExpose({ setScrollProgress })
   white-space: nowrap;
 }
 
-.question-display-content {
-  box-sizing: border-box;
+.question-display-content-wrapper {
+  position: relative;
   display: flex;
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
+}
+
+.question-display-content {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   justify-content: var(--card-content-justify, start);
-  gap: clamp(14px, 3cqh, 24px);
-  padding: 0;
-  overflow: auto;
-  overflow-wrap: anywhere;
-  overscroll-behavior: contain;
-  scrollbar-color: color-mix(in srgb, var(--card-fg) 26%, transparent) transparent;
-  scrollbar-width: thin;
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
 .question-display-content::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  display: none;
 }
 
-.question-display-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.question-display-content::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--card-fg) 26%, transparent);
-  border-radius: 3px;
-}
-
-.question-display-content::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--card-fg) 42%, transparent);
+.overflow-indicator {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 48px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--card-background));
+  opacity: 0.92;
+  transition: opacity 0.2s ease;
 }
 
 .question-display-text {
@@ -367,8 +443,8 @@ defineExpose({ setScrollProgress })
   max-width: 100%;
   max-height: var(--card-image-max-height);
   padding: 6px;
-  background: color-mix(in srgb, var(--card-border-color) 10%, rgb(127 127 127 / 8%));
-  border: 1px solid color-mix(in srgb, var(--card-border-color) 24%, transparent);
+  background: color-mix(in srgb, var(--card-border-color, transparent) 10%, rgb(127 127 127 / 8%));
+  border: 1px solid color-mix(in srgb, var(--card-border-color, transparent) 24%, rgb(127 127 127 / 15%));
   border-radius: min(10px, calc(var(--card-radius) * 0.55));
   object-fit: contain;
 }
@@ -403,36 +479,40 @@ defineExpose({ setScrollProgress })
 
 .question-display-empty {
   display: flex;
-  flex: 1;
-  min-height: 1px;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
-  user-select: none;
+  width: 100%;
+  min-height: 100%;
+  color: var(--card-fg);
+  opacity: 0.65;
 }
 
 .question-display-empty-loader {
-  display: flex;
-  width: 58px;
-  height: 16px;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
 }
 
 .question-display-empty-loader i {
-  display: block;
-  width: 10px;
-  height: 10px;
-  background: color-mix(in srgb, var(--card-fg) 46%, transparent);
+  width: 8px;
+  height: 8px;
+  background: currentcolor;
   border-radius: 50%;
-  animation: question-display-empty-bounce 1.1s ease-in-out infinite;
+  opacity: 0.35;
+  animation: question-display-empty-bounce 1.1s infinite ease-in-out;
+}
+
+.question-display-empty-loader i:nth-child(1) {
+  animation-delay: -0.05s;
 }
 
 .question-display-empty-loader i:nth-child(2) {
-  animation-delay: -0.825s;
+  animation-delay: -0.125s;
 }
 
 .question-display-empty-loader i:nth-child(3) {
-  animation-delay: -0.55s;
+  animation-delay: -0.2s;
 }
 
 .question-display-empty-loader i:nth-child(4) {
@@ -469,8 +549,8 @@ defineExpose({ setScrollProgress })
 .question-display-scale-enter-active,
 .question-display-scale-leave-active {
   transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .question-display-fade-enter-from,

@@ -9,16 +9,16 @@ import type { UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { OpenLiveLotteryType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL } from '@/shared/config'
+import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
 const props = defineProps<{
   code?: string
+  id?: number | string | null
 }>()
 
 const route = useRoute()
-const currentCode = computed<string>(() => {
-  const v = props.code ?? (Array.isArray(route.query.code) ? route.query.code[0] : route.query.code)
-  return typeof v === 'string' ? v : ''
-})
+const currentId = computed(() => parsePositiveId(props.id ?? route.query.id))
+const currentCode = computed(() => firstQueryValue(props.code ?? route.query.code).trim())
 const listContainerRef = ref()
 const { height, width } = useElementSize(listContainerRef)
 
@@ -35,7 +35,8 @@ const isMoreThanContainer = computed(() => {
 async function refreshUsers() {
   try {
     const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(`${LOTTERY_API_URL}live/get-users`, {
-      code: currentCode.value,
+      ...(currentId.value ? { id: currentId.value } : {}),
+      ...(currentCode.value ? { code: currentCode.value } : {}),
     })
     if (data.code === 200) {
       result.value = data.data

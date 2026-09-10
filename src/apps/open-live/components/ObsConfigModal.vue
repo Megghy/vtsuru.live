@@ -23,6 +23,7 @@ import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { CURRENT_HOST } from '@/shared/config'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { copyToClipboard } from '@/shared/utils'
 
 type ObsStyle = 'classic' | 'fresh' | 'minimal'
@@ -70,23 +71,20 @@ const styleModel = computed({
 
 const effectiveUserId = computed(() => props.userId || accountInfo.value?.id || 0)
 
-const obsUrl = computed(() => {
-  const userId = effectiveUserId.value
-  const params = new URLSearchParams()
-  if (userId) {
-    params.set('id', String(userId))
-  }
-  if (props.showStyleOptions) {
-    params.set('style', styleModel.value)
-    params.set('speed', String(speedModel.value))
-  }
-  if (accountInfo.value?.token) {
-    params.set('token', accountInfo.value.token)
-  }
-  const base = CURRENT_HOST.endsWith('/') ? CURRENT_HOST : `${CURRENT_HOST}/`
-  const cleanPath = props.obsPath.startsWith('/') ? props.obsPath.slice(1) : props.obsPath
-  return `${base}${cleanPath}?${params.toString()}`
-})
+const obsUrl = computed(() =>
+  buildObsSourceUrl({
+    path: props.obsPath,
+    host: CURRENT_HOST,
+    credential: 'public-id',
+    userId: effectiveUserId.value,
+    params: props.showStyleOptions
+      ? {
+          style: styleModel.value,
+          speed: speedModel.value,
+        }
+      : undefined,
+  }),
+)
 </script>
 
 <template>

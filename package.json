@@ -116,6 +116,7 @@
     "@vitejs/plugin-legacy": "^8.2.3",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "@vitest/ui": "^4.1.9",
+    "@vue/test-utils": "^2.5.0",
     "eslint": "^10.6.0",
     "eslint-plugin-oxlint": "^1.72.0",
     "jsdom": "^29.1.1",

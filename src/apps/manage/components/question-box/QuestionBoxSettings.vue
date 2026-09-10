@@ -7,8 +7,8 @@ import {
   NCheckbox,
   NEmpty,
   NFlex,
-  NGrid,
   NGi,
+  NGrid,
   NIcon,
   NInput,
   NInputGroup,
@@ -101,7 +101,8 @@ async function saveNotificationSetting() {
 }
 
 function addTag() {
-  useQB.addTag(addTagName.value)
+  if (!addTagName.value.trim()) return
+  useQB.addTag(addTagName.value.trim())
   addTagName.value = ''
 }
 </script>
@@ -117,6 +118,7 @@ function addTag() {
       <NFlex
         class="question-box-settings-stack"
         vertical
+        :size="12"
       >
         <NCard
           class="setting-card"
@@ -133,6 +135,7 @@ function addTag() {
           <NFlex
             class="question-box-settings-content"
             vertical
+            :size="12"
           >
             <NCheckbox
               v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
@@ -198,6 +201,7 @@ function addTag() {
           <NFlex
             class="question-box-settings-content"
             vertical
+            :size="12"
           >
             <NCheckbox
               v-model:checked="accountInfo.settings.sendEmail.recieveQA"
@@ -240,10 +244,11 @@ function addTag() {
         <NInputGroup class="question-box-tag-input">
           <NInput
             v-model:value="addTagName"
-            placeholder="输入新标签名称"
-            maxlength="30"
+            placeholder="输入新标签名称..."
+            maxlength="20"
             show-count
             clearable
+            @keydown.enter="addTag"
           />
           <NButton
             type="primary"
@@ -255,73 +260,75 @@ function addTag() {
         </NInputGroup>
 
         <NEmpty
-          v-if="useQB.tags.length === 0"
-          description="暂无标签"
+          v-if="sortedTags.length === 0"
+          description="暂无标签，添加后提问者可选择分类"
+          style="margin-top: 24px"
         />
+
         <NList
           v-else
-          bordered
-          hoverable
-          class="question-box-tag-list"
+          class="question-box-tags-list"
         >
           <NListItem
             v-for="item in sortedTags"
             :key="item.name"
+            class="tag-item"
           >
             <NFlex
-              class="question-box-tag-row"
               align="center"
               justify="space-between"
             >
-              <NTag
-                :bordered="false"
-                :type="item.visiable ? 'success' : 'default'"
-                :style="!item.visiable ? { textDecoration: 'line-through', color: 'grey' } : {}"
-              >
-                {{ item.name }}
-              </NTag>
               <NFlex
-                class="question-box-tag-actions"
-                size="small"
+                align="center"
+                :size="8"
               >
-                <NTooltip placement="top">
+                <NTag
+                  size="small"
+                  :type="item.visiable ? 'primary' : 'default'"
+                >
+                  {{ item.name }}
+                </NTag>
+                <NTag
+                  v-if="!item.visiable"
+                  size="small"
+                  :bordered="false"
+                >
+                  已隐藏
+                </NTag>
+              </NFlex>
+
+              <NFlex :size="6">
+                <NTooltip>
                   <template #trigger>
-                    <NPopconfirm @positive-click="useQB.updateTagVisiable(item.name, !item.visiable)">
-                      <template #trigger>
-                        <NButton
-                          :type="item.visiable ? 'success' : 'warning'"
-                          text
-                          size="small"
-                        >
-                          <template #icon>
-                            <NIcon :component="item.visiable ? Eye24Filled : EyeOff24Filled" />
-                          </template>
-                        </NButton>
+                    <NButton
+                      size="tiny"
+                      quaternary
+                      circle
+                      @click="useQB.changeTagVisiable(item.name, !item.visiable)"
+                    >
+                      <template #icon>
+                        <NIcon :component="item.visiable ? Eye24Filled : EyeOff24Filled" />
                       </template>
-                      确定要{{ item.visiable ? '隐藏' : '显示' }}这个标签吗?
-                    </NPopconfirm>
+                    </NButton>
                   </template>
-                  {{ item.visiable ? '隐藏标签' : '显示标签' }}
+                  {{ item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题' }}
                 </NTooltip>
-                <NTooltip placement="top">
+
+                <NPopconfirm @positive-click="useQB.delTag(item.name)">
                   <template #trigger>
-                    <NPopconfirm @positive-click="useQB.delTag(item.name)">
-                      <template #trigger>
-                        <NButton
-                          type="error"
-                          text
-                          size="small"
-                        >
-                          <template #icon>
-                            <NIcon :component="Delete24Regular" />
-                          </template>
-                        </NButton>
+                    <NButton
+                      size="tiny"
+                      quaternary
+                      circle
+                      type="error"
+                    >
+                      <template #icon>
+                        <NIcon :component="Delete24Regular" />
                       </template>
-                      确定要删除这个标签吗?
-                    </NPopconfirm>
+                    </NButton>
                   </template>
-                  删除标签
-                </NTooltip>
+                  确认删除标签「{{ item.name }}」吗？
+                </NPopconfirm>
               </NFlex>
             </NFlex>
           </NListItem>
@@ -333,64 +340,33 @@ function addTag() {
 
 <style scoped>
 .question-box-settings-grid {
-  --question-box-card-gap: 12px;
+  margin-top: 4px;
 }
 
-.question-box-settings-stack {
-  gap: var(--question-box-card-gap);
-}
-
-.question-box-settings-content {
-  gap: 10px;
-}
-
-.question-box-settings-grid :deep(.n-card__content) {
-  padding: 14px 16px 16px;
+.setting-card {
+  border-radius: 8px;
 }
 
 .question-box-safety-content {
-  padding: 0 2px 4px;
+  padding: 8px 12px 16px;
 }
 
 .question-box-help-text {
-  margin-bottom: 12px;
-  color: var(--vtsuru-fg-muted);
+  margin-bottom: 16px;
   font-size: 13px;
-}
-
-.question-box-tags-card {
-  height: 100%;
+  color: var(--vtsuru-fg-muted);
 }
 
 .question-box-tag-input {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-.question-box-tag-list {
-  max-height: 500px;
+.question-box-tags-list {
+  max-height: 380px;
   overflow-y: auto;
 }
 
-.question-box-tag-row {
-  gap: 8px;
-}
-
-.question-box-tag-actions {
-  flex: none;
-  gap: 2px;
-}
-
-.question-box-tag-list :deep(.n-list-item) {
-  padding: 7px 10px;
-}
-
-@media (max-width: 520px) {
-  .question-box-settings-grid :deep(.n-card__content) {
-    padding: 12px;
-  }
-
-  .question-box-tag-list :deep(.n-list-item) {
-    padding: 6px 8px;
-  }
+.tag-item {
+  padding: 8px 4px !important;
 }
 </style>

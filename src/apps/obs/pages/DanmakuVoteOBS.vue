@@ -6,6 +6,7 @@ import { clearInterval, setInterval } from 'worker-timers'
 import type { VoteOBSData, VoteOption } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { VOTE_API_URL } from '@/shared/config'
+import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
 const props = defineProps<{
   active?: boolean
@@ -44,7 +45,7 @@ async function fetchVoteData() {
     const userId = getUserIdFromUrl()
     if (!userId) return
 
-    const result = await QueryGetAPI<VoteOBSData>(`${VOTE_API_URL}obs-data`, { user: userId })
+    const result = await QueryGetAPI<VoteOBSData>(`${VOTE_API_URL}obs-data`, { id: userId, user: userId })
 
     if (result.code === 200 && result.data) {
       voteData.value = result.data
@@ -67,14 +68,14 @@ async function fetchVoteData() {
 
 // 从URL获取用户ID
 function getUserIdFromUrl(): string | null {
-  const hash = route.query.hash as string
-  if (hash) {
-    const parts = hash.split('_')
-    if (parts.length === 2) {
-      return parts[1]
-    }
+  const id = parsePositiveId(route.query.id)
+  if (id) return id
+  const hash = firstQueryValue(route.query.hash)
+  if (hash.includes('_')) {
+    const userId = hash.split('_').at(-1)
+    return parsePositiveId(userId) || null
   }
-  return (route.query.user as string) || null
+  return parsePositiveId(route.query.user) || firstQueryValue(route.query.user) || null
 }
 
 // 计算百分比

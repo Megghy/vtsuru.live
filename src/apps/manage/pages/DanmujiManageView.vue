@@ -1,24 +1,37 @@
 <script setup lang="ts">
-import { Copy16Regular } from '@vicons/fluent'
+import {
+  ArrowReset24Regular,
+  CloudCheckmark24Regular,
+  Copy16Regular,
+  Save24Regular,
+  Send24Regular,
+  Sparkle24Regular,
+} from '@vicons/fluent'
+import { useWindowSize } from '@vueuse/core'
 import {
   NAlert,
   NButton,
   NCard,
   NCheckbox,
+  NDivider,
   NFlex,
   NForm,
   NFormItem,
   NGi,
   NGrid,
+  NIcon,
   NInput,
   NInputNumber,
-  NIcon,
   NPopconfirm,
+  NRadioButton,
+  NRadioGroup,
   NSelect,
   NSplit,
   NSwitch,
   NTabPane,
   NTabs,
+  NTag,
+  NTooltip,
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
@@ -29,10 +42,11 @@ import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponen
 import type { DanmujiConfig } from '@/apps/obs/pages/DanmujiOBS.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { isDarkMode } from '@/shared/utils'
+import { copyToClipboard, isDarkMode } from '@/shared/utils'
 
 const props = defineProps<{
   openLiveAuth?: AuthInfo
@@ -42,17 +56,32 @@ const accountInfo = useAccount()
 const css = usePersistedStorage('danmuji-css', defaultDanmujiCss)
 const danmujiObsRef = ref<InstanceType<typeof DanmujiOBS> | null>(null)
 const message = useMessage()
-const windowWidth = useWindowSize().width
-const obsUrl = computed(() => {
-  if (accountInfo.value?.id) return `${CURRENT_HOST}obs/danmuji?token=${accountInfo.value.token}`
-  if (!props.openLiveAuth?.Code) return ''
+const { width: windowWidth } = useWindowSize()
 
-  const query = new URLSearchParams()
+const isSavingCloud = ref(false)
+const serverConfigSnapshot = ref<string>('')
+const previewBgMode = ref<'transparent' | 'dark' | 'light' | 'game'>('transparent')
+
+const obsUrl = computed(() => {
+  const tokenUrl = buildObsSourceUrl({
+    path: 'obs/danmuji',
+    host: CURRENT_HOST,
+    credential: 'token',
+    token: accountInfo.value?.id ? accountInfo.value.token : undefined,
+  })
+  if (tokenUrl) return tokenUrl
+  if (!props.openLiveAuth?.Code) return ''
+  const params: Record<string, string> = {}
   for (const key of ['Timestamp', 'Code', 'Mid', 'Caller', 'CodeSign'] as const) {
     const value = props.openLiveAuth[key]
-    if (value) query.set(key, value)
+    if (value) params[key] = value
   }
-  return `${CURRENT_HOST}obs/danmuji?${query}`
+  return buildObsSourceUrl({
+    path: 'obs/danmuji',
+    host: CURRENT_HOST,
+    credential: 'none',
+    params,
+  })
 })
 
 const testFormData = reactive({
@@ -90,24 +119,26 @@ function randomDigits(length = 4) {
 }
 
 function generateTestUsername() {
-  return `测试用户${randomDigits(5)}`
+  return `热心观众${randomDigits(4)}`
 }
 
 function generateTestMessage() {
-  const templates = ['测试消息', '这是一条测试消息', '测试弹幕内容', '系统测试消息', '模拟展示消息']
+  const templates = ['今晚开播辛苦啦！', '主播这把太帅了！', '打卡打卡~', '加油加油！', '刚才那波走位真细节']
   const template = templates[Math.floor(Math.random() * templates.length)]
-  return `${template}${randomDigits(4)}`
+  return `${template} (${randomDigits(3)})`
 }
 
 function generateTestGiftName() {
-  return `测试礼物${randomDigits(3)}`
+  const gifts = ['辣条', '小电视飞船', '小心心', 'B坷垃', '打call']
+  return gifts[Math.floor(Math.random() * gifts.length)]
 }
 
 function generateTestMedalName() {
-  return `测试粉丝牌${randomDigits(3)}`
+  const medals = ['小仙女', '头号粉丝', '干饭人', '元气满分']
+  return medals[Math.floor(Math.random() * medals.length)]
 }
 
-// 保存DanmujiConfig的配置
+// 保存 DanmujiConfig 配置
 const danmujiConfig = usePersistedStorage<DanmujiConfig>('danmuji-config', {
   minGiftPrice: 0.1,
   showDanmaku: true,
@@ -116,27 +147,27 @@ const danmujiConfig = usePersistedStorage<DanmujiConfig>('danmuji-config', {
   mergeSimilarDanmaku: false,
   mergeGift: true,
   maxNumber: 60,
-
   blockLevel: 0,
   blockKeywords: '',
   blockUsers: '',
   blockMedalLevel: 0,
-
   giftUsernamePronunciation: '',
   importPresetCss: false,
-
   emoticons: [],
 })
 
-// 修改为使用标签页的活动键存储
+const hasUnsavedConfig = computed(() => {
+  if (!serverConfigSnapshot.value) return false
+  return JSON.stringify(danmujiConfig.value) !== serverConfigSnapshot.value
+})
+
 const activeTab = usePersistedStorage('danmuji-active-tab', 'style')
 
-// 自动生成弹幕设置
+// 自动模拟弹幕
 const isAutoGenerating = ref(false)
-const autoGenerateInterval = ref(1) // 默认间隔3秒
+const autoGenerateInterval = ref(1.5)
 let autoGenerateTimer: ReturnType<typeof setTimeout> | null = null
 
-// 自动生成弹幕的独立数据对象，不影响表单
 const autoGenData = reactive({
   type: EventDataTypes.Message,
   uname: '',
@@ -149,12 +180,11 @@ const autoGenData = reactive({
   fans_medal_name: '',
 })
 
-// 重设CSS为默认值
 function resetCssToDefault() {
   css.value = defaultDanmujiCss
+  message.success('已重设为默认 CSS')
 }
 
-// 重设配置为默认值
 function resetConfigToDefault() {
   danmujiConfig.value = {
     minGiftPrice: 0.1,
@@ -164,54 +194,38 @@ function resetConfigToDefault() {
     mergeSimilarDanmaku: false,
     mergeGift: true,
     maxNumber: 60,
-
     blockLevel: 0,
     blockKeywords: '',
     blockUsers: '',
     blockMedalLevel: 0,
-
     giftUsernamePronunciation: '',
     importPresetCss: false,
-
     emoticons: [],
   }
-  message.success('配置已重置为默认值')
+  message.success('功能配置已重置为默认值')
 }
 
-// 随机生成测试弹幕内容
 function generateRandomContent() {
-  // 随机生成用户名
   testFormData.uname = generateTestUsername()
-
-  // 随机生成用户ID (10000-99999)
   testFormData.uid = Math.floor(Math.random() * 90000) + 10000
 
-  // 根据消息类型随机生成相应内容
   switch (testFormData.type) {
     case EventDataTypes.Message: {
-      // 随机弹幕内容
       testFormData.msg = generateTestMessage()
-      // 随机粉丝牌等级 (0-30)
       testFormData.fans_medal_level = Math.floor(Math.random() * 31)
-      // 随机粉丝牌名称
       testFormData.fans_medal_name = generateTestMedalName()
-      // 随机舰长等级
       const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length)
       testFormData.guard_level = guardLevelOptions[guardRandomIndex].value
       break
     }
 
     case EventDataTypes.Gift:
-      // 随机礼物名称
       testFormData.msg = generateTestGiftName()
-      // 随机礼物数量 (1-99)
-      testFormData.num = Math.floor(Math.random() * 99) + 1
-      // 随机礼物价值 (1-50)
+      testFormData.num = Math.floor(Math.random() * 20) + 1
       testFormData.price = Math.floor(Math.random() * 50) + 1
       break
 
     case EventDataTypes.Guard: {
-      // 随机舰长等级 (排除非舰长选项)
       const guardOptions = guardLevelOptions.filter((option) => option.value !== GuardLevel.None)
       const guardIndex = Math.floor(Math.random() * guardOptions.length)
       testFormData.guard_level = guardOptions[guardIndex].value
@@ -219,24 +233,18 @@ function generateRandomContent() {
     }
 
     case EventDataTypes.SC:
-      // 随机SC内容
       testFormData.msg = generateTestMessage()
-      // 随机SC价格 (5-500)
       testFormData.price = Math.floor(Math.random() * 496) + 5
       break
 
     case EventDataTypes.SCDel:
-      // 生成一个假的SC ID
       testFormData.sc_id_to_delete = `test-sc-${Date.now() - Math.floor(Math.random() * 10000)}`
       break
   }
 }
 
 function sendTestMessage() {
-  if (!danmujiObsRef.value) {
-    console.error('DanmujiOBS component instance not found.')
-    return
-  }
+  if (!danmujiObsRef.value) return
 
   let dataPayload: any = {}
   const baseMsg = testFormData.msg
@@ -314,117 +322,39 @@ function sendTestMessage() {
   danmujiObsRef.value.testAddMessage(eventToSend as any)
 }
 
-// 添加初始测试数据
-function addInitialTestMessages() {
-  if (!danmujiObsRef.value) return
-
-  // 延迟执行，确保组件已完全渲染
-  setTimeout(() => {
-    // 添加普通弹幕消息
-    for (let i = 0; i < 5; i++) {
-      autoGenData.type = EventDataTypes.Message
-      generateAutoContent()
-      sendAutoMessage()
-    }
-
-    // 添加礼物消息
-    autoGenData.type = EventDataTypes.Gift
-    generateAutoContent()
-    sendAutoMessage()
-
-    // 添加舰长消息
-    autoGenData.type = EventDataTypes.Guard
-    generateAutoContent()
-    sendAutoMessage()
-
-    // 添加SC消息
-    autoGenData.type = EventDataTypes.SC
-    generateAutoContent()
-    sendAutoMessage()
-  }, 500)
-}
-
-// 开始自动生成弹幕
-function startAutoGenerate() {
-  if (autoGenerateTimer) {
-    clearTimeout(autoGenerateTimer)
-  }
-
-  if (!isAutoGenerating.value) return
-
-  // 生成随机消息类型
-  const messageTypes = [EventDataTypes.Message, EventDataTypes.Gift, EventDataTypes.Guard, EventDataTypes.SC]
-
-  // 50%概率为普通弹幕，50%概率为其他类型
-  autoGenData.type =
-    Math.random() < 0.5 ? EventDataTypes.Message : messageTypes[Math.floor(Math.random() * messageTypes.length)]
-
-  // 为自动生成数据随机生成内容
-  generateAutoContent()
-
-  // 发送自动生成的消息
-  sendAutoMessage()
-
-  // 随机间隔时间（基础间隔的50%-150%）
-  const randomInterval = autoGenerateInterval.value * (0.5 + Math.random())
-  autoGenerateTimer = setTimeout(startAutoGenerate, randomInterval * 1000)
-}
-
-// 为自动生成弹幕生成随机内容
 function generateAutoContent() {
-  // 随机生成用户名
   autoGenData.uname = generateTestUsername()
-
-  // 随机生成用户ID (10000-99999)
   autoGenData.uid = Math.floor(Math.random() * 90000) + 10000
 
-  // 根据消息类型随机生成相应内容
   switch (autoGenData.type) {
     case EventDataTypes.Message: {
-      // 随机弹幕内容
       autoGenData.msg = generateTestMessage()
-      // 随机粉丝牌等级 (0-30)
-      autoGenData.fans_medal_level = Math.floor(Math.random() * 31)
-      // 随机粉丝牌名称
+      autoGenData.fans_medal_level = Math.floor(Math.random() * 25)
       autoGenData.fans_medal_name = generateTestMedalName()
-      // 随机舰长等级
       const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length)
       autoGenData.guard_level = guardLevelOptions[guardRandomIndex].value
       break
     }
-
     case EventDataTypes.Gift:
-      // 随机礼物名称
       autoGenData.msg = generateTestGiftName()
-      // 随机礼物数量 (1-99)
-      autoGenData.num = Math.floor(Math.random() * 99) + 1
-      // 随机礼物价值 (1-50)
-      autoGenData.price = Math.floor(Math.random() * 50) + 1
+      autoGenData.num = Math.floor(Math.random() * 10) + 1
+      autoGenData.price = Math.floor(Math.random() * 30) + 1
       break
-
     case EventDataTypes.Guard: {
-      // 随机舰长等级 (排除非舰长选项)
       const guardOptions = guardLevelOptions.filter((option) => option.value !== GuardLevel.None)
       const guardIndex = Math.floor(Math.random() * guardOptions.length)
       autoGenData.guard_level = guardOptions[guardIndex].value
       break
     }
-
     case EventDataTypes.SC:
-      // 随机SC内容
       autoGenData.msg = generateTestMessage()
-      // 随机SC价格 (5-500)
-      autoGenData.price = Math.floor(Math.random() * 496) + 5
+      autoGenData.price = Math.floor(Math.random() * 100) + 30
       break
   }
 }
 
-// 发送自动生成的消息
 function sendAutoMessage() {
-  if (!danmujiObsRef.value) {
-    console.error('DanmujiOBS component instance not found.')
-    return
-  }
+  if (!danmujiObsRef.value) return
 
   let dataPayload: any = {}
 
@@ -494,7 +424,42 @@ function sendAutoMessage() {
   danmujiObsRef.value.testAddMessage(eventToSend as any)
 }
 
-// 监听自动生成状态变化
+function startAutoGenerate() {
+  if (autoGenerateTimer) {
+    clearTimeout(autoGenerateTimer)
+  }
+
+  if (!isAutoGenerating.value) return
+
+  const messageTypes = [EventDataTypes.Message, EventDataTypes.Gift, EventDataTypes.Guard, EventDataTypes.SC]
+  autoGenData.type = Math.random() < 0.65 ? EventDataTypes.Message : messageTypes[Math.floor(Math.random() * messageTypes.length)]
+
+  generateAutoContent()
+  sendAutoMessage()
+
+  autoGenerateTimer = setTimeout(startAutoGenerate, autoGenerateInterval.value * 1000)
+}
+
+function addInitialTestMessages() {
+  if (!danmujiObsRef.value) return
+
+  setTimeout(() => {
+    for (let i = 0; i < 4; i++) {
+      autoGenData.type = EventDataTypes.Message
+      generateAutoContent()
+      sendAutoMessage()
+    }
+
+    autoGenData.type = EventDataTypes.Gift
+    generateAutoContent()
+    sendAutoMessage()
+
+    autoGenData.type = EventDataTypes.SC
+    generateAutoContent()
+    sendAutoMessage()
+  }, 400)
+}
+
 watch(
   isAutoGenerating,
   (newValue) => {
@@ -508,90 +473,74 @@ watch(
   { immediate: true },
 )
 
-// 从服务器获取配置
 async function downloadConfigFromServer() {
   const result = await DownloadConfig<DanmujiConfig>('danmuji-config')
   if (result.status === 'success' && result.data) {
     danmujiConfig.value = result.data
-    message.success('已从服务器获取弹幕姬配置')
+    serverConfigSnapshot.value = JSON.stringify(result.data)
+    message.success('已同步云端弹幕机配置')
     return true
-  } else if (result.status === 'notfound') {
-    // message.info('服务器上未找到弹幕姬配置，将使用本地配置');
-    uploadConfigToServer()
-  } else {
-    message.error(`获取配置失败: ${result.msg}`)
   }
   return false
 }
 
-// 组件挂载后添加初始测试数据
+async function uploadConfigToServer() {
+  isSavingCloud.value = true
+  try {
+    const result = await UploadConfig('danmuji-config', danmujiConfig.value)
+    if (result) {
+      serverConfigSnapshot.value = JSON.stringify(danmujiConfig.value)
+      message.success('弹幕机配置已保存并同步至云端')
+    } else {
+      message.error('上传弹幕机配置失败')
+    }
+  } catch (error) {
+    message.error(`保存失败: ${error instanceof Error ? error.message : error}`)
+  } finally {
+    isSavingCloud.value = false
+  }
+}
+
+async function copyObsUrl() {
+  await copyToClipboard(obsUrl.value)
+  message.success('OBS 浏览器源地址已复制')
+}
+
+async function copyCss() {
+  await copyToClipboard(css.value)
+  message.success('自定义 CSS 已复制到剪贴板')
+}
+
 onMounted(async () => {
   if (accountInfo.value?.id) await downloadConfigFromServer()
-
-  // 添加初始测试数据
   addInitialTestMessages()
-
-  // 确保在添加初始测试数据后启动自动生成
-  setTimeout(() => {
-    if (isAutoGenerating.value && !autoGenerateTimer) {
-      startAutoGenerate()
-    }
-  }, 1000)
 })
 
-// 组件卸载时清除定时器
 onUnmounted(() => {
   if (autoGenerateTimer) {
     clearTimeout(autoGenerateTimer)
     autoGenerateTimer = null
   }
 })
-
-// 上传配置到服务器
-async function uploadConfigToServer() {
-  const result = await UploadConfig('danmuji-config', danmujiConfig.value)
-  if (result) {
-    message.success('弹幕姬配置已上传到服务器')
-  } else {
-    message.error('上传弹幕姬配置失败')
-  }
-}
-
-async function copyText(text: string, successMessage: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-    message.success(successMessage)
-  } catch {
-    message.error('复制失败，请手动复制')
-  }
-}
-
-function copyObsUrl() {
-  return copyText(obsUrl.value, 'OBS 地址已复制到剪贴板')
-}
-
-function copyCss() {
-  return copyText(css.value, '自定义 CSS 已复制到剪贴板')
-}
 </script>
 
 <template>
   <div class="danmuji-manage-container">
     <NSplit
       class="danmuji-split"
-      :direction="windowWidth < 768 ? 'vertical' : 'horizontal'"
-      :min="0.3"
-      :max="0.7"
-      :default-size="0.4"
+      :direction="windowWidth < 960 ? 'vertical' : 'horizontal'"
+      :min="0.32"
+      :max="0.68"
+      :default-size="0.44"
     >
       <template #1>
         <div class="left-panel-scroll-container">
           <NFlex
             vertical
             style="padding: 16px; height: 100%; box-sizing: border-box"
-            :size="16"
+            :size="14"
           >
-            <!-- 顶部连接信息，更加紧凑 -->
+            <!-- 顶部 OBS 连接卡片 -->
             <NCard
               size="small"
               embedded
@@ -601,17 +550,17 @@ function copyCss() {
                 align="center"
                 justify="space-between"
                 :wrap="false"
+                :size="12"
               >
                 <div class="obs-label">
-                  <span class="label-text">OBS Studio 地址</span>
-                  <span class="label-desc">在 OBS 浏览器源中填入此地址</span>
+                  <span class="label-text">OBS 浏览器源地址</span>
+                  <span class="label-desc">在 OBS 来源中添加“浏览器”并填入此 URL</span>
                 </div>
                 <NInput
                   size="small"
                   readonly
-                  :allow-input="() => false"
                   :value="obsUrl"
-                  style="flex: 1; max-width: 400px"
+                  style="flex: 1; max-width: 360px"
                 >
                   <template #suffix>
                     <NButton
@@ -620,17 +569,19 @@ function copyCss() {
                       size="tiny"
                       @click="copyObsUrl"
                     >
+                      <template #icon><NIcon :component="Copy16Regular" /></template>
                       复制
                     </NButton>
                   </template>
                 </NInput>
               </NFlex>
+
               <details class="obs-source-guide">
-                <summary>浏览器源添加说明</summary>
+                <summary>OBS 来源配置三步指引</summary>
                 <ol>
-                  <li>在 OBS 的“来源”中点击“+”，选择“浏览器”并新建来源。</li>
-                  <li>将上方地址粘贴到浏览器源的“URL”中。</li>
-                  <li>将“样式定制”中的完整 CSS 粘贴到“自定义 CSS”中，然后点击“确定”。</li>
+                  <li>在 OBS“来源”列表点击 <strong>+</strong>，选择<strong>“浏览器”</strong>新建来源。</li>
+                  <li>将上方地址复制并粘贴到浏览器源的<strong>“URL”</strong>输入框中。</li>
+                  <li>将下方“样式定制”里的完整 CSS 复制并粘贴到 OBS 浏览器源属性的<strong>“自定义 CSS”</strong>框中。</li>
                 </ol>
               </details>
             </NCard>
@@ -640,25 +591,22 @@ function copyCss() {
               type="segment"
               animated
               class="main-tabs"
-              style="flex: 1; display: flex; flex-direction: column"
-              pane-style="flex: 1; overflow: hidden; display: flex; flex-direction: column;"
             >
+              <!-- 样式定制 Tab -->
               <NTabPane
                 name="style"
                 tab="样式定制"
               >
                 <div class="tab-content-wrapper">
                   <div class="editor-header">
-                    <span class="editor-title">自定义 CSS</span>
+                    <span class="editor-title">自定义 CSS 样式</span>
                     <NFlex :size="8">
                       <NButton
                         size="small"
                         secondary
                         @click="copyCss"
                       >
-                        <template #icon>
-                          <NIcon :component="Copy16Regular" />
-                        </template>
+                        <template #icon><NIcon :component="Copy16Regular" /></template>
                         复制 CSS
                       </NButton>
                       <NPopconfirm @positive-click="resetCssToDefault">
@@ -668,22 +616,23 @@ function copyCss() {
                             type="warning"
                             secondary
                           >
-                            重设为默认
+                            <template #icon><NIcon :component="ArrowReset24Regular" /></template>
+                            重设默认
                           </NButton>
                         </template>
-                        确定要重设为默认CSS吗？这将清除所有自定义样式。
+                        确定要重设为默认 CSS 吗？这将清除当前所有自定义样式。
                       </NPopconfirm>
                     </NFlex>
                   </div>
+
                   <NAlert
                     class="css-transparency-alert"
-                    title="透明背景需要复制 CSS"
-                    type="warning"
+                    type="info"
                     :bordered="false"
                   >
-                    OBS 浏览器源的默认样式带有白色背景。创建浏览器源时，请将下方完整 CSS 复制到浏览器源属性的“自定义
-                    CSS”框中，应用后背景才会透明。
+                    提示：OBS 浏览器源默认带白色底。请将下方完整 CSS 复制粘贴到 OBS 属性中的“自定义 CSS”框，应用后背景即完全透明。
                   </NAlert>
+
                   <div class="editor-container">
                     <MonacoEditorComponent
                       v-model:value="css"
@@ -702,8 +651,8 @@ function copyCss() {
                         autoIndent: 'full',
                         folding: true,
                         scrollbar: {
-                          verticalScrollbarSize: 10,
-                          horizontalScrollbarSize: 10,
+                          verticalScrollbarSize: 8,
+                          horizontalScrollbarSize: 8,
                         },
                       }"
                       :theme="isDarkMode ? 'vs-dark' : 'vs'"
@@ -712,6 +661,7 @@ function copyCss() {
                 </div>
               </NTabPane>
 
+              <!-- 功能配置 Tab -->
               <NTabPane
                 name="config"
                 tab="功能配置"
@@ -726,17 +676,33 @@ function copyCss() {
                         justify="space-between"
                         align="center"
                       >
-                        <span>基本设置</span>
-                        <NFlex>
+                        <NFlex
+                          align="center"
+                          :size="8"
+                        >
+                          <span>弹幕过滤与合并规则</span>
+                          <NTag
+                            v-if="hasUnsavedConfig"
+                            size="small"
+                            type="warning"
+                            round
+                          >
+                            未同步到云端
+                          </NTag>
+                        </NFlex>
+
+                        <NFlex :size="8">
                           <NButton
                             v-if="accountInfo?.id"
                             size="small"
                             type="primary"
-                            secondary
+                            :loading="isSavingCloud"
                             @click="uploadConfigToServer"
                           >
-                            保存到云端
+                            <template #icon><NIcon :component="hasUnsavedConfig ? Save24Regular : CloudCheckmark24Regular" /></template>
+                            {{ hasUnsavedConfig ? '保存到云端 (未同步)' : '已同步云端' }}
                           </NButton>
+
                           <NPopconfirm @positive-click="resetConfigToDefault">
                             <template #trigger>
                               <NButton
@@ -747,7 +713,7 @@ function copyCss() {
                                 重置
                               </NButton>
                             </template>
-                            确定要重设为默认配置吗？
+                            确定要重设为默认功能配置吗？
                           </NPopconfirm>
                         </NFlex>
                       </NFlex>
@@ -756,11 +722,9 @@ function copyCss() {
                     <NForm
                       :model="danmujiConfig"
                       label-placement="top"
-                      label-width="auto"
-                      require-mark-placement="right-hanging"
                       size="small"
                     >
-                      <div class="form-section-title">显示设置</div>
+                      <div class="form-section-title">显示类型</div>
                       <NGrid
                         :x-gap="12"
                         :y-gap="8"
@@ -816,7 +780,7 @@ function copyCss() {
                             embedded
                             class="checkbox-card"
                           >
-                            <NCheckbox v-model:checked="danmujiConfig.mergeGift"> 合并礼物消息 </NCheckbox>
+                            <NCheckbox v-model:checked="danmujiConfig.mergeGift"> 合并连击礼物 </NCheckbox>
                           </NCard>
                         </NGi>
                       </NGrid>
@@ -855,7 +819,7 @@ function copyCss() {
                         </NGi>
                       </NGrid>
 
-                      <div class="form-section-title">过滤规则</div>
+                      <div class="form-section-title">过滤与屏蔽规则</div>
                       <NGrid
                         :x-gap="12"
                         :y-gap="8"
@@ -880,7 +844,7 @@ function copyCss() {
                             <NInputNumber
                               v-model:value="danmujiConfig.blockMedalLevel"
                               :min="0"
-                              placeholder="0表示不过滤"
+                              placeholder="0 表示不过滤"
                             />
                           </NFormItem>
                         </NGi>
@@ -900,13 +864,13 @@ function copyCss() {
                               v-model:value="danmujiConfig.blockKeywords"
                               type="textarea"
                               :rows="3"
-                              placeholder="输入关键词..."
+                              placeholder="输入屏蔽词..."
                             />
                           </NFormItem>
                         </NGi>
                         <NGi>
                           <NFormItem
-                            label="屏蔽用户 (每行一个)"
+                            label="屏蔽用户 (每行一个用户名)"
                             path="blockUsers"
                           >
                             <NInput
@@ -919,9 +883,9 @@ function copyCss() {
                         </NGi>
                       </NGrid>
 
-                      <div class="form-section-title">高级设置</div>
+                      <div class="form-section-title">高级发音</div>
                       <NFormItem
-                        label="礼物用户名发音规则"
+                        label="礼物用户名发音模板"
                         path="giftUsernamePronunciation"
                       >
                         <NInput
@@ -934,6 +898,7 @@ function copyCss() {
                 </div>
               </NTabPane>
 
+              <!-- 消息调试 Tab -->
               <NTabPane
                 name="test"
                 tab="消息调试"
@@ -950,7 +915,7 @@ function copyCss() {
                     >
                       <NCard
                         size="small"
-                        title="自动模拟"
+                        title="自动弹幕模拟器"
                         embedded
                         style="margin-bottom: 16px"
                       >
@@ -959,31 +924,45 @@ function copyCss() {
                             v-model:value="isAutoGenerating"
                             size="small"
                           >
-                            <template #checked> 运行中 </template>
-                            <template #unchecked> 已停止 </template>
+                            <template #checked> 模拟中 </template>
+                            <template #unchecked> 已暂停 </template>
                           </NSwitch>
                         </template>
-                        <NFlex align="center">
-                          <span style="font-size: 12px; color: var(--vtsuru-fg-muted)">生成间隔:</span>
-                          <NInputNumber
-                            v-model:value="autoGenerateInterval"
-                            :min="0.5"
-                            :max="10"
-                            :step="0.5"
-                            size="tiny"
-                            style="width: 100px"
-                            :disabled="!isAutoGenerating"
+
+                        <NFlex
+                          align="center"
+                          justify="space-between"
+                        >
+                          <NFlex align="center">
+                            <span style="font-size: 12px; color: var(--vtsuru-fg-muted)">发送间隔:</span>
+                            <NInputNumber
+                              v-model:value="autoGenerateInterval"
+                              :min="0.5"
+                              :max="10"
+                              :step="0.5"
+                              size="tiny"
+                              style="width: 100px"
+                              :disabled="!isAutoGenerating"
+                            >
+                              <template #suffix> 秒 </template>
+                            </NInputNumber>
+                          </NFlex>
+
+                          <NTag
+                            :type="isAutoGenerating ? 'success' : 'default'"
+                            size="small"
+                            round
                           >
-                            <template #suffix> 秒 </template>
-                          </NInputNumber>
+                            {{ isAutoGenerating ? '正在持续推流' : '未启动' }}
+                          </NTag>
                         </NFlex>
                       </NCard>
 
-                      <div class="form-section-title">手动发送</div>
+                      <div class="form-section-title">单条手动发送</div>
 
                       <NGrid
                         :x-gap="12"
-                        :y-gap="12"
+                        :y-gap="10"
                         :cols="2"
                       >
                         <NGi :span="2">
@@ -1011,7 +990,7 @@ function copyCss() {
                         </NGi>
                         <NGi>
                           <NFormItem
-                            label="用户ID"
+                            label="用户 ID"
                             path="uid"
                           >
                             <NInputNumber
@@ -1021,7 +1000,6 @@ function copyCss() {
                           </NFormItem>
                         </NGi>
 
-                        <!-- 动态内容区域 -->
                         <NGi
                           v-if="testFormData.type === EventDataTypes.Message || testFormData.type === EventDataTypes.SC"
                           :span="2"
@@ -1117,15 +1095,18 @@ function copyCss() {
                           :span="2"
                         >
                           <NFormItem
-                            label="目标 SC ID"
+                            label="要删除的 SC ID"
                             path="sc_id_to_delete"
                           >
-                            <NInput v-model:value="testFormData.sc_id_to_delete" />
+                            <NInput
+                              v-model:value="testFormData.sc_id_to_delete"
+                              placeholder="输入 SC ID..."
+                            />
                           </NFormItem>
                         </NGi>
                       </NGrid>
 
-                      <div style="margin-top: 24px">
+                      <div style="margin-top: 14px">
                         <NGrid
                           :x-gap="12"
                           :cols="2"
@@ -1134,10 +1115,10 @@ function copyCss() {
                             <NButton
                               block
                               secondary
-                              type="info"
                               @click="generateRandomContent"
                             >
-                              🎲 随机填充
+                              <template #icon><NIcon :component="Sparkle24Regular" /></template>
+                              随机填充内容
                             </NButton>
                           </NGi>
                           <NGi>
@@ -1146,7 +1127,8 @@ function copyCss() {
                               type="primary"
                               @click="sendTestMessage"
                             >
-                              📨 发送消息
+                              <template #icon><NIcon :component="Send24Regular" /></template>
+                              发送测试消息
                             </NButton>
                           </NGi>
                         </NGrid>
@@ -1160,6 +1142,7 @@ function copyCss() {
         </div>
       </template>
 
+      <!-- 右侧预览区 -->
       <template #2>
         <div class="right-panel-container">
           <div class="preview-window">
@@ -1169,13 +1152,26 @@ function copyCss() {
                 <div class="dot yellow" />
                 <div class="dot green" />
               </div>
-              <div class="address-bar">OBS Live Chat Preview</div>
-              <div class="toolbar-actions">
-                <!-- 可以在这里放一些快捷开关，比如透明背景切换等 -->
+              <div class="address-bar">OBS 弹幕机实时效果预览</div>
+
+              <!-- 背景模拟切换 -->
+              <div class="bg-switch-group">
+                <NRadioGroup
+                  v-model:value="previewBgMode"
+                  size="small"
+                >
+                  <NRadioButton value="transparent">透明网格</NRadioButton>
+                  <NRadioButton value="dark">纯黑</NRadioButton>
+                  <NRadioButton value="light">纯白</NRadioButton>
+                  <NRadioButton value="game">游戏底图</NRadioButton>
+                </NRadioGroup>
               </div>
             </div>
 
-            <div class="preview-content">
+            <div
+              class="preview-content"
+              :class="`bg-${previewBgMode}`"
+            >
               <DanmujiOBS
                 ref="danmujiObsRef"
                 :is-o-b-s="false"
@@ -1208,11 +1204,13 @@ function copyCss() {
 
 .left-panel-scroll-container {
   height: 100%;
-  background-color: var(--vtsuru-bg-surface);
+  overflow-y: auto;
+  background-color: var(--vtsuru-bg-elevated);
 }
 
 .obs-link-card {
   flex-shrink: 0;
+  border-radius: 8px;
 }
 
 .obs-label {
@@ -1222,11 +1220,13 @@ function copyCss() {
 }
 
 .label-text {
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
 }
 
 .label-desc {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--vtsuru-fg-muted);
 }
 
@@ -1246,121 +1246,99 @@ function copyCss() {
 }
 
 .obs-source-guide ol {
-  margin: 4px 0 0;
-  padding-left: 20px;
-  line-height: 1.65;
+  margin: 6px 0 0;
+  padding-left: 18px;
+  line-height: 1.6;
 }
 
 .main-tabs {
-  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .tab-content-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-top: 12px;
+  min-height: 480px;
+  gap: 10px;
 }
+
+
 
 .editor-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  justify-content: space-between;
 }
 
 .editor-title {
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
 }
 
 .css-transparency-alert {
-  flex-shrink: 0;
-  margin-bottom: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .editor-container {
   flex: 1;
-  min-height: 0;
+  min-height: 360px;
   border: 1px solid var(--vtsuru-border);
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
 }
 
 .config-scroll-container {
   height: 100%;
   overflow-y: auto;
-  padding-right: 4px;
-  padding-top: 4px;
-}
-
-/* 隐藏滚动条但保持可滚动 (Webkit) */
-.config-scroll-container::-webkit-scrollbar {
-  width: 6px;
-}
-.config-scroll-container::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-.config-scroll-container::-webkit-scrollbar-track {
-  background-color: transparent;
 }
 
 .form-section-title {
-  font-size: 13px;
+  margin: 14px 0 8px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
-  margin-top: 16px;
-  margin-bottom: 8px;
-  padding-left: 4px;
-  border-left: 3px solid var(--vtsuru-primary);
-  line-height: 1;
-}
-.form-section-title:first-child {
-  margin-top: 0;
+  color: var(--vtsuru-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .checkbox-card {
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.checkbox-card:hover {
-  background-color: var(--vtsuru-bg-muted);
+  border-radius: 6px;
 }
 
 .right-panel-container {
   height: 100%;
-  width: 100%;
   padding: 16px;
   box-sizing: border-box;
-  background-color: var(--vtsuru-bg-inset);
-  display: flex;
-  flex-direction: column;
 }
 
 .preview-window {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  background: #1a1a1a; /* 默认深色背景，模拟OBS */
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  height: 100%;
   border: 1px solid var(--vtsuru-border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 18%);
 }
 
 .preview-toolbar {
-  height: 36px;
-  background: #2d2d2d;
   display: flex;
   align-items: center;
-  padding: 0 12px;
-  border-bottom: 1px solid #3d3d3d;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--vtsuru-bg-elevated);
+  border-bottom: 1px solid var(--vtsuru-border);
 }
 
 .window-controls {
   display: flex;
   gap: 6px;
-  margin-right: 16px;
 }
 
 .dot {
@@ -1380,39 +1358,38 @@ function copyCss() {
 }
 
 .address-bar {
-  flex: 1;
-  background: #1a1a1a;
-  height: 24px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: #888;
-  user-select: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vtsuru-fg-muted);
 }
 
 .preview-content {
+  position: relative;
   flex: 1;
   min-height: 0;
-  position: relative;
-  /* 棋盘格背景 */
-  background-color: #1a1a1a;
-  background-image:
-    linear-gradient(45deg, #222 25%, transparent 25%), linear-gradient(-45deg, #222 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #222 75%), linear-gradient(-45deg, transparent 75%, #222 75%);
-  background-size: 20px 20px;
-  background-position:
-    0 0,
-    0 10px,
-    10px -10px,
-    -10px 0;
+  overflow: hidden;
+  transition: background 0.2s ease;
 }
 
-:deep(.n-card-header) {
-  padding: 12px 16px 8px 16px;
+.preview-content.bg-transparent {
+  background-image: linear-gradient(45deg, #23272e 25%, transparent 25%),
+    linear-gradient(-45deg, #23272e 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #23272e 75%),
+    linear-gradient(-45deg, transparent 75%, #23272e 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-color: #1a1d23;
 }
-:deep(.n-card__content) {
-  padding: 0 16px 12px 16px;
+
+.preview-content.bg-dark {
+  background-color: #121214;
+}
+
+.preview-content.bg-light {
+  background-color: #ffffff;
+}
+
+.preview-content.bg-game {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #0f2027 100%);
 }
 </style>

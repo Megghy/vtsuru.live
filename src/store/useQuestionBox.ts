@@ -31,7 +31,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   const onlyFavorite = ref(false)
   const onlyPublic = ref(false)
   const onlyUnread = ref(false)
-  const displayTag = ref<string>()
+  const onlyUnreplied = ref(false)
+  const displayTag = ref<string | null>()
   const searchKeyword = ref('')
   const sortMode = ref<SortMode>('default')
 
@@ -76,13 +77,14 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
 
   const recieveQuestionsFiltered = computed(() => {
-    const keyword = searchKeyword.value.toLowerCase()
+    const keyword = searchKeyword.value.trim().toLowerCase()
     const filtered = recieveQuestions.value.filter(
       (q) =>
         (!q.reviewResult || q.reviewResult.isApproved === true) &&
         (!onlyFavorite.value || q.isFavorite) &&
         (!onlyPublic.value || q.isPublic) &&
         (!onlyUnread.value || !q.isReaded) &&
+        (!onlyUnreplied.value || !q.answer) &&
         (!displayTag.value || q.tag === displayTag.value) &&
         (!keyword || q.question?.message?.toLowerCase().includes(keyword)),
     )
@@ -138,6 +140,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         message.success('删除成功')
         recieveQuestions.value = recieveQuestions.value.filter((q) => q.id !== id)
         selectedIds.value = selectedIds.value.filter((sid) => sid !== id)
+        if (displayQuestion.value?.id === id) {
+          displayQuestion.value = undefined
+        }
       } else {
         message.error(resp.message)
       }
@@ -165,20 +170,17 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function addTag(tag: string) {
-    if (!tag) {
-      message.warning('请输入标签')
+  async function addTag(tagName: string) {
+    if (!tagName.trim()) {
+      message.warning('标签名称不能为空')
       return
     }
-    if (tags.value.find((t) => t.name === tag)) {
-      message.warning('标签已存在')
-      return
-    }
+
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}add-tag`, { tag })
+      const resp = await QueryPostAPI(`${QUESTION_API_URL}tag/add`, { name: tagName.trim() })
       if (resp.code === 200) {
         message.success('添加成功')
-        GetTags()
+        await GetTags()
       } else {
         message.error(`添加失败: ${resp.message}`)
       }
@@ -187,16 +189,12 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function delTag(tag: string) {
-    if (!tag) {
-      message.warning('请输入标签')
-      return
-    }
+  async function delTag(tagName: string) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}del-tag`, { tag })
+      const resp = await QueryGetAPI(`${QUESTION_API_URL}tag/del`, { name: tagName })
       if (resp.code === 200) {
         message.success('删除成功')
-        GetTags()
+        await GetTags()
       } else {
         message.error(`删除失败: ${resp.message}`)
       }
@@ -205,16 +203,15 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function updateTagVisiable(tag: string, visiable: boolean) {
-    if (!tag) {
-      message.warning('请输入标签')
-      return
-    }
+  async function changeTagVisiable(tagName: string, isVisiable: boolean) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}update-tag-visiable`, { tag, visiable })
+      const resp = await QueryGetAPI(`${QUESTION_API_URL}tag/visiable`, {
+        name: tagName,
+        visiable: isVisiable,
+      })
       if (resp.code === 200) {
         message.success('修改成功')
-        GetTags()
+        await GetTags()
       } else {
         message.error(`修改失败: ${resp.message}`)
       }
@@ -223,20 +220,25 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function reply(id: number, msg: string) {
+  async function reply(id: number, replyMsg: string) {
     isRepling.value = true
     try {
-      const resp = await QueryPostAPI<QAInfo>(`${QUESTION_API_URL}reply`, { Id: id, Message: msg })
+      const resp = await QueryPostAPI(`${QUESTION_API_URL}reply`, {
+        id,
+        reply: replyMsg,
+      })
       if (resp.code === 200) {
-        const index = recieveQuestions.value.findIndex((q) => q.id === id)
-        if (index > -1) recieveQuestions.value[index] = resp.data
         message.success('回复成功')
-        currentQuestion.value = undefined
+        const q = recieveQuestions.value.find((item) => item.id === id)
+        if (q) {
+          q.answer = { message: replyMsg, createdAt: Math.floor(Date.now() / 1000) }
+          q.isReaded = true
+        }
       } else {
-        message.error(`发送失败: ${resp.message}`)
+        message.error(`回复失败: ${resp.message}`)
       }
     } catch (err) {
-      message.error(`发送失败: ${err}`)
+      message.error(`回复失败: ${err}`)
     } finally {
       isRepling.value = false
     }
@@ -244,7 +246,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   async function read(question: QAInfo, isRead: boolean) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}read`, { id: question.id, read: isRead ? 'true' : 'false' })
+      const resp = await QueryGetAPI(`${QUESTION_API_URL}read`, {
+        id: question.id,
+        read: isRead ? 'true' : 'false',
+      })
       if (resp.code === 200) {
         question.isReaded = isRead
       } else {
@@ -286,6 +291,11 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
 
   async function blacklist(question: QAInfo) {
+    if (question.isAnonymous || !question.sender?.id) {
+      message.warning('匿名提问无法拉黑提问者账号')
+      return
+    }
+
     try {
       const resp = await QueryGetAPI(`${ACCOUNT_API_URL}black-list/add`, { id: question.sender.id })
       if (resp.code === 200) {
@@ -293,6 +303,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         if (delResp.code === 200) {
           message.success(`已拉黑 ${question.sender.name}`)
           recieveQuestions.value = recieveQuestions.value.filter((q) => q.id !== question.id)
+          selectedIds.value = selectedIds.value.filter((sid) => sid !== question.id)
         } else {
           message.error(`删除失败: ${delResp.message}`)
         }
@@ -319,13 +330,15 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function setCurrentQuestion(item: QAInfo | undefined) {
     const nextId = item?.id
     const previousQuestion = displayQuestion.value
+    // 乐观更新：本地状态与 UI 立即切换，杜绝等待网络请求的卡顿与空隙
+    displayQuestion.value = item
+    if (accountInfo.value) accountInfo.value.currentQuestionId = nextId
     try {
       const resp = await QueryGetAPI(`${QUESTION_API_URL}set-current`, nextId ? { id: nextId } : null)
       if (resp.code !== 200) throw new Error(resp.message)
-      displayQuestion.value = item
-      if (accountInfo.value) accountInfo.value.currentQuestionId = nextId
     } catch (err) {
       displayQuestion.value = previousQuestion
+      if (accountInfo.value) accountInfo.value.currentQuestionId = previousQuestion?.id
       message.error(`设置失败: ${err instanceof Error ? err.message : err}`)
     }
   }
@@ -371,6 +384,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     if (!ids.length) return
     await Promise.allSettled(ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}del`, { id })))
     recieveQuestions.value = recieveQuestions.value.filter((q) => !ids.includes(q.id))
+    if (displayQuestion.value && ids.includes(displayQuestion.value.id)) {
+      displayQuestion.value = undefined
+    }
     clearSelection()
     message.success('已批量删除')
   }
@@ -416,42 +432,31 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   return {
     isLoading,
-    isRecieveGetted,
-    isSendGetted,
     isRepling,
     isChangingPublic,
     recieveQuestions,
-    recieveQuestionsFiltered,
     sendQuestions,
-    trashQuestions,
-    reviewing,
     tags,
-    currentQuestion,
-    displayQuestion,
-    // 筛选
+    reviewing,
     onlyFavorite,
     onlyPublic,
     onlyUnread,
+    onlyUnreplied,
     displayTag,
     searchKeyword,
     sortMode,
-    // 批量
     selectedIds,
-    toggleSelect,
-    selectAll,
-    clearSelection,
-    batchRead,
-    batchDelete,
-    batchSetPublic,
-    batchFavorite,
-    // API
+    currentQuestion,
+    displayQuestion,
+    trashQuestions,
+    recieveQuestionsFiltered,
     GetRecieveQAInfo,
     GetSendQAInfo,
     DelQA,
     GetTags,
     addTag,
     delTag,
-    updateTagVisiable,
+    changeTagVisiable,
     reply,
     read,
     favorite,
@@ -460,6 +465,13 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     markAsNormal,
     setCurrentQuestion,
     clearCurrentQuestion,
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    batchRead,
+    batchDelete,
+    batchSetPublic,
+    batchFavorite,
     getViolationString,
   }
 })

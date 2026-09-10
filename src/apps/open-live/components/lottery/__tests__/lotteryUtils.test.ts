@@ -3,7 +3,14 @@ import { describe, expect, it } from 'vitest'
 import type { OpenLiveLotteryUserInfo } from '@/api/api-models'
 
 import type { LotteryOption } from '../lotteryTypes'
-import { getAvatarUrl, getRandomInt, isUserValid, shuffleArray } from '../lotteryUtils'
+import {
+  buildLotteryObsUrl,
+  getAvatarUrl,
+  getRandomInt,
+  isUserValid,
+  resolveLotteryIdentityCode,
+  shuffleArray,
+} from '../lotteryUtils'
 
 function makeUser(overrides: Partial<OpenLiveLotteryUserInfo> = {}): OpenLiveLotteryUserInfo {
   return {
@@ -167,5 +174,48 @@ describe('getAvatarUrl', () => {
 
   it('appends size parameter when missing', () => {
     expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/abc.jpg')).toBe('https://i2.hdslb.com/bfs/face/abc.jpg@96w_96h')
+  })
+})
+
+describe('resolveLotteryIdentityCode', () => {
+  it('prefers the H5 identity code over biliAuthCode', () => {
+    expect(resolveLotteryIdentityCode('h5-code', 'bili-code')).toBe('h5-code')
+  })
+
+  it('falls back to biliAuthCode when the H5 code is missing', () => {
+    expect(resolveLotteryIdentityCode(undefined, 'bili-code')).toBe('bili-code')
+    expect(resolveLotteryIdentityCode('', 'bili-code')).toBe('bili-code')
+    expect(resolveLotteryIdentityCode('  ', 'bili-code')).toBe('bili-code')
+  })
+
+  it('returns empty when neither code is available', () => {
+    expect(resolveLotteryIdentityCode()).toBe('')
+    expect(resolveLotteryIdentityCode('', '')).toBe('')
+    expect(resolveLotteryIdentityCode(undefined, undefined)).toBe('')
+  })
+})
+
+describe('buildLotteryObsUrl', () => {
+  it('prefers public user id over identity code', () => {
+    expect(buildLotteryObsUrl('https://vtsuru.live/', 42, 'abc123')).toBe(
+      'https://vtsuru.live/obs/live-lottery?id=42',
+    )
+  })
+
+  it('falls back to identity code for H5-only access', () => {
+    expect(buildLotteryObsUrl('https://vtsuru.live/', undefined, 'abc123')).toBe(
+      'https://vtsuru.live/obs/live-lottery?code=abc123',
+    )
+  })
+
+  it('returns empty when neither user id nor code is available', () => {
+    expect(buildLotteryObsUrl('https://vtsuru.live/')).toBe('')
+    expect(buildLotteryObsUrl('https://vtsuru.live/', 0, '')).toBe('')
+  })
+
+  it('encodes special characters in the identity code', () => {
+    expect(buildLotteryObsUrl('https://vtsuru.live/', undefined, 'a b&c')).toBe(
+      'https://vtsuru.live/obs/live-lottery?code=a+b%26c',
+    )
   })
 })

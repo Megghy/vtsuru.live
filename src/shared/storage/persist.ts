@@ -142,6 +142,7 @@ const persistedAsyncStorage: StorageLikeAsync = {
 type PersistKey = string | Ref<string> | (() => string)
 
 const sharedRefCache = new Map<string, RemovableRef<any>>()
+const sharedReadyCache = new Map<string, Promise<any>>()
 
 export function usePersistedStorage<T>(
   key: PersistKey,
@@ -155,15 +156,38 @@ export function usePersistedStorage<T>(
     const canonicalKey = canonicalizePersistKey(keyValue)
     const cached = sharedRefCache.get(canonicalKey)
     if (cached) {
-      // console.log('[persist] cache hit:', canonicalKey)
+      if (options?.onReady) {
+        const readyPromise = sharedReadyCache.get(canonicalKey)
+        if (readyPromise) {
+          void readyPromise.then((val) => options.onReady?.(val))
+        } else {
+          options.onReady(cached.value)
+        }
+      }
       return cached as RemovableRef<T>
     }
-    // console.log('[persist] cache miss:', canonicalKey)
   }
 
   const canonicalKey = computed(() => canonicalizePersistKey(toValue(key)))
 
+  let resolveReady: (val: any) => void
+  const readyPromise = new Promise<any>((resolve) => {
+    resolveReady = resolve
+  })
+  if (isStaticKey) {
+    sharedReadyCache.set(canonicalizePersistKey(keyValue), readyPromise)
+  }
+
+  const wrappedOptions: UseStorageAsyncOptions<T> = {
+    ...options,
+    onReady: (value: T) => {
+      resolveReady(value)
+      options?.onReady?.(value)
+    },
+  }
+
   const state = ref<T>(initialValue) as RemovableRef<T>
+  ;(state as any).ready = readyPromise
   let active: any = null
   let stopFromStorage: (() => void) | null = null
   let stopToStorage: (() => void) | null = null
@@ -175,7 +199,7 @@ export function usePersistedStorage<T>(
     stopFromStorage = null
     stopToStorage = null
 
-    const storageRef = useStorageAsync<T>(nextCanonicalKey, initialValue, persistedAsyncStorage, options) as any
+    const storageRef = useStorageAsync<T>(nextCanonicalKey, initialValue, persistedAsyncStorage, wrappedOptions) as any
 
     active = storageRef
 

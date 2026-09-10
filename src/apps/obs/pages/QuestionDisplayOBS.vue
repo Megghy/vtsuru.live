@@ -4,6 +4,7 @@ import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, toRe
 import { useQuestionDisplayOBS } from '@/apps/obs/composables/useQuestionDisplayOBS'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
+import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 import { useWebRTC } from '@/store/useRTC'
 
 const props = withDefaults(
@@ -15,12 +16,12 @@ const props = withDefaults(
   { active: true, visible: true },
 )
 
+const idFromQuery = useRouteQueryParam('id')
 const token = useRouteQueryParam('token')
-const tokenStr = computed(() => {
-  const v = token.value
-  return String(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
-})
+const userId = computed(() => parsePositiveId(props.id ?? idFromQuery.value))
+const tokenStr = computed(() => firstQueryValue(token.value).trim())
 const { question, setting, state } = useQuestionDisplayOBS({
+  userId,
   token: tokenStr,
   active: toRef(props, 'active'),
   visible: toRef(props, 'visible'),

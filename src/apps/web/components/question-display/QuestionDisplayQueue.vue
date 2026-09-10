@@ -1,8 +1,18 @@
 <script setup lang="ts">
-import { ArrowSync24Regular, Checkmark24Regular, Dismiss24Regular, Eye24Regular, Search24Regular } from '@vicons/fluent'
+import {
+  ArrowSync24Regular,
+  Checkmark24Regular,
+  Comment24Regular,
+  Dismiss24Regular,
+  Eye24Regular,
+  Image24Regular,
+  Location24Regular,
+  LockClosed24Regular,
+  Search24Regular,
+} from '@vicons/fluent'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
 import { NButton, NCheckbox, NEmpty, NIcon, NInput, NScrollbar, NSelect, NTag, NTime, NTooltip } from 'naive-ui'
-import { computed } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import type { QAInfo } from '@/api/api-models'
 import { questionSenderLabel } from '@/shared/questionDisplay'
@@ -26,8 +36,22 @@ const search = defineModel<string>('search', { required: true })
 const tag = defineModel<string | undefined>('tag', { required: true })
 const onlyUnread = defineModel<boolean>('onlyUnread', { required: true })
 const onlyFavorite = defineModel<boolean>('onlyFavorite', { required: true })
+const onlyUnreplied = defineModel<boolean>('onlyUnreplied', { default: false })
 
+const scrollbarRef = ref<{ scrollTo: (options: { el?: HTMLElement; top?: number; behavior?: 'auto' | 'smooth' }) => void }>()
 const tagOptions = computed(() => props.tags.map((value) => ({ label: value, value })))
+
+function scrollToCurrent() {
+  if (!props.currentId) return
+  void nextTick(() => {
+    const el = document.querySelector<HTMLElement>(`.queue-item[data-id="${props.currentId}"]`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  })
+}
+
+defineExpose({ scrollToCurrent })
 </script>
 
 <template>
@@ -37,26 +61,44 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
         <h1>提问队列</h1>
         <span>{{ questions.length }} 条</span>
       </div>
-      <NTooltip>
-        <template #trigger>
-          <NButton
-            circle
-            secondary
-            :loading="loading"
-            aria-label="刷新提问队列"
-            @click="emit('refresh')"
-          >
-            <template #icon><NIcon :component="ArrowSync24Regular" /></template>
-          </NButton>
-        </template>
-        刷新提问队列
-      </NTooltip>
+      <div class="heading-actions">
+        <NTooltip v-if="currentId">
+          <template #trigger>
+            <NButton
+              circle
+              quaternary
+              size="small"
+              aria-label="定位正在展示的提问"
+              @click="scrollToCurrent"
+            >
+              <template #icon><NIcon :component="Location24Regular" /></template>
+            </NButton>
+          </template>
+          定位正在展示的提问
+        </NTooltip>
+        <NTooltip>
+          <template #trigger>
+            <NButton
+              circle
+              secondary
+              size="small"
+              :loading="loading"
+              aria-label="刷新提问队列"
+              @click="emit('refresh')"
+            >
+              <template #icon><NIcon :component="ArrowSync24Regular" /></template>
+            </NButton>
+          </template>
+          刷新提问队列
+        </NTooltip>
+      </div>
     </header>
 
     <div class="queue-filters">
       <NInput
         v-model:value="search"
         clearable
+        size="small"
         placeholder="搜索提问内容"
       >
         <template #prefix><NIcon :component="Search24Regular" /></template>
@@ -66,15 +108,20 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
         :options="tagOptions"
         clearable
         filterable
+        size="small"
         placeholder="全部话题"
       />
       <div class="filter-flags">
-        <NCheckbox v-model:checked="onlyUnread">仅未读</NCheckbox>
-        <NCheckbox v-model:checked="onlyFavorite">仅收藏</NCheckbox>
+        <NCheckbox v-model:checked="onlyUnread">未读</NCheckbox>
+        <NCheckbox v-model:checked="onlyFavorite">收藏</NCheckbox>
+        <NCheckbox v-model:checked="onlyUnreplied">未回复</NCheckbox>
       </div>
     </div>
 
-    <NScrollbar class="queue-scroll">
+    <NScrollbar
+      ref="scrollbarRef"
+      class="queue-scroll"
+    >
       <div
         v-if="questions.length"
         class="queue-list"
@@ -83,6 +130,7 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
           v-for="item in questions"
           :key="item.id"
           class="queue-item"
+          :data-id="item.id"
           :class="{ 'is-current': item.id === currentId, 'is-unread': !item.isReaded }"
         >
           <button
@@ -92,10 +140,21 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
           >
             <span class="question-meta">
               <strong>{{ questionSenderLabel(item) }}</strong>
-              <NTime
-                :time="item.sendAt"
-                type="relative"
-              />
+              <span class="meta-right">
+                <NTooltip v-if="!item.isPublic">
+                  <template #trigger>
+                    <NIcon
+                      :component="LockClosed24Regular"
+                      class="meta-lock-icon"
+                    />
+                  </template>
+                  私密提问
+                </NTooltip>
+                <NTime
+                  :time="item.sendAt"
+                  type="relative"
+                />
+              </span>
             </span>
             <span class="question-text">{{ item.question.message }}</span>
             <span class="question-flags">
@@ -116,13 +175,28 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
                 未读
               </NTag>
               <NTag
+                v-if="item.answer"
+                size="tiny"
+                type="info"
+                :bordered="false"
+              >
+                <template #icon><NIcon :component="Comment24Regular" /></template>
+                已回复
+              </NTag>
+              <NTag
                 v-if="item.tag"
                 size="tiny"
                 :bordered="false"
               >
                 {{ item.tag }}
               </NTag>
-              <span v-if="item.questionImages?.length">{{ item.questionImages.length }} 张图片</span>
+              <span
+                v-if="item.questionImages?.length"
+                class="img-flag"
+              >
+                <NIcon :component="Image24Regular" />
+                {{ item.questionImages.length }}
+              </span>
             </span>
           </button>
 
@@ -203,8 +277,14 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
   align-items: center;
   justify-content: space-between;
   min-width: 0;
-  padding: 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--vtsuru-border);
+}
+
+.heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .queue-heading h1,
@@ -214,7 +294,7 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
 
 .queue-heading h1 {
   color: var(--vtsuru-fg);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.35;
 }
 
@@ -233,7 +313,9 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
 .filter-flags {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
 }
 
 .queue-scroll {
@@ -264,7 +346,7 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
 
 .question-main {
   min-width: 0;
-  padding: 13px 8px 13px 16px;
+  padding: 12px 8px 12px 14px;
   color: inherit;
   text-align: left;
   background: transparent;
@@ -286,6 +368,17 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
   font-size: 11px;
 }
 
+.meta-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-lock-icon {
+  font-size: 13px;
+  color: var(--vtsuru-fg-muted);
+}
+
 .question-meta strong {
   overflow: hidden;
   color: var(--vtsuru-fg);
@@ -296,11 +389,11 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
 
 .question-text {
   display: -webkit-box;
-  margin-top: 6px;
+  margin-top: 5px;
   overflow: hidden;
   color: var(--vtsuru-fg);
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.5;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -309,8 +402,15 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
 .question-flags {
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 6px;
   color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+}
+
+.img-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   font-size: 11px;
 }
 
@@ -319,16 +419,10 @@ const tagOptions = computed(() => props.tags.map((value) => ({ label: value, val
   flex-direction: column;
   justify-content: center;
   gap: 2px;
-  padding: 8px 8px 8px 0;
+  padding: 6px 8px 6px 0;
 }
 
 .queue-empty {
   padding: 64px 16px;
-}
-
-@media (max-width: 760px) {
-  .queue-panel {
-    border-right: 0;
-  }
 }
 </style>

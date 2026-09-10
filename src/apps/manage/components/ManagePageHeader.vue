@@ -192,6 +192,7 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
 
 .manage-page-header__title {
   margin: 0;
+  color: var(--vtsuru-fg);
   font-size: 20px;
   font-weight: 650;
   line-height: 1.2;
