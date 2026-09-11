@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import type { OpenLiveLotteryUserInfo } from '@/api/api-models'
+import { OpenLiveLotteryType, type OpenLiveLotteryUserInfo } from '@/api/api-models'
 
 import type { LotteryOption } from '../lotteryTypes'
 import {
+  buildLiveLotterySyncBody,
   buildLotteryObsUrl,
   getAvatarUrl,
   getRandomInt,
   isUserValid,
   resolveLotteryIdentityCode,
+  shouldSyncLiveLottery,
   shuffleArray,
 } from '../lotteryUtils'
 
@@ -216,6 +218,54 @@ describe('buildLotteryObsUrl', () => {
   it('encodes special characters in the identity code', () => {
     expect(buildLotteryObsUrl('https://vtsuru.live/', undefined, 'a b&c')).toBe(
       'https://vtsuru.live/obs/live-lottery?code=a+b%26c',
+    )
+  })
+})
+
+describe('shouldSyncLiveLottery', () => {
+  const idle = {
+    originCount: 0,
+    resultCount: 0,
+    drawing: false,
+    finished: false,
+  }
+
+  it('skips idle empty pages so they cannot overwrite an active lottery', () => {
+    expect(shouldSyncLiveLottery(idle)).toBe(false)
+  })
+
+  it('syncs when drawing, finished, or any users exist', () => {
+    expect(shouldSyncLiveLottery({ ...idle, originCount: 1 })).toBe(true)
+    expect(shouldSyncLiveLottery({ ...idle, resultCount: 1 })).toBe(true)
+    expect(shouldSyncLiveLottery({ ...idle, drawing: true })).toBe(true)
+    expect(shouldSyncLiveLottery({ ...idle, finished: true })).toBe(true)
+  })
+})
+
+describe('buildLiveLotterySyncBody', () => {
+  const users = [makeUser({ openId: 'a' })]
+  const resultUsers = [makeUser({ openId: 'b' })]
+
+  it('omits empty identity code so the backend can key by logged-in user id', () => {
+    expect(buildLiveLotterySyncBody({ code: '  ', users, resultUsers, drawing: false, finished: false })).toEqual({
+      users,
+      resultUsers,
+      type: OpenLiveLotteryType.Waiting,
+    })
+  })
+
+  it('keeps a trimmed identity code for H5 sessions', () => {
+    expect(
+      buildLiveLotterySyncBody({ code: ' abc ', users, resultUsers, drawing: false, finished: false }).code,
+    ).toBe('abc')
+  })
+
+  it('marks drawing and result states for OBS', () => {
+    expect(buildLiveLotterySyncBody({ users, resultUsers, drawing: true, finished: false }).type).toBe(
+      OpenLiveLotteryType.Drawing,
+    )
+    expect(buildLiveLotterySyncBody({ users, resultUsers, drawing: true, finished: true }).type).toBe(
+      OpenLiveLotteryType.Result,
     )
   })
 })

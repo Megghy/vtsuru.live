@@ -623,6 +623,7 @@ export interface OpenLiveLotteryUserInfo {
 export enum OpenLiveLotteryType {
   Waiting,
   Result,
+  Drawing,
 }
 export interface UpdateLiveLotteryUsersModel {
   users: OpenLiveLotteryUserInfo[]

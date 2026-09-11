@@ -21,7 +21,6 @@ import { computed, h, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { OpenLiveInfo, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
-import { OpenLiveLotteryType } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import LotteryAddUserModal from '@/apps/open-live/components/lottery/LotteryAddUserModal.vue'
 import LotteryHistoryModal from '@/apps/open-live/components/lottery/LotteryHistoryModal.vue'
@@ -33,10 +32,12 @@ import type {
   ManualUserFormModel,
 } from '@/apps/open-live/components/lottery/lotteryTypes'
 import {
+  buildLiveLotterySyncBody,
   getAvatarUrl,
   getRandomInt,
   isUserValid,
   resolveLotteryIdentityCode,
+  shouldSyncLiveLottery,
   shuffleArray,
 } from '@/apps/open-live/components/lottery/lotteryUtils'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
@@ -122,7 +123,8 @@ function syncCardStates(users: OpenLiveLotteryUserInfo[], options: { reset?: boo
 async function getUsers() {
   try {
     const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(`${LOTTERY_API_URL}live/get-users`, {
-      code: lotteryCode.value,
+      ...(accountInfo.value?.id ? { id: accountInfo.value.id } : {}),
+      ...(lotteryCode.value ? { code: lotteryCode.value } : {}),
     })
     if (data.code === 200) {
       return data.data
@@ -132,13 +134,28 @@ async function getUsers() {
   }
   return null
 }
-function updateUsers() {
-  QueryPostAPI(`${LOTTERY_API_URL}live/update-users`, {
-    code: lotteryCode.value,
-    users: originUsers.value,
-    resultUsers: resultUsers.value,
-    type: isLotteried.value ? OpenLiveLotteryType.Result : OpenLiveLotteryType.Waiting,
-  }).catch((err) => {
+function updateUsers(force = false) {
+  if (
+    !force &&
+    !shouldSyncLiveLottery({
+      originCount: originUsers.value.length,
+      resultCount: resultUsers.value.length,
+      drawing: isLottering.value,
+      finished: isLotteried.value,
+    })
+  ) {
+    return
+  }
+  QueryPostAPI(
+    `${LOTTERY_API_URL}live/update-users`,
+    buildLiveLotterySyncBody({
+      code: lotteryCode.value,
+      users: currentUsers.value,
+      resultUsers: resultUsers.value,
+      drawing: isLottering.value,
+      finished: isLotteried.value,
+    }),
+  ).catch((err) => {
     console.error('[OPEN-LIVE-Lottery] 更新历史抽奖用户失败', err)
   })
 }
@@ -207,6 +224,7 @@ function startLottery() {
         isLottering.value = false
         return
       }
+      updateUsers()
 
       switch (lotteryOption.value.lotteryType) {
         case 'single':
@@ -255,6 +273,7 @@ function startSingleLottery() {
         ((totalSteps - (currentUsers.value.length - lotteryOption.value.resultCount)) / totalSteps) * 100
 
       console.log(`[${currentUsers.value.length}] 移除 ${eliminatedUser.name}`)
+      updateUsers()
 
       setTimeout(() => {
         removeSingleUser()
@@ -292,6 +311,7 @@ function startHalfLottery() {
         (eliminatedUsers.value.length + currentUsers.value.length - lotteryOption.value.resultCount)) *
       100
     isLottering.value = false
+    updateUsers()
   }
 }
 
@@ -406,6 +426,7 @@ function startEliminationLottery() {
       eliminatedUsers.value.push(eliminatedUser)
       cardStates.value[eliminatedUser.openId].eliminated = true
     }
+    updateUsers()
 
     lotteryProgress.value =
       ((totalRounds - Math.ceil(Math.log2(currentUsers.value.length / lotteryOption.value.resultCount))) /
@@ -533,7 +554,7 @@ function clear() {
   }
   message.success('已清空队列')
 
-  updateUsers()
+  updateUsers(true)
 }
 // 洗牌（仅翻牌模式）
 function shuffleFlipCards() {
@@ -611,7 +632,7 @@ function continueLottery() {
 
 let timer: any
 onMounted(async () => {
-  if (lotteryCode.value) {
+  if (lotteryCode.value || accountInfo.value?.id) {
     const users = (await getUsers())?.users ?? []
     originUsers.value = users
     currentUsers.value = JSON.parse(JSON.stringify(users))
@@ -622,7 +643,7 @@ onMounted(async () => {
   }
   client?.on('danmaku', onDanmaku)
   client?.on('gift', onGift)
-  timer = setInterval(updateUsers, 1000 * 10)
+  timer = setInterval(() => updateUsers(), 1000)
 })
 onUnmounted(() => {
   if (timer) {

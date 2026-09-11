@@ -5,8 +5,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 
-import type { UpdateLiveLotteryUsersModel } from '@/api/api-models'
-import { OpenLiveLotteryType } from '@/api/api-models'
+import { OpenLiveLotteryType, type UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL } from '@/shared/config'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
@@ -28,11 +27,13 @@ const result = ref<UpdateLiveLotteryUsersModel>({
   type: OpenLiveLotteryType.Waiting,
 })
 const users = computed(() => result.value.users)
-const isMoreThanContainer = computed(() => {
-  return users.value.length * 50 > height.value
-})
+const isDrawing = computed(() => result.value.type === OpenLiveLotteryType.Drawing)
+const isResult = computed(() => result.value.type === OpenLiveLotteryType.Result)
+const isMoreThanContainer = computed(() => users.value.length * 50 > height.value)
+let pollTimer: number | undefined
 
 async function refreshUsers() {
+  if (!currentId.value && !currentCode.value) return
   try {
     const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(`${LOTTERY_API_URL}live/get-users`, {
       ...(currentId.value ? { id: currentId.value } : {}),
@@ -53,13 +54,13 @@ function handleImageError(e: Event) {
   img.src = 'https://i2.hdslb.com/bfs/face/member/noface.jpg'
 }
 
-function handleObsUpdate() {
-  void refreshUsers()
-}
-
-onMounted(() => window.$mitt.on('onOBSComponentUpdate', handleObsUpdate))
+onMounted(() => {
+  pollTimer = window.setInterval(() => {
+    void refreshUsers()
+  }, 1000)
+})
 onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate', handleObsUpdate)
+  if (pollTimer !== undefined) window.clearInterval(pollTimer)
 })
 </script>
 
@@ -70,23 +71,23 @@ onUnmounted(() => {
   >
     <p class="lottery-header">抽奖</p>
     <NDivider
-      v-if="result.type === OpenLiveLotteryType.Waiting"
+      v-if="!isResult"
       class="lottery-divider"
     >
-      <p class="lottery-header-count">已有 {{ users.length }} 人</p>
+      <p class="lottery-header-count">{{ isDrawing ? '抽取中' : `已有 ${users.length} 人` }}</p>
     </NDivider>
     <div
       ref="listContainerRef"
       class="lottery-content"
     >
       <template v-if="users.length > 0">
-        <Vue3Marquee
-          v-if="result.type === OpenLiveLotteryType.Waiting"
-          vertical
-          :pause="!isMoreThanContainer"
-          :duration="20"
-          :style="`height: ${height}px;`"
-        >
+          <Vue3Marquee
+            v-if="!isResult"
+            vertical
+            :pause="!isDrawing && !isMoreThanContainer"
+            :duration="isDrawing ? 8 : 20"
+            :style="`height: ${height}px;`"
+          >
           <span
             v-for="(user, index) in users"
             :id="index.toString()"
@@ -112,7 +113,7 @@ onUnmounted(() => {
       >
         <NEmpty description="暂无人参与" />
       </div>
-      <template v-if="result.type === OpenLiveLotteryType.Result">
+      <template v-if="isResult">
         <p style="text-align: center; font-size: 20px; margin: 0; font-weight: bold; color: #eeabab">结果</p>
         <Vue3Marquee
           v-if="100 * result.resultUsers.length > width"

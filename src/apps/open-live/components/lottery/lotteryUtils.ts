@@ -1,4 +1,4 @@
-import type { OpenLiveLotteryUserInfo } from '@/api/api-models'
+import { OpenLiveLotteryType, type OpenLiveLotteryUserInfo } from '@/api/api-models'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 
 import type { LotteryOption } from './lotteryTypes'
@@ -76,4 +76,33 @@ export function buildLotteryObsUrl(host: string, userId?: number | string | null
     credential: 'none',
     params: { code: trimmed },
   })
+}
+
+export function shouldSyncLiveLottery(state: {
+  originCount: number
+  resultCount: number
+  drawing: boolean
+  finished: boolean
+}): boolean {
+  return state.originCount > 0 || state.resultCount > 0 || state.drawing || state.finished
+}
+
+export function buildLiveLotterySyncBody(options: {
+  code?: string
+  users: OpenLiveLotteryUserInfo[]
+  resultUsers: OpenLiveLotteryUserInfo[]
+  drawing: boolean
+  finished: boolean
+}) {
+  const code = options.code?.trim()
+  return {
+    ...(code ? { code } : {}),
+    users: options.users,
+    resultUsers: options.resultUsers,
+    type: options.finished
+      ? OpenLiveLotteryType.Result
+      : options.drawing
+        ? OpenLiveLotteryType.Drawing
+        : OpenLiveLotteryType.Waiting,
+  }
 }
