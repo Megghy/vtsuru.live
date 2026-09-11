@@ -70,7 +70,7 @@ const enableCustomColor = computed({
 })
 
 const sensitivityKey = computed(() => `gamepad-stick-sensitivity-${selectedType.value}`)
-const stickSensitivity = usePersistedStorage<number>(sensitivityKey, 12)
+const stickSensitivity = usePersistedStorage<number>(sensitivityKey, 15)
 
 const viewBoxKey = computed(() => `gamepad-viewBox-${selectedType.value}`)
 const customViewBox = usePersistedStorage<string>(viewBoxKey, '')
@@ -90,7 +90,7 @@ const displayRelativeUrl = computed(() => {
     p.set('pressedColor', customPressedColor.value)
   }
   if (customViewBox.value) p.set('viewBox', customViewBox.value)
-  if (stickSensitivity.value !== 12) p.set('stickSensitivity', String(stickSensitivity.value))
+  if (stickSensitivity.value !== 15) p.set('stickSensitivity', String(stickSensitivity.value))
   return `/obs-store/gamepad?${p.toString()}`
 })
 
@@ -356,21 +356,21 @@ async function copyObsUrl() {
           </NText>
           <NSlider
             v-model:value="stickSensitivity"
-            :min="4"
-            :max="30"
+            :min="5"
+            :max="50"
             :step="1"
             style="min-width: 180px; max-width: 280px"
           />
           <NInputNumber
             v-model:value="stickSensitivity"
-            :min="4"
-            :max="40"
+            :min="5"
+            :max="50"
             size="small"
             style="width: 80px"
           />
           <NButton
             size="small"
-            @click="stickSensitivity = 12"
+            @click="stickSensitivity = 15"
           >
             重置
           </NButton>

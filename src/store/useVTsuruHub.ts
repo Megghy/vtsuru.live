@@ -1,4 +1,4 @@
-import { HttpTransportType, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
+import { HttpTransportType, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr'
 import type { HubConnection } from '@microsoft/signalr'
 import { MessagePackHubProtocol } from '@microsoft/signalr-protocol-msgpack'
 import { acceptHMRUpdate, defineStore } from 'pinia'
@@ -6,6 +6,15 @@ import { ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { BASE_HUB_URL, mapToCurrentAPI } from '@/shared/config'
+
+export function isHubConnected(client: HubConnection | undefined | null): client is HubConnection {
+  return client?.state === HubConnectionState.Connected
+}
+
+function sendIfConnected(client: HubConnection | undefined | null, methodName: string, ...args: unknown[]) {
+  if (!isHubConnected(client)) return
+  return client.send(methodName, ...args)
+}
 
 export const useVTsuruHub = defineStore('VTsuruHub', () => {
   const signalRClient = ref<HubConnection>()
@@ -42,8 +51,8 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
       .withAutomaticReconnect([0, 2000, 10000, 30000])
       .withHubProtocol(new MessagePackHubProtocol())
       .build()
-    connection.on('Finished', async () => {
-      connection.send('Finished')
+    connection.on('Finished', () => {
+      void sendIfConnected(connection, 'Finished')
     })
     connection.on('Disconnect', (reason: unknown) => {
       console.log(`[Hub] 被 VTsuru 服务器断开连接: ${reason}`)
@@ -66,7 +75,7 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
   async function reconnect() {
     try {
       await signalRClient.value?.start()
-      signalRClient.value?.send('Reconnected')
+      void sendIfConnected(signalRClient.value, 'Reconnected')
       console.log('[Hub] 已重新连接')
     } catch (err) {
       console.log(err)
@@ -78,13 +87,15 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
     if (!isInited.value) {
       await connectSignalR()
     }
-    return signalRClient.value?.send(methodName, ...args)
+    return sendIfConnected(signalRClient.value, methodName, ...args)
   }
   async function invoke<T>(methodName: string, ...args: unknown[]) {
     if (!isInited.value) {
       await connectSignalR()
     }
-    return signalRClient.value?.invoke<T>(methodName, ...args)
+    const client = signalRClient.value
+    if (!isHubConnected(client)) return
+    return client.invoke<T>(methodName, ...args)
   }
   async function on(eventName: string, listener: (...args: unknown[]) => void) {
     if (!isInited.value) {

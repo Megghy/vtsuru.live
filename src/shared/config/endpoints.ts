@@ -30,3 +30,4 @@ export const USER_PAGES_API_URL = `${BASE_API_URL}user-pages/`
 export const FILE_API_URL = `${BASE_API_URL}files/`
 export const VOTE_API_URL = `${BASE_API_URL}vote/`
 export const TTS_API_URL = `${BASE_API_URL}tts/`
+export const OBS_STORE_API_URL = `${BASE_API_URL}obs-store/`

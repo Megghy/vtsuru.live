@@ -30,8 +30,8 @@ export const STANDARD_BUTTON_MAP: Partial<Record<number, LogicalButton>> = {
   14: 'DPAD_LEFT', // 十字键 左
   15: 'DPAD_RIGHT', // 十字键 右
   16: 'HOME', // Xbox Guide / PS Button / Nintendo Home
-  17: 'PS_TOUCHPAD', // PS 触摸板点击
-  18: 'NINTENDO_CAPTURE', // 任天堂截图键
+  17: 'PS_TOUCHPAD', // DualSense 触摸板 / Xbox Series Share
+  18: 'NINTENDO_CAPTURE', // DualSense Mute / Switch Capture
 }
 
 // 默认死区大小
@@ -183,6 +183,13 @@ export const useGamepadStore = defineStore('gamepad', () => {
     normalizedGamepadState.buttons.RIGHT_SHOULDER_2.value = 1 - trigVal
     normalizedGamepadState.buttons.RIGHT_SHOULDER_2.pressed = (1 - trigVal) > 0.15
 
+    // 左右肩键周期性交替按下 (LB / RB / L1 / R1)
+    const shoulderCycle = Math.floor(simulationTick * 1.6) % 4
+    normalizedGamepadState.buttons.LEFT_SHOULDER_1.pressed = shoulderCycle === 0
+    normalizedGamepadState.buttons.LEFT_SHOULDER_1.value = shoulderCycle === 0 ? 1 : 0
+    normalizedGamepadState.buttons.RIGHT_SHOULDER_1.pressed = shoulderCycle === 2
+    normalizedGamepadState.buttons.RIGHT_SHOULDER_1.value = shoulderCycle === 2 ? 1 : 0
+
     // 动作键交替按下
     const cycle = Math.floor(simulationTick * 2) % 4
     normalizedGamepadState.buttons.ACTION_DOWN.pressed = cycle === 0
@@ -191,11 +198,15 @@ export const useGamepadStore = defineStore('gamepad', () => {
     normalizedGamepadState.buttons.ACTION_UP.pressed = cycle === 3
 
     // 方向键交替按下
-    const dpadCycle = Math.floor(simulationTick * 1.2) % 8
+    const dpadCycle = Math.floor(simulationTick * 1.5) % 4
     normalizedGamepadState.buttons.DPAD_UP.pressed = dpadCycle === 0
-    normalizedGamepadState.buttons.DPAD_RIGHT.pressed = dpadCycle === 2
-    normalizedGamepadState.buttons.DPAD_DOWN.pressed = dpadCycle === 4
-    normalizedGamepadState.buttons.DPAD_LEFT.pressed = dpadCycle === 6
+    normalizedGamepadState.buttons.DPAD_UP.value = dpadCycle === 0 ? 1 : 0
+    normalizedGamepadState.buttons.DPAD_RIGHT.pressed = dpadCycle === 1
+    normalizedGamepadState.buttons.DPAD_RIGHT.value = dpadCycle === 1 ? 1 : 0
+    normalizedGamepadState.buttons.DPAD_DOWN.pressed = dpadCycle === 2
+    normalizedGamepadState.buttons.DPAD_DOWN.value = dpadCycle === 2 ? 1 : 0
+    normalizedGamepadState.buttons.DPAD_LEFT.pressed = dpadCycle === 3
+    normalizedGamepadState.buttons.DPAD_LEFT.value = dpadCycle === 3 ? 1 : 0
   }, { immediate: false })
 
   function startSimulation() {

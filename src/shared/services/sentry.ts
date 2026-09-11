@@ -4,6 +4,34 @@ import * as Sentry from '@sentry/vue'
 
 export const BUGSINK_DSN = 'https://cc64380340634181a0dc73f6c453b60d@bugsink.suki.club/1'
 
+export const SENTRY_IGNORE_ERRORS: Array<string | RegExp> = [
+  /^尚未完成邮箱验证$/,
+  /^未登录$/,
+  /takeRecords/,
+  /register_listener not found/,
+  /ResizeObserver loop/,
+  /Failed to fetch dynamically imported module/,
+  /Unable to preload CSS/,
+  /Importing a module script failed/,
+  /is not a valid JavaScript MIME type/,
+  /weixinPostMessageHandlers/,
+  /Failed to load Turnstile/,
+  /Nothing to reset found for provided container/,
+  /failed to receive message from webview/,
+  /QueryRequestError/,
+  /网络请求失败/,
+  /Failed to fetch/,
+  /set_focus not allowed by ACL/,
+  /Cannot send data if the connection is not in the 'Connected' State/,
+  /Cannot read properties of null \(reading 'contains'\)/,
+]
+
+export function shouldIgnoreSentryMessage(message: string) {
+  return SENTRY_IGNORE_ERRORS.some((pattern) =>
+    typeof pattern === 'string' ? message.includes(pattern) : pattern.test(message),
+  )
+}
+
 const FINGERPRINT_CACHE_KEY = 'vtsuru:device:fingerprint'
 
 let cachedFingerprint = typeof window !== 'undefined' ? localStorage.getItem(FINGERPRINT_CACHE_KEY) || '' : ''
@@ -45,7 +73,7 @@ export function initSentry(app?: App) {
     app,
     dsn: BUGSINK_DSN,
     environment: import.meta.env.MODE || 'production',
-    ignoreErrors: [/^尚未完成邮箱验证$/, /^未登录$/, /takeRecords/, /register_listener not found/],
+    ignoreErrors: SENTRY_IGNORE_ERRORS,
     denyUrls: [/hyperdx-vendor/],
     initialScope: {
       tags: {

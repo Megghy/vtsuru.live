@@ -6,6 +6,7 @@ import VueKonva from 'vue3-konva'
 import { initPersistedStorage } from '@/shared/storage/persist'
 import { initializeAPISelection } from '@/shared/config'
 import { initSentry } from '@/shared/services/sentry'
+import { installStaleChunkReload } from '@/shared/services/staleChunkReload'
 
 import App from './App.vue'
 import emitter from './mitt'
@@ -15,6 +16,8 @@ import router from './router'
 
 const pinia = createPinia()
 export const getPinia = () => pinia
+
+installStaleChunkReload()
 
 async function bootstrapApp() {
   await initPersistedStorage()

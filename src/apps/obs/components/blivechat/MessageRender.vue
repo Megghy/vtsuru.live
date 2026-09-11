@@ -112,8 +112,12 @@ export default defineComponent({
       window.clearTimeout(this.emitSmoothedMessageTimerId)
       this.emitSmoothedMessageTimerId = null
     }
-    this.clearMessages()
-    document.head.removeChild(this.customStyleElement)
+    this.resetSmoothScroll()
+    this.messages = []
+    this.paidMessages = []
+    this.smoothedMessageQueue = []
+    this.messagesBuffer = []
+    this.customStyleElement?.parentNode?.removeChild(this.customStyleElement)
   },
   methods: {
     getGiftShowContent(message) {
@@ -466,7 +470,9 @@ export default defineComponent({
         await this.$nextTick()
       }
 
-      this.preinsertHeight = this.$refs.items.clientHeight
+      const refs = this.scrollRefs()
+      if (!refs) return
+      this.preinsertHeight = refs.items.clientHeight
       for (const message of this.messagesBuffer) {
         this.messages.push(message)
       }
@@ -476,14 +482,16 @@ export default defineComponent({
       this.showNewMessages()
     },
     showNewMessages() {
-      const hasScrollBar = this.$refs.items.clientHeight > this.$refs.scroller.clientHeight
-      this.$refs.itemOffset.style.height = `${this.$refs.items.clientHeight}px`
+      const refs = this.scrollRefs()
+      if (!refs) return
+      const hasScrollBar = refs.items.clientHeight > refs.scroller.clientHeight
+      refs.itemOffset.style.height = `${refs.items.clientHeight}px`
       if (!this.canScrollToBottomOrTimedOut() || !hasScrollBar) {
         return
       }
 
       // 计算剩余像素
-      this.scrollPixelsRemaining += this.$refs.items.clientHeight - this.preinsertHeight
+      this.scrollPixelsRemaining += refs.items.clientHeight - this.preinsertHeight
       this.scrollToBottom()
 
       // 计算是否平滑滚动、剩余时间
@@ -548,9 +556,18 @@ export default defineComponent({
       }
     },
 
+    scrollRefs() {
+      const itemOffset = this.$refs.itemOffset
+      const items = this.$refs.items
+      const scroller = this.$refs.scroller
+      if (!itemOffset || !items || !scroller) return null
+      return { itemOffset, items, scroller }
+    },
     maybeResizeScrollContainer() {
-      this.$refs.itemOffset.style.height = `${this.$refs.items.clientHeight}px`
-      this.$refs.itemOffset.style.minHeight = `${this.$refs.scroller.clientHeight}px`
+      const refs = this.scrollRefs()
+      if (!refs) return
+      refs.itemOffset.style.height = `${refs.items.clientHeight}px`
+      refs.itemOffset.style.minHeight = `${refs.scroller.clientHeight}px`
       this.maybeScrollToBottom()
     },
     maybeScrollToBottom() {
@@ -559,12 +576,16 @@ export default defineComponent({
       }
     },
     scrollToBottom() {
-      this.$refs.scroller.scrollTop = 2 ** 24
+      const refs = this.scrollRefs()
+      if (!refs) return
+      refs.scroller.scrollTop = 2 ** 24
       this.atBottom = true
     },
     onScroll() {
       this.refreshCantScrollStartTime()
-      const scroller = this.$refs.scroller
+      const refs = this.scrollRefs()
+      if (!refs) return
+      const { scroller } = refs
       this.atBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < SCROLLED_TO_BOTTOM_EPSILON
       this.flushMessagesBuffer()
     },

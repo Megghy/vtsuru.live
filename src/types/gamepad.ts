@@ -1,12 +1,5 @@
 import type { Component } from 'vue'
 
-export interface Position {
-  top: string // 百分比，例如 '50%'
-  left: string // 百分比，例如 '25%'
-  width: string // 百分比，例如 '15%'
-  height?: string // 可选百分比，例如 '10%'
-}
-
 // 统一标准手柄逻辑按键定义
 export const LogicalButtonsList = [
   'ACTION_DOWN', // Xbox A / PS Cross / Nintendo B
@@ -34,32 +27,11 @@ export type LogicalButton = (typeof LogicalButtonsList)[number]
 
 export type LogicalStickName = 'LEFT_STICK' | 'RIGHT_STICK'
 
-export interface ButtonComponentConfig {
-  type: 'button'
-  logicalButton: LogicalButton
-  name: string
-  svg: Component
-  position: Position
-  isTrigger?: boolean // 是否为线性扳机 (LT/RT/L2/R2)
-}
-
-export interface StickComponentConfig {
-  type: 'stick'
-  logicalButton: LogicalStickName
-  pressLogicalButton?: LogicalButton // 摇杆下压关联逻辑键 (如 LEFT_STICK_PRESS)
-  svg: Component
-  pressSvg?: Component
-  position: Position
-}
-
-export type GamepadComponentConfig = ButtonComponentConfig | StickComponentConfig
-
 export interface GamepadConfig {
   name: string
   bodySvg: Component
-  aspectRatio: string // 宽高比，例如 '1543/956'
+  aspectRatio: string // 宽高比，例如 '1543.24 / 956.31'
   defaultViewBox: string
-  components: GamepadComponentConfig[]
 }
 
 export type GamepadType = 'xbox' | 'ps' | 'nintendo'

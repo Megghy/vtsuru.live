@@ -37,7 +37,7 @@ const accountInfo = useAccount()
 
 export const clientInited = ref(false)
 export const clientInitStage = ref('')
-let tray: TrayIcon
+let tray: TrayIcon | undefined
 let heartbeatTimer: number | null = null
 let updateCheckTimer: number | null = null
 let updateNotificationRef: any = null
@@ -429,8 +429,8 @@ export async function initAll(isOnBoot: boolean) {
     icon: iconData,
     action: (event) => {
       if (event.type === 'DoubleClick' || event.type === 'Click') {
-        appWindow.show()
-        appWindow.setFocus()
+        void appWindow.show().catch((err) => warn(`[tray] 显示窗口失败: ${err}`))
+        void appWindow.setFocus().catch((err) => warn(`[tray] 聚焦窗口失败: ${err}`))
       }
     },
   }
@@ -526,8 +526,9 @@ export function OnClientUnmounted() {
   void useClientBackup().dispose()
   void useTranscription().dispose()
   useFetcherRpcServer().dispose()
-  tray.close()
-  // useDanmakuWindow().closeWindow();
+  const currentTray = tray
+  tray = undefined
+  void currentTray?.close()
 }
 
 export async function checkUpdate() {

@@ -175,14 +175,22 @@ function reset() {
     })
     return
   }
-  turnstile.value?.reset?.()
+  try {
+    turnstile.value?.reset?.()
+  } catch {
+    // Turnstile 在容器已空/未 render 时 reset 会抛
+  }
 }
 
 function remove() {
   clearReadyTimer()
   probeAbort?.abort()
   unbindAltchaEvents(altchaEl.value)
-  turnstile.value?.remove?.()
+  try {
+    turnstile.value?.remove?.()
+  } catch {
+    // widget 已卸载
+  }
 }
 
 watch(altchaEl, (el, prev) => {

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
+import { computed, ref } from 'vue'
 
 import { controllerBodies, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
+import { useSvgGamepadRenderer } from '@/composables/useSvgGamepadRenderer'
 import type { GamepadConfig, GamepadType } from '@/types/gamepad'
-
-import GamepadStage from './GamepadStage.vue'
 
 interface Props {
   type?: GamepadType
@@ -34,10 +34,10 @@ const queryPressedColor = useRouteQueryParam<string | null>('pressedColor', null
   transform: (v) => (!v || v === 'null' ? null : String(v)),
 })
 const queryViewBox = useRouteQueryParam<string>('viewBox', '')
-const querySensitivity = useRouteQueryParam<number>('stickSensitivity', 12, {
+const querySensitivity = useRouteQueryParam<number>('stickSensitivity', 15, {
   transform: (v) => {
     const n = Number(v)
-    return Number.isNaN(n) || n <= 0 ? 12 : n
+    return Number.isNaN(n) || n <= 0 ? 15 : n
   },
 })
 
@@ -56,26 +56,52 @@ const bodies = computed(() => controllerBodies[effectiveType.value] || [])
 
 const selectedBody = computed(() => {
   if (effectiveBodyId.value) {
-    const match = bodies.value.find((b) => b.id === effectiveBodyId.value || b.name === effectiveBodyId.value)
+    const match = bodies.value.find(
+      (b) => b.id === effectiveBodyId.value || b.name === effectiveBodyId.value,
+    )
     if (match) return match
   }
   return bodies.value[0]
 })
 
 const bodySvgComponent = computed(() => selectedBody.value?.body || config.value?.bodySvg)
-const viewBoxString = computed(() => effectiveViewBox.value || selectedBody.value?.defaultViewBox || config.value?.defaultViewBox)
+const viewBoxString = computed(
+  () =>
+    effectiveViewBox.value ||
+    selectedBody.value?.defaultViewBox ||
+    config.value?.defaultViewBox,
+)
+const activeAspectRatio = computed(
+  () => selectedBody.value?.aspectRatio || config.value?.aspectRatio || '16 / 10',
+)
+
+// SVG 容器引用与直接 DOM 渲染驱动
+const bodySvgRef = ref<ComponentPublicInstance | null>(null)
+
+useSvgGamepadRenderer({
+  svgContainerRef: bodySvgRef,
+  gamepadType: effectiveType,
+  pressedColor: effectivePressedColor,
+  stickSensitivity: effectiveSensitivity,
+})
 </script>
 
 <template>
   <div :class="inlineMode ? 'gp-container-inline' : 'gp-container-obs'">
-    <GamepadStage
+    <div
       v-if="config"
-      :config="config"
-      :body-svg="bodySvgComponent"
-      :view-box="viewBoxString"
-      :pressed-color="effectivePressedColor"
-      :stick-sensitivity="effectiveSensitivity"
-    />
+      class="gp-stage-box"
+      :style="{ aspectRatio: activeAspectRatio }"
+    >
+      <component
+        :is="bodySvgComponent"
+        v-if="bodySvgComponent"
+        ref="bodySvgRef"
+        class="gp-svg-body"
+        :viewBox="viewBoxString"
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </div>
     <div
       v-else
       class="gp-error-tip"
@@ -110,6 +136,27 @@ const viewBoxString = computed(() => effectiveViewBox.value || selectedBody.valu
   align-items: center;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+.gp-stage-box {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.gp-svg-body {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .gp-error-tip {

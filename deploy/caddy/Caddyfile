@@ -1,11 +1,16 @@
 :80 {
-  # Compress responses according to Accept-Encoding headers
   encode gzip zstd
-
   root * /etc/caddy/html/
 
-  try_files {path} /index.html
+  # hashed 资源缺失必须 404，禁止回退成 index.html（否则 MIME 变成 text/html）
+  handle /assets/* {
+    header Cache-Control "public, max-age=31536000, immutable"
+    file_server
+  }
 
-  # Serve everything else from the file system
-  file_server
+  handle {
+    try_files {path} /index.html
+    header Cache-Control "no-cache, no-store, must-revalidate"
+    file_server
+  }
 }
