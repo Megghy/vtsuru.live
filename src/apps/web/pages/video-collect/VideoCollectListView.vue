@@ -330,6 +330,11 @@ function resetProgress() {
   message.success('已重置所有进度')
 }
 
+function resetFilter() {
+  searchQuery.value = ''
+  watchFilter.value = 'all'
+}
+
 // 快捷键支持
 function handleKeydown(e: KeyboardEvent) {
   const target = e.target as HTMLElement
@@ -642,10 +647,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                         <NButton
                           size="small"
                           secondary
-                          @click="
-                            searchQuery = ''
-                            watchFilter = 'all'
-                          "
+                          @click="resetFilter"
                         >
                           清除筛选
                         </NButton>
