@@ -3,12 +3,15 @@ import {
   ArrowClockwise24Regular,
   Checkmark24Regular,
   Clock24Regular,
+  Comment24Regular,
   Dismiss24Regular,
+  Heart24Regular,
   Open24Regular,
   Person24Regular,
+  Video24Regular,
 } from '@vicons/fluent'
 import { NButton, NCheckbox, NEllipsis, NIcon, NTag, NTime } from 'naive-ui'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
 import { VideoStatus } from '@/api/api-models'
@@ -25,6 +28,12 @@ const emit = defineEmits<{
   updateStatus: [status: VideoStatus, video: VideoInfo]
   toggleSelect: [bvid: string]
 }>()
+
+const coverError = ref(false)
+const isExpandedSenders = ref(false)
+
+const primarySender = computed(() => props.videoInfo.senders[0])
+const otherSenders = computed(() => props.videoInfo.senders.slice(1))
 
 const actions = computed(() => {
   if (props.videoInfo.status === VideoStatus.Pending) {
@@ -51,7 +60,7 @@ function formatDuration(seconds: number) {
   const remainingSeconds = seconds % 60
   return hours > 0
     ? `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
-    : `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
+    : `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
 }
 
 function openVideo() {
@@ -62,19 +71,43 @@ function openVideo() {
 <template>
   <article
     class="video-item"
-    :class="{ 'video-item--selected': selected }"
+    :class="{
+      'video-item--selected': selected,
+      'is-accepted': videoInfo.status === VideoStatus.Accepted,
+      'is-rejected': videoInfo.status === VideoStatus.Rejected,
+    }"
   >
-    <button
-      type="button"
-      class="video-cover"
-      :aria-label="`打开视频：${videoData.title}`"
-      @click="openVideo"
-    >
-      <img
-        :src="videoData.cover.replace('http://', 'https://')"
-        :alt="videoData.title"
-        referrerpolicy="no-referrer"
-      />
+    <div class="video-cover-slot">
+      <button
+        type="button"
+        class="video-cover"
+        :aria-label="`在哔哩哔哩打开视频：${videoData.title}`"
+        @click="openVideo"
+      >
+        <img
+          v-if="!coverError && videoData.cover"
+          :src="videoData.cover.replace('http://', 'https://')"
+          :alt="videoData.title"
+          referrerpolicy="no-referrer"
+          @error="coverError = true"
+        />
+        <div
+          v-else
+          class="cover-fallback"
+        >
+          <NIcon
+            :component="Video24Regular"
+            class="fallback-icon"
+          />
+          <span>封面无法加载</span>
+        </div>
+
+        <span class="duration-label">
+          <NIcon :component="Clock24Regular" />
+          {{ formatDuration(videoData.length) }}
+        </span>
+      </button>
+
       <span
         v-if="selectable"
         class="select-check"
@@ -86,74 +119,130 @@ function openVideo() {
           @click.stop
         />
       </span>
-      <span class="duration-label">
-        <NIcon :component="Clock24Regular" />
-        {{ formatDuration(videoData.length) }}
-      </span>
-    </button>
+    </div>
 
     <div class="video-content">
       <div class="video-heading">
         <button
           type="button"
           class="video-title"
+          :title="videoData.title"
           @click="openVideo"
         >
           <NEllipsis :line-clamp="2">
             {{ videoData.title }}
           </NEllipsis>
         </button>
-        <NButton
-          text
-          circle
+        <button
+          type="button"
+          class="open-link-icon-btn"
           title="在哔哩哔哩打开"
-          @click="openVideo"
+          aria-label="在哔哩哔哩打开"
+          @click.stop="openVideo"
         >
-          <template #icon>
-            <NIcon :component="Open24Regular" />
-          </template>
-        </NButton>
+          <NIcon :component="Open24Regular" />
+        </button>
       </div>
 
       <div class="video-meta">
-        <span>
+        <span
+          class="owner"
+          :title="`UP 主: ${videoData.ownerName}`"
+        >
           <NIcon :component="Person24Regular" />
-          {{ videoData.ownerName }}
+          <span class="owner-name">{{ videoData.ownerName }}</span>
         </span>
-        <code>{{ videoInfo.bvid }}</code>
+        <code class="bvid-code">{{ videoInfo.bvid }}</code>
       </div>
 
+      <!-- 推荐信息与粉丝推荐理由 -->
       <div class="recommendations">
         <div class="recommendations-heading">
-          <span>推荐记录</span>
+          <span class="rec-title">
+            <NIcon :component="Heart24Regular" />
+            <span>粉丝推荐</span>
+          </span>
           <NTag
+            v-if="otherSenders.length > 0"
             size="tiny"
             :bordered="false"
+            class="more-senders-pill"
+            @click="isExpandedSenders = !isExpandedSenders"
           >
-            {{ videoInfo.senders.length }} 人
+            共 {{ videoInfo.senders.length }} 人 {{ isExpandedSenders ? '收起' : '展开' }}
           </NTag>
         </div>
-        <div class="recommendation-list">
+
+        <!-- 首要推荐人 -->
+        <div
+          v-if="primarySender"
+          class="recommendation-primary"
+        >
+          <div class="recommendation-author">
+            <strong class="author-name">{{ primarySender.sender || '匿名用户' }}</strong>
+            <span
+              v-if="primarySender.senderId"
+              class="author-uid"
+              >UID {{ primarySender.senderId }}</span
+            >
+            <NTime
+              :time="primarySender.sendAt"
+              type="relative"
+            />
+          </div>
+          <p
+            v-if="primarySender.description"
+            class="recommendation-quote"
+            :title="primarySender.description"
+          >
+            <NIcon
+              :component="Comment24Regular"
+              class="quote-icon"
+            />
+            <span>{{ primarySender.description }}</span>
+          </p>
+        </div>
+
+        <!-- 展开其他合并推荐人 -->
+        <div
+          v-if="isExpandedSenders && otherSenders.length > 0"
+          class="recommendation-more-list"
+        >
           <div
-            v-for="(sender, index) in videoInfo.senders"
-            :key="`${sender.senderId ?? sender.sender}-${sender.sendAt}-${index}`"
-            class="recommendation-item"
+            v-for="(sender, idx) in otherSenders"
+            :key="idx"
+            class="recommendation-sub-item"
           >
             <div class="recommendation-author">
-              <strong>{{ sender.sender || '匿名用户' }}</strong>
-              <span v-if="sender.senderId">UID {{ sender.senderId }}</span>
+              <span class="author-name">{{ sender.sender || '匿名用户' }}</span>
+              <span
+                v-if="sender.senderId"
+                class="author-uid"
+                >UID {{ sender.senderId }}</span
+              >
               <NTime
                 :time="sender.sendAt"
                 type="relative"
               />
             </div>
-            <p v-if="sender.description">
+            <p
+              v-if="sender.description"
+              class="recommendation-sub-desc"
+            >
               {{ sender.description }}
             </p>
           </div>
         </div>
+
+        <div
+          v-if="!primarySender"
+          class="recommendation-none"
+        >
+          <span>无推荐详情</span>
+        </div>
       </div>
 
+      <!-- 操作按钮组 -->
       <div class="video-actions">
         <NButton
           v-for="action in actions"
@@ -184,30 +273,44 @@ function openVideo() {
   overflow: hidden;
   background: var(--vtsuru-bg-elevated);
   border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
+  border-radius: 8px;
+  transition: all 0.16s ease;
+  color: var(--vtsuru-fg);
+}
+
+.video-item:hover {
+  border-color: color-mix(in srgb, var(--vtsuru-brand) 50%, var(--vtsuru-border));
 }
 
 .video-item--selected {
-  border-color: color-mix(in srgb, var(--vtsuru-primary) 55%, var(--vtsuru-border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vtsuru-primary) 35%, transparent);
+  border-color: var(--vtsuru-brand);
+  box-shadow: 0 0 0 1px var(--vtsuru-brand);
+}
+
+.video-cover-slot {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  flex: 0 0 auto;
 }
 
 .select-check {
   position: absolute;
   top: 8px;
   left: 8px;
-  z-index: 2;
+  z-index: 3;
   display: inline-flex;
-  padding: 2px 4px;
-  background: rgb(0 0 0 / 45%);
-  border-radius: 6px;
+  padding: 3px 5px;
+  background: rgb(0 0 0 / 60%);
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
 }
 
 .video-cover {
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   padding: 0;
   overflow: hidden;
   background: var(--vtsuru-bg-muted);
@@ -219,11 +322,29 @@ function openVideo() {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.18s ease;
+  display: block;
+  transition: transform 0.22s ease;
 }
 
 .video-cover:hover img {
-  transform: scale(1.025);
+  transform: scale(1.03);
+}
+
+.cover-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+}
+
+.fallback-icon {
+  font-size: 24px;
+  opacity: 0.6;
 }
 
 .duration-label {
@@ -236,16 +357,19 @@ function openVideo() {
   padding: 3px 6px;
   color: #fff;
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
   background: rgb(0 0 0 / 72%);
+  backdrop-filter: blur(4px);
   border-radius: 4px;
+  pointer-events: none;
 }
 
 .video-content {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 11px;
+  gap: 10px;
   min-height: 0;
   padding: 12px;
 }
@@ -254,7 +378,8 @@ function openVideo() {
   display: flex;
   gap: 6px;
   align-items: flex-start;
-  min-height: 42px;
+  justify-content: space-between;
+  min-height: 40px;
 }
 
 .video-title {
@@ -265,102 +390,181 @@ function openVideo() {
   font: inherit;
   font-size: 14px;
   font-weight: 600;
-  line-height: 1.45;
+  line-height: 1.4;
   text-align: left;
   background: transparent;
   border: 0;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .video-title:hover {
   color: var(--vtsuru-brand);
 }
 
-.video-meta,
-.video-meta span {
-  display: flex;
+.open-link-icon-btn {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  padding: 3px;
+  color: var(--vtsuru-fg-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.open-link-icon-btn:hover {
+  color: var(--vtsuru-brand);
+  background: color-mix(in srgb, var(--vtsuru-brand) 12%, transparent);
 }
 
 .video-meta {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
 }
 
-.video-meta span {
-  min-width: 0;
+.owner {
+  display: inline-flex;
   gap: 4px;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.owner-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.video-meta code {
+.bvid-code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 11px;
+  color: var(--vtsuru-fg-muted);
+  opacity: 0.8;
 }
 
 .recommendations {
-  min-height: 98px;
-  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 80px;
+  padding-top: 8px;
   border-top: 1px solid var(--vtsuru-border);
 }
 
-.recommendations-heading,
-.recommendation-author {
+.recommendations-heading {
   display: flex;
   align-items: center;
-}
-
-.recommendations-heading {
   justify-content: space-between;
-  margin-bottom: 7px;
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
 }
 
-.recommendation-list {
+.rec-title {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--vtsuru-brand);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.more-senders-pill {
+  cursor: pointer;
+}
+
+.recommendation-primary {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 112px;
-  overflow: auto;
+  gap: 4px;
 }
 
 .recommendation-author {
+  display: flex;
   gap: 6px;
+  align-items: center;
   min-width: 0;
   font-size: 12px;
 }
 
-.recommendation-author strong {
+.author-name {
   overflow: hidden;
   font-weight: 600;
+  color: var(--vtsuru-fg);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.recommendation-author span,
-.recommendation-author :deep(.n-time) {
+.author-uid {
   color: var(--vtsuru-fg-muted);
   font-size: 11px;
 }
 
 .recommendation-author :deep(.n-time) {
   margin-left: auto;
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
   white-space: nowrap;
 }
 
-.recommendation-item p {
+.recommendation-quote {
   display: -webkit-box;
-  margin: 3px 0 0;
+  margin: 0;
   overflow: hidden;
-  color: var(--vtsuru-fg-muted);
+  color: var(--vtsuru-fg);
   font-size: 12px;
   line-height: 1.4;
+  font-style: italic;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  opacity: 0.9;
+  background: color-mix(in srgb, var(--vtsuru-brand) 6%, transparent);
+  padding: 4px 8px;
+  border-left: 2px solid var(--vtsuru-brand);
+  border-radius: 0 4px 4px 0;
+}
+
+.quote-icon {
+  margin-right: 4px;
+  font-size: 11px;
+  vertical-align: -1px;
+  color: var(--vtsuru-brand);
+}
+
+.recommendation-more-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background: var(--vtsuru-bg-muted);
+  border-radius: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.recommendation-sub-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recommendation-sub-desc {
+  margin: 0;
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+}
+
+.recommendation-none {
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+  font-style: italic;
 }
 
 .video-actions {
@@ -368,26 +572,6 @@ function openVideo() {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: auto;
-  padding-top: 2px;
-}
-
-@media (max-width: 520px) {
-  .video-item {
-    display: grid;
-    grid-template-columns: 120px minmax(0, 1fr);
-  }
-
-  .video-cover {
-    height: 100%;
-    aspect-ratio: auto;
-  }
-
-  .video-heading {
-    min-height: 0;
-  }
-
-  .recommendations {
-    min-height: 0;
-  }
+  padding-top: 4px;
 }
 </style>

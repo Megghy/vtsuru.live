@@ -1,7 +1,34 @@
 <script setup lang="ts">
-import { Add20Regular, ArrowRight24Regular, ArrowSync24Regular, Search24Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NProgress, NSelect, NSpin, NTag, NTime, useMessage } from 'naive-ui'
-import { computed, ref } from 'vue'
+import {
+  Add20Regular,
+  ArrowRight24Regular,
+  ArrowSync24Regular,
+  Copy24Regular,
+  Delete24Regular,
+  Edit24Regular,
+  Folder24Regular,
+  Timer24Regular,
+  MoreVertical24Regular,
+  Open24Regular,
+  Search24Regular,
+  TableDismiss24Regular,
+  Video24Regular,
+} from '@vicons/fluent'
+import {
+  NButton,
+  NDropdown,
+  NEmpty,
+  NIcon,
+  NInput,
+  NProgress,
+  NSelect,
+  NSpin,
+  NTag,
+  NTime,
+  useDialog,
+  useMessage,
+} from 'naive-ui'
+import { computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
@@ -10,12 +37,14 @@ import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
+import { copyToClipboard } from '@/shared/utils'
 
 import VideoCollectFormModal from './VideoCollectFormModal.vue'
 
 type StatusFilter = 'all' | 'active' | 'finished'
 
 const message = useMessage()
+const dialog = useDialog()
 const router = useRouter()
 const accountInfo = useAccount()
 
@@ -23,6 +52,8 @@ const videoTables = ref<VideoCollectTable[]>([])
 const isLoading = ref(false)
 const isCreating = ref(false)
 const createModalVisible = ref(false)
+const editModalVisible = ref(false)
+const currentEditingTable = ref<VideoCollectTable>()
 const keyword = ref('')
 const statusFilter = ref<StatusFilter>('all')
 
@@ -42,6 +73,26 @@ const filteredTables = computed(() => {
       return `${table.name} ${table.description}`.toLocaleLowerCase().includes(search)
     })
     .toSorted((a, b) => Number(isActive(b)) - Number(isActive(a)) || b.createAt - a.createAt)
+})
+
+const editInitialValue = computed<VideoCollectCreateModel | undefined>(() => {
+  if (!currentEditingTable.value) return undefined
+  const t = currentEditingTable.value
+  return {
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    startAt: t.startAt,
+    endAt: t.endAt,
+    maxVideoCount: t.maxVideoCount,
+    minVideoDuration: t.minVideoDuration,
+    maxVideoDuration: t.maxVideoDuration,
+    allowedPartitions: [...(t.allowedPartitions ?? [])],
+    allowUnregisteredUser: t.allowUnregisteredUser,
+    maxVideoPerUser: t.maxVideoPerUser,
+    requireDescription: t.requireDescription,
+    duplicatePolicy: t.duplicatePolicy,
+  }
 })
 
 await loadTables()
@@ -89,13 +140,109 @@ async function createTable(model: VideoCollectCreateModel) {
     isCreating.value = false
   }
 }
+
+async function updateTable(model: VideoCollectCreateModel) {
+  if (!currentEditingTable.value) return
+  isCreating.value = true
+  try {
+    const response = await QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}update`, {
+      ...model,
+      id: currentEditingTable.value.id,
+    })
+    if (response.code !== 200) throw new Error(response.message)
+    const idx = videoTables.value.findIndex((t) => t.id === currentEditingTable.value?.id)
+    if (idx !== -1) videoTables.value[idx] = response.data
+    editModalVisible.value = false
+    message.success('征集规则已更新')
+  } catch (error) {
+    console.error(error)
+    message.error(error instanceof Error ? error.message : '更新失败')
+  } finally {
+    isCreating.value = false
+  }
+}
+
+function copyShareLink(table: VideoCollectTable) {
+  const url = `${CURRENT_HOST}video-collect/${table.shortId}`
+  copyToClipboard(url)
+  message.success('已复制投稿页面链接')
+}
+
+function openResultPage(table: VideoCollectTable) {
+  router.push({ name: 'video-collect-list', params: { id: table.id } })
+}
+
+function openEditModal(table: VideoCollectTable) {
+  currentEditingTable.value = table
+  editModalVisible.value = true
+}
+
+async function toggleFinish(table: VideoCollectTable) {
+  const finish = !table.isFinish
+  try {
+    const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}finish`, { id: table.id, finish })
+    if (response.code !== 200) throw new Error(response.message)
+    table.isFinish = finish
+    message.success(finish ? '征集已结束' : '征集已重新开启')
+  } catch (error) {
+    console.error(error)
+    message.error(error instanceof Error ? error.message : '操作失败')
+  }
+}
+
+function confirmDelete(table: VideoCollectTable) {
+  dialog.warning({
+    title: '删除视频征集',
+    content: `确定删除“${table.name}”吗？此操作无法撤销。`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}del`, { id: table.id })
+        if (response.code !== 200) throw new Error(response.message)
+        videoTables.value = videoTables.value.filter((t) => t.id !== table.id)
+        message.success('征集已删除')
+      } catch (error) {
+        console.error(error)
+        message.error(error instanceof Error ? error.message : '删除失败')
+      }
+    },
+  })
+}
+
+function getRowDropdownOptions(table: VideoCollectTable) {
+  return [
+    {
+      label: '编辑规则',
+      key: 'edit',
+      icon: () => h(NIcon, null, { default: () => h(Edit24Regular) }),
+    },
+    {
+      label: isActive(table) ? '结束征集' : '重新开启',
+      key: 'toggle',
+      icon: () => h(NIcon, null, { default: () => h(TableDismiss24Regular) }),
+    },
+    { type: 'divider', key: 'divider' },
+    {
+      label: '删除征集',
+      key: 'delete',
+      icon: () => h(NIcon, { color: 'var(--vtsuru-error)' }, { default: () => h(Delete24Regular) }),
+    },
+  ]
+}
+
+function handleRowDropdown(key: string, table: VideoCollectTable) {
+  if (key === 'edit') openEditModal(table)
+  else if (key === 'toggle') toggleFinish(table)
+  else if (key === 'delete') confirmDelete(table)
+}
 </script>
 
 <template>
   <div class="video-collect-manage">
     <ManagePageHeader
       title="视频征集"
-      subtitle="征集活动与提交审核"
+      subtitle="征集活动管理与投稿审核"
       :function-type="FunctionTypes.VideoCollect"
       :loading="isLoading"
       :links="[{ label: '公开展示页', value: videoCollectUrl }]"
@@ -106,46 +253,63 @@ async function createTable(model: VideoCollectCreateModel) {
           :loading="isLoading"
           @click="loadTables"
         >
-          <template #icon>
-            <NIcon><ArrowSync24Regular /></NIcon>
-          </template>
+          <template #icon><NIcon :component="ArrowSync24Regular" /></template>
           刷新
         </NButton>
         <NButton
           type="primary"
           @click="createModalVisible = true"
         >
-          <template #icon>
-            <NIcon><Add20Regular /></NIcon>
-          </template>
+          <template #icon><NIcon :component="Add20Regular" /></template>
           新建征集
         </NButton>
       </template>
     </ManagePageHeader>
 
+    <!-- Bento 概览看板 -->
     <section
-      class="summary-strip"
+      class="summary-bento-grid"
       aria-label="视频征集概览"
     >
-      <div class="summary-item">
-        <span class="summary-label">全部征集</span>
+      <div
+        class="summary-card"
+        :class="{ 'is-active': statusFilter === 'all' }"
+        @click="statusFilter = 'all'"
+      >
+        <div class="summary-card__top">
+          <NIcon :component="Folder24Regular" />
+          <span>全部征集</span>
+        </div>
         <strong>{{ videoTables.length }}</strong>
       </div>
-      <div class="summary-item">
-        <span class="summary-label">未结束</span>
+
+      <div
+        class="summary-card is-active-card"
+        :class="{ 'is-active': statusFilter === 'active' }"
+        @click="statusFilter = 'active'"
+      >
+        <div class="summary-card__top">
+          <NIcon :component="Timer24Regular" />
+          <span>进行中/未结束</span>
+        </div>
         <strong>{{ activeTables.length }}</strong>
       </div>
-      <div class="summary-item">
-        <span class="summary-label">累计视频</span>
+
+      <div class="summary-card is-total-card">
+        <div class="summary-card__top">
+          <NIcon :component="Video24Regular" />
+          <span>累计征集视频</span>
+        </div>
         <strong>{{ totalVideoCount }}</strong>
       </div>
     </section>
 
+    <!-- 工具栏 -->
     <div class="collection-toolbar">
       <NInput
         v-model:value="keyword"
         clearable
-        placeholder="搜索名称或说明"
+        placeholder="搜索征集名称或说明..."
         class="collection-search"
       >
         <template #prefix>
@@ -157,16 +321,17 @@ async function createTable(model: VideoCollectCreateModel) {
         class="status-filter"
         :options="[
           { label: '全部状态', value: 'all' },
-          { label: '未结束', value: 'active' },
-          { label: '已结束', value: 'finished' },
+          { label: '仅进行中/未结束', value: 'active' },
+          { label: '仅已结束', value: 'finished' },
         ]"
       />
     </div>
 
+    <!-- 列表区 -->
     <NSpin :show="isLoading">
       <NEmpty
         v-if="!isLoading && filteredTables.length === 0"
-        :description="videoTables.length === 0 ? '暂无视频征集' : '没有符合条件的征集'"
+        :description="videoTables.length === 0 ? '暂无视频征集活动' : '没有符合条件的征集'"
         class="collection-empty"
       >
         <template
@@ -177,7 +342,7 @@ async function createTable(model: VideoCollectCreateModel) {
             type="primary"
             @click="createModalVisible = true"
           >
-            新建征集
+            立即创建第一个征集
           </NButton>
         </template>
       </NEmpty>
@@ -186,11 +351,10 @@ async function createTable(model: VideoCollectCreateModel) {
         v-else
         class="collection-list"
       >
-        <button
+        <div
           v-for="table in filteredTables"
           :key="table.id"
-          type="button"
-          class="collection-row"
+          class="collection-card"
           @click="router.push({ name: 'manage-videoCollect-Detail', params: { id: table.id } })"
         >
           <div class="collection-main">
@@ -204,7 +368,12 @@ async function createTable(model: VideoCollectCreateModel) {
               >
                 {{ tableStatus(table) }}
               </NTag>
-              <strong class="collection-title">{{ table.name }}</strong>
+              <strong
+                class="collection-title"
+                :title="table.name"
+              >
+                {{ table.name }}
+              </strong>
             </div>
             <p class="collection-description">
               {{ table.description || '未填写征集说明' }}
@@ -212,16 +381,19 @@ async function createTable(model: VideoCollectCreateModel) {
           </div>
 
           <div class="collection-deadline">
-            <span class="collection-meta-label">{{ tableStatus(table) === '未开始' ? '开放时间' : '截止时间' }}</span>
+            <span class="collection-meta-label">
+              {{ tableStatus(table) === '未开始' ? '开放时间' : '截止时间' }}
+            </span>
             <NTime
               :time="tableStatus(table) === '未开始' ? table.startAt : table.endAt"
               format="yyyy-MM-dd HH:mm"
+              class="deadline-time"
             />
           </div>
 
           <div class="collection-capacity">
             <div class="collection-capacity-label">
-              <span>占用名额</span>
+              <span>名额占用</span>
               <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
             </div>
             <NProgress
@@ -234,19 +406,68 @@ async function createTable(model: VideoCollectCreateModel) {
             />
           </div>
 
-          <NIcon
-            :component="ArrowRight24Regular"
-            class="collection-arrow"
-          />
-        </button>
+          <!-- 行内快捷操作区 -->
+          <div
+            class="collection-row-actions"
+            @click.stop
+          >
+            <NButton
+              size="small"
+              secondary
+              title="复制投稿页面链接"
+              @click.stop="copyShareLink(table)"
+            >
+              <template #icon><NIcon :component="Copy24Regular" /></template>
+              复制链接
+            </NButton>
+            <NButton
+              size="small"
+              secondary
+              title="查看展示结果页"
+              @click.stop="openResultPage(table)"
+            >
+              <template #icon><NIcon :component="Open24Regular" /></template>
+              结果页
+            </NButton>
+            <NDropdown
+              trigger="click"
+              :options="getRowDropdownOptions(table)"
+              @select="handleRowDropdown($event, table)"
+            >
+              <NButton
+                size="small"
+                secondary
+                circle
+                title="更多操作"
+                @click.stop
+              >
+                <template #icon><NIcon :component="MoreVertical24Regular" /></template>
+              </NButton>
+            </NDropdown>
+            <NIcon
+              :component="ArrowRight24Regular"
+              class="collection-arrow"
+            />
+          </div>
+        </div>
       </div>
     </NSpin>
 
+    <!-- 新建弹窗 -->
     <VideoCollectFormModal
       v-model:show="createModalVisible"
       title="新建视频征集"
       :loading="isCreating"
       @submit="createTable"
+    />
+
+    <!-- 编辑弹窗 -->
+    <VideoCollectFormModal
+      v-model:show="editModalVisible"
+      title="编辑视频征集规则"
+      :initial-value="editInitialValue"
+      :loading="isCreating"
+      @submit="updateTable"
     />
   </div>
 </template>
@@ -256,35 +477,65 @@ async function createTable(model: VideoCollectCreateModel) {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  color: var(--vtsuru-fg);
 }
 
-.summary-strip {
+/* Bento 概览看板 */
+.summary-bento-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-block: 1px solid var(--vtsuru-border);
+  gap: 12px;
 }
 
-.summary-item {
+.summary-card {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
   padding: 14px 18px;
-}
-
-.summary-item + .summary-item {
-  border-left: 1px solid var(--vtsuru-border);
-}
-
-.summary-item strong {
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.16s ease;
   color: var(--vtsuru-fg);
-  font-size: 22px;
-  line-height: 1.2;
 }
 
-.summary-label,
-.collection-meta-label {
+.summary-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--vtsuru-brand) 50%, var(--vtsuru-border));
+}
+
+.summary-card.is-active {
+  border-color: var(--vtsuru-brand);
+  background: color-mix(in srgb, var(--vtsuru-brand) 4%, var(--vtsuru-bg-elevated));
+}
+
+.summary-card__top {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
+  font-weight: 500;
+}
+
+.summary-card strong {
+  color: var(--vtsuru-fg);
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.summary-card.is-active-card .summary-card__top {
+  color: #10b981;
+}
+
+.summary-card.is-total-card {
+  cursor: default;
+}
+
+.summary-card.is-total-card:hover {
+  transform: none;
+  border-color: var(--vtsuru-border);
 }
 
 .collection-toolbar {
@@ -297,33 +548,34 @@ async function createTable(model: VideoCollectCreateModel) {
 }
 
 .status-filter {
-  width: 140px;
+  width: 160px;
 }
 
 .collection-list {
-  border-top: 1px solid var(--vtsuru-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.collection-row {
+.collection-card {
   display: grid;
-  grid-template-columns: minmax(220px, 1.6fr) minmax(150px, 0.7fr) minmax(170px, 0.8fr) 24px;
-  gap: 24px;
+  grid-template-columns: minmax(220px, 1.6fr) minmax(140px, 0.7fr) minmax(150px, 0.8fr) auto;
+  gap: 20px;
   align-items: center;
   width: 100%;
-  padding: 16px 12px;
-  color: var(--vtsuru-fg);
-  text-align: left;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--vtsuru-border);
+  padding: 14px 16px;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  color: var(--vtsuru-fg);
 }
 
-.collection-row:hover,
-.collection-row:focus-visible {
-  background: var(--vtsuru-bg-muted);
-  outline: none;
+.collection-card:hover {
+  border-color: color-mix(in srgb, var(--vtsuru-brand) 60%, var(--vtsuru-border));
+  background: color-mix(in srgb, var(--vtsuru-brand) 2%, var(--vtsuru-bg-elevated));
 }
 
 .collection-main,
@@ -334,20 +586,21 @@ async function createTable(model: VideoCollectCreateModel) {
 .collection-title-row {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   min-width: 0;
 }
 
 .collection-title {
   overflow: hidden;
   font-size: 15px;
+  color: var(--vtsuru-fg);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .collection-description {
   overflow: hidden;
-  margin: 7px 0 0;
+  margin: 6px 0 0;
   color: var(--vtsuru-fg-muted);
   font-size: 13px;
   line-height: 1.4;
@@ -358,14 +611,24 @@ async function createTable(model: VideoCollectCreateModel) {
 .collection-deadline {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
+  gap: 3px;
+  font-size: 12px;
+}
+
+.collection-meta-label {
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+}
+
+.deadline-time {
+  color: var(--vtsuru-fg);
+  font-weight: 500;
 }
 
 .collection-capacity-label {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 7px;
+  margin-bottom: 6px;
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
 }
@@ -375,44 +638,44 @@ async function createTable(model: VideoCollectCreateModel) {
   font-weight: 600;
 }
 
+.collection-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .collection-arrow {
   color: var(--vtsuru-fg-muted);
+  font-size: 18px;
+  margin-left: 4px;
 }
 
 .collection-empty {
   padding: 64px 0;
 }
 
-@media (max-width: 760px) {
-  .collection-row {
-    grid-template-columns: minmax(0, 1fr) 20px;
+@media (max-width: 880px) {
+  .collection-card {
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
-    padding: 15px 8px;
-  }
-
-  .collection-deadline,
-  .collection-capacity {
-    grid-column: 1;
   }
 
   .collection-deadline {
     flex-direction: row;
     gap: 8px;
+    align-items: center;
   }
 
-  .collection-arrow {
-    grid-row: 1 / 4;
-    grid-column: 2;
+  .collection-row-actions {
+    justify-content: flex-end;
+    border-top: 1px dashed var(--vtsuru-border);
+    padding-top: 10px;
   }
 }
 
-@media (max-width: 520px) {
-  .summary-item {
-    padding: 12px;
-  }
-
-  .summary-item strong {
-    font-size: 19px;
+@media (max-width: 540px) {
+  .summary-bento-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .collection-toolbar {

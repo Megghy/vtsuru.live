@@ -3,13 +3,19 @@ import {
   ArrowDownload24Regular,
   ArrowLeft24Regular,
   ArrowSync24Regular,
+  CheckmarkCircle24Regular,
+  Clock24Regular,
+  Copy24Regular,
   Delete24Regular,
+  DismissCircle24Regular,
   Edit24Regular,
+  Link24Regular,
   MoreVertical24Regular,
   Open24Regular,
   Search24Regular,
   Share24Regular,
   TableDismiss24Regular,
+  Timer24Regular,
 } from '@vicons/fluent'
 import { saveAs } from 'file-saver'
 import {
@@ -80,6 +86,7 @@ const pendingVideos = computed(() => videos.value.filter((item) => item.info.sta
 const acceptedVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Accepted))
 const rejectedVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Rejected))
 const acceptedDuration = computed(() => acceptedVideos.value.reduce((sum, item) => sum + item.video.length, 0))
+
 const editValue = computed<VideoCollectCreateModel | undefined>(() => {
   if (!table.value) return undefined
   return {
@@ -98,6 +105,7 @@ const editValue = computed<VideoCollectCreateModel | undefined>(() => {
     duplicatePolicy: table.value.duplicatePolicy,
   }
 })
+
 const visibleVideos = computed(() => {
   const search = keyword.value.trim().toLocaleLowerCase()
   const result = videos.value.filter((item) => {
@@ -118,9 +126,22 @@ const visibleVideos = computed(() => {
     return latestSubmitTime(b.info) - latestSubmitTime(a.info)
   })
 })
+
 const moreOptions = computed(() => [
   {
-    label: '导出通过结果',
+    label: '复制所有通过 BV 号',
+    key: 'copy-bvids',
+    disabled: acceptedVideos.value.length === 0,
+    icon: () => h(NIcon, null, { default: () => h(Copy24Regular) }),
+  },
+  {
+    label: '复制所有通过视频链接',
+    key: 'copy-links',
+    disabled: acceptedVideos.value.length === 0,
+    icon: () => h(NIcon, null, { default: () => h(Link24Regular) }),
+  },
+  {
+    label: '导出通过结果 (CSV)',
     key: 'export',
     disabled: acceptedVideos.value.length === 0,
     icon: () => h(NIcon, null, { default: () => h(ArrowDownload24Regular) }),
@@ -207,6 +228,7 @@ function clearSelection() {
   selectedBvids.value = []
 }
 
+/** 并发限流批量审核，避免纯串行卡死 */
 async function batchSetStatus(status: VideoStatus) {
   const targets = visibleVideos.value.filter((item) => selectedBvids.value.includes(item.info.bvid))
   if (!targets.length) {
@@ -216,21 +238,30 @@ async function batchSetStatus(status: VideoStatus) {
   isBatchUpdating.value = true
   let success = 0
   let failed = 0
-  try {
-    for (const item of targets) {
+  const concurrency = 4
+  let queueIndex = 0
+
+  async function worker() {
+    while (queueIndex < targets.length) {
+      const current = targets[queueIndex++]
       try {
         const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}set-status`, {
           id: currentId(),
-          bvid: item.info.bvid,
+          bvid: current.info.bvid,
           status,
         })
         if (response.code !== 200) throw new Error(response.message)
-        updateLocalStatus(item.info, status)
+        updateLocalStatus(current.info, status)
         success++
       } catch {
         failed++
       }
     }
+  }
+
+  try {
+    const workerCount = Math.min(concurrency, targets.length)
+    await Promise.all(Array.from({ length: workerCount }, worker))
     selectedBvids.value = []
     if (failed === 0) message.success(`已批量更新 ${success} 条`)
     else message.warning(`成功 ${success} 条，失败 ${failed} 条`)
@@ -302,11 +333,29 @@ async function deleteTable() {
 }
 
 function handleMoreAction(key: string) {
-  if (key === 'export') {
+  if (key === 'copy-bvids') {
+    copyAcceptedBvids()
+  } else if (key === 'copy-links') {
+    copyAcceptedLinks()
+  } else if (key === 'export') {
     exportResults()
   } else if (key === 'delete') {
     confirmDelete()
   }
+}
+
+function copyAcceptedBvids() {
+  if (acceptedVideos.value.length === 0) return
+  const text = acceptedVideos.value.map((item) => item.info.bvid).join('\n')
+  copyToClipboard(text)
+  message.success(`已复制 ${acceptedVideos.value.length} 个通过的 BV 号`)
+}
+
+function copyAcceptedLinks() {
+  if (acceptedVideos.value.length === 0) return
+  const text = acceptedVideos.value.map((item) => `https://www.bilibili.com/video/${item.info.bvid}`).join('\n')
+  copyToClipboard(text)
+  message.success(`已复制 ${acceptedVideos.value.length} 个通过的视频链接`)
 }
 
 function exportResults() {
@@ -341,7 +390,7 @@ function saveQrCode() {
       <template v-if="videoDetail && table">
         <ManagePageHeader
           :title="table.name"
-          subtitle="投稿审核"
+          subtitle="视频征集审核"
           :loading="Boolean(tableOperation)"
         >
           <template #action>
@@ -349,37 +398,29 @@ function saveQrCode() {
               secondary
               @click="router.push({ name: 'manage-videoCollect' })"
             >
-              <template #icon
-                ><NIcon><ArrowLeft24Regular /></NIcon
-              ></template>
-              返回
+              <template #icon><NIcon :component="ArrowLeft24Regular" /></template>
+              返回列表
             </NButton>
             <NButton
               type="primary"
               @click="router.push({ name: 'video-collect-list', params: { id: table.id }, query: route.query })"
             >
-              <template #icon>
-                <NIcon :component="Open24Regular" />
-              </template>
+              <template #icon><NIcon :component="Open24Regular" /></template>
               查看结果页
             </NButton>
             <NButton
               secondary
               @click="shareModalVisible = true"
             >
-              <template #icon
-                ><NIcon><Share24Regular /></NIcon
-              ></template>
-              分享
+              <template #icon><NIcon :component="Share24Regular" /></template>
+              分享征集
             </NButton>
             <NButton
               secondary
               @click="editModalVisible = true"
             >
-              <template #icon
-                ><NIcon><Edit24Regular /></NIcon
-              ></template>
-              编辑
+              <template #icon><NIcon :component="Edit24Regular" /></template>
+              编辑规则
             </NButton>
             <NButton
               secondary
@@ -387,9 +428,7 @@ function saveQrCode() {
               :loading="tableOperation === 'toggle'"
               @click="toggleCollection"
             >
-              <template #icon
-                ><NIcon><TableDismiss24Regular /></NIcon
-              ></template>
+              <template #icon><NIcon :component="TableDismiss24Regular" /></template>
               {{ isActive ? '结束征集' : '重新开启' }}
             </NButton>
             <NDropdown
@@ -402,135 +441,155 @@ function saveQrCode() {
                 circle
                 title="更多操作"
               >
-                <template #icon
-                  ><NIcon><MoreVertical24Regular /></NIcon
-                ></template>
+                <template #icon><NIcon :component="MoreVertical24Regular" /></template>
               </NButton>
             </NDropdown>
           </template>
         </ManagePageHeader>
 
-        <section class="collection-overview">
-          <div class="collection-copy">
-            <div class="collection-state">
-              <NTag
-                :type="collectionStatus === '进行中' ? 'success' : collectionStatus === '未开始' ? 'info' : 'default'"
-                :bordered="false"
-              >
-                {{ collectionStatus }}
-              </NTag>
-              <span>
+        <!-- Bento 风格概览指标卡片组 -->
+        <section
+          class="overview-dashboard"
+          aria-label="征集审核概览"
+        >
+          <div class="overview-main-card">
+            <div class="overview-header-row">
+              <div class="overview-status-group">
+                <NTag
+                  size="small"
+                  :type="collectionStatus === '进行中' ? 'success' : collectionStatus === '未开始' ? 'info' : 'default'"
+                  :bordered="false"
+                >
+                  {{ collectionStatus }}
+                </NTag>
+                <span class="overview-time-hint">
+                  开放于
+                  <NTime
+                    :time="table.startAt"
+                    format="MM-dd HH:mm"
+                  />
+                  至
+                  <NTime
+                    :time="table.endAt"
+                    format="MM-dd HH:mm"
+                  />
+                </span>
+              </div>
+              <span class="overview-created">
                 创建于
                 <NTime
                   :time="table.createAt"
-                  format="yyyy-MM-dd HH:mm"
+                  type="relative"
                 />
               </span>
             </div>
-            <p>{{ table.description || '未填写征集说明' }}</p>
-            <div class="collection-facts">
-              <div>
-                <span>开放时间</span>
-                <strong>
-                  <NTime
-                    :time="table.startAt"
-                    format="yyyy-MM-dd HH:mm"
-                  />
-                </strong>
-              </div>
-              <div>
-                <span>截止时间</span>
-                <strong>
-                  <NTime
-                    :time="table.endAt"
-                    format="yyyy-MM-dd HH:mm"
-                  />
-                </strong>
-              </div>
-              <div>
-                <span>剩余名额</span>
-                <strong>{{ Math.max(0, table.maxVideoCount - table.videoCount) }}</strong>
-              </div>
-            </div>
-            <div class="capacity-progress">
-              <div class="capacity-heading">
-                <span>占用名额</span>
-                <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
+
+            <p class="overview-desc">
+              {{ table.description || '未填写征集说明' }}
+            </p>
+
+            <div class="overview-capacity">
+              <div class="capacity-labels">
+                <span class="capacity-title">征集名额进度</span>
+                <span class="capacity-val">
+                  <strong>{{ table.videoCount }}</strong> / {{ table.maxVideoCount }}
+                  <span class="capacity-remain">(剩余 {{ Math.max(0, table.maxVideoCount - table.videoCount) }})</span>
+                </span>
               </div>
               <NProgress
                 type="line"
                 :percentage="Math.min(100, Math.round((table.videoCount / table.maxVideoCount) * 100))"
                 :height="6"
                 :show-indicator="false"
+                :status="table.videoCount >= table.maxVideoCount ? 'success' : 'default'"
               />
             </div>
-            <div class="rule-tags">
-              <NTag
-                size="small"
-                :bordered="false"
-              >
-                待审核 + 已通过占名额，拒绝后释放
-              </NTag>
-              <NTag
-                size="small"
-                :bordered="false"
-              >
-                {{ table.allowUnregisteredUser ? '允许游客投稿' : '仅限已绑定账号' }}
-              </NTag>
-              <NTag
-                v-if="table.minVideoDuration || table.maxVideoDuration"
-                size="small"
-                :bordered="false"
-              >
-                时长 {{ table.minVideoDuration ? formatDuration(table.minVideoDuration) : '不限' }} -
-                {{ table.maxVideoDuration ? formatDuration(table.maxVideoDuration) : '不限' }}
-              </NTag>
-              <NTag
-                v-if="table.maxVideoPerUser"
-                size="small"
-                :bordered="false"
-              >
-                每人最多 {{ table.maxVideoPerUser }} 个
-              </NTag>
-              <NTag
+
+            <div class="overview-rules-row">
+              <span class="rule-chip">
+                {{ table.allowUnregisteredUser ? '允许游客投稿' : '仅限绑定账号' }}
+              </span>
+              <span class="rule-chip">
+                {{ table.duplicatePolicy === DuplicateVideoPolicy.Reject ? '拒绝重复' : '重复合并' }}
+              </span>
+              <span
                 v-if="table.requireDescription"
-                size="small"
-                :bordered="false"
+                class="rule-chip"
               >
                 推荐理由必填
-              </NTag>
-              <NTag
-                size="small"
-                :bordered="false"
+              </span>
+              <span
+                v-if="table.minVideoDuration || table.maxVideoDuration"
+                class="rule-chip"
               >
-                {{ table.duplicatePolicy === DuplicateVideoPolicy.Reject ? '拒绝重复视频' : '重复视频合并推荐人' }}
-              </NTag>
-              <NTag
-                v-for="partition in table.allowedPartitions"
-                :key="partition"
-                size="small"
-                :bordered="false"
+                时长 {{ table.minVideoDuration ? formatDuration(table.minVideoDuration) : '不限' }} ~
+                {{ table.maxVideoDuration ? formatDuration(table.maxVideoDuration) : '不限' }}
+              </span>
+              <span
+                v-if="table.maxVideoPerUser"
+                class="rule-chip"
               >
-                {{ partition }}
-              </NTag>
+                每人限 {{ table.maxVideoPerUser }} 个
+              </span>
+              <span
+                v-for="part in table.allowedPartitions"
+                :key="part"
+                class="rule-chip is-partition"
+              >
+                {{ part }}
+              </span>
             </div>
           </div>
-          <div class="review-stats">
-            <div>
-              <span>待审核</span><strong>{{ pendingVideos.length }}</strong>
+
+          <!-- 4 宫格统计指标 -->
+          <div class="overview-metrics-grid">
+            <div
+              class="metric-box is-pending"
+              :class="{ 'is-active': activeStatus === VideoStatus.Pending }"
+              @click="activeStatus = VideoStatus.Pending"
+            >
+              <div class="metric-top">
+                <NIcon :component="Timer24Regular" />
+                <span>待审核</span>
+              </div>
+              <strong class="metric-num">{{ pendingVideos.length }}</strong>
             </div>
-            <div>
-              <span>已通过</span><strong>{{ acceptedVideos.length }}</strong>
+
+            <div
+              class="metric-box is-accepted"
+              :class="{ 'is-active': activeStatus === VideoStatus.Accepted }"
+              @click="activeStatus = VideoStatus.Accepted"
+            >
+              <div class="metric-top">
+                <NIcon :component="CheckmarkCircle24Regular" />
+                <span>已通过</span>
+              </div>
+              <strong class="metric-num">{{ acceptedVideos.length }}</strong>
             </div>
-            <div>
-              <span>已拒绝</span><strong>{{ rejectedVideos.length }}</strong>
+
+            <div
+              class="metric-box is-rejected"
+              :class="{ 'is-active': activeStatus === VideoStatus.Rejected }"
+              @click="activeStatus = VideoStatus.Rejected"
+            >
+              <div class="metric-top">
+                <NIcon :component="DismissCircle24Regular" />
+                <span>已拒绝</span>
+              </div>
+              <strong class="metric-num">{{ rejectedVideos.length }}</strong>
             </div>
-            <div>
-              <span>通过总时长</span><strong class="duration-value">{{ formatDuration(acceptedDuration) }}</strong>
+
+            <div class="metric-box is-duration">
+              <div class="metric-top">
+                <NIcon :component="Clock24Regular" />
+                <span>通过总时长</span>
+              </div>
+              <strong class="metric-num is-time">{{ formatDuration(acceptedDuration) }}</strong>
             </div>
           </div>
         </section>
 
+        <!-- 审核工作台 -->
         <section class="review-workspace">
           <NTabs
             v-model:value="activeStatus"
@@ -540,35 +599,38 @@ function saveQrCode() {
           >
             <NTabPane :name="VideoStatus.Pending">
               <template #tab>
-                <span class="status-tab"
-                  >待审核
+                <span class="status-tab">
+                  待审核
                   <NBadge
                     :value="pendingVideos.length"
                     :max="99"
                     type="warning"
-                /></span>
+                  />
+                </span>
               </template>
             </NTabPane>
             <NTabPane :name="VideoStatus.Accepted">
               <template #tab>
-                <span class="status-tab"
-                  >已通过
+                <span class="status-tab">
+                  已通过
                   <NBadge
                     :value="acceptedVideos.length"
                     :max="99"
                     type="success"
-                /></span>
+                  />
+                </span>
               </template>
             </NTabPane>
             <NTabPane :name="VideoStatus.Rejected">
               <template #tab>
-                <span class="status-tab"
-                  >已拒绝
+                <span class="status-tab">
+                  已拒绝
                   <NBadge
                     :value="rejectedVideos.length"
                     :max="99"
                     type="error"
-                /></span>
+                  />
+                </span>
               </template>
             </NTabPane>
           </NTabs>
@@ -577,7 +639,7 @@ function saveQrCode() {
             <NInput
               v-model:value="keyword"
               clearable
-              placeholder="搜索标题、BV 号、UP 主或推荐人"
+              placeholder="搜索标题、BV 号、UP 主或推荐人..."
               class="review-search"
             >
               <template #prefix><NIcon :component="Search24Regular" /></template>
@@ -597,13 +659,12 @@ function saveQrCode() {
               :loading="isLoading"
               @click="loadData"
             >
-              <template #icon
-                ><NIcon><ArrowSync24Regular /></NIcon
-              ></template>
+              <template #icon><NIcon :component="ArrowSync24Regular" /></template>
               刷新
             </NButton>
           </div>
 
+          <!-- 批量操作控制条 -->
           <div
             v-if="visibleVideos.length > 0"
             class="batch-bar"
@@ -623,7 +684,7 @@ function saveQrCode() {
             >
               清空选择
             </NButton>
-            <span class="batch-count">已选 {{ selectedBvids.length }}</span>
+            <span class="batch-count">已选 {{ selectedBvids.length }} / {{ visibleVideos.length }}</span>
             <NButton
               v-if="activeStatus !== VideoStatus.Accepted"
               size="small"
@@ -658,9 +719,10 @@ function saveQrCode() {
             </NButton>
           </div>
 
+          <!-- 视频卡片列表 -->
           <NEmpty
             v-if="visibleVideos.length === 0"
-            :description="keyword ? '没有符合条件的视频' : '此状态下暂无视频'"
+            :description="keyword ? '没有符合搜索条件的视频' : '此状态下暂无投稿视频'"
             class="review-empty"
           />
           <div
@@ -694,27 +756,29 @@ function saveQrCode() {
       </NResult>
     </NSpin>
 
+    <!-- 分享征集二维码与链接弹窗 -->
     <NModal
       v-model:show="shareModalVisible"
       preset="card"
       title="分享视频征集"
       class="share-modal"
-      style="max-height: 90vh"
-      content-style="overflow-y: auto; max-height: calc(90vh - 110px);"
+      style="width: 440px; max-width: calc(100vw - 32px)"
     >
       <div class="share-content">
         <div
           ref="qrCodeWrapper"
-          class="qr-code"
+          class="qr-code-box"
         >
           <Qrcode
             :value="shareUrl"
             level="Q"
-            :size="196"
-            background="#fff"
-            :margin="1"
+            :size="180"
+            background="#ffffff"
+            foreground="#000000"
+            :margin="2"
           />
         </div>
+        <p class="share-tip">微信 / B 站等扫码直接投稿</p>
         <NInputGroup>
           <NInput
             :value="shareUrl"
@@ -729,19 +793,19 @@ function saveQrCode() {
         </NInputGroup>
         <NButton
           secondary
+          block
           @click="saveQrCode"
         >
-          <template #icon
-            ><NIcon><ArrowDownload24Regular /></NIcon
-          ></template>
-          保存二维码
+          <template #icon><NIcon :component="ArrowDownload24Regular" /></template>
+          保存二维码图片
         </NButton>
       </div>
     </NModal>
 
+    <!-- 编辑表单弹窗 -->
     <VideoCollectFormModal
       v-model:show="editModalVisible"
-      title="编辑视频征集"
+      title="编辑视频征集规则"
       :initial-value="editValue"
       :loading="tableOperation === 'edit'"
       @submit="updateTable"
@@ -750,230 +814,279 @@ function saveQrCode() {
 </template>
 
 <style scoped>
-.video-collect-detail,
-.review-workspace {
+.video-collect-detail {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.collection-overview {
-  display: grid;
-  grid-template-columns: minmax(280px, 1.3fr) minmax(420px, 1fr);
-  margin-top: 16px;
-  border-block: 1px solid var(--vtsuru-border);
-}
-
-.collection-copy {
-  min-width: 0;
-  padding: 18px 20px 18px 4px;
-}
-
-.collection-state {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.collection-copy p {
-  margin: 12px 0 14px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.collection-facts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-block: 1px solid var(--vtsuru-border);
-}
-
-.collection-facts > div {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-  padding: 10px 0;
-}
-
-.collection-facts > div + div {
-  padding-left: 18px;
-  border-left: 1px solid var(--vtsuru-border);
-}
-
-.collection-facts span,
-.capacity-heading span {
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.collection-facts strong,
-.capacity-heading strong {
-  overflow: hidden;
   color: var(--vtsuru-fg);
-  font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.capacity-progress {
+/* Bento 风格概览指标 */
+.overview-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.overview-main-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  color: var(--vtsuru-fg);
 }
 
-.rule-tags {
+.overview-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.overview-status-group {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.overview-time-hint,
+.overview-created {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
+.overview-desc {
+  margin: 0;
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.overview-capacity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.capacity-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+}
+
+.capacity-title {
+  color: var(--vtsuru-fg-muted);
+}
+
+.capacity-val {
+  color: var(--vtsuru-fg-muted);
+}
+
+.capacity-val strong {
+  color: var(--vtsuru-fg);
+  font-weight: 700;
+}
+
+.capacity-remain {
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+}
+
+.overview-rules-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 12px;
+  margin-top: auto;
 }
 
-.capacity-heading {
-  display: flex;
-  justify-content: space-between;
+.rule-chip {
+  padding: 2px 8px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 11px;
+  background: var(--vtsuru-bg-muted);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 4px;
 }
 
-.review-stats {
+.rule-chip.is-partition {
+  color: var(--vtsuru-brand);
+  background: color-mix(in srgb, var(--vtsuru-brand) 8%, transparent);
+}
+
+.overview-metrics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-left: 1px solid var(--vtsuru-border);
+  gap: 12px;
 }
 
-.review-stats > div {
+.metric-box {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  min-width: 0;
-  padding: 14px 18px;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.16s ease;
 }
 
-.review-stats > div:nth-child(odd) {
-  border-right: 1px solid var(--vtsuru-border);
+.metric-box:hover {
+  transform: translateY(-1px);
 }
 
-.review-stats > div:nth-child(-n + 2) {
-  border-bottom: 1px solid var(--vtsuru-border);
+.metric-box.is-pending.is-active,
+.metric-box.is-pending:hover {
+  border-color: #f59e0b;
 }
 
-.review-stats span {
+.metric-box.is-accepted.is-active,
+.metric-box.is-accepted:hover {
+  border-color: #10b981;
+}
+
+.metric-box.is-rejected.is-active,
+.metric-box.is-rejected:hover {
+  border-color: #ef4444;
+}
+
+.metric-top {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
+  font-weight: 500;
 }
 
-.review-stats strong {
-  font-size: 20px;
-  line-height: 1.2;
+.metric-box.is-pending .metric-top {
+  color: #f59e0b;
 }
 
-.review-stats .duration-value {
-  overflow: hidden;
-  font-size: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.metric-box.is-accepted .metric-top {
+  color: #10b981;
 }
 
-.status-tabs {
-  width: min(560px, 100%);
+.metric-box.is-rejected .metric-top {
+  color: #ef4444;
 }
 
+.metric-num {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--vtsuru-fg);
+  line-height: 1.1;
+  margin-top: 6px;
+}
+
+.metric-num.is-time {
+  font-size: 18px;
+}
+
+/* 审核工作台 */
 .review-workspace {
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.status-tabs :deep(.n-tabs-tab) {
+  padding: 8px 16px;
 }
 
 .status-tab {
-  display: flex;
-  gap: 8px;
+  display: inline-flex;
+  gap: 6px;
   align-items: center;
+  font-weight: 600;
 }
 
 .review-toolbar {
   display: flex;
   gap: 10px;
+  align-items: center;
+}
+
+.review-search {
+  flex: 1;
+  max-width: 420px;
+}
+
+.review-sort {
+  width: 150px;
 }
 
 .batch-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--vtsuru-bg-elevated);
   border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
+  border-radius: 6px;
 }
 
 .batch-count {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  margin-right: 4px;
-}
-
-.review-search {
-  width: min(440px, 100%);
-}
-
-.review-sort {
-  width: 170px;
-}
-
-.video-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-  gap: 12px;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
+  margin-right: 6px;
 }
 
 .review-empty {
   padding: 64px 0;
 }
 
-.share-modal {
-  width: min(520px, calc(100vw - 32px));
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
 }
 
+/* 分享弹窗 */
 .share-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   align-items: center;
+  gap: 14px;
 }
 
-.qr-code {
+.qr-code-box {
   display: flex;
-  padding: 10px;
-  background: #fff;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.share-tip {
+  margin: 0;
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
 }
 
 @media (max-width: 860px) {
-  .collection-overview {
-    grid-template-columns: 1fr;
-  }
-
-  .collection-copy {
-    padding-right: 4px;
-  }
-
-  .review-stats {
-    border-top: 1px solid var(--vtsuru-border);
-    border-left: 0;
+  .overview-dashboard {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media (max-width: 620px) {
-  .collection-facts {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .collection-facts > div + div {
-    padding-left: 0;
-    border-top: 1px solid var(--vtsuru-border);
-    border-left: 0;
+@media (max-width: 560px) {
+  .overview-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .review-toolbar {
@@ -981,16 +1094,12 @@ function saveQrCode() {
   }
 
   .review-search {
+    max-width: 100%;
     width: 100%;
   }
 
   .review-sort {
     flex: 1;
-    width: auto;
-  }
-
-  .video-grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>

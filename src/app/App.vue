@@ -113,6 +113,8 @@ watchEffect(() => {
 html,
 body {
   margin: 0;
+  color: var(--vtsuru-fg);
+  background-color: var(--vtsuru-bg);
 }
 
 :root {

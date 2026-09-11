@@ -107,6 +107,7 @@ onMounted(() => {
 .manage-shell {
   height: 100vh;
   background: var(--vtsuru-bg);
+  color: var(--vtsuru-fg);
 }
 
 .manage-shell {
