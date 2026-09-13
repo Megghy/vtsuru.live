@@ -1,7 +1,9 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ViolationTypes } from '@/api/api-models'
+import * as queryApi from '@/api/query'
+import { QUESTION_API_URL } from '@/shared/config'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { createMockQuestion } from '@/test/testUtils'
 
@@ -94,6 +96,40 @@ describe('useQuestionBox store', () => {
       expect(store.getViolationString(ViolationTypes.SENSITIVE_TERM)).toBe('敏感词')
       expect(store.getViolationString(ViolationTypes.HATE)).toBe('辱骂')
       expect(store.getViolationString(ViolationTypes.ADVERTISING)).toBe('广告')
+    })
+  })
+
+  describe('话题与标签 API 契约', () => {
+    it('addTag 正确调用 GET add-tag', async () => {
+      const getSpy = vi.spyOn(queryApi, 'QueryGetAPI').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      await store.addTag('新话题')
+      expect(getSpy).toHaveBeenCalledWith(`${QUESTION_API_URL}add-tag`, { tag: '新话题' })
+    })
+
+    it('delTag 正确调用 GET del-tag', async () => {
+      const getSpy = vi.spyOn(queryApi, 'QueryGetAPI').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      await store.delTag('旧话题')
+      expect(getSpy).toHaveBeenCalledWith(`${QUESTION_API_URL}del-tag`, { tag: '旧话题' })
+    })
+
+    it('changeTagVisiable 正确调用 GET update-tag-visiable', async () => {
+      const getSpy = vi.spyOn(queryApi, 'QueryGetAPI').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      await store.changeTagVisiable('话题A', false)
+      expect(getSpy).toHaveBeenCalledWith(`${QUESTION_API_URL}update-tag-visiable`, {
+        tag: '话题A',
+        visiable: false,
+      })
+    })
+
+    it('reply 正确调用 POST reply 且字段为 message', async () => {
+      const postSpy = vi.spyOn(queryApi, 'QueryPostAPI').mockResolvedValue({ code: 200, message: 'ok', data: {} })
+      store.recieveQuestions = [createMockQuestion({ id: 101, answer: undefined })]
+      await store.reply(101, '感谢提问！')
+      expect(postSpy).toHaveBeenCalledWith(`${QUESTION_API_URL}reply`, {
+        id: 101,
+        message: '感谢提问！',
+      })
+      expect(store.recieveQuestions.find((q) => q.id === 101)?.answer?.message).toBe('感谢提问！')
     })
   })
 })

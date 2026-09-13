@@ -234,7 +234,7 @@ export async function UploadConfig(name: string, data: unknown, isPublic: boolea
 }
 export async function GetConfigHash(name: string) {
   try {
-    const resp = await QueryGetAPI<string>(`${USER_CONFIG_API_URL}hash`, {
+    const resp = await QueryGetAPI<string>(`${USER_CONFIG_API_URL}get-hash`, {
       name,
     })
     if (resp.code == 200) {

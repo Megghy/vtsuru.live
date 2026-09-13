@@ -20,7 +20,12 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   const isRepling = ref(false)
   const isChangingPublic = ref(false)
   const accountInfo = useAccount()
-  const message = window.$message
+  const message = {
+    info: (msg?: string) => window.$message?.info(msg ?? ''),
+    success: (msg?: string) => window.$message?.success(msg ?? ''),
+    warning: (msg?: string) => window.$message?.warning(msg ?? ''),
+    error: (msg?: string) => window.$message?.error(msg ?? ''),
+  }
 
   const recieveQuestions = ref<QAInfo[]>([])
   const sendQuestions = ref<QAInfo[]>([])
@@ -177,7 +182,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
 
     try {
-      const resp = await QueryPostAPI(`${QUESTION_API_URL}tag/add`, { name: tagName.trim() })
+      const resp = await QueryGetAPI(`${QUESTION_API_URL}add-tag`, { tag: tagName.trim() })
       if (resp.code === 200) {
         message.success('添加成功')
         await GetTags()
@@ -191,7 +196,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   async function delTag(tagName: string) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}tag/del`, { name: tagName })
+      const resp = await QueryGetAPI(`${QUESTION_API_URL}del-tag`, { tag: tagName })
       if (resp.code === 200) {
         message.success('删除成功')
         await GetTags()
@@ -205,8 +210,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   async function changeTagVisiable(tagName: string, isVisiable: boolean) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}tag/visiable`, {
-        name: tagName,
+      const resp = await QueryGetAPI(`${QUESTION_API_URL}update-tag-visiable`, {
+        tag: tagName,
         visiable: isVisiable,
       })
       if (resp.code === 200) {
@@ -225,7 +230,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     try {
       const resp = await QueryPostAPI(`${QUESTION_API_URL}reply`, {
         id,
-        reply: replyMsg,
+        message: replyMsg,
       })
       if (resp.code === 200) {
         message.success('回复成功')

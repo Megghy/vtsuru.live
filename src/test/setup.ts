@@ -42,6 +42,19 @@ if (typeof window !== 'undefined') {
   if (typeof navigator !== 'undefined' && !navigator.getGamepads) {
     navigator.getGamepads = () => []
   }
+  // 模拟全局 UI 提示
+  const mockMessage = {
+    info: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+    loading: vi.fn(),
+    create: vi.fn(),
+    destroyAll: vi.fn(),
+  }
+  window.$message = (window.$message || mockMessage) as typeof window.$message
+  window.$dialog = (window.$dialog || {}) as typeof window.$dialog
+  window.$notification = (window.$notification || {}) as typeof window.$notification
 }
 
 beforeEach(() => {
