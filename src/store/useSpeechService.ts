@@ -441,6 +441,68 @@ function createSpeechService() {
     }
   }
 
+  // 播放器必须由 store 持有：页面卸载后 SpeechMiniController 仍要继续播
+  function ensureAudioElement(): HTMLAudioElement {
+    if (apiAudio.value) return apiAudio.value
+    const el = new Audio()
+    el.addEventListener('canplay', () => {
+      speechState.isApiAudioLoading = false
+      clearLoadingTimeout()
+    })
+    el.addEventListener('ended', () => {
+      cancelSpeech()
+    })
+    el.addEventListener('error', () => {
+      clearLoadingTimeout()
+      if (!speechState.apiAudioSrc) return
+      message.error('音频加载失败')
+      cancelSpeech()
+    })
+    el.addEventListener('loadedmetadata', () => {
+      void setAudioOutputDevice()
+    })
+    apiAudio.value = el
+    return el
+  }
+
+  async function setAudioOutputDevice() {
+    const el = apiAudio.value
+    const deviceId = settings.value.outputDeviceId
+    if (!el || !deviceId) return
+    try {
+      if (typeof el.setSinkId === 'function') await el.setSinkId(deviceId)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function playApiAudio(url: string, runId: number) {
+    const el = ensureAudioElement()
+    el.volume = Math.min(1, Math.max(0, settings.value.speechInfo.volume ?? 1))
+    void setAudioOutputDevice()
+    speechState.apiAudioSrc = url
+    el.src = url
+    el.play()
+      .then(() => {
+        if (runId !== speechRunId) return
+        speechState.isApiAudioLoading = false
+        clearLoadingTimeout()
+      })
+      .catch((error) => {
+        if (runId !== speechRunId) return
+        console.error('[TTS] 音频播放失败:', error)
+        message.error(`音频播放失败: ${error instanceof Error ? error.message : '未知错误'}`)
+        cancelSpeech()
+      })
+  }
+
+  watch(
+    () => settings.value.speechInfo.volume,
+    (volume) => {
+      if (apiAudio.value) apiAudio.value.volume = Math.min(1, Math.max(0, volume ?? 1))
+    },
+  )
+
   const speechSynthesisInfo = ref<{
     speechSynthesis: SpeechSynthesis | undefined
     speechSynthesisUtterance: SpeechSynthesisUtterance | undefined
@@ -476,6 +538,7 @@ function createSpeechService() {
 
       const provider = getCurrentProvider()
       if (provider) await provider.initialize()
+      ensureAudioElement()
 
       speechQueueTimer = setInterval(() => {
         processQueue()
@@ -727,10 +790,7 @@ function createSpeechService() {
             const url = URL.createObjectURL(blob)
             revokePendingObjectUrl()
             pendingObjectUrl = url
-            setTimeout(() => {
-              if (runId !== speechRunId) return
-              speechState.apiAudioSrc = url
-            }, 0)
+            playApiAudio(url, runId)
           })
           .catch((error) => {
             if (runId !== speechRunId) return
@@ -744,10 +804,7 @@ function createSpeechService() {
           cancelSpeech()
           return
         }
-        setTimeout(() => {
-          if (runId !== speechRunId) return
-          speechState.apiAudioSrc = url
-        }, 0)
+        playApiAudio(url, runId)
       } else {
         message.error('当前语音提供商未实现音频获取')
         cancelSpeech()
@@ -867,11 +924,14 @@ function createSpeechService() {
     }
 
     speechState.isApiAudioLoading = false
-
-    if (apiAudio.value && !apiAudio.value.paused) {
-      apiAudio.value.pause()
-    }
     speechState.apiAudioSrc = ''
+
+    const el = apiAudio.value
+    if (el) {
+      el.pause()
+      el.removeAttribute('src')
+      el.load()
+    }
     revokePendingObjectUrl()
 
     getCurrentProvider()?.stop()
@@ -1204,6 +1264,7 @@ function createSpeechService() {
     previewVoice,
     buildApiUrl,
     getCurrentProvider,
+    setAudioOutputDevice,
     togglePause: () => {
       isPaused.value = !isPaused.value
     },

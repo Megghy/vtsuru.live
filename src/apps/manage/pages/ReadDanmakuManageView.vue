@@ -60,7 +60,7 @@ const accountInfo = useAccount()
 const client = useDanmakuClient()
 const speechService = useSpeechService()
 
-const { settings, speechState, speakQueue, readedDanmaku, isPaused, speechSynthesisInfo, apiAudio } = speechService
+const { speechState, speakQueue, readedDanmaku, isPaused, speechSynthesisInfo } = speechService
 
 const audioOutputDevices = ref<{ label: string; value: string }[]>([])
 const audioOutputDevicesLoading = ref(false)
@@ -98,15 +98,6 @@ async function fetchAudioOutputDevices() {
     /* ignore */
   } finally {
     audioOutputDevicesLoading.value = false
-  }
-}
-
-async function setAudioOutputDevice() {
-  if (!apiAudio.value || !settings.value.outputDeviceId) return
-  try {
-    if (typeof apiAudio.value.setSinkId === 'function') await apiAudio.value.setSinkId(settings.value.outputDeviceId)
-  } catch {
-    /* ignore */
   }
 }
 
@@ -285,7 +276,7 @@ onDeactivated(unbindKeydown)
                 <AdvancedSettingsPanel
                   :audio-output-devices="audioOutputDevices"
                   :audio-output-devices-loading="audioOutputDevicesLoading"
-                  @device-change="setAudioOutputDevice"
+                  @device-change="speechService.setAudioOutputDevice"
                 />
               </div>
             </NTabPane>

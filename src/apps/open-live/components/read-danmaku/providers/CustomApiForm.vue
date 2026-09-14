@@ -21,12 +21,7 @@ const schemeOptions = [
 ]
 
 function test() {
-  const url = speechService.buildApiUrl('这是一条测试弹幕')
-  if (url) {
-    speechState.isSpeaking = true
-    speechState.isApiAudioLoading = true
-    speechState.apiAudioSrc = url
-  }
+  void speechService.previewVoice('这是一条测试弹幕')
 }
 </script>
 
