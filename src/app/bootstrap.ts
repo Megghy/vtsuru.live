@@ -94,8 +94,9 @@ function showAPIFailoverNotification() {
 }
 
 function canInitHyperDX(): boolean {
-  if (import.meta.env.MODE === 'development') return false
-  if (window.$route.path.startsWith('/obs')) return false
+  if (import.meta.env.DEV || import.meta.env.MODE === 'development') return false
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) return false
+  if (window.$route?.path?.startsWith('/obs')) return false
   // 夸克/UC 的 Observer 实现不完整, HyperDX 点击插桩会炸 takeRecords
   if (/Quark|UCBrowser/i.test(navigator.userAgent)) return false
   if (typeof MutationObserver === 'undefined' || typeof MutationObserver.prototype.takeRecords !== 'function') {

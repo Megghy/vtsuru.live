@@ -5,7 +5,9 @@ import { useRoute } from 'vue-router'
 import { useMusicRequestObsView } from '@/apps/obs/components/request/useMusicRequestObsView'
 import ObsClassicPanel from '@/apps/obs/components/shared/ObsClassicPanel.vue'
 import ObsFreshPanel from '@/apps/obs/components/shared/ObsFreshPanel.vue'
+import ObsGlassPanel from '@/apps/obs/components/shared/ObsGlassPanel.vue'
 import ObsMinimalPanel from '@/apps/obs/components/shared/ObsMinimalPanel.vue'
+import ObsTransparentPanel from '@/apps/obs/components/shared/ObsTransparentPanel.vue'
 import { useOBSNotification } from '@/store/useOBSNotification'
 
 const props = defineProps<{
@@ -13,7 +15,7 @@ const props = defineProps<{
   active?: boolean
   visible?: boolean
   speedMultiplier?: number
-  style?: 'classic' | 'fresh' | 'minimal'
+  style?: 'classic' | 'fresh' | 'minimal' | 'glass' | 'transparent'
 }>()
 
 const route = useRoute()
@@ -37,6 +39,10 @@ const styleType = computed(() => {
 
 const panelComponent = computed(() => {
   switch (styleType.value) {
+    case 'glass':
+      return ObsGlassPanel
+    case 'transparent':
+      return ObsTransparentPanel
     case 'fresh':
       return ObsFreshPanel
     case 'minimal':

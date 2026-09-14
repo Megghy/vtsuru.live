@@ -48,6 +48,8 @@ const props = defineProps<{
   active?: boolean
   visible?: boolean
   config?: DanmujiConfig
+  danmujiConfig?: any
+  customCss?: string
   openLiveAuth?: AuthInfo
 }>()
 
@@ -72,8 +74,14 @@ const defaultConfig: DanmujiConfig = {
   emoticons: [],
 }
 
-defineExpose({ setCss, testAddMessage })
+defineExpose({ setCss, testAddMessage, pushTestEvent: testAddMessage })
 const customCss = usePersistedStorage('danmuji-css', '')
+
+watch(() => props.customCss, (newCss) => {
+  if (newCss !== undefined && messageRender.value) {
+    messageRender.value.setCss(newCss)
+  }
+})
 
 const isOBS = computed(() => {
   // @ts-ignore

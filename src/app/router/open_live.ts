@@ -19,7 +19,7 @@ export default {
     {
       path: 'lottery',
       name: 'open-live-lottery',
-      component: async () => import('@/apps/open-live/pages/OpenLottery.vue'),
+      component: async () => import('@/apps/manage/pages/LotteryView.vue'),
       meta: {
         title: '直播抽奖',
         pageWidth: 'xl',
@@ -28,7 +28,7 @@ export default {
     {
       path: 'live-request',
       name: 'open-live-live-request',
-      component: async () => import('@/apps/open-live/pages/request/LiveRequest.vue'),
+      component: async () => import('@/apps/manage/pages/LiveRequestManageView.vue'),
       meta: {
         title: '点歌',
         pageWidth: 'xl',
@@ -37,7 +37,7 @@ export default {
     {
       path: 'queue',
       name: 'open-live-queue',
-      component: async () => import('@/apps/open-live/pages/OpenQueue.vue'),
+      component: async () => import('@/apps/manage/pages/QueueManageView.vue'),
       meta: {
         title: '排队',
         pageWidth: 'xl',
@@ -46,7 +46,7 @@ export default {
     {
       path: 'speech',
       name: 'open-live-speech',
-      component: async () => import('@/apps/open-live/pages/ReadDanmaku.vue'),
+      component: async () => import('@/apps/manage/pages/ReadDanmakuManageView.vue'),
       meta: {
         title: '读弹幕',
         pageWidth: 'md',

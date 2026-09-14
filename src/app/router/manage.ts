@@ -100,7 +100,7 @@ export default // 管理页面
     {
       path: 'live-lottery',
       name: 'manage-liveLottery',
-      component: async () => import('@/apps/open-live/pages/OpenLottery.vue'),
+      component: async () => import('@/apps/manage/pages/LotteryView.vue'),
       meta: {
         title: '弹幕抽奖',
         keepAlive: true,
@@ -122,7 +122,7 @@ export default // 管理页面
     {
       path: 'queue',
       name: 'manage-liveQueue',
-      component: async () => import('@/apps/open-live/pages/OpenQueue.vue'),
+      component: async () => import('@/apps/manage/pages/QueueManageView.vue'),
       meta: {
         title: '排队',
         keepAlive: true,
@@ -133,7 +133,7 @@ export default // 管理页面
     {
       path: 'speech',
       name: 'manage-speech',
-      component: async () => import('@/apps/open-live/pages/ReadDanmaku.vue'),
+      component: async () => import('@/apps/manage/pages/ReadDanmakuManageView.vue'),
       meta: {
         title: '读弹幕',
         keepAlive: true,
@@ -144,7 +144,7 @@ export default // 管理页面
     {
       path: 'live-request',
       name: 'manage-liveRequest',
-      component: async () => import('@/apps/open-live/pages/request/LiveRequest.vue'),
+      component: async () => import('@/apps/manage/pages/LiveRequestManageView.vue'),
       meta: {
         title: '点播',
         keepAlive: true,
@@ -155,7 +155,7 @@ export default // 管理页面
     {
       path: 'music-request',
       name: 'manage-musicRequest',
-      component: async () => import('@/apps/open-live/pages/request/MusicRequest.vue'),
+      component: async () => import('@/apps/manage/pages/MusicRequestManageView.vue'),
       meta: {
         title: '点歌机',
         keepAlive: true,
@@ -178,11 +178,10 @@ export default // 管理页面
     {
       path: 'vote',
       name: 'manage-danmakuVote',
-      component: async () => import('@/apps/open-live/pages/DanmakuVote.vue'),
+      component: async () => import('@/apps/manage/pages/VoteManageView.vue'),
       meta: {
         title: '弹幕投票',
         keepAlive: true,
-        danmaku: true,
         pageWidth: 'xl',
       },
     },
@@ -193,7 +192,7 @@ export default // 管理页面
       meta: {
         title: '直播记录',
         keepAlive: true,
-        pageWidth: 'md',
+        pageWidth: 'lg',
       },
     },
     {
@@ -202,7 +201,7 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/live/LiveDetailManage.vue'),
       meta: {
         title: '直播详情',
-        pageWidth: 'md',
+        pageWidth: 'lg',
       },
     },
     {

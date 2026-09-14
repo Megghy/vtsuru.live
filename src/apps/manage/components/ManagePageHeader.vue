@@ -18,6 +18,7 @@ interface ManageHeaderLink {
 const props = defineProps<{
   title: string
   subtitle?: string
+  description?: string
   functionType?: FunctionTypes // 如果不传，则不显示开关
   links?: ManageHeaderLink[]
   loading?: boolean
@@ -27,6 +28,7 @@ const accountInfo = useAccount()
 const toggle = props.functionType != null ? useFunctionToggle(props.functionType, props.title) : null
 const links = computed(() => props.links?.filter((link) => link.value) ?? [])
 const switchLoading = computed(() => toggle?.loading.value ?? false)
+const displayedSubtitle = computed(() => props.subtitle || props.description || '')
 </script>
 
 <template>
@@ -72,11 +74,11 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
           </NFlex>
         </div>
         <NText
-          v-if="subtitle"
+          v-if="displayedSubtitle"
           depth="3"
           class="manage-page-header__subtitle"
         >
-          {{ subtitle }}
+          {{ displayedSubtitle }}
         </NText>
       </div>
 
@@ -91,7 +93,9 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
           class="manage-page-header__actions"
           :wrap="true"
         >
-          <slot name="action" />
+          <slot name="action">
+            <slot name="actions" />
+          </slot>
         </NFlex>
       </NFlex>
     </NFlex>
@@ -174,6 +178,7 @@ const switchLoading = computed(() => toggle?.loading.value ?? false)
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-bottom: 16px;
 }
 
 .manage-page-header__titles {

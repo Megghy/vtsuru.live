@@ -10,6 +10,7 @@ export const SENTRY_IGNORE_ERRORS: Array<string | RegExp> = [
   /takeRecords/,
   /register_listener not found/,
   /ResizeObserver loop/,
+  /Cannot read properties of undefined \(reading 'startTime'\)/,
   /Failed to fetch dynamically imported module/,
   /Unable to preload CSS/,
   /Importing a module script failed/,
@@ -24,6 +25,8 @@ export const SENTRY_IGNORE_ERRORS: Array<string | RegExp> = [
   /set_focus not allowed by ACL/,
   /Cannot send data if the connection is not in the 'Connected' State/,
   /Cannot read properties of null \(reading 'contains'\)/,
+  /Module "fs" has been externalized for browser compatibility/,
+  /analytics\.suki\.club/,
 ]
 
 export function shouldIgnoreSentryMessage(message: string) {

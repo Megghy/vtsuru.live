@@ -1,7 +1,30 @@
 <script setup lang="ts">
+import {
+  ArrowClockwise24Regular,
+  Copy24Regular,
+  DocumentArrowDown20Regular,
+  DocumentText24Regular,
+  Mic24Regular,
+  Search24Filled,
+} from '@vicons/fluent'
 import { saveAs } from 'file-saver'
 import type { DataTableColumns } from 'naive-ui'
-import { NButton, NDataTable, NEmpty, NFlex, NSelect, NSpin, NTag, NText } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NDataTable,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NIcon,
+  NInput,
+  NSelect,
+  NSpin,
+  NTag,
+  NText,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, h, ref } from 'vue'
 
 import { QueryGetAPI, unwrapOk } from '@/api/query'
@@ -12,6 +35,7 @@ const props = defineProps<{
   liveId: string
 }>()
 
+const message = useMessage()
 const loading = ref(false)
 const loaded = ref(false)
 const error = ref<string>()
@@ -19,31 +43,138 @@ const sessions = ref<TranscriptSession[]>([])
 const segments = ref<TranscriptSegment[]>([])
 const selectedSessionId = ref<string>()
 
+// 搜索与说话人过滤
+const searchKeyword = ref('')
+const selectedSpeaker = ref<string>('all')
+
 const sessionOptions = computed(() =>
   sessions.value.map((session) => ({
-    label: `${formatDateTime(session.startedAt)} · ${providerName(session.provider)}`,
+    label: `${formatDateTime(session.startedAt)} · ${providerName(session.provider)} (${session.model})`,
     value: session.id,
   })),
 )
 
 const selectedSession = computed(() => sessions.value.find((session) => session.id === selectedSessionId.value))
 
+// 说话人列表选项
+const speakerOptions = computed(() => {
+  const set = new Set<string>()
+  for (const s of segments.value) {
+    if (s.speaker && s.speaker.trim()) {
+      set.add(s.speaker.trim())
+    }
+  }
+  const opts = [{ label: '全部说话人', value: 'all' }]
+  for (const spk of Array.from(set)) {
+    opts.push({ label: spk, value: spk })
+  }
+  return opts
+})
+
+// 过滤后的分段
+const filteredSegments = computed(() => {
+  let list = segments.value
+
+  if (selectedSpeaker.value !== 'all') {
+    list = list.filter((s) => s.speaker === selectedSpeaker.value)
+  }
+
+  const kw = searchKeyword.value.trim().toLowerCase()
+  if (kw) {
+    list = list.filter((s) => (s.text && s.text.toLowerCase().includes(kw)) || (s.speaker && s.speaker.toLowerCase().includes(kw)))
+  }
+
+  return list
+})
+
+function highlightText(text: string, kw: string) {
+  if (!kw.trim()) return [text]
+  const parts: any[] = []
+  const lower = text.toLowerCase()
+  const kwLower = kw.toLowerCase()
+  let lastIndex = 0
+  let idx = lower.indexOf(kwLower, lastIndex)
+
+  while (idx !== -1) {
+    if (idx > lastIndex) {
+      parts.push(text.slice(lastIndex, idx))
+    }
+    parts.push(
+      h(
+        'mark',
+        {
+          style: 'background-color: rgba(245, 158, 11, 0.35); color: inherit; padding: 1px 2px; border-radius: 2px;',
+        },
+        text.slice(idx, idx + kw.length),
+      ),
+    )
+    lastIndex = idx + kw.length
+    idx = lower.indexOf(kwLower, lastIndex)
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+  return parts
+}
+
+function copySegment(segment: TranscriptSegment) {
+  const line = `[${formatClock(segment.startMs)}] ${segment.speaker ? `${segment.speaker}: ` : ''}${segment.text}`
+  navigator.clipboard.writeText(line).then(() => {
+    message.success('已复制单句字幕与时间戳')
+  })
+}
+
 const columns: DataTableColumns<TranscriptSegment> = [
   {
-    title: '时间',
+    title: '时间轴',
     key: 'startMs',
-    width: 110,
-    render: (row) => h(NText, { depth: 3 }, () => formatClock(row.startMs)),
-  },
-  {
-    title: '字幕',
-    key: 'text',
+    width: 130,
+    render: (row) =>
+      h(
+        'span',
+        {
+          style: 'font-variant-numeric: tabular-nums; font-size: 12px; color: var(--vtsuru-fg-muted);',
+        },
+        formatClock(row.startMs),
+      ),
   },
   {
     title: '说话人',
     key: 'speaker',
-    width: 120,
-    render: (row) => row.speaker || '—',
+    width: 110,
+    render: (row) =>
+      row.speaker
+        ? h(
+            NTag,
+            { size: 'small', bordered: false, style: 'font-size: 11px' },
+            () => row.speaker,
+          )
+        : h('span', { style: 'color: var(--vtsuru-fg-muted); font-size: 11px;' }, '—'),
+  },
+  {
+    title: '转写字幕内容',
+    key: 'text',
+    render: (row) => {
+      const kw = searchKeyword.value.trim()
+      const content = kw ? highlightText(row.text || '', kw) : row.text
+      return h('div', { class: 'segment-content-cell' }, [
+        h('span', { class: 'segment-text' }, content),
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            quaternary: true,
+            class: 'copy-btn',
+            title: '复制单句',
+            onClick: () => copySegment(row),
+          },
+          {
+            icon: () => h(NIcon, { component: Copy24Regular, size: 13 }),
+          },
+        ),
+      ])
+    },
   },
 ]
 
@@ -117,18 +248,21 @@ function saveText(content: string, extension: 'txt' | 'srt') {
   if (!session) return
   const filename = `live-${props.liveId}-${new Date(session.startedAt * 1000).toISOString().replaceAll(':', '-')}.${extension}`
   saveAs(new Blob([`\uFEFF${content}`], { type: 'text/plain;charset=utf-8' }), filename)
+  message.success(`已成功导出 .${extension} 文件`)
 }
 
 function downloadTxt() {
   const session = selectedSession.value
   if (!session) return
+  const source = filteredSegments.value.length ? filteredSegments.value : segments.value
   const header = [
     `Provider: ${providerName(session.provider)}`,
     `Model: ${session.model}`,
     `Language: ${session.language}`,
+    `Exported: ${new Date().toLocaleString()}`,
     '',
   ]
-  const lines = segments.value.map(
+  const lines = source.map(
     (segment) => `[${formatClock(segment.startMs)}] ${segment.speaker ? `${segment.speaker}: ` : ''}${segment.text}`,
   )
   saveText([...header, ...lines].join('\r\n'), 'txt')
@@ -137,7 +271,8 @@ function downloadTxt() {
 function downloadSrt() {
   const session = selectedSession.value
   if (!session) return
-  const content = segments.value
+  const source = filteredSegments.value.length ? filteredSegments.value : segments.value
+  const content = source
     .map((segment, index) =>
       [
         index + 1,
@@ -154,79 +289,279 @@ defineExpose({ load })
 </script>
 
 <template>
-  <NSpin :show="loading">
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NFlex
-        v-if="sessions.length"
-        align="center"
-        justify="space-between"
+  <div class="live-transcript-panel">
+    <NSpin :show="loading">
+      <div
+        v-if="error"
+        class="transcript-error-box"
       >
-        <NSelect
-          v-model:value="selectedSessionId"
-          :options="sessionOptions"
-          style="max-width: 560px; flex: 1"
-          @update:value="loadSegments"
-        />
-        <NFlex>
-          <NButton
-            size="small"
-            :disabled="!segments.length"
-            @click="downloadTxt"
-          >
-            下载 TXT
-          </NButton>
-          <NButton
-            size="small"
-            :disabled="!segments.length"
-            @click="downloadSrt"
-          >
-            下载 SRT
-          </NButton>
-        </NFlex>
-      </NFlex>
+        <NEmpty :description="`转写获取失败: ${error}`">
+          <template #extra>
+            <NButton
+              size="small"
+              type="primary"
+              secondary
+              @click="load"
+            >
+              重试加载
+            </NButton>
+          </template>
+        </NEmpty>
+      </div>
 
-      <NFlex
-        v-if="selectedSession"
-        align="center"
-        :size="8"
+      <div
+        v-else-if="!sessions.length && loaded"
+        class="transcript-empty-box"
       >
-        <NTag
-          size="small"
-          :bordered="false"
-        >
-          {{ providerName(selectedSession.provider) }}
-        </NTag>
-        <NText depth="3"> {{ selectedSession.model }} · {{ selectedSession.language }} </NText>
-      </NFlex>
+        <NEmpty description="该场直播未开启语音转写或未采集到音频会话">
+          <template #icon>
+            <NIcon :component="Mic24Regular" />
+          </template>
+        </NEmpty>
+      </div>
 
-      <NDataTable
-        v-if="segments.length"
-        :columns="columns"
-        :data="segments"
-        :row-key="(row) => row.sequence"
-        :max-height="650"
-        virtual-scroll
-        size="small"
-        striped
-      />
-
-      <NEmpty
+      <div
         v-else
-        :description="error || (loaded ? '这场直播暂无转写归档' : '尚未加载转写归档')"
+        class="transcript-main"
       >
-        <template #extra>
-          <NButton
-            v-if="!loaded || error"
-            size="small"
-            @click="load"
+        <!-- 转写工具卡片 -->
+        <NCard
+          size="small"
+          class="transcript-toolbar-card"
+          :bordered="true"
+        >
+          <NFlex
+            vertical
+            :size="12"
           >
-            {{ error ? '重试' : '加载' }}
-          </NButton>
-        </template>
-      </NEmpty>
-    </NFlex>
-  </NSpin>
+            <!-- 第一行：会话选择与导出操作 -->
+            <NFlex
+              justify="space-between"
+              align="center"
+              wrap
+              :size="12"
+            >
+              <NFlex
+                align="center"
+                :size="10"
+                style="flex: 1; min-width: 280px; max-width: 540px"
+              >
+                <span class="control-label">转写会话:</span>
+                <NSelect
+                  v-model:value="selectedSessionId"
+                  :options="sessionOptions"
+                  size="small"
+                  @update:value="loadSegments"
+                />
+              </NFlex>
+
+              <NFlex
+                align="center"
+                :size="8"
+              >
+                <NButton
+                  size="small"
+                  secondary
+                  :disabled="!segments.length"
+                  @click="downloadTxt"
+                >
+                  <template #icon>
+                    <NIcon :component="DocumentText24Regular" />
+                  </template>
+                  导出 TXT
+                </NButton>
+                <NButton
+                  size="small"
+                  type="primary"
+                  secondary
+                  :disabled="!segments.length"
+                  @click="downloadSrt"
+                >
+                  <template #icon>
+                    <NIcon :component="DocumentArrowDown20Regular" />
+                  </template>
+                  导出 SRT 字幕
+                </NButton>
+              </NFlex>
+            </NFlex>
+
+            <!-- 第二行：会话元信息与实时搜索/说话人过滤 -->
+            <NFlex
+              justify="space-between"
+              align="center"
+              wrap
+              :size="10"
+            >
+              <NFlex
+                align="center"
+                :size="8"
+              >
+                <NInput
+                  v-model:value="searchKeyword"
+                  placeholder="搜索字幕关键词..."
+                  clearable
+                  size="small"
+                  class="transcript-search-input"
+                >
+                  <template #prefix>
+                    <NIcon :component="Search24Filled" />
+                  </template>
+                </NInput>
+
+                <NSelect
+                  v-if="speakerOptions.length > 2"
+                  v-model:value="selectedSpeaker"
+                  :options="speakerOptions"
+                  size="small"
+                  style="width: 140px"
+                />
+              </NFlex>
+
+              <NFlex
+                v-if="selectedSession"
+                align="center"
+                :size="8"
+              >
+                <NTag
+                  size="small"
+                  :bordered="false"
+                  type="info"
+                >
+                  {{ providerName(selectedSession.provider) }}
+                </NTag>
+                <NText depth="3" class="meta-desc">
+                  模型: {{ selectedSession.model }} · 语言: {{ selectedSession.language }}
+                </NText>
+              </NFlex>
+            </NFlex>
+          </NFlex>
+
+          <div class="transcript-statusbar">
+            <span>
+              已加载 <strong>{{ segments.length.toLocaleString() }}</strong> 条分段
+              <template v-if="searchKeyword || selectedSpeaker !== 'all'">
+                （匹配到 <strong>{{ filteredSegments.length.toLocaleString() }}</strong> 条）
+              </template>
+            </span>
+            <span class="tip-hint">支持点击单句末尾图标快捷复制时间戳与字幕</span>
+          </div>
+        </NCard>
+
+        <!-- 数据表格 -->
+        <NCard
+          size="small"
+          class="table-card"
+          :bordered="true"
+        >
+          <NDataTable
+            v-if="filteredSegments.length"
+            :columns="columns"
+            :data="filteredSegments"
+            :row-key="(row) => row.sequence"
+            :max-height="580"
+            size="small"
+            :bordered="false"
+          />
+          <div
+            v-else
+            class="empty-filter-box"
+          >
+            <NEmpty description="未找到匹配的转写分段" />
+          </div>
+        </NCard>
+      </div>
+    </NSpin>
+  </div>
 </template>
+
+<style scoped>
+.live-transcript-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.transcript-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transcript-toolbar-card {
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-card);
+}
+
+.control-label {
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+  white-space: nowrap;
+}
+
+.transcript-search-input {
+  width: 240px;
+}
+
+.meta-desc {
+  font-size: 12px;
+}
+
+.transcript-statusbar {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--vtsuru-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.transcript-statusbar strong {
+  color: var(--vtsuru-fg);
+}
+
+.tip-hint {
+  font-size: 11px;
+  color: var(--vtsuru-fg-muted);
+}
+
+.table-card {
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-card);
+  overflow: hidden;
+}
+
+:deep(.segment-content-cell) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-right: 8px;
+}
+
+:deep(.segment-text) {
+  line-height: 1.5;
+  color: var(--vtsuru-fg);
+}
+
+:deep(.copy-btn) {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+:deep(tr:hover .copy-btn) {
+  opacity: 1;
+}
+
+.transcript-error-box,
+.transcript-empty-box,
+.empty-filter-box {
+  padding: 48px 0;
+  display: flex;
+  justify-content: center;
+}
+</style>

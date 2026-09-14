@@ -1,220 +1,158 @@
-<!-- eslint-disable vue/no-mutating-props -->
 <script setup lang="ts">
-import { Info12Filled, Money20Regular, Money24Regular, Search24Filled, Wrench24Filled } from '@vicons/fluent'
-import { useDebounceFn } from '@vueuse/core'
+import {
+  ArrowDownload24Regular,
+  ArrowSort24Regular,
+  Box24Regular,
+  Checkmark24Filled,
+  Dismiss24Filled,
+  DocumentArrowDown20Regular,
+  Filter24Regular,
+  Info12Filled,
+  Money24Regular,
+  Search24Filled,
+  VehicleShip24Filled,
+} from '@vicons/fluent'
 import { saveAs } from 'file-saver'
 import {
-  NAvatar,
   NButton,
   NCard,
   NCheckbox,
   NCheckboxGroup,
-  NCollapse,
-  NCollapseItem,
-  NCollapseTransition,
   NDivider,
+  NEmpty,
+  NFlex,
   NIcon,
   NInput,
   NInputNumber,
-  NList,
-  NListItem,
   NModal,
+  NPopover,
+  NRadio,
   NRadioButton,
   NRadioGroup,
+  NSelect,
   NSkeleton,
-  NFlex,
   NSpin,
-  NSwitch,
   NTag,
+  NText,
   NTooltip,
   useMessage,
 } from 'naive-ui'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
+import type { AccountInfo, DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { usePersistedStorage } from '@/shared/storage/persist'
+import DanmakuItem from '@/apps/manage/components/live/DanmakuItem.vue'
+import { GetString } from '@/apps/manage/components/live/danmakuExport'
+import SimpleVirtualList from '@/apps/manage/components/live/SimpleVirtualList.vue'
 
-import { GetString } from './danmakuExport'
-import DanmakuItem from './DanmakuItem.vue'
-import LiveInfoContainer from './LiveInfoContainer.vue'
-import SimpleVirtualList from './SimpleVirtualList.vue'
-
-enum RankType {
-  Danmaku,
-  Paid,
-}
-
-interface RankInfo {
-  ouId: string
-  uName: string
-  Paid: number
-  Danmakus: number
-  Index: number
-}
-
-const {
-  currentDanmakus,
-  currentLive,
-  defaultFilterSelected = [EventDataTypes.Gift, EventDataTypes.Guard, EventDataTypes.Message, EventDataTypes.SC],
-  height = 1000,
-  itemHeight = 30,
-  showLiveInfo = true,
-  showLiver = false,
-  isInModal = false,
-  showName = true,
-  showTools = true,
-  showStatistic = true,
-  showRank = false,
-  bordered = true,
-  toolsVisiable = true,
-  itemRange = 30,
-  to = 'space',
-} = defineProps<Props>()
+const props = withDefaults(
+  defineProps<{
+    currentLive: ResponseLiveInfoModel
+    currentDanmakus?: DanmakuModel[]
+    height?: number | string
+    isInModal?: boolean
+    showBorder?: boolean
+    to?: 'userDanmakus' | 'space'
+  }>(),
+  {
+    currentDanmakus: () => [],
+    height: '620px',
+    isInModal: false,
+    showBorder: true,
+    to: 'userDanmakus',
+  },
+)
 
 const emit = defineEmits<{
-  (e: 'onClickName', uId: number, ouId: string): boolean
+  (e: 'onClickName', uId: number, ouId: string): void
 }>()
 
 const accountInfo = useAccount()
 const message = useMessage()
 
-const isLoading = ref(false)
-const showModal = ref(false)
-const showExportModal = ref(false)
-const userDanmakus = ref<DanmakuModel[] | undefined>()
-const hideAvatar = usePersistedStorage('Setting.HideAvatar', false)
-
-const keyword = ref('')
-const enableRegex = ref(false)
-const deselect = ref(false)
-const price = ref<number | undefined>()
-const filterSelected = ref(defaultFilterSelected)
-const innerShowTools = ref(showTools)
-const modalShowTools = ref(false)
-const orderDecreasing = ref(false)
-const orderByPrice = ref(false)
-const processing = ref(false)
-const isRanking = ref(false)
-const rankType = ref(RankType.Danmaku)
-const hideEmoji = ref(false)
-
-const exportType = ref<'json' | 'xml' | 'csv'>('json')
-const onlyExportFilteredDanmakus = ref(false)
-const isExporting = ref(false)
-
-let processingTimer: ReturnType<typeof setTimeout> | undefined
-
+// 数据源
 const baseDanmakus = shallowRef<DanmakuModel[]>([])
 const dynamicDanmakus = shallowRef<DanmakuModel[]>([])
 
-interface Props {
-  currentLive: ResponseLiveInfoModel
-  currentDanmakus: DanmakuModel[]
-  defaultFilterSelected?: EventDataTypes[]
-  height?: number
-  itemHeight?: number
-  showLiver?: boolean
-  showLiveInfo?: boolean
-  showName?: boolean
-  isInModal?: boolean
-  showRank?: boolean
-  showBorder?: boolean
-  showTools?: boolean
-  showStatistic?: boolean
-  animeNum?: boolean
-  bordered?: boolean
-  toolsVisiable?: boolean
-  itemRange?: number
-  to?: 'userDanmakus' | 'space'
+// 筛选状态
+const keyword = ref('')
+const enableRegex = ref(false)
+const deselect = ref(false)
+
+const filterSelected = ref<EventDataTypes[]>([
+  EventDataTypes.Message,
+  EventDataTypes.Gift,
+  EventDataTypes.Guard,
+  EventDataTypes.SC,
+  EventDataTypes.Enter,
+])
+
+const price = ref<number | undefined>(undefined)
+const orderByPrice = ref(false)
+const orderDecreasing = ref(false)
+const hideEmoji = ref(false)
+const hideAvatar = ref(false)
+
+// 导出与弹窗
+const showExportModal = ref(false)
+const isExporting = ref(false)
+const exportType = ref<'json' | 'xml' | 'csv'>('json')
+const onlyExportFilteredDanmakus = ref(true)
+
+const showModal = ref(false)
+const userDanmakus = ref<DanmakuModel[] | undefined>(undefined)
+
+function createDanmakuSignature(item: DanmakuModel): string {
+  return `${item.id}_${item.time}_${item.type}_${item.uId}_${item.ouId ?? ''}`
 }
 
-function createDanmakuSignature(danmaku: DanmakuModel, index: number) {
-  const segments = []
-  if (danmaku.ouId) segments.push(`ou_${danmaku.ouId}`)
-  if (danmaku.uId) segments.push(`u_${danmaku.uId}`)
-  if (danmaku.time) segments.push(`t_${danmaku.time}`)
-  if (segments.length === 0) segments.push(`idx_${index}`)
-  return segments.join('_')
-}
-
-function normalizeDanmakuList(source: DanmakuModel[] | undefined | null, existingIds?: Set<string>) {
-  if (!source?.length) return []
-  const usedIds = existingIds ?? new Set<string>()
-  const normalized: DanmakuModel[] = []
-  source.forEach((item, index) => {
-    const baseId = item.id ?? createDanmakuSignature(item, index)
-    let candidateId = baseId
-    let suffix = 1
-    while (usedIds.has(candidateId)) {
-      candidateId = `${baseId}_${suffix++}`
+function normalizeDanmakuList(list: DanmakuModel[], seen: Set<string>): DanmakuModel[] {
+  const result: DanmakuModel[] = []
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i]
+    if (!item) continue
+    const sig = createDanmakuSignature(item)
+    if (seen.has(sig)) continue
+    seen.add(sig)
+    if (!item.id) {
+      item.id = `${sig}_${i}`
     }
-    normalized.push({
-      ...item,
-      id: candidateId,
-    })
-    usedIds.add(candidateId)
-  })
-  return normalized
-}
-
-function triggerProcessing(delay = 120) {
-  processing.value = true
-  if (processingTimer) {
-    clearTimeout(processingTimer)
+    result.push(item)
   }
-  processingTimer = setTimeout(() => {
-    processing.value = false
-  }, delay)
+  return result
 }
 
-function UpdateDanmakus() {
-  triggerProcessing(80)
-}
-
-const debouncedFn = useDebounceFn(UpdateDanmakus, 750)
-
 watch(
-  () => showTools,
-  (value) => {
-    innerShowTools.value = value
-  },
-)
-
-watch(
-  () => rankType.value,
-  () => {
-    triggerProcessing(40)
-  },
-)
-
-watch(
-  () => currentDanmakus,
-  (list) => {
-    const normalized = normalizeDanmakuList(list)
-    const baseIds = new Set(normalized.map((item) => item.id))
-    const filteredDynamic = dynamicDanmakus.value.filter((item) => !baseIds.has(item.id))
-    baseDanmakus.value = normalized
-    if (filteredDynamic.length !== dynamicDanmakus.value.length) {
-      dynamicDanmakus.value = filteredDynamic
-    }
-    triggerProcessing(normalized.length ? 80 : 0)
+  () => props.currentDanmakus,
+  (val) => {
+    const seen = new Set<string>()
+    baseDanmakus.value = normalizeDanmakuList(val ?? [], seen)
+    dynamicDanmakus.value = []
   },
   { immediate: true, deep: true },
 )
 
 const combinedDanmakus = computed(() => {
-  if (!dynamicDanmakus.value.length) {
-    return baseDanmakus.value
+  if (!dynamicDanmakus.value.length) return baseDanmakus.value
+  const seen = new Set<string>()
+  const merged: DanmakuModel[] = []
+  for (const item of baseDanmakus.value) {
+    const sig = createDanmakuSignature(item)
+    if (!seen.has(sig)) {
+      seen.add(sig)
+      merged.push(item)
+    }
   }
-  if (!baseDanmakus.value.length) {
-    return dynamicDanmakus.value
+  for (const item of dynamicDanmakus.value) {
+    const sig = createDanmakuSignature(item)
+    if (!seen.has(sig)) {
+      seen.add(sig)
+      merged.push(item)
+    }
   }
-  return [...baseDanmakus.value, ...dynamicDanmakus.value]
+  return merged
 })
-
-const existEnterMessage = computed(() => combinedDanmakus.value.some((item) => item.type === EventDataTypes.Enter))
 
 const filteredDanmakus = computed(() => {
   const source = combinedDanmakus.value
@@ -277,55 +215,13 @@ const totalFilteredPrice = computed(() =>
   filteredDanmakus.value.reduce((sum, item) => sum + (item.price && item.price > 0 ? item.price : 0), 0),
 )
 
-const rankStats = computed(() => aggregateRankStats(combinedDanmakus.value))
-const currentRankInfo = computed(() => buildRankedList(rankStats.value, rankType.value))
-
-function aggregateRankStats(source: DanmakuModel[]): RankInfo[] {
-  if (!source.length) return []
-  const ranking = new Map<string, RankInfo>()
-  source.forEach((item, index) => {
-    const key = item.ouId || (item.uId != null ? `uid_${item.uId}` : `idx_${index}`)
-    let info = ranking.get(key)
-    if (!info) {
-      info = {
-        ouId: item.ouId || key,
-        uName: item.uName ?? '未命名用户',
-        Paid: 0,
-        Danmakus: 0,
-        Index: 0,
-      }
-      ranking.set(key, info)
-    } else if (item.uName) {
-      info.uName = item.uName
-    }
-    if (item.type === EventDataTypes.Message) {
-      info.Danmakus += 1
-    }
-    if (typeof item.price === 'number') {
-      info.Paid += item.price
-    }
-  })
-  return Array.from(ranking.values())
-}
-
-function buildRankedList(stats: RankInfo[], type: RankType) {
-  if (!stats.length) return []
-  const filtered = stats.filter((info) => (type === RankType.Paid ? info.Paid > 0 : true)).map((info) => ({ ...info }))
-  filtered.sort((a, b) => (type === RankType.Danmaku ? b.Danmakus - a.Danmakus : b.Paid - a.Paid))
-  const limited = filtered.slice(0, 100)
-  limited.forEach((info, idx) => {
-    info.Index = idx + 1
-  })
-  return limited
-}
-
-function OnNameClick(uId: number, ouId: string) {
-  if (isInModal) {
+function onNameClick(uId: number, ouId: string) {
+  if (props.isInModal) {
     emit('onClickName', uId, ouId)
     return
   }
   const sourceDanmakus = combinedDanmakus.value
-  switch (to) {
+  switch (props.to) {
     case 'userDanmakus': {
       userDanmakus.value = sourceDanmakus.filter((d) => (d.uId ? d.uId === uId : d.ouId === ouId))
       showModal.value = true
@@ -345,22 +241,30 @@ function OnNameClick(uId: number, ouId: string) {
   }
 }
 
-function ChangePrice(p: number) {
-  if (p === price.value) {
-    price.value = undefined
-  } else {
-    price.value = p
-  }
-  UpdateDanmakus()
+function handlePriceQuickSelect(p: number | undefined) {
+  price.value = price.value === p ? undefined : p
 }
 
-function OnRank(isRank: boolean) {
-  if (isRank) {
-    triggerProcessing(60)
+function handleExport() {
+  isExporting.value = true
+  try {
+    const source = onlyExportFilteredDanmakus.value ? filteredDanmakus.value : combinedDanmakus.value
+    saveAs(
+      new Blob([GetString(accountInfo.value, props.currentLive, source, exportType.value)], {
+        type: 'text/plain;charset=utf-8',
+      }),
+      `${Date.now()}_${props.currentLive.startAt}_${props.currentLive.title.replace(/[\/\\]/g, '-')}_${accountInfo.value?.name ?? 'live'}.${exportType.value}`,
+    )
+    showExportModal.value = false
+    message.success('弹幕导出成功')
+  } catch (err) {
+    message.error('导出失败')
+  } finally {
+    isExporting.value = false
   }
 }
 
-function InsertDanmakus(targetDanmakus: DanmakuModel[]) {
+function insertDanmakus(targetDanmakus: DanmakuModel[]) {
   if (!Array.isArray(targetDanmakus) || targetDanmakus.length === 0) return
   const existingIds = new Set<string>([
     ...baseDanmakus.value.map((item) => item.id),
@@ -371,492 +275,412 @@ function InsertDanmakus(targetDanmakus: DanmakuModel[]) {
   dynamicDanmakus.value = orderDecreasing.value
     ? [...normalized, ...dynamicDanmakus.value]
     : [...dynamicDanmakus.value, ...normalized]
-  triggerProcessing(40)
 }
-
-function Export() {
-  isExporting.value = true
-  const source = onlyExportFilteredDanmakus.value ? filteredDanmakus.value : combinedDanmakus.value
-  saveAs(
-    new Blob([GetString(accountInfo.value, currentLive, source, exportType.value)], {
-      type: 'text/plain;charset=utf-8',
-    }),
-    `${Date.now()}_${currentLive.startAt}_${currentLive.title.replace('_', '-')}_${accountInfo.value?.name}.${exportType.value}`,
-  )
-  isExporting.value = false
-}
-
-function GetRankIndexColor(index: number) {
-  switch (index) {
-    case 1:
-      return `background:#fbda41;color:rgb(133,133,133);font-size:16px;`
-    case 2:
-      return `background:#c4d7d6;color:rgb(133,133,133);font-size:16px;`
-    case 3:
-      return `background:#f0d695;color:rgb(133,133,133);font-size:16px;`
-    default:
-      return 'background:#afafaf;'
-  }
-}
-
-function RoundNumber(num: number) {
-  if (Number.isInteger(num)) {
-    return num
-  }
-  return num.toFixed(1)
-}
-
-onBeforeUnmount(() => {
-  if (processingTimer) {
-    clearTimeout(processingTimer)
-  }
-})
 
 defineExpose({
-  InsertDanmakus,
+  InsertDanmakus: insertDanmakus,
 })
 </script>
 
 <template>
-  <NSkeleton v-if="isLoading" />
-  <NSpin
-    v-else
-    :show="processing"
-  >
+  <div class="danmaku-container-wrapper">
+    <!-- 用户单人弹幕弹窗 -->
     <NModal
       v-model:show="showModal"
       preset="card"
-      style="width: 600px; max-width: 90vw; max-height: 90vh"
-      content-style="overflow-y: auto"
+      style="width: 680px; max-width: 92vw; max-height: 85vh"
+      content-style="overflow-y: auto; padding: 12px 16px;"
       @after-leave="userDanmakus = undefined"
     >
       <template #header>
-        {{ userDanmakus?.[0].uName }}
-      </template>
-      <template #header-extra>
-        <NSwitch
-          v-model:value="modalShowTools"
-          size="small"
-        >
-          <template #checked> 显示 </template>
-          <template #unchecked> 隐藏 </template>
-          <template #icon>
-            <NIcon :component="Wrench24Filled" />
-          </template>
-        </NSwitch>
+        <span class="user-modal-title">
+          观众「{{ userDanmakus?.[0]?.uName || '未知用户' }}」在本场的发言 ({{ userDanmakus?.length || 0 }} 条)
+        </span>
       </template>
       <DanmakuContainer
-        :show-live-info="false"
         :current-danmakus="userDanmakus ?? []"
-        :current-live="currentLive"
-        :height="500"
+        :current-live="props.currentLive"
+        height="480px"
         :show-border="false"
-        :show-tools="modalShowTools"
         to="space"
       />
     </NModal>
+
+    <!-- 弹幕导出弹窗 -->
     <NModal
       v-model:show="showExportModal"
       preset="card"
-      style="width: 500px; max-width: 90vw; height: auto"
+      style="width: 480px; max-width: 90vw"
+      title="导出弹幕数据"
     >
-      <template #header> 导出 </template>
       <NSpin :show="isExporting">
         <NFlex
           vertical
-          align="center"
+          :size="16"
         >
-          <NRadioGroup
-            v-model:value="exportType"
-            style="margin: 0 auto"
-          >
-            <NRadioButton value="json"> Json </NRadioButton>
-            <NRadioButton value="xml"> XML </NRadioButton>
-            <NRadioButton value="csv">
-              CSV
-              <NTooltip>
-                <template #trigger>
-                  <NIcon>
-                    <Info12Filled />
-                  </NIcon>
-                </template>
-                只包含弹幕, 可在 Excel 中打开
-              </NTooltip>
-            </NRadioButton>
-          </NRadioGroup>
-          <NCheckbox v-model:checked="onlyExportFilteredDanmakus">
-            仅导出当前筛选结果
-          </NCheckbox>
-          <NButton
-            type="primary"
-            size="large"
-            @click="Export"
-          >
-            导出
-          </NButton>
-          <span />
-          <NCollapse>
-            <NCollapseItem
-              title="关于"
-              name="1"
+          <div>
+            <div class="export-label">选择导出格式</div>
+            <NRadioGroup
+              v-model:value="exportType"
+              name="export-format"
             >
-              <div>
-                文件名格式: {<NTooltip> <template #trigger> 生成时间 </template>Unix </NTooltip>}_{<NTooltip>
-                  <template #trigger> 开始时间 </template>Unix: {{ currentLive.startAt }} </NTooltip
-                >}_{<NTooltip> <template #trigger> 直播间标题 </template>' _ ' 将被转义为 ' - ' </NTooltip>}_{<NTooltip>
-                  <template #trigger> 用户名 </template>{{ accountInfo?.name }} </NTooltip
-                >}.{{ exportType }}
-                <br />
-                弹幕Type对应:
-                <br />● 0 : 上舰 <br />● 1: sc <br />● 2: 礼物 <br />● 3: 弹幕
-              </div>
-            </NCollapseItem>
-          </NCollapse>
-          <span style="color: gray" />
+              <NRadioButton value="json">JSON 完整格式</NRadioButton>
+              <NRadioButton value="xml">XML (B站弹幕机标准)</NRadioButton>
+              <NRadioButton value="csv">CSV (Excel 表格)</NRadioButton>
+            </NRadioGroup>
+          </div>
+
+          <div>
+            <NCheckbox v-model:checked="onlyExportFilteredDanmakus">
+              仅导出当前筛选后的弹幕 (当前 {{ filteredDanmakuCount }} 条)
+            </NCheckbox>
+          </div>
+
+          <NFlex justify="flex-end" :size="10">
+            <NButton @click="showExportModal = false">取消</NButton>
+            <NButton
+              type="primary"
+              :loading="isExporting"
+              @click="handleExport"
+            >
+              立即导出
+            </NButton>
+          </NFlex>
         </NFlex>
       </NSpin>
     </NModal>
+
+    <!-- 筛选控制工具条 (Bento Style) -->
     <NCard
-      style="height: 100%"
-      embedded
-      :bordered="bordered"
-      content-style="padding: 12px"
+      size="small"
+      class="danmaku-toolbar-card"
+      :bordered="props.showBorder"
     >
-      <template #header>
-        <slot name="header" />
-      </template>
-      <template #header-extra>
-        <slot name="header-extra" />
-      </template>
-      <template v-if="showLiveInfo">
-        <LiveInfoContainer
-          :live="currentLive"
-          :show-liver="showLiver"
-          show-area
-          :show-statistic="showStatistic"
-        />
-        <NDivider
-          v-if="toolsVisiable"
-          title-placement="left"
-          style="font-size: 12px"
-        >
-          <NSwitch
-            v-if="showRank"
-            v-model:value="isRanking"
-            size="small"
-            @update-value="OnRank"
-          >
-            <template #checked> 排行 </template>
-            <template #unchecked> 弹幕 </template>
-          </NSwitch>
-          <NDivider
-            v-if="showRank && !isRanking"
-            vertical
-          />
-          <Transition>
-            <span v-if="!isRanking">
-              <NSwitch
-                v-model:value="innerShowTools"
-                size="small"
-              >
-                <template #checked> 工具 </template>
-                <template #unchecked> 工具 </template>
-                <template #icon>
-                  <NIcon :component="Wrench24Filled" />
-                </template>
-              </NSwitch>
-            </span>
-            <span v-else />
-          </Transition>
-        </NDivider>
-        <br v-else />
-      </template>
-      <NCollapseTransition :show="innerShowTools && !isRanking">
+      <NFlex
+        vertical
+        :size="12"
+      >
+        <!-- 第一行：搜索与类型快速过滤 -->
         <NFlex
-          vertical
-          style="padding-bottom: 16px"
+          justify="space-between"
+          align="center"
+          wrap
+          :size="10"
         >
-          <NFlex align="center">
-            <NButton
-              type="primary"
-              size="small"
-              @click="showExportModal = true"
-              @update:value="UpdateDanmakus"
-            >
-              导出
-            </NButton>
-            <NCheckbox
-              v-model:checked="orderDecreasing"
-              @update:checked="UpdateDanmakus"
-            >
-              降序
-            </NCheckbox>
-            <NCollapseTransition :show="filterSelected.includes(EventDataTypes.Message)">
-              <NCheckbox
-                v-model:checked="hideEmoji"
-                @update:checked="UpdateDanmakus"
-              >
-                隐藏表情
-              </NCheckbox>
-            </NCollapseTransition>
-            <NCheckbox v-model:checked="hideAvatar"> 隐藏头像 </NCheckbox>
-            <NCheckbox
-              v-model:checked="orderByPrice"
-              @update:checked="UpdateDanmakus"
-            >
-              按价格排序
-            </NCheckbox>
-          </NFlex>
-          <NFlex align="center">
+          <!-- 搜索输入 -->
+          <NFlex
+            align="center"
+            wrap
+            :size="8"
+          >
             <NInput
               v-model:value="keyword"
-              size="small"
-              style="max-width: 200px"
-              placeholder="内容筛选"
+              placeholder="搜索发言内容、用户名或 UID..."
               clearable
-              @update:value="debouncedFn"
+              size="small"
+              class="danmaku-search-input"
             >
               <template #prefix>
                 <NIcon :component="Search24Filled" />
               </template>
             </NInput>
-            <NCheckbox
-              v-model:checked="enableRegex"
-              @update:checked="UpdateDanmakus"
-            >
+
+            <NCheckbox v-model:checked="enableRegex" size="small">
               正则
             </NCheckbox>
-            <NCheckbox
-              v-model:checked="deselect"
-              @update:checked="UpdateDanmakus"
-            >
+            <NCheckbox v-model:checked="deselect" size="small">
               反选
             </NCheckbox>
           </NFlex>
-          <NFlex align="center">
-            <NInputNumber
-              v-model:value="price"
-              placeholder="最低价格"
-              size="small"
-              style="max-width: 200px"
-              clearable
-              :min="0"
-              @update:value="debouncedFn"
-            >
-              <template #prefix>
-                <NIcon :component="Money20Regular" />
-              </template>
-            </NInputNumber>
-            <NTag
-              size="small"
-              checkable
-              :checked="price === 0.1"
-              @update-checked="ChangePrice(0.1)"
-            >
-              0.1
-            </NTag>
-            <NTag
-              size="small"
-              checkable
-              :checked="price === 1"
-              @update-checked="ChangePrice(1)"
-            >
-              1
-            </NTag>
-            <NTag
-              size="small"
-              checkable
-              :checked="price === 9.9"
-              @update-checked="ChangePrice(9.9)"
-            >
-              9.9
-            </NTag>
-            <NTag
-              size="small"
-              checkable
-              :checked="price === 30"
-              @update-checked="ChangePrice(30)"
-            >
-              30
-            </NTag>
-            <NTag
-              size="small"
-              checkable
-              :checked="price === 100"
-              @update-checked="ChangePrice(100)"
-            >
-              100
-            </NTag>
-          </NFlex>
-          <NCheckboxGroup
-            v-model:value="filterSelected"
-            @update:value="UpdateDanmakus"
-          >
-            <NFlex>
-              <NCheckbox
-                :value="EventDataTypes.Message"
-                label="弹幕"
-              />
-              <NCheckbox
-                :value="EventDataTypes.Gift"
-                label="礼物"
-              />
-              <NCheckbox
-                :value="EventDataTypes.Guard"
-                label="舰长"
-              />
-              <NCheckbox
-                :value="EventDataTypes.SC"
-                label="Superchat"
-              />
 
-              <NCheckbox
-                v-if="existEnterMessage"
-                :value="EventDataTypes.Enter"
-                label="入场"
-              />
-            </NFlex>
-          </NCheckboxGroup>
+          <!-- 右侧：导出与视图选项 -->
+          <NFlex
+            align="center"
+            wrap
+            :size="8"
+          >
+            <NCheckbox v-model:checked="hideEmoji" size="small">
+              隐藏表情
+            </NCheckbox>
+            <NCheckbox v-model:checked="hideAvatar" size="small">
+              隐藏头像
+            </NCheckbox>
+
+            <NDivider vertical />
+
+            <NButton
+              size="small"
+              type="primary"
+              secondary
+              @click="showExportModal = true"
+            >
+              <template #icon>
+                <NIcon :component="DocumentArrowDown20Regular" />
+              </template>
+              导出弹幕
+            </NButton>
+          </NFlex>
         </NFlex>
-        <NDivider
-          style="margin-top: 0px; margin-bottom: 12px"
-          title-placement="left"
+
+        <!-- 第二行：事件类型过滤、价格门槛与排序 -->
+        <NFlex
+          justify="space-between"
+          align="center"
+          wrap
+          :size="10"
         >
-          <NTag
-            style="font-size: 12px"
-            size="small"
+          <!-- 类型多选标签 -->
+          <NFlex
+            align="center"
+            wrap
+            :size="6"
           >
-            {{ filteredDanmakuCount }}
-            {{ filteredDanmakuCount !== totalDanmakuCount ? `/ ${totalDanmakuCount}` : '' }}
-            条
-          </NTag>
-          <NDivider vertical />
-          <NTag
-            style="font-size: 12px"
-            size="small"
-            type="error"
-            :bordered="false"
+            <span class="control-label">事件类型:</span>
+            <NCheckboxGroup v-model:value="filterSelected">
+              <NFlex :size="8" align="center" wrap>
+                <NCheckbox :value="EventDataTypes.Message" size="small">弹幕</NCheckbox>
+                <NCheckbox :value="EventDataTypes.Gift" size="small">礼物</NCheckbox>
+                <NCheckbox :value="EventDataTypes.SC" size="small">SC</NCheckbox>
+                <NCheckbox :value="EventDataTypes.Guard" size="small">舰长</NCheckbox>
+                <NCheckbox :value="EventDataTypes.Enter" size="small">进场</NCheckbox>
+              </NFlex>
+            </NCheckboxGroup>
+          </NFlex>
+
+          <!-- 价格与排序 -->
+          <NFlex
+            align="center"
+            wrap
+            :size="8"
           >
-            💰
-            {{ RoundNumber(totalFilteredPrice) }}
-          </NTag>
-        </NDivider>
-      </NCollapseTransition>
-      <div :style="isRanking ? 'display:none' : ''">
+            <span class="control-label">最低打赏:</span>
+            <div class="price-pills">
+              <span
+                class="price-pill"
+                :class="{ active: price === undefined }"
+                @click="handlePriceQuickSelect(undefined)"
+              >
+                不限
+              </span>
+              <span
+                class="price-pill"
+                :class="{ active: price === 0.1 }"
+                @click="handlePriceQuickSelect(0.1)"
+              >
+                ≥0.1
+              </span>
+              <span
+                class="price-pill"
+                :class="{ active: price === 1 }"
+                @click="handlePriceQuickSelect(1)"
+              >
+                ≥1
+              </span>
+              <span
+                class="price-pill"
+                :class="{ active: price === 30 }"
+                @click="handlePriceQuickSelect(30)"
+              >
+                ≥30
+              </span>
+              <span
+                class="price-pill"
+                :class="{ active: price === 100 }"
+                @click="handlePriceQuickSelect(100)"
+              >
+                ≥100
+              </span>
+            </div>
+
+            <NDivider vertical />
+
+            <NCheckbox v-model:checked="orderDecreasing" size="small">
+              时间倒序
+            </NCheckbox>
+            <NCheckbox v-model:checked="orderByPrice" size="small">
+              按金额排序
+            </NCheckbox>
+          </NFlex>
+        </NFlex>
+      </NFlex>
+
+      <!-- 底部状态计数条 -->
+      <div class="danmaku-statusbar">
+        <span class="status-meta">
+          显示 <strong>{{ filteredDanmakuCount.toLocaleString() }}</strong> / {{ totalDanmakuCount.toLocaleString() }} 条事件
+        </span>
+        <span
+          v-if="totalFilteredPrice > 0"
+          class="status-income"
+        >
+          <NIcon :component="Money24Regular" />
+          筛选范围打赏: <strong>¥{{ totalFilteredPrice.toLocaleString() }}</strong>
+        </span>
+      </div>
+    </NCard>
+
+    <!-- 弹幕虚拟列表渲染 -->
+    <div
+      class="danmaku-list-card"
+      :class="{ 'with-border': props.showBorder }"
+    >
+      <div
+        v-if="filteredDanmakus.length > 0"
+        class="danmaku-scroll-area"
+        :style="{ height: typeof props.height === 'number' ? `${props.height}px` : props.height }"
+      >
         <SimpleVirtualList
-          v-if="filteredDanmakuCount > itemRange"
+          :default-size="28"
+          :default-height="props.height"
           :items="filteredDanmakus"
-          :default-size="itemHeight"
-          :default-height="height ?? 1000"
         >
           <template #default="{ item }">
-            <p :style="`min-height: ${itemHeight}px;width:97%;display:flex;align-items:center;`">
+            <div class="danmaku-row-item">
               <DanmakuItem
                 :danmaku="item"
                 :account-info="accountInfo"
-                :show-name="showName"
                 :show-avatar="!hideAvatar"
-                :height="itemHeight"
-                @on-click-name="OnNameClick"
+                @on-click-name="onNameClick"
               />
-            </p>
+            </div>
           </template>
         </SimpleVirtualList>
-        <p
-          v-for="item in filteredDanmakus"
-          v-else
-          :key="item.id"
-          :style="`min-height: ${itemHeight}px;width:97%;display:flex;align-items:center;`"
-        >
-          <DanmakuItem
-            :danmaku="item"
-            :account-info="accountInfo"
-            :show-name="showName"
-            :show-avatar="!hideAvatar"
-            :height="itemHeight"
-            @on-click-name="OnNameClick"
-          />
-        </p>
       </div>
-      <div v-if="isRanking">
-        <NRadioGroup
-          v-model:value="rankType"
-          size="small"
-        >
-          <NRadioButton :value="RankType.Danmaku"> 弹幕 </NRadioButton>
-          <NRadioButton :value="RankType.Paid"> 付费 </NRadioButton>
-        </NRadioGroup>
-        <NDivider />
-        <NList
-          :show-divider="false"
-          style="background-color: rgba(255, 255, 255, 0)"
-        >
-          <NListItem
-            v-for="user in currentRankInfo"
-            :key="user.ouId"
-          >
-            <span style="display: flex; align-items: center">
-              <NAvatar
-                round
-                size="small"
-                :style="GetRankIndexColor(user.Index)"
-              >
-                {{ user.Index }}
-              </NAvatar>
-              <NDivider vertical />
-              <NButton
-                text
-                type="info"
-                @click="OnNameClick(accountInfo?.biliId ?? 0, user.ouId)"
-              >
-                <NTooltip v-if="user.uName === accountInfo?.name">
-                  <template #trigger>
-                    <NTag
-                      size="small"
-                      type="warning"
-                      style="cursor: pointer"
-                    >
-                      {{ user.uName }}
-                    </NTag>
-                  </template>
-                  主播
-                </NTooltip>
-                <template v-else>
-                  {{ user.uName }}
-                </template>
-              </NButton>
-              <NDivider vertical />
-              <span v-if="rankType === RankType.Danmaku"> {{ user.Danmakus }} 条 </span>
-              <span v-else-if="rankType === RankType.Paid">
-                <NTag
-                  size="small"
-                  type="error"
-                  :bordered="false"
-                >
-                  <NIcon :component="Money24Regular" />
-                  {{ RoundNumber(user.Paid) }}
-                </NTag>
-              </span>
-            </span>
-          </NListItem>
-        </NList>
+
+      <div
+        v-else
+        class="empty-danmaku-box"
+        :style="{ height: typeof props.height === 'number' ? `${props.height}px` : props.height }"
+      >
+        <NEmpty description="没有匹配的弹幕或事件记录" />
       </div>
-    </NCard>
-  </NSpin>
+    </div>
+  </div>
 </template>
 
-<style>
-.vListItem {
-  min-height: 30px;
+<style scoped>
+.danmaku-container-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
 }
 
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 0.3s ease;
+.user-modal-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
 }
 
-.v-enter-from,
-.v-leave-to {
-  opacity: 0;
+.danmaku-toolbar-card {
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-card);
+}
+
+.danmaku-search-input {
+  width: 280px;
+}
+
+.control-label {
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+}
+
+.price-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.price-pill {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background-color: var(--vtsuru-bg-muted);
+  color: var(--vtsuru-fg-muted);
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid var(--vtsuru-border);
+  font-variant-numeric: tabular-nums;
+  transition: all 0.15s ease;
+}
+
+.price-pill:hover {
+  color: var(--vtsuru-brand);
+  border-color: var(--vtsuru-brand);
+}
+
+.price-pill.active {
+  background-color: var(--vtsuru-brand);
+  color: #fff;
+  border-color: var(--vtsuru-brand);
+  font-weight: 600;
+}
+
+.danmaku-statusbar {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--vtsuru-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.status-meta strong {
+  color: var(--vtsuru-fg);
+}
+
+.status-income {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #10b981;
+}
+
+.status-income strong {
+  color: #10b981;
+}
+
+.danmaku-list-card {
+  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-card);
+  overflow: hidden;
+}
+
+.danmaku-list-card.with-border {
+  border: 1px solid var(--vtsuru-border);
+}
+
+.danmaku-scroll-area {
+  padding: 8px 12px;
+}
+
+.danmaku-row-item {
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+}
+
+.empty-danmaku-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.export-label {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--vtsuru-fg);
+}
+
+@media (max-width: 768px) {
+  .danmaku-search-input {
+    width: 100%;
+  }
 }
 </style>

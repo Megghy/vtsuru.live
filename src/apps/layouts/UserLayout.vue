@@ -923,19 +923,8 @@ watch(
             >
               <RouterView v-slot="{ Component, route: viewRoute }">
                 <KeepAlive :max="4">
-                  <template v-if="viewRoute.meta.pageContainer === 'none'">
-                    <component
-                      :is="Component"
-                      :key="route.fullPath.split('#')[0]"
-                      :bili-info="biliUserInfo"
-                      :bili-status="biliProfileStatus"
-                      :user-info="userInfo"
-                    />
-                  </template>
                   <div
-                    v-else
-                    class="user-page"
-                    :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
+                    :class="viewRoute.meta.pageContainer !== 'none' ? ['user-page', viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined] : undefined"
                   >
                     <component
                       :is="Component"

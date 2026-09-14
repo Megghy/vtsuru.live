@@ -516,31 +516,19 @@ onMounted(() => {
       <div class="client-page">
         <RouterView v-slot="{ Component, route: viewRoute }">
           <KeepAlive>
-            <Transition
-              name="fade-slide"
-              mode="out-in"
-              :appear="true"
+            <div
+              :class="viewRoute.meta.pageContainer !== 'none' ? [
+                'client-page-inner',
+                viewRoute.meta.pageWidth === 'md' && 'client-page-inner--md',
+                viewRoute.meta.pageWidth === 'xl' && 'client-page-inner--xl',
+                viewRoute.meta.pageWidth === 'full' && 'client-page-inner--full',
+              ] : undefined"
             >
-              <Suspense>
-                <template v-if="viewRoute.meta.pageContainer === 'none'">
-                  <component :is="Component" />
-                </template>
-                <div
-                  v-else
-                  class="client-page-inner"
-                  :class="{
-                    'client-page-inner--md': viewRoute.meta.pageWidth === 'md',
-                    'client-page-inner--xl': viewRoute.meta.pageWidth === 'xl',
-                    'client-page-inner--full': viewRoute.meta.pageWidth === 'full',
-                  }"
-                >
-                  <component :is="Component" />
-                </div>
-                <template #fallback>
-                  <div class="suspense-fallback">加载中...</div>
-                </template>
-              </Suspense>
-            </Transition>
+              <component
+                :is="Component"
+                :key="viewRoute.fullPath.split('#')[0]"
+              />
+            </div>
           </KeepAlive>
         </RouterView>
       </div>

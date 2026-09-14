@@ -1,338 +1,132 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { clearInterval, setInterval } from 'worker-timers'
 
-import type { VoteOBSData, VoteOption } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import type { VoteOBSData } from '@/api/api-models'
+import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
 import { VOTE_API_URL } from '@/shared/config'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
-const props = defineProps<{
-  active?: boolean
-  visible?: boolean
-}>()
-
 const route = useRoute()
-const voteData = ref<VoteOBSData | null>(null)
-const fetchIntervalId = ref<number | null>(null)
-const nowMs = ref<number>(Date.now())
-const tickIntervalId = ref<number | null>(null)
 
-const timeLeftMs = computed(() => {
-  if (!voteData.value?.endTime) return null
-  const remain = voteData.value.endTime * 1000 - nowMs.value
-  return Math.max(0, remain)
+// 状态管理
+const voteData = ref<VoteOBSData | null>(null)
+const lastHash = ref<string>('')
+const isLoading = ref<boolean>(true)
+const nowMs = ref(Date.now())
+
+// 路由与凭证参数
+const targetUserId = computed(() => parsePositiveId(firstQueryValue(route.query.id)))
+const token = computed(() => firstQueryValue(route.query.token) || undefined)
+const currentTheme = computed(() => firstQueryValue(route.query.theme) || undefined)
+const currentPosition = computed(() => firstQueryValue(route.query.position) || 'bottom-right')
+const maxDisplayCount = computed(() => {
+  const parsed = Number(parsePositiveId(firstQueryValue(route.query.max)))
+  return parsed > 0 ? parsed : 6
 })
 
-function formatRemain(ms: number | null | undefined) {
-  if (ms == null) return ''
-  const total = Math.floor(ms / 1000)
-  const mm = Math.floor(total / 60)
-    .toString()
-    .padStart(2, '0')
-  const ss = (total % 60).toString().padStart(2, '0')
-  return `${mm}:${ss}`
+let pollTimer: number | undefined
+let clockTimer: number | undefined
+
+// 轮询轻量探针 Hash
+async function pollHash() {
+  if (!targetUserId.value && !token.value) {
+    isLoading.value = false
+    return
+  }
+
+  try {
+    const params: Record<string, any> = {}
+    if (targetUserId.value) params.id = targetUserId.value
+    if (token.value) params.token = token.value
+
+    const res = await QueryGetAPI<{ hash: string; hasActive: boolean }>(`${VOTE_API_URL}obs-hash`, params)
+    if (res.code === 200 && res.data) {
+      if (!res.data.hasActive) {
+        voteData.value = null
+        lastHash.value = ''
+        return
+      }
+      if (res.data.hash !== lastHash.value) {
+        await fetchFullData()
+        lastHash.value = res.data.hash
+      }
+    }
+  } catch (err) {
+    console.warn('[DanmakuVoteOBS] 轮询哈希失败:', err)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-// 可见性检测
-const isVisible = computed(() => props.visible !== false)
-const isActive = computed(() => props.active !== false)
-
-// 从后端获取投票数据
-async function fetchVoteData() {
+// 获取 OBS 全量展示快照
+async function fetchFullData() {
   try {
-    const userId = getUserIdFromUrl()
-    if (!userId) return
+    const params: Record<string, any> = {}
+    if (targetUserId.value) params.id = targetUserId.value
+    if (token.value) params.token = token.value
 
-    const result = await QueryGetAPI<VoteOBSData>(`${VOTE_API_URL}obs-data`, { id: userId, user: userId })
-
-    if (result.code === 200 && result.data) {
-      voteData.value = result.data
-      // 更新每个选项的百分比（若后端未提供）
-      if (voteData.value && voteData.value.options) {
-        voteData.value.options.forEach((option) => {
-          if (option.percentage == null && voteData.value!.totalVotes > 0) {
-            option.percentage = calculatePercentage(option.count, voteData.value!.totalVotes)
-          }
-        })
-      }
-    } else if (voteData.value && !result.data) {
-      // 投票结束或无投票
+    const res = await QueryGetAPI<VoteOBSData>(`${VOTE_API_URL}obs-data`, params)
+    if (res.code === 200 && res.data) {
+      voteData.value = res.data
+    } else {
       voteData.value = null
     }
-  } catch (error) {
-    console.error('获取投票数据失败:', error)
+  } catch (err) {
+    console.error('[DanmakuVoteOBS] 获取数据失败:', err)
   }
 }
-
-// 从URL获取用户ID
-function getUserIdFromUrl(): string | null {
-  const id = parsePositiveId(route.query.id)
-  if (id) return id
-  const hash = firstQueryValue(route.query.hash)
-  if (hash.includes('_')) {
-    const userId = hash.split('_').at(-1)
-    return parsePositiveId(userId) || null
-  }
-  return parsePositiveId(route.query.user) || firstQueryValue(route.query.user) || null
-}
-
-// 计算百分比
-function calculatePercentage(count: number, total: number): number {
-  if (total === 0) return 0
-  return Math.round((count / total) * 100)
-}
-
-// 设置投票数据轮询（有活跃数据时1秒，无数据时5秒）
-let lastHadData = false
-function setupPolling() {
-  if (fetchIntervalId.value) {
-    clearInterval(fetchIntervalId.value)
-  }
-
-  fetchVoteData()
-  fetchIntervalId.value = setInterval(async () => {
-    await fetchVoteData()
-    // 无活跃投票时降频至5秒
-    const hasData = voteData.value != null
-    if (!hasData && lastHadData && fetchIntervalId.value) {
-      clearInterval(fetchIntervalId.value)
-      fetchIntervalId.value = setInterval(() => fetchVoteData(), 5000) as unknown as number
-    } else if (hasData && !lastHadData && fetchIntervalId.value) {
-      clearInterval(fetchIntervalId.value)
-      fetchIntervalId.value = setInterval(() => fetchVoteData(), 1000) as unknown as number
-    }
-    lastHadData = hasData
-  }, 1000)
-}
-
-// 获取某个选项占总票数的百分比
-function getPercentage(option: VoteOption): number {
-  if (!voteData.value || voteData.value.totalVotes === 0) return 0
-  return option.percentage || 0
-}
-
-// 主题相关
-const theme = computed(() => {
-  if (route.query.theme && typeof route.query.theme === 'string') {
-    return route.query.theme
-  }
-  return 'default'
-})
 
 onMounted(() => {
-  setupPolling()
-  tickIntervalId.value = setInterval(() => {
+  pollHash()
+  pollTimer = window.setInterval(pollHash, 1000)
+  clockTimer = window.setInterval(() => {
     nowMs.value = Date.now()
-  }, 1000)
+  }, 500)
+})
 
-  onUnmounted(() => {
-    if (fetchIntervalId.value) {
-      clearInterval(fetchIntervalId.value)
-    }
-    if (tickIntervalId.value) {
-      clearInterval(tickIntervalId.value)
-    }
-  })
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
+  if (clockTimer) clearInterval(clockTimer)
+})
+
+watch([targetUserId, token], () => {
+  lastHash.value = ''
+  pollHash()
 })
 </script>
 
 <template>
-  <div
-    v-if="voteData && isVisible && isActive"
-    class="danmaku-vote-obs"
-    :class="[`theme-${theme}`, `position-${voteData.displayPosition || 'right'}`, { rounded: voteData.roundedCorners }]"
-    :style="{
-      '--bg-color': voteData.backgroundColor || '#1e1e2e',
-      '--text-color': voteData.textColor || '#ffffff',
-      '--option-color': voteData.optionColor || '#89b4fa',
-      '--bg-image': voteData.backgroundImage ? `url(${voteData.backgroundImage})` : 'none',
-    }"
-  >
-    <div class="vote-container">
-      <div class="vote-header">
-        <div class="vote-title">
-          {{ voteData.title }}
-          <span
-            v-if="timeLeftMs !== null"
-            class="vote-timer"
-            >剩余 {{ formatRemain(timeLeftMs) }}</span
-          >
-        </div>
-      </div>
-
-      <div class="vote-stats">
-        总票数: <span class="vote-count">{{ voteData.totalVotes }}</span>
-      </div>
-
-      <div class="vote-options">
-        <div
-          v-for="(option, index) in voteData.options"
-          :key="index"
-          class="vote-option"
-        >
-          <div class="option-header">
-            <div class="option-name">{{ index + 1 }}. {{ option.text }}</div>
-            <div
-              v-if="voteData.showResults"
-              class="option-count-wrapper"
-            >
-              <span class="option-count">{{ option.count }}</span>
-              <span class="option-percent">{{ getPercentage(option) }}%</span>
-            </div>
-          </div>
-
-          <div
-            v-if="voteData.showResults"
-            class="progress-wrapper"
-          >
-            <div
-              class="progress-bar"
-              :style="`width: ${getPercentage(option)}%`"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="danmaku-vote-obs-page" :class="[`pos-${currentPosition}`]">
+    <DanmakuVoteCard
+      :data="voteData"
+      :theme="currentTheme"
+      :position="currentPosition"
+      :max-display="maxDisplayCount"
+      :current-time-ms="nowMs"
+    />
   </div>
 </template>
 
 <style scoped>
-.danmaku-vote-obs {
-  width: 100%;
-  height: 100%;
+.danmaku-vote-obs-page {
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 24px;
   overflow: hidden;
-  font-family: 'Microsoft YaHei', sans-serif;
-  color: var(--text-color);
+  background: transparent;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 
-.vote-container {
-  width: 90%;
-  max-width: 600px;
-  background-color: var(--bg-color);
-  background-image: var(--bg-image);
-  background-size: cover;
-  background-position: center;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.danmaku-vote-obs.rounded .vote-container {
-  border-radius: 12px;
-}
-
-.vote-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.vote-title {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.vote-stats {
-  margin-bottom: 16px;
-  font-size: 16px;
-  opacity: 0.9;
-}
-
-.vote-count {
-  font-weight: bold;
-  color: var(--option-color);
-}
-
-.vote-options {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.vote-option {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 12px;
-}
-
-.option-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.option-name {
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.option-count-wrapper {
-  display: flex;
-  gap: 8px;
-}
-
-.option-count {
-  background-color: var(--option-color);
-  color: var(--bg-color);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.option-percent {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: var(--text-color);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.progress-wrapper {
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.progress-bar {
-  height: 100%;
-  background: var(--option-color);
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-/* 位置样式 */
-.position-right {
-  justify-content: flex-end;
-}
-
-.position-left {
-  justify-content: flex-start;
-}
-
-.position-top {
-  align-items: flex-start;
-}
-
-.position-bottom {
-  align-items: flex-end;
-}
-
-/* 主题样式 */
-.theme-transparent .vote-container {
-  background-color: rgba(0, 0, 0, 0.6);
-  box-shadow: none;
-}
+.pos-top-left { justify-content: flex-start; align-items: flex-start; }
+.pos-top-center { justify-content: center; align-items: flex-start; }
+.pos-top-right { justify-content: flex-end; align-items: flex-start; }
+.pos-center-left { justify-content: flex-start; align-items: center; }
+.pos-center { justify-content: center; align-items: center; }
+.pos-center-right { justify-content: flex-end; align-items: center; }
+.pos-bottom-left { justify-content: flex-start; align-items: flex-end; }
+.pos-bottom-center { justify-content: center; align-items: flex-end; }
+.pos-bottom-right { justify-content: flex-end; align-items: flex-end; }
 </style>

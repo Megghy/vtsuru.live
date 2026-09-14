@@ -101,7 +101,7 @@ watch(
       props.initialValue?.allowedPartitions?.length ||
       props.initialValue?.maxVideoPerUser ||
       props.initialValue?.requireDescription ||
-      (props.initialValue?.duplicatePolicy &&
+      (props.initialValue?.duplicatePolicy !== undefined &&
         props.initialValue.duplicatePolicy !== DuplicateVideoPolicy.MergeRecommendations),
     )
     expandedNames.value = hasCustomAdvanced ? ['advanced'] : []

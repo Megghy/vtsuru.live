@@ -73,32 +73,36 @@ async function updateSettings() {
   >
     <NCard
       size="small"
-      :bordered="false"
-      content-style="padding: 0;"
+      bordered
+      content-style="padding: 10px 14px;"
     >
       <NFlex
         justify="space-between"
         align="center"
+        wrap
+        :size="[12, 10]"
       >
-        <!-- 左侧统计 -->
+        <!-- 左侧统计指示 -->
         <NFlex
           align="center"
-          :size="16"
+          :size="10"
         >
-          <NTag
-            type="success"
-            round
-            :bordered="false"
-          >
-            <template #icon>
-              <NIcon :component="PeopleQueue24Filled" />
-            </template>
-            队列: {{ waitingCount }}
-          </NTag>
           <NTag
             type="info"
             round
             :bordered="false"
+            size="small"
+          >
+            <template #icon>
+              <NIcon :component="PeopleQueue24Filled" />
+            </template>
+            待唱: {{ waitingCount }}
+          </NTag>
+          <NTag
+            type="success"
+            round
+            :bordered="false"
+            size="small"
           >
             <template #icon>
               <NIcon :component="Checkmark12Regular" />
@@ -107,24 +111,30 @@ async function updateSettings() {
           </NTag>
           <NText
             depth="3"
-            style="font-size: 12px"
+            style="font-size: 12px; margin-left: 4px;"
           >
             共 {{ songRequest.activeSongs.length }} 首
           </NText>
         </NFlex>
 
-        <!-- 右侧操作 -->
-        <NFlex align="center">
-          <NInputGroup size="small">
+        <!-- 右侧操作与过滤 -->
+        <NFlex
+          align="center"
+          wrap
+          :size="8"
+        >
+          <NInputGroup style="width: 220px">
             <NInput
               :value="songRequest.newSongName"
-              placeholder="手动添加歌曲"
-              style="width: 150px"
+              placeholder="手动输入歌曲名"
+              size="small"
+              clearable
               @update:value="songRequest.newSongName = $event"
+              @keyup.enter="songRequest.addSongManual()"
             />
             <NButton
               type="primary"
-              ghost
+              size="small"
               @click="songRequest.addSongManual()"
             >
               添加
@@ -165,12 +175,12 @@ async function updateSettings() {
               <NButton
                 type="error"
                 size="small"
-                ghost
+                secondary
               >
                 全部取消
               </NButton>
             </template>
-            确定全部取消吗?
+            确定要取消全部待唱歌曲吗?
           </NPopconfirm>
         </NFlex>
       </NFlex>

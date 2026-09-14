@@ -2,15 +2,28 @@
 import {
   ArrowReset24Regular,
   CloudCheckmark24Regular,
-  Copy16Regular,
+  Code24Regular,
+  Color24Regular,
+  Copy24Regular,
+  Desktop24Regular,
+  Eye24Regular,
+  Flash24Regular,
+  Gift24Regular,
+  Money24Regular,
+  Play24Filled,
   Save24Regular,
   Send24Regular,
+  Settings24Regular,
+  ShieldCheckmark24Regular,
   Sparkle24Regular,
+  Target24Regular,
+  VehicleShip24Regular,
+  Wrench24Regular,
 } from '@vicons/fluent'
-import { useWindowSize } from '@vueuse/core'
 import {
   NAlert,
   NButton,
+  NButtonGroup,
   NCard,
   NCheckbox,
   NDivider,
@@ -19,501 +32,286 @@ import {
   NFormItem,
   NGi,
   NGrid,
+  NGridItem,
   NIcon,
   NInput,
   NInputNumber,
+  NModal,
   NPopconfirm,
   NRadioButton,
   NRadioGroup,
   NSelect,
-  NSplit,
+  NSpin,
   NSwitch,
   NTabPane,
   NTabs,
   NTag,
-  NTooltip,
+  NText,
   useMessage,
 } from 'naive-ui'
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
 
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
-import { EventDataTypes, GuardLevel } from '@/api/api-models'
-import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
-import type { DanmujiConfig } from '@/apps/obs/pages/DanmujiOBS.vue'
+import { EventDataTypes } from '@/api/api-models'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
+import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
+import { DANMUJI_PRESETS, defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
-import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
-import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { copyToClipboard, isDarkMode } from '@/shared/utils'
+import { copyToClipboard } from '@/shared/utils'
 
-const props = defineProps<{
-  openLiveAuth?: AuthInfo
-}>()
-
-const accountInfo = useAccount()
-const css = usePersistedStorage('danmuji-css', defaultDanmujiCss)
-const danmujiObsRef = ref<InstanceType<typeof DanmujiOBS> | null>(null)
-const message = useMessage()
-const { width: windowWidth } = useWindowSize()
-
-const isSavingCloud = ref(false)
-const serverConfigSnapshot = ref<string>('')
-const previewBgMode = ref<'transparent' | 'dark' | 'light' | 'game'>('transparent')
-
-const obsUrl = computed(() => {
-  const tokenUrl = buildObsSourceUrl({
-    path: 'obs/danmuji',
-    host: CURRENT_HOST,
-    credential: 'token',
-    token: accountInfo.value?.id ? accountInfo.value.token : undefined,
-  })
-  if (tokenUrl) return tokenUrl
-  if (!props.openLiveAuth?.Code) return ''
-  const params: Record<string, string> = {}
-  for (const key of ['Timestamp', 'Code', 'Mid', 'Caller', 'CodeSign'] as const) {
-    const value = props.openLiveAuth[key]
-    if (value) params[key] = value
-  }
-  return buildObsSourceUrl({
-    path: 'obs/danmuji',
-    host: CURRENT_HOST,
-    credential: 'none',
-    params,
-  })
-})
-
-const testFormData = reactive({
-  type: EventDataTypes.Message,
-  uname: '测试用户',
-  uid: 10001,
-  msg: '这是一条测试弹幕',
-  price: 30,
-  num: 1,
-  guard_level: GuardLevel.Jianzhang,
-  fans_medal_level: 10,
-  fans_medal_name: '测试牌子',
-  sc_id_to_delete: '',
-})
-
-const messageTypeOptions = [
-  { label: '弹幕 (Message)', value: EventDataTypes.Message },
-  { label: '礼物 (Gift)', value: EventDataTypes.Gift },
-  { label: '舰长 (Guard)', value: EventDataTypes.Guard },
-  { label: '醒目留言 (SC)', value: EventDataTypes.SC },
-  { label: '删除SC (SCDel)', value: EventDataTypes.SCDel },
-]
-
-const guardLevelOptions = [
-  { label: '非舰长', value: GuardLevel.None },
-  { label: '舰长', value: GuardLevel.Jianzhang },
-  { label: '提督', value: GuardLevel.Tidu },
-  { label: '总督', value: GuardLevel.Zongdu },
-]
-
-function randomDigits(length = 4) {
-  const min = length > 1 ? 10 ** (length - 1) : 0
-  const max = 10 ** length - 1
-  return Math.floor(Math.random() * (max - min + 1)) + min
+interface DanmujiConfig {
+  showDanmaku: boolean
+  showGift: boolean
+  showGiftName: boolean
+  mergeSimilarDanmaku: boolean
+  mergeGift: boolean
+  minGiftPrice: number
+  maxNumber: number
+  blockUsers: string[]
+  blockKeywords: string[]
+  giftUsernamePronunciation: string
 }
 
-function generateTestUsername() {
-  return `热心观众${randomDigits(4)}`
-}
-
-function generateTestMessage() {
-  const templates = ['今晚开播辛苦啦！', '主播这把太帅了！', '打卡打卡~', '加油加油！', '刚才那波走位真细节']
-  const template = templates[Math.floor(Math.random() * templates.length)]
-  return `${template} (${randomDigits(3)})`
-}
-
-function generateTestGiftName() {
-  const gifts = ['辣条', '小电视飞船', '小心心', 'B坷垃', '打call']
-  return gifts[Math.floor(Math.random() * gifts.length)]
-}
-
-function generateTestMedalName() {
-  const medals = ['小仙女', '头号粉丝', '干饭人', '元气满分']
-  return medals[Math.floor(Math.random() * medals.length)]
-}
-
-// 保存 DanmujiConfig 配置
-const danmujiConfig = usePersistedStorage<DanmujiConfig>('danmuji-config', {
-  minGiftPrice: 0.1,
+const defaultConfig: DanmujiConfig = {
   showDanmaku: true,
   showGift: true,
   showGiftName: true,
   mergeSimilarDanmaku: false,
   mergeGift: true,
+  minGiftPrice: 0.1,
   maxNumber: 60,
-  blockLevel: 0,
-  blockKeywords: '',
-  blockUsers: '',
-  blockMedalLevel: 0,
+  blockUsers: [],
+  blockKeywords: [],
   giftUsernamePronunciation: '',
-  importPresetCss: false,
-  emoticons: [],
-})
+}
+
+const message = useMessage()
+const accountInfo = useAccount()
+
+// 激活视图 Tab
+const activeMainTab = ref<'settings' | 'preview'>('settings')
+
+// CSS 与配置持久化
+const css = usePersistedStorage<string>('Danmuji.Css', defaultDanmujiCss)
+const danmujiConfig = usePersistedStorage<DanmujiConfig>('Danmuji.Config', defaultConfig)
+
+const serverConfigSnapshot = ref<string>('')
+const isSavingCloud = ref(false)
+const isLoading = ref(false)
 
 const hasUnsavedConfig = computed(() => {
   if (!serverConfigSnapshot.value) return false
   return JSON.stringify(danmujiConfig.value) !== serverConfigSnapshot.value
 })
 
-const activeTab = usePersistedStorage('danmuji-active-tab', 'style')
+// OBS 链接
+const obsUrl = computed(() => {
+  return buildObsSourceUrl({
+    path: 'obs/danmuji',
+    host: CURRENT_HOST,
+    credential: 'token',
+    token: accountInfo.value?.id ? accountInfo.value.token : undefined,
+  })
+})
 
-// 自动模拟弹幕
+// 选中的预设 ID
+const selectedPresetId = ref<string>('glass')
+
+function applyPreset(presetId: 'glass' | 'minimal' | 'anime' | 'transparent') {
+  const target = DANMUJI_PRESETS.find((p) => p.id === presetId)
+  if (!target) return
+  selectedPresetId.value = presetId
+  css.value = target.css
+  message.success(`已应用「${target.name}」预设`)
+}
+
+function resetCssToDefault() {
+  css.value = defaultDanmujiCss
+  selectedPresetId.value = 'glass'
+  message.success('已重设为默认 CSS 样式')
+}
+
+function resetConfigToDefault() {
+  danmujiConfig.value = { ...defaultConfig }
+  message.success('已恢复默认功能配置')
+}
+
+// ================= 仿真与测试系统 =================
+const danmujiObsRef = shallowRef<any>(null)
+const previewBg = ref<'checker' | 'dark' | 'light' | 'game'>('checker')
 const isAutoGenerating = ref(false)
 const autoGenerateInterval = ref(1.5)
 let autoGenerateTimer: ReturnType<typeof setTimeout> | null = null
 
-const autoGenData = reactive({
-  type: EventDataTypes.Message,
-  uname: '',
-  uid: 0,
-  msg: '',
-  price: 0,
-  num: 1,
-  guard_level: GuardLevel.None,
-  fans_medal_level: 0,
-  fans_medal_name: '',
+// 屏蔽词辅助编辑
+const blockUsersText = computed({
+  get: () => danmujiConfig.value.blockUsers?.join('\n') || '',
+  set: (val: string) => {
+    danmujiConfig.value.blockUsers = val.split('\n').map((s) => s.trim()).filter(Boolean)
+  },
 })
 
-function resetCssToDefault() {
-  css.value = defaultDanmujiCss
-  message.success('已重设为默认 CSS')
-}
-
-function resetConfigToDefault() {
-  danmujiConfig.value = {
-    minGiftPrice: 0.1,
-    showDanmaku: true,
-    showGift: true,
-    showGiftName: true,
-    mergeSimilarDanmaku: false,
-    mergeGift: true,
-    maxNumber: 60,
-    blockLevel: 0,
-    blockKeywords: '',
-    blockUsers: '',
-    blockMedalLevel: 0,
-    giftUsernamePronunciation: '',
-    importPresetCss: false,
-    emoticons: [],
-  }
-  message.success('功能配置已重置为默认值')
-}
-
-function generateRandomContent() {
-  testFormData.uname = generateTestUsername()
-  testFormData.uid = Math.floor(Math.random() * 90000) + 10000
-
-  switch (testFormData.type) {
-    case EventDataTypes.Message: {
-      testFormData.msg = generateTestMessage()
-      testFormData.fans_medal_level = Math.floor(Math.random() * 31)
-      testFormData.fans_medal_name = generateTestMedalName()
-      const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length)
-      testFormData.guard_level = guardLevelOptions[guardRandomIndex].value
-      break
-    }
-
-    case EventDataTypes.Gift:
-      testFormData.msg = generateTestGiftName()
-      testFormData.num = Math.floor(Math.random() * 20) + 1
-      testFormData.price = Math.floor(Math.random() * 50) + 1
-      break
-
-    case EventDataTypes.Guard: {
-      const guardOptions = guardLevelOptions.filter((option) => option.value !== GuardLevel.None)
-      const guardIndex = Math.floor(Math.random() * guardOptions.length)
-      testFormData.guard_level = guardOptions[guardIndex].value
-      break
-    }
-
-    case EventDataTypes.SC:
-      testFormData.msg = generateTestMessage()
-      testFormData.price = Math.floor(Math.random() * 496) + 5
-      break
-
-    case EventDataTypes.SCDel:
-      testFormData.sc_id_to_delete = `test-sc-${Date.now() - Math.floor(Math.random() * 10000)}`
-      break
-  }
-}
-
-function sendTestMessage() {
-  if (!danmujiObsRef.value) return
-
-  let dataPayload: any = {}
-  const baseMsg = testFormData.msg
-  const basePrice = testFormData.price
-  const baseGuardLevel = testFormData.guard_level
-
-  switch (testFormData.type) {
-    case EventDataTypes.Message:
-      dataPayload = {
-        msg_id: `test-danmaku-${Date.now()}`,
-        timestamp: Date.now() / 1000,
-        msg: testFormData.msg,
-        uname: testFormData.uname,
-        uid: testFormData.uid,
-        guard_level: testFormData.guard_level,
-        fans_medal_level: testFormData.fans_medal_level,
-        fans_medal_name: testFormData.fans_medal_name,
-      }
-      break
-    case EventDataTypes.Gift:
-      dataPayload = {
-        msg_id: `test-gift-${Date.now()}`,
-        timestamp: Date.now() / 1000,
-        gift_name: testFormData.msg,
-        gift_num: testFormData.num,
-        price: testFormData.price * 1000,
-        paid: true,
-        uname: testFormData.uname,
-        uid: testFormData.uid,
-      }
-      break
-    case EventDataTypes.Guard:
-      dataPayload = {
-        msg_id: `test-guard-${Date.now()}`,
-        timestamp: Date.now() / 1000,
-        guard_level: testFormData.guard_level,
-        user_info: {
-          uname: testFormData.uname,
-          uid: testFormData.uid,
-          uface: '',
-        },
-      }
-      break
-    case EventDataTypes.SC:
-      dataPayload = {
-        msg_id: `test-sc-${Date.now()}`,
-        timestamp: Date.now() / 1000,
-        message: testFormData.msg,
-        rmb: testFormData.price,
-        uname: testFormData.uname,
-        uid: testFormData.uid,
-      }
-      break
-    case EventDataTypes.SCDel:
-      dataPayload = {
-        message_ids: [testFormData.sc_id_to_delete || `test-sc-${Date.now() - 5000}`],
-      }
-      break
-  }
-
-  const eventToSend = {
-    type: testFormData.type,
-    uname: testFormData.uname,
-    uid: Number(testFormData.uid ?? 0),
-    msg: dataPayload.message ?? dataPayload.msg ?? baseMsg,
-    price: Number(dataPayload.rmb ?? basePrice ?? 0),
-    num: Number(testFormData.num ?? 1),
-    guard_level: dataPayload.guard_level ?? baseGuardLevel,
-    fans_medal_level: Number(testFormData.fans_medal_level ?? 0),
-    fans_medal_name: testFormData.fans_medal_name,
-    time: dataPayload.timestamp ?? Date.now() / 1000,
-    data: dataPayload,
-  }
-
-  danmujiObsRef.value.testAddMessage(eventToSend as any)
-}
-
-function generateAutoContent() {
-  autoGenData.uname = generateTestUsername()
-  autoGenData.uid = Math.floor(Math.random() * 90000) + 10000
-
-  switch (autoGenData.type) {
-    case EventDataTypes.Message: {
-      autoGenData.msg = generateTestMessage()
-      autoGenData.fans_medal_level = Math.floor(Math.random() * 25)
-      autoGenData.fans_medal_name = generateTestMedalName()
-      const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length)
-      autoGenData.guard_level = guardLevelOptions[guardRandomIndex].value
-      break
-    }
-    case EventDataTypes.Gift:
-      autoGenData.msg = generateTestGiftName()
-      autoGenData.num = Math.floor(Math.random() * 10) + 1
-      autoGenData.price = Math.floor(Math.random() * 30) + 1
-      break
-    case EventDataTypes.Guard: {
-      const guardOptions = guardLevelOptions.filter((option) => option.value !== GuardLevel.None)
-      const guardIndex = Math.floor(Math.random() * guardOptions.length)
-      autoGenData.guard_level = guardOptions[guardIndex].value
-      break
-    }
-    case EventDataTypes.SC:
-      autoGenData.msg = generateTestMessage()
-      autoGenData.price = Math.floor(Math.random() * 100) + 30
-      break
-  }
-}
-
-function sendAutoMessage() {
-  if (!danmujiObsRef.value) return
-
-  let dataPayload: any = {}
-
-  switch (autoGenData.type) {
-    case EventDataTypes.Message:
-      dataPayload = {
-        msg_id: `test-danmaku-${Date.now()}`,
-        timestamp: Date.now() / 1000,
-        msg: autoGenData.msg,
-        uname: autoGenData.uname,
-        uid: autoGenData.uid,
-        guard_level: autoGenData.guard_level,
-        fans_medal_level: autoGenData.fans_medal_level,
-        fans_medal_name: autoGenData.fans_medal_name,
-      }
-      break
-    case EventDataTypes.Gift:
-      dataPayload = {
-        msg_id: `test-gift-${Date.now()}`,
-        timestamp: Date.now() / 1000,
-        gift_name: autoGenData.msg,
-        gift_num: autoGenData.num,
-        price: autoGenData.price * 1000,
-        paid: true,
-        uname: autoGenData.uname,
-        uid: autoGenData.uid,
-      }
-      break
-    case EventDataTypes.Guard:
-      dataPayload = {
-        msg_id: `test-guard-${Date.now()}`,
-        timestamp: Date.now() / 1000,
-        guard_level: autoGenData.guard_level,
-        user_info: {
-          uname: autoGenData.uname,
-          uid: autoGenData.uid,
-          uface: '',
-        },
-      }
-      break
-    case EventDataTypes.SC:
-      dataPayload = {
-        msg_id: `test-sc-${Date.now()}`,
-        timestamp: Date.now() / 1000,
-        message: autoGenData.msg,
-        rmb: autoGenData.price,
-        uname: autoGenData.uname,
-        uid: autoGenData.uid,
-      }
-      break
-  }
-
-  const eventToSend = {
-    type: autoGenData.type,
-    uname: autoGenData.uname,
-    uid: Number(autoGenData.uid),
-    msg: dataPayload.message ?? dataPayload.msg ?? autoGenData.msg,
-    price: Number(dataPayload.rmb ?? autoGenData.price ?? 0),
-    num: Number(autoGenData.num ?? 1),
-    guard_level: dataPayload.guard_level ?? autoGenData.guard_level,
-    fans_medal_level: Number(autoGenData.fans_medal_level ?? 0),
-    fans_medal_name: autoGenData.fans_medal_name,
-    time: dataPayload.timestamp ?? Date.now() / 1000,
-    data: dataPayload,
-  }
-
-  danmujiObsRef.value.testAddMessage(eventToSend as any)
-}
-
-function startAutoGenerate() {
-  if (autoGenerateTimer) {
-    clearTimeout(autoGenerateTimer)
-  }
-
-  if (!isAutoGenerating.value) return
-
-  const messageTypes = [EventDataTypes.Message, EventDataTypes.Gift, EventDataTypes.Guard, EventDataTypes.SC]
-  autoGenData.type = Math.random() < 0.65 ? EventDataTypes.Message : messageTypes[Math.floor(Math.random() * messageTypes.length)]
-
-  generateAutoContent()
-  sendAutoMessage()
-
-  autoGenerateTimer = setTimeout(startAutoGenerate, autoGenerateInterval.value * 1000)
-}
-
-function addInitialTestMessages() {
-  if (!danmujiObsRef.value) return
-
-  setTimeout(() => {
-    for (let i = 0; i < 4; i++) {
-      autoGenData.type = EventDataTypes.Message
-      generateAutoContent()
-      sendAutoMessage()
-    }
-
-    autoGenData.type = EventDataTypes.Gift
-    generateAutoContent()
-    sendAutoMessage()
-
-    autoGenData.type = EventDataTypes.SC
-    generateAutoContent()
-    sendAutoMessage()
-  }, 400)
-}
-
-watch(
-  isAutoGenerating,
-  (newValue) => {
-    if (newValue) {
-      startAutoGenerate()
-    } else if (autoGenerateTimer) {
-      clearTimeout(autoGenerateTimer)
-      autoGenerateTimer = null
-    }
+const blockKeywordsText = computed({
+  get: () => danmujiConfig.value.blockKeywords?.join('\n') || '',
+  set: (val: string) => {
+    danmujiConfig.value.blockKeywords = val.split('\n').map((s) => s.trim()).filter(Boolean)
   },
-  { immediate: true },
-)
+})
 
-async function downloadConfigFromServer() {
-  const result = await DownloadConfig<DanmujiConfig>('danmuji-config')
-  if (result.status === 'success' && result.data) {
-    danmujiConfig.value = result.data
-    serverConfigSnapshot.value = JSON.stringify(result.data)
-    message.success('已同步云端弹幕机配置')
-    return true
-  }
-  return false
+// 测试数据表单
+const testFormData = reactive({
+  type: EventDataTypes.Message,
+  uname: '桃饱网高级会员',
+  face: 'https://i0.hdslb.com/bfs/face/member/noface.jpg',
+  price: 50,
+  message: '主播好棒！太帅了！',
+  gift_name: '小心心',
+  num: 1,
+  guard_level: 3,
+  fans_medal_level: 21,
+  fans_medal_name: '小蛋糕',
+})
+
+const sampleMessages = [
+  '主播今晚玩什么游戏呀？',
+  '2333333333 太草了',
+  '单抽出奇迹！吸吸欧气！',
+  '前面的别跑，加我一个！',
+  '666666 这波操作拉满了',
+  '晚上好！今天也准时来报到啦～',
+  '这波配合简直天衣无缝！',
+]
+
+const sampleUsers = ['七海的大号', '猫猫不吃鱼', '冰镇可乐加冰', '星空漫步者', '巡音流歌', '夜雨声烦']
+const sampleGifts = [
+  { name: '小心心', price: 0.1 },
+  { name: '辣条', price: 0.2 },
+  { name: '吃瓜', price: 1 },
+  { name: '牛哇牛哇', price: 5 },
+  { name: '能量饮料', price: 9.9 },
+  { name: 'B坷垃', price: 28 },
+  { name: '摩天大楼', price: 450 },
+]
+
+function generateRandomTest() {
+  testFormData.uname = sampleUsers[Math.floor(Math.random() * sampleUsers.length)]
+  testFormData.message = sampleMessages[Math.floor(Math.random() * sampleMessages.length)]
+  const g = sampleGifts[Math.floor(Math.random() * sampleGifts.length)]
+  testFormData.gift_name = g.name
+  testFormData.price = g.price
+  testFormData.num = Math.floor(Math.random() * 10) + 1
 }
 
-async function uploadConfigToServer() {
+function sendSingleTest(type?: EventDataTypes) {
+  if (type) testFormData.type = type
+  if (!danmujiObsRef.value) {
+    message.warning('请先切换到「OBS 预览与调试」Tab 查看渲染')
+    activeMainTab.value = 'preview'
+    return
+  }
+
+  const rawData: any = {
+    uname: testFormData.uname,
+    face: testFormData.face,
+    uid: 10000 + Math.floor(Math.random() * 90000),
+    guard_level: testFormData.guard_level,
+    fans_medal_level: testFormData.fans_medal_level,
+    fans_medal_name: testFormData.fans_medal_name,
+  }
+
+  if (testFormData.type === EventDataTypes.Message) {
+    rawData.msg = testFormData.message
+  } else if (testFormData.type === EventDataTypes.Gift) {
+    rawData.gift_name = testFormData.gift_name
+    rawData.price = testFormData.price
+    rawData.num = testFormData.num
+    rawData.total_price = testFormData.price * testFormData.num
+  } else if (testFormData.type === EventDataTypes.SC) {
+    rawData.message = testFormData.message
+    rawData.price = testFormData.price
+  } else if (testFormData.type === EventDataTypes.Guard) {
+    rawData.role_name = testFormData.guard_level === 1 ? '总督' : testFormData.guard_level === 2 ? '提督' : '舰长'
+    rawData.num = 1
+    rawData.price = testFormData.guard_level === 1 ? 19998 : testFormData.guard_level === 2 ? 1998 : 198
+  }
+
+  danmujiObsRef.value.pushTestEvent({
+    type: testFormData.type,
+    data: rawData,
+    date: Date.now(),
+  })
+}
+
+function startAutoStream() {
+  if (!danmujiObsRef.value || !isAutoGenerating.value) return
+  generateRandomTest()
+  const types = [EventDataTypes.Message, EventDataTypes.Message, EventDataTypes.Message, EventDataTypes.Gift, EventDataTypes.SC]
+  testFormData.type = types[Math.floor(Math.random() * types.length)]
+  sendSingleTest()
+  autoGenerateTimer = setTimeout(startAutoStream, autoGenerateInterval.value * 1000)
+}
+
+watch(isAutoGenerating, (val) => {
+  if (val) {
+    if (activeMainTab.value !== 'preview') activeMainTab.value = 'preview'
+    nextTick(() => startAutoStream())
+  } else if (autoGenerateTimer) {
+    clearTimeout(autoGenerateTimer)
+    autoGenerateTimer = null
+  }
+})
+
+// 云端同步
+async function syncFromCloud() {
+  isLoading.value = true
+  try {
+    const res = await DownloadConfig<DanmujiConfig>('danmuji-config')
+    if (res.status === 'success' && res.data) {
+      danmujiConfig.value = res.data
+      serverConfigSnapshot.value = JSON.stringify(res.data)
+      message.success('已同步云端弹幕机配置')
+    } else {
+      message.info('云端暂无保存的配置')
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function saveToCloud() {
   isSavingCloud.value = true
   try {
-    const result = await UploadConfig('danmuji-config', danmujiConfig.value)
-    if (result) {
+    const success = await UploadConfig('danmuji-config', danmujiConfig.value)
+    if (success) {
       serverConfigSnapshot.value = JSON.stringify(danmujiConfig.value)
       message.success('弹幕机配置已保存并同步至云端')
     } else {
-      message.error('上传弹幕机配置失败')
+      message.error('上传失败')
     }
-  } catch (error) {
-    message.error(`保存失败: ${error instanceof Error ? error.message : error}`)
+  } catch (err: any) {
+    message.error(`保存失败: ${err?.message || err}`)
   } finally {
     isSavingCloud.value = false
   }
 }
 
-async function copyObsUrl() {
+async function copyObsLink() {
   await copyToClipboard(obsUrl.value)
-  message.success('OBS 浏览器源地址已复制')
+  message.success('OBS 浏览器源地址已复制到剪贴板')
 }
 
-async function copyCss() {
+async function copyFullCss() {
   await copyToClipboard(css.value)
   message.success('自定义 CSS 已复制到剪贴板')
 }
 
 onMounted(async () => {
-  if (accountInfo.value?.id) await downloadConfigFromServer()
-  addInitialTestMessages()
+  if (accountInfo.value?.id) {
+    await syncFromCloud()
+  }
 })
 
 onUnmounted(() => {
@@ -525,871 +323,473 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="danmuji-manage-container">
-    <NSplit
-      class="danmuji-split"
-      :direction="windowWidth < 960 ? 'vertical' : 'horizontal'"
-      :min="0.32"
-      :max="0.68"
-      :default-size="0.44"
+  <div class="danmuji-manage-view">
+    <!-- 统一标准管理头 -->
+    <ManagePageHeader
+      title="弹幕姬管理与样式定制"
+      subtitle="在 OBS 中渲染高颜值弹幕流，支持开箱即用现代预设、Monaco CSS 自定义、弹幕过滤合并与 1080P 实时仿真"
+      :links="[
+        {
+          label: 'OBS 浏览器源地址',
+          value: obsUrl,
+          description: '将此链接作为 OBS 浏览器源添加，建议分辨率 400x800 或按需调整',
+        },
+      ]"
     >
-      <template #1>
-        <div class="left-panel-scroll-container">
-          <NFlex
-            vertical
-            style="padding: 16px; height: 100%; box-sizing: border-box"
-            :size="14"
-          >
-            <!-- 顶部 OBS 连接卡片 -->
-            <NCard
-              size="small"
-              embedded
-              class="obs-link-card"
-            >
-              <NFlex
-                align="center"
-                justify="space-between"
-                :wrap="false"
-                :size="12"
-              >
-                <div class="obs-label">
-                  <span class="label-text">OBS 浏览器源地址</span>
-                  <span class="label-desc">在 OBS 来源中添加“浏览器”并填入此 URL</span>
-                </div>
-                <NInput
-                  size="small"
-                  readonly
-                  :value="obsUrl"
-                  style="flex: 1; max-width: 360px"
-                >
-                  <template #suffix>
-                    <NButton
-                      text
-                      type="primary"
-                      size="tiny"
-                      @click="copyObsUrl"
-                    >
-                      <template #icon><NIcon :component="Copy16Regular" /></template>
-                      复制
+      <template #action>
+        <NButton
+          v-if="accountInfo?.id"
+          size="small"
+          secondary
+          :loading="isSavingCloud"
+          @click="saveToCloud"
+        >
+          <template #icon>
+            <NIcon :component="hasUnsavedConfig ? Save24Regular : CloudCheckmark24Regular" />
+          </template>
+          {{ hasUnsavedConfig ? '保存至云端 (未同步)' : '已同步云端' }}
+        </NButton>
+      </template>
+    </ManagePageHeader>
+
+    <!-- 主工作区 Tabs -->
+    <NTabs
+      v-model:value="activeMainTab"
+      type="segment"
+      animated
+      class="main-nav-tabs"
+      style="margin-top: 14px"
+    >
+      <!-- ================= Tab 1: 样式定制与规则配置 ================= -->
+      <NTabPane name="settings">
+        <template #tab>
+          <NFlex align="center" :size="6" :wrap="false">
+            <NIcon :component="Wrench24Regular" />
+            <span>样式定制与功能规则</span>
+          </NFlex>
+        </template>
+        <NFlex vertical :size="16" style="margin-top: 14px">
+          <!-- 预设选择卡片 -->
+          <NCard size="small">
+            <template #header>
+              <NFlex align="center" :size="6">
+                <NIcon :component="Color24Regular" />
+                <span>开箱即用现代预设</span>
+              </NFlex>
+            </template>
+            <template #header-extra>
+              <NFlex align="center" :size="8">
+                <NButton size="tiny" secondary @click="copyFullCss">
+                  <template #icon><NIcon :component="Copy24Regular" /></template>
+                  复制完整 CSS
+                </NButton>
+                <NPopconfirm @positive-click="resetCssToDefault">
+                  <template #trigger>
+                    <NButton size="tiny" secondary type="warning">
+                      <template #icon><NIcon :component="ArrowReset24Regular" /></template>
+                      重置为默认
                     </NButton>
                   </template>
-                </NInput>
+                  确定要重设为默认样式吗？自定义代码将被覆盖。
+                </NPopconfirm>
               </NFlex>
+            </template>
 
-              <details class="obs-source-guide">
-                <summary>OBS 来源配置三步指引</summary>
-                <ol>
-                  <li>在 OBS“来源”列表点击 <strong>+</strong>，选择<strong>“浏览器”</strong>新建来源。</li>
-                  <li>将上方地址复制并粘贴到浏览器源的<strong>“URL”</strong>输入框中。</li>
-                  <li>将下方“样式定制”里的完整 CSS 复制并粘贴到 OBS 浏览器源属性的<strong>“自定义 CSS”</strong>框中。</li>
-                </ol>
-              </details>
-            </NCard>
-
-            <NTabs
-              v-model:value="activeTab"
-              type="segment"
-              animated
-              class="main-tabs"
-            >
-              <!-- 样式定制 Tab -->
-              <NTabPane
-                name="style"
-                tab="样式定制"
-              >
-                <div class="tab-content-wrapper">
-                  <div class="editor-header">
-                    <span class="editor-title">自定义 CSS 样式</span>
-                    <NFlex :size="8">
-                      <NButton
-                        size="small"
-                        secondary
-                        @click="copyCss"
-                      >
-                        <template #icon><NIcon :component="Copy16Regular" /></template>
-                        复制 CSS
-                      </NButton>
-                      <NPopconfirm @positive-click="resetCssToDefault">
-                        <template #trigger>
-                          <NButton
-                            size="small"
-                            type="warning"
-                            secondary
-                          >
-                            <template #icon><NIcon :component="ArrowReset24Regular" /></template>
-                            重设默认
-                          </NButton>
-                        </template>
-                        确定要重设为默认 CSS 吗？这将清除当前所有自定义样式。
-                      </NPopconfirm>
-                    </NFlex>
-                  </div>
-
-                  <NAlert
-                    class="css-transparency-alert"
-                    type="info"
-                    :bordered="false"
-                  >
-                    提示：OBS 浏览器源默认带白色底。请将下方完整 CSS 复制粘贴到 OBS 属性中的“自定义 CSS”框，应用后背景即完全透明。
-                  </NAlert>
-
-                  <div class="editor-container">
-                    <MonacoEditorComponent
-                      v-model:value="css"
-                      language="css"
-                      style="height: 100%; width: 100%"
-                      :options="{
-                        minimap: { enabled: false },
-                        fontSize: 13,
-                        automaticLayout: true,
-                        formatOnPaste: true,
-                        lineNumbers: 'on',
-                        scrollBeyondLastLine: false,
-                        wordWrap: 'on',
-                        tabSize: 2,
-                        bracketPairColorization: { enabled: true },
-                        autoIndent: 'full',
-                        folding: true,
-                        scrollbar: {
-                          verticalScrollbarSize: 8,
-                          horizontalScrollbarSize: 8,
-                        },
-                      }"
-                      :theme="isDarkMode ? 'vs-dark' : 'vs'"
-                    />
-                  </div>
-                </div>
-              </NTabPane>
-
-              <!-- 功能配置 Tab -->
-              <NTabPane
-                name="config"
-                tab="功能配置"
-              >
-                <div class="config-scroll-container">
-                  <NCard
-                    :bordered="false"
-                    size="small"
-                  >
-                    <template #header>
-                      <NFlex
-                        justify="space-between"
-                        align="center"
-                      >
-                        <NFlex
-                          align="center"
-                          :size="8"
-                        >
-                          <span>弹幕过滤与合并规则</span>
-                          <NTag
-                            v-if="hasUnsavedConfig"
-                            size="small"
-                            type="warning"
-                            round
-                          >
-                            未同步到云端
-                          </NTag>
-                        </NFlex>
-
-                        <NFlex :size="8">
-                          <NButton
-                            v-if="accountInfo?.id"
-                            size="small"
-                            type="primary"
-                            :loading="isSavingCloud"
-                            @click="uploadConfigToServer"
-                          >
-                            <template #icon><NIcon :component="hasUnsavedConfig ? Save24Regular : CloudCheckmark24Regular" /></template>
-                            {{ hasUnsavedConfig ? '保存到云端 (未同步)' : '已同步云端' }}
-                          </NButton>
-
-                          <NPopconfirm @positive-click="resetConfigToDefault">
-                            <template #trigger>
-                              <NButton
-                                size="small"
-                                type="error"
-                                secondary
-                              >
-                                重置
-                              </NButton>
-                            </template>
-                            确定要重设为默认功能配置吗？
-                          </NPopconfirm>
-                        </NFlex>
-                      </NFlex>
-                    </template>
-
-                    <NForm
-                      :model="danmujiConfig"
-                      label-placement="top"
-                      size="small"
-                    >
-                      <div class="form-section-title">显示类型</div>
-                      <NGrid
-                        :x-gap="12"
-                        :y-gap="8"
-                        :cols="3"
-                      >
-                        <NGi>
-                          <NCard
-                            size="small"
-                            embedded
-                            class="checkbox-card"
-                          >
-                            <NCheckbox v-model:checked="danmujiConfig.showDanmaku"> 显示弹幕消息 </NCheckbox>
-                          </NCard>
-                        </NGi>
-                        <NGi>
-                          <NCard
-                            size="small"
-                            embedded
-                            class="checkbox-card"
-                          >
-                            <NCheckbox v-model:checked="danmujiConfig.showGift"> 显示礼物消息 </NCheckbox>
-                          </NCard>
-                        </NGi>
-                        <NGi>
-                          <NCard
-                            size="small"
-                            embedded
-                            class="checkbox-card"
-                          >
-                            <NCheckbox v-model:checked="danmujiConfig.showGiftName"> 显示礼物名称 </NCheckbox>
-                          </NCard>
-                        </NGi>
-                      </NGrid>
-
-                      <div class="form-section-title">合并策略</div>
-                      <NGrid
-                        :x-gap="12"
-                        :y-gap="8"
-                        :cols="2"
-                      >
-                        <NGi>
-                          <NCard
-                            size="small"
-                            embedded
-                            class="checkbox-card"
-                          >
-                            <NCheckbox v-model:checked="danmujiConfig.mergeSimilarDanmaku"> 合并相似弹幕 </NCheckbox>
-                          </NCard>
-                        </NGi>
-                        <NGi>
-                          <NCard
-                            size="small"
-                            embedded
-                            class="checkbox-card"
-                          >
-                            <NCheckbox v-model:checked="danmujiConfig.mergeGift"> 合并连击礼物 </NCheckbox>
-                          </NCard>
-                        </NGi>
-                      </NGrid>
-
-                      <div class="form-section-title">阈值控制</div>
-                      <NGrid
-                        :x-gap="12"
-                        :y-gap="8"
-                        :cols="2"
-                      >
-                        <NGi>
-                          <NFormItem
-                            label="最大消息积压数"
-                            path="maxNumber"
-                          >
-                            <NInputNumber
-                              v-model:value="danmujiConfig.maxNumber"
-                              :min="10"
-                              :max="200"
-                            />
-                          </NFormItem>
-                        </NGi>
-                        <NGi>
-                          <NFormItem
-                            label="最低显示礼物价值"
-                            path="minGiftPrice"
-                          >
-                            <NInputNumber
-                              v-model:value="danmujiConfig.minGiftPrice"
-                              :min="0"
-                              :step="0.1"
-                            >
-                              <template #suffix> 元 </template>
-                            </NInputNumber>
-                          </NFormItem>
-                        </NGi>
-                      </NGrid>
-
-                      <div class="form-section-title">过滤与屏蔽规则</div>
-                      <NGrid
-                        :x-gap="12"
-                        :y-gap="8"
-                        :cols="2"
-                      >
-                        <NGi>
-                          <NFormItem
-                            label="屏蔽舰长等级低于"
-                            path="blockLevel"
-                          >
-                            <NSelect
-                              v-model:value="danmujiConfig.blockLevel"
-                              :options="guardLevelOptions"
-                            />
-                          </NFormItem>
-                        </NGi>
-                        <NGi>
-                          <NFormItem
-                            label="屏蔽粉丝牌等级低于"
-                            path="blockMedalLevel"
-                          >
-                            <NInputNumber
-                              v-model:value="danmujiConfig.blockMedalLevel"
-                              :min="0"
-                              placeholder="0 表示不过滤"
-                            />
-                          </NFormItem>
-                        </NGi>
-                      </NGrid>
-
-                      <NGrid
-                        :x-gap="12"
-                        :y-gap="8"
-                        :cols="2"
-                      >
-                        <NGi>
-                          <NFormItem
-                            label="屏蔽关键词 (每行一个)"
-                            path="blockKeywords"
-                          >
-                            <NInput
-                              v-model:value="danmujiConfig.blockKeywords"
-                              type="textarea"
-                              :rows="3"
-                              placeholder="输入屏蔽词..."
-                            />
-                          </NFormItem>
-                        </NGi>
-                        <NGi>
-                          <NFormItem
-                            label="屏蔽用户 (每行一个用户名)"
-                            path="blockUsers"
-                          >
-                            <NInput
-                              v-model:value="danmujiConfig.blockUsers"
-                              type="textarea"
-                              :rows="3"
-                              placeholder="输入用户名..."
-                            />
-                          </NFormItem>
-                        </NGi>
-                      </NGrid>
-
-                      <div class="form-section-title">高级发音</div>
-                      <NFormItem
-                        label="礼物用户名发音模板"
-                        path="giftUsernamePronunciation"
-                      >
-                        <NInput
-                          v-model:value="danmujiConfig.giftUsernamePronunciation"
-                          placeholder="例如：{name} 送出了 {gift}"
-                        />
-                      </NFormItem>
-                    </NForm>
-                  </NCard>
-                </div>
-              </NTabPane>
-
-              <!-- 消息调试 Tab -->
-              <NTabPane
-                name="test"
-                tab="消息调试"
-              >
-                <div class="config-scroll-container">
-                  <NCard
-                    :bordered="false"
-                    size="small"
-                  >
-                    <NForm
-                      :model="testFormData"
-                      label-placement="top"
-                      size="small"
-                    >
-                      <NCard
-                        size="small"
-                        title="自动弹幕模拟器"
-                        embedded
-                        style="margin-bottom: 16px"
-                      >
-                        <template #header-extra>
-                          <NSwitch
-                            v-model:value="isAutoGenerating"
-                            size="small"
-                          >
-                            <template #checked> 模拟中 </template>
-                            <template #unchecked> 已暂停 </template>
-                          </NSwitch>
-                        </template>
-
-                        <NFlex
-                          align="center"
-                          justify="space-between"
-                        >
-                          <NFlex align="center">
-                            <span style="font-size: 12px; color: var(--vtsuru-fg-muted)">发送间隔:</span>
-                            <NInputNumber
-                              v-model:value="autoGenerateInterval"
-                              :min="0.5"
-                              :max="10"
-                              :step="0.5"
-                              size="tiny"
-                              style="width: 100px"
-                              :disabled="!isAutoGenerating"
-                            >
-                              <template #suffix> 秒 </template>
-                            </NInputNumber>
-                          </NFlex>
-
-                          <NTag
-                            :type="isAutoGenerating ? 'success' : 'default'"
-                            size="small"
-                            round
-                          >
-                            {{ isAutoGenerating ? '正在持续推流' : '未启动' }}
-                          </NTag>
-                        </NFlex>
-                      </NCard>
-
-                      <div class="form-section-title">单条手动发送</div>
-
-                      <NGrid
-                        :x-gap="12"
-                        :y-gap="10"
-                        :cols="2"
-                      >
-                        <NGi :span="2">
-                          <NFormItem
-                            label="消息类型"
-                            path="type"
-                          >
-                            <NSelect
-                              v-model:value="testFormData.type"
-                              :options="messageTypeOptions"
-                            />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi>
-                          <NFormItem
-                            label="用户名"
-                            path="uname"
-                          >
-                            <NInput
-                              v-model:value="testFormData.uname"
-                              placeholder="测试用户"
-                            />
-                          </NFormItem>
-                        </NGi>
-                        <NGi>
-                          <NFormItem
-                            label="用户 ID"
-                            path="uid"
-                          >
-                            <NInputNumber
-                              v-model:value="testFormData.uid"
-                              :show-button="false"
-                            />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi
-                          v-if="testFormData.type === EventDataTypes.Message || testFormData.type === EventDataTypes.SC"
-                          :span="2"
-                        >
-                          <NFormItem
-                            label="消息内容"
-                            path="msg"
-                          >
-                            <NInput
-                              v-model:value="testFormData.msg"
-                              type="textarea"
-                              :rows="2"
-                              placeholder="输入消息内容..."
-                            />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi v-if="testFormData.type === EventDataTypes.Gift">
-                          <NFormItem
-                            label="礼物名称"
-                            path="msg"
-                          >
-                            <NInput v-model:value="testFormData.msg" />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi v-if="testFormData.type === EventDataTypes.Gift">
-                          <NFormItem
-                            label="数量"
-                            path="num"
-                          >
-                            <NInputNumber
-                              v-model:value="testFormData.num"
-                              :min="1"
-                            />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi
-                          v-if="testFormData.type === EventDataTypes.Gift || testFormData.type === EventDataTypes.SC"
-                        >
-                          <NFormItem
-                            label="价值 (元)"
-                            path="price"
-                          >
-                            <NInputNumber
-                              v-model:value="testFormData.price"
-                              :min="0"
-                              :precision="1"
-                            />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi
-                          v-if="
-                            testFormData.type === EventDataTypes.Guard || testFormData.type === EventDataTypes.Message
-                          "
-                        >
-                          <NFormItem
-                            label="舰长身份"
-                            path="guard_level"
-                          >
-                            <NSelect
-                              v-model:value="testFormData.guard_level"
-                              :options="guardLevelOptions"
-                            />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi v-if="testFormData.type === EventDataTypes.Message">
-                          <NFormItem
-                            label="粉丝牌等级"
-                            path="fans_medal_level"
-                          >
-                            <NInputNumber
-                              v-model:value="testFormData.fans_medal_level"
-                              :min="0"
-                            />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi v-if="testFormData.type === EventDataTypes.Message">
-                          <NFormItem
-                            label="粉丝牌名称"
-                            path="fans_medal_name"
-                          >
-                            <NInput v-model:value="testFormData.fans_medal_name" />
-                          </NFormItem>
-                        </NGi>
-
-                        <NGi
-                          v-if="testFormData.type === EventDataTypes.SCDel"
-                          :span="2"
-                        >
-                          <NFormItem
-                            label="要删除的 SC ID"
-                            path="sc_id_to_delete"
-                          >
-                            <NInput
-                              v-model:value="testFormData.sc_id_to_delete"
-                              placeholder="输入 SC ID..."
-                            />
-                          </NFormItem>
-                        </NGi>
-                      </NGrid>
-
-                      <div style="margin-top: 14px">
-                        <NGrid
-                          :x-gap="12"
-                          :cols="2"
-                        >
-                          <NGi>
-                            <NButton
-                              block
-                              secondary
-                              @click="generateRandomContent"
-                            >
-                              <template #icon><NIcon :component="Sparkle24Regular" /></template>
-                              随机填充内容
-                            </NButton>
-                          </NGi>
-                          <NGi>
-                            <NButton
-                              block
-                              type="primary"
-                              @click="sendTestMessage"
-                            >
-                              <template #icon><NIcon :component="Send24Regular" /></template>
-                              发送测试消息
-                            </NButton>
-                          </NGi>
-                        </NGrid>
-                      </div>
-                    </NForm>
-                  </NCard>
-                </div>
-              </NTabPane>
-            </NTabs>
-          </NFlex>
-        </div>
-      </template>
-
-      <!-- 右侧预览区 -->
-      <template #2>
-        <div class="right-panel-container">
-          <div class="preview-window">
-            <div class="preview-toolbar">
-              <div class="window-controls">
-                <div class="dot red" />
-                <div class="dot yellow" />
-                <div class="dot green" />
-              </div>
-              <div class="address-bar">OBS 弹幕机实时效果预览</div>
-
-              <!-- 背景模拟切换 -->
-              <div class="bg-switch-group">
-                <NRadioGroup
-                  v-model:value="previewBgMode"
-                  size="small"
+            <NGrid :x-gap="12" :y-gap="12" :cols="4" responsive="screen">
+              <NGi v-for="preset in DANMUJI_PRESETS" :key="preset.id">
+                <div
+                  class="preset-card"
+                  :class="{ active: selectedPresetId === preset.id }"
+                  @click="applyPreset(preset.id)"
                 >
-                  <NRadioButton value="transparent">透明网格</NRadioButton>
-                  <NRadioButton value="dark">纯黑</NRadioButton>
-                  <NRadioButton value="light">纯白</NRadioButton>
-                  <NRadioButton value="game">游戏底图</NRadioButton>
-                </NRadioGroup>
-              </div>
-            </div>
+                  <div class="preset-header">
+                    <span class="preset-name">{{ preset.name }}</span>
+                    <NTag v-if="selectedPresetId === preset.id" size="tiny" type="primary" :bordered="false">已载入</NTag>
+                  </div>
+                  <div class="preset-desc">{{ preset.description }}</div>
+                </div>
+              </NGi>
+            </NGrid>
+          </NCard>
 
-            <div
-              class="preview-content"
-              :class="`bg-${previewBgMode}`"
-            >
-              <DanmujiOBS
-                ref="danmujiObsRef"
-                :is-o-b-s="false"
-                style="height: 100%; width: 100%"
-                :custom-css="css"
-                :config="danmujiConfig"
-                :open-live-auth="openLiveAuth"
-              />
-            </div>
-          </div>
-        </div>
-      </template>
-    </NSplit>
+          <!-- Monaco CSS 编辑器与功能规则分栏 -->
+          <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen">
+            <!-- 左侧：Monaco CSS 高级编辑器 (占 7 列) -->
+            <NGi :span="7">
+              <NCard size="small" style="height: 100%">
+                <template #header>
+                  <NFlex align="center" :size="6">
+                    <NIcon :component="Code24Regular" />
+                    <span>自定义 CSS 深度调优</span>
+                  </NFlex>
+                </template>
+                <template #header-extra>
+                  <NText depth="3" style="font-size: 11px">支持标准 CSS / Keyframes / @import</NText>
+                </template>
+
+                <div class="monaco-editor-wrapper">
+                  <MonacoEditorComponent
+                    v-model:value="css"
+                    language="css"
+                    style="height: 100%; width: 100%"
+                    :options="{
+                      minimap: { enabled: false },
+                      fontSize: 13,
+                      automaticLayout: true,
+                      formatOnPaste: true,
+                      lineNumbers: 'on',
+                      wordWrap: 'on',
+                    }"
+                  />
+                </div>
+              </NCard>
+            </NGi>
+
+            <!-- 右侧：过滤与合并规则配置 (占 5 列) -->
+            <NGi :span="5">
+              <NCard size="small" style="height: 100%">
+                <template #header>
+                  <NFlex align="center" :size="6">
+                    <NIcon :component="Settings24Regular" />
+                    <span>过滤、合并与阈值规则</span>
+                  </NFlex>
+                </template>
+                <template #header-extra>
+                  <NPopconfirm @positive-click="resetConfigToDefault">
+                    <template #trigger>
+                      <NButton size="tiny" quaternary type="error">恢复默认规则</NButton>
+                    </template>
+                    确定要重设为默认功能配置吗？
+                  </NPopconfirm>
+                </template>
+
+                <NForm :model="danmujiConfig" label-placement="top" size="small">
+                  <!-- 显示类型 -->
+                  <div class="form-section-title">消息显示开关</div>
+                  <NGrid :x-gap="8" :y-gap="8" :cols="3">
+                    <NGi>
+                      <NCard size="small" embedded class="checkbox-pill">
+                        <NCheckbox v-model:checked="danmujiConfig.showDanmaku">普通弹幕</NCheckbox>
+                      </NCard>
+                    </NGi>
+                    <NGi>
+                      <NCard size="small" embedded class="checkbox-pill">
+                        <NCheckbox v-model:checked="danmujiConfig.showGift">礼物消息</NCheckbox>
+                      </NCard>
+                    </NGi>
+                    <NGi>
+                      <NCard size="small" embedded class="checkbox-pill">
+                        <NCheckbox v-model:checked="danmujiConfig.showGiftName">显示礼物名</NCheckbox>
+                      </NCard>
+                    </NGi>
+                  </NGrid>
+
+                  <!-- 合并策略 -->
+                  <div class="form-section-title" style="margin-top: 12px">合并与节流</div>
+                  <NGrid :x-gap="8" :y-gap="8" :cols="2">
+                    <NGi>
+                      <NCard size="small" embedded class="checkbox-pill">
+                        <NCheckbox v-model:checked="danmujiConfig.mergeSimilarDanmaku">合并相似弹幕</NCheckbox>
+                      </NCard>
+                    </NGi>
+                    <NGi>
+                      <NCard size="small" embedded class="checkbox-pill">
+                        <NCheckbox v-model:checked="danmujiConfig.mergeGift">合并连击礼物</NCheckbox>
+                      </NCard>
+                    </NGi>
+                  </NGrid>
+
+                  <!-- 阈值 -->
+                  <div class="form-section-title" style="margin-top: 12px">阈值与限制</div>
+                  <NGrid :x-gap="8" :y-gap="8" :cols="2">
+                    <NGi>
+                      <NFormItem label="最大消息积压数">
+                        <NInputNumber v-model:value="danmujiConfig.maxNumber" :min="10" :max="300" style="width: 100%" />
+                      </NFormItem>
+                    </NGi>
+                    <NGi>
+                      <NFormItem label="最低展示礼物价值">
+                        <NInputNumber v-model:value="danmujiConfig.minGiftPrice" :min="0" :step="0.1" style="width: 100%">
+                          <template #suffix>元</template>
+                        </NInputNumber>
+                      </NFormItem>
+                    </NGi>
+                  </NGrid>
+
+                  <!-- 屏蔽名单 -->
+                  <div class="form-section-title" style="margin-top: 4px">屏蔽与过滤</div>
+                  <NGrid :x-gap="8" :y-gap="8" :cols="2">
+                    <NGi>
+                      <NFormItem label="屏蔽用户名 (一行一个)">
+                        <NInput v-model:value="blockUsersText" type="textarea" :rows="3" placeholder="用户A&#10;用户B" />
+                      </NFormItem>
+                    </NGi>
+                    <NGi>
+                      <NFormItem label="屏蔽关键词 (一行一个)">
+                        <NInput v-model:value="blockKeywordsText" type="textarea" :rows="3" placeholder="词条A&#10;词条B" />
+                      </NFormItem>
+                    </NGi>
+                  </NGrid>
+                </NForm>
+              </NCard>
+            </NGi>
+          </NGrid>
+        </NFlex>
+      </NTabPane>
+
+      <!-- ================= Tab 2: OBS 画布实时预览与仿真调试 ================= -->
+      <NTabPane name="preview">
+        <template #tab>
+          <NFlex align="center" :size="6" :wrap="false">
+            <NIcon :component="Desktop24Regular" />
+            <span>OBS 舞台预览与仿真</span>
+          </NFlex>
+        </template>
+        <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen" style="margin-top: 14px">
+          <!-- 左侧：1080P 舞台视口 (占 8 列) -->
+          <NGi :span="8">
+            <NCard size="small">
+              <template #header>
+                <NFlex justify="space-between" align="center">
+                  <NFlex align="center" :size="8">
+                    <NIcon :component="Eye24Regular" />
+                    <NText strong>OBS 画布实时预览 (1080P 比例视口)</NText>
+                  </NFlex>
+
+                  <NRadioGroup v-model:value="previewBg" size="small">
+                    <NRadioButton value="checker">透明网格</NRadioButton>
+                    <NRadioButton value="dark">纯黑背景</NRadioButton>
+                    <NRadioButton value="light">浅色背景</NRadioButton>
+                    <NRadioButton value="game">游戏场景</NRadioButton>
+                  </NRadioGroup>
+                </NFlex>
+              </template>
+
+              <!-- 舞台视口容器 -->
+              <div class="stage-viewport" :class="[`bg-${previewBg}`]">
+                <div class="stage-canvas">
+                  <DanmujiOBS
+                    ref="danmujiObsRef"
+                    :custom-css="css"
+                    :danmuji-config="danmujiConfig"
+                  />
+                </div>
+              </div>
+
+              <template #action>
+                <NFlex justify="space-between" align="center">
+                  <NText depth="3" style="font-size: 12px">
+                    OBS 来源配置指引：在 OBS 添加「浏览器」来源并填入 URL，将「自定义 CSS」框清空（或填入上方代码）即可。
+                  </NText>
+                  <NButton size="small" type="primary" @click="copyObsLink">
+                    <template #icon><NIcon :component="Copy24Regular" /></template>
+                    复制 OBS 链接
+                  </NButton>
+                </NFlex>
+              </template>
+            </NCard>
+          </NGi>
+
+          <!-- 右侧：仿真调试控制器 (占 4 列) -->
+          <NGi :span="4">
+            <NFlex vertical :size="16">
+              <!-- 自动推流器 -->
+              <NCard size="small">
+                <template #header>
+                  <NFlex align="center" :size="6">
+                    <NIcon :component="Flash24Regular" />
+                    <span>自动弹幕推流仿真</span>
+                  </NFlex>
+                </template>
+                <template #header-extra>
+                  <NSwitch v-model:value="isAutoGenerating" size="small">
+                    <template #checked>推流中</template>
+                    <template #unchecked>已暂停</template>
+                  </NSwitch>
+                </template>
+
+                <NFlex vertical :size="10">
+                  <NFlex justify="space-between" align="center">
+                    <span style="font-size: 12px; color: var(--vtsuru-fg-muted)">推流间隔时间：</span>
+                    <NInputNumber
+                      v-model:value="autoGenerateInterval"
+                      :min="0.3"
+                      :max="5"
+                      :step="0.2"
+                      size="tiny"
+                      style="width: 110px"
+                    >
+                      <template #suffix>秒</template>
+                    </NInputNumber>
+                  </NFlex>
+
+                  <NText depth="3" style="font-size: 11px">
+                    启动后将自动按设定间隔随机注入真实弹幕、醒目留言与高频礼物，测试 OBS 动效流畅度。
+                  </NText>
+                </NFlex>
+              </NCard>
+
+              <!-- 手动单条注入 -->
+              <NCard size="small">
+                <template #header>
+                  <NFlex align="center" :size="6">
+                    <NIcon :component="Target24Regular" />
+                    <span>一键注入特定事件</span>
+                  </NFlex>
+                </template>
+                <NFlex vertical :size="10">
+                  <NFlex :size="8">
+                    <NButton size="tiny" secondary @click="sendSingleTest(EventDataTypes.Message)">
+                      <template #icon><NIcon :component="Send24Regular" /></template>
+                      普通弹幕
+                    </NButton>
+                    <NButton size="tiny" secondary type="info" @click="sendSingleTest(EventDataTypes.Gift)">
+                      <template #icon><NIcon :component="Gift24Regular" /></template>
+                      豪华礼物
+                    </NButton>
+                    <NButton size="tiny" secondary type="warning" @click="sendSingleTest(EventDataTypes.SC)">
+                      <template #icon><NIcon :component="Money24Regular" /></template>
+                      醒目留言
+                    </NButton>
+                    <NButton size="tiny" secondary type="error" @click="sendSingleTest(EventDataTypes.Guard)">
+                      <template #icon><NIcon :component="ShieldCheckmark24Regular" /></template>
+                      续费大航海
+                    </NButton>
+                  </NFlex>
+
+                  <NDivider style="margin: 4px 0" />
+
+                  <NButton size="small" block secondary @click="generateRandomTest">
+                    <template #icon><NIcon :component="Sparkle24Regular" /></template>
+                    随机重置测试文案
+                  </NButton>
+                </NFlex>
+              </NCard>
+            </NFlex>
+          </NGi>
+        </NGrid>
+      </NTabPane>
+    </NTabs>
   </div>
 </template>
 
 <style scoped>
-.danmuji-manage-container {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - var(--vtsuru-header-height) - var(--vtsuru-content-padding) - 20px);
+.danmuji-manage-view {
   width: 100%;
-  overflow: hidden;
 }
 
-.danmuji-split {
-  flex: 1;
-  min-height: 0;
+.main-nav-tabs {
+  --n-tab-padding: 6px 16px !important;
 }
 
-.left-panel-scroll-container {
-  height: 100%;
-  overflow-y: auto;
-  background-color: var(--vtsuru-bg-elevated);
+.main-nav-tabs :deep(.n-tabs-rail) {
+  width: fit-content;
+  max-width: 100%;
 }
 
-.obs-link-card {
-  flex-shrink: 0;
+.main-nav-tabs :deep(.n-tabs-tab) {
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* 预设卡片 */
+.preset-card {
+  padding: 12px;
   border-radius: 8px;
-}
-
-.obs-label {
-  display: flex;
-  flex-direction: column;
-  margin-right: 12px;
-}
-
-.label-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.label-desc {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.obs-source-guide {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--vtsuru-border);
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.obs-source-guide summary {
+  border: 1px solid var(--vtsuru-border);
+  background: var(--vtsuru-bg-muted);
   cursor: pointer;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  user-select: none;
-}
-
-.obs-source-guide ol {
-  margin: 6px 0 0;
-  padding-left: 18px;
-  line-height: 1.6;
-}
-
-.main-tabs {
-  flex: 1;
+  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-}
-
-.tab-content-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 480px;
-  gap: 10px;
-}
-
-
-
-.editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.editor-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.css-transparency-alert {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-.editor-container {
-  flex: 1;
-  min-height: 360px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.config-scroll-container {
-  height: 100%;
-  overflow-y: auto;
-}
-
-.form-section-title {
-  margin: 14px 0 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--vtsuru-fg-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.checkbox-card {
-  border-radius: 6px;
-}
-
-.right-panel-container {
-  height: 100%;
-  padding: 16px;
-  box-sizing: border-box;
-}
-
-.preview-window {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 8px 30px rgb(0 0 0 / 18%);
-}
-
-.preview-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 14px;
-  background: var(--vtsuru-bg-elevated);
-  border-bottom: 1px solid var(--vtsuru-border);
-}
-
-.window-controls {
-  display: flex;
   gap: 6px;
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.preset-card:hover {
+  border-color: var(--vtsuru-brand-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.dot.red {
-  background: #ff5f56;
-}
-.dot.yellow {
-  background: #ffbd2e;
-}
-.dot.green {
-  background: #27c93f;
+.preset-card.active {
+  border-color: var(--vtsuru-brand-soft);
+  background: var(--vtsuru-brand-tint);
 }
 
-.address-bar {
-  font-size: 12px;
-  font-weight: 500;
+.preset-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preset-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vtsuru-fg);
+}
+
+.preset-desc {
+  font-size: 11px;
   color: var(--vtsuru-fg-muted);
+  line-height: 1.35;
 }
 
-.preview-content {
-  position: relative;
-  flex: 1;
-  min-height: 0;
+/* 编辑器容器 */
+.monaco-editor-wrapper {
+  height: 480px;
+  border-radius: 6px;
   overflow: hidden;
-  transition: background 0.2s ease;
+  border: 1px solid var(--vtsuru-border);
 }
 
-.preview-content.bg-transparent {
-  background-image: linear-gradient(45deg, #23272e 25%, transparent 25%),
-    linear-gradient(-45deg, #23272e 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #23272e 75%),
-    linear-gradient(-45deg, transparent 75%, #23272e 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
-  background-color: #1a1d23;
+/* 规则表单 */
+.form-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--vtsuru-fg-muted);
+  margin-bottom: 6px;
 }
 
-.preview-content.bg-dark {
-  background-color: #121214;
+.checkbox-pill {
+  border-radius: 6px;
+  padding: 6px 10px;
 }
 
-.preview-content.bg-light {
-  background-color: #ffffff;
+/* 1080P 舞台视口 */
+.stage-viewport {
+  width: 100%;
+  height: 520px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--vtsuru-border);
 }
 
-.preview-content.bg-game {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #0f2027 100%);
+.stage-viewport.bg-checker {
+  background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%),
+    linear-gradient(-45deg, #1e293b 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #1e293b 75%),
+    linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  background-color: #0f172a;
+}
+
+.stage-viewport.bg-dark { background-color: #000000; }
+.stage-viewport.bg-light { background-color: #f1f5f9; }
+.stage-viewport.bg-game {
+  background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)),
+    radial-gradient(circle at 80% 20%, #3b82f6 0%, transparent 40%),
+    radial-gradient(circle at 20% 80%, #ec4899 0%, transparent 40%), #090d16;
+}
+
+.stage-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 </style>

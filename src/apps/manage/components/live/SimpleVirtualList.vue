@@ -56,18 +56,21 @@ const parentHeight = computed(() => {
   return scrollerInstRef.value?.$el.parentElement?.clientHeight ?? 0
 })
 const height = computed(() => {
-  if (typeof props.defaultHeight == 'number') {
-    return `${props.defaultHeight < 0 ? parentHeight : props.defaultHeight}px`
-  } else {
-    if (props.defaultHeight.endsWith('%')) {
-      return `${parentHeight.value * (Number(props.defaultHeight.replace('%', '')) / 100)}px`
-    } else if (props.defaultHeight.endsWith('vh') || props.defaultHeight.endsWith('vw')) {
-      return props.defaultHeight
-    } else {
-      console.log(`[SimpleVirtualList] Invalid height value: ${props.defaultHeight}`)
-      return `${0}px`
-    }
+  if (typeof props.defaultHeight === 'number') {
+    return props.defaultHeight < 0 ? `${parentHeight.value}px` : `${props.defaultHeight}px`
   }
+  const val = String(props.defaultHeight).trim()
+  if (val.endsWith('px') || val.endsWith('vh') || val.endsWith('vw') || val.endsWith('rem') || val.endsWith('em')) {
+    return val
+  }
+  if (val.endsWith('%')) {
+    return `${parentHeight.value * (Number(val.replace('%', '')) / 100)}px`
+  }
+  const num = Number(val)
+  if (!Number.isNaN(num)) {
+    return num < 0 ? `${parentHeight.value}px` : `${num}px`
+  }
+  return '600px'
 })
 </script>
 

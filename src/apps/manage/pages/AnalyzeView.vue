@@ -502,7 +502,7 @@ function updateChartOption() {
     })
     .filter(Boolean)
 
-  const yAxis: echarts.YAXisComponentOption[] = []
+  const yAxis: any[] = []
 
   if (showLeftAxis) {
     yAxis.push({
@@ -1341,15 +1341,15 @@ onUnmounted(() => {
                 ></div>
               </template>
               <div class="heatmap-tooltip">
-                <div class="tooltip-date">📅 {{ point.date }}</div>
+                <div class="tooltip-date">{{ point.date }}</div>
                 <div v-if="point.liveMinutes > 0" class="tooltip-body">
-                  <div>⏱️ 时长: {{ (point.liveMinutes / 60).toFixed(1) }} 小时</div>
-                  <div>💰 收益: ¥{{ formatNumber(point.income) }}</div>
-                  <div>💬 弹幕: {{ formatNumber(point.danmakuCount) }} 条</div>
-                  <div>👥 互动: {{ formatNumber(point.interactionUsers) }} 人</div>
+                  <div>直播时长: {{ (point.liveMinutes / 60).toFixed(1) }} 小时</div>
+                  <div>总收益: ¥{{ formatNumber(point.income) }}</div>
+                  <div>弹幕数: {{ formatNumber(point.danmakuCount) }} 条</div>
+                  <div>互动人数: {{ formatNumber(point.interactionUsers) }} 人</div>
                 </div>
                 <div v-else class="tooltip-body is-rest">
-                  <span>💤 未开播 / 休整日</span>
+                  <span>未开播 / 休整日</span>
                 </div>
               </div>
             </NTooltip>

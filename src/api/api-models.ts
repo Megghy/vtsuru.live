@@ -1284,10 +1284,7 @@ export interface VoteConfig {
   allowMultipleVotes: boolean
   allowCustomOptions: boolean
   defaultOptions: string[]
-  backgroundFile?: APIFileModel
-  backgroundColor: string
-  textColor: string
-  optionColor: string
+  theme: string
   roundedCorners: boolean
   displayPosition: string
   allowGiftVoting: boolean
@@ -1299,7 +1296,14 @@ export interface VoteOption {
   text: string
   count: number
   voters: string[]
-  percentage?: number // 用于OBS显示
+  percentage?: number
+}
+
+export interface VoteOptionDto {
+  index: number
+  text: string
+  count: number
+  percentage: number
 }
 
 export interface ResponseVoteSession {
@@ -1320,17 +1324,22 @@ export interface RequestCreateBulletVote {
   durationSeconds?: number
 }
 
+export interface RequestExtendVote {
+  seconds: number
+}
+
 export interface VoteOBSData {
+  sessionId: number
   title: string
-  options: VoteOption[]
+  options: VoteOptionDto[]
   totalVotes: number
   showResults: boolean
+  isActive: boolean
   isEnding: boolean
-  backgroundImage?: string
-  backgroundColor: string
-  textColor: string
-  optionColor: string
+  winnerOption?: string | null
+  theme: string
   roundedCorners: boolean
   displayPosition: string
+  startTime: number
   endTime?: number
 }

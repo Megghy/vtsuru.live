@@ -40,7 +40,7 @@ import {
   useMessage,
   useThemeVars,
 } from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
@@ -164,7 +164,14 @@ const eventSummary = computed(() => {
   }
 })
 
-// API请求获取数据
+let fetchGen = 0
+let inFlightKey = ''
+
+function currentQueryKey() {
+  const filter = userFilterApplied.value
+  return `${selectedDate.value[0]}:${selectedDate.value[1]}:${selectedType.value}:${filter.uid ?? ''}:${filter.ouid ?? ''}:${filter.uname ?? ''}`
+}
+
 async function get(currentOffset: number, currentLimit: number) {
   try {
     const data = await QueryGetAPI<EventModel[]>(`${EVENT_API_URL}get`, {
@@ -178,9 +185,6 @@ async function get(currentOffset: number, currentLimit: number) {
       uname: userFilterApplied.value.uname,
     })
     if (data.code == 200) {
-      if (currentOffset === 0) {
-        message.success(`成功获取 ${data.data.length} 条数据`)
-      }
       return data.data
     } else {
       message.error(`获取数据失败: ${data.message}`)
@@ -192,51 +196,75 @@ async function get(currentOffset: number, currentLimit: number) {
   }
 }
 
-// 封装的数据获取函数
-async function fetchData(isInitialLoad = false) {
-  if (isLoading.value || isLoadingMore.value) return
+function sortEvents(list: EventModel[]) {
+  return new List(list).OrderByDescending((d) => d.time).ToArray()
+}
 
-  if (isInitialLoad) {
+async function fetchData(reset = false) {
+  if (reset) {
+    const key = currentQueryKey()
+    if (isLoading.value && inFlightKey === key) return
+    inFlightKey = key
+    const gen = ++fetchGen
     isLoading.value = true
-    offset.value = 0
-    events.value = []
-    hasMore.value = true
-  } else {
-    isLoadingMore.value = true
-  }
-
-  const currentOffset = offset.value
-  const fetchedData = await get(currentOffset, limit.value)
-
-  if (fetchedData.length > 0) {
-    const sortedData = new List(fetchedData).OrderByDescending((d) => d.time).ToArray()
-    events.value = isInitialLoad ? sortedData : [...events.value, ...sortedData]
-    offset.value += fetchedData.length
-    hasMore.value = fetchedData.length === limit.value
-  } else {
-    hasMore.value = false
-  }
-
-  if (isInitialLoad) {
-    isLoading.value = false
-  } else {
     isLoadingMore.value = false
+    offset.value = 0
+    hasMore.value = true
+    try {
+      const fetchedData = await get(0, limit.value)
+      if (gen !== fetchGen) return
+      events.value = sortEvents(fetchedData)
+      offset.value = fetchedData.length
+      hasMore.value = fetchedData.length === limit.value
+    } finally {
+      if (gen === fetchGen) isLoading.value = false
+    }
+    return
+  }
+
+  if (isLoading.value || isLoadingMore.value || !hasMore.value) return
+  const gen = fetchGen
+  isLoadingMore.value = true
+  try {
+    const fetchedData = await get(offset.value, limit.value)
+    if (gen !== fetchGen) return
+    if (fetchedData.length > 0) {
+      events.value = [...events.value, ...sortEvents(fetchedData)]
+      offset.value += fetchedData.length
+      hasMore.value = fetchedData.length === limit.value
+    } else {
+      hasMore.value = false
+    }
+  } finally {
+    if (gen === fetchGen) isLoadingMore.value = false
   }
 }
 
-// 日期或类型变化时重新加载
-async function onFilterChange() {
-  await fetchData(true)
+function onFilterChange() {
+  void fetchData(true)
 }
 
-// 无限滚动加载更多
-async function loadMore() {
-  if (!hasMore.value || isLoadingMore.value || isLoading.value) return
-  await fetchData(false)
+function loadMore() {
+  void fetchData(false)
 }
 
-// 监视日期和类型变化
-watch([selectedDate, selectedType], onFilterChange, { immediate: true })
+function sameDateRange(a?: [number, number] | null, b?: [number, number] | null) {
+  return !!a && !!b && a[0] === b[0] && a[1] === b[1]
+}
+
+watch(
+  [selectedDate, selectedType],
+  (curr, prev) => {
+    if (prev && sameDateRange(curr[0], prev[0]) && curr[1] === prev[1]) return
+    onFilterChange()
+  },
+)
+
+onMounted(() => {
+  void nextTick(() => {
+    if (!isLoading.value) void fetchData(true)
+  })
+})
 
 const manualGuardUname = ref('')
 const manualGuardUserKey = ref('')

@@ -18,6 +18,7 @@ export interface ObsDisplayCurrent {
 export interface ObsDisplayItem {
   id: number | string
   primary: string
+  secondary?: string
   badges?: ObsDisplayBadge[]
 }
 

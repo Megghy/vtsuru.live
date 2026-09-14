@@ -1,3 +1,4 @@
+import type { Ref } from 'vue'
 import {
   onScopeDispose,
   onUnmounted,
@@ -48,7 +49,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = any>(
     }
   }
 
-  const state = ref<TState>(loadPersistedState()) as { value: TState }
+  const state = ref<TState>(loadPersistedState()) as Ref<TState>
   const currentHash = ref<string>('')
   const isSyncing = ref<boolean>(false)
   const lastSyncError = ref<boolean>(false)
