@@ -51,6 +51,9 @@ import { useWebFetcher } from '@/store/useWebFetcher'
 
 import '@/apps/client/styles/client-page.css'
 
+import { buildManageTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
+import { isDarkMode } from '@/shared/utils'
+
 // --- 响应式状态 ---
 
 // 获取 webfetcher 状态管理的实例
@@ -58,6 +61,11 @@ const router = useRouter()
 const route = useRoute()
 const webfetcher = useWebFetcher()
 const rpcServer = useFetcherRpcServer()
+
+// 对齐管理后台 (Manage) 的统一主题设计 Token 与 Naive UI Overrides
+const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
+const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
+const manageThemeOverrides = computed(() => getThemeOverrides(manageTokens.value))
 const danmakuWindow = useDanmakuWindow()
 const giftWindow = useGiftWindow()
 const biliCookie = useBiliCookie()
@@ -199,17 +207,36 @@ const menuOptions = computed(() => {
       label: '直播浮窗',
       key: 'live-windows',
       icon: () => h(Chat24Filled),
-      show: danmakuWindow.danmakuWindow != undefined || giftWindow.giftWindow != undefined,
       children: [
         {
-          label: () => h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机'),
+          label: () =>
+            h(
+              RouterLink,
+              { to: { name: 'client-danmaku-window-manage' } },
+              () =>
+                h('div', { style: 'display: flex; align-items: center; justify-content: space-between; width: 100%' }, [
+                  h('span', '弹幕机'),
+                  danmakuWindow.danmakuWindow != null
+                    ? h('span', { style: 'width: 6px; height: 6px; border-radius: 50%; background: var(--vtsuru-success); display: inline-block; margin-left: 8px;' })
+                    : null,
+                ])
+            ),
           key: 'danmaku-window-manage',
-          show: danmakuWindow.danmakuWindow != undefined,
         },
         {
-          label: () => h(RouterLink, { to: { name: 'client-gift-window-manage' } }, () => '礼物与排行'),
+          label: () =>
+            h(
+              RouterLink,
+              { to: { name: 'client-gift-window-manage' } },
+              () =>
+                h('div', { style: 'display: flex; align-items: center; justify-content: space-between; width: 100%' }, [
+                  h('span', '礼物与排行'),
+                  giftWindow.giftWindow != null
+                    ? h('span', { style: 'width: 6px; height: 6px; border-radius: 50%; background: var(--vtsuru-success); display: inline-block; margin-left: 8px;' })
+                    : null,
+                ])
+            ),
           key: 'gift-window-manage',
-          show: giftWindow.giftWindow != undefined,
         },
       ],
     },
@@ -244,9 +271,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <WindowBar />
+  <NConfigProvider :theme-overrides="manageThemeOverrides">
+    <div
+      class="client-layout-root manage-theme"
+      :style="manageCssVars"
+    >
+      <WindowBar />
 
-  <Transition name="fade">
+      <Transition name="fade">
     <div
       v-if="isLoggedIn && !clientInited"
       class="init-overlay"
@@ -534,11 +566,21 @@ onMounted(() => {
       </div>
     </NLayoutContent>
 
-    <SpeechMiniController />
-  </NLayout>
+      <SpeechMiniController />
+    </NLayout>
+  </div>
+</NConfigProvider>
 </template>
 
 <style scoped>
+.client-layout-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--vtsuru-bg);
+}
+
 /* 登录容器样式 */
 .login-container {
   display: flex;

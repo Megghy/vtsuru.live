@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSwitch } from 'naive-ui'
+import { Alert24Filled, Chat24Filled, Code24Filled } from '@vicons/fluent'
+import { NButton, NCard, NFlex, NIcon, NSwitch, NText } from 'naive-ui'
 
 import type { QAInfo } from '@/api/api-models'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
@@ -8,6 +9,7 @@ import { onReceivedQuestion } from '@/apps/client/data/notification'
 import { useSettings } from '@/apps/client/store/useSettings'
 
 const setting = useSettings()
+
 async function testNotification() {
   onReceivedQuestion({
     id: 1,
@@ -22,51 +24,66 @@ async function testNotification() {
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-  >
-    <NCard
-      size="small"
-      bordered
+  <div class="client-readable">
+    <NFlex
+      vertical
+      :size="14"
     >
       <ClientPageHeader
-        title="测试"
-        description="开发与调试入口（仅用于内部测试）"
+        title="开发与测试工具"
+        description="用于本地快速触发事件、调试系统通知与排查桌面客户端运行状态"
       />
-    </NCard>
 
-    <NCard
-      size="small"
-      bordered
-    >
-      <NFlex
-        :wrap="true"
-        :size="12"
-        align="center"
+      <NCard
+        title="调试操作"
+        size="small"
+        bordered
       >
-        <NButton
-          type="primary"
-          size="small"
-          @click="testNotification"
+        <NFlex
+          vertical
+          :size="14"
         >
-          测试通知
-        </NButton>
-        <NButton
-          type="primary"
-          size="small"
-          @click="$router.push({ name: 'client-danmaku-window-manage' })"
-        >
-          弹幕机
-        </NButton>
-        <LabelItem label="关闭弹幕客户端">
-          <NSwitch
-            v-model:value="setting.settings.dev_disableDanmakuClient"
-            size="small"
-            @update:value="setting.save()"
-          />
-        </LabelItem>
-      </NFlex>
-    </NCard>
-  </NFlex>
+          <NFlex
+            align="center"
+            :size="10"
+            wrap
+          >
+            <NButton
+              type="primary"
+              secondary
+              size="small"
+              @click="testNotification"
+            >
+              <template #icon>
+                <NIcon :component="Alert24Filled" />
+              </template>
+              测试触发提问通知
+            </NButton>
+
+            <NButton
+              secondary
+              size="small"
+              @click="$router.push({ name: 'client-danmaku-window-manage' })"
+            >
+              <template #icon>
+                <NIcon :component="Chat24Filled" />
+              </template>
+              跳转弹幕机配置
+            </NButton>
+          </NFlex>
+
+          <LabelItem
+            label="禁用弹幕客户端 (开发调试)"
+            description="开启后在开发环境下跳过本地弹幕 WebSocket 连接"
+          >
+            <NSwitch
+              v-model:value="setting.settings.dev_disableDanmakuClient"
+              size="small"
+              @update:value="setting.save()"
+            />
+          </LabelItem>
+        </NFlex>
+      </NCard>
+    </NFlex>
+  </div>
 </template>

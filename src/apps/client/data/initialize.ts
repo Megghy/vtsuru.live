@@ -406,6 +406,23 @@ export async function initAll(isOnBoot: boolean) {
   const menu = await Menu.new({
     items: [
       {
+        id: 'show-main',
+        text: '显示主界面',
+        action: () => {
+          void appWindow.show().catch((err) => warn(`[tray] 显示窗口失败: ${err}`))
+          void appWindow.unminimize().catch(() => {})
+          void appWindow.setFocus().catch((err) => warn(`[tray] 聚焦窗口失败: ${err}`))
+        },
+      },
+      {
+        id: 'toggle-danmaku',
+        text: '打开/关闭弹幕机',
+        action: () => {
+          const danmakuStore = useDanmakuWindow()
+          danmakuStore.toggleDanmakuWindow()
+        },
+      },
+      {
         id: 'open-devtools',
         text: '打开调试控制台',
         action: () => {
@@ -414,9 +431,9 @@ export async function initAll(isOnBoot: boolean) {
       },
       {
         id: 'quit',
-        text: '退出',
+        text: '退出程序',
         action: () => {
-          invoke('quit_app')
+          void invoke('quit_app')
         },
       },
     ],
@@ -424,12 +441,18 @@ export async function initAll(isOnBoot: boolean) {
   const iconData = await (await fetch('https://oss.suki.club/vtsuru/icon.ico')).arrayBuffer()
   const options: TrayIconOptions = {
     menu,
+    menuOnLeftClick: false,
     title: 'VTsuru.Client',
     tooltip: 'VTsuru 事件收集器',
     icon: iconData,
     action: (event) => {
-      if (event.type === 'DoubleClick' || event.type === 'Click') {
+      // 仅在左键单击或双击时激活并显示主窗口；右键由系统原生弹出菜单
+      if (
+        (event.type === 'Click' && event.button === 'Left' && event.buttonState === 'Up') ||
+        event.type === 'DoubleClick'
+      ) {
         void appWindow.show().catch((err) => warn(`[tray] 显示窗口失败: ${err}`))
+        void appWindow.unminimize().catch(() => {})
         void appWindow.setFocus().catch((err) => warn(`[tray] 聚焦窗口失败: ${err}`))
       }
     },
@@ -445,7 +468,7 @@ export async function initAll(isOnBoot: boolean) {
     info('[init] 跳过弹幕客户端初始化')
   }
 
-  appWindow.setMinSize(new PhysicalSize(720, 480))
+  appWindow.setMinSize(new PhysicalSize(860, 580))
 
   getAllWebviewWindows().then(async (windows) => {
     const w = windows.find((win) => win.label === 'danmaku-window')

@@ -93,6 +93,7 @@ const closeWindow = () => appWindow.hide()
         size="tiny"
         title="最小化"
         aria-label="Minimize"
+        class="window-btn"
         @click="minimizeWindow"
       >
         <Minus class="icon" />
@@ -103,6 +104,7 @@ const closeWindow = () => appWindow.hide()
         size="tiny"
         :title="isMaximized ? '还原' : '最大化'"
         :aria-label="isMaximized ? 'Restore' : 'Maximize'"
+        class="window-btn"
         @click="toggleMaximizeWindow"
       >
         <!-- 根据 isMaximized 状态切换图标 -->
@@ -118,6 +120,7 @@ const closeWindow = () => appWindow.hide()
         size="tiny"
         title="关闭"
         aria-label="Close"
+        class="window-btn window-btn--close"
         @click="closeWindow"
       >
         <Close class="icon" />
@@ -145,5 +148,14 @@ const closeWindow = () => appWindow.hide()
 .icon {
   width: 16px; /* 统一设置图标大小 */
   height: 16px;
+}
+
+.window-btn {
+  transition: all 0.15s ease;
+}
+
+.window-btn--close:hover {
+  background-color: #e81123 !important;
+  color: #ffffff !important;
 }
 </style>

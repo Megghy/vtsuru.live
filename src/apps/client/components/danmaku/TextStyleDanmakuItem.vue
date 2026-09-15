@@ -159,37 +159,38 @@ const {
 <style scoped>
 /* --- 纯文本风格样式 --- */
 .danmaku-text-mode {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  display: block;
   width: 100%;
-  padding: 4px 8px;
+  padding: 3px 8px;
   background-color: rgba(var(--dw-bg-color-rgb, 0, 0, 0), calc(0.6 * var(--dw-opacity, 1)));
   border-radius: var(--dw-border-radius);
   line-height: 1.4;
-  gap: 2px;
-  box-sizing: border-box; /* 确保padding不会增加元素的实际尺寸 */
-  margin-bottom: 1px; /* 减少底部边距，防止溢出 */
+  box-sizing: border-box;
+  margin-bottom: 1px;
+  word-break: break-word;
 }
 
 .danmaku-text-mode.compact {
-  padding: 2px 6px;
-  line-height: 1.2;
+  padding: 1px 6px;
+  line-height: 1.25;
 }
 
 .avatar-text-mode {
   border-radius: 50%;
-  width: calc(var(--dw-font-size) * 1.5);
-  height: calc(var(--dw-font-size) * 1.5);
+  width: calc(var(--dw-font-size) * 1.3);
+  height: calc(var(--dw-font-size) * 1.3);
   margin-right: 4px;
+  display: inline-block;
+  vertical-align: -2px;
+  object-fit: cover;
   flex-shrink: 0;
 }
 
 .text-mode-type {
   font-weight: bold;
   margin-right: 4px;
-  flex-shrink: 0;
-  opacity: 1; /* 确保文本完全不透明 */
+  display: inline;
+  opacity: 1;
 }
 
 .guard-icon-text-mode {
@@ -197,37 +198,34 @@ const {
   height: 8px;
   border-radius: 50%;
   display: inline-block;
+  vertical-align: middle;
   margin-right: 4px;
-  flex-shrink: 0;
 }
 
 .username-text-mode {
   font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-  flex-shrink: 0;
-  opacity: 1; /* 确保文本完全不透明 */
+  display: inline;
+  word-break: keep-all;
+  opacity: 1;
 }
 
 .separator-text-mode {
-  white-space: nowrap;
+  display: inline;
   margin-right: 4px;
-  flex-shrink: 0;
-  opacity: 1; /* 确保文本完全不透明 */
+  opacity: 1;
 }
 
 .price-text-mode {
   font-weight: bold;
+  display: inline;
   margin-right: 4px;
-  flex-shrink: 0;
-  opacity: 1; /* 确保文本完全不透明 */
+  opacity: 1;
 }
 
 .mystery-box-text-mode {
   display: inline-flex;
   align-items: center;
+  vertical-align: middle;
   padding: 0 6px;
   margin-right: 4px;
   border-radius: 999px;
@@ -261,13 +259,13 @@ const {
 }
 
 .content-text-mode {
+  display: inline;
   word-break: break-word;
-  flex-grow: 1;
-  opacity: 1; /* 确保文本完全不透明 */
+  opacity: 1;
 }
 
 .inline-emoji-text-mode {
-  vertical-align: middle;
+  vertical-align: -2px;
   height: calc(var(--dw-font-size) * 1.2);
   margin: 0 1px;
 }

@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import {
   AppGeneric24Regular,
+  ArrowLeft24Filled,
   Chat24Regular,
-  Clock24Regular,
   DataUsage24Regular,
+  DoorArrowLeft24Regular,
+  Edit16Regular,
   Gift24Regular,
   History24Regular,
   PersonAdd24Regular,
-  Shield24Regular,
-  DoorArrowLeft24Regular,
-  Star24Regular,
-  Timer24Regular,
   Settings24Regular,
+  Shield24Regular,
+  Star24Regular,
   Target24Filled,
-  Edit16Regular,
+  Timer24Regular,
 } from '@vicons/fluent'
 import {
   NAlert,
@@ -29,9 +29,12 @@ import {
   NLayoutSider,
   NMenu,
   NModal,
+  NScrollbar,
   NSelect,
+  NSwitch,
   NTag,
   NText,
+  NTooltip,
   useMessage,
 } from 'naive-ui'
 import type { Component } from 'vue'
@@ -91,7 +94,6 @@ function renderMenuLabel(label: string, key: string) {
     count = autoActionStore.autoActions.filter((a) => a.triggerType === type && a.enabled).length
   } else if (isCheckIn) {
     isEnabled = accountStore.value?.settings?.point?.enableCheckIn ?? false
-    // 签到只有开关状态，没有多个子条目概念，或者可以看做 1
     count = isEnabled ? 1 : 0
   }
 
@@ -243,14 +245,15 @@ const currentEditingAction = computed(() => {
   return autoActionStore.autoActions.find((a) => a.id === editingActionId.value)
 })
 
+const activeRulesCount = computed(() => autoActionStore.autoActions.filter((a) => a.enabled).length)
+
 // 方法
 function handleMenuUpdate(key: string) {
   currentMenuKey.value = key
-  editingActionId.value = null // 切换菜单时退出编辑模式
+  editingActionId.value = null
 }
 
 function handleAddAction() {
-  // 如果当前在某个具体的触发类型页面，直接添加该类型
   if (Object.values(TriggerType).includes(currentMenuKey.value as TriggerType)) {
     selectedTriggerType.value = currentMenuKey.value as TriggerType
     addAutoAction()
@@ -275,7 +278,6 @@ function backToOverview() {
   editingActionId.value = null
 }
 
-// 测试相关逻辑
 function handleTestClick(type: TriggerType) {
   const requiresLogin = [TriggerType.DANMAKU, TriggerType.GUARD, TriggerType.SUPER_CHAT].includes(type)
   if (requiresLogin && !biliCookieStore.isCookieValid) {
@@ -309,7 +311,6 @@ function confirmTest() {
   showTestModal.value = false
 }
 
-// 定时任务相关逻辑
 function openSetNextModal() {
   targetNextActionId.value = autoActionStore.nextScheduledAction?.id ?? null
   showSetNextModal.value = true
@@ -335,232 +336,261 @@ const triggerTypeOptions = [
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="0"
-    class="full-height"
-  >
-    <!-- Header Area -->
-    <div class="header-container">
+  <div class="auto-action-page">
+    <NFlex
+      vertical
+      :size="14"
+      class="auto-action-wrapper"
+    >
+      <!-- 标准管理页标头 -->
       <ClientPageHeader
         title="自动操作"
-        description="管理自动回复、礼物感谢、入场欢迎、定时发送等规则"
-      />
+        description="管理自动回复、礼物感谢、入场欢迎、定时发送等自动化规则"
+      >
+        <template #actions>
+          <NFlex
+            align="center"
+            :size="10"
+          >
+            <NTag
+              :type="autoActionStore.enable ? 'success' : 'default'"
+              round
+              :bordered="false"
+            >
+              {{ autoActionStore.enable ? `已启用 (${activeRulesCount} 条生效中)` : '引擎已暂停' }}
+            </NTag>
+
+            <NTooltip>
+              <template #trigger>
+                <NSwitch v-model:value="autoActionStore.enable">
+                  <template #checked> 运行中 </template>
+                  <template #unchecked> 已暂停 </template>
+                </NSwitch>
+              </template>
+              自动操作总开关，关闭后所有规则停止自动触发
+            </NTooltip>
+          </NFlex>
+        </template>
+      </ClientPageHeader>
+
       <NAlert
         v-if="!biliCookieStore.isCookieValid"
         type="warning"
-        title="未登录B站账号"
+        title="B站账号凭据未就绪"
         size="small"
         closable
-        style="margin-top: 12px"
       >
-        部分需要发送弹幕或私信的自动操作（如自动回复、上舰感谢）将无法执行。请前往【设置】- 【账号设置】页面登录。
+        部分需要发送弹幕或私信的操作（如自动回复、上舰感谢）将无法执行。请前往【设置】完成登录。
       </NAlert>
-    </div>
 
-    <!-- Main Content Area -->
-    <div class="content-container">
-      <NLayout
-        has-sider
-        class="inner-layout"
+      <!-- 双栏工作台卡片 -->
+      <NCard
+        size="small"
+        bordered
+        content-style="padding: 0;"
+        class="auto-action-workbench"
       >
-        <NLayoutSider
-          bordered
-          width="200"
-          content-style="padding: 12px 0;"
-          :native-scrollbar="false"
+        <NLayout
+          has-sider
+          class="inner-layout"
         >
-          <NMenu
-            :value="currentMenuKey"
-            :options="menuOptions"
-            :indent="24"
-            @update:value="handleMenuUpdate"
-          />
-        </NLayoutSider>
+          <!-- 左侧二级菜单 -->
+          <NLayoutSider
+            bordered
+            width="210"
+            content-style="padding: 10px 0;"
+            :native-scrollbar="false"
+          >
+            <NMenu
+              :value="currentMenuKey"
+              :options="menuOptions"
+              :indent="20"
+              @update:value="handleMenuUpdate"
+            />
+          </NLayoutSider>
 
-        <NLayoutContent content-style="padding: 16px; height: 100%;">
-          <NScrollbar class="main-scrollbar">
-            <transition
-              name="fade-slide"
-              mode="out-in"
-            >
-              <!-- 编辑模式 -->
-              <div
-                v-if="editingActionId && currentEditingAction"
-                :key="`edit-${editingActionId}`"
-                class="edit-mode-container"
+          <!-- 右侧内容区域 -->
+          <NLayoutContent
+            content-style="padding: 16px 20px; height: 100%;"
+            :native-scrollbar="false"
+          >
+            <NScrollbar class="main-scrollbar">
+              <transition
+                name="fade-slide"
+                mode="out-in"
               >
-                <NFlex
-                  vertical
-                  :size="16"
+                <!-- 编辑模式 -->
+                <div
+                  v-if="editingActionId && currentEditingAction"
+                  :key="`edit-${editingActionId}`"
+                  class="edit-mode-container"
                 >
-                  <NFlex align="center">
-                    <NButton
-                      secondary
-                      size="small"
-                      @click="backToOverview"
-                    >
-                      <template #icon>
-                        <NIcon
-                          :component="Clock24Regular"
-                          style="transform: rotate(90deg)"
-                        />
-                      </template>
-                      返回列表
-                    </NButton>
-                    <NText
-                      strong
-                      style="font-size: 16px"
-                    >
-                      编辑 {{ currentEditingAction.name }}
-                    </NText>
-                  </NFlex>
-                  <div class="editor-wrapper">
-                    <AutoActionEditor :action="currentEditingAction" />
-                  </div>
-                </NFlex>
-              </div>
-
-              <!-- 列表模式 / 其他功能页面 -->
-              <div
-                v-else
-                :key="`view-${currentMenuKey}`"
-                class="view-mode-container"
-              >
-                <!-- 自动操作列表 -->
-                <ActionList
-                  v-if="Object.values(TriggerType).includes(currentMenuKey as TriggerType)"
-                  :trigger-type="currentMenuKey as TriggerType"
-                  :title="typeMap[currentMenuKey]"
-                  @edit="handleEdit"
-                  @add="handleAddAction"
-                  @test="() => handleTestClick(currentMenuKey as TriggerType)"
-                >
-                  <template #header-content>
-                    <!-- 定时发送专属设置 -->
-                    <div
-                      v-if="currentMenuKey === TriggerType.SCHEDULED"
-                      style="margin-bottom: 16px"
-                    >
-                      <GlobalScheduledSettings />
-                      <div
-                        v-if="
-                          enabledTriggerTypes &&
-                          enabledTriggerTypes[TriggerType.SCHEDULED] &&
-                          autoActionStore.globalSchedulingMode === 'sequential' &&
-                          autoActionStore.nextScheduledAction
-                        "
-                        class="next-action-display"
-                      >
-                        <NFlex
-                          align="center"
-                          justify="space-between"
-                        >
-                          <NText type="success">
-                            <NIcon
-                              :component="Target24Filled"
-                              style="vertical-align: -0.15em; margin-right: 4px"
-                            />
-                            下一个执行:
-                            <NTag
-                              type="info"
-                              size="small"
-                              round
-                            >
-                              {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
-                            </NTag>
-                          </NText>
-                          <NButton
-                            text
-                            icon-placement="right"
-                            size="small"
-                            @click="openSetNextModal"
-                          >
-                            <template #icon>
-                              <NIcon :component="Edit16Regular" />
-                            </template>
-                            手动指定
-                          </NButton>
-                        </NFlex>
-                      </div>
-                    </div>
-
-                    <!-- 舰长专属提示 -->
-                    <NAlert
-                      v-if="currentMenuKey === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
-                      type="warning"
-                      title="功能限制提醒"
-                      style="margin-bottom: 12px"
-                      :bordered="false"
-                    >
-                      当前连接模式 (OpenLive)
-                      无法获取用户UID，因此无法执行【发送私信】操作。如需使用私信功能，请考虑切换至直连模式。
-                    </NAlert>
-                  </template>
-                </ActionList>
-
-                <!-- 签到设置 -->
-                <CheckInSettings v-else-if="currentMenuKey === 'check-in-settings'" />
-
-                <!-- 消息队列设置 -->
-                <div v-else-if="currentMenuKey === 'queue-settings'">
-                  <NCard
-                    title="全局消息队列设置"
-                    size="small"
-                    bordered
+                  <NFlex
+                    vertical
+                    :size="14"
                   >
-                    <NFlex
-                      vertical
-                      :size="16"
-                    >
-                      <div class="setting-item">
-                        <div class="label">弹幕队列间隔</div>
-                        <div class="control">
-                          <NInputNumber
-                            v-model:value="biliFunc.danmakuInterval"
-                            :min="100"
-                            :step="100"
-                            style="width: 150px"
-                          >
-                            <template #suffix> ms </template>
-                          </NInputNumber>
-                          <div class="desc">
-                            两条弹幕之间的最小发送间隔，过短可能导致被B站吞弹幕。建议 1000ms 以上。
-                          </div>
-                        </div>
-                      </div>
-                      <NDivider style="margin: 0" />
-                      <div class="setting-item">
-                        <div class="label">私信队列间隔</div>
-                        <div class="control">
-                          <NInputNumber
-                            v-model:value="biliFunc.pmInterval"
-                            :min="1000"
-                            :step="500"
-                            style="width: 150px"
-                          >
-                            <template #suffix> ms </template>
-                          </NInputNumber>
-                          <div class="desc">私信发送频率限制，建议保持默认或更高以避免封控。</div>
-                        </div>
-                      </div>
+                    <NFlex align="center">
+                      <NButton
+                        secondary
+                        size="small"
+                        @click="backToOverview"
+                      >
+                        <template #icon>
+                          <NIcon :component="ArrowLeft24Filled" />
+                        </template>
+                        返回列表
+                      </NButton>
+                      <NText
+                        strong
+                        style="font-size: 15px"
+                      >
+                        编辑 {{ currentEditingAction.name }}
+                      </NText>
                     </NFlex>
-                  </NCard>
+                    <div class="editor-wrapper">
+                      <AutoActionEditor :action="currentEditingAction" />
+                    </div>
+                  </NFlex>
                 </div>
 
-                <!-- 执行历史 -->
-                <ActionHistoryViewer v-else-if="currentMenuKey === 'action-history'" />
+                <!-- 列表模式 / 功能页面 -->
+                <div
+                  v-else
+                  :key="`view-${currentMenuKey}`"
+                  class="view-mode-container"
+                >
+                  <!-- 自动操作列表 -->
+                  <ActionList
+                    v-if="Object.values(TriggerType).includes(currentMenuKey as TriggerType)"
+                    :trigger-type="currentMenuKey as TriggerType"
+                    :title="typeMap[currentMenuKey]"
+                    @edit="handleEdit"
+                    @add="handleAddAction"
+                    @test="() => handleTestClick(currentMenuKey as TriggerType)"
+                  >
+                    <template #header-content>
+                      <!-- 定时发送专属设置 -->
+                      <div
+                        v-if="currentMenuKey === TriggerType.SCHEDULED"
+                        style="margin-bottom: 14px"
+                      >
+                        <GlobalScheduledSettings />
+                        <div
+                          v-if="
+                            enabledTriggerTypes &&
+                            enabledTriggerTypes[TriggerType.SCHEDULED] &&
+                            autoActionStore.globalSchedulingMode === 'sequential' &&
+                            autoActionStore.nextScheduledAction
+                          "
+                          class="next-action-display"
+                        >
+                          <NFlex
+                            align="center"
+                            justify="space-between"
+                          >
+                            <NText type="success">
+                              <NIcon
+                                :component="Target24Filled"
+                                style="vertical-align: -0.15em; margin-right: 4px"
+                              />
+                              下一个执行:
+                              <NTag
+                                type="info"
+                                size="small"
+                                round
+                              >
+                                {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
+                              </NTag>
+                            </NText>
+                            <NButton
+                              text
+                              icon-placement="right"
+                              size="small"
+                              @click="openSetNextModal"
+                            >
+                              <template #icon>
+                                <NIcon :component="Edit16Regular" />
+                              </template>
+                              手动指定
+                            </NButton>
+                          </NFlex>
+                        </div>
+                      </div>
 
-                <!-- 数据管理 -->
-                <DataManager v-else-if="currentMenuKey === 'data-manager'" />
-              </div>
-            </transition>
-          </NScrollbar>
-        </NLayoutContent>
-      </NLayout>
-    </div>
+                      <!-- 舰长专属提示 -->
+                      <NAlert
+                        v-if="currentMenuKey === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
+                        type="warning"
+                        title="功能限制提醒"
+                        style="margin-bottom: 12px"
+                        :bordered="false"
+                      >
+                        当前连接模式 (OpenLive) 无法获取用户 UID，因此无法执行【发送私信】操作。如需使用私信功能，请切换至直连模式。
+                      </NAlert>
+                    </template>
+                  </ActionList>
 
-    <!-- Modals -->
+                  <!-- 签到设置 -->
+                  <CheckInSettings v-else-if="currentMenuKey === 'check-in-settings'" />
+
+                  <!-- 消息队列设置 -->
+                  <div v-else-if="currentMenuKey === 'queue-settings'">
+                    <NCard
+                      title="全局消息队列频率"
+                      size="small"
+                      bordered
+                    >
+                      <NFlex
+                        vertical
+                        :size="14"
+                      >
+                        <div class="setting-item">
+                          <div class="label">弹幕队列最小间隔</div>
+                          <div class="control">
+                            <NInputNumber
+                              v-model:value="biliFunc.danmakuInterval"
+                              :min="100"
+                              :step="100"
+                              style="width: 160px"
+                            >
+                              <template #suffix> ms </template>
+                            </NInputNumber>
+                            <div class="desc">两条弹幕之间的最小发送间隔，过短可能导致被B站吞弹幕。建议 1000ms 以上。</div>
+                          </div>
+                        </div>
+                        <NDivider style="margin: 4px 0" />
+                        <div class="setting-item">
+                          <div class="label">私信队列最小间隔</div>
+                          <div class="control">
+                            <NInputNumber
+                              v-model:value="biliFunc.pmInterval"
+                              :min="1000"
+                              :step="500"
+                              style="width: 160px"
+                            >
+                              <template #suffix> ms </template>
+                            </NInputNumber>
+                            <div class="desc">私信发送频率限制，建议保持默认 1000ms 或更高以避免触发 B 站频控。</div>
+                          </div>
+                        </div>
+                      </NFlex>
+                    </NCard>
+                  </div>
+
+                  <!-- 执行历史 -->
+                  <ActionHistoryViewer v-else-if="currentMenuKey === 'action-history'" />
+
+                  <!-- 数据管理 -->
+                  <DataManager v-else-if="currentMenuKey === 'data-manager'" />
+                </div>
+              </transition>
+            </NScrollbar>
+          </NLayoutContent>
+        </NLayout>
+      </NCard>
+    </NFlex>
+
+    <!-- 弹窗部分 -->
     <NModal
       v-model:show="showAddModal"
       preset="dialog"
@@ -620,29 +650,26 @@ const triggerTypeOptions = [
         />
       </NFlex>
     </NModal>
-  </NFlex>
+  </div>
 </template>
 
 <style scoped>
-.full-height {
-  height: calc(100vh - 64px); /* Adjust based on your layout header height */
-  overflow: hidden;
+.auto-action-page {
+  width: 100%;
 }
 
-.header-container {
-  padding: 16px 24px 0;
-  flex-shrink: 0;
+.auto-action-wrapper {
+  width: 100%;
 }
 
-.content-container {
-  flex: 1;
+.auto-action-workbench {
+  min-height: 560px;
+  border-radius: var(--vtsuru-radius, 6px);
   overflow: hidden;
-  margin-top: 16px;
-  border-top: 1px solid var(--vtsuru-border);
 }
 
 .inner-layout {
-  height: 100%;
+  min-height: 560px;
   background: transparent;
 }
 
@@ -651,7 +678,6 @@ const triggerTypeOptions = [
   height: 100%;
 }
 
-/* 约束可读内容宽度, 避免宽屏下表单/编辑器被无限拉伸 */
 .editor-wrapper {
   max-width: 920px;
   margin-left: auto;
@@ -662,17 +688,17 @@ const triggerTypeOptions = [
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s ease;
 }
 
 .status-dot--active {
-  background-color: var(--vtsuru-success);
-  box-shadow: 0 0 4px var(--vtsuru-success);
+  background-color: var(--vtsuru-success, #10b981);
+  box-shadow: 0 0 4px var(--vtsuru-success, #10b981);
 }
 
 .status-dot--inactive {
-  background-color: var(--vtsuru-error);
-  opacity: 0.6;
+  background-color: var(--vtsuru-error, #ef4444);
+  opacity: 0.5;
 }
 
 :deep(.n-menu-item-content) {
@@ -680,18 +706,20 @@ const triggerTypeOptions = [
 }
 
 .next-action-display {
-  margin-top: 12px;
+  margin-top: 10px;
   padding: 8px 12px;
-  background-color: var(--vtsuru-bg-inset);
-  border-radius: var(--vtsuru-radius);
+  background-color: var(--vtsuru-bg-elevated);
+  border-radius: var(--vtsuru-radius, 6px);
   font-size: 13px;
   border-left: 3px solid var(--vtsuru-primary);
+  border: 1px solid var(--vtsuru-border);
+  border-left-width: 3px;
 }
 
 .setting-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .setting-item .label {
@@ -705,19 +733,19 @@ const triggerTypeOptions = [
   margin-top: 4px;
 }
 
-/* Transition Animations */
+/* 动效 */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 0.25s ease-out;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .fade-slide-enter-from {
   opacity: 0;
-  transform: translateX(20px);
+  transform: translateX(10px);
 }
 
 .fade-slide-leave-to {
   opacity: 0;
-  transform: translateX(-20px);
+  transform: translateX(-10px);
 }
 </style>

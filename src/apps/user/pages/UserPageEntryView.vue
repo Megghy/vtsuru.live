@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NResult, NText } from 'naive-ui'
+import { NButton, NResult } from 'naive-ui'
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -65,14 +65,6 @@ const mergedBlockProject = computed(() => {
   }
 })
 
-const contentMaxWidth = computed(() => {
-  const value =
-    mergedBlockProject.value?.theme?.pageMaxWidth ??
-    pageConfig.value?.theme?.pageMaxWidth ??
-    settings.value?.theme?.pageMaxWidth
-  return typeof value === 'string' && value.trim() ? value.trim() : '820px'
-})
-
 const effectiveIsDark = computed(() => {
   const modes = [
     mergedBlockProject.value?.theme?.pageThemeMode,
@@ -132,27 +124,6 @@ const contentClass = computed(() => ({
         class="content"
         :class="contentClass"
       >
-        <header
-          v-if="pageSlug && pageConfig && (pageConfig.title || pageConfig.description)"
-          class="page-heading"
-          :style="{ maxWidth: contentMaxWidth }"
-        >
-          <NText
-            v-if="pageConfig.title"
-            tag="h1"
-            class="page-heading__title"
-          >
-            {{ pageConfig.title }}
-          </NText>
-          <NText
-            v-if="pageConfig.description"
-            depth="3"
-            class="page-heading__summary"
-          >
-            {{ pageConfig.description }}
-          </NText>
-        </header>
-
         <component
           :is="indexTemplateComponent"
           v-if="renderMode === 'legacy'"
@@ -213,28 +184,6 @@ const contentClass = computed(() => ({
 
 .content {
   min-height: 100vh;
-}
-
-.page-heading {
-  margin: 0 auto var(--vtsuru-page-spacing);
-  padding: 0 var(--vtsuru-page-spacing);
-}
-
-.page-heading__title,
-.page-heading__summary {
-  display: block;
-}
-
-.page-heading__title {
-  margin: 0;
-  color: var(--vtsuru-page-text);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.page-heading__summary {
-  margin-top: 4px;
-  color: var(--vtsuru-page-text-muted, var(--vtsuru-page-text));
 }
 
 .bg-host {

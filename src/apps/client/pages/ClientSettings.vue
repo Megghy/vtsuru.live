@@ -2,22 +2,34 @@
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
+import {
+  Alert24Filled,
+  ArrowSync24Regular,
+  Info24Filled,
+  Mic24Filled,
+  Save24Filled,
+  Settings24Filled,
+} from '@vicons/fluent'
 import type { MenuOption } from 'naive-ui'
 import {
   NAlert,
+  NButton,
   NCard,
-  NCheckbox,
   NDivider,
+  NFlex,
   NFormItem,
   NGrid,
   NGridItem,
+  NIcon,
   NMenu,
   NRadio,
   NRadioGroup,
   NSpin,
   NSwitch,
+  NTag,
+  NText,
 } from 'naive-ui'
-import { onMounted, ref, watch } from 'vue'
+import { h, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { ThemeType } from '@/api/api-models'
@@ -36,8 +48,8 @@ const route = useRoute()
 const currentTab = ref((route.query.tab as string) || 'general')
 const isLoading = ref(true)
 const errorMsg = ref<string | null>(null)
-const titleClickCount = ref(0) // 添加计数器状态变量
-let resetTimeout: number | null = null // 用于重置计数器的超时ID
+const titleClickCount = ref(0)
+let resetTimeout: number | null = null
 
 const setting = useSettings()
 const currentVersion = await getVersion()
@@ -77,18 +89,36 @@ const handleCheckUpdate = async () => {
   }
 }
 
-// Navigation
+// Navigation Options
 const navOptions: MenuOption[] = [
-  { label: '常规', key: 'general' },
-  { label: '通知', key: 'notification' },
-  { label: '语音转写', key: 'transcription' },
-  { label: '备份', key: 'backup' },
-  { label: '其他', key: 'other' },
-  { label: '关于', key: 'about' },
+  {
+    label: '常规设置',
+    key: 'general',
+    icon: () => h(NIcon, null, { default: () => h(Settings24Filled) }),
+  },
+  {
+    label: '系统通知',
+    key: 'notification',
+    icon: () => h(NIcon, null, { default: () => h(Alert24Filled) }),
+  },
+  {
+    label: '语音转写',
+    key: 'transcription',
+    icon: () => h(NIcon, null, { default: () => h(Mic24Filled) }),
+  },
+  {
+    label: '数据备份',
+    key: 'backup',
+    icon: () => h(NIcon, null, { default: () => h(Save24Filled) }),
+  },
+  {
+    label: '关于程序',
+    key: 'about',
+    icon: () => h(NIcon, null, { default: () => h(Info24Filled) }),
+  },
 ]
 
 // Theme
-
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 
 // Autostart Settings
@@ -133,28 +163,54 @@ watch(isStartOnBoot, async (newValue, oldValue) => {
   }
 })
 
-function renderNotificationEnable(name: NotificationType) {
-  return h(
-    NCheckbox,
-    {
-      checked: setting.settings.notificationSettings?.enableTypes.includes(name),
-      onUpdateChecked: (value) => {
-        setting.settings.notificationSettings.enableTypes ??= []
-        if (value) {
-          setting.settings.notificationSettings.enableTypes.push(name)
-        } else {
-          setting.settings.notificationSettings.enableTypes = setting.settings.notificationSettings.enableTypes.filter(
-            (type) => type !== name,
-          )
-        }
-        setting.save()
-      },
-    },
-    () => '启用',
-  )
+const notificationItems: Array<{ type: NotificationType; title: string; desc: string }> = [
+  {
+    type: 'question-box',
+    title: '提问箱新问题通知',
+    desc: '当收到新的公开或匿名提问时在桌面提醒',
+  },
+  {
+    type: 'goods-buy',
+    title: '积分兑换通知',
+    desc: '当有观众在积分商城兑换实物或虚拟商品时提醒',
+  },
+  {
+    type: 'danmaku',
+    title: '弹幕连接异常通知',
+    desc: '当弹幕流中断或异常重连时在桌面提醒',
+  },
+  {
+    type: 'message-failed',
+    title: '私信发送失败通知',
+    desc: '自动操作发送 B站私信失败时在桌面提醒',
+  },
+  {
+    type: 'live-danmaku-failed',
+    title: '直播弹幕发送失败通知',
+    desc: '自动操作发送直播间弹幕失败时在桌面提醒',
+  },
+]
+
+function isNotificationTypeEnabled(type: NotificationType): boolean {
+  return setting.settings.notificationSettings?.enableTypes?.includes(type) ?? false
 }
 
-// --- 隐藏功能处理函数 ---
+function toggleNotificationType(type: NotificationType, value: boolean) {
+  setting.settings.notificationSettings ??= { enableTypes: [] }
+  setting.settings.notificationSettings.enableTypes ??= []
+  if (value) {
+    if (!setting.settings.notificationSettings.enableTypes.includes(type)) {
+      setting.settings.notificationSettings.enableTypes.push(type)
+    }
+  } else {
+    setting.settings.notificationSettings.enableTypes = setting.settings.notificationSettings.enableTypes.filter(
+      (t) => t !== type,
+    )
+  }
+  setting.save()
+}
+
+// --- 隐藏开发者功能 ---
 function handleTitleClick() {
   titleClickCount.value++
 
@@ -177,7 +233,7 @@ function handleTitleClick() {
 <template>
   <NFlex
     vertical
-    :size="12"
+    :size="14"
     class="client-readable"
   >
     <NCard
@@ -188,12 +244,15 @@ function handleTitleClick() {
         <template #title>
           <NText
             strong
+            style="cursor: pointer;"
             @click="handleTitleClick"
           >
-            设置
+            客户端设置
           </NText>
         </template>
-        <template #description> 客户端行为、外观与通知偏好 </template>
+        <template #description>
+          配置系统启动行为、界面外观、桌面通知与数据备份
+        </template>
       </ClientPageHeader>
     </NCard>
 
@@ -204,6 +263,7 @@ function handleTitleClick() {
       :x-gap="12"
       :y-gap="12"
     >
+      <!-- 左侧设置分类导航 -->
       <NGridItem span="24 900:6">
         <NCard
           size="small"
@@ -218,6 +278,7 @@ function handleTitleClick() {
         </NCard>
       </NGridItem>
 
+      <!-- 右侧设置内容 -->
       <NGridItem span="24 900:18">
         <NSpin :show="isLoading">
           <NFlex
@@ -240,23 +301,24 @@ function handleTitleClick() {
               mode="out-in"
             >
               <div :key="currentTab">
+                <!-- 常规设置 -->
                 <template v-if="currentTab === 'general'">
                   <NFlex
                     vertical
                     :size="12"
                   >
                     <NCard
-                      title="启动"
+                      title="启动偏好"
                       size="small"
                       bordered
                     >
                       <NFlex
                         vertical
-                        :size="8"
+                        :size="12"
                         align="start"
                       >
                         <LabelItem
-                          label="开机时启动应用"
+                          label="开机时自动启动应用"
                           label-placement="left"
                         >
                           <NSwitch
@@ -265,9 +327,10 @@ function handleTitleClick() {
                             :loading="isUpdatingAutostart"
                           />
                         </LabelItem>
+
                         <LabelItem
                           v-if="isStartOnBoot"
-                          label="启动后最小化到托盘"
+                          label="启动后静默最小化到系统托盘"
                           label-placement="left"
                         >
                           <NSwitch
@@ -279,7 +342,7 @@ function handleTitleClick() {
                     </NCard>
 
                     <NCard
-                      title="外观"
+                      title="界面外观"
                       size="small"
                       bordered
                     >
@@ -293,103 +356,86 @@ function handleTitleClick() {
                           :segmented="true"
                           size="small"
                         >
-                          <NRadio :value="ThemeType.Light"> 亮色 </NRadio>
-                          <NRadio :value="ThemeType.Dark"> 暗色 </NRadio>
-                          <NRadio :value="ThemeType.Auto"> 跟随系统 </NRadio>
+                          <NRadio :value="ThemeType.Light">
+                            亮色
+                          </NRadio>
+                          <NRadio :value="ThemeType.Dark">
+                            暗色
+                          </NRadio>
+                          <NRadio :value="ThemeType.Auto">
+                            跟随系统
+                          </NRadio>
                         </NRadioGroup>
                       </NFormItem>
                     </NCard>
                   </NFlex>
                 </template>
 
+                <!-- 系统通知 -->
                 <template v-else-if="currentTab === 'notification'">
                   <NCard
-                    title="通知"
+                    title="系统通知"
                     size="small"
                     bordered
                   >
-                    <NAlert
-                      type="warning"
-                      size="small"
-                      :bordered="false"
-                    >
-                      未完全完成
-                    </NAlert>
-                    <NDivider />
                     <NFlex
                       vertical
-                      :size="12"
+                      :size="14"
                     >
-                      <NCheckbox
-                        v-model:checked="setting.settings.enableNotification"
-                        @update:checked="() => setting.save()"
-                      >
-                        启用通知
-                      </NCheckbox>
+                      <div class="notification-master-row">
+                        <div>
+                          <NText strong>
+                            桌面通知总开关
+                          </NText>
+                          <div class="setting-hint">
+                            开启后，选中的事件将在 Windows 桌面右下角推送通知
+                          </div>
+                        </div>
+                        <NSwitch
+                          v-model:value="setting.settings.enableNotification"
+                          @update:value="() => setting.save()"
+                        />
+                      </div>
 
-                      <template v-if="setting.settings.enableNotification">
-                        <NCard
-                          size="small"
-                          bordered
-                          title="提问箱通知"
+                      <NDivider style="margin: 4px 0;" />
+
+                      <div
+                        v-if="setting.settings.enableNotification"
+                        class="notification-list"
+                      >
+                        <div
+                          v-for="item in notificationItems"
+                          :key="item.type"
+                          class="notification-row"
                         >
-                          <template #header-extra>
-                            <component :is="renderNotificationEnable('question-box')" />
-                          </template>
-                        </NCard>
-                        <NCard
-                          size="small"
-                          bordered
-                          title="积分兑换通知"
-                        >
-                          <template #header-extra>
-                            <component :is="renderNotificationEnable('goods-buy')" />
-                          </template>
-                        </NCard>
-                        <NCard
-                          size="small"
-                          bordered
-                          title="弹幕相关"
-                        >
-                          <template #header-extra>
-                            <component :is="renderNotificationEnable('danmaku')" />
-                          </template>
-                        </NCard>
-                        <NCard
-                          size="small"
-                          bordered
-                          title="私信失败通知"
-                        >
-                          <template #header-extra>
-                            <component :is="renderNotificationEnable('message-failed')" />
-                          </template>
-                          <NText depth="3"> 当 B 站私信发送失败时通知你 </NText>
-                        </NCard>
-                        <NCard
-                          size="small"
-                          bordered
-                          title="弹幕发送失败通知"
-                        >
-                          <template #header-extra>
-                            <component :is="renderNotificationEnable('live-danmaku-failed')" />
-                          </template>
-                          <NText depth="3"> 当直播弹幕发送失败时通知你 </NText>
-                        </NCard>
-                      </template>
+                          <div class="notification-text">
+                            <NText strong>
+                              {{ item.title }}
+                            </NText>
+                            <div class="setting-hint">
+                              {{ item.desc }}
+                            </div>
+                          </div>
+                          <NSwitch
+                            size="small"
+                            :value="isNotificationTypeEnabled(item.type)"
+                            @update:value="(val) => toggleNotificationType(item.type, val)"
+                          />
+                        </div>
+                      </div>
+
+                      <NText
+                        v-else
+                        depth="3"
+                        style="text-align: center; padding: 12px;"
+                      >
+                        桌面通知已全局关闭
+                      </NText>
                     </NFlex>
                   </NCard>
                 </template>
 
-                <template v-else-if="currentTab === 'backup'">
-                  <NCard
-                    title="备份"
-                    size="small"
-                    bordered
-                  >
-                    <ClientBackupPanel />
-                  </NCard>
-                </template>
-
+                <!-- 语音转写 -->
                 <template v-else-if="currentTab === 'transcription'">
                   <NCard
                     title="语音转写"
@@ -400,80 +446,127 @@ function handleTitleClick() {
                   </NCard>
                 </template>
 
-                <template v-else-if="currentTab === 'other'">
+                <!-- 数据备份 -->
+                <template v-else-if="currentTab === 'backup'">
                   <NCard
-                    title="其他"
+                    title="数据备份"
                     size="small"
                     bordered
                   >
-                    <NText depth="3"> 其他设置将显示在这里。 </NText>
+                    <ClientBackupPanel />
                   </NCard>
                 </template>
 
+                <!-- 关于程序 -->
                 <template v-else-if="currentTab === 'about'">
                   <NCard
-                    title="关于"
+                    title="关于 VTsuru.Client"
                     size="small"
                     bordered
                   >
-                    <template #header-extra>
-                      <div
-                        style="width: 10px; height: 10px"
-                        @click="$router.push({ name: 'client-test' })"
-                      />
-                    </template>
                     <NFlex
                       vertical
-                      :size="8"
+                      :size="14"
                     >
-                      <NText depth="3"> VTsuruEventFetcher Tauri </NText>
-                      <NText depth="3"> 版本: {{ currentVersion }} </NText>
-                      <div>
-                        <NText depth="3"> 作者: </NText>
-                        <NButton
-                          tag="a"
-                          href="https://space.bilibili.com/10021741"
-                          target="_blank"
-                          type="info"
-                          text
-                        >
-                          Megghy
-                        </NButton>
+                      <div class="about-hero">
+                        <div class="about-title-row">
+                          <NText
+                            strong
+                            style="font-size: 16px;"
+                          >
+                            VTsuru EventFetcher
+                          </NText>
+                          <NTag
+                            size="small"
+                            type="info"
+                            :bordered="false"
+                            round
+                          >
+                            v{{ currentVersion }}
+                          </NTag>
+                        </div>
+                        <NText depth="3">
+                          专为 Bilibili 主播打造的现代化全功能直播辅助与事件采集桌面客户端
+                        </NText>
                       </div>
-                      <div>
-                        <NText depth="3"> 仓库: </NText>
-                        <NButton
-                          tag="a"
-                          href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
-                          target="_blank"
-                          type="info"
-                          text
-                        >
-                          界面/逻辑
-                        </NButton>
-                        <NDivider vertical />
-                        <NButton
-                          tag="a"
-                          href="https://github.com/Megghy/vtsuru-fetcher-client"
-                          target="_blank"
-                          type="info"
-                          text
-                        >
-                          Tauri 客户端
-                        </NButton>
+
+                      <div class="about-meta-list">
+                        <div class="about-meta-item">
+                          <NText depth="3">
+                            作者
+                          </NText>
+                          <NButton
+                            tag="a"
+                            href="https://space.bilibili.com/10021741"
+                            target="_blank"
+                            type="info"
+                            text
+                          >
+                            Megghy
+                          </NButton>
+                        </div>
+
+                        <div class="about-meta-item">
+                          <NText depth="3">
+                            开源仓库
+                          </NText>
+                          <NFlex :size="8">
+                            <NButton
+                              tag="a"
+                              href="https://github.com/Megghy/vtsuru.live"
+                              target="_blank"
+                              type="info"
+                              text
+                            >
+                              Web 平台
+                            </NButton>
+                            <span style="opacity: 0.4;">/</span>
+                            <NButton
+                              tag="a"
+                              href="https://github.com/Megghy/vtsuru-fetcher-client"
+                              target="_blank"
+                              type="info"
+                              text
+                            >
+                              Tauri 客户端
+                            </NButton>
+                          </NFlex>
+                        </div>
+
+                        <div class="about-meta-item">
+                          <NText depth="3">
+                            交流与反馈群
+                          </NText>
+                          <NText strong>
+                            873260337
+                          </NText>
+                        </div>
                       </div>
-                      <NText depth="3"> 反馈: 🐧 873260337 </NText>
-                      <NDivider />
+
+                      <NDivider style="margin: 4px 0;" />
+
                       <NFlex
                         align="center"
                         justify="space-between"
                       >
-                        <NText>检查更新</NText>
+                        <div>
+                          <NText strong>
+                            在线检查更新
+                          </NText>
+                          <div class="setting-hint">
+                            查询服务端最新客户端版本并自动更新
+                          </div>
+                        </div>
                         <NButton
                           size="small"
+                          type="primary"
+                          secondary
                           :loading="isCheckingUpdate"
                           @click="handleCheckUpdate"
                         >
+                          <template #icon>
+                            <NIcon :component="ArrowSync24Regular" />
+                          </template>
                           检查更新
                         </NButton>
                       </NFlex>
@@ -483,7 +576,9 @@ function handleTitleClick() {
               </div>
             </Transition>
           </NFlex>
-          <template #description> 正在加载设置... </template>
+          <template #description>
+            正在加载设置...
+          </template>
         </NSpin>
       </NGridItem>
     </NGrid>
@@ -491,6 +586,65 @@ function handleTitleClick() {
 </template>
 
 <style scoped>
+.notification-master-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.setting-hint {
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+  margin-top: 2px;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius, 6px);
+  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.03));
+}
+
+.notification-text {
+  min-width: 0;
+}
+
+.about-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.about-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.about-meta-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--vtsuru-border);
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
