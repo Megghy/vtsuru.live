@@ -83,6 +83,7 @@ import type {
 import {
   buildLiveLotterySyncBody,
   buildLotteryObsUrl,
+  formatLotteryAvatar,
   getAvatarUrl,
   getRandomInt as getLiveRandomInt,
   isUserValid as isLiveUserValid,
@@ -203,11 +204,12 @@ function addManualLiveUser(payload: ManualUserFormModel) {
     message.error('请输入用户名')
     return
   }
+  const formattedAvatar = formatLotteryAvatar(payload.avatar, 96)
   const newUser: OpenLiveLotteryUserInfo = {
     uId: Date.now(),
     openId: `manual_${Date.now()}`,
-    name: payload.name,
-    avatar: payload.avatar,
+    name: payload.name.trim(),
+    avatar: formattedAvatar,
     fans_medal_level: payload.fans_medal_level,
     fans_medal_name: payload.fans_medal_name,
     fans_medal_wearing_status: payload.fans_medal_level > 0,
@@ -287,7 +289,9 @@ async function startLiveLottery() {
     eliminatedUsers.value.push(removed)
     const st = ensureCardState(removed.openId)
     st.eliminated = true
-    liveProgress.value = Math.floor(((currentUsers.value.length - pool.length) / (currentUsers.value.length - target)) * 100)
+    liveProgress.value = Math.floor(
+      ((currentUsers.value.length - pool.length) / (currentUsers.value.length - target)) * 100,
+    )
     await new Promise((r) => setTimeout(r, Math.max(80, 500 - pool.length * 10)))
   }
 
@@ -394,9 +398,11 @@ async function fetchDynamicUsers() {
   isDynamicLoading.value = true
   try {
     const endpoint = dynamicType.value === 'comment' ? 'comments' : 'forward'
-    const res = await QueryGetAPI<TempLotteryResponseModel>(`${LOTTERY_API_URL}${endpoint}`, { id: dynamicId.toString() }, [
-      ['Turnstile', turnstileToken.value],
-    ])
+    const res = await QueryGetAPI<TempLotteryResponseModel>(
+      `${LOTTERY_API_URL}${endpoint}`,
+      { id: dynamicId.toString() },
+      [['Turnstile', turnstileToken.value]],
+    )
     if (res.code === 200 && res.data) {
       res.data.users = new List(res.data.users).DistinctBy((u) => u.uId).ToArray()
       res.data.total = res.data.users.length
@@ -506,30 +512,60 @@ onUnmounted(() => {
       <!-- ================= Tab 1: 直播间实时弹幕/礼物抽奖 ================= -->
       <NTabPane name="live">
         <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
+          <NFlex
+            align="center"
+            :size="6"
+            :wrap="false"
+          >
             <NIcon :component="Games24Regular" />
             <span>直播间实时弹幕抽奖</span>
           </NFlex>
         </template>
-        <NFlex vertical :size="16" style="margin-top: 14px">
+        <NFlex
+          vertical
+          :size="16"
+          style="margin-top: 14px"
+        >
           <!-- 控制工具条卡片 -->
           <NCard size="small">
-            <NFlex justify="space-between" align="center" wrap>
+            <NFlex
+              justify="space-between"
+              align="center"
+              wrap
+            >
               <!-- 状态与人数 -->
-              <NFlex align="center" :size="8">
-                <NTag :type="isStartLiveLottery ? 'success' : 'default'" round>
+              <NFlex
+                align="center"
+                :size="8"
+              >
+                <NTag
+                  :type="isStartLiveLottery ? 'success' : 'default'"
+                  round
+                >
                   {{ isStartLiveLottery ? '正在抓取弹幕/送礼' : '已暂停采集' }}
                 </NTag>
-                <NTag type="info" :bordered="false" round>
+                <NTag
+                  type="info"
+                  :bordered="false"
+                  round
+                >
                   奖池观众: {{ currentUsers.length }} 人
                 </NTag>
-                <NTag v-if="liveResultUsers.length > 0" type="warning" :bordered="false" round>
+                <NTag
+                  v-if="liveResultUsers.length > 0"
+                  type="warning"
+                  :bordered="false"
+                  round
+                >
                   中奖人数: {{ liveResultUsers.length }} 人
                 </NTag>
               </NFlex>
 
               <!-- 动作按钮组 -->
-              <NFlex align="center" :size="8">
+              <NFlex
+                align="center"
+                :size="8"
+              >
                 <NButton
                   size="small"
                   :type="isStartLiveLottery ? 'warning' : 'success'"
@@ -552,23 +588,40 @@ onUnmounted(() => {
                   开始翻牌抽取
                 </NButton>
 
-                <NButton size="small" secondary @click="showLiveAddUserModal = true">
+                <NButton
+                  size="small"
+                  secondary
+                  @click="showLiveAddUserModal = true"
+                >
                   <template #icon><NIcon :component="PersonAdd24Filled" /></template>
                   手动加人
                 </NButton>
 
-                <NButton size="small" secondary @click="showLiveObsModal = true">
+                <NButton
+                  size="small"
+                  secondary
+                  @click="showLiveObsModal = true"
+                >
                   OBS 组件大屏
                 </NButton>
 
-                <NButton size="small" secondary @click="showLiveHistoryModal = true">
+                <NButton
+                  size="small"
+                  secondary
+                  @click="showLiveHistoryModal = true"
+                >
                   <template #icon><NIcon :component="History24Filled" /></template>
                   历史
                 </NButton>
 
                 <NPopconfirm @positive-click="clearLiveUsers">
                   <template #trigger>
-                    <NButton size="small" secondary type="error">清空奖池</NButton>
+                    <NButton
+                      size="small"
+                      secondary
+                      type="error"
+                      >清空奖池</NButton
+                    >
                   </template>
                   确定清空当前收集的所有观众吗？
                 </NPopconfirm>
@@ -577,21 +630,39 @@ onUnmounted(() => {
           </NCard>
 
           <!-- 奖池卡片流与设置分栏 -->
-          <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen">
+          <NGrid
+            :x-gap="16"
+            :y-gap="16"
+            :cols="12"
+            responsive="screen"
+          >
             <!-- 奖池卡片 (占 8 列) -->
             <NGi :span="8">
               <NCard size="small">
                 <template #header>
-                  <NFlex align="center" :size="6">
+                  <NFlex
+                    align="center"
+                    :size="6"
+                  >
                     <NIcon :component="PeopleQueue24Regular" />
                     <span>实时奖池观众卡片</span>
                   </NFlex>
                 </template>
-                <div v-if="isLiveLottering" style="margin-bottom: 12px">
-                  <NProgress type="line" :percentage="liveProgress" processing />
+                <div
+                  v-if="isLiveLottering"
+                  style="margin-bottom: 12px"
+                >
+                  <NProgress
+                    type="line"
+                    :percentage="liveProgress"
+                    processing
+                  />
                 </div>
 
-                <div v-if="currentUsers.length > 0" class="user-cards-grid">
+                <div
+                  v-if="currentUsers.length > 0"
+                  class="user-cards-grid"
+                >
                   <div
                     v-for="user in currentUsers"
                     :key="user.openId"
@@ -607,13 +678,27 @@ onUnmounted(() => {
                       :src="getAvatarUrl(user.avatar)"
                       class="card-avatar"
                     />
-                    <div class="card-name" :title="user.name">{{ user.name }}</div>
-                    <NTag v-if="cardStates[user.openId]?.isWinner" size="tiny" type="warning" round>
+                    <div
+                      class="card-name"
+                      :title="user.name"
+                    >
+                      {{ user.name }}
+                    </div>
+                    <NTag
+                      v-if="cardStates[user.openId]?.isWinner"
+                      size="tiny"
+                      type="warning"
+                      round
+                    >
                       中奖
                     </NTag>
                   </div>
                 </div>
-                <NEmpty v-else description="暂无观众加入，请开启收集让观众发弹幕/送礼" style="padding: 60px 0" />
+                <NEmpty
+                  v-else
+                  description="暂无观众加入，请开启收集让观众发弹幕/送礼"
+                  style="padding: 60px 0"
+                />
               </NCard>
             </NGi>
 
@@ -634,22 +719,39 @@ onUnmounted(() => {
       <!-- ================= Tab 2: B站动态与视频评论抽奖 ================= -->
       <NTabPane name="dynamic">
         <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
+          <NFlex
+            align="center"
+            :size="6"
+            :wrap="false"
+          >
             <NIcon :component="Comment24Regular" />
             <span>B站动态/评论智能抽奖</span>
           </NFlex>
         </template>
-        <NFlex vertical :size="16" style="margin-top: 14px">
+        <NFlex
+          vertical
+          :size="16"
+          style="margin-top: 14px"
+        >
           <!-- 动态 URL 解析与拉取 -->
           <NCard size="small">
             <template #header>
-              <NFlex align="center" :size="6">
+              <NFlex
+                align="center"
+                :size="6"
+              >
                 <NIcon :component="Link24Regular" />
                 <span>输入动态或视频链接</span>
               </NFlex>
             </template>
-            <NFlex align="center" :size="10">
-              <NRadioGroup v-model:value="dynamicType" size="small">
+            <NFlex
+              align="center"
+              :size="10"
+            >
+              <NRadioGroup
+                v-model:value="dynamicType"
+                size="small"
+              >
                 <NRadioButton value="comment">评论抽奖</NRadioButton>
                 <NRadioButton value="forward">转发抽奖</NRadioButton>
               </NRadioGroup>
@@ -661,7 +763,12 @@ onUnmounted(() => {
                   placeholder="输入 B站动态 ID、动态链接 (如 https://t.bilibili.com/123456) 或视频链接"
                   clearable
                 />
-                <NButton size="small" type="primary" :loading="isDynamicLoading" @click="fetchDynamicUsers">
+                <NButton
+                  size="small"
+                  type="primary"
+                  :loading="isDynamicLoading"
+                  @click="fetchDynamicUsers"
+                >
                   拉取用户数据
                 </NButton>
               </NInputGroup>
@@ -669,18 +776,29 @@ onUnmounted(() => {
           </NCard>
 
           <!-- 抽奖控制与结果 -->
-          <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen">
+          <NGrid
+            :x-gap="16"
+            :y-gap="16"
+            :cols="12"
+            responsive="screen"
+          >
             <!-- 候选池与抽取 (占 8 列) -->
             <NGi :span="8">
               <NCard size="small">
                 <template #header>
-                  <NFlex align="center" :size="6">
+                  <NFlex
+                    align="center"
+                    :size="6"
+                  >
                     <NIcon :component="Target24Regular" />
                     <span>候选观众与中奖结果</span>
                   </NFlex>
                 </template>
                 <template #header-extra>
-                  <NFlex align="center" :size="8">
+                  <NFlex
+                    align="center"
+                    :size="8"
+                  >
                     <NButton
                       v-if="dynamicResultUsers.length > 0"
                       size="tiny"
@@ -702,7 +820,10 @@ onUnmounted(() => {
                   </NFlex>
                 </template>
 
-                <div v-if="validDynamicUsers.length > 0" class="dynamic-user-pool">
+                <div
+                  v-if="validDynamicUsers.length > 0"
+                  class="dynamic-user-pool"
+                >
                   <div
                     v-for="user in validDynamicUsers"
                     :key="user.uId"
@@ -713,12 +834,24 @@ onUnmounted(() => {
                       'is-rolling': rollingId === user.uId,
                     }"
                   >
-                    <NAvatar round :size="22" :src="`${user.avatar}@48w_48h`" />
+                    <NAvatar
+                      round
+                      :size="22"
+                      :src="getAvatarUrl(user.avatar)"
+                    />
                     <span class="uname">{{ user.name }}</span>
-                    <span v-if="dynamicResultUsers.some((w) => w.uId === user.uId)" class="winner-tag">中奖</span>
+                    <span
+                      v-if="dynamicResultUsers.some((w) => w.uId === user.uId)"
+                      class="winner-tag"
+                      >中奖</span
+                    >
                   </div>
                 </div>
-                <NEmpty v-else description="请输入动态链接并拉取评论/转发名单" style="padding: 60px 0" />
+                <NEmpty
+                  v-else
+                  description="请输入动态链接并拉取评论/转发名单"
+                  style="padding: 60px 0"
+                />
               </NCard>
             </NGi>
 
@@ -726,13 +859,22 @@ onUnmounted(() => {
             <NGi :span="4">
               <NCard size="small">
                 <template #header>
-                  <NFlex align="center" :size="6">
+                  <NFlex
+                    align="center"
+                    :size="6"
+                  >
                     <NIcon :component="Settings24Regular" />
                     <span>抽选条件与过滤</span>
                   </NFlex>
                 </template>
-                <NFlex vertical :size="12">
-                  <NFlex justify="space-between" align="center">
+                <NFlex
+                  vertical
+                  :size="12"
+                >
+                  <NFlex
+                    justify="space-between"
+                    align="center"
+                  >
                     <span>抽取人数：</span>
                     <NInputNumber
                       v-model:value="dynamicOption.resultCount"
@@ -764,8 +906,14 @@ onUnmounted(() => {
     </NTabs>
 
     <!-- 弹窗组件 -->
-    <LotteryAddUserModal v-model:show="showLiveAddUserModal" @submit="addManualLiveUser" />
-    <LotteryHistoryModal v-model:show="showLiveHistoryModal" :history="liveHistory" />
+    <LotteryAddUserModal
+      v-model:show="showLiveAddUserModal"
+      @submit="addManualLiveUser"
+    />
+    <LotteryHistoryModal
+      v-model:show="showLiveHistoryModal"
+      :history="liveHistory"
+    />
     <LotteryObsModal
       v-model:show="showLiveObsModal"
       :user-id="accountInfo?.id"

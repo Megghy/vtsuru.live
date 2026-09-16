@@ -21,7 +21,7 @@ const showModel = computed({
 
 const form = reactive<ManualUserFormModel>({
   name: '',
-  avatar: 'https://i2.hdslb.com/bfs/face/member/noface.jpg',
+  avatar: '',
   fans_medal_level: 0,
   fans_medal_name: '',
   guard_level: 0,
@@ -32,7 +32,7 @@ watch(
   (show) => {
     if (!show) return
     form.name = ''
-    form.avatar = 'https://i2.hdslb.com/bfs/face/member/noface.jpg'
+    form.avatar = ''
     form.fans_medal_level = 0
     form.fans_medal_name = ''
     form.guard_level = 0
@@ -73,7 +73,7 @@ function submit() {
           v-model:value="form.avatar"
           size="small"
           :disabled="disabled"
-          placeholder="请输入头像链接"
+          placeholder="可选，留空则使用内置默认头像"
         />
       </NFormItem>
       <NFlex

@@ -4,8 +4,10 @@ import { OpenLiveLotteryType, type OpenLiveLotteryUserInfo } from '@/api/api-mod
 
 import type { LotteryOption } from '../lotteryTypes'
 import {
+  DEFAULT_LOTTERY_AVATAR,
   buildLiveLotterySyncBody,
   buildLotteryObsUrl,
+  formatLotteryAvatar,
   getAvatarUrl,
   getRandomInt,
   isUserValid,
@@ -158,14 +160,12 @@ describe('isUserValid', () => {
 })
 
 describe('getAvatarUrl', () => {
-  it('returns noface for empty string', () => {
-    expect(getAvatarUrl('')).toBe('https://i2.hdslb.com/bfs/face/member/noface.jpg')
+  it('returns default SVG avatar for empty string', () => {
+    expect(getAvatarUrl('')).toBe(DEFAULT_LOTTERY_AVATAR)
   })
 
-  it('returns noface for default noface url', () => {
-    expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/member/noface.jpg')).toBe(
-      'https://i2.hdslb.com/bfs/face/member/noface.jpg',
-    )
+  it('returns default SVG avatar for default noface url', () => {
+    expect(getAvatarUrl('https://i2.hdslb.com/bfs/face/member/noface.jpg')).toBe(DEFAULT_LOTTERY_AVATAR)
   })
 
   it('replaces existing size parameter', () => {
@@ -198,10 +198,21 @@ describe('resolveLotteryIdentityCode', () => {
 })
 
 describe('buildLotteryObsUrl', () => {
-  it('prefers public user id over identity code', () => {
-    expect(buildLotteryObsUrl('https://vtsuru.live/', 42, 'abc123')).toBe(
-      'https://vtsuru.live/obs/live-lottery?id=42',
+  it('formats lottery avatar safely without broken noface suffixes', () => {
+    expect(formatLotteryAvatar('')).toBe(DEFAULT_LOTTERY_AVATAR)
+    expect(formatLotteryAvatar(undefined)).toBe(DEFAULT_LOTTERY_AVATAR)
+    expect(formatLotteryAvatar('https://i2.hdslb.com/bfs/face/member/noface.jpg')).toBe(DEFAULT_LOTTERY_AVATAR)
+    expect(formatLotteryAvatar('https://i0.hdslb.com/bfs/face/abc.jpg', 64)).toBe(
+      'https://i0.hdslb.com/bfs/face/abc.jpg@64w_64h',
     )
+    expect(formatLotteryAvatar('https://i0.hdslb.com/bfs/face/abc.jpg@128w_128h', 64)).toBe(
+      'https://i0.hdslb.com/bfs/face/abc.jpg@128w_128h',
+    )
+    expect(formatLotteryAvatar('https://example.com/avatar.png')).toBe('https://example.com/avatar.png')
+  })
+
+  it('prefers public user id over identity code', () => {
+    expect(buildLotteryObsUrl('https://vtsuru.live/', 42, 'abc123')).toBe('https://vtsuru.live/obs/live-lottery?id=42')
   })
 
   it('falls back to identity code for H5-only access', () => {
@@ -218,6 +229,21 @@ describe('buildLotteryObsUrl', () => {
   it('encodes special characters in the identity code', () => {
     expect(buildLotteryObsUrl('https://vtsuru.live/', undefined, 'a b&c')).toBe(
       'https://vtsuru.live/obs/live-lottery?code=a+b%26c',
+    )
+  })
+
+  it('appends style and mode query when custom style or mode is passed', () => {
+    expect(buildLotteryObsUrl('https://vtsuru.live/', 42, 'abc123', 'transparent')).toBe(
+      'https://vtsuru.live/obs/live-lottery?id=42&style=transparent',
+    )
+    expect(buildLotteryObsUrl('https://vtsuru.live/', 42, 'abc123', 'champagne', 'banner')).toBe(
+      'https://vtsuru.live/obs/live-lottery?id=42&style=champagne&mode=banner',
+    )
+    expect(buildLotteryObsUrl('https://vtsuru.live/', undefined, 'abc123', 'slate', 'compact')).toBe(
+      'https://vtsuru.live/obs/live-lottery?code=abc123&mode=compact',
+    )
+    expect(buildLotteryObsUrl('https://vtsuru.live/', 42, 'abc123', 'slate', 'card')).toBe(
+      'https://vtsuru.live/obs/live-lottery?id=42',
     )
   })
 })
@@ -255,9 +281,9 @@ describe('buildLiveLotterySyncBody', () => {
   })
 
   it('keeps a trimmed identity code for H5 sessions', () => {
-    expect(
-      buildLiveLotterySyncBody({ code: ' abc ', users, resultUsers, drawing: false, finished: false }).code,
-    ).toBe('abc')
+    expect(buildLiveLotterySyncBody({ code: ' abc ', users, resultUsers, drawing: false, finished: false }).code).toBe(
+      'abc',
+    )
   })
 
   it('marks drawing and result states for OBS', () => {

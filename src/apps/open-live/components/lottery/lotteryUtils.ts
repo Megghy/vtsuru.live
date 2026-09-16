@@ -3,6 +3,9 @@ import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 
 import type { LotteryOption } from './lotteryTypes'
 
+export type LotteryObsStyle = 'slate' | 'transparent' | 'champagne' | 'classic'
+export type LotteryObsMode = 'card' | 'banner' | 'compact' | 'grid'
+
 export function getRandomInt(max: number) {
   return crypto.getRandomValues(new Uint32Array(1))[0] % max
 }
@@ -45,27 +48,67 @@ export function isUserValid(
   return true
 }
 
-export function getAvatarUrl(avatar: string): string {
-  if (!avatar || avatar === 'https://i2.hdslb.com/bfs/face/member/noface.jpg') {
-    return 'https://i2.hdslb.com/bfs/face/member/noface.jpg'
-  }
-  if (avatar.includes('@')) {
-    return avatar.replace(/@\w+/, '@96w_96h')
-  }
-  return `${avatar}@96w_96h`
-}
+export const DEFAULT_LOTTERY_AVATAR =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="%2364748b"><circle cx="24" cy="24" r="24" fill="%23334155"/><path d="M24 23a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm0 4c-6.67 0-14 3.34-14 8v1a2 2 0 0 0 2 2h24a2 2 0 0 0 2-2v-1c0-4.66-7.33-8-14-8Z" fill="%2394a3b8"/></svg>'
 
 /** 幻星 H5 身份码优先，管理端回退到已绑定的 B 站身份码 */
 export function resolveLotteryIdentityCode(propCode?: string, biliAuthCode?: string): string {
   return propCode?.trim() || biliAuthCode?.trim() || ''
 }
 
-export function buildLotteryObsUrl(host: string, userId?: number | string | null, code?: string): string {
+export function formatLotteryAvatar(avatar?: string, size = 48): string {
+  if (!avatar || typeof avatar !== 'string') {
+    return DEFAULT_LOTTERY_AVATAR
+  }
+  const trimmed = avatar.trim()
+  if (
+    !trimmed ||
+    trimmed.includes('noface') ||
+    (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('data:image/'))
+  ) {
+    return DEFAULT_LOTTERY_AVATAR
+  }
+  if ((trimmed.includes('hdslb.com') || trimmed.includes('biliimg.com')) && !trimmed.includes('@')) {
+    return `${trimmed}@${size}w_${size}h`
+  }
+  return trimmed
+}
+
+export function getAvatarUrl(avatar?: string): string {
+  if (!avatar) return DEFAULT_LOTTERY_AVATAR
+  const trimmed = avatar.trim()
+  if (!trimmed || trimmed.includes('noface')) {
+    return DEFAULT_LOTTERY_AVATAR
+  }
+  if (trimmed.includes('@')) {
+    return trimmed.replace(/@\w+/, '@96w_96h')
+  }
+  if (trimmed.includes('hdslb.com') || trimmed.includes('biliimg.com')) {
+    return `${trimmed}@96w_96h`
+  }
+  return trimmed
+}
+
+export function buildLotteryObsUrl(
+  host: string,
+  userId?: number | string | null,
+  code?: string,
+  style?: LotteryObsStyle | string,
+  mode?: LotteryObsMode | string,
+): string {
+  const extraParams: Record<string, string> = {}
+  if (style && style !== 'slate') {
+    extraParams.style = style
+  }
+  if (mode && mode !== 'card') {
+    extraParams.mode = mode
+  }
   const idUrl = buildObsSourceUrl({
     path: 'obs/live-lottery',
     host,
     credential: 'public-id',
     userId,
+    params: extraParams,
   })
   if (idUrl) return idUrl
   const trimmed = code?.trim()
@@ -74,7 +117,7 @@ export function buildLotteryObsUrl(host: string, userId?: number | string | null
     path: 'obs/live-lottery',
     host,
     credential: 'none',
-    params: { code: trimmed },
+    params: { code: trimmed, ...extraParams },
   })
 }
 
