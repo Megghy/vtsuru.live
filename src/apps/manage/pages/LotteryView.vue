@@ -63,8 +63,6 @@ import {
 import { computed, h, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { CURRENT_HOST } from '@/shared/config'
-import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import type {
   LotteryUserInfo,
   OpenLiveInfo,
@@ -84,6 +82,7 @@ import type {
 } from '@/apps/open-live/components/lottery/lotteryTypes'
 import {
   buildLiveLotterySyncBody,
+  buildLotteryObsUrl,
   getAvatarUrl,
   getRandomInt as getLiveRandomInt,
   isUserValid as isLiveUserValid,
@@ -92,7 +91,7 @@ import {
   shuffleArray,
 } from '@/apps/open-live/components/lottery/lotteryUtils'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
-import { LOTTERY_API_URL } from '@/shared/config'
+import { CURRENT_HOST, LOTTERY_API_URL } from '@/shared/config'
 import type { DanmakuInfo, GiftInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard, objectsToCSV } from '@/shared/utils'
@@ -104,15 +103,6 @@ const activeMainTab = ref<'live' | 'dynamic'>('live')
 const message = useMessage()
 const notification = useNotification()
 const accountInfo = useAccount()
-
-const obsUrl = computed(() => {
-  return buildObsSourceUrl({
-    host: CURRENT_HOST,
-    path: '/obs/lottery',
-    credential: 'public-id',
-    userId: accountInfo.value?.id,
-  })
-})
 
 // ======================= 1. 直播间实时抽奖 (Live Lottery) =======================
 const liveDefaultOption: LiveLotteryOption = {
@@ -132,6 +122,7 @@ const liveHistory = usePersistedStorage<LiveLotteryHistory[]>('OpenLive.LotteryH
 
 const client = await useDanmakuClient().initOpenlive()
 const lotteryCode = computed(() => resolveLotteryIdentityCode(undefined, accountInfo.value?.biliAuthCode))
+const obsUrl = computed(() => buildLotteryObsUrl(CURRENT_HOST, accountInfo.value?.id, lotteryCode.value))
 
 const originUsers = ref<OpenLiveLotteryUserInfo[]>([])
 const currentUsers = ref<OpenLiveLotteryUserInfo[]>([])
@@ -773,7 +764,7 @@ onUnmounted(() => {
     </NTabs>
 
     <!-- 弹窗组件 -->
-    <LotteryAddUserModal v-model:show="showLiveAddUserModal" @add="addManualLiveUser" />
+    <LotteryAddUserModal v-model:show="showLiveAddUserModal" @submit="addManualLiveUser" />
     <LotteryHistoryModal v-model:show="showLiveHistoryModal" :history="liveHistory" />
     <LotteryObsModal
       v-model:show="showLiveObsModal"
