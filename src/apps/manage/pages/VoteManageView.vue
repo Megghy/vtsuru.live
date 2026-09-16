@@ -446,7 +446,7 @@ const activePreviewCardData = computed<VoteOBSData | null>(() => {
       totalVotes: currentVote.value.totalVotes,
       startTime: Math.floor(Date.now() / 1000),
       endTime: currentVote.value.endTime,
-      options: currentVote.value.options.map((opt, idx) => ({
+      options: (currentVote.value.options ?? []).map((opt, idx) => ({
         index: idx + 1,
         text: opt.text,
         count: opt.count,
@@ -600,7 +600,7 @@ async function deleteHistoryVote(id: number) {
 
 function reuseHistory(item: ResponseVoteSession) {
   formTitle.value = item.title
-  formOptions.value = item.options.map((opt) => createFormOption(opt.text))
+  formOptions.value = (item.options ?? []).map((opt) => createFormOption(opt.text))
   activeTab.value = 'console'
   message.info('已复制到发起表单')
 }
@@ -721,7 +721,7 @@ onUnmounted(() => {
               <!-- 动态选项统计条 -->
               <div class="active-options-list">
                 <div
-                  v-for="(opt, idx) in currentVote.options"
+                  v-for="(opt, idx) in currentVote.options ?? []"
                   :key="idx"
                   class="active-option-row"
                   :class="{ 'is-leading': idx === leadingOptionIndex }"

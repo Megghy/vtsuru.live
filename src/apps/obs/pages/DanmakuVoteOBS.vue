@@ -41,16 +41,17 @@ async function pollHash() {
     if (targetUserId.value) params.id = targetUserId.value
     if (token.value) params.token = token.value
 
-    const res = await QueryGetAPI<{ hash: string; hasActive: boolean }>(`${VOTE_API_URL}obs-hash`, params)
-    if (res.code === 200 && res.data) {
-      if (!res.data.hasActive) {
+    const res = await QueryGetAPI<string>(`${VOTE_API_URL}obs-hash`, params)
+    if (res.code === 200) {
+      const hash = res.data || 'empty'
+      if (hash === 'empty') {
         voteData.value = null
-        lastHash.value = ''
+        lastHash.value = 'empty'
         return
       }
-      if (res.data.hash !== lastHash.value) {
+      if (hash !== lastHash.value) {
         await fetchFullData()
-        lastHash.value = res.data.hash
+        lastHash.value = hash
       }
     }
   } catch (err) {
