@@ -826,7 +826,7 @@ function onTabChange(tab: string) {
                 >
                   <div
                     v-for="(item, index) in historyRanking"
-                    :key="item.ouId || item.name"
+                    :key="item.ouId"
                     class="history-rank-item"
                   >
                     <NFlex
@@ -850,9 +850,9 @@ function onTabChange(tab: string) {
                         <NAvatar
                           round
                           size="small"
-                          :src="item.avatar"
+                          :src="item.uFace || undefined"
                         />
-                        <NText strong>{{ item.name }}</NText>
+                        <NText strong>{{ item.uName }}</NText>
                       </NFlex>
                       <NTag
                         type="warning"
