@@ -7,7 +7,7 @@ export const pngtuberComponent: ObsComponentDefinition = {
   name: 'PNGtuber 反应立绘',
   shortDescription: '麦克风驱动双图立绘，说话时切换张嘴图并附带动效',
   description:
-    '上传静止与说话两张立绘，由麦克风音量切换。支持弹跳、果冻、摇摆等说话动效，以及呼吸、漂浮待机。OBS 浏览器源自行采集麦克风。',
+    '上传静止与说话立绘（另有静止眨眼、说话眨眼槽位，共 4 张，可不填），由麦克风音量切换。支持多套表情与快捷键、配件贴饰，以及弹跳、果冻、摇摆等说话动效与呼吸、漂浮待机。',
   category: 'interactive',
   status: 'ready',
   tags: ['PNGtuber', '反应立绘', '麦克风', '弹跳'],
@@ -25,7 +25,7 @@ export const pngtuberComponent: ObsComponentDefinition = {
     '弹跳 / 果冻 / 摇摆等说话动效，可关闭',
     '待机呼吸与漂浮',
     '音量电平与阈值调节',
-    '本地压缩上传或外链，支持镜像与阴影',
+    '素材支持 PNG/APNG/GIF/WebP 上传（≤16 MB）或外链，支持镜像与阴影',
   ],
   version: '1.1.0',
   manageComponent: () => import('@/apps/obs-store/components/pngtuber/PngtuberViewer.vue'),

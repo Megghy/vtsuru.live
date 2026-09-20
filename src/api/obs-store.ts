@@ -1,5 +1,5 @@
 import { OBS_STORE_API_URL } from '@/shared/config/endpoints'
-import { QueryDeleteAPI, QueryGetAPI, QueryPostAPI, unwrapOk } from './query'
+import { QueryGetAPI, QueryPostAPI, unwrapOk } from './query'
 
 export class ObsSyncConflict extends Error {
   constructor(public snapshot: ObsSyncStateResponse) { super('配置已在其他窗口更新') }
@@ -39,42 +39,4 @@ export async function updateObsSyncState(
   })
   if (resp.code === 409) throw new ObsSyncConflict(resp.data)
   return unwrapOk(resp, '更新 OBS 组件状态失败')
-}
-
-export type PngtuberImageSlot = 'idle' | 'speaking'
-
-export interface PngtuberImageInfo {
-  userId: number
-  slot: PngtuberImageSlot
-  version: number
-}
-
-export function pngtuberImageUrl(userId: number, slot: PngtuberImageSlot, version?: number) {
-  const suffix = version ? `?v=${version}` : ''
-  return `${OBS_STORE_API_URL}pngtuber/image/${userId}/${slot}${suffix}`
-}
-
-function toPngtuberImage(info: PngtuberImageInfo) {
-  return {
-    ...info,
-    url: pngtuberImageUrl(info.userId, info.slot, info.version),
-  }
-}
-
-export async function uploadPngtuberImage(slot: PngtuberImageSlot, file: File) {
-  const form = new FormData()
-  form.append('slot', slot)
-  form.append('file', file)
-  const resp = await QueryPostAPI<PngtuberImageInfo>(`${OBS_STORE_API_URL}pngtuber/upload`, form)
-  return toPngtuberImage(unwrapOk(resp, '上传立绘失败'))
-}
-
-export async function copyPngtuberIdleToSpeaking() {
-  const resp = await QueryPostAPI<PngtuberImageInfo>(`${OBS_STORE_API_URL}pngtuber/copy-idle-to-speaking`)
-  return toPngtuberImage(unwrapOk(resp, '复制立绘失败'))
-}
-
-export async function deletePngtuberImage(slot: PngtuberImageSlot) {
-  const resp = await QueryDeleteAPI(`${OBS_STORE_API_URL}pngtuber/image/${slot}`)
-  unwrapOk(resp, '删除立绘失败')
 }
