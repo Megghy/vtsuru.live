@@ -56,7 +56,7 @@ export default {
       component: async () => import('@/apps/manage/pages/DanmujiManageView.vue'),
       meta: {
         title: '弹幕姬',
-        pageWidth: 'full',
+        pageWidth: 'xl',
       },
     },
     {

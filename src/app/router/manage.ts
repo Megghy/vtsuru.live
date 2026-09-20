@@ -170,7 +170,7 @@ export default // 管理页面
         keepAlive: true,
         danmaku: true,
         isNew: true,
-        pageWidth: 'full',
+        pageWidth: 'xl',
       },
     },
     {

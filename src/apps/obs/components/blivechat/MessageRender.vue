@@ -1,5 +1,4 @@
 <script>
-import { useDebounceFn } from '@vueuse/core'
 import { cloneDeep } from 'lodash-es'
 import { defineComponent } from 'vue'
 
@@ -49,12 +48,6 @@ export default defineComponent({
     },
   },
   data() {
-    const customStyleElement = document.createElement('style')
-    document.head.appendChild(customStyleElement)
-    const setCssDebounce = useDebounceFn(() => {
-      customStyleElement.innerHTML = this.customCss || ''
-      console.log('[blivechat] 已设置自定义样式')
-    }, 1000)
     return {
       MESSAGE_TYPE_TEXT: constants.MESSAGE_TYPE_TEXT,
       MESSAGE_TYPE_GIFT: constants.MESSAGE_TYPE_GIFT,
@@ -83,9 +76,8 @@ export default defineComponent({
       atBottom: true, // 滚动到底部，用来判断能否自动滚动
       cantScrollStartTime: null, // 开始不能自动滚动的时间，用来防止卡住
 
-      customStyleElement,
+      customStyleElement: null,
 
-      setCssDebounce,
     }
   },
   computed: {
@@ -99,8 +91,8 @@ export default defineComponent({
     },
     customCss: {
       immediate: true,
-      handler() {
-        this.setCssDebounce()
+      handler(val) {
+        this.setCss(val)
       },
     },
   },
@@ -117,7 +109,7 @@ export default defineComponent({
     this.paidMessages = []
     this.smoothedMessageQueue = []
     this.messagesBuffer = []
-    this.customStyleElement?.parentNode?.removeChild(this.customStyleElement)
+    this.customStyleElement?.remove()
   },
   methods: {
     getGiftShowContent(message) {
@@ -135,7 +127,11 @@ export default defineComponent({
       this.enqueueMessages(messages)
     },
     setCss(css) {
-      this.setCssDebounce(css)
+      if (!this.customStyleElement) {
+        this.customStyleElement = document.createElement('style')
+        document.head.appendChild(this.customStyleElement)
+      }
+      this.customStyleElement.textContent = css
     },
     // 后悔加这个功能了
     mergeSimilarText(content) {
@@ -217,6 +213,9 @@ export default defineComponent({
     delMessage(id) {
       this.delMessages([id])
     },
+    deleteMessage(id) {
+      this.delMessages([id])
+    },
     delMessages(ids) {
       this.enqueueMessages(
         ids.map((id) => ({
@@ -226,6 +225,11 @@ export default defineComponent({
       )
     },
     clearMessages() {
+      this.resetSmoothScroll()
+      if (this.emitSmoothedMessageTimerId) {
+        window.clearTimeout(this.emitSmoothedMessageTimerId)
+        this.emitSmoothedMessageTimerId = null
+      }
       this.messages = []
       this.paidMessages = []
       this.smoothedMessageQueue = []

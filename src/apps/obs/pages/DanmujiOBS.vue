@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NAlert } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 // @ts-ignore
 import { DownloadConfig, GetConfigHash, useAccount } from '@/api/account'
@@ -16,92 +16,64 @@ import * as pronunciation from '@/apps/obs/components/blivechat/utils/pronunciat
 import * as trie from '@/apps/obs/components/blivechat/utils/trie'
 import { VTSURU_API_URL } from '@/shared/config'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
+import { type DanmujiConfig, defaultDanmujiConfig, normalizeDanmujiConfig } from '@/shared/danmujiConfig'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
-export interface DanmujiConfig {
-  minGiftPrice: number
-  showDanmaku: boolean
-  showGift: boolean
-  showGiftName: boolean
-  mergeSimilarDanmaku: boolean
-  mergeGift: boolean
-  maxNumber: number
+export type { DanmujiConfig }
 
-  blockLevel: number
-  blockKeywords: string
-  blockUsers: string
-  blockMedalLevel: number
+const props = withDefaults(
+  defineProps<{
+    active?: boolean
+    visible?: boolean
+    preview?: boolean
+    config?: DanmujiConfig
+    customCss?: string
+    openLiveAuth?: AuthInfo
+  }>(),
+  {
+    preview: false,
+  },
+)
 
-  giftUsernamePronunciation: string
-  importPresetCss: boolean
-
-  emoticons: {
-    keyword: string
-    url: string
-  }[]
-}
-
-const props = defineProps<{
-  active?: boolean
-  visible?: boolean
-  config?: DanmujiConfig
-  danmujiConfig?: any
-  customCss?: string
-  openLiveAuth?: AuthInfo
+const emit = defineEmits<{
+  (e: 'ready'): void
 }>()
 
-// 默认配置
-const defaultConfig: DanmujiConfig = {
-  minGiftPrice: 0.1,
-  showDanmaku: true,
-  showGift: true,
-  showGiftName: true,
-  mergeSimilarDanmaku: false,
-  mergeGift: true,
-  maxNumber: 60,
-
-  blockLevel: 0,
-  blockKeywords: '',
-  blockUsers: '',
-  blockMedalLevel: 0,
-
-  giftUsernamePronunciation: '',
-  importPresetCss: false,
-
-  emoticons: [],
-}
-
-defineExpose({ setCss, testAddMessage, pushTestEvent: testAddMessage })
-const customCss = usePersistedStorage('danmuji-css', '')
-
-watch(() => props.customCss, (newCss) => {
-  if (newCss !== undefined && messageRender.value) {
-    messageRender.value.setCss(newCss)
-  }
-})
+const persistedCss = usePersistedStorage('danmuji-css', '')
 
 const isOBS = computed(() => {
   // @ts-ignore
-  return window.obsstudio !== undefined
+  return typeof window !== 'undefined' && window.obsstudio !== undefined
 })
 
-const messageRender = ref()
+const effectiveCss = computed(() => {
+  if (props.customCss !== undefined && props.customCss !== null) {
+    return props.customCss
+  }
+  return persistedCss.value || defaultDanmujiCss
+})
+
+const internalConfig = ref<DanmujiConfig>({ ...defaultDanmujiConfig })
+
+
+const effectiveConfig = computed(() => props.config ?? internalConfig.value)
+const messageRender = ref<InstanceType<typeof MessageRender> | null>(null)
 const danmakuClient = useDanmakuClient()
-const client = danmakuClient.connected ? danmakuClient : await danmakuClient.initOpenlive(props.openLiveAuth)
+let client: Awaited<ReturnType<typeof danmakuClient.initOpenlive>> | null = null
+let disposed = false
 const pronunciationConverter = new pronunciation.PronunciationConverter()
 const accountInfo = useAccount()
 
-const config = computed(() => props.config ?? defaultConfig)
-
 let textEmoticons: { keyword: string; url: string }[] = []
+
 
 // 表情词典树计算
 const emoticonsTrie = computed(() => {
   const res = new trie.Trie()
-  for (const emoticons of [config.value.emoticons, textEmoticons]) {
+  for (const emoticons of [effectiveConfig.value.emoticons, textEmoticons]) {
     for (const emoticon of emoticons) {
       if (emoticon.keyword !== '' && emoticon.url !== '') {
         res.set(emoticon.keyword, emoticon)
@@ -113,14 +85,25 @@ const emoticonsTrie = computed(() => {
 
 // 屏蔽关键词词典树计算
 const blockKeywordsTrie = computed(() => {
-  const blockKeywords = config.value.blockKeywords.split('\n')
+  const blockKeywords = (effectiveConfig.value.blockKeywords || '').split('\n')
   const res = new trie.Trie()
   for (const keyword of blockKeywords) {
-    if (keyword !== '') {
-      res.set(keyword, true)
+    const trimmed = keyword.trim()
+    if (trimmed !== '') {
+      res.set(trimmed, true)
     }
   }
   return res
+})
+
+// 屏蔽用户名单计算
+const blockUsersSet = computed(() => {
+  const text = effectiveConfig.value.blockUsers || ''
+  const list = text
+    .split('\n')
+    .map((u) => u.trim())
+    .filter(Boolean)
+  return new Set(list)
 })
 
 /**
@@ -131,10 +114,17 @@ function setCss(css: string) {
 }
 
 /**
+ * 清空已显示与缓冲的消息
+ */
+function clearMessages() {
+  messageRender.value?.clearMessages()
+}
+
+/**
  * 处理弹幕消息
  */
 async function onAddText(event: EventModel, _command: unknown) {
-  if (!config.value.showDanmaku || !filterTextMessage(event)) {
+  if (!effectiveConfig.value.showDanmaku || !filterTextMessage(event)) {
     return
   }
 
@@ -157,20 +147,20 @@ async function onAddText(event: EventModel, _command: unknown) {
     repeated: 1,
     translation: '',
   }
-  messageRender.value.addMessage(message)
+  messageRender.value?.addMessage(message)
 }
 
 /**
  * 处理礼物消息
  */
 function onAddGift(event: EventModel, _command: unknown) {
-  if (!config.value.showGift) {
+  if (!effectiveConfig.value.showGift || !filterByAuthor(event.uname, event.uid)) {
     return
   }
 
   const price = (event.price * event.num) / 1000
   // 价格过滤
-  if (price < (config.value.minGiftPrice ?? 0)) {
+  if (price < (effectiveConfig.value.minGiftPrice ?? 0)) {
     return
   }
 
@@ -190,14 +180,14 @@ function onAddGift(event: EventModel, _command: unknown) {
     giftName: event.msg,
     num: event.num,
   }
-  messageRender.value.addMessage(message)
+  messageRender.value?.addMessage(message)
 }
 
 /**
  * 处理舰长上舰消息
  */
 function onAddMember(event: EventModel, _command: unknown) {
-  if (!config.value.showGift || !filterNewMemberMessage(event)) {
+  if (!effectiveConfig.value.showGift || !filterNewMemberMessage(event)) {
     return
   }
 
@@ -211,18 +201,18 @@ function onAddMember(event: EventModel, _command: unknown) {
     privilegeType: event.guard_level,
     title: '新舰长',
   }
-  messageRender.value.addMessage(message)
+  messageRender.value?.addMessage(message)
 }
 
 /**
  * 处理醒目留言消息
  */
 function onAddSuperChat(event: EventModel, _command: unknown) {
-  if (!config.value.showGift || !filterSuperChatMessage(event)) {
+  if (!effectiveConfig.value.showGift || !filterSuperChatMessage(event)) {
     return
   }
 
-  if (event.price < (config.value.minGiftPrice ?? 0)) {
+  if (event.price < (effectiveConfig.value.minGiftPrice ?? 0)) {
     return
   }
 
@@ -237,7 +227,7 @@ function onAddSuperChat(event: EventModel, _command: unknown) {
     content: event.msg.trim(),
     translation: '',
   }
-  messageRender.value.addMessage(message)
+  messageRender.value?.addMessage(message)
 }
 
 /**
@@ -247,7 +237,7 @@ function onDelSuperChat(event: EventModel, _command: unknown) {
   const messageIdsToDelete = getDeletedSuperChatIds(event)
   if (messageIdsToDelete.size > 0) {
     console.log(`正在删除SC，ID: ${[...messageIdsToDelete].join(', ')}`)
-    messageIdsToDelete.forEach((id) => messageRender.value.deleteMessage(id))
+    messageIdsToDelete.forEach((id) => messageRender.value?.deleteMessage(id))
   } else {
     console.warn('收到删除SC事件但无法确定要删除的消息ID', event)
   }
@@ -257,7 +247,7 @@ function onDelSuperChat(event: EventModel, _command: unknown) {
  * 获取用户类型：0-普通用户，1-舰长，3-主播
  */
 function getAuthorType(open_id: string, guard_level: number): number {
-  if (open_id === client.authInfo?.anchor_info.open_id) {
+  if (client?.authInfo?.anchor_info?.open_id && open_id === client.authInfo.anchor_info.open_id) {
     return 3 // 主播
   } else if (guard_level !== 0) {
     return 1 // 舰长
@@ -293,7 +283,7 @@ async function getRichContent(data: EventModel): Promise<RichContentType[]> {
   }
 
   // 没有文本表情，只能是纯文本
-  if (config.value.emoticons.length === 0 && textEmoticons.length === 0) {
+  if (effectiveConfig.value.emoticons.length === 0 && textEmoticons.length === 0) {
     richContent.push({
       type: constants.CONTENT_TYPE_TEXT,
       text: data.msg,
@@ -348,6 +338,10 @@ async function getRichContent(data: EventModel): Promise<RichContentType[]> {
  * 填充图片内容的尺寸信息
  */
 async function fillImageContentSizes(richContent: RichContentType[]) {
+  if (typeof document === 'undefined') {
+    return
+  }
+
   const urlSizeMap = new Map()
 
   // 收集所有需要获取尺寸的图片URL
@@ -408,14 +402,14 @@ function getPronunciation(text: string): string {
  * 过滤SC消息
  */
 function filterSuperChatMessage(data: EventModel): boolean {
-  return filterByContent(data.msg) && filterByAuthorName(data.uname)
+  return filterByContent(data.msg) && filterByAuthor(data.uname, data.uid)
 }
 
 /**
  * 过滤新舰长消息
  */
 function filterNewMemberMessage(data: EventModel): boolean {
-  return filterByAuthorName(data.uname)
+  return filterByAuthor(data.uname, data.uid)
 }
 
 /**
@@ -432,10 +426,19 @@ function filterByContent(content: string): boolean {
 }
 
 /**
- * 根据用户名过滤消息
+ * 根据用户名或UID过滤消息（黑名单）
  */
-function filterByAuthorName(id: string): boolean {
-  return !(accountInfo.value && accountInfo.value.biliBlackList && id in accountInfo.value.biliBlackList)
+function filterByAuthor(name?: string, uid?: string | number): boolean {
+  if (name && blockUsersSet.value.has(name)) {
+    return false
+  }
+  if (uid !== undefined && uid !== null && blockUsersSet.value.has(String(uid))) {
+    return false
+  }
+  if (name && accountInfo.value?.biliBlackList && name in accountInfo.value.biliBlackList) {
+    return false
+  }
+  return true
 }
 
 /**
@@ -443,21 +446,21 @@ function filterByAuthorName(id: string): boolean {
  */
 function filterTextMessage(data: EventModel): boolean {
   // 舰长等级过滤
-  if (config.value.blockLevel > 0 && data.guard_level < config.value.blockLevel) {
+  if (effectiveConfig.value.blockLevel > 0 && data.guard_level < effectiveConfig.value.blockLevel) {
     return false
   }
   // 粉丝牌等级过滤
-  else if (config.value.blockMedalLevel > 0 && data.fans_medal_level < config.value.blockMedalLevel) {
+  else if (effectiveConfig.value.blockMedalLevel > 0 && data.fans_medal_level < effectiveConfig.value.blockMedalLevel) {
     return false
   }
-  return filterByContent(data.msg) && filterByAuthorName(data.uname)
+  return filterByContent(data.msg) && filterByAuthor(data.uname, data.uid)
 }
 
 /**
  * 合并相似文本
  */
 function mergeSimilarText(content: string): boolean {
-  if (!config.value.mergeSimilarDanmaku) {
+  if (!effectiveConfig.value.mergeSimilarDanmaku || !messageRender.value) {
     return false
   }
   return messageRender.value.mergeSimilarText(content)
@@ -473,15 +476,14 @@ function mergeSimilarGift(
   giftName: string,
   num: number,
 ): boolean {
-  if (!config.value.mergeGift) {
+  if (!effectiveConfig.value.mergeGift || !messageRender.value) {
     return false
   }
   return messageRender.value.mergeSimilarGift(authorName, price, freePrice, giftName, num)
 }
 
-// --- 修改测试方法 ---
 /**
- * 用于测试，手动触发消息添加
+ * 用于测试与仿真，手动触发消息添加
  * @param rawEventData 测试用的 EventModel 部分数据和可选的 data 负载
  */
 async function testAddMessage(rawEventData: Partial<EventModel> & { type: EventDataTypes; data?: any }) {
@@ -524,7 +526,6 @@ async function testAddMessage(rawEventData: Partial<EventModel> & { type: EventD
       console.warn('Unsupported test event type:', event.type)
   }
 }
-// --- 结束修改测试方法 ---
 
 /**
  * 添加系统通知消息
@@ -563,7 +564,7 @@ async function getConfigFromServer() {
   try {
     const result = await DownloadConfig<DanmujiConfig>('danmuji-config')
     if (result.status === 'success' && result.data) {
-      Object.assign(config.value, result.data)
+      internalConfig.value = normalizeDanmujiConfig(result.data)
       console.log('已从服务器获取弹幕姬配置')
       addSystemNotice('配置已从服务器更新')
       return true
@@ -598,62 +599,69 @@ async function checkConfigHash() {
 function startConfigHashCheck() {
   if (!isOBS.value) return
 
-  // 先获取一次当前哈希值
   GetConfigHash('danmuji-config').then((hash) => {
     currentConfigHash = hash
   })
 
-  // 设置定时检查，每5秒检查一次
   configHashCheckTimer = setInterval(checkConfigHash, 5000)
 }
 
-onMounted(async () => {
-  client.onEvent('danmaku', onAddText)
-  client.onEvent('gift', onAddGift)
-  client.onEvent('sc', onAddSuperChat)
-  client.onEvent('guard', onAddMember)
-  client.onEvent('scDel', onDelSuperChat)
+defineExpose({
+  setCss,
+  testAddMessage,
+  pushTestEvent: testAddMessage,
+  clearMessages,
+})
 
+onMounted(async () => {
+  // 渲染器就绪通知
+  nextTick(() => {
+    emit('ready')
+  })
+
+
+  // 加载通用静态表情包
   try {
     const result = await QueryGetAPI<{ keyword: string; url: string }[]>(`${VTSURU_API_URL}blivechat/emoticon`)
-    if (result.code === 200) {
+    if (result.code === 200 && Array.isArray(result.data)) {
       textEmoticons = result.data
     }
   } catch (error) {
     console.error('加载表情包失败:', error)
   }
 
-  // 监听CSS变化
-  watch(customCss, (newVal) => {
-    messageRender.value?.setCss(newVal)
-  })
+  // 预览模式：不建立真实弹幕连接、不拉取远端配置、不发系统消息、不轮询
+  if (props.preview || disposed) {
+    return
+  }
 
-  // 显示弹幕姬加载完成的通知
-  setTimeout(() => {
-    addSystemNotice('加载完成')
-  }, 300)
+  // 真实弹幕客户端连接
+  client = danmakuClient.connected ? danmakuClient : await danmakuClient.initOpenlive(props.openLiveAuth)
+  if (disposed) return
+  client.onEvent('danmaku', onAddText)
+  client.onEvent('gift', onAddGift)
+  client.onEvent('sc', onAddSuperChat)
+  client.onEvent('guard', onAddMember)
+  client.onEvent('scDel', onDelSuperChat)
+  addSystemNotice('加载完成')
 
-  // 在OBS环境下，获取配置并启动配置检查
-  // @ts-ignore
-  if (window.obsstudio) {
+  // OBS 运行时环境配置拉取与定时比对
+  if (isOBS.value) {
     await getConfigFromServer()
-    startConfigHashCheck()
-
-    messageRender.value?.setCss(defaultDanmujiCss)
-    console.log('设置默认CSS')
-  } else {
-    messageRender.value?.setCss(customCss.value)
+    if (!disposed) startConfigHashCheck()
   }
 })
 
 onUnmounted(() => {
-  client.offEvent('danmaku', onAddText)
-  client.offEvent('gift', onAddGift)
-  client.offEvent('sc', onAddSuperChat)
-  client.offEvent('guard', onAddMember)
-  client.offEvent('scDel', onDelSuperChat)
+  disposed = true
+  if (client) {
+    client.offEvent('danmaku', onAddText)
+    client.offEvent('gift', onAddGift)
+    client.offEvent('sc', onAddSuperChat)
+    client.offEvent('guard', onAddMember)
+    client.offEvent('scDel', onDelSuperChat)
+  }
 
-  // 清除定时器
   if (configHashCheckTimer) {
     clearInterval(configHashCheckTimer)
     configHashCheckTimer = null
@@ -663,7 +671,7 @@ onUnmounted(() => {
 
 <template>
   <NAlert
-    v-if="!$route.query.token && isOBS"
+    v-if="!preview && isOBS && !$route?.query?.token"
     type="error"
   >
     未携带token参数
@@ -671,8 +679,9 @@ onUnmounted(() => {
   <MessageRender
     v-else
     ref="messageRender"
-    :custom-css="customCss"
-    :show-gift-name="config.showGiftName"
+    :custom-css="effectiveCss"
+    :max-number="effectiveConfig.maxNumber"
+    :show-gift-name="effectiveConfig.showGiftName"
     style="height: 100%; width: 100%"
   />
 </template>
