@@ -3,6 +3,7 @@ import { clockComponent } from './items/clock'
 import { counterComponent } from './items/counter'
 import { gamepadComponent } from './items/gamepad'
 import { plannedComponents } from './items/planned'
+import { pngtuberComponent } from './items/pngtuber'
 import type {
   ObsCategory,
   ObsCategoryMeta,
@@ -21,6 +22,7 @@ export const obsComponentList: ObsComponentDefinition[] = [
   gamepadComponent,
   counterComponent,
   clockComponent,
+  pngtuberComponent,
   ...plannedComponents,
 ]
 

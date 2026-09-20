@@ -394,37 +394,37 @@ watch(
 
           <!-- 路由视图: 根据认证状态显示不同内容 -->
           <RouterView v-slot="{ Component, route: viewRoute }">
-            <KeepAlive>
-              <div
-                v-if="Component && (!needsOpenLiveAuth || danmakuClient.authInfo)"
-                :class="viewRoute.meta.pageContainer !== 'none' ? [
-                  'open-live-page-inner',
-                  viewRoute.meta.pageWidth === 'md' && 'open-live-page-inner--md',
-                  viewRoute.meta.pageWidth === 'xl' && 'open-live-page-inner--xl',
-                  viewRoute.meta.pageWidth === 'full' && 'open-live-page-inner--full',
-                ] : undefined"
-              >
+            <div
+              v-if="Component && (!needsOpenLiveAuth || danmakuClient.authInfo)"
+              :class="viewRoute.meta.pageContainer !== 'none' ? [
+                'open-live-page-inner',
+                viewRoute.meta.pageWidth === 'md' && 'open-live-page-inner--md',
+                viewRoute.meta.pageWidth === 'xl' && 'open-live-page-inner--xl',
+                viewRoute.meta.pageWidth === 'full' && 'open-live-page-inner--full',
+              ] : undefined"
+            >
+              <KeepAlive>
                 <component
                   :is="Component"
                   :key="viewRoute.fullPath.split('#')[0]"
                   v-bind="routeComponentProps"
                 />
-              </div>
-              <div
-                v-else-if="needsOpenLiveAuth && !danmakuClient.authInfo && !danmakuClientError"
-                style="display: flex; justify-content: center; align-items: center; height: 80%"
-              >
-                <NSpin size="large">
-                  <template #description> 正在加载主播信息并连接服务... </template>
-                </NSpin>
-              </div>
-              <NResult
-                v-else-if="!danmakuClientError"
-                status="warning"
-                title="页面加载失败"
-                description="无法加载当前功能模块，请尝试刷新或联系开发者。"
-              />
-            </KeepAlive>
+              </KeepAlive>
+            </div>
+            <div
+              v-else-if="needsOpenLiveAuth && !danmakuClient.authInfo && !danmakuClientError"
+              style="display: flex; justify-content: center; align-items: center; height: 80%"
+            >
+              <NSpin size="large">
+                <template #description> 正在加载主播信息并连接服务... </template>
+              </NSpin>
+            </div>
+            <NResult
+              v-else-if="!danmakuClientError"
+              status="warning"
+              title="页面加载失败"
+              description="无法加载当前功能模块，请尝试刷新或联系开发者。"
+            />
           </RouterView>
 
           <!-- 返回顶部按钮 -->

@@ -197,12 +197,13 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
   },
 ])
 
-onMounted(() => {
+onMounted(async () => {
   if (accountInfo.value?.id) {
     store.settings = accountInfo.value.settings.queue
   }
   client.onEvent('danmaku', store.onGetDanmaku)
   client.onEvent('gift', store.onGetGift)
+  await store.init()
 })
 
 onActivated(async () => {

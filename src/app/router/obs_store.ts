@@ -59,5 +59,23 @@ export default {
         forceReload: true,
       },
     },
+    {
+      path: 'pngtuber-manage',
+      name: 'obs-store-pngtuber-manage',
+      component: async () => import('@/apps/obs-store/components/pngtuber/PngtuberViewer.vue'),
+      meta: {
+        title: 'PNGtuber 控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'pngtuber',
+      name: 'obs-store-pngtuber-display',
+      component: async () => import('@/apps/obs-store/components/pngtuber/PngtuberObsPage.vue'),
+      meta: {
+        title: 'PNGtuber',
+        forceReload: true,
+      },
+    },
   ],
 }

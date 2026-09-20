@@ -74,25 +74,20 @@ function logout() {
       v-if="accountInfo?.isEmailVerified"
       v-slot="{ Component, route: viewRoute }"
     >
-      <KeepAlive v-if="viewRoute.meta.keepAlive">
-        <div
-          class="manage-page"
-          :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
-        >
-          <ManageDanmakuStatusBanner v-if="viewRoute.meta.danmaku" />
-          <component
-            :is="Component"
-            :key="String(viewRoute.name ?? viewRoute.path)"
-          />
-        </div>
-      </KeepAlive>
       <div
-        v-else
         class="manage-page"
         :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
       >
         <ManageDanmakuStatusBanner v-if="viewRoute.meta.danmaku" />
+        <KeepAlive>
+          <component
+            v-if="viewRoute.meta.keepAlive"
+            :is="Component"
+            :key="String(viewRoute.name ?? viewRoute.path)"
+          />
+        </KeepAlive>
         <component
+          v-if="!viewRoute.meta.keepAlive"
           :is="Component"
           :key="viewRoute.fullPath.split('#')[0]"
         />

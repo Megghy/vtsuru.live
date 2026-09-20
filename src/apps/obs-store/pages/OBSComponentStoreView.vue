@@ -109,7 +109,7 @@ watch(
           直播挂件与工具控制台
         </h1>
         <p class="header-desc">
-          无服务端与账号依赖。在网页端即时修改并与 OBS 画面毫秒级双向同步。
+          独立挂件，网页端配置，OBS 浏览器源展示。
         </p>
       </div>
 
@@ -219,10 +219,14 @@ watch(
 
 <style scoped>
 .obs-studio-page {
-  padding: 16px 20px 24px;
+  height: calc(100dvh - var(--vtsuru-header-height));
+  padding: 16px 20px;
   box-sizing: border-box;
   max-width: 1440px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 顶部状态栏 */
@@ -234,6 +238,7 @@ watch(
   border-bottom: 1px solid var(--vtsuru-border);
   margin-bottom: 16px;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .header-badge {
@@ -286,7 +291,10 @@ watch(
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* 左侧导航 */
@@ -298,6 +306,9 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .nav-section-label {
@@ -425,6 +436,8 @@ watch(
 /* 右侧工作台 */
 .active-workbench {
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
 }
 
 .planned-placeholder {
@@ -438,8 +451,14 @@ watch(
 }
 
 @media (max-width: 900px) {
+  .obs-studio-page {
+    height: auto;
+    overflow: visible;
+  }
+
   .studio-workspace {
     grid-template-columns: 1fr;
+    overflow: visible;
   }
 }
 </style>
