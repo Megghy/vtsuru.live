@@ -24,7 +24,7 @@ const targetChannel = computed(
 
 const { state, onAction } = useObsBridge<CounterState, CounterAction>({
   componentId: 'counter',
-  channelId: targetChannel.value,
+  channelId: targetChannel,
   defaultState: DEFAULT_COUNTER_STATE,
   role: 'viewer',
 })

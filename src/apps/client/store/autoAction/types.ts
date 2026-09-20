@@ -18,6 +18,7 @@ export enum ActionType {
   SEND_DANMAKU = 'send_danmaku', // 发送弹幕
   SEND_PRIVATE_MSG = 'send_private_msg', // 发送私信
   EXECUTE_COMMAND = 'execute_command', // 执行命令
+  PNGTUBER_EXPRESSION = 'pngtuber_expression', // 切换 PNGtuber 表情
   VTS_HOTKEY = 'vts_hotkey', // 触发 VTS hotkey
   VTS_PRESET = 'vts_preset', // 应用 VTS 机位预设
   VTS_DROP_ITEM = 'vts_drop_item', // 掉落 VTS 道具
@@ -67,6 +68,10 @@ export interface AutoActionItem {
     maxUsersPerMsg?: number // 每条消息最大用户数
     maxItemsPerUser?: number // 每用户最大项目数 (礼物等)
     cooldownSeconds?: number // 冷却时间(秒)
+
+    pngtuberExpressionId?: string
+    pngtuberDurationMs?: number
+    pngtuberChannel?: string
 
     // --- VTS 动作配置（按 actionType 使用） ---
     vtsHotkeyId?: string

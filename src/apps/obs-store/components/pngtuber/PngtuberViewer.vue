@@ -1,1375 +1,461 @@
 <script setup lang="ts">
-import { useClipboard, useDebounceFn } from '@vueuse/core'
-import {
-  ArrowUpload24Regular,
-  Checkmark24Regular,
-  Copy24Regular,
-  Delete24Regular,
-  Image24Regular,
-  Lightbulb24Regular,
-  Mic24Regular,
-  MicOff24Regular,
-  Open24Regular,
-  Sparkle24Regular,
-  Speaker224Regular,
-  SpeakerOff24Regular,
-} from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NColorPicker,
-  NDivider,
-  NFlex,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSlider,
-  NSpace,
-  NSwitch,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
-import {
-  computed,
-  onMounted,
-  ref,
-} from 'vue'
+import { useClipboard } from '@vueuse/core'
+import { saveAs } from 'file-saver'
+import { NAlert, NButton, NCard, NInput, NInputGroup, NSelect, NSpace, NTag, NText, useMessage } from 'naive-ui'
+import { computed, onScopeDispose, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
-import {
-  copyPngtuberIdleToSpeaking,
-  deletePngtuberImage,
-  uploadPngtuberImage,
-} from '@/api/obs-store'
-import type { PngtuberImageSlot } from '@/api/obs-store'
+import { useAccount } from '@/api/account'
 import { useObsBridge } from '@/apps/obs-store/sync'
+import { buildObsSourceUrl, firstQueryValue } from '@/shared/obs/obsUrl'
+import { exportPngtuberPackage, importPngtuberPackage } from '@/shared/pngtuber/modelPackage'
+import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
+import { DEFAULT_PNGTUBER_STATE } from '@/shared/pngtuber/types'
+import type { PngtuberExpression, PngtuberRuntime, PngtuberState } from '@/shared/pngtuber/types'
+import { usePngtuberRuntime } from '@/shared/pngtuber/usePngtuberRuntime'
 
-import { compressAvatarImage } from './compressAvatar'
+import PngtuberAppearance from './PngtuberAppearance.vue'
 import PngtuberDisplay from './PngtuberDisplay.vue'
-import { DEFAULT_PNGTUBER_STATE, sanitizePngtuberState } from './types'
-import type {
-  AnimationIntensity,
-  IdleAnimationType,
-  PngtuberState,
-  SpeakingAnimationType,
-} from './types'
-import { useAudioReactive } from './useAudioReactive'
-
-const message = useMessage()
-const { copy, isSupported: isCopySupported } = useClipboard()
-
-const channelId = ref<string>('default')
-const copied = ref(false)
-
-const {
-  state,
-  updateState,
-} = useObsBridge<PngtuberState>({
+import PngtuberExpressions from './PngtuberExpressions.vue'
+import PngtuberInputSettings from './PngtuberInputSettings.vue'
+import PngtuberMicrophone from './PngtuberMicrophone.vue'
+import { usePngtuberHotkeys } from './usePngtuberHotkeys'
+const message = useMessage(),
+  account = useAccount(),
+  route = useRoute()
+const { copy } = useClipboard()
+const channel = ref(firstQueryValue(route.query.channel) || 'default')
+const channelDraft = ref(channel.value)
+// An empty bridge default preserves the distinction between legacy snapshots and expressions.
+const bridge = useObsBridge<PngtuberState>({
   componentId: 'pngtuber',
-  channelId: channelId.value,
-  defaultState: DEFAULT_PNGTUBER_STATE,
+  channelId: channel,
+  defaultState: {} as PngtuberState,
   role: 'controller',
 })
-
-const viewState = computed(() => sanitizePngtuberState(state.value))
-
-onMounted(() => {
-  const cleaned = sanitizePngtuberState(state.value)
-  if (cleaned.idleImage !== state.value.idleImage || cleaned.speakingImage !== state.value.speakingImage) {
-    updateState({
-      idleImage: cleaned.idleImage,
-      speakingImage: cleaned.speakingImage,
-    })
-  }
-})
-
-const persistThreshold = useDebounceFn((val: number) => updateState({ threshold: val }), 200)
-const persistGain = useDebounceFn((val: number) => updateState({ gain: val }), 200)
-const persistRelease = useDebounceFn((val: number) => updateState({ releaseDelay: val }), 200)
-const persistScale = useDebounceFn((val: number) => updateState({ scale: val }), 200)
-
-function onThresholdInput(val: number) {
-  state.value.threshold = val
-  persistThreshold(val)
-}
-function onGainInput(val: number) {
-  state.value.gain = val
-  persistGain(val)
-}
-function onReleaseInput(val: number) {
-  state.value.releaseDelay = val
-  persistRelease(val)
-}
-function onScaleInput(val: number) {
-  state.value.scale = val
-  persistScale(val)
-}
-
-const {
-  isListening,
-  isSpeaking,
-  smoothedVolume,
-  errorMessage: audioErrorMessage,
-  deviceList,
-  startListening,
-  stopListening,
-  simulateSpeaking,
-} = useAudioReactive({
-  threshold: computed(() => state.value.threshold),
-  gain: computed(() => state.value.gain),
-  releaseDelay: computed(() => state.value.releaseDelay),
-  deviceId: computed(() => state.value.deviceId),
-})
-
-function handleTestTrigger() {
-  simulateSpeaking(true)
-  setTimeout(() => {
-    simulateSpeaking(false)
-  }, 1500)
-}
-
-// 麦克风开关切换
-async function toggleListening() {
-  if (isListening.value) {
-    stopListening()
-    message.info('已停止麦克风监听')
-  } else {
-    const success = await startListening(state.value.deviceId)
-    if (success) {
-      message.success('已开启麦克风监听，说话即可驱动立绘')
-    } else if (audioErrorMessage.value) {
-      message.error(audioErrorMessage.value)
-    }
-  }
-}
-
-const uploading = ref<PngtuberImageSlot | null>(null)
-
-function isHostedPngtuberUrl(url: string) {
-  return /\/obs-store\/pngtuber\/image\/\d+\/(idle|speaking)/.test(url)
-}
-
-async function handleFileUpload(type: PngtuberImageSlot, file?: File) {
-  if (!file) return
-  if (!file.type.startsWith('image/')) {
-    message.error('请选择图片文件')
-    return
-  }
-
-  uploading.value = type
+const { userId, isReady, isSyncing, lastSyncError, errorMessage } = bridge
+const normalized = computed(() => {
   try {
-    const compressed = await compressAvatarImage(file)
-    const result = await uploadPngtuberImage(type, compressed)
-    updateState(type === 'idle' ? { idleImage: result.url } : { speakingImage: result.url })
-    message.success(type === 'idle' ? '已上传静止立绘' : '已上传说话立绘')
+    return { state: normalizePngtuberState(bridge.state.value), error: '' }
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '上传失败')
-  } finally {
-    uploading.value = null
+    return { state: structuredClone(DEFAULT_PNGTUBER_STATE), error: String(error) }
   }
-}
-
-// 拖拽上传支持
-const isDraggingIdle = ref(false)
-const isDraggingSpeaking = ref(false)
-
-function onDragOver(type: 'idle' | 'speaking', e: DragEvent) {
-  e.preventDefault()
-  if (type === 'idle') isDraggingIdle.value = true
-  else isDraggingSpeaking.value = true
-}
-
-function onDragLeave(type: 'idle' | 'speaking') {
-  if (type === 'idle') isDraggingIdle.value = false
-  else isDraggingSpeaking.value = false
-}
-
-function onDrop(type: 'idle' | 'speaking', e: DragEvent) {
-  e.preventDefault()
-  if (type === 'idle') isDraggingIdle.value = false
-  else isDraggingSpeaking.value = false
-
-  const files = e.dataTransfer?.files
-  if (files && files[0]) {
-    handleFileUpload(type, files[0])
-  }
-}
-
-async function clearCustomImage(type: PngtuberImageSlot) {
-  const current = type === 'idle' ? state.value.idleImage : state.value.speakingImage
-  const other = type === 'idle' ? state.value.speakingImage : state.value.idleImage
-  const currentPath = current.split('?')[0]
-  if (isHostedPngtuberUrl(current) && currentPath !== other.split('?')[0]) {
-    try {
-      await deletePngtuberImage(type)
-    } catch {
-      // 本地状态仍清除
-    }
-  }
-  updateState(type === 'idle' ? { idleImage: '' } : { speakingImage: '' })
-  message.info(type === 'idle' ? '已清除静止立绘' : '已清除说话立绘')
-}
-
-async function copyIdleToSpeaking() {
-  if (!state.value.idleImage) {
-    message.error('还没有静止立绘')
-    return
-  }
-  if (isHostedPngtuberUrl(state.value.idleImage)) {
-    try {
-      const result = await copyPngtuberIdleToSpeaking()
-      updateState({ speakingImage: result.url })
-      message.success('已将静止立绘复制为说话立绘')
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : '复制失败')
-    }
-    return
-  }
-  updateState({ speakingImage: state.value.idleImage })
-  message.success('已将静止立绘复制为说话立绘')
-}
-
-// 动效选项列表
-const speakingAnimationOptions = [
-  { label: '元气弹跳 (Bounce)', value: 'bounce' as SpeakingAnimationType },
-  { label: '果冻形变 (Jelly)', value: 'jelly' as SpeakingAnimationType },
-  { label: '左右晃动 (Shake)', value: 'shake' as SpeakingAnimationType },
-  { label: '脉冲放大 (Pulse)', value: 'pulse' as SpeakingAnimationType },
-  { label: '平缓悬浮 (Float)', value: 'float' as SpeakingAnimationType },
-  { label: '无动画 (仅切图)', value: 'none' as SpeakingAnimationType },
-]
-
-const idleAnimationOptions = [
-  { label: '舒缓呼吸 (Breathe)', value: 'breathe' as IdleAnimationType },
-  { label: '轻微微晃 (Sway)', value: 'sway' as IdleAnimationType },
-  { label: '慢速漂浮 (Float)', value: 'float' as IdleAnimationType },
-  { label: '完全静止 (None)', value: 'none' as IdleAnimationType },
-]
-
-const intensityOptions = [
-  { label: '轻微', value: 'subtle' as AnimationIntensity },
-  { label: '标准', value: 'normal' as AnimationIntensity },
-  { label: '强烈', value: 'energetic' as AnimationIntensity },
-]
-
-// 预览背景
-const previewBg = ref<'checker' | 'dark' | 'green' | 'transparent'>('checker')
-
-// OBS URL 计算
-const obsRelativeUrl = computed(() => {
-  const p = new URLSearchParams()
-  if (channelId.value && channelId.value !== 'default') {
-    p.set('channel', channelId.value)
-  }
-  const queryStr = p.toString()
-  return `/obs-store/pngtuber${queryStr ? `?${queryStr}` : ''}`
 })
-
-const obsAbsoluteUrl = computed(() => {
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${obsRelativeUrl.value}`
-  }
-  return obsRelativeUrl.value
-})
-
-async function copyObsUrl() {
-  if (!isCopySupported.value) {
-    message.error('当前浏览器不支持自动复制，请手动选中复制')
-    return
-  }
+const state = computed(() => normalized.value.state)
+const writable = computed(
+  () => !!userId.value && userId.value === account.value.id && isReady.value && !normalized.value.error,
+)
+const session = computed(() => `${userId.value}:${channel.value}`)
+const live = usePngtuberRuntime(userId, channel, true)
+const { runtime, connected, error: runtimeError } = live
+const controlDisabled = computed(() => !writable.value || !connected.value)
+const busy = ref(false),
+  assetError = ref(''),
+  localVolume = ref(0),
+  localSpeaking = ref(false)
+const localInput = computed(() => ['microphone', 'controller'].includes(state.value.inputMode))
+const previewVolume = computed(() => (localInput.value ? localVolume.value : runtime.value.volume))
+const previewSpeaking = computed(() => (localInput.value ? localSpeaking.value : runtime.value.isSpeaking))
+const bg = ref('checker'),
+  packageInput = ref<HTMLInputElement>()
+const obsUrl = computed(() =>
+  buildObsSourceUrl({
+    path: '/obs-store/pngtuber',
+    host: window.location.origin,
+    credential: 'public-id',
+    userId: userId.value,
+    params: { channel: channel.value },
+  }),
+)
+function failed(error: unknown) {
+  message.error(error instanceof Error ? error.message : String(error))
+}
+async function setState(next: PngtuberState) {
+  if (!writable.value) throw new Error('请登录并等待配置加载完成')
+  const clean = normalizePngtuberState(next)
+  // Replace local snapshot first: bridge updates merge, so legacy keys must be removed explicitly.
+  bridge.state.value = clean
+  await bridge.setState(clean)
+}
+async function patch(value: Partial<PngtuberState>) {
   try {
-    await copy(obsAbsoluteUrl.value)
-    copied.value = true
-    message.success('OBS 浏览器源链接已复制到剪贴板！')
-    setTimeout(() => {
-      copied.value = false
-    }, 2000)
-  } catch {
-    message.error('复制失败，请手动复制')
+    const next = { ...state.value, ...value }
+    if (value.blinkMin !== undefined) next.blinkMax = Math.max(next.blinkMax, value.blinkMin)
+    if (value.blinkMax !== undefined) next.blinkMin = Math.min(next.blinkMin, value.blinkMax)
+    const clean = normalizePngtuberState(next)
+    const changed = Object.fromEntries(
+      Object.entries(clean).filter(
+        ([key, value]) => JSON.stringify(value) !== JSON.stringify(state.value[key as keyof PngtuberState]),
+      ),
+    )
+    if (!writable.value) throw new Error('请登录并等待配置加载完成')
+    await bridge.updateState(changed)
+  } catch (error) {
+    failed(error)
   }
 }
-
-function openObsWindow() {
-  if (typeof window !== 'undefined') {
-    window.open(obsRelativeUrl.value, '_blank')
+const migrated = new Set<string>()
+watch(
+  [isReady, session, bridge.state],
+  () => {
+    if (!writable.value || migrated.has(session.value)) return
+    migrated.add(session.value)
+    const raw = bridge.state.value as unknown as Record<string, unknown>
+    if (!Array.isArray(raw.expressions) || 'deviceId' in raw || 'idleImage' in raw || 'speakingImage' in raw)
+      void setState(state.value).catch(failed)
+  },
+  { immediate: true },
+)
+async function control(value: Partial<Pick<PngtuberRuntime, 'expressionId' | 'muted' | 'away'>>, duration = 0) {
+  if (controlDisabled.value) return
+  try {
+    await live.control(value, duration)
+  } catch (error) {
+    failed(error)
   }
 }
-
-// 外链 URL 弹窗/直接输入状态
-const idleUrlInput = ref('')
-const speakingUrlInput = ref('')
-
-function applyUrlImage(type: PngtuberImageSlot) {
-  const raw = type === 'idle' ? idleUrlInput.value.trim() : speakingUrlInput.value.trim()
-  if (!raw) return
-  if (!/^https?:\/\//i.test(raw)) {
-    message.error('请输入 http(s) 图片链接')
-    return
+function activate(expression: PngtuberExpression) {
+  void control({ expressionId: expression.id }, expression.hotkeyMode === 'timed' ? expression.durationMs : 0)
+}
+const hotkeys = usePngtuberHotkeys({
+  expressions: () => state.value.expressions,
+  runtime: () => runtime.value,
+  enabled: () => !controlDisabled.value,
+  control: (expressionId, duration) => control({ expressionId }, duration),
+})
+onScopeDispose(() => {
+  if (state.value.inputMode === 'controller') void live.stopPublishing().catch(() => {})
+})
+function sample(volume: number, speaking: boolean) {
+  localVolume.value = volume
+  localSpeaking.value = speaking
+  if (state.value.inputMode === 'controller' && writable.value) void live.publish(volume, speaking, 'controller')
+}
+watch(
+  () => state.value.inputMode,
+  (_next, previous) => {
+    localVolume.value = 0
+    localSpeaking.value = false
+    if (previous === 'controller') void live.stopPublishing().catch(failed)
+  },
+)
+watch(session, () => {
+  hotkeys.release()
+  assetError.value = ''
+  localVolume.value = 0
+  localSpeaking.value = false
+})
+async function retry() {
+  await bridge.retry()
+  await live.reconnect()
+}
+async function exportPackage() {
+  busy.value = true
+  try {
+    saveAs(await exportPngtuberPackage(state.value), 'pngtuber.zip')
+  } catch (error) {
+    failed(error)
+  } finally {
+    busy.value = false
   }
-  updateState(type === 'idle' ? { idleImage: raw } : { speakingImage: raw })
-  if (type === 'idle') idleUrlInput.value = ''
-  else speakingUrlInput.value = ''
-  message.success(type === 'idle' ? '已应用静止立绘外链' : '已应用说话立绘外链')
+}
+async function importPackage(event: Event) {
+  const input = event.target as HTMLInputElement,
+    file = input.files?.[0]
+  input.value = ''
+  if (!file || !writable.value || busy.value) return
+  const owner = session.value
+  busy.value = true
+  try {
+    const validated = normalizePngtuberState(await importPngtuberPackage(file))
+    if (owner !== session.value) throw new Error('频道或登录用户已变化，请重新导入')
+    await setState(validated)
+    if (!lastSyncError.value) message.success('模型包已导入')
+  } catch (error) {
+    failed(error)
+  } finally {
+    busy.value = false
+  }
+}
+async function copyUrl() {
+  try {
+    await copy(obsUrl.value)
+    message.success('已复制 OBS 链接')
+  } catch (error) {
+    failed(error)
+  }
+}
+function changeChannel() {
+  const next = channelDraft.value.trim() || 'default'
+  if (next === channel.value) return
+  hotkeys.release()
+  void live.stopPublishing().catch(failed)
+  channel.value = next
 }
 </script>
-
 <template>
-  <div class="pngtuber-viewer-root">
-    <!-- 主控制台栅格布局 -->
-    <div class="workbench-layout">
-      <!-- 左侧：参数调节面板 -->
-      <div class="config-pane">
-        <!-- 1. 麦克风与说话检测卡片 -->
+  <NSpace
+    vertical
+    :size="12"
+  >
+    <NAlert
+      v-if="!userId"
+      type="warning"
+      >请登录后编辑立绘配置。</NAlert
+    >
+    <NAlert
+      v-else-if="lastSyncError || !isReady || runtimeError || !connected || normalized.error"
+      type="warning"
+    >
+      {{ normalized.error || errorMessage || runtimeError || (!isReady ? '配置尚未加载完成' : '立绘控制连接尚未就绪') }}
+      <NButton
+        size="tiny"
+        secondary
+        @click="retry"
+        >重试连接</NButton
+      >
+    </NAlert>
+    <div class="workbench">
+      <div class="settings">
         <NCard
+          title="声音输入"
           size="small"
-          class="workbench-card audio-control-card"
-          :bordered="false"
-        >
-          <template #header>
-            <NFlex
-              align="center"
-              justify="space-between"
-              style="width: 100%"
-            >
-              <NFlex
-                align="center"
-                :size="8"
-              >
-                <NIcon
-                  size="18"
-                  :color="isListening ? '#10b981' : '#94a3b8'"
-                >
-                  <Mic24Regular v-if="isListening" />
-                  <MicOff24Regular v-else />
-                </NIcon>
-                <span class="card-title">麦克风监听与声音判定</span>
-              </NFlex>
-              <NFlex
-                align="center"
-                :size="8"
-              >
-                <NTag
-                  v-if="isListening"
-                  type="success"
-                  size="small"
-                  round
-                >
-                  监听中
-                </NTag>
-                <NTag
-                  v-else
-                  type="default"
-                  size="small"
-                  round
-                >
-                  未开启
-                </NTag>
-              </NFlex>
-            </NFlex>
-          </template>
-
-          <NSpace
-            vertical
-            :size="14"
-          >
-            <NAlert
-              v-if="audioErrorMessage"
-              type="warning"
-              :title="audioErrorMessage"
-              :bordered="false"
-            />
-            <!-- 启动开关与测试按钮 -->
-            <NFlex
-              align="center"
-              justify="space-between"
-            >
-              <NButton
-                :type="isListening ? 'error' : 'primary'"
-                secondary
-                size="medium"
-                style="flex: 1"
-                @click="toggleListening"
-              >
-                <template #icon>
-                  <NIcon>
-                    <MicOff24Regular v-if="isListening" />
-                    <Mic24Regular v-else />
-                  </NIcon>
-                </template>
-                {{ isListening ? '停止麦克风监听' : '开启麦克风监听' }}
-              </NButton>
-
-              <NButton
-                size="medium"
-                type="info"
-                ghost
-                @click="handleTestTrigger"
-              >
-                <template #icon>
-                  <NIcon><Sparkle24Regular /></NIcon>
-                </template>
-                模拟说话 1.5s
-              </NButton>
-            </NFlex>
-
-            <!-- 麦克风设备选择 -->
-            <NFormItem
-              label="音频输入设备"
-              :show-feedback="false"
-            >
-              <NSelect
-                v-model:value="state.deviceId"
-                size="small"
-                :options="deviceList.map((d) => ({ label: d.label, value: d.deviceId }))"
-                placeholder="默认麦克风"
-                @update:value="(val) => updateState({ deviceId: val })"
-              />
-            </NFormItem>
-
-            <!-- 实时电平表与触发阈值刻度 -->
-            <div class="meter-container">
-              <div class="meter-header">
-                <span class="meter-label">实时音量电平: {{ Math.round(smoothedVolume) }}%</span>
-                <span
-                  class="meter-status"
-                  :class="{ 'is-active': isSpeaking }"
-                >
-                  <NIcon
-                    size="14"
-                    style="vertical-align: -2px; margin-right: 4px"
-                  >
-                    <Speaker224Regular v-if="isSpeaking" />
-                    <SpeakerOff24Regular v-else />
-                  </NIcon>
-                  {{ isSpeaking ? '说话中 (Active)' : '待机中 (Idle)' }}
-                </span>
-              </div>
-
-              <!-- 动态电平条 -->
-              <div class="meter-track">
-                <!-- 实际音量电平 -->
-                <div
-                  class="meter-fill"
-                  :class="{ 'is-exceeded': smoothedVolume >= state.threshold }"
-                  :style="{ width: `${Math.min(100, Math.max(0, smoothedVolume))}%` }"
-                />
-                <!-- 阈值红线指示器 -->
-                <div
-                  class="meter-threshold-line"
-                  :style="{ left: `${state.threshold}%` }"
-                >
-                  <span class="threshold-tag">{{ state.threshold }}%</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 音量阈值调节 -->
-            <NFormItem
-              label="说话判定阈值 (超过即切换说话立绘)"
-              :show-feedback="false"
-            >
-              <NFlex
-                align="center"
-                style="width: 100%"
-                :size="12"
-              >
-                <NSlider
-                  :value="state.threshold"
-                  :min="1"
-                  :max="100"
-                  :step="1"
-                  style="flex: 1"
-                  @update:value="(val) => onThresholdInput(Number(val))"
-                />
-                <NInputNumber
-                  :value="state.threshold"
-                  size="small"
-                  :min="1"
-                  :max="100"
-                  style="width: 76px"
-                  @update:value="(val) => onThresholdInput(val || 15)"
-                />
-              </NFlex>
-            </NFormItem>
-
-            <!-- 麦克风增益与释放延时 -->
-            <NGrid
-              :cols="2"
-              :x-gap="12"
-            >
-              <NGridItem>
-                <NFormItem
-                  label="麦克风增益"
-                  :show-feedback="false"
-                >
-                  <NInputNumber
-                    :value="state.gain"
-                    size="small"
-                    :min="0.5"
-                    :max="3.0"
-                    :step="0.1"
-                    style="width: 100%"
-                    @update:value="(val) => onGainInput(val || 1.0)"
-                  />
-                </NFormItem>
-              </NGridItem>
-              <NGridItem>
-                <NFormItem
-                  label="消抖保持延时"
-                  :show-feedback="false"
-                >
-                  <NInputNumber
-                    :value="state.releaseDelay"
-                    size="small"
-                    :min="50"
-                    :max="1000"
-                    :step="50"
-                    style="width: 100%"
-                    @update:value="(val) => onReleaseInput(val || 220)"
-                  >
-                    <template #suffix>
-                      ms
-                    </template>
-                  </NInputNumber>
-                </NFormItem>
-              </NGridItem>
-            </NGrid>
-          </NSpace>
-        </NCard>
-
-        <!-- 2. 上传立绘图片卡片 -->
-        <NCard
-          size="small"
-          class="workbench-card"
-          :bordered="false"
-        >
-          <template #header>
-            <NFlex
-              align="center"
-              justify="space-between"
-            >
-              <span class="card-title">立绘图片配置</span>
-              <NText
-                depth="3"
-                style="font-size: 12px"
-              >
-                上传后会压缩为 WebP，也可直接填外链
-              </NText>
-            </NFlex>
-          </template>
-
-          <NSpace
-            vertical
-            :size="14"
-          >
-            <NGrid
-              :cols="2"
-              :x-gap="12"
-            >
-              <!-- 1. 静止/闭嘴立绘 -->
-              <NGridItem>
-                <div
-                  class="avatar-dropzone"
-                  :class="{ 'is-dragging': isDraggingIdle, 'has-image': !!state.idleImage, 'is-uploading': uploading === 'idle' }"
-                  @dragover="(e) => onDragOver('idle', e)"
-                  @dragleave="() => onDragLeave('idle')"
-                  @drop="(e) => onDrop('idle', e)"
-                >
-                  <div class="dropzone-header">
-                    <NFlex
-                      align="center"
-                      :size="4"
-                    >
-                      <NIcon size="14"><Image24Regular /></NIcon>
-                      <span class="dropzone-title">静止 / 闭嘴立绘</span>
-                    </NFlex>
-                    <NButton
-                      v-if="state.idleImage"
-                      text
-                      type="error"
-                      size="tiny"
-                      @click="clearCustomImage('idle')"
-                    >
-                      <template #icon>
-                        <NIcon><Delete24Regular /></NIcon>
-                      </template>
-                      清除
-                    </NButton>
-                  </div>
-
-                  <div class="dropzone-body">
-                    <div
-                      v-if="state.idleImage"
-                      class="preview-thumb-wrap"
-                    >
-                      <img
-                        :src="state.idleImage"
-                        alt="Idle"
-                        class="thumb-img"
-                      >
-                    </div>
-                    <div
-                      v-else
-                      class="empty-upload-hint"
-                    >
-                      <NIcon
-                        size="28"
-                        color="var(--vtsuru-fg-muted)"
-                      >
-                        <Image24Regular />
-                      </NIcon>
-                      <span class="hint-text">拖拽或点击上传</span>
-                    </div>
-                  </div>
-
-                  <label class="dropzone-upload-btn">
-                    <NIcon size="14"><ArrowUpload24Regular /></NIcon>
-                    <span>{{ state.idleImage ? '更换立绘' : '选择图片' }}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style="display: none"
-                      @change="(e: Event) => { const el = e.target as HTMLInputElement; handleFileUpload('idle', el.files?.[0]); el.value = '' }"
-                    >
-                  </label>
-
-                  <!-- 外链快速输入 -->
-                  <div class="url-input-row">
-                    <NInputGroup>
-                      <NInput
-                        v-model:value="idleUrlInput"
-                        size="tiny"
-                        placeholder="或输入图片 URL..."
-                        @keyup.enter="applyUrlImage('idle')"
-                      />
-                      <NButton
-                        size="tiny"
-                        type="primary"
-                        ghost
-                        :disabled="!idleUrlInput.trim()"
-                        @click="applyUrlImage('idle')"
-                      >
-                        确定
-                      </NButton>
-                    </NInputGroup>
-                  </div>
-                </div>
-              </NGridItem>
-
-              <!-- 2. 说话/张嘴立绘 -->
-              <NGridItem>
-                <div
-                  class="avatar-dropzone"
-                  :class="{ 'is-dragging': isDraggingSpeaking, 'has-image': !!state.speakingImage, 'is-uploading': uploading === 'speaking' }"
-                  @dragover="(e) => onDragOver('speaking', e)"
-                  @dragleave="() => onDragLeave('speaking')"
-                  @drop="(e) => onDrop('speaking', e)"
-                >
-                  <div class="dropzone-header">
-                    <NFlex
-                      align="center"
-                      :size="4"
-                    >
-                      <NIcon size="14"><Speaker224Regular /></NIcon>
-                      <span class="dropzone-title">说话 / 张嘴立绘</span>
-                    </NFlex>
-                    <NFlex :size="4">
-                    <NButton
-                      v-if="state.idleImage"
-                      text
-                      size="tiny"
-                      :disabled="uploading === 'speaking'"
-                      @click="copyIdleToSpeaking"
-                    >
-                      用静止立绘
-                    </NButton>
-                    <NButton
-                      v-if="state.speakingImage"
-                      text
-                      type="error"
-                      size="tiny"
-                      @click="clearCustomImage('speaking')"
-                    >
-                      <template #icon>
-                        <NIcon><Delete24Regular /></NIcon>
-                      </template>
-                      清除
-                    </NButton>
-                    </NFlex>
-                  </div>
-
-                  <div class="dropzone-body">
-                    <div
-                      v-if="state.speakingImage"
-                      class="preview-thumb-wrap"
-                    >
-                      <img
-                        :src="state.speakingImage"
-                        alt="Speaking"
-                        class="thumb-img"
-                      >
-                    </div>
-                    <div
-                      v-else
-                      class="empty-upload-hint"
-                    >
-                      <NIcon
-                        size="28"
-                        color="var(--vtsuru-fg-muted)"
-                      >
-                        <Image24Regular />
-                      </NIcon>
-                      <span class="hint-text">拖拽或点击上传</span>
-                    </div>
-                  </div>
-
-                  <label class="dropzone-upload-btn">
-                    <NIcon size="14"><ArrowUpload24Regular /></NIcon>
-                    <span>{{ state.speakingImage ? '更换立绘' : '选择图片' }}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style="display: none"
-                      @change="(e: Event) => { const el = e.target as HTMLInputElement; handleFileUpload('speaking', el.files?.[0]); el.value = '' }"
-                    >
-                  </label>
-
-                  <!-- 外链快速输入 -->
-                  <div class="url-input-row">
-                    <NInputGroup>
-                      <NInput
-                        v-model:value="speakingUrlInput"
-                        size="tiny"
-                        placeholder="或输入图片 URL..."
-                        @keyup.enter="applyUrlImage('speaking')"
-                      />
-                      <NButton
-                        size="tiny"
-                        type="primary"
-                        ghost
-                        :disabled="!speakingUrlInput.trim()"
-                        @click="applyUrlImage('speaking')"
-                      >
-                        确定
-                      </NButton>
-                    </NInputGroup>
-                  </div>
-                </div>
-              </NGridItem>
-            </NGrid>
-          </NSpace>
-        </NCard>
-
-        <!-- 3. 动效与动画参数配置卡片 -->
-        <NCard
-          size="small"
-          class="workbench-card"
-          :bordered="false"
-        >
-          <template #header>
-            <span class="card-title">动效类型与动作参数</span>
-          </template>
-
-          <NSpace
+          ><NSpace
             vertical
             :size="12"
           >
-            <!-- 说话动作 -->
-            <NFormItem
-              label="说话动效 (Speaking)"
-              :show-feedback="false"
-            >
-              <NSelect
-                v-model:value="state.speakingAnimation"
-                size="small"
-                :options="speakingAnimationOptions"
-                @update:value="(val) => updateState({ speakingAnimation: val })"
-              />
-            </NFormItem>
-
-            <!-- 待机动作 -->
-            <NFormItem
-              label="静止待机动效 (Idle)"
-              :show-feedback="false"
-            >
-              <NSelect
-                v-model:value="state.idleAnimation"
-                size="small"
-                :options="idleAnimationOptions"
-                @update:value="(val) => updateState({ idleAnimation: val })"
-              />
-            </NFormItem>
-
-            <!-- 动效幅度/强度 -->
-            <NFormItem
-              label="动效弹跳/形变强度"
-              :show-feedback="false"
-            >
-              <NRadioGroup
-                v-model:value="state.intensity"
-                size="small"
-                @update:value="(val) => updateState({ intensity: val })"
-              >
-                <NRadioButton
-                  v-for="opt in intensityOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </NRadioButton>
-              </NRadioGroup>
-            </NFormItem>
-
-            <NDivider style="margin: 6px 0" />
-
-            <!-- 外观细节开关 -->
-            <NGrid
-              :cols="2"
-              :x-gap="12"
-              :y-gap="8"
-            >
-              <NGridItem>
-                <NFlex
-                  align="center"
-                  justify="space-between"
-                  class="setting-toggle-row"
-                >
-                  <span>水平翻转镜像</span>
-                  <NSwitch
-                    v-model:value="state.flipH"
-                    size="small"
-                    @update:value="(val) => updateState({ flipH: val })"
-                  />
-                </NFlex>
-              </NGridItem>
-
-              <NGridItem>
-                <NFlex
-                  align="center"
-                  justify="space-between"
-                  class="setting-toggle-row"
-                >
-                  <span>静止时微暗</span>
-                  <NSwitch
-                    v-model:value="state.idleDim"
-                    size="small"
-                    @update:value="(val) => updateState({ idleDim: val })"
-                  />
-                </NFlex>
-              </NGridItem>
-
-              <NGridItem>
-                <NFlex
-                  align="center"
-                  justify="space-between"
-                  class="setting-toggle-row"
-                >
-                  <span>地面立体软投影</span>
-                  <NSwitch
-                    v-model:value="state.shadow"
-                    size="small"
-                    @update:value="(val) => updateState({ shadow: val })"
-                  />
-                </NFlex>
-              </NGridItem>
-
-              <NGridItem>
-                <NFlex
-                  align="center"
-                  justify="space-between"
-                  class="setting-toggle-row"
-                >
-                  <span>说话发光光晕</span>
-                  <NSwitch
-                    v-model:value="state.showGlow"
-                    size="small"
-                    @update:value="(val) => updateState({ showGlow: val })"
-                  />
-                </NFlex>
-              </NGridItem>
-            </NGrid>
-
-            <!-- 光晕颜色 -->
-            <NFormItem
-              v-if="state.showGlow"
-              label="说话外发光颜色"
-              :show-feedback="false"
-            >
-              <NColorPicker
-                :value="state.glowColor"
-                size="small"
-                :show-alpha="false"
-                @update:value="(val) => updateState({ glowColor: val })"
-              />
-            </NFormItem>
-
-            <!-- 整体缩放 -->
-            <NFormItem
-              label="画面缩放比例"
-              :show-feedback="false"
-            >
-              <NFlex
-                align="center"
-                style="width: 100%"
-                :size="12"
-              >
-                <NSlider
-                  :value="state.scale"
-                  :min="0.4"
-                  :max="1.8"
-                  :step="0.05"
-                  style="flex: 1"
-                  @update:value="(val) => onScaleInput(Number(val))"
-                />
-                <span style="font-size: 12px; min-width: 40px">{{ Math.round((state.scale || 1) * 100) }}%</span>
-              </NFlex>
-            </NFormItem>
-          </NSpace>
-        </NCard>
-      </div>
-
-      <!-- 右侧：实时预览舞台与 OBS 链接集成 -->
-      <div class="stage-pane">
-        <NCard
-          size="small"
-          class="workbench-card stage-card"
-          :bordered="false"
-        >
-          <template #header>
-            <NFlex
-              align="center"
-              justify="space-between"
-            >
-              <span class="card-title">OBS 画面实时监视器</span>
-              <NRadioGroup
-                v-model:value="previewBg"
-                size="small"
-              >
-                <NRadioButton value="checker">
-                  透明棋盘
-                </NRadioButton>
-                <NRadioButton value="dark">
-                  暗色
-                </NRadioButton>
-                <NRadioButton value="green">
-                  绿幕
-                </NRadioButton>
-              </NRadioGroup>
-            </NFlex>
-          </template>
-
-          <!-- 监视器舞台 -->
-          <div
-            class="live-preview-viewport"
-            :class="`bg-${previewBg}`"
-          >
-            <!-- 说话状态悬浮徽标 -->
-            <div
-              class="preview-state-badge"
-              :class="{ 'is-speaking': isSpeaking }"
-            >
-              <span class="badge-dot" />
-              <span>{{ isSpeaking ? '说话中 (Speaking)' : '待机中 (Idle)' }}</span>
-            </div>
-
-            <!-- 内嵌组件渲染 -->
-            <PngtuberDisplay
-              :state="viewState"
-              :is-speaking="isSpeaking"
-              inline-mode
+            <PngtuberInputSettings
+              :state="state"
+              :disabled="!writable || busy"
+              @change="patch"
             />
-          </div>
-
-          <!-- OBS 源链接集成卡片 -->
-          <div class="obs-link-box">
-            <div class="obs-link-header">
-              <span class="obs-link-title">OBS 浏览器源链接</span>
-              <NText
-                depth="3"
-                style="font-size: 12px"
-              >
-                推荐分辨率: 400 × 500 px
-              </NText>
-            </div>
-            <NFlex
-              align="center"
-              :size="8"
+            <PngtuberMicrophone
+              v-if="localInput"
+              :key="session"
+              :state="state"
+              :muted="runtime.muted || runtime.away"
+              :disabled="!writable || busy"
+              @sample="sample"
+              @change="patch"
+              @error="failed"
+            /> </NSpace
+        ></NCard>
+        <PngtuberExpressions
+          :key="session"
+          :state="state"
+          :disabled="!writable || busy"
+          :control-disabled="controlDisabled"
+          @change="patch"
+          @activate="activate"
+        />
+        <PngtuberAppearance
+          :state="state"
+          :disabled="!writable || busy"
+          @change="patch"
+        />
+      </div>
+      <div class="stage">
+        <NCard
+          title="实时预览"
+          size="small"
+          ><NSpace
+            vertical
+            :size="12"
+          >
+            <NSpace align="center"
+              ><NTag
+                size="small"
+                :type="previewSpeaking ? 'success' : 'default'"
+                >{{ runtime.away ? '暂离' : runtime.muted ? '静音' : previewSpeaking ? '说话中' : '待机' }}</NTag
+              ><NTag size="small">{{
+                isSyncing ? '保存中' : lastSyncError ? '保存失败' : isReady ? '配置已就绪' : '加载中'
+              }}</NTag
+              ><NText depth="3">音量 {{ Math.round(previewVolume) }}%</NText></NSpace
             >
-              <NInput
-                :value="obsAbsoluteUrl"
-                readonly
-                size="small"
-                style="flex: 1"
+            <NSelect
+              v-model:value="bg"
+              size="small"
+              :options="[
+                { label: '透明棋盘', value: 'checker' },
+                { label: '暗色', value: 'dark' },
+                { label: '绿幕', value: 'green' },
+                { label: '透明', value: 'transparent' },
+              ]"
+            />
+            <div
+              class="preview"
+              :class="`bg-${bg}`"
+            >
+              <PngtuberDisplay
+                :state="state"
+                :is-speaking="previewSpeaking"
+                :volume="previewVolume"
+                :expression-id="runtime.expressionId"
+                :muted="runtime.muted"
+                :away="runtime.away"
+                inline-mode
+                @asset-error="assetError = $event"
               />
-              <NButton
-                type="primary"
-                size="small"
-                @click="copyObsUrl"
-              >
-                <template #icon>
-                  <NIcon>
-                    <Checkmark24Regular v-if="copied" />
-                    <Copy24Regular v-else />
-                  </NIcon>
-                </template>
-                {{ copied ? '已复制' : '复制' }}
-              </NButton>
-              <NButton
-                secondary
-                size="small"
-                @click="openObsWindow"
-              >
-                <template #icon>
-                  <NIcon><Open24Regular /></NIcon>
-                </template>
-                打开
-              </NButton>
-            </NFlex>
-
-            <div class="obs-tips">
-              <NIcon
-                size="14"
-                color="#f59e0b"
-                style="vertical-align: -2px; margin-right: 4px"
-              >
-                <Lightbulb24Regular />
-              </NIcon>
-              在 OBS 添加浏览器源并粘贴上方链接。浏览器源会自己采集麦克风，请在源属性里允许音频。控制台麦克风只用于预览调参。
             </div>
-          </div>
-        </NCard>
+            <NAlert
+              v-if="assetError"
+              type="warning"
+              >{{ assetError }}</NAlert
+            >
+            <NSpace
+              ><NButton
+                size="small"
+                :disabled="controlDisabled"
+                @click="control({ muted: !runtime.muted })"
+                >{{ runtime.muted ? '取消静音' : '静音' }}</NButton
+              ><NButton
+                size="small"
+                :disabled="controlDisabled"
+                @click="control({ away: !runtime.away })"
+                >{{ runtime.away ? '结束暂离' : '暂离' }}</NButton
+              ><NButton
+                size="small"
+                :disabled="controlDisabled"
+                @click="control({ expressionId: '' })"
+                >默认表情</NButton
+              ></NSpace
+            >
+          </NSpace></NCard
+        >
+        <NCard
+          title="OBS 浏览器源"
+          size="small"
+          ><NSpace
+            vertical
+            :size="12"
+          >
+            <NInputGroup
+              ><NInput
+                v-model:value="channelDraft"
+                placeholder="频道"
+                :disabled="busy"
+                @keyup.enter="changeChannel"
+              /><NButton
+                :disabled="busy"
+                @click="changeChannel"
+                >切换频道</NButton
+              ></NInputGroup
+            >
+            <NInput
+              :value="obsUrl"
+              readonly
+              placeholder="登录后生成链接"
+            />
+            <NSpace
+              ><NButton
+                size="small"
+                :disabled="!obsUrl"
+                @click="copyUrl"
+                >复制链接</NButton
+              ><NButton
+                tag="a"
+                :href="obsUrl || undefined"
+                target="_blank"
+                rel="noopener"
+                size="small"
+                :disabled="!obsUrl"
+                >打开画面</NButton
+              ><NButton
+                tag="a"
+                :href="obsUrl ? `${obsUrl}&debug=1` : undefined"
+                target="_blank"
+                rel="noopener"
+                size="small"
+                :disabled="!obsUrl"
+                >OBS 诊断</NButton
+              ></NSpace
+            >
+            <NText depth="3"
+              >浏览器源尺寸：{{ state.canvasWidth }} × {{ state.canvasHeight }}。麦克风模式请在 OBS「交互」窗口访问带
+              debug=1 的链接选择设备，完成后移除 debug 参数。</NText
+            >
+          </NSpace></NCard
+        >
+        <NCard
+          title="模型包"
+          size="small"
+          ><NSpace
+            ><NButton
+              size="small"
+              :loading="busy"
+              :disabled="!writable || busy"
+              @click="packageInput?.click()"
+              >导入模型包</NButton
+            ><NButton
+              size="small"
+              :loading="busy"
+              :disabled="busy || !isReady || !!normalized.error"
+              @click="exportPackage"
+              >导出模型包</NButton
+            ><input
+              ref="packageInput"
+              hidden
+              type="file"
+              accept=".zip,application/zip"
+              @change="importPackage" /></NSpace
+          ><NText depth="3">导入会校验模型包并替换当前频道配置。</NText></NCard
+        >
       </div>
     </div>
-  </div>
+  </NSpace>
 </template>
-
 <style scoped>
-.pngtuber-viewer-root {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.workbench-layout {
+.workbench {
   display: grid;
-  grid-template-columns: minmax(360px, 460px) minmax(380px, 1fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 1fr);
   gap: 16px;
-  align-items: start;
+  color: var(--vtsuru-fg);
 }
-
-@media (max-width: 960px) {
-  .workbench-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-.config-pane {
+.settings,
+.stage {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  min-width: 0;
 }
-
-.stage-pane {
+.stage {
   position: sticky;
   top: 16px;
+  align-self: start;
 }
-
-.workbench-card {
-  background: var(--vtsuru-bg-elevated);
-  border-radius: 10px;
-  border: 1px solid var(--vtsuru-border);
-}
-
-.card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-/* =========================================================================
- * 实时音量电平表
- * ========================================================================= */
-.meter-container {
-  background: var(--vtsuru-bg-muted);
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--vtsuru-border);
-}
-
-.meter-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 12px;
-}
-
-.meter-label {
-  font-weight: 500;
-  color: var(--vtsuru-fg);
-}
-
-.meter-status {
-  font-weight: 600;
-  color: var(--vtsuru-fg-muted);
-  transition: color 0.15s ease;
-}
-
-.meter-status.is-active {
-  color: #10b981;
-}
-
-.meter-track {
+.preview {
   position: relative;
-  width: 100%;
-  height: 12px;
-  background: rgba(148, 163, 184, 0.2);
-  border-radius: 6px;
-  overflow: visible;
-}
-
-.meter-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #38bdf8 0%, #34d399 70%, #f59e0b 100%);
-  border-radius: 6px;
-  transition: width 0.05s ease-out;
-}
-
-.meter-fill.is-exceeded {
-  background: linear-gradient(90deg, #34d399 0%, #10b981 60%, #ef4444 100%);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-}
-
-.meter-threshold-line {
-  position: absolute;
-  top: -4px;
-  bottom: -4px;
-  width: 2px;
-  background: #ef4444;
-  transform: translateX(-50%);
-  z-index: 5;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
-}
-
-.threshold-tag {
-  position: absolute;
-  top: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  color: #ef4444;
-  font-weight: 700;
-  line-height: 1;
-}
-
-/* =========================================================================
- * 拖拽上传卡片 (Dropzone)
- * ========================================================================= */
-.avatar-dropzone {
-  background: var(--vtsuru-bg-muted);
-  border: 1.5px dashed var(--vtsuru-border);
-  border-radius: 8px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: all 0.18s ease;
-}
-
-.avatar-dropzone.is-dragging {
-  border-color: #38bdf8;
-  background: rgba(56, 189, 248, 0.08);
-}
-
-.avatar-dropzone.has-image {
-  border-style: solid;
-  border-color: var(--vtsuru-border);
-}
-
-.avatar-dropzone.is-uploading {
-  opacity: 0.65;
-  pointer-events: none;
-}
-
-.dropzone-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.dropzone-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.dropzone-body {
-  width: 100%;
-  height: 110px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--vtsuru-bg);
-  border-radius: 6px;
-  margin-bottom: 8px;
+  height: 340px;
   overflow: hidden;
-}
-
-.preview-thumb-wrap {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  box-sizing: border-box;
-}
-
-.thumb-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.empty-upload-hint {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.hint-text {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.dropzone-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 100%;
-  padding: 5px 0;
-  background: var(--vtsuru-bg-elevated);
   border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  font-size: 11px;
-  color: var(--vtsuru-fg);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.dropzone-upload-btn:hover {
-  border-color: #38bdf8;
-  color: #0284c7;
-}
-
-.url-input-row {
-  margin-top: 6px;
-  width: 100%;
-}
-
-/* =========================================================================
- * 监视器舞台与 OBS 卡片
- * ========================================================================= */
-.setting-toggle-row {
-  font-size: 12px;
-  color: var(--vtsuru-fg);
-  padding: 4px 0;
-}
-
-.live-preview-viewport {
-  position: relative;
-  width: 100%;
-  height: 480px;
   border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--vtsuru-border);
 }
-
-.live-preview-viewport.bg-checker {
-  background-color: #f1f5f9;
-  background-image:
-    linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
-    linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
-    linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+.bg-checker {
+  background-color: var(--vtsuru-bg);
+  background-image: conic-gradient(
+    var(--vtsuru-bg-muted) 25%,
+    transparent 0 50%,
+    var(--vtsuru-bg-muted) 0 75%,
+    transparent 0
+  );
+  background-size: 20px 20px;
 }
-
-.live-preview-viewport.bg-dark {
-  background-color: #0f172a;
+.bg-dark {
+  background: #18181b;
 }
-
-.live-preview-viewport.bg-green {
-  background-color: #00ff00;
+.bg-green {
+  background: #00b140;
 }
-
-.preview-state-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(6px);
-  color: #ffffff;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #94a3b8;
-}
-
-.preview-state-badge.is-speaking .badge-dot {
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-}
-
-.obs-link-box {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.obs-link-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.obs-link-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.obs-tips {
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  line-height: 1.5;
+@media (max-width: 900px) {
+  .workbench {
+    grid-template-columns: 1fr;
+  }
+  .stage {
+    position: static;
+    grid-row: 1;
+  }
+  .preview {
+    height: 280px;
+  }
 }
 </style>

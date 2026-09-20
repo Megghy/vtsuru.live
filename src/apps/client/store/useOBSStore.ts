@@ -1,4 +1,4 @@
-import OBSWebSocket from 'obs-websocket-js'
+import OBSWebSocket, { EventSubscription } from 'obs-websocket-js'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -30,6 +30,12 @@ export interface ObsStats {
   outputSkippedFrames: number | null
   outputTotalFrames: number | null
   bitrateKbps: number | null
+}
+
+export interface ObsInputVolume {
+  inputName: string
+  volume: number
+  muted: boolean
 }
 
 export const useOBSStore = defineStore('obs', () => {
@@ -74,6 +80,54 @@ export const useOBSStore = defineStore('obs', () => {
     autoToggleStream: true, // 默认开启
   })
 
+  const obsInputs = ref<string[]>([])
+  const volumeSubscribers = new Set<(sample: ObsInputVolume) => void>()
+  const inputMuted = new Map<string, boolean>()
+  let inputGeneration = 0
+
+  function emitVolume(sample: ObsInputVolume) {
+    for (const subscriber of volumeSubscribers) subscriber(sample)
+  }
+
+  async function fetchObsInputs() {
+    const client = obs
+    if (!client || !obsConnected.value) return
+    const generation = ++inputGeneration
+    const result = await client.call('GetInputList')
+    if (generation !== inputGeneration || !obsConnected.value) return
+    const names = result.inputs.map((input) => String(input.inputName))
+    for (const name of inputMuted.keys()) if (!names.includes(name)) {
+      inputMuted.delete(name)
+      emitVolume({ inputName: name, volume: 0, muted: true })
+    }
+    await Promise.all(
+      names.map(async (inputName) => {
+        // Unknown/non-audio inputs remain muted until OBS confirms their state.
+        if (inputMuted.has(inputName)) return
+        try {
+          const result = await client.call('GetInputMute', { inputName })
+          if (generation === inputGeneration && !inputMuted.has(inputName)) inputMuted.set(inputName, result.inputMuted)
+        } catch (cause) {
+          // OBS 604 (InputHasNoAudio) is expected for image/browser-only inputs.
+          if (!(cause && typeof cause === 'object' && 'code' in cause && cause.code === 604)) throw cause
+        }
+      }),
+    )
+    if (generation === inputGeneration && obsConnected.value) {
+      obsInputs.value = names.filter(name => inputMuted.has(name))
+    }
+  }
+
+  function subscribeInputVolume(subscriber: (sample: ObsInputVolume) => void) {
+    volumeSubscribers.add(subscriber)
+    if (obsConnected.value)
+      obs?.reidentify({ eventSubscriptions: EventSubscription.All | EventSubscription.InputVolumeMeters })
+    return () => {
+      volumeSubscribers.delete(subscriber)
+      if (!volumeSubscribers.size && obsConnected.value) obs?.reidentify({ eventSubscriptions: EventSubscription.All })
+    }
+  }
+
   // OBS实例和定时器
   let obs: OBSWebSocket | null = null
   let obsStatsTimer: number | null = null
@@ -85,7 +139,32 @@ export const useOBSStore = defineStore('obs', () => {
   function ensureObsInstance() {
     if (!obs) {
       obs = new OBSWebSocket()
+      obs.on('InputVolumeMeters', (event) => {
+        for (const input of event.inputs) {
+          const name = String(input.inputName)
+          const channels = input.inputLevelsMul as number[][]
+          const rms = Math.max(0, ...channels.map((channel) => Number.isFinite(channel[0]) ? channel[0] : 0))
+          const muted = inputMuted.get(name) ?? true
+          emitVolume({ inputName: name, volume: muted ? 0 : Math.min(100, rms * 220), muted })
+        }
+      })
+      obs.on('InputMuteStateChanged', (event) => {
+        inputMuted.set(event.inputName, event.inputMuted)
+        if (event.inputMuted) emitVolume({ inputName: event.inputName, volume: 0, muted: true })
+      })
+      const refreshInputs = () => {
+        void fetchObsInputs().catch((err) => {
+          obsError.value = String(err)
+        })
+      }
+      obs.on('InputCreated', refreshInputs)
+      obs.on('InputRemoved', refreshInputs)
+      obs.on('InputNameChanged', refreshInputs)
       obs.on('ConnectionClosed', () => {
+        inputGeneration++
+        inputMuted.clear()
+        obsInputs.value = []
+        emitVolume({ inputName: '', volume: 0, muted: true })
         obsConnected.value = false
         obsStreamActive.value = false
         stopObsStatsLoop()
@@ -211,6 +290,7 @@ export const useOBSStore = defineStore('obs', () => {
 
       await obs.connect(address, password, {
         rpcVersion: 1,
+        eventSubscriptions: EventSubscription.All | (volumeSubscribers.size ? EventSubscription.InputVolumeMeters : 0),
       })
 
       obsConnected.value = true
@@ -233,6 +313,9 @@ export const useOBSStore = defineStore('obs', () => {
 
       // 连接成功后获取场景列表
       void fetchObsScenes()
+      void fetchObsInputs().catch((err) => {
+        obsError.value = String(err)
+      })
     } catch (err: any) {
       console.error('连接 OBS 失败:', err)
       obsError.value = err?.message || String(err)
@@ -497,6 +580,9 @@ export const useOBSStore = defineStore('obs', () => {
   }
 
   return {
+    obsInputs,
+    fetchObsInputs,
+    subscribeInputVolume,
     // 状态
     obsAddress,
     obsPassword,

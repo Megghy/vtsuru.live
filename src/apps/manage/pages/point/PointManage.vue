@@ -43,7 +43,7 @@ import {
   useDialog,
   useMessage,
 } from 'naive-ui'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ResponsePointGoodModel, UploadSubPointGoodsModel, UploadPointGoodsModel } from '@/api/api-models'
@@ -702,7 +702,6 @@ function resetGoods() {
   subItemsSortMode.value = 'manual'
 }
 
-onMounted(() => {})
 </script>
 
 <template>

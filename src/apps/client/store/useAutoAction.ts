@@ -9,6 +9,7 @@ import { isDev } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient.js'
 import { useVTsuruHub } from '@/store/useVTsuruHub'
 
+import { executeActions } from './autoAction/actionUtils'
 import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator'
 import { useAutoReply } from './autoAction/modules/autoReply'
 import type { CheckInHubEvent } from './autoAction/modules/checkin'
@@ -142,7 +143,9 @@ export const useAutoAction = defineStore('autoAction', () => {
         actionToExecute = eligibleActions[lastGlobalActionIndex.value]
       }
 
-      if (actionToExecute) {
+      if (actionToExecute?.actionType === ActionType.PNGTUBER_EXPRESSION) {
+        executeActions([actionToExecute], null, TriggerType.SCHEDULED, roomId.value, runtimeState.value, {})
+      } else if (actionToExecute) {
         const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED)
         const template = getRandomTemplate(actionToExecute.template)
         if (template && roomId.value) {
@@ -256,7 +259,9 @@ export const useAutoAction = defineStore('autoAction', () => {
         (!currentAction.triggerConfig.onlyDuringLive || isLive.value) &&
         (!currentAction.triggerConfig.ignoreTianXuan || !isTianXuanActive.value)
 
-      if (shouldExecute) {
+      if (shouldExecute && currentAction.actionType === ActionType.PNGTUBER_EXPRESSION) {
+        executeActions([currentAction], null, TriggerType.SCHEDULED, roomId.value, runtimeState.value, {})
+      } else if (shouldExecute) {
         const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED)
         const template = getRandomTemplate(currentAction.template)
         if (template && roomId.value) {

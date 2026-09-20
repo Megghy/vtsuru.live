@@ -40,7 +40,7 @@ const targetChannel = computed(
 
 const { state } = useObsBridge<ClockState, ClockAction>({
   componentId: 'clock',
-  channelId: targetChannel.value,
+  channelId: targetChannel,
   defaultState: DEFAULT_CLOCK_STATE,
   role: 'viewer',
 })

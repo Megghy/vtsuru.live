@@ -32,6 +32,8 @@ import {
   ref,
 } from 'vue'
 
+import { useAccount } from '@/api/account'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { useObsBridge } from '@/apps/obs-store/sync'
 import {
   loadObsStoreFonts,
@@ -64,7 +66,7 @@ const {
   lastSyncError,
 } = useObsBridge<ClockState, ClockAction>({
   componentId: 'clock',
-  channelId: channelId.value,
+  channelId,
   defaultState: DEFAULT_CLOCK_STATE,
   role: 'controller',
 })
@@ -77,21 +79,12 @@ onMounted(() => {
 const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
 
 // OBS URL
-const obsRelativeUrl = computed(() => {
-  const p = new URLSearchParams()
-  if (channelId.value && channelId.value !== 'default') {
-    p.set('channel', channelId.value)
-  }
-  const queryStr = p.toString()
-  return `/obs-store/clock${queryStr ? `?${queryStr}` : ''}`
-})
-
-const obsAbsoluteUrl = computed(() => {
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${obsRelativeUrl.value}`
-  }
-  return obsRelativeUrl.value
-})
+const account = useAccount()
+const obsAbsoluteUrl = computed(() => buildObsSourceUrl({
+  path: '/obs-store/clock', host: window.location.origin, credential: 'public-id',
+  userId: account.value.id, params: { channel: channelId.value },
+}))
+const obsRelativeUrl = obsAbsoluteUrl
 
 async function copyObsUrl() {
   if (!isCopySupported) {

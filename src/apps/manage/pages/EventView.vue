@@ -40,7 +40,7 @@ import {
   useMessage,
   useThemeVars,
 } from 'naive-ui'
-import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
@@ -258,13 +258,8 @@ watch(
     if (prev && sameDateRange(curr[0], prev[0]) && curr[1] === prev[1]) return
     onFilterChange()
   },
+  { immediate: true },
 )
-
-onMounted(() => {
-  void nextTick(() => {
-    if (!isLoading.value) void fetchData(true)
-  })
-})
 
 const manualGuardUname = ref('')
 const manualGuardUserKey = ref('')

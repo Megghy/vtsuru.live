@@ -353,22 +353,13 @@ const triggerTypeOptions = [
             :size="10"
           >
             <NTag
-              :type="autoActionStore.enable ? 'success' : 'default'"
+              :type="activeRulesCount > 0 ? 'success' : 'default'"
               round
               :bordered="false"
             >
-              {{ autoActionStore.enable ? `已启用 (${activeRulesCount} 条生效中)` : '引擎已暂停' }}
+              {{ `${activeRulesCount} 条规则已启用` }}
             </NTag>
 
-            <NTooltip>
-              <template #trigger>
-                <NSwitch v-model:value="autoActionStore.enable">
-                  <template #checked> 运行中 </template>
-                  <template #unchecked> 已暂停 </template>
-                </NSwitch>
-              </template>
-              自动操作总开关，关闭后所有规则停止自动触发
-            </NTooltip>
           </NFlex>
         </template>
       </ClientPageHeader>

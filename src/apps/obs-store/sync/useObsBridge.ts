@@ -1,219 +1,204 @@
+import { computed, onScopeDispose, ref, toValue, watch } from 'vue'
 import type { Ref } from 'vue'
-import {
-  onScopeDispose,
-  onUnmounted,
-  ref,
-} from 'vue'
+import { useRoute } from 'vue-router'
 
-import { getObsSyncState, updateObsSyncState } from '@/api/obs-store'
+import { useAccount } from '@/api/account'
+import { getObsSyncState, ObsSyncConflict, updateObsSyncState } from '@/api/obs-store'
+import type { ObsSyncStateResponse } from '@/api/obs-store'
+import { parsePositiveId } from '@/shared/obs/obsUrl'
 
-import type { ObsBridgeOptions, ObsSyncMessage } from './types'
+import type { ObsBridgeOptions } from './types'
 
-export function useObsBridge<TState extends Record<string, any>, TAction = any>(
-  options: ObsBridgeOptions<TState>,
-) {
-  const {
-    componentId,
-    channelId = 'default',
-    defaultState,
-    role = 'auto',
-    persist = true,
-    storageKeyPrefix = 'vtsuru_obs_state',
-  } = options
-
-  const storageKey = `${storageKeyPrefix}:${componentId}:${channelId}`
-  const channelName = `vtsuru:obs:${componentId}:${channelId}`
-
-  // 1. 本地持久化恢复
-  function loadPersistedState(): TState {
-    if (!persist || typeof window === 'undefined' || !window.localStorage) {
-      return { ...defaultState }
-    }
-    try {
-      const raw = window.localStorage.getItem(storageKey)
-      if (raw) {
-        return { ...defaultState, ...JSON.parse(raw) }
-      }
-    } catch {
-      // 忽略解析异常
-    }
-    return { ...defaultState }
-  }
-
-  function savePersistedState(val: TState) {
-    if (!persist || typeof window === 'undefined' || !window.localStorage) return
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(val))
-    } catch {
-      // 忽略写入异常
-    }
-  }
-
-  const state = ref<TState>(loadPersistedState()) as Ref<TState>
-  const currentHash = ref<string>('')
-  const isSyncing = ref<boolean>(false)
-  const lastSyncError = ref<boolean>(false)
+export function useObsBridge<TState extends Record<string, any>, TAction = unknown>(options: ObsBridgeOptions<TState>) {
+  const account = useAccount()
+  const route = useRoute()
+  const writable = options.role !== 'viewer'
+  const userId = computed(
+    () =>
+      toValue(options.userId) ??
+      (writable ? account.value.id : Number(parsePositiveId(route?.query.id)) || account.value.id) ??
+      0,
+  )
+  const channelId = computed(() => toValue(options.channelId) || 'default')
+  const channelName = computed(() => `vtsuru:obs:${userId.value}:${options.componentId}:${channelId.value}`)
+  const storageKey = computed(
+    () => `${options.storageKeyPrefix || 'vtsuru_obs_state'}:${userId.value}:${options.componentId}:${channelId.value}`,
+  )
+  const state = ref(structuredClone(options.defaultState)) as Ref<TState>
+  const currentHash = ref('')
+  const isSyncing = ref(false)
+  const isReady = ref(false)
+  const lastSyncError = ref(false)
+  const errorMessage = ref('')
   const actionHandlers = new Set<(action: TAction) => void>()
+  let generation = 0
+  let revision = 0
+  let pending: Partial<TState> = {}
+  let channel: BroadcastChannel | undefined
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let writeTask: Promise<void> | undefined
+  let destroyed = false
 
-  // 2. BroadcastChannel 同浏览器即时通道
-  let channel: BroadcastChannel | null = null
-
-  function generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-  }
-
-  function postLocalMessage(msg: Omit<ObsSyncMessage<TState, TAction>, 'id' | 'componentId' | 'channelId' | 'timestamp'>) {
-    if (!channel) return
-    const payload: ObsSyncMessage<TState, TAction> = {
-      id: generateId(),
-      componentId,
-      channelId,
-      timestamp: Date.now(),
-      ...msg,
-    }
+  function saveLocal() {
+    if (options.persist === false) return
+    // Storage quotas/private-mode restrictions must not stop server synchronization.
     try {
-      channel.postMessage(payload)
-    } catch {
-      // 忽略通道异常
+      localStorage.setItem(storageKey.value, JSON.stringify(state.value))
+    } catch (error) {
+      console.warn('OBS 本地缓存不可用', error)
     }
   }
-
-  function handleLocalMessage(event: MessageEvent<ObsSyncMessage<TState, TAction>>) {
-    const data = event.data
-    if (!data || data.componentId !== componentId || data.channelId !== channelId) {
-      return
-    }
-
-    if (data.type === 'STATE_UPDATE' && data.state) {
-      state.value = { ...state.value, ...data.state }
-      savePersistedState(state.value)
-    } else if (data.type === 'ACTION' && data.action !== undefined) {
-      actionHandlers.forEach((handler) => handler(data.action as TAction))
-    }
+  function apply(snapshot: ObsSyncStateResponse) {
+    currentHash.value = snapshot.hash
+    if (snapshot.changed && snapshot.data)
+      state.value = { ...structuredClone(options.defaultState), ...JSON.parse(snapshot.data), ...pending }
+    isReady.value = true
+    saveLocal()
   }
-
-  // 3. 后端轻量 Hash 同步轮询（解决 OBS 进程隔离问题）
-  let pollTimer: any = null
-  let isPolling = false
-
-  async function pollRemoteState() {
-    if (isPolling) return
-    isPolling = true
+  function fail(error: unknown) {
+    lastSyncError.value = true
+    errorMessage.value = error instanceof Error ? error.message : String(error)
+  }
+  async function poll(epoch = generation) {
+    if (!userId.value || writeTask || destroyed || Object.keys(pending).length) return
+    const requestedRevision = revision
     try {
-      const res = await getObsSyncState(componentId, channelId, currentHash.value)
+      const snapshot = await getObsSyncState(options.componentId, channelId.value, currentHash.value, userId.value)
+      if (epoch !== generation || writeTask || requestedRevision !== revision) return
+      apply(snapshot)
       lastSyncError.value = false
-      if (res.changed && res.data) {
-        currentHash.value = res.hash
+      errorMessage.value = ''
+    } catch (error) {
+      if (epoch === generation) fail(error)
+    }
+  }
+  async function flush(epoch: number, owner: number, targetChannel: string) {
+    isSyncing.value = true
+    try {
+      if (!isReady.value) {
+        const snapshot = await getObsSyncState(options.componentId, targetChannel, undefined, owner)
+        if (epoch !== generation) return
+        apply(snapshot)
+      }
+      let conflicts = 0
+      while (epoch === generation && Object.keys(pending).length) {
+        const patch = pending
+        pending = {}
         try {
-          const parsed = JSON.parse(res.data)
-          state.value = { ...state.value, ...parsed }
-          savePersistedState(state.value)
-        } catch {}
-      } else if (res.hash) {
-        currentHash.value = res.hash
-      }
-    } catch {
-      lastSyncError.value = true
-    } finally {
-      isPolling = false
-    }
-  }
-
-  // 启动同步任务
-  if (typeof window !== 'undefined') {
-    if (typeof BroadcastChannel !== 'undefined') {
-      try {
-        channel = new BroadcastChannel(channelName)
-        channel.onmessage = handleLocalMessage
-      } catch {}
-    }
-
-    // 立即拉取一次
-    pollRemoteState()
-
-    // 若作为 OBS 端或 auto 模式，每 1200ms 进行一次极轻量 Hash 轮询
-    pollTimer = setInterval(pollRemoteState, 1200)
-  }
-
-  // 4. 控制端写入与同步
-  async function syncToRemote(newState: TState) {
-    try {
-      isSyncing.value = true
-      const raw = JSON.stringify(newState)
-      const res = await updateObsSyncState(componentId, channelId, raw)
-      if (res.hash) {
-        currentHash.value = res.hash
+          const snapshot = await updateObsSyncState(
+            options.componentId,
+            targetChannel,
+            JSON.stringify(state.value),
+            currentHash.value,
+          )
+          if (epoch !== generation) return
+          currentHash.value = snapshot.hash
+          conflicts = 0
+          channel?.postMessage({ type: 'refresh' })
+        } catch (error) {
+          if (epoch !== generation) return
+          pending = { ...patch, ...pending }
+          if (!(error instanceof ObsSyncConflict) || ++conflicts > 3) throw error
+          apply(error.snapshot)
+        }
       }
       lastSyncError.value = false
-    } catch {
-      lastSyncError.value = true
+      errorMessage.value = ''
+      saveLocal()
+    } catch (error) {
+      if (epoch === generation) fail(error)
     } finally {
-      isSyncing.value = false
+      if (epoch === generation) isSyncing.value = false
     }
   }
-
-  function setState(newState: TState) {
-    state.value = { ...newState }
-    savePersistedState(state.value)
-    postLocalMessage({
-      type: 'STATE_UPDATE',
-      state: state.value,
+  function retry() {
+    if (destroyed) return Promise.resolve()
+    if (!writable) return poll()
+    if (writeTask || !userId.value) return writeTask ?? Promise.resolve()
+    const epoch = generation
+    writeTask = flush(epoch, userId.value, channelId.value).finally(() => {
+      if (epoch === generation) writeTask = undefined
     })
-    syncToRemote(state.value)
+    return writeTask
   }
-
-  function updateState(partialOrUpdater: Partial<TState> | ((prev: TState) => Partial<TState>)) {
-    const partial = typeof partialOrUpdater === 'function' ? partialOrUpdater(state.value) : partialOrUpdater
-    state.value = { ...state.value, ...partial }
-    savePersistedState(state.value)
-    postLocalMessage({
-      type: 'STATE_UPDATE',
-      state: state.value,
-    })
-    syncToRemote(state.value)
+  function updateState(value: Partial<TState> | ((previous: TState) => Partial<TState>)) {
+    if (destroyed || !writable || !userId.value || userId.value !== account.value.id)
+      throw new Error('请登录后修改自己的组件配置')
+    revision++
+    const patch = typeof value === 'function' ? value(state.value) : value
+    pending = { ...pending, ...patch }
+    state.value = { ...state.value, ...patch }
+    return retry()
   }
-
   function sendAction(action: TAction) {
-    postLocalMessage({
-      type: 'ACTION',
-      action,
-    })
+    if (!writable) throw new Error('展示页不能发送控制操作')
+    channel?.postMessage({ type: 'action', action })
   }
-
-  function onAction(handler: (action: TAction) => void): () => void {
+  function onAction(handler: (action: TAction) => void) {
     actionHandlers.add(handler)
-    return () => {
-      actionHandlers.delete(handler)
-    }
+    return () => actionHandlers.delete(handler)
   }
-
+  function cleanup() {
+    generation++
+    clearTimeout(timer)
+    channel?.close()
+    channel = undefined
+    writeTask = undefined
+  }
+  async function cycle(epoch: number) {
+    await poll(epoch)
+    if (epoch === generation && !destroyed) timer = setTimeout(() => void cycle(epoch), 1200)
+  }
+  watch(
+    [userId, channelId],
+    () => {
+      cleanup()
+      pending = {}
+      state.value = structuredClone(options.defaultState)
+      currentHash.value = ''
+      isReady.value = false
+      isSyncing.value = false
+      lastSyncError.value = false
+      errorMessage.value = ''
+      if (!userId.value) return
+      if (options.persist !== false) {
+        try {
+          const saved = localStorage.getItem(storageKey.value)
+          if (saved) state.value = { ...state.value, ...JSON.parse(saved) }
+        } catch (error) {
+          console.warn('OBS 本地缓存读取失败', error)
+        }
+      }
+      if (typeof BroadcastChannel !== 'undefined') {
+        channel = new BroadcastChannel(channelName.value)
+        channel.onmessage = ({ data }) => {
+          if (data.type === 'refresh') void poll()
+          if (data.type === 'action') actionHandlers.forEach((handler) => handler(data.action))
+        }
+      }
+      void cycle(generation)
+    },
+    { immediate: true },
+  )
   function destroy() {
-    if (pollTimer) {
-      clearInterval(pollTimer)
-      pollTimer = null
-    }
-    if (channel) {
-      try {
-        channel.close()
-      } catch {}
-      channel = null
-    }
+    destroyed = true
+    cleanup()
     actionHandlers.clear()
   }
-
-  if (typeof onScopeDispose === 'function') {
-    onScopeDispose(destroy)
-  }
-
+  onScopeDispose(destroy)
   return {
     state,
-    setState,
     updateState,
+    setState: (value: TState) => updateState(value),
     sendAction,
     onAction,
     currentHash,
     isSyncing,
+    isReady,
     lastSyncError,
+    errorMessage,
+    retry,
+    userId,
     channelName,
     storageKey,
     destroy,

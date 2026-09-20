@@ -46,6 +46,7 @@ const actionTypeOptions = [
   { label: '发送弹幕', value: ActionType.SEND_DANMAKU },
   { label: '发送私信', value: ActionType.SEND_PRIVATE_MSG },
   { label: '执行命令', value: ActionType.EXECUTE_COMMAND },
+  { label: 'PNGtuber：切换表情', value: ActionType.PNGTUBER_EXPRESSION },
   { label: 'VTS：触发热键', value: ActionType.VTS_HOTKEY },
   { label: 'VTS：机位预设', value: ActionType.VTS_PRESET },
   { label: 'VTS：掉落道具', value: ActionType.VTS_DROP_ITEM },

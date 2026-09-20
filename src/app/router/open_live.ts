@@ -1,11 +1,9 @@
-import { RouterView } from 'vue-router'
-
 import { createToolRoutes } from './toolRoutes'
 
 export default {
   path: '/open-live',
   name: 'open-live',
-  component: RouterView,
+  // 只做路径分组；页面由布局的 RouterView + KeepAlive 渲染。
   children: [
     {
       path: '',

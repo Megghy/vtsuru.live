@@ -426,6 +426,38 @@ export function executeActions(
         break
       }
 
+      case ActionType.PNGTUBER_EXPRESSION: {
+        // Reserve cooldown before delay to prevent burst events queuing duplicates.
+        runtimeState.lastExecutionTime[action.id] = Date.now()
+        const run = async () => {
+          let failure: unknown
+          try {
+            const { executePngtuberExpression } = await import('./modules/pngtuber')
+            await executePngtuberExpression(action)
+            options?.onSuccess?.(action, context)
+          } catch (cause) {
+            failure = cause
+            options?.onError?.(action, context, cause)
+            if (options?.isTest) window.$message?.error(String(cause))
+          }
+          await logCommandHistory(
+            action.id,
+            action.name || 'PNGtuber 表情',
+            `PNGtuber ${action.actionConfig.pngtuberChannel || 'default'} / ${action.actionConfig.pngtuberExpressionId || ''} (${action.actionConfig.pngtuberDurationMs ?? 5000}ms)`,
+            !failure,
+            failure ? String(failure) : undefined,
+            ActionType.PNGTUBER_EXPRESSION,
+          )
+        }
+        const execute = () => {
+          void run().catch((cause) => console.error('记录 PNGtuber 操作失败', cause))
+        }
+        if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0)
+          setTimeout(execute, action.actionConfig.delaySeconds * 1000)
+        else execute()
+        break
+      }
+
       case ActionType.VTS_HOTKEY:
       case ActionType.VTS_PRESET:
       case ActionType.VTS_DROP_ITEM:

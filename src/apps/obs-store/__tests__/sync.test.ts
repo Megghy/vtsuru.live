@@ -1,157 +1,143 @@
+import { mount, flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent, nextTick, ref } from 'vue'
 
 import { useObsBridge } from '../sync/useObsBridge'
-
-// Mock 后端 API 调用
+const mocks = vi.hoisted(() => ({ get: vi.fn(), update: vi.fn() }))
+const account = ref({ id: 1 })
+const route = { query: {} as Record<string, unknown> }
+vi.mock('@/api/account', () => ({ useAccount: () => account }))
+vi.mock('vue-router', () => ({ useRoute: () => route }))
 vi.mock('@/api/obs-store', () => ({
-  getObsSyncState: vi.fn().mockResolvedValue({
-    hash: 'mock-hash-123',
-    changed: false,
-    data: null,
-    updatedAt: Date.now(),
-  }),
-  updateObsSyncState: vi.fn().mockResolvedValue({
-    hash: 'mock-hash-456',
-    changed: true,
-    data: null,
-    updatedAt: Date.now(),
-  }),
-}))
-
-describe('OBS Store 通用数据同步机制 (useObsBridge)', () => {
-  const defaultState = {
-    title: '测试计数器',
-    count: 10,
-    active: true,
-  }
-
-  // 模拟 localStorage
-  const storageMap = new Map<string, string>()
-  const mockLocalStorage = {
-    getItem: (key: string) => storageMap.get(key) ?? null,
-    setItem: (key: string, val: string) => storageMap.set(key, String(val)),
-    removeItem: (key: string) => storageMap.delete(key),
-    clear: () => storageMap.clear(),
-  }
-
-  // 模拟 BroadcastChannel
-  class MockBroadcastChannel {
-    name: string
-    onmessage: ((event: MessageEvent) => void) | null = null
-    constructor(name: string) {
-      this.name = name
+  getObsSyncState: mocks.get,
+  updateObsSyncState: mocks.update,
+  ObsSyncConflict: class extends Error {
+    constructor(public snapshot: unknown) {
+      super('conflict')
     }
-    postMessage(data: any) {}
-    close() {}
-  }
-
-  beforeEach(() => {
-    storageMap.clear()
-    // @ts-ignore
-    globalThis.window = {
-      localStorage: mockLocalStorage,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    } as any
-    // @ts-ignore
-    globalThis.BroadcastChannel = MockBroadcastChannel as any
+  },
+}))
+import { ObsSyncConflict } from '@/api/obs-store'
+function snapshot(data: object, hash = 'a') {
+  return { hash, data: JSON.stringify(data), changed: true, updatedAt: 1 }
+}
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((r) => {
+    resolve = r
   })
-
-  afterEach(() => {
-    storageMap.clear()
-  })
-
-  it('应正确初始化默认状态与持久化配置', () => {
-    const bridge = useObsBridge({
-      componentId: 'test-counter',
-      defaultState,
-    })
-
-    expect(bridge.state.value.count).toBe(10)
-    expect(bridge.state.value.title).toBe('测试计数器')
-    expect(bridge.channelName).toBe('vtsuru:obs:test-counter:default')
-    expect(bridge.storageKey).toBe('vtsuru_obs_state:test-counter:default')
-
-    bridge.destroy()
-  })
-
-  it('持久化存储中存在数据时应优先恢复', () => {
-    const saved = { title: '已保存标题', count: 99, active: false }
-    mockLocalStorage.setItem(
-      'vtsuru_obs_state:test-counter:default',
-      JSON.stringify(saved),
-    )
-
-    const bridge = useObsBridge({
-      componentId: 'test-counter',
-      defaultState,
-    })
-
-    expect(bridge.state.value.count).toBe(99)
-    expect(bridge.state.value.title).toBe('已保存标题')
-
-    bridge.destroy()
-  })
-
-  it('updateState 应能局部更新状态并写入本地存储', () => {
-    const bridge = useObsBridge({
-      componentId: 'test-counter',
-      defaultState,
-    })
-
-    bridge.updateState({ count: 42 })
-    expect(bridge.state.value.count).toBe(42)
-    expect(bridge.state.value.title).toBe('测试计数器')
-
-    const raw = mockLocalStorage.getItem(bridge.storageKey)
-    expect(raw).toBeTruthy()
-    const parsed = JSON.parse(raw!)
-    expect(parsed.count).toBe(42)
-
-    // 函数式更新
-    bridge.updateState((prev) => ({ count: prev.count + 1 }))
-    expect(bridge.state.value.count).toBe(43)
-
-    bridge.destroy()
-  })
-
-  it('setState 应能全量重设状态并更新本地存储', () => {
-    const bridge = useObsBridge({
-      componentId: 'test-counter',
-      defaultState,
-    })
-
-    bridge.setState({ title: '全新标题', count: 0, active: false })
-    expect(bridge.state.value.title).toBe('全新标题')
+  return { promise, resolve }
+}
+const wrappers: ReturnType<typeof mount>[] = []
+function setup(role: 'viewer' | 'controller' = 'controller') {
+  let bridge!: ReturnType<typeof useObsBridge<{ count: number; title: string }>>
+  wrappers.push(
+    mount(
+      defineComponent({
+        setup() {
+          bridge = useObsBridge({ componentId: 'counter', defaultState: { count: 0, title: 'initial' }, role })
+          return () => null
+        },
+      }),
+    ),
+  )
+  return bridge
+}
+beforeEach(() => {
+  account.value = { id: 1 }
+  route.query = {}
+  localStorage.clear()
+  vi.clearAllMocks()
+  mocks.get.mockResolvedValue(snapshot({ count: 5, title: 'remote' }))
+  mocks.update.mockResolvedValue({ hash: 'b', changed: false, data: null, updatedAt: 2 })
+  vi.stubGlobal(
+    'BroadcastChannel',
+    class {
+      close() {}
+      postMessage() {}
+      onmessage = null
+    },
+  )
+})
+afterEach(() => {
+  wrappers.splice(0).forEach((w) => w.unmount())
+  vi.unstubAllGlobals()
+})
+describe('OBS owner-scoped synchronization', () => {
+  it('does not request before identity arrives and never adopts unowned legacy storage', async () => {
+    account.value.id = 0
+    localStorage.setItem('vtsuru_obs_state:counter:default', JSON.stringify({ count: 999 }))
+    const bridge = setup()
+    await flushPromises()
+    expect(mocks.get).not.toHaveBeenCalled()
     expect(bridge.state.value.count).toBe(0)
-
-    const raw = mockLocalStorage.getItem(bridge.storageKey)
-    expect(JSON.parse(raw!).title).toBe('全新标题')
-
-    bridge.destroy()
+    account.value.id = 2
+    await nextTick()
+    await flushPromises()
+    expect(mocks.get).toHaveBeenCalledWith('counter', 'default', '', 2)
+    expect(bridge.storageKey.value).toBe('vtsuru_obs_state:2:counter:default')
+    expect(bridge.state.value.count).toBe(5)
   })
-
-  it('sendAction 与 onAction 应能注册并接收操作动作', () => {
-    const bridge = useObsBridge<{ count: number }, { type: string; val: number }>({
-      componentId: 'test-action',
-      defaultState: { count: 0 },
-    })
-
-    const handler = vi.fn()
-    const unsubscribe = bridge.onAction(handler)
-
-    expect(typeof unsubscribe).toBe('function')
-    unsubscribe()
-
-    bridge.destroy()
+  it('public viewer reads route owner and cannot write', async () => {
+    route.query.id = '22'
+    const bridge = setup('viewer')
+    await flushPromises()
+    expect(mocks.get).toHaveBeenCalledWith('counter', 'default', '', 22)
+    expect(() => bridge.updateState({ count: 10 })).toThrow()
+    expect(mocks.update).not.toHaveBeenCalled()
   })
-
-  it('destroy 应安全清理通道与监听', () => {
-    const bridge = useObsBridge({
-      componentId: 'test-destroy',
-      defaultState,
-    })
-
-    expect(() => bridge.destroy()).not.toThrow()
+  it('rejects late snapshots after account changes', async () => {
+    const old = deferred<ReturnType<typeof snapshot>>()
+    mocks.get.mockReturnValueOnce(old.promise)
+    const bridge = setup()
+    account.value.id = 2
+    await nextTick()
+    await flushPromises()
+    old.resolve(snapshot({ count: 999, title: 'wrong owner' }))
+    await flushPromises()
+    expect(bridge.state.value.count).toBe(5)
+  })
+  it('ignores a poll that returns after a newer write has already completed', async () => {
+    const old = deferred<ReturnType<typeof snapshot>>()
+    mocks.get.mockReturnValueOnce(old.promise)
+    const bridge = setup()
+    await bridge.updateState({ count: 7 })
+    old.resolve(snapshot({ count: 1, title: 'stale' }, 'old'))
+    await flushPromises()
+    expect(bridge.state.value.count).toBe(7)
+    expect(bridge.currentHash.value).toBe('b')
+  })
+  it('serializes writes and preserves edits made during the first request', async () => {
+    const bridge = setup()
+    await flushPromises()
+    const first = deferred<{ hash: string; changed: boolean; data: null; updatedAt: number }>()
+    mocks.update.mockReturnValueOnce(first.promise)
+    const saving = bridge.updateState({ count: 6 })
+    bridge.updateState({ count: 7 })
+    expect(mocks.update).toHaveBeenCalledTimes(1)
+    first.resolve({ hash: 'b', changed: false, data: null, updatedAt: 2 })
+    await saving
+    expect(mocks.update).toHaveBeenCalledTimes(2)
+    expect(JSON.parse(mocks.update.mock.calls[1][2]).count).toBe(7)
+    expect(mocks.update.mock.calls[1][3]).toBe('b')
+  })
+  it('rebases only edited fields on conflicting remote configuration', async () => {
+    const bridge = setup()
+    await flushPromises()
+    mocks.update.mockRejectedValueOnce(new ObsSyncConflict(snapshot({ count: 10, title: 'other window' }, 'new')))
+    await bridge.updateState({ count: 6 })
+    expect(bridge.state.value).toEqual({ count: 6, title: 'other window' })
+    expect(mocks.update.mock.calls[1][3]).toBe('new')
+  })
+  it('exposes failure and retries pending writes without reporting ready data lost', async () => {
+    const bridge = setup()
+    await flushPromises()
+    mocks.update.mockRejectedValueOnce(new Error('offline'))
+    await bridge.updateState({ count: 8 })
+    expect(bridge.lastSyncError.value).toBe(true)
+    expect(bridge.errorMessage.value).toBe('offline')
+    await bridge.retry()
+    expect(bridge.lastSyncError.value).toBe(false)
+    expect(JSON.parse(mocks.update.mock.calls[1][2]).count).toBe(8)
   })
 })

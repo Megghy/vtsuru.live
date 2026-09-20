@@ -1,9 +1,7 @@
-import { RouterView } from 'vue-router'
-
 export default {
   path: '/client',
   name: 'client',
-  component: RouterView,
+  // 只做路径分组；页面由布局的 RouterView + KeepAlive 渲染。
   children: [
     {
       path: '',
@@ -64,6 +62,12 @@ export default {
         forceReload: true,
         pageWidth: 'full',
       },
+    },
+    {
+      path: 'pngtuber',
+      name: 'client-pngtuber',
+      component: async () => import('@/apps/client/pages/ClientPngtuber.vue'),
+      meta: { title: 'PNGtuber', pageWidth: 'xl' },
     },
     {
       path: 'vts',

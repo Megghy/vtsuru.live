@@ -35,6 +35,8 @@ import {
   ref,
 } from 'vue'
 
+import { useAccount } from '@/api/account'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { useObsBridge } from '@/apps/obs-store/sync'
 
 import CounterDisplay from './CounterDisplay.vue'
@@ -56,7 +58,7 @@ const {
   lastSyncError,
 } = useObsBridge<CounterState, CounterAction>({
   componentId: 'counter',
-  channelId: channelId.value,
+  channelId,
   defaultState: DEFAULT_COUNTER_STATE,
   role: 'controller',
 })
@@ -73,21 +75,12 @@ const themeOptions = [
 const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
 
 // OBS URL 计算
-const obsRelativeUrl = computed(() => {
-  const p = new URLSearchParams()
-  if (channelId.value && channelId.value !== 'default') {
-    p.set('channel', channelId.value)
-  }
-  const queryStr = p.toString()
-  return `/obs-store/counter${queryStr ? `?${queryStr}` : ''}`
-})
-
-const obsAbsoluteUrl = computed(() => {
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${obsRelativeUrl.value}`
-  }
-  return obsRelativeUrl.value
-})
+const account = useAccount()
+const obsAbsoluteUrl = computed(() => buildObsSourceUrl({
+  path: '/obs-store/counter', host: window.location.origin, credential: 'public-id',
+  userId: account.value.id, params: { channel: channelId.value },
+}))
+const obsRelativeUrl = obsAbsoluteUrl
 
 function handleIncrement(amount = 1) {
   const newCount = state.value.count + amount

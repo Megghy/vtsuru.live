@@ -128,7 +128,6 @@ async function updateSettings() {
 onMounted(() => {
   client.onEvent('danmaku', liveRequest.onGetDanmaku)
   client.onEvent('sc', liveRequest.onGetSC)
-  liveRequest.init()
 })
 
 onActivated(() => {

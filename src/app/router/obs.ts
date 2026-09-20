@@ -1,9 +1,7 @@
-import { RouterView } from 'vue-router'
-
 export default {
   path: '/obs',
   name: 'obs',
-  component: RouterView,
+  // 只做路径分组；页面由布局的 RouterView + KeepAlive 渲染。
   children: [
     {
       path: 'live-lottery',

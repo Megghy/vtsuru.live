@@ -61,7 +61,7 @@ const rpcServer = useFetcherRpcServer()
 
 // 直播间封面
 const roomCover = computed(() => {
-  return roomInfo.value?.user_cover || roomInfo.value?.cover || ''
+  return roomInfo.value?.user_cover || roomInfo.value?.keyframe || ''
 })
 const liveRoomUrl = computed(() => `https://live.bilibili.com/${accountInfo.value.biliRoomId}`)
 const isStreaming = computed(() => roomInfo.value?.live_status === 1)
@@ -85,28 +85,28 @@ const cookieStatusLabel = computed(() => {
 
 // 弹幕机浮窗切换
 function toggleDanmakuWindow() {
-  if (danmakuWindow.danmakuWindow != null) {
-    danmakuWindow.closeDanmakuWindow()
+  if (danmakuWindow.isDanmakuWindowOpen) {
+    danmakuWindow.closeWindow()
   } else {
-    danmakuWindow.openDanmakuWindow()
+    danmakuWindow.openWindow()
   }
 }
 
 // 礼物与排行浮窗切换
 function toggleGiftWindow() {
-  if (giftWindow.giftWindow != null) {
-    giftWindow.closeGiftWindow()
+  if (giftWindow.isGiftWindowOpen) {
+    giftWindow.closeWindow()
   } else {
-    giftWindow.openGiftWindow()
+    giftWindow.openWindow()
   }
 }
 
 // VTS 悬浮窗切换
 function toggleVtsFloatWindow() {
-  if (vtsFloatWindow.isWindowOpen) {
-    vtsFloatWindow.closeFloatWindow()
+  if (vtsFloatWindow.opened) {
+    vtsFloatWindow.close()
   } else {
-    vtsFloatWindow.openFloatWindow()
+    vtsFloatWindow.open()
   }
 }
 
@@ -173,13 +173,14 @@ function logout() {
               </NText>
               <span class="dot-divider">·</span>
               <NText depth="3">
-                UID: {{ accountInfo.streamerInfo?.uid || '—' }}
+                UID: {{ accountInfo.streamerInfo?.uId || '—' }}
               </NText>
             </div>
           </div>
         </div>
 
         <div class="hero-actions">
+          <NButton size="small" @click="router.push({ name: 'client-pngtuber' })">PNGtuber</NButton>
           <NButton
             type="primary"
             size="small"
@@ -243,7 +244,7 @@ function logout() {
           </div>
           <div class="health-desc">
             <NText depth="3">
-              模式: {{ webfetcher.mode === 'direct' ? '直连' : '开放平台' }}
+              模式: {{ webfetcher.webfetcherType === 'direct' ? '直连' : '开放平台' }}
             </NText>
           </div>
         </NCard>
@@ -376,11 +377,11 @@ function logout() {
               </div>
               <NTag
                 size="tiny"
-                :type="danmakuWindow.danmakuWindow != null ? 'success' : 'default'"
+                :type="danmakuWindow.isDanmakuWindowOpen ? 'success' : 'default'"
                 :bordered="false"
                 round
               >
-                {{ danmakuWindow.danmakuWindow != null ? '运行中' : '未开启' }}
+                {{ danmakuWindow.isDanmakuWindowOpen ? '运行中' : '未开启' }}
               </NTag>
             </div>
 
@@ -391,19 +392,19 @@ function logout() {
             <div class="float-window-actions">
               <NButton
                 size="tiny"
-                :type="danmakuWindow.danmakuWindow != null ? 'error' : 'primary'"
+                :type="danmakuWindow.isDanmakuWindowOpen ? 'error' : 'primary'"
                 secondary
                 @click="toggleDanmakuWindow"
               >
-                {{ danmakuWindow.danmakuWindow != null ? '关闭浮窗' : '开启浮窗' }}
+                {{ danmakuWindow.isDanmakuWindowOpen ? '关闭浮窗' : '开启浮窗' }}
               </NButton>
               <NTooltip trigger="hover">
                 <template #trigger>
                   <NButton
                     size="tiny"
                     quaternary
-                    :disabled="danmakuWindow.danmakuWindow == null"
-                    @click="danmakuWindow.resetPosition"
+                    :disabled="!danmakuWindow.isDanmakuWindowOpen"
+                    @click="danmakuWindow.setDanmakuWindowPosition(100, 100)"
                   >
                     <template #icon>
                       <NIcon :component="ArrowReset24Regular" />
@@ -440,11 +441,11 @@ function logout() {
               </div>
               <NTag
                 size="tiny"
-                :type="giftWindow.giftWindow != null ? 'success' : 'default'"
+                :type="giftWindow.isGiftWindowOpen ? 'success' : 'default'"
                 :bordered="false"
                 round
               >
-                {{ giftWindow.giftWindow != null ? '运行中' : '未开启' }}
+                {{ giftWindow.isGiftWindowOpen ? '运行中' : '未开启' }}
               </NTag>
             </div>
 
@@ -455,19 +456,19 @@ function logout() {
             <div class="float-window-actions">
               <NButton
                 size="tiny"
-                :type="giftWindow.giftWindow != null ? 'error' : 'primary'"
+                :type="giftWindow.isGiftWindowOpen ? 'error' : 'primary'"
                 secondary
                 @click="toggleGiftWindow"
               >
-                {{ giftWindow.giftWindow != null ? '关闭浮窗' : '开启浮窗' }}
+                {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '开启浮窗' }}
               </NButton>
               <NTooltip trigger="hover">
                 <template #trigger>
                   <NButton
                     size="tiny"
                     quaternary
-                    :disabled="giftWindow.giftWindow == null"
-                    @click="giftWindow.resetPosition"
+                    :disabled="!giftWindow.isGiftWindowOpen"
+                    @click="giftWindow.setPosition(100, 100)"
                   >
                     <template #icon>
                       <NIcon :component="ArrowReset24Regular" />
@@ -504,11 +505,11 @@ function logout() {
               </div>
               <NTag
                 size="tiny"
-                :type="vtsFloatWindow.isWindowOpen ? 'success' : 'default'"
+                :type="vtsFloatWindow.opened ? 'success' : 'default'"
                 :bordered="false"
                 round
               >
-                {{ vtsFloatWindow.isWindowOpen ? '运行中' : '未开启' }}
+                {{ vtsFloatWindow.opened ? '运行中' : '未开启' }}
               </NTag>
             </div>
 
@@ -519,11 +520,11 @@ function logout() {
             <div class="float-window-actions">
               <NButton
                 size="tiny"
-                :type="vtsFloatWindow.isWindowOpen ? 'error' : 'primary'"
+                :type="vtsFloatWindow.opened ? 'error' : 'primary'"
                 secondary
                 @click="toggleVtsFloatWindow"
               >
-                {{ vtsFloatWindow.isWindowOpen ? '关闭面板' : '开启面板' }}
+                {{ vtsFloatWindow.opened ? '关闭面板' : '开启面板' }}
               </NButton>
               <NButton
                 size="tiny"

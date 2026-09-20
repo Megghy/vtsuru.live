@@ -107,12 +107,13 @@ export async function logCommandHistory(
   content: string,
   success: boolean,
   error?: string,
+  actionType: ActionType = ActionType.EXECUTE_COMMAND,
 ): Promise<void> {
   const historyItem: HistoryItem = {
     id: `c_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
     actionId,
     actionName,
-    actionType: ActionType.EXECUTE_COMMAND,
+    actionType,
     timestamp: Date.now(),
     content,
     success,

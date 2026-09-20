@@ -1,411 +1,254 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { useElementSize } from '@vueuse/core'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
-import type { PngtuberState } from './types'
-import { sanitizePngtuberState } from './types'
+import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
+import { motionIntensity, playbackSource, selectExpression, selectImage } from '@/shared/pngtuber/renderer'
+import type { PngtuberState } from '@/shared/pngtuber/types'
+import { IMAGE_SLOTS } from '@/shared/pngtuber/types'
 
 const props = defineProps<{
   state: PngtuberState
   isSpeaking?: boolean
+  volume?: number
+  expressionId?: string
+  muted?: boolean
+  away?: boolean
   inlineMode?: boolean
 }>()
-
-const viewState = computed(() => sanitizePngtuberState(props.state))
-const isSpeaking = computed(() => !!props.isSpeaking)
-
-const idleSrc = computed(() => viewState.value.idleImage)
-const speakingSrc = computed(() => viewState.value.speakingImage || viewState.value.idleImage)
-const hasCustomAvatar = computed(() => !!(idleSrc.value || speakingSrc.value))
-const hasDistinctSpeaking = computed(() => {
-  return !!viewState.value.speakingImage && viewState.value.speakingImage !== viewState.value.idleImage
-})
-
-const failedSrc = ref('')
-watch([idleSrc, speakingSrc], () => {
-  failedSrc.value = ''
-})
-
-const intensityFactor = computed(() => {
-  switch (viewState.value.intensity) {
-    case 'subtle':
-      return '0.6'
-    case 'energetic':
-      return '1.4'
-    default:
-      return '1.0'
+const emit = defineEmits<{ 'asset-error': [message: string] }>()
+const viewState = computed(() => normalizePngtuberState(props.state))
+const speaking = computed(() => !!props.isSpeaking && !props.muted && !props.away)
+const expression = computed(() => selectExpression(viewState.value, props.expressionId, props.away))
+const blinking = ref(false)
+let blinkTimer: ReturnType<typeof setTimeout> | undefined
+function scheduleBlink() {
+  clearTimeout(blinkTimer)
+  blinking.value = false
+  if (!viewState.value.blinkEnabled) return
+  const { blinkMin, blinkMax, blinkDuration } = viewState.value
+  blinkTimer = setTimeout(
+    () => {
+      blinking.value = true
+      blinkTimer = setTimeout(scheduleBlink, blinkDuration)
+    },
+    blinkMin + Math.random() * (blinkMax - blinkMin),
+  )
+}
+watch(
+  () => [
+    viewState.value.blinkEnabled,
+    viewState.value.blinkMin,
+    viewState.value.blinkMax,
+    viewState.value.blinkDuration,
+  ],
+  scheduleBlink,
+  { immediate: true },
+)
+onBeforeUnmount(() => clearTimeout(blinkTimer))
+const root = ref<HTMLElement>()
+const { width, height } = useElementSize(root)
+const fit = computed(
+  () => Math.min(width.value / viewState.value.canvasWidth, height.value / viewState.value.canvasHeight) || 1,
+)
+const styles = computed(() => {
+  const s = viewState.value
+  // Even a tiny canvas retains a drawable area when importing large padding values.
+  const padding = Math.min(s.padding, (Math.min(s.canvasWidth, s.canvasHeight) - 1) / 2)
+  return {
+    width: `${s.canvasWidth}px`,
+    height: `${s.canvasHeight}px`,
+    transform: `scale(${fit.value})`,
+    '--padding': `${padding}px`,
+    '--scale': s.scale,
+    '--flip': s.flipH ? -1 : 1,
+    '--intensity': motionIntensity(s, speaking.value, props.volume),
+    '--glow': s.glowColor,
+    '--transition': `${s.transitionMs}ms`,
   }
 })
-
-const rootStyles = computed(() => ({
-  '--pngtuber-scale': viewState.value.scale || 1.0,
-  '--pngtuber-intensity': intensityFactor.value,
-  '--pngtuber-glow-color': viewState.value.glowColor || '#38bdf8',
-}))
-
-function onImageError(event: Event) {
-  const el = event.target as HTMLImageElement
-  failedSrc.value = el.src
+const sources = ref<Record<string, string>>({})
+const failed = ref(new Set<string>())
+const reported = ref(new Map<string, string>())
+let activation = 0
+let activeKeys = new Set<string>()
+let playbackModes = new Map<string, string>()
+function report(src: string, message: string) {
+  reported.value = new Map(reported.value).set(src, message)
 }
+function imageLoaded(src: string) {
+  if (!failed.value.has(src) && !reported.value.has(src)) return
+  const next = new Set(failed.value)
+  next.delete(src)
+  failed.value = next
+  const errors = new Map(reported.value)
+  errors.delete(src)
+  reported.value = errors
+}
+const layers = computed(() =>
+  viewState.value.expressions.map((e) => ({
+    expression: e,
+    images: [...new Set(IMAGE_SLOTS.map((slot) => e[slot]).filter(Boolean))],
+    selected: selectImage(e, speaking.value, blinking.value),
+  })),
+)
+function key(id: string, src: string) {
+  return JSON.stringify([id, src])
+}
+watch(
+  () =>
+    [
+      expression.value.id,
+      selectImage(expression.value, speaking.value, blinking.value),
+      speaking.value,
+      JSON.stringify(viewState.value.expressions),
+    ] as const,
+  () => {
+    const active = expression.value
+    const selected = selectImage(active, speaking.value, blinking.value)
+    const next = { ...sources.value }
+    const liveKeys = new Set<string>()
+    const nextActive = new Set<string>()
+    const nextModes = new Map<string, string>()
+    for (const layer of layers.value) {
+      for (const src of [...layer.images, ...layer.expression.accessories.map((a) => a.image).filter(Boolean)]) {
+        const k = key(layer.expression.id, src)
+        liveKeys.add(k)
+        nextModes.set(k, layer.expression.playback)
+        const visible =
+          layer.expression.id === active.id &&
+          (src === selected ||
+            active.accessories.some(
+              (a) =>
+                a.image === src && (a.visible === 'always' || a.visible === (speaking.value ? 'speaking' : 'idle')),
+            ))
+        if (visible) nextActive.add(k)
+        if (playbackModes.get(k) !== layer.expression.playback) delete next[k]
+        if (layer.expression.playback === 'continue') next[k] = src
+        else if (visible && (!activeKeys.has(k) || playbackModes.get(k) !== layer.expression.playback)) {
+          try {
+            next[k] = playbackSource(src, active.playback, `${Date.now()}-${++activation}`)
+          } catch (error) {
+            next[k] = ''
+            report(src, (error as Error).message)
+          }
+        }
+      }
+    }
+    for (const k of Object.keys(next)) if (!liveKeys.has(k)) delete next[k]
+    sources.value = next
+    activeKeys = nextActive
+    playbackModes = nextModes
+  },
+  { immediate: true },
+)
+watch(
+  () => {
+    const activeSources = new Set([
+      ...Object.values(sources.value),
+      ...viewState.value.expressions.flatMap((e) => [
+        ...IMAGE_SLOTS.map((slot) => e[slot]),
+        ...e.accessories.map((a) => a.image),
+      ]),
+    ])
+    return [...reported.value]
+      .filter(([src]) => activeSources.has(src))
+      .map(([, message]) => message)
+      .join('\n')
+  },
+  (message) => emit('asset-error', message),
+  { immediate: true },
+)
+function source(id: string, src: string) {
+  return sources.value[key(id, src)] || ''
+}
+function imageError(src: string) {
+  failed.value = new Set([...failed.value, src])
+  report(src, `立绘素材加载失败：${src}`)
+}
+const empty = computed(() => {
+  const src = source(expression.value.id, selectImage(expression.value, speaking.value, blinking.value))
+  return !src || failed.value.has(src)
+})
 </script>
 
 <template>
   <div
+    ref="root"
     class="pngtuber-obs-root"
-    :class="[
-      { 'is-inline': props.inlineMode },
-      { 'is-speaking': isSpeaking },
-      { 'is-idle': !isSpeaking },
-      { 'is-flipped': viewState.flipH },
-      { 'is-dimmed': !isSpeaking && viewState.idleDim },
-      { 'has-glow': isSpeaking && viewState.showGlow },
-      { 'has-shadow': viewState.shadow },
-    ]"
-    :style="rootStyles"
+    :class="{ 'is-inline': inlineMode }"
   >
     <div
-      v-if="hasCustomAvatar && failedSrc !== (isSpeaking ? speakingSrc : idleSrc)"
-      class="avatar-stage"
+      class="pngtuber-canvas"
+      :style="styles"
+      :class="{
+        'is-speaking': speaking,
+        'is-dimmed': !speaking && viewState.idleDim,
+        'has-glow': speaking && viewState.showGlow,
+        'is-pixelated': viewState.pixelated,
+        'motion-onset': viewState.motionMode === 'onset',
+      }"
     >
-      <div
-        v-if="viewState.shadow"
-        class="avatar-ground-shadow"
-      />
-      <div
-        class="avatar-motion-wrapper"
-        :class="[
-          isSpeaking ? `anim-${viewState.speakingAnimation || 'bounce'}` : `idle-${viewState.idleAnimation || 'breathe'}`,
-        ]"
-      >
-        <div class="avatar-stack">
-          <img
-            v-if="idleSrc"
-            :src="idleSrc"
-            alt=""
-            class="avatar-image"
-            :class="{ 'is-active': !isSpeaking || !hasDistinctSpeaking }"
-            draggable="false"
-            @error="onImageError"
+      <div class="avatar-stage">
+        <div
+          v-if="viewState.shadow && !empty"
+          class="avatar-ground-shadow"
+        />
+        <div
+          class="avatar-motion-wrapper"
+          :class="speaking ? `anim-${viewState.speakingAnimation}` : `idle-${viewState.idleAnimation}`"
+        >
+          <div
+            v-for="layer in layers"
+            :key="layer.expression.id"
+            class="expression-layer"
+            :class="{ 'is-current': layer.expression.id === expression.id }"
           >
-          <img
-            v-if="hasDistinctSpeaking"
-            :src="speakingSrc"
-            alt=""
-            class="avatar-image"
-            :class="{ 'is-active': isSpeaking }"
-            draggable="false"
-            @error="onImageError"
-          >
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-else-if="props.inlineMode"
-      class="avatar-stage"
-    >
-      <div
-        class="avatar-motion-wrapper avatar-placeholder-box"
-        :class="[
-          isSpeaking ? `anim-${viewState.speakingAnimation || 'bounce'}` : `idle-${viewState.idleAnimation || 'breathe'}`,
-        ]"
-      >
-        <div class="placeholder-chibi-figure">
-          <svg
-            viewBox="0 0 160 200"
-            width="160"
-            height="200"
-            class="placeholder-svg"
-          >
-            <circle
-              cx="80"
-              cy="70"
-              r="44"
-              fill="color-mix(in srgb, var(--vtsuru-fg-muted) 12%, transparent)"
-              stroke="color-mix(in srgb, var(--vtsuru-fg-muted) 40%, transparent)"
-              stroke-width="2.5"
+            <img
+              v-for="src in layer.images"
+              :key="src"
+              :src="source(layer.expression.id, src) || undefined"
+              class="avatar-image"
+              :class="{ 'is-active': src === layer.selected && !!source(layer.expression.id, src) }"
+              alt=""
+              draggable="false"
+              @load="imageLoaded(source(layer.expression.id, src))"
+              @error="imageError(source(layer.expression.id, src))"
             />
-            <ellipse
-              v-if="!isSpeaking"
-              cx="64"
-              cy="68"
-              rx="4"
-              ry="5"
-              fill="color-mix(in srgb, var(--vtsuru-fg-muted) 60%, transparent)"
+            <img
+              v-for="accessory in layer.expression.accessories"
+              :key="`accessory-${accessory.id}`"
+              :src="source(layer.expression.id, accessory.image) || undefined"
+              class="accessory-image"
+              :class="{
+                'is-active':
+                  !!source(layer.expression.id, accessory.image) &&
+                  (accessory.visible === 'always' || accessory.visible === (speaking ? 'speaking' : 'idle')),
+              }"
+              :style="{
+                zIndex: accessory.front ? 3 : 1,
+                transform: `translate(${accessory.x}px, ${accessory.y}px) rotate(${accessory.rotation}deg) scale(${accessory.scale})`,
+              }"
+              alt=""
+              draggable="false"
+              @load="imageLoaded(source(layer.expression.id, accessory.image))"
+              @error="imageError(source(layer.expression.id, accessory.image))"
             />
-            <ellipse
-              v-if="!isSpeaking"
-              cx="96"
-              cy="68"
-              rx="4"
-              ry="5"
-              fill="color-mix(in srgb, var(--vtsuru-fg-muted) 60%, transparent)"
-            />
-            <path
-              v-if="isSpeaking"
-              d="M 58 68 Q 64 62 70 68"
-              stroke="color-mix(in srgb, var(--vtsuru-fg-muted) 80%, transparent)"
-              stroke-width="2.5"
-              fill="none"
-              stroke-linecap="round"
-            />
-            <path
-              v-if="isSpeaking"
-              d="M 90 68 Q 96 62 102 68"
-              stroke="color-mix(in srgb, var(--vtsuru-fg-muted) 80%, transparent)"
-              stroke-width="2.5"
-              fill="none"
-              stroke-linecap="round"
-            />
-            <path
-              v-if="!isSpeaking"
-              d="M 74 84 Q 80 88 86 84"
-              stroke="color-mix(in srgb, var(--vtsuru-fg-muted) 60%, transparent)"
-              stroke-width="2"
-              fill="none"
-              stroke-linecap="round"
-            />
-            <ellipse
-              v-if="isSpeaking"
-              cx="80"
-              cy="86"
-              rx="7"
-              ry="9"
-              fill="color-mix(in srgb, var(--vtsuru-brand) 55%, transparent)"
-              stroke="color-mix(in srgb, var(--vtsuru-fg-muted) 60%, transparent)"
-              stroke-width="2"
-            />
-            <path
-              d="M 50 120 C 50 120 40 180 80 180 C 120 180 110 120 110 120 Z"
-              fill="color-mix(in srgb, var(--vtsuru-fg-muted) 8%, transparent)"
-              stroke="color-mix(in srgb, var(--vtsuru-fg-muted) 35%, transparent)"
-              stroke-width="2.5"
-            />
-          </svg>
-          <div class="placeholder-caption">
-            {{ isSpeaking ? '说话中' : '上传静止 / 说话立绘' }}
           </div>
         </div>
+      </div>
+      <div
+        v-if="inlineMode && empty"
+        class="placeholder-caption"
+      >
+        {{
+          expression.idleImage || expression.speakingImage
+            ? '素材不可用，请检查图片地址或先上传素材'
+            : '上传立绘后显示预览'
+        }}
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.pngtuber-obs-root {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  overflow: visible;
-  user-select: none;
-  pointer-events: none;
-  position: relative;
-  box-sizing: border-box;
-}
-
-.pngtuber-obs-root.is-inline {
-  min-width: 240px;
-  min-height: 280px;
-}
-
-.avatar-stage {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  transform-origin: bottom center;
-  transform: scale(var(--pngtuber-scale, 1));
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.pngtuber-obs-root.is-flipped .avatar-stage {
-  transform: scale(var(--pngtuber-scale, 1)) scaleX(-1);
-}
-
-.avatar-ground-shadow {
-  position: absolute;
-  bottom: -10px;
-  width: 180px;
-  height: 22px;
-  background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.08) 55%, transparent 75%);
-  border-radius: 50%;
-  filter: blur(2px);
-  transform-origin: center center;
-  transition: transform 0.22s ease-out, opacity 0.22s ease-out;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.pngtuber-obs-root.is-speaking .avatar-ground-shadow {
-  transform: scale(0.82);
-  opacity: 0.55;
-}
-
-.avatar-motion-wrapper {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform-origin: bottom center;
-  will-change: transform, filter;
-}
-
-.avatar-stack {
-  display: grid;
-}
-
-.avatar-image {
-  grid-area: 1 / 1;
-  display: block;
-  max-width: 100%;
-  max-height: 480px;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  opacity: 0;
-  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.1));
-  transition: filter 0.18s ease-out, opacity 0.12s linear;
-}
-
-.avatar-image.is-active {
-  opacity: 1;
-}
-
-.pngtuber-obs-root.is-dimmed .avatar-image.is-active {
-  filter: brightness(0.88) saturate(0.92) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.12));
-}
-
-.pngtuber-obs-root.has-glow.is-speaking .avatar-image.is-active {
-  filter: drop-shadow(0 0 18px var(--pngtuber-glow-color, #38bdf8))
-    drop-shadow(0 8px 24px rgba(0, 0, 0, 0.2));
-}
-
-.avatar-placeholder-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.placeholder-chibi-figure {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px 20px;
-  background: color-mix(in srgb, var(--vtsuru-bg-muted) 72%, transparent);
-  backdrop-filter: blur(8px);
-  border: 2px dashed var(--vtsuru-border);
-  border-radius: 16px;
-}
-
-.placeholder-caption {
-  margin-top: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--vtsuru-fg-muted);
-  text-align: center;
-}
-
-.avatar-motion-wrapper.anim-bounce {
-  animation: pngtuber-bounce 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
-}
-
-@keyframes pngtuber-bounce {
-  0% { transform: translateY(0) scale(1, 1); }
-  100% {
-    transform: translateY(calc(-20px * var(--pngtuber-intensity, 1)))
-      scale(calc(1 - 0.03 * var(--pngtuber-intensity, 1)), calc(1 + 0.04 * var(--pngtuber-intensity, 1)));
-  }
-}
-
-.avatar-motion-wrapper.anim-jelly {
-  animation: pngtuber-jelly 0.38s ease-in-out infinite alternate;
-}
-
-@keyframes pngtuber-jelly {
-  0% {
-    transform: translateY(0) scale(calc(1 + 0.08 * var(--pngtuber-intensity, 1)), calc(1 - 0.08 * var(--pngtuber-intensity, 1)));
-  }
-  50% {
-    transform: translateY(calc(-14px * var(--pngtuber-intensity, 1)))
-      scale(calc(1 - 0.06 * var(--pngtuber-intensity, 1)), calc(1 + 0.08 * var(--pngtuber-intensity, 1)));
-  }
-  100% {
-    transform: translateY(calc(-6px * var(--pngtuber-intensity, 1)))
-      scale(calc(1 + 0.03 * var(--pngtuber-intensity, 1)), calc(1 - 0.03 * var(--pngtuber-intensity, 1)));
-  }
-}
-
-.avatar-motion-wrapper.anim-shake {
-  animation: pngtuber-shake 0.18s ease-in-out infinite alternate;
-}
-
-@keyframes pngtuber-shake {
-  0% {
-    transform: translateY(calc(-6px * var(--pngtuber-intensity, 1)))
-      rotate(calc(-3.5deg * var(--pngtuber-intensity, 1)));
-  }
-  100% {
-    transform: translateY(calc(-6px * var(--pngtuber-intensity, 1)))
-      rotate(calc(3.5deg * var(--pngtuber-intensity, 1)));
-  }
-}
-
-.avatar-motion-wrapper.anim-pulse {
-  animation: pngtuber-pulse 0.24s ease-out infinite alternate;
-}
-
-@keyframes pngtuber-pulse {
-  0% { transform: scale(1); }
-  100% { transform: scale(calc(1 + 0.08 * var(--pngtuber-intensity, 1))); }
-}
-
-.avatar-motion-wrapper.anim-float {
-  animation: pngtuber-speaking-float 0.45s ease-in-out infinite alternate;
-}
-
-@keyframes pngtuber-speaking-float {
-  0% { transform: translateY(calc(-8px * var(--pngtuber-intensity, 1))); }
-  100% { transform: translateY(calc(-22px * var(--pngtuber-intensity, 1))); }
-}
-
-.avatar-motion-wrapper.anim-none {
-  transform: translateY(0);
-}
-
-.avatar-motion-wrapper.idle-breathe {
-  animation: pngtuber-idle-breathe 2.4s ease-in-out infinite;
-}
-
-@keyframes pngtuber-idle-breathe {
-  0%, 100% { transform: translateY(0) scale(1, 1); }
-  50% { transform: translateY(-4px) scale(0.99, 1.02); }
-}
-
-.avatar-motion-wrapper.idle-sway {
-  animation: pngtuber-idle-sway 3.2s ease-in-out infinite;
-}
-
-@keyframes pngtuber-idle-sway {
-  0%, 100% { transform: rotate(0deg) translateY(0); }
-  25% { transform: rotate(-1.5deg) translateY(-2px); }
-  75% { transform: rotate(1.5deg) translateY(-2px); }
-}
-
-.avatar-motion-wrapper.idle-float {
-  animation: pngtuber-idle-float 2.8s ease-in-out infinite;
-}
-
-@keyframes pngtuber-idle-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-.avatar-motion-wrapper.idle-none {
-  transform: none;
-}
-</style>
+<style scoped src="./PngtuberDisplay.css"></style>

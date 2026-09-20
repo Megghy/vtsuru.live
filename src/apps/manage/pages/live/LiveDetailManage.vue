@@ -22,7 +22,7 @@ import {
   NTime,
   useMessage,
 } from 'naive-ui'
-import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
@@ -127,12 +127,6 @@ onMounted(async () => {
   await loadInitialData()
   await hub.Init()
   await hub.on('NewDanmaku', onNewDanmaku)
-})
-
-onActivated(async () => {
-  if (liveInfo.value?.live.liveId !== String(route.params.id ?? '')) {
-    await loadInitialData()
-  }
 })
 
 onBeforeUnmount(async () => {

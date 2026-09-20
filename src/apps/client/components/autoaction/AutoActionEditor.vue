@@ -13,6 +13,7 @@ import EnterSettings from './settings/EnterSettings.vue'
 import FollowSettings from './settings/FollowSettings.vue'
 import GiftSettings from './settings/GiftSettings.vue'
 import GuardSettings from './settings/GuardSettings.vue'
+import PngtuberSettings from './settings/PngtuberSettings.vue'
 import ScheduledSettings from './settings/ScheduledSettings.vue'
 import SuperChatSettings from './settings/SuperChatSettings.vue'
 import TemplateSettings from './settings/TemplateSettings.vue'
@@ -113,7 +114,7 @@ function getAdvancedSummary() {
 
     <!-- 2. 内容配置 (模板或VTS) -->
     <NCard
-      v-if="showTemplate || showVtsSettings"
+      v-if="showTemplate || showVtsSettings || action.actionType === ActionType.PNGTUBER_EXPRESSION"
       size="small"
       embedded
       :bordered="false"
@@ -124,6 +125,10 @@ function getAdvancedSummary() {
         v-if="showTemplate"
         :action="action"
         :custom-test-context="customTestContext"
+      />
+      <PngtuberSettings
+        v-if="action.actionType === ActionType.PNGTUBER_EXPRESSION"
+        :action="action"
       />
       <VtsSettings
         v-if="showVtsSettings"

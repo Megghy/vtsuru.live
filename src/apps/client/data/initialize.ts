@@ -23,6 +23,7 @@ import {
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
+import { usePngtuberDriver } from '../store/usePngtuberDriver'
 import { useAutoAction } from '../store/useAutoAction'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
@@ -419,7 +420,8 @@ export async function initAll(isOnBoot: boolean) {
         text: '打开/关闭弹幕机',
         action: () => {
           const danmakuStore = useDanmakuWindow()
-          danmakuStore.toggleDanmakuWindow()
+          if (danmakuStore.isDanmakuWindowOpen) danmakuStore.closeWindow()
+          else danmakuStore.openWindow()
         },
       },
       {
@@ -506,6 +508,7 @@ export async function initAll(isOnBoot: boolean) {
     }
   })
 
+  usePngtuberDriver() // Pinia owns the driver; audio starts only through an explicit user action.
   useAutoAction().init()
   useBiliFunction().init()
   await useClientBackup().init()

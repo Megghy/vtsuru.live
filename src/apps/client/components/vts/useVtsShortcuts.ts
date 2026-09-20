@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
 import type { StoreTarget } from '@/apps/client/store/useTauriStore'
 import { isTauri } from '@/shared/config'
+import { createOwnedShortcuts } from '@/shared/helpers/ownedShortcuts'
 
 export interface VtsShortcutBinding {
   id: string
@@ -14,8 +15,7 @@ export interface VtsShortcutBinding {
 
 const STORE_KEY = 'vts.shortcuts'
 
-let registered = false
-let currentBindings: VtsShortcutBinding[] = []
+let shortcuts: ReturnType<typeof createOwnedShortcuts> | undefined
 let actionHandler: ((binding: VtsShortcutBinding) => void) | null = null
 
 export function useVtsShortcuts() {
@@ -33,24 +33,22 @@ export function useVtsShortcuts() {
 
   async function registerAll() {
     if (!isTauri()) return
-    const { unregisterAll, register } = await import('@tauri-apps/plugin-global-shortcut')
-    if (registered) await unregisterAll()
-    registered = false
-    currentBindings = bindings.value
-
-    for (const b of currentBindings) {
-      if (!b.shortcut) continue
-      try {
-        await register(b.shortcut, (event) => {
-          if (event.state === 'Pressed' && actionHandler) {
-            actionHandler(b)
-          }
-        })
-      } catch (err) {
-        console.warn(`[VtsShortcut] 注册失败: ${b.shortcut}`, err)
-      }
+    const adapter = await import('@tauri-apps/plugin-global-shortcut')
+    shortcuts ??= createOwnedShortcuts(adapter)
+    try {
+      await shortcuts.replace(
+        bindings.value
+          .filter((binding) => binding.shortcut)
+          .map((binding) => ({
+            shortcut: binding.shortcut,
+            handler: (event) => {
+              if (event.state === 'Pressed') actionHandler?.(binding)
+            },
+          })),
+      )
+    } catch (cause) {
+      window.$message?.error(String(cause))
     }
-    registered = true
   }
 
   function onAction(handler: (binding: VtsShortcutBinding) => void) {
@@ -79,9 +77,7 @@ export function useVtsShortcuts() {
 
   async function cleanup() {
     if (!isTauri()) return
-    const { unregisterAll } = await import('@tauri-apps/plugin-global-shortcut')
-    await unregisterAll()
-    registered = false
+    await shortcuts?.dispose()
     actionHandler = null
   }
 
