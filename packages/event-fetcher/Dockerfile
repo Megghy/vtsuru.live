@@ -1,10 +1,10 @@
-# Build from the frontend repository root:
-# docker build -f packages/event-fetcher/Dockerfile .
+# Build from packages/:
+# docker build -f event-fetcher/Dockerfile packages
 FROM oven/bun:1-alpine
 WORKDIR /app
-COPY packages/danmaku ./packages/danmaku
-COPY packages/event-fetcher ./packages/event-fetcher
-RUN cd packages/event-fetcher && bun install
+COPY danmaku ./danmaku
+COPY event-fetcher ./event-fetcher
+RUN cd event-fetcher && bun install
 ENV PORT=3000
 EXPOSE 3000
-CMD ["bun", "packages/event-fetcher/src/cli.ts"]
+CMD ["bun", "event-fetcher/src/cli.ts"]
