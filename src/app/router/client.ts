@@ -70,12 +70,27 @@ export default {
       meta: { title: 'PNGtuber', pageWidth: 'xl' },
     },
     {
+      path: 'pngtuber/model',
+      name: 'client-pngtuber-model',
+      component: async () => import('@/apps/obs-store/components/pngtuber/PngtuberViewer.vue'),
+      meta: { title: 'PNGtuber 模型', pageWidth: 'full' },
+    },
+    {
       path: 'vts',
       name: 'client-vts',
       component: async () => import('@/apps/client/pages/ClientVTS.vue'),
       meta: {
         title: 'VTS 控制',
         forceReload: true,
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'transcription',
+      name: 'client-transcription',
+      component: async () => import('@/apps/client/pages/ClientTranscription.vue'),
+      meta: {
+        title: '语音转写',
         pageWidth: 'xl',
       },
     },

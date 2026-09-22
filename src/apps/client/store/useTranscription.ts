@@ -17,6 +17,9 @@ import { useTranscriptionSettings } from './useTranscriptionSettings'
 const UPLOAD_INTERVAL_MS = 2_000
 const UPLOAD_BATCH_SIZE = 100
 const MAX_PENDING_SEGMENTS = 10_000
+const MAX_VISIBLE_LINES = 200
+const MAX_RECONNECTS = 3
+const RECONNECT_DELAY_MS = 2_000
 
 interface HubResult {
   Success: boolean
@@ -27,8 +30,17 @@ interface StartSessionResult extends HubResult {
   SessionId: string
 }
 
+export interface TranscriptLine {
+  text: string
+  startMs: number
+}
+
 function profileModel(profile: TranscriptionProfile) {
   return profile.provider === 'tencent' ? profile.engineModelType : profile.model
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export const useTranscription = defineStore('transcription', () => {
@@ -38,11 +50,14 @@ export const useTranscription = defineStore('transcription', () => {
   const status = ref<TranscriptionStatus>({ running: false, phase: 'idle' })
   const partialText = ref('')
   const lastFinalText = ref('')
+  const lines = ref<TranscriptLine[]>([])
   const archivedCount = ref(0)
   const pendingCount = ref(0)
   const sessionId = ref<string>()
   const uploadError = ref<string>()
   const runtimeError = ref<string>()
+  const stderrLine = ref('')
+  const archivePaused = ref(false)
   const pendingSegments: TranscriptSegment[] = []
   const finalizedIds = new Set<string>()
   let initialized = false
@@ -53,7 +68,12 @@ export const useTranscription = defineStore('transcription', () => {
   let flushTask: Promise<void> | undefined
   let finishTask: Promise<void> | undefined
   let stopTask: Promise<void> | undefined
+  let reconnectTask: Promise<void> | undefined
   let stopping = false
+  let pipelineClosing = false
+  let pipelineEpoch = 0
+  let reconnects = 0
+  let pipelineFault: unknown
   let sequence = 0
   let lastEndMs = 0
 
@@ -88,6 +108,7 @@ export const useTranscription = defineStore('transcription', () => {
     const profile = assertStartReady()
     if (sessionId.value) await finishSession()
     resetRuntime(profile)
+    const epoch = ++pipelineEpoch
 
     try {
       const connection = webFetcher.signalRClient
@@ -99,51 +120,12 @@ export const useTranscription = defineStore('transcription', () => {
       )
       if (!startResult.Success) throw new Error(startResult.Message)
       sessionId.value = startResult.SessionId
-
-      status.value.message = '正在获取 Bilibili 播放流'
-      const source = await resolveBilibiliStream(Number(account.value.biliRoomId))
-      status.value = {
-        ...status.value,
-        canonicalRoomId: source.canonicalRoomId,
-        sourceProtocol: source.protocol,
-        sourceFormat: source.format,
-        phase: 'connecting_provider',
-        message: '正在连接转写 Provider',
-      }
-
-      provider = createProvider(profile, {
-        onPartial: (result) => (partialText.value = result.text),
-        onFinal: enqueueFinal,
-        onError: (error) => void failRuntime(error),
-      })
-      await provider.connect()
-
-      status.value = { ...status.value, phase: 'starting_ffmpeg', message: '正在启动 FFmpeg 音频提取' }
-      frameBuffer = new AudioFrameBuffer(pcmFrameSize(provider.sampleRate), (frame) => {
-        try {
-          provider?.sendAudio(frame)
-        } catch (error) {
-          void failRuntime(error)
-        }
-      })
-      ffmpegJob = await startAudioExtraction(
-        source,
-        provider.sampleRate,
-        (chunk) => frameBuffer?.append(chunk),
-        () => undefined,
-        () => {
-          if (!stopping) void failRuntime(new Error('FFmpeg 音频提取进程已结束'))
-        },
-      )
-      status.value = {
-        ...status.value,
-        phase: 'running',
-        message: undefined,
-      }
+      await openPipeline(profile, epoch)
       startUploadTimer()
     } catch (error) {
       stopping = true
-      await cleanupRuntime().catch(() => undefined)
+      pipelineEpoch++
+      await closePipeline()
       await closeArchiveSession().catch(() => undefined)
       stopping = false
       status.value = { running: false, phase: 'error', message: String(error) }
@@ -154,16 +136,20 @@ export const useTranscription = defineStore('transcription', () => {
 
   function resetRuntime(profile: TranscriptionProfile) {
     stopping = false
+    reconnects = 0
     sequence = 0
     lastEndMs = 0
     archivedCount.value = 0
     pendingSegments.length = 0
     pendingCount.value = 0
     finalizedIds.clear()
+    lines.value = []
     partialText.value = ''
     lastFinalText.value = ''
     uploadError.value = undefined
     runtimeError.value = undefined
+    stderrLine.value = ''
+    archivePaused.value = false
     status.value = {
       running: true,
       phase: 'resolving_stream',
@@ -173,19 +159,149 @@ export const useTranscription = defineStore('transcription', () => {
     }
   }
 
+  async function openPipeline(profile: TranscriptionProfile, epoch: number) {
+    pipelineFault = undefined
+    status.value = { ...status.value, phase: 'resolving_stream', message: '正在获取 Bilibili 播放流' }
+    const source = await resolveBilibiliStream(Number(account.value.biliRoomId))
+    if (stale(epoch)) return
+
+    status.value = {
+      ...status.value,
+      canonicalRoomId: source.canonicalRoomId,
+      sourceProtocol: source.protocol,
+      sourceFormat: source.format,
+      phase: 'connecting_provider',
+      message: '正在连接识别服务',
+    }
+    const next = createProvider(profile, {
+      onPartial: (result) => {
+        if (epoch === pipelineEpoch) partialText.value = result.text
+      },
+      onFinal: (result) => {
+        if (epoch === pipelineEpoch) enqueueFinal(result)
+      },
+      onError: (error) => pipelineLost(epoch, error),
+    })
+    let job: FfmpegAudioJob | undefined
+    try {
+      await next.connect()
+      if (stale(epoch)) return
+      provider = next
+
+      status.value = { ...status.value, phase: 'starting_ffmpeg', message: '正在启动 FFmpeg 音频提取' }
+      stderrLine.value = ''
+      frameBuffer = new AudioFrameBuffer(pcmFrameSize(next.sampleRate), (frame) => {
+        if (epoch !== pipelineEpoch) return
+        try {
+          provider?.sendAudio(frame)
+        } catch (error) {
+          pipelineLost(epoch, error)
+        }
+      })
+      job = await startAudioExtraction(
+        source,
+        next.sampleRate,
+        (chunk) => {
+          if (epoch === pipelineEpoch) frameBuffer?.append(chunk)
+        },
+        (line) => {
+          const text = line.trim()
+          if (text) stderrLine.value = text
+        },
+        () => pipelineLost(epoch, new Error(stderrLine.value || 'FFmpeg 音频提取进程已结束')),
+      )
+      if (!stale(epoch)) {
+        ffmpegJob = job
+        job = undefined
+      }
+      if (pipelineFault) throw pipelineFault
+      if (stale(epoch)) return
+      status.value = { ...status.value, phase: 'running', message: undefined }
+      runtimeError.value = undefined
+      reconnects = 0
+    } finally {
+      if (job) await stopJob(job)
+      if (provider === next && !stale(epoch)) return
+      if (provider === next) provider = undefined
+      if (ffmpegJob && stale(epoch)) {
+        const owned = ffmpegJob
+        ffmpegJob = undefined
+        await stopJob(owned)
+      }
+      await next.finish().catch(() => undefined)
+    }
+  }
+
+  function stale(epoch: number) {
+    return epoch !== pipelineEpoch || stopping
+  }
+
+  function pipelineLost(epoch: number, error: unknown) {
+    if (pipelineClosing || epoch !== pipelineEpoch || stopping || status.value.phase === 'stopping') return
+    if (status.value.phase !== 'running') {
+      pipelineFault = error
+      return
+    }
+    void reconnectPipeline(error)
+  }
+
+  function reconnectPipeline(error: unknown) {
+    if (reconnectTask) return reconnectTask
+    const epoch = ++pipelineEpoch
+    reconnectTask = runReconnect(epoch, error).finally(() => {
+      reconnectTask = undefined
+    })
+    return reconnectTask
+  }
+
+  async function runReconnect(epoch: number, error: unknown) {
+    if (stopping) return
+    if (reconnects >= MAX_RECONNECTS) {
+      await failRuntime(error)
+      return
+    }
+    reconnects++
+    const detail = stderrLine.value && !String(error).includes(stderrLine.value) ? `${error}（${stderrLine.value}）` : String(error)
+    runtimeError.value = detail
+    status.value = {
+      ...status.value,
+      running: true,
+      phase: 'reconnecting',
+      message: `连接中断，正在重试（${reconnects}/${MAX_RECONNECTS}）`,
+    }
+    await closePipeline()
+    await delay(RECONNECT_DELAY_MS)
+    if (stopping || epoch !== pipelineEpoch) return
+    const profile = settingsStore.activeProfile
+    if (!profile) {
+      await failRuntime(new Error('转写配置已丢失'))
+      return
+    }
+    try {
+      await openPipeline(profile, epoch)
+    } catch (cause) {
+      if (stopping || epoch !== pipelineEpoch) return
+      await runReconnect(epoch, cause)
+    }
+  }
+
   function enqueueFinal(result: ProviderTranscript) {
     const text = result.text.trim()
     if (!text || finalizedIds.has(result.id)) return
     finalizedIds.add(result.id)
     partialText.value = ''
     lastFinalText.value = text
-    if (pendingSegments.length >= MAX_PENDING_SEGMENTS) {
-      void failRuntime(new Error('待归档字幕过多，转写已停止，请恢复 EventFetcher 连接后重试上传'))
-      return
-    }
     const startMs = result.startMs ?? lastEndMs
     const endMs = result.endMs ?? startMs
     lastEndMs = endMs
+    lines.value.push({ text, startMs })
+    if (lines.value.length > MAX_VISIBLE_LINES) {
+      lines.value.splice(0, lines.value.length - MAX_VISIBLE_LINES)
+    }
+    if (pendingSegments.length >= MAX_PENDING_SEGMENTS) {
+      pauseArchive('待上传字幕已满，归档暂停，转写仍在继续')
+      return
+    }
     pendingSegments.push({
       sequence: sequence++,
       startMs,
@@ -194,6 +310,11 @@ export const useTranscription = defineStore('transcription', () => {
       speaker: result.speaker,
     })
     pendingCount.value = pendingSegments.length
+  }
+
+  function pauseArchive(message: string) {
+    archivePaused.value = true
+    uploadError.value = message
   }
 
   async function stop() {
@@ -221,10 +342,11 @@ export const useTranscription = defineStore('transcription', () => {
 
   async function stopRuntime(preserveError: boolean, originalError?: unknown) {
     stopping = true
+    pipelineEpoch++
     status.value = { ...status.value, phase: 'stopping', message: '正在停止直播转写' }
     let error = originalError
     try {
-      await cleanupRuntime()
+      await closePipeline()
     } catch (cleanupError) {
       error ??= cleanupError
     }
@@ -244,19 +366,26 @@ export const useTranscription = defineStore('transcription', () => {
     status.value = { running: false, phase: 'idle' }
   }
 
-  async function cleanupRuntime() {
-    frameBuffer?.clear()
-    frameBuffer = undefined
-    const job = ffmpegJob
-    ffmpegJob = undefined
-    if (job) {
-      job.stdout.close()
-      job.stderr.close()
-      await job.stop()
+  async function closePipeline() {
+    pipelineClosing = true
+    try {
+      frameBuffer?.clear()
+      frameBuffer = undefined
+      const job = ffmpegJob
+      ffmpegJob = undefined
+      if (job) await stopJob(job)
+      const currentProvider = provider
+      provider = undefined
+      if (currentProvider) await currentProvider.finish().catch(() => undefined)
+    } finally {
+      pipelineClosing = false
     }
-    const currentProvider = provider
-    provider = undefined
-    if (currentProvider) await currentProvider.finish()
+  }
+
+  async function stopJob(job: FfmpegAudioJob) {
+    job.stdout.close()
+    job.stderr.close()
+    await job.stop().catch(() => undefined)
   }
 
   function startUploadTimer() {
@@ -275,7 +404,7 @@ export const useTranscription = defineStore('transcription', () => {
     if (!sessionId.value || pendingSegments.length === 0) return
     const connection = webFetcher.signalRClient
     if (!connection) {
-      uploadError.value = 'EventFetcher 已断开，字幕将在连接恢复后继续上传'
+      pauseArchive('EventFetcher 已断开，归档暂停，转写仍在继续')
       return
     }
 
@@ -289,10 +418,11 @@ export const useTranscription = defineStore('transcription', () => {
         pendingCount.value = pendingSegments.length
         archivedCount.value += batch.length
         uploadError.value = undefined
+        archivePaused.value = false
         uploaded = true
       })
       .catch((error) => {
-        uploadError.value = String(error)
+        pauseArchive(String(error))
         console.error(`上传转写字幕失败: ${error}`)
       })
       .finally(() => (flushTask = undefined))
@@ -332,11 +462,14 @@ export const useTranscription = defineStore('transcription', () => {
     status,
     partialText,
     lastFinalText,
+    lines,
     archivedCount,
     pendingCount,
     sessionId,
     uploadError,
     runtimeError,
+    stderrLine,
+    archivePaused,
     init,
     start,
     stop,

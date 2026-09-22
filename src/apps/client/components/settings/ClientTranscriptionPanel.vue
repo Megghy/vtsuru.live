@@ -13,23 +13,36 @@ import {
   NTag,
   NText,
 } from 'naive-ui'
-import { computed, onMounted, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { useAccount } from '@/api/account'
+import type { ResponseCurrentLiveModel } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
 import { useTranscription } from '@/apps/client/store/useTranscription'
 import { createTranscriptionProfile, useTranscriptionSettings } from '@/apps/client/store/useTranscriptionSettings'
+import { LIVE_API_URL } from '@/shared/config'
 import {
   clientSupportsTranscription,
   clientVersion,
   TRANSCRIPTION_MIN_CLIENT_VERSION,
 } from '@/shared/config/clientVersion'
-import type { TranscriptionProvider } from '@/shared/models/transcription'
+import type { TranscriptionProfile, TranscriptionProvider } from '@/shared/models/transcription'
+import { useWebFetcher } from '@/store/useWebFetcher'
 
 const settingsStore = useTranscriptionSettings()
 const transcription = useTranscription()
+const account = useAccount()
+const webFetcher = useWebFetcher()
 const activeProfile = computed(() => settingsStore.activeProfile)
 const isRunning = computed(() => transcription.status.running)
-const isBusy = computed(() => transcription.status.phase !== 'running' && transcription.status.running)
+const isBusy = computed(() =>
+  ['resolving_stream', 'connecting_provider', 'starting_ffmpeg', 'stopping'].includes(transcription.status.phase),
+)
 const isSupported = computed(() => clientSupportsTranscription())
+const transcriptEl = ref<HTMLElement>()
+const liveState = ref<'loading' | 'ready' | 'missing' | 'unknown'>('loading')
+const liveTitle = ref('')
+let liveTimer: ReturnType<typeof setInterval> | undefined
 
 const profileOptions = computed(() =>
   settingsStore.settings.profiles.map((profile) => ({
@@ -52,29 +65,142 @@ const tencentModelOptions = [
   { label: '粤语 16k', value: '16k_yue' },
 ]
 
+const credentialsReady = computed(() => profileReady(activeProfile.value))
+
+const readiness = computed(() => {
+  const version = clientVersion.value
+  const roomId = account.value.biliRoomId
+  const fetcherReady = webFetcher.state === 'connected'
+  return [
+    {
+      state: isSupported.value ? 'ok' : 'bad',
+      label: isSupported.value
+        ? `客户端 ${version}`
+        : `需要客户端 ${TRANSCRIPTION_MIN_CLIENT_VERSION} 或更高版本`,
+    },
+    {
+      state: roomId ? 'ok' : 'bad',
+      label: roomId ? `直播间 ${roomId}` : '未绑定 Bilibili 直播间',
+    },
+    {
+      state: fetcherReady ? 'ok' : 'bad',
+      label: fetcherReady ? 'EventFetcher 已连接' : 'EventFetcher 未连接',
+    },
+    liveReadiness(),
+    {
+      state: credentialsReady.value ? 'ok' : 'bad',
+      label: credentialsReady.value ? '识别服务凭据已填写' : '识别服务凭据未填完',
+    },
+  ] as { state: 'ok' | 'bad' | 'pending'; label: string }[]
+})
+
+const startBlocked = computed(
+  () => liveState.value === 'loading' || readiness.value.some((item) => item.state === 'bad'),
+)
+
 const statusMeta = computed(() => {
   switch (transcription.status.phase) {
     case 'resolving_stream':
       return { type: 'warning' as const, text: '正在获取播放流' }
     case 'connecting_provider':
-      return { type: 'warning' as const, text: '正在连接 Provider' }
+      return { type: 'warning' as const, text: '正在连接识别服务' }
     case 'starting_ffmpeg':
       return { type: 'warning' as const, text: '正在启动 FFmpeg' }
     case 'running':
       return { type: 'success' as const, text: '转写中' }
+    case 'reconnecting':
+      return { type: 'warning' as const, text: '正在重连' }
     case 'stopping':
       return { type: 'warning' as const, text: '正在停止' }
     case 'error':
-      return { type: 'error' as const, text: '运行错误' }
+      return { type: 'error' as const, text: '已停止' }
     default:
       return { type: 'default' as const, text: '未运行' }
   }
 })
 
+const notice = computed(() => {
+  if (transcription.status.phase === 'reconnecting') {
+    const headline = transcription.status.message || '连接中断，正在重新连接'
+    const detail = transcription.runtimeError
+    return { type: 'warning' as const, text: detail ? `${headline}：${detail}` : headline }
+  }
+  if (transcription.runtimeError && transcription.status.phase === 'error') {
+    return { type: 'error' as const, text: transcription.runtimeError }
+  }
+  if (transcription.archivePaused || transcription.uploadError) {
+    return { type: 'warning' as const, text: transcription.uploadError || '归档暂停，转写仍在继续' }
+  }
+  if (transcription.status.message) return { type: 'info' as const, text: transcription.status.message }
+  return undefined
+})
+
+const sourceLabel = computed(() => {
+  const { sourceProtocol, sourceFormat } = transcription.status
+  if (!sourceProtocol && !sourceFormat) return ''
+  return [sourceProtocol, sourceFormat].filter(Boolean).join(' · ')
+})
+
 const saveSettings = useDebounceFn(() => settingsStore.save(), 300)
 watch(() => settingsStore.settings, saveSettings, { deep: true })
+watch(
+  () => [transcription.lines.length, transcription.partialText] as const,
+  async () => {
+    await nextTick()
+    const el = transcriptEl.value
+    if (el) el.scrollTop = el.scrollHeight
+  },
+)
 
-onMounted(() => settingsStore.init())
+onMounted(() => {
+  void settingsStore.init()
+  void refreshLive()
+  liveTimer = setInterval(() => void refreshLive(), 15_000)
+})
+
+onUnmounted(() => {
+  if (liveTimer) clearInterval(liveTimer)
+})
+
+function liveReadiness() {
+  if (liveState.value === 'loading') return { state: 'pending' as const, label: '正在确认直播归档' }
+  if (liveState.value === 'ready') return { state: 'ok' as const, label: `正在归档：${liveTitle.value}` }
+  if (liveState.value === 'unknown') return { state: 'pending' as const, label: '暂时无法确认是否有正在归档的直播' }
+  return { state: 'bad' as const, label: '当前没有正在归档的直播' }
+}
+
+function profileReady(profile: TranscriptionProfile | undefined) {
+  if (!profile) return false
+  if (profile.provider === 'tencent') return !!(profile.appId && profile.secretId && profile.secretKey)
+  return !!profile.apiKey
+}
+
+async function refreshLive() {
+  try {
+    const current = await QueryGetAPI<ResponseCurrentLiveModel>(`${LIVE_API_URL}current`)
+    const live = current.code === 200 ? current.data?.live : undefined
+    if (current.code !== 200) {
+      liveState.value = 'unknown'
+      liveTitle.value = ''
+      return
+    }
+    if (live && !live.isFinish) {
+      liveState.value = 'ready'
+      liveTitle.value = live.title || '未命名直播'
+      return
+    }
+    liveState.value = 'missing'
+    liveTitle.value = ''
+  } catch {
+    liveState.value = 'unknown'
+    liveTitle.value = ''
+  }
+}
+
+function formatOffset(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000))
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
 
 function addProfile(provider: TranscriptionProvider) {
   settingsStore.addProfile(provider)
@@ -115,42 +241,18 @@ async function stop() {
     vertical
     :size="16"
   >
-    <NAlert
-      type="warning"
-      :bordered="false"
-    >
-      直播语音转写功能仍在开发中，当前版本尚未完成，请勿依赖它进行正式直播归档。
-    </NAlert>
-    <NAlert
-      type="info"
-      :bordered="false"
-    >
-      API 凭据只保存在本机 Tauri Store 中并由客户端直接用于转写，不会上传到本站。本站仅接收最终字幕用于直播归档。
-    </NAlert>
-    <NAlert
-      type="warning"
-      :bordered="false"
-    >
-      音频来自当前绑定的 Bilibili
-      直播间播放流。第三方播放地址和语音服务可能中断，客户端会报告实际状态，但无法承诺持续稳定运行。
-    </NAlert>
-    <NAlert
-      v-if="!isSupported"
-      type="error"
-      :bordered="false"
-    >
-      当前 Client 版本 {{ clientVersion || '未知' }} 不包含本地直播转写能力，请升级到
-      {{ TRANSCRIPTION_MIN_CLIENT_VERSION }} 或更高版本。
-    </NAlert>
-
     <section class="setting-section">
       <NFlex
         justify="space-between"
         align="center"
       >
         <div>
-          <NText strong> 运行状态 </NText>
-          <div class="section-description">仅最终确认的字幕会上传归档，实时临时结果只在本机显示。</div>
+          <NText strong>
+            运行状态
+          </NText>
+          <div class="section-description">
+            最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。
+          </div>
         </div>
         <NTag
           :type="statusMeta.type"
@@ -159,6 +261,25 @@ async function stop() {
           {{ statusMeta.text }}
         </NTag>
       </NFlex>
+
+      <div
+        v-if="!isRunning"
+        class="readiness"
+      >
+        <div
+          v-for="item in readiness"
+          :key="item.label"
+          class="readiness-item"
+        >
+          <span
+            class="readiness-dot"
+            :data-state="item.state"
+          />
+          <NText :depth="item.state === 'ok' ? undefined : 3">
+            {{ item.label }}
+          </NText>
+        </div>
+      </div>
 
       <NFlex
         class="runtime-actions"
@@ -169,7 +290,7 @@ async function stop() {
           type="primary"
           size="small"
           :loading="isBusy"
-          :disabled="!isSupported"
+          :disabled="startBlocked"
           @click="start"
         >
           开始转写
@@ -185,38 +306,49 @@ async function stop() {
         </NButton>
         <NText depth="3">
           已归档 {{ transcription.archivedCount }} 条
-          <template v-if="transcription.pendingCount"> ，待上传 {{ transcription.pendingCount }} 条 </template>
+          <template v-if="transcription.pendingCount">
+            ，待上传 {{ transcription.pendingCount }} 条
+          </template>
+          <template v-if="sourceLabel">
+            · {{ sourceLabel }}
+          </template>
         </NText>
       </NFlex>
 
       <NAlert
-        v-if="transcription.status.message"
-        :type="transcription.status.phase === 'error' ? 'error' : 'info'"
+        v-if="notice"
+        :type="notice.type"
         size="small"
+        :bordered="false"
       >
-        {{ transcription.status.message }}
+        {{ notice.text }}
       </NAlert>
-      <NAlert
-        v-if="transcription.uploadError"
-        type="warning"
-        size="small"
-      >
-        {{ transcription.uploadError }}
-      </NAlert>
-      <NAlert
-        v-if="transcription.runtimeError"
-        type="warning"
-        size="small"
-      >
-        {{ transcription.runtimeError }}
-      </NAlert>
+
       <div
-        v-if="transcription.partialText || transcription.lastFinalText"
-        class="transcript-preview"
+        ref="transcriptEl"
+        class="transcript"
       >
-        <NText depth="3">
-          {{ transcription.partialText || transcription.lastFinalText }}
-        </NText>
+        <div
+          v-if="!transcription.lines.length && !transcription.partialText"
+          class="transcript-empty"
+        >
+          开始后在这里显示本场字幕
+        </div>
+        <div
+          v-for="(line, index) in transcription.lines"
+          :key="`${line.startMs}-${index}`"
+          class="transcript-line"
+        >
+          <span class="transcript-time">{{ formatOffset(line.startMs) }}</span>
+          <span>{{ line.text }}</span>
+        </div>
+        <div
+          v-if="transcription.partialText"
+          class="transcript-line transcript-line--partial"
+        >
+          <span class="transcript-time">…</span>
+          <span>{{ transcription.partialText }}</span>
+        </div>
       </div>
     </section>
 
@@ -228,8 +360,12 @@ async function stop() {
         align="center"
       >
         <div>
-          <NText strong> Provider 配置 </NText>
-          <div class="section-description">可保存多个本地配置，启动时使用当前选中的配置。</div>
+          <NText strong>
+            识别服务
+          </NText>
+          <div class="section-description">
+            可保存多个本地配置，启动时使用当前选中的配置。
+          </div>
         </div>
         <NFlex>
           <NButton
@@ -290,7 +426,7 @@ async function stop() {
             placeholder="用于区分本地配置"
           />
         </NFormItem>
-        <NFormItem label="Provider">
+        <NFormItem label="识别服务">
           <NSelect
             :value="activeProfile.provider"
             :options="[
@@ -385,10 +521,65 @@ async function stop() {
   min-height: 32px;
 }
 
-.transcript-preview {
+.readiness {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.readiness-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.readiness-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vtsuru-fg-muted);
+  flex: none;
+}
+
+.readiness-dot[data-state='ok'] {
+  background: var(--vtsuru-success, #18a058);
+}
+
+.readiness-dot[data-state='bad'] {
+  background: var(--vtsuru-error, #d03050);
+}
+
+.transcript {
+  max-height: 320px;
+  overflow: auto;
   padding: 10px 12px;
   border: 1px solid var(--vtsuru-border);
   border-radius: 6px;
   background: var(--vtsuru-bg-muted);
+}
+
+.transcript-empty {
+  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+}
+
+.transcript-line {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.transcript-line--partial {
+  color: var(--vtsuru-fg-muted);
+}
+
+.transcript-time {
+  flex: none;
+  width: 42px;
+  color: var(--vtsuru-fg-muted);
+  font-variant-numeric: tabular-nums;
 }
 </style>

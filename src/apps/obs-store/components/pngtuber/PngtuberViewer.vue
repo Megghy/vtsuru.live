@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useClipboard } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import { NAlert, NButton, NCard, NInput, NInputGroup, NSelect, NSpace, NTag, NText, useMessage } from 'naive-ui'
+import { ArrowLeft24Regular } from '@vicons/fluent'
+import { NAlert, NButton, NCard, NIcon, NInput, NInputGroup, NSelect, NSpace, NTag, NText, useMessage } from 'naive-ui'
 import { computed, onScopeDispose, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { useObsBridge } from '@/apps/obs-store/sync'
@@ -22,7 +23,16 @@ import PngtuberMicrophone from './PngtuberMicrophone.vue'
 import { usePngtuberHotkeys } from './usePngtuberHotkeys'
 const message = useMessage(),
   account = useAccount(),
-  route = useRoute()
+  route = useRoute(),
+  router = useRouter()
+const standalone = computed(() => route.name !== 'client-pngtuber-model')
+function goBack() {
+  if (window.history.state?.back) {
+    router.back()
+    return
+  }
+  void router.push(standalone.value ? { name: 'manage-obsStore' } : { name: 'client-pngtuber' })
+}
 const { copy } = useClipboard()
 const channel = ref(firstQueryValue(route.query.channel) || 'default')
 const channelDraft = ref(channel.value)
@@ -194,10 +204,24 @@ function changeChannel() {
 }
 </script>
 <template>
-  <NSpace
-    vertical
-    :size="12"
+  <div
+    class="pngtuber-page"
+    :class="{ standalone }"
   >
+    <NButton
+      quaternary
+      size="small"
+      @click="goBack"
+    >
+      <template #icon>
+        <NIcon :component="ArrowLeft24Regular" />
+      </template>
+      返回
+    </NButton>
+    <NSpace
+      vertical
+      :size="12"
+    >
     <NAlert
       v-if="!userId"
       type="warning"
@@ -402,9 +426,22 @@ function changeChannel() {
         >
       </div>
     </div>
-  </NSpace>
+    </NSpace>
+  </div>
 </template>
 <style scoped>
+.pngtuber-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--vtsuru-fg);
+  background: var(--vtsuru-bg);
+}
+.pngtuber-page.standalone {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: 16px 20px 32px;
+}
 .workbench {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(300px, 1fr);

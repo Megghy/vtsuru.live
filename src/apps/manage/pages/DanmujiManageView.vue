@@ -5,14 +5,14 @@ import {
   NAlert, NButton, NCheckbox, NCollapse, NCollapseItem, NFlex, NFormItem, NIcon,
   NInput, NInputNumber, NPopconfirm, NSelect, NSwitch, NTabPane, NTabs, useMessage,
 } from 'naive-ui'
-import { computed, onActivated, onDeactivated, onMounted, ref, shallowRef } from 'vue'
+import { computed, onActivated, onDeactivated, ref, shallowRef } from 'vue'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes, type EventModel } from '@/api/api-models'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
 import DanmujiRulesEditor from '@/apps/manage/components/danmuji/DanmujiRulesEditor.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
-import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
+import DanmujiStyleEditor from '@/apps/manage/components/danmuji/DanmujiStyleEditor.vue'
 import { normalizeDanmujiConfig } from '@/shared/danmujiConfig'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
@@ -21,13 +21,17 @@ import { copyToClipboard } from '@/shared/utils'
 
 const message = useMessage()
 const accountInfo = useAccount()
-const css = usePersistedStorage('danmuji-css', defaultDanmujiCss)
-if (!css.value) css.value = defaultDanmujiCss
-const config = usePersistedStorage('Danmuji.Config', normalizeDanmujiConfig())
-config.value = normalizeDanmujiConfig(config.value)
+const legacyCss = usePersistedStorage('danmuji-css', '')
+const config = usePersistedStorage('Danmuji.Config', normalizeDanmujiConfig(), {
+  serializer: { read: value => normalizeDanmujiConfig(JSON.parse(value)), write: JSON.stringify },
+  onReady: () => {
+    if (accountInfo.value?.id) void loadConfig()
+    else isLoading.value = false
+  },
+})
 const serverSnapshot = ref<string | null>(null)
 const isSaving = ref(false)
-const isLoading = ref(false)
+const isLoading = ref(true)
 const isDirty = computed(() => JSON.stringify(config.value) !== serverSnapshot.value)
 const activeTab = ref('style')
 const preview = shallowRef<InstanceType<typeof DanmujiOBS>>()
@@ -103,7 +107,7 @@ async function onPreviewReady() {
 }
 
 function resetCss() {
-  css.value = defaultDanmujiCss
+  config.value.style.customCss = ''
 }
 
 async function copy(value: string, label: string) {
@@ -119,7 +123,7 @@ async function loadConfig() {
       config.value = normalizeDanmujiConfig(result.data)
       serverSnapshot.value = JSON.stringify(config.value)
     } else if (result.status !== 'notfound') {
-      message.error(result.msg || '读取云端规则失败')
+      message.error(result.msg || '读取云端配置失败')
     }
   } finally {
     isLoading.value = false
@@ -127,12 +131,16 @@ async function loadConfig() {
 }
 
 async function saveConfig() {
-  isSaving.value = true
   const snapshot = JSON.stringify(config.value)
+  if (new TextEncoder().encode(snapshot).byteLength > 512 * 1024) {
+    message.error('配置超过 512 KiB（UTF-8），请精简自定义 CSS 或表情规则后保存')
+    return
+  }
+  isSaving.value = true
   try {
     if (await UploadConfig('danmuji-config', JSON.parse(snapshot))) {
       serverSnapshot.value = snapshot
-      message.success('功能规则已保存至云端')
+      message.success('样式与规则已保存，OBS 将在五秒内同步')
     } else message.error('保存失败')
   } catch (error) {
     message.error(`保存失败：${error instanceof Error ? error.message : String(error)}`)
@@ -141,7 +149,6 @@ async function saveConfig() {
   }
 }
 
-onMounted(() => { if (accountInfo.value?.id) void loadConfig() })
 onDeactivated(() => {
   pause()
   previewReady.value = false
@@ -158,33 +165,41 @@ onActivated(() => { previewVisible.value = true })
           <template #icon><NIcon :component="Copy24Regular" /></template>复制 OBS 链接
         </NButton>
         <NButton v-if="accountInfo?.id" size="small" type="primary" :loading="isSaving" :disabled="isLoading || !isDirty" @click="saveConfig">
-          {{ isDirty ? '保存功能规则' : '规则已同步' }}
+          {{ isDirty ? '保存配置' : '已同步' }}
         </NButton>
       </template>
     </ManagePageHeader>
 
     <div class="workspace">
       <section class="editor-panel" aria-label="弹幕姬设置">
-        <NTabs v-model:value="activeTab" type="line" size="small">
+        <NAlert v-if="isLoading" :show-icon="false" type="info" class="loading-note">正在读取配置…</NAlert>
+        <NTabs :inert="isLoading" v-model:value="activeTab" type="line" size="small">
           <NTabPane name="style" tab="样式定制" display-directive="show">
+            <DanmujiStyleEditor v-model="config.style" />
+            <NAlert v-if="legacyCss" :show-icon="false" type="info" style="margin-top: 12px">
+              此浏览器留有旧版 CSS，可导入后保存至云端。
+              <NPopconfirm @positive-click="config.style.customCss = legacyCss">
+                <template #trigger><NButton size="tiny" secondary>导入本地 CSS</NButton></template>
+                用旧版 CSS 替换当前自定义覆盖？
+              </NPopconfirm>
+            </NAlert>
             <div class="section-heading css-heading">
-              <h2>自定义 CSS</h2>
+              <h2>自定义覆盖 CSS</h2>
               <NFlex :size="6">
                 <NPopconfirm @positive-click="resetCss">
                   <template #trigger><NButton size="tiny" quaternary aria-label="重置样式"><template #icon><NIcon :component="ArrowReset24Regular" /></template>重置</NButton></template>
-                  确定恢复默认样式吗？自定义 CSS 将被覆盖。
+                  确定清空自定义覆盖 CSS，恢复预设与参数的效果吗？
                 </NPopconfirm>
-                <NButton size="tiny" secondary @click="copy(css, 'CSS')"><template #icon><NIcon :component="Copy24Regular" /></template>复制 CSS</NButton>
+                <NButton size="tiny" secondary @click="copy(config.style.customCss, 'CSS')"><template #icon><NIcon :component="Copy24Regular" /></template>复制 CSS</NButton>
               </NFlex>
             </div>
             <div class="code-editor">
-              <MonacoEditorComponent v-model:value="css" language="css" :height="380" :options="{ minimap: { enabled: false }, fontSize: 13, wordWrap: 'on', scrollBeyondLastLine: false, tabSize: 2 }" />
+              <MonacoEditorComponent v-model:value="config.style.customCss" language="css" :height="380" :options="{ minimap: { enabled: false }, fontSize: 13, wordWrap: 'on', scrollBeyondLastLine: false, tabSize: 2 }" />
             </div>
-            <p class="hint">修改会自动保存在当前浏览器，并实时应用到右侧预览。</p>
+            <p class="hint">修改实时应用到预览，点击「保存配置」后同步至 OBS。预设和参数不会改写自定义 CSS；自定义覆盖优先。</p>
           </NTabPane>
           <NTabPane name="rules" tab="功能规则" display-directive="show">
-            <NAlert v-if="isLoading" :show-icon="false" type="info" class="loading-note">正在读取云端规则…</NAlert>
-            <DanmujiRulesEditor v-model="config" @reset="config = normalizeDanmujiConfig()" />
+            <DanmujiRulesEditor v-model="config" @reset="config = { ...normalizeDanmujiConfig(), style: config.style }" />
           </NTabPane>
         </NTabs>
         <NCollapse class="obs-help">
@@ -192,9 +207,9 @@ onActivated(() => { previewVisible.value = true })
             <ol>
               <li>复制 OBS 链接，添加到 OBS 的「浏览器」来源。</li>
               <li>将 OBS 来源宽高设为 {{ sourceWidth }} × {{ sourceHeight }}；勾选「完整画布」可核对实际比例与换行。</li>
-              <li>复制 CSS，粘贴到该来源的「自定义 CSS」。之后修改样式也需重新粘贴。</li>
+              <li>点击「保存配置」，样式与规则将自动同步。</li>
             </ol>
-            <p class="hint">功能规则通过上方按钮保存至云端，OBS 会自动读取。</p>
+            <p class="hint">旧样式若只保存在 OBS，请将其粘贴到上方自定义 CSS 并保存，再清理 OBS 中的旧覆盖，避免样式冲突。</p>
           </NCollapseItem>
         </NCollapse>
       </section>
@@ -215,7 +230,7 @@ onActivated(() => { previewVisible.value = true })
           <div ref="viewport" class="viewport">
             <div class="scaled-bounds" :style="fullCanvas ? { width: `${sourceWidth * scale}px`, height: `${sourceHeight * scale}px` } : { width: '100%', height: '100%' }">
               <div class="source-canvas" :style="stageStyle">
-                <DanmujiOBS v-if="previewVisible" ref="preview" preview :custom-css="css" :config="config" @ready="onPreviewReady" />
+                <DanmujiOBS v-if="previewVisible" ref="preview" preview :config="config" @ready="onPreviewReady" />
               </div>
             </div>
           </div>

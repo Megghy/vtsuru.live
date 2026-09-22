@@ -1,7 +1,15 @@
 import { NButton, NFlex, NText } from 'naive-ui'
 import { h } from 'vue'
 
-import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
+import {
+  GetSelfAccount,
+  Login,
+  UpdateAccountLoop,
+  applyAccountSession,
+  isLoadingAccount,
+  useAccount,
+} from '@/api/account'
+import { cookie } from '@/api/auth'
 import { QueryGetAPI } from '@/api/query'
 import { BASE_API_URL, isAutomaticAPIFailover, isTauri, markAPIFailover, setSelectedAPIKey } from '@/shared/config'
 import { setSentryUser } from '@/shared/services/sentry'
@@ -121,10 +129,36 @@ async function initHyperDX() {
   }
 }
 
+// 本地调试自动登录: 在 .env.local 配 VITE_DEV_LOGIN_TOKEN 或 VITE_DEV_LOGIN_NAME + VITE_DEV_LOGIN_PASSWORD
+// 免去 Playwright 等无头环境手动登录; 生产构建下 import.meta.env.DEV 为 false, 整段被摇树删除
+async function devAutoLogin() {
+  if (!import.meta.env.DEV || cookie.value?.cookie) return
+
+  const token = import.meta.env.VITE_DEV_LOGIN_TOKEN?.trim()
+  if (token) {
+    await GetSelfAccount(token)
+    return
+  }
+
+  const name = import.meta.env.VITE_DEV_LOGIN_NAME?.trim()
+  const password = import.meta.env.VITE_DEV_LOGIN_PASSWORD
+  if (!name || !password) return
+
+  const result = await Login(name, password)
+  if (result.code != 200) {
+    console.warn(`[vtsuru] dev 自动登录失败: ${result.message}`)
+    return
+  }
+  applyAccountSession(result.data)
+  isLoadingAccount.value = false
+  console.log(`[vtsuru] dev 自动登录成功: ${result.data.account.name}`)
+}
+
 async function InitOther() {
   await initHyperDX()
   // 加载其他数据
   void InitTTS()
+  await devAutoLogin()
   const routeToken = new URLSearchParams(window.location.search).get('token')?.trim() || undefined
   await GetSelfAccount(routeToken)
   const account = useAccount()

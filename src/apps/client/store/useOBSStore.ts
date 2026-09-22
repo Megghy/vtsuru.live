@@ -518,6 +518,19 @@ export const useOBSStore = defineStore('obs', () => {
     }
   }
 
+  async function inspectPreflight() {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    const [stream, scenes] = await Promise.all([
+      obs.call('GetStreamServiceSettings'),
+      obs.call('GetSceneList'),
+    ])
+    // 自检只返回是否已填写，不把推流密钥带到面板或诊断结果中。
+    return {
+      streamReady: Boolean(stream.streamServiceSettings.server && stream.streamServiceSettings.key),
+      scenes: scenes.scenes.map(scene => String(scene.sceneName)),
+    }
+  }
+
   // 保存场景配置
   async function saveSceneConfig() {
     try {
@@ -583,6 +596,7 @@ export const useOBSStore = defineStore('obs', () => {
     obsInputs,
     fetchObsInputs,
     subscribeInputVolume,
+    inspectPreflight,
     // 状态
     obsAddress,
     obsPassword,

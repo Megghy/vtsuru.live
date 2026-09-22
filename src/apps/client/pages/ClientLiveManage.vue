@@ -1,16 +1,39 @@
 <script setup lang="ts">
+import { openUrl } from '@tauri-apps/plugin-opener'
 import { Desktop24Filled, Live24Filled } from '@vicons/fluent'
 import { NFlex, NIcon, NTabPane, NTabs, NTag } from 'naive-ui'
-import { h } from 'vue'
+import { nextTick, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import FaceAuthModal from '@/apps/client/components/live-manage/FaceAuthModal.vue'
 import LiveControlPanel from '@/apps/client/components/live-manage/LiveControlPanel.vue'
+import LivePreflightPanel from '@/apps/client/components/live-manage/LivePreflightPanel.vue'
 import LiveStreamInfo from '@/apps/client/components/live-manage/LiveStreamInfo.vue'
 import ObsControlPanel from '@/apps/client/components/live-manage/ObsControlPanel.vue'
+import type { CheckTarget } from '@/apps/client/components/live-manage/preflight'
 import { useLiveControl } from '@/apps/client/composables/useLiveControl'
+import { useLivePreflight } from '@/apps/client/composables/useLivePreflight'
 
 const control = useLiveControl()
+const preflight = useLivePreflight(control)
+const activeTab = ref('control')
+const settingsPanel = ref<HTMLElement>()
+const router = useRouter()
+
+async function navigateCheck(target: CheckTarget) {
+  if (target === 'account') {
+    await openUrl('https://vtsuru.live/manage')
+    return
+  }
+  if (target === 'fetcher') {
+    await router.push({ name: 'client-fetcher' })
+    return
+  }
+  activeTab.value = target
+  await nextTick()
+  settingsPanel.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 </script>
 
 <template>
@@ -41,56 +64,65 @@ const control = useLiveControl()
         </template>
       </ClientPageHeader>
 
-      <!-- 统一 Segmented 分段导航 -->
-      <NTabs
-        type="segment"
-        animated
-        default-value="control"
-        class="live-manage-tabs"
-      >
-        <NTabPane
-          name="control"
-          tab="直播控制"
+      <LivePreflightPanel
+        :checks="preflight.checks.value"
+        :refreshing="preflight.refreshing.value"
+        :error="preflight.error.value"
+        :checked-at="preflight.checkedAt.value"
+        @refresh="preflight.refresh"
+        @navigate="navigateCheck"
+      />
+      <div ref="settingsPanel">
+        <NTabs
+          v-model:value="activeTab"
+          type="segment"
+          animated
+          class="live-manage-tabs"
         >
-          <template #tab>
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <NIcon :component="Live24Filled" />
-              <span>直播控制</span>
-            </NFlex>
-          </template>
-
-          <NFlex
-            vertical
-            :size="12"
-            class="client-readable"
+          <NTabPane
+            name="control"
+            tab="直播控制"
           >
-            <LiveControlPanel :control="control" />
-            <LiveStreamInfo :control="control" />
-          </NFlex>
-        </NTabPane>
+            <template #tab>
+              <NFlex
+                align="center"
+                :size="6"
+              >
+                <NIcon :component="Live24Filled" />
+                <span>直播控制</span>
+              </NFlex>
+            </template>
 
-        <NTabPane
-          name="obs"
-          tab="OBS 与统计"
-        >
-          <template #tab>
             <NFlex
-              align="center"
-              :size="6"
+              vertical
+              :size="12"
+              class="client-readable"
             >
-              <NIcon :component="Desktop24Filled" />
-              <span>OBS 与统计</span>
+              <LiveControlPanel :control="control" />
+              <LiveStreamInfo :control="control" />
             </NFlex>
-          </template>
+          </NTabPane>
 
-          <div class="client-readable">
-            <ObsControlPanel :control="control" />
-          </div>
-        </NTabPane>
-      </NTabs>
+          <NTabPane
+            name="obs"
+            tab="OBS 与统计"
+          >
+            <template #tab>
+              <NFlex
+                align="center"
+                :size="6"
+              >
+                <NIcon :component="Desktop24Filled" />
+                <span>OBS 与统计</span>
+              </NFlex>
+            </template>
+
+            <div class="client-readable">
+              <ObsControlPanel :control="control" />
+            </div>
+          </NTabPane>
+        </NTabs>
+      </div>
     </NFlex>
 
     <!-- 人脸认证弹窗 -->

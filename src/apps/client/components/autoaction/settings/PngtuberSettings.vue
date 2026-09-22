@@ -63,7 +63,7 @@ function test() {
         placeholder="5000"
     /></NFormItem>
     <RouterLink :to="{ name: 'client-pngtuber' }">前往启动驱动</RouterLink>
-    <RouterLink :to="{ name: 'obs-store-pngtuber-manage', query: { channel: targetChannel } }">编辑目标频道表情</RouterLink>
+    <RouterLink :to="{ name: 'client-pngtuber-model', query: { channel: targetChannel } }">编辑目标频道表情</RouterLink>
     <NButton
       :disabled="testing || !action.actionConfig.pngtuberExpressionId?.trim()"
       :loading="testing"

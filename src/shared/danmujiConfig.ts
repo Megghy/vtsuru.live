@@ -2,7 +2,10 @@
  * 弹幕姬配置契约与工具
  */
 
+import { defaultDanmujiStyle, normalizeDanmujiStyle, type DanmujiStyle } from './danmujiStyle'
+
 export interface DanmujiConfig {
+  style: DanmujiStyle
   minGiftPrice: number
   showDanmaku: boolean
   showGift: boolean
@@ -26,6 +29,7 @@ export interface DanmujiConfig {
 }
 
 export const defaultDanmujiConfig: DanmujiConfig = {
+  style: defaultDanmujiStyle,
   minGiftPrice: 0.1,
   showDanmaku: true,
   showGift: true,
@@ -62,6 +66,7 @@ export function normalizeDanmujiConfig(input?: unknown): DanmujiConfig {
     if (typeof fallback === 'number' && (typeof value === 'number' || typeof value === 'string' && value.trim() !== '') && Number.isFinite(Number(value))) Object.assign(config, { [key]: Number(value) })
   }
   config.blockUsers = normalizeList(raw.blockUsers)
+  config.style = normalizeDanmujiStyle(raw.style)
   config.blockKeywords = normalizeList(raw.blockKeywords)
   if (Array.isArray(raw.emoticons)) {
     config.emoticons = raw.emoticons.filter((item) => item && typeof item.keyword === 'string' && item.keyword && typeof item.url === 'string' && item.url).map(({ keyword, url }) => ({ keyword, url }))

@@ -6,7 +6,6 @@ import {
   Alert24Filled,
   ArrowSync24Regular,
   Info24Filled,
-  Mic24Filled,
   Save24Filled,
   Settings24Filled,
 } from '@vicons/fluent'
@@ -30,13 +29,12 @@ import {
   NText,
 } from 'naive-ui'
 import { h, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { ThemeType } from '@/api/api-models'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
-import ClientTranscriptionPanel from '@/apps/client/components/settings/ClientTranscriptionPanel.vue'
 import type { NotificationType } from '@/apps/client/store/useSettings'
 import { useSettings } from '@/apps/client/store/useSettings'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -45,7 +43,9 @@ import { useWebFetcher } from '@/store/useWebFetcher'
 // --- State ---
 
 const route = useRoute()
-const currentTab = ref((route.query.tab as string) || 'general')
+const router = useRouter()
+if (route.query.tab === 'transcription') void router.replace({ name: 'client-transcription' })
+const currentTab = ref(route.query.tab === 'transcription' ? 'general' : (route.query.tab as string) || 'general')
 const isLoading = ref(true)
 const errorMsg = ref<string | null>(null)
 const titleClickCount = ref(0)
@@ -100,11 +100,6 @@ const navOptions: MenuOption[] = [
     label: '系统通知',
     key: 'notification',
     icon: () => h(NIcon, null, { default: () => h(Alert24Filled) }),
-  },
-  {
-    label: '语音转写',
-    key: 'transcription',
-    icon: () => h(NIcon, null, { default: () => h(Mic24Filled) }),
   },
   {
     label: '数据备份',
@@ -432,17 +427,6 @@ function handleTitleClick() {
                         桌面通知已全局关闭
                       </NText>
                     </NFlex>
-                  </NCard>
-                </template>
-
-                <!-- 语音转写 -->
-                <template v-else-if="currentTab === 'transcription'">
-                  <NCard
-                    title="语音转写"
-                    size="small"
-                    bordered
-                  >
-                    <ClientTranscriptionPanel />
                   </NCard>
                 </template>
 

@@ -1,32 +1,20 @@
 <script>
 import { cloneDeep } from 'lodash-es'
 import { defineComponent } from 'vue'
+import { defaultDanmujiStyle } from '@/shared/danmujiStyle'
 
 import * as constants from './constants'
 import MembershipItem from './MembershipItem.vue'
 import PaidMessage from './PaidMessage.vue'
 import TextMessage from './TextMessage.vue'
 import Ticker from './Ticker.vue'
-
-// 要添加的消息类型
-const ADD_MESSAGE_TYPES = new Set([
-  constants.MESSAGE_TYPE_TEXT,
-  constants.MESSAGE_TYPE_GIFT,
-  constants.MESSAGE_TYPE_MEMBER,
-  constants.MESSAGE_TYPE_SUPER_CHAT,
-])
-// 发送消息时间间隔范围
-const MESSAGE_MIN_INTERVAL = 80
-const MESSAGE_MAX_INTERVAL = 1000
-
-// 每次发送消息后增加的动画时间，要比MESSAGE_MIN_INTERVAL稍微大一点，太小了动画不连续，太大了发送消息时会中断动画
-// 84 = ceil((1000 / 60) * 5)
-const CHAT_SMOOTH_ANIMATION_TIME_MS = 84
-// 滚动条距离底部小于多少像素则认为在底部
-const SCROLLED_TO_BOTTOM_EPSILON = 15
+import messageScroll from './messageScroll'
+import messageMerge from './messageMerge'
+import messageQueue from './messageQueue'
 
 export default defineComponent({
   name: 'ChatRenderer',
+  mixins: [messageScroll, messageMerge, messageQueue],
   components: {
     Ticker,
     TextMessage,
@@ -34,6 +22,7 @@ export default defineComponent({
     PaidMessage,
   },
   props: {
+    appearance: { type: Object, default: () => ({ ...defaultDanmujiStyle }) },
     maxNumber: {
       type: Number,
       default: 60,
@@ -77,15 +66,23 @@ export default defineComponent({
       cantScrollStartTime: null, // 开始不能自动滚动的时间，用来防止卡住
 
       customStyleElement: null,
+      expiryTimer: null,
 
     }
   },
   computed: {
+    displayMessages() {
+      return this.appearance.reverse ? this.messages : this.messages.toReversed()
+    },
     canScrollToBottom() {
       return this.atBottom /* || this.allowScroll */
     },
   },
   watch: {
+    'appearance.reverse'() {
+      this.resetSmoothScroll()
+      this.$nextTick(this.scrollToBottom)
+    },
     canScrollToBottom(val) {
       this.cantScrollStartTime = val ? null : new Date()
     },
@@ -97,9 +94,18 @@ export default defineComponent({
     },
   },
   mounted() {
+    this.expiryTimer = window.setInterval(() => {
+      if (!this.appearance.autoHide) return
+      const cutoff = Date.now() - this.appearance.autoHide * 1000
+      const expired = new Set([...this.messages, ...this.paidMessages, ...this.messagesBuffer]
+        .filter(message => message.addTime.getTime() <= cutoff).map(message => message.id))
+      for (const id of expired) this.handleDelMessage({ id })
+      if (expired.size) this.$nextTick(this.maybeResizeScrollContainer)
+    }, 1000)
     this.scrollToBottom()
   },
   beforeUnmount() {
+    window.clearInterval(this.expiryTimer)
     if (this.emitSmoothedMessageTimerId) {
       window.clearTimeout(this.emitSmoothedMessageTimerId)
       this.emitSmoothedMessageTimerId = null
@@ -132,57 +138,6 @@ export default defineComponent({
         document.head.appendChild(this.customStyleElement)
       }
       this.customStyleElement.textContent = css
-    },
-    // 后悔加这个功能了
-    mergeSimilarText(content) {
-      content = content.trim().toLowerCase()
-      for (const message of this.iterRecentMessages(5)) {
-        if (message.type !== constants.MESSAGE_TYPE_TEXT) {
-          continue
-        }
-
-        const messageContent = message.content.trim().toLowerCase()
-        let longer, shorter
-        if (messageContent.length > content.length) {
-          longer = messageContent
-          shorter = content
-        } else {
-          longer = content
-          shorter = messageContent
-        }
-
-        if (
-          longer.includes(shorter) && // 长的包含短的
-          longer.length - shorter.length < shorter.length // 长度差较小
-        ) {
-          this.updateMessage(message.id, {
-            $add: {
-              repeated: 1,
-            },
-          })
-          return true
-        }
-      }
-      return false
-    },
-    mergeSimilarGift(authorName, price, _freePrice, giftName, num) {
-      for (const message of this.iterRecentMessages(5)) {
-        if (
-          message.type === constants.MESSAGE_TYPE_GIFT &&
-          message.authorName === authorName &&
-          message.giftName === giftName
-        ) {
-          this.updateMessage(message.id, {
-            $add: {
-              price,
-              // freePrice: freePrice, // 暂时没用到
-              num,
-            },
-          })
-          return true
-        }
-      }
-      return false
     },
     // 从新到老迭代num条消息，注意会迭代smoothedMessageQueue，不会迭代paidMessages
     *iterRecentMessages(num, onlyCountAddMessages = true) {
@@ -256,108 +211,6 @@ export default defineComponent({
       ])
     },
 
-    enqueueMessages(messages) {
-      // 估计进队列时间间隔
-      if (!this.lastEnqueueTime) {
-        this.lastEnqueueTime = new Date()
-      } else {
-        const curTime = new Date()
-        const interval = curTime - this.lastEnqueueTime
-        // 真实的进队列时间间隔模式大概是这样：2500, 300, 300, 300, 2500, 300, ...
-        // B站消息有缓冲，会一次发多条消息。这里把波峰视为发送了一次真实的WS消息，所以要过滤掉间隔太小的
-        if (interval > 1000 || this.enqueueIntervals.length < 5) {
-          this.enqueueIntervals.push(interval)
-          if (this.enqueueIntervals.length > 5) {
-            this.enqueueIntervals.splice(0, this.enqueueIntervals.length - 5)
-          }
-          // 这边估计得尽量大，只要不太早把消息缓冲发完就是平滑的。有MESSAGE_MAX_INTERVAL保底，不会让消息延迟太大
-          // 使用Math.max计算最大值来估计下次入队时间间隔
-          this.estimatedEnqueueInterval = Math.max(...this.enqueueIntervals)
-        }
-        // 上次入队时间还是要设置，否则会太早把消息缓冲发完，然后较长时间没有新消息
-        this.lastEnqueueTime = curTime
-      }
-
-      // 把messages分成messageGroup，每个组里最多有1个需要平滑的消息
-      let messageGroup = []
-      for (const message of messages) {
-        messageGroup.push(message)
-        if (this.isAddMessage(message)) {
-          this.smoothedMessageQueue.push(messageGroup)
-          messageGroup = []
-        }
-      }
-      // 还剩下不需要平滑的消息
-      if (messageGroup.length > 0) {
-        if (this.smoothedMessageQueue.length > 0) {
-          // 和上一组合并
-          const lastMessageGroup = this.smoothedMessageQueue.at(-1)
-          lastMessageGroup.push(...messageGroup)
-        } else {
-          // 自己一个组
-          this.smoothedMessageQueue.push(messageGroup)
-        }
-      }
-
-      if (!this.emitSmoothedMessageTimerId) {
-        this.emitSmoothedMessageTimerId = window.setTimeout(this.emitSmoothedMessages)
-      }
-    },
-    isAddMessage({ type }) {
-      return ADD_MESSAGE_TYPES.has(type)
-    },
-    emitSmoothedMessages() {
-      this.emitSmoothedMessageTimerId = null
-      if (this.smoothedMessageQueue.length <= 0) {
-        return
-      }
-
-      // 估计的下次进队列剩余时间
-      let estimatedNextEnqueueRemainTime = 10 * 1000
-      if (this.estimatedEnqueueInterval) {
-        estimatedNextEnqueueRemainTime = Math.max(this.lastEnqueueTime - new Date() + this.estimatedEnqueueInterval, 1)
-      }
-      // 计算发送的消息数，保证在下次进队列之前发完
-      // 下次进队列之前应该发多少条消息
-      const shouldEmitGroupNum = Math.max(this.smoothedMessageQueue.length, 0)
-      // 下次进队列之前最多能发多少次
-      const maxCanEmitCount = estimatedNextEnqueueRemainTime / MESSAGE_MIN_INTERVAL
-      // 这次发多少条消息
-      let groupNumToEmit
-      if (shouldEmitGroupNum < maxCanEmitCount) {
-        // 队列中消息数很少，每次发1条也能发完
-        groupNumToEmit = 1
-      } else {
-        // 每次发1条以上，保证按最快速度能发完
-        groupNumToEmit = Math.ceil(shouldEmitGroupNum / maxCanEmitCount)
-      }
-
-      // 发消息
-      const messageGroups = this.smoothedMessageQueue.splice(0, groupNumToEmit)
-      const mergedGroup = messageGroups.flat()
-      this.handleMessageGroup(mergedGroup)
-
-      if (this.smoothedMessageQueue.length <= 0) {
-        return
-      }
-      // 消息没发完，计算下次发消息时间
-      let sleepTime
-      if (groupNumToEmit === 1) {
-        // 队列中消息数很少，随便定个[MESSAGE_MIN_INTERVAL, MESSAGE_MAX_INTERVAL]的时间
-        sleepTime = estimatedNextEnqueueRemainTime / this.smoothedMessageQueue.length
-        sleepTime *= 0.5 + Math.random()
-        if (sleepTime > MESSAGE_MAX_INTERVAL) {
-          sleepTime = MESSAGE_MAX_INTERVAL
-        } else if (sleepTime < MESSAGE_MIN_INTERVAL) {
-          sleepTime = MESSAGE_MIN_INTERVAL
-        }
-      } else {
-        // 按最快速度发
-        sleepTime = MESSAGE_MIN_INTERVAL
-      }
-      this.emitSmoothedMessageTimerId = window.setTimeout(this.emitSmoothedMessages, sleepTime)
-    },
-
     handleMessageGroup(messageGroup) {
       if (messageGroup.length <= 0) {
         return
@@ -389,7 +242,7 @@ export default defineComponent({
       // 添加一个本地时间给Ticker用，防止本地时间和服务器时间相差很大的情况
       message.addTime = new Date()
 
-      if (message.type !== constants.MESSAGE_TYPE_TEXT) {
+      if (message.type === constants.MESSAGE_TYPE_SUPER_CHAT || message.type === constants.MESSAGE_TYPE_GIFT && message.price >= this.appearance.pinnedMinPrice) {
         this.paidMessages.unshift(cloneDeep(message))
         const MAX_PAID_MESSAGE_NUM = 100
         if (this.paidMessages.length > MAX_PAID_MESSAGE_NUM) {
@@ -485,127 +338,7 @@ export default defineComponent({
       await this.$nextTick()
       this.showNewMessages()
     },
-    showNewMessages() {
-      const refs = this.scrollRefs()
-      if (!refs) return
-      const hasScrollBar = refs.items.clientHeight > refs.scroller.clientHeight
-      refs.itemOffset.style.height = `${refs.items.clientHeight}px`
-      if (!this.canScrollToBottomOrTimedOut() || !hasScrollBar) {
-        return
-      }
 
-      // 计算剩余像素
-      this.scrollPixelsRemaining += refs.items.clientHeight - this.preinsertHeight
-      this.scrollToBottom()
-
-      // 计算是否平滑滚动、剩余时间
-      if (!this.lastSmoothChatMessageAddMs) {
-        this.lastSmoothChatMessageAddMs = performance.now()
-      }
-      const interval = performance.now() - this.lastSmoothChatMessageAddMs
-      this.chatRateMs = 0.9 * this.chatRateMs + 0.1 * interval
-      if (this.isSmoothed) {
-        if (this.chatRateMs < 400) {
-          this.isSmoothed = false
-        }
-      } else {
-        if (this.chatRateMs > 450) {
-          this.isSmoothed = true
-        }
-      }
-      this.scrollTimeRemainingMs += this.isSmoothed ? CHAT_SMOOTH_ANIMATION_TIME_MS : 0
-
-      if (!this.smoothScrollRafHandle) {
-        this.smoothScrollRafHandle = window.requestAnimationFrame(this.smoothScroll)
-      }
-      this.lastSmoothChatMessageAddMs = performance.now()
-    },
-    smoothScroll(time) {
-      if (!this.lastSmoothScrollUpdate) {
-        // 第一帧
-        this.lastSmoothScrollUpdate = time
-        this.smoothScrollRafHandle = window.requestAnimationFrame(this.smoothScroll)
-        return
-      }
-
-      const interval = time - this.lastSmoothScrollUpdate
-      if (
-        this.scrollPixelsRemaining <= 0 ||
-        this.scrollPixelsRemaining >= 400 || // 已经滚动到底部或者离底部太远则结束
-        interval >= 1000 || // 离上一帧时间太久，可能用户切换到其他网页
-        this.scrollTimeRemainingMs <= 0 // 时间已结束
-      ) {
-        this.resetSmoothScroll()
-        return
-      }
-
-      const pixelsToScroll = (interval / this.scrollTimeRemainingMs) * this.scrollPixelsRemaining
-      this.scrollPixelsRemaining -= pixelsToScroll
-      if (this.scrollPixelsRemaining < 0) {
-        this.scrollPixelsRemaining = 0
-      }
-      this.scrollTimeRemainingMs -= interval
-      if (this.scrollTimeRemainingMs < 0) {
-        this.scrollTimeRemainingMs = 0
-      }
-      this.lastSmoothScrollUpdate = time
-      this.smoothScrollRafHandle = window.requestAnimationFrame(this.smoothScroll)
-    },
-    resetSmoothScroll() {
-      this.scrollTimeRemainingMs = this.scrollPixelsRemaining = 0
-      this.lastSmoothScrollUpdate = null
-      if (this.smoothScrollRafHandle) {
-        window.cancelAnimationFrame(this.smoothScrollRafHandle)
-        this.smoothScrollRafHandle = null
-      }
-    },
-
-    scrollRefs() {
-      const itemOffset = this.$refs.itemOffset
-      const items = this.$refs.items
-      const scroller = this.$refs.scroller
-      if (!itemOffset || !items || !scroller) return null
-      return { itemOffset, items, scroller }
-    },
-    maybeResizeScrollContainer() {
-      const refs = this.scrollRefs()
-      if (!refs) return
-      refs.itemOffset.style.height = `${refs.items.clientHeight}px`
-      refs.itemOffset.style.minHeight = `${refs.scroller.clientHeight}px`
-      this.maybeScrollToBottom()
-    },
-    maybeScrollToBottom() {
-      if (this.canScrollToBottomOrTimedOut()) {
-        this.scrollToBottom()
-      }
-    },
-    scrollToBottom() {
-      const refs = this.scrollRefs()
-      if (!refs) return
-      refs.scroller.scrollTop = 2 ** 24
-      this.atBottom = true
-    },
-    onScroll() {
-      this.refreshCantScrollStartTime()
-      const refs = this.scrollRefs()
-      if (!refs) return
-      const { scroller } = refs
-      this.atBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < SCROLLED_TO_BOTTOM_EPSILON
-      this.flushMessagesBuffer()
-    },
-    canScrollToBottomOrTimedOut() {
-      if (this.canScrollToBottom) {
-        return true
-      }
-      // 防止在OBS中卡住，超过一定时间也可以自动滚动
-      return new Date() - this.cantScrollStartTime >= 5 * 1000
-    },
-    refreshCantScrollStartTime() {
-      // 有鼠标事件时刷新，防止用户看弹幕时自动滚动
-      if (this.cantScrollStartTime) {
-        this.cantScrollStartTime = new Date()
-      }
-    },
   },
 })
 </script>
@@ -619,6 +352,7 @@ export default defineComponent({
   >
     <Ticker
       v-model:messages="paidMessages"
+      :min-gift-price="appearance.pinnedMinPrice"
       class="style-scope yt-live-chat-renderer"
       :show-gift-name="showGiftName || undefined"
     />
@@ -642,10 +376,10 @@ export default defineComponent({
             ref="items"
             class="style-scope yt-live-chat-item-list-renderer"
             style="overflow: hidden"
-            :style="{ transform: `translateY(${Math.floor(scrollPixelsRemaining)}px)` }"
+            :style="{ top: appearance.reverse ? undefined : 0, bottom: appearance.reverse ? 0 : 'auto', transform: `translateY(${Math.floor(appearance.reverse ? scrollPixelsRemaining : -scrollPixelsRemaining)}px)` }"
           >
             <template
-              v-for="message in messages"
+              v-for="message in displayMessages"
               :key="message.id"
             >
               <TextMessage

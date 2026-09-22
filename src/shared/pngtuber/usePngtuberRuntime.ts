@@ -1,4 +1,4 @@
-import { HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr'
+import { HttpTransportType, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr'
 import { onScopeDispose, ref, toValue, watch } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 
@@ -75,7 +75,12 @@ export function usePngtuberRuntime(
       const url = new URL(mapToCurrentAPI(`${BASE_HUB_URL}pngtuber`))
       if (controller) url.searchParams.set('token', account.value.token)
       const client = new HubConnectionBuilder()
-        .withUrl(url.toString())
+        .withUrl(url.toString(), {
+          // Caddy answers the credentialed negotiate preflight without
+          // Access-Control-Allow-Credentials, so the HTTP handshake never starts.
+          skipNegotiation: true,
+          transport: HttpTransportType.WebSockets,
+        })
         .configureLogging(LogLevel.Error)
         .withAutomaticReconnect()
         .build()

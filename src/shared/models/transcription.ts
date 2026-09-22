@@ -36,6 +36,7 @@ export type TranscriptionPhase =
   | 'connecting_provider'
   | 'starting_ffmpeg'
   | 'running'
+  | 'reconnecting'
   | 'stopping'
   | 'error'
 

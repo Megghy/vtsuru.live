@@ -71,3 +71,13 @@ describe('danmujiConfig contract', () => {
     expect(normalized.emoticons).toEqual([{ keyword: '233', url: 'https://example.com/233.png' }])
   })
 })
+
+
+it('旧配置补齐独立样式对象，外部非法参数在读取边界归一', () => {
+  const a = normalizeDanmujiConfig()
+  const b = normalizeDanmujiConfig()
+  a.style.fontSize = 32
+  expect(b.style.fontSize).toBe(18)
+  const config = normalizeDanmujiConfig({ style: { fontSize: 999, opacity: -1, autoHide: NaN, pinned: 'true', customCss: 'a {}' } })
+  expect(config.style).toMatchObject({ fontSize: 72, opacity: 0, autoHide: 0, pinned: false, customCss: 'a {}' })
+})

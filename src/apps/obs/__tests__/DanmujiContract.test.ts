@@ -2,11 +2,18 @@ import { normalizeDanmujiConfig } from '@/shared/danmujiConfig'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick, ref } from 'vue'
+import { defineComponent, nextTick, ref } from 'vue'
 
+import { DownloadConfig, GetConfigHash } from '@/api/account'
+import { useDanmujiConfig } from '@/apps/obs/composables/useDanmujiConfig'
+import * as messageTypes from '@/apps/obs/components/blivechat/constants'
+import { buildDanmujiCss } from '@/shared/danmujiStyle'
 import { EventDataTypes } from '@/api/api-models'
+import Ticker from '@/apps/obs/components/blivechat/Ticker.vue'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
+
+vi.mock('@/composables/useRouteQueryParam', () => ({ useRouteQueryParam: () => ref(undefined) }))
 
 vi.mock('@/api/query', () => ({
   QueryGetAPI: vi.fn().mockResolvedValue({ code: 200, data: [] }),
@@ -253,4 +260,95 @@ describe('DanmujiOBS 底层契约与预览隔离', () => {
 
     wrapper.unmount()
   })
+})
+
+
+describe('云端外观与消息生命周期', () => {
+  afterEach(() => { vi.useRealTimers(); vi.clearAllMocks() })
+
+  it('配置预览响应参数与自定义覆盖，切换预设不改写 CSS', async () => {
+    setActivePinia(createPinia())
+    const config = normalizeDanmujiConfig({ style: { customCss: '#message { color: red !important; }' } })
+    const wrapper = mount(DanmujiOBS, { props: { preview: true, config } })
+    const render = wrapper.findComponent(MessageRender)
+    expect(render.props('customCss')).toBe(buildDanmujiCss(config.style))
+    const changed = { ...config, style: { ...config.style, preset: 'bubble' as const, fontSize: 28, opacity: 0.5 } }
+    await wrapper.setProps({ config: changed })
+    expect(render.props('customCss')).toContain('--danmuji-font-size: 28px')
+    expect(render.props('customCss')).toContain('border-radius: 12px')
+    expect(render.props('customCss').trim().endsWith(config.style.customCss)).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('消息反序、礼物置顶阈值和到期清理复用同一消息源', async () => {
+    vi.useFakeTimers()
+    const appearance = normalizeDanmujiConfig({ style: { reverse: false, autoHide: 2, pinned: true, pinnedMinPrice: 30 } }).style
+    const wrapper = mount(MessageRender, { props: { appearance } })
+    for (const [id, type, price] of [['text', messageTypes.MESSAGE_TYPE_TEXT, 0], ['small', messageTypes.MESSAGE_TYPE_GIFT, 10], ['large', messageTypes.MESSAGE_TYPE_GIFT, 50]] as const) {
+      wrapper.vm.handleAddMessage({ id, type, price, time: new Date(), content: id })
+    }
+    expect(wrapper.vm.paidMessages.map((m: any) => m.id)).toEqual(['large'])
+    wrapper.vm.messages = [...wrapper.vm.messagesBuffer]
+    wrapper.vm.messagesBuffer = []
+    expect(wrapper.vm.displayMessages.map((m: any) => m.id)).toEqual(['large', 'small', 'text'])
+    await vi.advanceTimersByTimeAsync(3000)
+    expect(wrapper.vm.messages).toEqual([])
+    expect(wrapper.vm.paidMessages).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('首次读取配置、五秒同步变更，哈希未变不重复下载，卸载停止轮询', async () => {
+    vi.useFakeTimers()
+    vi.mocked(GetConfigHash).mockResolvedValue('first')
+    vi.mocked(DownloadConfig).mockResolvedValue({ status: 'success', msg: undefined, data: { style: { fontSize: 25 } } })
+    const Host = defineComponent({ setup: () => ({ config: useDanmujiConfig({ preview: false }) }), template: '<div>{{ config.style.fontSize }}</div>' })
+    const wrapper = mount(Host)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(wrapper.text()).toBe('25')
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(DownloadConfig).toHaveBeenCalledTimes(1)
+    vi.mocked(GetConfigHash).mockResolvedValue('second')
+    vi.mocked(DownloadConfig).mockResolvedValue({ status: 'success', msg: undefined, data: { style: { fontSize: 32 } } })
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(wrapper.text()).toBe('32')
+    wrapper.unmount()
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(GetConfigHash).toHaveBeenCalledTimes(3)
+  })
+})
+
+
+it('初次下载失败向 Vue 错误边界报错，下一周期同一哈希仍重新下载', async () => {
+  vi.useFakeTimers()
+  vi.clearAllMocks()
+  const errorHandler = vi.fn()
+  vi.mocked(GetConfigHash).mockResolvedValue('unchanged')
+  vi.mocked(DownloadConfig)
+    .mockResolvedValueOnce({ status: 'error', msg: '暂时无法下载', data: undefined })
+    .mockResolvedValue({ status: 'success', msg: undefined, data: { style: { fontSize: 36 } } })
+  const Host = defineComponent({ setup: () => ({ config: useDanmujiConfig({ preview: false }) }), template: '<div>{{ config.style.fontSize }}</div>' })
+  const wrapper = mount(Host, { global: { config: { errorHandler } } })
+  try {
+    await vi.advanceTimersByTimeAsync(0)
+    expect(errorHandler).toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(DownloadConfig).toHaveBeenCalledTimes(2)
+    expect(wrapper.text()).toBe('36')
+  } finally { wrapper.unmount(); vi.useRealTimers() }
+})
+
+
+it('30 元礼物在置顶栏保留，源消息撤回后关闭已展开的详情', async () => {
+  vi.useFakeTimers()
+  const message = { id: 'gift-30', type: messageTypes.MESSAGE_TYPE_GIFT, price: 30, addTime: new Date(), time: new Date(), authorName: '观众', giftName: '礼物', num: 1 }
+  const wrapper = mount(Ticker, { props: { messages: [message], minGiftPrice: 30 } })
+  try {
+    await vi.advanceTimersByTimeAsync(1000)
+    const item = wrapper.find('yt-live-chat-ticker-paid-message-item-renderer')
+    expect(item.exists()).toBe(true)
+    await item.trigger('click')
+    expect(wrapper.find('yt-live-chat-paid-message-renderer').exists()).toBe(true)
+    await wrapper.setProps({ messages: [] })
+    expect(wrapper.find('yt-live-chat-paid-message-renderer').exists()).toBe(false)
+  } finally { wrapper.unmount(); vi.useRealTimers() }
 })

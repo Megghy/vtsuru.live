@@ -3,22 +3,23 @@ import { NAlert } from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 // @ts-ignore
-import { DownloadConfig, GetConfigHash, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 // @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'
+import { getRichContent } from '@/apps/obs/components/blivechat/richContent'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
 // @ts-ignore
 import * as pronunciation from '@/apps/obs/components/blivechat/utils/pronunciation'
 // @ts-ignore
 import * as trie from '@/apps/obs/components/blivechat/utils/trie'
 import { VTSURU_API_URL } from '@/shared/config'
-import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
-import { type DanmujiConfig, defaultDanmujiConfig, normalizeDanmujiConfig } from '@/shared/danmujiConfig'
+import { buildDanmujiCss } from '@/shared/danmujiStyle'
+import { useDanmujiConfig } from '@/apps/obs/composables/useDanmujiConfig'
+import { type DanmujiConfig } from '@/shared/danmujiConfig'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
-import { usePersistedStorage } from '@/shared/storage/persist'
 import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -42,24 +43,14 @@ const emit = defineEmits<{
   (e: 'ready'): void
 }>()
 
-const persistedCss = usePersistedStorage('danmuji-css', '')
 
 const isOBS = computed(() => {
   // @ts-ignore
   return typeof window !== 'undefined' && window.obsstudio !== undefined
 })
 
-const effectiveCss = computed(() => {
-  if (props.customCss !== undefined && props.customCss !== null) {
-    return props.customCss
-  }
-  return persistedCss.value || defaultDanmujiCss
-})
-
-const internalConfig = ref<DanmujiConfig>({ ...defaultDanmujiConfig })
-
-
-const effectiveConfig = computed(() => props.config ?? internalConfig.value)
+const effectiveConfig = useDanmujiConfig(props)
+const effectiveCss = computed(() => props.customCss ?? buildDanmujiCss(effectiveConfig.value.style))
 const messageRender = ref<InstanceType<typeof MessageRender> | null>(null)
 const danmakuClient = useDanmakuClient()
 let client: Awaited<ReturnType<typeof danmakuClient.initOpenlive>> | null = null
@@ -128,7 +119,7 @@ async function onAddText(event: EventModel, _command: unknown) {
     return
   }
 
-  const richContent = await getRichContent(event)
+  const richContent = await getRichContent(event, emoticonsTrie.value)
   // 合并要放在异步调用后面，因为异步调用后可能有新的消息，会漏合并
   if (mergeSimilarText(event.msg)) {
     return
@@ -253,138 +244,6 @@ function getAuthorType(open_id: string, guard_level: number): number {
     return 1 // 舰长
   } else {
     return 0 // 普通用户
-  }
-}
-
-interface RichContentType {
-  type: number
-  text: string
-  url?: string
-  width?: number
-  height?: number
-}
-
-/**
- * 获取富文本内容（处理表情等）
- */
-async function getRichContent(data: EventModel): Promise<RichContentType[]> {
-  const richContent: RichContentType[] = []
-
-  // 官方的非文本表情
-  if (data.emoji) {
-    richContent.push({
-      type: constants.CONTENT_TYPE_IMAGE,
-      text: data.msg,
-      url: `${data.emoji}@256w_256h_1e_1c`,
-      width: 256,
-      height: 256,
-    })
-    return richContent
-  }
-
-  // 没有文本表情，只能是纯文本
-  if (effectiveConfig.value.emoticons.length === 0 && textEmoticons.length === 0) {
-    richContent.push({
-      type: constants.CONTENT_TYPE_TEXT,
-      text: data.msg,
-    })
-    return richContent
-  }
-
-  // 可能含有文本表情，需要解析
-  let startPos = 0
-  let pos = 0
-  while (pos < data.msg.length) {
-    const remainContent = data.msg.substring(pos)
-    const matchEmoticon = emoticonsTrie.value.lazyMatch(remainContent)
-    if (matchEmoticon === null) {
-      pos++
-      continue
-    }
-
-    // 加入之前的文本
-    if (pos !== startPos) {
-      richContent.push({
-        type: constants.CONTENT_TYPE_TEXT,
-        text: data.msg.slice(startPos, pos),
-      })
-    }
-
-    // 加入表情
-    richContent.push({
-      type: constants.CONTENT_TYPE_IMAGE,
-      text: matchEmoticon.keyword,
-      url: matchEmoticon.url,
-      width: 0,
-      height: 0,
-    })
-    pos += matchEmoticon.keyword.length
-    startPos = pos
-  }
-
-  // 加入尾部的文本
-  if (pos !== startPos) {
-    richContent.push({
-      type: constants.CONTENT_TYPE_TEXT,
-      text: data.msg.slice(startPos, pos),
-    })
-  }
-
-  await fillImageContentSizes(richContent)
-  return richContent
-}
-
-/**
- * 填充图片内容的尺寸信息
- */
-async function fillImageContentSizes(richContent: RichContentType[]) {
-  if (typeof document === 'undefined') {
-    return
-  }
-
-  const urlSizeMap = new Map()
-
-  // 收集所有需要获取尺寸的图片URL
-  for (const content of richContent) {
-    if (content.type === constants.CONTENT_TYPE_IMAGE && content.url) {
-      urlSizeMap.set(content.url, { width: 0, height: 0 })
-    }
-  }
-
-  if (urlSizeMap.size === 0) {
-    return
-  }
-
-  // 并行加载所有图片获取尺寸
-  const promises = []
-  for (const url of urlSizeMap.keys()) {
-    promises.push(
-      new Promise<void>((resolve) => {
-        const img = document.createElement('img')
-        img.onload = () => {
-          const size = urlSizeMap.get(url)
-          size.width = img.naturalWidth
-          size.height = img.naturalHeight
-          resolve()
-        }
-        // 获取失败了默认为0
-        img.onerror = () => resolve()
-        // 超时保底
-        window.setTimeout(() => resolve(), 5000)
-        img.src = url
-      }),
-    )
-  }
-
-  await Promise.all(promises)
-
-  // 应用获取的尺寸到富文本内容
-  for (const content of richContent) {
-    if (content.type === constants.CONTENT_TYPE_IMAGE && content.url) {
-      const size = urlSizeMap.get(content.url)
-      content.width = size.width
-      content.height = size.height
-    }
   }
 }
 
@@ -556,56 +415,6 @@ function addSystemNotice(message: string) {
   messageRender.value.addMessage(systemMessage)
 }
 
-let configHashCheckTimer: ReturnType<typeof setInterval> | null = null
-let currentConfigHash: string | null = null
-
-// 从服务器获取配置
-async function getConfigFromServer() {
-  try {
-    const result = await DownloadConfig<DanmujiConfig>('danmuji-config')
-    if (result.status === 'success' && result.data) {
-      internalConfig.value = normalizeDanmujiConfig(result.data)
-      console.log('已从服务器获取弹幕姬配置')
-      addSystemNotice('配置已从服务器更新')
-      return true
-    } else if (result.status === 'notfound') {
-      console.log('服务器上未找到弹幕姬配置')
-    } else {
-      console.error(`获取配置失败: ${result.msg}`)
-    }
-  } catch (error) {
-    console.error('获取配置文件出错:', error)
-  }
-  return false
-}
-
-// 检查配置文件哈希值
-async function checkConfigHash() {
-  if (!isOBS.value) return
-
-  try {
-    const hash = await GetConfigHash('danmuji-config')
-    if (hash && hash !== currentConfigHash) {
-      console.log('配置文件已更新，正在获取新配置...')
-      currentConfigHash = hash
-      await getConfigFromServer()
-    }
-  } catch (error) {
-    console.error('检查配置哈希值出错:', error)
-  }
-}
-
-// 启动定时检查配置
-function startConfigHashCheck() {
-  if (!isOBS.value) return
-
-  GetConfigHash('danmuji-config').then((hash) => {
-    currentConfigHash = hash
-  })
-
-  configHashCheckTimer = setInterval(checkConfigHash, 5000)
-}
-
 defineExpose({
   setCss,
   testAddMessage,
@@ -645,11 +454,7 @@ onMounted(async () => {
   client.onEvent('scDel', onDelSuperChat)
   addSystemNotice('加载完成')
 
-  // OBS 运行时环境配置拉取与定时比对
-  if (isOBS.value) {
-    await getConfigFromServer()
-    if (!disposed) startConfigHashCheck()
-  }
+
 })
 
 onUnmounted(() => {
@@ -662,10 +467,7 @@ onUnmounted(() => {
     client.offEvent('scDel', onDelSuperChat)
   }
 
-  if (configHashCheckTimer) {
-    clearInterval(configHashCheckTimer)
-    configHashCheckTimer = null
-  }
+
 })
 </script>
 
@@ -681,6 +483,7 @@ onUnmounted(() => {
     ref="messageRender"
     :custom-css="effectiveCss"
     :max-number="effectiveConfig.maxNumber"
+    :appearance="effectiveConfig.style"
     :show-gift-name="effectiveConfig.showGiftName"
     style="height: 100%; width: 100%"
   />

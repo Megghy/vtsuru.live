@@ -35,6 +35,22 @@ beforeEach(() => {
 })
 
 describe('shared OBS volume subscription', () => {
+  it('inspects stream configuration without returning secrets or writing to OBS', async () => {
+    const store = useOBSStore()
+    await store.handleObsConnect()
+    mocks.call.mockClear()
+    mocks.call.mockImplementation(async (method: string) => {
+      if (method === 'GetStreamServiceSettings') return { streamServiceSettings: { server: 'rtmp://test', key: 'secret-fixture' } }
+      if (method === 'GetSceneList') return { scenes: [{ sceneName: '直播' }] }
+      throw new Error(`Unexpected request ${method}`)
+    })
+    expect(await store.inspectPreflight()).toEqual({ streamReady: true, scenes: ['直播'] })
+    expect(mocks.call.mock.calls.map(([method]) => method)).toEqual(['GetStreamServiceSettings', 'GetSceneList'])
+    mocks.call.mockRejectedValue(new Error('Connection lost'))
+    await expect(store.inspectPreflight()).rejects.toThrow('Connection lost')
+    store.cleanup()
+  })
+
   it('uses the existing connection, tracks mute, and removes only the volume subscription', async () => {
     const store = useOBSStore(),
       listener = vi.fn()

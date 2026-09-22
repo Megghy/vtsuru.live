@@ -37,7 +37,7 @@ const layout = computed(() => {
   } else if (route.path.startsWith('/open-live')) {
     document.title = `${route.meta.title} · 开放平台 · VTsuru`
     return 'open-live'
-  } else if (route.path.startsWith('/obs')) {
+  } else if (route.path.startsWith('/obs') && !route.path.endsWith('-manage')) {
     document.title = `${route.meta.title} · OBS · VTsuru`
     return 'obs'
   } else if (route.path.startsWith('/client')) {

@@ -9,6 +9,7 @@ import {
   Live24Filled,
   Mic24Filled,
   PlugConnected24Filled,
+  Record24Filled,
   Settings24Filled,
   VideoPerson24Filled,
 } from '@vicons/fluent'
@@ -121,6 +122,7 @@ const routeNameToMenuKey: Record<string, string> = {
   'client-auto-action-manage': 'danmaku-auto-action-manage',
   'client-vts': 'vts',
   'client-read-danmaku': 'read-danmaku',
+  'client-transcription': 'transcription',
   'client-settings': 'settings',
 }
 const activeMenuKey = computed(() => routeNameToMenuKey[route.name as string] ?? '')
@@ -254,6 +256,11 @@ const menuOptions = computed(() => {
       label: () => h(RouterLink, { to: { name: 'client-read-danmaku' } }, () => '读弹幕'),
       key: 'read-danmaku',
       icon: () => h(Mic24Filled),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'client-transcription' } }, () => '语音转写'),
+      key: 'transcription',
+      icon: () => h(Record24Filled),
     },
     {
       label: () => h(RouterLink, { to: { name: 'client-settings' } }, () => '设置'),

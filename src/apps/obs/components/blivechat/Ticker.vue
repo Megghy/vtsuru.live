@@ -11,6 +11,7 @@ import { formatCurrency } from './utils'
 
 const props = defineProps({
   messages: Array,
+  minGiftPrice: { type: Number, default: 0 },
   showGiftName: {
     type: Boolean,
     default: false,
@@ -21,7 +22,8 @@ const emit = defineEmits(['update:messages'])
 
 const MESSAGE_TYPE_MEMBER = constants.MESSAGE_TYPE_MEMBER
 const curTime = ref(new Date())
-const pinnedMessage = ref(null)
+const pinnedMessageId = ref(null)
+const pinnedMessage = computed(() => props.messages.find(message => message.id === pinnedMessageId.value && needToShow(message)) ?? null)
 
 // 定时更新进度
 const updateTimerId = window.setInterval(updateProgress, 1000)
@@ -86,6 +88,7 @@ function onTickerItemLeave(el, done) {
 const getShowAuthorName = constants.getShowAuthorName
 
 function needToShow(message) {
+  if (message.type === constants.MESSAGE_TYPE_GIFT && message.price < props.minGiftPrice) return false
   const pinTime = getPinTime(message)
   return (new Date() - message.addTime) / (60 * 1000) < pinTime
 }
@@ -128,7 +131,7 @@ function getPinTime(message) {
   if (message.type === constants.MESSAGE_TYPE_MEMBER) {
     return 2
   }
-  return constants.getPriceConfig(message.price).pinTime
+  return Math.max(2, constants.getPriceConfig(message.price).pinTime)
 }
 
 function updateProgress() {
@@ -142,9 +145,6 @@ function updateProgress() {
     const pinTime = getPinTime(message)
     if ((curTime.value - message.addTime) / (60 * 1000) >= pinTime) {
       messagesChanged = true
-      if (pinnedMessage.value === message) {
-        pinnedMessage.value = null
-      }
       continue
     }
     filteredMessages.push(message)
@@ -155,11 +155,7 @@ function updateProgress() {
 }
 
 function onItemClick(message) {
-  if (pinnedMessage.value == message) {
-    pinnedMessage.value = null
-  } else {
-    pinnedMessage.value = message
-  }
+  pinnedMessageId.value = pinnedMessageId.value === message.id ? null : message.id
 }
 </script>
 

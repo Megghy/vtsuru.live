@@ -67,6 +67,7 @@ class MockConnection {
 vi.mock('@/api/account', () => ({ useAccount: () => account }))
 vi.mock('@/shared/config', () => ({ BASE_HUB_URL: 'https://example.test/hub/', mapToCurrentAPI: (url: string) => url }))
 vi.mock('@microsoft/signalr', () => ({
+  HttpTransportType: { WebSockets: 1 },
   HubConnectionState: { Connected: 'Connected' },
   LogLevel: { Error: 4 },
   HubConnectionBuilder: class {

@@ -119,7 +119,7 @@ async function createSignedUrl(profile: TencentTranscriptionProfile) {
     needvad: '1',
     filter_dirty: '1',
     filter_modal: '1',
-    filter_punc: '1',
+    filter_punc: '0',
     convert_num_mode: '1',
     word_info: '0',
   })

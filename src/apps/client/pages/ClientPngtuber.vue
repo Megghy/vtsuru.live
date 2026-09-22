@@ -36,7 +36,7 @@ const expressions = computed(() =>
   })),
 )
 const settingsLink = computed(() => ({
-  name: 'obs-store-pngtuber-manage',
+  name: 'client-pngtuber-model',
   query: { channel: driver.channel || 'default' },
 }))
 async function refreshInputs() {

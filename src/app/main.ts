@@ -36,7 +36,6 @@ async function bootstrapApp() {
     void import('@/apps/client/data/initialize').then((m) => {
       import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
         if (getCurrentWindow().label === 'main') {
-          m.startHeartbeat()
           m.checkUpdate()
         }
       })
