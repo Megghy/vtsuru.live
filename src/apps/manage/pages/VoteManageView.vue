@@ -63,10 +63,13 @@ import type {
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
+import { getVoteStandings, voteOutcomeLabel } from '@/shared/utils/voteStandings'
+import { createVotePreviewScene, type VotePreviewScene } from './votePreview'
 import { CURRENT_HOST, VOTE_API_URL } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
+import { formatCountdown, remainingMs } from '@/shared/utils/countdown'
 
 // 账号与消息
 const message = useMessage()
@@ -94,7 +97,7 @@ const voteConfig = ref<VoteConfig>({
   defaultOptions: ['选项1', '选项2'],
   theme: 'glass',
   roundedCorners: true,
-  displayPosition: 'bottom-right',
+  displayPosition: 'center',
   allowGiftVoting: false,
   minGiftPrice: 1,
   voteResultMode: 0,
@@ -123,20 +126,10 @@ const nowMs = ref(Date.now())
 let clockTimer: number | undefined
 let pollTimer: number | undefined
 
-const timeLeftMs = computed(() => {
-  if (!currentVote.value?.endTime) return null
-  const remain = currentVote.value.endTime * 1000 - nowMs.value
-  return Math.max(0, remain)
-})
+const timeLeftMs = computed(() => remainingMs(currentVote.value?.endTime, nowMs.value))
 
 function formatTime(ms: number | null): string {
-  if (ms == null) return '进行中'
-  const total = Math.ceil(ms / 1000)
-  const mm = Math.floor(total / 60)
-    .toString()
-    .padStart(2, '0')
-  const ss = (total % 60).toString().padStart(2, '0')
-  return `${mm}:${ss}`
+  return ms == null ? '进行中' : formatCountdown(ms)
 }
 
 const leadingOptionIndex = computed(() => {
@@ -251,9 +244,14 @@ function deleteCustomTemplate(idx: number) {
 // =================== OBS 预览与仿真调试状态 ===================
 const previewBg = ref<'checker' | 'dark' | 'light' | 'game'>('checker')
 const previewTheme = ref<'glass' | 'duel' | 'minimal' | 'transparent'>('glass')
-const previewPosition = ref('bottom-right')
+const previewPosition = ref('center')
 const previewMaxDisplay = ref(6)
 const previewMode = ref<'live' | 'mock'>('mock')
+
+// Mock 场景时间基准：后端 endTime 为毫秒时间戳，这里保持同单位
+function mockTime(offsetSeconds: number): number {
+  return Date.now() + offsetSeconds * 1000
+}
 
 // 模拟调试数据源
 const mockData = ref<VoteOBSData>({
@@ -264,10 +262,10 @@ const mockData = ref<VoteOBSData>({
   showResults: true,
   theme: 'glass',
   roundedCorners: true,
-  displayPosition: 'bottom-right',
+  displayPosition: 'center',
   totalVotes: 35,
-  startTime: Math.floor(Date.now() / 1000) - 15,
-  endTime: Math.floor(Date.now() / 1000) + 45,
+  startTime: mockTime(-15),
+  endTime: mockTime(45),
   winnerOption: undefined,
   options: [
     { index: 1, text: '疾跑攻速流', count: 18, percentage: 51 },
@@ -281,7 +279,7 @@ function recalculateMockPercentages() {
   const total = mockData.value.options.reduce((sum, opt) => sum + opt.count, 0)
   mockData.value.totalVotes = total
   mockData.value.options.forEach((opt) => {
-    opt.percentage = total > 0 ? Math.round((opt.count / total) * 100) : 0
+    opt.percentage = total > 0 ? Math.round((opt.count / total) * 1000) / 10 : 0
   })
 }
 
@@ -306,110 +304,23 @@ function mockOvertake(targetIdx: number) {
   }
 }
 
-// 场景载入
-function loadMockScene(scene: 'duel' | 'duel-top' | 'standard' | 'leaderboard') {
-  if (scene === 'duel-top') {
-    previewTheme.value = 'duel'
-    previewPosition.value = 'top-center'
-    mockData.value = {
-      sessionId: 9999,
-      title: '红蓝阵营对抗赛 (顶部长条 HUD)',
-      isActive: true,
-      isEnding: false,
-      showResults: true,
-      theme: 'duel',
-      roundedCorners: true,
-      displayPosition: 'top-center',
-      totalVotes: 50,
-      startTime: Math.floor(Date.now() / 1000) - 15,
-      endTime: Math.floor(Date.now() / 1000) + 45,
-      winnerOption: undefined,
-      options: [
-        { index: 1, text: '红方：炽热战队', count: 29, percentage: 58 },
-        { index: 2, text: '蓝方：冰霜骑士', count: 21, percentage: 42 },
-      ],
-    }
-  } else if (scene === 'duel') {
-    previewTheme.value = 'duel'
-    previewPosition.value = 'bottom-right'
-    mockData.value = {
-      sessionId: 9999,
-      title: '红蓝阵营对抗赛',
-      isActive: true,
-      isEnding: false,
-      showResults: true,
-      theme: 'duel',
-      roundedCorners: true,
-      displayPosition: previewPosition.value,
-      totalVotes: 42,
-      startTime: Math.floor(Date.now() / 1000) - 10,
-      endTime: Math.floor(Date.now() / 1000) + 50,
-      winnerOption: undefined,
-      options: [
-        { index: 1, text: '红方：炽热战队', count: 24, percentage: 57 },
-        { index: 2, text: '蓝方：冰霜骑士', count: 18, percentage: 43 },
-      ],
-    }
-  } else if (scene === 'standard') {
-    previewTheme.value = 'glass'
-    mockData.value = {
-      sessionId: 9999,
-      title: '下一局挑战什么游戏？',
-      isActive: true,
-      isEnding: false,
-      showResults: true,
-      theme: 'glass',
-      roundedCorners: true,
-      displayPosition: previewPosition.value,
-      totalVotes: 60,
-      startTime: Math.floor(Date.now() / 1000) - 20,
-      endTime: Math.floor(Date.now() / 1000) + 40,
-      winnerOption: undefined,
-      options: [
-        { index: 1, text: '艾尔登法环', count: 28, percentage: 47 },
-        { index: 2, text: '怪物猎人荒野', count: 18, percentage: 30 },
-        { index: 3, text: '星露谷物语', count: 10, percentage: 17 },
-        { index: 4, text: '杂谈休息', count: 4, percentage: 6 },
-      ],
-    }
-  } else if (scene === 'leaderboard') {
-    previewTheme.value = 'glass'
-    previewMaxDisplay.value = 6
-    const songs = [
-      '恋爱循环',
-      '晴天',
-      '群青',
-      '七里香',
-      '残酷天使的行动纲领',
-      'lemon',
-      '起风了',
-      '勾指起誓',
-      '夜驱',
-      '打上花火',
-    ]
-    const counts = [35, 30, 24, 18, 15, 12, 8, 6, 4, 2]
-    const total = counts.reduce((a, b) => a + b, 0)
-    mockData.value = {
-      sessionId: 9999,
-      title: '点歌大乱斗 (前 6 名进入排期)',
-      isActive: true,
-      isEnding: false,
-      showResults: true,
-      theme: 'glass',
-      roundedCorners: true,
-      displayPosition: previewPosition.value,
-      totalVotes: total,
-      startTime: Math.floor(Date.now() / 1000) - 10,
-      endTime: Math.floor(Date.now() / 1000) + 60,
-      winnerOption: undefined,
-      options: songs.map((text, idx) => ({
-        index: idx + 1,
-        text,
-        count: counts[idx],
-        percentage: Math.round((counts[idx] / total) * 100),
-      })),
-    }
-  }
+function loadMockScene(scene: VotePreviewScene) {
+  mockData.value = createVotePreviewScene(scene, previewPosition.value)
+  previewTheme.value = scene === 'duel' || scene === 'duel-top' ? 'duel' : 'glass'
+  previewPosition.value = mockData.value.displayPosition
+  previewMode.value = 'mock'
+  if (scene === 'leaderboard') previewMaxDisplay.value = 6
+}
+
+function setMockBalance(mode: 'close' | 'tie' | 'empty') {
+  previewMode.value = 'mock'
+  mockData.value.isActive = true
+  mockData.value.isEnding = false
+  mockData.value.winnerOption = null
+  mockData.value.options.forEach((option, index) => {
+    option.count = mode === 'empty' ? 0 : mode === 'tie' ? 100 : index < 2 ? 100 + index : 20
+  })
+  recalculateMockPercentages()
 }
 
 // 模拟状态切换
@@ -417,17 +328,17 @@ function toggleMockUrgent() {
   mockData.value.isActive = true
   mockData.value.isEnding = false
   mockData.value.winnerOption = undefined
-  mockData.value.endTime = Math.floor(Date.now() / 1000) + 8 // 8 秒倒计时，触发紧急呼吸
+  mockData.value.endTime = mockTime(8) // 8 秒倒计时，触发紧急呼吸
   message.info('已切换至最后 8s 紧急倒计时状态')
 }
 
 function toggleMockWinner() {
-  const sorted = [...mockData.value.options].sort((a, b) => b.count - a.count)
+  const standings = getVoteStandings(mockData.value.options)
   mockData.value.isActive = false
   mockData.value.isEnding = true
-  mockData.value.winnerOption = sorted[0]?.text || '胜出选项'
+  mockData.value.winnerOption = standings.leader?.text ?? null
   mockData.value.endTime = undefined
-  message.success(`已触发结算揭晓动效：胜出者「${mockData.value.winnerOption}」`)
+  message.success(voteOutcomeLabel(standings, true))
 }
 
 // 当前送往 Card 组件的数据
@@ -444,7 +355,7 @@ const activePreviewCardData = computed<VoteOBSData | null>(() => {
       roundedCorners: voteConfig.value.roundedCorners,
       displayPosition: voteConfig.value.displayPosition,
       totalVotes: currentVote.value.totalVotes,
-      startTime: Math.floor(Date.now() / 1000),
+      startTime: Date.now(),
       endTime: currentVote.value.endTime,
       options: (currentVote.value.options ?? []).map((opt, idx) => ({
         index: idx + 1,
@@ -464,7 +375,7 @@ async function fetchVoteConfig() {
     if (res.code === 200 && res.data) {
       voteConfig.value = { ...voteConfig.value, ...res.data }
       previewTheme.value = (res.data.theme as any) || 'glass'
-      previewPosition.value = res.data.displayPosition || 'bottom-right'
+      previewPosition.value = res.data.displayPosition || 'center'
     }
   } catch (err) {
     console.error('获取配置失败:', err)
@@ -1050,6 +961,9 @@ onUnmounted(() => {
                     <NButton size="tiny" secondary @click="loadMockScene('leaderboard')">
                       10人排行榜赛跑
                     </NButton>
+                    <NButton size="tiny" secondary @click="setMockBalance('close')">仅差 1 票</NButton>
+                    <NButton size="tiny" secondary @click="setMockBalance('tie')">平票</NButton>
+                    <NButton size="tiny" secondary @click="setMockBalance('empty')">零票</NButton>
                   </NFlex>
                 </div>
 
@@ -1075,12 +989,12 @@ onUnmounted(() => {
                     v-model:value="previewPosition"
                     size="small"
                     :options="[
+                      { label: '正中心 (默认)', value: 'center' },
                       { label: '顶部居中 (推荐长条对决)', value: 'top-center' },
-                      { label: '右下角 (默认)', value: 'bottom-right' },
+                      { label: '右下角', value: 'bottom-right' },
                       { label: '左下角', value: 'bottom-left' },
                       { label: '右上角', value: 'top-right' },
                       { label: '左上角', value: 'top-left' },
-                      { label: '正中央', value: 'center' },
                     ]"
                   />
                 </div>
@@ -1249,12 +1163,12 @@ onUnmounted(() => {
               v-model:value="voteConfig.displayPosition"
               size="small"
               :options="[
+                { label: '正中心 (默认)', value: 'center' },
                 { label: '顶部居中 (推荐长条对决)', value: 'top-center' },
-                { label: '右下角 (推荐卡片)', value: 'bottom-right' },
+                { label: '右下角', value: 'bottom-right' },
                 { label: '左下角', value: 'bottom-left' },
                 { label: '右上角', value: 'top-right' },
                 { label: '左上角', value: 'top-left' },
-                { label: '正中央', value: 'center' },
               ]"
             />
           </div>

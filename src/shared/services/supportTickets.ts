@@ -27,8 +27,11 @@ export async function createSupportTicket(request: CreateSupportTicketRequest) {
   return unwrapOk(response, '创建工单失败')
 }
 
-export async function addSupportTicketMessage(id: number, content: string) {
-  const response = await QueryPostAPI<SupportTicketMessage>(`${SUPPORT_TICKET_API_URL}${id}/messages`, { content })
+export async function addSupportTicketMessage(id: number, content: string, imageFileIds: number[] = []) {
+  const response = await QueryPostAPI<SupportTicketMessage>(`${SUPPORT_TICKET_API_URL}${id}/messages`, {
+    content,
+    imageFileIds,
+  })
   return unwrapOk(response, '回复失败')
 }
 

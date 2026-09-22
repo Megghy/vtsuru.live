@@ -47,7 +47,6 @@ export interface TranscriptionStatus {
   canonicalRoomId?: number
   sourceProtocol?: string
   sourceFormat?: string
-  startedAt?: number
   message?: string
 }
 

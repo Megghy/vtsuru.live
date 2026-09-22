@@ -212,6 +212,15 @@ export default // 管理页面
       },
     },
     {
+      path: 'feedback/:id',
+      name: 'manage-feedback-detail',
+      component: async () => import('@/shared/components/FeedbackManage.vue'),
+      meta: {
+        title: '工单详情',
+        pageWidth: 'xl',
+      },
+    },
+    {
       path: 'point',
       name: 'manage-point',
       component: async () => import('@/apps/manage/pages/point/PointManage.vue'),

@@ -3,15 +3,12 @@ import { NTag, NTime } from 'naive-ui'
 
 import type { SupportTicketSummary } from '@/api/api-models'
 import { SupportTicketStatus } from '@/api/api-models'
+import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
 
 defineProps<{
   ticket: SupportTicketSummary
   active: boolean
 }>()
-
-const statusLabels = ['待处理', '处理中', '等待回复', '已解决']
-const statusTypes = ['default', 'info', 'warning', 'success'] as const
-const typeLabels = ['问题', '功能建议', '账号', '其他']
 
 function hasUnread(ticket: SupportTicketSummary) {
   return (
@@ -35,14 +32,14 @@ function hasUnread(ticket: SupportTicketSummary) {
       <span class="ticket-item__title">{{ ticket.title }}</span>
       <NTag
         size="small"
-        :type="statusTypes[ticket.status]"
+        :type="supportTicketStatusMeta[ticket.status].type"
         :bordered="false"
       >
-        {{ statusLabels[ticket.status] }}
+        {{ supportTicketStatusMeta[ticket.status].label }}
       </NTag>
     </span>
     <span class="ticket-item__meta">
-      <span>#{{ ticket.id }} · {{ typeLabels[ticket.type] }}</span>
+      <span>#{{ ticket.id }} · {{ supportTicketTypeLabel(ticket.type) }}</span>
       <NTime
         :time="ticket.lastMessageTime"
         type="relative"

@@ -225,8 +225,8 @@ function providerName(provider: TranscriptSession['provider']) {
   return provider === 'tencent' ? '腾讯云' : 'OpenAI'
 }
 
-function formatDateTime(timestamp: number) {
-  return new Date(timestamp * 1000).toLocaleString()
+function formatDateTime(startedAtMs: number) {
+  return new Date(startedAtMs).toLocaleString()
 }
 
 function formatClock(milliseconds: number, srt = false) {
@@ -246,7 +246,7 @@ function pad(value: number) {
 function saveText(content: string, extension: 'txt' | 'srt') {
   const session = selectedSession.value
   if (!session) return
-  const filename = `live-${props.liveId}-${new Date(session.startedAt * 1000).toISOString().replaceAll(':', '-')}.${extension}`
+  const filename = `live-${props.liveId}-${new Date(session.startedAt).toISOString().replaceAll(':', '-')}.${extension}`
   saveAs(new Blob([`\uFEFF${content}`], { type: 'text/plain;charset=utf-8' }), filename)
   message.success(`已成功导出 .${extension} 文件`)
 }

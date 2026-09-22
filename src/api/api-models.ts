@@ -800,6 +800,7 @@ export interface SupportTicketMessage {
   authorUserId?: number | null
   content: string
   createTime: number
+  images?: SupportTicketImage[]
 }
 
 export interface SupportTicketSummary {
@@ -1310,7 +1311,9 @@ export interface ResponseVoteSession {
   id: number
   title: string
   options: VoteOption[]
+  /** 毫秒时间戳（后端 Utils.ToUnix 返回毫秒） */
   startTime: number
+  /** 毫秒时间戳（后端 Utils.ToUnix 返回毫秒） */
   endTime?: number
   isActive: boolean
   totalVotes: number
@@ -1340,6 +1343,8 @@ export interface VoteOBSData {
   theme: string
   roundedCorners: boolean
   displayPosition: string
+  /** 毫秒时间戳（后端 Utils.ToUnix 返回毫秒） */
   startTime: number
+  /** 毫秒时间戳（后端 Utils.ToUnix 返回毫秒） */
   endTime?: number
 }

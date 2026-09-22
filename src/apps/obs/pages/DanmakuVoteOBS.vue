@@ -20,7 +20,8 @@ const nowMs = ref(Date.now())
 const targetUserId = computed(() => parsePositiveId(firstQueryValue(route.query.id)))
 const token = computed(() => firstQueryValue(route.query.token) || undefined)
 const currentTheme = computed(() => firstQueryValue(route.query.theme) || undefined)
-const currentPosition = computed(() => firstQueryValue(route.query.position) || 'bottom-right')
+// 未显式指定位置时铺满视口：OBS 里一般把本页作为单组件源嵌入，尺寸由源决定
+const currentPosition = computed(() => firstQueryValue(route.query.position) || 'fill')
 const maxDisplayCount = computed(() => {
   const parsed = Number(parsePositiveId(firstQueryValue(route.query.max)))
   return parsed > 0 ? parsed : 6
@@ -99,7 +100,7 @@ watch([targetUserId, token], () => {
 </script>
 
 <template>
-  <div class="danmaku-vote-obs-page" :class="[`pos-${currentPosition}`]">
+  <div class="danmaku-vote-obs-page">
     <DanmakuVoteCard
       :data="voteData"
       :theme="currentTheme"
@@ -111,23 +112,11 @@ watch([targetUserId, token], () => {
 </template>
 
 <style scoped>
+/* 铺满整页，对齐完全交给卡片自身，页不再重复补偿 */
 .danmaku-vote-obs-page {
   width: 100vw;
   height: 100vh;
-  box-sizing: border-box;
-  padding: 24px;
   overflow: hidden;
   background: transparent;
-  display: flex;
 }
-
-.pos-top-left { justify-content: flex-start; align-items: flex-start; }
-.pos-top-center { justify-content: center; align-items: flex-start; }
-.pos-top-right { justify-content: flex-end; align-items: flex-start; }
-.pos-center-left { justify-content: flex-start; align-items: center; }
-.pos-center { justify-content: center; align-items: center; }
-.pos-center-right { justify-content: flex-end; align-items: center; }
-.pos-bottom-left { justify-content: flex-start; align-items: flex-end; }
-.pos-bottom-center { justify-content: center; align-items: flex-end; }
-.pos-bottom-right { justify-content: flex-end; align-items: flex-end; }
 </style>

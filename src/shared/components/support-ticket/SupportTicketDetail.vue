@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowLeft24Regular, CheckmarkCircle24Regular, Send24Regular, Settings24Regular } from '@vicons/fluent'
+import { ArrowLeft24Regular, CheckmarkCircle24Regular, Image24Regular, Send24Regular, Settings24Regular } from '@vicons/fluent'
+import type { UploadFileInfo } from 'naive-ui'
 import {
   NButton,
   NCheckbox,
@@ -13,17 +14,25 @@ import {
   NSpin,
   NTag,
   NTime,
+  NUpload,
   useMessage,
 } from 'naive-ui'
 import { computed, nextTick, ref, watch } from 'vue'
 
 import type { SupportTicketDetail } from '@/api/api-models'
-import { SupportTicketAuthorType, SupportTicketStatus } from '@/api/api-models'
+import { SupportTicketAuthorType, SupportTicketStatus, UserFileLocation, UserFileTypes } from '@/api/api-models'
+import { uploadFiles } from '@/shared/services/fileUpload'
 import {
   addSupportTicketMessage,
   resolveSupportTicket,
   updateSupportTicketPreferences,
 } from '@/shared/services/supportTickets'
+import {
+  imagesForMessage,
+  isOwnTicketMessage,
+  supportTicketStatusMeta,
+  supportTicketTypeLabel,
+} from '@/shared/supportTicket'
 
 const props = defineProps<{
   ticket?: SupportTicketDetail
@@ -38,6 +47,7 @@ const emit = defineEmits<{
 
 const message = useMessage()
 const reply = ref('')
+const replyFiles = ref<UploadFileInfo[]>([])
 const sending = ref(false)
 const resolving = ref(false)
 const savingPreferences = ref(false)
@@ -46,11 +56,9 @@ const isPublic = ref(false)
 const emailOnStaffReply = ref(false)
 const timeline = ref<HTMLElement>()
 
-const statusLabels = ['待处理', '处理中', '等待你回复', '已解决']
-const statusTypes = ['default', 'info', 'warning', 'success'] as const
-const typeLabels = ['问题', '功能建议', '账号', '其他']
-
 const messages = computed(() => props.ticket?.messages ?? [])
+const remainingImageSlots = computed(() => Math.max(0, 5 - (props.ticket?.images.length ?? 0)))
+const canSend = computed(() => Boolean(reply.value.trim() || replyFiles.value.length))
 
 watch(
   () => props.ticket,
@@ -70,13 +78,28 @@ function authorLabel(authorType: SupportTicketAuthorType) {
   return props.editable ? '我' : '用户'
 }
 
+function beforeReplyUpload({ file }: { file: UploadFileInfo }) {
+  if (!file.file?.type.startsWith('image/')) {
+    message.error('只能上传图片文件')
+    return false
+  }
+  return true
+}
+
 async function sendReply() {
   const content = reply.value.trim()
-  if (!props.ticket || !content) return
+  if (!props.ticket || (!content && !replyFiles.value.length)) return
   sending.value = true
   try {
-    await addSupportTicketMessage(props.ticket.id, content)
+    const files = replyFiles.value.map((item) => item.file).filter((file): file is File => Boolean(file))
+    const uploaded = files.length ? await uploadFiles(files, UserFileTypes.Image, UserFileLocation.Local) : []
+    await addSupportTicketMessage(
+      props.ticket.id,
+      content,
+      uploaded.map((file) => file.id),
+    )
     reply.value = ''
+    replyFiles.value = []
     emit('refresh')
   } catch (error) {
     message.error((error as Error).message)
@@ -119,7 +142,10 @@ async function savePreferences() {
 </script>
 
 <template>
-  <section class="ticket-detail">
+  <section
+    class="ticket-detail"
+    :class="{ 'ticket-detail--editable': editable }"
+  >
     <div
       v-if="loading"
       class="ticket-detail__state"
@@ -148,16 +174,16 @@ async function savePreferences() {
           <div class="ticket-detail__title-row">
             <h2>{{ ticket.title }}</h2>
             <NTag
-              :type="statusTypes[ticket.status]"
+              :type="supportTicketStatusMeta[ticket.status].type"
               :bordered="false"
               size="small"
             >
-              {{ statusLabels[ticket.status] }}
+              {{ supportTicketStatusMeta[ticket.status].label }}
             </NTag>
           </div>
           <div class="ticket-detail__meta">
             <span>#{{ ticket.id }}</span>
-            <span>{{ typeLabels[ticket.type] }}</span>
+            <span>{{ supportTicketTypeLabel(ticket.type) }}</span>
             <span v-if="ticket.isPublic">公开</span>
             <span>创建于 <NTime :time="ticket.createTime" /></span>
           </div>
@@ -179,24 +205,12 @@ async function savePreferences() {
         ref="timeline"
         class="ticket-detail__timeline"
       >
-        <NImageGroup v-if="ticket.images.length">
-          <div class="ticket-images">
-            <NImage
-              v-for="image in ticket.images"
-              :key="image.id"
-              class="ticket-image"
-              object-fit="cover"
-              :src="image.path"
-              :alt="image.name"
-            />
-          </div>
-        </NImageGroup>
-
         <div
-          v-for="item in messages"
+          v-for="(item, index) in messages"
           :key="item.id"
           class="ticket-message"
           :class="{
+            'ticket-message--mine': isOwnTicketMessage(editable, item.authorType),
             'ticket-message--staff': item.authorType === SupportTicketAuthorType.Staff,
             'ticket-message--system': item.authorType === SupportTicketAuthorType.System,
           }"
@@ -216,7 +230,21 @@ async function savePreferences() {
                 type="relative"
               />
             </div>
-            <p>{{ item.content }}</p>
+            <div class="ticket-message__bubble">
+              <NImageGroup v-if="imagesForMessage(ticket, item, index).length">
+                <div class="ticket-message__images">
+                  <NImage
+                    v-for="image in imagesForMessage(ticket, item, index)"
+                    :key="image.id"
+                    class="ticket-message__image"
+                    object-fit="cover"
+                    :src="image.path"
+                    :alt="image.name"
+                  />
+                </div>
+              </NImageGroup>
+              <p v-if="item.content">{{ item.content }}</p>
+            </div>
           </template>
         </div>
       </div>
@@ -225,6 +253,22 @@ async function savePreferences() {
         v-if="editable"
         class="ticket-detail__composer"
       >
+        <NUpload
+          v-if="remainingImageSlots > 0"
+          v-model:file-list="replyFiles"
+          class="ticket-detail__upload"
+          accept="image/*"
+          list-type="image-card"
+          :default-upload="false"
+          :max="remainingImageSlots"
+          multiple
+          :on-before-upload="beforeReplyUpload"
+        >
+          <NIcon
+            :component="Image24Regular"
+            size="20"
+          />
+        </NUpload>
         <NInput
           v-model:value="reply"
           type="textarea"
@@ -256,7 +300,7 @@ async function savePreferences() {
           </NPopconfirm>
           <NButton
             type="primary"
-            :disabled="!reply.trim()"
+            :disabled="!canSend"
             :loading="sending"
             @click="sendReply"
           >
@@ -302,7 +346,8 @@ async function savePreferences() {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: min(720px, calc(100vh - 150px));
+  min-height: 0;
+  height: 100%;
 }
 .ticket-detail__state {
   display: grid;
@@ -349,18 +394,6 @@ async function savePreferences() {
   overflow-y: auto;
   padding: 18px;
 }
-.ticket-images {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.ticket-image {
-  width: 100%;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border-radius: 6px;
-}
 .ticket-message {
   width: fit-content;
   max-width: min(78%, 660px);
@@ -374,24 +407,42 @@ async function savePreferences() {
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
 }
-.ticket-message p {
-  margin: 0;
-  padding: 10px 13px;
+.ticket-message__bubble {
+  overflow: hidden;
   border: 1px solid var(--vtsuru-border);
   border-radius: 6px;
-  color: var(--vtsuru-fg);
   background: var(--vtsuru-bg-muted);
+}
+.ticket-message__bubble p {
+  margin: 0;
+  padding: 10px 13px;
+  color: var(--vtsuru-fg);
   line-height: 1.65;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
-.ticket-message--staff {
+.ticket-message__images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+}
+.ticket-message__image {
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+.ticket-message--mine,
+.ticket-detail:not(.ticket-detail--editable) .ticket-message--staff {
   margin-left: auto;
 }
-.ticket-message--staff .ticket-message__meta {
+.ticket-message--mine .ticket-message__meta,
+.ticket-detail:not(.ticket-detail--editable) .ticket-message--staff .ticket-message__meta {
   justify-content: flex-end;
 }
-.ticket-message--staff p {
+.ticket-message--mine .ticket-message__bubble,
+.ticket-detail:not(.ticket-detail--editable) .ticket-message--staff .ticket-message__bubble {
   border-color: var(--vtsuru-brand-soft);
   background: var(--vtsuru-brand-tint);
 }
@@ -409,6 +460,9 @@ async function savePreferences() {
   padding: 12px 16px 14px;
   border-top: 1px solid var(--vtsuru-border);
   background: var(--vtsuru-bg);
+}
+.ticket-detail__upload {
+  margin-bottom: 8px;
 }
 .ticket-detail__actions {
   display: flex;
@@ -436,7 +490,7 @@ async function savePreferences() {
 
 @media (max-width: 760px) {
   .ticket-detail {
-    height: calc(100dvh - 100px);
+    height: 100%;
   }
   .ticket-detail__header {
     padding: 12px;
@@ -449,9 +503,6 @@ async function savePreferences() {
   }
   .ticket-detail__timeline {
     padding: 14px 12px;
-  }
-  .ticket-images {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .ticket-message {
     max-width: 90%;

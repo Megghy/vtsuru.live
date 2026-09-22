@@ -25,6 +25,11 @@ import type { CreateSupportTicketRequest, SupportTicketDetail, SupportTicketSumm
 import { SupportTicketStatus, SupportTicketType, UserFileLocation, UserFileTypes } from '@/api/api-models'
 import { uploadFiles } from '@/shared/services/fileUpload'
 import {
+  filterSupportTickets,
+  supportTicketStatusOptions,
+  supportTicketTypeOptions,
+} from '@/shared/supportTicket'
+import {
   createSupportTicket,
   getMySupportTickets,
   getPublicSupportTickets,
@@ -46,6 +51,9 @@ const loadingList = ref(false)
 const loadingDetail = ref(false)
 const showCreate = ref(false)
 const creating = ref(false)
+const keyword = ref('')
+const statusFilter = ref<SupportTicketStatus | null>(null)
+const typeFilter = ref<SupportTicketType | null>(null)
 const fileList = ref<UploadFileInfo[]>([])
 const draft = ref<CreateSupportTicketRequest>({
   title: '',
@@ -65,13 +73,17 @@ const editable = computed(
 )
 const isDetailRoute = computed(() => selectedId.value !== undefined)
 const showPublicCards = computed(() => view.value === 'public' && !isDetailRoute.value)
-
-const typeOptions = [
-  { label: '产品问题', value: SupportTicketType.Bug },
-  { label: '功能建议', value: SupportTicketType.Feature },
-  { label: '账号问题', value: SupportTicketType.Account },
-  { label: '其他', value: SupportTicketType.Other },
-]
+const inManage = computed(() => route.path.startsWith('/manage'))
+const filtering = computed(() => Boolean(keyword.value.trim() || statusFilter.value != null || typeFilter.value != null))
+const filteredTickets = computed(() =>
+  filterSupportTickets(tickets.value, {
+    keyword: keyword.value,
+    status: statusFilter.value,
+    type: typeFilter.value,
+  }),
+)
+const listRouteName = computed(() => (inManage.value ? 'manage-feedback' : 'feedback'))
+const detailRouteName = computed(() => (inManage.value ? 'manage-feedback-detail' : 'feedback-detail'))
 
 async function loadTickets() {
   loadingList.value = true
@@ -108,11 +120,11 @@ async function loadDetail() {
 }
 
 async function openTicket(id: number) {
-  await router.push({ name: 'feedback-detail', params: { id }, query: { view: view.value } })
+  await router.push({ name: detailRouteName.value, params: { id }, query: { view: view.value } })
 }
 
 async function closeDetail() {
-  await router.push({ name: 'feedback', query: view.value === 'public' ? { view: 'public' } : undefined })
+  await router.push({ name: listRouteName.value, query: view.value === 'public' ? { view: 'public' } : undefined })
 }
 
 function resetDraft() {
@@ -173,9 +185,12 @@ watch(
   view,
   async (nextView, previousView) => {
     if (previousView && nextView !== previousView && isDetailRoute.value) {
-      await router.push({ name: 'feedback', query: nextView === 'public' ? { view: 'public' } : undefined })
+      await router.push({
+        name: listRouteName.value,
+        query: nextView === 'public' ? { view: 'public' } : undefined,
+      })
     }
-    if (route.name === 'feedback-detail' && route.query.view !== nextView) {
+    if (route.name === detailRouteName.value && route.query.view !== nextView) {
       await router.replace({ query: { ...route.query, view: nextView } })
     }
     await loadTickets()
@@ -195,7 +210,10 @@ watch(
 </script>
 
 <template>
-  <div class="ticket-page">
+  <div
+    class="ticket-page"
+    :class="{ 'ticket-page--manage': inManage, 'ticket-page--detail': isDetailRoute }"
+  >
     <header class="ticket-page__toolbar">
       <NTabs
         v-if="isLoggedIn"
@@ -218,31 +236,58 @@ watch(
         class="ticket-page__title"
         >公开工单</strong
       >
-      <NButton
-        v-if="isLoggedIn"
-        type="primary"
-        size="small"
-        @click="showCreate = true"
-      >
-        <template #icon>
-          <NIcon :component="Add24Regular" />
-        </template>
-        新建工单
-      </NButton>
-      <NButton
-        v-else
-        quaternary
-        circle
-        size="small"
-        title="刷新"
-        :loading="loadingList"
-        @click="loadTickets"
-      >
-        <template #icon>
-          <NIcon :component="ArrowClockwise24Regular" />
-        </template>
-      </NButton>
+      <div class="ticket-page__actions">
+        <NButton
+          quaternary
+          circle
+          size="small"
+          title="刷新"
+          :loading="loadingList"
+          @click="loadTickets"
+        >
+          <template #icon>
+            <NIcon :component="ArrowClockwise24Regular" />
+          </template>
+        </NButton>
+        <NButton
+          v-if="isLoggedIn"
+          type="primary"
+          size="small"
+          @click="showCreate = true"
+        >
+          <template #icon>
+            <NIcon :component="Add24Regular" />
+          </template>
+          新建工单
+        </NButton>
+      </div>
     </header>
+
+    <div
+      v-if="tickets.length || filtering"
+      class="ticket-page__filters"
+    >
+      <NInput
+        v-model:value="keyword"
+        size="small"
+        clearable
+        placeholder="搜索标题或编号"
+      />
+      <NSelect
+        v-model:value="statusFilter"
+        size="small"
+        clearable
+        placeholder="状态"
+        :options="supportTicketStatusOptions"
+      />
+      <NSelect
+        v-model:value="typeFilter"
+        size="small"
+        clearable
+        placeholder="类型"
+        :options="supportTicketTypeOptions"
+      />
+    </div>
 
     <div
       v-if="showPublicCards"
@@ -255,16 +300,16 @@ watch(
         <NSpin size="small" />
       </div>
       <NEmpty
-        v-else-if="!tickets.length"
+        v-else-if="!filteredTickets.length"
         class="public-ticket-list__state"
-        description="暂无公开工单"
+        :description="filtering ? '没有符合条件的工单' : '暂无公开工单'"
       />
       <div
         v-else
         class="public-ticket-list__grid"
       >
         <PublicTicketCard
-          v-for="ticket in tickets"
+          v-for="ticket in filteredTickets"
           :key="ticket.id"
           :ticket="ticket"
           @click="openTicket(ticket.id)"
@@ -278,21 +323,6 @@ watch(
       :class="{ 'ticket-workspace--detail': isDetailRoute }"
     >
       <aside class="ticket-list">
-        <div class="ticket-list__header">
-          <span>{{ view === 'mine' ? '我的工单' : '公开工单' }}</span>
-          <NButton
-            quaternary
-            circle
-            size="small"
-            title="刷新"
-            :loading="loadingList"
-            @click="loadTickets"
-          >
-            <template #icon>
-              <NIcon :component="ArrowClockwise24Regular" />
-            </template>
-          </NButton>
-        </div>
         <div
           v-if="loadingList && !tickets.length"
           class="ticket-list__state"
@@ -300,12 +330,12 @@ watch(
           <NSpin size="small" />
         </div>
         <NEmpty
-          v-else-if="!tickets.length"
+          v-else-if="!filteredTickets.length"
           class="ticket-list__state"
-          :description="view === 'mine' ? '还没有工单' : '暂无公开工单'"
+          :description="filtering ? '没有符合条件的工单' : '还没有工单'"
         />
         <SupportTicketListItem
-          v-for="ticket in tickets"
+          v-for="ticket in filteredTickets"
           v-else
           :key="ticket.id"
           :ticket="ticket"
@@ -352,7 +382,7 @@ watch(
         >
           <NSelect
             v-model:value="draft.type"
-            :options="typeOptions"
+            :options="supportTicketTypeOptions"
           />
         </NFormItem>
         <NFormItem
@@ -424,14 +454,28 @@ watch(
 
 <style scoped>
 .ticket-page {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  height: calc(100dvh - 32px);
+  min-height: 420px;
 }
-.ticket-page__toolbar {
+.ticket-page--manage {
+  height: calc(100dvh - var(--vtsuru-header-height) - 12px);
+}
+.ticket-page__toolbar,
+.ticket-page__actions {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+.ticket-page__toolbar {
   justify-content: space-between;
-  gap: 12px;
+}
+.ticket-page__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px 132px;
+  gap: 8px;
 }
 .ticket-page__title {
   color: var(--vtsuru-fg);
@@ -441,7 +485,9 @@ watch(
   width: 220px;
 }
 .public-ticket-list {
-  min-height: 320px;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
 }
 .public-ticket-list__grid {
   display: grid;
@@ -454,14 +500,21 @@ watch(
   place-content: center;
 }
 .public-ticket-detail {
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--vtsuru-border);
   border-radius: 8px;
   background: var(--vtsuru-bg);
 }
+.ticket-page > :deep(.public-ticket-detail) {
+  height: auto;
+}
 .ticket-workspace {
   display: grid;
   grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--vtsuru-border);
   border-radius: 8px;
@@ -469,24 +522,9 @@ watch(
 }
 .ticket-list {
   min-width: 0;
-  height: min(720px, calc(100vh - 150px));
+  min-height: 0;
   overflow-y: auto;
   border-right: 1px solid var(--vtsuru-border);
-}
-.ticket-list__header {
-  position: sticky;
-  z-index: 1;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 48px;
-  padding: 0 12px 0 14px;
-  border-bottom: 1px solid var(--vtsuru-border);
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg);
-  font-size: 13px;
-  font-weight: 600;
 }
 .ticket-list__state {
   display: grid;
@@ -507,8 +545,15 @@ watch(
 }
 
 @media (max-width: 760px) {
+  .ticket-page--detail .ticket-page__toolbar,
+  .ticket-page--detail .ticket-page__filters {
+    display: none;
+  }
   .ticket-page__tabs {
     width: 190px;
+  }
+  .ticket-page__filters {
+    grid-template-columns: 1fr;
   }
   .public-ticket-list__grid {
     grid-template-columns: 1fr;
@@ -519,13 +564,15 @@ watch(
     border-radius: 0;
   }
   .ticket-workspace {
-    display: block;
+    display: flex;
+    flex-direction: column;
     border-right: 0;
     border-left: 0;
     border-radius: 0;
   }
   .ticket-list {
-    height: calc(100dvh - 150px);
+    flex: 1;
+    height: auto;
     border-right: 0;
   }
   .ticket-workspace__detail {

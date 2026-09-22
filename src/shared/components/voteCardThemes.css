@@ -1,0 +1,97 @@
+/* ========================================================================= */
+/* 弹幕投票卡片 · 四套主题预设与主题专属布局                                  */
+/* 由 DanmakuVoteCard.vue 以 <style scoped src> 引入，作用域与主样式一致      */
+/* ========================================================================= */
+
+/* ================= 主题预设 1: Modern Glass (毛玻璃) ================= */
+.theme-glass {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 16px 40px -8px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.theme-glass .option-row {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.theme-glass .option-progress-bg {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.35) 0%, rgba(99, 102, 241, 0.45) 100%);
+}
+
+.theme-glass .option-row.is-leading .option-progress-bg {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.45) 0%, rgba(239, 68, 68, 0.55) 100%);
+}
+
+/* ================= 主题预设 2: Duel VS (红蓝对决卡片款) ================= */
+.theme-duel {
+  background: rgba(10, 10, 15, 0.94);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+/* ================= 主题预设 3: Minimal (极简通透) ================= */
+.theme-minimal {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.theme-minimal .option-row {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 极简主题下进度条默认无色（基类不设背景），这里补上单色填充，否则进度不可读 */
+.theme-minimal .option-progress-bg {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.26) 100%);
+}
+
+.theme-minimal .option-row.is-leading .option-progress-bg {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.35) 0%, rgba(239, 68, 68, 0.45) 100%);
+}
+
+/* ================= 主题预设 4: Transparent (纯透明无底壳，专为主播底图定制) ================= */
+.theme-transparent {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 8px 12px;
+}
+
+.theme-transparent .vote-title {
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.theme-transparent .total-label,
+.theme-transparent .total-value,
+.theme-transparent .option-text,
+.theme-transparent .option-count,
+.theme-transparent .option-percentage,
+.theme-transparent .option-num {
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.95),
+    0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.theme-transparent .option-row {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.theme-transparent .option-progress-bg {
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.65) 0%, rgba(99, 102, 241, 0.75) 100%);
+}
+
+.theme-transparent .option-row.is-leading .option-progress-bg {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.75) 0%, rgba(239, 68, 68, 0.85) 100%);
+}

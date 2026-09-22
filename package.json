@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
   "scripts": {
     "dev": "bunx --bun vite",
     "build": "vite build",
@@ -26,7 +25,6 @@
     "@hyperdx/browser": "^0.24.0",
     "@imgly/background-removal": "^1.7.0",
     "@laplace.live/ws": "^8.0.1",
-    "@vtsuru/danmaku": "file:./packages/danmaku",
     "@microsoft/signalr": "^10.0.0",
     "@microsoft/signalr-protocol-msgpack": "^10.0.0",
     "@mixer/postmessage-rpc": "^1.1.4",

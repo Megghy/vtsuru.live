@@ -138,7 +138,6 @@ export const useTranscription = defineStore('transcription', () => {
       status.value = {
         ...status.value,
         phase: 'running',
-        startedAt: Math.floor(Date.now() / 1000),
         message: undefined,
       }
       startUploadTimer()

@@ -2,14 +2,11 @@
 import { NTag, NTime } from 'naive-ui'
 
 import type { SupportTicketSummary } from '@/api/api-models'
+import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
 
 defineProps<{
   ticket: SupportTicketSummary
 }>()
-
-const statusLabels = ['待处理', '处理中', '等待回复', '已解决']
-const statusTypes = ['default', 'info', 'warning', 'success'] as const
-const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
 </script>
 
 <template>
@@ -27,12 +24,12 @@ const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
       <div class="public-ticket-card__tags">
         <NTag
           size="small"
-          :type="statusTypes[ticket.status]"
+          :type="supportTicketStatusMeta[ticket.status].type"
           :bordered="false"
         >
-          {{ statusLabels[ticket.status] }}
+          {{ supportTicketStatusMeta[ticket.status].label }}
         </NTag>
-        <span>{{ typeLabels[ticket.type] }}</span>
+        <span>{{ supportTicketTypeLabel(ticket.type) }}</span>
       </div>
       <h2>{{ ticket.title }}</h2>
       <div class="public-ticket-card__meta">
@@ -48,8 +45,9 @@ const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
 
 <style scoped>
 .public-ticket-card {
-  display: grid;
+  display: flex;
   min-width: 0;
+  min-height: 96px;
   overflow: hidden;
   padding: 0;
   border: 1px solid var(--vtsuru-border);
@@ -69,18 +67,21 @@ const typeLabels = ['产品问题', '功能建议', '账号问题', '其他']
 }
 
 .public-ticket-card__image {
-  width: 100%;
-  aspect-ratio: 16 / 8;
+  width: 96px;
+  height: 96px;
+  flex: 0 0 96px;
+  align-self: center;
   object-fit: cover;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-right: 1px solid var(--vtsuru-border);
 }
 
 .public-ticket-card__body {
   display: flex;
-  min-height: 132px;
+  min-width: 0;
+  flex: 1;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
+  gap: 8px;
+  padding: 12px 14px;
 }
 
 .public-ticket-card__tags,
