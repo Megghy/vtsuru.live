@@ -1,7 +1,9 @@
+import type { RouteRecordRaw } from 'vue-router'
+
 import { createToolRoutes } from './toolRoutes'
 
-export default // 管理页面
-{
+// 管理页面
+const manageRoute: RouteRecordRaw = {
   path: '/manage',
   name: 'manage',
   // 只做路径分组；页面由布局的 RouterView + KeepAlive 渲染。
@@ -14,6 +16,37 @@ export default // 管理页面
         title: '面板',
         pageWidth: 'md',
       },
+    },
+    {
+      path: 'user',
+      redirect: { name: 'bili-user-points' },
+      meta: { workspace: 'user' },
+      children: [
+        {
+          path: 'points',
+          name: 'bili-user-points',
+          component: async () => import('@/apps/account/pages/point/PointOverviewView.vue'),
+          meta: { title: '我的积分', workspace: 'user', pageWidth: 'lg' },
+        },
+        {
+          path: 'orders',
+          name: 'bili-user-orders',
+          component: async () => import('@/apps/account/pages/point/PointOrderView.vue'),
+          meta: { title: '我的订单', workspace: 'user', pageWidth: 'lg' },
+        },
+        {
+          path: 'history',
+          name: 'bili-user-history',
+          component: async () => import('@/apps/account/pages/point/PointUserHistoryView.vue'),
+          meta: { title: '积分记录', workspace: 'user', pageWidth: 'lg' },
+        },
+        {
+          path: 'settings',
+          name: 'bili-user-settings',
+          component: async () => import('@/apps/account/pages/point/PointUserSettings.vue'),
+          meta: { title: '账户设置', workspace: 'user', pageWidth: 'lg' },
+        },
+      ],
     },
     {
       path: 'song-list',
@@ -269,3 +302,5 @@ export default // 管理页面
     },
   ],
 }
+
+export default manageRoute

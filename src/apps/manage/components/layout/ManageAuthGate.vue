@@ -2,14 +2,18 @@
 import { BrowsersOutline } from '@vicons/ionicons5'
 import { NAlert, NButton, NFlex, NIcon, NSpin, NText, useMessage } from 'naive-ui'
 import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import { isLoadingAccount } from '@/api/account'
+import { isLoadingAccount, useAccount } from '@/api/account'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { currentAPIKey, setSelectedAPIKey } from '@/shared/config'
 import VtsuruLogo from '@/svgs/ic_vtuber.svg?component'
 
 const message = useMessage()
+const route = useRoute()
+const router = useRouter()
+const accountInfo = useAccount()
 const showAPISwitchDialog = ref(false)
 let loadingTimer: number | null = null
 
@@ -35,6 +39,21 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => accountInfo.value.id,
+  (accountId, previousId) => {
+    if (
+      accountId > 0 &&
+      !previousId &&
+      route.meta.workspace !== 'user' &&
+      !accountInfo.value.isBiliVerified &&
+      accountInfo.value.biliUserAuthInfo
+    ) {
+      void router.replace({ name: 'bili-user-points' })
+    }
+  },
+)
+
 async function switchToBackupAPI() {
   await setSelectedAPIKey('failover')
   message.info('已切换到备用API，正在重新加载...')
@@ -55,7 +74,7 @@ async function switchToBackupAPI() {
       <header class="auth-header">
         <VtsuruLogo class="auth-logo" />
         <p class="auth-eyebrow">VTSURU CENTER</p>
-        <h1 id="auth-title">登录或创建账号</h1>
+        <h1 id="auth-title">{{ route.meta.workspace === 'user' ? '连接用户身份' : '登录或创建账号' }}</h1>
       </header>
 
       <NAlert
@@ -68,21 +87,28 @@ async function switchToBackupAPI() {
           align="center"
           :size="10"
         >
-          <NText depth="3">普通观众无需注册，可以直接访问主播分享的功能页面。</NText>
+          <NText depth="3">{{
+            route.meta.workspace === 'user'
+              ? '认证 Bilibili 账户后即可查看积分、订单与互动记录。'
+              : '普通观众无需注册，可以直接访问主播分享的功能页面。'
+          }}</NText>
           <NButton
             type="primary"
             size="small"
-            @click="$router.push({ name: 'bili-user' })"
+            @click="$router.push({ name: route.meta.workspace === 'user' ? 'bili-auth' : 'bili-user-points' })"
           >
             <template #icon>
               <NIcon :component="BrowsersOutline" />
             </template>
-            前往 Bilibili 认证用户主页
+            {{ route.meta.workspace === 'user' ? '开始 Bilibili 认证' : '前往用户中心' }}
           </NButton>
         </NFlex>
       </NAlert>
 
-      <div class="auth-form">
+      <div
+        v-if="route.meta.workspace !== 'user'"
+        class="auth-form"
+      >
         <RegisterAndLogin />
       </div>
 

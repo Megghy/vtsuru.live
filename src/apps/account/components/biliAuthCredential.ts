@@ -1,7 +1,7 @@
 const AUTH_PATTERN = /(?:^|[#&])auth=([^&#\s]*)/
 
 export function createBiliAuthUrl(host: string, token: string) {
-  return `${host}bili-user/points#auth=${encodeURIComponent(token)}`
+  return `${host}manage/user#auth=${encodeURIComponent(token)}`
 }
 
 export function hasBiliAuthInUrl(value: string) {

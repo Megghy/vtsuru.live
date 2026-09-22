@@ -11,7 +11,6 @@ import {
   NFlex,
   NIcon,
   NPopconfirm,
-  NSpin,
   NTag,
   NText,
   useMessage,
@@ -23,7 +22,9 @@ import { RouterView } from 'vue-router'
 import type { AccountInfo } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI } from '@/api/query'
+import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import ManageDanmakuStatusBanner from '@/apps/manage/components/event-fetcher/ManageDanmakuStatusBanner.vue'
+import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { ACCOUNT_API_URL } from '@/shared/config'
 
 const props = defineProps<{
@@ -33,6 +34,7 @@ const props = defineProps<{
 const message = useMessage()
 const themeVars = useThemeVars()
 const canResendEmail = ref(false)
+const { workspace } = useManageWorkspace()
 
 watchEffect(() => {
   if (props.accountInfo?.isEmailVerified === false) {
@@ -71,7 +73,7 @@ function logout() {
 <template>
   <NElement>
     <RouterView
-      v-if="accountInfo?.isEmailVerified"
+      v-if="workspace === 'streamer' && accountInfo?.isEmailVerified"
       v-slot="{ Component, route: viewRoute }"
     >
       <div
@@ -81,20 +83,33 @@ function logout() {
         <ManageDanmakuStatusBanner v-if="viewRoute.meta.danmaku" />
         <KeepAlive>
           <component
-            v-if="viewRoute.meta.keepAlive"
             :is="Component"
+            v-if="viewRoute.meta.keepAlive"
             :key="String(viewRoute.name ?? viewRoute.path)"
           />
         </KeepAlive>
         <component
-          v-if="!viewRoute.meta.keepAlive"
           :is="Component"
+          v-if="!viewRoute.meta.keepAlive"
           :key="viewRoute.fullPath.split('#')[0]"
         />
       </div>
     </RouterView>
 
-    <template v-else>
+    <template v-else-if="workspace === 'streamer' && !accountInfo?.bindEmail">
+      <div class="manage-page manage-page--md">
+        <NAlert
+          type="info"
+          title="绑定邮箱后使用主播后台"
+          style="margin-bottom: 12px"
+        >
+          主播功能需要一个已验证的邮箱。绑定并验证后，此页面会自动开放。
+        </NAlert>
+        <AccountSecurityPanel />
+      </div>
+    </template>
+
+    <template v-else-if="workspace === 'streamer'">
       <div class="manage-page manage-page--md">
         <NCard
           size="small"

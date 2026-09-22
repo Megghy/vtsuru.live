@@ -15,7 +15,10 @@ import { NButton, NCountdown, NIcon, NInput, NPopconfirm, NTooltip, useMessage }
 import { v4 as uuidv4 } from 'uuid'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
+import { prepareBiliAccount } from '@/api/account'
+import type { BiliAccountProof } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
+import BiliAccountSetup from '@/apps/account/components/BiliAccountSetup.vue'
 import { createBiliAuthUrl } from '@/apps/account/components/biliAuthCredential'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/shared/config'
@@ -33,13 +36,15 @@ interface AuthStartModel {
 const steps = [
   { title: '准备认证', detail: '创建一次性认证流程' },
   { title: '直播间确认', detail: '使用目标账号发送认证码' },
-  { title: '完成连接', detail: '保存专属登录链接' },
+  { title: '完成连接', detail: '设置本站登录密码' },
 ]
 
 const message = useMessage()
 const biliAuth = useBiliAuth()
 const guidKey = usePersistedStorage('Bili.Auth.Key', uuidv4())
-const currentToken = usePersistedStorage<string | null>('Bili.Auth.Selected', null)
+const currentToken = computed(() => (biliAuth.usesAccountIdentity ? null : biliAuth.currentToken))
+const accountProof = ref<BiliAccountProof>()
+const accountSetupError = ref('')
 const startModel = ref<AuthStartModel>()
 const currentStep = ref(currentToken.value ? 2 : 0)
 const timeLeft = ref(0)
@@ -47,6 +52,7 @@ const timeOut = ref(false)
 const isStarting = ref(false)
 const authUrl = computed(() => createBiliAuthUrl(CURRENT_HOST, currentToken.value ?? ''))
 let timer: ReturnType<typeof setInterval> | undefined
+let pendingStatus: Promise<void> | undefined
 
 function stopPolling() {
   clearInterval(timer)
@@ -67,8 +73,17 @@ function updateTimeLeft() {
   if (timeOut.value) stopPolling()
 }
 
-async function syncStatus() {
-  const response = await QueryGetAPI(`${BILI_AUTH_API_URL}status`, { key: guidKey.value })
+function syncStatus() {
+  pendingStatus ??= readStatus().finally(() => {
+    pendingStatus = undefined
+  })
+  return pendingStatus
+}
+
+async function readStatus() {
+  const key = guidKey.value
+  const response = await QueryGetAPI(`${BILI_AUTH_API_URL}status`, { key })
+  if (key !== guidKey.value) return
 
   if (response.code === 201) {
     startModel.value = response.data as AuthStartModel
@@ -79,8 +94,11 @@ async function syncStatus() {
 
   if (response.code === 200) {
     stopPolling()
-    currentToken.value = response.data as string
-    void biliAuth.setCurrentAuth(currentToken.value)
+    if (!biliAuth.usesAccountIdentity) await biliAuth.setCurrentAuth(response.data as string)
+    const prepared = await prepareBiliAccount(key)
+    if (key !== guidKey.value) return
+    accountProof.value = prepared.code === 200 ? prepared.data : undefined
+    accountSetupError.value = prepared.code === 200 ? '' : prepared.message
     guidKey.value = uuidv4()
     currentStep.value = 2
     message.success('认证成功')
@@ -127,11 +145,13 @@ function restart() {
   startModel.value = undefined
   currentStep.value = 0
   timeOut.value = false
+  accountProof.value = undefined
+  accountSetupError.value = ''
 }
 
 function authenticateAnotherAccount() {
   restart()
-  currentToken.value = null
+  if (!biliAuth.usesAccountIdentity) biliAuth.logout()
   guidKey.value = uuidv4()
 }
 
@@ -192,7 +212,7 @@ onBeforeUnmount(stopPolling)
 
         <div class="trust-note">
           <NIcon :component="ShieldCheckmark24Regular" />
-          <p><strong>无需密码或 Cookie</strong><span>认证码仅用于确认当前 Bilibili 账号归属。</span></p>
+          <p><strong>无需 B 站密码或 Cookie</strong><span>认证码仅用于确认当前 Bilibili 账号归属。</span></p>
         </div>
       </section>
 
@@ -315,41 +335,49 @@ onBeforeUnmount(stopPolling)
             </div>
             <p class="state-kicker state-kicker--success">认证完成</p>
             <h2>账户已成功连接</h2>
-            <p class="state-summary">你的专属登录链接已经生成，可用于在其他浏览器中恢复登录。</p>
+            <p class="state-summary">完成账号设置后，可以使用 B 站 UID 和本站密码登录。</p>
 
-            <label
-              class="login-link-label"
-              for="bili-login-link"
-              >专属登录链接</label
-            >
-            <NInput
-              id="bili-login-link"
-              :value="authUrl"
-              type="password"
-              show-password-on="click"
-              readonly
-              class="login-link-input"
-            >
-              <template #suffix>
-                <NTooltip>
-                  <template #trigger>
-                    <NButton
-                      text
-                      aria-label="复制登录链接"
-                      @click="copyText(authUrl, '已复制登录链接')"
-                    >
-                      <template #icon><NIcon :component="Copy24Regular" /></template>
-                    </NButton>
-                  </template>
-                  复制登录链接
-                </NTooltip>
-              </template>
-            </NInput>
+            <BiliAccountSetup
+              :proof="accountProof"
+              :error="accountSetupError"
+              @restart="authenticateAnotherAccount"
+            />
 
-            <div class="security-notice">
-              <NIcon :component="LockClosed24Regular" />
-              <p><strong>请妥善保管此链接</strong><span>任何获得链接的人都能以你的身份登录。</span></p>
-            </div>
+            <template v-if="currentToken">
+              <label
+                class="login-link-label"
+                for="bili-login-link"
+                >专属登录链接</label
+              >
+              <NInput
+                id="bili-login-link"
+                :value="authUrl"
+                type="password"
+                show-password-on="click"
+                readonly
+                class="login-link-input"
+              >
+                <template #suffix>
+                  <NTooltip>
+                    <template #trigger>
+                      <NButton
+                        text
+                        aria-label="复制登录链接"
+                        @click="copyText(authUrl, '已复制登录链接')"
+                      >
+                        <template #icon><NIcon :component="Copy24Regular" /></template>
+                      </NButton>
+                    </template>
+                    复制登录链接
+                  </NTooltip>
+                </template>
+              </NInput>
+
+              <div class="security-notice">
+                <NIcon :component="LockClosed24Regular" />
+                <p><strong>请妥善保管此链接</strong><span>任何获得链接的人都能以你的身份登录。</span></p>
+              </div>
+            </template>
 
             <div class="success-actions">
               <NButton
@@ -359,7 +387,7 @@ onBeforeUnmount(stopPolling)
                 text-color="#ffffff"
                 @click="$router.push({ name: 'bili-user-points' })"
               >
-                前往 Bilibili 账户中心
+                进入用户后台
                 <template #icon><NIcon :component="ArrowRight24Regular" /></template>
               </NButton>
               <NPopconfirm

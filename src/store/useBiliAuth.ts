@@ -1,8 +1,10 @@
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
+import { ACCOUNT } from '@/api/account'
 import type { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
+import { cookie } from '@/api/auth'
 import type { QueryParams, QueryRequestOptions } from '@/api/query'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { BILI_AUTH_API_URL, POINT_API_URL } from '@/shared/config'
@@ -13,7 +15,11 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     token: string
     expiresAt: number | null
   }
-  const biliAuth = ref<BiliAuthModel>({} as BiliAuthModel)
+  const sessionAuth = ref<BiliAuthModel>({} as BiliAuthModel)
+  const usesAccountIdentity = computed(() => Boolean(cookie.value?.cookie))
+  const biliAuth = computed(() =>
+    usesAccountIdentity.value ? (ACCOUNT.value.biliUserAuthInfo ?? ({} as BiliAuthModel)) : sessionAuth.value,
+  )
 
   const biliTokens = usePersistedStorage<
     {
@@ -32,21 +38,33 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   })
 
   const isLoading = ref(false)
-  const isAuthed = computed(() => biliAuth.value.id > 0 || Boolean(currentToken.value))
+  const isAuthed = computed(() => biliAuth.value.id > 0 || (!usesAccountIdentity.value && Boolean(currentToken.value)))
   const isInvalid = ref(false)
   const legacyToken = ref<string | null>(null)
   const replacementToken = ref<string | null>(null)
   const requiresLegacyMigration = computed(() => Boolean(legacyToken.value || replacementToken.value))
 
-  let pendingAuthInfoPromise: Promise<boolean> | null = null
+  const identity = computed(() =>
+    cookie.value?.cookie ? `account:${cookie.value.cookie}` : `session:${currentToken.value ?? ''}`,
+  )
+  let pendingAuthInfo: { identity: string; promise: Promise<boolean> } | undefined
+  watch(
+    identity,
+    () => {
+      sessionAuth.value = {} as BiliAuthModel
+      isLoading.value = false
+      isInvalid.value = false
+      legacyToken.value = null
+      replacementToken.value = null
+    },
+    { flush: 'sync' },
+  )
 
   async function setCurrentAuth(token: string) {
-    if (!token) {
-      console.warn('[bili-auth] 无效的token')
-      return
-    }
+    if (usesAccountIdentity.value) throw new Error('请先退出站内账号，再切换独立认证账号')
+    if (!token) throw new Error('认证凭据不能为空')
     await currentTokenReady
-    biliAuth.value = {} as BiliAuthModel
+    sessionAuth.value = {} as BiliAuthModel
     currentToken.value = token
     legacyToken.value = null
     replacementToken.value = null
@@ -55,26 +73,22 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   }
 
   async function getAuthInfo(): Promise<boolean> {
-    if (pendingAuthInfoPromise) {
-      return pendingAuthInfoPromise
-    }
-
-    pendingAuthInfoPromise = (async () => {
+    await currentTokenReady
+    const requestIdentity = identity.value
+    if (!usesAccountIdentity.value && !currentToken.value) return false
+    if (usesAccountIdentity.value && ACCOUNT.value.id && !ACCOUNT.value.biliUserAuthInfo) return false
+    if (pendingAuthInfo?.identity === requestIdentity) return pendingAuthInfo.promise
+    const promise = (async () => {
       try {
         isLoading.value = true
-        await currentTokenReady
-
-        if (!currentToken.value) {
-          biliAuth.value = {} as BiliAuthModel
-          isInvalid.value = false
-          return false
-        }
-
         const data = await QueryBiliAuthGetAPI<BiliAuthModel>(`${BILI_AUTH_API_URL}info`)
+        // 切换账号后到达的旧响应不能覆盖当前身份。
+        if (identity.value !== requestIdentity) return false
         if (data.code == 200) {
-          biliAuth.value = data.data
+          if (usesAccountIdentity.value) ACCOUNT.value.biliUserAuthInfo = data.data
+          else sessionAuth.value = data.data
           console.log('[bili-auth] 已获取 Bilibili 认证信息')
-          if (currentToken.value) {
+          if (!usesAccountIdentity.value && currentToken.value) {
             const index = biliTokens.value.findIndex((t) => t.id == biliAuth.value.id)
             const account = {
               id: biliAuth.value.id,
@@ -93,22 +107,21 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
           return true
         } else {
           console.error(`[bili-auth] 无法获取 Bilibili 认证信息: ${data.message}`)
+          if (usesAccountIdentity.value) ACCOUNT.value.biliUserAuthInfo = undefined
+          else sessionAuth.value = {} as BiliAuthModel
           isInvalid.value = true
-          if (currentToken.value && data.message === '旧版认证链接需要迁移') {
+          if (!usesAccountIdentity.value && currentToken.value && data.message === '旧版认证链接需要迁移') {
             legacyToken.value = currentToken.value
           }
           return false
         }
-      } catch (err) {
-        console.error(`[bili-auth] 无法获取 Bilibili 认证信息: ${err}`)
-        return false
       } finally {
-        isLoading.value = false
-        pendingAuthInfoPromise = null
+        if (identity.value === requestIdentity) isLoading.value = false
+        if (pendingAuthInfo?.identity === requestIdentity) pendingAuthInfo = undefined
       }
     })()
-
-    return pendingAuthInfoPromise
+    pendingAuthInfo = { identity: requestIdentity, promise }
+    return promise
   }
 
   async function migrateLegacyToken() {
@@ -138,8 +151,12 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
 
   async function getBiliAuthHeaders(headers?: [string, string][]) {
     await currentTokenReady
-    const result = [...(headers ?? [])]
-    if (currentToken.value && result.find((h) => h[0].toLowerCase() == 'bili-auth') == null) {
+    const result = (headers ?? []).filter(([name]) => !usesAccountIdentity.value || name.toLowerCase() !== 'bili-auth')
+    if (
+      !usesAccountIdentity.value &&
+      currentToken.value &&
+      result.find((h) => h[0].toLowerCase() == 'bili-auth') == null
+    ) {
       result.push(['Bili-Auth', currentToken.value ?? ''])
     }
     return result
@@ -203,7 +220,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   }
 
   function logout() {
-    biliAuth.value = {} as BiliAuthModel
+    sessionAuth.value = {} as BiliAuthModel
     biliTokens.value = biliTokens.value.filter((t) => t.token != currentToken.value)
     currentToken.value = ''
     legacyToken.value = null
@@ -214,6 +231,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
 
   return {
     biliAuth,
+    usesAccountIdentity,
     biliToken: currentToken,
     biliTokens,
     isLoading,

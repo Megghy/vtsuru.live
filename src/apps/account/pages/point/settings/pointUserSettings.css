@@ -101,6 +101,16 @@
   font-size: 19px;
 }
 
+.point-settings__identity {
+  margin-top: 14px;
+}
+
+.point-settings__identity-hint {
+  margin-top: 4px;
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
 .point-settings__empty {
   padding: 30px 16px;
 }

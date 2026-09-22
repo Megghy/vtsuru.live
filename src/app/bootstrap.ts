@@ -3,15 +3,9 @@ import { h } from 'vue'
 
 import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
-import {
-  BASE_API_URL,
-  isAutomaticAPIFailover,
-  isTauri,
-  markAPIFailover,
-  setSelectedAPIKey,
-} from '@/shared/config'
-import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
+import { BASE_API_URL, isAutomaticAPIFailover, isTauri, markAPIFailover, setSelectedAPIKey } from '@/shared/config'
 import { setSentryUser } from '@/shared/services/sentry'
+import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
 import { createNaiveUIApi } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useNotificationStore } from '@/store/useNotificationStore'
@@ -95,7 +89,11 @@ function showAPIFailoverNotification() {
 
 function canInitHyperDX(): boolean {
   if (import.meta.env.DEV || import.meta.env.MODE === 'development') return false
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) return false
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  )
+    return false
   if (window.$route?.path?.startsWith('/obs')) return false
   // 夸克/UC 的 Observer 实现不完整, HyperDX 点击插桩会炸 takeRecords
   if (/Quark|UCBrowser/i.test(navigator.userAgent)) return false
@@ -139,7 +137,7 @@ async function InitOther() {
       userName: account.value.name,
     })
   }
-  useAuth.getAuthInfo()
+  void useAuth.getAuthInfo().catch((error) => console.error('[bili-auth] 初始化认证信息失败', error))
   UpdateAccountLoop()
 
   useNotificationStore().init()

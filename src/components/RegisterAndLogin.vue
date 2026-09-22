@@ -131,7 +131,7 @@ const loginRules: FormRules = {
   account: [
     {
       required: true,
-      message: '请输入用户名或邮箱',
+      message: '请输入用户名 / 邮箱 / B站 UID',
     },
   ],
   password: [
@@ -599,12 +599,12 @@ onUnmounted(() => {
           >
             <NFormItem
               path="account"
-              label="用户名或邮箱"
+              label="用户名 / 邮箱 / B站 UID"
             >
               <NInput
                 v-model:value="loginModel.account"
                 clearable
-                placeholder="输入用户名或邮箱"
+                placeholder="输入用户名 / 邮箱 / B站 UID"
                 :input-props="{ autocomplete: 'username' }"
               />
             </NFormItem>
@@ -742,6 +742,14 @@ onUnmounted(() => {
           name="forget"
           tab="忘记密码"
         >
+          <p>已关联 B 站的账号，也可以重新认证身份后设置新密码。</p>
+          <NButton
+            tag="a"
+            href="/bili-auth"
+            block
+            secondary
+            >通过 B 站认证重置密码</NButton
+          >
           <NFormItem label="注册邮箱">
             <NInput
               v-model:value="inputForgetPasswordValue"

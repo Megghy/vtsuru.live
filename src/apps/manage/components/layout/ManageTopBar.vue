@@ -7,6 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ThemeType } from '@/api/api-models'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
+import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { isDarkMode } from '@/shared/utils'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
@@ -21,6 +22,7 @@ const assistant = useAssistantStore()
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 const defaultCollapsed = window.innerWidth < 750
 const siderCollapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
+const { workspace } = useManageWorkspace()
 
 onMounted(() => {
   if (window.innerWidth < 750) siderCollapsed.value = true
@@ -72,6 +74,7 @@ async function goToUserPage(accountName?: string) {
         decoding="async"
       />
       <div class="manage-header__brand">VTSURU CENTER</div>
+      <div class="manage-header__workspace">{{ workspace === 'user' ? '用户中心' : '主播后台' }}</div>
       <div
         v-if="accountName"
         class="manage-header__account"
@@ -101,7 +104,7 @@ async function goToUserPage(accountName?: string) {
         <span class="manage-header__assistant-text">助手</span>
       </button>
 
-      <NotificationsPopover />
+      <NotificationsPopover v-if="workspace === 'streamer'" />
 
       <button
         class="manage-header__icon-button"
@@ -116,6 +119,7 @@ async function goToUserPage(accountName?: string) {
       </button>
 
       <button
+        v-if="workspace === 'streamer'"
         class="manage-header__button"
         type="button"
         :disabled="!accountName"
@@ -169,6 +173,16 @@ async function goToUserPage(accountName?: string) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.manage-header__workspace {
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--vtsuru-brand-soft);
+  color: var(--vtsuru-brand);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .manage-header__page-title {

@@ -1,5 +1,5 @@
 import { isSameDay } from 'date-fns'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { ACCOUNT_API_URL, USER_CONFIG_API_URL } from '@/shared/config'
@@ -21,7 +21,7 @@ export async function GetSelfAccount(token?: string) {
   if (cookie.value?.cookie || token) {
     const result = await Self(token)
     if (result.code == 200) {
-      if (!ACCOUNT.value.id) {
+      if (ACCOUNT.value.id !== result.data.id) {
         ACCOUNT.value = result.data
       } else {
         result.data.settings = ACCOUNT.value.settings
@@ -132,8 +132,33 @@ export async function Register(name: string, email: string, password: string, to
   })
 }
 
-export async function Login(nameOrEmail: string, password: string): Promise<APIRoot<string>> {
-  return QueryPostAPI<string>(`${ACCOUNT_API_URL}login`, {
+export interface AccountSession {
+  account: AccountInfo
+  token: string
+}
+
+export function applyAccountSession(session: AccountSession) {
+  ACCOUNT.value = session.account
+  cookie.value = { cookie: session.token, refreshDate: Date.now() }
+}
+
+export interface BiliAccountProof {
+  proof: string
+  userId: number
+  linked: boolean
+  expiresAt: number
+}
+
+export async function prepareBiliAccount(key: string) {
+  return QueryPostAPI<BiliAccountProof>(`${ACCOUNT_API_URL}bili-auth/prepare`, { key })
+}
+
+export async function completeBiliAccount(proof: string, password?: string, resetPassword = false) {
+  return QueryPostAPI<AccountSession>(`${ACCOUNT_API_URL}bili-auth/complete`, { proof, password, resetPassword })
+}
+
+export async function Login(nameOrEmail: string, password: string): Promise<APIRoot<AccountSession>> {
+  return QueryPostAPI<AccountSession>(`${ACCOUNT_API_URL}login`, {
     nameOrEmail,
     password,
   })

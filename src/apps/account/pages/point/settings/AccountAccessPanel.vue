@@ -1,13 +1,22 @@
 <script setup lang="ts">
-import { Add24Regular, ArrowSync24Regular, Copy24Regular, Delete24Regular, Key24Regular, Person24Regular } from '@vicons/fluent'
-import { NAvatar, NButton, NEmpty, NIcon, NInput, NModal, NPopconfirm, NSpin, NTag, useMessage } from 'naive-ui'
+import {
+  Add24Regular,
+  ArrowSync24Regular,
+  Copy24Regular,
+  Delete24Regular,
+  Key24Regular,
+  Person24Regular,
+} from '@vicons/fluent'
+import { NAlert, NAvatar, NButton, NEmpty, NIcon, NInput, NModal, NPopconfirm, NSpin, NTag, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
+import { useAccount } from '@/api/account'
 import { createBiliAuthUrl, parseBiliAuthCredential } from '@/apps/account/components/biliAuthCredential'
 import { CURRENT_HOST } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const auth = useBiliAuth()
+const account = useAccount()
 const message = useMessage()
 const adding = ref(false)
 const working = ref(false)
@@ -16,6 +25,7 @@ const refreshedLink = ref('')
 
 const accountCount = computed(() => auth.biliTokens.length)
 const maskedLoginUrl = computed(() => createBiliAuthUrl(CURRENT_HOST, '************'))
+const usesAccountIdentity = computed(() => Boolean(account.value?.id && account.value?.biliUserAuthInfo))
 
 function errorText(error: unknown) {
   return error instanceof Error ? error.message : String(error)
@@ -84,7 +94,7 @@ async function copyLoginUrl() {
 async function rotateLoginUrl() {
   working.value = true
   try {
-    if (!await auth.rotateSession()) {
+    if (!(await auth.rotateSession())) {
       throw new Error('无法刷新登录链接')
     }
     refreshedLink.value = createBiliAuthUrl(CURRENT_HOST, auth.biliToken)
@@ -110,10 +120,11 @@ defineExpose({ reset })
         <span class="point-settings__panel-icon"><NIcon :component="Person24Regular" /></span>
         <div>
           <h2>认证账号</h2>
-          <span>{{ accountCount }} 个账号</span>
+          <span>{{ usesAccountIdentity ? '站内账号身份' : `${accountCount} 个快捷账号` }}</span>
         </div>
       </div>
       <NButton
+        v-if="!usesAccountIdentity"
         type="primary"
         secondary
         size="small"
@@ -125,8 +136,18 @@ defineExpose({ reset })
     </div>
 
     <NSpin :show="working || auth.isLoading">
+      <NAlert
+        v-if="usesAccountIdentity"
+        type="success"
+        :bordered="false"
+        class="point-settings__identity"
+      >
+        <template #header>已绑定 Bilibili 用户身份</template>
+        {{ account.biliUserAuthInfo?.name }} · UID {{ account.biliUserAuthInfo?.userId }}
+        <div class="point-settings__identity-hint">可使用 B 站 UID 与本站密码登录。</div>
+      </NAlert>
       <NEmpty
-        v-if="accountCount === 0"
+        v-else-if="accountCount === 0"
         size="small"
         class="point-settings__empty"
       />
@@ -185,7 +206,10 @@ defineExpose({ reset })
       </div>
     </NSpin>
 
-    <div class="point-settings__credential">
+    <div
+      v-if="!usesAccountIdentity"
+      class="point-settings__credential"
+    >
       <div class="point-settings__credential-heading">
         <span class="point-settings__panel-icon"><NIcon :component="Key24Regular" /></span>
         <strong>快捷登录链接</strong>
@@ -255,7 +279,11 @@ defineExpose({ reset })
     preset="card"
     title="新的快捷登录链接"
     :mask-closable="false"
-    @update:show="(show) => { if (!show) refreshedLink = '' }"
+    @update:show="
+      (show) => {
+        if (!show) refreshedLink = ''
+      }
+    "
   >
     <NInput
       :value="refreshedLink"

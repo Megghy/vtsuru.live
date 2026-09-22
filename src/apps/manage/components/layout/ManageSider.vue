@@ -7,6 +7,9 @@ import {
   Lottery24Filled,
   PeopleQueue24Filled,
   Person48Filled,
+  History24Regular,
+  Receipt24Regular,
+  Settings24Regular,
   PersonFeedback24Filled,
   StoreMicrosoft24Regular,
   TabletSpeaker24Filled,
@@ -27,19 +30,20 @@ import {
   PlayCircleOutline,
   StatsChartOutline,
 } from '@vicons/ionicons5'
-import { NButton, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui'
+import { NAvatar, NButton, NDropdown, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui'
 import { computed, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import type { AccountInfo } from '@/api/api-models'
+import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { NavigateToNewTab } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 const props = defineProps<{
   accountInfo: AccountInfo
 }>()
 
-type ManageNavGroupId = 'favorites' | 'common' | 'data' | 'tools' | 'danmaku'
+type ManageNavGroupId = 'favorites' | 'user' | 'common' | 'data' | 'tools' | 'danmaku'
 type ManageNavGroupKey = `group-${ManageNavGroupId}`
 
 type ManageNavItem = {
@@ -55,6 +59,8 @@ type ManageNavItem = {
 const message = useMessage()
 const route = useRoute()
 const router = useRouter()
+const biliAuth = useBiliAuth()
+const { workspace, switchWorkspace } = useManageWorkspace()
 
 const defaultCollapsed = window.innerWidth < 750
 const collapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
@@ -81,18 +87,62 @@ function toggleFavorite(key: string) {
 
 const isBiliVerified = computed(() => !!props.accountInfo?.isBiliVerified)
 const needsEmailVerified = computed(() => props.accountInfo?.isEmailVerified === false)
+const biliAccountOptions = computed(() => [
+  ...biliAuth.biliTokens.map((account) => ({
+    key: String(account.id),
+    label: account.name || `UID ${account.uId}`,
+    disabled: account.id === biliAuth.biliAuth.id,
+  })),
+  { type: 'divider' as const, key: 'divider' },
+  { key: 'add', label: '认证其他账号' },
+])
 
-function gotoAuthPage() {
-  if (!props.accountInfo?.biliUserAuthInfo) {
-    message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
+async function switchBiliAccount(key: string) {
+  if (key === 'add') {
+    await router.push({ name: 'bili-auth' })
     return
   }
-  NavigateToNewTab('/bili-user')
+  const account = biliAuth.biliTokens.find((item) => String(item.id) === key)
+  if (!account) return
+  await biliAuth.setCurrentAuth(account.token)
+  message.success(`已切换至 ${account.name || `UID ${account.uId}`}`)
 }
 
 const activeKey = computed(() => (route.meta.parent as string) ?? route.name?.toString() ?? '')
 
 const baseItems = computed<ManageNavItem[]>(() => {
+  if (workspace.value === 'user') {
+    return [
+      {
+        key: 'bili-user-points',
+        label: '我的积分',
+        icon: BookCoins20Filled,
+        to: { name: 'bili-user-points' },
+        group: 'user',
+      },
+      {
+        key: 'bili-user-orders',
+        label: '我的订单',
+        icon: Receipt24Regular,
+        to: { name: 'bili-user-orders' },
+        group: 'user',
+      },
+      {
+        key: 'bili-user-history',
+        label: '积分记录',
+        icon: History24Regular,
+        to: { name: 'bili-user-history' },
+        group: 'user',
+      },
+      {
+        key: 'bili-user-settings',
+        label: '账户设置',
+        icon: Settings24Regular,
+        to: { name: 'bili-user-settings' },
+        group: 'user',
+      },
+    ]
+  }
   const emailDisabled = needsEmailVerified.value
   const biliDisabled = !isBiliVerified.value
   const biliReason = biliDisabled ? '需要完成 Bilibili 认证后才能使用' : undefined
@@ -280,6 +330,7 @@ type ManageNavGroup = {
 
 const groups = computed<ManageNavGroup[]>(() => {
   const items = baseItems.value
+  if (workspace.value === 'user') return [{ key: 'group-user', label: '账户', items }]
   const map = new Map(items.map((i) => [i.key, i]))
 
   const favorites = (favoriteMenuItems.value ?? []).map((k) => map.get(k)).filter(Boolean) as ManageNavItem[]
@@ -326,7 +377,14 @@ function toggleGroup(key: ManageNavGroupKey) {
 }
 
 watchEffect(() => {
-  const allowed: ManageNavGroupKey[] = ['group-favorites', 'group-common', 'group-data', 'group-tools', 'group-danmaku']
+  const allowed: ManageNavGroupKey[] = [
+    'group-favorites',
+    'group-user',
+    'group-common',
+    'group-data',
+    'group-tools',
+    'group-danmaku',
+  ]
   const list = Array.isArray(expandedGroups.value) ? expandedGroups.value : []
   const next = list.filter((k): k is ManageNavGroupKey => allowed.includes(k as any))
   if (next.length === 0) next.push(...allowed)
@@ -355,100 +413,152 @@ async function go(name: string) {
 
 <template>
   <aside
-    v-if="accountInfo?.isEmailVerified"
     class="manage-sider"
     :class="{ collapsed }"
     :style="{ width: collapsed ? `${siderCollapsedWidth}px` : `${siderWidth}px` }"
   >
     <div class="manage-sider__top">
-      <div class="manage-sider__top-row">
+      <div
+        class="workspace-switch"
+        :class="{ 'workspace-switch--collapsed': collapsed }"
+      >
+        <button
+          type="button"
+          :class="{ active: workspace === 'streamer' }"
+          :title="collapsed ? '主播后台' : undefined"
+          @click="switchWorkspace('streamer')"
+        >
+          <NIcon :component="Live24Filled" />
+          <span v-if="!collapsed">主播</span>
+        </button>
+        <button
+          type="button"
+          :class="{ active: workspace === 'user' }"
+          :title="collapsed ? '用户中心' : undefined"
+          @click="switchWorkspace('user')"
+        >
+          <NIcon :component="Person48Filled" />
+          <span v-if="!collapsed">用户</span>
+        </button>
+      </div>
+
+      <NDropdown
+        v-if="workspace === 'user' && biliAuth.biliAuth.id && !biliAuth.usesAccountIdentity"
+        trigger="click"
+        placement="bottom-start"
+        :options="biliAccountOptions"
+        @select="switchBiliAccount"
+      >
         <NButton
-          class="sider-top-btn sider-top-btn--panel"
-          size="small"
+          class="identity-button"
           secondary
+          block
           :circle="collapsed"
-          :title="collapsed ? '面板' : undefined"
-          @click="go('manage-index')"
+        >
+          <template #icon>
+            <NAvatar
+              :size="20"
+              round
+              :src="biliAuth.biliAuth.avatar"
+            >
+              {{ biliAuth.biliAuth.name?.slice(0, 1) }}
+            </NAvatar>
+          </template>
+          <span
+            v-if="!collapsed"
+            class="identity-button__label"
+            >{{ biliAuth.biliAuth.name }}</span
+          >
+        </NButton>
+      </NDropdown>
+      <NButton
+        v-else-if="workspace === 'user' && biliAuth.biliAuth.id"
+        class="identity-button"
+        secondary
+        block
+        :circle="collapsed"
+      >
+        <template #icon>
+          <NAvatar
+            :size="20"
+            round
+            :src="biliAuth.biliAuth.avatar"
+          >
+            {{ biliAuth.biliAuth.name?.slice(0, 1) }}
+          </NAvatar>
+        </template>
+        <span
+          v-if="!collapsed"
+          class="identity-button__label"
+          >{{ biliAuth.biliAuth.name }}</span
+        >
+      </NButton>
+
+      <template v-if="workspace === 'streamer'">
+        <div class="manage-sider__top-row">
+          <NButton
+            class="sider-top-btn sider-top-btn--panel"
+            size="small"
+            secondary
+            :circle="collapsed"
+            :title="collapsed ? '面板' : undefined"
+            @click="go('manage-index')"
+          >
+            <template #icon>
+              <component
+                :is="GridOutline"
+                class="sider-icon"
+              />
+            </template>
+            <span
+              v-if="!collapsed"
+              class="sider-top-label"
+              >面板</span
+            >
+          </NButton>
+
+          <NButton
+            v-if="!collapsed"
+            class="sider-top-icon-btn"
+            size="small"
+            quaternary
+            circle
+            :title="collapsed ? '反馈' : '反馈'"
+            @click="go('manage-feedback')"
+          >
+            <template #icon>
+              <component
+                :is="PersonFeedback24Filled"
+                class="sider-icon"
+              />
+            </template>
+          </NButton>
+        </div>
+
+        <NButton
+          class="sider-top-btn"
+          size="small"
+          type="primary"
+          secondary
+          strong
+          :circle="collapsed"
+          :block="!collapsed"
+          :title="collapsed ? '自定义页面' : undefined"
+          @click="go('manage-userPageBuilder')"
         >
           <template #icon>
             <component
-              :is="GridOutline"
+              :is="DocumentTextOutline"
               class="sider-icon"
             />
           </template>
           <span
             v-if="!collapsed"
-            class="sider-top-label"
-            >面板</span
+            class="sider-btn-label"
+            >自定义页面</span
           >
         </NButton>
-
-        <NButton
-          v-if="!collapsed"
-          class="sider-top-icon-btn"
-          size="small"
-          quaternary
-          circle
-          :title="collapsed ? '反馈' : '反馈'"
-          @click="go('manage-feedback')"
-        >
-          <template #icon>
-            <component
-              :is="PersonFeedback24Filled"
-              class="sider-icon"
-            />
-          </template>
-        </NButton>
-      </div>
-
-      <NButton
-        class="sider-top-btn"
-        size="small"
-        type="primary"
-        secondary
-        strong
-        :circle="collapsed"
-        :block="!collapsed"
-        :title="collapsed ? '自定义页面' : undefined"
-        @click="go('manage-userPageBuilder')"
-      >
-        <template #icon>
-          <component
-            :is="DocumentTextOutline"
-            class="sider-icon"
-          />
-        </template>
-        <span
-          v-if="!collapsed"
-          class="sider-btn-label"
-          >自定义页面</span
-        >
-      </NButton>
-
-      <NButton
-        v-if="accountInfo.biliUserAuthInfo"
-        class="sider-top-btn"
-        size="small"
-        type="info"
-        secondary
-        strong
-        :circle="collapsed"
-        :block="!collapsed"
-        :title="collapsed ? '认证用户主页' : undefined"
-        @click="gotoAuthPage()"
-      >
-        <template #icon>
-          <component
-            :is="Person48Filled"
-            class="sider-icon"
-          />
-        </template>
-        <span
-          v-if="!collapsed"
-          class="sider-btn-label"
-          >认证用户主页</span
-        >
-      </NButton>
+      </template>
     </div>
 
     <NScrollbar class="manage-sider__nav">
@@ -468,10 +578,12 @@ async function go(name: string) {
               <button
                 class="nav-group__toggle"
                 type="button"
+                :disabled="g.key === 'group-user'"
                 @click="toggleGroup(g.key)"
               >
                 <span class="nav-group__label">{{ g.label }}</span>
                 <span
+                  v-if="g.key !== 'group-user'"
                   class="nav-group__chev"
                   :class="{ open: isGroupExpanded(g.key) }"
                   >›</span
@@ -534,7 +646,7 @@ async function go(name: string) {
             </div>
 
             <div
-              v-show="collapsed || isGroupExpanded(g.key)"
+              v-show="collapsed || g.key === 'group-user' || isGroupExpanded(g.key)"
               class="nav-group__items"
             >
               <div
@@ -665,6 +777,53 @@ async function go(name: string) {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.workspace-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 9px;
+  background: var(--vtsuru-bg-muted);
+}
+
+.workspace-switch button {
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--vtsuru-fg-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workspace-switch button.active {
+  background: var(--vtsuru-bg-elevated);
+  color: var(--vtsuru-fg);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--vtsuru-fg) 12%, transparent);
+}
+
+.workspace-switch--collapsed {
+  grid-template-columns: 1fr;
+}
+
+.identity-button {
+  justify-content: flex-start;
+}
+
+.identity-button__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .manage-sider__top-row {

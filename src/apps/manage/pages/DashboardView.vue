@@ -5,8 +5,6 @@ import {
   NAlert,
   NButton,
   NCard,
-  NCode,
-  NCountdown,
   NDivider,
   NEllipsis,
   NFlex,
@@ -28,11 +26,10 @@ import { onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
-import type { BiliAuthModel } from '@/api/api-models'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { parseBiliAuthCredential } from '@/apps/account/components/biliAuthCredential'
+import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
@@ -64,22 +61,12 @@ watch(
   { immediate: true },
 )
 
-const resetEmailModalVisiable = ref(false)
-const resetPasswordModalVisiable = ref(false)
 const bindBiliCodeModalVisiable = ref(false)
-const bindBiliAuthModalVisiable = ref(false)
 const resetNameModalVisiable = ref(false)
-
-const newEmailAddress = ref('')
-const newEmailVerifyCode = ref('')
-const canSendEmailVerifyCode = ref(true)
 
 const newName = ref('')
 
-const newPassword = ref('')
-const newPassword2 = ref('')
 const biliCode = ref('')
-const biliAuthText = ref('')
 const isLoading = ref(false)
 
 // API选择器选项
@@ -122,85 +109,6 @@ function resetBili() {
     .finally(() => {
       isLoading.value = false
     })
-}
-function resetBiliAuthBind() {
-  isLoading.value = true
-  QueryGetAPI(`${ACCOUNT_API_URL}reset-bili-auth`)
-    .then(async (data) => {
-      if (data.code === 200) {
-        message.success('已解绑 Bilibili 用户账号')
-        await refreshAccountState()
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-function resetEmail() {
-  isLoading.value = true
-  QueryGetAPI(`${ACCOUNT_API_URL}reset-email`, { email: newEmailAddress.value, code: newEmailVerifyCode.value })
-    .then(async (data) => {
-      if (data.code === 200) {
-        message.success(`已将邮箱改绑为 ${newEmailAddress.value}`)
-        resetEmailModalVisiable.value = false
-        await refreshAccountState()
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-function sendEmailVerifyCode() {
-  QueryGetAPI(`${ACCOUNT_API_URL}reset-email/code`, { email: newEmailAddress.value })
-    .then((data) => {
-      if (data.code === 200) {
-        message.success('发送成功, 请检查目标邮箱. 如果没有收到, 请检查垃圾邮件')
-        canSendEmailVerifyCode.value = false
-        setTimeout(() => {
-          canSendEmailVerifyCode.value = true
-        }, 60 * 1000)
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
-    })
-}
-async function resetPassword() {
-  if (newPassword.value !== newPassword2.value) {
-    message.error('两次密码不一致')
-    return
-  }
-  try {
-    const data = await QueryGetAPI(`${ACCOUNT_API_URL}verify/reset-password`, { password: newPassword.value })
-    if (data.code === 200) {
-      message.success('密码已修改')
-      resetPasswordModalVisiable.value = false
-      newPassword.value = ''
-      newPassword2.value = ''
-      // 密码修改不需要整页刷新；会话 cookie 仍有效
-      await refreshAccountState()
-    } else {
-      message.error(data.message)
-    }
-  } catch (err) {
-    console.error(err)
-    message.error('发生错误')
-  }
 }
 async function resetName() {
   if (accountInfo.value?.name === newName.value) {
@@ -271,39 +179,6 @@ async function BindBili() {
     })
     .finally(() => {
       turnstile.value?.reset()
-      isLoading.value = false
-    })
-}
-async function BindBiliAuth() {
-  if (!biliAuthText.value) {
-    message.error('认证链接不能为空')
-    return
-  }
-  let authToken: string
-  try {
-    authToken = parseBiliAuthCredential(biliAuthText.value)
-  } catch (error) {
-    message.error(error instanceof Error ? error.message : '认证链接格式无效')
-    return
-  }
-
-  isLoading.value = true
-  await QueryPostAPI<BiliAuthModel>(`${ACCOUNT_API_URL}bind-bili-auth`, { token: authToken })
-    .then(async (data) => {
-      if (data.code == 200) {
-        message.success(`已绑定用户: ${data.data.userId}`)
-        bindBiliAuthModalVisiable.value = false
-        biliAuthText.value = ''
-        await refreshAccountState()
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
-    })
-    .finally(() => {
       isLoading.value = false
     })
 }
@@ -450,13 +325,6 @@ onUnmounted(() => {
                 >
                   修改用户名
                 </NButton>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="resetPasswordModalVisiable = true"
-                >
-                  修改密码
-                </NButton>
                 <NPopconfirm @positive-click="logout">
                   <template #trigger>
                     <NButton
@@ -473,36 +341,7 @@ onUnmounted(() => {
             </NFlex>
 
             <NFlex vertical>
-              <NCard
-                size="small"
-                bordered
-              >
-                <NFlex :size="5">
-                  邮箱:
-                  <NEllipsis
-                    v-if="accountInfo?.isEmailVerified"
-                    style="max-width: 100%"
-                  >
-                    <NText style="color: var(--vtsuru-primary)"> 已认证 | {{ accountInfo?.bindEmail }} </NText>
-                  </NEllipsis>
-                  <template v-else>
-                    <NTag
-                      type="error"
-                      size="small"
-                    >
-                      未认证
-                    </NTag>
-                  </template>
-                  <NButton
-                    v-if="accountInfo?.isEmailVerified"
-                    type="warning"
-                    size="tiny"
-                    @click="resetEmailModalVisiable = true"
-                  >
-                    修改邮箱
-                  </NButton>
-                </NFlex>
-              </NCard>
+              <AccountSecurityPanel />
               <NCard
                 size="small"
                 bordered
@@ -589,59 +428,6 @@ onUnmounted(() => {
                     @click="bindBiliCodeModalVisiable = true"
                   >
                     进行绑定
-                  </NButton>
-                </template>
-              </NCard>
-              <NCard
-                size="small"
-                bordered
-              >
-                用户 Bilibili 账户:
-                <NEllipsis
-                  v-if="accountInfo?.biliUserAuthInfo"
-                  style="max-width: 100%"
-                >
-                  <NText style="color: var(--vtsuru-primary)">
-                    <NFlex
-                      :size="5"
-                      align="center"
-                    >
-                      已绑定 | {{ accountInfo?.biliUserAuthInfo?.name }} [{{ accountInfo?.biliUserAuthInfo?.userId }}]
-                      <NPopconfirm @positive-click="resetBiliAuthBind">
-                        <template #trigger>
-                          <NButton
-                            size="tiny"
-                            type="error"
-                          >
-                            解除绑定
-                          </NButton>
-                        </template>
-                        确定解除绑定吗?
-                      </NPopconfirm>
-                    </NFlex>
-                  </NText>
-                </NEllipsis>
-                <template v-else>
-                  <NTag
-                    type="error"
-                    size="small"
-                  >
-                    未认证
-                    <NTooltip>
-                      <template #trigger>
-                        <NIcon :component="Info24Filled" />
-                      </template>
-                      用于进行积分兑换等操作, 如果你是主播可以不用管,
-                      并且即使不绑定也可以直接用认证完成给出的链接查看和使用积分
-                    </NTooltip>
-                  </NTag>
-                  <NDivider vertical />
-                  <NButton
-                    size="small"
-                    type="info"
-                    @click="bindBiliAuthModalVisiable = true"
-                  >
-                    进行认证
                   </NButton>
                 </template>
               </NCard>
@@ -741,70 +527,6 @@ onUnmounted(() => {
     </NTabs>
   </div>
   <NModal
-    v-model:show="resetEmailModalVisiable"
-    preset="card"
-    title="改绑邮箱"
-    style="width: 400px; max-width: 90%"
-  >
-    <NFlex vertical>
-      <NInput
-        v-model:value="newEmailAddress"
-        placeholder="新邮箱地址"
-      />
-      <NInputGroup>
-        <NInput
-          v-model:value="newEmailVerifyCode"
-          placeholder="验证码"
-        />
-        <NButton
-          type="primary"
-          @click="sendEmailVerifyCode"
-        >
-          发送验证码
-          <template v-if="!canSendEmailVerifyCode">
-            |
-            <NCountdown :duration="60000" />
-          </template>
-        </NButton>
-      </NInputGroup>
-    </NFlex>
-    <template #footer>
-      <NButton
-        type="primary"
-        @click="resetEmail"
-      >
-        确定
-      </NButton>
-    </template>
-  </NModal>
-  <NModal
-    v-model:show="resetPasswordModalVisiable"
-    preset="card"
-    title="修改密码"
-    style="width: 400px; max-width: 90%"
-  >
-    <NFlex vertical>
-      <NInput
-        v-model:value="newPassword"
-        type="password"
-        placeholder="新密码"
-      />
-      <NInput
-        v-model:value="newPassword2"
-        type="password"
-        placeholder="确认密码"
-      />
-    </NFlex>
-    <template #footer>
-      <NButton
-        type="warning"
-        @click="resetPassword"
-      >
-        确定修改
-      </NButton>
-    </template>
-  </NModal>
-  <NModal
     v-model:show="resetNameModalVisiable"
     preset="card"
     title="修改用户名"
@@ -884,58 +606,6 @@ onUnmounted(() => {
         :disabled="!token"
         :loading="isLoading"
         @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()"
-      >
-        确定
-      </NButton>
-    </template>
-  </NModal>
-  <NModal
-    v-model:show="bindBiliAuthModalVisiable"
-    preset="card"
-    title="绑定用户账户"
-    style="width: 700px; max-width: 90%"
-  >
-    <NFlex vertical>
-      <NAlert
-        title="获取认证链接"
-        type="info"
-      >
-        因为部分功能如积分兑换等也需要对没有注册本站账户的用户开放，所以需要在另一个页面获取认证链接，
-        然后再回到这里绑定
-      </NAlert>
-      <NInputGroup>
-        <NInput
-          v-model:value="biliAuthText"
-          placeholder="认证链接, 或者 Token"
-        />
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              type="primary"
-              tag="a"
-              href="/bili-auth"
-              target="_blank"
-            >
-              <template #icon>
-                <NIcon>
-                  <Question24Regular />
-                </NIcon>
-              </template>
-              前往认证
-            </NButton>
-          </template>
-          直接粘贴认证完成后给出的类似
-          <NCode> https://vtsuru.live/bili-user/points#auth=abcdefghijklmnopqrstuvwxyz%3D%3D </NCode>
-          的链接即可
-        </NTooltip>
-      </NInputGroup>
-    </NFlex>
-    <template #footer>
-      <NButton
-        type="success"
-        :loading="isLoading"
-        :disabled="!biliAuthText"
-        @click="BindBiliAuth()"
       >
         确定
       </NButton>

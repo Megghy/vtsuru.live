@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Bot24Regular } from '@vicons/fluent'
 import { NButton, NConfigProvider, NIcon, useMessage } from 'naive-ui'
-import { computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
@@ -15,17 +15,40 @@ import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate
 import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer.vue'
 import ManageSider from '@/apps/manage/components/layout/ManageSider.vue'
 import ManageTopBar from '@/apps/manage/components/layout/ManageTopBar.vue'
+import ManageUserGate from '@/apps/manage/components/layout/ManageUserGate.vue'
+import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { currentAPIKey } from '@/shared/config'
 import { buildManageTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
 import { isDarkMode } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 const accountInfo = useAccount()
 const message = useMessage()
 const route = useRoute()
+const router = useRouter()
 const assistant = useAssistantStore()
+const biliAuth = useBiliAuth()
+const { workspace } = useManageWorkspace()
+const hasWorkspaceIdentity = computed(() => workspace.value === 'user' || accountInfo.value.id > 0)
 const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
 const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
 const manageThemeOverrides = computed(() => getThemeOverrides(manageTokens.value))
+
+watch(
+  () => accountInfo.value.id,
+  (accountId, previousId) => {
+    if (
+      accountId > 0 &&
+      !previousId &&
+      workspace.value === 'streamer' &&
+      route.name === 'manage-index' &&
+      !accountInfo.value.isBiliVerified &&
+      accountInfo.value.biliUserAuthInfo
+    ) {
+      void router.replace({ name: 'bili-user-points' })
+    }
+  },
+)
 
 function openAssistant() {
   assistant.open({
@@ -55,17 +78,21 @@ onMounted(() => {
       :style="manageCssVars"
     >
       <div
-        v-if="accountInfo.id"
+        v-if="hasWorkspaceIdentity"
         class="manage-shell"
       >
         <div class="manage-shell__body">
           <ManageSider :account-info="accountInfo" />
 
           <div class="manage-shell__main">
-            <ManageTopBar :account-name="accountInfo?.name" />
+            <ManageTopBar :account-name="workspace === 'user' ? biliAuth.biliAuth.name : accountInfo?.name" />
             <div class="manage-shell__scroll">
               <div class="manage-shell__content">
-                <ManageContentGate :account-info="accountInfo" />
+                <ManageUserGate v-if="workspace === 'user'" />
+                <ManageContentGate
+                  v-else
+                  :account-info="accountInfo"
+                />
               </div>
             </div>
 
