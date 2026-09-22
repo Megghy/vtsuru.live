@@ -1,3 +1,4 @@
+import { createDanmakuSocket } from '@vtsuru/danmaku'
 import { clearTimeout, setTimeout } from 'worker-timers'
 
 import type { OpenLiveInfo } from '@/api/api-models'
@@ -6,7 +7,7 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { OPEN_LIVE_API_URL } from '@/shared/config'
 import { GuidUtils } from '@/shared/utils'
 
-import BaseDanmakuClient, { DanmakuKeepLiveWS } from './BaseDanmakuClient'
+import BaseDanmakuClient from './BaseDanmakuClient'
 
 export default class OpenLiveClient extends BaseDanmakuClient {
   public serverUrl: string = ''
@@ -48,8 +49,10 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     if (signal.aborted) return { success: false, message: '弹幕客户端启动已取消' }
 
     if (auth.data) {
-      const chatClient = new DanmakuKeepLiveWS(auth.data.anchor_info.room_id, {
-        authBody: JSON.parse(auth.data.websocket_info.auth_body),
+      const chatClient = createDanmakuSocket({
+        type: 'openlive',
+        roomId: auth.data.anchor_info.room_id,
+        authBody: JSON.parse(auth.data.websocket_info.auth_body) as Record<string, unknown>,
         address: auth.data.websocket_info.wss_link[0],
       })
       chatClient.addEventListener('msg', ({ data }) => {

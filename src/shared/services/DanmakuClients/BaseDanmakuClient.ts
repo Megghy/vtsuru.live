@@ -1,4 +1,4 @@
-import { KeepLiveWS } from '@laplace.live/ws/client'
+import type { DanmakuSocket } from '@vtsuru/danmaku'
 
 import DanmakuEventEmitter from './DanmakuEventEmitter'
 
@@ -7,15 +7,8 @@ type ConnectOutcome = 'connected' | 'error' | 'timeout' | 'cancelled'
 
 const CONNECT_TIMEOUT_MS = 30_000
 
-export class DanmakuKeepLiveWS extends KeepLiveWS {
-  public override connect(reconnect = true) {
-    if (this.closed) return
-    super.connect(reconnect)
-  }
-}
-
 export default abstract class BaseDanmakuClient extends DanmakuEventEmitter {
-  public client: DanmakuKeepLiveWS | null = null
+  public client: DanmakuSocket | null = null
   public abstract type: 'openlive' | 'direct'
   public abstract serverUrl: string
 
@@ -80,7 +73,7 @@ export default abstract class BaseDanmakuClient extends DanmakuEventEmitter {
 
   protected abstract initClient(signal: AbortSignal): Promise<StartResult>
 
-  protected async initClientInner(chatClient: DanmakuKeepLiveWS, signal: AbortSignal): Promise<StartResult> {
+  protected async initClientInner(chatClient: DanmakuSocket, signal: AbortSignal): Promise<StartResult> {
     if (signal.aborted) {
       chatClient.close()
       return { success: false, message: '弹幕客户端启动已取消' }

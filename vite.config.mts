@@ -143,7 +143,12 @@ export default defineConfig({
     }),
   ],
   server: { host: '0.0.0.0', port: 51000 },
-  resolve: { alias: { '@': import.meta.dirname + '/src' } },
+  resolve: {
+    alias: {
+      '@': import.meta.dirname + '/src',
+      '@vtsuru/danmaku': import.meta.dirname + '/packages/danmaku/src/index.ts',
+    },
+  },
   define: {
     'process.env': {},
     // 用 globalThis 而非 window：主线程/Web Worker/Node 均存在，避免 worker 内 window 未定义报错

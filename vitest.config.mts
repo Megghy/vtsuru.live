@@ -6,7 +6,10 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@vtsuru/danmaku': path.resolve(__dirname, 'packages/danmaku/src/index.ts'),
+    },
   },
   plugins: [
     vue(),
@@ -19,6 +22,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['src/test/setup.ts'],
-    include: ['src/**/*.{test,spec}.ts'],
+    include: ['src/**/*.{test,spec}.ts', 'packages/**/*.test.ts'],
+    server: { deps: { inline: ['@vtsuru/danmaku'] } },
   },
 })

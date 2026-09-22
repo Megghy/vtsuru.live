@@ -9,6 +9,7 @@
     "paths": {
       "*": ["./*"],
       "@/*": ["./src/*"],
+      "@vtsuru/danmaku": ["./packages/danmaku/src/index.ts"],
       "vue": ["./node_modules/vue"],
       "@vue/*": ["./node_modules/@vue/*"]
     },

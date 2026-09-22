@@ -1,0 +1,12 @@
+{
+  "name": "@vtsuru/danmaku",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@laplace.live/ws": "^8.0.1"
+  }
+}

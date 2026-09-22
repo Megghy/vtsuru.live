@@ -1,10 +1,11 @@
 import type { LiveEventMap } from '@laplace.live/ws/browser'
+import { createDanmakuSocket } from '@vtsuru/danmaku'
 
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
 import { GuidUtils } from '@/shared/utils'
 
-import BaseDanmakuClient, { DanmakuKeepLiveWS } from './BaseDanmakuClient'
+import BaseDanmakuClient from './BaseDanmakuClient'
 import { decodeInteractWord } from './interactWord'
 import type { InteractionData } from './interactWord'
 import { decodeSendGiftV2 } from './sendGiftV2'
@@ -35,11 +36,12 @@ export default class DirectClient extends BaseDanmakuClient {
 
   protected async initClient(signal: AbortSignal): Promise<{ success: boolean; message: string }> {
     if (this.authInfo) {
-      const chatClient = new DanmakuKeepLiveWS(this.authInfo.roomId, {
-        key: this.authInfo.token,
+      const chatClient = createDanmakuSocket({
+        type: 'direct',
+        roomId: this.authInfo.roomId,
+        token: this.authInfo.token,
         buvid: this.authInfo.buvid,
         uid: this.authInfo.tokenUserId,
-        protover: 3,
       })
 
       chatClient.addEventListener('live', () => {
