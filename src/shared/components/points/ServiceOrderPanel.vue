@@ -127,6 +127,32 @@ function normalizeTimestamp(value?: number | null) {
   return value < 10_000_000_000 ? value * 1000 : value
 }
 
+function startOfDay(time: number) {
+  const date = new Date(time)
+  date.setHours(0, 0, 0, 0)
+  return date.getTime()
+}
+
+function isAppointmentDateDisabled(timestamp: number) {
+  return timestamp < startOfDay(Date.now())
+}
+
+function isAppointmentTimeDisabled(timestamp: number) {
+  const now = new Date()
+  const selected = new Date(timestamp)
+  const sameDay =
+    selected.getFullYear() === now.getFullYear() &&
+    selected.getMonth() === now.getMonth() &&
+    selected.getDate() === now.getDate()
+  if (!sameDay) return {}
+  return {
+    isHourDisabled: (hour: number) => hour < now.getHours(),
+    isMinuteDisabled: (minute: number, hour: number | null) => hour === now.getHours() && minute < now.getMinutes(),
+    isSecondDisabled: (second: number, minute: number | null, hour: number | null) =>
+      hour === now.getHours() && minute === now.getMinutes() && second < now.getSeconds(),
+  }
+}
+
 function syncForm(data?: ServiceOrderData) {
   appointmentAt.value = normalizeTimestamp(data?.appointmentAt) ?? null
   deliveryUrl.value = data?.deliveryUrl ?? ''
@@ -347,6 +373,8 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
                 v-model:value="appointmentAt"
                 type="datetime"
                 clearable
+                :is-date-disabled="isAppointmentDateDisabled"
+                :is-time-disabled="isAppointmentTimeDisabled"
                 placeholder="选择预约时间"
               />
               <NTime
@@ -480,11 +508,11 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
 </template>
 
 <style scoped>
-.service-order-modal {
+:global(.service-order-modal) {
   width: min(760px, calc(100vw - 24px));
   max-width: calc(100vw - 24px);
 }
-.service-order-scrollbar {
+:global(.service-order-scrollbar) {
   max-height: min(80vh, 780px);
 }
 .service-order-detail {
@@ -549,7 +577,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
   margin: 4px 0;
 }
 @media (max-width: 620px) {
-  .service-order-modal {
+  :global(.service-order-modal) {
     width: calc(100vw - 16px);
     max-width: calc(100vw - 16px);
   }

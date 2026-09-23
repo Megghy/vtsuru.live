@@ -33,8 +33,7 @@ import {
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { useAccount } from '@/api/account'
-import { cookie } from '@/api/auth'
+import { logoutAccount, useAccount } from '@/api/account'
 import CookieInvalidAlert from '@/apps/client/components/CookieInvalidAlert.vue'
 import { roomInfo } from '@/apps/client/data/info'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
@@ -110,10 +109,6 @@ function toggleVtsFloatWindow() {
   }
 }
 
-function logout() {
-  cookie.value = undefined
-  window.location.reload()
-}
 </script>
 
 <template>
@@ -193,7 +188,7 @@ function logout() {
             前往直播间
           </NButton>
 
-          <NPopconfirm @positive-click="logout">
+          <NPopconfirm @positive-click="logoutAccount">
             <template #trigger>
               <NButton
                 quaternary

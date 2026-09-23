@@ -1,29 +1,32 @@
 <script setup lang="ts">
-import { BrowsersOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NFlex, NIcon, NSpin, NText, useMessage } from 'naive-ui'
-import { ref, watch } from 'vue'
+import { NAlert, NButton, NFlex, NSpin, NText, useMessage } from 'naive-ui'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { isLoadingAccount, useAccount } from '@/api/account'
+import { isLoadingAccount } from '@/api/account'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { currentAPIKey, setSelectedAPIKey } from '@/shared/config'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import VtsuruLogo from '@/svgs/ic_vtuber.svg?component'
 
 const message = useMessage()
 const route = useRoute()
 const router = useRouter()
-const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
 const showAPISwitchDialog = ref(false)
+const showSiteLogin = ref(false)
+const isUserWorkspace = computed(() => route.meta.workspace === 'user')
+const pending = computed(() => isLoadingAccount.value || (isUserWorkspace.value && !biliAuth.sessionLoaded))
 let loadingTimer: number | null = null
 
 watch(
-  isLoadingAccount,
+  pending,
   (loading) => {
     if (loading) {
       showAPISwitchDialog.value = false
       loadingTimer = window.setTimeout(() => {
-        if (isLoadingAccount.value && currentAPIKey.value === 'main') {
+        if (pending.value && currentAPIKey.value === 'main') {
           showAPISwitchDialog.value = true
         }
       }, 3000)
@@ -39,21 +42,6 @@ watch(
   { immediate: true },
 )
 
-watch(
-  () => accountInfo.value.id,
-  (accountId, previousId) => {
-    if (
-      accountId > 0 &&
-      !previousId &&
-      route.meta.workspace !== 'user' &&
-      !accountInfo.value.isBiliVerified &&
-      accountInfo.value.biliUserAuthInfo
-    ) {
-      void router.replace({ name: 'bili-user-points' })
-    }
-  },
-)
-
 async function switchToBackupAPI() {
   await setSelectedAPIKey('failover')
   message.info('已切换到备用API，正在重新加载...')
@@ -67,50 +55,71 @@ async function switchToBackupAPI() {
     <HomeEmojiBackdrop />
 
     <section
-      v-if="!isLoadingAccount"
+      v-if="!pending"
       class="auth-shell"
       aria-labelledby="auth-title"
     >
       <header class="auth-header">
         <VtsuruLogo class="auth-logo" />
         <p class="auth-eyebrow">VTSURU CENTER</p>
-        <h1 id="auth-title">{{ route.meta.workspace === 'user' ? '连接用户身份' : '登录或创建账号' }}</h1>
+        <h1 id="auth-title">{{ isUserWorkspace ? '查看积分和订单' : '登录或创建账号' }}</h1>
+        <p class="auth-lead">
+          {{
+            isUserWorkspace
+              ? '用 Bilibili 发一条弹幕完成认证。不用注册本站账号。'
+              : '主播使用本站账号管理直播工具。'
+          }}
+        </p>
       </header>
 
+      <div
+        v-if="isUserWorkspace"
+        class="auth-actions"
+      >
+        <NButton
+          type="primary"
+          @click="router.push({ name: 'bili-auth' })"
+        >
+          开始认证
+        </NButton>
+        <NButton
+          v-if="!showSiteLogin"
+          quaternary
+          @click="showSiteLogin = true"
+        >
+          已有本站账号，登录
+        </NButton>
+      </div>
+
+      <div
+        v-if="!isUserWorkspace || showSiteLogin"
+        class="auth-form"
+      >
+        <RegisterAndLogin initial-tab="login" />
+      </div>
+
       <NAlert
+        v-if="!isUserWorkspace"
         type="info"
         :bordered="false"
-        class="auth-note"
+        title="不是主播？"
       >
         <NFlex
           vertical
-          align="center"
           :size="10"
         >
-          <NText depth="3">{{
-            route.meta.workspace === 'user'
-              ? '认证 Bilibili 账户后即可查看积分、订单与互动记录。'
-              : '普通观众无需注册，可以直接访问主播分享的功能页面。'
-          }}</NText>
-          <NButton
-            type="primary"
-            size="small"
-            @click="$router.push({ name: route.meta.workspace === 'user' ? 'bili-auth' : 'bili-user-points' })"
-          >
-            <template #icon>
-              <NIcon :component="BrowsersOutline" />
-            </template>
-            {{ route.meta.workspace === 'user' ? '开始 Bilibili 认证' : '前往用户中心' }}
-          </NButton>
+          <NText>看积分和订单不用注册。用 Bilibili 发一条弹幕完成认证即可。</NText>
+          <div>
+            <NButton
+              size="small"
+              type="primary"
+              @click="router.push({ name: 'bili-auth' })"
+            >
+              前往观众认证
+            </NButton>
+          </div>
         </NFlex>
       </NAlert>
-
-      <div
-        v-if="route.meta.workspace !== 'user'"
-        class="auth-form"
-      >
-        <RegisterAndLogin />
-      </div>
 
       <NButton
         secondary
@@ -128,7 +137,7 @@ async function switchToBackupAPI() {
       aria-live="polite"
     >
       <NSpin
-        :loading="isLoadingAccount"
+        :loading="pending"
         size="large"
       >
         <NText>正在请求账户数据...</NText>
@@ -220,8 +229,19 @@ async function switchToBackupAPI() {
   letter-spacing: 0;
 }
 
-.auth-note {
+.auth-lead {
+  margin: 8px 0 0;
+  color: var(--vtsuru-fg-muted);
+  font-size: 14px;
+  line-height: 1.6;
   text-align: center;
+}
+
+.auth-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .auth-form {

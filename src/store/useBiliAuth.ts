@@ -36,6 +36,10 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   const currentToken = usePersistedStorage<string>('Bili.Auth.Selected', null, {
     onReady: resolveCurrentTokenReady,
   })
+  const sessionLoaded = ref(false)
+  const sessionReady = currentTokenReady.then(() => {
+    sessionLoaded.value = true
+  })
 
   const isLoading = ref(false)
   const isAuthed = computed(() => biliAuth.value.id > 0 || (!usesAccountIdentity.value && Boolean(currentToken.value)))
@@ -235,6 +239,8 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     biliToken: currentToken,
     biliTokens,
     isLoading,
+    sessionLoaded,
+    sessionReady,
     isAuthed,
     isInvalid,
     legacyToken,

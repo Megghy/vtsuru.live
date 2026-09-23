@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Person48Filled, WindowWrench20Filled } from '@vicons/fluent'
-import { BrowsersOutline, ChevronBackOutline, ChevronForwardOutline, HeartOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
+import { ChevronBackOutline, ChevronForwardOutline, HeartOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useMediaQuery } from '@vueuse/core'
 import {
   darkTheme,
@@ -20,7 +20,7 @@ import {
   NTooltip,
 } from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import type { UserInfo } from '@/api/api-models'
@@ -62,6 +62,7 @@ import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 // --- 响应式状态和常量 ---
 const route = useRoute()
+const router = useRouter()
 const accountInfo = useAccount() // 获取当前登录账户信息
 const useAuth = useBiliAuth() // 获取认证状态 Store
 
@@ -83,6 +84,12 @@ const isLoading = computed(() => loadStatus.value === 'idle' || loadStatus.value
 
 // UI 控制状态
 const registerAndLoginModalVisiable = ref(false) // 注册/登录弹窗可见性
+
+async function openAudienceEntry() {
+  registerAndLoginModalVisiable.value = false
+  await useAuth.sessionReady
+  void router.push({ name: useAuth.isAuthed ? 'bili-user-points' : 'bili-auth' })
+}
 const sider = ref() // 侧边栏 DOM 引用
 const { width: siderWidth } = useElementSize(sider) // 侧边栏宽度
 const isDesktop = useMediaQuery('(min-width: 768px)')
@@ -646,7 +653,7 @@ watch(
               type="primary"
               @click="registerAndLoginModalVisiable = true"
             >
-              注册 / 登陆
+              注册 / 登录
             </NButton>
           </div>
         </div>
@@ -984,7 +991,7 @@ watch(
         size="small"
       >
         <div style="text-align: center">
-          如果你不是主播且不发送棉花糖(提问)的话则不需要注册本站, 可以直接认证B站账号
+          查看积分和订单，用 Bilibili 认证即可，不用注册。主播或需要提问时再登录。
         </div>
         <NFlex
           justify="center"
@@ -993,12 +1000,9 @@ watch(
           <NButton
             type="primary"
             size="small"
-            @click="$router.push({ name: 'bili-user-points' })"
+            @click="openAudienceEntry"
           >
-            <template #icon>
-              <NIcon :component="BrowsersOutline" />
-            </template>
-            前往 Bilibili 账户中心
+            {{ useAuth.isAuthed ? '查看积分和订单' : '开始 Bilibili 认证' }}
           </NButton>
         </NFlex>
       </NFlex>

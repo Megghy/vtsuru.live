@@ -30,10 +30,17 @@ import { useRouter } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import { VTSURU_API_URL } from '@/shared/config'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import vtb from '@/svgs/ic_vtuber.svg'
 
 const $router = useRouter()
+const biliAuth = useBiliAuth()
+
+async function openAudience() {
+  await biliAuth.sessionReady
+  void $router.push({ name: biliAuth.isAuthed ? 'bili-user-points' : 'bili-auth' })
+}
 
 const featureTones = ['tone-cyan', 'tone-yellow', 'tone-coral'] as const
 
@@ -288,17 +295,17 @@ onMounted(() => {
                   <button
                     type="button"
                     class="entry-card tone-yellow"
-                    @click="$router.push({ name: 'bili-user-points' })"
+                    @click="openAudience"
                   >
                     <NIcon
                       :component="Chat24Filled"
                       size="36"
                     />
                     <strong>我是观众</strong>
-                    <span>账户中心</span>
+                    <span>查看积分</span>
                   </button>
                 </template>
-                进入 Bilibili 账户中心，查看积分与互动记录
+                用 Bilibili 认证查看积分和订单，不用注册
               </NTooltip>
             </div>
 

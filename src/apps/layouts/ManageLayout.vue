@@ -4,7 +4,7 @@ import { NButton, NConfigProvider, NIcon, useMessage } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { useAccount } from '@/api/account'
+import { isLoadingAccount, useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import AssistantModal from '@/apps/assistant/components/AssistantModal.vue'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
@@ -29,7 +29,12 @@ const router = useRouter()
 const assistant = useAssistantStore()
 const biliAuth = useBiliAuth()
 const { workspace } = useManageWorkspace()
-const hasWorkspaceIdentity = computed(() => workspace.value === 'user' || accountInfo.value.id > 0)
+const showShell = computed(() => {
+  if (isLoadingAccount.value) return false
+  if (workspace.value === 'user' && !biliAuth.sessionLoaded) return false
+  if (workspace.value === 'user') return accountInfo.value.id > 0 || biliAuth.isAuthed
+  return accountInfo.value.id > 0
+})
 const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
 const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
 const manageThemeOverrides = computed(() => getThemeOverrides(manageTokens.value))
@@ -78,7 +83,7 @@ onMounted(() => {
       :style="manageCssVars"
     >
       <div
-        v-if="hasWorkspaceIdentity"
+        v-if="showShell"
         class="manage-shell"
       >
         <div class="manage-shell__body">

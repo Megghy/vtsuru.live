@@ -534,12 +534,12 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
   display: none;
 }
 
-.owner-order-modal {
+:global(.owner-order-modal) {
   width: min(780px, calc(100vw - 24px));
   max-width: calc(100vw - 24px);
 }
 
-.owner-order-scrollbar {
+:global(.owner-order-scrollbar) {
   max-height: min(78vh, 760px);
 }
 
@@ -639,7 +639,7 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
     gap: 8px;
   }
 
-  .owner-order-modal {
+  :global(.owner-order-modal) {
     width: calc(100vw - 16px);
     max-width: calc(100vw - 16px);
   }

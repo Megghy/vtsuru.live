@@ -19,8 +19,8 @@ import {
 import { ref, watchEffect } from 'vue'
 import { RouterView } from 'vue-router'
 
+import { logoutAccount } from '@/api/account'
 import type { AccountInfo } from '@/api/api-models'
-import { cookie } from '@/api/auth'
 import { QueryGetAPI } from '@/api/query'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import ManageDanmakuStatusBanner from '@/apps/manage/components/event-fetcher/ManageDanmakuStatusBanner.vue'
@@ -64,10 +64,6 @@ async function resendEmail() {
   }
 }
 
-function logout() {
-  cookie.value = undefined
-  window.location.reload()
-}
 </script>
 
 <template>
@@ -188,7 +184,7 @@ function logout() {
 
             <NDivider style="width: 80%; min-width: 250px" />
 
-            <NPopconfirm @positive-click="logout">
+            <NPopconfirm @positive-click="logoutAccount">
               <template #trigger>
                 <NButton secondary>
                   <template #icon>

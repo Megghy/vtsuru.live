@@ -8,7 +8,7 @@ import {
   Dismiss16Regular,
   Edit16Regular,
 } from '@vicons/fluent'
-import { NButton, NCollapseTransition, NIcon, NInput, NText, NTooltip } from 'naive-ui'
+import { NButton, NCollapseTransition, NIcon, NInput, NPopconfirm, NText, NTooltip } from 'naive-ui'
 import { reactive } from 'vue'
 
 import { copyToClipboard } from '@/shared/utils'
@@ -25,6 +25,7 @@ const emit = defineEmits<{
   (e: 'rerun', messageId: string): void
   (e: 'edit-user', messageId: string, text: string): void
   (e: 'confirm', messageId: string, actionId: string): void
+  (e: 'confirm-all', messageId: string): void
   (e: 'reject', messageId: string, actionId: string): void
   (e: 'save', messageId: string, actionId: string, items: ProposalEditItem[]): void
   (e: 'schedule', messageId: string, actionId: string, scheduledTime: number): void
@@ -74,6 +75,24 @@ function processBlocks(msg: AssistantMessage): ProcessBlock[] {
 
 function copyMessage(msg: AssistantMessage) {
   if (msg.text) copyToClipboard(msg.text)
+}
+
+function isPendingStatus(status: string): boolean {
+  return status === 'draft' || status === 'requires_confirmation'
+}
+
+function batchActions(msg: AssistantMessage) {
+  return msg.actions.filter(
+    (action) => isPendingStatus(action.proposal.status) || action.proposal.status === 'running',
+  )
+}
+
+function batchRunning(msg: AssistantMessage): boolean {
+  return msg.actions.some((action) => action.proposal.status === 'running')
+}
+
+function batchHighRisk(msg: AssistantMessage): boolean {
+  return msg.actions.some((action) => isPendingStatus(action.proposal.status) && action.proposal.risk === 'high')
 }
 
 function canEditUser(msg: AssistantMessage): boolean {
@@ -343,6 +362,38 @@ function formatTokens(value?: number): string {
           </NButton>
         </div>
 
+        <div
+          v-if="batchActions(msg).length >= 2"
+          class="msg-batch"
+        >
+          <NPopconfirm
+            v-if="batchHighRisk(msg) && !batchRunning(msg)"
+            @positive-click="emit('confirm-all', msg.id)"
+          >
+            <template #trigger>
+              <NButton
+                size="small"
+                type="primary"
+                secondary
+              >
+                全部执行 {{ batchActions(msg).length }} 项
+              </NButton>
+            </template>
+            其中包含高风险操作，确认全部执行？
+          </NPopconfirm>
+          <NButton
+            v-else
+            size="small"
+            type="primary"
+            secondary
+            :loading="batchRunning(msg)"
+            :disabled="batchRunning(msg)"
+            @click="emit('confirm-all', msg.id)"
+          >
+            全部执行 {{ batchActions(msg).length }} 项
+          </NButton>
+        </div>
+
         <AssistantActionCard
           v-for="action in msg.actions"
           :key="action.id"
@@ -587,6 +638,11 @@ function formatTokens(value?: number): string {
 }
 .msg-action {
   color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
+}
+.msg-batch {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 .msg-error {
   display: flex;

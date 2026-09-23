@@ -3,7 +3,7 @@ import { Key24Regular, Mail24Regular } from '@vicons/fluent'
 import { NButton, NCountdown, NIcon, NInput, NInputGroup, NModal, NTag, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-import { GetSelfAccount, useAccount } from '@/api/account'
+import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL } from '@/shared/config'
@@ -107,8 +107,7 @@ function reset() {
 
 function logout() {
   biliAuth.logout()
-  cookie.value = undefined
-  window.location.reload()
+  logoutAccount()
 }
 
 defineExpose({ reset })

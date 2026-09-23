@@ -26,11 +26,11 @@ const { workspace, switchWorkspace } = useManageWorkspace()
     <button
       type="button"
       :class="{ active: workspace === 'user' }"
-      :title="collapsed ? '用户中心' : undefined"
+      :title="collapsed ? '观众' : undefined"
       @click="switchWorkspace('user')"
     >
       <NIcon :component="Person48Filled" />
-      <span v-if="!collapsed">用户</span>
+      <span v-if="!collapsed">观众</span>
     </button>
   </div>
 </template>

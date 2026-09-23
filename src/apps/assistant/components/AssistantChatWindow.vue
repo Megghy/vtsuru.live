@@ -180,6 +180,7 @@ function onPickSuggestion(text: string) {
         @rerun="store.rerun"
         @edit-user="store.editAndRerun"
         @confirm="store.confirmAction"
+        @confirm-all="store.confirmAllActions"
         @reject="store.rejectActionById"
         @save="store.saveActionEdit"
         @schedule="store.scheduleActionById"

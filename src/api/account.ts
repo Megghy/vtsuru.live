@@ -9,6 +9,23 @@ import { createNaiveUIApi } from '@/shared/utils'
 import type { AccountInfo, APIRoot, FunctionTypes } from './api-models'
 import { cookie } from './auth'
 
+// 手动登出后本次标签页会话内不再 dev 自动登录；关闭标签页后恢复。生产构建不会读写该键。
+const DEV_AUTO_LOGIN_SUPPRESSED_KEY = 'vtsuru.devAutoLoginSuppressed'
+
+export function isDevAutoLoginSuppressed() {
+  return import.meta.env.DEV && sessionStorage.getItem(DEV_AUTO_LOGIN_SUPPRESSED_KEY) === '1'
+}
+
+function suppressDevAutoLogin() {
+  if (import.meta.env.DEV) sessionStorage.setItem(DEV_AUTO_LOGIN_SUPPRESSED_KEY, '1')
+}
+
+export function logoutAccount() {
+  suppressDevAutoLogin()
+  cookie.value = undefined
+  window.location.reload()
+}
+
 export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
 export const isLoadingAccount = ref(true)
 export const isLoggedIn = computed<boolean>(() => {

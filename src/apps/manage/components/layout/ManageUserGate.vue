@@ -113,8 +113,8 @@ onMounted(async () => {
   >
     <NResult
       :status="auth.isInvalid ? 'warning' : 'info'"
-      :title="auth.isInvalid ? '当前 Bilibili 账户认证已失效' : '连接 Bilibili 账户后继续'"
-      description="用户工作区用于查看积分、订单和账户记录。"
+      :title="auth.isInvalid ? 'Bilibili 认证已失效' : '先完成 Bilibili 认证'"
+      description="认证后即可查看积分、订单和积分记录。"
     >
       <template #footer>
         <div class="user-workspace-actions">
@@ -122,13 +122,7 @@ onMounted(async () => {
             type="primary"
             @click="router.push({ name: 'bili-auth' })"
           >
-            {{ accountInfo.id ? '绑定 Bilibili 身份' : auth.biliTokens.length ? '认证其他账号' : '开始认证' }}
-          </NButton>
-          <NButton
-            v-if="!accountInfo.id"
-            @click="router.push({ name: 'manage-index' })"
-          >
-            使用 UID / 用户名登录
+            {{ auth.isInvalid ? '重新认证' : accountInfo.id ? '绑定 Bilibili' : '开始认证' }}
           </NButton>
         </div>
       </template>

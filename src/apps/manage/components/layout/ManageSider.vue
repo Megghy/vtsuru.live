@@ -767,6 +767,8 @@ async function go(name: string) {
 .identity-button__label {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 20px;
 }
 
 .manage-sider__top-row {

@@ -366,20 +366,52 @@ export const useAssistantStore = defineStore('assistant', () => {
     return messages.value.find((m) => m.id === messageId)?.actions.find((a) => a.id === actionId)
   }
 
-  /** 确认执行操作: 仅凭 proposalId 调后端 */
-  async function confirmAction(messageId: string, actionId: string) {
-    const action = findAction(messageId, actionId)
-    if (!action) return
+  const confirmingMessages = new Set<string>()
+
+  async function executeProposal(action: AssistantAction): Promise<boolean> {
     action.proposal.status = 'running'
     action.proposal.error = undefined
     try {
       action.proposal = await approveAction(action.proposal.id)
-      window.$message?.success('操作已执行')
+      return true
     } catch (e) {
       action.proposal.status = 'failed'
       action.proposal.error = e instanceof Error ? e.message : String(e)
-      window.$message?.error(action.proposal.error)
+      return false
     }
+  }
+
+  /** 确认执行操作: 仅凭 proposalId 调后端 */
+  async function confirmAction(messageId: string, actionId: string) {
+    const action = findAction(messageId, actionId)
+    if (!action) return
+    const ok = await executeProposal(action)
+    if (ok) window.$message?.success('操作已执行')
+    else window.$message?.error(action.proposal.error)
+  }
+
+  /** 按出现顺序执行本轮全部待确认提案; 单项失败不中断后续 */
+  async function confirmAllActions(messageId: string) {
+    if (confirmingMessages.has(messageId)) return
+    const msg = messages.value.find((m) => m.id === messageId)
+    if (!msg) return
+    const pending = msg.actions.filter(
+      (action) => action.proposal.status === 'draft' || action.proposal.status === 'requires_confirmation',
+    )
+    if (pending.length === 0) return
+    confirmingMessages.add(messageId)
+    let ok = 0
+    let failed = 0
+    try {
+      for (const action of pending) {
+        if (await executeProposal(action)) ok++
+        else failed++
+      }
+    } finally {
+      confirmingMessages.delete(messageId)
+    }
+    if (failed === 0) window.$message?.success(`已执行 ${ok} 项`)
+    else window.$message?.warning(`已执行 ${ok} 项，${failed} 项失败`)
   }
 
   /** 取消/拒绝操作 */
@@ -450,6 +482,7 @@ export const useAssistantStore = defineStore('assistant', () => {
     editAndRerun,
     abortPending,
     confirmAction,
+    confirmAllActions,
     rejectActionById,
     saveActionEdit,
     scheduleActionById,

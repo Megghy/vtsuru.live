@@ -6,6 +6,7 @@ import {
   Login,
   UpdateAccountLoop,
   applyAccountSession,
+  isDevAutoLoginSuppressed,
   isLoadingAccount,
   useAccount,
 } from '@/api/account'
@@ -130,9 +131,10 @@ async function initHyperDX() {
 }
 
 // 本地调试自动登录: 在 .env.local 配 VITE_DEV_LOGIN_TOKEN 或 VITE_DEV_LOGIN_NAME + VITE_DEV_LOGIN_PASSWORD
-// 免去 Playwright 等无头环境手动登录; 生产构建下 import.meta.env.DEV 为 false, 整段被摇树删除
+// 免去 Playwright 等无头环境手动登录。手动登出后本次标签页不再自动登录。
+// 生产构建下 import.meta.env.DEV 为 false, 整段被摇树删除
 async function devAutoLogin() {
-  if (!import.meta.env.DEV || cookie.value?.cookie) return
+  if (!import.meta.env.DEV || cookie.value?.cookie || isDevAutoLoginSuppressed()) return
 
   const token = import.meta.env.VITE_DEV_LOGIN_TOKEN?.trim()
   if (token) {

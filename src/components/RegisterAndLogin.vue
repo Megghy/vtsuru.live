@@ -42,9 +42,11 @@ type AuthProgressState = 'idle' | 'submitting' | 'slow' | 'success' | 'error' | 
 const props = withDefaults(
   defineProps<{
     closable?: boolean
+    initialTab?: 'login' | 'register'
   }>(),
   {
     closable: false,
+    initialTab: 'login',
   },
 )
 
@@ -71,7 +73,7 @@ const loginModel = ref<LoginModel>({
 const token = ref('')
 const turnstile = ref<InstanceType<typeof CaptchaWidget>>()
 
-const selectedTab = ref<'login' | 'register' | 'forget'>('login')
+const selectedTab = ref<'login' | 'register' | 'forget'>(props.initialTab)
 const inputForgetPasswordValue = ref('')
 const isForgetPassword = ref(false)
 const canSendForgetPassword = ref(true)
@@ -533,7 +535,7 @@ onUnmounted(() => {
 <template>
   <section class="account-auth">
     <header class="account-auth__header">
-      <h2>账号认证</h2>
+      <h2>登录或注册</h2>
       <div class="account-auth__header-actions">
         <slot name="header-extra" />
         <NButton

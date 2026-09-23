@@ -25,9 +25,8 @@ import {
 import { onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { GetSelfAccount, useAccount } from '@/api/account'
+import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
-import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
@@ -83,11 +82,6 @@ async function handleAPIChange(value: string) {
   location.reload()
 }
 
-// 登出后清空会话，必须整页重载
-function logout() {
-  cookie.value = undefined
-  window.location.reload()
-}
 async function refreshAccountState() {
   await GetSelfAccount()
 }
@@ -333,7 +327,7 @@ onUnmounted(() => {
                 >
                   修改用户名
                 </NButton>
-                <NPopconfirm @positive-click="logout">
+                <NPopconfirm @positive-click="logoutAccount">
                   <template #trigger>
                     <NButton
                       size="small"

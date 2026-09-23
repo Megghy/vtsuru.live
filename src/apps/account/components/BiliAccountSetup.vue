@@ -60,11 +60,11 @@ async function submit() {
 <template>
   <section class="account-setup">
     <template v-if="proof?.linked && !account.id && !resetting">
-      <p>UID {{ proof.userId }} 已关联站内账号，请使用 UID 和已有密码登录。</p>
+      <p>这个 B 站账号已经设置过本站密码，直接登录即可。登录 UID：{{ proof.userId }}</p>
       <NButton
         type="primary"
         block
-        @click="router.push({ name: 'manage' })"
+        @click="router.push({ name: 'manage-index' })"
         >前往登录</NButton
       >
       <NButton
@@ -111,7 +111,7 @@ async function submit() {
         :loading="pending"
         @click="submit"
       >
-        {{ resetting ? '重置密码并进入后台' : account.id ? '确认绑定' : '设置密码并进入后台' }}
+        {{ resetting ? '重置密码并查看积分' : account.id ? '确认绑定' : '设置密码并查看积分' }}
       </NButton>
     </template>
     <NAlert

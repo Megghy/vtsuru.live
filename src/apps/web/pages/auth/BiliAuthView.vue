@@ -387,7 +387,7 @@ onBeforeUnmount(stopPolling)
                 text-color="#ffffff"
                 @click="$router.push({ name: 'bili-user-points' })"
               >
-                进入用户后台
+                查看我的积分
                 <template #icon><NIcon :component="ArrowRight24Regular" /></template>
               </NButton>
               <NPopconfirm
