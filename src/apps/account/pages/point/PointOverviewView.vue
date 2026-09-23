@@ -5,6 +5,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { UserInfo } from '@/api/api-models'
+import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
 import { POINT_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -45,14 +46,17 @@ onMounted(loadPoints)
         <h1>我的积分</h1>
         <p>查看你在不同主播频道中的积分余额。</p>
       </div>
-      <NButton
-        secondary
-        :loading="isLoading"
-        @click="loadPoints"
-      >
-        <template #icon><NIcon :component="ArrowSync24Regular" /></template>
-        刷新
-      </NButton>
+      <div class="page-heading__actions">
+        <WorkspaceSwitch />
+        <NButton
+          secondary
+          :loading="isLoading"
+          @click="loadPoints"
+        >
+          <template #icon><NIcon :component="ArrowSync24Regular" /></template>
+          刷新
+        </NButton>
+      </div>
     </div>
 
     <div class="summary-grid">
@@ -133,10 +137,18 @@ onMounted(loadPoints)
 
 .page-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   justify-content: space-between;
   gap: 24px;
   padding: 4px 2px;
+}
+
+.page-heading__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
 }
 
 .page-heading span {

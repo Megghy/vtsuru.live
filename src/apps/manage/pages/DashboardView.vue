@@ -31,6 +31,7 @@ import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
+import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
@@ -250,6 +251,13 @@ onUnmounted(() => {
           </NButton>
         </NFlex>
       </NAlert>
+    </div>
+
+    <div
+      v-if="accountInfo"
+      class="dashboard-role"
+    >
+      <WorkspaceSwitch />
     </div>
 
     <NTabs
@@ -633,6 +641,11 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.dashboard-role {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .dashboard-tabs :deep(.n-tabs-nav) {

@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   imported: null as any,
 }))
 vi.mock('@/api/account', () => ({ useAccount: () => mocks.account }))
-vi.mock('vue-router', () => ({ useRoute: () => mocks.route }))
+vi.mock('vue-router', () => ({ useRoute: () => mocks.route, useRouter: () => ({ back: vi.fn() }) }))
 vi.mock('@/apps/obs-store/sync', () => ({
   useObsBridge: (options: unknown) => {
     mocks.options = options
