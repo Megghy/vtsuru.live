@@ -148,7 +148,7 @@ defineExpose({ scrollToCurrent })
                       class="meta-lock-icon"
                     />
                   </template>
-                  私密提问
+                  {{ item.senderAllowsPublic === false ? '提问者选择不公开展示' : '私密提问' }}
                 </NTooltip>
                 <NTime
                   :time="item.sendAt"

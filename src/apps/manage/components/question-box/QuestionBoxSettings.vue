@@ -163,6 +163,18 @@ function addTag() {
             >
               在提问页显示公开回复
             </NCheckbox>
+            <NCheckbox
+              :checked="accountInfo.settings.questionBox.defaultPublic !== false"
+              :disabled="useQB.isLoading"
+              @update:checked="
+                (checked) => {
+                  accountInfo.settings.questionBox.defaultPublic = checked
+                  saveQuestionBoxSettings()
+                }
+              "
+            >
+              新提问默认公开展示
+            </NCheckbox>
           </NFlex>
         </NCard>
 

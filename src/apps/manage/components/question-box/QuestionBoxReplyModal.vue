@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NCheckbox, NDivider, NFlex, NInput, NModal, NSpin, NText } from 'naive-ui'
+import { NButton, NCard, NDivider, NFlex, NInput, NModal, NText } from 'naive-ui'
 import { ref, watch } from 'vue'
 
 import { useQuestionBox } from '@/store/useQuestionBox'
@@ -71,15 +71,6 @@ function handleKeydown(e: KeyboardEvent) {
           :autosize="{ minRows: 4, maxRows: 12 }"
           @keydown="handleKeydown"
         />
-
-        <NSpin :show="useQB.isChangingPublic">
-          <NCheckbox
-            :checked="useQB.currentQuestion?.isPublic"
-            @update:checked="(v) => useQB.setPublic(v)"
-          >
-            公开这条提问和我的回复 (其他人可在你的提问页看到)
-          </NCheckbox>
-        </NSpin>
       </NFlex>
 
       <NDivider style="margin: 16px 0 12px" />

@@ -37,6 +37,7 @@ const target = toRef(props, 'userInfo')
 const composer = useQuestionComposer(target, () => emit('submitted'))
 const {
   addFiles,
+  allowDefaultPublic,
   canSubmit,
   canUploadImages,
   characterCount,
@@ -342,6 +343,14 @@ async function submit() {
               <template #prefix><NIcon :component="Mail24Regular" /></template>
             </NInput>
           </div>
+        </div>
+
+        <div
+          v-if="!isSelf && allowDefaultPublic"
+          class="public-consent"
+        >
+          <NCheckbox v-model:checked="draft.allowPublic"> 公开展示这条 </NCheckbox>
+          <span>取消后只有主播能看到，不会出现在提问页公开列表</span>
         </div>
 
         <div

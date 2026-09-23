@@ -433,8 +433,25 @@
 }
 
 .identity-copy {
+  display: flex;
   gap: 10px;
   min-width: 0;
+}
+
+.public-consent {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--composer-bg) 92%, var(--composer-accent) 8%);
+  border: 1px solid var(--composer-border);
+  border-radius: var(--vtsuru-page-radius, 8px);
+}
+
+.public-consent span {
+  color: var(--composer-subtle);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .identity-copy > .n-icon {

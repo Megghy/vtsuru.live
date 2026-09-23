@@ -16,6 +16,7 @@ interface QuestionDraft {
   anonymousName: string
   anonymousEmail: string
   isAnonymous: boolean
+  allowPublic: boolean
 }
 
 interface CaptchaHandle {
@@ -36,7 +37,7 @@ const SEND_COOLDOWN = 30_000
 const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 
 function emptyDraft(): QuestionDraft {
-  return { message: '', tag: null, anonymousName: '', anonymousEmail: '', isAnonymous: true }
+  return { message: '', tag: null, anonymousName: '', anonymousEmail: '', isAnonymous: true, allowPublic: true }
 }
 
 export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitted: () => void) {
@@ -48,7 +49,10 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
     emptyDraft(),
     {
       serializer: {
-        read: (value) => (value ? JSON.parse(value) : emptyDraft()),
+        read: (value) => {
+          const parsed = value ? JSON.parse(value) : emptyDraft()
+          return { ...emptyDraft(), ...parsed, allowPublic: parsed.allowPublic !== false }
+        },
         write: (value) => JSON.stringify(value),
       },
     },
@@ -77,6 +81,7 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
     return accountInfo.value?.name || biliAuth.biliAuth?.name || '已认证身份'
   })
   const allowUploadImage = computed(() => target.value?.extra?.allowQuestionBoxUploadImage ?? false)
+  const allowDefaultPublic = computed(() => target.value?.extra?.questionBoxDefaultPublic !== false)
   const canUploadImages = computed(() => !isSelf.value && (isIdentified.value || allowUploadImage.value))
   const maxImages = computed(() => (isIdentified.value ? 9 : 3))
   const characterCount = computed(() => [...segmenter.segment(draft.value.message)].length)
@@ -165,6 +170,7 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
         AnonymousName: !isIdentified.value && submittedDraft.anonymousName ? submittedDraft.anonymousName : undefined,
         AnonymousEmail:
           !isIdentified.value && submittedDraft.anonymousEmail ? submittedDraft.anonymousEmail : undefined,
+        AllowPublic: allowDefaultPublic.value ? submittedDraft.allowPublic !== false : undefined,
       }),
     )
     selectedFiles.value.forEach((file) => formData.append('Files', file))
@@ -213,6 +219,7 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
 
   return {
     addFiles,
+    allowDefaultPublic,
     allowUploadImage,
     canSubmit,
     canUploadImages,

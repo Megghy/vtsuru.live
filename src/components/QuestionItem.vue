@@ -106,6 +106,14 @@ function getScoreColor(score: number | undefined): string {
         >
           公开
         </NTag>
+        <NTag
+          v-if="item.senderAllowsPublic === false"
+          size="small"
+          type="warning"
+          :bordered="false"
+        >
+          提问者不公开
+        </NTag>
 
         <NTooltip v-if="item.tag">
           <template #trigger>

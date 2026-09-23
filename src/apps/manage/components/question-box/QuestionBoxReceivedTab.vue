@@ -298,14 +298,45 @@ const sortOptions = [
         </template>
 
         <template #header-extra="{ item }">
-          <NButton
-            :type="item.answer ? 'primary' : 'info'"
-            :tertiary="item.isReaded && !item.answer"
-            :secondary="!item.isReaded && !item.answer"
-            @click="emit('reply', item)"
+          <NFlex
+            align="center"
+            :size="8"
           >
-            {{ item.answer ? '修改回复' : '回复' }}
-          </NButton>
+            <NPopconfirm
+              v-if="!item.isPublic && item.senderAllowsPublic === false"
+              @positive-click="useQB.setPublic(item, true, { force: true })"
+            >
+              <template #trigger>
+                <NButton
+                  size="small"
+                  ghost
+                >
+                  <template #icon><NIcon :component="Eye24Regular" /></template>
+                  公开
+                </NButton>
+              </template>
+              提问者选择不公开展示这条内容。确定仍要放到提问页公开列表吗？
+            </NPopconfirm>
+            <NButton
+              v-else
+              size="small"
+              ghost
+              @click="useQB.setPublic(item, !item.isPublic)"
+            >
+              <template #icon>
+                <NIcon :component="item.isPublic ? EyeOff24Regular : Eye24Regular" />
+              </template>
+              {{ item.isPublic ? '取消公开' : '公开' }}
+            </NButton>
+            <NButton
+              :type="item.answer ? 'primary' : 'info'"
+              :tertiary="item.isReaded && !item.answer"
+              :secondary="!item.isReaded && !item.answer"
+              @click="emit('reply', item)"
+            >
+              {{ item.answer ? '修改回复' : '回复' }}
+            </NButton>
+          </NFlex>
         </template>
       </QuestionItems>
 

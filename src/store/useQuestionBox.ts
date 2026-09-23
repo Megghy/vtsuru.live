@@ -278,18 +278,29 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function setPublic(pub: boolean) {
+  async function setPublic(question: QAInfo, pub: boolean, options?: { force?: boolean }) {
+    if (pub && question.senderAllowsPublic === false && !options?.force) {
+      message.warning('提问者选择不公开展示，请确认后强制公开')
+      return false
+    }
     isChangingPublic.value = true
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}public`, { id: currentQuestion.value?.id, public: pub })
+      const resp = await QueryGetAPI(`${QUESTION_API_URL}public`, {
+        id: question.id,
+        public: pub,
+        ...(options?.force ? { force: true } : {}),
+      })
       if (resp.code === 200) {
-        if (currentQuestion.value) currentQuestion.value.isPublic = pub
+        question.isPublic = pub
+        if (currentQuestion.value?.id === question.id) currentQuestion.value.isPublic = pub
         message.success('已修改公开状态')
-      } else {
-        message.error(`修改失败: ${resp.message}`)
+        return true
       }
+      message.error(`修改失败: ${resp.message}`)
+      return false
     } catch (err) {
       message.error(`修改失败: ${err}`)
+      return false
     } finally {
       isChangingPublic.value = false
     }
@@ -399,12 +410,26 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function batchSetPublic(pub: boolean) {
     const ids = [...selectedIds.value]
     if (!ids.length) return
-    await Promise.allSettled(ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}public`, { id, public: pub })))
-    ids.forEach((id) => {
+    const skipped = pub
+      ? ids.filter((id) => recieveQuestions.value.find((item) => item.id === id)?.senderAllowsPublic === false)
+      : []
+    const targets = ids.filter((id) => !skipped.includes(id))
+    if (!targets.length) {
+      message.warning('所选提问均由提问者选择不公开，请逐条确认后强制公开')
+      return
+    }
+    await Promise.allSettled(
+      targets.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}public`, { id, public: pub })),
+    )
+    targets.forEach((id) => {
       const q = recieveQuestions.value.find((item) => item.id === id)
       if (q) q.isPublic = pub
     })
     clearSelection()
+    if (skipped.length) {
+      message.success(`已${pub ? '公开' : '设为私密'} ${targets.length} 条，跳过 ${skipped.length} 条提问者未同意的提问`)
+      return
+    }
     message.success(`已批量${pub ? '公开' : '设为私密'}`)
   }
 

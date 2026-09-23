@@ -43,6 +43,7 @@ export interface UserInfo extends UserBasicInfo {
     allowCheckInRanking?: boolean // 是否允许查看签到排行
     allowQuestionBoxUploadImage?: boolean // 是否允许问题箱上传图片
     showQuestionBoxPublicReplies?: boolean // 是否在提问页显示公开回复
+    questionBoxDefaultPublic?: boolean // 新提问是否默认公开展示
   }
 }
 export interface EventFetcherStateModel {
@@ -148,6 +149,7 @@ export interface Setting_QuestionBox {
   saftyLevel: SaftyLevels
   allowImageUpload: boolean
   showPublicReplies?: boolean
+  defaultPublic?: boolean
 }
 export interface UserSetting {
   sendEmail: Setting_SendEmail
@@ -455,6 +457,7 @@ export interface QAInfo {
   isReaded?: boolean
   isSenderRegisted: boolean
   isPublic: boolean
+  senderAllowsPublic?: boolean | null
   isFavorite: boolean
   sendAt: number
   isAnonymous: boolean

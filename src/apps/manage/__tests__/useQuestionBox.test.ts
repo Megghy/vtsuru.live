@@ -132,4 +132,35 @@ describe('useQuestionBox store', () => {
       expect(store.recieveQuestions.find((q) => q.id === 101)?.answer?.message).toBe('感谢提问！')
     })
   })
+
+  describe('公开状态', () => {
+    it('批量公开跳过提问者未同意的条目', async () => {
+      const getSpy = vi.spyOn(queryApi, 'QueryGetAPI').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      store.recieveQuestions = [
+        createMockQuestion({ id: 1, isPublic: false, senderAllowsPublic: true }),
+        createMockQuestion({ id: 2, isPublic: false, senderAllowsPublic: false }),
+        createMockQuestion({ id: 3, isPublic: false }),
+      ]
+      store.selectedIds = [1, 2, 3]
+
+      await store.batchSetPublic(true)
+
+      expect(getSpy).toHaveBeenCalledTimes(2)
+      expect(getSpy).toHaveBeenCalledWith(`${QUESTION_API_URL}public`, { id: 1, public: true })
+      expect(getSpy).toHaveBeenCalledWith(`${QUESTION_API_URL}public`, { id: 3, public: true })
+      expect(store.recieveQuestions.find((q) => q.id === 1)?.isPublic).toBe(true)
+      expect(store.recieveQuestions.find((q) => q.id === 2)?.isPublic).toBe(false)
+      expect(store.recieveQuestions.find((q) => q.id === 3)?.isPublic).toBe(true)
+    })
+
+    it('未带 force 时拒绝公开提问者未同意的条目', async () => {
+      const getSpy = vi.spyOn(queryApi, 'QueryGetAPI').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      const question = createMockQuestion({ id: 9, isPublic: false, senderAllowsPublic: false })
+
+      await store.setPublic(question, true)
+
+      expect(getSpy).not.toHaveBeenCalled()
+      expect(question.isPublic).toBe(false)
+    })
+  })
 })
