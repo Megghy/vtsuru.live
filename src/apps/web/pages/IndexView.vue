@@ -502,6 +502,7 @@ onMounted(() => {
           </div>
 
           <div class="streamers-controls">
+            <RouterLink to="/live"><NButton size="small">直播与关注</NButton></RouterLink>
             <NTooltip>
               <template #trigger>
                 <NButton

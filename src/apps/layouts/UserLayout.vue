@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Person48Filled, WindowWrench20Filled } from '@vicons/fluent'
-import { BrowsersOutline, ChevronBackOutline, ChevronForwardOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
+import { BrowsersOutline, ChevronBackOutline, ChevronForwardOutline, HeartOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useMediaQuery } from '@vueuse/core'
 import {
   darkTheme,
@@ -51,6 +51,8 @@ import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { getUserPageAppearanceOverrides } from '@/apps/user-page/themeConfig'
 import type { BiliProfile, BiliProfileStatus, UserPagesSettings } from '@/apps/user-page/types'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import FollowButton from '@/components/common/FollowButton.vue'
+import { useFollowingStates } from '@/api/following'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -71,6 +73,7 @@ const themeType = usePersistedStorage<ThemeType>('Settings.Theme', ThemeType.Aut
 
 // 用户和页面状态
 const userInfo = ref<UserInfo | null>(null) // 用户信息，初始化为 null
+const follows = useFollowingStates(() => userInfo.value ? [userInfo.value.id] : [])
 const biliUserInfo = ref<BiliProfile | null>(null) // B站用户信息
 const biliProfileStatus = ref<BiliProfileStatus>('idle')
 const loadStatus = ref<'idle' | 'loading' | 'not-found' | 'error' | 'ready'>('idle')
@@ -598,6 +601,17 @@ watch(
 
             <!-- 已登录用户操作 -->
             <template v-if="accountInfo?.id">
+              <NButton
+                type="primary"
+                size="small"
+                secondary
+                @click="$router.push({ name: 'live-directory', query: { tab: 'following' } })"
+              >
+                <template #icon>
+                  <NIcon :component="HeartOutline" />
+                </template>
+                <span v-if="isDesktop">关注管理</span>
+              </NButton>
               <!-- B站认证中心按钮 (如果已认证) -->
               <NButton
                 v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
@@ -729,9 +743,15 @@ watch(
               </NFlex>
             </div>
 
+            <div v-if="userInfo && !siderCollapsed" style="padding: 8px 12px; text-align: center">
+              <FollowButton :user-id="userInfo.id" :following="follows.states.value[userInfo.id]?.isFollowing"
+                :followers="follows.states.value[userInfo.id]?.followers" @changed="follows.refresh" />
+              <NText v-if="follows.error.value" type="error">{{ follows.error.value }}</NText>
+            </div>
+
             <!-- 侧边栏加载状态 -->
             <div
-              v-else-if="isLoading"
+              v-if="isLoading"
               class="sider-loading"
             >
               <NSpin size="small" />

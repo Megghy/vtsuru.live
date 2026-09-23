@@ -56,6 +56,12 @@ const weekOptions = computed(() => {
   })
   return weeks
 })
+const copyWeekOptions = computed(() =>
+  getAllWeeks(selectedScheduleYear.value).map((week) => ({
+    label: `${schedules.value.some((s) => s.year === selectedScheduleYear.value && s.week === week[0] + 1) ? '(已有行程) ' : ''}第${week[0] + 1}周 (${week[1]})`,
+    value: week[0] + 1,
+  })),
+)
 const dayOptions = computed(() => {
   const days: SelectOption[] = []
   for (let i = 0; i < 7; i++) {
@@ -213,6 +219,7 @@ function normalizeWeek(week?: ScheduleWeekInfo): ScheduleWeekInfo {
   return {
     year: week?.year ?? new Date().getFullYear(),
     week: week?.week ?? Number(format(Date.now(), 'w')) + 1,
+    version: week?.version ?? '',
     days: normalizedDays,
   }
 }
@@ -224,6 +231,7 @@ function cloneWeek(week: ScheduleWeekInfo, options: { resetIds?: boolean } = {})
   return {
     year: normalized.year,
     week: normalized.week,
+    version: normalized.version,
     days: normalized.days.map((dayList) =>
       dayList.map((item) => ({
         title: item.title ?? null,
@@ -240,6 +248,7 @@ function createEmptyWeek(year?: number, week?: number): ScheduleWeekInfo {
   return {
     year: year ?? new Date().getFullYear(),
     week: week ?? Number(format(Date.now(), 'w')) + 1,
+    version: '',
     days: createEmptyDays(),
   }
 }
@@ -312,6 +321,12 @@ const showAddModal = ref(false)
 const showCopyModal = ref(false)
 const showBatchAddModal = ref(false)
 const updateScheduleModel = ref<ScheduleWeekInfo>(createEmptyWeek())
+const scheduleConflict = ref(false)
+const copyMode = ref<'merge' | 'replace'>('merge')
+const copyModeOptions: SelectOption[] = [
+  { label: '合并（保留目标周已有行程）', value: 'merge' },
+  { label: '替换手工行程', value: 'replace' },
+]
 
 const selectedDay = ref(0)
 const selectedScheduleYear = ref(new Date().getFullYear())
@@ -382,20 +397,35 @@ watch(selectedDay, (value) => {
 
 async function get() {
   isLoading.value = true
-  await QueryGetAPI<ScheduleWeekInfo[]>(`${SCHEDULE_API_URL}get`, {
-    id: accountInfo.value?.id ?? -1,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        schedules.value = sortSchedules((data.data ?? []).map((week) => normalizeWeek(week)))
-      } else {
-        message.error(`加载失败: ${data.message}`)
-      }
+  try {
+    const data = await QueryGetAPI<ScheduleWeekInfo[]>(`${SCHEDULE_API_URL}get`, {
+      id: accountInfo.value?.id ?? -1,
     })
-    .catch(() => {
-      message.error('加载失败')
-    })
-    .finally(() => (isLoading.value = false))
+    if (data.code !== 200) throw new Error(data.message || '加载失败')
+    schedules.value = sortSchedules((data.data ?? []).map((week) => normalizeWeek(week)))
+  } catch (error) {
+    message.error(error instanceof Error ? `加载失败: ${error.message}` : '加载失败')
+    throw error
+  } finally {
+    isLoading.value = false
+  }
+}
+async function reloadAfterConflict() {
+  scheduleConflict.value = true
+  message.warning('日程已在其他窗口更新，已保留当前草稿；请加载最新版本后重试')
+  await get()
+}
+async function loadLatestScheduleVersion() {
+  await get()
+  const latest = schedules.value.find(
+    (schedule) => schedule.year === updateScheduleModel.value.year && schedule.week === updateScheduleModel.value.week,
+  )
+  updateScheduleModel.value = latest
+    ? cloneWeek(latest, { resetIds: showCopyModal.value })
+    : createEmptyWeek(updateScheduleModel.value.year, updateScheduleModel.value.week)
+  ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
+  scheduleConflict.value = false
+  message.success('已加载最新版本，请重新确认修改')
 }
 const isFetching = ref(false)
 const biliReserve = ref<BiliLiveReserveModel>({
@@ -466,33 +496,56 @@ async function setBiliReserveAutoSync(enable: boolean) {
 async function addSchedule() {
   isFetching.value = true
   const emptyWeek = createEmptyWeek(selectedScheduleYear.value, selectedScheduleWeek.value)
-  await QueryPostAPI(`${SCHEDULE_API_URL}update`, {
-    year: emptyWeek.year,
-    week: emptyWeek.week,
-    days: emptyWeek.days,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        message.success('添加成功')
-        showAddModal.value = false
-        schedules.value = sortSchedules([...schedules.value, emptyWeek])
-      } else {
-        message.error(`添加失败: ${data.message}`)
-      }
+  try {
+    const data = await QueryPostAPI<ScheduleWeekInfo>(`${SCHEDULE_API_URL}update`, {
+      year: emptyWeek.year,
+      week: emptyWeek.week,
+      days: emptyWeek.days,
+      expectedVersion: '',
     })
-    .finally(() => {
-      isFetching.value = false
-    })
+    if (data.code === 409) return await reloadAfterConflict()
+    if (data.code !== 200 || !data.data) return message.error(`添加失败: ${data.message}`)
+    message.success('添加成功')
+    showAddModal.value = false
+    schedules.value = sortSchedules([...schedules.value, normalizeWeek(data.data)])
+  } finally {
+    isFetching.value = false
+  }
 }
 async function onCopySchedule() {
-  if (schedules.value?.find((s) => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)) {
-    message.error('想要复制到的周已存在')
-  } else {
-    updateScheduleModel.value.year = selectedScheduleYear.value
-    updateScheduleModel.value.week = selectedScheduleWeek.value
-    ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
-    await saveSchedule(null)
+  isFetching.value = true
+  const target = schedules.value.find(
+    (schedule) => schedule.year === selectedScheduleYear.value && schedule.week === selectedScheduleWeek.value,
+  )
+  try {
+    const response = await QueryPostAPI<ScheduleWeekInfo>(`${SCHEDULE_API_URL}copy`, {
+      sourceYear: updateScheduleModel.value.year,
+      sourceWeek: updateScheduleModel.value.week,
+      targetYear: selectedScheduleYear.value,
+      targetWeek: selectedScheduleWeek.value,
+      sourceVersion: updateScheduleModel.value.version ?? '',
+      targetVersion: target?.version ?? '',
+      mode: copyMode.value,
+    })
+    if (response.code === 409) {
+      await reloadAfterConflict()
+      return
+    }
+    if (response.code !== 200 || !response.data) {
+      message.error(`复制失败: ${response.message}`)
+      return
+    }
+    const copied = normalizeWeek(response.data)
+    const index = schedules.value.findIndex(
+      (schedule) => schedule.year === copied.year && schedule.week === copied.week,
+    )
+    if (index >= 0) schedules.value.splice(index, 1, copied)
+    else schedules.value.push(copied)
+    schedules.value = sortSchedules(schedules.value)
+    message.success('复制成功')
     showCopyModal.value = false
+  } finally {
+    isFetching.value = false
   }
 }
 async function saveSchedule(day: number | null) {
@@ -503,80 +556,70 @@ async function saveSchedule(day: number | null) {
     week: number
     day?: number
     days: ScheduleDayInfo[][]
+    expectedVersion: string
   } = {
     year: updateScheduleModel.value.year,
     week: updateScheduleModel.value.week,
     days: sanitizedDays,
+    expectedVersion: updateScheduleModel.value.version ?? '',
   }
 
   if (day !== null && day !== undefined) {
     payload.day = day
   }
 
-  await QueryPostAPI(`${SCHEDULE_API_URL}update`, payload)
-    .then((data) => {
-      if (data.code == 200) {
-        message.success('成功')
-        const normalizedWeek = normalizeWeek({
-          year: payload.year,
-          week: payload.week,
-          days: sanitizedDays,
-        })
+  try {
+    const data = await QueryPostAPI<ScheduleWeekInfo>(`${SCHEDULE_API_URL}update`, payload)
+    if (data.code === 409) return await reloadAfterConflict()
+    if (data.code == 200 && data.data) {
+      message.success('成功')
+      const normalizedWeek = normalizeWeek(data.data)
 
-        const index = schedules.value.findIndex(
-          (s) => s.year == updateScheduleModel.value.year && s.week == updateScheduleModel.value.week,
-        )
+      const index = schedules.value.findIndex(
+        (s) => s.year == updateScheduleModel.value.year && s.week == updateScheduleModel.value.week,
+      )
 
-        if (index >= 0) {
-          if (day !== null && day !== undefined) {
-            const current = cloneWeek(schedules.value[index])
-            current.days[day] = normalizedWeek.days[day]
-            schedules.value.splice(index, 1, current)
-          } else {
-            schedules.value.splice(index, 1, normalizedWeek)
-          }
-        } else {
-          schedules.value.push(normalizedWeek)
-        }
-        schedules.value = sortSchedules(schedules.value)
-        updateScheduleModel.value = normalizeWeek({
-          year: payload.year,
-          week: payload.week,
-          days: sanitizedDays,
-        })
-        ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
-      } else {
-        message.error(`修改失败: ${data.message}`)
-      }
-    })
-    .finally(() => {
-      isFetching.value = false
-    })
+      if (index >= 0) schedules.value.splice(index, 1, normalizedWeek)
+      else schedules.value.push(normalizedWeek)
+      schedules.value = sortSchedules(schedules.value)
+      updateScheduleModel.value = normalizeWeek({
+        year: payload.year,
+        week: payload.week,
+        version: normalizedWeek.version,
+        days: normalizedWeek.days,
+      })
+      ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
+    } else message.error(`修改失败: ${data.message}`)
+  } finally {
+    isFetching.value = false
+  }
 }
 async function onUpdateSchedule() {
   await saveSchedule(selectedDay.value)
 }
 async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
-  await QueryGetAPI(`${SCHEDULE_API_URL}del`, {
+  const data = await QueryGetAPI(`${SCHEDULE_API_URL}del`, {
     year: schedule.year,
     week: schedule.week,
-  }).then((data) => {
-    if (data.code == 200) {
-      message.success('已删除')
-      get()
-    } else {
-      message.error(`删除失败: ${data.message}`)
-    }
+    expectedVersion: schedule.version ?? '',
   })
+  if (data.code === 409) await reloadAfterConflict()
+  else if (data.code == 200) {
+    message.success('已删除')
+    await get()
+  } else message.error(`删除失败: ${data.message}`)
 }
 function onOpenUpdateModal(schedule: ScheduleWeekInfo) {
+  scheduleConflict.value = false
   updateScheduleModel.value = cloneWeek(schedule)
   selectedDay.value = 0
   ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
   showUpdateModal.value = true
 }
 function onOpenCopyModal(schedule: ScheduleWeekInfo) {
+  scheduleConflict.value = false
   updateScheduleModel.value = cloneWeek(schedule, { resetIds: true })
+  copyMode.value = 'merge'
   selectedDay.value = 0
   ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
   showCopyModal.value = true
@@ -604,25 +647,18 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
     return dayList
   })
 
-  await QueryPostAPI(`${SCHEDULE_API_URL}update`, {
+  const data = await QueryPostAPI<ScheduleWeekInfo>(`${SCHEDULE_API_URL}update`, {
     year: schedule.year,
     week: schedule.week,
     days: sanitizeDays(updatedDays),
-  }).then((data) => {
-    if (data.code == 200) {
-      message.success('已删除')
-      const index = schedules.value.findIndex((s) => s.year === schedule.year && s.week === schedule.week)
-      if (index >= 0) {
-        schedules.value[index] = normalizeWeek({
-          year: schedule.year,
-          week: schedule.week,
-          days: updatedDays,
-        })
-      }
-    } else {
-      message.error(`删除失败: ${data.message}`)
-    }
+    expectedVersion: targetSchedule.version ?? '',
   })
+  if (data.code === 409) await reloadAfterConflict()
+  else if (data.code == 200 && data.data) {
+    message.success('已删除')
+    const index = schedules.value.findIndex((s) => s.year === schedule.year && s.week === schedule.week)
+    if (index >= 0) schedules.value[index] = normalizeWeek(data.data)
+  } else message.error(`删除失败: ${data.message}`)
 }
 function onSelectChange(value: string | null, option: SelectOption, itemIndex: number) {
   if (value) {
@@ -686,14 +722,19 @@ async function onBatchAddSchedule() {
         year,
         week,
         days: sanitizedDays,
+        expectedVersion: targetWeek.version ?? '',
       })
 
-      if (resp.code !== 200) {
+      if (resp.code === 409) {
+        await reloadAfterConflict()
+        return
+      }
+      if (resp.code !== 200 || !resp.data) {
         message.error(`第${week}周添加失败: ${resp.message}`)
         return
       }
 
-      const normalizedWeek = normalizeWeek({ year, week, days: sanitizedDays })
+      const normalizedWeek = normalizeWeek(resp.data as ScheduleWeekInfo)
       const index = schedules.value.findIndex((s) => s.year === year && s.week === week)
       if (index >= 0) {
         schedules.value.splice(index, 1, normalizedWeek)
@@ -793,7 +834,7 @@ function renderOption({ node, option }: { node: VNode; option: SelectOption }) {
 }
 
 onMounted(() => {
-  get()
+  void get()
   loadBiliReserve()
 })
 </script>
@@ -820,11 +861,7 @@ onMounted(() => {
       >
         批量添加
       </NButton>
-      <NButton
-        @click="
-          $router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })
-        "
-      >
+      <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })">
         修改模板
       </NButton>
     </template>
@@ -862,7 +899,25 @@ onMounted(() => {
     preset="card"
     title="复制周程"
   >
-    <NAlert type="info"> 复制为 </NAlert>
+    <NAlert
+      v-if="scheduleConflict"
+      type="warning"
+      style="margin-bottom: 12px"
+    >
+      <NFlex
+        vertical
+        align="start"
+        :size="8"
+      >
+        源周或目标周已更新。当前复制内容仍保留，加载最新版本后请重新确认并点击复制。
+        <NButton
+          size="small"
+          @click="loadLatestScheduleVersion"
+          >加载最新版本</NButton
+        >
+      </NFlex>
+    </NAlert>
+    <NAlert type="info">只复制手工行程，B站同步预约不受影响。</NAlert>
     <NFlex vertical>
       年份
       <NSelect
@@ -872,7 +927,12 @@ onMounted(() => {
       第几周
       <NSelect
         v-model:value="selectedScheduleWeek"
-        :options="weekOptions"
+        :options="copyWeekOptions"
+      />
+      复制方式
+      <NSelect
+        v-model:value="copyMode"
+        :options="copyModeOptions"
       />
     </NFlex>
     <NDivider />
@@ -1007,6 +1067,24 @@ onMounted(() => {
     preset="card"
     title="编辑周程"
   >
+    <NAlert
+      v-if="scheduleConflict"
+      type="warning"
+      style="margin-bottom: 12px"
+    >
+      <NFlex
+        vertical
+        align="start"
+        :size="8"
+      >
+        当前草稿已保留。加载最新版本会替换草稿，请确认后操作。
+        <NButton
+          size="small"
+          @click="loadLatestScheduleVersion"
+          >加载最新版本</NButton
+        >
+      </NFlex>
+    </NAlert>
     <NSelect
       v-model:value="selectedDay"
       :options="dayOptions"

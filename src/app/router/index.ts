@@ -13,6 +13,12 @@ import user from './user'
 
 const routes: Array<RouteRecordRaw> = [
   {
+    path: '/live',
+    name: 'live-directory',
+    component: async () => import('@/apps/web/pages/LiveDirectoryView.vue'),
+    meta: { title: '正在直播' },
+  },
+  {
     path: '/',
     name: 'index',
     component: async () => import('@/apps/web/pages/IndexView.vue'),

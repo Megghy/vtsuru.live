@@ -14,6 +14,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BiliLiveReservePanel: typeof import('./components/BiliLiveReservePanel.vue')['default']
     BiliUserSelector: typeof import('./components/common/BiliUserSelector.vue')['default']
+    FollowButton: typeof import('./components/common/FollowButton.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
@@ -76,6 +77,7 @@ declare module 'vue' {
 declare global {
   const BiliLiveReservePanel: typeof import('./components/BiliLiveReservePanel.vue')['default']
   const BiliUserSelector: typeof import('./components/common/BiliUserSelector.vue')['default']
+  const FollowButton: typeof import('./components/common/FollowButton.vue')['default']
   const NAlert: typeof import('naive-ui')['NAlert']
   const NButton: typeof import('naive-ui')['NButton']
   const NCard: typeof import('naive-ui')['NCard']

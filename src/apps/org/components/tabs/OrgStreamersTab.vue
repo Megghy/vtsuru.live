@@ -17,6 +17,9 @@ import {
 } from 'naive-ui'
 import { onMounted } from 'vue'
 
+import { useFollowingStates } from '@/api/following'
+import FollowButton from '@/components/common/FollowButton.vue'
+
 import { useOrgContext } from '../../composables/useOrgContext'
 import { useOrgInvites } from '../../composables/useOrgInvites'
 import { injectOrgStreamers, useStreamerDetail } from '../../composables/useOrgStreamers'
@@ -29,6 +32,7 @@ import OrgUserAvatar from '../OrgUserAvatar.vue'
 const ctx = useOrgContext()
 const { isOrgAdmin } = ctx
 const { loading, includeAll, search, filtered, load, remove } = injectOrgStreamers()
+const follows = useFollowingStates(() => filtered.value.map((s) => s.streamer.id))
 const invites = useOrgInvites<OrgInviteStreamerListItem>(ctx, 'streamer')
 const detail = useStreamerDetail(ctx)
 
@@ -112,6 +116,11 @@ async function onSaved() {
           :wrap="false"
         >
           <NFlex align="center">
+            <FollowButton
+              :user-id="s.streamer.id"
+              :following="follows.states.value[s.streamer.id]?.isFollowing"
+              @changed="follows.refresh"
+            />
             <OrgUserAvatar
               :face-url="s.streamer.faceUrl"
               :size="48"

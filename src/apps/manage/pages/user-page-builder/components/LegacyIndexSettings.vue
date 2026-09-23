@@ -286,7 +286,7 @@ await loadIndexInfo()
       :disabled="isLoading"
       @update:checked="updateUserIndexSettings"
     >
-      允许显示在网站主页
+      允许显示在网站主页与直播列表
     </NCheckbox>
 
     <NDivider style="margin: 0"> 通知 </NDivider>

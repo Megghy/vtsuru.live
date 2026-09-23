@@ -488,6 +488,7 @@ export interface LotteryUserCardInfo {
 export interface ScheduleWeekInfo {
   year: number
   week: number
+  version?: string
   days: ScheduleDayInfo[][]
 }
 export interface ScheduleDayInfo {
