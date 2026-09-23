@@ -292,6 +292,15 @@ const manageRoute: RouteRecordRaw = {
     },
     ...createToolRoutes('manage'),
     {
+      path: 'qq-bot',
+      name: 'manage-qqBot',
+      component: async () => import('@/apps/manage/pages/QqBotManageView.vue'),
+      meta: {
+        title: 'QQ 群机器人',
+        pageWidth: 'md',
+      },
+    },
+    {
       path: 'user-page-builder',
       name: 'manage-userPageBuilder',
       component: async () => import('@/apps/manage/pages/UserPageBuilderView.vue'),

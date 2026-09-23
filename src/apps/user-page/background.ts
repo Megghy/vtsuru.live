@@ -159,7 +159,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
   const appearance = resolveUserPageAppearance(theme)
   const surfaceVars = getUserPageSurfaceCssVars(effectiveIsDark, theme)
   const siteTokens = buildSiteTokens(effectiveIsDark)
-  const pagePrimary = primaryColor || siteTokens.primary
+  const rawPrimary = primaryColor || siteTokens.primary
   const customSurface =
     backgroundColor && appearance.surfaceOpacity !== undefined
       ? applyColorOpacity(backgroundColor, appearance.surfaceOpacity)
@@ -174,9 +174,11 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     : textPalette
   const pageText = canvasPalette.color
   const surfaceText = textPalette.color
-  const readablePrimary = resolveUserPageReadableAccent(pagePrimary, backgroundColor, effectiveIsDark, contrastSurface)
+  // 主色按当前明暗模式修正为可读色后再派生全部主色 token（如 #000 在暗色下会提亮），
+  // 否则文字、描边、浅色底都会与暗色表面糊在一起
+  const pagePrimary = resolveUserPageReadableAccent(rawPrimary, backgroundColor, effectiveIsDark, contrastSurface)
   const canvasAccent = resolveUserPageReadableAccent(
-    pagePrimary,
+    rawPrimary,
     canvasColor || backgroundColor,
     canvasIsDark,
     canvasColor || contrastSurface,
@@ -201,7 +203,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--vtsuru-primary': pagePrimary,
     '--vtsuru-primary-hover': pagePrimary,
     '--vtsuru-primary-pressed': pagePrimary,
-    '--vtsuru-primary-fg': readablePrimary,
+    '--vtsuru-primary-fg': resolveReadableForeground(pagePrimary, contentColor, effectiveIsDark),
     '--vtsuru-brand': pagePrimary,
     '--vtsuru-brand-soft': `color-mix(in srgb, ${pagePrimary} 12%, transparent)`,
     '--vtsuru-brand-tint': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
@@ -210,8 +212,8 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--vtsuru-page-primary-active': `color-mix(in srgb, ${pagePrimary} 26%, transparent)`,
     '--vtsuru-page-primary-border': `color-mix(in srgb, ${pagePrimary} 28%, transparent)`,
     '--vtsuru-page-primary-focus': `color-mix(in srgb, ${pagePrimary} 42%, transparent)`,
-    '--vtsuru-page-primary-readable': readablePrimary,
-    '--vtsuru-page-canvas-accent': canvasAccent || readablePrimary,
+    '--vtsuru-page-primary-readable': pagePrimary,
+    '--vtsuru-page-canvas-accent': canvasAccent,
     '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
     '--vtsuru-page-content-color': contentColor,
     '--vtsuru-page-card-bg': surfaceColor,
@@ -268,7 +270,8 @@ export function getUserPageNaiveThemeOverrides(
   effectiveIsDark: boolean,
 ): GlobalThemeOverrides {
   const base = getThemeOverrides(buildSiteTokens(effectiveIsDark))
-  const primaryColor = readThemeColor(theme, 'primaryColor')
+  // 用户自定义主色时使用已按明暗模式修正过的页面主色，未自定义则沿用站点默认
+  const primaryColor = readThemeColor(theme, 'primaryColor') ? vars['--vtsuru-page-primary'] : ''
   const appearance = resolveUserPageAppearance(theme)
   const contentColor = vars['--vtsuru-page-content-color'] || vars['--user-page-ui-surface-bg']
   const cardColor = vars['--vtsuru-page-card-bg']
