@@ -47,7 +47,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ResponsePointGoodModel, UploadSubPointGoodsModel, UploadPointGoodsModel } from '@/api/api-models'
-import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode, UserFileLocation } from '@/api/api-models'
+import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode, ServiceFieldType, UserFileLocation } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -62,6 +62,7 @@ import { useBiliAuth } from '@/store/useBiliAuth'
 import PointGuardDuplicateManage from './PointGuardDuplicateManage.vue'
 import PointTestPanel from './PointTestPanel.vue'
 import PointUserManage from './PointUserManage.vue'
+import ServiceGoodsConfig from './ServiceGoodsConfig.vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -139,6 +140,7 @@ function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFi
       tags: [],
       description: '',
       cover: undefined,
+      serviceConfig: undefined,
     } as UploadPointGoodsModel,
     fileList: [],
   }
@@ -208,10 +210,6 @@ function moveSubItemByKey(subKey: string, direction: -1 | 1) {
   list.splice(nextIndex, 0, item)
 }
 
-function resolveSubType(sub: UploadSubPointGoodsModel) {
-  return sub.type ?? currentGoodsModel.value.goods.type
-}
-
 // 监听 fileList 变化，确保 cover 和 fileList 同步
 watch(
   () => currentGoodsModel.value.fileList,
@@ -279,7 +277,7 @@ const rules = {
   },
   type: {
     required: true,
-    message: '请选择是虚拟礼物或实物',
+    message: '请选择礼物类型',
   },
 }
 
@@ -359,6 +357,40 @@ async function updateGoods(e: MouseEvent) {
         goodsModalTab.value = 'basic'
         throw new Error('请输入虚拟礼物的交付内容')
       }
+    } else if (currentGoodsModel.value.goods.type === GoodsTypes.Service) {
+      const config = currentGoodsModel.value.goods.serviceConfig
+      if (!config) {
+        goodsModalTab.value = 'basic'
+        throw new Error('请配置服务兑换信息')
+      }
+      if (config.estimatedDays !== undefined && config.estimatedDays !== null && config.estimatedDays < 1) {
+        goodsModalTab.value = 'basic'
+        throw new Error('预计完成周期必须大于 0')
+      }
+      if (config.maxActiveOrders !== undefined && config.maxActiveOrders !== null && config.maxActiveOrders < 1) {
+        goodsModalTab.value = 'basic'
+        throw new Error('最大未完成订单数必须大于 0')
+      }
+      const ids = new Set<string>()
+      for (const field of config.fields ?? []) {
+        const fieldId = field.id?.trim() ?? ''
+        const fieldLabel = field.label?.trim() ?? ''
+        field.id = fieldId
+        field.label = fieldLabel
+        if (!fieldId || !fieldLabel) {
+          goodsModalTab.value = 'basic'
+          throw new Error('服务需求字段的 ID 和名称不能为空')
+        }
+        if (ids.has(fieldId)) {
+          goodsModalTab.value = 'basic'
+          throw new Error(`服务需求字段 ID 重复：${fieldId}`)
+        }
+        ids.add(fieldId)
+        if ((field.type === ServiceFieldType.Select || field.type === ServiceFieldType.MultiSelect) && field.options.length === 0) {
+          goodsModalTab.value = 'basic'
+          throw new Error(`服务需求字段“${field.label}”至少需要一个选项`)
+        }
+      }
     }
 
     // 4. 款式校验与“默认继承父商品”归一化
@@ -385,6 +417,16 @@ async function updateGoods(e: MouseEvent) {
       if (sub.maxBuyCount !== undefined && sub.maxBuyCount !== null && Number(sub.maxBuyCount) < 1) {
         goodsModalTab.value = 'subItems'
         throw new Error(`款式 ${name} 的最大兑换数量必须大于0`)
+      }
+
+      if (currentGoodsModel.value.goods.type === GoodsTypes.Service) {
+        if (sub.type !== undefined && sub.type !== GoodsTypes.Service) {
+          goodsModalTab.value = 'subItems'
+          throw new Error(`服务商品的款式“${name}”只能使用服务类型`)
+        }
+      } else if (sub.type === GoodsTypes.Service) {
+        goodsModalTab.value = 'subItems'
+        throw new Error(`款式“${name}”不能混用服务类型`)
       }
 
       if (
@@ -537,6 +579,9 @@ function onUpdateClick(item: ResponsePointGoodModel) {
   if (copiedItem.count === null) copiedItem.count = undefined
   if (copiedItem.collectUrl === null) copiedItem.collectUrl = undefined
   if (copiedItem.embedCollectUrl === null) copiedItem.embedCollectUrl = undefined
+  if (copiedItem.type === GoodsTypes.Service && !copiedItem.serviceConfig) {
+    copiedItem.serviceConfig = { fields: [], rules: '', paused: false }
+  }
 
   const parentCoverId = item.cover?.id
   const parentCollectUrl = copiedItem.collectUrl ?? undefined
@@ -693,6 +738,18 @@ function onModalOpen() {
   showAddGoodsModal.value = true
 }
 
+function onGoodsTypeChange(type: GoodsTypes) {
+  currentGoodsModel.value.goods.type = type
+  if (type === GoodsTypes.Service) {
+    currentGoodsModel.value.goods.serviceConfig ??= { fields: [], rules: '', paused: false }
+    currentGoodsModel.value.goods.content = undefined
+    currentGoodsModel.value.goods.collectUrl = undefined
+    currentGoodsModel.value.goods.embedCollectUrl = undefined
+  } else {
+    currentGoodsModel.value.goods.serviceConfig = undefined
+  }
+}
+
 function resetGoods() {
   currentGoodsModel.value = defaultGoodsModel()
   subItemFileLists.value = {}
@@ -701,7 +758,6 @@ function resetGoods() {
   goodsModalTab.value = 'basic'
   subItemsSortMode.value = 'manual'
 }
-
 </script>
 
 <template>
@@ -1148,11 +1204,20 @@ function resetGoods() {
                 label="礼物类型"
                 required
               >
-                <NRadioGroup v-model:value="currentGoodsModel.goods.type">
-                  <NRadioButton :value="GoodsTypes.Virtual"> 虚拟礼物 (卡密/网盘/文本) </NRadioButton>
-                  <NRadioButton :value="GoodsTypes.Physical"> 实体礼物 (实物邮寄) </NRadioButton>
+                <NRadioGroup
+                  v-model:value="currentGoodsModel.goods.type"
+                  @update:value="onGoodsTypeChange"
+                >
+                  <NRadioButton :value="GoodsTypes.Virtual">虚拟礼物 (卡密/网盘/文本)</NRadioButton>
+                  <NRadioButton :value="GoodsTypes.Physical">实体礼物 (实物邮寄)</NRadioButton>
+                  <NRadioButton :value="GoodsTypes.Service">服务兑换 (约稿/预约/定制)</NRadioButton>
                 </NRadioGroup>
               </NFormItem>
+
+              <ServiceGoodsConfig
+                v-if="currentGoodsModel.goods.type === GoodsTypes.Service"
+                v-model="currentGoodsModel.goods.serviceConfig"
+              />
 
               <!-- 虚拟礼物专用 -->
               <template v-if="currentGoodsModel.goods.type === GoodsTypes.Virtual">
@@ -1233,7 +1298,7 @@ function resetGoods() {
               </template>
 
               <!-- 实体礼物专用 -->
-              <template v-else>
+              <template v-if="currentGoodsModel.goods.type === GoodsTypes.Physical">
                 <NGrid
                   cols="1 s:2"
                   :x-gap="16"

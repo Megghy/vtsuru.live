@@ -35,13 +35,18 @@ const filteredOrders = computed(() => {
 const stats = computed(() => [
   { label: '全部订单', value: orders.value.length },
   {
-    label: '待发货',
+    label: '待处理',
     value: orders.value.filter((item) => item.status === PointOrderStatus.Pending).length,
     tone: 'warning' as const,
   },
   {
     label: '已发货',
     value: orders.value.filter((item) => item.status === PointOrderStatus.Shipped).length,
+    tone: 'info' as const,
+  },
+  {
+    label: '服务进行中',
+    value: orders.value.filter((item) => item.status === PointOrderStatus.InProgress).length,
     tone: 'info' as const,
   },
   {
@@ -133,8 +138,11 @@ onMounted(() => void loadOrders())
               clearable
               :options="[
                 { label: '全部状态', value: null },
-                { label: '待发货', value: PointOrderStatus.Pending },
+                { label: '待处理', value: PointOrderStatus.Pending },
                 { label: '已发货', value: PointOrderStatus.Shipped },
+                { label: '服务进行中', value: PointOrderStatus.InProgress },
+                { label: '已拒绝', value: PointOrderStatus.Rejected },
+                { label: '已取消', value: PointOrderStatus.Cancelled },
                 { label: '已完成', value: PointOrderStatus.Completed },
               ]"
               placeholder="订单状态"

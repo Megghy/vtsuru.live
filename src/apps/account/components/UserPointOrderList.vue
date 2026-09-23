@@ -22,6 +22,7 @@ import type { ResponsePointOrder2UserModel } from '@/api/api-models'
 import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
+import ServiceOrderPanel from '@/shared/components/points/ServiceOrderPanel.vue'
 
 const props = defineProps<{
   orders: ResponsePointOrder2UserModel[]
@@ -29,6 +30,8 @@ const props = defineProps<{
 
 const detail = ref<ResponsePointOrder2UserModel>()
 const showDetail = ref(false)
+const serviceDetail = ref<ResponsePointOrder2UserModel>()
+const showServiceDetail = ref(false)
 const page = ref(1)
 const pageSize = 10
 
@@ -36,6 +39,9 @@ const statusMeta = {
   [PointOrderStatus.Pending]: { label: '等待发货', type: 'warning' as const },
   [PointOrderStatus.Shipped]: { label: '已发货', type: 'info' as const },
   [PointOrderStatus.Completed]: { label: '已完成', type: 'success' as const },
+  [PointOrderStatus.InProgress]: { label: '进行中', type: 'info' as const },
+  [PointOrderStatus.Rejected]: { label: '已拒绝', type: 'error' as const },
+  [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default' as const },
 }
 
 const pagedOrders = computed(() => props.orders.slice((page.value - 1) * pageSize, page.value * pageSize))
@@ -46,8 +52,19 @@ watch(
 )
 
 function openDetail(order: ResponsePointOrder2UserModel) {
+  if (order.type === GoodsTypes.Service) {
+    serviceDetail.value = order
+    showServiceDetail.value = true
+    return
+  }
   detail.value = order
   showDetail.value = true
+}
+
+function statusLabel(order: ResponsePointOrder2UserModel) {
+  return order.type === GoodsTypes.Service && order.status === PointOrderStatus.Pending
+    ? '待接单'
+    : statusMeta[order.status].label
 }
 
 const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
@@ -58,7 +75,7 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
     minWidth: 220,
     render: (row) =>
       h('div', { class: 'order-goods-cell' }, [
-        h('strong', row.goods.name),
+        h('strong', `${row.type === GoodsTypes.Service ? '服务 · ' : ''}${row.goods.name}`),
         row.selectedSubItems?.length
           ? h('span', row.selectedSubItems.map((item) => `${item.nameSnapshot} x ${item.quantity}`).join(' / '))
           : null,
@@ -127,7 +144,7 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
             size="small"
             :bordered="false"
           >
-            {{ statusMeta[order.status].label }}
+            {{ statusLabel(order) }}
           </NTag>
         </span>
         <strong>{{ order.goods.name }}</strong>
@@ -185,7 +202,7 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
               size="small"
               :bordered="false"
             >
-              {{ statusMeta[detail.status].label }}
+              {{ statusLabel(detail) }}
             </NTag>
           </div>
         </div>
@@ -290,6 +307,14 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
       </div>
     </NScrollbar>
   </NModal>
+
+  <ServiceOrderPanel
+    v-if="serviceDetail"
+    v-model:show="showServiceDetail"
+    :order="serviceDetail"
+    role="buyer"
+    @updated="(updated) => Object.assign(serviceDetail!, updated)"
+  />
 </template>
 
 <style scoped>

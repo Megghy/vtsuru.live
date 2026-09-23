@@ -30,6 +30,7 @@ import { updateOrderExpress, updateOrdersStatus } from '@/api/point-orders'
 
 import AddressDisplay from './AddressDisplay.vue'
 import PointGoodsItem from './PointGoodsItem.vue'
+import ServiceOrderPanel from './ServiceOrderPanel.vue'
 
 const props = defineProps<{
   order: ResponsePointOrder2OwnerModel[]
@@ -45,13 +46,21 @@ const actionLoading = ref(false)
 const selectedItems = ref<DataTableRowKey[]>([])
 const detail = ref<ResponsePointOrder2OwnerModel>()
 const showDetail = ref(false)
+const serviceDetail = ref<ResponsePointOrder2OwnerModel>()
+const showServiceDetail = ref(false)
 const page = ref(1)
 const pageSize = 10
 
-const statusMeta: Record<PointOrderStatus, { label: string; type: 'warning' | 'info' | 'success'; hint: string }> = {
+const statusMeta: Record<
+  PointOrderStatus,
+  { label: string; type: 'default' | 'warning' | 'info' | 'success' | 'error'; hint: string }
+> = {
   [PointOrderStatus.Pending]: { label: '等待发货', type: 'warning', hint: '订单已创建，等待处理' },
   [PointOrderStatus.Shipped]: { label: '已发货', type: 'info', hint: '订单已发货，可填写或更新物流信息' },
   [PointOrderStatus.Completed]: { label: '已完成', type: 'success', hint: '订单流程已完成' },
+  [PointOrderStatus.InProgress]: { label: '进行中', type: 'info', hint: '服务已接单，正在履约' },
+  [PointOrderStatus.Rejected]: { label: '已拒绝', type: 'error', hint: '服务订单已拒绝，积分已退回' },
+  [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default', hint: '订单已取消，积分已退回' },
 }
 
 const loading = computed(() => !!props.loading || actionLoading.value)
@@ -70,17 +79,32 @@ watch(
 
 function statusTag(row: ResponsePointOrder2OwnerModel) {
   const meta = statusMeta[row.status]
-  const label = row.status === PointOrderStatus.Shipped && !row.trackingNumber ? '已发货 · 待填单号' : meta.label
+  const label =
+    row.type === GoodsTypes.Service && row.status === PointOrderStatus.Pending
+      ? '待接单'
+      : row.status === PointOrderStatus.Shipped && !row.trackingNumber
+        ? '已发货 · 待填单号'
+        : meta.label
   const type = row.status === PointOrderStatus.Shipped && !row.trackingNumber ? 'warning' : meta.type
   return h(NTag, { type, size: 'small', bordered: false }, () => label)
 }
 
 function openDetail(row: ResponsePointOrder2OwnerModel) {
+  if (row.type === GoodsTypes.Service) {
+    if (props.orgId) {
+      message.info('组织订单暂不支持查看服务需求，请在主播账号下处理')
+      return
+    }
+    serviceDetail.value = row
+    showServiceDetail.value = true
+    return
+  }
   detail.value = row
   showDetail.value = true
 }
 
 function nextStatus(order: ResponsePointOrder2OwnerModel) {
+  if (order.type === GoodsTypes.Service) return null
   if (order.type === GoodsTypes.Virtual && order.status === PointOrderStatus.Pending) return PointOrderStatus.Completed
   if (order.status === PointOrderStatus.Pending) return PointOrderStatus.Shipped
   if (order.status === PointOrderStatus.Shipped) return PointOrderStatus.Completed
@@ -140,8 +164,9 @@ async function saveExpress() {
 }
 
 function updateSelection(items: DataTableRowKey[]) {
-  selectedItems.value = items
-  emit('selectedItem', items)
+  const eligible = items.filter((id) => props.order.find((order) => order.id === id)?.type !== GoodsTypes.Service)
+  selectedItems.value = eligible
+  emit('selectedItem', eligible)
 }
 
 function toggleSelection(id: number, checked: boolean) {
@@ -159,7 +184,11 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
         label: '选中待发货订单',
         key: 'pending',
         onSelect: (rows) =>
-          updateSelection(rows.filter((row) => row.status === PointOrderStatus.Pending).map((row) => row.id)),
+          updateSelection(
+            rows
+              .filter((row) => row.type !== GoodsTypes.Service && row.status === PointOrderStatus.Pending)
+              .map((row) => row.id),
+          ),
       },
     ],
   },
@@ -214,7 +243,9 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
     key: 'type',
     width: 90,
     render: (row) =>
-      h(NTag, { size: 'small', bordered: false }, () => (row.type === GoodsTypes.Physical ? '实体' : '虚拟')),
+      h(NTag, { size: 'small', bordered: false }, () =>
+        row.type === GoodsTypes.Physical ? '实体' : row.type === GoodsTypes.Service ? '服务' : '虚拟',
+      ),
   },
   {
     title: '备注',
@@ -267,6 +298,7 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
           <div class="mobile-owner-order__topline">
             <NCheckbox
               :checked="selectedItems.includes(item.id)"
+              :disabled="item.type === GoodsTypes.Service"
               @update:checked="(checked) => toggleSelection(item.id, checked)"
             >
               #{{ item.id }}
@@ -283,7 +315,9 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
               {{
                 item.status === PointOrderStatus.Shipped && !item.trackingNumber
                   ? '已发货 · 待填单号'
-                  : statusMeta[item.status].label
+                  : item.type === GoodsTypes.Service && item.status === PointOrderStatus.Pending
+                    ? '待接单'
+                    : statusMeta[item.status].label
               }}
             </NTag>
           </div>
@@ -343,7 +377,9 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
                 {{
                   detail.status === PointOrderStatus.Shipped && !detail.trackingNumber
                     ? '已发货 · 待填单号'
-                    : statusMeta[detail.status].label
+                    : detail.type === GoodsTypes.Service && detail.status === PointOrderStatus.Pending
+                      ? '待接单'
+                      : statusMeta[detail.status].label
                 }}
               </NTag>
             </div>
@@ -464,6 +500,14 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
         </div>
       </NScrollbar>
     </NModal>
+
+    <ServiceOrderPanel
+      v-if="serviceDetail"
+      v-model:show="showServiceDetail"
+      :order="serviceDetail"
+      role="owner"
+      @updated="(updated) => Object.assign(serviceDetail!, updated)"
+    />
   </div>
 </template>
 

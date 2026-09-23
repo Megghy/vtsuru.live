@@ -843,7 +843,21 @@ export enum GoodsStatus {
 export enum GoodsTypes {
   Physical,
   Virtual,
+  Service,
 }
+
+export enum ServiceFieldType {
+  Text,
+  Textarea,
+  Select,
+  Url,
+  MultiSelect,
+  Date,
+  Number,
+}
+export interface ServiceField { id: string; label: string; type: ServiceFieldType; required: boolean; options: string[] }
+export interface ServiceConfig { fields: ServiceField[]; rules?: string; estimatedDays?: number; paused: boolean; maxActiveOrders?: number }
+
 
 // 添加密钥选择模式枚举
 export enum KeySelectionMode {
@@ -883,6 +897,8 @@ export interface ResponseSubPointGoodModel {
   keySelectionMode?: KeySelectionMode
 }
 export interface ResponsePointGoodModel {
+  serviceConfig?: ServiceConfig
+  serviceSummary?: ServiceOrderSummary
   id: number
   name: string
   description: string
@@ -941,6 +957,7 @@ export interface UploadSubPointGoodsModel {
   setting?: PointGoodsSetting
 }
 export interface UploadPointGoodsModel {
+  serviceConfig?: ServiceConfig
   id?: number
   name: string
   count?: number
@@ -1103,6 +1120,7 @@ export interface ResponsePointGuardDuplicateApplyResult {
   liveDuplicateRowsRemoved: number
 }
 export interface ResponsePointOrder2OwnerModel {
+  serviceData?: ServiceOrderData
   instanceOf: 'owner'
   id: number
   point: number
@@ -1122,6 +1140,7 @@ export interface ResponsePointOrder2OwnerModel {
 }
 
 export interface ResponsePointOrder2UserModel {
+  serviceData?: ServiceOrderData
   instanceOf: 'user'
   id: number
   point: number
@@ -1146,10 +1165,31 @@ export interface ResponseSelectedSubItemOrderInfo {
   assignedVirtualKeys: string[]
 }
 export enum PointOrderStatus {
-  Pending, // 订单正在等待处理
-  Shipped, // 订单已发货
-  Completed, // 订单已完成
+  Pending,
+  Shipped,
+  Completed,
+  InProgress,
+  Rejected,
+  Cancelled,
 }
+
+export interface ServiceOrderSummary { active: boolean; appointmentAt?: number; deliveryUrl?: string; cancelReason?: string }
+export enum ServiceTimelineActor {
+  Buyer,
+  Owner,
+  System,
+}
+export enum ServiceTimelineType {
+  Message,
+  Status,
+  Appointment,
+  Delivery,
+  Refund,
+}
+export interface ServiceAnswer { fieldId: string; label: string; type: ServiceFieldType; value: string | string[] }
+export interface ServiceTimelineEntry { id: string; createdAt: number; actor: ServiceTimelineActor; type: ServiceTimelineType; message: string; status?: PointOrderStatus }
+export interface ServiceOrderData { answers: ServiceAnswer[]; appointmentAt?: number; deliveryUrl?: string; cancelReason?: string; refundedAt?: number; refundHistoryId?: number; timeline: ServiceTimelineEntry[] }
+
 // 积分历史记录的 extra 字段类型定义
 // 为了保持向后兼容并避免类型检查问题，使用通用的 extra 接口，但提供详细注释
 export interface PointHistoryExtraBase {

@@ -109,9 +109,11 @@ const orderStats = computed(() => {
     total: orders.value.length,
     pending: orders.value.filter((o) => o.status === PointOrderStatus.Pending).length,
     shipped: orders.value.filter((o) => o.status === PointOrderStatus.Shipped).length,
+    inProgress: orders.value.filter((o) => o.status === PointOrderStatus.InProgress).length,
     completed: orders.value.filter((o) => o.status === PointOrderStatus.Completed).length,
     physical: orders.value.filter((o) => o.type === GoodsTypes.Physical).length,
     virtual: orders.value.filter((o) => o.type === GoodsTypes.Virtual).length,
+    service: orders.value.filter((o) => o.type === GoodsTypes.Service).length,
     totalPoints: Number(orders.value.reduce((sum, o) => sum + o.point, 0).toFixed(1)),
     filteredCount: filteredOrders.value.length,
   }
@@ -129,11 +131,18 @@ async function deleteOrder() {
     return
   }
 
+  const ids = selectedItem.value.filter(
+    (id) => orders.value.find((order) => order.id === id)?.type !== GoodsTypes.Service,
+  )
+  if (!ids.length) {
+    message.warning('服务订单需要在订单详情中按履约流程取消')
+    return
+  }
   try {
-    const data = await QueryPostAPI(`${POINT_API_URL}delete-orders`, selectedItem.value)
+    const data = await QueryPostAPI(`${POINT_API_URL}delete-orders`, ids)
     if (data.code == 200) {
       message.success('删除成功')
-      orders.value = orders.value.filter((o) => !selectedItem.value?.includes(o.id))
+      orders.value = orders.value.filter((o) => !ids.includes(o.id))
       selectedItem.value = undefined
     } else {
       message.error(`删除失败: ${data.message}`)
@@ -165,14 +174,21 @@ async function batchUpdateOrderStatus() {
     return
   }
 
+  const ids = (selectedItem.value as number[]).filter(
+    (id) => orders.value.find((order) => order.id === id)?.type !== GoodsTypes.Service,
+  )
+  if (!ids.length) {
+    message.warning('服务订单需要在订单详情中按履约流程处理')
+    return
+  }
   try {
     await updateOrdersStatus(
       props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
-      (selectedItem.value as number[]) ?? [],
+      ids,
       targetStatus.value,
     )
     message.success('更新成功')
-    const updated = new Set<number>((selectedItem.value as number[]) ?? [])
+    const updated = new Set<number>(ids)
     orders.value.forEach((order) => {
       if (updated.has(Number(order.id))) {
         order.status = targetStatus.value as PointOrderStatus
@@ -190,8 +206,11 @@ async function batchUpdateOrderStatus() {
 // 订单状态文本映射
 const statusText = {
   [PointOrderStatus.Completed]: '已完成',
-  [PointOrderStatus.Pending]: '等待发货',
+  [PointOrderStatus.Pending]: '待处理',
   [PointOrderStatus.Shipped]: '已发货',
+  [PointOrderStatus.InProgress]: '进行中',
+  [PointOrderStatus.Rejected]: '已拒绝',
+  [PointOrderStatus.Cancelled]: '已取消',
 }
 
 // 导出订单数据为CSV
@@ -202,7 +221,7 @@ function exportData() {
         const gift = s.goods
         return {
           订单号: s.id,
-          订单类型: s.type == GoodsTypes.Physical ? '实体' : '虚拟',
+          订单类型: s.type == GoodsTypes.Physical ? '实体' : s.type === GoodsTypes.Service ? '服务' : '虚拟',
           订单状态: statusText[s.status],
           用户名: s.customer.name ?? '未知',
           用户UID: s.customer.userId,
@@ -282,7 +301,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">待发货</div>
+          <div class="stat-label">待处理</div>
           <div class="stat-value warning">
             {{ orderStats.pending }}
           </div>
@@ -294,14 +313,20 @@ onMounted(async () => {
           </div>
         </div>
         <div class="stat-card">
+          <div class="stat-label">服务进行中</div>
+          <div class="stat-value info">
+            {{ orderStats.inProgress }}
+          </div>
+        </div>
+        <div class="stat-card">
           <div class="stat-label">已完成</div>
           <div class="stat-value success">
             {{ orderStats.completed }}
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">实体 / 虚拟</div>
-          <div class="stat-value">{{ orderStats.physical }} / {{ orderStats.virtual }}</div>
+          <div class="stat-label">实体 / 虚拟 / 服务</div>
+          <div class="stat-value">{{ orderStats.physical }} / {{ orderStats.virtual }} / {{ orderStats.service }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">总积分</div>
@@ -343,6 +368,7 @@ onMounted(async () => {
                 :options="[
                   { label: '实体订单', value: GoodsTypes.Physical },
                   { label: '虚拟订单', value: GoodsTypes.Virtual },
+                  { label: '服务订单', value: GoodsTypes.Service },
                 ]"
                 clearable
                 placeholder="订单类型"
@@ -353,8 +379,11 @@ onMounted(async () => {
                 v-model:value="filterSettings.status"
                 :options="[
                   { label: '已完成', value: PointOrderStatus.Completed },
-                  { label: '等待发货', value: PointOrderStatus.Pending },
+                  { label: '待处理', value: PointOrderStatus.Pending },
                   { label: '已发货', value: PointOrderStatus.Shipped },
+                  { label: '进行中', value: PointOrderStatus.InProgress },
+                  { label: '已拒绝', value: PointOrderStatus.Rejected },
+                  { label: '已取消', value: PointOrderStatus.Cancelled },
                 ]"
                 placeholder="订单状态"
                 clearable

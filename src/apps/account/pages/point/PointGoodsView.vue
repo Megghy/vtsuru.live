@@ -7,6 +7,7 @@ import {
   NButton,
   NCard,
   NCheckbox,
+  NDatePicker,
   NDivider,
   NEmpty,
   NFlex,
@@ -32,7 +33,7 @@ import { useRouter } from 'vue-router'
 
 // 移除未使用的 useAccount
 import type { AddressInfo, ResponsePointGoodModel, ResponsePointOrder2UserModel, UserInfo } from '@/api/api-models'
-import { GoodsTypes } from '@/api/api-models'
+import { GoodsTypes, ServiceFieldType } from '@/api/api-models'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import { POINT_API_URL } from '@/shared/config'
@@ -68,6 +69,7 @@ const userAgree = ref(false)
 const buyCount = ref(1) // 购买数量
 const selectedAddress = ref<AddressInfo>() // 选中的地址
 const remark = ref('') // 新增：用于存储用户备注
+const serviceAnswers = ref<Record<string, string | string[] | number | undefined>>({})
 type BuySubItem = { subItemId: number; quantity: number }
 const selectedSubItems = ref<BuySubItem[]>([]) // 选中的子选项（可多选）
 
@@ -141,6 +143,9 @@ const needAddress = computed(() => {
     (s) => selectedIds.has(String(s.id)) && s.type === GoodsTypes.Physical && !s.collectUrl,
   )
 })
+
+const serviceConfig = computed(() => currentGoods.value?.type === GoodsTypes.Service ? currentGoods.value.serviceConfig : undefined)
+const isService = computed(() => currentGoods.value?.type === GoodsTypes.Service)
 
 function isSubItemChecked(id: number) {
   return selectedSubItems.value.some((s) => String(s.subItemId) === String(id))
@@ -472,6 +477,7 @@ function resetBuyModalState() {
   selectedSubItems.value = []
   currentGoods.value = undefined
   remark.value = '' // 新增：重置备注
+  serviceAnswers.value = {}
 }
 
 // 处理模态框显示状态变化
@@ -542,6 +548,17 @@ async function buyGoods() {
     return
   }
 
+  if (isService.value) {
+    const missing = (serviceConfig.value?.fields ?? []).find((field) => {
+      const answer = serviceAnswers.value[field.id]
+      return field.required && (Array.isArray(answer) ? answer.length === 0 : !String(answer ?? '').trim())
+    })
+    if (missing) {
+      message.error(`请填写${missing.label}`)
+      return
+    }
+  }
+
   const selectedSummary = hasSubs
     ? selectedSubItems.value
         .map((s) => `${subMap.get(String(s.subItemId))?.name ?? s.subItemId}×${s.quantity}`)
@@ -568,6 +585,9 @@ async function buyGoods() {
           count,
           addressId: selectedAddress.value?.id ?? null, // 如果地址未选择，则传 null
           remark: remark.value, // 新增：将备注添加到请求中
+          ...(isService.value ? {
+            serviceAnswers: Object.fromEntries(Object.entries(serviceAnswers.value).map(([id, value]) => [id, Array.isArray(value) ? value.join('\n') : value == null ? '' : String(value)])),
+          } : {}),
           ...(hasSubs ? { selectedSubItems: selectedSubItems.value } : {}),
         })
 
@@ -663,6 +683,7 @@ function onBuyClick(good: ResponsePointGoodModel) {
   buyCount.value = 1 // 重置购买数量
   selectedSubItems.value = [] // 重置子选项
   selectedAddress.value = undefined // 重置地址选择
+  serviceAnswers.value = {}
   showBuyModal.value = true
 }
 
@@ -1124,6 +1145,72 @@ onMounted(async () => {
             label-width="auto"
             :style="{ '--n-label-font-weight': '600' }"
           >
+            <NAlert
+              v-if="isService && serviceConfig?.rules"
+              type="info"
+              :bordered="false"
+              style="margin-bottom: 12px; white-space: pre-wrap"
+            >
+              {{ serviceConfig.rules }}
+            </NAlert>
+            <NAlert
+              v-if="isService"
+              type="default"
+              :bordered="false"
+              style="margin-bottom: 12px"
+            >
+              提交后进入待接单状态<span v-if="serviceConfig?.estimatedDays">，预计 {{ serviceConfig.estimatedDays }} 天内完成</span>。主播确认接单后会在订单中更新进度。
+            </NAlert>
+            <NFormItem
+              v-for="field in serviceConfig?.fields ?? []"
+              :key="field.id"
+              :label="field.label"
+              :required="field.required"
+              style="margin-bottom: 12px"
+            >
+              <NSelect
+                v-if="field.type === ServiceFieldType.Select"
+                v-model:value="serviceAnswers[field.id]"
+                :options="field.options.map((option) => ({ label: option, value: option }))"
+                :placeholder="`请选择${field.label}`"
+              />
+              <NSelect
+                v-else-if="field.type === ServiceFieldType.MultiSelect"
+                v-model:value="serviceAnswers[field.id]"
+                multiple
+                :options="field.options.map((option) => ({ label: option, value: option }))"
+                :placeholder="`请选择${field.label}`"
+              />
+              <NInput
+                v-else-if="field.type === ServiceFieldType.Number"
+                :value="serviceAnswers[field.id] == null ? null : String(serviceAnswers[field.id])"
+                type="text"
+                :input-props="{ type: 'number', step: 'any' }"
+                :placeholder="`请输入${field.label}`"
+                style="width: 100%"
+                @update:value="serviceAnswers[field.id] = $event"
+              />
+              <NDatePicker
+                v-else-if="field.type === ServiceFieldType.Date"
+                :formatted-value="typeof serviceAnswers[field.id] === 'string' && serviceAnswers[field.id] ? String(serviceAnswers[field.id]) : null"
+                type="date"
+                value-format="yyyy-MM-dd"
+                :placeholder="`请选择${field.label}`"
+                style="width: 100%"
+                @update:formatted-value="serviceAnswers[field.id] = $event ?? ''"
+              />
+              <NInput
+                v-else
+                :value="serviceAnswers[field.id] == null ? '' : String(serviceAnswers[field.id])"
+                :type="field.type === ServiceFieldType.Textarea ? 'textarea' : 'text'"
+                :placeholder="field.type === ServiceFieldType.Url ? '请输入链接' : `请输入${field.label}`"
+                :input-props="field.type === ServiceFieldType.Url ? { type: 'url' } : undefined"
+                :autosize="field.type === ServiceFieldType.Textarea ? { minRows: 3, maxRows: 8 } : undefined"
+                :maxlength="field.type === ServiceFieldType.Textarea ? 2000 : 300"
+                show-count
+                @update:value="serviceAnswers[field.id] = String($event ?? '')"
+              />
+            </NFormItem>
             <!-- 款式选择（可多选） -->
             <NFormItem
               v-if="hasSubItems"

@@ -101,9 +101,9 @@ const priceRangeText = computed(() => {
               size="tiny"
               :bordered="false"
               class="glass-tag"
-              :class="goods.type === GoodsTypes.Physical ? 'tag-success' : 'tag-info'"
+              :class="goods.type === GoodsTypes.Physical ? 'tag-success' : goods.type === GoodsTypes.Service ? 'tag-warning' : 'tag-info'"
             >
-              {{ goods.type === GoodsTypes.Physical ? '实物' : '虚拟' }}
+              {{ goods.type === GoodsTypes.Physical ? '实物' : goods.type === GoodsTypes.Service ? '服务' : '虚拟' }}
             </NTag>
 
             <NTag
