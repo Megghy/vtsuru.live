@@ -1,0 +1,12 @@
+[# macro: fallback_link(url, expires) #]
+{% macro fallback_link(url, expires) %}
+<p style="margin:0 0 6px;font-size:13px;color:#718096;">如果按钮无效，请复制以下链接到浏览器：</p>
+<div style="background:#f8fafd;border:1px solid #e2e8f0;border-radius:8px;
+            padding:12px 16px;margin-bottom:16px;word-break:break-all;
+            font-size:12px;color:#6082b6;line-height:1.5;">
+  <a href="[[ url ]]" target="_blank" style="color:#6082b6;text-decoration:none;">[[ url ]]</a>
+</div>
+<p style="margin:0 0 24px;font-size:13px;color:#718096;">
+  此链接将在 <strong style="color:#2d3748;">[[ expires ]]</strong> 后过期。
+</p>
+{% endmacro %}

@@ -1,0 +1,15 @@
+[# macro: action_button(url, label, bottom_pad="24px") #]
+{% macro action_button(url, label, bottom_pad="24px") %}
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+  <tr>
+    <td align="center" style="padding-bottom:[[ bottom_pad ]];">
+      <a href="[[ url ]]" target="_blank" class="btn"
+         style="display:inline-block;background-color:#6082b6;color:#ffffff;
+                font-size:15px;font-weight:600;text-decoration:none;
+                padding:13px 36px;border-radius:8px;letter-spacing:0.02em;">
+        [[ label ]]
+      </a>
+    </td>
+  </tr>
+</table>
+{% endmacro %}

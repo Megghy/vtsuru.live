@@ -1,0 +1,35 @@
+{% extends "../_layouts/base.njk" %}
+{% from "../_partials/action_button.njk" import action_button %}
+{% set title = "礼物兑换通知（{{order_count}} 笔）" %}
+{% set subtitle = "礼物兑换通知（{{order_count}} 笔）" %}
+{% set preview = "您在过去 1 分钟内收到了 {{order_count}} 笔礼物兑换。" %}
+
+{% block body %}
+<p style="margin:0 0 6px;font-size:16px;color:#2d3748;font-weight:600;">您好，{{owner_name}}</p>
+<p style="margin:0 0 16px;font-size:15px;color:#4a5568;line-height:1.6;">
+  以下是近期合并通知的所有兑换详情。
+</p>
+
+<div style="display:inline-block;background:#ebf1fa;border:1px solid #c8d9f0;
+            border-radius:20px;padding:6px 18px;margin-bottom:20px;">
+  <span style="font-size:13px;color:#6082b6;font-weight:600;">
+    过去 1 分钟内共 {{order_count}} 笔兑换
+  </span>
+</div>
+
+<style>
+  .order-item { background:#f8fafd; border:1px solid #e2e8f0; border-radius:10px;
+                padding:16px 20px; margin-bottom:12px; }
+  .order-item p { margin:4px 0; font-size:14px; color:#2d3748; line-height:1.5; }
+  .order-item p strong { color:#4a5568; font-weight:600; }
+</style>
+{{order_items}}
+
+[[ action_button("{{order_link}}", "查看全部订单") ]]
+{% endblock %}
+
+{% block footer_extra %}
+如不需要此类通知，可在
+<a href="{{settings_link}}" style="color:#6082b6;text-decoration:none;">设置页面</a>
+中关闭。<br />
+{% endblock %}

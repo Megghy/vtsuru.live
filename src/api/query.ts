@@ -1,4 +1,4 @@
-import { apiFail, isManagedAPIUrl, mapToCurrentAPI, markAPIFailover, selectedAPIKey } from '@/shared/config'
+import { getAPIUrl, isManagedAPIUrl, mapToCurrentAPI, markAPIFailover, selectedAPIKey } from '@/shared/config'
 
 import type { APIRoot, PaginationResponse } from './api-models'
 import { cookie } from './auth'
@@ -15,6 +15,7 @@ export type QueryRequestOptions = {
 }
 
 export class QueryRequestError extends Error {
+  requestUrl?: string
   constructor(
     public kind: 'timeout' | 'aborted' | 'network',
     message: string,
@@ -68,6 +69,30 @@ function toQueryRequestError(error: unknown, didTimeout: boolean) {
     return new QueryRequestError('aborted', '请求已取消', error)
   }
   return new QueryRequestError('network', '网络请求失败', error)
+}
+
+async function readResponseJson<T>(response: Response): Promise<T> {
+  const text = await response.text()
+  if (text) {
+    try {
+      return JSON.parse(text) as T
+    } catch (error) {
+      if (response.status >= 500) throw error
+      throw new QueryRequestError('network', `请求失败 (${response.status})`, error)
+    }
+  }
+  if (response.status >= 500) {
+    throw new TypeError(`Empty ${response.status} response`)
+  }
+  throw new QueryRequestError('network', `请求失败 (${response.status})`)
+}
+
+function shouldRetryOnFailover(error: QueryRequestError, retryOnFailover: boolean) {
+  if (!retryOnFailover || error.kind === 'aborted') return false
+  if (selectedAPIKey.value !== 'main') return false
+  const requestUrl = error.requestUrl
+  if (!requestUrl || !isManagedAPIUrl(requestUrl)) return false
+  return !requestUrl.startsWith(getAPIUrl('failover'))
 }
 
 function buildAuthHeaders(headers?: [string, string][]) {
@@ -173,9 +198,13 @@ async function QueryAPIInternal<T>(url: URL, init: RequestInit, options?: QueryR
     const { signal, cleanup, didTimeout } = createRequestSignal(options?.signal, options?.timeoutMs)
     try {
       const data = await fetch(mappedUrl, { ...init, signal })
-      return (await data.json()) as T
+      return await readResponseJson<T>(data)
     } catch (error) {
-      throw toQueryRequestError(error, didTimeout())
+      const queryError = toQueryRequestError(error, didTimeout())
+      if (!(error instanceof QueryRequestError)) {
+        queryError.requestUrl = mappedUrl
+      }
+      throw queryError
     } finally {
       cleanup()
     }
@@ -186,12 +215,10 @@ async function QueryAPIInternal<T>(url: URL, init: RequestInit, options?: QueryR
   } catch (e) {
     console.error(`[${init.method}] API调用失败: ${e}`)
     const queryError = toQueryRequestError(e, false)
-    if (queryError.kind !== 'aborted' && isManagedAPIUrl(rawUrl) && selectedAPIKey.value === 'main' && !apiFail.value) {
+    if (shouldRetryOnFailover(queryError, options?.retryOnFailover ?? true)) {
       markAPIFailover()
       console.log('默认API异常, 切换至故障转移节点')
-      if (options?.retryOnFailover ?? true) {
-        return request()
-      }
+      return request()
     }
     throw queryError
   }

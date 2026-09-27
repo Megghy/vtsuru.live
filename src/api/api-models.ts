@@ -684,6 +684,8 @@ export enum QueueStatus {
   Cancel,
 }
 export interface EventModel {
+  /** Stable source event identity, preserved across RPC and tab forwarding. */
+  eventId?: string
   id?: number
   type: EventDataTypes
   uname: string

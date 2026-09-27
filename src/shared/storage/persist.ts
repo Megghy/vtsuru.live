@@ -245,6 +245,11 @@ export function usePersistedStorage<T>(
   return state
 }
 
+export function whenPersistedReady<T>(storage: RemovableRef<T>): Promise<T> {
+  const ready = (storage as RemovableRef<T> & { ready?: Promise<T> }).ready
+  return ready ?? Promise.resolve(storage.value)
+}
+
 export async function persistedGetItemRaw(key: string): Promise<string | null> {
   return persistedAsyncStorage.getItem(canonicalizePersistKey(key))
 }

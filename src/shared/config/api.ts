@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-import { persistedGetItemRaw, persistedSetItemRaw, usePersistedStorage } from '@/shared/storage/persist'
+import { persistedGetItemRaw, persistedSetItemRaw, usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 
 const debugAPI: string =
   import.meta.env.VITE_API == 'dev'
@@ -42,6 +42,7 @@ function hasSessionFailover() {
 export async function initializeAPISelection() {
   if (isDev) return
 
+  await whenPersistedReady(selectedAPIKey)
   const hasManualSelection = (await persistedGetItemRaw(API_MANUAL_SELECTION_KEY)) === '1'
   const savedSelection = await persistedGetItemRaw('Settings.SelectedAPI')
 

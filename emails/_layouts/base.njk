@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>[[ title ]] - [[ site_name ]]</title>
+    <style type="text/css">
+      body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+      img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+      table { border-collapse: collapse !important; }
+      body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important;
+             background-color: #eef2f7; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      @media screen and (max-width: 600px) {
+        .card { width: 100% !important; border-radius: 0 !important; box-shadow: none !important; }
+        .body-pad { padding: 24px 20px !important; }
+        .btn { width: 100% !important; display: block !important; text-align: center !important; }
+        .code-block { font-size: 28px !important; letter-spacing: 4px !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0;background-color:#eef2f7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+
+    [# preview text (hidden) #]
+    <div style="display:none;font-size:1px;color:#eef2f7;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+      [[ preview ]]
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
+           style="background-color:#eef2f7;padding:40px 0;">
+      <tr>
+        <td align="center">
+          <table class="card" width="600" cellpadding="0" cellspacing="0" border="0" role="presentation"
+                 style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;
+                        overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+            [# ── 顶部渐变色带 ── #]
+            <tr>
+              <td style="background:linear-gradient(135deg,#6082b6 0%,#7e9fd4 100%);
+                         padding:32px 40px 28px;text-align:center;">
+                <img src="[[ logo_url ]]" width="40" height="40" alt="[[ site_name ]]"
+                     style="display:inline-block;border-radius:8px;margin-bottom:12px;" />
+                <div style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:0.02em;">[[ site_name ]]</div>
+                <div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px;">[[ subtitle ]]</div>
+              </td>
+            </tr>
+
+            [# ── 正文 ── #]
+            <tr>
+              <td class="body-pad" style="padding:32px 40px 0;">
+                {% block body %}{% endblock %}
+              </td>
+            </tr>
+
+            [# ── Footer ── #]
+            <tr>
+              <td style="padding:20px 40px 28px;border-top:1px solid #e8edf5;">
+                <p style="margin:0;font-size:12px;color:#a0aec0;line-height:1.6;text-align:center;">
+                  {% block footer_extra %}{% endblock %}
+                  © [[ current_year ]] [[ site_name ]]. 保留所有权利。
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "lint": "oxlint && eslint . --cache",
     "lint:fix": "oxlint --fix && eslint . --cache --fix && oxfmt --write .",
-    "knip": "knip"
+    "knip": "knip",
+    "build:emails": "bun scripts/build-emails.mjs"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -112,6 +113,7 @@
     "@types/css-tree": "^2.3.11",
     "@types/culori": "^4.0.1",
     "@types/file-saver": "^2.0.7",
+    "@types/nunjucks": "^3.2.6",
     "@vicons/ionicons5": "^0.13.0",
     "@vitejs/plugin-legacy": "^8.2.3",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
@@ -121,6 +123,7 @@
     "eslint-plugin-oxlint": "^1.72.0",
     "jsdom": "^29.1.1",
     "knip": "6.24.0",
+    "nunjucks": "^3.2.4",
     "oxfmt": "^0.61.0",
     "oxlint": "^1.72.0",
     "playwright-core": "^1.61.1",

@@ -120,9 +120,9 @@ async function initHyperDX() {
     HyperDX.init({
       apiKey: '7d1eb66c-24b8-445e-a406-dc2329fa9423',
       service: 'vtsuru.live',
-      tracePropagationTargets: [/vtsuru.suki.club/i],
+      tracePropagationTargets: [/^https:\/\/(api|failover-api)\.vtsuru\.suki\.club\//i],
       advancedNetworkCapture: true,
-      ignoreUrls: [/localhost/i],
+      ignoreUrls: [/localhost/i, /^https:\/\/files\.vtsuru\.suki\.club\//i],
     })
     ;(window as any).__HyperDX__ = HyperDX
   } catch (err) {

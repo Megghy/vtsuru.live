@@ -5,6 +5,7 @@
 // - BaseDanmakuClient 继承它, 补上 B 站 LiveWS 专属的连接与原始命令解析。
 // - LocalRpcClient 继承它, 走本地 birpc 拿到已经是 EventModel 的数据后直接分发。
 import type { EventModel } from '@/api/api-models'
+import md5 from 'md5'
 
 export type DanmakuClientType = 'openlive' | 'direct' | 'local' | 'broadcast'
 
@@ -89,6 +90,8 @@ export default abstract class DanmakuEventEmitter {
   }
 
   protected emitParsedEvent(eventName: ModelEventName, rawData: unknown, data: EventModel, command?: unknown) {
+    // Hash the source packet, not receipt time, to identify reconnect replays.
+    data.eventId ??= eventName + ':' + md5(JSON.stringify(command ?? rawData))
     this.notifyListeners(`raw:${eventName}`, this.eventsRaw[eventName], rawData, command)
     this.notifyListeners(`model:${eventName}`, this.eventsAsModel[eventName], data, command)
   }

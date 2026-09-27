@@ -1,0 +1,27 @@
+{% extends "../_layouts/base.njk" %}
+{% set title = "邮箱地址更改验证" %}
+{% set subtitle = "邮箱更改验证" %}
+{% set preview = "您的 " + site_name + " 邮箱更改验证码。" %}
+
+{% block body %}
+<p style="margin:0 0 8px;font-size:16px;color:#2d3748;font-weight:600;">您好，</p>
+<p style="margin:0 0 28px;font-size:15px;color:#4a5568;line-height:1.6;">
+  您正在将 {{site_name}} 账户绑定的邮箱更改到当前地址。请输入以下验证码完成操作：
+</p>
+
+<div class="code-block"
+     style="background:#ebf1fa;border:1px solid #c8d9f0;border-radius:12px;
+            padding:24px 20px;margin-bottom:24px;text-align:center;
+            font-size:36px;font-weight:700;letter-spacing:8px;color:#2d3748;
+            font-family:'Courier New',Courier,monospace;">
+  {{verification_code}}
+</div>
+
+<div style="border-top:1px solid #e8edf5;margin-bottom:20px;"></div>
+<p style="margin:0 0 8px;font-size:13px;color:#718096;text-align:center;">
+  验证码将在 <strong style="color:#2d3748;">5 分钟</strong>内失效，请尽快使用。
+</p>
+<p style="margin:0 0 32px;font-size:13px;color:#a0aec0;line-height:1.6;text-align:center;">
+  如果您没有进行相关操作，请忽略此邮件，您的账户邮箱将保持不变。
+</p>
+{% endblock %}

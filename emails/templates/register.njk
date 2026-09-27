@@ -1,0 +1,21 @@
+{% extends "../_layouts/base.njk" %}
+{% from "../_partials/action_button.njk" import action_button %}
+{% from "../_partials/fallback_link.njk" import fallback_link %}
+{% set title = "邮箱验证" %}
+{% set subtitle = "邮箱验证" %}
+{% set preview = "请验证您的邮箱地址以完成 " + site_name + " 注册。" %}
+
+{% block body %}
+<p style="margin:0 0 8px;font-size:16px;color:#2d3748;font-weight:600;">您好，{{username}}</p>
+<p style="margin:0 0 24px;font-size:15px;color:#4a5568;line-height:1.6;">
+  感谢您注册 {{site_name}}！请点击下方按钮验证您的邮箱地址，完成注册流程。
+</p>
+
+[[ action_button("{{verification_link}}", "验证我的邮箱") ]]
+[[ fallback_link("{{verification_link}}", "{{valid_duration}}") ]]
+
+<div style="border-top:1px solid #e8edf5;margin-bottom:20px;"></div>
+<p style="margin:0 0 32px;font-size:13px;color:#a0aec0;line-height:1.6;">
+  如果您未注册 {{site_name}}，请忽略此邮件，您的账户将不会被激活。
+</p>
+{% endblock %}

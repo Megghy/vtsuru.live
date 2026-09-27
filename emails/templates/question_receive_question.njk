@@ -1,0 +1,25 @@
+{% extends "../_layouts/base.njk" %}
+{% from "../_partials/action_button.njk" import action_button %}
+{% set title = "您的问题收到回复" %}
+{% set subtitle = "您的问题收到回复啦" %}
+{% set preview = "您在 " + site_name + " 提出的问题已收到回复。" %}
+
+{% block body %}
+<p style="margin:0 0 8px;font-size:16px;color:#2d3748;font-weight:600;">您好，</p>
+<p style="margin:0 0 16px;font-size:15px;color:#4a5568;line-height:1.6;">
+  您之前在 {{site_name}} 提问箱提出的问题已经收到了回复。
+</p>
+
+<p style="margin:0 0 8px;font-size:13px;color:#718096;font-weight:600;">您的问题是：</p>
+<div style="border-left:3px solid #6082b6;background:#f0f5ff;
+            padding:14px 18px;border-radius:0 8px 8px 0;
+            margin-bottom:28px;font-style:italic;color:#4a5568;
+            font-size:14px;line-height:1.6;">
+  {{question_snippet}}
+</div>
+
+<p style="margin:0 0 24px;font-size:15px;color:#4a5568;line-height:1.6;">
+  点击下方按钮查看完整回复内容：
+</p>
+[[ action_button("{{view_answer_link}}", "查看回复", "32px") ]]
+{% endblock %}

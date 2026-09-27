@@ -1,0 +1,55 @@
+{% extends "../_layouts/base.njk" %}
+{% from "../_partials/action_button.njk" import action_button %}
+{% set title = "礼物兑换通知" %}
+{% set subtitle = "礼物兑换通知" %}
+{% set preview = "{{buyer_name}} 刚刚兑换了您的礼物「{{goods_name}}」。" %}
+
+{% block body %}
+<p style="margin:0 0 8px;font-size:16px;color:#2d3748;font-weight:600;">您好，{{owner_name}}</p>
+<p style="margin:0 0 24px;font-size:15px;color:#4a5568;line-height:1.6;">
+  有粉丝刚刚兑换了您的礼物，以下是本次兑换详情。
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
+       style="background:#f8fafd;border:1px solid #e2e8f0;border-radius:10px;
+              overflow:hidden;margin-bottom:24px;">
+  <tr>
+    <td style="padding:20px 24px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+        <tr>
+          <td style="padding:5px 0;width:90px;"><span style="font-size:13px;color:#718096;">用户名称</span></td>
+          <td style="padding:5px 0;"><span style="font-size:14px;color:#2d3748;font-weight:600;">{{buyer_name}}</span></td>
+        </tr>
+        <tr><td colspan="2"><div style="border-top:1px solid #e8edf5;margin:6px 0;"></div></td></tr>
+        <tr>
+          <td style="padding:5px 0;"><span style="font-size:13px;color:#718096;">礼物名称</span></td>
+          <td style="padding:5px 0;"><span style="font-size:14px;color:#2d3748;">{{goods_name}}</span></td>
+        </tr>
+        <tr><td colspan="2"><div style="border-top:1px solid #e8edf5;margin:6px 0;"></div></td></tr>
+        <tr>
+          <td style="padding:5px 0;"><span style="font-size:13px;color:#718096;">兑换数量</span></td>
+          <td style="padding:5px 0;"><span style="font-size:14px;color:#2d3748;">{{goods_count}}</span></td>
+        </tr>
+        <tr><td colspan="2"><div style="border-top:1px solid #e8edf5;margin:6px 0;"></div></td></tr>
+        <tr>
+          <td style="padding:5px 0;"><span style="font-size:13px;color:#718096;">消费积分</span></td>
+          <td style="padding:5px 0;"><span style="font-size:14px;color:#6082b6;font-weight:600;">{{point_used}}</span></td>
+        </tr>
+        <tr><td colspan="2"><div style="border-top:1px solid #e8edf5;margin:6px 0;"></div></td></tr>
+        <tr>
+          <td style="padding:5px 0;"><span style="font-size:13px;color:#718096;">兑换时间</span></td>
+          <td style="padding:5px 0;"><span style="font-size:14px;color:#2d3748;">{{order_time}}</span></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+[[ action_button("{{order_link}}", "查看订单详情") ]]
+{% endblock %}
+
+{% block footer_extra %}
+如不需要此类通知，可在
+<a href="{{settings_link}}" style="color:#6082b6;text-decoration:none;">设置页面</a>
+中关闭。<br />
+{% endblock %}

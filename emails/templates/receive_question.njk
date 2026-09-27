@@ -1,0 +1,19 @@
+{% extends "../_layouts/base.njk" %}
+{% from "../_partials/action_button.njk" import action_button %}
+{% set title = "提问箱" %}
+{% set subtitle = "新提问通知" %}
+{% set preview = "您收到了一条新提问。" %}
+
+{% block body %}
+<p style="margin:0 0 8px;font-size:16px;color:#2d3748;font-weight:600;">您好，{{box_owner_name}}</p>
+<p style="margin:0 0 28px;font-size:15px;color:#4a5568;line-height:1.6;">
+  您的提问箱收到了一条新提问，请点击下方按钮前往查看。
+</p>
+[[ action_button("{{view_question_link}}", "查看提问详情") ]]
+{% endblock %}
+
+{% block footer_extra %}
+如不需要此类通知，可在
+<a href="{{settings_link}}" style="color:#6082b6;text-decoration:none;">设置页面</a>
+中关闭。<br />
+{% endblock %}
