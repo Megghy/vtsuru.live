@@ -181,7 +181,11 @@ describe('useDanmakuClient event sharing', () => {
     owner.danmakuClient.eventsAsModel.gift[0](event)
 
     expect(laterListener).toHaveBeenCalledWith(event, undefined)
-    expect(remoteListener).toHaveBeenCalledWith(event, undefined)
+    expect(remoteListener).toHaveBeenCalledTimes(1)
+    expect(remoteListener.mock.calls[0][0]).toEqual({
+      ...event,
+      eventId: expect.stringMatching(/^gift:[0-9a-f]{32}$/),
+    })
   })
 
   it('receives gift events from another local page without starting a new client', async () => {
@@ -198,7 +202,11 @@ describe('useDanmakuClient event sharing', () => {
     const event = makeEvent({ uname: 'Bob', msg: '小花花', num: 2 })
     owner.danmakuClient.eventsAsModel.gift[0](event)
 
-    expect(giftListener).toHaveBeenCalledWith(event, undefined)
+    expect(giftListener).toHaveBeenCalledTimes(1)
+    expect(giftListener.mock.calls[0][0]).toEqual({
+      ...event,
+      eventId: expect.stringMatching(/^gift:[0-9a-f]{32}$/),
+    })
     expect(startMock).toHaveBeenCalledTimes(1)
   })
 

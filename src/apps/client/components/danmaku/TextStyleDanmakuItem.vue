@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 import { AVATAR_URL } from '@/shared/config'
 
-import { useDanmakuWindow } from '../../store/useDanmakuWindow'
 import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { useDanmakuUtils } from './danmakuUtils'
 
@@ -9,7 +11,7 @@ import { useDanmakuUtils } from './danmakuUtils'
 const props = defineProps<BaseDanmakuItemProps>()
 
 // 使用工具函数获取所有计算属性
-const emojiData = useDanmakuWindow().emojiData
+const { emojiData } = storeToRefs(useLiveEmoji())
 const danmakuUtils = useDanmakuUtils(props, emojiData)
 
 // 直接从工具函数获取计算属性，不再需要getBaseProp方法

@@ -201,7 +201,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   }
 
   async function activateIntent(intent: SourceIntent, reconnecting = false, allowUpstream = true) {
-    if (connected.value && currentIntent?.scope === intent.scope) return useDanmakuClient()
+    if (!reconnecting && connected.value && currentIntent?.scope === intent.scope) return useDanmakuClient()
     if (connectTask && connectTaskScope === intent.scope) {
       await connectTask
       return useDanmakuClient()
@@ -401,6 +401,12 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     releaseLeadership()
   }
 
+  /** 手动重连：沿用当前来源意图；尚未建立过连接时按开放平台启动 */
+  async function reconnect() {
+    if (currentIntent) return restartConnection('手动重连')
+    await ensureOpenlive()
+  }
+
   async function dispose() {
     currentIntent = undefined
     activeScope = ''
@@ -576,6 +582,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     initDirect,
     initLocal,
     ensureOpenlive,
+    reconnect,
     dispose,
   }
 })

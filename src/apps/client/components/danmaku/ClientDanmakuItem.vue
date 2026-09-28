@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
+import { storeToRefs } from 'pinia'
+
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 import CardStyleDanmakuItem from './CardStyleDanmakuItem.vue'
 import type { BaseDanmakuItemProps } from './danmakuUtils'
@@ -9,7 +11,7 @@ import TextStyleDanmakuItem from './TextStyleDanmakuItem.vue'
 const props = defineProps<BaseDanmakuItemProps>()
 
 // 使用工具函数获取基础计算属性
-const emojiData = useDanmakuWindow().emojiData
+const { emojiData } = storeToRefs(useLiveEmoji())
 const { typeClass } = useDanmakuUtils(props, emojiData)
 </script>
 

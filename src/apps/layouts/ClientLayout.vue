@@ -2,6 +2,7 @@
 // 引入 Tauri 插件
 import { openUrl } from '@tauri-apps/plugin-opener'
 import {
+  Board24Filled,
   Chat24Filled,
   CloudArchive24Filled,
   Cookies24Filled,
@@ -117,6 +118,7 @@ const routeNameToMenuKey: Record<string, string> = {
   'client-index': 'go-back-home',
   'client-fetcher': 'fetcher',
   'client-live-manage': 'live-manage',
+  'client-live-dashboard': 'live-dashboard',
   'client-danmaku-window-manage': 'danmaku-window-manage',
   'client-gift-window-manage': 'gift-window-manage',
   'client-auto-action-manage': 'danmaku-auto-action-manage',
@@ -204,6 +206,11 @@ const menuOptions = computed(() => {
       label: () => h(RouterLink, { to: { name: 'client-live-manage' } }, () => '直播管理'),
       key: 'live-manage',
       icon: () => h(Live24Filled),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'client-live-dashboard' } }, () => '中控台'),
+      key: 'live-dashboard',
+      icon: () => h(Board24Filled),
     },
     {
       label: '直播浮窗',

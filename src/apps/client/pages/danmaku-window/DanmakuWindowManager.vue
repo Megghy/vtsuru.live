@@ -4,9 +4,7 @@ import {
   Color24Filled,
   Delete24Regular,
   Desktop24Filled,
-  Eye24Filled,
   Filter24Filled,
-  Flash24Filled,
   Send24Filled,
 } from '@vicons/fluent'
 import {
@@ -31,7 +29,6 @@ import {
   NTabs,
   NTag,
   NText,
-  NTooltip,
   useMessage,
 } from 'naive-ui'
 import { ref } from 'vue'
@@ -39,15 +36,17 @@ import { ref } from 'vue'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 const danmakuWindow = useDanmakuWindow()
+const liveEmoji = useLiveEmoji()
 const message = useMessage()
 const emojiLoading = ref(false)
 
 async function reloadEmoji() {
   emojiLoading.value = true
   try {
-    await danmakuWindow.getEmojiData()
+    await liveEmoji.refresh()
     message.success('表情数据已重新加载')
   } finally {
     emojiLoading.value = false
@@ -724,8 +723,8 @@ function resetWindowPosition() {
                 <div>
                   <NText strong>本地表情缓存状态</NText>
                   <div style="font-size: 12px; color: var(--vtsuru-fg-muted); margin-top: 2px;">
-                    内联表情: {{ Object.keys(danmakuWindow.emojiData?.data?.inline || {}).length }} 个 · 纯文本表情:
-                    {{ Object.keys(danmakuWindow.emojiData?.data?.plain || {}).length }} 个
+                    内联表情: {{ Object.keys(liveEmoji.emojiData.data.inline || {}).length }} 个 · 纯文本表情:
+                    {{ Object.keys(liveEmoji.emojiData.data.plain || {}).length }} 个
                   </div>
                 </div>
                 <NButton

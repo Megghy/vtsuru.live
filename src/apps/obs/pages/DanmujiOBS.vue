@@ -2,8 +2,7 @@
 import { NAlert } from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
-// @ts-ignore
-import { useAccount } from '@/api/account'
+import { isInBiliBlackList } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
@@ -20,6 +19,7 @@ import { buildDanmujiCss } from '@/shared/danmujiStyle'
 import { useDanmujiConfig } from '@/apps/obs/composables/useDanmujiConfig'
 import { type DanmujiConfig } from '@/shared/danmujiConfig'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
+import { GuidUtils } from '@/shared/utils'
 import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -56,7 +56,6 @@ const danmakuClient = useDanmakuClient()
 let client: Awaited<ReturnType<typeof danmakuClient.initOpenlive>> | null = null
 let disposed = false
 const pronunciationConverter = new pronunciation.PronunciationConverter()
-const accountInfo = useAccount()
 
 let textEmoticons: { keyword: string; url: string }[] = []
 
@@ -145,7 +144,7 @@ async function onAddText(event: EventModel, _command: unknown) {
  * 处理礼物消息
  */
 function onAddGift(event: EventModel, _command: unknown) {
-  if (!effectiveConfig.value.showGift || !filterByAuthor(event.uname, event.uid)) {
+  if (!effectiveConfig.value.showGift || !filterByAuthor(event)) {
     return
   }
 
@@ -261,14 +260,14 @@ function getPronunciation(text: string): string {
  * 过滤SC消息
  */
 function filterSuperChatMessage(data: EventModel): boolean {
-  return filterByContent(data.msg) && filterByAuthor(data.uname, data.uid)
+  return filterByContent(data.msg) && filterByAuthor(data)
 }
 
 /**
  * 过滤新舰长消息
  */
 function filterNewMemberMessage(data: EventModel): boolean {
-  return filterByAuthor(data.uname, data.uid)
+  return filterByAuthor(data)
 }
 
 /**
@@ -284,20 +283,12 @@ function filterByContent(content: string): boolean {
   return true
 }
 
-/**
- * 根据用户名或UID过滤消息（黑名单）
- */
-function filterByAuthor(name?: string, uid?: string | number): boolean {
-  if (name && blockUsersSet.value.has(name)) {
-    return false
-  }
-  if (uid !== undefined && uid !== null && blockUsersSet.value.has(String(uid))) {
-    return false
-  }
-  if (name && accountInfo.value?.biliBlackList && name in accountInfo.value.biliBlackList) {
-    return false
-  }
-  return true
+/** 本地屏蔽名单按用户名/UID；B 站黑名单按 OUId（缺 ouid 时由 uid/open_id 派生） */
+function filterByAuthor(event: EventModel): boolean {
+  if (event.uname && blockUsersSet.value.has(event.uname)) return false
+  if (event.uid != null && blockUsersSet.value.has(String(event.uid))) return false
+  const ouid = event.ouid || GuidUtils.toOuid(event.uid, event.open_id ?? '')
+  return !isInBiliBlackList(ouid)
 }
 
 /**
@@ -312,7 +303,7 @@ function filterTextMessage(data: EventModel): boolean {
   else if (effectiveConfig.value.blockMedalLevel > 0 && data.fans_medal_level < effectiveConfig.value.blockMedalLevel) {
     return false
   }
-  return filterByContent(data.msg) && filterByAuthor(data.uname, data.uid)
+  return filterByContent(data.msg) && filterByAuthor(data)
 }
 
 /**

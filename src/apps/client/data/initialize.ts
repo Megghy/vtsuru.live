@@ -21,6 +21,7 @@ import {
   REQUIRED_CLIENT_VERSION,
 } from '@/shared/config'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
 import { usePngtuberDriver } from '../store/usePngtuberDriver'
@@ -380,9 +381,9 @@ export async function initAll(isOnBoot: boolean) {
         id: 'show-main',
         text: '显示主界面',
         action: () => {
-          void appWindow.show().catch((err) => warn(`[tray] 显示窗口失败: ${err}`))
+          void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
           void appWindow.unminimize().catch(() => {})
-          void appWindow.setFocus().catch((err) => warn(`[tray] 聚焦窗口失败: ${err}`))
+          void appWindow.setFocus().catch(async (err) => warn(`[tray] 聚焦窗口失败: ${err}`))
         },
       },
       {
@@ -423,9 +424,9 @@ export async function initAll(isOnBoot: boolean) {
         (event.type === 'Click' && event.button === 'Left' && event.buttonState === 'Up') ||
         event.type === 'DoubleClick'
       ) {
-        void appWindow.show().catch((err) => warn(`[tray] 显示窗口失败: ${err}`))
+        void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
         void appWindow.unminimize().catch(() => {})
-        void appWindow.setFocus().catch((err) => warn(`[tray] 聚焦窗口失败: ${err}`))
+        void appWindow.setFocus().catch(async (err) => warn(`[tray] 聚焦窗口失败: ${err}`))
       }
     },
   }
@@ -448,9 +449,7 @@ export async function initAll(isOnBoot: boolean) {
       const useWindow = useDanmakuWindow()
       useWindow.init()
 
-      if ((useWindow.emojiData?.updateAt ?? 0) < Date.now() - 1000 * 60 * 60 * 24) {
-        await useWindow.getEmojiData()
-      }
+      await useLiveEmoji().ensureFresh()
       if (await w.isVisible()) {
         useWindow.isDanmakuWindowOpen = true
 

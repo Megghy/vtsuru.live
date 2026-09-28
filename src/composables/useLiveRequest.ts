@@ -8,6 +8,7 @@ import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } fro
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { GuidUtils } from '@/shared/utils'
 import { sortByQueueType } from '@/shared/utils/queue'
 
 export const useLiveRequest = defineStore('songRequest', () => {
@@ -355,7 +356,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
 
     if (item.user) {
       try {
-        const data = await AddBiliBlackList(item.user.uid, item.user.name)
+        const data = await AddBiliBlackList(GuidUtils.toOuid(item.user.uid, item.user.oid), item.user.name)
 
         if (data.code == 200) {
           window.$message.success(`[${item.user?.name}] 已添加到黑名单`)

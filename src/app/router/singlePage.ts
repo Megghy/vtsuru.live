@@ -10,6 +10,14 @@ export default [
     },
   },
   {
+    path: '/live-dashboard',
+    name: 'live-dashboard',
+    component: async () => import('@/apps/live-dashboard/pages/LiveDashboard.vue'),
+    meta: {
+      title: '直播中控台',
+    },
+  },
+  {
     path: '/playground/test',
     name: 'test',
     component: async () => import('@/apps/web/pages/TestView.vue'),

@@ -12,6 +12,7 @@ import { EventDataTypes } from '@/api/api-models'
 import Ticker from '@/apps/obs/components/blivechat/Ticker.vue'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
+import { GuidUtils } from '@/shared/utils'
 
 vi.mock('@/composables/useRouteQueryParam', () => ({ useRouteQueryParam: () => ref(undefined) }))
 
@@ -19,10 +20,13 @@ vi.mock('@/api/query', () => ({
   QueryGetAPI: vi.fn().mockResolvedValue({ code: 200, data: [] }),
 }))
 
+const { bannedOuids } = vi.hoisted(() => ({ bannedOuids: new Set<string>() }))
+
 vi.mock('@/api/account', () => ({
   DownloadConfig: vi.fn().mockResolvedValue({ status: 'success', data: null }),
   GetConfigHash: vi.fn().mockResolvedValue(null),
-  useAccount: () => ref({ biliBlackList: { banned_user: true } }),
+  useAccount: () => ref({ biliBlackList: {} }),
+  isInBiliBlackList: (ouid?: string | null) => !!ouid && bannedOuids.has(ouid),
 }))
 
 const mockInitOpenlive = vi.fn()
@@ -152,6 +156,7 @@ describe('DanmujiOBS 底层契约与预览隔离', () => {
   })
 
   afterEach(() => {
+    bannedOuids.clear()
     document.head.querySelectorAll('style').forEach((el) => el.remove())
   })
 
@@ -253,11 +258,78 @@ describe('DanmujiOBS 底层契约与预览隔离', () => {
     expect(allMessages.some((m: any) => m.content?.includes('ad_keyword'))).toBe(false)
     expect(authors).toContain('normal_user')
 
-    // 5. 测试 clearMessages
     wrapper.vm.clearMessages()
-    const afterClear = Array.from(renderComponent.vm.iterRecentMessages(10, false))
-    expect(afterClear).toHaveLength(0)
+    expect(Array.from(renderComponent.vm.iterRecentMessages(10, false))).toHaveLength(0)
 
+    wrapper.unmount()
+  })
+
+  it('B 站黑名单按 OUId 屏蔽，不按用户名当 key', async () => {
+    const bannedOuid = GuidUtils.numToGuid(999)
+    bannedOuids.add(bannedOuid)
+    const wrapper = mount(DanmujiOBS, {
+      props: {
+        preview: true,
+        config: normalizeDanmujiConfig({ showDanmaku: true, maxNumber: 50 }),
+      },
+    })
+    await nextTick()
+    const renderComponent = wrapper.findComponent(MessageRender)
+
+    await wrapper.vm.testAddMessage({
+      type: EventDataTypes.Message,
+      uname: 'banned_user',
+      msg: '应被 OUId 屏蔽',
+      uid: 999,
+      ouid: bannedOuid,
+    })
+    await wrapper.vm.testAddMessage({
+      type: EventDataTypes.Message,
+      uname: 'banned_user',
+      msg: '同名但未拉黑',
+      uid: 1001,
+      ouid: GuidUtils.numToGuid(1001),
+    })
+
+    const allMessages = Array.from(renderComponent.vm.iterRecentMessages(10, false))
+    expect(allMessages.some((m: any) => m.content?.includes('应被 OUId 屏蔽'))).toBe(false)
+    expect(allMessages.some((m: any) => m.content?.includes('同名但未拉黑'))).toBe(true)
+
+    bannedOuids.clear()
+    wrapper.unmount()
+  })
+
+  it('B 站黑名单在缺 ouid 时由 uid 派生', async () => {
+    const wrapper = mount(DanmujiOBS, {
+      props: {
+        preview: true,
+        config: normalizeDanmujiConfig({ showDanmaku: true, maxNumber: 50 }),
+      },
+    })
+    await nextTick()
+    bannedOuids.add(GuidUtils.numToGuid(888))
+    const renderComponent = wrapper.findComponent(MessageRender)
+
+    await wrapper.vm.testAddMessage({
+      type: EventDataTypes.Message,
+      uname: 'derived',
+      msg: '由 uid 派生 OUId',
+      uid: 888,
+      ouid: '',
+    })
+    await wrapper.vm.testAddMessage({
+      type: EventDataTypes.Message,
+      uname: 'ok',
+      msg: '正常',
+      uid: 1,
+      ouid: '',
+    })
+
+    const allMessages = Array.from(renderComponent.vm.iterRecentMessages(10, false))
+    expect(allMessages.some((m: any) => m.content?.includes('由 uid 派生 OUId'))).toBe(false)
+    expect(allMessages.some((m: any) => m.content?.includes('正常'))).toBe(true)
+
+    bannedOuids.clear()
     wrapper.unmount()
   })
 })

@@ -16,6 +16,7 @@ import {
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { QUEUE_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { GuidUtils } from '@/shared/utils'
 import { formatDanmakuPrice, getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 import { matchKeyword, sortByQueueType } from '@/shared/utils/queue'
 const defaultSettings = {
@@ -460,14 +461,14 @@ export const useQueue = defineStore('queue', () => {
       window.$message.error(`[${item.user?.name}] 不是来自弹幕或礼物的用户，无法拉黑`)
       return
     }
-    if (!item.user?.uid) {
+    if (!item.user?.uid && !item.user?.oid) {
       window.$message.error(`用户 [${item.user?.name}] 没有有效的 UID，无法拉黑`)
       return
     }
     isLoading.value = true
     queueDataBeingManaged.value = item.id
     try {
-      const data = await AddBiliBlackList(item.user.uid, item.user.name)
+      const data = await AddBiliBlackList(GuidUtils.toOuid(item.user.uid, item.user.oid), item.user.name)
       if (data.code === 200) {
         window.$message.success(`[${item.user?.name}] 已添加到 B站黑名单`)
         await updateStatus(item, QueueStatus.Cancel)

@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import {
   Add24Filled,
-  ArrowClockwise24Regular,
   ArrowTrending24Filled,
-  ChartMultiple24Regular,
   Clock24Regular,
   Color24Regular,
   Copy24Regular,
@@ -25,7 +23,6 @@ import {
   NCard,
   NCheckbox,
   NDivider,
-  NEmpty,
   NFlex,
   NGrid,
   NGridItem,
@@ -37,19 +34,16 @@ import {
   NModal,
   NPopconfirm,
   NProgress,
-  NRadio,
   NRadioButton,
   NRadioGroup,
   NSelect,
   NSpin,
   NSwitch,
-  NTabPane,
-  NTabs,
   NTag,
   NText,
   useMessage,
 } from 'naive-ui'
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 
 import { useAccount } from '@/api/account'
@@ -58,7 +52,6 @@ import type {
   ResponseVoteSession,
   VoteConfig,
   VoteOBSData,
-  VoteOptionDto,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -67,9 +60,9 @@ import { getVoteStandings, voteOutcomeLabel } from '@/shared/utils/voteStandings
 import { createVotePreviewScene, type VotePreviewScene } from './votePreview'
 import { CURRENT_HOST, VOTE_API_URL } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
-import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
 import { formatCountdown, remainingMs } from '@/shared/utils/countdown'
+import { useVoteTemplates, VOTE_QUICK_PRESETS, type VotePreset } from '@/shared/utils/votePresets'
 
 // 账号与消息
 const message = useMessage()
@@ -150,15 +143,7 @@ const leadingOptionIndex = computed(() => {
   return tie || max <= 0 ? -1 : leader
 })
 
-// 预设模板
-const quickPresets = [
-  { name: '红蓝 PK', title: '阵营对抗', options: ['红方', '蓝方'] },
-  { name: '正反判断', title: '是否赞同', options: ['支持', '反对'] },
-  { name: '三选一', title: '路线选择', options: ['方案 A', '方案 B', '方案 C'] },
-  { name: '四选一', title: '你最喜欢的项目', options: ['选项 A', '选项 B', '选项 C', '选项 D'] },
-]
-
-function applyPreset(preset: { title: string; options: string[] }) {
+function applyPreset(preset: VotePreset) {
   formTitle.value = preset.title
   formOptions.value = preset.options.map((opt) => createFormOption(opt))
 }
@@ -208,12 +193,7 @@ function removeOption(idx: number) {
 }
 
 // 模板管理 (存储在持久化)
-interface SavedTemplate {
-  name: string
-  title: string
-  options: string[]
-}
-const savedTemplates = usePersistedStorage<SavedTemplate[]>('DanmakuVoteTemplates', [])
+const savedTemplates = useVoteTemplates()
 const newTemplateName = ref('')
 
 function saveCustomTemplate() {
@@ -693,7 +673,7 @@ onUnmounted(() => {
                   <NFlex align="center" :size="8">
                     <NText depth="3" style="font-size: 12px">快捷预设：</NText>
                     <NButton
-                      v-for="p in quickPresets"
+                      v-for="p in VOTE_QUICK_PRESETS"
                       :key="p.name"
                       size="tiny"
                       secondary

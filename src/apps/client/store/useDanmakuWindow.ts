@@ -4,8 +4,6 @@ import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { VTSURU_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -200,19 +198,6 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     textStyleNameSeparator: ': ', // 新增：默认用户名和消息之间的分隔符为冒号+空格
     enableAnimation: true, // 新增：默认启用动画效果
   })
-  const emojiData = usePersistedStorage<{
-    updateAt: number
-    data: {
-      inline: { [key: string]: string }
-      plain: { [key: string]: string }
-    }
-  }>('Data.Emoji', {
-    updateAt: 0,
-    data: {
-      inline: {},
-      plain: {},
-    },
-  })
   const danmakuClient = useDanmakuClient()
   const isWindowOpened = ref(false)
   let bc: BroadcastChannel | undefined
@@ -328,29 +313,6 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     }
   }
 
-  async function getEmojiData() {
-    try {
-      const resp = await QueryGetAPI<{
-        inline: { [key: string]: string }
-        plain: { [key: string]: string }
-      }>(`${VTSURU_API_URL}client/live-emoji`)
-      if (resp.code == 200) {
-        emojiData.value = {
-          updateAt: Date.now(),
-          data: resp.data,
-        }
-        console.log(
-          `已获取表情数据, 共 ${Object.keys(resp.data.inline).length + Object.keys(resp.data.plain).length} 条`,
-          resp.data,
-        )
-      } else {
-        console.error('获取表情数据失败:', resp.message)
-      }
-    } catch (error) {
-      console.error('无法获取表情数据:', error)
-    }
-  }
-
   function onGetDanmakus(data: EventModel) {
     if (!isWindowOpened.value || !bc) return
     postBroadcastMessage(bc, {
@@ -388,11 +350,9 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
   return {
     danmakuWindow,
     danmakuWindowSetting,
-    emojiData,
     setDanmakuWindowSize,
     setDanmakuWindowPosition,
     updateWindowPosition,
-    getEmojiData,
     isDanmakuWindowOpen: isWindowOpened,
     openWindow,
     closeWindow,

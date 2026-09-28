@@ -187,16 +187,23 @@ export async function Login(nameOrEmail: string, password: string): Promise<APIR
 export async function Self(token?: string): Promise<APIRoot<AccountInfo>> {
   return QueryPostAPIWithParams<AccountInfo>(`${ACCOUNT_API_URL}self`, token ? { token } : undefined)
 }
-export async function AddBiliBlackList(id: number, name: string): Promise<APIRoot<unknown>> {
-  return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/add-bili`, {
-    id,
-    name,
-  })
+export function isInBiliBlackList(ouid?: string | null) {
+  return !!ouid && Object.hasOwn(ACCOUNT.value.biliBlackList ?? {}, ouid)
 }
-export async function DelBiliBlackList(id: number): Promise<APIRoot<unknown>> {
-  return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/del-bili`, {
-    id,
-  })
+
+/** id 为后端 OUId（uid 派生 Guid 或开放平台 open_id，见 GuidUtils.toOuid）；成功后同步本地账户的黑名单 */
+export async function AddBiliBlackList(id: string, name: string): Promise<APIRoot<unknown>> {
+  const resp = await QueryGetAPI<unknown>(`${ACCOUNT_API_URL}black-list/add-bili`, { id, name })
+  if (resp.code === 200) ACCOUNT.value.biliBlackList = { ...ACCOUNT.value.biliBlackList, [id]: name }
+  return resp
+}
+export async function DelBiliBlackList(id: string): Promise<APIRoot<unknown>> {
+  const resp = await QueryGetAPI<unknown>(`${ACCOUNT_API_URL}black-list/del-bili`, { id })
+  if (resp.code === 200) {
+    const { [id]: _removed, ...rest } = ACCOUNT.value.biliBlackList ?? {}
+    ACCOUNT.value.biliBlackList = rest
+  }
+  return resp
 }
 export async function DelBlackList(id: number): Promise<APIRoot<unknown>> {
   return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/del`, {

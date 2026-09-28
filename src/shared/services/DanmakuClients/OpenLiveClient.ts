@@ -212,7 +212,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         emoji: data.dm_type == 1 ? data.emoji_img_url : undefined,
         uface: data.uface,
         open_id: data.open_id,
-        ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+        ouid: GuidUtils.toOuid(data.uid, data.open_id),
       },
       command,
     )
@@ -238,7 +238,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         fans_medal_wearing_status: data.fans_medal_wearing_status,
         uface: data.uface,
         open_id: data.open_id,
-        ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+        ouid: GuidUtils.toOuid(data.uid, data.open_id),
         gift_icon: data.gift_icon,
       },
       command,
@@ -265,7 +265,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         fans_medal_wearing_status: data.fans_medal_wearing_status,
         uface: data.uface,
         open_id: data.open_id,
-        ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+        ouid: GuidUtils.toOuid(data.uid, data.open_id),
       },
       command,
     )
@@ -290,7 +290,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         fans_medal_wearing_status: data.fans_medal_wearing_status,
         uface: data.user_info.uface,
         open_id: data.user_info.open_id,
-        ouid: data.user_info.open_id ?? GuidUtils.numToGuid(data.user_info.uid),
+        ouid: GuidUtils.toOuid(data.user_info.uid, data.user_info.open_id),
       },
       command,
     )
@@ -340,7 +340,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         fans_medal_wearing_status: data.fans_medal_wearing_status,
         uface: data.uface,
         open_id: data.open_id,
-        ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+        ouid: GuidUtils.toOuid(data.uid, data.open_id),
       },
       command,
     )

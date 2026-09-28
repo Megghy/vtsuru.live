@@ -106,6 +106,16 @@ export default {
       },
     },
     {
+      path: 'dashboard',
+      name: 'client-live-dashboard',
+      component: async () => import('@/apps/live-dashboard/pages/LiveDashboard.vue'),
+      meta: {
+        title: '中控台',
+        pageWidth: 'full',
+        pageContainer: 'none',
+      },
+    },
+    {
       path: 'live-manage',
       name: 'client-live-manage',
       component: async () => import('@/apps/client/pages/ClientLiveManage.vue'),

@@ -175,16 +175,20 @@ export function getOUIdAvatarUrl(ouid: string) {
   return `${VTSURU_API_URL}face/${ouid}`
 }
 
+/** 与后端 GuidHelper.NumToBackGuid 保持一致：uid 以小端写入后 8 字节（该段在 Guid 字符串中按字节序原样输出） */
 export class GuidUtils {
-  // 将数字转换为GUID
   public static numToGuid(value: number): string {
     if (!Number.isSafeInteger(value) || value < 0) {
       throw new Error('输入必须是非负安全整数')
     }
     const buffer = new ArrayBuffer(16)
-    const view = new DataView(buffer)
-    view.setBigUint64(8, BigInt(value)) // 将数字写入后8个字节
+    new DataView(buffer).setBigUint64(8, BigInt(value), true)
     return GuidUtils.bufferToGuid(buffer)
+  }
+
+  /** 对应后端 OUId：有 uid 时由 uid 派生，否则使用开放平台 open_id */
+  public static toOuid(uid: number | null | undefined, openId: string): string {
+    return uid && uid > 0 ? GuidUtils.numToGuid(uid) : openId
   }
 
   // 检查GUID是否由数字生成
@@ -205,8 +209,7 @@ export class GuidUtils {
   public static guidToLong(guid: string): number {
     try {
       const buffer = GuidUtils.guidToBuffer(guid)
-      const view = new DataView(buffer)
-      return Number(view.getBigUint64(8))
+      return Number(new DataView(buffer).getBigUint64(8, true))
     } catch {
       throw new Error('无效的GUID格式')
     }

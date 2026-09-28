@@ -11,6 +11,7 @@ import {
   Settings24Regular,
   PersonFeedback24Filled,
   StoreMicrosoft24Regular,
+  Board24Regular,
   Bot24Regular,
   TabletSpeaker24Filled,
   VehicleShip24Filled,
@@ -264,6 +265,15 @@ const baseItems = computed<ManageNavItem[]>(() => {
       group: 'tools',
     },
 
+    {
+      key: 'live-dashboard',
+      label: '中控台',
+      icon: Board24Regular,
+      to: { name: 'live-dashboard' },
+      disabled: biliDisabled,
+      disabledReason: biliReason,
+      group: 'danmaku',
+    },
     {
       key: 'manage-danmuji',
       label: '弹幕机',

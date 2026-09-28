@@ -3,6 +3,7 @@ import { NAlert, NButton, NCard, NEmpty, NFlex, NInput, NInputNumber, NList, NLi
 import { ref } from 'vue'
 
 import { AddBiliBlackList, DelBiliBlackList, DelBlackList, useAccount } from '@/api/account'
+import { GuidUtils } from '@/shared/utils'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -10,6 +11,11 @@ const message = useMessage()
 const biliId = ref<number | null>(null)
 const biliName = ref('')
 const isAdding = ref(false)
+
+/** 黑名单键为 OUId：由 uid 派生的显示为 UID，开放平台用户显示原始 OpenID */
+function displayOuid(ouid: string) {
+  return GuidUtils.isGuidFromUserId(ouid) ? `UID ${GuidUtils.guidToLong(ouid)}` : ouid
+}
 
 async function addBiliUser() {
   if (!biliId.value || biliId.value <= 0) {
@@ -19,15 +25,9 @@ async function addBiliUser() {
   const name = biliName.value.trim() || String(biliId.value)
   isAdding.value = true
   try {
-    const data = await AddBiliBlackList(biliId.value, name)
+    const data = await AddBiliBlackList(GuidUtils.numToGuid(biliId.value), name)
     if (data.code === 200) {
       message.success(`已将 ${name} 加入 B 站黑名单`)
-      if (accountInfo.value) {
-        accountInfo.value.biliBlackList = {
-          ...accountInfo.value.biliBlackList,
-          [String(biliId.value)]: name,
-        }
-      }
       biliId.value = null
       biliName.value = ''
     } else {
@@ -40,12 +40,11 @@ async function addBiliUser() {
   }
 }
 
-function unblockBiliUser(id: number) {
-  DelBiliBlackList(id)
+function unblockBiliUser(ouid: string) {
+  DelBiliBlackList(ouid)
     .then((data) => {
       if (data.code === 200) {
-        message.success(`[${id}] 已移除黑名单`)
-        if (accountInfo.value) delete accountInfo.value.biliBlackList[id]
+        message.success(`[${displayOuid(ouid)}] 已移除黑名单`)
       } else {
         message.error(data.message)
       }
@@ -139,14 +138,14 @@ function unblockUser(id: number) {
                   depth="3"
                   code
                 >
-                  {{ item[0] }}
+                  {{ displayOuid(item[0]) }}
                 </NText>
               </NFlex>
               <NButton
                 type="error"
                 size="small"
                 secondary
-                @click="unblockBiliUser(Number(item[0]))"
+                @click="unblockBiliUser(item[0])"
               >
                 移除
               </NButton>
