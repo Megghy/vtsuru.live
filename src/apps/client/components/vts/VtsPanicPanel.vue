@@ -47,7 +47,7 @@ function setResetPhysicsHotkey(id: string) {
         <NButton
           size="small"
           type="error"
-          :disabled="!vts.canOperate"
+          :disabled="!vts.connected"
           @click="run(() => vts.panicCalibrate(), '已校准')"
         >
           一键校准
@@ -69,7 +69,7 @@ function setResetPhysicsHotkey(id: string) {
         <NButton
           size="small"
           type="error"
-          :disabled="!vts.canOperate"
+          :disabled="!vts.connected"
           @click="run(() => vts.panicResetPhysics(), '已重置')"
         >
           重置物理

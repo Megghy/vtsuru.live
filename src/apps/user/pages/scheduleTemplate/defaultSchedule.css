@@ -1,0 +1,472 @@
+.default-schedule {
+  /* 区块页优先使用区块令牌, 普通主页回退到日程主题令牌 */
+  --ds-surface: var(--vtsuru-block-bg-muted, var(--schedule-panel));
+  --ds-line: var(--vtsuru-block-border, var(--schedule-border));
+  --ds-rule: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--ds-line);
+  --ds-radius: var(--vtsuru-page-radius, 8px);
+  --ds-radius-inner: max(4px, calc(var(--ds-radius) - 3px));
+
+  display: grid;
+  gap: clamp(14px, 2vw, 20px);
+  width: 100%;
+  container: default-schedule / inline-size;
+}
+
+.schedule-intro,
+.schedule-week,
+.schedule-empty {
+  min-width: 0;
+  background: var(--ds-surface);
+  border: var(--ds-rule);
+  border-radius: var(--ds-radius);
+  box-shadow: var(--vtsuru-page-shadow);
+}
+
+/* ---------- 顶部 ---------- */
+
+.schedule-intro {
+  display: flex;
+  padding: clamp(18px, 3vw, 26px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.schedule-intro__copy {
+  min-width: 0;
+}
+
+.schedule-intro__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--schedule-accent-readable);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.schedule-intro__eyebrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+.schedule-intro h2 {
+  margin: 10px 0 4px;
+  color: var(--schedule-fg);
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.schedule-intro p {
+  margin: 0;
+  color: var(--schedule-muted);
+  font-size: 13px;
+}
+
+.schedule-next {
+  display: grid;
+  flex: 0 1 320px;
+  min-width: 0;
+  padding: 12px 16px;
+  gap: 4px;
+  background: var(--schedule-accent-soft);
+  border: 1px solid var(--schedule-accent-border);
+  border-radius: var(--ds-radius-inner);
+}
+
+.schedule-next__label {
+  color: var(--schedule-accent-readable);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.schedule-next strong {
+  overflow: hidden;
+  color: var(--schedule-fg);
+  font-size: 15px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-next__when {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--schedule-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-next__when svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+/* ---------- 周卡片 ---------- */
+
+.schedule-week {
+  overflow: hidden;
+}
+
+.schedule-week.is-featured {
+  border-color: var(--schedule-accent-border);
+}
+
+/*
+ * 非重点周只弱化内容而非整卡: 卡片底色常为半透明,
+ * 整卡降透明度会透出页面背景, 与悬停态形成大幅跳变
+ */
+.schedule-week.is-other {
+  --ds-dim: 0.78;
+
+  box-shadow: none;
+}
+
+.schedule-week.is-past {
+  --ds-dim: 0.6;
+}
+
+.is-other > * {
+  opacity: var(--ds-dim);
+  transition: opacity 0.2s ease;
+}
+
+.is-past > * {
+  filter: saturate(0.5);
+}
+
+.is-other:hover > *,
+.is-other:focus-within > * {
+  opacity: calc(var(--ds-dim) + 0.14);
+}
+
+.schedule-week__header {
+  display: flex;
+  min-width: 0;
+  padding: 14px 18px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: var(--ds-rule);
+}
+
+.schedule-week__header:last-child {
+  border-bottom: 0;
+}
+
+.is-featured .schedule-week__header {
+  background: color-mix(in srgb, var(--schedule-accent) 6%, transparent);
+}
+
+.is-other .schedule-week__header {
+  padding: 10px 16px;
+}
+
+.schedule-week__title {
+  min-width: 0;
+}
+
+.schedule-week__title h3 {
+  margin: 0;
+  color: var(--schedule-fg);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+}
+
+.is-other .schedule-week__title h3 {
+  font-size: 14px;
+}
+
+.schedule-week__title p {
+  margin: 2px 0 0;
+  color: var(--schedule-muted);
+  font-size: 12px;
+}
+
+.schedule-week__badge,
+.schedule-week__status {
+  flex: none;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.schedule-week__badge {
+  color: var(--schedule-accent-fg);
+  background: var(--schedule-accent);
+}
+
+.schedule-week__status {
+  color: var(--schedule-subtle);
+  font-size: 11px;
+  border: 1px solid var(--ds-line);
+}
+
+/* ---------- 日列 ---------- */
+
+.schedule-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.schedule-day {
+  display: flex;
+  min-width: 0;
+  min-height: 150px;
+  padding: 12px 10px;
+  flex-direction: column;
+  gap: 10px;
+  border-right: var(--ds-rule);
+}
+
+.schedule-day:last-child {
+  border-right: 0;
+}
+
+.is-other .schedule-day {
+  min-height: 92px;
+  padding: 10px 8px;
+  gap: 8px;
+}
+
+.is-featured .schedule-day.is-past {
+  opacity: 0.5;
+}
+
+.schedule-day.is-today {
+  background: color-mix(in srgb, var(--schedule-accent) 8%, transparent);
+  box-shadow: inset 0 3px var(--schedule-accent);
+}
+
+.schedule-day__header {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.schedule-day__header strong {
+  color: var(--schedule-fg);
+  font-size: 13px;
+}
+
+.schedule-day__header time {
+  color: var(--schedule-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-day__today {
+  margin-left: auto;
+  padding: 1px 6px;
+  color: var(--schedule-accent-fg);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--schedule-accent);
+  border-radius: 999px;
+}
+
+.schedule-day__events {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.schedule-day__empty {
+  margin: 0;
+  color: var(--schedule-subtle);
+  font-size: 12px;
+}
+
+/* ---------- 日程条目 ---------- */
+
+.schedule-event {
+  --event-color: var(--schedule-accent);
+
+  position: relative;
+  display: grid;
+  min-width: 0;
+  padding: 8px 8px 8px 11px;
+  gap: 4px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--event-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--event-color) 22%, var(--ds-line));
+  border-radius: var(--ds-radius-inner);
+}
+
+.schedule-event::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--event-color);
+  content: '';
+}
+
+.schedule-event.is-next {
+  background: color-mix(in srgb, var(--event-color) 14%, transparent);
+  border-color: var(--event-color);
+}
+
+.schedule-event__meta {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.schedule-event__time {
+  color: var(--schedule-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.schedule-event__tag {
+  max-width: 100%;
+  padding: 1px 6px;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--event-color) 65%, var(--schedule-fg));
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--event-color) 14%, transparent);
+  border-radius: 999px;
+}
+
+.schedule-event > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--schedule-fg);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.is-other .schedule-event > strong {
+  font-size: 12px;
+}
+
+/* ---------- 空状态 ---------- */
+
+.schedule-empty {
+  display: grid;
+  min-height: 220px;
+  padding: 32px;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.schedule-empty__icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 12px;
+  place-items: center;
+  color: var(--schedule-accent);
+  background: var(--schedule-accent-soft);
+  border-radius: 50%;
+}
+
+.schedule-empty__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.schedule-empty strong {
+  color: var(--schedule-fg);
+  font-size: 15px;
+}
+
+.schedule-empty p {
+  margin: 4px 0 0;
+  color: var(--schedule-subtle);
+  font-size: 13px;
+}
+
+/* ---------- 窄屏: 日列改为纵向列表 ---------- */
+
+@container default-schedule (max-width: 720px) {
+  .schedule-intro {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .schedule-next {
+    flex-basis: auto;
+  }
+
+  .schedule-days {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 非重点周隐藏空日, 分隔线只画在可见行之间 */
+  .is-featured .schedule-day + .schedule-day,
+  .is-other .schedule-day:not(.is-empty) ~ .schedule-day:not(.is-empty) {
+    border-top: var(--ds-rule);
+  }
+
+  .schedule-day,
+  .is-other .schedule-day {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    min-height: 0;
+    padding: 12px 14px;
+    align-items: start;
+    border-right: 0;
+  }
+
+  .schedule-day__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .schedule-day__today {
+    margin: 4px 0 0;
+  }
+
+  .schedule-day.is-today {
+    box-shadow: inset 3px 0 var(--schedule-accent);
+  }
+
+  .is-other .schedule-day.is-empty {
+    display: none;
+  }
+}
+
+@container default-schedule (max-width: 420px) {
+  .schedule-intro {
+    padding: 16px;
+  }
+
+  .schedule-week__header {
+    padding: 12px 14px;
+  }
+
+  .schedule-day,
+  .is-other .schedule-day {
+    grid-template-columns: 56px minmax(0, 1fr);
+    padding: 10px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-week {
+    transition: none;
+  }
+}

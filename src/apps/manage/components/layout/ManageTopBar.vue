@@ -7,7 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ThemeType } from '@/api/api-models'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
-import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
+import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { isDarkMode } from '@/shared/utils'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
@@ -74,7 +74,7 @@ async function goToUserPage(accountName?: string) {
         decoding="async"
       />
       <div class="manage-header__brand">VTSURU CENTER</div>
-      <div class="manage-header__workspace">{{ workspace === 'user' ? '用户中心' : '主播后台' }}</div>
+      <div class="manage-header__workspace">{{ WORKSPACE_LABELS[workspace] }}</div>
       <div
         v-if="accountName"
         class="manage-header__account"

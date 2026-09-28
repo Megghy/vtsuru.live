@@ -32,6 +32,7 @@ import { useClientBackup } from '../store/useClientBackup'
 import { useDanmakuWindow } from '../store/useDanmakuWindow'
 import { useSettings } from '../store/useSettings'
 import { useTranscription } from '../store/useTranscription'
+import { useVtsStore } from '../store/useVtsStore'
 import { initInfo } from './info'
 import { getBuvid, getRoomKey } from './utils'
 
@@ -480,6 +481,9 @@ export async function initAll(isOnBoot: boolean) {
   usePngtuberDriver() // Pinia owns the driver; audio starts only through an explicit user action.
   useAutoAction().init()
   useBiliFunction().init()
+  void useVtsStore()
+    .init()
+    .catch(async (err) => warn(`[VTS] 初始化失败: ${err}`))
   await useClientBackup().init()
   await useTranscription().init()
 

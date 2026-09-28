@@ -35,7 +35,7 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/DefaultScheduleTemplate.vue')),
     ),
-    capabilities: ['scheduleDate', 'todayHighlight'],
+    capabilities: ['scheduleDate', 'todayHighlight', 'scheduleStats'],
   },
   pinky: {
     name: '粉粉',

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   Flash24Filled,
+  Grid24Regular,
   PlugConnected24Filled,
   PlugDisconnected24Filled,
   Settings24Filled,
@@ -19,15 +20,14 @@ import {
   NTabs,
   NTag,
   NText,
-  NTooltip,
 } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import { useVtsAction } from '@/apps/client/components/vts/useVtsAction'
 import VtsConnectionCard from '@/apps/client/components/vts/VtsConnectionCard.vue'
-import VtsFloatWindowPanel from '@/apps/client/components/vts/VtsFloatWindowPanel.vue'
+import VtsDeck from '@/apps/client/components/vts/VtsDeck.vue'
 import VtsHistoryPanel from '@/apps/client/components/vts/VtsHistoryPanel.vue'
 import VtsHotkeyBoard from '@/apps/client/components/vts/VtsHotkeyBoard.vue'
 import VtsImportExportCard from '@/apps/client/components/vts/VtsImportExportCard.vue'
@@ -38,7 +38,6 @@ import VtsPanicPanel from '@/apps/client/components/vts/VtsPanicPanel.vue'
 import VtsParameterPanel from '@/apps/client/components/vts/VtsParameterPanel.vue'
 import VtsPresetPanel from '@/apps/client/components/vts/VtsPresetPanel.vue'
 import VtsProfilePanel from '@/apps/client/components/vts/VtsProfilePanel.vue'
-import VtsShortcutPanel from '@/apps/client/components/vts/VtsShortcutPanel.vue'
 import { ActionType } from '@/apps/client/store/autoAction/types'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
@@ -46,44 +45,15 @@ import { isTauri } from '@/shared/config'
 
 const vts = useVtsStore()
 const autoAction = useAutoAction()
-const { run, message } = useVtsAction()
+const { run } = useVtsAction()
 const router = useRouter()
-const tab = ref<'control' | 'items' | 'settings'>('control')
-const showConnectionDetail = ref(false)
+const tab = ref<'deck' | 'actions' | 'items' | 'settings'>('deck')
 
-onMounted(async () => {
-  if (!isTauri()) return
-  try {
-    await vts.init()
-  } catch (err) {
-    message.error(err instanceof Error ? err.message : String(err))
-    return
-  }
-  if (vts.wsUrl && vts.authToken && !vts.connected) {
-    run(() => vts.connect())
-  }
+const status = computed(() => {
+  if (vts.connected) return { type: 'success' as const, text: '已连接' }
+  if (vts.connecting) return { type: 'info' as const, text: '等待 VTS / 授权中' }
+  return { type: 'error' as const, text: '未连接' }
 })
-
-const statusType = computed(() => {
-  if (vts.connecting) return 'info'
-  if (!vts.connected) return 'error'
-  if (!vts.authenticated) return 'warning'
-  return 'success'
-})
-
-const statusText = computed(() => {
-  if (vts.connecting) return '连接中...'
-  if (!vts.connected) return '未连接'
-  if (!vts.authenticated) return '等待授权'
-  return '已连接并就绪'
-})
-
-const favoriteHotkeys = computed(() =>
-  vts.hotkeys.filter((hk) => {
-    const c = vts.hotkeyCustomizations.find((x) => x.hotkeyID === hk.hotkeyID)
-    return c?.favorite || c?.pinned
-  }),
-)
 
 const VTS_ACTION_TYPES = new Set([
   ActionType.VTS_HOTKEY,
@@ -94,18 +64,16 @@ const VTS_ACTION_TYPES = new Set([
   ActionType.VTS_ACCESSORY,
 ])
 
-const linkedAutoActions = computed(() =>
-  (autoAction.autoActions ?? []).filter((a) => VTS_ACTION_TYPES.has(a.actionType)),
-)
+const linkedAutoActions = computed(() => autoAction.autoActions.filter((a) => VTS_ACTION_TYPES.has(a.actionType)))
 
 const macroProgress = computed(() => {
-  if (!vts.macroRunning) return null
-  const m = vts.macros.find((x) => x.id === vts.macroRunning!.macroId)
+  const running = vts.macroRunning
+  if (!running) return null
   return {
-    name: m?.name ?? '宏任务',
-    step: vts.macroRunning.stepIndex + 1,
-    total: vts.macroRunning.totalSteps,
-    percent: Math.round(((vts.macroRunning.stepIndex + 1) / vts.macroRunning.totalSteps) * 100),
+    name: vts.macros.find((x) => x.id === running.macroId)?.name ?? '宏',
+    step: running.stepIndex + 1,
+    total: running.totalSteps,
+    percent: Math.round(((running.stepIndex + 1) / running.totalSteps) * 100),
   }
 })
 </script>
@@ -116,10 +84,9 @@ const macroProgress = computed(() => {
       vertical
       :size="14"
     >
-      <!-- 标准页面标头 -->
       <ClientPageHeader
         title="VTube Studio 控制中心"
-        description="通过 VTS API 本地双向联动控制表情动作、机位预设、道具掉落与动作宏"
+        description="通过 VTS 插件 API 在本地控制表情、热键、机位、道具与动作宏，可配合自动操作与 OBS 场景联动"
       >
         <template #actions>
           <NFlex
@@ -127,19 +94,17 @@ const macroProgress = computed(() => {
             :size="8"
           >
             <NTag
-              :type="statusType"
+              :type="status.type"
               round
               :bordered="false"
             >
-              {{ statusText }}
+              {{ status.text }}
             </NTag>
-
             <NButton
-              v-if="!vts.connected"
+              v-if="!vts.connected && !vts.connecting"
               size="small"
               type="primary"
               secondary
-              :loading="vts.connecting"
               @click="run(() => vts.connect())"
             >
               <template #icon>
@@ -147,26 +112,16 @@ const macroProgress = computed(() => {
               </template>
               连接
             </NButton>
-
             <NButton
               v-else
               size="small"
-              type="error"
               secondary
-              @click="vts.disconnect"
+              @click="run(() => vts.disconnect())"
             >
               <template #icon>
                 <NIcon :component="PlugDisconnected24Filled" />
               </template>
-              断开
-            </NButton>
-
-            <NButton
-              size="small"
-              quaternary
-              @click="showConnectionDetail = !showConnectionDetail"
-            >
-              {{ showConnectionDetail ? '收起配置' : '连接配置' }}
+              {{ vts.connecting ? '取消' : '断开' }}
             </NButton>
           </NFlex>
         </template>
@@ -176,89 +131,79 @@ const macroProgress = computed(() => {
         v-if="!isTauri()"
         type="error"
       >
-        当前不是桌面客户端环境，无法直接连接本地 VTube Studio 端口。
+        当前不是桌面客户端环境，无法连接本地 VTube Studio。
       </NAlert>
 
       <template v-else>
-        <!-- 运行状态指示条 -->
+        <NAlert
+          v-if="vts.connecting"
+          type="info"
+          :show-icon="false"
+        >
+          正在等待 VTube Studio：请确认 VTS 已启动并开启「启动 API」；首次连接需在 VTS 弹窗中点击「允许」。
+        </NAlert>
+
         <NCard
+          v-else-if="vts.connected"
           size="small"
           bordered
-          class="vts-status-strip"
         >
           <NFlex
             align="center"
-            justify="space-between"
+            :size="10"
             wrap
-            :size="12"
           >
-            <NFlex
-              align="center"
-              :size="10"
-              wrap
+            <span class="model-badge">
+              <span class="label">当前模型</span>
+              <NText strong>{{ vts.currentModelName || '未加载模型' }}</NText>
+            </span>
+            <NTag
+              v-if="vts.statistics?.framerate"
+              size="small"
+              :bordered="false"
+              type="info"
             >
-              <div class="model-badge">
-                <span class="label">当前模型:</span>
-                <NText strong>{{ vts.currentModelName || '未加载模型' }}</NText>
-              </div>
-
-              <NTag
-                v-if="vts.statistics?.framerate"
-                size="small"
-                :bordered="false"
-                type="info"
-              >
-                {{ vts.statistics.framerate }} FPS
-              </NTag>
-
-              <NTag
-                v-if="vts.lastRttMs != null"
-                size="small"
-                :bordered="false"
-                :type="vts.lastRttMs < 50 ? 'success' : 'warning'"
-              >
-                RTT {{ vts.lastRttMs }}ms
-              </NTag>
-            </NFlex>
-
-            <NText
-              depth="3"
-              style="font-size: 12px"
+              {{ vts.statistics.framerate }} FPS
+            </NTag>
+            <NTag
+              v-if="vts.lastRttMs != null"
+              size="small"
+              :bordered="false"
+              :type="vts.lastRttMs < 50 ? 'success' : 'warning'"
             >
-              端口: {{ vts.wsUrl || 'ws://127.0.0.1:8001' }}
-            </NText>
+              延迟 {{ vts.lastRttMs }}ms
+            </NTag>
+            <NTag
+              v-if="vts.faceFound === false"
+              size="small"
+              :bordered="false"
+              type="warning"
+            >
+              面部丢失
+            </NTag>
           </NFlex>
-
-          <NAlert
-            v-if="vts.lastError"
-            type="error"
-            size="small"
-            style="margin-top: 10px"
-          >
-            {{ vts.lastError }}
-          </NAlert>
         </NCard>
 
-        <!-- 详细连接配置展开卡片 -->
-        <Transition name="vts-slide">
-          <VtsConnectionCard v-if="showConnectionDetail" />
-        </Transition>
+        <NAlert
+          v-if="vts.lastError"
+          type="error"
+          closable
+          @close="vts.lastError = null"
+        >
+          {{ vts.lastError }}
+        </NAlert>
 
-        <!-- 宏执行实时进度条 -->
         <Transition name="vts-slide">
           <NCard
             v-if="macroProgress"
             size="small"
             bordered
-            class="macro-progress-card"
           >
             <NFlex
               align="center"
               :size="12"
             >
-              <NText strong>
-                {{ macroProgress.name }}
-              </NText>
+              <NText strong>{{ macroProgress.name }}</NText>
               <NTag
                 size="tiny"
                 type="info"
@@ -276,85 +221,35 @@ const macroProgress = computed(() => {
           </NCard>
         </Transition>
 
-        <!-- 常用动作与宏快捷操作栏 -->
-        <Transition name="vts-fade">
-          <NCard
-            v-if="favoriteHotkeys.length > 0 || vts.macros.length > 0 || vts.presets.length > 0"
-            size="small"
-            bordered
-          >
-            <template #header>
-              <span style="font-size: 13px; font-weight: 600">快捷操作面板</span>
-            </template>
-            <NFlex
-              :wrap="true"
-              :size="8"
-            >
-              <TransitionGroup name="vts-btn">
-                <NTooltip
-                  v-for="hk in favoriteHotkeys"
-                  :key="hk.hotkeyID"
-                  trigger="hover"
-                >
-                  <template #trigger>
-                    <NButton
-                      size="small"
-                      :disabled="!vts.canOperate"
-                      @click="run(() => vts.triggerHotkey(hk.hotkeyID))"
-                    >
-                      {{ vts.hotkeyCustomizations.find((c) => c.hotkeyID === hk.hotkeyID)?.displayName || hk.name }}
-                    </NButton>
-                  </template>
-                  {{ hk.name }}{{ hk.description ? ` - ${hk.description}` : '' }}
-                </NTooltip>
-                <NButton
-                  v-for="m in vts.macros"
-                  :key="m.id"
-                  size="small"
-                  type="primary"
-                  ghost
-                  :disabled="!vts.canOperate || !!vts.macroRunning"
-                  @click="run(() => vts.runMacro(m.id))"
-                >
-                  {{ m.name }}
-                </NButton>
-                <NButton
-                  v-for="p in vts.presets"
-                  :key="p.id"
-                  size="small"
-                  secondary
-                  :disabled="!vts.canOperate"
-                  @click="run(() => vts.applyPreset(p.id))"
-                >
-                  {{ p.name }}
-                </NButton>
-              </TransitionGroup>
-            </NFlex>
-          </NCard>
-        </Transition>
-
-        <!-- 统一 Segmented Tabs -->
         <NTabs
           v-model:value="tab"
           type="segment"
           animated
           class="vts-tabs"
         >
-          <!-- 动作控制 -->
-          <NTabPane
-            name="control"
-            tab="动作控制"
-          >
+          <NTabPane name="deck">
+            <template #tab>
+              <NFlex
+                align="center"
+                :size="6"
+              >
+                <NIcon :component="Grid24Regular" />
+                <span>操作台</span>
+              </NFlex>
+            </template>
+            <VtsDeck />
+          </NTabPane>
+
+          <NTabPane name="actions">
             <template #tab>
               <NFlex
                 align="center"
                 :size="6"
               >
                 <NIcon :component="VideoPerson24Filled" />
-                <span>动作控制</span>
+                <span>热键与宏</span>
               </NFlex>
             </template>
-
             <NFlex
               vertical
               :size="12"
@@ -363,8 +258,8 @@ const macroProgress = computed(() => {
               <VtsHotkeyBoard
                 :hotkeys="vts.hotkeys"
                 :model-name="vts.currentModelName"
-                :disabled="!vts.canOperate"
-                @refresh="run(() => vts.refreshHotkeys())"
+                :disabled="!vts.connected"
+                @refresh="run(() => vts.refreshModelState())"
                 @trigger="(id) => run(() => vts.triggerHotkey(id))"
               />
               <VtsMacroPanel />
@@ -373,11 +268,7 @@ const macroProgress = computed(() => {
             </NFlex>
           </NTabPane>
 
-          <!-- 道具与参数 -->
-          <NTabPane
-            name="items"
-            tab="道具与参数"
-          >
+          <NTabPane name="items">
             <template #tab>
               <NFlex
                 align="center"
@@ -387,7 +278,6 @@ const macroProgress = computed(() => {
                 <span>道具与参数</span>
               </NFlex>
             </template>
-
             <NFlex
               vertical
               :size="12"
@@ -398,110 +288,78 @@ const macroProgress = computed(() => {
             </NFlex>
           </NTabPane>
 
-          <!-- 联动与设置 -->
-          <NTabPane
-            name="settings"
-            tab="联动与设置"
-          >
+          <NTabPane name="settings">
             <template #tab>
               <NFlex
                 align="center"
                 :size="6"
               >
                 <NIcon :component="Settings24Filled" />
-                <span>联动与设置</span>
+                <span>设置</span>
               </NFlex>
             </template>
-
-            <NCollapse
-              :default-expanded-names="['automation', 'window']"
-              arrow-placement="right"
+            <NFlex
+              vertical
+              :size="12"
               class="client-readable"
             >
-              <NCollapseItem
-                title="自动化与 OBS 联动"
-                name="automation"
-              >
-                <NFlex
-                  vertical
-                  :size="14"
+              <VtsConnectionCard />
+              <VtsObsLinkPanel />
+              <NCollapse arrow-placement="right">
+                <NCollapseItem
+                  title="配置方案与备份"
+                  name="profiles"
                 >
-                  <VtsShortcutPanel />
-                  <VtsObsLinkPanel />
-                </NFlex>
-              </NCollapseItem>
-
-              <NCollapseItem
-                title="悬浮窗与配置方案"
-                name="window"
-              >
-                <NFlex
-                  vertical
-                  :size="14"
+                  <NFlex
+                    vertical
+                    :size="12"
+                  >
+                    <VtsProfilePanel />
+                    <VtsImportExportCard />
+                  </NFlex>
+                </NCollapseItem>
+                <NCollapseItem
+                  :title="`关联的自动操作规则 (${linkedAutoActions.length})`"
+                  name="rules"
                 >
-                  <VtsFloatWindowPanel />
-                  <VtsProfilePanel />
-                  <VtsImportExportCard />
-                </NFlex>
-              </NCollapseItem>
-
-              <NCollapseItem
-                title="历史日志与关联诊断"
-                name="diagnostics"
-              >
-                <NFlex
-                  vertical
-                  :size="14"
+                  <NFlex
+                    vertical
+                    :size="8"
+                  >
+                    <NText depth="3"> 在「自动操作」中可以让礼物、弹幕、上舰等事件自动触发 VTS 动作 </NText>
+                    <NFlex
+                      v-for="a in linkedAutoActions"
+                      :key="a.id"
+                      align="center"
+                      :size="8"
+                      class="linked-action-row"
+                    >
+                      <NTag
+                        :type="a.enabled ? 'success' : 'default'"
+                        size="small"
+                      >
+                        {{ a.enabled ? '启用' : '禁用' }}
+                      </NTag>
+                      <NText strong>{{ a.name || '未命名操作' }}</NText>
+                    </NFlex>
+                    <NButton
+                      size="small"
+                      secondary
+                      style="align-self: flex-start"
+                      @click="router.push({ name: 'client-auto-action-manage' })"
+                    >
+                      前往自动操作
+                    </NButton>
+                  </NFlex>
+                </NCollapseItem>
+                <NCollapseItem
+                  title="操作记录"
+                  name="history"
                 >
                   <VtsHistoryPanel />
-                  <NCard
-                    v-if="linkedAutoActions.length > 0"
-                    size="small"
-                    bordered
-                    title="关联的自动操作规则"
-                  >
-                    <NFlex
-                      vertical
-                      :size="8"
-                    >
-                      <NText depth="3"> 以下自动操作规则绑定了 VTS 动作 </NText>
-                      <NFlex
-                        v-for="a in linkedAutoActions"
-                        :key="a.id"
-                        align="center"
-                        justify="space-between"
-                        :wrap="true"
-                        :size="8"
-                        class="linked-action-row"
-                      >
-                        <NFlex
-                          align="center"
-                          :size="8"
-                        >
-                          <NTag
-                            :type="a.enabled ? 'success' : 'default'"
-                            size="small"
-                          >
-                            {{ a.enabled ? '启用' : '禁用' }}
-                          </NTag>
-                          <NText strong>{{ a.name || '未命名操作' }}</NText>
-                          <NText depth="3">
-                            {{ a.actionType }}
-                          </NText>
-                        </NFlex>
-                        <NButton
-                          size="small"
-                          secondary
-                          @click="router.push({ name: 'client-auto-action-manage' })"
-                        >
-                          前往配置
-                        </NButton>
-                      </NFlex>
-                    </NFlex>
-                  </NCard>
-                </NFlex>
-              </NCollapseItem>
-            </NCollapse>
+                </NCollapseItem>
+              </NCollapse>
+            </NFlex>
           </NTabPane>
         </NTabs>
       </template>
@@ -515,11 +373,7 @@ const macroProgress = computed(() => {
 }
 
 .vts-tabs :deep(.n-tabs-rail) {
-  max-width: 420px;
-}
-
-.vts-status-strip {
-  border-radius: var(--vtsuru-radius, 6px);
+  max-width: 520px;
 }
 
 .model-badge {
@@ -540,7 +394,6 @@ const macroProgress = computed(() => {
   border: 1px solid var(--vtsuru-border);
 }
 
-/* 动效 */
 .vts-slide-enter-active,
 .vts-slide-leave-active {
   transition: all 0.25s ease;
@@ -551,35 +404,12 @@ const macroProgress = computed(() => {
 .vts-slide-leave-to {
   opacity: 0;
   max-height: 0;
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
   transform: translateY(-8px);
 }
 
 .vts-slide-enter-to,
 .vts-slide-leave-from {
   opacity: 1;
-  max-height: 500px;
-}
-
-.vts-fade-enter-active,
-.vts-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.vts-fade-enter-from,
-.vts-fade-leave-to {
-  opacity: 0;
-}
-
-.vts-btn-enter-active,
-.vts-btn-leave-active {
-  transition: all 0.2s ease;
-}
-
-.vts-btn-enter-from,
-.vts-btn-leave-to {
-  opacity: 0;
-  transform: scale(0.9);
+  max-height: 200px;
 }
 </style>

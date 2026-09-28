@@ -107,7 +107,8 @@
     "vue3-marquee": "^4.2.2",
     "vueuc": "^0.4.65",
     "worker-timers": "^8.0.33",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.1.0",

@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { NButton, NCard, NDivider, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
-import { computed, onUnmounted, watch } from 'vue'
+import { computed } from 'vue'
 
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 
-import { useVtsAction } from './useVtsAction'
-
 const obs = useOBSStore()
 const vts = useVtsStore()
-const { run } = useVtsAction()
 
 const sceneOptions = computed(() => obs.obsScenes.map((s) => ({ label: s, value: s })))
 const presetOptions = computed(() => vts.presets.map((p) => ({ label: p.name, value: p.id })))
@@ -35,38 +32,13 @@ function removeMapping(scene: string) {
   void vts.setObsLinkConfig({ ...vts.obsLinkConfig, sceneToPresetId: next })
 }
 
-let timer: number | null = null
-let lastScene: string | null = null
-
-const stopWatch = watch(
-  () => obs.currentObsScene,
-  (scene) => {
-    if (!scene || !vts.obsLinkConfig.enabled || !vts.canOperate) return
-    const presetId = vts.obsLinkConfig.sceneToPresetId[scene]
-    if (!presetId || scene === lastScene) return
-    lastScene = scene
-    if (timer != null) window.clearTimeout(timer)
-    timer = window.setTimeout(() => {
-      run(() => vts.applyPreset(presetId))
-    }, vts.obsLinkConfig.debounceMs)
-  },
-  { immediate: true },
-)
-
-onUnmounted(() => {
-  stopWatch()
-  if (timer != null) {
-    window.clearTimeout(timer)
-    timer = null
-  }
-})
 </script>
 
 <template>
   <NCard
     size="small"
     bordered
-    title="OBS 联动"
+    title="OBS 场景联动"
   >
     <NFlex
       vertical

@@ -23,14 +23,12 @@ import {
   NGrid,
   NGridItem,
   NIcon,
-  NImage,
   NPopconfirm,
   NTag,
   NText,
   NTooltip,
-  useThemeVars,
 } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { logoutAccount, useAccount } from '@/api/account'
@@ -40,21 +38,18 @@ import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
-import { useVtsFloatWindow } from '@/apps/client/store/useVtsFloatWindow'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
 const router = useRouter()
 const accountInfo = useAccount()
-const themeVars = useThemeVars()
 
 const webfetcher = useWebFetcher()
 const biliCookie = useBiliCookie()
 const danmakuWindow = useDanmakuWindow()
 const giftWindow = useGiftWindow()
 const vtsStore = useVtsStore()
-const vtsFloatWindow = useVtsFloatWindow()
 const autoActionStore = useAutoAction()
 const rpcServer = useFetcherRpcServer()
 
@@ -97,15 +92,6 @@ function toggleGiftWindow() {
     giftWindow.closeWindow()
   } else {
     giftWindow.openWindow()
-  }
-}
-
-// VTS 悬浮窗切换
-function toggleVtsFloatWindow() {
-  if (vtsFloatWindow.opened) {
-    vtsFloatWindow.close()
-  } else {
-    vtsFloatWindow.open()
   }
 }
 
@@ -344,7 +330,7 @@ function toggleVtsFloatWindow() {
       </NGridItem>
     </NGrid>
 
-    <!-- 直播浮窗控制中心 (3 Bento Grid Cards) -->
+    <!-- 直播浮窗控制中心 -->
     <NCard
       size="small"
       bordered
@@ -353,7 +339,7 @@ function toggleVtsFloatWindow() {
       <NGrid
         :x-gap="12"
         :y-gap="12"
-        cols="1 768:3"
+        cols="1 768:2"
         item-responsive
       >
         <!-- 弹幕机浮窗 -->
@@ -479,54 +465,6 @@ function toggleVtsFloatWindow() {
                 @click="router.push({ name: 'client-gift-window-manage' })"
               >
                 设置
-              </NButton>
-            </div>
-          </div>
-        </NGridItem>
-
-        <!-- VTS 悬浮窗 -->
-        <NGridItem>
-          <div class="float-window-box">
-            <div class="float-window-head">
-              <div class="float-window-icon-title">
-                <NIcon
-                  :size="18"
-                  :component="VideoPerson24Filled"
-                  color="#8b5cf6"
-                />
-                <NText strong>
-                  VTS 悬浮面板
-                </NText>
-              </div>
-              <NTag
-                size="tiny"
-                :type="vtsFloatWindow.opened ? 'success' : 'default'"
-                :bordered="false"
-                round
-              >
-                {{ vtsFloatWindow.opened ? '运行中' : '未开启' }}
-              </NTag>
-            </div>
-
-            <div class="float-window-desc">
-              轻量悬浮快捷触控，一键触发模型表情、预设与宏动作。
-            </div>
-
-            <div class="float-window-actions">
-              <NButton
-                size="tiny"
-                :type="vtsFloatWindow.opened ? 'error' : 'primary'"
-                secondary
-                @click="toggleVtsFloatWindow"
-              >
-                {{ vtsFloatWindow.opened ? '关闭面板' : '开启面板' }}
-              </NButton>
-              <NButton
-                size="tiny"
-                quaternary
-                @click="router.push({ name: 'client-vts' })"
-              >
-                VTS 中心
               </NButton>
             </div>
           </div>

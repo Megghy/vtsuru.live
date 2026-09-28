@@ -243,7 +243,7 @@ function runMacro(macroId: string) {
           <NButton
             size="small"
             type="primary"
-            :disabled="!vts.canOperate"
+            :disabled="!vts.connected"
             @click="runMacro(m.id)"
           >
             运行
@@ -318,6 +318,8 @@ function runMacro(macroId: string) {
         v-model="macroSteps"
         handle=".macro-step-handle"
         :animation="150"
+        force-fallback
+        :fallback-tolerance="4"
       >
         <NCard
           v-for="(element, index) in macroSteps"

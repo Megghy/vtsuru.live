@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Person48Filled, WindowWrench20Filled } from '@vicons/fluent'
+import { WindowWrench20Filled } from '@vicons/fluent'
 import { ChevronBackOutline, ChevronForwardOutline, HeartOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useMediaQuery } from '@vueuse/core'
 import {
@@ -53,6 +53,7 @@ import type { BiliProfile, BiliProfileStatus, UserPagesSettings } from '@/apps/u
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import FollowButton from '@/components/common/FollowButton.vue'
 import { useFollowingStates } from '@/api/following'
+import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -65,6 +66,7 @@ const route = useRoute()
 const router = useRouter()
 const accountInfo = useAccount() // 获取当前登录账户信息
 const useAuth = useBiliAuth() // 获取认证状态 Store
+const { lastWorkspace, enterLastWorkspace } = useManageWorkspace()
 
 // 路由参数
 const id = computed(() => route.params.id)
@@ -619,31 +621,15 @@ watch(
                 </template>
                 <span v-if="isDesktop">关注管理</span>
               </NButton>
-              <!-- B站认证中心按钮 (如果已认证) -->
-              <NButton
-                v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
-                type="primary"
-                tag="a"
-                href="/bili-user/points"
-                target="_blank"
-                size="small"
-                secondary
-              >
-                <template #icon>
-                  <NIcon :component="Person48Filled" />
-                </template>
-                <span v-if="isDesktop"> Bilibili 账户中心 </span>
-              </NButton>
-              <!-- 主播后台按钮 -->
               <NButton
                 type="primary"
                 size="small"
-                @click="$router.push({ name: 'manage-index' })"
+                @click="enterLastWorkspace"
               >
                 <template #icon>
                   <NIcon :component="WindowWrench20Filled" />
                 </template>
-                <span v-if="isDesktop"> 主播后台 </span>
+                <span v-if="isDesktop">{{ WORKSPACE_LABELS[lastWorkspace] }}</span>
               </NButton>
             </template>
 

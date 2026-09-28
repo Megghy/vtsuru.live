@@ -115,7 +115,7 @@ function dropPrank(p: VtsPrankBinding) {
         <NButton
           size="small"
           :loading="refreshing"
-          :disabled="!vts.canOperate || refreshing"
+          :disabled="!vts.connected || refreshing"
           @click="refresh"
         >
           刷新列表
@@ -179,7 +179,7 @@ function dropPrank(p: VtsPrankBinding) {
                 />
                 <NSwitch
                   :value="acc.visible"
-                  :disabled="!vts.canOperate"
+                  :disabled="!vts.connected"
                   @update:value="(val) => toggleAccessory(acc, val)"
                 >
                   <template #checked> 显示 </template>
@@ -262,14 +262,14 @@ function dropPrank(p: VtsPrankBinding) {
               >
                 <NButton
                   size="small"
-                  :disabled="!vts.canOperate || !p.fileName"
+                  :disabled="!vts.connected || !p.fileName"
                   @click="loadPrank(p)"
                 >
                   加载
                 </NButton>
                 <NButton
                   size="small"
-                  :disabled="!vts.canOperate || !p.fileName"
+                  :disabled="!vts.connected || !p.fileName"
                   @click="unloadPrank(p)"
                 >
                   卸载
@@ -277,7 +277,7 @@ function dropPrank(p: VtsPrankBinding) {
                 <NButton
                   size="small"
                   type="primary"
-                  :disabled="!vts.canOperate"
+                  :disabled="!vts.connected"
                   @click="dropPrank(p)"
                 >
                   掉落

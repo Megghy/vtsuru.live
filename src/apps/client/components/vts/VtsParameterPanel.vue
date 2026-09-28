@@ -63,7 +63,7 @@ function addSlot() {
         </NButton>
         <NButton
           size="small"
-          :disabled="!vts.canOperate"
+          :disabled="!vts.connected"
           @click="vts.stopAllParamHolds"
         >
           全部停止持有
@@ -105,7 +105,7 @@ function addSlot() {
           >
             <NSwitch
               :value="slot.hold"
-              :disabled="!vts.canOperate"
+              :disabled="!vts.connected"
               @update:value="(val) => updateSlot({ ...slot, hold: val })"
             >
               <template #checked> Hold </template>
@@ -113,7 +113,7 @@ function addSlot() {
             </NSwitch>
             <NButton
               size="small"
-              :disabled="!vts.canOperate"
+              :disabled="!vts.connected"
               @click="injectOnce(slot)"
             >
               注入
@@ -144,7 +144,7 @@ function addSlot() {
             :min="slot.min"
             :max="slot.max"
             :step="slot.step"
-            :disabled="!vts.canOperate"
+            :disabled="!vts.connected"
             @update:value="
               (val) => {
                 slot.value = val as number
@@ -157,7 +157,7 @@ function addSlot() {
             :min="slot.min"
             :max="slot.max"
             :step="slot.step"
-            :disabled="!vts.canOperate"
+            :disabled="!vts.connected"
             style="width: 140px"
             @update:value="
               (val) => {

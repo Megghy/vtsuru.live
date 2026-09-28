@@ -470,7 +470,7 @@ export function executeActions(
         }
         const vts = useVtsStore()
         const run = async () => {
-          if (!vts.canOperate) throw new Error('VTS 未连接或未鉴权')
+          if (!vts.connected) throw new Error('VTS 未连接')
 
           switch (action.actionType) {
             case ActionType.VTS_HOTKEY: {

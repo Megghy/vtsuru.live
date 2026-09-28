@@ -19,7 +19,9 @@
     --vtsuru-page-primary-border,
     color-mix(in srgb, var(--schedule-accent) 34%, var(--schedule-border))
   );
+  /* readable: 表面上的强调色文字; fg: 强调色填充上的前景色 */
   --schedule-accent-readable: var(--vtsuru-page-primary-readable, var(--schedule-fg));
+  --schedule-accent-fg: var(--vtsuru-primary-fg);
   --schedule-spacing: var(--vtsuru-page-spacing, 16px);
 
   min-width: 0;

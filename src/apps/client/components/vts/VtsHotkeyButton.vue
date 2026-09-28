@@ -9,63 +9,42 @@ defineProps<{
   custom?: VtsHotkeyCustomization
   disabled?: boolean
   armed?: boolean
-  safeClick?: boolean
-  deck?: boolean
+  onDeck?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'trigger'): void
   (e: 'edit'): void
   (e: 'toggle-pinned'): void
-  (e: 'toggle-favorite'): void
+  (e: 'add-to-deck'): void
 }>()
 </script>
 
 <template>
-  <NPopover trigger="hover">
+  <NPopover
+    trigger="hover"
+    :delay="400"
+  >
     <template #trigger>
       <NButton
         block
-        :size="deck ? 'medium' : 'small'"
+        size="small"
         :disabled="disabled"
-        :type="safeClick && armed ? 'warning' : 'default'"
-        :class="{ 'hotkey-deck-btn': deck }"
+        :type="armed ? 'warning' : 'default'"
         @click="emit('trigger')"
       >
-        <NFlex
-          v-if="deck"
-          vertical
-          align="center"
-          :size="4"
-          style="padding: 6px 0"
-        >
-          <img
-            v-if="custom?.iconDataUrl"
-            class="hotkey-deck-icon"
-            :src="custom.iconDataUrl"
-            alt=""
-          />
-          <span
-            v-else-if="custom?.color"
-            class="hotkey-deck-dot"
-            :style="{ backgroundColor: custom.color }"
-          />
-          <span class="hotkey-deck-label">{{ custom?.displayName || hk.name || hk.hotkeyID }}</span>
-        </NFlex>
-        <template v-else>
-          <span
-            v-if="custom?.color"
-            class="hotkey-color-dot"
-            :style="{ backgroundColor: custom.color }"
-          />
-          <img
-            v-if="custom?.iconDataUrl"
-            class="hotkey-icon"
-            :src="custom.iconDataUrl"
-            alt=""
-          />
-          <span>{{ custom?.displayName || hk.name || hk.hotkeyID }}</span>
-        </template>
+        <span
+          v-if="custom?.color"
+          class="hotkey-color-dot"
+          :style="{ backgroundColor: custom.color }"
+        />
+        <img
+          v-if="custom?.iconDataUrl"
+          class="hotkey-icon"
+          :src="custom.iconDataUrl"
+          alt=""
+        />
+        <span class="hotkey-label">{{ armed ? '再次点击触发' : custom?.displayName || hk.name || hk.hotkeyID }}</span>
       </NButton>
     </template>
     <NFlex
@@ -86,9 +65,10 @@ const emit = defineEmits<{
       >
         <NButton
           size="tiny"
-          @click="emit('edit')"
+          :disabled="onDeck"
+          @click="emit('add-to-deck')"
         >
-          编辑
+          {{ onDeck ? '已在操作台' : '加入操作台' }}
         </NButton>
         <NButton
           size="tiny"
@@ -98,9 +78,9 @@ const emit = defineEmits<{
         </NButton>
         <NButton
           size="tiny"
-          @click="emit('toggle-favorite')"
+          @click="emit('edit')"
         >
-          {{ custom?.favorite ? '取消收藏' : '收藏' }}
+          自定义外观
         </NButton>
       </NFlex>
     </NFlex>
@@ -123,30 +103,8 @@ const emit = defineEmits<{
   object-fit: cover;
   flex: 0 0 auto;
 }
-.hotkey-deck-btn {
-  height: auto !important;
-  min-height: 64px;
-}
-.hotkey-deck-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-.hotkey-deck-dot {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-}
-.hotkey-deck-label {
-  font-size: 11px;
-  line-height: 1.2;
-  text-align: center;
-  word-break: break-all;
-  max-width: 80px;
+.hotkey-label {
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
 }
 </style>

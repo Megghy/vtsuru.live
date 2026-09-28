@@ -119,7 +119,7 @@ function addFromCurrent() {
           <NButton
             size="small"
             type="primary"
-            :disabled="!vts.canOperate"
+            :disabled="!vts.connected"
             @click="run(() => vts.applyPreset(p.id), '已应用')"
           >
             应用

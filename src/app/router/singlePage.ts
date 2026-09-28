@@ -36,16 +36,6 @@ export default [
     },
   },
   {
-    path: '/vts-float-window',
-    name: 'client-vts-float-window',
-    component: async () => import('@/apps/client/pages/vts-window/ClientVtsFloatWindow.vue'),
-    meta: {
-      title: 'VTS 悬浮小窗',
-      ignoreLogin: true,
-      forceReload: true,
-    },
-  },
-  {
     path: '/gift-window',
     name: 'client-gift-window',
     component: async () => import('@/apps/client/pages/gift-window/ClientGiftWindow.vue'),

@@ -140,7 +140,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                   size="small"
                   quaternary
                   circle
-                  :disabled="!vts.canOperate"
+                  :disabled="!vts.connected"
                   title="刷新"
                   @click="vts.refreshItems({ includeFiles: true })"
                 >

@@ -4,22 +4,13 @@ import { computed, h } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsOpRecord } from '@/apps/client/store/useVtsStore'
+import { REPLAYABLE_KINDS } from '@/apps/client/store/vts/operations'
 
 import { useVtsAction } from './useVtsAction'
 
 const vts = useVtsStore()
 const { run } = useVtsAction()
 
-const replayableKinds = new Set([
-  'hotkeyTrigger',
-  'moveModel',
-  'injectParam',
-  'macroRun',
-  'itemOpacity',
-  'dropItem',
-  'panicCalibrate',
-  'panicResetPhysics',
-])
 
 const columns = computed(() => [
   {
@@ -63,12 +54,12 @@ const columns = computed(() => [
     key: 'op',
     width: 80,
     render: (row: VtsOpRecord) => {
-      if (!row.payload || !replayableKinds.has(row.kind)) return ''
+      if (!row.payload || !REPLAYABLE_KINDS.has(row.kind)) return ''
       return h(
         NButton,
         {
           size: 'tiny',
-          disabled: !vts.canOperate,
+          disabled: !vts.connected,
           onClick: () => run(() => vts.replayHistoryRecord(row.id), '已回放'),
         },
         { default: () => '回放' },

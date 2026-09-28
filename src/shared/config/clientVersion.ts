@@ -11,6 +11,8 @@ import { isTauri } from './api'
 export const REQUIRED_CLIENT_VERSION = '0.1.9'
 // 开放 RPC 接口 (含 /health CORS + PNA 预检) 起始可用的 client 版本
 export const RPC_MIN_CLIENT_VERSION = '0.1.9'
+// 全局快捷键 (VTS 操作台格子快捷键) 起始可用版本
+export const GLOBAL_SHORTCUT_MIN_CLIENT_VERSION = '0.1.8'
 // 本地直播音频提取和实时语音转写起始可用版本
 export const TRANSCRIPTION_MIN_CLIENT_VERSION = '0.1.11'
 

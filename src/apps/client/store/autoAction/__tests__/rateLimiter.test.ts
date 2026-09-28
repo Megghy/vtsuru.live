@@ -8,7 +8,7 @@ vi.mock('@/apps/client/store/useBiliCookie', () => ({
   useBiliCookie: () => ({ isCookieValid: true }),
 }))
 vi.mock('@/apps/client/store/useVtsStore', () => ({
-  useVtsStore: () => ({ canOperate: false }),
+  useVtsStore: () => ({ connected: false }),
 }))
 vi.mock('@/shared/config', () => ({ isTauri: () => false }))
 vi.mock('../utils/historyLogger', () => ({
