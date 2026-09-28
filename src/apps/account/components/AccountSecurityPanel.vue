@@ -23,7 +23,7 @@ const sendingCode = ref(false)
 const canSendCode = ref(true)
 const saving = ref(false)
 
-const emailAction = computed(() => (account.value.isEmailVerified ? '修改邮箱' : '绑定邮箱'))
+const emailAction = computed(() => (account.value.bindEmail ? '修改邮箱' : '绑定邮箱'))
 
 function responseError(error: unknown) {
   return error instanceof Error ? error.message : String(error)

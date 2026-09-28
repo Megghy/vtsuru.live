@@ -430,7 +430,7 @@ async function onRegisterButtonClick() {
       return
     }
 
-    await finalizeAuthenticatedSession(data.data, '注册成功')
+    await finalizeAuthenticatedSession(data.data, '注册成功，请查收验证邮件')
   } catch (error) {
     handleRequestError('注册', error)
   } finally {

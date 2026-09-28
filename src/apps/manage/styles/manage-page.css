@@ -13,6 +13,13 @@
   max-width: 1100px;
 }
 
+.manage-page--center {
+  flex: 1;
+  justify-content: center;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
 .manage-page--xl {
   max-width: 1600px;
 }

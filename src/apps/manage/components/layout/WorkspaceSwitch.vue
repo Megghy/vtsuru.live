@@ -45,6 +45,7 @@ const { workspace, switchWorkspace } = useManageWorkspace()
   border: 1px solid var(--vtsuru-border);
   border-radius: 9px;
   background: var(--vtsuru-bg-muted);
+  box-sizing: border-box;
 }
 
 .workspace-switch button {

@@ -31,7 +31,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'verify',
     component: async () => import('@/apps/web/pages/auth/VerifyView.vue'),
     meta: {
-      title: '认证',
+      title: '验证邮箱',
     },
   },
   {

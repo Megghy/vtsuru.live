@@ -773,7 +773,7 @@ async function go(name: string) {
 }
 
 .manage-sider__top {
-  padding: 9px 10px 6px;
+  padding: 9px 12px 6px;
   display: flex;
   flex-direction: column;
   gap: 6px;

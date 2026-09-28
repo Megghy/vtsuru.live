@@ -165,15 +165,21 @@ onMounted(() => {
 }
 
 .manage-shell__scroll {
+  display: flex;
   flex: 1 1 0;
   min-height: 0;
   overflow: auto;
+  flex-direction: column;
   -webkit-overflow-scrolling: touch;
 }
 
 .manage-shell__content {
-  padding: 0;
+  display: flex;
+  flex: 1 0 auto;
+  width: 100%;
   min-width: 370px;
+  padding: 0;
+  flex-direction: column;
   box-sizing: border-box;
 }
 
