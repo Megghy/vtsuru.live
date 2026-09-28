@@ -213,13 +213,13 @@ async function QueryAPIInternal<T>(url: URL, init: RequestInit, options?: QueryR
   try {
     return await request()
   } catch (e) {
-    console.error(`[${init.method}] API调用失败: ${e}`)
     const queryError = toQueryRequestError(e, false)
     if (shouldRetryOnFailover(queryError, options?.retryOnFailover ?? true)) {
       markAPIFailover()
       console.log('默认API异常, 切换至故障转移节点')
       return request()
     }
+    console.error(`[${init.method}] API调用失败: ${e}`)
     throw queryError
   }
 }

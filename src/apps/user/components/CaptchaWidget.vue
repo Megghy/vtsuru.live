@@ -19,6 +19,10 @@ interface AltchaVerifiedDetail {
   payload?: string
 }
 
+const { action } = defineProps<{
+  action?: string
+}>()
+
 const token = defineModel<string>({ default: '' })
 
 const canSolve = ref(false)
@@ -302,6 +306,7 @@ defineExpose({
       v-model="token"
       :site-key="TURNSTILE_KEY"
       :theme="turnstileTheme"
+      :action="action || ''"
       size="flexible"
       class="captcha-widget__turnstile"
     />

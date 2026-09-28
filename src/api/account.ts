@@ -81,15 +81,19 @@ export function UpdateAccountLoop() {
   }, 60 * 1000)
 }
 function refreshCookie(token?: string) {
-  QueryPostAPIWithParams<string>(`${ACCOUNT_API_URL}refresh-token`, { token }).then((data) => {
-    if (data.code == 200) {
-      cookie.value = {
-        cookie: data.data,
-        refreshDate: new Date().getTime(),
+  QueryPostAPIWithParams<string>(`${ACCOUNT_API_URL}refresh-token`, { token })
+    .then((data) => {
+      if (data.code == 200) {
+        cookie.value = {
+          cookie: data.data,
+          refreshDate: new Date().getTime(),
+        }
+        console.log('[vtsuru] 已刷新Cookie')
       }
-      console.log('[vtsuru] 已刷新Cookie')
-    }
-  })
+    })
+    .catch((err) => {
+      console.warn('[vtsuru] 刷新Cookie失败', err)
+    })
 }
 export async function SaveAccountSettings() {
   return QueryPostAPI(`${ACCOUNT_API_URL}update-setting`, ACCOUNT.value?.settings)

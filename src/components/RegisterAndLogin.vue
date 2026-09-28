@@ -807,8 +807,10 @@ onUnmounted(() => {
       >
         <div class="turnstile-wrap">
           <CaptchaWidget
+            :key="selectedTab"
             ref="turnstile"
             v-model="token"
+            :action="selectedTab === 'register' ? 'register' : undefined"
           />
         </div>
       </section>
