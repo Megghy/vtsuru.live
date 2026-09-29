@@ -21,6 +21,7 @@ import type { ForumPostTopicModel, ForumTopicBaseModel } from '@/api/models/foru
 import { ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
+import { refreshCaptcha } from '@/shared/captcha'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useForumStore } from '@/store/useForumStore'
 
@@ -64,7 +65,7 @@ function backupTopic() {
 function postTopic() {
   currentPostTopicModel.value.owner = forumInfo.value?.owner.id ?? -1
   useForum
-    .PostTopic(currentPostTopicModel.value, token.value)
+    .PostTopic(currentPostTopicModel.value, token.value, () => refreshCaptcha(turnstile.value))
     .then(async (topic) => {
       if (topic) {
         currentPostTopicModel.value = {} as ForumPostTopicModel

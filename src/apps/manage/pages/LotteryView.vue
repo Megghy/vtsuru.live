@@ -92,6 +92,7 @@ import {
   shuffleArray,
 } from '@/apps/open-live/components/lottery/lotteryUtils'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
+import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { CURRENT_HOST, LOTTERY_API_URL } from '@/shared/config'
 import type { DanmakuInfo, GiftInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -398,11 +399,16 @@ async function fetchDynamicUsers() {
   isDynamicLoading.value = true
   try {
     const endpoint = dynamicType.value === 'comment' ? 'comments' : 'forward'
-    const res = await QueryGetAPI<TempLotteryResponseModel>(
-      `${LOTTERY_API_URL}${endpoint}`,
-      { id: dynamicId.toString() },
-      [['Turnstile', turnstileToken.value]],
-    )
+    const res = await requestWithCaptchaRetry({
+      getToken: () => turnstileToken.value,
+      refresh: () => refreshCaptcha(turnstile.value),
+      request: (captchaToken) =>
+        QueryGetAPI<TempLotteryResponseModel>(
+          `${LOTTERY_API_URL}${endpoint}`,
+          { id: dynamicId.toString() },
+          [['Turnstile', captchaToken]],
+        ),
+    })
     if (res.code === 200 && res.data) {
       res.data.users = new List(res.data.users).DistinctBy((u) => u.uId).ToArray()
       res.data.total = res.data.users.length
@@ -485,6 +491,7 @@ onMounted(() => {
 onUnmounted(() => {
   client.offEvent('danmaku', onDanmaku)
   client.offEvent('gift', onGift)
+  turnstile.value?.remove?.()
 })
 </script>
 
@@ -767,12 +774,18 @@ onUnmounted(() => {
                   size="small"
                   type="primary"
                   :loading="isDynamicLoading"
+                  :disabled="!turnstileToken"
                   @click="fetchDynamicUsers"
                 >
                   拉取用户数据
                 </NButton>
               </NInputGroup>
             </NFlex>
+            <CaptchaWidget
+              ref="turnstile"
+              v-model="turnstileToken"
+              class="dynamic-captcha"
+            />
           </NCard>
 
           <!-- 抽奖控制与结果 -->
@@ -925,6 +938,10 @@ onUnmounted(() => {
 <style scoped>
 .lottery-manage-view {
   width: 100%;
+}
+
+.dynamic-captcha {
+  margin-top: 10px;
 }
 
 .main-nav-tabs {

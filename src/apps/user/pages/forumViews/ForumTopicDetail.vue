@@ -34,6 +34,7 @@ import { ForumCommentSortTypes } from '@/api/models/forum'
 import router from '@/app/router'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
+import { refreshCaptcha } from '@/shared/captcha'
 import { getUserAvatarUrl } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
@@ -97,7 +98,7 @@ async function postComment() {
   }
   currentCommentContent.value.topic = topic.value.id
   useForum
-    .PostComment(currentCommentContent.value, commentToken.value)
+    .PostComment(currentCommentContent.value, commentToken.value, () => refreshCaptcha(commentCaptcha.value))
     .then(async (comment) => {
       if (comment) {
         setTimeout(async () => {
@@ -121,7 +122,7 @@ async function postReply() {
   currentReplyContent.value.comment = useForum.replyingComment?.id ?? -1
   currentReplyContent.value.replyTo = useForum.replyingReply?.id
   useForum
-    .PostReply(currentReplyContent.value, replyToken.value)
+    .PostReply(currentReplyContent.value, replyToken.value, () => refreshCaptcha(replyCaptcha.value))
     .then(async (comment) => {
       if (comment) {
         refreshComments()

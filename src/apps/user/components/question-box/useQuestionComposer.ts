@@ -4,6 +4,7 @@ import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 import { useAccount } from '@/api/account'
 import type { QAInfo, UserInfo } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
+import { refreshCaptcha, requestWithCaptchaRetry, type CaptchaHandle } from '@/shared/captcha'
 import { QUESTION_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -17,11 +18,6 @@ interface QuestionDraft {
   anonymousEmail: string
   isAnonymous: boolean
   allowPublic: boolean
-}
-
-interface CaptchaHandle {
-  remove: () => void
-  reset: () => void
 }
 
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -159,34 +155,43 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
     isSending.value = true
     const submittedDraft = { ...draft.value }
     const hasImage = selectedFiles.value.length > 0
-    const formData = new FormData()
-    formData.append(
-      'Data',
-      JSON.stringify({
-        Target: target.value.id,
-        IsAnonymous: !isIdentified.value || submittedDraft.isAnonymous,
-        Message: submittedDraft.message,
-        Tag: submittedDraft.tag,
-        AnonymousName: !isIdentified.value && submittedDraft.anonymousName ? submittedDraft.anonymousName : undefined,
-        AnonymousEmail:
-          !isIdentified.value && submittedDraft.anonymousEmail ? submittedDraft.anonymousEmail : undefined,
-        AllowPublic: allowDefaultPublic.value ? submittedDraft.allowPublic !== false : undefined,
-      }),
-    )
-    selectedFiles.value.forEach((file) => formData.append('Files', file))
+    const targetId = target.value.id
+    const targetName = target.value.name
 
     try {
-      const headers: [string, string][] = [['Turnstile', token.value]]
-      const response = isBiliAuthed.value
-        ? await biliAuth.QueryBiliAuthPostAPI<QAInfo>(`${QUESTION_API_URL}send`, formData, headers)
-        : await QueryPostAPI<QAInfo>(`${QUESTION_API_URL}send`, formData, headers)
+      const response = await requestWithCaptchaRetry({
+        getToken: () => token.value,
+        refresh: () => refreshCaptcha(turnstile.value),
+        request: (captchaToken) => {
+          const formData = new FormData()
+          formData.append(
+            'Data',
+            JSON.stringify({
+              Target: targetId,
+              IsAnonymous: !isIdentified.value || submittedDraft.isAnonymous,
+              Message: submittedDraft.message,
+              Tag: submittedDraft.tag,
+              AnonymousName:
+                !isIdentified.value && submittedDraft.anonymousName ? submittedDraft.anonymousName : undefined,
+              AnonymousEmail:
+                !isIdentified.value && submittedDraft.anonymousEmail ? submittedDraft.anonymousEmail : undefined,
+              AllowPublic: allowDefaultPublic.value ? submittedDraft.allowPublic !== false : undefined,
+            }),
+          )
+          selectedFiles.value.forEach((file) => formData.append('Files', file))
+          const headers: [string, string][] = [['Turnstile', captchaToken]]
+          return isBiliAuthed.value
+            ? biliAuth.QueryBiliAuthPostAPI<QAInfo>(`${QUESTION_API_URL}send`, formData, headers)
+            : QueryPostAPI<QAInfo>(`${QUESTION_API_URL}send`, formData, headers)
+        },
+      })
       if (response.code !== 200) throw new Error(response.message)
 
       if (!isIdentified.value) {
         history.add({
           id: `local-${Date.now()}-${crypto.randomUUID()}`,
-          targetUserId: target.value.id,
-          targetUserName: target.value.name,
+          targetUserId: targetId,
+          targetUserName: targetName,
           message: submittedDraft.message,
           tag: submittedDraft.tag,
           anonymousName: submittedDraft.anonymousName,
@@ -201,10 +206,10 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
       token.value = ''
       isSent.value = true
       nextSendAt.value = Date.now() + SEND_COOLDOWN
-      turnstile.value?.reset()
       onSubmitted()
     } finally {
       isSending.value = false
+      turnstile.value?.reset()
     }
   }
 

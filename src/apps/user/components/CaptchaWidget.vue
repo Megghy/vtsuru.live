@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import 'altcha'
 import 'altcha/i18n/zh-cn'
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
 import { ALTCHA_CHALLENGE_URL, TURNSTILE_KEY } from '@/shared/config'
 import { isDarkMode } from '@/shared/utils'
+
+import { useAltchaRefresh } from './useAltchaRefresh'
 
 type CaptchaProvider = 'altcha' | 'turnstile'
 type AltchaState = 'unverified' | 'verifying' | 'verified' | 'error' | 'expired' | 'code'
@@ -76,12 +78,22 @@ function clearReadyTimer() {
 function startReadyTimer() {
   clearReadyTimer()
   readyTimer = setTimeout(() => {
-    // 已弹出 code/error 交互界面时不回退，等用户完成
     if (provider.value === 'altcha' && !token.value && !showAltchaUi.value) {
       fallbackToTurnstile('验证超时，已切换备用验证')
     }
   }, ALTCHA_READY_MS)
 }
+
+const altchaRefresh = useAltchaRefresh({
+  token,
+  provider,
+  altchaState,
+  showAltchaUi,
+  altchaEl,
+  isFallback: () => fallbackTriggered,
+  startReadyTimer,
+  clearReadyTimer,
+})
 
 async function probeAltchaChallenge() {
   probeAbort?.abort()
@@ -105,6 +117,7 @@ function fallbackToTurnstile(_reason?: string) {
   if (fallbackTriggered || provider.value === 'turnstile') return
   fallbackTriggered = true
   clearReadyTimer()
+  altchaRefresh.dispose()
   probeAbort?.abort()
   token.value = ''
   provider.value = 'turnstile'
@@ -126,26 +139,27 @@ function onAltchaStateChange(ev: Event) {
   if (!state) return
   altchaState.value = state
 
-  if (state === 'code' || state === 'error' || state === 'expired') {
-    revealAltchaUi()
+  if (state === 'verified') {
+    altchaRefresh.applyVerifiedPayload(detail.payload)
+    return
   }
   if (state === 'verifying' || state === 'unverified') {
     showAltchaUi.value = false
+    return
   }
-  if (state === 'verified') {
-    if (detail.payload) token.value = detail.payload
-    clearReadyTimer()
-    showAltchaUi.value = false
+  if (state === 'code') {
+    altchaRefresh.markInteractive()
+    revealAltchaUi()
+    return
+  }
+  if (state === 'error' || state === 'expired') {
+    if (altchaRefresh.handleChallengeFailure(state)) return
+    if (!token.value) revealAltchaUi()
   }
 }
 
 function onAltchaVerified(ev: Event) {
-  const detail = (ev as CustomEvent<AltchaVerifiedDetail>).detail
-  if (!detail?.payload) return
-  token.value = detail.payload
-  altchaState.value = 'verified'
-  clearReadyTimer()
-  showAltchaUi.value = false
+  altchaRefresh.applyVerifiedPayload((ev as CustomEvent<AltchaVerifiedDetail>).detail?.payload)
 }
 
 function onAltchaCodeChallenge() {
@@ -167,18 +181,13 @@ function unbindAltchaEvents(el: HTMLElementTagNameMap['altcha-widget'] | null) {
 }
 
 function reset() {
-  token.value = ''
+  fallbackTriggered = false
+  altchaRefresh.resetSession()
   if (provider.value === 'altcha') {
-    altchaState.value = 'unverified'
-    showAltchaUi.value = false
-    fallbackTriggered = false
-    altchaEl.value?.reset?.()
-    void nextTick(() => {
-      void altchaEl.value?.verify?.()
-      startReadyTimer()
-    })
+    altchaRefresh.reverify(false)
     return
   }
+  token.value = ''
   try {
     turnstile.value?.reset?.()
   } catch {
@@ -186,8 +195,19 @@ function reset() {
   }
 }
 
+function refresh() {
+  if (provider.value === 'turnstile') {
+    reset()
+    return Promise.reject(new Error('请完成人机验证'))
+  }
+  const previous = token.value
+  reset()
+  return altchaRefresh.waitForFreshToken(previous)
+}
+
 function remove() {
   clearReadyTimer()
+  altchaRefresh.dispose()
   probeAbort?.abort()
   unbindAltchaEvents(altchaEl.value)
   try {
@@ -221,6 +241,7 @@ onUnmounted(() => {
 
 defineExpose({
   reset,
+  refresh,
   remove,
   provider,
 })

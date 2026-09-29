@@ -36,6 +36,7 @@ import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
+import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { ACCOUNT_API_URL, availableAPIs, currentAPIKey, isDev, setSelectedAPIKey } from '@/shared/config'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 import { copyToClipboard } from '@/shared/utils'
@@ -146,67 +147,47 @@ async function resetToken() {
       isLoading.value = false
     })
 }
-async function BindBili() {
+async function submitBiliCode(path: 'bind-bili' | 'change-bili', successText: string) {
   if (!biliCode.value) {
     message.error('身份码不能为空')
     return
   }
   isLoading.value = true
-  await QueryGetAPI<{
-    uname: string
-    uid: number
-    uface: string
-    room_id: number
-  }>(`${ACCOUNT_API_URL}bind-bili`, { code: biliCode.value }, [['Turnstile', token.value]])
-    .then(async (data) => {
-      if (data.code == 200) {
-        message.success('已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码')
-        bindBiliCodeModalVisiable.value = false
-        biliCode.value = ''
-        await refreshAccountState()
-      } else {
-        message.error(data.message)
-      }
+  try {
+    const data = await requestWithCaptchaRetry({
+      getToken: () => token.value,
+      refresh: () => refreshCaptcha(turnstile.value),
+      request: (captchaToken) =>
+        QueryGetAPI<{ uname: string; uid: number; uface: string; room_id: number }>(
+          `${ACCOUNT_API_URL}${path}`,
+          { code: biliCode.value },
+          [['Turnstile', captchaToken]],
+        ),
     })
-    .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
-    })
-    .finally(() => {
-      turnstile.value?.reset()
-      isLoading.value = false
-    })
+    if (data.code == 200) {
+      message.success(successText)
+      bindBiliCodeModalVisiable.value = false
+      biliCode.value = ''
+      await refreshAccountState()
+      return
+    }
+    message.error(data.message)
+  } catch (err) {
+    console.error(err)
+    message.error('发生错误')
+  } finally {
+    turnstile.value?.reset()
+    isLoading.value = false
+  }
 }
-async function ChangeBili() {
-  if (!biliCode.value) {
-    message.error('身份码不能为空')
-    return
-  }
-  isLoading.value = true
-  await QueryGetAPI<{
-    uname: string
-    uid: number
-    uface: string
-    room_id: number
-  }>(`${ACCOUNT_API_URL}change-bili`, { code: biliCode.value }, [['Turnstile', token.value]])
-    .then(async (data) => {
-      if (data.code == 200) {
-        message.success('已更新身份码')
-        bindBiliCodeModalVisiable.value = false
-        biliCode.value = ''
-        await refreshAccountState()
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
-    })
-    .finally(() => {
-      turnstile.value?.reset()
-      isLoading.value = false
-    })
+function BindBili() {
+  return submitBiliCode(
+    'bind-bili',
+    '已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码',
+  )
+}
+function ChangeBili() {
+  return submitBiliCode('change-bili', '已更新身份码')
 }
 onMounted(() => {
   checkUpdateNote()

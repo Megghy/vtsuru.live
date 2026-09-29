@@ -23,6 +23,7 @@ import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { DuplicateVideoPolicy } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
+import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { VIDEO_COLLECT_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -168,26 +169,30 @@ async function addVideo() {
 
   isLoading.value = true
   const payload = { ...addModel.value, id: table.value?.id ?? currentId() }
-  const headers: [string, string][] = [['Turnstile', token.value]]
 
   try {
-    const response = await (isBiliAuthed.value
-      ? biliAuth.QueryBiliAuthPostAPI(`${VIDEO_COLLECT_API_URL}add`, payload, headers)
-      : QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, payload, headers))
+    const response = await requestWithCaptchaRetry({
+      getToken: () => token.value,
+      refresh: () => refreshCaptcha(turnstile.value),
+      request: (captchaToken) => {
+        const headers: [string, string][] = [['Turnstile', captchaToken]]
+        return isBiliAuthed.value
+          ? biliAuth.QueryBiliAuthPostAPI(`${VIDEO_COLLECT_API_URL}add`, payload, headers)
+          : QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, payload, headers)
+      },
+    })
     if (response.code !== 200) throw new Error(response.message)
 
     submitted.value = true
     addModel.value.video = ''
     addModel.value.description = ''
-    token.value = ''
-    turnstile.value?.reset()
     await loadTable()
   } catch (error) {
     console.error('推荐视频失败', error)
     message.error(error instanceof Error ? error.message : '推荐失败')
-    turnstile.value?.reset()
   } finally {
     isLoading.value = false
+    turnstile.value?.reset()
   }
 }
 

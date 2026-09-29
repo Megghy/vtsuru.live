@@ -12,7 +12,9 @@ import type {
   ForumTopicModel,
   ForumTopicSortTypes,
 } from '@/api/models/forum'
+import type { APIRoot } from '@/api/api-models'
 import { QueryGetAPI, QueryGetPaginationAPI, QueryPostAPI } from '@/api/query'
+import { requestWithCaptchaRetry } from '@/shared/captcha'
 import { FORUM_API_URL } from '@/shared/config'
 import { createNaiveUIApi } from '@/shared/utils'
 
@@ -160,65 +162,71 @@ export const useForumStore = defineStore('forum', () => {
     }
   }
 
-  async function PostTopic(topic: ForumPostTopicModel, token: string) {
+  async function postWithCaptcha<T>(
+    request: (token: string) => Promise<APIRoot<T>>,
+    token: string,
+    refresh: (() => Promise<string>) | undefined,
+    successText: string,
+    failText: string,
+  ) {
     try {
       isLoading.value = true
-      const data = await QueryPostAPI<ForumTopicModel>(`${FORUM_API_URL}post-topic`, topic, [['Turnstile', token]])
+      const data = await requestWithCaptchaRetry({
+        getToken: () => token,
+        refresh,
+        request,
+      })
       if (data.code == 200) {
-        message?.success('发布成功')
+        message?.success(successText)
         return data.data
-      } else {
-        message?.error(`发布失败: ${data.message}`)
-        console.error(`发布失败: ${data.message}`)
-        return undefined
       }
+      message?.error(`${failText}: ${data.message}`)
+      console.error(`${failText}: ${data.message}`)
+      return undefined
     } catch (err) {
-      message?.error(`发布失败: ${err}`)
-      console.error(`发布失败: ${err}`)
+      message?.error(`${failText}: ${err}`)
+      console.error(`${failText}: ${err}`)
       return undefined
     } finally {
       isLoading.value = false
     }
   }
-  async function PostComment(model: { topic: number; content: string }, token: string) {
-    try {
-      isLoading.value = true
-      const data = await QueryPostAPI<ForumCommentModel>(`${FORUM_API_URL}post-comment`, model, [['Turnstile', token]])
-      if (data.code == 200) {
-        message?.success('评论成功')
-        return data.data
-      } else {
-        message?.error(`评论失败: ${data.message}`)
-        console.error(`评论失败: ${data.message}`)
-        return undefined
-      }
-    } catch (err) {
-      message?.error(`评论失败: ${err}`)
-      console.error(`评论失败: ${err}`)
-      return undefined
-    } finally {
-      isLoading.value = false
-    }
+  function PostTopic(topic: ForumPostTopicModel, token: string, refresh?: () => Promise<string>) {
+    return postWithCaptcha(
+      (captchaToken) => QueryPostAPI<ForumTopicModel>(`${FORUM_API_URL}post-topic`, topic, [['Turnstile', captchaToken]]),
+      token,
+      refresh,
+      '发布成功',
+      '发布失败',
+    )
   }
-  async function PostReply(model: { comment: number; content: string; replyTo?: number }, token: string) {
-    try {
-      isLoading.value = true
-      const data = await QueryPostAPI<ForumCommentModel>(`${FORUM_API_URL}post-reply`, model, [['Turnstile', token]])
-      if (data.code == 200) {
-        message?.success('评论成功')
-        return data.data
-      } else {
-        message?.error(`评论失败: ${data.message}`)
-        console.error(`评论失败: ${data.message}`)
-        return undefined
-      }
-    } catch (err) {
-      message?.error(`评论失败: ${err}`)
-      console.error(`评论失败: ${err}`)
-      return undefined
-    } finally {
-      isLoading.value = false
-    }
+  function PostComment(
+    model: { topic: number; content: string },
+    token: string,
+    refresh?: () => Promise<string>,
+  ) {
+    return postWithCaptcha(
+      (captchaToken) =>
+        QueryPostAPI<ForumCommentModel>(`${FORUM_API_URL}post-comment`, model, [['Turnstile', captchaToken]]),
+      token,
+      refresh,
+      '评论成功',
+      '评论失败',
+    )
+  }
+  function PostReply(
+    model: { comment: number; content: string; replyTo?: number },
+    token: string,
+    refresh?: () => Promise<string>,
+  ) {
+    return postWithCaptcha(
+      (captchaToken) =>
+        QueryPostAPI<ForumCommentModel>(`${FORUM_API_URL}post-reply`, model, [['Turnstile', captchaToken]]),
+      token,
+      refresh,
+      '评论成功',
+      '评论失败',
+    )
   }
   async function LikeTopic(topic: number, like: boolean) {
     try {

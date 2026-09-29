@@ -21,6 +21,7 @@ import type { AccountInfo } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI, QueryRequestError } from '@/api/query'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
+import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { ACCOUNT_API_URL } from '@/shared/config'
 
 interface RegisterModel {
@@ -407,21 +408,26 @@ async function onRegisterButtonClick() {
   const controller = beginRequest('register', '注册')
 
   try {
-    const data = await QueryPostAPI<string>(
-      `${ACCOUNT_API_URL}register`,
-      {
-        name: registerModel.value.username,
-        email: registerModel.value.email,
-        password: registerModel.value.password,
-      },
-      [['Turnstile', token.value]],
-      undefined,
-      {
-        signal: controller.signal,
-        timeoutMs: 8000,
-        retryOnFailover: false,
-      },
-    )
+    const data = await requestWithCaptchaRetry({
+      getToken: () => token.value,
+      refresh: () => refreshCaptcha(turnstile.value),
+      request: (captchaToken) =>
+        QueryPostAPI<string>(
+          `${ACCOUNT_API_URL}register`,
+          {
+            name: registerModel.value.username,
+            email: registerModel.value.email,
+            password: registerModel.value.password,
+          },
+          [['Turnstile', captchaToken]],
+          undefined,
+          {
+            signal: controller.signal,
+            timeoutMs: 8000,
+            retryOnFailover: false,
+          },
+        ),
+    })
 
     if (data.code !== 200) {
       const failureMessage = data.message || '注册失败'
@@ -496,16 +502,21 @@ async function onForgetPassword() {
   const controller = beginRequest('forget', '重置密码')
 
   try {
-    const data = await QueryGetAPI(
-      `${ACCOUNT_API_URL}reset-password`,
-      { email: inputForgetPasswordValue.value.trim() },
-      [['Turnstile', token.value]],
-      {
-        signal: controller.signal,
-        timeoutMs: 8000,
-        retryOnFailover: false,
-      },
-    )
+    const data = await requestWithCaptchaRetry({
+      getToken: () => token.value,
+      refresh: () => refreshCaptcha(turnstile.value),
+      request: (captchaToken) =>
+        QueryGetAPI(
+          `${ACCOUNT_API_URL}reset-password`,
+          { email: inputForgetPasswordValue.value.trim() },
+          [['Turnstile', captchaToken]],
+          {
+            signal: controller.signal,
+            timeoutMs: 8000,
+            retryOnFailover: false,
+          },
+        ),
+    })
 
     if (data.code !== 200) {
       setFeedback('error', 'error', data.message || '发送失败')
