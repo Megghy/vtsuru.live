@@ -1,9 +1,9 @@
 import { computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, type RouteMeta } from 'vue-router'
 
 import { usePersistedStorage } from '@/shared/storage/persist'
 
-export type ManageWorkspace = 'streamer' | 'user'
+export type ManageWorkspace = NonNullable<RouteMeta['workspace']>
 
 export const WORKSPACE_LABELS: Record<ManageWorkspace, string> = {
   streamer: '主播后台',
@@ -15,7 +15,7 @@ const DEFAULT_ROUTES: Record<ManageWorkspace, string> = {
   user: '/manage/user/points',
 }
 
-function workspaceOf(path: { meta: { workspace?: unknown } }): ManageWorkspace {
+function workspaceOf(path: { meta: RouteMeta }): ManageWorkspace {
   return path.meta.workspace === 'user' ? 'user' : 'streamer'
 }
 

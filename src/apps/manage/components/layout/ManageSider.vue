@@ -755,7 +755,6 @@ async function go(name: string) {
           关于本站
         </NButton>
       </div>
-      <div class="footer-by">By Megghy</div>
     </div>
   </aside>
 </template>
@@ -1100,12 +1099,5 @@ async function go(name: string) {
   font-size: 12px;
   color: var(--vtsuru-fg-muted);
   text-align: center;
-}
-
-.footer-by {
-  margin-top: 4px;
-  font-size: 12px;
-  text-align: center;
-  color: var(--vtsuru-fg-muted);
 }
 </style>

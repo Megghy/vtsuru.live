@@ -1,6 +1,7 @@
 import { AzureVoiceProvider } from './azure'
 import { CosyVoiceProvider, DEFAULT_COSYVOICE_MODEL, DEFAULT_COSYVOICE_VOICE } from './cosyvoice'
 import { CustomApiVoiceProvider } from './custom-api'
+import { DEFAULT_GROK_VOICE, GrokVoiceProvider } from './grok'
 import { LocalVoiceProvider } from './local'
 import { DEFAULT_MIMO_VOICE, MimoVoiceProvider } from './mimo'
 import { OpenAICompatibleVoiceProvider } from './openai'
@@ -35,6 +36,7 @@ registerVoiceProvider('azure', (getConfig) => new AzureVoiceProvider(getConfig))
 registerVoiceProvider('cosyvoice', (getConfig) => new CosyVoiceProvider(getConfig))
 registerVoiceProvider('api', (getConfig) => new CustomApiVoiceProvider(getConfig))
 registerVoiceProvider('mimo', (getConfig) => new MimoVoiceProvider(getConfig))
+registerVoiceProvider('grok-tts', (getConfig) => new GrokVoiceProvider(getConfig))
 registerVoiceProvider('openai', (getConfig) => new OpenAICompatibleVoiceProvider(getConfig))
 
 export * from './types'
@@ -44,7 +46,9 @@ export {
   CustomApiVoiceProvider,
   DEFAULT_COSYVOICE_MODEL,
   DEFAULT_COSYVOICE_VOICE,
+  DEFAULT_GROK_VOICE,
   DEFAULT_MIMO_VOICE,
+  GrokVoiceProvider,
   LocalVoiceProvider,
   MimoVoiceProvider,
   OpenAICompatibleVoiceProvider,

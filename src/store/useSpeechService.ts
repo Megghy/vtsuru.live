@@ -10,6 +10,7 @@ import {
   createVoiceProvider,
   DEFAULT_COSYVOICE_MODEL,
   DEFAULT_COSYVOICE_VOICE,
+  DEFAULT_GROK_VOICE,
   DEFAULT_MIMO_VOICE,
   hasVoiceProvider,
 } from '@/apps/open-live/voice-providers'
@@ -144,6 +145,7 @@ const DEFAULT_SETTINGS: SpeechSettings = {
       splitText: false,
     },
     mimo: { mimoVoice: DEFAULT_MIMO_VOICE, mimoStyleTag: '', mimoApiKey: '' },
+    'grok-tts': { voice: DEFAULT_GROK_VOICE, language: 'zh' },
     openai: { baseUrl: 'https://api.openai.com', apiKey: '', model: 'tts-1', voice: 'alloy', format: 'mp3' },
     cosyvoice: {
       apiKey: '',
@@ -303,37 +305,14 @@ function normalizeSettings(raw: any): SpeechSettings {
 
 function ensureProviderDefaults(settings: SpeechSettings) {
   if (!settings.providers) settings.providers = {}
-  if (!settings.providers.azure) {
-    settings.providers.azure = { ...DEFAULT_SETTINGS.providers.azure }
-  }
-  if (!settings.providers.api) {
-    settings.providers.api = { ...DEFAULT_SETTINGS.providers.api }
-  }
-  if (!settings.providers.mimo) {
-    settings.providers.mimo = { ...DEFAULT_SETTINGS.providers.mimo }
+  for (const [id, defaults] of Object.entries(DEFAULT_SETTINGS.providers)) {
+    const provider = (settings.providers[id] ??= structuredClone(defaults))
+    for (const [key, value] of Object.entries(defaults)) {
+      provider[key] ??= structuredClone(value)
+    }
   }
   if (!settings.providers.mimo.mimoVoice || settings.providers.mimo.mimoVoice === 'mimo_default') {
     settings.providers.mimo.mimoVoice = DEFAULT_MIMO_VOICE
-  }
-  settings.providers.mimo.mimoStyleTag ??= ''
-  settings.providers.mimo.mimoApiKey ??= ''
-  if (!settings.providers.openai) {
-    settings.providers.openai = { ...DEFAULT_SETTINGS.providers.openai }
-  } else {
-    settings.providers.openai.baseUrl ??= DEFAULT_SETTINGS.providers.openai.baseUrl
-    settings.providers.openai.model ??= DEFAULT_SETTINGS.providers.openai.model
-    settings.providers.openai.voice ??= DEFAULT_SETTINGS.providers.openai.voice
-    settings.providers.openai.format ??= DEFAULT_SETTINGS.providers.openai.format
-    settings.providers.openai.apiKey ??= ''
-  }
-  if (!settings.providers.cosyvoice) {
-    settings.providers.cosyvoice = { ...DEFAULT_SETTINGS.providers.cosyvoice }
-  } else {
-    settings.providers.cosyvoice.apiKey ??= ''
-    settings.providers.cosyvoice.model ??= DEFAULT_COSYVOICE_MODEL
-    settings.providers.cosyvoice.voice ??= DEFAULT_COSYVOICE_VOICE
-    settings.providers.cosyvoice.customVoices ??= []
-    settings.providers.cosyvoice.languageHint ??= 'zh'
   }
 
   // 新增字段迁移

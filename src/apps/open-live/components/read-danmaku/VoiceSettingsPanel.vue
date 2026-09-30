@@ -7,6 +7,7 @@ import { useSpeechService } from '@/store/useSpeechService'
 import AzureForm from './providers/AzureForm.vue'
 import CosyVoiceForm from './providers/CosyVoiceForm.vue'
 import CustomApiForm from './providers/CustomApiForm.vue'
+import GrokForm from './providers/GrokForm.vue'
 import LocalForm from './providers/LocalForm.vue'
 import MimoForm from './providers/MimoForm.vue'
 import OpenAIForm from './providers/OpenAIForm.vue'
@@ -26,6 +27,7 @@ const supportsProsody = computed(
 const providers = [
   { id: 'cosyvoice', title: 'CosyVoice3', desc: '阿里云百炼, 支持中英混合' },
   { id: 'mimo', title: 'MiMo TTS', desc: '小米 MiMo 语音, 支持风格标签' },
+  { id: 'grok-tts', title: 'Grok TTS', desc: '第三方渠道，不保证可用性' },
   { id: 'azure', title: 'Azure', desc: '本站托管的 Microsoft Azure 语音' },
   { id: 'local', title: '本地语音', desc: '使用浏览器内置 TTS' },
   { id: 'openai', title: 'OpenAI 兼容', desc: '直连 OpenAI Audio API', badge: '前端直连' },
@@ -102,6 +104,7 @@ const providers = [
       <CosyVoiceForm v-else-if="settings.provider === 'cosyvoice'" />
       <CustomApiForm v-else-if="settings.provider === 'api'" />
       <MimoForm v-else-if="settings.provider === 'mimo'" />
+      <GrokForm v-else-if="settings.provider === 'grok-tts'" />
       <OpenAIForm v-else-if="settings.provider === 'openai'" />
     </Transition>
   </div>
