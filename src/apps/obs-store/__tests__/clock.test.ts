@@ -53,7 +53,7 @@ describe('OBS Clock & Timer Component', () => {
       expect(clockComponent.id).toBe('clock')
       expect(clockComponent.status).toBe('ready')
       expect(clockComponent.obsPath).toBe('/obs-store/clock')
-      expect(clockComponent.managePath).toBe('/obs-store/clock-manage')
+      expect(clockComponent.managePath).toBe('/manage/obs-store?component=clock')
       expect(typeof clockComponent.manageComponent).toBe('function')
       expect(clockComponent.features.length).toBeGreaterThan(0)
     })

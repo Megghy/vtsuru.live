@@ -91,7 +91,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
   }
 
   // Cache cleanup before touching resources: stop, ended and failed startup may converge here.
-  async function release(current: AudioSession): Promise<void> {
+  function release(current: AudioSession): Promise<void> {
     if (current.cleanup) return current.cleanup
     let resolve!: () => void, reject!: (error: unknown) => void
     current.cleanup = new Promise<void>((yes, no) => {
@@ -128,7 +128,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
     if (!disposed) errorMessage.value = errorMessage.value ? `${errorMessage.value}；${message}` : message
     console.error(message, error)
   }
-  async function stopListening(): Promise<void> {
+  function stopListening(): Promise<void> {
     generation++
     const current = session
     session = undefined
@@ -214,7 +214,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
     setSpeaking(active)
     options.onVolume?.(volume, active)
   }
-  async function startListening(targetDeviceId?: string): Promise<boolean> {
+  function startListening(targetDeviceId?: string): Promise<boolean> {
     if (disposed) return Promise.resolve(false)
     const device = targetDeviceId ?? toValue(options.deviceId)
     const noiseSuppression = toValue(options.noiseSuppression) ?? false
@@ -322,7 +322,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
     options.onVolume?.(rawVolume.value, active)
     if (active) simulationTimer = setTimeout(() => simulateSpeaking(false), duration)
   }
-  async function calibrateNoise(): Promise<CalibrationResult> {
+  function calibrateNoise(): Promise<CalibrationResult> {
     if (!isListening.value || calibration || isSimulating.value)
       return Promise.reject(new Error('请先启动麦克风，并等待当前校准或模拟完成'))
     isCalibrating.value = true
