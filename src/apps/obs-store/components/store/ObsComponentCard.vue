@@ -11,7 +11,6 @@ import {
   NFlex,
   NIcon,
   NTag,
-  NText,
   NTooltip,
   useMessage,
 } from 'naive-ui'
@@ -19,6 +18,8 @@ import { computed, ref } from 'vue'
 
 import { getCategoryMeta } from '@/apps/obs-store/registry'
 import type { ObsComponentDefinition } from '@/apps/obs-store/registry'
+import { useAccount } from '@/api/account'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 
 const props = defineProps<{
   item: ObsComponentDefinition
@@ -29,22 +30,30 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const account = useAccount()
 const { copy, isSupported: isCopySupported } = useClipboard()
 const copied = ref(false)
 
-const isReady = computed(() => props.item.status === 'ready')
+const isReady = computed(() => props.item.status === 'ready' || props.item.status === 'beta')
+const statusLabel = computed(() => props.item.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中')
 const categoryMeta = computed(() => getCategoryMeta(props.item.category))
 
 const absoluteObsUrl = computed(() => {
-  if (!props.item.obsPath) return ''
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${props.item.obsPath}`
-  }
-  return props.item.obsPath
+  if (!props.item.obsPath || typeof window === 'undefined') return ''
+  return buildObsSourceUrl({
+    path: props.item.obsPath,
+    host: window.location.origin,
+    credential: props.item.requiresAccount ? 'public-id' : 'none',
+    userId: props.item.requiresAccount ? account.value.id : undefined,
+    params: props.item.requiresAccount ? { channel: 'default' } : undefined,
+  })
 })
 
 async function handleCopy() {
-  if (!props.item.obsPath) return
+  if (!absoluteObsUrl.value) {
+    message.warning(props.item.requiresAccount ? '请登录后生成 OBS 浏览器源链接' : '当前组件暂不可用')
+    return
+  }
 
   if (!isCopySupported) {
     message.warning('当前环境不支持直接写入剪贴板，请手动复制')
@@ -82,11 +91,11 @@ async function handleCopy() {
           <span class="card-title">{{ item.name }}</span>
           <NTag
             size="tiny"
-            :type="isReady ? 'success' : 'default'"
+            :type="props.item.status === 'beta' ? 'warning' : isReady ? 'success' : 'default'"
             :bordered="false"
             class="status-tag"
           >
-            {{ isReady ? '已就绪' : '规划中' }}
+            {{ statusLabel }}
           </NTag>
         </div>
         <div class="meta-row">
@@ -107,7 +116,7 @@ async function handleCopy() {
     </div>
 
     <!-- 卡片内容 -->
-    <div class="card-body">
+      <div class="card-body">
       <p class="card-desc">
         {{ item.shortDescription }}
       </p>
@@ -145,8 +154,8 @@ async function handleCopy() {
       </div>
 
       <!-- 推荐尺寸规格 -->
-      <div
-        v-if="item.defaultResolution"
+        <div
+          v-if="item.defaultResolution"
         class="resolution-info"
       >
         <span class="res-label">推荐尺寸:</span>
@@ -157,7 +166,7 @@ async function handleCopy() {
     <!-- 卡片底部操作栏 -->
     <div class="card-footer">
       <template v-if="isReady">
-        <NButton
+            <NButton
           type="primary"
           size="small"
           class="action-btn config-btn"
@@ -198,7 +207,8 @@ async function handleCopy() {
                 size="small"
                 secondary
                 tag="a"
-                :href="item.obsPath"
+                :href="absoluteObsUrl || undefined"
+                :disabled="!absoluteObsUrl"
                 target="_blank"
                 class="action-icon-btn"
               >
@@ -215,6 +225,10 @@ async function handleCopy() {
       <template v-else>
         <div class="planned-footer">
           <span class="planned-text">开发规划中，敬请期待</span>
+        </div>
+        <div class="requirements-row">
+          <span class="requirement-dot" :class="{ local: !item.requiresAccount }" />
+          {{ item.requiresAccount ? '需要账号同步' : '纯本地运行' }}
         </div>
       </template>
     </div>
@@ -397,6 +411,25 @@ async function handleCopy() {
   border-radius: 4px;
   color: var(--vtsuru-fg-muted);
   margin-top: auto;
+}
+
+.requirements-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--vtsuru-fg-muted);
+}
+
+.requirement-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vtsuru-brand);
+}
+
+.requirement-dot.local {
+  background: #10b981;
 }
 
 .res-label {

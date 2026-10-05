@@ -36,6 +36,8 @@ export interface ObsComponentDefinition {
   icon: Component
   /** OBS 浏览器源相对路径，例如 '/obs-store/gamepad' */
   obsPath?: string
+  /** 展示页是否需要带公开用户 ID 才能读取云端同步状态 */
+  requiresAccount?: boolean
   /** 独立配置管理页相对路径，例如 '/obs-store/gamepad-manage' */
   managePath?: string
   /** 推荐 OBS 尺寸 (宽 x 高) */

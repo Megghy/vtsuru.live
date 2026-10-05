@@ -3,7 +3,7 @@ import { useClipboard } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import { ArrowLeft24Regular } from '@vicons/fluent'
 import { NAlert, NButton, NCard, NIcon, NInput, NInputGroup, NSelect, NSpace, NTag, NText, useMessage } from 'naive-ui'
-import { computed, onScopeDispose, ref, watch } from 'vue'
+import { computed, onActivated, onDeactivated, onScopeDispose, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
@@ -21,10 +21,10 @@ import PngtuberExpressions from './PngtuberExpressions.vue'
 import PngtuberInputSettings from './PngtuberInputSettings.vue'
 import PngtuberMicrophone from './PngtuberMicrophone.vue'
 import { usePngtuberHotkeys } from './usePngtuberHotkeys'
-const message = useMessage(),
-  account = useAccount(),
-  route = useRoute(),
-  router = useRouter()
+const message = useMessage()
+const account = useAccount()
+const route = useRoute()
+const router = useRouter()
 const standalone = computed(() => route.name !== 'client-pngtuber-model')
 function goBack() {
   if (window.history.state?.back) {
@@ -33,7 +33,7 @@ function goBack() {
   }
   void router.push(standalone.value ? { name: 'manage-obsStore' } : { name: 'client-pngtuber' })
 }
-const { copy } = useClipboard()
+const { copy, isSupported: isCopySupported } = useClipboard()
 const channel = ref(firstQueryValue(route.query.channel) || 'default')
 const channelDraft = ref(channel.value)
 // An empty bridge default preserves the distinction between legacy snapshots and expressions.
@@ -59,15 +59,16 @@ const session = computed(() => `${userId.value}:${channel.value}`)
 const live = usePngtuberRuntime(userId, channel, true)
 const { runtime, connected, error: runtimeError } = live
 const controlDisabled = computed(() => !writable.value || !connected.value)
-const busy = ref(false),
-  assetError = ref(''),
-  localVolume = ref(0),
-  localSpeaking = ref(false)
+const active = ref(true)
+const busy = ref(false)
+const assetError = ref('')
+const localVolume = ref(0)
+const localSpeaking = ref(false)
 const localInput = computed(() => ['microphone', 'controller'].includes(state.value.inputMode))
 const previewVolume = computed(() => (localInput.value ? localVolume.value : runtime.value.volume))
 const previewSpeaking = computed(() => (localInput.value ? localSpeaking.value : runtime.value.isSpeaking))
-const bg = ref('checker'),
-  packageInput = ref<HTMLInputElement>()
+const bg = ref('checker')
+const packageInput = ref<HTMLInputElement>()
 const obsUrl = computed(() =>
   buildObsSourceUrl({
     path: '/obs-store/pngtuber',
@@ -130,8 +131,16 @@ function activate(expression: PngtuberExpression) {
 const hotkeys = usePngtuberHotkeys({
   expressions: () => state.value.expressions,
   runtime: () => runtime.value,
-  enabled: () => !controlDisabled.value,
+  enabled: () => active.value && !controlDisabled.value,
   control: (expressionId, duration) => control({ expressionId }, duration),
+})
+onActivated(() => {
+  active.value = true
+})
+onDeactivated(() => {
+  active.value = false
+  hotkeys.release()
+  if (state.value.inputMode === 'controller') void live.stopPublishing().catch(() => {})
 })
 onScopeDispose(() => {
   if (state.value.inputMode === 'controller') void live.stopPublishing().catch(() => {})
@@ -170,8 +179,8 @@ async function exportPackage() {
   }
 }
 async function importPackage(event: Event) {
-  const input = event.target as HTMLInputElement,
-    file = input.files?.[0]
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
   input.value = ''
   if (!file || !writable.value || busy.value) return
   const owner = session.value
@@ -188,6 +197,10 @@ async function importPackage(event: Event) {
   }
 }
 async function copyUrl() {
+  if (!isCopySupported.value) {
+    message.warning('当前环境不支持直接写入剪贴板，请手动复制')
+    return
+  }
   try {
     await copy(obsUrl.value)
     message.success('已复制 OBS 链接')

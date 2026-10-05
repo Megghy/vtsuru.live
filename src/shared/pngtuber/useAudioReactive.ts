@@ -1,4 +1,4 @@
-import { getCurrentInstance, onMounted, onScopeDispose, ref, toValue, watch } from 'vue'
+import { getCurrentInstance, onActivated, onDeactivated, onMounted, onScopeDispose, ref, toValue, watch } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 import { setInterval as workerInterval, clearInterval as clearWorkerInterval } from 'worker-timers'
 
@@ -41,19 +41,19 @@ function describeError(error: unknown): string {
 export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
   const mediaDevices = typeof navigator === 'undefined' ? undefined : navigator.mediaDevices
   const isSupported = !!mediaDevices?.getUserMedia && typeof AudioContext !== 'undefined'
-  const isListening = ref(false),
-    isStarting = ref(false),
-    isSpeaking = ref(false),
-    isSimulating = ref(false)
-  const rawVolume = ref(0),
-    smoothedVolume = ref(0),
-    isCalibrating = ref(false)
+  const isListening = ref(false)
+  const isStarting = ref(false)
+  const isSpeaking = ref(false)
+  const isSimulating = ref(false)
+  const rawVolume = ref(0)
+  const smoothedVolume = ref(0)
+  const isCalibrating = ref(false)
   const permissionState = ref<'prompt' | 'granted' | 'denied' | 'unsupported'>(isSupported ? 'prompt' : 'unsupported')
-  const errorMessage = ref<string | null>(null),
-    deviceList = ref<AudioDeviceOption[]>([])
-  let generation = 0,
-    enumeration = 0,
-    disposed = false
+  const errorMessage = ref<string | null>(null)
+  const deviceList = ref<AudioDeviceOption[]>([])
+  let generation = 0
+  let enumeration = 0
+  let disposed = false
   let session: AudioSession | undefined
   let cleanupInFlight: Promise<void> | undefined
   let startup: { key: string; promise: Promise<boolean> } | undefined
@@ -67,6 +67,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
       }
     | undefined
   const gate = createAudioGate()
+  let resumeAfterActivation = false
 
   function setSpeaking(value: boolean) {
     if (isSpeaking.value === value) return
@@ -90,7 +91,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
   }
 
   // Cache cleanup before touching resources: stop, ended and failed startup may converge here.
-  function release(current: AudioSession): Promise<void> {
+  async function release(current: AudioSession): Promise<void> {
     if (current.cleanup) return current.cleanup
     let resolve!: () => void, reject!: (error: unknown) => void
     current.cleanup = new Promise<void>((yes, no) => {
@@ -105,7 +106,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
         errors.push(error)
       }
     }
-    if (current.timer !== undefined) attempt(() => clearWorkerInterval(current.timer!))
+    if (current.timer !== undefined) attempt(() => clearWorkerInterval(current.timer))
     for (const remove of current.listeners) attempt(remove)
     for (const track of current.stream?.getTracks() ?? []) attempt(() => track.stop())
     attempt(() => current.source?.disconnect())
@@ -127,7 +128,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
     if (!disposed) errorMessage.value = errorMessage.value ? `${errorMessage.value}；${message}` : message
     console.error(message, error)
   }
-  function stopListening(): Promise<void> {
+  async function stopListening(): Promise<void> {
     generation++
     const current = session
     session = undefined
@@ -162,7 +163,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
     if (!isSupported || disposed) return
     const request = ++enumeration
     try {
-      const devices = await mediaDevices!.enumerateDevices()
+      const devices = await mediaDevices.enumerateDevices()
       if (!disposed && request === enumeration)
         deviceList.value = devices
           .filter((d) => d.kind === 'audioinput')
@@ -178,7 +179,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
       return
     }
     try {
-      current.analyser!.getFloatTimeDomainData(buffer)
+      current.analyser.getFloatTimeDomainData(buffer)
     } catch (error) {
       stopWithMessage(`麦克风采样失败：${describeError(error)}`)
       return
@@ -213,7 +214,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
     setSpeaking(active)
     options.onVolume?.(volume, active)
   }
-  function startListening(targetDeviceId?: string): Promise<boolean> {
+  async function startListening(targetDeviceId?: string): Promise<boolean> {
     if (disposed) return Promise.resolve(false)
     const device = targetDeviceId ?? toValue(options.deviceId)
     const noiseSuppression = toValue(options.noiseSuppression) ?? false
@@ -236,7 +237,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
           errorMessage.value = '当前环境不支持麦克风采集'
           return false
         }
-        const stream = await mediaDevices!.getUserMedia({
+        const stream = await mediaDevices.getUserMedia({
           audio: {
             ...(device && device !== 'default' ? { deviceId: { exact: device } } : {}),
             noiseSuppression,
@@ -321,7 +322,7 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
     options.onVolume?.(rawVolume.value, active)
     if (active) simulationTimer = setTimeout(() => simulateSpeaking(false), duration)
   }
-  function calibrateNoise(): Promise<CalibrationResult> {
+  async function calibrateNoise(): Promise<CalibrationResult> {
     if (!isListening.value || calibration || isSimulating.value)
       return Promise.reject(new Error('请先启动麦克风，并等待当前校准或模拟完成'))
     isCalibrating.value = true
@@ -341,8 +342,18 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
     mediaDevices?.addEventListener('devicechange', deviceChanged)
     if (options.autoStart) void startListening()
   }
-  if (getCurrentInstance()) onMounted(initialize)
-  else initialize()
+  if (getCurrentInstance()) {
+    onMounted(initialize)
+    onDeactivated(() => {
+      resumeAfterActivation = isListening.value || isStarting.value
+      if (resumeAfterActivation) void stopListening().catch(() => {})
+    })
+    onActivated(() => {
+      if (!resumeAfterActivation || disposed) return
+      resumeAfterActivation = false
+      void startListening()
+    })
+  } else initialize()
   onScopeDispose(() => {
     disposed = true
     mediaDevices?.removeEventListener('devicechange', deviceChanged)

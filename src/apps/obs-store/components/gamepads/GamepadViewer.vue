@@ -15,7 +15,6 @@ import {
   NSelect,
   NSlider,
   NSpace,
-  NSwitch,
   NTag,
   NText,
   useMessage,
@@ -102,7 +101,7 @@ const displayAbsoluteUrl = computed(() => {
 })
 
 async function copyObsUrl() {
-  if (!isCopySupported) {
+  if (!isCopySupported.value) {
     message.warning('当前环境不支持直接写入剪贴板，请手动复制')
     return
   }

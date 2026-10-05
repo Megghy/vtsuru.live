@@ -22,7 +22,6 @@ import {
   NInputNumber,
   NSelect,
   NSpace,
-  NSpin,
   NSwitch,
   NText,
   NTooltip,
@@ -30,10 +29,11 @@ import {
 } from 'naive-ui'
 import {
   computed,
-  onMounted,
-  onUnmounted,
+  onActivated,
+  onDeactivated,
   ref,
 } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
@@ -46,7 +46,9 @@ import type { CounterAction, CounterState, CounterTheme } from './types'
 const message = useMessage()
 const { copy, isSupported: isCopySupported } = useClipboard()
 
-const channelId = ref<string>('default')
+const route = useRoute()
+const channelId = ref<string>(typeof route.query.channel === 'string' ? route.query.channel : 'default')
+const channelDraft = ref(channelId.value)
 const copied = ref(false)
 
 const {
@@ -56,6 +58,8 @@ const {
   currentHash,
   isSyncing,
   lastSyncError,
+  hasPendingChanges,
+  retry,
 } = useObsBridge<CounterState, CounterAction>({
   componentId: 'counter',
   channelId,
@@ -80,7 +84,6 @@ const obsAbsoluteUrl = computed(() => buildObsSourceUrl({
   path: '/obs-store/counter', host: window.location.origin, credential: 'public-id',
   userId: account.value.id, params: { channel: channelId.value },
 }))
-const obsRelativeUrl = obsAbsoluteUrl
 
 function handleIncrement(amount = 1) {
   const newCount = state.value.count + amount
@@ -100,7 +103,7 @@ function handleReset() {
 }
 
 async function copyObsUrl() {
-  if (!isCopySupported) {
+  if (!isCopySupported.value) {
     message.warning('当前环境不支持直接写入剪贴板，请手动复制')
     return
   }
@@ -119,7 +122,7 @@ async function copyObsUrl() {
 // 弹出独立控制小窗
 function openPopoutWindow() {
   if (typeof window === 'undefined') return
-  const url = `/obs-store/counter-manage`
+  const url = `/manage/obs-store?component=counter&channel=${encodeURIComponent(channelId.value)}`
   window.open(
     url,
     'VtsuruCounterPopout',
@@ -143,17 +146,27 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-onMounted(() => {
+function changeChannel() {
+  const next = channelDraft.value.trim() || 'default'
+  channelId.value = next
+  channelDraft.value = next
+}
+
+function activateKeyboard() {
   if (typeof window !== 'undefined') {
     window.addEventListener('keydown', handleKeyDown)
   }
-})
+}
 
-onUnmounted(() => {
+function deactivateKeyboard() {
   if (typeof window !== 'undefined') {
     window.removeEventListener('keydown', handleKeyDown)
   }
-})
+}
+
+onActivated(activateKeyboard)
+onDeactivated(deactivateKeyboard)
+activateKeyboard()
 </script>
 
 <template>
@@ -181,14 +194,45 @@ onUnmounted(() => {
               class="sync-indicator-dot"
               :class="{ syncing: isSyncing, error: lastSyncError }"
             />
-            <span v-if="lastSyncError">同步连接异常，重试中...</span>
+            <span v-if="lastSyncError">同步失败，请重试</span>
             <span v-else-if="isSyncing">正在同步状态...</span>
+            <span v-else-if="hasPendingChanges">有修改尚未保存</span>
             <span v-else-if="currentHash">已同步 (Hash: {{ currentHash.slice(0, 8) }})</span>
             <span v-else>就绪</span>
           </div>
         </div>
 
+        <NSpace
+          align="center"
+          :size="6"
+        >
+          <NInput
+            v-model:value="channelDraft"
+            size="small"
+            placeholder="频道"
+            style="width: 120px"
+            @keyup.enter="changeChannel"
+          />
+          <NButton
+            size="small"
+            secondary
+            @click="changeChannel"
+          >
+            切换频道
+          </NButton>
+        </NSpace>
+
         <NSpace size="small">
+          <NButton
+            v-if="lastSyncError"
+            size="small"
+            secondary
+            :loading="isSyncing"
+            :disabled="isSyncing"
+            @click="retry"
+          >
+            重试同步
+          </NButton>
           <NTooltip trigger="hover">
             <template #trigger>
               <NButton

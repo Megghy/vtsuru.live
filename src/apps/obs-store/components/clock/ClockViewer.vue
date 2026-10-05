@@ -31,6 +31,7 @@ import {
   onMounted,
   ref,
 } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
@@ -54,7 +55,9 @@ import type {
 const message = useMessage()
 const { copy, isSupported: isCopySupported } = useClipboard()
 
-const channelId = ref<string>('default')
+const route = useRoute()
+const channelId = ref<string>(typeof route.query.channel === 'string' ? route.query.channel : 'default')
+const channelDraft = ref(channelId.value)
 const copied = ref(false)
 
 const {
@@ -64,6 +67,8 @@ const {
   currentHash,
   isSyncing,
   lastSyncError,
+  hasPendingChanges,
+  retry,
 } = useObsBridge<ClockState, ClockAction>({
   componentId: 'clock',
   channelId,
@@ -71,9 +76,7 @@ const {
   role: 'controller',
 })
 
-onMounted(() => {
-  loadObsStoreFonts(OBS_CLOCK_FONTS)
-})
+onMounted(() => loadObsStoreFonts(OBS_CLOCK_FONTS))
 
 // 监视器背景
 const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
@@ -87,7 +90,7 @@ const obsAbsoluteUrl = computed(() => buildObsSourceUrl({
 const obsRelativeUrl = obsAbsoluteUrl
 
 async function copyObsUrl() {
-  if (!isCopySupported) {
+  if (!isCopySupported.value) {
     message.warning('当前环境不支持直接写入剪贴板，请手动复制')
     return
   }
@@ -103,10 +106,16 @@ async function copyObsUrl() {
   }
 }
 
+function changeChannel() {
+  const next = channelDraft.value.trim() || 'default'
+  channelId.value = next
+  channelDraft.value = next
+}
+
 function openPopoutWindow() {
   if (typeof window === 'undefined') return
   window.open(
-    `/obs-store/clock-manage`,
+    `/manage/obs-store?component=clock&channel=${encodeURIComponent(channelId.value)}`,
     'VtsuruClockPopout',
     'width=440,height=680,menubar=no,toolbar=no,location=no,status=no',
   )
@@ -179,12 +188,33 @@ function quickSetMinutes(mins: number) {
               class="sync-indicator-dot"
               :class="{ syncing: isSyncing, error: lastSyncError }"
             />
-            <span v-if="lastSyncError">同步连接异常，重试中...</span>
+            <span v-if="lastSyncError">同步失败，请重试</span>
             <span v-else-if="isSyncing">正在同步状态...</span>
+            <span v-else-if="hasPendingChanges">有修改尚未保存</span>
             <span v-else-if="currentHash">已同步 (Hash: {{ currentHash.slice(0, 8) }})</span>
             <span v-else>就绪</span>
           </div>
         </div>
+
+        <NSpace
+          align="center"
+          :size="6"
+        >
+          <NInput
+            v-model:value="channelDraft"
+            size="small"
+            placeholder="频道"
+            style="width: 120px"
+            @keyup.enter="changeChannel"
+          />
+          <NButton
+            size="small"
+            secondary
+            @click="changeChannel"
+          >
+            切换频道
+          </NButton>
+        </NSpace>
 
         <!-- 模式切换控制器 -->
         <NRadioGroup
@@ -206,6 +236,16 @@ function quickSetMinutes(mins: number) {
 
         <!-- 快捷操作按钮 -->
         <NSpace :size="6">
+          <NButton
+            v-if="lastSyncError"
+            size="small"
+            secondary
+            :loading="isSyncing"
+            :disabled="isSyncing"
+            @click="retry"
+          >
+            重试同步
+          </NButton>
           <NTooltip trigger="hover">
             <template #trigger>
               <NButton

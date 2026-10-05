@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NSelect, NSlider, NText, useMessage } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
 import { useSpeechService } from '@/store/useSpeechService'
@@ -8,11 +8,13 @@ import { useSpeechService } from '@/store/useSpeechService'
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 
+const props = defineProps<{ providerId: string }>()
 const speechService = useSpeechService()
 const { settings } = speechService
 const message = useMessage()
 const voices = ref<VoiceOption[]>([])
 const loading = ref(false)
+const rateLimits = computed(() => (props.providerId === 'grok-tts' ? [0.7, 1.5] : [0.5, 2]))
 const languageOptions = [
   { label: '中文', value: 'zh' },
   { label: '自动识别', value: 'auto' },
@@ -26,7 +28,7 @@ async function loadVoices() {
   try {
     voices.value = await speechService.getCurrentProvider()!.getVoices()
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '获取 Grok 音色失败')
+    message.error(error instanceof Error ? error.message : '获取音色失败')
   } finally {
     loading.value = false
   }
@@ -44,16 +46,19 @@ onMounted(loadVoices)
     >
     <SectionField label="音色">
       <VoiceSelectWithPreview
-        v-model="settings.providers['grok-tts'].voice"
+        v-model="settings.providers[providerId].voice"
         :options="voices"
         :loading="loading"
-        placeholder="Eve"
+        placeholder="选择音色"
         @focus="loadVoices"
       />
     </SectionField>
-    <SectionField label="语言">
+    <SectionField
+      v-if="providerId === 'grok-tts'"
+      label="语言"
+    >
       <NSelect
-        v-model:value="settings.providers['grok-tts'].language"
+        v-model:value="settings.providers[providerId].language"
         :options="languageOptions"
         size="small"
       />
@@ -64,8 +69,8 @@ onMounted(loadVoices)
     >
       <NSlider
         v-model:value="settings.speechInfo.rate"
-        :min="0.7"
-        :max="1.5"
+        :min="rateLimits[0]"
+        :max="rateLimits[1]"
         :step="0.01"
       />
     </SectionField>

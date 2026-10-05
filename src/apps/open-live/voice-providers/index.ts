@@ -5,6 +5,7 @@ import { DEFAULT_GROK_VOICE, GrokVoiceProvider } from './grok'
 import { LocalVoiceProvider } from './local'
 import { DEFAULT_MIMO_VOICE, MimoVoiceProvider } from './mimo'
 import { OpenAICompatibleVoiceProvider } from './openai'
+import { DEFAULT_QWEN_VOICE, QwenVoiceProvider } from './qwen'
 import type { ConfigSource, VoiceProvider } from './types'
 
 type ProviderFactory = (getConfig: ConfigSource) => VoiceProvider
@@ -37,6 +38,7 @@ registerVoiceProvider('cosyvoice', (getConfig) => new CosyVoiceProvider(getConfi
 registerVoiceProvider('api', (getConfig) => new CustomApiVoiceProvider(getConfig))
 registerVoiceProvider('mimo', (getConfig) => new MimoVoiceProvider(getConfig))
 registerVoiceProvider('grok-tts', (getConfig) => new GrokVoiceProvider(getConfig))
+registerVoiceProvider('qwen-tts', (getConfig) => new QwenVoiceProvider(getConfig))
 registerVoiceProvider('openai', (getConfig) => new OpenAICompatibleVoiceProvider(getConfig))
 
 export * from './types'
@@ -48,8 +50,10 @@ export {
   DEFAULT_COSYVOICE_VOICE,
   DEFAULT_GROK_VOICE,
   DEFAULT_MIMO_VOICE,
+  DEFAULT_QWEN_VOICE,
   GrokVoiceProvider,
   LocalVoiceProvider,
   MimoVoiceProvider,
   OpenAICompatibleVoiceProvider,
+  QwenVoiceProvider,
 }

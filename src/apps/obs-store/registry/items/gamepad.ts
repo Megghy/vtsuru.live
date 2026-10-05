@@ -13,7 +13,8 @@ export const gamepadComponent: ObsComponentDefinition = {
   tags: ['Gamepad', 'Xbox', 'PS5', 'Switch', 'SVG矢量', '60+ FPS', '零延迟'],
   icon: GameControllerOutline,
   obsPath: '/obs-store/gamepad',
-  managePath: '/obs-store/gamepad-manage',
+  requiresAccount: false,
+  managePath: '/manage/obs-store?component=gamepad',
   defaultResolution: { width: 800, height: 500, label: '标准比例 (800×500 px)' },
   supportedResolutions: [
     { width: 800, height: 500, label: '标准尺寸 (800×500 px)' },
@@ -28,5 +29,5 @@ export const gamepadComponent: ObsComponentDefinition = {
     '参数全通过 URL query 驱动，纯本地浏览器源即开即用',
   ],
   version: '2.0.0',
-  manageComponent: () => import('@/apps/obs-store/components/gamepads/GamepadViewer.vue'),
+  manageComponent: async () => import('@/apps/obs-store/components/gamepads/GamepadViewer.vue'),
 }

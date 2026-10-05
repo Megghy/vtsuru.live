@@ -171,6 +171,14 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   useLoadingBarStore().loadingBar?.start()
 
+  const legacyObsManage = /^\/obs-store\/(gamepad|counter|clock|pngtuber)-manage$/u.exec(to.path)
+  if (legacyObsManage) {
+    return {
+      name: 'manage-obsStore',
+      query: { ...to.query, component: legacyObsManage[1] },
+    }
+  }
+
   // iOS Safari / QQ 等 WebView 会把路径里的 @ 百分号编码成 %40, 而 vue-router 用未解码的 pathname
   // 匹配字面量 @, 导致 /@:id 匹配失败落到 notfound. 这里规范化后重定向回 /@.
   if (to.path.startsWith('/%40')) {

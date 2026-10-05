@@ -1,4 +1,4 @@
-import { computed, onScopeDispose, ref, toValue, watch } from 'vue'
+import { computed, onActivated, onDeactivated, onScopeDispose, ref, toValue, watch } from 'vue'
 import type { Ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -30,6 +30,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
   const isReady = ref(false)
   const lastSyncError = ref(false)
   const errorMessage = ref('')
+  const hasPendingChanges = ref(false)
   const actionHandlers = new Set<(action: TAction) => void>()
   let generation = 0
   let revision = 0
@@ -38,6 +39,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
   let timer: ReturnType<typeof setTimeout> | undefined
   let writeTask: Promise<void> | undefined
   let destroyed = false
+  let active = true
 
   function saveLocal() {
     if (options.persist === false) return
@@ -60,11 +62,11 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
     errorMessage.value = error instanceof Error ? error.message : String(error)
   }
   async function poll(epoch = generation) {
-    if (!userId.value || writeTask || destroyed || Object.keys(pending).length) return
+    if (!active || !userId.value || writeTask || destroyed || Object.keys(pending).length) return
     const requestedRevision = revision
     try {
       const snapshot = await getObsSyncState(options.componentId, channelId.value, currentHash.value, userId.value)
-      if (epoch !== generation || writeTask || requestedRevision !== revision) return
+      if (!active || epoch !== generation || writeTask || requestedRevision !== revision) return
       apply(snapshot)
       lastSyncError.value = false
       errorMessage.value = ''
@@ -104,6 +106,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
       }
       lastSyncError.value = false
       errorMessage.value = ''
+      hasPendingChanges.value = Object.keys(pending).length > 0
       saveLocal()
     } catch (error) {
       if (epoch === generation) fail(error)
@@ -111,7 +114,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
       if (epoch === generation) isSyncing.value = false
     }
   }
-  function retry() {
+  async function retry() {
     if (destroyed) return Promise.resolve()
     if (!writable) return poll()
     if (writeTask || !userId.value) return writeTask ?? Promise.resolve()
@@ -121,12 +124,15 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
     })
     return writeTask
   }
+  // This boundary intentionally throws synchronously so button handlers and callers can reject invalid writes immediately.
+  // eslint-disable-next-line ts/promise-function-async
   function updateState(value: Partial<TState> | ((previous: TState) => Partial<TState>)) {
     if (destroyed || !writable || !userId.value || userId.value !== account.value.id)
       throw new Error('请登录后修改自己的组件配置')
     revision++
     const patch = typeof value === 'function' ? value(state.value) : value
     pending = { ...pending, ...patch }
+    hasPendingChanges.value = true
     state.value = { ...state.value, ...patch }
     return retry()
   }
@@ -147,13 +153,26 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
   }
   async function cycle(epoch: number) {
     await poll(epoch)
-    if (epoch === generation && !destroyed) timer = setTimeout(() => void cycle(epoch), 1200)
+    if (active && epoch === generation && !destroyed) timer = setTimeout(() => void cycle(epoch), 1200)
+  }
+
+  function pausePolling() {
+    active = false
+    clearTimeout(timer)
+    timer = undefined
+  }
+
+  function resumePolling() {
+    if (destroyed || active) return
+    active = true
+    if (userId.value) void cycle(generation)
   }
   watch(
     [userId, channelId],
     () => {
       cleanup()
       pending = {}
+      hasPendingChanges.value = false
       state.value = structuredClone(options.defaultState)
       currentHash.value = ''
       isReady.value = false
@@ -185,10 +204,13 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
     cleanup()
     actionHandlers.clear()
   }
+  onActivated(resumePolling)
+  onDeactivated(pausePolling)
   onScopeDispose(destroy)
   return {
     state,
     updateState,
+    // eslint-disable-next-line ts/promise-function-async
     setState: (value: TState) => updateState(value),
     sendAction,
     onAction,
@@ -197,6 +219,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
     isReady,
     lastSyncError,
     errorMessage,
+    hasPendingChanges,
     retry,
     userId,
     channelName,

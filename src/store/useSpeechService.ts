@@ -12,6 +12,7 @@ import {
   DEFAULT_COSYVOICE_VOICE,
   DEFAULT_GROK_VOICE,
   DEFAULT_MIMO_VOICE,
+  DEFAULT_QWEN_VOICE,
   hasVoiceProvider,
 } from '@/apps/open-live/voice-providers'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -146,6 +147,7 @@ const DEFAULT_SETTINGS: SpeechSettings = {
     },
     mimo: { mimoVoice: DEFAULT_MIMO_VOICE, mimoStyleTag: '', mimoApiKey: '' },
     'grok-tts': { voice: DEFAULT_GROK_VOICE, language: 'zh' },
+    'qwen-tts': { voice: DEFAULT_QWEN_VOICE },
     openai: { baseUrl: 'https://api.openai.com', apiKey: '', model: 'tts-1', voice: 'alloy', format: 'mp3' },
     cosyvoice: {
       apiKey: '',

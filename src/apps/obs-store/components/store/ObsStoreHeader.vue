@@ -6,14 +6,13 @@ import {
   NInput,
   NRadioButton,
   NRadioGroup,
-  NText,
 } from 'naive-ui'
 import { computed } from 'vue'
 
 import {
   OBS_CATEGORIES,
   getCategoryCounts,
-  getReadyComponentsCount,
+  obsComponentList,
 } from '@/apps/obs-store/registry'
 import type { ObsCategory, ObsComponentStatus } from '@/apps/obs-store/registry'
 
@@ -30,7 +29,7 @@ const emit = defineEmits<{
 }>()
 
 const categoryCounts = computed(() => getCategoryCounts())
-const readyCount = computed(() => getReadyComponentsCount())
+const availableCount = computed(() => obsComponentList.filter((item) => item.status !== 'planned').length)
 </script>
 
 <template>
@@ -45,10 +44,10 @@ const readyCount = computed(() => getReadyComponentsCount())
           <h1 class="page-title">
             OBS 独立组件
           </h1>
-          <span class="ready-badge">{{ readyCount }} 个就绪</span>
+          <span class="ready-badge">{{ availableCount }} 个可用</span>
         </NFlex>
         <p class="page-desc">
-          用于 OBS 浏览器源的独立小工具，无需登录或服务端。支持在网页端配置并与 OBS 画面实时同步。
+          收录独立 OBS 浏览器源。纯本地组件即开即用，需要同步的组件会在配置台保存并实时更新。
         </p>
       </div>
 
@@ -102,6 +101,9 @@ const readyCount = computed(() => getReadyComponentsCount())
           </NRadioButton>
           <NRadioButton value="ready">
             已就绪
+          </NRadioButton>
+          <NRadioButton value="beta">
+            内测
           </NRadioButton>
           <NRadioButton value="planned">
             规划中

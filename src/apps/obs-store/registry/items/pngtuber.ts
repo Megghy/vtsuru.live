@@ -13,7 +13,8 @@ export const pngtuberComponent: ObsComponentDefinition = {
   tags: ['PNGtuber', '反应立绘', '麦克风', '弹跳'],
   icon: PersonOutline,
   obsPath: '/obs-store/pngtuber',
-  managePath: '/obs-store/pngtuber-manage',
+  requiresAccount: true,
+  managePath: '/manage/obs-store?component=pngtuber',
   defaultResolution: { width: 400, height: 500, label: '标准半身立绘 (400×500 px)' },
   supportedResolutions: [
     { width: 400, height: 500, label: '标准半身 (400×500 px)' },
@@ -28,5 +29,5 @@ export const pngtuberComponent: ObsComponentDefinition = {
     '素材支持 PNG/APNG/GIF/WebP 上传（≤16 MB）或外链，支持镜像与阴影',
   ],
   version: '1.1.0',
-  manageComponent: () => import('@/apps/obs-store/components/pngtuber/PngtuberViewer.vue'),
+  manageComponent: async () => import('@/apps/obs-store/components/pngtuber/PngtuberViewer.vue'),
 }

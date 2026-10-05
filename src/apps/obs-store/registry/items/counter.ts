@@ -13,7 +13,8 @@ export const counterComponent: ObsComponentDefinition = {
   tags: ['计数器', '受苦计数', '目标进度', '实时同步', '本地存储'],
   icon: AddCircleOutline,
   obsPath: '/obs-store/counter',
-  managePath: '/obs-store/counter-manage',
+  requiresAccount: true,
+  managePath: '/manage/obs-store?component=counter',
   defaultResolution: { width: 360, height: 140, label: '标准挂件 (360×140 px)' },
   supportedResolutions: [
     { width: 360, height: 140, label: '标准尺寸 (360×140 px)' },
@@ -28,5 +29,5 @@ export const counterComponent: ObsComponentDefinition = {
     '数据持久化保存于本地浏览器，场景切换或刷新不丢失',
   ],
   version: '1.0.0',
-  manageComponent: () => import('@/apps/obs-store/components/counter/CounterViewer.vue'),
+  manageComponent: async () => import('@/apps/obs-store/components/counter/CounterViewer.vue'),
 }

@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {
-  Dismiss24Regular,
-  Open24Regular,
-} from '@vicons/fluent'
+import { Open24Regular } from '@vicons/fluent'
 import {
   NButton,
   NDrawer,
@@ -13,13 +10,7 @@ import {
   NTag,
   NText,
 } from 'naive-ui'
-import {
-  computed,
-  defineAsyncComponent,
-  ref,
-  shallowRef,
-  watch,
-} from 'vue'
+import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
 
 import type { ObsComponentDefinition } from '@/apps/obs-store/registry'
 
@@ -32,7 +23,7 @@ const emit = defineEmits<{
   'update:show': [value: boolean]
 }>()
 
-const activeComponentLoader = shallowRef<any>(null)
+const activeComponentLoader = shallowRef<ReturnType<typeof defineAsyncComponent> | null>(null)
 const isLoading = ref(false)
 
 watch(
@@ -45,7 +36,15 @@ watch(
 
     try {
       isLoading.value = true
-      activeComponentLoader.value = defineAsyncComponent(comp.manageComponent)
+      activeComponentLoader.value = defineAsyncComponent({
+        loader: comp.manageComponent,
+        delay: 120,
+        timeout: 20_000,
+        onError(error, retry, fail, attempts) {
+          if (attempts <= 2) retry()
+          else fail()
+        },
+      })
     } catch {
       activeComponentLoader.value = null
     } finally {
@@ -57,9 +56,7 @@ watch(
 
 const isReady = computed(() => props.component?.status === 'ready')
 
-function handleClose() {
-  emit('update:show', false)
-}
+const statusLabel = computed(() => props.component?.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中')
 </script>
 
 <template>
@@ -97,10 +94,10 @@ function handleClose() {
                 <span class="header-title">{{ props.component.name }}</span>
                 <NTag
                   size="tiny"
-                  :type="isReady ? 'success' : 'default'"
+                  :type="props.component?.status === 'beta' ? 'warning' : isReady ? 'success' : 'default'"
                   :bordered="false"
                 >
-                  {{ isReady ? '已就绪' : '规划中' }}
+                  {{ statusLabel }}
                 </NTag>
               </NFlex>
               <NText

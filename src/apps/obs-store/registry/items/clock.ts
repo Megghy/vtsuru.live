@@ -13,7 +13,8 @@ export const clockComponent: ObsComponentDefinition = {
   tags: ['时钟', '开播倒计时', '速通计时', '瑞士版式', '辉光管', '像素街机', '秒级同步'],
   icon: TimerOutline,
   obsPath: '/obs-store/clock',
-  managePath: '/obs-store/clock-manage',
+  requiresAccount: true,
+  managePath: '/manage/obs-store?component=clock',
   defaultResolution: { width: 420, height: 160, label: '标准横条 (420×160 px)' },
   supportedResolutions: [
     { width: 420, height: 160, label: '标准尺寸 (420×160 px)' },
@@ -28,5 +29,5 @@ export const clockComponent: ObsComponentDefinition = {
     '基于通用 Hash 同步通道，网页端操作秒级同步至 OBS 画面',
   ],
   version: '1.0.0',
-  manageComponent: () => import('@/apps/obs-store/components/clock/ClockViewer.vue'),
+  manageComponent: async () => import('@/apps/obs-store/components/clock/ClockViewer.vue'),
 }
