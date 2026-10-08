@@ -353,7 +353,7 @@ function toggleGiftWindow() {
                   color="var(--vtsuru-primary)"
                 />
                 <NText strong>
-                  弹幕机浮窗
+                  弹幕机
                 </NText>
               </div>
               <NTag
@@ -367,7 +367,7 @@ function toggleGiftWindow() {
             </div>
 
             <div class="float-window-desc">
-              桌面半透明置顶弹幕，支持拖拽、穿透与自定义样式。
+              在桌面上显示弹幕机悬浮窗
             </div>
 
             <div class="float-window-actions">
@@ -431,7 +431,7 @@ function toggleGiftWindow() {
             </div>
 
             <div class="float-window-desc">
-              二合一礼物掉落与高能粉丝榜浮窗，多套精美预设。
+              礼物掉落与高能粉丝榜浮窗
             </div>
 
             <div class="float-window-actions">
@@ -544,7 +544,11 @@ function toggleGiftWindow() {
                 round
                 :bordered="false"
               >
-                点击前往直播间 ↗
+                <span>点击前往直播间</span>
+                <NIcon
+                  :component="Open24Regular"
+                  style="margin-left: 2px; vertical-align: -1px;"
+                />
               </NTag>
             </div>
           </div>

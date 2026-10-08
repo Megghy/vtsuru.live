@@ -50,13 +50,15 @@ export function useSuperChatThank(
                 return true
               }
 
-              // 价格过滤模式
-              if (
-                action.triggerConfig.scFilterMode === 'price' &&
-                action.triggerConfig.scMinPrice &&
-                (event.price || 0) < action.triggerConfig.scMinPrice
-              ) {
-                return false
+              // 价格过滤模式（支持最低与最高价格区间）
+              if (action.triggerConfig.scFilterMode === 'price') {
+                const price = event.price || 0
+                if (action.triggerConfig.scMinPrice !== undefined && action.triggerConfig.scMinPrice !== null && price < action.triggerConfig.scMinPrice) {
+                  return false
+                }
+                if (action.triggerConfig.scMaxPrice !== undefined && action.triggerConfig.scMaxPrice !== null && price > action.triggerConfig.scMaxPrice) {
+                  return false
+                }
               }
 
               return true

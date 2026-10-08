@@ -47,8 +47,10 @@ const keyboardStatus = ref('')
 
 const layoutModal = ref(false)
 const globalBgModal = ref(false)
+const isBlockMode = computed(() => editor.currentPage.value.mode === 'block')
 const isLegacyMode = computed(() => editor.currentPage.value.mode === 'legacy')
-const builderLayout = useBuilderLayout()
+const isContribMode = computed(() => editor.currentPage.value.mode === 'contrib')
+const builderLayout = useBuilderLayout(isBlockMode)
 const {
   bodyElement: builderBodyEl,
   columnWidths,
@@ -74,14 +76,21 @@ const columnResizeState = ref<ColumnResizeState | null>(null)
 const mediumPaneIds: BuilderColumnId[] = ['pages', 'blocks']
 const compactPaneIds: BuilderColumnId[] = ['pages', 'blocks', 'preview']
 const responsivePaneIds = computed<BuilderColumnId[]>(() => {
-  if (isLegacyMode.value) return ['preview']
+  if (!isBlockMode.value) {
+    return workspaceMode.value === 'medium' ? ['pages'] : ['pages', 'preview']
+  }
   return workspaceMode.value === 'medium' ? mediumPaneIds : compactPaneIds
 })
 const selectedResponsivePane = computed<BuilderColumnId>(() => {
-  if (workspaceMode.value === 'compact') {
-    return compactPaneIds.includes(compactPane.value) && !isLegacyMode.value ? compactPane.value : 'preview'
+  if (!isBlockMode.value) {
+    if (workspaceMode.value === 'compact') {
+      return ['pages', 'preview'].includes(compactPane.value) ? compactPane.value : 'preview'
+    }
+    return 'pages'
   }
-  if (isLegacyMode.value) return 'preview'
+  if (workspaceMode.value === 'compact') {
+    return compactPaneIds.includes(compactPane.value) ? compactPane.value : 'preview'
+  }
   return mediumPane.value
 })
 const workspaceGridStyle = computed(() => ({
@@ -91,13 +100,13 @@ const workspaceGridStyle = computed(() => ({
 }))
 const columnResizeTargets = computed<Partial<Record<BuilderColumnId, ColumnResizeTarget>>>(() => {
   if (workspaceMode.value === 'compact') return {}
-  if (isLegacyMode.value) return { preview: { id: 'props', direction: -1 } }
   if (workspaceMode.value === 'medium') {
     const targets: Partial<Record<BuilderColumnId, ColumnResizeTarget>> = {
       preview: { id: 'props', direction: -1 },
     }
-    if (!(mediumPane.value === 'pages' && isPagesCollapsed.value)) {
-      targets[mediumPane.value] = { id: mediumPane.value, direction: 1 }
+    const activeLeft = isBlockMode.value ? mediumPane.value : 'pages'
+    if (!(activeLeft === 'pages' && isPagesCollapsed.value)) {
+      targets[activeLeft] = { id: activeLeft, direction: 1 }
     }
     return targets
   }
@@ -380,16 +389,16 @@ onBeforeRouteLeave(() => {
 
           <div
             class="builder-pane-grid"
-            :class="{ 'is-legacy': isLegacyMode }"
+            :class="{ 'is-legacy': isLegacyMode, 'is-non-block': !isBlockMode }"
             :style="workspaceGridStyle"
           >
             <div
               v-for="id in DEFAULT_COLUMNS_ORDER"
-              v-show="!isLegacyMode || id === 'preview' || id === 'props'"
+              v-show="activeColumnsOrder.includes(id)"
               :key="id"
               class="builder-pane-slot"
               :class="{
-                'is-medium-active': id === 'preview' || id === 'props' || id === mediumPane,
+                'is-medium-active': id === 'preview' || id === 'props' || id === (isBlockMode ? mediumPane : 'pages'),
                 'is-compact-active': id === 'props' || id === selectedResponsivePane,
                 'is-wide-active': activeColumnsOrder.includes(id),
               }"
@@ -399,7 +408,7 @@ onBeforeRouteLeave(() => {
               <BuilderPaneHost
                 :pane-id="id"
                 :pages-collapsed="isPagesCollapsed"
-                :pages-collapsible="workspaceMode !== 'compact' && !isLegacyMode"
+                :pages-collapsible="workspaceMode !== 'compact' && id === 'pages'"
                 @toggle-pages-collapse="togglePagesCollapse"
               />
               <div
@@ -708,18 +717,6 @@ onBeforeRouteLeave(() => {
 
 .builder-body[data-workspace-mode='wide'] .builder-pane-slot.is-wide-active {
   display: flex;
-}
-
-.builder-body[data-workspace-mode='wide'] .builder-pane-grid.is-legacy {
-  grid-template-columns: var(--builder-legacy-columns);
-}
-
-.builder-body[data-workspace-mode='wide'] .builder-pane-grid.is-legacy [data-pane-id='preview'] {
-  order: 0 !important;
-}
-
-.builder-body[data-workspace-mode='wide'] .builder-pane-grid.is-legacy [data-pane-id='props'] {
-  order: 1 !important;
 }
 
 .builder-body[data-workspace-mode='medium'] .builder-pane-grid {

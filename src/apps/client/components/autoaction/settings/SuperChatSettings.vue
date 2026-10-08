@@ -15,7 +15,7 @@ defineProps({
 // SC过滤模式选项
 const scFilterModeOptions = [
   { label: '不进行额外过滤', value: 'none' },
-  { label: '按最低价格过滤', value: 'price' },
+  { label: '按价格区间过滤', value: 'price' },
 ]
 </script>
 
@@ -45,29 +45,41 @@ const scFilterModeOptions = [
         <transition name="fade">
           <NFormItem
             v-if="action.triggerConfig.scFilterMode === 'price'"
-            label="最低价格 (元)"
+            label="触发价格区间"
           >
             <template #label>
               <NTooltip trigger="hover">
                 <template #trigger>
-                  <span
-                    >最低价格
+                  <span>价格区间
                     <NIcon
                       :component="Info16Regular"
                       style="vertical-align: -2px"
                   /></span>
                 </template>
-                仅当 SC 价格大于或等于此值时才触发感谢
+                仅当 SC 价格在区间内才触发感谢。<br />
+                • 最低填 30 元可自动忽略 B 站每日赠送的 2 元免费 SC；<br />
+                • 填 2 ~ 29 元可针对 2 元小额 SC 设置专属感谢话术。
               </NTooltip>
             </template>
-            <NInputNumber
-              v-model:value="action.triggerConfig.scMinPrice"
-              :min="0"
-              style="width: 140px"
-              placeholder="0"
-            >
-              <template #suffix> 元 </template>
-            </NInputNumber>
+            <NFlex align="center" :size="8">
+              <NInputNumber
+                v-model:value="action.triggerConfig.scMinPrice"
+                :min="0"
+                style="width: 120px"
+                placeholder="最低 (如 30)"
+              >
+                <template #suffix> 元 </template>
+              </NInputNumber>
+              <span style="color: var(--vtsuru-fg-muted)">至</span>
+              <NInputNumber
+                v-model:value="action.triggerConfig.scMaxPrice"
+                :min="0"
+                style="width: 120px"
+                placeholder="不限"
+              >
+                <template #suffix> 元 </template>
+              </NInputNumber>
+            </NFlex>
           </NFormItem>
         </transition>
 

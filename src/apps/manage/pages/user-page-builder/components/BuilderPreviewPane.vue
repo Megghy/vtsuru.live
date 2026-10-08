@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  CodeSlashOutline,
   DesktopOutline,
   HandLeftOutline,
   NavigateOutline,
@@ -401,13 +402,47 @@ watch(
                     :bili-info="biliProfileQuery.data.value"
                   />
                 </template>
-                <NAlert
-                  v-else
-                  type="warning"
-                  :show-icon="true"
-                >
-                  当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}，非区块页，不展示预览。
-                </NAlert>
+                <template v-else-if="editor.currentPage.value.mode === 'contrib'">
+                  <div class="contrib-preview-placeholder">
+                    <div class="contrib-placeholder-card">
+                      <NIcon
+                        size="40"
+                        :component="CodeSlashOutline"
+                        style="color: var(--vtsuru-primary); margin-bottom: 8px"
+                      />
+                      <div class="contrib-placeholder-title">
+                        扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
+                      </div>
+                      <div class="contrib-placeholder-desc">
+                        扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId 与相关属性，保存后可在外部预览中查看实际渲染效果。
+                      </div>
+                      <NFlex
+                        justify="center"
+                        style="margin-top: 14px"
+                      >
+                        <NButton
+                          type="primary"
+                          secondary
+                          size="small"
+                          @click="editor.openPreview"
+                        >
+                          <template #icon>
+                            <NIcon><OpenOutline /></NIcon>
+                          </template>
+                          在对外页面中预览
+                        </NButton>
+                      </NFlex>
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <NAlert
+                    type="info"
+                    :show-icon="true"
+                  >
+                    当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
+                  </NAlert>
+                </template>
               </div>
             </Transition>
           </PhonePreview>
@@ -424,5 +459,38 @@ watch(
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+}
+
+.contrib-preview-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 24px;
+}
+
+.contrib-placeholder-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 380px;
+  padding: 24px 20px;
+  border-radius: 12px;
+  border: 1px dashed var(--vtsuru-border);
+  background: var(--vtsuru-bg-muted);
+}
+
+.contrib-placeholder-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
+  margin-bottom: 6px;
+}
+
+.contrib-placeholder-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--vtsuru-fg-muted);
 }
 </style>

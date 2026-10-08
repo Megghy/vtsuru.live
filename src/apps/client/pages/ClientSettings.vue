@@ -6,6 +6,7 @@ import {
   Alert24Filled,
   ArrowSync24Regular,
   Info24Filled,
+  People24Regular,
   Save24Filled,
   Settings24Filled,
 } from '@vicons/fluent'
@@ -34,6 +35,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ThemeType } from '@/api/api-models'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
+import BiliAccountManagerCard from '@/apps/client/components/settings/BiliAccountManagerCard.vue'
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
 import type { NotificationType } from '@/apps/client/store/useSettings'
 import { useSettings } from '@/apps/client/store/useSettings'
@@ -95,6 +97,11 @@ const navOptions: MenuOption[] = [
     label: '常规设置',
     key: 'general',
     icon: () => h(NIcon, null, { default: () => h(Settings24Filled) }),
+  },
+  {
+    label: 'B站账号管理',
+    key: 'bili-accounts',
+    icon: () => h(NIcon, null, { default: () => h(People24Regular) }),
   },
   {
     label: '系统通知',
@@ -364,6 +371,11 @@ function handleTitleClick() {
                       </NFormItem>
                     </NCard>
                   </NFlex>
+                </template>
+
+                <!-- B站账号管理 -->
+                <template v-else-if="currentTab === 'bili-accounts'">
+                  <BiliAccountManagerCard />
                 </template>
 
                 <!-- 系统通知 -->

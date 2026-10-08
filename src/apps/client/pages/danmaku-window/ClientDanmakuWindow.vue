@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { NSpin } from 'naive-ui'
+import {
+  Eye20Regular,
+  LockClosed20Regular,
+  LockOpen20Regular,
+  Payment20Regular,
+  PeopleCommunity20Regular,
+  ThumbLike20Regular,
+} from '@vicons/fluent'
+import { NIcon, NSpin } from 'naive-ui'
 import { nanoid } from 'nanoid'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import ClientDanmakuItem from '@/apps/client/components/danmaku/ClientDanmakuItem.vue'
-import type { DanmakuWindowBCData, DanmakuWindowSettings } from '@/apps/client/store/useDanmakuWindow'
+import type { DanmakuWindowBCData, DanmakuWindowSettings, LiveStatsData } from '@/apps/client/store/useDanmakuWindow'
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { getDanmakuWindowFilterType, removeDeletedSuperChats } from '@/shared/utils/danmakuWindowEvents'
@@ -91,6 +99,45 @@ const isUpdateScheduled = ref(false) // 新增：是否已安排更新
 const maxItems = computed(() => setting.value?.maxDanmakuCount || 50)
 const hasItems = computed(() => danmakuList.value.length > 0)
 const isInBatchUpdate = ref(false) // 添加批量更新状态标志
+
+// 实时统计状态
+const liveStats = ref<LiveStatsData>({
+  watchedCount: 0,
+  likeCount: 0,
+  totalIncome: 0,
+  onlineCount: 0,
+})
+
+function toggleInteractive() {
+  if (!bc) return
+  postBroadcastMessage(bc, {
+    type: 'toggle-interactive',
+  })
+}
+
+function formatStatCount(num: number): string {
+  if (!num || num <= 0) return '0'
+  if (num >= 10000) {
+    return `${(num / 10000).toFixed(1).replace(/\.0$/, '')}w`
+  }
+  return num.toLocaleString()
+}
+
+function formatIncomeDisplay(amount: number): string {
+  if (!amount || amount <= 0) return '0'
+  return amount % 1 === 0 ? String(amount) : amount.toFixed(1)
+}
+
+const hasVisibleStats = computed(() => {
+  if (!setting.value) return false
+  const s = setting.value
+  return (
+    s.showWatchedCount !== false ||
+    s.showLikeCount !== false ||
+    s.showIncome !== false ||
+    s.showOnlineCount !== false
+  )
+})
 
 // 动态设置CSS变量
 function updateCssVariables() {
@@ -252,6 +299,9 @@ onMounted(() => {
         updateCssVariables()
         console.log('[DanmakuWindow] 设置已更新:', data.data)
         break
+      case 'live-stats': // 接收实时统计数据
+        liveStats.value = { ...data.data }
+        break
       case 'clear-danmaku': // 处理清空弹幕
         danmakuList.value = []
         console.log('[DanmakuWindow] 弹幕已清空')
@@ -296,9 +346,88 @@ watch(
   <div
     v-else
     class="danmaku-window"
-    :class="{ 'has-items': hasItems, 'batch-update': isInBatchUpdate }"
+    :class="{
+      'has-items': hasItems,
+      'has-status-bar': setting.showStatusBar !== false && hasVisibleStats,
+      'batch-update': isInBatchUpdate,
+    }"
   >
     <div class="danmaku-window-bg" />
+
+    <!-- 顶部实时数据状态栏 (类似哔哩哔哩弹幕机互动面板) -->
+    <div
+      v-if="setting.showStatusBar !== false && hasVisibleStats"
+      class="danmaku-status-bar"
+    >
+      <div class="danmaku-status-items">
+        <!-- 观看人数 -->
+        <div
+          v-if="setting.showWatchedCount !== false"
+          class="status-pill"
+          title="累计观看/在看人数"
+        >
+          <NIcon
+            :component="Eye20Regular"
+            class="status-icon"
+          />
+          <span class="status-value">{{ formatStatCount(liveStats.watchedCount) }}</span>
+        </div>
+
+        <!-- 点赞数 -->
+        <div
+          v-if="setting.showLikeCount !== false"
+          class="status-pill"
+          title="本场点赞互动数"
+        >
+          <NIcon
+            :component="ThumbLike20Regular"
+            class="status-icon"
+          />
+          <span class="status-value">{{ formatStatCount(liveStats.likeCount) }}</span>
+        </div>
+
+        <!-- 收益金额 (由客户端设置决定是否显示与脱敏) -->
+        <div
+          v-if="setting.showIncome !== false"
+          class="status-pill"
+          :title="setting.hideIncomeAmount ? '本场收益（已脱敏隐藏）' : `本场收益：¥${liveStats.totalIncome.toFixed(1)}`"
+        >
+          <NIcon
+            :component="Payment20Regular"
+            class="status-icon"
+          />
+          <span class="status-value">¥ {{ setting.hideIncomeAmount ? '***' : formatIncomeDisplay(liveStats.totalIncome) }}</span>
+        </div>
+
+        <!-- 在线人数 -->
+        <div
+          v-if="setting.showOnlineCount !== false"
+          class="status-pill"
+          title="当前在场活跃人数"
+        >
+          <NIcon
+            :component="PeopleCommunity20Regular"
+            class="status-icon"
+          />
+          <span class="status-value">{{ formatStatCount(liveStats.onlineCount) }} 在线</span>
+        </div>
+      </div>
+
+      <!-- Mini 穿透切换按钮 (锁定/解锁) -->
+      <button
+        type="button"
+        class="status-mini-btn"
+        :class="{ 'is-locked': setting.interactive }"
+        :title="setting.interactive ? '鼠标穿透：已开启（点击关闭穿透）' : '鼠标穿透：已关闭（点击开启穿透）'"
+        @click="toggleInteractive"
+      >
+        <NIcon
+          :component="setting.interactive ? LockClosed20Regular : LockOpen20Regular"
+          class="mini-btn-icon"
+        />
+      </button>
+    </div>
+
     <div class="danmaku-list">
       <!-- 使用TransitionGroup替代普通div -->
       <TransitionGroup
@@ -374,9 +503,91 @@ body {
   pointer-events: none;
 }
 
-/* 没有弹幕时完全透明 */
-.danmaku-window:not(.has-items) {
+/* 没有弹幕且未启用状态栏时完全透明 */
+.danmaku-window:not(.has-items):not(.has-status-bar) {
   opacity: 0;
+}
+
+.danmaku-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  margin: 6px 8px 2px 8px;
+  background: var(--dw-bg-color, rgba(0, 0, 0, 0.6));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: calc(var(--dw-border-radius, 8px) * 0.75 + 2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: calc(var(--dw-font-size, 14px) * 0.88);
+  line-height: 1.2;
+  color: var(--dw-text-color, #ffffff);
+  user-select: none;
+  -webkit-app-region: drag;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.danmaku-status-items {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.92;
+  transition: opacity 0.2s ease;
+}
+
+.status-pill:hover {
+  opacity: 1;
+}
+
+.status-icon {
+  font-size: 1.15em;
+  opacity: 0.85;
+}
+
+.status-value {
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.status-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
+}
+
+.status-mini-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.status-mini-btn.is-locked {
+  background: rgba(96, 165, 250, 0.25);
+  color: #60a5fa;
+  opacity: 0.95;
+}
+
+.mini-btn-icon {
+  font-size: 13px;
 }
 
 .danmaku-list {

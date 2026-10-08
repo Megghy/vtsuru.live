@@ -7,6 +7,7 @@ import {
   NFlex,
   NIcon,
   NModal,
+  NPopover,
   NScrollbar,
   NSpin,
   NTabPane,
@@ -226,16 +227,31 @@ function confirmDelete(resource: BuilderResource) {
                   :wrap="false"
                   style="gap: 10px; min-width: 0"
                 >
-                  <img
+                  <NPopover
                     v-if="isImagePath(file.path) && !file.missing"
-                    :src="file.path"
-                    :alt="file.name || `资源 ${file.id}`"
-                    referrerpolicy="no-referrer"
-                    loading="lazy"
-                    decoding="async"
-                    class="resource-thumbnail"
-                    @load="readImageDimensions(file.id, $event)"
-                  />
+                    trigger="hover"
+                    placement="right"
+                  >
+                    <template #trigger>
+                      <img
+                        :src="file.path"
+                        :alt="file.name || `资源 ${file.id}`"
+                        referrerpolicy="no-referrer"
+                        loading="lazy"
+                        decoding="async"
+                        class="resource-thumbnail"
+                        @load="readImageDimensions(file.id, $event)"
+                      />
+                    </template>
+                    <div style="max-width: 320px; max-height: 320px; overflow: hidden; border-radius: 4px">
+                      <img
+                        :src="file.path"
+                        :alt="file.name"
+                        referrerpolicy="no-referrer"
+                        style="width: 100%; height: 100%; object-fit: contain; display: block"
+                      />
+                    </div>
+                  </NPopover>
                   <div
                     v-else
                     class="resource-thumbnail resource-placeholder"
@@ -355,13 +371,20 @@ function confirmDelete(resource: BuilderResource) {
   border: 1px solid var(--vtsuru-border);
   border-radius: 6px;
   object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.resource-thumbnail:hover {
+  transform: scale(1.05);
 }
 
 .resource-placeholder {
-  display: grid;
-  place-items: center;
-  color: var(--vtsuru-fg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
+  color: var(--vtsuru-fg-muted);
   background: var(--vtsuru-bg-muted);
 }
 
@@ -369,31 +392,20 @@ function confirmDelete(resource: BuilderResource) {
   min-width: 0;
 }
 
-.resource-path,
-.resource-locations {
+.resource-meta {
   display: block;
-  overflow-wrap: anywhere;
+  font-size: 12px;
 }
 
 .resource-path {
-  margin-top: 2px;
-}
-
-.resource-meta {
   display: block;
-  margin-top: 2px;
   font-size: 12px;
+  word-break: break-all;
 }
 
 .resource-locations {
-  margin-top: 8px;
-  padding-left: 58px;
+  display: block;
+  margin-top: 6px;
   font-size: 12px;
-}
-
-@media (max-width: 640px) {
-  .resource-locations {
-    padding-left: 0;
-  }
 }
 </style>

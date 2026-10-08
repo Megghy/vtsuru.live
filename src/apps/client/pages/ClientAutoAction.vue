@@ -2,6 +2,7 @@
 import {
   AppGeneric24Regular,
   ArrowLeft24Filled,
+  Bot24Regular,
   Chat24Regular,
   DataUsage24Regular,
   DoorArrowLeft24Regular,
@@ -48,7 +49,9 @@ import DataManager from '@/apps/client/components/autoaction/DataManager.vue'
 import CheckInSettings from '@/apps/client/components/autoaction/settings/CheckInSettings.vue'
 import GlobalScheduledSettings from '@/apps/client/components/autoaction/settings/GlobalScheduledSettings.vue'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
+import BiliAccountManagerCard from '@/apps/client/components/settings/BiliAccountManagerCard.vue'
 import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
+import { useBiliAccountManager } from '@/apps/client/store/useBiliAccountManager'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
@@ -58,6 +61,7 @@ const autoActionStore = useAutoAction()
 const accountStore = useAccount()
 const message = useMessage()
 const biliCookieStore = useBiliCookie()
+const accountManager = useBiliAccountManager()
 const webFetcherStore = useWebFetcher()
 const biliFunc = useBiliFunction()
 
@@ -181,6 +185,11 @@ const menuOptions = computed(() => [
     key: 'group-settings',
     type: 'group',
     children: [
+      {
+        label: renderMenuLabel('发弹幕账号 (多账号管理)', 'account-settings'),
+        key: 'account-settings',
+        icon: renderIcon(Bot24Regular),
+      },
       {
         label: renderMenuLabel('签到设置', 'check-in-settings'),
         key: 'check-in-settings',
@@ -352,6 +361,27 @@ const triggerTypeOptions = [
             align="center"
             :size="10"
           >
+            <NTooltip>
+              <template #trigger>
+                <NTag
+                  :type="biliFunc.activeDanmakuAccountType === 'bot' ? 'info' : 'default'"
+                  round
+                  style="cursor: pointer"
+                  @click="currentMenuKey = 'account-settings'"
+                >
+                  <template #icon>
+                    <NIcon :component="biliFunc.activeDanmakuAccountType === 'bot' ? Bot24Regular : PersonAdd24Regular" />
+                  </template>
+                  {{
+                    `发弹幕: ${accountManager.danmakuAccount?.name || '未设置'}${
+                      accountManager.danmakuAccount?.alias ? ` (${accountManager.danmakuAccount?.alias})` : ''
+                    }`
+                  }}
+                </NTag>
+              </template>
+              点击管理 B 站账号池，自由选择发弹幕账号（支持添加多个账号随时切换）
+            </NTooltip>
+
             <NTag
               :type="activeRulesCount > 0 ? 'success' : 'default'"
               round
@@ -359,7 +389,6 @@ const triggerTypeOptions = [
             >
               {{ `${activeRulesCount} 条规则已启用` }}
             </NTag>
-
           </NFlex>
         </template>
       </ClientPageHeader>
@@ -520,6 +549,9 @@ const triggerTypeOptions = [
                       </NAlert>
                     </template>
                   </ActionList>
+
+                  <!-- 多账号管理设置 -->
+                  <BiliAccountManagerCard v-else-if="currentMenuKey === 'account-settings'" />
 
                   <!-- 签到设置 -->
                   <CheckInSettings v-else-if="currentMenuKey === 'check-in-settings'" />

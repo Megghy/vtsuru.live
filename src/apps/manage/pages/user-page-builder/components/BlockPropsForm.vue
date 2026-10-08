@@ -1,5 +1,17 @@
 <script setup lang="ts">
-import { NAlert, NCollapse, NCollapseItem, NDatePicker, NFormItem, NInput, NSelect, NSwitch, NText } from 'naive-ui'
+import {
+  NAlert,
+  NCollapse,
+  NCollapseItem,
+  NDatePicker,
+  NFlex,
+  NFormItem,
+  NInput,
+  NSelect,
+  NSwitch,
+  NTag,
+  NText,
+} from 'naive-ui'
 import type { Component } from 'vue'
 import { computed, ref, watch } from 'vue'
 
@@ -122,6 +134,17 @@ const dateRangeModel = computed<[number, number] | null>({
     })
   },
 })
+
+const visibilityTags = computed(() => {
+  const tags: string[] = []
+  if (liveStateModel.value === 'live') tags.push('仅直播中')
+  else if (liveStateModel.value === 'offline') tags.push('仅未开播')
+  if (deviceModel.value === 'desktop') tags.push('仅桌面端')
+  else if (deviceModel.value === 'mobile') tags.push('仅移动端')
+  if (dateRangeModel.value) tags.push('限时')
+  return tags
+})
+
 const selectedEditor = computed(() => editorByType[props.block.type])
 const expandedCommonSections = ref<Array<string | number>>([])
 const validationIssues = computed(() =>
@@ -188,12 +211,12 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
       class="block-common-sections"
     >
       <NCollapseItem
-        title="默认属性"
+        title="卡片外观与命名"
         name="defaults"
       >
         <PropsGrid :row-gap="0">
           <NFormItem
-            label="区块名称"
+            label="区块备注名称"
             style="justify-self: start; width: min(260px, 100%)"
             data-validation-field="name"
           >
@@ -231,6 +254,22 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
         title="显示条件"
         name="visibility"
       >
+        <template #header-extra>
+          <NFlex
+            :size="4"
+            align="center"
+          >
+            <NTag
+              v-for="tag in visibilityTags"
+              :key="tag"
+              size="tiny"
+              type="warning"
+              :bordered="false"
+            >
+              {{ tag }}
+            </NTag>
+          </NFlex>
+        </template>
         <PropsGrid :row-gap="0">
           <NFormItem
             label="直播状态"

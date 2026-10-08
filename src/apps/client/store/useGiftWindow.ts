@@ -1,6 +1,8 @@
 import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
+import { acceptHMRUpdate, defineStore } from 'pinia'
+import { ref, watch } from 'vue'
 
 import type {
   EventModel,
@@ -17,6 +19,7 @@ import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export type GiftSortBy = 'time' | 'price' | 'num'
 export type GiftFilterType = 'Gift' | 'SC' | 'Guard'
+export type RankViewMode = 'thank_summary' | 'rank' | 'online_guard'
 
 export interface GiftWindowSettings {
   width: number
@@ -47,6 +50,10 @@ export interface GiftWindowSettings {
   showGiftList: boolean
   showRanking: boolean
   rankDisplayCount: number
+  rankViewMode: RankViewMode
+  showScrollbar: boolean
+  onlineThresholdMinutes: number
+  contentProtected?: boolean
 }
 
 export interface GiftEntry {
@@ -67,19 +74,60 @@ export interface GiftEntry {
 
 export const GIFT_WINDOW_BROADCAST_CHANNEL = 'channel.gift.window'
 
-export type GiftWindowBCData =
-  | { type: 'gift-list'; data: GiftEntry[] }
-  | { type: 'rank-list'; data: RankEntry[] }
-  | { type: 'update-setting'; data: GiftWindowSettings }
-  | { type: 'window-ready' }
-  | { type: 'clear' }
-
 export interface RankEntry {
   id: string
+  uid: number
   uname: string
   uface: string
   totalPaid: number
   score: number
+  guardLevel: GuardLevel
+  isOnline: boolean
+  lastActiveTime: number
+}
+
+export interface OnlineGuardEntry {
+  id: string
+  uid: number
+  uname: string
+  uface: string
+  guardLevel: GuardLevel
+  lastActiveTime: number
+  lastAction: string
+  totalPaid: number
+  rankIndex?: number
+}
+
+export interface ThankSummaryItem {
+  id: string
+  uid: number
+  uname: string
+  uface: string
+  totalPaid: number
+  guardLevel: GuardLevel
+  isOnline: boolean
+  lastActiveTime: number
+  isTopRank: boolean
+  rankIndex?: number
+  isGuardOnly: boolean
+}
+
+export type GiftWindowBCData =
+  | { type: 'gift-list'; data: GiftEntry[] }
+  | { type: 'rank-list'; data: RankEntry[] }
+  | { type: 'online-guard-list'; data: OnlineGuardEntry[] }
+  | { type: 'update-setting'; data: GiftWindowSettings }
+  | { type: 'window-ready' }
+  | { type: 'clear' }
+
+interface UserActivityState {
+  id: string
+  uid: number
+  uname: string
+  uface: string
+  guardLevel: GuardLevel
+  lastActiveTime: number
+  lastAction: string
 }
 
 const TYPE_TO_FILTER: Partial<Record<EventDataTypes, GiftFilterType>> = {
@@ -91,8 +139,8 @@ const TYPE_TO_FILTER: Partial<Record<EventDataTypes, GiftFilterType>> = {
 export const useGiftWindow = defineStore('giftWindow', () => {
   const giftWindow = ref<WebviewWindow>()
   const settings = usePersistedStorage<GiftWindowSettings>('Setting.GiftWindow', {
-    width: 320,
-    height: 520,
+    width: 340,
+    height: 560,
     x: 100,
     y: 100,
     opacity: 0.95,
@@ -118,13 +166,18 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     compactMode: false,
     showGiftList: true,
     showRanking: true,
-    rankDisplayCount: 20,
+    rankDisplayCount: 50,
+    rankViewMode: 'thank_summary',
+    showScrollbar: true,
+    onlineThresholdMinutes: 20,
+    contentProtected: false,
   })
 
   const danmakuClient = useDanmakuClient()
   const isWindowOpened = ref(false)
   const giftList = ref<GiftEntry[]>([])
   const rankMap = ref(new Map<string, RankEntry>())
+  const userActivityMap = ref(new Map<string, UserActivityState>())
   const currentLive = ref<ResponseLiveInfoModel | null>(null)
   let bc: BroadcastChannel | undefined
   let isInited = false
@@ -161,6 +214,40 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   async function applyWindowSettings() {
     await giftWindow.value?.setAlwaysOnTop(settings.value.alwaysOnTop)
     await giftWindow.value?.setIgnoreCursorEvents(settings.value.interactive)
+    await giftWindow.value?.setContentProtected(settings.value.contentProtected ?? false)
+  }
+
+  function resolveUserId(data: EventModel): string {
+    return data.ouid || (data.uid > 0 ? String(data.uid) : '')
+  }
+
+  function recordUserActivity(data: EventModel, actionName = '活跃') {
+    const id = resolveUserId(data)
+    if (!id) return
+
+    const now = data.time > 0 ? data.time : Date.now()
+    const existing = userActivityMap.value.get(id)
+    const guardLevel = data.guard_level && data.guard_level > 0 ? data.guard_level : existing?.guardLevel ?? GuardLevel.None
+
+    userActivityMap.value.set(id, {
+      id,
+      uid: data.uid,
+      uname: data.uname || existing?.uname || `用户${data.uid}`,
+      uface: data.uface || existing?.uface || '',
+      guardLevel,
+      lastActiveTime: now,
+      lastAction: actionName,
+    })
+
+    // 同步更新 rankMap 里的用户信息与在线状态
+    const rankItem = rankMap.value.get(id)
+    if (rankItem) {
+      if (data.uname) rankItem.uname = data.uname
+      if (data.uface) rankItem.uface = data.uface
+      if (guardLevel > 0) rankItem.guardLevel = guardLevel
+      rankItem.lastActiveTime = now
+      rankItem.isOnline = true
+    }
   }
 
   function onGiftEvent(data: EventModel) {
@@ -175,7 +262,6 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     const now = Date.now()
     const mergeMs = settings.value.mergeWindowSeconds * 1000
 
-    // 仅礼物按礼物名合并；SC/Guard 每条都是独立内容，不合并
     const existing =
       data.type === EventDataTypes.Gift
         ? giftList.value.find(
@@ -242,47 +328,173 @@ export const useGiftWindow = defineStore('giftWindow', () => {
 
   function updateRank(data: EventModel) {
     if (!currentLive.value) return
-    const id = data.ouid || (data.uid > 0 ? String(data.uid) : '')
+    const id = resolveUserId(data)
     if (!id) return
+
+    const now = data.time > 0 ? data.time : Date.now()
+    const activity = userActivityMap.value.get(id)
+    const guardLevel = data.guard_level && data.guard_level > 0 ? data.guard_level : activity?.guardLevel ?? GuardLevel.None
+
     let entry = rankMap.value.get(id)
     if (!entry) {
-      entry = { id, uname: data.uname, uface: data.uface, totalPaid: 0, score: 0 }
+      entry = {
+        id,
+        uid: data.uid,
+        uname: data.uname,
+        uface: data.uface,
+        totalPaid: 0,
+        score: 0,
+        guardLevel,
+        isOnline: true,
+        lastActiveTime: now,
+      }
       rankMap.value.set(id, entry)
     }
     entry.uname = data.uname || entry.uname
     entry.uface = data.uface || entry.uface
+    if (guardLevel > 0) entry.guardLevel = guardLevel
+    entry.lastActiveTime = now
+    entry.isOnline = true
 
     if (data.type === EventDataTypes.Gift || data.type === EventDataTypes.SC || data.type === EventDataTypes.Guard) {
       entry.totalPaid += data.price
     }
     entry.score = entry.totalPaid
     sendRankList()
+    sendOnlineGuardList()
+  }
+
+  function isUserOnline(lastActiveTime: number): boolean {
+    if (!lastActiveTime) return false
+    const thresholdMs = (settings.value.onlineThresholdMinutes || 20) * 60 * 1000
+    return Date.now() - lastActiveTime <= thresholdMs
   }
 
   function getRankedList(): RankEntry[] {
-    return Array.from(rankMap.value.values())
+    const list = Array.from(rankMap.value.values()).map((item) => {
+      const act = userActivityMap.value.get(item.id)
+      const lastActive = Math.max(item.lastActiveTime || 0, act?.lastActiveTime || 0)
+      const guardLevel = item.guardLevel > 0 ? item.guardLevel : act?.guardLevel ?? GuardLevel.None
+      return {
+        ...item,
+        guardLevel,
+        lastActiveTime: lastActive,
+        isOnline: isUserOnline(lastActive),
+      }
+    })
+
+    return list
       .toSorted((a, b) => b.score - a.score)
-      .slice(0, settings.value.rankDisplayCount)
+      .slice(0, settings.value.rankDisplayCount || 50)
+  }
+
+  function getOnlineGuardList(): OnlineGuardEntry[] {
+    const rankList = getRankedList()
+    const rankIndexMap = new Map<string, number>()
+    rankList.forEach((r, idx) => rankIndexMap.set(r.id, idx + 1))
+
+    const list: OnlineGuardEntry[] = []
+
+    for (const [id, act] of userActivityMap.value.entries()) {
+      if (act.guardLevel > 0 && isUserOnline(act.lastActiveTime)) {
+        const rankItem = rankMap.value.get(id)
+        const totalPaid = rankItem?.totalPaid || 0
+        list.push({
+          id,
+          uid: act.uid,
+          uname: act.uname,
+          uface: act.uface,
+          guardLevel: act.guardLevel,
+          lastActiveTime: act.lastActiveTime,
+          lastAction: act.lastAction,
+          totalPaid,
+          rankIndex: rankIndexMap.get(id),
+        })
+      }
+    }
+
+    // 排序：总督 (1) > 提督 (2) > 舰长 (3)，同等级按最近活跃时间排序
+    list.sort((a, b) => {
+      if (a.guardLevel !== b.guardLevel) {
+        return a.guardLevel - b.guardLevel
+      }
+      return b.lastActiveTime - a.lastActiveTime
+    })
+
+    return list
+  }
+
+  function getThankSummaryList(): ThankSummaryItem[] {
+    const ranked = getRankedList()
+    const onlineGuards = getOnlineGuardList()
+    const rankedIds = new Set(ranked.map((r) => r.id))
+
+    const items: ThankSummaryItem[] = ranked.map((r, idx) => ({
+      id: r.id,
+      uid: r.uid,
+      uname: r.uname,
+      uface: r.uface,
+      totalPaid: r.totalPaid,
+      guardLevel: r.guardLevel,
+      isOnline: r.isOnline,
+      lastActiveTime: r.lastActiveTime,
+      isTopRank: true,
+      rankIndex: idx + 1,
+      isGuardOnly: false,
+    }))
+
+    // 查找不在 Top 50 中的其他在场舰长
+    const additionalGuards = onlineGuards.filter((g) => !rankedIds.has(g.id))
+    for (const g of additionalGuards) {
+      items.push({
+        id: g.id,
+        uid: g.uid,
+        uname: g.uname,
+        uface: g.uface,
+        totalPaid: g.totalPaid,
+        guardLevel: g.guardLevel,
+        isOnline: true,
+        lastActiveTime: g.lastActiveTime,
+        isTopRank: false,
+        isGuardOnly: true,
+      })
+    }
+
+    return items
   }
 
   function sendRankList() {
     postBroadcastMessage(bc, { type: 'rank-list', data: getRankedList() } satisfies GiftWindowBCData)
   }
 
+  function sendOnlineGuardList() {
+    postBroadcastMessage(bc, { type: 'online-guard-list', data: getOnlineGuardList() } satisfies GiftWindowBCData)
+  }
+
   function replaceRank(entries: ResponseLiveRankingEntryModel[]) {
     rankMap.value = new Map(
-      entries.map((entry) => [
-        entry.ouId,
-        {
-          id: entry.ouId,
-          uname: entry.uName,
-          uface: entry.uFace ?? '',
-          totalPaid: entry.totalPaid,
-          score: entry.totalPaid,
-        },
-      ]),
+      entries.map((entry) => {
+        const id = entry.ouId
+        const act = userActivityMap.value.get(id)
+        const lastActive = act?.lastActiveTime || 0
+        return [
+          id,
+          {
+            id,
+            uid: 0,
+            uname: entry.uName,
+            uface: entry.uFace ?? '',
+            totalPaid: entry.totalPaid,
+            score: entry.totalPaid,
+            guardLevel: act?.guardLevel ?? GuardLevel.None,
+            isOnline: isUserOnline(lastActive),
+            lastActiveTime: lastActive,
+          },
+        ]
+      }),
     )
     sendRankList()
+    sendOnlineGuardList()
   }
 
   async function syncCurrentLive() {
@@ -297,13 +509,15 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       currentLive.value = nextLive
       if (liveChanged) {
         rankMap.value.clear()
+        userActivityMap.value.clear()
         sendRankList()
+        sendOnlineGuardList()
       }
       if (!nextLive) return
 
       const ranking = await QueryGetAPI<ResponseLiveRankingEntryModel[]>(`${LIVE_API_URL}ranking`, {
         liveId: nextLive.liveId,
-        limit: 100,
+        limit: Math.max(100, settings.value.rankDisplayCount || 50),
       })
       if (ranking.code !== 200) throw new Error(ranking.message)
       replaceRank(ranking.data)
@@ -320,11 +534,20 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   }
 
   function cleanupExpired() {
-    if (settings.value.autoDisappearTime <= 0 || giftList.value.length === 0) return
-    const now = Date.now()
-    const before = giftList.value.length
-    giftList.value = giftList.value.filter((e) => !e.disappearAt || e.disappearAt > now)
-    if (giftList.value.length !== before) sendGiftList()
+    if (settings.value.autoDisappearTime > 0 && giftList.value.length > 0) {
+      const now = Date.now()
+      const before = giftList.value.length
+      giftList.value = giftList.value.filter((e) => !e.disappearAt || e.disappearAt > now)
+      if (giftList.value.length !== before) sendGiftList()
+    }
+  }
+
+  function refreshOnlineStatus() {
+    // 定期刷新在线状态广播
+    if (rankMap.value.size > 0 || userActivityMap.value.size > 0) {
+      sendRankList()
+      sendOnlineGuardList()
+    }
   }
 
   async function init() {
@@ -351,20 +574,29 @@ export const useGiftWindow = defineStore('giftWindow', () => {
         postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
         sendGiftList()
         sendRankList()
+        sendOnlineGuardList()
       }
     }
     postBroadcastMessage(bc, { type: 'window-ready' } satisfies GiftWindowBCData)
     postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
 
+    // 全量事件监听以追踪用户在场活跃状态与大航海
+    danmakuClient.onEvent('danmaku', (e) => recordUserActivity(e, '发弹幕'))
+    danmakuClient.onEvent('enter', (e) => recordUserActivity(e, '进入直播间'))
+    danmakuClient.onEvent('like', (e) => recordUserActivity(e, '点赞'))
+
     danmakuClient.onEvent('gift', (e) => {
+      recordUserActivity(e, '送出礼物')
       onGiftEvent(e)
       updateRank(e)
     })
     danmakuClient.onEvent('sc', (e) => {
+      recordUserActivity(e, '发送SC')
       onGiftEvent(e)
       updateRank(e)
     })
     danmakuClient.onEvent('guard', (e) => {
+      recordUserActivity(e, '开通大航海')
       onGiftEvent(e)
       updateRank(e)
     })
@@ -375,11 +607,14 @@ export const useGiftWindow = defineStore('giftWindow', () => {
         postBroadcastMessage(bc, { type: 'update-setting', data: v.value } satisfies GiftWindowBCData)
         applyWindowSettings()
         sendGiftList()
+        sendRankList()
+        sendOnlineGuardList()
       },
       { deep: true },
     )
 
     setInterval(cleanupExpired, 1000)
+    setInterval(refreshOnlineStatus, 15_000)
     void syncCurrentLive()
     setInterval(() => void syncCurrentLive(), 30_000)
     isInited = true
@@ -389,9 +624,10 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     const types = [EventDataTypes.Gift, EventDataTypes.SC, EventDataTypes.Guard]
     const t = types[Math.floor(Math.random() * types.length)]
     const gifts = ['小花花', '辣条', '能量饮料', '小星星', '告白气球']
-    onGiftEvent({
+    const mockUid = Math.floor(Math.random() * 100000)
+    const mockEvent: EventModel = {
       type: t,
-      uid: Math.floor(Math.random() * 100000),
+      uid: mockUid,
       uname: `测试用户${Math.floor(Math.random() * 100)}`,
       uface: 'https://i0.hdslb.com/bfs/face/member/noface.jpg',
       msg:
@@ -407,14 +643,18 @@ export const useGiftWindow = defineStore('giftWindow', () => {
           : t === EventDataTypes.Guard
             ? 198
             : [100, 1000, 5000][Math.floor(Math.random() * 3)],
-      guard_level: t === EventDataTypes.Guard ? GuardLevel.Jianzhang : GuardLevel.None,
+      guard_level: t === EventDataTypes.Guard ? [GuardLevel.Zongdu, GuardLevel.Tidu, GuardLevel.Jianzhang][Math.floor(Math.random() * 3)] : GuardLevel.None,
       open_id: '',
       time: Date.now(),
       fans_medal_level: 0,
       fans_medal_name: '',
       fans_medal_wearing_status: false,
-      ouid: '',
-    })
+      ouid: String(mockUid),
+    }
+
+    recordUserActivity(mockEvent, '测试送礼')
+    onGiftEvent(mockEvent)
+    updateRank(mockEvent)
   }
 
   return {
@@ -423,6 +663,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     isGiftWindowOpen: isWindowOpened,
     giftList,
     rankMap,
+    userActivityMap,
     currentLive,
     openWindow,
     closeWindow,
@@ -431,6 +672,9 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     updateWindowPosition,
     clearGifts,
     sendTestGift,
+    getRankedList,
+    getOnlineGuardList,
+    getThankSummaryList,
     init,
   }
 })

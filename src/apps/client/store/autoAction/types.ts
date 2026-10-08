@@ -156,6 +156,7 @@ export interface TriggerConfig {
   // SC相关配置
   scFilterMode?: 'none' | 'price' // SC过滤模式
   scMinPrice?: number // SC最低价格(元)
+  scMaxPrice?: number // SC最高价格(元)
 
   // Scheduled options
   useGlobalTimer?: boolean

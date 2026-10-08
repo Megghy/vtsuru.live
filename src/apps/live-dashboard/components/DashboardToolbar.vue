@@ -2,15 +2,19 @@
 import {
   ArrowClockwise16Regular,
   Board16Regular,
+  CalendarLtr20Regular,
+  Dismiss16Regular,
   Eye16Regular,
   EyeOff16Regular,
+  History24Regular,
   Keyboard20Regular,
   Search16Regular,
   Settings16Regular,
   WeatherMoon16Regular,
   WeatherSunny16Regular,
 } from '@vicons/fluent'
-import { NButton, NDatePicker, NIcon, NInput, NPopover, NTag, NTooltip } from 'naive-ui'
+import { OpenOutline } from '@vicons/ionicons5'
+import { NButton, NDatePicker, NFlex, NIcon, NInput, NPopover, NTag, NText, NTooltip } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { isDarkMode } from '@/shared/utils'
@@ -50,6 +54,10 @@ const range = computed({
   set: (value) => void dashboard.setHistoryRange(value),
 })
 
+function openInNewWindow() {
+  window.open('/live-dashboard', '_blank', 'noopener,noreferrer')
+}
+
 const SEARCH_HELP = [
   'type:superchat,gift,toast,message,enter,follow,like',
   'uid:12345  username:名字  message:内容  medal:勋章  note:备注',
@@ -67,6 +75,7 @@ const SEARCH_HELP = [
         size="small"
         clearable
         placeholder="搜索（Ctrl+F）"
+        class="toolbar__search-input"
       >
         <template #prefix>
           <NTooltip placement="bottom-start">
@@ -82,20 +91,70 @@ const SEARCH_HELP = [
           </NTooltip>
         </template>
       </NInput>
-      <NDatePicker
-        v-model:value="range"
-        type="datetimerange"
-        size="small"
-        clearable
-        :shortcuts="{
-          '最近 1 小时': () => [Date.now() - 3600_000, Date.now()],
-          '今天': () => [new Date().setHours(0, 0, 0, 0), Date.now()],
-          '最近 7 天': () => [Date.now() - 7 * 86400_000, Date.now()],
-        }"
-        start-placeholder="历史开始"
-        end-placeholder="结束"
-        style="width: 300px"
-      />
+
+      <!-- 历史筛选：默认收起为紧凑 Popover 按钮，大幅释放顶栏水平空间 -->
+      <NPopover
+        trigger="click"
+        placement="bottom-start"
+        style="padding: 12px"
+      >
+        <template #trigger>
+          <NButton
+            size="small"
+            :type="range ? 'primary' : 'default'"
+            :quaternary="!range"
+            :secondary="!!range"
+            class="toolbar__history-btn"
+          >
+            <template #icon>
+              <NIcon :component="History24Regular" />
+            </template>
+            <span>{{ range ? '已选历史' : '历史回溯' }}</span>
+            <NIcon
+              v-if="range"
+              :component="Dismiss16Regular"
+              style="margin-left: 4px"
+              @click.stop="range = null"
+            />
+          </NButton>
+        </template>
+
+        <NFlex
+          vertical
+          :size="8"
+        >
+          <div style="font-weight: 600; font-size: 13px">
+            历史事件回溯筛选
+          </div>
+          <NDatePicker
+            v-model:value="range"
+            type="datetimerange"
+            size="small"
+            clearable
+            :shortcuts="{
+              '最近 1 小时': () => [Date.now() - 3600_000, Date.now()],
+              '今天': () => [new Date().setHours(0, 0, 0, 0), Date.now()],
+              '最近 7 天': () => [Date.now() - 7 * 86400_000, Date.now()],
+            }"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            style="width: 320px"
+          />
+          <NFlex
+            v-if="range"
+            justify="flex-end"
+          >
+            <NButton
+              size="tiny"
+              quaternary
+              @click="range = null"
+            >
+              清除时间筛选
+            </NButton>
+          </NFlex>
+        </NFlex>
+      </NPopover>
+
       <NTag
         v-if="dashboard.userFilter"
         size="small"
@@ -126,12 +185,29 @@ const SEARCH_HELP = [
         <span class="stat__value">{{ stats.counters.danmaku }}</span>
       </div>
       <div class="stat">
-        <span class="stat__label">每分钟事件</span>
-        <span class="stat__value">{{ stats.perMinute }}</span>
+        <span class="stat__label">点赞</span>
+        <span class="stat__value">{{ stats.counters.like }}</span>
       </div>
-      <div class="stat">
+      <div
+        class="stat"
+        title="最近 20 分钟内有互动的在线/在场观众数"
+      >
+        <span class="stat__label">在线人数</span>
+        <span class="stat__value">{{ stats.onlineCount }}</span>
+      </div>
+      <div
+        class="stat"
+        title="本场累计互动过的独立观众总数"
+      >
         <span class="stat__label">互动人数</span>
         <span class="stat__value">{{ stats.userCount }}</span>
+      </div>
+      <div
+        class="stat"
+        title="本场礼物、SC 与大航海汇总"
+      >
+        <span class="stat__label">总收益</span>
+        <span class="stat__value">{{ formatPrice(stats.totals.totalRevenue) }}</span>
       </div>
       <div class="stat">
         <span class="stat__label">醒目留言</span>
@@ -144,6 +220,10 @@ const SEARCH_HELP = [
       <div class="stat">
         <span class="stat__label">大航海</span>
         <span class="stat__value">{{ stats.totals.guardCount }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">每分钟事件</span>
+        <span class="stat__value">{{ stats.perMinute }}</span>
       </div>
       <div
         v-for="payer in stats.topPayers"
@@ -215,6 +295,11 @@ const SEARCH_HELP = [
         @click="ui.shortcutsOpen = true"
       />
       <IconAction
+        :icon="OpenOutline"
+        tip="在新窗口中独立打开"
+        @click="openInNewWindow"
+      />
+      <IconAction
         :icon="Settings16Regular"
         tip="设置"
         @click="ui.settingsOpen = true"
@@ -249,7 +334,17 @@ const SEARCH_HELP = [
 }
 
 .toolbar__search :deep(.n-input) {
+  width: 140px;
+  transition: width 0.2s ease;
+}
+
+.toolbar__search :deep(.n-input.n-input--focus),
+.toolbar__search :deep(.n-input:hover) {
   width: 200px;
+}
+
+.toolbar__history-btn {
+  flex-shrink: 0;
 }
 
 .toolbar__stats {

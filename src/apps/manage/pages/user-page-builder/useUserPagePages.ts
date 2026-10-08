@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
-import type { UserPagesSettings } from '@/apps/user-page/types'
+import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 
 import { cloneBlockNode, deepCloneJson } from './editorHelpers'
 
@@ -31,20 +31,25 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
     return copied
   }
 
-  function createPage(slugInput: string) {
+  function createPage(slugInput: string, mode: UserPageConfig['mode'] = 'block') {
     const slug = slugInput.trim()
-    if (!slugOk(slug)) throw new Error('slug 仅支持小写字母/数字/短横线，长度 1~40，且不能以 - 开头或结尾')
+    if (!slugOk(slug)) throw new Error('页面标识 (Slug) 仅支持小写字母/数字/短横线，长度 1~40，且不能以 - 开头或结尾')
     opts.settings.value.pages ??= {}
     if (Object.keys(opts.settings.value.pages).length >= opts.maxPagesCount)
       throw new Error(`子页面最多只能创建 ${opts.maxPagesCount} 个`)
-    if (opts.settings.value.pages[slug]) throw new Error('该 slug 已存在')
+    if (opts.settings.value.pages[slug]) throw new Error('该页面标识已存在')
     opts.history.batch(() => {
-      opts.settings.value.pages[slug] = { mode: 'block', block: opts.createDefaultProject() }
+      if (mode === 'block') {
+        opts.settings.value.pages[slug] = { mode: 'block', block: opts.createDefaultProject() }
+      } else if (mode === 'contrib') {
+        opts.settings.value.pages[slug] = { mode: 'contrib', contrib: { scope: 'global', pageId: '' } }
+      } else {
+        opts.settings.value.pages[slug] = { mode: 'legacy' }
+      }
       opts.currentKey.value = slug
       opts.clearSelection()
     })
   }
-
   function removePage(slug: string) {
     if (!opts.settings.value.pages?.[slug]) return
     opts.history.batch(() => {

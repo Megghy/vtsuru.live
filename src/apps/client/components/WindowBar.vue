@@ -1,15 +1,29 @@
 <script setup lang="ts">
 import type { UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent' // Maximize 和 Restore 图标
+import { Live20Filled, Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent' // Maximize 和 Restore 图标
 import { Close, RemoveOutline as Minus } from '@vicons/ionicons5' // Close 和 Minimize 图标
-import { NButton, NFlex } from 'naive-ui'
+import { NButton, NFlex, NIcon, NTag, NText, NTooltip } from 'naive-ui'
 // 显式导入 Naive UI 组件（好习惯）
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+
+const router = useRouter()
+const giftWindow = useGiftWindow()
 const appWindow = getCurrentWindow()
 const isMaximized = ref(false)
 let unlisten: UnlistenFn | null = null
+
+const currentLive = computed(() => giftWindow.currentLive)
+const isLiving = computed(() => {
+  return currentLive.value && !currentLive.value.isFinish
+})
+
+function goToLiveManage() {
+  router.push({ name: 'client-live-manage' })
+}
 
 // --- Window State Handling ---
 
@@ -66,27 +80,64 @@ const closeWindow = () => appWindow.hide()
 </script>
 
 <template>
-  <NFlex class="titlebar">
-    <NFlex
-      style="flex: 1; padding-left: 8px"
-      align="center"
+  <header
+    class="titlebar"
+    data-tauri-drag-region="true"
+  >
+    <div
+      class="titlebar-left"
       @mousedown="handleTitlebarMouseDown"
     >
-      <NText>
-        <span class="title">VTsuruEventFetcher</span>
-      </NText>
-    </NFlex>
-    <NFlex
+      <span class="title">VTsuru.Client</span>
+
+      <!-- 开播状态指示 (可点击跳转直播管理) -->
+      <NTooltip
+        v-if="isLiving"
+        placement="bottom"
+      >
+        <template #trigger>
+          <NTag
+            type="error"
+            size="tiny"
+            round
+            :bordered="false"
+            class="live-status-tag live-status-tag--active"
+            @click.stop="goToLiveManage"
+          >
+            <template #icon>
+              <span class="live-dot pulse" />
+            </template>
+            直播中{{ currentLive?.title ? ` · ${currentLive.title}` : '' }}
+          </NTag>
+        </template>
+        <div>
+          <div><strong>{{ currentLive?.title || '直播中' }}</strong></div>
+          <div style="font-size: 12px; opacity: 0.85">
+            点击前往「直播管理」页面
+          </div>
+        </div>
+      </NTooltip>
+
+      <NTag
+        v-else
+        size="tiny"
+        round
+        :bordered="false"
+        class="live-status-tag live-status-tag--idle"
+        @click.stop="goToLiveManage"
+      >
+        <template #icon>
+          <span class="live-dot" />
+        </template>
+        未开播
+      </NTag>
+    </div>
+
+    <div
+      class="titlebar-controls"
       data-tauri-drag-region="true"
-      justify="flex-end"
-      align="center"
       @dblclick="toggleMaximizeWindow"
     >
-      <!-- 注意： data-tauri-drag-region 会使整个区域可拖动 -->
-      <!-- 如果按钮区域不希望触发拖动（通常是这样），需要确保按钮本身不被拖动 -->
-      <!-- Naive UI 的 NButton 通常会阻止事件冒泡，所以一般没问题 -->
-      <!-- 如果使用普通 <button>，可能需要加 @mousedown.stop -->
-
       <NButton
         quaternary
         circle
@@ -107,7 +158,6 @@ const closeWindow = () => appWindow.hide()
         class="window-btn"
         @click="toggleMaximizeWindow"
       >
-        <!-- 根据 isMaximized 状态切换图标 -->
         <component
           :is="isMaximized ? SquareMultiple24Regular : Maximize24Filled"
           class="icon"
@@ -125,18 +175,45 @@ const closeWindow = () => appWindow.hide()
       >
         <Close class="icon" />
       </NButton>
-    </NFlex>
-  </NFlex>
+    </div>
+  </header>
 </template>
 
 <style scoped>
 .titlebar {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+  width: 100%;
+  flex: 0 0 30px;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--vtsuru-border);
-  user-select: none; /* 防止拖动时选中文本 */
-  padding: 0 4px; /* 给按钮一些边距 */
+  user-select: none;
+  padding: 0 4px;
   box-sizing: border-box;
+  background-color: var(--vtsuru-bg-surface);
+  z-index: 1000;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 8px;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+}
+
+.titlebar-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  height: 100%;
 }
 
 /* 如果需要让按钮区域不可拖动（虽然 NButton 通常没问题），可以这样设置 */
@@ -144,6 +221,55 @@ const closeWindow = () => appWindow.hide()
   -webkit-app-region: no-drag;
   app-region: no-drag;
 } */
+
+.title {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  opacity: 0.9;
+}
+
+.live-status-tag {
+  cursor: pointer;
+  max-width: 320px;
+  font-size: 11px;
+  transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
+}
+
+.live-status-tag:hover {
+  opacity: 0.85;
+}
+
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vtsuru-fg-muted, #9ca3af);
+  margin-right: 2px;
+}
+
+.live-dot.pulse {
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
 
 .icon {
   width: 16px; /* 统一设置图标大小 */

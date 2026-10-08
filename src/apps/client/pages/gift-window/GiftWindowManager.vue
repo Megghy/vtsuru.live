@@ -2,14 +2,18 @@
 import {
   ArrowReset24Regular,
   ArrowSync24Filled,
+  Checkmark24Filled,
   Color24Filled,
+  Copy24Regular,
   Delete24Regular,
   Desktop24Filled,
   Filter24Filled,
   History24Filled,
-  ResizeTable24Filled,
+  Megaphone24Filled,
   Send24Filled,
-  Trophy24Filled,
+  Trophy20Regular,
+  VehicleShip20Regular,
+  WindowShield20Regular,
 } from '@vicons/fluent'
 import {
   NAvatar,
@@ -19,6 +23,7 @@ import {
   NCheckbox,
   NCheckboxGroup,
   NColorPicker,
+  NDivider,
   NEmpty,
   NFlex,
   NFormItem,
@@ -40,7 +45,7 @@ import {
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-import type { ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/api-models'
+import { GuardLevel, type ResponseLiveInfoModel, type ResponseLiveRankingEntryModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
@@ -60,6 +65,12 @@ const sortOptions = [
   { label: '送礼时间', value: 'time' },
   { label: '礼物金额', value: 'price' },
   { label: '礼物数量', value: 'num' },
+]
+
+const rankViewOptions = [
+  { label: '下播感谢合集', value: 'thank_summary' },
+  { label: '打赏贡献榜', value: 'rank' },
+  { label: '在场大航海', value: 'online_guard' },
 ]
 
 const presets = {
@@ -94,6 +105,66 @@ function resetWindowPosition() {
   message.success('窗口位置已重置至默认坐标')
 }
 
+// 实时感谢数据
+const realtimeRankList = computed(() => giftWindow.getRankedList())
+const realtimeGuardList = computed(() => giftWindow.getOnlineGuardList())
+const realtimeThankList = computed(() => giftWindow.getThankSummaryList())
+
+function getGuardTitle(level: GuardLevel): string {
+  switch (level) {
+    case GuardLevel.Zongdu:
+      return '总督'
+    case GuardLevel.Tidu:
+      return '提督'
+    case GuardLevel.Jianzhang:
+      return '舰长'
+    default:
+      return ''
+  }
+}
+
+function formatPaid(totalPaid: number) {
+  return `¥${totalPaid.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+}
+
+function copyThankText() {
+  const ranked = realtimeRankList.value
+  const guards = realtimeGuardList.value
+
+  const lines: string[] = []
+  lines.push(`【本场打赏贡献榜 Top ${ranked.length}】`)
+  if (ranked.length === 0) {
+    lines.push('(暂无打赏记录)')
+  } else {
+    ranked.forEach((r, idx) => {
+      const guardStr = r.guardLevel > 0 ? ` [${getGuardTitle(r.guardLevel)}]` : ''
+      const onlineStr = r.isOnline ? ' (在场)' : ''
+      lines.push(`${idx + 1}. ${r.uname} - ¥${r.score}${guardStr}${onlineStr}`)
+    })
+  }
+
+  lines.push('')
+  lines.push(`【在场大航海名单 (共 ${guards.length} 人)】`)
+  if (guards.length === 0) {
+    lines.push('(暂无在场大航海记录)')
+  } else {
+    guards.forEach((g) => {
+      lines.push(`- ${g.uname} [${getGuardTitle(g.guardLevel)}] (${g.lastAction})`)
+    })
+  }
+
+  const text = lines.join('\n')
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      message.success('已复制下播感谢文案至剪贴板')
+    })
+    .catch(() => {
+      message.error('复制到剪贴板失败')
+    })
+}
+
+// 历史榜单查询
 const historyLives = ref<ResponseLiveInfoModel[]>([])
 const historyRanking = ref<ResponseLiveRankingEntryModel[]>([])
 const selectedHistoryLiveId = ref<string | null>(null)
@@ -106,10 +177,6 @@ const historyLiveOptions = computed(() =>
     value: live.liveId,
   })),
 )
-
-function formatPaid(totalPaid: number) {
-  return `¥${totalPaid.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-}
 
 async function loadHistoryRanking() {
   if (!selectedHistoryLiveId.value) {
@@ -167,7 +234,7 @@ function onTabChange(tab: string) {
       <!-- 标准管理页标头 -->
       <ClientPageHeader
         title="礼物与高能榜浮窗管理"
-        description="桌面半透明置顶礼物浮窗与高能排行榜，同窗口分屏或独立展示，支持实时打赏动画与历史追溯"
+        description="桌面半透明置顶礼物浮窗与高能排行榜，同窗口分屏或独立展示，支持实时打赏动画、在场舰长名单与下播感谢"
       >
         <template #actions>
           <NTag
@@ -218,10 +285,244 @@ function onTabChange(tab: string) {
       <NTabs
         type="segment"
         animated
-        default-value="appearance"
+        default-value="thank"
         class="gift-tabs"
         @update:value="onTabChange"
       >
+        <!-- 下播感谢与实时榜单 -->
+        <NTabPane
+          name="thank"
+          tab="下播感谢看板"
+        >
+          <template #tab>
+            <NFlex
+              align="center"
+              :size="6"
+            >
+              <NIcon :component="Megaphone24Filled" />
+              <span>下播感谢看板</span>
+            </NFlex>
+          </template>
+
+          <NFlex
+            vertical
+            :size="12"
+            class="client-readable"
+          >
+            <NCard
+              title="本场打赏前 50 ➕ 在场舰长名单"
+              size="small"
+              bordered
+            >
+              <template #header-extra>
+                <NFlex :size="8">
+                  <NButton
+                    size="small"
+                    type="primary"
+                    secondary
+                    @click="copyThankText"
+                  >
+                    <template #icon>
+                      <NIcon :component="Copy24Regular" />
+                    </template>
+                    一键复制感谢文案
+                  </NButton>
+                </NFlex>
+              </template>
+
+              <NGrid
+                cols="1 m:2"
+                :x-gap="16"
+                :y-gap="12"
+              >
+                <!-- 左列: 本场打赏榜 Top 50 -->
+                <NGi>
+                  <div class="thank-section-header">
+                    <span class="thank-section-title">
+                      <NIcon
+                        :component="Trophy20Regular"
+                        style="vertical-align: -2px; margin-right: 4px;"
+                      />
+                      本场打赏贡献榜 (前 {{ realtimeRankList.length }} 名)
+                    </span>
+                    <NTag
+                      size="small"
+                      :bordered="false"
+                      type="warning"
+                    >
+                      上限 {{ giftWindow.settings.rankDisplayCount }} 人
+                    </NTag>
+                  </div>
+
+                  <div class="thank-scroll-box">
+                    <NEmpty
+                      v-if="realtimeRankList.length === 0"
+                      description="本场暂无打赏记录"
+                      style="padding: 30px 0"
+                    />
+                    <div
+                      v-else
+                      class="thank-list"
+                    >
+                      <div
+                        v-for="(r, idx) in realtimeRankList"
+                        :key="r.id"
+                        class="thank-item"
+                        :class="{ 'thank-item--top': idx < 3 }"
+                      >
+                        <NFlex
+                          align="center"
+                          justify="space-between"
+                          style="width: 100%"
+                        >
+                          <NFlex
+                            align="center"
+                            :size="8"
+                          >
+                            <span
+                              class="thank-idx"
+                              :class="{
+                                'thank-idx--1': idx === 0,
+                                'thank-idx--2': idx === 1,
+                                'thank-idx--3': idx === 2,
+                              }"
+                            >
+                              {{ idx + 1 }}
+                            </span>
+                            <div class="thank-avatar-wrap">
+                              <NAvatar
+                                round
+                                size="small"
+                                :src="r.uface || undefined"
+                              />
+                              <span
+                                class="thank-online-dot"
+                                :class="{ online: r.isOnline }"
+                                :title="r.isOnline ? '在场活跃' : '离线'"
+                              />
+                            </div>
+                            <NText strong>{{ r.uname }}</NText>
+                            <NTag
+                              v-if="r.guardLevel > 0"
+                              size="tiny"
+                              :bordered="false"
+                              :type="r.guardLevel === GuardLevel.Zongdu ? 'error' : r.guardLevel === GuardLevel.Tidu ? 'warning' : 'info'"
+                            >
+                              {{ getGuardTitle(r.guardLevel) }}
+                            </NTag>
+                          </NFlex>
+
+                          <NFlex
+                            align="center"
+                            :size="6"
+                          >
+                            <NTag
+                              v-if="r.isOnline"
+                              size="tiny"
+                              type="success"
+                              :bordered="false"
+                            >
+                              在场
+                            </NTag>
+                            <NText
+                              type="warning"
+                              strong
+                            >
+                              ¥{{ r.score.toLocaleString() }}
+                            </NText>
+                          </NFlex>
+                        </NFlex>
+                      </div>
+                    </div>
+                  </div>
+                </NGi>
+
+                <!-- 右列: 还在直播间的在场舰长 -->
+                <NGi>
+                  <div class="thank-section-header">
+                    <span class="thank-section-title">
+                      <NIcon
+                        :component="VehicleShip20Regular"
+                        style="vertical-align: -2px; margin-right: 4px;"
+                      />
+                      还在直播间的舰长 ({{ realtimeGuardList.length }} 人)
+                    </span>
+                    <NText depth="3" style="font-size: 12px">
+                      {{ giftWindow.settings.onlineThresholdMinutes }} 分钟内有互动
+                    </NText>
+                  </div>
+
+                  <div class="thank-scroll-box">
+                    <NEmpty
+                      v-if="realtimeGuardList.length === 0"
+                      description="当前暂无在场大航海观众活跃"
+                      style="padding: 30px 0"
+                    />
+                    <div
+                      v-else
+                      class="thank-list"
+                    >
+                      <div
+                        v-for="g in realtimeGuardList"
+                        :key="g.id"
+                        class="thank-item thank-item--guard"
+                      >
+                        <NFlex
+                          align="center"
+                          justify="space-between"
+                          style="width: 100%"
+                        >
+                          <NFlex
+                            align="center"
+                            :size="8"
+                          >
+                            <NTag
+                              size="small"
+                              :bordered="false"
+                              :type="g.guardLevel === GuardLevel.Zongdu ? 'error' : g.guardLevel === GuardLevel.Tidu ? 'warning' : 'info'"
+                            >
+                              {{ getGuardTitle(g.guardLevel) }}
+                            </NTag>
+                            <div class="thank-avatar-wrap">
+                              <NAvatar
+                                round
+                                size="small"
+                                :src="g.uface || undefined"
+                              />
+                              <span class="thank-online-dot online" />
+                            </div>
+                            <NText strong>{{ g.uname }}</NText>
+                          </NFlex>
+
+                          <NFlex
+                            align="center"
+                            :size="6"
+                          >
+                            <NText
+                              depth="3"
+                              style="font-size: 11px"
+                            >
+                              {{ g.lastAction }}
+                            </NText>
+                            <NTag
+                              v-if="g.rankIndex"
+                              size="tiny"
+                              type="warning"
+                              :bordered="false"
+                            >
+                              榜 #{{ g.rankIndex }}
+                            </NTag>
+                          </NFlex>
+                        </NFlex>
+                      </div>
+                    </div>
+                  </div>
+                </NGi>
+              </NGrid>
+            </NCard>
+          </NFlex>
+        </NTabPane>
+
         <!-- 外观与主题 -->
         <NTabPane
           name="appearance"
@@ -403,7 +704,7 @@ function onTabChange(tab: string) {
                 <NDivider style="margin: 8px 0" />
 
                 <NGrid
-                  cols="2 s:4"
+                  cols="2 s:3"
                   :x-gap="12"
                   :y-gap="6"
                 >
@@ -425,6 +726,14 @@ function onTabChange(tab: string) {
                   <NGi>
                     <LabelItem label="紧凑模式">
                       <NSwitch v-model:value="giftWindow.settings.compactMode" />
+                    </LabelItem>
+                  </NGi>
+                  <NGi>
+                    <LabelItem
+                      label="浮窗滚动条"
+                      description="显示极简半透明细滚动条"
+                    >
+                      <NSwitch v-model:value="giftWindow.settings.showScrollbar" />
                     </LabelItem>
                   </NGi>
                 </NGrid>
@@ -550,9 +859,26 @@ function onTabChange(tab: string) {
                 </LabelItem>
                 <LabelItem
                   label="启用高能排行榜"
-                  description="在同窗口内展示本场直播贡献值最高的观众排名"
+                  description="在同窗口内展示本场直播打赏榜与在场舰长名单"
                 >
                   <NSwitch v-model:value="giftWindow.settings.showRanking" />
+                </LabelItem>
+                <LabelItem
+                  v-if="giftWindow.settings.showRanking"
+                  label="浮窗默认排行视图"
+                  description="打开浮窗时默认聚焦的排行板块"
+                >
+                  <NRadioGroup v-model:value="giftWindow.settings.rankViewMode">
+                    <NFlex :size="8">
+                      <NRadioButton
+                        v-for="opt in rankViewOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                      >
+                        {{ opt.label }}
+                      </NRadioButton>
+                    </NFlex>
+                  </NRadioGroup>
                 </LabelItem>
               </NFlex>
             </NCard>
@@ -578,6 +904,15 @@ function onTabChange(tab: string) {
                   description="点击事件穿透到下层游戏界面，不影响直播操作"
                 >
                   <NSwitch v-model:value="giftWindow.settings.interactive" />
+                </LabelItem>
+                <LabelItem
+                  label="防 OBS / 屏幕共享捕捉 (防抓取)"
+                  description="开启后 OBS 抓屏、全屏捕获与截屏工具将无法捕捉到此浮窗，防止遮挡游戏画面与隐私泄露"
+                >
+                  <template #icon>
+                    <NIcon :component="WindowShield20Regular" />
+                  </template>
+                  <NSwitch v-model:value="giftWindow.settings.contentProtected" />
                 </LabelItem>
               </NFlex>
             </NCard>
@@ -734,30 +1069,58 @@ function onTabChange(tab: string) {
               </NGrid>
             </NCard>
 
-            <!-- 排行榜规则 -->
+            <!-- 排行榜与在场规则 -->
             <NCard
-              title="排行榜规则"
+              title="排行榜与在场规则"
               size="small"
               bordered
             >
-              <NFormItem
-                label="排行榜上榜人数上限"
-                label-placement="left"
-                style="margin-bottom: 0"
+              <NGrid
+                cols="1 s:2"
+                :x-gap="16"
+                :y-gap="8"
               >
-                <NInputNumber
-                  v-model:value="giftWindow.settings.rankDisplayCount"
-                  :min="5"
-                  :max="100"
-                  style="width: 160px"
-                />
-              </NFormItem>
-              <NText
-                depth="3"
-                style="font-size: 12px; margin-top: 6px; display: block;"
-              >
-                排行榜依据本场直播累计送出的付费礼物与大航海总价值实时计算。
-              </NText>
+                <NGi>
+                  <NFormItem
+                    label="排行榜显示人数上限"
+                    label-placement="top"
+                  >
+                    <NInputNumber
+                      v-model:value="giftWindow.settings.rankDisplayCount"
+                      :min="5"
+                      :max="200"
+                      :step="10"
+                    />
+                  </NFormItem>
+                  <NText
+                    depth="3"
+                    style="font-size: 12px; display: block; margin-top: -6px;"
+                  >
+                    依据本场直播累计送出的付费礼物与大航海总价值计算，建议设为 50。
+                  </NText>
+                </NGi>
+                <NGi>
+                  <NFormItem
+                    label="在场活跃判定时间 (分钟)"
+                    label-placement="top"
+                  >
+                    <NInputNumber
+                      v-model:value="giftWindow.settings.onlineThresholdMinutes"
+                      :min="5"
+                      :max="120"
+                      :step="5"
+                    >
+                      <template #suffix> 分钟 </template>
+                    </NInputNumber>
+                  </NFormItem>
+                  <NText
+                    depth="3"
+                    style="font-size: 12px; display: block; margin-top: -6px;"
+                  >
+                    观众在该时间内有发言、送礼、进入或点赞即视为「还在直播间」。
+                  </NText>
+                </NGi>
+              </NGrid>
             </NCard>
           </NFlex>
         </NTabPane>
@@ -879,7 +1242,98 @@ function onTabChange(tab: string) {
 }
 
 .gift-tabs :deep(.n-tabs-rail) {
-  max-width: 480px;
+  max-width: 580px;
+}
+
+/* 感谢看板 */
+.thank-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.thank-section-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--vtsuru-fg);
+}
+
+.thank-scroll-box {
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.thank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.thank-item {
+  padding: 8px 12px;
+  border-radius: var(--vtsuru-radius, 6px);
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  transition: all 0.15s ease;
+}
+
+.thank-item:hover {
+  border-color: var(--vtsuru-primary);
+}
+
+.thank-item--top {
+  border-color: rgba(234, 179, 8, 0.35);
+  background: rgba(234, 179, 8, 0.04);
+}
+
+.thank-item--guard {
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.thank-idx {
+  width: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  text-align: center;
+  color: var(--vtsuru-fg-muted);
+}
+
+.thank-idx--1 {
+  color: #eab308;
+}
+
+.thank-idx--2 {
+  color: #94a3b8;
+}
+
+.thank-idx--3 {
+  color: #d97706;
+}
+
+.thank-avatar-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thank-online-dot {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  border: 1.5px solid var(--vtsuru-bg-elevated);
+}
+
+.thank-online-dot.online {
+  background: #22c55e;
+  box-shadow: 0 0 4px #22c55e;
 }
 
 /* 预设卡片 */

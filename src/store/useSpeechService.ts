@@ -1039,8 +1039,18 @@ function createSpeechService() {
     }
   }
 
-  function testEvent(data: EventModel) {
+  function testEvent(data: EventModel): { success: boolean; text?: string; reason?: string } {
+    const text = getTextFromDanmaku(data)
+    if (!text) {
+      const eventKey = getEventKey(data.type)
+      const config = eventKey ? settings.value.templates[eventKey] : undefined
+      if (!config || config.rules.length === 0) {
+        return { success: false, reason: '未配置任何模板规则' }
+      }
+      return { success: false, reason: '测试事件不满足模板中的条件规则' }
+    }
     enqueueEvent(data)
+    return { success: true, text }
   }
 
   function getEventKey(type: EventDataTypes): keyof SpeechSettings['enabledEvents'] | null {

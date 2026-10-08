@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ImageOutline, TrashOutline } from '@vicons/ionicons5'
 import {
   NAlert,
   NButton,
@@ -6,11 +7,14 @@ import {
   NFlex,
   NForm,
   NFormItem,
+  NIcon,
   NInputNumber,
   NRadioButton,
   NRadioGroup,
   NSelect,
+  NSlider,
   NSwitch,
+  NText,
 } from 'naive-ui'
 import { computed } from 'vue'
 
@@ -178,7 +182,7 @@ function clearAll() {
         justify="space-between"
         align="center"
         :wrap="false"
-        style="gap: 10px"
+        style="gap: 10px; width: 100%"
       >
         <NRadioGroup
           v-model:value="type"
@@ -189,30 +193,38 @@ function clearAll() {
             value="none"
             style="width: 33.3%; text-align: center"
           >
-            无
+            无背景
           </NRadioButton>
           <NRadioButton
             value="color"
             style="width: 33.3%; text-align: center"
           >
-            纯色
+            纯色底
           </NRadioButton>
           <NRadioButton
             value="image"
             style="width: 33.4%; text-align: center"
           >
-            图片
+            图片背景
           </NRadioButton>
         </NRadioGroup>
         <NButton
           size="small"
           secondary
+          :disabled="type === 'none'"
           @click="clearAll"
         >
           清空
         </NButton>
       </NFlex>
     </NFormItem>
+
+    <div
+      v-if="type === 'none' && noneHint"
+      style="margin-bottom: 10px; font-size: 12px; color: var(--vtsuru-fg-muted)"
+    >
+      {{ noneHint }}
+    </div>
 
     <Transition
       name="fade-slide"
@@ -231,61 +243,65 @@ function clearAll() {
 
         <template v-else-if="type === 'image'">
           <NFormItem label="背景图片">
-            <NFlex align="center">
-              <NButton
-                v-if="props.target.uploadImage"
-                size="small"
-                @click="props.target.uploadImage"
-              >
-                上传背景图
-              </NButton>
-              <NButton
-                v-if="props.target.clearImage"
-                size="small"
-                secondary
-                :disabled="!imagePath"
-                @click="props.target.clearImage"
-              >
-                清除
-              </NButton>
-              <Transition name="fade-scale">
-                <img
-                  v-if="imagePath"
-                  :src="imagePath"
-                  alt=""
-                  referrerpolicy="no-referrer"
-                  style="
-                    width: 36px;
-                    height: 36px;
-                    object-fit: cover;
-                    border-radius: 6px;
-                    border: 1px solid var(--vtsuru-border);
-                  "
-                />
-              </Transition>
-            </NFlex>
+            <div
+              v-if="!imagePath"
+              class="upload-dropzone"
+              @click="props.target.uploadImage?.()"
+            >
+              <NIcon
+                size="24"
+                :component="ImageOutline"
+                style="color: var(--vtsuru-fg-muted); margin-bottom: 4px"
+              />
+              <div style="font-size: 13px; font-weight: 500">点击上传背景图</div>
+              <div style="font-size: 11px; color: var(--vtsuru-fg-muted)">支持 PNG, JPG, WebP 格式</div>
+            </div>
+            <div
+              v-else
+              class="image-preview-bar"
+            >
+              <img
+                :src="imagePath"
+                alt="背景预览"
+                referrerpolicy="no-referrer"
+                class="image-thumb"
+              />
+              <div class="image-info">
+                <span class="image-filename">已上传背景图</span>
+                <span class="image-sub">已设置生效</span>
+              </div>
+              <NFlex :size="6">
+                <NButton
+                  size="tiny"
+                  secondary
+                  @click="props.target.uploadImage?.()"
+                >
+                  更换
+                </NButton>
+                <NButton
+                  size="tiny"
+                  type="error"
+                  secondary
+                  @click="props.target.clearImage?.()"
+                >
+                  <template #icon>
+                    <NIcon :component="TrashOutline" />
+                  </template>
+                </NButton>
+              </NFlex>
+            </div>
           </NFormItem>
           <NFormItem label="图片填充方式">
             <NSelect
               v-model:value="fit"
               :options="[
-                { label: '铺满', value: 'cover' },
-                { label: '完整显示', value: 'contain' },
-                { label: '拉伸填满', value: 'fill' },
-                { label: '原始大小', value: 'none' },
+                { label: '铺满裁剪 (cover)', value: 'cover' },
+                { label: '完整显示 (contain)', value: 'contain' },
+                { label: '拉伸填满 (fill)', value: 'fill' },
+                { label: '原始大小 (none)', value: 'none' },
               ]"
             />
           </NFormItem>
-          <Transition name="fade">
-            <NAlert
-              v-if="!imagePath"
-              type="warning"
-              :show-icon="true"
-              style="margin-bottom: 12px"
-            >
-              请选择并上传一张图片作为背景。
-            </NAlert>
-          </Transition>
         </template>
       </div>
     </Transition>
@@ -295,13 +311,13 @@ function clearAll() {
         justify="space-between"
         align="center"
         :wrap="false"
-        style="margin-bottom: 10px"
+        style="margin-bottom: 12px; margin-top: 4px"
       >
         <div
-          style="font-size: 12px; color: var(--vtsuru-fg-muted)"
-          title="建议开启以让内置页面也生效"
+          style="font-size: 13px; color: var(--vtsuru-fg)"
+          title="开启后背景将延伸覆盖左侧导航区域"
         >
-          覆盖导航区域
+          延伸覆盖侧边导航栏
         </div>
         <NSwitch
           v-model:value="coverSidebar"
@@ -309,86 +325,180 @@ function clearAll() {
         />
       </NFlex>
 
-      <NFormItem label="遮罩颜色">
-        <NRadioGroup
-          v-model:value="scrimMode"
-          size="small"
+      <NFormItem label="遮罩色调与透明度">
+        <NFlex
+          vertical
+          :size="8"
           style="width: 100%"
         >
-          <NRadioButton
-            value="auto"
-            style="width: 33.3%; text-align: center"
+          <NRadioGroup
+            v-model:value="scrimMode"
+            size="small"
+            style="width: 100%"
           >
-            自动
-          </NRadioButton>
-          <NRadioButton
-            value="black"
-            style="width: 33.3%; text-align: center"
+            <NRadioButton
+              value="auto"
+              style="width: 33.3%; text-align: center"
+            >
+              自适应
+            </NRadioButton>
+            <NRadioButton
+              value="black"
+              style="width: 33.3%; text-align: center"
+            >
+              暗黑遮罩
+            </NRadioButton>
+            <NRadioButton
+              value="white"
+              style="width: 33.4%; text-align: center"
+            >
+              纯白遮罩
+            </NRadioButton>
+          </NRadioGroup>
+          <NFlex
+            align="center"
+            :size="10"
+            style="width: 100%"
           >
-            黑
-          </NRadioButton>
-          <NRadioButton
-            value="white"
-            style="width: 33.4%; text-align: center"
-          >
-            白
-          </NRadioButton>
-        </NRadioGroup>
+            <NSlider
+              v-model:value="scrimStrength"
+              :min="0"
+              :max="100"
+              :step="1"
+              style="flex: 1"
+            />
+            <NInputNumber
+              v-model:value="scrimStrength"
+              :min="0"
+              :max="100"
+              size="small"
+              style="width: 80px"
+            >
+              <template #suffix> % </template>
+            </NInputNumber>
+          </NFlex>
+        </NFlex>
       </NFormItem>
 
-      <NFormItem
-        label="遮罩强度 %"
-        :show-feedback="false"
-      >
-        <NInputNumber
-          v-model:value="scrimStrength"
-          :min="0"
-          :max="100"
-          style="width: 100%"
-        />
-      </NFormItem>
-
-      <NFormItem label="背景效果">
-        <NRadioGroup
-          v-model:value="blurMode"
-          size="small"
+      <NFormItem label="视觉滤镜与模糊">
+        <NFlex
+          vertical
+          :size="8"
           style="width: 100%"
         >
-          <NRadioButton
-            value="none"
-            style="width: 33.3%; text-align: center"
+          <NRadioGroup
+            v-model:value="blurMode"
+            size="small"
+            style="width: 100%"
           >
-            无
-          </NRadioButton>
-          <NRadioButton
-            value="background"
-            style="width: 33.3%; text-align: center"
+            <NRadioButton
+              value="none"
+              style="width: 33.3%; text-align: center"
+            >
+              清晰无滤镜
+            </NRadioButton>
+            <NRadioButton
+              value="background"
+              style="width: 33.3%; text-align: center"
+            >
+              模糊背景
+            </NRadioButton>
+            <NRadioButton
+              value="glass"
+              style="width: 33.4%; text-align: center"
+            >
+              磨砂玻璃
+            </NRadioButton>
+          </NRadioGroup>
+          <NFlex
+            v-if="blurMode !== 'none'"
+            align="center"
+            :size="10"
+            style="width: 100%"
           >
-            模糊背景
-          </NRadioButton>
-          <NRadioButton
-            value="glass"
-            style="width: 33.4%; text-align: center"
-          >
-            磨砂玻璃
-          </NRadioButton>
-        </NRadioGroup>
-      </NFormItem>
-
-      <NFormItem
-        label="强度 px"
-        :show-feedback="false"
-      >
-        <NInputNumber
-          v-model:value="blur"
-          :min="0"
-          :max="40"
-          style="width: 100%"
-          :disabled="blurMode === 'none'"
-        />
+            <NSlider
+              v-model:value="blur"
+              :min="0"
+              :max="40"
+              :step="1"
+              style="flex: 1"
+            />
+            <NInputNumber
+              v-model:value="blur"
+              :min="0"
+              :max="40"
+              size="small"
+              style="width: 80px"
+            >
+              <template #suffix> px </template>
+            </NInputNumber>
+          </NFlex>
+        </NFlex>
       </NFormItem>
     </template>
   </NForm>
 </template>
 
-<style scoped src="./ui-transitions.css"></style>
+<style scoped>
+@import './ui-transitions.css';
+
+.upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 1px dashed var(--vtsuru-border);
+  border-radius: 8px;
+  background: var(--vtsuru-bg-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.upload-dropzone:hover {
+  border-color: var(--vtsuru-primary, #3b82f6);
+  background: var(--vtsuru-bg-elevated);
+}
+
+.image-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  background: var(--vtsuru-bg-muted);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.image-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--vtsuru-border);
+  flex-shrink: 0;
+}
+
+.image-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.image-filename {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vtsuru-fg);
+}
+
+.image-sub {
+  font-size: 11px;
+  color: var(--vtsuru-fg-muted);
+}
+</style>

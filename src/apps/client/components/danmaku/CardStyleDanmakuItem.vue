@@ -2,7 +2,8 @@
 import { storeToRefs } from 'pinia'
 
 import { useLiveEmoji } from '@/store/useLiveEmoji'
-import { Box24Regular, VehicleShip24Filled } from '@vicons/fluent'
+import { Box24Regular, Heart24Filled, VehicleShip24Filled } from '@vicons/fluent'
+import { NIcon } from 'naive-ui'
 
 import { EventDataTypes } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
@@ -168,7 +169,13 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
           <span class="enter-badge">进入了直播间</span>
         </template>
         <template v-else-if="item.type === EventDataTypes.Like">
-          <span class="like-badge">❤️ 点赞了</span>
+          <span class="like-badge">
+            <NIcon
+              :component="Heart24Filled"
+              style="vertical-align: -2px; margin-right: 2px"
+            />
+            点赞了
+          </span>
         </template>
       </div>
       <div

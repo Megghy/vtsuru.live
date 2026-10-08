@@ -26,6 +26,7 @@ import { useWebFetcher } from '@/store/useWebFetcher'
 
 import { usePngtuberDriver } from '../store/usePngtuberDriver'
 import { useAutoAction } from '../store/useAutoAction'
+import { useBiliAccountManager } from '../store/useBiliAccountManager'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
 import { useClientBackup } from '../store/useClientBackup'
@@ -370,6 +371,7 @@ export async function initAll(isOnBoot: boolean) {
   info('[init] 已加载账户信息')
   clientInitStage.value = '加载 Bilibili Cookie...'
   biliCookie.init()
+  useBiliAccountManager().init()
   info('[init] 已加载bilibili cookie')
   clientInitStage.value = '初始化基础信息...'
   initInfo()

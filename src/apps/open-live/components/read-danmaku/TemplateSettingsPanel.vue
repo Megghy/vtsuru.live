@@ -14,6 +14,7 @@ import {
   NSelect,
   NSwitch,
   NText,
+  useMessage,
 } from 'naive-ui'
 import { reactive } from 'vue'
 
@@ -32,6 +33,7 @@ withDefaults(defineProps<{ supportsFollow?: boolean }>(), {
   supportsFollow: true,
 })
 
+const message = useMessage()
 const speechService = useSpeechService()
 const { settings, speechState } = speechService
 
@@ -130,32 +132,102 @@ function onFieldChange(cond: TemplateCondition) {
   }
 }
 
-function test(type: EventDataTypes) {
-  const data: any = {
+function generateMockDataForEvent(eventKey: string, type: EventDataTypes, specificRule?: TemplateRule): any {
+  const rules = specificRule ? [specificRule] : (settings.value.templates[eventKey]?.rules ?? [])
+
+  const mock: any = {
     type,
     uname: '测试用户',
-    uid: 0,
+    uid: 10001,
     msg: '',
     price: 0,
-    num: 0,
+    num: 1,
     time: Date.now(),
     guard_level: 0,
     fans_medal_level: 1,
-    fans_medal_name: '',
-    fans_medal_wearing_status: false,
+    fans_medal_name: '粉丝勋章',
+    fans_medal_wearing_status: true,
     emoji: undefined,
     uface: '',
     open_id: '',
-    ouid: '',
+    ouid: 'mock_uid_10001',
   }
-  const map: Partial<Record<EventDataTypes, any>> = {
-    [EventDataTypes.Message]: { msg: '测试弹幕' },
-    [EventDataTypes.SC]: { msg: '测试留言', price: 30, num: 1 },
-    [EventDataTypes.Guard]: { msg: '舰长', num: 1, guard_level: 3 },
-    [EventDataTypes.Gift]: { msg: '测试礼物', price: 5, num: 5 },
+
+  switch (type) {
+    case EventDataTypes.Message:
+      mock.msg = '测试弹幕消息'
+      break
+    case EventDataTypes.Gift:
+      mock.msg = '测试礼物'
+      mock.price = 5
+      mock.num = 5
+      break
+    case EventDataTypes.SC:
+      mock.msg = '测试醒目留言'
+      mock.price = 30
+      mock.num = 1
+      break
+    case EventDataTypes.Guard:
+      mock.msg = '舰长'
+      mock.guard_level = 3
+      mock.num = 1
+      break
+    case EventDataTypes.Enter:
+      mock.msg = '进入了直播间'
+      mock.num = 0
+      break
+    case EventDataTypes.Follow:
+      mock.msg = '关注了直播间'
+      mock.num = 0
+      break
   }
-  Object.assign(data, map[type] ?? {})
-  speechService.testEvent(data)
+
+  // 若存在条件规则，提取条件并设置对应值，使 mock 满足条件
+  const targetRule = specificRule || rules.find((r) => r.conditions.length > 0) || rules[0]
+  if (targetRule?.conditions?.length) {
+    for (const cond of targetRule.conditions) {
+      const condVal = cond.value
+      switch (cond.field) {
+        case 'guard_level':
+          mock.guard_level = Number(condVal) || 3
+          break
+        case 'fans_medal_level':
+          mock.fans_medal_level = Number(condVal) || 10
+          mock.fans_medal_wearing_status = true
+          break
+        case 'price':
+          mock.price = Number(condVal) || 30
+          break
+        case 'count':
+          mock.num = Number(condVal) || 1
+          break
+        case 'message':
+        case 'gift_name':
+          if (cond.op === 'contains') {
+            mock.msg = condVal ? `包含${condVal}的测试内容` : (mock.msg || '测试内容')
+          } else if (cond.op === 'regex') {
+            mock.msg = condVal ? String(condVal) : (mock.msg || '测试内容')
+          }
+          break
+        case 'message_length':
+          mock.msg = '测'.repeat(Math.max(1, Number(condVal) || 5))
+          break
+      }
+    }
+  }
+
+  return mock
+}
+
+function test(type: EventDataTypes, eventKey?: string, specificRule?: TemplateRule) {
+  const actualKey = eventKey || templateRows.find((r) => r.type === type)?.eventKey || 'message'
+  const mock = generateMockDataForEvent(actualKey, type, specificRule)
+  const res = speechService.testEvent(mock)
+  if (res.success) {
+    message.success(`已触发测试播报: ${res.text}`)
+  } else {
+    message.warning(res.reason || '测试事件未满足当前任何模板规则，请检查条件设置')
+  }
 }
 
 const mockTypeOptions = [
@@ -275,7 +347,7 @@ function fireMock() {
               (row.type === EventDataTypes.Follow && !supportsFollow)
             "
             :loading="speechState.isApiAudioLoading"
-            @click.stop="test(row.type)"
+            @click.stop="test(row.type, row.eventKey)"
           >
             测试
           </NButton>
@@ -294,16 +366,27 @@ function fireMock() {
               >
                 规则 {{ ri + 1 }}
               </NText>
-              <NButton
-                size="tiny"
-                tertiary
-                type="error"
-                @click="removeRule(row.eventKey, ri)"
-              >
-                <template #icon>
-                  <NIcon :component="Delete20Filled" />
-                </template>
-              </NButton>
+              <NFlex :size="4">
+                <NButton
+                  size="tiny"
+                  tertiary
+                  type="primary"
+                  :loading="speechState.isApiAudioLoading"
+                  @click="test(row.type, row.eventKey, rule)"
+                >
+                  测试此条
+                </NButton>
+                <NButton
+                  size="tiny"
+                  tertiary
+                  type="error"
+                  @click="removeRule(row.eventKey, ri)"
+                >
+                  <template #icon>
+                    <NIcon :component="Delete20Filled" />
+                  </template>
+                </NButton>
+              </NFlex>
             </div>
             <NInput
               v-model:value="rule.template"

@@ -31,6 +31,10 @@ export interface VTsuruClientSettings {
   // EventFetcher 功能开关
   enableEventFetcher: boolean
 
+  // 机器人小号独立自动操作
+  enableBotAccount: boolean
+  botAccountFallbackToMain: boolean
+
   dev_disableDanmakuClient: boolean
   backup: ClientBackupSettings
 }
@@ -56,6 +60,10 @@ export const useSettings = defineStore('settings', () => {
     // 默认启用 EventFetcher
     enableEventFetcher: true,
 
+    // 机器人小号设置
+    enableBotAccount: false,
+    botAccountFallbackToMain: true,
+
     dev_disableDanmakuClient: false,
 
     backup: {
@@ -79,6 +87,8 @@ export const useSettings = defineStore('settings', () => {
     settings.value.pmInterval ??= defaultSettings.pmInterval
     // 初始化 EventFetcher 开关
     settings.value.enableEventFetcher ??= defaultSettings.enableEventFetcher
+    settings.value.enableBotAccount ??= defaultSettings.enableBotAccount
+    settings.value.botAccountFallbackToMain ??= defaultSettings.botAccountFallbackToMain
     settings.value.backup ??= Object.assign({}, defaultSettings.backup)
     settings.value.backup.directory ??= defaultSettings.backup.directory
     settings.value.backup.scheduleEnabled ??= defaultSettings.backup.scheduleEnabled

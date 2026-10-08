@@ -14,27 +14,30 @@ const alignOptions = [
   { label: '右对齐', value: 'end' },
 ]
 const typeOptions = [
-  { label: 'default', value: 'default' },
-  { label: 'primary', value: 'primary' },
-  { label: 'info', value: 'info' },
-  { label: 'success', value: 'success' },
-  { label: 'warning', value: 'warning' },
-  { label: 'error', value: 'error' },
+  { label: '默认 (Default)', value: 'default' },
+  { label: '主要品牌色 (Primary)', value: 'primary' },
+  { label: '信息蓝 (Info)', value: 'info' },
+  { label: '成功绿 (Success)', value: 'success' },
+  { label: '警告黄 (Warning)', value: 'warning' },
+  { label: '危险红 (Error)', value: 'error' },
 ]
-const variantOptions = ['solid', 'secondary', 'tertiary', 'quaternary', 'ghost'].map((value) => ({
-  label: value,
-  value,
-}))
+const variantOptions = [
+  { label: '实心填充 (solid)', value: 'solid' },
+  { label: '次级柔色 (secondary)', value: 'secondary' },
+  { label: '轻量描边 (tertiary)', value: 'tertiary' },
+  { label: '纯文字无框 (quaternary)', value: 'quaternary' },
+  { label: '幽灵边框 (ghost)', value: 'ghost' },
+]
 const sizeOptions = [
-  { label: '小', value: 'sm' },
-  { label: '中', value: 'md' },
-  { label: '大', value: 'lg' },
+  { label: '小 (sm)', value: 'sm' },
+  { label: '中 (md)', value: 'md' },
+  { label: '大 (lg)', value: 'lg' },
 ]
 const radiusOptions = [
   { label: '默认圆角', value: 'default' },
-  { label: '胶囊', value: 'pill' },
-  { label: '直角', value: 'sharp' },
-  { label: '自定义', value: 'custom' },
+  { label: '胶囊全圆', value: 'pill' },
+  { label: '硬朗直角', value: 'sharp' },
+  { label: '自定义数值', value: 'custom' },
 ]
 const effectOptions = [
   { label: '无', value: 'none' },
@@ -88,7 +91,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
       :options="typeOptions"
     />
   </NFormItem>
-  <NFormItem label="样式">
+  <NFormItem label="样式变体">
     <NSelect
       v-model:value="blockProps.variant"
       :options="variantOptions"
@@ -165,7 +168,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
     />
   </NFormItem>
   <NFormItem
-    v-if="propertyAvailable('effectIntensity')"
+    v-if="blockProps.effect && blockProps.effect !== 'none'"
     label="特效强度"
   >
     <NSelect

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCollapse, NCollapseItem, NFormItem, NInput, NInputNumber, NSelect, NText } from 'naive-ui'
+import { NButton, NCollapse, NCollapseItem, NFlex, NFormItem, NInput, NInputNumber, NSelect, NTag, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserPageAppearanceTheme } from '@/apps/user-page/themeConfig'
@@ -59,7 +59,8 @@ const advancedKeys: Array<keyof UserPageAppearanceTheme> = [
   'controlSize',
   'pageMaxWidth',
 ]
-const hasAdvancedSettings = computed(() => advancedKeys.some((key) => props.target.get()?.[key] !== undefined))
+const customCount = computed(() => advancedKeys.filter((key) => props.target.get()?.[key] !== undefined).length)
+const hasAdvancedSettings = computed(() => customCount.value > 0)
 
 function clearAdvancedSettings() {
   const theme = props.target.get()
@@ -67,32 +68,70 @@ function clearAdvancedSettings() {
   advancedKeys.forEach((key) => delete theme[key])
   props.target.cleanup?.()
 }
+
+const radiusPresets = [
+  { label: '直角 0px', value: 0 },
+  { label: '微圆 6px', value: 6 },
+  { label: '圆角 12px', value: 12 },
+  { label: '大圆 20px', value: 20 },
+]
 </script>
 
 <template>
   <NCollapse class="advanced-options">
     <NCollapseItem
       name="appearance"
-      title="高级选项"
+      title="高级外观选项"
     >
+      <template #header-extra>
+        <NTag
+          size="tiny"
+          :type="hasAdvancedSettings ? 'primary' : 'default'"
+          :bordered="false"
+        >
+          {{ hasAdvancedSettings ? `已自定义 ${customCount} 项` : '默认' }}
+        </NTag>
+      </template>
+
       <NText
         depth="3"
         class="advanced-hint"
       >
-        未设置的项目会继承上级主题或使用站点默认值。
+        未设置的项目会继承全局主题或使用站点默认值。
       </NText>
       <PropsGrid :min-item-width="210">
         <NFormItem label="圆角大小">
-          <NInputNumber
-            v-model:value="radius"
-            :min="0"
-            :max="32"
-            clearable
-            placeholder="默认 6px"
+          <NFlex
+            vertical
+            :size="4"
             style="width: 100%"
           >
-            <template #suffix> px </template>
-          </NInputNumber>
+            <NInputNumber
+              v-model:value="radius"
+              :min="0"
+              :max="32"
+              clearable
+              placeholder="默认 6px"
+              style="width: 100%"
+            >
+              <template #suffix> px </template>
+            </NInputNumber>
+            <NFlex
+              :size="4"
+              style="margin-top: 2px"
+            >
+              <NButton
+                v-for="preset in radiusPresets"
+                :key="preset.value"
+                size="tiny"
+                quaternary
+                :type="radius === preset.value ? 'primary' : 'default'"
+                @click="radius = preset.value"
+              >
+                {{ preset.label }}
+              </NButton>
+            </NFlex>
+          </NFlex>
         </NFormItem>
         <NFormItem label="边框强度">
           <NSelect
@@ -113,8 +152,8 @@ function clearAdvancedSettings() {
             clearable
             placeholder="继承（实线）"
             :options="[
-              { label: '实线', value: 'solid' },
-              { label: '虚线', value: 'dashed' },
+              { label: '实线 (solid)', value: 'solid' },
+              { label: '虚线 (dashed)', value: 'dashed' },
             ]"
           />
         </NFormItem>
@@ -127,7 +166,7 @@ function clearAdvancedSettings() {
               { label: '无阴影', value: 'none' },
               { label: '轻微', value: 'subtle' },
               { label: '标准', value: 'normal' },
-              { label: '悬浮', value: 'floating' },
+              { label: '悬浮立体', value: 'floating' },
             ]"
           />
         </NFormItem>
@@ -149,9 +188,9 @@ function clearAdvancedSettings() {
             clearable
             placeholder="继承（标准）"
             :options="[
-              { label: '紧凑', value: 'compact' },
-              { label: '标准', value: 'normal' },
-              { label: '宽松', value: 'relaxed' },
+              { label: '紧凑 (compact)', value: 'compact' },
+              { label: '标准 (normal)', value: 'normal' },
+              { label: '宽松 (relaxed)', value: 'relaxed' },
             ]"
           />
         </NFormItem>
@@ -161,9 +200,9 @@ function clearAdvancedSettings() {
             clearable
             placeholder="继承（标准）"
             :options="[
-              { label: '紧凑', value: 'compact' },
-              { label: '标准', value: 'normal' },
-              { label: '舒适', value: 'comfortable' },
+              { label: '紧凑 (compact)', value: 'compact' },
+              { label: '标准 (normal)', value: 'normal' },
+              { label: '舒适 (comfortable)', value: 'comfortable' },
             ]"
           />
         </NFormItem>
@@ -204,5 +243,6 @@ function clearAdvancedSettings() {
 .advanced-actions {
   display: flex;
   justify-content: flex-end;
+  margin-top: 6px;
 }
 </style>

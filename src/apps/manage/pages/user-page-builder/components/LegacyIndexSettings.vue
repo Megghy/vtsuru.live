@@ -16,30 +16,37 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 
-import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
-import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
-import { USER_INDEX_API_URL } from '@/shared/config'
+
+import type { UserIndexDisplayInfo, UserIndexSettings } from '@/apps/manage/types'
 import { IndexTemplateMap } from '@/shared/config/templates'
-const accountInfo = useAccount()
+
+import { UserPageEditorKey } from '../context'
+
+const editor = inject(UserPageEditorKey)
+if (!editor) throw new Error('UserPageEditor context is missing')
+
 const message = useMessage()
 
-const selectedIndexTemplateKey = ref(accountInfo.value.settings.indexTemplate || 'default')
-const showTemplatePreview = ref(false)
-const indexTemplateOptions = Object.entries(IndexTemplateMap).map(([value, template]) => ({
-  label: template.name,
-  value,
-}))
+const accountInfo = computed(() => editor.account.value)
+const indexDisplayInfo = computed(() => editor.indexDisplayInfo.value)
+
+const selectedIndexTemplateKey = computed({
+  get: () => accountInfo.value.settings.indexTemplate || 'default',
+  set: (val: string) => {
+    accountInfo.value.settings.indexTemplate = val
+  },
+})
+
 const selectedIndexTemplate = computed(
-  () => IndexTemplateMap[selectedIndexTemplateKey.value] ?? IndexTemplateMap.default,
+  () => IndexTemplateMap[selectedIndexTemplateKey.value] || IndexTemplateMap.default,
 )
-
-const isLoading = ref(false)
-
-const indexDisplayInfo = ref<ResponseUserIndexModel | null>(null)
+const indexTemplateOptions = Object.entries(IndexTemplateMap).map(([key, item]) => ({
+  label: item.name,
+  value: key,
+}))
+const showTemplatePreview = ref(false)
 
 const showAddVideoModal = ref(false)
 const addVideoUrl = ref('')
@@ -48,71 +55,34 @@ const showAddLinkModal = ref(false)
 const addLinkName = ref('')
 const addLinkUrl = ref('')
 
+const linkKey = ref(0)
 const editingLinkName = ref<string | null>(null)
 const newLinkName = ref('')
-const linkKey = ref(0)
 
-const orderedLinks = computed(() => {
-  const links = indexDisplayInfo.value?.links ?? {}
-  const entries = Object.entries(links)
-  const order = accountInfo.value?.settings.index.linkOrder
-  if (!order?.length) return entries
-  const map = new Map(entries)
-  return order.filter((k) => map.has(k)).map((k) => [k, map.get(k)!]) as [string, string][]
-})
+const isLoading = ref(false)
 
-async function loadIndexInfo() {
-  if (!accountInfo.value?.name) return
+function updateUserIndexSettings() {
+  return editor.updateUserIndexSettings(accountInfo.value.settings.index)
+}
+
+async function updateIndexSettings() {
   isLoading.value = true
   try {
-    const data = await QueryGetAPI<ResponseUserIndexModel>(`${USER_INDEX_API_URL}get`, { id: accountInfo.value.name })
-    if (data.code === 200) {
-      indexDisplayInfo.value = data.data
-      return
-    }
-    if (data.code === 404) {
-      indexDisplayInfo.value = { links: {}, videos: [] } as any
-      return
-    }
-    throw new Error(data.message || `无法获取数据: ${data.code}`)
-  } catch (e) {
-    console.error('Failed to load user index info:', e)
-    message.error(`无法获取数据: ${(e as Error).message || String(e)}`)
-    indexDisplayInfo.value = null
+    await updateUserIndexSettings()
+    message.success('更新成功')
+  } catch (err) {
+    message.error((err as Error).message)
   } finally {
     isLoading.value = false
   }
 }
 
-async function updateUserIndexSettings() {
+async function saveIndexTemplate(templateKey: string) {
   try {
-    await SaveSetting('Index', accountInfo.value.settings.index)
-    message.success('已保存')
-  } catch (e) {
-    message.error(`保存失败: ${(e as Error).message || String(e)}`)
-    throw e
-  }
-}
-
-async function saveIndexTemplate() {
-  accountInfo.value.settings.indexTemplate = selectedIndexTemplateKey.value
-  try {
-    const response = await SaveAccountSettings()
-    if (response.code !== 200) throw new Error(response.message || '保存失败')
-    message.success('主页模板已更新')
-  } catch (error) {
-    message.error(`保存失败: ${(error as Error).message || String(error)}`)
-  }
-}
-
-async function updateIndexSettings() {
-  try {
-    const response = await QueryPostAPI(`${USER_INDEX_API_URL}update-setting`, accountInfo.value.settings.index)
-    if (response.code !== 200) throw new Error(response.message || `保存失败: ${response.code}`)
-    message.success('已保存')
+    await editor.updateUserIndexTemplate(templateKey)
+    message.success('已切换主页模板')
   } catch (err) {
-    message.error(`保存失败: ${err}`)
-    throw err
+    message.error((err as Error).message)
   }
 }
 
@@ -121,21 +91,19 @@ async function addVideo() {
     message.error('请输入视频链接')
     return
   }
-
+  const match = /video\/(BV[a-zA-Z0-9]+)/.exec(addVideoUrl.value)
+  if (!match) {
+    message.error('无效的视频链接')
+    return
+  }
   isLoading.value = true
   try {
-    const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}add-video`, {
-      video: addVideoUrl.value,
-    })
-
-    if (response.code !== 200) throw new Error(response.message || `保存失败: ${response.code}`)
-    message.success('已添加')
-    indexDisplayInfo.value?.videos.push(response.data)
-    accountInfo.value.settings.index.videos.push(response.data.id)
-    addVideoUrl.value = ''
+    await editor.addIndexVideo(match[1])
+    message.success('添加成功')
     showAddVideoModal.value = false
+    addVideoUrl.value = ''
   } catch (err) {
-    message.error(`保存失败: ${err}`)
+    message.error((err as Error).message)
   } finally {
     isLoading.value = false
   }
@@ -144,37 +112,84 @@ async function addVideo() {
 async function removeVideo(id: string) {
   isLoading.value = true
   try {
-    const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}del-video`, { video: id })
-    if (response.code !== 200) throw new Error(response.message || `删除失败: ${response.code}`)
-    message.success('已删除')
-    if (indexDisplayInfo.value) indexDisplayInfo.value.videos = indexDisplayInfo.value.videos.filter((v) => v.id !== id)
-    accountInfo.value.settings.index.videos = accountInfo.value.settings.index.videos.filter((v) => v !== id)
+    await editor.removeIndexVideo(id)
+    message.success('删除成功')
   } catch (err) {
-    message.error(`删除失败: ${err}`)
+    message.error((err as Error).message)
   } finally {
     isLoading.value = false
   }
 }
 
-function moveVideo(id: string, dir: 'up' | 'down') {
-  const list = accountInfo.value.settings.index.videos
-  const i = list.indexOf(id)
-  if (i === -1) return
-  const nextIndex = dir === 'up' ? i - 1 : i + 1
-  if (nextIndex < 0 || nextIndex >= list.length) return
-  ;[list[i], list[nextIndex]] = [list[nextIndex], list[i]]
-  void updateIndexSettings()
+async function moveVideo(id: string, direction: 'up' | 'down') {
+  const videos = accountInfo.value.settings.index.videos
+  const currentIndex = videos.findIndex((item) => item.id === id)
+  if (currentIndex === -1) return
+  if (direction === 'up' && currentIndex > 0) {
+    ;[videos[currentIndex], videos[currentIndex - 1]] = [videos[currentIndex - 1], videos[currentIndex]]
+  } else if (direction === 'down' && currentIndex < videos.length - 1) {
+    ;[videos[currentIndex], videos[currentIndex + 1]] = [videos[currentIndex + 1], videos[currentIndex]]
+  } else {
+    return
+  }
+  isLoading.value = true
+  try {
+    await updateUserIndexSettings()
+    await loadIndexInfo()
+  } catch (err) {
+    message.error((err as Error).message)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-function moveLink(name: string, dir: 'up' | 'down') {
-  const order = accountInfo.value.settings.index.linkOrder
-  if (!order) return
-  const i = order.indexOf(name)
-  const nextIndex = dir === 'up' ? i - 1 : i + 1
-  if (i === -1 || nextIndex < 0 || nextIndex >= order.length) return
-  ;[order[i], order[nextIndex]] = [order[nextIndex], order[i]]
-  void updateIndexSettings()
-  linkKey.value++
+async function addLink() {
+  if (!addLinkName.value || !addLinkUrl.value) {
+    message.error('请输入链接名称和地址')
+    return
+  }
+  if (!accountInfo.value.settings.index.links) {
+    accountInfo.value.settings.index.links = {}
+  }
+  if (accountInfo.value.settings.index.links[addLinkName.value]) {
+    message.error('链接名称已存在')
+    return
+  }
+  accountInfo.value.settings.index.links[addLinkName.value] = addLinkUrl.value
+  if (!accountInfo.value.settings.index.linkOrder) {
+    accountInfo.value.settings.index.linkOrder = []
+  }
+  accountInfo.value.settings.index.linkOrder.push(addLinkName.value)
+  isLoading.value = true
+  try {
+    await updateUserIndexSettings()
+    message.success('添加成功')
+    showAddLinkModal.value = false
+    addLinkName.value = ''
+    addLinkUrl.value = ''
+    linkKey.value++
+  } catch (err) {
+    message.error((err as Error).message)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function removeLink(name: string) {
+  delete accountInfo.value.settings.index.links[name]
+  accountInfo.value.settings.index.linkOrder = (accountInfo.value.settings.index.linkOrder || []).filter(
+    (item) => item !== name,
+  )
+  isLoading.value = true
+  try {
+    await updateUserIndexSettings()
+    message.success('删除成功')
+    linkKey.value++
+  } catch (err) {
+    message.error((err as Error).message)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 function startEditLink(name: string) {
@@ -182,71 +197,88 @@ function startEditLink(name: string) {
   newLinkName.value = name
 }
 
-async function confirmEditLink(oldName: string) {
-  const idxSetting = accountInfo.value.settings.index
-  if (!newLinkName.value || newLinkName.value === oldName) {
-    editingLinkName.value = null
-    return
-  }
-  if (idxSetting.links[newLinkName.value]) {
-    message.error('名称已存在')
-    return
-  }
-  idxSetting.links[newLinkName.value] = idxSetting.links[oldName]
-  delete idxSetting.links[oldName]
-  if (idxSetting.linkOrder) {
-    idxSetting.linkOrder = idxSetting.linkOrder.map((k) => (k === oldName ? newLinkName.value : k))
-  }
-  await updateIndexSettings()
-  editingLinkName.value = null
-  linkKey.value++
-}
-
 function cancelEditLink() {
   editingLinkName.value = null
+  newLinkName.value = ''
 }
 
-async function addLink() {
-  if (!addLinkName.value || !addLinkUrl.value) {
-    message.error('请输入名称和链接')
+async function confirmEditLink(oldName: string) {
+  if (!newLinkName.value || newLinkName.value === oldName) {
+    cancelEditLink()
     return
   }
-
+  const links = accountInfo.value.settings.index.links || {}
+  const linkOrder = accountInfo.value.settings.index.linkOrder || []
+  if (links[newLinkName.value]) {
+    message.error('新链接名称已存在')
+    return
+  }
+  links[newLinkName.value] = links[oldName]
+  delete links[oldName]
+  const index = linkOrder.indexOf(oldName)
+  if (index !== -1) {
+    linkOrder[index] = newLinkName.value
+  }
+  isLoading.value = true
   try {
-    const validatedUrl = new URL(addLinkUrl.value)
-    addLinkUrl.value = validatedUrl.toString()
-  } catch (e) {
-    console.error(e)
-    message.error('请输入正确的链接')
-    return
+    await updateUserIndexSettings()
+    message.success('改名成功')
+    cancelEditLink()
+    linkKey.value++
+  } catch (err) {
+    message.error((err as Error).message)
+  } finally {
+    isLoading.value = false
   }
-
-  if (Object.keys(accountInfo.value.settings.index.links).includes(addLinkName.value)) {
-    message.error(`${addLinkName.value}已存在`)
-    return
-  }
-
-  accountInfo.value.settings.index.links[addLinkName.value] = addLinkUrl.value
-  await updateIndexSettings()
-  await loadIndexInfo()
-
-  addLinkName.value = ''
-  addLinkUrl.value = ''
-  showAddLinkModal.value = false
-  linkKey.value++
 }
 
-async function removeLink(name: string) {
-  delete accountInfo.value.settings.index.links[name]
-  if (accountInfo.value.settings.index.linkOrder) {
-    accountInfo.value.settings.index.linkOrder = accountInfo.value.settings.index.linkOrder.filter((k) => k !== name)
+async function moveLink(name: string, direction: 'up' | 'down') {
+  const linkOrder = accountInfo.value.settings.index.linkOrder || []
+  const currentIndex = linkOrder.indexOf(name)
+  if (currentIndex === -1) return
+  if (direction === 'up' && currentIndex > 0) {
+    ;[linkOrder[currentIndex], linkOrder[currentIndex - 1]] = [linkOrder[currentIndex - 1], linkOrder[currentIndex]]
+  } else if (direction === 'down' && currentIndex < linkOrder.length - 1) {
+    ;[linkOrder[currentIndex], linkOrder[currentIndex + 1]] = [linkOrder[currentIndex + 1], linkOrder[currentIndex]]
+  } else {
+    return
   }
-  await updateIndexSettings()
-  await loadIndexInfo()
-  linkKey.value++
+  accountInfo.value.settings.index.linkOrder = linkOrder
+  isLoading.value = true
+  try {
+    await updateUserIndexSettings()
+    linkKey.value++
+  } catch (err) {
+    message.error((err as Error).message)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-accountInfo.value.settings.index.allowDisplayInIndex = accountInfo.value.settings.index.allowDisplayInIndex ?? true
+const orderedLinks = computed(() => {
+  const links = indexDisplayInfo.value?.links || {}
+  const order = accountInfo.value.settings.index.linkOrder || []
+  const ordered: [string, string][] = []
+  order.forEach((key) => {
+    if (links[key]) {
+      ordered.push([key, links[key]])
+    }
+  })
+  Object.entries(links).forEach(([key, value]) => {
+    if (!order.includes(key)) {
+      ordered.push([key, value])
+    }
+  })
+  return ordered
+})
+
+async function loadIndexInfo() {
+  await editor.loadIndexDisplayInfo()
+}
+
+accountInfo.value.settings.index ??= {} as UserIndexSettings
+accountInfo.value.settings.index.videos ??= []
+accountInfo.value.settings.index.links ??= {}
 if (!accountInfo.value.settings.index.linkOrder || accountInfo.value.settings.index.linkOrder.length === 0) {
   accountInfo.value.settings.index.linkOrder = Object.keys(accountInfo.value.settings.index.links || {})
 }
@@ -261,23 +293,34 @@ await loadIndexInfo()
     <NDivider style="margin: 0"> 主页模板 </NDivider>
     <div class="index-template-picker">
       <div class="index-template-picker__copy">
-        <strong>{{ selectedIndexTemplate.name }}</strong>
-        <span>支持头图、头像框、荣誉、直播状态和精选内容。</span>
+        <div class="index-template-picker__title">
+          {{ selectedIndexTemplate.name }}
+        </div>
+        <div class="index-template-picker__desc">
+          支持头图、头像框、荣誉、直播状态和精选内容。
+        </div>
       </div>
-      <NSelect
-        v-model:value="selectedIndexTemplateKey"
-        size="small"
-        :options="indexTemplateOptions"
-        style="min-width: 150px"
-        @update:value="saveIndexTemplate"
-      />
-      <NButton
-        size="small"
-        secondary
-        @click="showTemplatePreview = true"
+      <NFlex
+        :size="8"
+        align="center"
+        style="width: 100%"
+        :wrap="false"
       >
-        浏览预览
-      </NButton>
+        <NSelect
+          v-model:value="selectedIndexTemplateKey"
+          size="small"
+          :options="indexTemplateOptions"
+          style="flex: 1; min-width: 0"
+          @update:value="saveIndexTemplate"
+        />
+        <NButton
+          size="small"
+          secondary
+          @click="showTemplatePreview = true"
+        >
+          浏览预览
+        </NButton>
+      </NFlex>
     </div>
 
     <NDivider style="margin: 0"> 常规 </NDivider>
@@ -320,44 +363,45 @@ await loadIndexInfo()
       v-else
       wrap
       :size="12"
+      style="width: 100%"
     >
-      <NTooltip
+      <div
         v-for="item in indexDisplayInfo?.videos ?? []"
         :key="item.id"
+        style="width: 100%"
       >
-        <template #trigger>
-          <div>
-            <SimpleVideoCard :video="item" />
-            <NFlex style="margin-top: 6px">
-              <NButton
-                size="small"
-                secondary
-                :disabled="isLoading"
-                @click="moveVideo(item.id, 'up')"
-              >
-                上移
-              </NButton>
-              <NButton
-                size="small"
-                secondary
-                :disabled="isLoading"
-                @click="moveVideo(item.id, 'down')"
-              >
-                下移
-              </NButton>
-              <NButton
-                type="warning"
-                size="small"
-                :disabled="isLoading"
-                @click="removeVideo(item.id)"
-              >
-                删除
-              </NButton>
-            </NFlex>
-          </div>
-        </template>
-        {{ item.title }}
-      </NTooltip>
+        <SimpleVideoCard :video="item" />
+        <NFlex
+          style="margin-top: 6px"
+          :size="6"
+        >
+          <NButton
+            size="tiny"
+            secondary
+            :disabled="isLoading"
+            @click="moveVideo(item.id, 'up')"
+          >
+            上移
+          </NButton>
+          <NButton
+            size="tiny"
+            secondary
+            :disabled="isLoading"
+            @click="moveVideo(item.id, 'down')"
+          >
+            下移
+          </NButton>
+          <NButton
+            type="warning"
+            size="tiny"
+            secondary
+            :disabled="isLoading"
+            @click="removeVideo(item.id)"
+          >
+            删除
+          </NButton>
+        </NFlex>
+      </div>
     </NFlex>
 
     <NDivider style="margin: 0"> 其他链接 </NDivider>
@@ -370,38 +414,43 @@ await loadIndexInfo()
       添加链接
     </NButton>
     <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
-    <NFlex
+    <div
       v-else
       :key="linkKey"
-      wrap
-      :size="8"
+      class="links-list"
     >
-      <NFlex
+      <div
         v-for="link in orderedLinks"
         :key="link[0]"
-        align="center"
+        class="link-item-row"
       >
         <template v-if="editingLinkName === link[0]">
-          <NInput
-            v-model:value="newLinkName"
-            size="small"
-            style="width: 120px"
-          />
-          <NButton
-            size="tiny"
-            type="primary"
-            text
-            @click="confirmEditLink(link[0])"
+          <NFlex
+            :size="6"
+            align="center"
+            style="width: 100%"
+            :wrap="false"
           >
-            保存
-          </NButton>
-          <NButton
-            size="tiny"
-            text
-            @click="cancelEditLink"
-          >
-            取消
-          </NButton>
+            <NInput
+              v-model:value="newLinkName"
+              size="small"
+              style="flex: 1; min-width: 0"
+            />
+            <NButton
+              size="tiny"
+              type="primary"
+              @click="confirmEditLink(link[0])"
+            >
+              保存
+            </NButton>
+            <NButton
+              size="tiny"
+              secondary
+              @click="cancelEditLink"
+            >
+              取消
+            </NButton>
+          </NFlex>
         </template>
         <template v-else>
           <NTooltip>
@@ -410,19 +459,24 @@ await loadIndexInfo()
                 :bordered="false"
                 size="small"
                 type="info"
+                class="link-tag"
               >
                 {{ link[0] }}
               </NTag>
             </template>
             {{ link[1] }}
           </NTooltip>
-          <NFlex>
+          <NFlex
+            :size="4"
+            align="center"
+            :wrap="false"
+          >
             <NTooltip>
               <template #trigger>
                 <NButton
                   size="tiny"
-                  secondary
-                  text
+                  quaternary
+                  circle
                   aria-label="上移链接"
                   @click="moveLink(link[0], 'up')"
                 >
@@ -437,8 +491,8 @@ await loadIndexInfo()
               <template #trigger>
                 <NButton
                   size="tiny"
-                  secondary
-                  text
+                  quaternary
+                  circle
                   aria-label="下移链接"
                   @click="moveLink(link[0], 'down')"
                 >
@@ -451,7 +505,7 @@ await loadIndexInfo()
             </NTooltip>
             <NButton
               size="tiny"
-              text
+              secondary
               @click="startEditLink(link[0])"
             >
               改名
@@ -462,7 +516,7 @@ await loadIndexInfo()
                   <template #trigger>
                     <NButton
                       type="error"
-                      text
+                      secondary
                       size="tiny"
                       aria-label="删除链接"
                     >
@@ -478,8 +532,8 @@ await loadIndexInfo()
             </NTooltip>
           </NFlex>
         </template>
-      </NFlex>
-    </NFlex>
+      </div>
+    </div>
   </NFlex>
 
   <NModal
@@ -548,9 +602,8 @@ await loadIndexInfo()
 
 <style scoped>
 .index-template-picker {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--vtsuru-border);
@@ -561,26 +614,45 @@ await loadIndexInfo()
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
-.index-template-picker__copy strong {
+.index-template-picker__title {
   color: var(--vtsuru-fg);
   font-size: 14px;
+  font-weight: 600;
 }
-.index-template-picker__copy span {
+.index-template-picker__desc {
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
   line-height: 1.5;
+}
+.links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.link-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--vtsuru-bg-inset, rgba(127, 127, 127, 0.06));
+  box-sizing: border-box;
+}
+.link-tag {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .index-template-preview {
   max-height: min(72vh, 760px);
   overflow: auto;
   margin: -12px;
   background: var(--vtsuru-bg);
-}
-@media (max-width: 640px) {
-  .index-template-picker {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

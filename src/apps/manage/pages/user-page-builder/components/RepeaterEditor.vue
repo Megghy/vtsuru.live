@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { AddOutline, ChevronDownOutline, CopyOutline, ReorderThreeOutline, TrashOutline } from '@vicons/ionicons5'
-import { NButton, NIcon, NPopconfirm, NText, NTooltip } from 'naive-ui'
+import {
+  AddOutline,
+  ChevronDownOutline,
+  ContractOutline,
+  CopyOutline,
+  ExpandOutline,
+  ReorderThreeOutline,
+  TrashOutline,
+} from '@vicons/ionicons5'
+import { NButton, NFlex, NIcon, NPopconfirm, NText, NTooltip } from 'naive-ui'
 import { computed, ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -31,6 +39,14 @@ function toggle(itemId: string) {
   expandedIds.value = next
 }
 
+function expandAll() {
+  expandedIds.value = new Set(props.items.map((item) => item._id))
+}
+
+function collapseAll() {
+  expandedIds.value = new Set()
+}
+
 function addItem() {
   const item = { ...props.createItem(), _id: createId() }
   props.items.push(item)
@@ -46,7 +62,50 @@ function duplicateItem(index: number) {
 
 <template>
   <div class="repeater-editor">
+    <div
+      v-if="itemsModel.length >= 2"
+      class="repeater-bulk-actions"
+    >
+      <NFlex
+        justify="space-between"
+        align="center"
+        style="width: 100%"
+      >
+        <span style="font-size: 11px; color: var(--vtsuru-fg-muted)"> 共 {{ itemsModel.length }} 项 </span>
+        <NFlex :size="4">
+          <NButton
+            size="tiny"
+            quaternary
+            @click="expandAll"
+          >
+            <template #icon>
+              <NIcon><ExpandOutline /></NIcon>
+            </template>
+            全部展开
+          </NButton>
+          <NButton
+            size="tiny"
+            quaternary
+            @click="collapseAll"
+          >
+            <template #icon>
+              <NIcon><ContractOutline /></NIcon>
+            </template>
+            全部折叠
+          </NButton>
+        </NFlex>
+      </NFlex>
+    </div>
+
+    <div
+      v-if="itemsModel.length === 0"
+      class="repeater-empty"
+    >
+      <span style="font-size: 12px; color: var(--vtsuru-fg-muted)"> 暂无列表项，点击下方按钮添加 </span>
+    </div>
+
     <VueDraggable
+      v-else
       v-model="itemsModel"
       handle=".repeater-drag-handle"
       :animation="160"
@@ -149,6 +208,20 @@ function duplicateItem(index: number) {
   display: grid;
   gap: 8px;
   width: 100%;
+}
+.repeater-bulk-actions {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.repeater-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border: 1px dashed var(--vtsuru-border);
+  border-radius: 6px;
+  background: var(--vtsuru-bg-muted);
 }
 .repeater-item {
   margin-bottom: 8px;

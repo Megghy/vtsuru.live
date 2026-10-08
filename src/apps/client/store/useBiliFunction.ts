@@ -8,6 +8,7 @@ import { isDev } from '@/shared/config'
 
 import { onSendPrivateMessageFailed } from '../data/notification'
 import { QueryBiliAPI } from '../data/utils'
+import { useBiliAccountManager } from './useBiliAccountManager'
 import { useBiliCookie } from './useBiliCookie'
 import { useSettings } from './useSettings'
 
@@ -44,11 +45,50 @@ function getMixinKey(orig: string): string {
 }
 
 export const useBiliFunction = defineStore('biliFunction', () => {
+  const accountManager = useBiliAccountManager()
   const biliCookieStore = useBiliCookie()
   const account = useAccount()
   const settingsStore = useSettings()
-  const cookie = computed(() => biliCookieStore.cookie)
-  const uid = computed(() => account.value.biliId)
+
+  // 账号角色与凭证路由：优先由账号池管理器统一解析
+  const danmakuAccount = computed(() => accountManager.danmakuAccount)
+  const mainAccount = computed(() => accountManager.mainAccount)
+
+  const activeDanmakuAccountType = computed<'bot' | 'main'>(() => {
+    if (
+      accountManager.routing.danmakuAccountId !== 'main' &&
+      danmakuAccount.value &&
+      mainAccount.value &&
+      danmakuAccount.value.id !== mainAccount.value.id
+    ) {
+      return 'bot'
+    }
+    return 'main'
+  })
+
+  // 自动化发送专用 Cookie
+  const activeDanmakuCookie = computed(() => danmakuAccount.value?.cookie || biliCookieStore.cookie || '')
+  const activeDanmakuUid = computed(() => danmakuAccount.value?.mid || account.value.biliId || 0)
+  const activeDanmakuCsrf = computed(() => {
+    const c = activeDanmakuCookie.value
+    if (!c) return null
+    const match = c.match(/bili_jct=([^;]+)/)
+    return match ? match[1] : null
+  })
+
+  // 主播号专属凭证（直播管理与房管封禁等操作专用）
+  const mainCookie = computed(() => mainAccount.value?.cookie || biliCookieStore.cookie || '')
+  const mainCsrf = computed(() => {
+    const c = mainCookie.value
+    if (!c) return null
+    const match = c.match(/bili_jct=([^;]+)/)
+    return match ? match[1] : null
+  })
+
+  // 主播号 UID 与 CSRF（保持向后兼容）
+  const uid = computed(() => mainAccount.value?.mid || account.value.biliId)
+  const csrf = computed(() => mainCsrf.value)
+
   // 存储WBI密钥
   const wbiKeys = ref<{ img_key: string; sub_key: string } | null>(null)
   const wbiKeysTimestamp = ref<number | null>(null)
@@ -64,12 +104,6 @@ export const useBiliFunction = defineStore('biliFunction', () => {
   // 使用computed获取设置中的间隔值
   const danmakuInterval = computed(() => settingsStore.settings.danmakuInterval)
   const pmInterval = computed(() => settingsStore.settings.pmInterval)
-
-  const csrf = computed(() => {
-    if (!cookie.value) return null
-    const match = cookie.value.match(/bili_jct=([^;]+)/)
-    return match ? match[1] : null
-  })
 
   // 设置间隔的方法
   async function setDanmakuInterval(interval: number) {
@@ -160,8 +194,17 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     fontsize: number = 25,
     mode: number = 1,
   ): Promise<boolean> {
-    if (!csrf.value || !cookie.value) {
-      console.error('发送弹幕失败：缺少 cookie 或 csrf token')
+    if (!activeDanmakuCsrf.value || !activeDanmakuCookie.value) {
+      if (settingsStore.settings.enableBotAccount && !settingsStore.settings.botAccountFallbackToMain) {
+        console.error('发送弹幕失败：机器人小号 Cookie 无效且已关闭回退主账号')
+        window.$notification.error({
+          title: '机器人小号异常',
+          description: '机器人小号 Cookie 已失效，已暂停自动操作发送。请重新登录小号或开启回退主账号。',
+          duration: 5000,
+        })
+      } else {
+        console.error('发送弹幕失败：缺少 cookie 或 csrf token')
+      }
       return false
     }
     if (!message || message.trim().length === 0) {
@@ -171,9 +214,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
     // 开发环境下只显示通知，不实际发送
     if (isDev) {
-      console.log(`[开发环境] 模拟发送弹幕到房间 ${roomId}: ${message}`)
+      const accountLabel = activeDanmakuAccountType.value === 'bot' ? '机器人小号' : '主播号'
+      console.log(`[开发环境] 模拟发送弹幕 [${accountLabel}] 到房间 ${roomId}: ${message}`)
       window.$notification.info({
-        title: '开发环境 - 弹幕未实际发送',
+        title: `开发环境 - 弹幕未实际发送 (${accountLabel})`,
         description: `房间: ${roomId}, 内容: ${message}`,
         duration: 10000,
       })
@@ -190,8 +234,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       mode: mode.toString(),
       roomid: roomId.toString(),
       rnd: rnd.toString(),
-      csrf: csrf.value,
-      csrf_token: csrf.value,
+      csrf: activeDanmakuCsrf.value,
+      csrf_token: activeDanmakuCsrf.value,
     }
     const params = new URLSearchParams(data)
     try {
@@ -199,7 +243,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          Cookie: cookie.value,
+          Cookie: activeDanmakuCookie.value,
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
           Referer: `https://live.bilibili.com/${roomId}`,
@@ -232,7 +276,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
           duration: 0,
         })
         console.error(
-          `发送弹幕API失败 to: ${roomId} ${uid.value} [${message}] - ${json.code} - ${json.message || json.msg}`,
+          `发送弹幕API失败 to: ${roomId} [${message}] - ${json.code} - ${json.message || json.msg}`,
         )
         return false
       }
@@ -310,7 +354,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
   // 原始发送私信方法（重命名为_sendPrivateMessage）
   async function _sendPrivateMessage(receiverId: number, message: string): Promise<boolean> {
-    if (!csrf.value || !cookie.value || !uid.value) {
+    if (!activeDanmakuCsrf.value || !activeDanmakuCookie.value || !activeDanmakuUid.value) {
       const error = '发送私信失败：缺少 cookie, csrf token 或 uid'
       console.error(error)
       onSendPrivateMessageFailed(receiverId, message, error)
@@ -329,9 +373,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
     // 开发环境下只显示通知，不实际发送
     if (isDev) {
-      console.log(`[开发环境] 模拟发送私信到用户 ${receiverId}: ${message}`)
+      const accountLabel = activeDanmakuAccountType.value === 'bot' ? '机器人小号' : '主播号'
+      console.log(`[开发环境] 模拟发送私信 [${accountLabel}] 到用户 ${receiverId}: ${message}`)
       window.$notification.info({
-        title: '开发环境 - 私信未实际发送',
+        title: `开发环境 - 私信未实际发送 (${accountLabel})`,
         description: `接收者: ${receiverId}, 内容: ${message}`,
         duration: 10000,
       })
@@ -350,7 +395,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
       // 准备URL参数(需要WBI签名的参数)
       const urlParams = {
-        w_sender_uid: uid.value.toString(),
+        w_sender_uid: activeDanmakuUid.value.toString(),
         w_receiver_id: receiverId.toString(),
         w_dev_id: dev_id,
       }
@@ -363,7 +408,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
       // 准备表单数据
       const formData = {
-        'msg[sender_uid]': uid.value.toString(),
+        'msg[sender_uid]': activeDanmakuUid.value.toString(),
         'msg[receiver_id]': receiverId.toString(),
         'msg[receiver_type]': '1',
         'msg[msg_type]': '1',
@@ -374,8 +419,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         'msg[dev_id]': dev_id,
         build: '0',
         mobi_app: 'web',
-        csrf: csrf.value,
-        csrf_token: csrf.value,
+        csrf: activeDanmakuCsrf.value,
+        csrf_token: activeDanmakuCsrf.value,
       }
 
       const params = new URLSearchParams(formData)
@@ -383,7 +428,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          Cookie: cookie.value,
+          Cookie: activeDanmakuCookie.value,
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
           Origin: '',
@@ -447,9 +492,9 @@ export const useBiliFunction = defineStore('biliFunction', () => {
    * @param hours 封禁时长 (小时, 1-720)
    */
   async function banLiveUser(roomId: number, userId: number, hours: number = 1): Promise<unknown> {
-    // 使用 csrf.value
-    if (!csrf.value || !cookie.value) {
-      console.error('封禁用户失败：缺少 cookie 或 csrf token')
+    // 房管封禁操作必须严格使用主播号凭证
+    if (!mainCsrf.value || !mainCookie.value) {
+      console.error('封禁用户失败：主播账号缺少 cookie 或 csrf token')
       return
     }
     // 确保 hours 在 1 到 720 之间
@@ -459,9 +504,9 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       room_id: roomId.toString(),
       block_uid: userId.toString(),
       hour: validHours.toString(),
-      csrf: csrf.value, // 使用计算属性的值
-      csrf_token: csrf.value, // 使用计算属性的值
-      visit_id: '', // 通常可以为空
+      csrf: mainCsrf.value,
+      csrf_token: mainCsrf.value,
+      visit_id: '',
     }
 
     try {
@@ -470,12 +515,12 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          Cookie: cookie.value, // 使用计算属性的值
+          Cookie: mainCookie.value,
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
-          Referer: `https://live.bilibili.com/p/html/live-room-setting/#/room-manager/black-list?room_id=${roomId}`, // 模拟来源
+          Referer: `https://live.bilibili.com/p/html/live-room-setting/#/room-manager/black-list?room_id=${roomId}`,
         },
-        body: params, // 发送 URLSearchParams 数据
+        body: params,
       })
       if (!response.ok) {
         console.error('封禁用户失败:', response.status, await response.text())
@@ -500,6 +545,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     sendPrivateMessage,
     csrf,
     uid,
+    activeDanmakuAccountType,
+    activeDanmakuUid,
     danmakuInterval,
     pmInterval,
     setDanmakuInterval,

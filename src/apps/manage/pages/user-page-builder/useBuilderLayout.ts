@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'vue'
-import { computed, ref, watch, watchEffect } from 'vue'
+import type { CSSProperties, Ref } from 'vue'
+import { computed, ref, toValue, watch, watchEffect } from 'vue'
 
 import { usePersistedStorage } from '@/shared/storage/persist'
 
@@ -48,9 +48,11 @@ function clampWidth(id: BuilderColumnId, value: unknown) {
   return Number.isFinite(width) ? Math.min(meta.maxPx, Math.max(meta.minPx, width)) : DEFAULT_WIDTHS[id]
 }
 
-export function useBuilderLayout() {
+export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)) {
   const bodyElement = ref<HTMLElement | null>(null)
   const bodyWidth = ref(0)
+  const isBlockMode = computed(() => (isBlockModeRef != null ? Boolean(toValue(isBlockModeRef)) : true))
+
   const columnsOrder = usePersistedStorage<BuilderColumnId[]>(USER_PAGE_BUILDER_COLUMNS_ORDER_KEY, [
     ...DEFAULT_COLUMNS_ORDER,
   ])
@@ -72,13 +74,20 @@ export function useBuilderLayout() {
     if (bodyWidth.value < 980) return 'medium'
     return 'wide'
   })
-  const activeColumnsOrder = computed(() => columnsOrder.value)
+
+  // 处于非 block 模式时，自动剔除 blocks 列
+  const activeColumnsOrder = computed<BuilderColumnId[]>(() => {
+    if (isBlockMode.value) return columnsOrder.value
+    return columnsOrder.value.filter((id) => id !== 'blocks')
+  })
+
   const layoutColumnsModel = computed<BuilderColumnId[]>({
     get: () => [...columnsOrder.value],
     set: (value) => {
       columnsOrder.value = normalizeColumnsOrder(value)
     },
   })
+
   const wideGridColumns = computed(() => {
     const ids = activeColumnsOrder.value
     const fixedTracks = ids
@@ -88,7 +97,7 @@ export function useBuilderLayout() {
         min: id === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : COLUMN_META[id].minPx,
         width: id === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : columnWidths.value[id],
       }))
-    const availableWidth = bodyWidth.value - COLUMN_META.preview.minPx - GRID_GAP_PX * (ids.length - 1)
+    const availableWidth = bodyWidth.value - COLUMN_META.preview.minPx - GRID_GAP_PX * Math.max(1, ids.length - 1)
     const desiredTotal = fixedTracks.reduce((sum, track) => sum + track.width, 0)
     const minTotal = fixedTracks.reduce((sum, track) => sum + track.min, 0)
     const overflow = Math.max(0, desiredTotal - availableWidth)
@@ -106,14 +115,16 @@ export function useBuilderLayout() {
       .map((id) => (id === 'preview' ? `minmax(${COLUMN_META.preview.minPx}px, 1fr)` : `${widths[id]}px`))
       .join(' ')
   })
+
   const mediumGridColumns = computed(() => {
-    const primaryId = mediumPane.value
+    const primaryId = isBlockMode.value ? mediumPane.value : 'pages'
     const primaryMin =
       primaryId === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : COLUMN_META[primaryId].minPx
     const primaryWidth =
       primaryId === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : columnWidths.value[primaryId]
     return `minmax(${primaryMin}px, ${primaryWidth}px) minmax(280px, 1fr) minmax(240px, ${columnWidths.value.props}px)`
   })
+
   const legacyGridColumns = computed(() => `minmax(320px, 1fr) minmax(280px, ${columnWidths.value.props}px)`)
 
   function paneStyle(id: BuilderColumnId): CSSProperties {

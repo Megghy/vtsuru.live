@@ -179,9 +179,8 @@ function confirmImportJson() {
           :show-icon="true"
           style="margin-bottom: 12px"
         >
-          这里的设置仅应用于当前区块页，并会覆盖页面级和全局设置中的同名选项。
+          这里的背景与主题设置仅应用于当前页面，未单独配置的属性将自动继承全局主题或站点默认主题。
         </NAlert>
-
         <NFlex
           justify="end"
           style="margin-bottom: 12px"

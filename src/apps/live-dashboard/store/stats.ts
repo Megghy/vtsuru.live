@@ -15,21 +15,33 @@ export interface PayerSummary {
 }
 
 const RATE_WINDOW_MS = 60_000
+const ONLINE_THRESHOLD_MS = 20 * 60_000
 
 /** 实时统计：统计周期从页面打开（或手动重置）开始，付费汇总直接从付费列表派生 */
 export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
   const since = ref(Date.now())
-  const counters = reactive({ danmaku: 0, interaction: 0 })
+  const counters = reactive({ danmaku: 0, interaction: 0, like: 0 })
   const users = new Set<string>()
+  const activeUsers = new Map<string, number>()
   const userCount = ref(0)
+  const onlineCount = ref(0)
   const lastEventAt = ref<number>()
   const lastEventType = ref<EventDataTypes>()
   const now = ref(Date.now())
   let arrivals: number[] = []
 
+  function refreshOnlineUsers() {
+    const cutoff = Date.now() - ONLINE_THRESHOLD_MS
+    for (const [key, time] of activeUsers.entries()) {
+      if (time < cutoff) activeUsers.delete(key)
+    }
+    onlineCount.value = activeUsers.size
+  }
+
   useIntervalFn(() => {
     now.value = Date.now()
     arrivals = arrivals.filter((t) => t > now.value - RATE_WINDOW_MS)
+    refreshOnlineUsers()
   }, 1000)
 
   function record(event: DashboardEvent) {
@@ -37,9 +49,20 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
     arrivals.push(arrivedAt)
     lastEventAt.value = arrivedAt
     lastEventType.value = event.type
-    if (event.type === EventDataTypes.Message) counters.danmaku++
-    else if (event.type === EventDataTypes.Enter || event.type === EventDataTypes.Follow || event.type === EventDataTypes.Like) counters.interaction++
+    if (event.type === EventDataTypes.Message) {
+      counters.danmaku++
+    } else if (event.type === EventDataTypes.Like) {
+      counters.interaction++
+      counters.like += Math.max(1, event.num || 1)
+    } else if (event.type === EventDataTypes.Enter || event.type === EventDataTypes.Follow) {
+      counters.interaction++
+    }
+
     const key = userKeyOf(event)
+    if (key) {
+      activeUsers.set(key, arrivedAt)
+      refreshOnlineUsers()
+    }
     if (!users.has(key)) {
       users.add(key)
       userCount.value = users.size
@@ -50,8 +73,11 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
     since.value = Date.now()
     counters.danmaku = 0
     counters.interaction = 0
+    counters.like = 0
     users.clear()
+    activeUsers.clear()
     userCount.value = 0
+    onlineCount.value = 0
     arrivals = []
   }
 
@@ -63,15 +89,21 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
   const paidInPeriod = computed(() => paid.value.filter((e) => e.time >= since.value))
 
   const totals = computed(() => {
-    const result = { sc: 0, gift: 0, guard: 0, guardCount: 0 }
+    const result = { sc: 0, gift: 0, guard: 0, guardCount: 0, totalRevenue: 0 }
     for (const event of paidInPeriod.value) {
-      if (event.type === EventDataTypes.SC) result.sc += event.price
-      else if (event.type === EventDataTypes.Gift) result.gift += event.price
-      else {
+      if (event.type === EventDataTypes.SC) {
+        result.sc += event.price
+        result.totalRevenue += event.price
+      } else if (event.type === EventDataTypes.Gift) {
+        result.gift += event.price
+        result.totalRevenue += event.price
+      } else {
         result.guard += event.price
         result.guardCount += event.num
+        result.totalRevenue += event.price
       }
     }
+    result.totalRevenue = Math.round(result.totalRevenue * 100) / 100
     return result
   })
 
@@ -89,5 +121,5 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
 
   const duration = computed(() => now.value - since.value)
 
-  return { since, counters, userCount, perMinute, totals, topPayers, duration, lastEventAt, lastEventType, record, reset }
+  return { since, counters, userCount, onlineCount, perMinute, totals, topPayers, duration, lastEventAt, lastEventType, record, reset }
 }

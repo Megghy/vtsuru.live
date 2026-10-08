@@ -2,10 +2,17 @@
 import {
   ArrowReset24Regular,
   Color24Filled,
+  DataTrending20Regular,
   Delete24Regular,
   Desktop24Filled,
+  Eye20Regular,
+  EyeOff20Regular,
   Filter24Filled,
+  Payment20Regular,
+  PeopleCommunity20Regular,
   Send24Filled,
+  ThumbLike20Regular,
+  WindowShield20Regular,
 } from '@vicons/fluent'
 import {
   NButton,
@@ -288,6 +295,106 @@ function resetWindowPosition() {
               </template>
             </NCard>
 
+            <!-- 顶部实时数据状态栏 (类似哔哩哔哩弹幕机互动面板) -->
+            <NCard
+              title="顶部实时数据状态栏"
+              size="small"
+              bordered
+            >
+              <template #header-extra>
+                <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.showStatusBar" />
+              </template>
+
+              <template v-if="danmakuWindow.danmakuWindowSetting.showStatusBar !== false">
+                <NFlex
+                  vertical
+                  :size="8"
+                >
+                  <LabelItem
+                    label="显示观看/在看人数"
+                    description="直播间累计观看与当前在看人数"
+                  >
+                    <template #icon>
+                      <NIcon :component="Eye20Regular" />
+                    </template>
+                    <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.showWatchedCount" />
+                  </LabelItem>
+
+                  <LabelItem
+                    label="显示点赞互动数"
+                    description="本场直播观众累计点赞次数"
+                  >
+                    <template #icon>
+                      <NIcon :component="ThumbLike20Regular" />
+                    </template>
+                    <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.showLikeCount" />
+                  </LabelItem>
+
+                  <LabelItem
+                    label="显示本场收益金额"
+                    description="付费礼物、SC 与大航海汇总金额"
+                  >
+                    <template #icon>
+                      <NIcon :component="Payment20Regular" />
+                    </template>
+                    <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.showIncome" />
+                  </LabelItem>
+
+                  <LabelItem
+                    v-if="danmakuWindow.danmakuWindowSetting.showIncome !== false"
+                    label="脱敏隐藏金额"
+                    description="金额显示为 ¥ ***，防止直播投屏或录屏时泄露收益"
+                  >
+                    <template #icon>
+                      <NIcon :component="EyeOff20Regular" />
+                    </template>
+                    <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.hideIncomeAmount" />
+                  </LabelItem>
+
+                  <LabelItem
+                    label="显示在线活跃人数"
+                    description="当前在直播间互动的观众/大航海在场人数"
+                  >
+                    <template #icon>
+                      <NIcon :component="PeopleCommunity20Regular" />
+                    </template>
+                    <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.showOnlineCount" />
+                  </LabelItem>
+
+                  <NFlex
+                    justify="space-between"
+                    align="center"
+                    style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--n-border-color);"
+                  >
+                    <NText
+                      depth="3"
+                      style="font-size: 12px"
+                    >
+                      当前统计：观看 {{ danmakuWindow.liveStats.watchedCount }} ｜ 点赞 {{ danmakuWindow.liveStats.likeCount }} ｜ 收益 ¥{{ danmakuWindow.liveStats.totalIncome }} ｜ 在线 {{ danmakuWindow.liveStats.onlineCount }} 人
+                    </NText>
+                    <NButton
+                      size="tiny"
+                      secondary
+                      @click="danmakuWindow.resetLiveStats(); message.success('实时统计数据已重置')"
+                    >
+                      <template #icon>
+                        <NIcon :component="ArrowReset24Regular" />
+                      </template>
+                      重置统计
+                    </NButton>
+                  </NFlex>
+                </NFlex>
+              </template>
+              <template v-else>
+                <NText
+                  depth="3"
+                  style="font-size: 12px"
+                >
+                  开启后将在弹幕窗口顶部展示观看人数、点赞数、收益和在线人数状态栏（支持一键隐藏金额）
+                </NText>
+              </template>
+            </NCard>
+
             <!-- 色彩调节 -->
             <NCard
               title="色彩与透明度"
@@ -533,6 +640,15 @@ function resetWindowPosition() {
                   description="开启后鼠标点击可直接穿透弹幕窗口操作底下的游戏"
                 >
                   <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.interactive" />
+                </LabelItem>
+                <LabelItem
+                  label="防 OBS / 屏幕共享捕捉 (防抓取)"
+                  description="开启后 OBS 抓屏、全屏捕获与截屏工具将无法捕捉到此浮窗，防止遮挡游戏画面与隐私泄露"
+                >
+                  <template #icon>
+                    <NIcon :component="WindowShield20Regular" />
+                  </template>
+                  <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.contentProtected" />
                 </LabelItem>
               </NFlex>
             </NCard>

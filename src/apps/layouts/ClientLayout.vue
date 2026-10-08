@@ -40,6 +40,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router' // 引�
 
 // 引入自定义 API 和状态管理
 import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
+import ClientStatusBar from '@/apps/client/components/ClientStatusBar.vue'
 import SpeechMiniController from '@/apps/client/components/SpeechMiniController.vue'
 // 引入子组件
 import WindowBar from '@/apps/client/components/WindowBar.vue'
@@ -582,12 +583,16 @@ onMounted(() => {
 
       <SpeechMiniController />
     </NLayout>
+
+    <!-- 底部全局状态栏: 实时监控连接/直播数据与浮窗开关 -->
+    <ClientStatusBar v-if="isLoggedIn && clientInited" />
   </div>
 </NConfigProvider>
 </template>
 
 <style scoped>
 .client-layout-root {
+  --client-titlebar-height: 30px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -597,13 +602,12 @@ onMounted(() => {
 
 /* 登录容器样式 */
 .login-container {
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 计算高度，减去 WindowBar 的高度 */
-  height: calc(100vh - var(--client-titlebar-height));
   background-color: var(--vtsuru-bg-surface);
-  /* 可选：添加背景色 */
 }
 
 /* 登录卡片样式 */
@@ -665,8 +669,9 @@ onMounted(() => {
 
 /* 主布局样式 */
 .main-layout {
-  /* 计算高度，减去 WindowBar 的高度 */
-  height: calc(100vh - var(--client-titlebar-height));
+  flex: 1;
+  min-height: 0;
+  height: auto;
 }
 
 /* 侧边栏内容容器 (用于可能的滚动或内边距) */

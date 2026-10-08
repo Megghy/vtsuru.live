@@ -38,6 +38,20 @@ export interface DanmakuWindowSettings {
   textStyleCompact: boolean // 新增：纯文本模式下是否使用紧凑布局
   textStyleShowType: boolean // 新增：纯文本模式下是否显示消息类型标签
   textStyleNameSeparator: string // 新增：纯文本模式下用户名和消息之间的分隔符
+  showStatusBar?: boolean // 是否显示顶部实时状态栏
+  showWatchedCount?: boolean // 是否显示观看人数
+  showLikeCount?: boolean // 是否显示点赞数
+  showIncome?: boolean // 是否显示本场收益
+  hideIncomeAmount?: boolean // 是否脱敏隐藏金额
+  showOnlineCount?: boolean // 是否显示在线人数
+  contentProtected?: boolean // 是否开启防录屏/防OBS捕捉(内容保护)
+}
+
+export interface LiveStatsData {
+  watchedCount: number // 累计观看人数
+  likeCount: number // 累计点赞数
+  totalIncome: number // 本场总收益 (元)
+  onlineCount: number // 实时在线活跃人数
 }
 
 export const DANMAKU_WINDOW_BROADCAST_CHANNEL = 'channel.danmaku.window'
@@ -59,6 +73,13 @@ export type DanmakuWindowBCData =
   | {
       type: 'test-danmaku' // 新增：测试弹幕消息
       data: EventModel
+    }
+  | {
+      type: 'live-stats' // 实时状态统计数据
+      data: LiveStatsData
+    }
+  | {
+      type: 'toggle-interactive' // 切换鼠标穿透状态
     }
 
 // Helper function to generate random test data
@@ -197,10 +218,51 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     textStyleShowType: true, // 新增：默认显示消息类型标签
     textStyleNameSeparator: ': ', // 新增：默认用户名和消息之间的分隔符为冒号+空格
     enableAnimation: true, // 新增：默认启用动画效果
+    showStatusBar: true, // 新增：默认开启顶部实时数据状态栏
+    showWatchedCount: true, // 新增：默认显示观看人数
+    showLikeCount: true, // 新增：默认显示点赞数
+    showIncome: true, // 新增：默认显示本场收益
+    hideIncomeAmount: false, // 新增：默认不隐藏金额
+    showOnlineCount: true, // 新增：默认显示在场人数
+    contentProtected: false, // 新增：默认不开启防OBS抓屏保护
   })
   const danmakuClient = useDanmakuClient()
   const isWindowOpened = ref(false)
   let bc: BroadcastChannel | undefined
+
+  const liveStats = ref<LiveStatsData>({
+    watchedCount: 0,
+    likeCount: 0,
+    totalIncome: 0,
+    onlineCount: 0,
+  })
+
+  const activeUsers = new Map<string, number>()
+  const ONLINE_THRESHOLD_MS = 20 * 60 * 1000
+
+  function refreshOnlineCount() {
+    const cutoff = Date.now() - ONLINE_THRESHOLD_MS
+    for (const [key, time] of activeUsers.entries()) {
+      if (time < cutoff) activeUsers.delete(key)
+    }
+    liveStats.value.onlineCount = activeUsers.size
+  }
+
+  function recordActivity(uid: number | string, uname?: string) {
+    const key = String(uid || uname || '')
+    if (key && key !== '0') {
+      activeUsers.set(key, Date.now())
+      refreshOnlineCount()
+    }
+  }
+
+  function syncLiveStats() {
+    if (!isWindowOpened.value || !bc) return
+    postBroadcastMessage(bc, {
+      type: 'live-stats',
+      data: { ...liveStats.value },
+    } satisfies DanmakuWindowBCData)
+  }
 
   function closeWindow() {
     danmakuWindow.value?.hide()
@@ -258,12 +320,23 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
           type: 'update-setting',
           data: danmakuWindowSetting.value,
         } satisfies DanmakuWindowBCData)
+        postBroadcastMessage(bc, {
+          type: 'live-stats',
+          data: { ...liveStats.value },
+        } satisfies DanmakuWindowBCData)
+      } else if (event.data.type === 'toggle-interactive') {
+        danmakuWindowSetting.value.interactive = !danmakuWindowSetting.value.interactive
+        console.log(`[danmaku-window] 鼠标穿透已切换为: ${danmakuWindowSetting.value.interactive}`)
       }
     }
     postBroadcastMessage(bc, { type: 'window-ready' } satisfies DanmakuWindowBCData)
     postBroadcastMessage(bc, {
       type: 'update-setting',
       data: danmakuWindowSetting.value,
+    } satisfies DanmakuWindowBCData)
+    postBroadcastMessage(bc, {
+      type: 'live-stats',
+      data: { ...liveStats.value },
     } satisfies DanmakuWindowBCData)
 
     postBroadcastMessage(bc, {
@@ -311,10 +384,34 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     } else {
       await danmakuWindow.value?.setIgnoreCursorEvents(false)
     }
+    if (setting.contentProtected) {
+      await danmakuWindow.value?.setContentProtected(true)
+    } else {
+      await danmakuWindow.value?.setContentProtected(false)
+    }
   }
 
   function onGetDanmakus(data: EventModel) {
     if (!isWindowOpened.value || !bc) return
+
+    // 统计数据维护
+    recordActivity(data.uid, data.uname)
+
+    if (data.type === EventDataTypes.Like) {
+      liveStats.value.likeCount += Math.max(1, data.num || 1)
+    } else if (data.type === EventDataTypes.Gift) {
+      // 礼物价格转换为元 (B站金瓜子 1000 = 1元，或者直接按元)
+      const giftYuan = (data.price || 0) >= 100 ? (data.price || 0) / 1000 : (data.price || 0)
+      liveStats.value.totalIncome = Math.round((liveStats.value.totalIncome + giftYuan) * 100) / 100
+    } else if (data.type === EventDataTypes.SC) {
+      liveStats.value.totalIncome = Math.round((liveStats.value.totalIncome + (data.price || 0)) * 100) / 100
+    } else if (data.type === EventDataTypes.Guard) {
+      const guardPrice = data.price || (data.guard_level === GuardLevel.Zongdu ? 19998 : data.guard_level === GuardLevel.Tidu ? 1998 : 198)
+      liveStats.value.totalIncome = Math.round((liveStats.value.totalIncome + guardPrice) * 100) / 100
+    }
+
+    syncLiveStats()
+
     postBroadcastMessage(bc, {
       type: 'danmaku',
       data,
@@ -333,6 +430,18 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     console.log('[danmaku-window] 发送清空弹幕指令')
   }
 
+  // 新增：重置实时统计
+  function resetLiveStats() {
+    liveStats.value = {
+      watchedCount: 0,
+      likeCount: 0,
+      totalIncome: 0,
+      onlineCount: 0,
+    }
+    activeUsers.clear()
+    syncLiveStats()
+  }
+
   // 新增：发送测试弹幕函数
   function sendTestDanmaku() {
     if (!isWindowOpened.value || !bc) {
@@ -340,6 +449,12 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       return
     }
     const testData = generateTestDanmaku()
+
+    // 测试时也模拟推进观看与点赞统计
+    liveStats.value.watchedCount = Math.max(liveStats.value.watchedCount + Math.floor(Math.random() * 5) + 1, 10)
+    liveStats.value.likeCount += Math.floor(Math.random() * 3) + 1
+    onGetDanmakus(testData)
+
     postBroadcastMessage(bc, {
       type: 'test-danmaku',
       data: testData,
@@ -357,6 +472,8 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     openWindow,
     closeWindow,
     init,
+    liveStats,
+    resetLiveStats,
     clearAllDanmaku, // 导出新函数
     sendTestDanmaku, // 导出新函数
   }

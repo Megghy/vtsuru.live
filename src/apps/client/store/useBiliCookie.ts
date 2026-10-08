@@ -8,6 +8,7 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 
 import type { BiliUserProfile } from '../data/models'
 import { QueryBiliAPI } from '../data/utils'
+import { useBiliAccountManager } from './useBiliAccountManager'
 import { useTauriStore } from './useTauriStore'
 
 // --- 常量定义 ---
@@ -55,7 +56,7 @@ export interface CookieCloudCookie {
 }
 
 // CookieCloud 导出的完整数据结构
-interface CookieCloudExportData {
+export interface CookieCloudExportData {
   cookie_data: Record<string, CookieCloudCookie[]> // 按域名分组的 Cookie 数组
   local_storage_data?: Record<string, any> // 本地存储数据 (可选)
   update_time: string // 更新时间 ISO 8601 字符串
@@ -456,6 +457,14 @@ export const useBiliCookie = defineStore('biliCookie', () => {
         biliCookieStore.value = dataToStore // 使用响应式存储
         info('[BiliCookie] 新 Bilibili Cookie 已验证并保存')
         _updateCookieState(true, true) // 更新状态为存在且有效
+
+        // 同步至多账号池
+        try {
+          const accountMgr = useBiliAccountManager()
+          await accountMgr.addOrUpdateAccount(cookie, refreshToken, '主播大号')
+        } catch (syncErr) {
+          debug(`[BiliCookie] 同步至账号池失败(非致命): ${String(syncErr)}`)
+        }
       } catch (err) {
         error(`[BiliCookie] 保存 Bilibili Cookie 失败: ${String(err)}`)
         // 保存失败，状态回滚或标记为错误？暂时保持验证结果
