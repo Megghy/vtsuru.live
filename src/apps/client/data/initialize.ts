@@ -1,3 +1,4 @@
+import { defaultWindowIcon } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
 import { Menu } from '@tauri-apps/api/menu'
 import type { TrayIconOptions } from '@tauri-apps/api/tray'
@@ -139,6 +140,123 @@ function startDanmakuClientInitFlow() {
 //     hasTriedAutoResumeRtmp = true
 //   }
 // }
+
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => {
+      setTimeout(() => {
+        warn(`[init] 异步任务在 ${ms}ms 内未完成，已触发超时熔断`)
+        resolve(fallback)
+      }, ms)
+    }),
+  ])
+}
+
+async function getTrayIcon(): Promise<TrayIconOptions['icon']> {
+  try {
+    const icon = await defaultWindowIcon()
+    if (icon) {
+      return icon
+    }
+  } catch (err) {
+    warn(`[tray] 获取原生默认窗口图标失败: ${err}`)
+  }
+
+  // 本地同源静态图标兜底 (1.5s 短超时)
+  try {
+    const res = await fetch('/favicon.ico', { signal: AbortSignal.timeout(1500) })
+    if (res.ok) {
+      return await res.arrayBuffer()
+    }
+  } catch {}
+
+  // 远端 OSS 图标短超时兜底 (1.5s 短超时)
+  try {
+    const res = await fetch('https://oss.suki.club/vtsuru/icon.ico', { signal: AbortSignal.timeout(1500) })
+    if (res.ok) {
+      return await res.arrayBuffer()
+    }
+  } catch {}
+
+  return undefined
+}
+
+async function initSystemTray(appWindow: ReturnType<typeof getCurrentWindow>) {
+  setInitStageSafely('创建系统托盘...')
+  try {
+    if (tray) {
+      try {
+        await tray.close()
+      } catch {}
+      tray = undefined
+    }
+
+    const menu = await Menu.new({
+      items: [
+        {
+          id: 'show-main',
+          text: '显示主界面',
+          action: () => {
+            void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
+            void appWindow.unminimize().catch(() => {})
+            void appWindow.setFocus().catch(async (err) => warn(`[tray] 聚焦窗口失败: ${err}`))
+          },
+        },
+        {
+          id: 'toggle-danmaku',
+          text: '打开/关闭弹幕机',
+          action: () => {
+            const danmakuStore = useDanmakuWindow()
+            if (danmakuStore.isDanmakuWindowOpen) danmakuStore.closeWindow()
+            else danmakuStore.openWindow()
+          },
+        },
+        {
+          id: 'open-devtools',
+          text: '打开调试控制台',
+          action: () => {
+            void invoke('open_dev_tools')
+          },
+        },
+        {
+          id: 'quit',
+          text: '退出程序',
+          action: () => {
+            void invoke('quit_app')
+          },
+        },
+      ],
+    })
+
+    const icon = await getTrayIcon()
+    const options: TrayIconOptions = {
+      menu,
+      menuOnLeftClick: false,
+      title: 'VTsuru.Client',
+      tooltip: 'VTsuru 事件收集器',
+      ...(icon ? { icon } : {}),
+      action: (event) => {
+        // 仅在左键单击或双击时激活并显示主窗口；右键由系统原生弹出菜单
+        if (
+          (event.type === 'Click' && event.button === 'Left' && event.buttonState === 'Up') ||
+          event.type === 'DoubleClick'
+        ) {
+          void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
+          void appWindow.unminimize().catch(() => {})
+          void appWindow.setFocus().catch(async (err) => warn(`[tray] 聚焦窗口失败: ${err}`))
+        }
+      },
+    }
+
+    tray = await TrayIcon.new(options)
+    info('[tray] 系统托盘创建成功')
+  } catch (err) {
+    warn(`[tray] 系统托盘创建失败，降级跳过: ${err}`)
+  } finally {
+    setInitStageSafely('系统托盘就绪')
+  }
+}
 
 export function startUpdateCheck() {
   // 立即检查一次更新
@@ -377,64 +495,8 @@ export async function initAll(isOnBoot: boolean) {
   initInfo()
   info('[init] 开始更新数据')
 
-  clientInitStage.value = '创建系统托盘...'
-  const menu = await Menu.new({
-    items: [
-      {
-        id: 'show-main',
-        text: '显示主界面',
-        action: () => {
-          void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
-          void appWindow.unminimize().catch(() => {})
-          void appWindow.setFocus().catch(async (err) => warn(`[tray] 聚焦窗口失败: ${err}`))
-        },
-      },
-      {
-        id: 'toggle-danmaku',
-        text: '打开/关闭弹幕机',
-        action: () => {
-          const danmakuStore = useDanmakuWindow()
-          if (danmakuStore.isDanmakuWindowOpen) danmakuStore.closeWindow()
-          else danmakuStore.openWindow()
-        },
-      },
-      {
-        id: 'open-devtools',
-        text: '打开调试控制台',
-        action: () => {
-          void invoke('open_dev_tools')
-        },
-      },
-      {
-        id: 'quit',
-        text: '退出程序',
-        action: () => {
-          void invoke('quit_app')
-        },
-      },
-    ],
-  })
-  const iconData = await (await fetch('https://oss.suki.club/vtsuru/icon.ico')).arrayBuffer()
-  const options: TrayIconOptions = {
-    menu,
-    menuOnLeftClick: false,
-    title: 'VTsuru.Client',
-    tooltip: 'VTsuru 事件收集器',
-    icon: iconData,
-    action: (event) => {
-      // 仅在左键单击或双击时激活并显示主窗口；右键由系统原生弹出菜单
-      if (
-        (event.type === 'Click' && event.button === 'Left' && event.buttonState === 'Up') ||
-        event.type === 'DoubleClick'
-      ) {
-        void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
-        void appWindow.unminimize().catch(() => {})
-        void appWindow.setFocus().catch(async (err) => warn(`[tray] 聚焦窗口失败: ${err}`))
-      }
-    },
-  }
-  tray = await TrayIcon.new(options)
-  clientInitStage.value = '系统托盘就绪'
+  // 创建系统托盘（设 4s 熔断超时与异常隔离，绝不阻塞客户端核心启动流程）
+  await withTimeout(initSystemTray(appWindow), 4000, undefined)
 
   const shouldInitDanmakuClient =
     isLoggedIn.value && accountInfo.value.isBiliVerified && !setting.settings.dev_disableDanmakuClient

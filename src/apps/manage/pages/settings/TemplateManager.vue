@@ -144,8 +144,20 @@ const groups: Record<'schedule' | 'songlist', TemplateGroup> = {
 // 各分组当前选中的模板 key (响应式)
 const selectedTemplateKey = ref<Record<'schedule' | 'songlist', string>>({
   schedule: accountInfo.value?.settings.scheduleTemplate ?? '',
-  songlist: accountInfo.value?.settings.songListTemplate ?? 'traditional',
+  songlist: accountInfo.value?.settings.songListTemplate || 'traditional',
 })
+
+watch(
+  () => accountInfo.value?.settings,
+  (settings) => {
+    if (!settings) return
+    selectedTemplateKey.value = {
+      schedule: settings.scheduleTemplate ?? '',
+      songlist: settings.songListTemplate || 'traditional',
+    }
+  },
+  { immediate: true },
+)
 
 const pageOptions: SelectOption[] = [
   { label: '日程表', value: 'schedule' },
@@ -342,8 +354,11 @@ async function setAsDisplayTemplate() {
       accountInfo.value.settings.scheduleTemplate = selectedKey.value
     }
     const response = await SaveAccountSettings()
-    if (response.code === 200) message.success('已设为展示模板')
-    else message.error('保存失败')
+    if (response.code === 200) {
+      message.success('已设为展示模板')
+    } else {
+      message.error(response.message ? `保存失败: ${response.message}` : '保存失败')
+    }
   } catch (err) {
     message.error(`保存失败: ${err}`)
   } finally {
