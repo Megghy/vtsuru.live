@@ -7,7 +7,7 @@ import {
 } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { useObsBridge } from '@/apps/obs-store/sync'
+import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 
 import { DEFAULT_COUNTER_STATE } from './types'
 import type { CounterAction, CounterState } from './types'
@@ -18,9 +18,7 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
-const targetChannel = computed(
-  () => props.channelId || (route.query.channel as string) || 'default',
-)
+const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? route.query.channel))
 
 const { state, onAction } = useObsBridge<CounterState, CounterAction>({
   componentId: 'counter',

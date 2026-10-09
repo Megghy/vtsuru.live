@@ -7,6 +7,7 @@ import { getObsSyncState, ObsSyncConflict, updateObsSyncState } from '@/api/obs-
 import type { ObsSyncStateResponse } from '@/api/obs-store'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
 
+import { isObsSyncChannel } from './channel'
 import type { ObsBridgeOptions } from './types'
 
 export function useObsBridge<TState extends Record<string, any>, TAction = unknown>(options: ObsBridgeOptions<TState>) {
@@ -62,7 +63,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
     errorMessage.value = error instanceof Error ? error.message : String(error)
   }
   async function poll(epoch = generation) {
-    if (!active || !userId.value || writeTask || destroyed || Object.keys(pending).length) return
+    if (!active || !userId.value || !isObsSyncChannel(channelId.value) || writeTask || destroyed || Object.keys(pending).length) return
     const requestedRevision = revision
     try {
       const snapshot = await getObsSyncState(options.componentId, channelId.value, currentHash.value, userId.value)
@@ -117,7 +118,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
   async function retry() {
     if (destroyed) return Promise.resolve()
     if (!writable) return poll()
-    if (writeTask || !userId.value) return writeTask ?? Promise.resolve()
+    if (writeTask || !userId.value || !isObsSyncChannel(channelId.value)) return writeTask ?? Promise.resolve()
     const epoch = generation
     writeTask = flush(epoch, userId.value, channelId.value).finally(() => {
       if (epoch === generation) writeTask = undefined
@@ -179,7 +180,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
       isSyncing.value = false
       lastSyncError.value = false
       errorMessage.value = ''
-      if (!userId.value) return
+      if (!userId.value || !isObsSyncChannel(channelId.value)) return
       if (options.persist !== false) {
         try {
           const saved = localStorage.getItem(storageKey.value)

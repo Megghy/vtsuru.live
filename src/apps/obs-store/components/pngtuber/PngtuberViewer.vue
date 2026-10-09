@@ -7,8 +7,8 @@ import { computed, onActivated, onDeactivated, onScopeDispose, ref, watch } from
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import { useObsBridge } from '@/apps/obs-store/sync'
-import { buildObsSourceUrl, firstQueryValue } from '@/shared/obs/obsUrl'
+import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { exportPngtuberPackage, importPngtuberPackage } from '@/shared/pngtuber/modelPackage'
 import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
 import { DEFAULT_PNGTUBER_STATE } from '@/shared/pngtuber/types'
@@ -34,7 +34,7 @@ function goBack() {
   void router.push(standalone.value ? { name: 'manage-obsStore' } : { name: 'client-pngtuber' })
 }
 const { copy, isSupported: isCopySupported } = useClipboard()
-const channel = ref(firstQueryValue(route.query.channel) || 'default')
+const channel = ref(resolveObsSyncChannel(route.query.channel))
 const channelDraft = ref(channel.value)
 // An empty bridge default preserves the distinction between legacy snapshots and expressions.
 const bridge = useObsBridge<PngtuberState>({
@@ -209,7 +209,11 @@ async function copyUrl() {
   }
 }
 function changeChannel() {
-  const next = channelDraft.value.trim() || 'default'
+  const next = parseObsSyncChannel(channelDraft.value)
+  if (!next) {
+    message.error(OBS_SYNC_CHANNEL_HINT)
+    return
+  }
   if (next === channel.value) return
   hotkeys.release()
   void live.stopPublishing().catch(failed)
@@ -370,6 +374,7 @@ function changeChannel() {
               ><NInput
                 v-model:value="channelDraft"
                 placeholder="频道"
+                :maxlength="64"
                 :disabled="busy"
                 @keyup.enter="changeChannel"
               /><NButton

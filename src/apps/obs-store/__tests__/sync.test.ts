@@ -2,6 +2,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick, ref } from 'vue'
 
+import { parseObsSyncChannel, resolveObsSyncChannel } from '../sync/channel'
 import { useObsBridge } from '../sync/useObsBridge'
 const mocks = vi.hoisted(() => ({ get: vi.fn(), update: vi.fn() }))
 const account = ref({ id: 1 })
@@ -29,13 +30,13 @@ function deferred<T>() {
   return { promise, resolve }
 }
 const wrappers: ReturnType<typeof mount>[] = []
-function setup(role: 'viewer' | 'controller' = 'controller') {
+function setup(role: 'viewer' | 'controller' = 'controller', channelId?: string) {
   let bridge!: ReturnType<typeof useObsBridge<{ count: number; title: string }>>
   wrappers.push(
     mount(
       defineComponent({
         setup() {
-          bridge = useObsBridge({ componentId: 'counter', defaultState: { count: 0, title: 'initial' }, role })
+          bridge = useObsBridge({ componentId: 'counter', channelId, defaultState: { count: 0, title: 'initial' }, role })
           return () => null
         },
       }),
@@ -64,6 +65,20 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 describe('OBS owner-scoped synchronization', () => {
+  it('resolves query channels and rejects illegal names', () => {
+    expect(resolveObsSyncChannel(undefined)).toBe('default')
+    expect(resolveObsSyncChannel(['stage_1', 'other'])).toBe('stage_1')
+    expect(resolveObsSyncChannel('  ')).toBe('default')
+    expect(resolveObsSyncChannel('中文')).toBe('default')
+    expect(parseObsSyncChannel('  room-1  ')).toBe('room-1')
+    expect(parseObsSyncChannel('主实例')).toBeUndefined()
+  })
+  it('does not request when channel is invalid', async () => {
+    const bridge = setup('controller', '主实例')
+    await flushPromises()
+    expect(mocks.get).not.toHaveBeenCalled()
+    expect(bridge.state.value.count).toBe(0)
+  })
   it('does not request before identity arrives and never adopts unowned legacy storage', async () => {
     account.value.id = 0
     localStorage.setItem('vtsuru_obs_state:counter:default', JSON.stringify({ count: 999 }))

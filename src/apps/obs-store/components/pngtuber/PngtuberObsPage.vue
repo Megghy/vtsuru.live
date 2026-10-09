@@ -3,7 +3,7 @@ import { NAlert, NButton, NCard, NSpace, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { useObsBridge } from '@/apps/obs-store/sync'
+import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 import { firstQueryValue } from '@/shared/obs/obsUrl'
 import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
 import { DEFAULT_PNGTUBER_STATE } from '@/shared/pngtuber/types'
@@ -13,7 +13,7 @@ import { usePngtuberRuntime } from '@/shared/pngtuber/usePngtuberRuntime'
 import PngtuberDisplay from './PngtuberDisplay.vue'
 import PngtuberMicrophone from './PngtuberMicrophone.vue'
 const route = useRoute()
-const channel = computed(() => firstQueryValue(route.query.channel) || 'default')
+const channel = computed(() => resolveObsSyncChannel(route.query.channel))
 const debug = computed(() => 'debug' in route.query && firstQueryValue(route.query.debug) !== '0')
 const bridge = useObsBridge<PngtuberState>({
   componentId: 'pngtuber',

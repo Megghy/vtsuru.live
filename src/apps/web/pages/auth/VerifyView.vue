@@ -9,8 +9,7 @@ import { NButton, NIcon, NSpin } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { ACCOUNT } from '@/api/account'
-import type { AccountInfo } from '@/api/api-models'
+import { ACCOUNT, GetSelfAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { QueryGetAPI } from '@/api/query'
 import { ACCOUNT_API_URL } from '@/shared/config'
@@ -71,11 +70,11 @@ async function verify() {
   }
 
   try {
-    const data = await QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}verify`, { target: target.value })
+    const data = await QueryGetAPI(`${ACCOUNT_API_URL}verify`, { target: target.value })
     if (data.code === 200) {
-      accountName.value = data.data.name
       if (cookie.value?.cookie) {
-        ACCOUNT.value = data.data
+        await GetSelfAccount()
+        accountName.value = ACCOUNT.value.name ?? ''
         phase.value = 'success'
         redirectTimer = setTimeout(goManage, 1200)
       } else {
@@ -83,14 +82,8 @@ async function verify() {
       }
       return
     }
-    if (data.code === 400 && data.message?.includes('已被认证')) {
-      phase.value = cookie.value?.cookie ? 'success' : 'need-login'
-      detail.value = data.message
-      if (phase.value === 'success') redirectTimer = setTimeout(goManage, 1200)
-      return
-    }
     phase.value = 'error'
-    detail.value = data.message || '验证失败'
+    detail.value = data.message || '链接无效或已过期，请回到后台重新发送验证邮件。'
   } catch (error) {
     phase.value = 'error'
     detail.value = error instanceof Error ? error.message : '验证失败，请稍后重试'

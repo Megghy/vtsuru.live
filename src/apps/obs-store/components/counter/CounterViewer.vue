@@ -37,7 +37,7 @@ import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
-import { useObsBridge } from '@/apps/obs-store/sync'
+import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 
 import CounterDisplay from './CounterDisplay.vue'
 import { DEFAULT_COUNTER_STATE } from './types'
@@ -47,7 +47,7 @@ const message = useMessage()
 const { copy, isSupported: isCopySupported } = useClipboard()
 
 const route = useRoute()
-const channelId = ref<string>(typeof route.query.channel === 'string' ? route.query.channel : 'default')
+const channelId = ref(resolveObsSyncChannel(route.query.channel))
 const channelDraft = ref(channelId.value)
 const copied = ref(false)
 
@@ -147,7 +147,11 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 function changeChannel() {
-  const next = channelDraft.value.trim() || 'default'
+  const next = parseObsSyncChannel(channelDraft.value)
+  if (!next) {
+    message.error(OBS_SYNC_CHANNEL_HINT)
+    return
+  }
   channelId.value = next
   channelDraft.value = next
 }
@@ -210,6 +214,7 @@ activateKeyboard()
             v-model:value="channelDraft"
             size="small"
             placeholder="频道"
+            :maxlength="64"
             style="width: 120px"
             @keyup.enter="changeChannel"
           />

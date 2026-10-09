@@ -7,7 +7,7 @@ import {
 } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { useObsBridge } from '@/apps/obs-store/sync'
+import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 
 import CalculatorClock from './styles/CalculatorClock.vue'
 import CasioClock from './styles/CasioClock.vue'
@@ -34,9 +34,7 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
-const targetChannel = computed(
-  () => props.channelId || (route.query.channel as string) || 'default',
-)
+const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? route.query.channel))
 
 const { state } = useObsBridge<ClockState, ClockAction>({
   componentId: 'clock',
