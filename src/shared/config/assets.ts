@@ -9,4 +9,5 @@ export const TURNSTILE_KEY = '0x4AAAAAAAETUSAKbds019h0'
 export const CAP_SITE_KEY = '06317741e0'
 export const CAP_API_ENDPOINT = `https://captcha.suki.club/${CAP_SITE_KEY}/`
 export const CAP_WASM_URL = 'https://captcha.suki.club/assets/cap_wasm_bg.wasm'
+export const CAP_HASHWX_URL = 'https://captcha.suki.club/assets/hashwx.wasm'
 export const CAP_PROBE_URL = 'https://captcha.suki.club/assets/widget.js'
