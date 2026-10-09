@@ -16,21 +16,17 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, inject, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-
-import type { UserIndexDisplayInfo, UserIndexSettings } from '@/apps/manage/types'
+import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
+import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
+import { USER_INDEX_API_URL } from '@/shared/config'
 import { IndexTemplateMap } from '@/shared/config/templates'
 
-import { UserPageEditorKey } from '../context'
-
-const editor = inject(UserPageEditorKey)
-if (!editor) throw new Error('UserPageEditor context is missing')
-
+const accountInfo = useAccount()
 const message = useMessage()
-
-const accountInfo = computed(() => editor.account.value)
-const indexDisplayInfo = computed(() => editor.indexDisplayInfo.value)
 
 const selectedIndexTemplateKey = computed({
   get: () => accountInfo.value.settings.indexTemplate || 'default',
@@ -60,29 +56,61 @@ const editingLinkName = ref<string | null>(null)
 const newLinkName = ref('')
 
 const isLoading = ref(false)
+const indexDisplayInfo = ref<ResponseUserIndexModel | null>(null)
 
-function updateUserIndexSettings() {
-  return editor.updateUserIndexSettings(accountInfo.value.settings.index)
+async function loadIndexInfo() {
+  if (!accountInfo.value?.name) return
+  isLoading.value = true
+  try {
+    const data = await QueryGetAPI<ResponseUserIndexModel>(`${USER_INDEX_API_URL}get`, { id: accountInfo.value.name })
+    if (data.code === 200) {
+      indexDisplayInfo.value = data.data
+      return
+    }
+    if (data.code === 404) {
+      indexDisplayInfo.value = { notification: '', links: {}, videos: [] }
+      return
+    }
+    throw new Error(data.message || `无法获取数据: ${data.code}`)
+  } catch (e) {
+    console.error('Failed to load user index info:', e)
+    message.error(`无法获取数据: ${(e as Error).message || String(e)}`)
+    indexDisplayInfo.value = null
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function updateUserIndexSettings() {
+  try {
+    await SaveSetting('Index', accountInfo.value.settings.index)
+    message.success('已保存')
+  } catch (e) {
+    message.error(`保存失败: ${(e as Error).message || String(e)}`)
+  }
 }
 
 async function updateIndexSettings() {
   isLoading.value = true
   try {
-    await updateUserIndexSettings()
-    message.success('更新成功')
+    const response = await QueryPostAPI(`${USER_INDEX_API_URL}update-setting`, accountInfo.value.settings.index)
+    if (response.code !== 200) throw new Error(response.message || `保存失败: ${response.code}`)
+    message.success('已保存')
   } catch (err) {
-    message.error((err as Error).message)
+    message.error(`保存失败: ${(err as Error).message || String(err)}`)
   } finally {
     isLoading.value = false
   }
 }
 
 async function saveIndexTemplate(templateKey: string) {
+  accountInfo.value.settings.indexTemplate = templateKey
   try {
-    await editor.updateUserIndexTemplate(templateKey)
+    const response = await SaveAccountSettings()
+    if (response.code !== 200) throw new Error(response.message || '保存失败')
     message.success('已切换主页模板')
   } catch (err) {
-    message.error((err as Error).message)
+    message.error((err as Error).message || String(err))
   }
 }
 
@@ -91,19 +119,21 @@ async function addVideo() {
     message.error('请输入视频链接')
     return
   }
-  const match = /video\/(BV[a-zA-Z0-9]+)/.exec(addVideoUrl.value)
-  if (!match) {
-    message.error('无效的视频链接')
-    return
-  }
   isLoading.value = true
   try {
-    await editor.addIndexVideo(match[1])
+    const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}add-video`, {
+      video: addVideoUrl.value,
+    })
+    if (response.code !== 200) throw new Error(response.message || `保存失败: ${response.code}`)
     message.success('添加成功')
+    if (indexDisplayInfo.value) {
+      indexDisplayInfo.value.videos.push(response.data)
+    }
+    accountInfo.value.settings.index.videos.push(response.data.id)
     showAddVideoModal.value = false
     addVideoUrl.value = ''
   } catch (err) {
-    message.error((err as Error).message)
+    message.error((err as Error).message || String(err))
   } finally {
     isLoading.value = false
   }
@@ -112,10 +142,15 @@ async function addVideo() {
 async function removeVideo(id: string) {
   isLoading.value = true
   try {
-    await editor.removeIndexVideo(id)
+    const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}del-video`, { video: id })
+    if (response.code !== 200) throw new Error(response.message || `删除失败: ${response.code}`)
     message.success('删除成功')
+    if (indexDisplayInfo.value) {
+      indexDisplayInfo.value.videos = indexDisplayInfo.value.videos.filter((v) => v.id !== id)
+    }
+    accountInfo.value.settings.index.videos = accountInfo.value.settings.index.videos.filter((v) => v !== id)
   } catch (err) {
-    message.error((err as Error).message)
+    message.error((err as Error).message || String(err))
   } finally {
     isLoading.value = false
   }
@@ -123,7 +158,7 @@ async function removeVideo(id: string) {
 
 async function moveVideo(id: string, direction: 'up' | 'down') {
   const videos = accountInfo.value.settings.index.videos
-  const currentIndex = videos.findIndex((item) => item.id === id)
+  const currentIndex = videos.indexOf(id)
   if (currentIndex === -1) return
   if (direction === 'up' && currentIndex > 0) {
     ;[videos[currentIndex], videos[currentIndex - 1]] = [videos[currentIndex - 1], videos[currentIndex]]
@@ -134,10 +169,10 @@ async function moveVideo(id: string, direction: 'up' | 'down') {
   }
   isLoading.value = true
   try {
-    await updateUserIndexSettings()
+    await updateIndexSettings()
     await loadIndexInfo()
   } catch (err) {
-    message.error((err as Error).message)
+    message.error((err as Error).message || String(err))
   } finally {
     isLoading.value = false
   }
@@ -146,6 +181,13 @@ async function moveVideo(id: string, direction: 'up' | 'down') {
 async function addLink() {
   if (!addLinkName.value || !addLinkUrl.value) {
     message.error('请输入链接名称和地址')
+    return
+  }
+  try {
+    const validatedUrl = new URL(addLinkUrl.value)
+    addLinkUrl.value = validatedUrl.toString()
+  } catch {
+    message.error('请输入正确的链接')
     return
   }
   if (!accountInfo.value.settings.index.links) {
@@ -160,18 +202,16 @@ async function addLink() {
     accountInfo.value.settings.index.linkOrder = []
   }
   accountInfo.value.settings.index.linkOrder.push(addLinkName.value)
-  isLoading.value = true
   try {
-    await updateUserIndexSettings()
+    await updateIndexSettings()
+    await loadIndexInfo()
     message.success('添加成功')
     showAddLinkModal.value = false
     addLinkName.value = ''
     addLinkUrl.value = ''
     linkKey.value++
   } catch (err) {
-    message.error((err as Error).message)
-  } finally {
-    isLoading.value = false
+    message.error((err as Error).message || String(err))
   }
 }
 
@@ -180,15 +220,13 @@ async function removeLink(name: string) {
   accountInfo.value.settings.index.linkOrder = (accountInfo.value.settings.index.linkOrder || []).filter(
     (item) => item !== name,
   )
-  isLoading.value = true
   try {
-    await updateUserIndexSettings()
+    await updateIndexSettings()
+    await loadIndexInfo()
     message.success('删除成功')
     linkKey.value++
   } catch (err) {
-    message.error((err as Error).message)
-  } finally {
-    isLoading.value = false
+    message.error((err as Error).message || String(err))
   }
 }
 
@@ -219,16 +257,13 @@ async function confirmEditLink(oldName: string) {
   if (index !== -1) {
     linkOrder[index] = newLinkName.value
   }
-  isLoading.value = true
   try {
-    await updateUserIndexSettings()
+    await updateIndexSettings()
     message.success('改名成功')
     cancelEditLink()
     linkKey.value++
   } catch (err) {
-    message.error((err as Error).message)
-  } finally {
-    isLoading.value = false
+    message.error((err as Error).message || String(err))
   }
 }
 
@@ -244,18 +279,15 @@ async function moveLink(name: string, direction: 'up' | 'down') {
     return
   }
   accountInfo.value.settings.index.linkOrder = linkOrder
-  isLoading.value = true
   try {
-    await updateUserIndexSettings()
+    await updateIndexSettings()
     linkKey.value++
   } catch (err) {
-    message.error((err as Error).message)
-  } finally {
-    isLoading.value = false
+    message.error((err as Error).message || String(err))
   }
 }
 
-const orderedLinks = computed(() => {
+const orderedLinks = computed<[string, string][]>(() => {
   const links = indexDisplayInfo.value?.links || {}
   const order = accountInfo.value.settings.index.linkOrder || []
   const ordered: [string, string][] = []
@@ -272,11 +304,13 @@ const orderedLinks = computed(() => {
   return ordered
 })
 
-async function loadIndexInfo() {
-  await editor.loadIndexDisplayInfo()
+accountInfo.value.settings.index ??= {
+  allowDisplayInIndex: true,
+  videos: [],
+  notification: '',
+  links: {},
+  linkOrder: [],
 }
-
-accountInfo.value.settings.index ??= {} as UserIndexSettings
 accountInfo.value.settings.index.videos ??= []
 accountInfo.value.settings.index.links ??= {}
 if (!accountInfo.value.settings.index.linkOrder || accountInfo.value.settings.index.linkOrder.length === 0) {
@@ -296,9 +330,7 @@ await loadIndexInfo()
         <div class="index-template-picker__title">
           {{ selectedIndexTemplate.name }}
         </div>
-        <div class="index-template-picker__desc">
-          支持头图、头像框、荣誉、直播状态和精选内容。
-        </div>
+        <div class="index-template-picker__desc">支持头图、头像框、荣誉、直播状态和精选内容。</div>
       </div>
       <NFlex
         :size="8"

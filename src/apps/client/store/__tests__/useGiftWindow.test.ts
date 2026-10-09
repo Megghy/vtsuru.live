@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
+
 import { useGiftWindow } from '../useGiftWindow'
 
 vi.mock('@tauri-apps/api/webviewWindow', () => ({
@@ -52,9 +53,18 @@ describe('useGiftWindow 礼物与高能榜 / 下播感谢', () => {
     store.currentLive = {
       liveId: 'live_1',
       title: '测试直播',
-      cover: '',
+      coverUrl: '',
       isFinish: false,
+      parentArea: '',
+      area: '',
+      danmakusCount: 0,
       startAt: Date.now(),
+      stopAt: null,
+      totalIncome: 0,
+      totalIncomeWithGuard: 0,
+      likeCount: 0,
+      paymentCount: 0,
+      interactionCount: 0,
     }
 
     // 模拟添加打赏数据到 rankMap
@@ -151,9 +161,18 @@ describe('useGiftWindow 礼物与高能榜 / 下播感谢', () => {
     store.currentLive = {
       liveId: 'live_1',
       title: '测试直播',
-      cover: '',
+      coverUrl: '',
       isFinish: false,
+      parentArea: '',
+      area: '',
+      danmakusCount: 0,
       startAt: now,
+      stopAt: null,
+      totalIncome: 0,
+      totalIncomeWithGuard: 0,
+      likeCount: 0,
+      paymentCount: 0,
+      interactionCount: 0,
     }
 
     // user_1: 贡献 1000（非舰长，打赏榜第 1 名）

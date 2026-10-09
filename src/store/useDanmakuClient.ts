@@ -102,6 +102,15 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     return Boolean(currentIntent && getBestRemoteSource(currentIntent.scope))
   })
   const hasAnySource = computed(() => connected.value || hasRemoteSource.value)
+  const sourceType = computed<ClientType | undefined>(() => {
+    if (danmakuClient.value && danmakuClient.value.type !== 'broadcast') {
+      return danmakuClient.value.type
+    }
+    if (currentIntent) {
+      return getBestRemoteSource(currentIntent.scope)?.source.clientType
+    }
+    return danmakuClient.value?.type
+  })
   const connectionStatus = computed(() => {
     if (phase.value === 'connected') return sourceMeta.value?.uname ? `已连接: ${sourceMeta.value.uname}` : '已连接'
     if (phase.value === 'electing') return '正在选择弹幕源'
@@ -574,6 +583,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     connected,
     hasRemoteSource,
     hasAnySource,
+    sourceType,
     onEvent,
     offEvent,
     on,

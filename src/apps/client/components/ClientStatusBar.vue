@@ -74,7 +74,7 @@ function toggleDanmakuWindow() {
 }
 
 function toggleGiftWindow() {
-  if (giftWindow.isWindowOpened) {
+  if (giftWindow.isGiftWindowOpen) {
     giftWindow.closeWindow()
   } else {
     giftWindow.openWindow()
@@ -102,7 +102,9 @@ function toggleGiftWindow() {
           </div>
         </template>
         <div>
-          <div><strong>弹幕连接状态：{{ danmakuClient.connectionStatus }}</strong></div>
+          <div>
+            <strong>弹幕连接状态：{{ danmakuClient.connectionStatus }}</strong>
+          </div>
           <div style="font-size: 11px; opacity: 0.85">
             {{ isDanmakuConnected ? '正在实时接收直播间事件流' : '点击前往 EventFetcher / 弹幕设置' }}
           </div>
@@ -118,7 +120,12 @@ function toggleGiftWindow() {
           >
             <span
               class="mini-dot"
-              :style="{ background: webfetcher.state === 'connected' ? 'var(--vtsuru-success, #10b981)' : 'var(--vtsuru-fg-muted, #9ca3af)' }"
+              :style="{
+                background:
+                  webfetcher.state === 'connected'
+                    ? 'var(--vtsuru-success, #10b981)'
+                    : 'var(--vtsuru-fg-muted, #9ca3af)',
+              }"
             />
             <span class="status-text-subtle">上报服务</span>
           </div>
@@ -158,19 +165,19 @@ function toggleGiftWindow() {
         <!-- 观看/在看人数 -->
         <div
           class="stat-chip"
-          title="累计观看/在看人数"
+          title="累计观看人次"
         >
           <NIcon
             :component="Eye20Regular"
             class="stat-chip-icon"
           />
-          <span class="stat-chip-value">{{ formatStatCount(liveStats.watchedCount) }}</span>
+          <span class="stat-chip-value">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
         </div>
 
         <!-- 点赞互动数 -->
         <div
           class="stat-chip"
-          title="本场观众点赞互动数"
+          title="本场累计点赞数"
         >
           <NIcon
             :component="ThumbLike20Regular"
@@ -182,7 +189,7 @@ function toggleGiftWindow() {
         <!-- 实时在线人数 -->
         <div
           class="stat-chip"
-          title="当前在场活跃观众数"
+          title="在线观众人数"
         >
           <NIcon
             :component="PeopleCommunity20Regular"
@@ -238,8 +245,8 @@ function toggleGiftWindow() {
       <button
         type="button"
         class="float-window-toggle-btn"
-        :class="{ 'is-active': giftWindow.isWindowOpened }"
-        :title="giftWindow.isWindowOpened ? '礼物与排行浮窗运行中 (点击关闭)' : '礼物与排行浮窗已关闭 (点击打开)'"
+        :class="{ 'is-active': giftWindow.isGiftWindowOpen }"
+        :title="giftWindow.isGiftWindowOpen ? '礼物与排行浮窗运行中 (点击关闭)' : '礼物与排行浮窗已关闭 (点击打开)'"
         @click="toggleGiftWindow"
       >
         <NIcon
@@ -249,9 +256,9 @@ function toggleGiftWindow() {
         <span class="toggle-btn-text">礼物排行</span>
         <span
           class="window-state-pill"
-          :class="giftWindow.isWindowOpened ? 'is-on' : 'is-off'"
+          :class="giftWindow.isGiftWindowOpen ? 'is-on' : 'is-off'"
         >
-          {{ giftWindow.isWindowOpened ? '开' : '关' }}
+          {{ giftWindow.isGiftWindowOpen ? '开' : '关' }}
         </span>
       </button>
     </div>
@@ -375,7 +382,8 @@ function toggleGiftWindow() {
 }
 
 @keyframes pulse-dot {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }

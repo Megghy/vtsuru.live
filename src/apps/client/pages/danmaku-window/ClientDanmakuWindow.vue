@@ -364,20 +364,20 @@ watch(
         <div
           v-if="setting.showWatchedCount !== false"
           class="status-pill"
-          title="累计观看/在看人数"
+          title="累计观看人次"
         >
           <NIcon
             :component="Eye20Regular"
             class="status-icon"
           />
-          <span class="status-value">{{ formatStatCount(liveStats.watchedCount) }}</span>
+          <span class="status-value">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
         </div>
 
         <!-- 点赞数 -->
         <div
           v-if="setting.showLikeCount !== false"
           class="status-pill"
-          title="本场点赞互动数"
+          title="本场累计点赞数"
         >
           <NIcon
             :component="ThumbLike20Regular"
@@ -403,7 +403,7 @@ watch(
         <div
           v-if="setting.showOnlineCount !== false"
           class="status-pill"
-          title="当前在场活跃人数"
+          title="在线观众人数"
         >
           <NIcon
             :component="PeopleCommunity20Regular"

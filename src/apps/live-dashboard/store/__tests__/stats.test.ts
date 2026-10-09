@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { shallowRef } from 'vue'
 
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
+
 import type { DashboardEvent } from '../../core/types'
 import { useDashboardStats } from '../stats'
 
@@ -11,12 +12,18 @@ function createEvent(partial: Partial<DashboardEvent>): DashboardEvent {
     type: EventDataTypes.Message,
     time: Date.now(),
     uid: 12345,
+    ouid: '12345',
     uname: 'TestUser',
     uface: '',
     msg: 'hello',
     price: 0,
     num: 1,
+    guardLevel: GuardLevel.None,
+    medalLevel: 0,
+    medalName: '',
+    medalWearing: false,
     read: false,
+    deleted: false,
     ...partial,
   }
 }

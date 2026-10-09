@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { ReorderThreeOutline } from '@vicons/ionicons5'
 import { saveAs } from 'file-saver'
 import {
   NButton,
   NDivider,
   NDrawer,
   NDrawerContent,
+  NIcon,
   NInputNumber,
   NPopconfirm,
   NSlider,
@@ -12,10 +14,13 @@ import {
   NUpload,
   type UploadCustomRequestOptions,
 } from 'naive-ui'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 import type { ExportFormat } from '../core/archive'
 import { clearArchive, countByType, exportArchive, importArchive } from '../core/archive'
+import type { ToolbarStatOption } from '../store/settings'
+import { DEFAULT_TOOLBAR_ORDER, TOOLBAR_STAT_OPTIONS } from '../store/settings'
 import { useDashboardUi } from '../store/ui'
 import { useLiveDashboard } from '../store/useLiveDashboard'
 
@@ -29,7 +34,10 @@ async function refreshCounts() {
   counts.value = await countByType()
 }
 
-watch(() => ui.settingsOpen, (open) => open && void refreshCounts())
+watch(
+  () => ui.settingsOpen,
+  (open) => open && void refreshCounts(),
+)
 
 async function doExport(format: ExportFormat) {
   exporting.value = format
@@ -72,6 +80,29 @@ async function clearAll() {
   await refreshCounts()
   window.$message.success('本地事件已清空，刷新页面后生效')
 }
+
+const orderedStatOptions = computed({
+  get() {
+    const map = new Map(TOOLBAR_STAT_OPTIONS.map((opt) => [opt.key, opt]))
+    const order = dashboard.settings.toolbarOrder || DEFAULT_TOOLBAR_ORDER
+    const list: ToolbarStatOption[] = []
+    for (const key of order) {
+      const item = map.get(key)
+      if (item) list.push(item)
+    }
+    for (const opt of TOOLBAR_STAT_OPTIONS) {
+      if (!order.includes(opt.key)) list.push(opt)
+    }
+    return list
+  },
+  set(newList: ToolbarStatOption[]) {
+    dashboard.settings.toolbarOrder = newList.map((item) => item.key)
+  },
+})
+
+function resetToolbarOrder() {
+  dashboard.settings.toolbarOrder = [...DEFAULT_TOOLBAR_ORDER]
+}
 </script>
 
 <template>
@@ -86,15 +117,11 @@ async function clearAll() {
       :native-scrollbar="false"
     >
       <div class="settings">
-        <div class="settings__group">
-          显示
-        </div>
+        <div class="settings__group">显示</div>
         <label class="settings__row">显示头像<NSwitch v-model:value="dashboard.settings.showAvatar" /></label>
         <label class="settings__row">显示粉丝勋章<NSwitch v-model:value="dashboard.settings.showMedal" /></label>
         <label class="settings__row">显示绝对时间<NSwitch v-model:value="dashboard.settings.absoluteTime" /></label>
-        <div class="settings__row">
-          字号 {{ dashboard.settings.fontSize }}px
-        </div>
+        <div class="settings__row">字号 {{ dashboard.settings.fontSize }}px</div>
         <NSlider
           v-model:value="dashboard.settings.fontSize"
           :min="12"
@@ -112,9 +139,47 @@ async function clearAll() {
         </label>
 
         <NDivider />
-        <div class="settings__group">
-          卡片模式
+        <div class="settings__stat-header">
+          <div class="settings__group">顶栏指标项 (支持拖拽排序)</div>
+          <NButton
+            size="tiny"
+            quaternary
+            @click="resetToolbarOrder"
+          >
+            重置排序
+          </NButton>
         </div>
+        <VueDraggable
+          v-model="orderedStatOptions"
+          handle=".drag-handle"
+          :animation="150"
+          class="settings__stat-list"
+          ghost-class="settings__stat-ghost"
+        >
+          <div
+            v-for="opt in orderedStatOptions"
+            :key="opt.key"
+            class="settings__row settings__stat-item"
+            :title="opt.description"
+          >
+            <div class="settings__stat-label">
+              <span
+                class="drag-handle"
+                title="按住拖拽排序"
+              >
+                <NIcon><ReorderThreeOutline /></NIcon>
+              </span>
+              <span>{{ opt.label }}</span>
+            </div>
+            <NSwitch
+              v-model:value="dashboard.settings.toolbarStats[opt.key]"
+              size="small"
+            />
+          </div>
+        </VueDraggable>
+
+        <NDivider />
+        <div class="settings__group">卡片模式</div>
         <label class="settings__row">
           卡片数量
           <NInputNumber
@@ -125,7 +190,9 @@ async function clearAll() {
             style="width: 100px"
           />
         </label>
-        <label class="settings__row">自动隐藏刷屏弹幕<NSwitch v-model:value="dashboard.settings.card.autoHide" /></label>
+        <label class="settings__row"
+          >自动隐藏刷屏弹幕<NSwitch v-model:value="dashboard.settings.card.autoHide"
+        /></label>
         <template v-if="dashboard.settings.card.autoHide">
           <label class="settings__row">
             重复次数达到
@@ -148,9 +215,7 @@ async function clearAll() {
         </template>
 
         <NDivider />
-        <div class="settings__group">
-          用户备注
-        </div>
+        <div class="settings__group">用户备注</div>
         <div class="settings__buttons">
           <NButton
             size="small"
@@ -163,29 +228,28 @@ async function clearAll() {
             :show-file-list="false"
             :custom-request="importNotes"
           >
-            <NButton size="small">
-              导入备注
-            </NButton>
+            <NButton size="small"> 导入备注 </NButton>
           </NUpload>
         </div>
 
         <NDivider />
-        <div class="settings__group">
-          本地事件库
-        </div>
+        <div class="settings__group">本地事件库</div>
         <div class="settings__hint">
-          事件保存在当前浏览器，清除浏览器数据会一并删除。{{ dashboard.historyRange ? '导出范围为当前选择的时间段。' : '' }}
+          事件保存在当前浏览器，清除浏览器数据会一并删除。{{
+            dashboard.historyRange ? '导出范围为当前选择的时间段。' : ''
+          }}
         </div>
         <div class="settings__counts">
           <span
             v-for="c in counts"
             :key="c.label"
-          >{{ c.label }} {{ c.count }}</span>
+            >{{ c.label }} {{ c.count }}</span
+          >
           <span v-if="!counts.length">暂无数据</span>
         </div>
         <div class="settings__buttons">
           <NButton
-            v-for="f in (['json', 'csv', 'xlsx'] as const)"
+            v-for="f in ['json', 'csv', 'xlsx'] as const"
             :key="f"
             size="small"
             :loading="exporting === f"
@@ -200,9 +264,7 @@ async function clearAll() {
             :show-file-list="false"
             :custom-request="importEvents"
           >
-            <NButton size="small">
-              导入 JSON 归档
-            </NButton>
+            <NButton size="small"> 导入 JSON 归档 </NButton>
           </NUpload>
           <NPopconfirm @positive-click="clearAll">
             <template #trigger>
@@ -262,6 +324,52 @@ async function clearAll() {
   gap: 4px 10px;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+}
+
+.settings__stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings__stat-list {
+  display: grid;
+  gap: 6px;
+}
+
+.settings__stat-item {
+  padding: 4px 6px;
+  border-radius: var(--vtsuru-radius);
+  background: var(--vtsuru-bg-elevated);
+  transition: background 0.15s ease;
+}
+
+.settings__stat-item:hover {
+  background: var(--vtsuru-bg-hover, rgba(255, 255, 255, 0.06));
+}
+
+.settings__stat-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  cursor: grab;
+  color: var(--vtsuru-fg-muted);
+  font-size: 14px;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.settings__stat-ghost {
+  opacity: 0.4;
+  background: var(--vtsuru-brand-soft, rgba(59, 130, 246, 0.15));
 }
 
 .settings :deep(.n-divider) {

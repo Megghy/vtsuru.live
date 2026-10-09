@@ -4,6 +4,7 @@ import { computed, reactive, ref, shallowRef, triggerRef, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
+import { fetchOfficialLiveStats, officialLiveStats } from '@/shared/services/officialLiveStats'
 import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -50,6 +51,8 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const scrollTarget = ref<string>()
   const cardGrid = reactive(new CardGrid(settings.value.card.size))
   const stats = useDashboardStats(paid)
+  const officialOnline = ref<number | null>(null)
+  let officialTimer: ReturnType<typeof setInterval> | undefined
 
   const pageLoadedAt = Date.now()
   let pendingWrites = new Map<string, DashboardEvent>()
@@ -138,14 +141,32 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     await Promise.all([loadRecent(), notes.load()])
     client.onEvent('all', ingest)
     await client.ensureOpenlive()
+    await refreshOfficialStats()
+    officialTimer = setInterval(() => void refreshOfficialStats(), 15_000)
   }
 
   async function stop() {
     if (!started) return
     started = false
     client.offEvent('all', ingest)
+    if (officialTimer) clearInterval(officialTimer)
+    officialTimer = undefined
     if (flushTimer) clearTimeout(flushTimer)
     await flushWrites()
+  }
+
+  async function refreshOfficialStats() {
+    const roomId = account.value.biliRoomId
+    if (!roomId) return
+    const uid = account.value.biliId
+    try {
+      await fetchOfficialLiveStats(roomId, uid)
+      if (officialLiveStats.value.popularity !== null) {
+        officialOnline.value = officialLiveStats.value.popularity
+      }
+    } catch (error) {
+      console.warn('[LiveDashboard] 获取官方数据失败', error)
+    }
   }
 
   function isRead(event: DashboardEvent) {
@@ -237,6 +258,8 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     settings,
     notes,
     stats,
+    officialOnline,
+    officialStats: officialLiveStats,
     client,
     readKeys,
     cardGrid,

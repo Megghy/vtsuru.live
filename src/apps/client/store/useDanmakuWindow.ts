@@ -4,6 +4,7 @@ import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { fetchOfficialLiveStats, officialLiveStats } from '@/shared/services/officialLiveStats'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -48,10 +49,12 @@ export interface DanmakuWindowSettings {
 }
 
 export interface LiveStatsData {
-  watchedCount: number // 累计观看人数
-  likeCount: number // 累计点赞数
+  watchedCount: number // 累计观看人数 (官方观看人次)
+  watchedText?: string | null // 观看人数文本 (如 "1.2万人看过")
+  likeCount: number // 累计点赞数 (官方本场点赞总数)
   totalIncome: number // 本场总收益 (元)
-  onlineCount: number // 实时在线活跃人数
+  onlineCount: number // 实时在线活跃/高能人数
+  popularity?: number | null // 官方人气值
 }
 
 export const DANMAKU_WINDOW_BROADCAST_CHANNEL = 'channel.danmaku.window'
@@ -240,12 +243,44 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
   const activeUsers = new Map<string, number>()
   const ONLINE_THRESHOLD_MS = 20 * 60 * 1000
 
+  // 监听官方统计数据更新并同步
+  watch(
+    () => officialLiveStats.value,
+    (stats) => {
+      let changed = false
+      if (stats.watchedCount !== null && stats.watchedCount !== liveStats.value.watchedCount) {
+        liveStats.value.watchedCount = stats.watchedCount
+        liveStats.value.watchedText = stats.watchedText
+        changed = true
+      }
+      if (stats.totalLikes !== null && stats.totalLikes !== liveStats.value.likeCount) {
+        liveStats.value.likeCount = stats.totalLikes
+        changed = true
+      }
+      if (stats.onlineRank !== null && stats.onlineRank !== liveStats.value.onlineCount) {
+        liveStats.value.onlineCount = stats.onlineRank
+        changed = true
+      }
+      if (stats.popularity !== null && stats.popularity !== liveStats.value.popularity) {
+        liveStats.value.popularity = stats.popularity
+        changed = true
+      }
+      if (changed) syncLiveStats()
+    },
+    { deep: true, immediate: true },
+  )
+
   function refreshOnlineCount() {
     const cutoff = Date.now() - ONLINE_THRESHOLD_MS
     for (const [key, time] of activeUsers.entries()) {
       if (time < cutoff) activeUsers.delete(key)
     }
-    liveStats.value.onlineCount = activeUsers.size
+    // 优先使用官方在线高能观众数，未获取时回退到本地互动活跃人数
+    if (officialLiveStats.value.onlineRank !== null) {
+      liveStats.value.onlineCount = officialLiveStats.value.onlineRank
+    } else {
+      liveStats.value.onlineCount = activeUsers.size
+    }
   }
 
   function recordActivity(uid: number | string, uname?: string) {
@@ -398,7 +433,10 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     recordActivity(data.uid, data.uname)
 
     if (data.type === EventDataTypes.Like) {
-      liveStats.value.likeCount += Math.max(1, data.num || 1)
+      // 若官方本场总点赞未获取，使用单次累加；若已获取官方总点赞，保留官方总点赞
+      if (officialLiveStats.value.totalLikes === null) {
+        liveStats.value.likeCount += Math.max(1, data.num || 1)
+      }
     } else if (data.type === EventDataTypes.Gift) {
       // 礼物价格转换为元 (B站金瓜子 1000 = 1元，或者直接按元)
       const giftYuan = (data.price || 0) >= 100 ? (data.price || 0) / 1000 : (data.price || 0)
@@ -433,10 +471,12 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
   // 新增：重置实时统计
   function resetLiveStats() {
     liveStats.value = {
-      watchedCount: 0,
-      likeCount: 0,
+      watchedCount: officialLiveStats.value.watchedCount ?? 0,
+      watchedText: officialLiveStats.value.watchedText,
+      likeCount: officialLiveStats.value.totalLikes ?? 0,
       totalIncome: 0,
-      onlineCount: 0,
+      onlineCount: officialLiveStats.value.onlineRank ?? 0,
+      popularity: officialLiveStats.value.popularity,
     }
     activeUsers.clear()
     syncLiveStats()
@@ -450,9 +490,13 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     }
     const testData = generateTestDanmaku()
 
-    // 测试时也模拟推进观看与点赞统计
-    liveStats.value.watchedCount = Math.max(liveStats.value.watchedCount + Math.floor(Math.random() * 5) + 1, 10)
-    liveStats.value.likeCount += Math.floor(Math.random() * 3) + 1
+    // 仅在官方数据为空时模拟推进观看与点赞统计
+    if (officialLiveStats.value.watchedCount === null) {
+      liveStats.value.watchedCount = Math.max(liveStats.value.watchedCount + Math.floor(Math.random() * 5) + 1, 10)
+    }
+    if (officialLiveStats.value.totalLikes === null) {
+      liveStats.value.likeCount += Math.floor(Math.random() * 3) + 1
+    }
     onGetDanmakus(testData)
 
     postBroadcastMessage(bc, {

@@ -3,6 +3,7 @@ import { createDanmakuSocket } from '@vtsuru/danmaku'
 
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
+import { updateOfficialStats } from '@/shared/services/officialLiveStats'
 import { GuidUtils } from '@/shared/utils'
 
 import BaseDanmakuClient from './BaseDanmakuClient'
@@ -58,6 +59,10 @@ export default class DirectClient extends BaseDanmakuClient {
         this.emitInteraction(decodeInteractWord(data.data.pb), data),
       )
       chatClient.addEventListener('LIKE_INFO_V3_CLICK', ({ data }) => this.onLike(data))
+      chatClient.addEventListener('LIKE_INFO_V3_UPDATE', ({ data }) => this.onLikeUpdate(data))
+      chatClient.addEventListener('ONLINE_RANK_COUNT', ({ data }) => this.onOnlineRankCount(data))
+      chatClient.addEventListener('WATCHED_CHANGE', ({ data }) => this.onWatchedChange(data))
+      chatClient.addEventListener('heartbeat', ({ data }) => this.onHeartbeat(data))
 
       return super.initClientInner(chatClient, signal)
     } else {
@@ -296,6 +301,36 @@ export default class DirectClient extends BaseDanmakuClient {
       },
       command,
     )
+  }
+
+  public onLikeUpdate(command: DirectCommand<'LIKE_INFO_V3_UPDATE'>): void {
+    if (typeof command.data?.click_count === 'number') {
+      updateOfficialStats({ totalLikes: command.data.click_count })
+    }
+  }
+
+  public onOnlineRankCount(command: DirectCommand<'ONLINE_RANK_COUNT'>): void {
+    const count = command.data.online_count ?? command.data.count
+    const countText = command.data.online_count_text ?? command.data.count_text
+    updateOfficialStats({
+      onlineRank: typeof count === 'number' ? count : null,
+      onlineRankText: countText || null,
+    })
+  }
+
+  public onWatchedChange(command: DirectCommand<'WATCHED_CHANGE'>): void {
+    if (typeof command.data?.num === 'number') {
+      updateOfficialStats({
+        watchedCount: command.data.num,
+        watchedText: command.data.text_large || command.data.text_small || null,
+      })
+    }
+  }
+
+  public onHeartbeat(popularity: number): void {
+    if (typeof popularity === 'number' && popularity > 0) {
+      updateOfficialStats({ popularity })
+    }
   }
 
   public onScDel(command: DirectCommand<'SUPER_CHAT_MESSAGE_DELETE'>): void {

@@ -311,8 +311,8 @@ function resetWindowPosition() {
                   :size="8"
                 >
                   <LabelItem
-                    label="显示观看/在看人数"
-                    description="直播间累计观看与当前在看人数"
+                    label="显示观看人数"
+                    description="直播间累计观看人次"
                   >
                     <template #icon>
                       <NIcon :component="Eye20Regular" />
@@ -322,7 +322,7 @@ function resetWindowPosition() {
 
                   <LabelItem
                     label="显示点赞互动数"
-                    description="本场直播观众累计点赞次数"
+                    description="本场直播累计点赞次数"
                   >
                     <template #icon>
                       <NIcon :component="ThumbLike20Regular" />
@@ -352,8 +352,8 @@ function resetWindowPosition() {
                   </LabelItem>
 
                   <LabelItem
-                    label="显示在线活跃人数"
-                    description="当前在直播间互动的观众/大航海在场人数"
+                    label="显示在线人数"
+                    description="在线观众人数（未获取时为活跃互动人数）"
                   >
                     <template #icon>
                       <NIcon :component="PeopleCommunity20Regular" />
@@ -370,7 +370,7 @@ function resetWindowPosition() {
                       depth="3"
                       style="font-size: 12px"
                     >
-                      当前统计：观看 {{ danmakuWindow.liveStats.watchedCount }} ｜ 点赞 {{ danmakuWindow.liveStats.likeCount }} ｜ 收益 ¥{{ danmakuWindow.liveStats.totalIncome }} ｜ 在线 {{ danmakuWindow.liveStats.onlineCount }} 人
+                      当前统计：观看 {{ danmakuWindow.liveStats.watchedText || danmakuWindow.liveStats.watchedCount }} ｜ 点赞 {{ danmakuWindow.liveStats.likeCount }} ｜ 收益 ¥{{ danmakuWindow.liveStats.totalIncome }} ｜ 在线 {{ danmakuWindow.liveStats.onlineCount }} 人
                     </NText>
                     <NButton
                       size="tiny"

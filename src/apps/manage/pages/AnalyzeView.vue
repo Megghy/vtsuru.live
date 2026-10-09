@@ -80,6 +80,7 @@ import {
   type AnalyzeDayOfWeekStat,
   type AnalyzeDayPoint,
   type AnalyzeMilestones,
+  type AnalyzeOfflineEventItem,
   type AnalyzeRangeSummary,
   type AnalyzeSessionItem,
   type AnalyzeTopUser,
@@ -107,6 +108,10 @@ interface BackendChartItem {
   giftIncome?: number
   scIncome?: number
   guardIncome?: number
+  offlineIncome?: number
+  offlineGuardIncome?: number
+  offlineScIncome?: number
+  grandTotalIncome?: number
   totalIncomeWithGuard?: number
   interactionCount: number
   danmakuCount: number
@@ -122,6 +127,11 @@ interface BackendPeriodSummary {
   giftIncome?: number
   scIncome?: number
   guardIncome?: number
+  offlineIncome?: number
+  offlineGuardIncome?: number
+  offlineScIncome?: number
+  grandTotalIncome?: number
+  offlineGuardCount?: number
   totalIncomeWithGuard?: number
   totalInteractions: number
   totalDanmakuCount: number
@@ -148,6 +158,7 @@ interface BackendAnalyzeData {
   areaStats?: AnalyzeAreaStat[]
   topSpenders?: AnalyzeTopUser[]
   topChatters?: AnalyzeTopUser[]
+  offlineEvents?: AnalyzeOfflineEventItem[]
 }
 
 // 状态管理
@@ -215,6 +226,10 @@ function getChartDataArray(): Array<AnalyzeDayPoint & { date: string }> {
         giftIncome: data.giftIncome ?? data.income ?? 0,
         scIncome: data.scIncome ?? 0,
         guardIncome: data.guardIncome ?? 0,
+        offlineIncome: data.offlineIncome ?? 0,
+        offlineGuardIncome: data.offlineGuardIncome ?? 0,
+        offlineScIncome: data.offlineScIncome ?? 0,
+        grandTotalIncome: data.grandTotalIncome ?? (data.income || 0) + (data.offlineIncome || 0),
         totalIncomeWithGuard: data.totalIncomeWithGuard ?? (data.income || 0) + (data.guardIncome || 0),
         interactionCount: data.interactionCount || 0,
         danmakuCount: data.danmakuCount || 0,
@@ -244,6 +259,7 @@ interface UnifiedSummary extends AnalyzeRangeSummary {
   incomeTrend?: number
   interactionTrend?: number
   danmakuTrend?: number
+  offlineGuardCount?: number
 }
 
 const currentSummary = computed<UnifiedSummary>(() => {
@@ -258,6 +274,11 @@ const currentSummary = computed<UnifiedSummary>(() => {
       giftIncome: s7.giftIncome ?? calculated.giftIncome,
       scIncome: s7.scIncome ?? calculated.scIncome,
       guardIncome: s7.guardIncome ?? calculated.guardIncome,
+      offlineIncome: s7.offlineIncome ?? calculated.offlineIncome,
+      offlineGuardIncome: s7.offlineGuardIncome ?? calculated.offlineGuardIncome,
+      offlineScIncome: s7.offlineScIncome ?? calculated.offlineScIncome,
+      grandTotalIncome: s7.grandTotalIncome ?? calculated.grandTotalIncome,
+      offlineGuardCount: s7.offlineGuardCount ?? 0,
       totalIncomeWithGuard: s7.totalIncomeWithGuard ?? calculated.totalIncomeWithGuard,
       totalInteractions: s7.totalInteractions ?? calculated.totalInteractions,
       totalDanmakuCount: s7.totalDanmakuCount ?? calculated.totalDanmakuCount,
@@ -282,6 +303,11 @@ const currentSummary = computed<UnifiedSummary>(() => {
       giftIncome: s30.giftIncome ?? calculated.giftIncome,
       scIncome: s30.scIncome ?? calculated.scIncome,
       guardIncome: s30.guardIncome ?? calculated.guardIncome,
+      offlineIncome: s30.offlineIncome ?? calculated.offlineIncome,
+      offlineGuardIncome: s30.offlineGuardIncome ?? calculated.offlineGuardIncome,
+      offlineScIncome: s30.offlineScIncome ?? calculated.offlineScIncome,
+      grandTotalIncome: s30.grandTotalIncome ?? calculated.grandTotalIncome,
+      offlineGuardCount: s30.offlineGuardCount ?? 0,
       totalIncomeWithGuard: s30.totalIncomeWithGuard ?? calculated.totalIncomeWithGuard,
       totalInteractions: s30.totalInteractions ?? calculated.totalInteractions,
       totalDanmakuCount: s30.totalDanmakuCount ?? calculated.totalDanmakuCount,
@@ -313,7 +339,20 @@ const currentSummary = computed<UnifiedSummary>(() => {
     incomeTrend: undefined,
     interactionTrend: undefined,
     danmakuTrend: undefined,
+    offlineGuardCount: filteredOfflineEvents.value.filter((e) => e.type === 0).length,
   }
+})
+
+// 过滤后的离线事件流水（在选定日期区间内）
+const filteredOfflineEvents = computed<AnalyzeOfflineEventItem[]>(() => {
+  const all = analyzeData.value?.offlineEvents || []
+  if (!dateRange.value) return all
+  const start = Math.min(dateRange.value[0], dateRange.value[1])
+  const end = Math.max(dateRange.value[0], dateRange.value[1])
+  return all.filter((e) => {
+    const ts = e.time < 10_000_000_000 && e.time > 100_000_000 ? e.time * 1_000 : e.time
+    return ts >= start && ts <= end
+  })
 })
 
 // 区间里程碑峰值
@@ -348,6 +387,34 @@ const bestDayInsight = computed(() => {
   return {
     income: bestIncomeDay,
     danmaku: bestDanmakuDay,
+  }
+})
+
+// 活跃矩阵等级判定与节奏统计
+function getHeatmapLevel(liveMinutes: number): number {
+  if (liveMinutes === 0) return 0
+  if (liveMinutes < 120) return 1
+  if (liveMinutes < 240) return 2
+  if (liveMinutes < 360) return 3
+  return 4
+}
+
+const heatmapDays = computed(() => getChartDataArray())
+
+const heatmapStats = computed(() => {
+  const days = heatmapDays.value
+  if (days.length === 0) return { totalDays: 0, liveDays: 0, restDays: 0, rate: 0 }
+  let liveDays = 0
+  for (const d of days) {
+    if (d.liveMinutes > 0) liveDays++
+  }
+  const restDays = days.length - liveDays
+  const rate = Math.round((liveDays / days.length) * 100)
+  return {
+    totalDays: days.length,
+    liveDays,
+    restDays,
+    rate,
   }
 })
 
@@ -427,10 +494,12 @@ function applyMetricPreset(preset: MetricPreset) {
 }
 
 const chartMetrics = computed(() => [
-  { label: '总收益', value: 'income', color: '#f59e0b', unit: '¥', yAxisIndex: 1 },
+  { label: '全盘总收益', value: 'grandTotalIncome', color: '#eab308', unit: '¥', yAxisIndex: 1 },
+  { label: '直播收益', value: 'income', color: '#f59e0b', unit: '¥', yAxisIndex: 1 },
   { label: '普通礼物', value: 'giftIncome', color: '#fbbf24', unit: '¥', yAxisIndex: 1 },
   { label: '醒目留言', value: 'scIncome', color: '#f97316', unit: '¥', yAxisIndex: 1 },
-  { label: '大航海', value: 'guardIncome', color: '#d97706', unit: '¥', yAxisIndex: 1 },
+  { label: '直播舰长', value: 'guardIncome', color: '#3b82f6', unit: '¥', yAxisIndex: 1 },
+  { label: '下播上舰', value: 'offlineIncome', color: '#10b981', unit: '¥', yAxisIndex: 1 },
   { label: '弹幕数', value: 'danmakuCount', color: '#10b981', unit: '条', yAxisIndex: 0 },
   { label: '互动人次', value: 'interactionCount', color: '#3b82f6', unit: '次', yAxisIndex: 0 },
   { label: '点赞数', value: 'likeCount', color: '#f43f5e', unit: '次', yAxisIndex: 0 },
@@ -457,7 +526,7 @@ function updateChartOption() {
   const chartData = filteredChartData.value
   const dates = chartData.map((item) => item.date)
 
-  const isIncomeMetric = (m: string) => ['income', 'giftIncome', 'scIncome', 'guardIncome'].includes(m)
+  const isIncomeMetric = (m: string) => ['income', 'giftIncome', 'scIncome', 'guardIncome', 'offlineIncome', 'grandTotalIncome'].includes(m)
   const showRightAxis = selectedMetrics.value.some(isIncomeMetric)
   const showLeftAxis = selectedMetrics.value.some((m) => !isIncomeMetric(m))
 
@@ -803,7 +872,7 @@ onUnmounted(() => {
           <div class="bento-card-header">
             <div class="header-tag">
               <div class="icon-avatar is-gold"><Wallet24Regular /></div>
-              <span class="header-label">{{ currentSummary.titlePrefix }}总收益</span>
+              <span class="header-label">{{ currentSummary.titlePrefix }}全盘总收益</span>
             </div>
             <NTag
               v-if="currentSummary.incomeTrend !== undefined"
@@ -825,34 +894,46 @@ onUnmounted(() => {
           <div class="bento-card-body">
             <div class="primary-metric-val">
               <span class="currency-symbol">¥</span>
-              <NNumberAnimation :from="0" :to="currentSummary.totalIncome" :precision="2" :duration="800" />
+              <NNumberAnimation :from="0" :to="currentSummary.grandTotalIncome" :precision="2" :duration="800" />
             </div>
 
-            <!-- 收入构成细分胶囊条 -->
+            <!-- 收入构成细分胶囊条（礼物、SC、直播舰长、下播上舰） -->
             <div class="income-split-bar">
               <div class="split-info">
                 <span>礼物 ¥{{ formatNumber(currentSummary.giftIncome) }}</span>
                 <span>SC ¥{{ formatNumber(currentSummary.scIncome) }}</span>
-                <span v-if="currentSummary.guardIncome > 0">舰长 ¥{{ formatNumber(currentSummary.guardIncome) }}</span>
+                <span v-if="currentSummary.guardIncome > 0">直播舰长 ¥{{ formatNumber(currentSummary.guardIncome) }}</span>
+                <span v-if="currentSummary.offlineIncome > 0" class="offline-split-text">下播支持 ¥{{ formatNumber(currentSummary.offlineIncome) }}</span>
               </div>
               <div class="split-progress-track">
                 <div
                   class="split-seg is-gift"
+                  :title="`普通礼物: ¥${formatNumber(currentSummary.giftIncome)}`"
                   :style="{
-                    width: `${currentSummary.totalIncome > 0 ? (currentSummary.giftIncome / currentSummary.totalIncome) * 100 : 0}%`,
+                    width: `${currentSummary.grandTotalIncome > 0 ? (currentSummary.giftIncome / currentSummary.grandTotalIncome) * 100 : 0}%`,
                   }"
                 ></div>
                 <div
                   class="split-seg is-sc"
+                  :title="`醒目留言: ¥${formatNumber(currentSummary.scIncome)}`"
                   :style="{
-                    width: `${currentSummary.totalIncome > 0 ? (currentSummary.scIncome / currentSummary.totalIncome) * 100 : 0}%`,
+                    width: `${currentSummary.grandTotalIncome > 0 ? (currentSummary.scIncome / currentSummary.grandTotalIncome) * 100 : 0}%`,
                   }"
                 ></div>
                 <div
                   v-if="currentSummary.guardIncome > 0"
                   class="split-seg is-guard"
+                  :title="`直播舰长: ¥${formatNumber(currentSummary.guardIncome)}`"
                   :style="{
-                    width: `${currentSummary.totalIncome > 0 ? (currentSummary.guardIncome / currentSummary.totalIncome) * 100 : 0}%`,
+                    width: `${currentSummary.grandTotalIncome > 0 ? (currentSummary.guardIncome / currentSummary.grandTotalIncome) * 100 : 0}%`,
+                  }"
+                ></div>
+                <div
+                  v-if="currentSummary.offlineIncome > 0"
+                  class="split-seg is-offline"
+                  :title="`下播上舰支持: ¥${formatNumber(currentSummary.offlineIncome)}`"
+                  :style="{
+                    width: `${currentSummary.grandTotalIncome > 0 ? (currentSummary.offlineIncome / currentSummary.grandTotalIncome) * 100 : 0}%`,
                   }"
                 ></div>
               </div>
@@ -866,7 +947,7 @@ onUnmounted(() => {
             </div>
             <div class="sub-stat-sep"></div>
             <div class="sub-stat">
-              <span class="sub-stat-lbl">场均收益</span>
+              <span class="sub-stat-lbl">场均直播收益</span>
               <span class="sub-stat-val">¥{{ currentSummary.dailyAvgIncome.toFixed(1) }}</span>
             </div>
           </div>
@@ -1078,7 +1159,7 @@ onUnmounted(() => {
                     <span class="meta-val">¥{{ formatNumber(currentSummary.giftIncome) }}</span>
                   </div>
                   <span class="stat-pct">
-                    {{ currentSummary.totalIncome > 0 ? ((currentSummary.giftIncome / currentSummary.totalIncome) * 100).toFixed(1) : 0 }}%
+                    {{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.giftIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%
                   </span>
                 </div>
 
@@ -1089,18 +1170,29 @@ onUnmounted(() => {
                     <span class="meta-val">¥{{ formatNumber(currentSummary.scIncome) }}</span>
                   </div>
                   <span class="stat-pct">
-                    {{ currentSummary.totalIncome > 0 ? ((currentSummary.scIncome / currentSummary.totalIncome) * 100).toFixed(1) : 0 }}%
+                    {{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.scIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%
                   </span>
                 </div>
 
                 <div v-if="currentSummary.guardIncome > 0" class="pie-stat-item">
                   <div class="stat-dot is-guard"></div>
                   <div class="stat-meta">
-                    <span class="meta-label">大航海 (舰长/提督/总督)</span>
+                    <span class="meta-label">直播大航海 (舰长/提督)</span>
                     <span class="meta-val">¥{{ formatNumber(currentSummary.guardIncome) }}</span>
                   </div>
                   <span class="stat-pct">
-                    {{ currentSummary.totalIncome > 0 ? ((currentSummary.guardIncome / currentSummary.totalIncome) * 100).toFixed(1) : 0 }}%
+                    {{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.guardIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%
+                  </span>
+                </div>
+
+                <div v-if="currentSummary.offlineIncome > 0" class="pie-stat-item">
+                  <div class="stat-dot is-offline"></div>
+                  <div class="stat-meta">
+                    <span class="meta-label">下播支持 (未开播/主站上舰)</span>
+                    <span class="meta-val">¥{{ formatNumber(currentSummary.offlineIncome) }}</span>
+                  </div>
+                  <span class="stat-pct">
+                    {{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.offlineIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%
                   </span>
                 </div>
               </div>
@@ -1131,11 +1223,31 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
+
+            <!-- 下播上舰与离线创收流水清单 -->
+            <div v-if="filteredOfflineEvents.length > 0" class="offline-monetization-section">
+              <div class="offline-section-header">
+                <span class="offline-header-title">下播/未开播上舰支持明细 (共 {{ filteredOfflineEvents.length }} 笔)</span>
+                <span class="offline-header-sum">累计 ¥{{ formatNumber(currentSummary.offlineIncome) }}</span>
+              </div>
+              <div class="offline-cards-scroll">
+                <div v-for="ev in filteredOfflineEvents.slice(0, 10)" :key="ev.id" class="offline-event-chip">
+                  <div class="chip-main">
+                    <NTag size="tiny" :bordered="false" type="success">{{ ev.message }}</NTag>
+                    <span class="chip-user">{{ ev.name }}</span>
+                  </div>
+                  <div class="chip-side">
+                    <span class="chip-price">¥{{ formatNumber(ev.price) }}</span>
+                    <span class="chip-date">{{ formatDate(ev.time) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </NCard>
 
-        <!-- 右列: 周开播习惯与黄金周期分布 -->
-        <NCard class="insight-card" :bordered="false">
+        <!-- 右列: 周开播习惯与活跃节奏热力 -->
+        <NCard class="insight-card rhythm-card" :bordered="false">
           <div class="insight-card-header">
             <div class="insight-title">
               <NIcon><CalendarLtr24Regular /></NIcon>
@@ -1197,6 +1309,63 @@ onUnmounted(() => {
               </span>
             </div>
           </div>
+
+          <!-- 下方: 60 天开播活跃热力矩阵 -->
+          <div class="heatmap-section-divider">
+            <div class="heatmap-section-header">
+              <div class="heatmap-section-title">
+                <NIcon><CalendarClock24Regular /></NIcon>
+                <span>60 天开播活跃热力矩阵</span>
+              </div>
+              <div class="heatmap-summary-badge">
+                <span>开播 {{ heatmapStats.liveDays }}天</span>
+                <span class="badge-dot">·</span>
+                <span>休整 {{ heatmapStats.restDays }}天</span>
+                <span class="badge-dot">·</span>
+                <span>出勤率 {{ heatmapStats.rate }}%</span>
+              </div>
+            </div>
+
+            <div class="heatmap-compact-box">
+              <div class="heatmap-grid-scroll">
+                <div class="heatmap-grid">
+                  <NTooltip v-for="point in heatmapDays" :key="point.timestamp" trigger="hover">
+                    <template #trigger>
+                      <div
+                        class="heatmap-day-cell"
+                        :class="`lvl-${getHeatmapLevel(point.liveMinutes)}`"
+                      ></div>
+                    </template>
+                    <div class="heatmap-tooltip">
+                      <div class="tooltip-date">{{ point.date }}</div>
+                      <div v-if="point.liveMinutes > 0" class="tooltip-body">
+                        <div>直播时长: {{ (point.liveMinutes / 60).toFixed(1) }} 小时</div>
+                        <div>总收益: ¥{{ formatNumber(point.income) }}</div>
+                        <div>弹幕数: {{ formatNumber(point.danmakuCount) }} 条</div>
+                        <div>互动人数: {{ formatNumber(point.interactionUsers) }} 人</div>
+                      </div>
+                      <div v-else class="tooltip-body is-rest">
+                        <span>未开播 / 休整日</span>
+                      </div>
+                    </div>
+                  </NTooltip>
+                </div>
+              </div>
+
+              <div class="heatmap-footer-meta">
+                <span class="heatmap-footer-note">近 60 天每日直播状态</span>
+                <div class="heatmap-legend">
+                  <span class="legend-lbl">少</span>
+                  <div class="legend-cell lvl-0"></div>
+                  <div class="legend-cell lvl-1"></div>
+                  <div class="legend-cell lvl-2"></div>
+                  <div class="legend-cell lvl-3"></div>
+                  <div class="legend-cell lvl-4"></div>
+                  <span class="legend-lbl">多</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </NCard>
       </div>
 
@@ -1215,32 +1384,26 @@ onUnmounted(() => {
             <NText depth="3">当前区间无分区直播记录</NText>
           </div>
 
-          <div v-else class="area-table-box">
-            <NTable size="small" :single-line="false" class="clean-area-table">
-              <thead>
-                <tr>
-                  <th>分区名称</th>
-                  <th style="text-align: right">场次</th>
-                  <th style="text-align: right">总时长</th>
-                  <th style="text-align: right">总收益</th>
-                  <th style="text-align: right">场均收益</th>
-                  <th style="text-align: right">场均弹幕</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="area in currentAreaStats" :key="`${area.parentArea}-${area.area}`">
-                  <td>
-                    <span class="area-parent-badge">{{ area.parentArea }}</span>
-                    <span class="area-name-text">{{ area.area }}</span>
-                  </td>
-                  <td style="text-align: right">{{ area.sessionCount }} 场</td>
-                  <td style="text-align: right">{{ (area.totalLiveMinutes / 60).toFixed(1) }} h</td>
-                  <td style="text-align: right; font-weight: 600; color: #f59e0b">¥{{ formatNumber(area.totalIncome) }}</td>
-                  <td style="text-align: right">¥{{ area.avgIncome.toFixed(1) }}</td>
-                  <td style="text-align: right">{{ formatNumber(area.avgDanmaku) }} 条</td>
-                </tr>
-              </tbody>
-            </NTable>
+          <div v-else class="area-metric-list">
+            <div v-for="area in currentAreaStats" :key="`${area.parentArea}-${area.area}`" class="area-metric-card">
+              <div class="area-card-top">
+                <div class="area-info-left">
+                  <span class="area-parent-badge">{{ area.parentArea }}</span>
+                  <span class="area-name-text">{{ area.area }}</span>
+                </div>
+                <div class="area-income-right">
+                  <span class="area-income-val">¥{{ formatNumber(area.totalIncome) }}</span>
+                  <span class="area-income-avg">场均 ¥{{ area.avgIncome.toFixed(1) }}</span>
+                </div>
+              </div>
+              <div class="area-card-bottom">
+                <span class="area-sub-metric"><strong>{{ area.sessionCount }}</strong> 场直播</span>
+                <span class="metric-divider">·</span>
+                <span class="area-sub-metric"><strong>{{ (area.totalLiveMinutes / 60).toFixed(1) }}</strong> 小时</span>
+                <span class="metric-divider">·</span>
+                <span class="area-sub-metric">场均 <strong>{{ formatNumber(area.avgDanmaku) }}</strong> 弹幕</span>
+              </div>
+            </div>
           </div>
         </NCard>
 
@@ -1303,59 +1466,7 @@ onUnmounted(() => {
         </NCard>
       </div>
 
-      <!-- Section 5: 60 天开播活跃热力日历 (Activity Heatmap Grid) -->
-      <NCard class="heatmap-card" :bordered="false">
-        <div class="insight-card-header">
-          <div class="insight-title">
-            <NIcon><CalendarClock24Regular /></NIcon>
-            <span>60 天开播活跃热力矩阵</span>
-          </div>
-          <div class="heatmap-legend">
-            <span class="legend-lbl">少</span>
-            <div class="legend-cell lvl-0"></div>
-            <div class="legend-cell lvl-1"></div>
-            <div class="legend-cell lvl-2"></div>
-            <div class="legend-cell lvl-3"></div>
-            <div class="legend-cell lvl-4"></div>
-            <span class="legend-lbl">多</span>
-          </div>
-        </div>
 
-        <div class="heatmap-grid-box">
-          <div class="heatmap-grid">
-            <NTooltip v-for="point in getChartDataArray()" :key="point.timestamp" trigger="hover">
-              <template #trigger>
-                <div
-                  class="heatmap-day-cell"
-                  :class="[
-                    point.liveMinutes === 0
-                      ? 'lvl-0'
-                      : point.liveMinutes < 120
-                        ? 'lvl-1'
-                        : point.liveMinutes < 240
-                          ? 'lvl-2'
-                          : point.liveMinutes < 360
-                            ? 'lvl-3'
-                            : 'lvl-4',
-                  ]"
-                ></div>
-              </template>
-              <div class="heatmap-tooltip">
-                <div class="tooltip-date">{{ point.date }}</div>
-                <div v-if="point.liveMinutes > 0" class="tooltip-body">
-                  <div>直播时长: {{ (point.liveMinutes / 60).toFixed(1) }} 小时</div>
-                  <div>总收益: ¥{{ formatNumber(point.income) }}</div>
-                  <div>弹幕数: {{ formatNumber(point.danmakuCount) }} 条</div>
-                  <div>互动人数: {{ formatNumber(point.interactionUsers) }} 人</div>
-                </div>
-                <div v-else class="tooltip-body is-rest">
-                  <span>未开播 / 休整日</span>
-                </div>
-              </div>
-            </NTooltip>
-          </div>
-        </div>
-      </NCard>
 
       <!-- Section 6: 高频粉丝贡献与互动画像 (Top Supporters & Chatters) -->
       <div v-if="(analyzeData?.topSpenders && analyzeData.topSpenders.length > 0) || (analyzeData?.topChatters && analyzeData.topChatters.length > 0)" class="supporters-grid">
@@ -1742,7 +1853,16 @@ onUnmounted(() => {
 }
 
 .split-seg.is-guard {
-  background: #ef4444;
+  background: #3b82f6;
+}
+
+.split-seg.is-offline {
+  background: #10b981;
+}
+
+.offline-split-text {
+  color: #10b981;
+  font-weight: 600;
 }
 
 .metric-context-text {
@@ -1921,7 +2041,11 @@ onUnmounted(() => {
 }
 
 .stat-dot.is-guard {
-  background: #ef4444;
+  background: #3b82f6;
+}
+
+.stat-dot.is-offline {
+  background: #10b981;
 }
 
 .stat-meta {
@@ -1968,6 +2092,86 @@ onUnmounted(() => {
   gap: 8px;
 }
 
+.offline-monetization-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--vtsuru-border);
+}
+
+.offline-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.offline-header-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
+}
+
+.offline-header-sum {
+  font-size: 12px;
+  font-weight: 700;
+  color: #10b981;
+  font-family: var(--n-font-family-mono, monospace);
+}
+
+.offline-cards-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.offline-event-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--vtsuru-bg);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 6px;
+  font-size: 11.5px;
+  transition: border-color 0.15s;
+}
+
+.offline-event-chip:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.chip-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip-user {
+  font-weight: 500;
+  color: var(--vtsuru-fg);
+}
+
+.chip-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip-price {
+  font-weight: 700;
+  color: #10b981;
+  font-family: var(--n-font-family-mono, monospace);
+}
+
+.chip-date {
+  font-size: 10.5px;
+  color: var(--vtsuru-fg-muted);
+}
+
 .funnel-step {
   display: flex;
   flex-direction: column;
@@ -2009,10 +2213,10 @@ onUnmounted(() => {
 .dow-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  height: 180px;
+  gap: 6px;
+  height: 135px;
   align-items: flex-end;
-  padding: 10px 0;
+  padding: 6px 0;
 }
 
 .dow-col {
@@ -2129,25 +2333,89 @@ onUnmounted(() => {
   border: 1px solid var(--vtsuru-border);
 }
 
-.clean-area-table {
-  background: transparent;
-  font-size: 12px;
+.area-metric-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.area-metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--vtsuru-bg);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.area-metric-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.area-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.area-info-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .area-parent-badge {
   display: inline-block;
-  padding: 1px 5px;
-  background: var(--vtsuru-bg);
+  padding: 1px 6px;
+  background: var(--vtsuru-bg-elevated);
   border: 1px solid var(--vtsuru-border);
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--vtsuru-fg-muted);
-  margin-right: 6px;
 }
 
 .area-name-text {
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--vtsuru-fg);
+}
+
+.area-income-right {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.area-income-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: #f59e0b;
+  font-family: var(--n-font-family-mono, monospace);
+}
+
+.area-income-avg {
+  font-size: 11px;
+  color: var(--vtsuru-fg-muted);
+  font-family: var(--n-font-family-mono, monospace);
+}
+
+.area-card-bottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--vtsuru-fg-muted);
+}
+
+.area-sub-metric strong {
+  color: var(--vtsuru-fg);
+  font-weight: 600;
+}
+
+.metric-divider {
+  opacity: 0.4;
 }
 
 .top-sessions-list {
@@ -2272,49 +2540,98 @@ onUnmounted(() => {
   text-align: center;
 }
 
-/* 60 天开播热力矩阵 */
-.heatmap-card {
-  border-radius: 12px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+/* 嵌入式 60 天开播热力矩阵 */
+.heatmap-section-divider {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--vtsuru-border);
+}
+
+.heatmap-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.heatmap-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--vtsuru-fg);
+}
+
+.heatmap-summary-badge {
+  font-size: 11px;
+  color: var(--vtsuru-fg-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.badge-dot {
+  opacity: 0.5;
+}
+
+.heatmap-compact-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.heatmap-grid-scroll {
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  gap: 3.5px;
+  width: max-content;
+}
+
+.heatmap-day-cell {
+  width: 13px;
+  height: 13px;
+  border-radius: 2.5px;
+  transition: transform 0.15s, opacity 0.15s;
+  cursor: pointer;
+}
+
+.heatmap-day-cell:hover {
+  transform: scale(1.3);
+  z-index: 2;
+}
+
+.heatmap-footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 2px;
+}
+
+.heatmap-footer-note {
+  font-size: 11px;
+  color: var(--vtsuru-fg-muted);
 }
 
 .heatmap-legend {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--vtsuru-fg-muted);
 }
 
 .legend-cell {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 2px;
-}
-
-.heatmap-grid-box {
-  overflow-x: auto;
-  padding: 8px 0;
-}
-
-.heatmap-grid {
-  display: grid;
-  grid-template-rows: repeat(5, 1fr);
-  grid-auto-flow: column;
-  gap: 5px;
-}
-
-.heatmap-day-cell {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  transition: transform 0.15s, opacity 0.15s;
-  cursor: pointer;
-}
-
-.heatmap-day-cell:hover {
-  transform: scale(1.25);
 }
 
 .lvl-0 {

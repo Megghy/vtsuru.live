@@ -16,10 +16,12 @@ import {
 import { OpenOutline } from '@vicons/ionicons5'
 import { NButton, NDatePicker, NFlex, NIcon, NInput, NPopover, NTag, NText, NTooltip } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 import { isDarkMode } from '@/shared/utils'
 
 import { avatarUrl, formatDuration, formatPrice } from '../core/format'
+import { DEFAULT_TOOLBAR_ORDER, type ToolbarStatKey } from '../store/settings'
 import { useDashboardUi } from '../store/ui'
 import { useLiveDashboard } from '../store/useLiveDashboard'
 import IconAction from './IconAction.vue'
@@ -28,11 +30,37 @@ import LayoutMenu from './LayoutMenu.vue'
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
 const stats = computed(() => dashboard.stats)
+const officialStats = computed(() => dashboard.officialStats)
 const client = computed(() => dashboard.client)
 const searchRef = ref<InstanceType<typeof NInput>>()
 const reconnecting = ref(false)
 
-watch(() => ui.searchFocusTick, () => searchRef.value?.focus())
+const activeToolbarKeys = computed({
+  get() {
+    const order = dashboard.settings.toolbarOrder || DEFAULT_TOOLBAR_ORDER
+    const statsConfig = dashboard.settings.toolbarStats
+    return order.filter((key) => statsConfig[key])
+  },
+  set(newActiveKeys: ToolbarStatKey[]) {
+    const hiddenKeys = (dashboard.settings.toolbarOrder || DEFAULT_TOOLBAR_ORDER).filter(
+      (k) => !dashboard.settings.toolbarStats[k],
+    )
+    dashboard.settings.toolbarOrder = [...newActiveKeys, ...hiddenKeys]
+  },
+})
+
+function formatStatCount(num: number | null | undefined): string {
+  if (!num || num <= 0) return '0'
+  if (num >= 10000) {
+    return `${(num / 10000).toFixed(1).replace(/\.0$/, '')}w`
+  }
+  return num.toLocaleString()
+}
+
+watch(
+  () => ui.searchFocusTick,
+  () => searchRef.value?.focus(),
+)
 
 const statusColor = computed(() => {
   if (client.value.phase === 'connected' || client.value.hasRemoteSource) return 'var(--vtsuru-success)'
@@ -123,9 +151,7 @@ const SEARCH_HELP = [
           vertical
           :size="8"
         >
-          <div style="font-weight: 600; font-size: 13px">
-            历史事件回溯筛选
-          </div>
+          <div style="font-weight: 600; font-size: 13px">历史事件回溯筛选</div>
           <NDatePicker
             v-model:value="range"
             type="datetimerange"
@@ -133,7 +159,7 @@ const SEARCH_HELP = [
             clearable
             :shortcuts="{
               '最近 1 小时': () => [Date.now() - 3600_000, Date.now()],
-              '今天': () => [new Date().setHours(0, 0, 0, 0), Date.now()],
+              今天: () => [new Date().setHours(0, 0, 0, 0), Date.now()],
               '最近 7 天': () => [Date.now() - 7 * 86400_000, Date.now()],
             }"
             start-placeholder="开始时间"
@@ -166,82 +192,173 @@ const SEARCH_HELP = [
       </NTag>
     </div>
 
-    <div class="toolbar__stats">
-      <NTooltip>
-        <template #trigger>
-          <button
-            class="stat stat--button"
-            type="button"
-            @click="stats.reset()"
-          >
-            <span class="stat__label">统计时长</span>
-            <span class="stat__value">{{ formatDuration(stats.duration) }}</span>
-          </button>
-        </template>
-        点击重置统计（仅影响顶部数据）
-      </NTooltip>
-      <div class="stat">
-        <span class="stat__label">弹幕</span>
-        <span class="stat__value">{{ stats.counters.danmaku }}</span>
-      </div>
-      <div class="stat">
-        <span class="stat__label">点赞</span>
-        <span class="stat__value">{{ stats.counters.like }}</span>
-      </div>
-      <div
-        class="stat"
-        title="最近 20 分钟内有互动的在线/在场观众数"
+    <VueDraggable
+      v-model="activeToolbarKeys"
+      :animation="150"
+      class="toolbar__stats"
+      ghost-class="stat-ghost"
+    >
+      <template
+        v-for="key in activeToolbarKeys"
+        :key="key"
       >
-        <span class="stat__label">在线人数</span>
-        <span class="stat__value">{{ stats.onlineCount }}</span>
-      </div>
-      <div
-        class="stat"
-        title="本场累计互动过的独立观众总数"
-      >
-        <span class="stat__label">互动人数</span>
-        <span class="stat__value">{{ stats.userCount }}</span>
-      </div>
-      <div
-        class="stat"
-        title="本场礼物、SC 与大航海汇总"
-      >
-        <span class="stat__label">总收益</span>
-        <span class="stat__value">{{ formatPrice(stats.totals.totalRevenue) }}</span>
-      </div>
-      <div class="stat">
-        <span class="stat__label">醒目留言</span>
-        <span class="stat__value">{{ formatPrice(stats.totals.sc) }}</span>
-      </div>
-      <div class="stat">
-        <span class="stat__label">礼物</span>
-        <span class="stat__value">{{ formatPrice(stats.totals.gift) }}</span>
-      </div>
-      <div class="stat">
-        <span class="stat__label">大航海</span>
-        <span class="stat__value">{{ stats.totals.guardCount }}</span>
-      </div>
-      <div class="stat">
-        <span class="stat__label">每分钟事件</span>
-        <span class="stat__value">{{ stats.perMinute }}</span>
-      </div>
-      <div
-        v-for="payer in stats.topPayers"
-        :key="payer.userKey"
-        class="payer"
-        :title="payer.uname"
-      >
-        <img
-          v-if="payer.uface"
-          :src="avatarUrl(payer.uface, 48)"
-          referrerpolicy="no-referrer"
+        <!-- 统计时长 -->
+        <NTooltip v-if="key === 'duration'">
+          <template #trigger>
+            <button
+              class="stat stat--button"
+              type="button"
+              @click="stats.reset()"
+            >
+              <span class="stat__label">统计时长</span>
+              <span class="stat__value">{{ formatDuration(stats.duration) }}</span>
+            </button>
+          </template>
+          点击重置统计（仅影响顶部数据）
+        </NTooltip>
+
+        <!-- 弹幕数 -->
+        <div
+          v-else-if="key === 'danmaku'"
+          class="stat"
         >
-        <div class="payer__text">
-          <span class="stat__label">{{ payer.uname }}</span>
-          <span class="stat__value">{{ formatPrice(payer.total) }}</span>
+          <span class="stat__label">弹幕</span>
+          <span class="stat__value">{{ stats.counters.danmaku }}</span>
         </div>
-      </div>
-    </div>
+
+        <!-- 在线观众 -->
+        <div
+          v-else-if="key === 'onlineRank'"
+          class="stat"
+          :title="
+            officialStats.onlineRank !== null
+              ? '在线高能观众数（每 15 秒更新或实时推送）'
+              : '未获取时显示近 20 分钟互动去重用户数'
+          "
+        >
+          <span class="stat__label">在线观众</span>
+          <span class="stat__value">{{
+            officialStats.onlineRankText ||
+            (officialStats.onlineRank !== null ? officialStats.onlineRank : stats.onlineCount)
+          }}</span>
+        </div>
+
+        <!-- 本场点赞 -->
+        <div
+          v-else-if="key === 'totalLikes'"
+          class="stat"
+          :title="
+            officialStats.totalLikes !== null
+              ? `本场累计总点赞数：${officialStats.totalLikes}（会话接收点赞：${stats.counters.like}）`
+              : '会话内收到的点赞数'
+          "
+        >
+          <span class="stat__label">本场点赞</span>
+          <span class="stat__value">{{
+            officialStats.totalLikes !== null ? formatStatCount(officialStats.totalLikes) : stats.counters.like
+          }}</span>
+        </div>
+
+        <!-- 累计看过 -->
+        <div
+          v-else-if="key === 'watched'"
+          class="stat"
+          title="累计观看人次"
+        >
+          <span class="stat__label">累计看过</span>
+          <span class="stat__value">{{
+            officialStats.watchedText ||
+            (officialStats.watchedCount !== null ? formatStatCount(officialStats.watchedCount) : '暂无')
+          }}</span>
+        </div>
+
+        <!-- 人气值 -->
+        <div
+          v-else-if="key === 'popularity'"
+          class="stat"
+          title="直播间热度值"
+        >
+          <span class="stat__label">人气</span>
+          <span class="stat__value">{{ officialStats.popularity ?? dashboard.officialOnline ?? '暂无' }}</span>
+        </div>
+
+        <!-- 近 20 分钟互动 -->
+        <div
+          v-else-if="key === 'activeUsers'"
+          class="stat"
+          title="最近 20 分钟内收到互动事件的去重用户数"
+        >
+          <span class="stat__label">近 20 分钟互动</span>
+          <span class="stat__value">{{ stats.onlineCount }}</span>
+        </div>
+
+        <!-- 总收益 -->
+        <div
+          v-else-if="key === 'totalRevenue'"
+          class="stat"
+          title="本场礼物、SC 与大航海汇总"
+        >
+          <span class="stat__label">总收益</span>
+          <span class="stat__value">{{ formatPrice(stats.totals.totalRevenue) }}</span>
+        </div>
+
+        <!-- 醒目留言 -->
+        <div
+          v-else-if="key === 'sc'"
+          class="stat"
+        >
+          <span class="stat__label">醒目留言</span>
+          <span class="stat__value">{{ formatPrice(stats.totals.sc) }}</span>
+        </div>
+
+        <!-- 礼物 -->
+        <div
+          v-else-if="key === 'gift'"
+          class="stat"
+        >
+          <span class="stat__label">礼物</span>
+          <span class="stat__value">{{ formatPrice(stats.totals.gift) }}</span>
+        </div>
+
+        <!-- 大航海 -->
+        <div
+          v-else-if="key === 'guard'"
+          class="stat"
+        >
+          <span class="stat__label">大航海</span>
+          <span class="stat__value">{{ stats.totals.guardCount }}</span>
+        </div>
+
+        <!-- 每分钟事件 -->
+        <div
+          v-else-if="key === 'perMinute'"
+          class="stat"
+        >
+          <span class="stat__label">每分钟事件</span>
+          <span class="stat__value">{{ stats.perMinute }}</span>
+        </div>
+
+        <!-- Top Payers -->
+        <template v-else-if="key === 'topPayers'">
+          <div
+            v-for="payer in stats.topPayers"
+            :key="payer.userKey"
+            class="payer"
+            :title="payer.uname"
+          >
+            <img
+              v-if="payer.uface"
+              :src="avatarUrl(payer.uface, 48)"
+              referrerpolicy="no-referrer"
+            />
+            <div class="payer__text">
+              <span class="stat__label">{{ payer.uname }}</span>
+              <span class="stat__value">{{ formatPrice(payer.total) }}</span>
+            </div>
+          </div>
+        </template>
+      </template>
+    </VueDraggable>
 
     <div class="toolbar__actions">
       <NTooltip>
@@ -251,10 +368,10 @@ const SEARCH_HELP = [
             :style="{ background: statusColor }"
           />
         </template>
-        {{ client.hasRemoteSource && client.phase !== 'connected' ? '已通过其他标签页接收弹幕' : client.connectionStatus }}
-        <template v-if="client.reconnectCount">
-          · 已重连 {{ client.reconnectCount }} 次
-        </template>
+        {{
+          client.hasRemoteSource && client.phase !== 'connected' ? '已通过其他标签页接收弹幕' : client.connectionStatus
+        }}
+        <template v-if="client.reconnectCount"> · 已重连 {{ client.reconnectCount }} 次 </template>
       </NTooltip>
       <IconAction
         :icon="ArrowClockwise16Regular"
@@ -357,10 +474,24 @@ const SEARCH_HELP = [
   scrollbar-width: none;
 }
 
+.toolbar__stats::-webkit-scrollbar {
+  display: none;
+}
+
 .stat {
   display: grid;
   line-height: 1.15;
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.stat:active {
+  cursor: grabbing;
+}
+
+.stat-ghost {
+  opacity: 0.3;
 }
 
 .stat--button {
@@ -430,7 +561,11 @@ const SEARCH_HELP = [
 }
 
 @keyframes progress {
-  from { background-position: -50% 0; }
-  to { background-position: 150% 0; }
+  from {
+    background-position: -50% 0;
+  }
+  to {
+    background-position: 150% 0;
+  }
 }
 </style>

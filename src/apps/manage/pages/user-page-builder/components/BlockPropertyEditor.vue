@@ -32,11 +32,11 @@ import {
 import { computed, inject, ref, watch } from 'vue'
 
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
-import type { UserPageConfig } from '@/apps/user-page/types'
 import { getUserPageNavIconLabel, resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
+import type { UserPageConfig } from '@/apps/user-page/types'
 
 import { UserPageEditorKey } from '../context'
-import { PAGE_MODE_OPTIONS } from '../editorPageConfig'
+import { PAGE_MODE_OPTIONS, createDefaultProject } from '../editorPageConfig'
 import BlockTypeEditor from './BlockTypeEditor.vue'
 import ErrorBoundary from './ErrorBoundary.vue'
 import LegacyIndexSettings from './LegacyIndexSettings.vue'
@@ -85,7 +85,7 @@ function handleModeChange(newMode: UserPageConfig['mode']) {
   if (editor.currentPage.value.mode === newMode) return
   editor.currentPage.value.mode = newMode
   if (newMode === 'block' && !editor.currentPage.value.block) {
-    editor.currentPage.value.block = editor.createDefaultProject()
+    editor.currentPage.value.block = createDefaultProject()
   } else if (newMode === 'contrib' && !editor.currentPage.value.contrib) {
     editor.currentPage.value.contrib = { scope: 'global', pageId: '' }
   }
@@ -191,7 +191,11 @@ function groupSelection() {
             style="color: var(--vtsuru-primary)"
           />
           <NText strong>
-            {{ editor.selectedBlock.value ? `编辑区块 · ${editor.selectedBlock.value.type}` : `已选中 ${editor.selectedBlocks.value.length} 个区块` }}
+            {{
+              editor.selectedBlock.value
+                ? `编辑区块 · ${editor.selectedBlock.value.type}`
+                : `已选中 ${editor.selectedBlocks.value.length} 个区块`
+            }}
           </NText>
         </NFlex>
         <NButton
@@ -571,9 +575,7 @@ function groupSelection() {
                     已添加 {{ blocksCount }} 个区块
                   </NTag>
                 </NFlex>
-                <div class="workbench-hint">
-                  点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。
-                </div>
+                <div class="workbench-hint">点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。</div>
               </div>
 
               <NDivider style="margin: 8px 0" />

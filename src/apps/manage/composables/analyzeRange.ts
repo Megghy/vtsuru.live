@@ -4,6 +4,10 @@ export interface AnalyzeDayPoint {
   giftIncome?: number
   scIncome?: number
   guardIncome?: number
+  offlineIncome?: number
+  offlineGuardIncome?: number
+  offlineScIncome?: number
+  grandTotalIncome?: number
   totalIncomeWithGuard?: number
   interactionCount: number
   danmakuCount: number
@@ -48,6 +52,15 @@ export interface AnalyzeAreaStat {
   avgMinutes: number
 }
 
+export interface AnalyzeOfflineEventItem {
+  id: number
+  name: string
+  message: string
+  price: number
+  type: number
+  time: number
+}
+
 export interface AnalyzeTopUser {
   name: string
   totalPaid?: number
@@ -61,6 +74,10 @@ export interface AnalyzeRangeSummary {
   giftIncome: number
   scIncome: number
   guardIncome: number
+  offlineIncome: number
+  offlineGuardIncome: number
+  offlineScIncome: number
+  grandTotalIncome: number
   totalIncomeWithGuard: number
   totalInteractions: number
   totalDanmakuCount: number
@@ -138,6 +155,13 @@ export function computeRangeSummary(points: AnalyzeDayPoint[]): AnalyzeRangeSumm
   const giftIncome = points.reduce((s, p) => s + (p.giftIncome ?? p.income ?? 0), 0)
   const scIncome = points.reduce((s, p) => s + (p.scIncome ?? 0), 0)
   const guardIncome = points.reduce((s, p) => s + (p.guardIncome ?? 0), 0)
+  const offlineIncome = points.reduce((s, p) => s + (p.offlineIncome || 0), 0)
+  const offlineGuardIncome = points.reduce((s, p) => s + (p.offlineGuardIncome || 0), 0)
+  const offlineScIncome = points.reduce((s, p) => s + (p.offlineScIncome || 0), 0)
+  const grandTotalIncome = points.reduce(
+    (s, p) => s + (p.grandTotalIncome ?? ((p.income || 0) + (p.offlineIncome || 0))),
+    0,
+  )
   const totalIncomeWithGuard = points.reduce(
     (s, p) => s + (p.totalIncomeWithGuard ?? (p.income || 0) + (p.guardIncome || 0)),
     0,
@@ -160,6 +184,10 @@ export function computeRangeSummary(points: AnalyzeDayPoint[]): AnalyzeRangeSumm
     giftIncome,
     scIncome,
     guardIncome,
+    offlineIncome,
+    offlineGuardIncome,
+    offlineScIncome,
+    grandTotalIncome,
     totalIncomeWithGuard,
     totalInteractions,
     totalDanmakuCount,

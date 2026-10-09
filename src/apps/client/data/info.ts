@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import { ref } from 'vue'
 
 import { useAccount } from '@/api/account'
+import { fetchOfficialLiveStats, updateOfficialStats } from '@/shared/services/officialLiveStats'
 
 import { useTauriStore } from '../store/useTauriStore'
 import type { BiliRoomInfo, BiliStreamingInfo, FetcherStatisticData } from './models' // 假设模型路径
@@ -203,12 +204,18 @@ async function updateRoomAndStreamingInfo() {
     const json = await roomRes.json()
     if (json.code === 0) {
       roomInfo.value = json.data
+      if (typeof json.data?.online === 'number') {
+        updateOfficialStats({ popularity: json.data.online })
+      }
     } else {
       error(`Failed to fetch Bili room info: ${json.message}`)
     }
 
     // 没有有效 UID 时无法查询直播流信息，直接返回
     const uid = roomInfo.value?.uid
+    if (account.value.biliRoomId) {
+      fetchOfficialLiveStats(account.value.biliRoomId, uid).catch(() => {})
+    }
     if (!uid) {
       return
     }
