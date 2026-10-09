@@ -1,29 +1,25 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { isCaptchaDenied, parseAltchaExpiresAtMs, requestWithCaptchaRetry } from '../captcha'
+import { isCaptchaDenied, parseCapExpiresAtMs, requestWithCaptchaRetry } from '../captcha'
 
-function encodePayload(value: unknown) {
-  return btoa(JSON.stringify(value))
+function jwtPayload(payload: unknown) {
+  const body = btoa(JSON.stringify(payload)).replace(/=+$/, '')
+  return `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${body}.sig`
 }
 
-describe('parseAltchaExpiresAtMs', () => {
-  it('reads challenge.parameters.expiresAt as unix seconds', () => {
-    const payload = encodePayload({
-      challenge: { parameters: { expiresAt: 1_790_676_822 } },
-      solution: { counter: 1 },
-    })
-    expect(parseAltchaExpiresAtMs(payload)).toBe(1_790_676_822_000)
+describe('parseCapExpiresAtMs', () => {
+  it('reads JWT exp as unix seconds', () => {
+    expect(parseCapExpiresAtMs(jwtPayload({ exp: 1_790_676_822 }))).toBe(1_790_676_822_000)
   })
 
   it('accepts millisecond timestamps', () => {
-    const payload = encodePayload({ expiresAt: 1_790_676_822_000 })
-    expect(parseAltchaExpiresAtMs(payload)).toBe(1_790_676_822_000)
+    expect(parseCapExpiresAtMs(jwtPayload({ exp: 1_790_676_822_000 }))).toBe(1_790_676_822_000)
   })
 
-  it('returns undefined for invalid payloads', () => {
-    expect(parseAltchaExpiresAtMs('')).toBeUndefined()
-    expect(parseAltchaExpiresAtMs('not-base64')).toBeUndefined()
-    expect(parseAltchaExpiresAtMs(encodePayload({ challenge: {} }))).toBeUndefined()
+  it('returns undefined for invalid tokens', () => {
+    expect(parseCapExpiresAtMs('')).toBeUndefined()
+    expect(parseCapExpiresAtMs('not-a-jwt')).toBeUndefined()
+    expect(parseCapExpiresAtMs(jwtPayload({}))).toBeUndefined()
   })
 })
 

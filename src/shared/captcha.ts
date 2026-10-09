@@ -6,15 +6,13 @@ export type CaptchaHandle = {
 
 const CAPTCHA_FAIL_HINT = '人机验证'
 
-export function parseAltchaExpiresAtMs(payload: string): number | undefined {
-  if (!payload) return undefined
+export function parseCapExpiresAtMs(token: string): number | undefined {
+  if (!token) return undefined
+  const parts = token.split('.')
+  if (parts.length < 2) return undefined
   try {
-    const data = JSON.parse(atob(padBase64(payload))) as {
-      challenge?: { parameters?: { expiresAt?: number } }
-      parameters?: { expiresAt?: number }
-      expiresAt?: number
-    }
-    const expiresAt = data.challenge?.parameters?.expiresAt ?? data.parameters?.expiresAt ?? data.expiresAt
+    const payload = JSON.parse(atob(padBase64(parts[1]))) as { exp?: number; expires?: number }
+    const expiresAt = payload.exp ?? payload.expires
     if (typeof expiresAt !== 'number' || !Number.isFinite(expiresAt) || expiresAt <= 0) return undefined
     return expiresAt < 1e12 ? expiresAt * 1000 : expiresAt
   } catch {

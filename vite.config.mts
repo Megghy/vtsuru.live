@@ -82,7 +82,7 @@ export default defineConfig({
       template: {
         compilerOptions: {
           isCustomElement: (tag) => {
-            return tag.includes(':') || tag.startsWith('yt-') || tag.startsWith('altcha-')
+            return tag.includes(':') || tag.startsWith('yt-') || tag.startsWith('cap-')
           },
         },
       },
