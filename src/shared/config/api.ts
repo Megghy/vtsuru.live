@@ -95,12 +95,29 @@ export function getCurrentAPIUrl(): string {
 }
 
 const FILE_PATH = /^\/f\/\d+(?:\?.*)?$/
+const FILE_PATHNAME = /^\/f\/\d+$/
 
-/** 后端下发的 /f/{id} 拼到当前 API 源站，供 <img src> 直用。已是绝对地址的原样返回。 */
+/** 后端下发的 /f/{id} 拼到当前 API 源站。已是绝对地址的原样返回。 */
 export function resolveFileUrl(path: string | null | undefined): string {
   if (!path) return ''
   if (!FILE_PATH.test(path)) return path
   return new URL(path, getCurrentAPIUrl()).href
+}
+
+/** 给 /f/{id} 带上用户签名。sig 只用于请求，不得写回配置。已有 sig/token 的不重复附加。 */
+export function signFileUrl(path: string | null | undefined, sig?: string | null): string {
+  const resolved = resolveFileUrl(path)
+  if (!resolved || !sig) return resolved
+  let url: URL
+  try {
+    url = new URL(resolved, getCurrentAPIUrl())
+  } catch {
+    return resolved
+  }
+  if (!FILE_PATHNAME.test(url.pathname)) return resolved
+  if (url.searchParams.has('sig') || url.searchParams.has('token')) return resolved
+  url.searchParams.set('sig', sig)
+  return url.href
 }
 
 export function mapToCurrentAPI(url: string): string {

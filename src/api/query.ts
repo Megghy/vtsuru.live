@@ -1,4 +1,4 @@
-import { getAPIUrl, isManagedAPIUrl, mapToCurrentAPI, markAPIFailover, resolveFileUrl, selectedAPIKey } from '@/shared/config'
+import { getAPIUrl, isManagedAPIUrl, mapToCurrentAPI, markAPIFailover, selectedAPIKey, signFileUrl } from '@/shared/config'
 
 import type { APIRoot, PaginationResponse } from './api-models'
 import { cookie } from './auth'
@@ -75,7 +75,7 @@ async function readResponseJson<T>(response: Response): Promise<T> {
   const text = await response.text()
   if (text) {
     try {
-      return JSON.parse(text, (_key, value) => (typeof value === 'string' ? resolveFileUrl(value) : value)) as T
+      return JSON.parse(text, (_key, value) => (typeof value === 'string' ? signFileUrl(value, cookie.value?.cookie) : value)) as T
     } catch (error) {
       if (response.status >= 500) throw error
       throw new QueryRequestError('network', `请求失败 (${response.status})`, error)
