@@ -225,13 +225,14 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function reply(id: number, replyMsg: string) {
+  async function reply(id: number, replyMsg: string, files: File[] = []) {
     isRepling.value = true
     try {
-      const resp = await QueryPostAPI(`${QUESTION_API_URL}reply`, {
-        id,
-        message: replyMsg,
-      })
+      const form = new FormData()
+      form.append('id', String(id))
+      form.append('message', replyMsg)
+      for (const file of files) form.append('files', file)
+      const resp = await QueryPostAPI(`${QUESTION_API_URL}reply`, form)
       if (resp.code === 200) {
         message.success('回复成功')
         const q = recieveQuestions.value.find((item) => item.id === id)

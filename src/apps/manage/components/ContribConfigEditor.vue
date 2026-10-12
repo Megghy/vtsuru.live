@@ -15,9 +15,8 @@ import {
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-import type { UploadFileResponse, UserFileTypes } from '@/api/api-models'
-import { UserFileLocation, UserFileTypes as UserFileTypesEnum } from '@/api/api-models'
-import { uploadFiles } from '@/shared/services/fileUpload'
+import type { UploadFileResponse } from '@/api/api-models'
+import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import type { ConfigItemDefinition, RGBAColor, TemplateConfigFileItem } from '@/shared/types/VTsuruConfigTypes'
 import { isValidRGBAColor, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
@@ -103,8 +102,7 @@ async function onUploadChange(e: Event) {
   }
 
   try {
-    const type: UserFileTypes | undefined = undefined
-    const results = await uploadFiles(files, type ?? UserFileTypesEnum.Other, UserFileLocation.Local)
+    const results = await uploadFiles(files, FileStore.Configs)
     const arr = ensureArrayValue(key)
     arr.push(...results)
     message.success('已上传')

@@ -32,6 +32,7 @@ vi.mock('@/shared/config', () => ({
   },
   getAPIUrl: (key: string) =>
     key === 'failover' ? 'https://failover-api.vtsuru.suki.club/' : 'https://api.vtsuru.suki.club/',
+  resolveFileUrl: (path: string) => path,
 }))
 
 vi.mock('@/api/auth', () => ({

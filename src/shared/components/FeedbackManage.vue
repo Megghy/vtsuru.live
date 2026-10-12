@@ -22,8 +22,8 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { isLoggedIn } from '@/api/account'
 import type { CreateSupportTicketRequest, SupportTicketDetail, SupportTicketSummary } from '@/api/api-models'
-import { SupportTicketStatus, SupportTicketType, UserFileLocation, UserFileTypes } from '@/api/api-models'
-import { uploadFiles } from '@/shared/services/fileUpload'
+import { SupportTicketStatus, SupportTicketType } from '@/api/api-models'
+import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import {
   filterSupportTickets,
   supportTicketStatusOptions,
@@ -157,7 +157,7 @@ async function submitTicket() {
   creating.value = true
   try {
     const files = fileList.value.map((item) => item.file).filter((file): file is File => Boolean(file))
-    const uploaded = files.length ? await uploadFiles(files, UserFileTypes.Image, UserFileLocation.Local) : []
+    const uploaded = files.length ? await uploadFiles(files, FileStore.Tickets) : []
     const ticket = await createSupportTicket({
       ...draft.value,
       title,

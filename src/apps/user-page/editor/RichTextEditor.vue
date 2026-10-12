@@ -6,8 +6,7 @@ import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef, watch } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
-import { UserFileLocation, UserFileTypes } from '@/api/api-models'
-import { uploadFiles } from '@/shared/services/fileUpload'
+import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import { isDarkMode } from '@/shared/utils'
 
 import '@/assets/editorDarkMode.css'
@@ -107,7 +106,7 @@ const editorConfig: Partial<IEditorConfig> = {
       async customUpload(file: File, insertFn: InsertFnType) {
         try {
           message.info('图片上传中')
-          const [result] = await uploadFiles(file, UserFileTypes.Image, UserFileLocation.Local)
+          const [result] = await uploadFiles(file, FileStore.Configs)
           if (!imagesFile.value.some((x) => x.id === result.id)) imagesFile.value = [...imagesFile.value, result]
           insertFn(result.path, result.name || '', result.path)
           message.success('图片上传成功')

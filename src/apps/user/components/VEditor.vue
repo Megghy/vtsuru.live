@@ -5,9 +5,7 @@ import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef } from 'vue'
 
-import type { APIRoot } from '@/api/api-models'
-import { GetHeaders } from '@/api/query'
-import { VTSURU_API_URL } from '@/shared/config'
+import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import { isDarkMode } from '@/shared/utils'
 
 import '@/assets/editorDarkMode.css'
@@ -45,27 +43,15 @@ const editorConfig: Partial<IEditorConfig> = {
       maxFileSize: 10 * 1024 * 1024,
       maxNumberOfFiles: 10,
       async customUpload(file: File, insertFn: InsertFnType) {
-        const formData = new FormData() // 创建一个FormData实例。
-        message.info('图片上传中')
-        formData.append('file', file)
-        const resp = await fetch(`${VTSURU_API_URL}image/upload`, {
-          method: 'POST',
-          body: formData,
-          headers: GetHeaders(),
-        })
-        if (resp.ok) {
-          const data = (await resp.json()) as APIRoot<string>
-          if (data.code == 200) {
-            insertFn(data.data, '', '')
-          } else {
-            message.error(`图片上传失败: ${data.message}`)
-          }
-        } else {
-          message.error(`图片上传失败: ${resp.statusText}`)
+        try {
+          message.info('图片上传中')
+          const [result] = await uploadFiles(file, FileStore.Forum)
+          insertFn(result.path, result.name || '', result.path)
+          message.success('图片上传成功')
+        } catch (e) {
+          message.error((e as Error).message || '图片上传失败')
+          throw e
         }
-      },
-      onSuccess() {
-        message.success('图片上传成功')
       },
     },
   },

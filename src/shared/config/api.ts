@@ -94,6 +94,15 @@ export function getCurrentAPIUrl(): string {
   return getAPIUrl(currentAPIKey.value)
 }
 
+const FILE_PATH = /^\/f\/\d+(?:\?.*)?$/
+
+/** 后端下发的 /f/{id} 拼到当前 API 源站，供 <img src> 直用。已是绝对地址的原样返回。 */
+export function resolveFileUrl(path: string | null | undefined): string {
+  if (!path) return ''
+  if (!FILE_PATH.test(path)) return path
+  return new URL(path, getCurrentAPIUrl()).href
+}
+
 export function mapToCurrentAPI(url: string): string {
   if (import.meta.env.NODE_ENV === 'development') {
     return url

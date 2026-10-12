@@ -1267,27 +1267,6 @@ export interface CheckInResult {
   todayRank: number
 }
 
-/**
- * 文件类型枚举
- */
-export enum UserFileTypes {
-  Video = 0,
-  Image = 1,
-  Audio = 2,
-  Document = 3,
-  Other = 4,
-}
-
-/**
- * 文件存储位置枚举
- */
-export enum UserFileLocation {
-  Local = 0,
-}
-
-/**
- * 文件上传响应接口
- */
 export interface UploadFileResponse {
   id: number
   path: string

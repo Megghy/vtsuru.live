@@ -125,10 +125,11 @@ describe('useQuestionBox store', () => {
       const postSpy = vi.spyOn(queryApi, 'QueryPostAPI').mockResolvedValue({ code: 200, message: 'ok', data: {} })
       store.recieveQuestions = [createMockQuestion({ id: 101, answer: undefined })]
       await store.reply(101, '感谢提问！')
-      expect(postSpy).toHaveBeenCalledWith(`${QUESTION_API_URL}reply`, {
-        id: 101,
-        message: '感谢提问！',
-      })
+      expect(postSpy).toHaveBeenCalledTimes(1)
+      const body = postSpy.mock.calls[0]?.[1]
+      expect(body).toBeInstanceOf(FormData)
+      expect((body as FormData).get('id')).toBe('101')
+      expect((body as FormData).get('message')).toBe('感谢提问！')
       expect(store.recieveQuestions.find((q) => q.id === 101)?.answer?.message).toBe('感谢提问！')
     })
   })

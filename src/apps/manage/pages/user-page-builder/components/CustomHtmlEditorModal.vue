@@ -28,7 +28,7 @@ import {
 import { computed, inject, ref, watch } from 'vue'
 
 import type { APIFileModel } from '@/api/api-models'
-import { UserFileLocation, UserFileTypes } from '@/api/api-models'
+import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
 import {
   CUSTOM_CSS_MAX_BYTES,
@@ -47,7 +47,6 @@ import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
 import { resolveUserPageReadableAccent } from '@/apps/user-page/theme'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
-import { uploadFiles } from '@/shared/services/fileUpload'
 import { isDarkMode } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
@@ -223,7 +222,7 @@ async function handleUpload(event: Event) {
   }
   uploading.value = true
   try {
-    const uploaded = await uploadFiles(files[0], UserFileTypes.Image, UserFileLocation.Local)
+    const uploaded = await uploadFiles(files[0], FileStore.Configs)
     if (!uploaded.length) throw new Error('上传失败：无返回结果')
     resources.addResources(uploaded)
     attachResource(uploaded[0])

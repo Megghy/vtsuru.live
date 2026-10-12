@@ -13,6 +13,7 @@ import {
   CHECKIN_API_URL,
   FORUM_API_URL,
   POINT_API_URL,
+  resolveFileUrl,
   SONG_API_URL,
   SONG_REQUEST_API_URL,
   USER_API_URL,
@@ -27,7 +28,7 @@ import type { BiliProfile, UserPagesMyStateResponse, UserPagesSettings } from '.
 function parseUserPagesSettings(raw: string): UserPagesSettings {
   let parsed: unknown
   try {
-    parsed = JSON.parse(raw)
+    parsed = JSON.parse(raw, (_key, value) => (typeof value === 'string' ? resolveFileUrl(value) : value))
   } catch {
     throw new Error('用户页面配置不是合法 JSON')
   }

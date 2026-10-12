@@ -26,8 +26,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import { UploadConfig } from '@/api/account'
 import type { UploadFileResponse } from '@/api/api-models'
-import { UserFileLocation } from '@/api/api-models'
-import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
+import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
 import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
@@ -279,7 +278,7 @@ async function uploadAllFiles() {
     for (const group of uploadGroups) {
       for (const file of group.files) {
         updateUploadProgress(`${file.name} · ${UploadStage.Preparing}`, done, total)
-        const results = await uploadFiles(file, undefined, UserFileLocation.Local, (stage) => {
+        const results = await uploadFiles(file, FileStore.Configs, (stage) => {
           updateUploadProgress(`${file.name} · ${stage}`, done, total)
         })
         if (results.length !== 1) throw new Error(`${file.name} 上传结果数量异常`)

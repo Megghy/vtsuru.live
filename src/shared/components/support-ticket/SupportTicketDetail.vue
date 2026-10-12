@@ -20,8 +20,8 @@ import {
 import { computed, nextTick, ref, watch } from 'vue'
 
 import type { SupportTicketDetail } from '@/api/api-models'
-import { SupportTicketAuthorType, SupportTicketStatus, UserFileLocation, UserFileTypes } from '@/api/api-models'
-import { uploadFiles } from '@/shared/services/fileUpload'
+import { SupportTicketAuthorType, SupportTicketStatus } from '@/api/api-models'
+import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import {
   addSupportTicketMessage,
   resolveSupportTicket,
@@ -92,7 +92,7 @@ async function sendReply() {
   sending.value = true
   try {
     const files = replyFiles.value.map((item) => item.file).filter((file): file is File => Boolean(file))
-    const uploaded = files.length ? await uploadFiles(files, UserFileTypes.Image, UserFileLocation.Local) : []
+    const uploaded = files.length ? await uploadFiles(files, FileStore.Tickets) : []
     await addSupportTicketMessage(
       props.ticket.id,
       content,

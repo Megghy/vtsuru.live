@@ -1,12 +1,11 @@
 import type { Ref } from 'vue'
 import { ref, shallowRef } from 'vue'
 
-import { UserFileLocation, UserFileTypes } from '@/api/api-models'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
 import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
-import { UploadStage, uploadFiles } from '@/shared/services/fileUpload'
+import { FileStore, UploadStage, uploadFiles } from '@/shared/services/fileUpload'
 
 import { validateUserPageImageFiles } from './userPageImageUpload'
 
@@ -209,8 +208,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     try {
       const uploadedList = await uploadFiles(
         isBulk ? files : files[0],
-        UserFileTypes.Image,
-        UserFileLocation.Local,
+        FileStore.Configs,
         (stage) => {
           uploadQueue.value = uploadQueue.value.map((item) => ({ ...item, stage: stage as UploadStage }))
         },

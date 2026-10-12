@@ -1,6 +1,7 @@
 import { formatRgb } from 'culori'
 import type { GlobalThemeOverrides } from 'naive-ui'
 
+import { resolveFileUrl } from '@/shared/config'
 import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
 import { resolveReadableForeground } from '@/shared/config/theme/contrast'
 import { getThemeOverrides } from '@/shared/config/theme/overrides'
@@ -44,7 +45,7 @@ function asObject(v: unknown): Record<string, unknown> | null {
 export function getUploadedFilePath(v: unknown): string {
   const obj = asObject(v)
   const path = obj?.path
-  return typeof path === 'string' ? path : ''
+  return typeof path === 'string' ? resolveFileUrl(path) : ''
 }
 
 export function resolvePageBackground(raw: unknown): ResolvedPageBackground | null {

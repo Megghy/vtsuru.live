@@ -47,7 +47,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ResponsePointGoodModel, UploadSubPointGoodsModel, UploadPointGoodsModel } from '@/api/api-models'
-import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode, ServiceFieldType, UserFileLocation } from '@/api/api-models'
+import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode, ServiceFieldType } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -55,7 +55,7 @@ import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
 import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
-import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
+import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -283,7 +283,7 @@ const rules = {
 
 async function uploadCover(file: File) {
   const uploadFile = shouldWatermarkCover.value ? await addVtsuruLiveWatermark(file) : file
-  return uploadFiles([uploadFile], undefined, UserFileLocation.Local, (stage: string) => {
+  return uploadFiles([uploadFile], FileStore.Goods, (stage: string) => {
     if (stage === UploadStage.Uploading) {
       uploadProgress.value = 0
     }
