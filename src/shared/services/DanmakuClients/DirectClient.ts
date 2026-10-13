@@ -18,6 +18,10 @@ export interface DirectClientAuthInfo {
   buvid: string
 }
 
+function httpsAvatar(face: string | null | undefined, uid: number): string {
+  return face?.replace('http://', 'https://') || `${AVATAR_URL}${uid}`
+}
+
 type DirectCommand<T extends keyof LiveEventMap> = LiveEventMap[T] extends { data: infer TCommand } ? TCommand : never
 /**
  * 直播间弹幕客户端, 只能在vtsuru.client环境使用
@@ -95,7 +99,7 @@ export default class DirectClient extends BaseDanmakuClient {
         fans_medal_name: user?.medal?.name ?? '',
         fans_medal_wearing_status: user?.medal?.is_light === 1,
         emoji: typeof emote === 'object' ? emote.url.replace('http://', 'https://') : '',
-        uface: user?.base.face.replace('http://', 'https://') || `${AVATAR_URL}${uid}`,
+        uface: httpsAvatar(user?.base?.face, uid),
         open_id: '',
         ouid: GuidUtils.numToGuid(uid),
       },
@@ -166,7 +170,7 @@ export default class DirectClient extends BaseDanmakuClient {
         fans_medal_level: data.medalLevel,
         fans_medal_name: data.medalName,
         fans_medal_wearing_status: data.medalWearing,
-        uface: data.face.replace('http://', 'https://') || `${AVATAR_URL}${data.uid}`,
+        uface: httpsAvatar(data.face, data.uid),
         open_id: '',
         ouid: GuidUtils.numToGuid(data.uid),
         mystery_box_name: data.mysteryBoxName,
@@ -194,7 +198,7 @@ export default class DirectClient extends BaseDanmakuClient {
         fans_medal_level: data.medal_info?.medal_level ?? 0,
         fans_medal_name: data.medal_info?.medal_name ?? '',
         fans_medal_wearing_status: data.medal_info !== null && data.medal_info !== undefined,
-        uface: data.user_info.face.replace('http://', 'https://'),
+        uface: httpsAvatar(data.user_info?.face, data.uid),
         open_id: '',
         ouid: GuidUtils.numToGuid(data.uid),
       },
@@ -291,11 +295,11 @@ export default class DirectClient extends BaseDanmakuClient {
         price: 0,
         num: 1,
         time: Date.now(),
-        guard_level: data.uinfo.guard?.level ?? 0,
+        guard_level: data.uinfo?.guard?.level ?? 0,
         fans_medal_level: data.fans_medal?.medal_level ?? 0,
         fans_medal_name: data.fans_medal?.medal_name ?? '',
         fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
-        uface: data.uinfo.base.face.replace('http://', 'https://'),
+        uface: httpsAvatar(data.uinfo?.base?.face, data.uid),
         open_id: '',
         ouid: GuidUtils.numToGuid(data.uid),
       },
