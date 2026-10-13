@@ -19,6 +19,7 @@ import {
   CN_HOST,
   initClientVersion,
   isDev,
+  isTauri,
   REQUIRED_CLIENT_VERSION,
 } from '@/shared/config'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
@@ -452,8 +453,13 @@ export async function initAll(isOnBoot: boolean) {
     return
   }
   clientInitStage.value = '初始化中...'
-  // 读取当前 client 本体版本 (前端 bundle 可能比 client 新, 需据此做能力门禁)
   await initClientVersion()
+  if (!isTauri()) {
+    console.warn('[init] 非 Tauri 环境，跳过客户端原生初始化')
+    clientInited.value = true
+    clientInitStage.value = '启动完成'
+    return
+  }
   info(`[init] 当前 client 版本: ${clientVersion.value ?? '未知'} (前端所需最低: ${REQUIRED_CLIENT_VERSION})`)
   // 初始检查更新（不阻塞初始化）
   if (!isDev) {

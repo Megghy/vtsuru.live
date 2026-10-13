@@ -89,8 +89,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     disconnectedByServer = false
     serverDisconnectReason.value = undefined
 
-    // 使用 navigator.locks 确保同一时间只有一个 Start 操作执行
-    const result = await navigator.locks.request('webFetcherStartLock', async () => {
+    const startExclusive = async () => {
       console.log(`${prefix.value}开始启动...`)
       while (!(await connectSignalR())) {
         if (serverDisconnectReason.value) {
@@ -124,7 +123,10 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       disconnectedByServer = false
       console.log(`${prefix.value}启动成功`)
       return { success: true, message: '启动成功' }
-    })
+    }
+    const result = navigator.locks
+      ? await navigator.locks.request('webFetcherStartLock', startExclusive)
+      : await startExclusive()
 
     // 如果启动过程中因为手动停止而失败，需要确保状态是 disconnected
     if (!result.success) {

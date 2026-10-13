@@ -20,8 +20,17 @@ describe('shouldIgnoreSentryMessage', () => {
     '网络请求失败',
     'Failed to fetch (failover-api.vtsuru.suki.club)',
     'Non-Error promise rejection captured with value: Command plugin:window|set_focus not allowed by ACL',
+    'Non-Error promise rejection captured with value: Command plugin:webview|set_content_protected not allowed by ACL',
     "Cannot send data if the connection is not in the 'Connected' State.",
     "Cannot read properties of null (reading 'contains')",
+    'Event `CustomEvent` (type=error) captured as exception with missing stack trace.',
+    '用户关闭了此功能',
+    'Load failed',
+    'Fetch is aborted',
+    'Internal error opening backing store for indexedDB database',
+    '[Cloudflare Turnstile] Invalid type for parameter "container", expected "string or Element".',
+    "Couldn't resolve component \"default\" at /question-box",
+    'Server timeout elapsed without receiving a message from the server.',
   ]
 
   it('过滤已知噪音', () => {

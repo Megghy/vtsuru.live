@@ -23,10 +23,22 @@ export const SENTRY_IGNORE_ERRORS: Array<string | RegExp> = [
   /网络请求失败/,
   /Failed to fetch/,
   /set_focus not allowed by ACL/,
+  /set_content_protected not allowed by ACL/,
+  /fetch_cancel_body not allowed by ACL/,
   /Cannot send data if the connection is not in the 'Connected' State/,
   /Cannot read properties of null \(reading 'contains'\)/,
   /Module "fs" has been externalized for browser compatibility/,
   /analytics\.suki\.club/,
+  /Event `CustomEvent` \(type=error\)/,
+  /^用户关闭了此功能$/,
+  /^Load failed$/,
+  /Fetch is aborted/,
+  /Internal error opening backing store for indexedDB/,
+  /Invalid type for parameter "container"/,
+  /The resource id .* is invalid/,
+  /The operation is insecure/,
+  /Couldn't resolve component "default"/,
+  /Server timeout elapsed without receiving a message from the server/,
 ]
 
 export function shouldIgnoreSentryMessage(message: string) {

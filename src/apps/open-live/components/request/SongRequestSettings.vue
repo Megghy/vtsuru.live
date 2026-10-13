@@ -51,12 +51,7 @@ const configCanEdit = computed(() => {
   return accountInfo.value != null && accountInfo.value != undefined
 })
 const settings = computed({
-  get: () => {
-    if (accountInfo.value.id) {
-      return accountInfo.value.settings.songRequest
-    }
-    return defaultSettings
-  },
+  get: () => accountInfo.value?.settings?.songRequest ?? defaultSettings,
   set: (value) => {
     if (accountInfo.value.id) {
       accountInfo.value.settings.songRequest = value
@@ -110,7 +105,7 @@ async function updateSettings() {
               <NInputGroupLabel>点播弹幕前缀</NInputGroupLabel>
               <template v-if="liveRequest.configCanEdit">
                 <NInput
-                  v-model:value="accountInfo.settings.songRequest.orderPrefix"
+                  v-model:value="settings.orderPrefix"
                   size="small"
                 />
                 <NButton
@@ -130,8 +125,8 @@ async function updateSettings() {
             </NInputGroup>
             <NAlert
               v-if="
-                accountInfo.settings.songRequest.orderPrefix &&
-                accountInfo.settings.songRequest.orderPrefix.includes(' ')
+                settings.orderPrefix &&
+                settings.orderPrefix.includes(' ')
               "
               type="info"
               size="small"
@@ -144,7 +139,7 @@ async function updateSettings() {
           <NInputGroup class="song-request-settings__w-280">
             <NInputGroupLabel>最大队列长度</NInputGroupLabel>
             <NInputNumber
-              v-model:value="accountInfo.settings.songRequest.queueMaxSize"
+              v-model:value="settings.queueMaxSize"
               :disabled="!liveRequest.configCanEdit"
               size="small"
             />
@@ -165,14 +160,14 @@ async function updateSettings() {
             :size="12"
           >
             <NCheckbox
-              v-model:checked="accountInfo.settings.songRequest.enableOnStreaming"
+              v-model:checked="settings.enableOnStreaming"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="updateSettings"
             >
               仅在直播时允许加入
             </NCheckbox>
             <NCheckbox
-              v-model:checked="accountInfo.settings.songRequest.allowAllDanmaku"
+              v-model:checked="settings.allowAllDanmaku"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="updateSettings"
             >
@@ -180,14 +175,14 @@ async function updateSettings() {
             </NCheckbox>
           </NFlex>
 
-          <template v-if="!accountInfo.settings.songRequest.allowAllDanmaku">
+          <template v-if="!settings.allowAllDanmaku">
             <NFlex
               align="center"
               :wrap="true"
               :size="12"
             >
               <NCheckbox
-                v-model:checked="accountInfo.settings.songRequest.needWearFanMedal"
+                v-model:checked="settings.needWearFanMedal"
                 :disabled="!liveRequest.configCanEdit"
                 @update:checked="updateSettings"
               >
@@ -195,12 +190,12 @@ async function updateSettings() {
               </NCheckbox>
 
               <NInputGroup
-                v-if="accountInfo.settings.songRequest.needWearFanMedal"
+                v-if="settings.needWearFanMedal"
                 class="song-request-settings__w-280"
               >
                 <NInputGroupLabel>最低粉丝牌等级</NInputGroupLabel>
                 <NInputNumber
-                  v-model:value="accountInfo.settings.songRequest.fanMedalMinLevel"
+                  v-model:value="settings.fanMedalMinLevel"
                   :disabled="!liveRequest.configCanEdit"
                   size="small"
                 />
@@ -216,21 +211,21 @@ async function updateSettings() {
               </NInputGroup>
 
               <NCheckbox
-                v-model:checked="accountInfo.settings.songRequest.needJianzhang"
+                v-model:checked="settings.needJianzhang"
                 :disabled="!liveRequest.configCanEdit"
                 @update:checked="updateSettings"
               >
                 只允许舰长
               </NCheckbox>
               <NCheckbox
-                v-model:checked="accountInfo.settings.songRequest.needTidu"
+                v-model:checked="settings.needTidu"
                 :disabled="!liveRequest.configCanEdit"
                 @update:checked="updateSettings"
               >
                 只允许提督
               </NCheckbox>
               <NCheckbox
-                v-model:checked="accountInfo.settings.songRequest.needZongdu"
+                v-model:checked="settings.needZongdu"
                 :disabled="!liveRequest.configCanEdit"
                 @update:checked="updateSettings"
               >
@@ -245,15 +240,15 @@ async function updateSettings() {
             :size="12"
           >
             <NCheckbox
-              v-model:checked="accountInfo.settings.songRequest.allowSC"
+              v-model:checked="settings.allowSC"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="updateSettings"
             >
               允许通过 SuperChat 点播
             </NCheckbox>
             <NCheckbox
-              v-if="accountInfo.settings.songRequest.allowSC"
-              v-model:checked="accountInfo.settings.songRequest.scIgnoreLimit"
+              v-if="settings.allowSC"
+              v-model:checked="settings.scIgnoreLimit"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="updateSettings"
             >
@@ -261,12 +256,12 @@ async function updateSettings() {
             </NCheckbox>
 
             <NInputGroup
-              v-if="accountInfo.settings.songRequest.allowSC"
+              v-if="settings.allowSC"
               class="song-request-settings__w-280"
             >
               <NInputGroupLabel>最低 SC 价格</NInputGroupLabel>
               <NInputNumber
-                v-model:value="accountInfo.settings.songRequest.scMinPrice"
+                v-model:value="settings.scMinPrice"
                 :disabled="!liveRequest.configCanEdit"
                 size="small"
               />
@@ -295,7 +290,7 @@ async function updateSettings() {
           :size="12"
         >
           <NCheckbox
-            v-model:checked="accountInfo.settings.songRequest.onlyAllowSongList"
+            v-model:checked="settings.onlyAllowSongList"
             :disabled="!liveRequest.configCanEdit"
             @update:checked="updateSettings"
           >
@@ -313,22 +308,22 @@ async function updateSettings() {
             内的歌曲
           </NCheckbox>
           <NCheckbox
-            v-model:checked="accountInfo.settings.songRequest.allowReorderSong"
+            v-model:checked="settings.allowReorderSong"
             :disabled="!liveRequest.configCanEdit"
             @update:checked="updateSettings"
           >
             允许重复点歌
           </NCheckbox>
           <NCheckbox
-            v-model:checked="accountInfo.settings.songRequest.allowFromWeb"
+            v-model:checked="settings.allowFromWeb"
             :disabled="!liveRequest.configCanEdit"
             @update:checked="updateSettings"
           >
             允许通过网页点歌
           </NCheckbox>
           <NCheckbox
-            v-if="accountInfo.settings.songRequest.allowFromWeb"
-            v-model:checked="accountInfo.settings.songRequest.allowAnonymousFromWeb"
+            v-if="settings.allowFromWeb"
+            v-model:checked="settings.allowAnonymousFromWeb"
             :disabled="!liveRequest.configCanEdit"
             @update:checked="updateSettings"
           >
@@ -352,14 +347,14 @@ async function updateSettings() {
             :size="12"
           >
             <NCheckbox
-              v-model:checked="accountInfo.settings.songRequest.enableCooldown"
+              v-model:checked="settings.enableCooldown"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="updateSettings"
             >
               启用点播冷却
             </NCheckbox>
             <NCheckbox
-              v-model:checked="accountInfo.settings.songRequest.enableWebCooldown"
+              v-model:checked="settings.enableWebCooldown"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="updateSettings"
             >
@@ -368,14 +363,14 @@ async function updateSettings() {
           </NFlex>
 
           <NFlex
-            v-if="accountInfo.settings.songRequest.enableCooldown"
+            v-if="settings.enableCooldown"
             :wrap="true"
             :size="12"
           >
             <NInputGroup class="song-request-settings__w-280">
               <NInputGroupLabel>普通弹幕</NInputGroupLabel>
               <NInputNumber
-                v-model:value="accountInfo.settings.songRequest.cooldownSecond"
+                v-model:value="settings.cooldownSecond"
                 :disabled="!liveRequest.configCanEdit"
                 size="small"
               />
@@ -392,7 +387,7 @@ async function updateSettings() {
             <NInputGroup class="song-request-settings__w-260">
               <NInputGroupLabel>舰长</NInputGroupLabel>
               <NInputNumber
-                v-model:value="accountInfo.settings.songRequest.jianzhangCooldownSecond"
+                v-model:value="settings.jianzhangCooldownSecond"
                 :disabled="!liveRequest.configCanEdit"
                 size="small"
               />
@@ -409,7 +404,7 @@ async function updateSettings() {
             <NInputGroup class="song-request-settings__w-260">
               <NInputGroupLabel>提督</NInputGroupLabel>
               <NInputNumber
-                v-model:value="accountInfo.settings.songRequest.tiduCooldownSecond"
+                v-model:value="settings.tiduCooldownSecond"
                 :disabled="!liveRequest.configCanEdit"
                 size="small"
               />
@@ -426,7 +421,7 @@ async function updateSettings() {
             <NInputGroup class="song-request-settings__w-260">
               <NInputGroupLabel>总督</NInputGroupLabel>
               <NInputNumber
-                v-model:value="accountInfo.settings.songRequest.zongduCooldownSecond"
+                v-model:value="settings.zongduCooldownSecond"
                 :disabled="!liveRequest.configCanEdit"
                 size="small"
               />
@@ -443,12 +438,12 @@ async function updateSettings() {
           </NFlex>
 
           <NInputGroup
-            v-if="accountInfo.settings.songRequest.enableWebCooldown"
+            v-if="settings.enableWebCooldown"
             class="song-request-settings__w-280"
           >
             <NInputGroupLabel>网页点播</NInputGroupLabel>
             <NInputNumber
-              v-model:value="accountInfo.settings.songRequest.webCooldownSecond"
+              v-model:value="settings.webCooldownSecond"
               :disabled="!liveRequest.configCanEdit"
               size="small"
             />

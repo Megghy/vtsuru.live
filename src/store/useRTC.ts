@@ -35,8 +35,8 @@ export const useWebRTC = defineStore('WebRTC', () => {
       status.value = 'connecting'
       lastError.value = undefined
       initialization = (async () => {
-        await navigator.locks.request('rtcClientInit', { ifAvailable: true }, async (lock) => {
-          if (!lock || client.value) return
+        const initClient = async () => {
+          if (client.value) return
           const token = Array.isArray(route.query.token) ? route.query.token[0] : route.query.token
           if (!cookie.value?.cookie && !token) {
             status.value = 'idle'
@@ -52,7 +52,15 @@ export const useWebRTC = defineStore('WebRTC', () => {
           await client.value.Init()
           status.value = 'ready'
           lastError.value = undefined
-        })
+        }
+        if (navigator.locks) {
+          await navigator.locks.request('rtcClientInit', { ifAvailable: true }, async (lock) => {
+            if (!lock) return
+            await initClient()
+          })
+        } else {
+          await initClient()
+        }
       })().finally(() => {
         initialization = undefined
       })

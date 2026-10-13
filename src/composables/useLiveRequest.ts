@@ -3,7 +3,7 @@ import { NTime } from 'naive-ui'
 import { computed, h, ref } from 'vue'
 
 import { AddBiliBlackList, useAccount } from '@/api/account'
-import type { EventModel, Setting_LiveRequest, SongRequestInfo, SongsInfo } from '@/api/api-models'
+import type { EventModel, SongRequestInfo, SongsInfo } from '@/api/api-models'
 import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/shared/config'
@@ -62,10 +62,10 @@ export const useLiveRequest = defineStore('songRequest', () => {
       })
       .ToArray()
 
-    const settings: Setting_LiveRequest = accountInfo.value?.settings?.songRequest
-    const reverse = configCanEdit.value ? settings.isReverse : isReverse.value
+    const settings = accountInfo.value?.settings?.songRequest
+    const reverse = configCanEdit.value ? Boolean(settings?.isReverse) : isReverse.value
 
-    return sortByQueueType(filtered, settings.sortType, reverse, {
+    return sortByQueueType(filtered, settings?.sortType, reverse, {
       createAt: (q) => q.createAt,
       guardLevel: (q) => q.user?.guard_level,
       price: (q) => q.price,
@@ -128,9 +128,9 @@ export const useLiveRequest = defineStore('songRequest', () => {
       `[SONG-REQUEST] 收到 [${danmaku.uname}] 的点播${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`,
     )
 
-    const settings: Setting_LiveRequest = accountInfo.value?.settings?.songRequest
+    const settings = accountInfo.value?.settings?.songRequest
 
-    if (settings.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
+    if (settings?.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
       window.$notification.info({
         title: `${danmaku.uname} 点播失败`,
         description: '当前未在直播中, 无法添加点播请求. 或者关闭设置中的仅允许直播时加入',

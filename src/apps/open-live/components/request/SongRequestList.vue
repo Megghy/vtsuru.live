@@ -43,6 +43,14 @@ const waitingCount = computed(() => {
 const currentIsReverse = computed(() =>
   songRequest.configCanEdit ? accountInfo.value?.settings?.songRequest?.isReverse : songRequest.isReverse,
 )
+const sortType = computed({
+  get: () => accountInfo.value?.settings?.songRequest?.sortType ?? QueueSortType.TimeFirst,
+  set: (value) => {
+    const songRequestSettings = accountInfo.value?.settings?.songRequest
+    if (!songRequestSettings) return
+    songRequestSettings.sortType = value
+  },
+})
 
 // 保存排序设置
 async function updateSettings() {
@@ -142,7 +150,7 @@ async function updateSettings() {
           </NInputGroup>
 
           <NRadioGroup
-            v-model:value="accountInfo.settings.songRequest.sortType"
+            v-model:value="sortType"
             :disabled="!songRequest.configCanEdit"
             size="small"
             @update:value="updateSettings"
@@ -159,7 +167,9 @@ async function updateSettings() {
             @update:checked="
               (value) => {
                 if (songRequest.configCanEdit) {
-                  accountInfo.settings.songRequest.isReverse = value
+                  const songRequestSettings = accountInfo.value?.settings?.songRequest
+                  if (!songRequestSettings) return
+                  songRequestSettings.isReverse = value
                   updateSettings()
                 } else {
                   songRequest.isReverse = value

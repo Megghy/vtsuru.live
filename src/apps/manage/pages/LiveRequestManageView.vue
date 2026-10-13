@@ -33,7 +33,7 @@ import {
 } from 'naive-ui'
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 
-import { SaveSetting, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import type { OpenLiveInfo } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -90,8 +90,9 @@ provide('activeSongs', liveRequest.activeSongs)
 const { enabled: liveRequestEnabled, toggle: onUpdateFunctionEnable } = useFunctionToggle(FunctionTypes.LiveRequest, {
   label: '点播功能',
   onBeforeEnable: () => {
-    if (!accountInfo.value.settings.songRequest.orderPrefix) {
-      accountInfo.value.settings.songRequest.orderPrefix = liveRequest.defaultPrefix
+    const songRequest = accountInfo.value?.settings?.songRequest
+    if (songRequest && !songRequest.orderPrefix) {
+      songRequest.orderPrefix = liveRequest.defaultPrefix
     }
   },
 })
@@ -103,26 +104,6 @@ async function copyObsLink() {
   }
   await copyToClipboard(obsUrl.value)
   message.success('点播 OBS 源链接已复制 (已携带当前样式参数)')
-}
-
-async function updateSettings() {
-  if (accountInfo.value.id) {
-    liveRequest.isLoading = true
-    await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
-      .then((msg) => {
-        if (msg) {
-          message.success('已保存')
-          return true
-        } else {
-          message.error(`保存失败: ${msg}`)
-        }
-      })
-      .finally(() => {
-        liveRequest.isLoading = false
-      })
-  } else {
-    message.success('完成')
-  }
 }
 
 onMounted(() => {
@@ -188,24 +169,7 @@ onUnmounted(() => {
           </Transition>
 
           <!-- 点播清单 -->
-          <SongRequestList
-            @update:sort-type="
-              (value: any) => {
-                accountInfo.settings.songRequest.sortType = value
-                updateSettings()
-              }
-            "
-            @update:is-reverse="
-              (value: any) => {
-                if (liveRequest.configCanEdit) {
-                  accountInfo.settings.songRequest.isReverse = value
-                  updateSettings()
-                } else {
-                  liveRequest.isReverse = value
-                }
-              }
-            "
-          />
+          <SongRequestList />
         </NFlex>
       </NTabPane>
 
