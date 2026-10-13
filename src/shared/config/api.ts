@@ -104,22 +104,6 @@ export function resolveFileUrl(path: string | null | undefined): string {
   return new URL(path, getCurrentAPIUrl()).href
 }
 
-/** 给 /f/{id} 带上用户签名。sig 只用于请求，不得写回配置。已有 sig/token 的不重复附加。 */
-export function signFileUrl(path: string | null | undefined, sig?: string | null): string {
-  const resolved = resolveFileUrl(path)
-  if (!resolved || !sig) return resolved
-  let url: URL
-  try {
-    url = new URL(resolved, getCurrentAPIUrl())
-  } catch {
-    return resolved
-  }
-  if (!FILE_PATHNAME.test(url.pathname)) return resolved
-  if (url.searchParams.has('sig') || url.searchParams.has('token')) return resolved
-  url.searchParams.set('sig', sig)
-  return url.href
-}
-
 export function mapToCurrentAPI(url: string): string {
   if (import.meta.env.NODE_ENV === 'development') {
     return url

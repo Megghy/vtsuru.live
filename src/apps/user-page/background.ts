@@ -1,8 +1,7 @@
 import { formatRgb } from 'culori'
 import type { GlobalThemeOverrides } from 'naive-ui'
 
-import { cookie } from '@/api/auth'
-import { signFileUrl } from '@/shared/config/api'
+import { resolveFileUrl } from '@/shared/config/api'
 import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
 import { resolveReadableForeground } from '@/shared/config/theme/contrast'
 import { getThemeOverrides } from '@/shared/config/theme/overrides'
@@ -46,7 +45,7 @@ function asObject(v: unknown): Record<string, unknown> | null {
 export function getUploadedFilePath(v: unknown): string {
   const obj = asObject(v)
   const path = obj?.path
-  return typeof path === 'string' ? signFileUrl(path, cookie.value?.cookie) : ''
+  return typeof path === 'string' ? resolveFileUrl(path) : ''
 }
 
 export function resolvePageBackground(raw: unknown): ResolvedPageBackground | null {

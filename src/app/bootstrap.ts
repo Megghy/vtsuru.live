@@ -24,6 +24,11 @@ let isHaveNewVersion = false
 
 const { notification } = createNaiveUIApi(['notification'])
 
+function isObsOverlay() {
+  const path = window.location.pathname
+  return path.startsWith('/obs') && !path.endsWith('-manage')
+}
+
 export function InitVTsuru() {
   showAPIFailoverNotification()
   void loadVersionAndStart()
@@ -41,12 +46,14 @@ async function loadVersionAndStart() {
         setTimeout(() => {
           location.reload()
         }, 1000)
-        notification.info({
-          title: '发现新的版本更新',
-          content: '将自动刷新页面',
-          duration: 5000,
-          meta: () => h(NText, { depth: 3 }, () => currentVersion),
-        })
+        if (!isObsOverlay()) {
+          notification.info({
+            title: '发现新的版本更新',
+            content: '将自动刷新页面',
+            duration: 5000,
+            meta: () => h(NText, { depth: 3 }, () => currentVersion),
+          })
+        }
       } else {
         InitVersionCheck()
       }
@@ -64,7 +71,7 @@ async function loadVersionAndStart() {
 }
 
 function showAPIFailoverNotification() {
-  if (!isAutomaticAPIFailover.value) return
+  if (!isAutomaticAPIFailover.value || isObsOverlay()) return
 
   let switching = false
   const notificationRef = notification.warning({
@@ -190,7 +197,7 @@ function InitVersionCheck() {
         void persistedSetItemRaw('Version', currentVersion)
         console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
 
-        if (window.$route.meta.forceReload || isTauri()) {
+        if (window.$route?.meta.forceReload || isTauri() || isObsOverlay()) {
           location.reload()
         } else {
           const n = notification.info({
