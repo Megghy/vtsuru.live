@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import type { SupportTicketMessage, SupportTicketSummary } from '@/api/api-models'
 import { SupportTicketAuthorType, SupportTicketSource, SupportTicketStatus, SupportTicketType } from '@/api/api-models'
-import { filterSupportTickets, imagesForMessage, isOwnTicketMessage } from '@/shared/supportTicket'
+import {
+  filterSupportTickets,
+  imagesForMessage,
+  isOwnTicketMessage,
+  remainingReplyImageSlots,
+  SUPPORT_TICKET_MAX_IMAGES,
+} from '@/shared/supportTicket'
 
 function ticket(partial: Partial<SupportTicketSummary> = {}): SupportTicketSummary {
   return {
@@ -62,6 +68,14 @@ describe('support ticket presentation', () => {
     const mixed = ticket({ images: [image, added], messages: [message(), reply] })
     expect(imagesForMessage(mixed, mixed.messages![0], 0)).toEqual([image])
     expect(imagesForMessage(mixed, reply, 1)).toEqual([added])
+  })
+
+  it('caps reply images per message instead of the whole ticket', () => {
+    expect(SUPPORT_TICKET_MAX_IMAGES).toBe(5)
+    expect(remainingReplyImageSlots(0)).toBe(5)
+    expect(remainingReplyImageSlots(3)).toBe(2)
+    expect(remainingReplyImageSlots(5)).toBe(0)
+    expect(remainingReplyImageSlots(8)).toBe(0)
   })
 
   it('treats only the owner view of a user message as their own', () => {

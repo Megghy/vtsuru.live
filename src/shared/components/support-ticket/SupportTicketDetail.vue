@@ -30,6 +30,7 @@ import {
 import {
   imagesForMessage,
   isOwnTicketMessage,
+  remainingReplyImageSlots,
   supportTicketStatusMeta,
   supportTicketTypeLabel,
 } from '@/shared/supportTicket'
@@ -57,7 +58,7 @@ const emailOnStaffReply = ref(false)
 const timeline = ref<HTMLElement>()
 
 const messages = computed(() => props.ticket?.messages ?? [])
-const remainingImageSlots = computed(() => Math.max(0, 5 - (props.ticket?.images.length ?? 0)))
+const remainingImageSlots = computed(() => remainingReplyImageSlots(replyFiles.value.length))
 const canSend = computed(() => Boolean(reply.value.trim() || replyFiles.value.length))
 
 watch(

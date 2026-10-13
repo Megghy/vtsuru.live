@@ -2,7 +2,7 @@ import { formatRgb } from 'culori'
 import type { GlobalThemeOverrides } from 'naive-ui'
 
 import { cookie } from '@/api/auth'
-import { signFileUrl } from '@/shared/config'
+import { signFileUrl } from '@/shared/config/api'
 import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
 import { resolveReadableForeground } from '@/shared/config/theme/contrast'
 import { getThemeOverrides } from '@/shared/config/theme/overrides'

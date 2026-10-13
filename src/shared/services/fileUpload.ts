@@ -7,7 +7,6 @@ export const FileStore = {
   Questions: 'questions',
   Configs: 'configs',
   Goods: 'goods',
-  Orders: 'orders',
   Tickets: 'tickets',
   Voices: 'voices',
   Assistant: 'assistant',

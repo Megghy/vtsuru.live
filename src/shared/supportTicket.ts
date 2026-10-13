@@ -44,6 +44,12 @@ export function filterSupportTickets(
   })
 }
 
+export const SUPPORT_TICKET_MAX_IMAGES = 5
+
+export function remainingReplyImageSlots(draftCount: number) {
+  return Math.max(0, SUPPORT_TICKET_MAX_IMAGES - draftCount)
+}
+
 export function imagesForMessage(
   ticket: SupportTicketSummary | undefined,
   message: SupportTicketMessage,
