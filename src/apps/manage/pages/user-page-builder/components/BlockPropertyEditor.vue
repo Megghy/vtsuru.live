@@ -630,7 +630,6 @@ function groupSelection() {
                   </NFlex>
 
                   <NButton
-                    v-if="editor.currentKey.value !== 'home'"
                     secondary
                     block
                     @click="editor.pageThemeModal.value = true"
@@ -638,7 +637,7 @@ function groupSelection() {
                     <template #icon>
                       <NIcon><ColorPaletteOutline /></NIcon>
                     </template>
-                    设置本页专属主题与背景
+                    {{ editor.currentKey.value === 'home' ? '设置主页外观与全局主题' : '设置本页专属主题与背景' }}
                   </NButton>
                 </NFlex>
               </div>

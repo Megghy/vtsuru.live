@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { WindowWrench20Filled } from '@vicons/fluent'
-import { ChevronBackOutline, ChevronForwardOutline, HeartOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
+import { ChevronBackOutline, ChevronForwardOutline, ColorPaletteOutline, HeartOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useMediaQuery } from '@vueuse/core'
 import {
   darkTheme,
@@ -76,6 +76,10 @@ const themeType = usePersistedStorage<ThemeType>('Settings.Theme', ThemeType.Aut
 
 // 用户和页面状态
 const userInfo = ref<UserInfo | null>(null) // 用户信息，初始化为 null
+const isOwner = computed(() => {
+  if (!accountInfo.value?.id || !userInfo.value?.id) return false
+  return accountInfo.value.id === userInfo.value.id
+})
 const follows = useFollowingStates(() => userInfo.value ? [userInfo.value.id] : [])
 const biliUserInfo = ref<BiliProfile | null>(null) // B站用户信息
 const biliProfileStatus = ref<BiliProfileStatus>('idle')
@@ -610,6 +614,20 @@ watch(
 
             <!-- 已登录用户操作 -->
             <template v-if="accountInfo?.id">
+              <NButton
+                v-if="isOwner"
+                type="primary"
+                size="small"
+                secondary
+                title="进入主页可视化装修与块配置"
+                @click="$router.push({ name: 'manage-userPageBuilder' })"
+              >
+                <template #icon>
+                  <NIcon :component="ColorPaletteOutline" />
+                </template>
+                <span v-if="isDesktop">装修主页</span>
+              </NButton>
+
               <NButton
                 type="primary"
                 size="small"

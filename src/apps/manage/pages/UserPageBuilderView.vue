@@ -15,17 +15,16 @@ import {
   useDialog,
   useMessage,
 } from 'naive-ui'
-import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
-import BlockPageThemeModal from './user-page-builder/components/BlockPageThemeModal.vue'
 import BuilderPaneHost from './user-page-builder/components/BuilderPaneHost.vue'
 import BuilderResourcesModal from './user-page-builder/components/BuilderResourcesModal.vue'
 import BuilderToolbar from './user-page-builder/components/BuilderToolbar.vue'
-import GlobalPageStyleModal from './user-page-builder/components/GlobalPageStyleModal.vue'
+import ThemeStyleDrawer from './user-page-builder/components/ThemeStyleDrawer.vue'
 import { UserPageEditorKey } from './user-page-builder/context'
 import { COLUMN_META, DEFAULT_COLUMNS_ORDER, useBuilderLayout } from './user-page-builder/useBuilderLayout'
 import type { BuilderColumnId } from './user-page-builder/useBuilderLayout'
@@ -46,7 +45,41 @@ const message = useMessage()
 const keyboardStatus = ref('')
 
 const layoutModal = ref(false)
-const globalBgModal = ref(false)
+const themeDrawerVisible = ref(false)
+const themeDrawerScope = ref<'global' | 'page'>('global')
+
+function openThemeDrawer(scope: 'global' | 'page' = 'global') {
+  themeDrawerScope.value = scope
+  themeDrawerVisible.value = true
+}
+
+// 统一代理 editor.pageThemeModal，当属性栏触发「页面主题」时统一由外观抽屉承接
+watch(editor.pageThemeModal, (val) => {
+  if (val) {
+    editor.pageThemeModal.value = false
+    openThemeDrawer('page')
+  }
+})
+
+function onThemeDrawerUpdate(show: boolean) {
+  themeDrawerVisible.value = show
+  if (!show && (route.query.action === 'theme' || route.query.action === 'background')) {
+    const nextQuery = { ...route.query }
+    delete nextQuery.action
+    void router.replace({ name: 'manage-userPageBuilder', query: nextQuery })
+  }
+}
+
+watch(
+  () => [editor.loadStatus.value, route.query.action] as const,
+  async ([status, action]) => {
+    if (status === 'ready' && (action === 'theme' || action === 'background')) {
+      await nextTick()
+      openThemeDrawer('global')
+    }
+  },
+  { immediate: true },
+)
 const isBlockMode = computed(() => editor.currentPage.value.mode === 'block')
 const isLegacyMode = computed(() => editor.currentPage.value.mode === 'legacy')
 const isContribMode = computed(() => editor.currentPage.value.mode === 'contrib')
@@ -289,14 +322,14 @@ onBeforeRouteLeave(() => {
 <template>
   <div class="user-page-builder">
     <ManagePageHeader
-      title="自定义页面"
-      subtitle="配置个人主页与子页面"
+      title="主页装修"
+      subtitle="配置个人主页、视觉主题与展示块"
     >
       <template #action>
         <BuilderToolbar
           v-if="editor.loadStatus.value === 'ready'"
           @open-layout="layoutModal = true"
-          @open-global-style="globalBgModal = true"
+          @open-global-style="openThemeDrawer('global')"
         />
       </template>
     </ManagePageHeader>
@@ -541,9 +574,11 @@ onBeforeRouteLeave(() => {
 
         <BuilderResourcesModal v-model:show="editor.resourcesModal.value" />
 
-        <GlobalPageStyleModal v-model:show="globalBgModal" />
-
-        <BlockPageThemeModal v-model:show="editor.pageThemeModal.value" />
+        <ThemeStyleDrawer
+          :show="themeDrawerVisible"
+          :scope="themeDrawerScope"
+          @update:show="onThemeDrawerUpdate"
+        />
 
         <NModal
           v-model:show="editor.publishModal.value"

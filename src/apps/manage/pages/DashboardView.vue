@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
-import { DocumentTextOutline } from '@vicons/ionicons5'
+import { ColorPaletteOutline, DocumentTextOutline, ImageOutline, OpenOutline } from '@vicons/ionicons5'
 import {
   NAlert,
   NButton,
@@ -39,6 +39,7 @@ import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { ACCOUNT_API_URL, availableAPIs, currentAPIKey, isDev, setSelectedAPIKey } from '@/shared/config'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
 
 const token = ref('')
@@ -69,6 +70,19 @@ const newName = ref('')
 
 const biliCode = ref('')
 const isLoading = ref(false)
+
+function goToDecorate(action?: 'theme') {
+  if (action) {
+    void router.push({ name: 'manage-userPageBuilder', query: { action } })
+  } else {
+    void router.push({ name: 'manage-userPageBuilder' })
+  }
+}
+
+function goToUserPublicPage() {
+  if (!accountInfo.value?.name) return
+  void router.push({ name: 'user-index', params: { id: accountInfo.value.name } })
+}
 
 // API选择器选项
 const apiOptions = availableAPIs.map((api) => ({
@@ -235,6 +249,64 @@ onUnmounted(() => {
       <WorkspaceSwitch />
     </div>
 
+    <!-- 个人主页装扮常驻入口卡片 -->
+    <div
+      v-if="accountInfo"
+      class="home-decorate-banner"
+    >
+      <NFlex
+        justify="space-between"
+        align="center"
+        wrap
+        :size="12"
+      >
+        <NFlex
+          align="center"
+          :size="10"
+        >
+          <div class="home-decorate-banner__icon">
+            <NIcon
+              :component="ColorPaletteOutline"
+              size="20"
+            />
+          </div>
+          <div class="home-decorate-banner__text">
+            <NText strong>个性化你的主播主页</NText>
+            <div class="home-decorate-banner__desc">
+              为展示页定制全站壁纸、主题色及日程/歌单/提问箱等模块，打造专属主播风格。
+            </div>
+          </div>
+        </NFlex>
+        <NFlex
+          :size="8"
+          wrap
+          class="home-decorate-banner__actions"
+        >
+          <NButton
+            size="small"
+            secondary
+            @click="goToDecorate('theme')"
+          >
+            <template #icon>
+              <NIcon :component="ImageOutline" />
+            </template>
+            设置背景与主题
+          </NButton>
+          <NButton
+            size="small"
+            type="primary"
+            secondary
+            @click="goToDecorate()"
+          >
+            <template #icon>
+              <NIcon :component="ColorPaletteOutline" />
+            </template>
+            主页装修
+          </NButton>
+        </NFlex>
+      </NFlex>
+    </div>
+
     <NTabs
       v-if="accountInfo"
       v-model:value="selectedTab"
@@ -285,15 +357,37 @@ onUnmounted(() => {
                 :size="8"
               >
                 <NButton
+                  size="small"
+                  secondary
+                  @click="goToDecorate('theme')"
+                >
+                  <template #icon>
+                    <NIcon :component="ImageOutline" />
+                  </template>
+                  更换背景
+                </NButton>
+                <NButton
                   type="primary"
                   secondary
                   size="small"
-                  @click="router.push({ name: 'manage-userPageBuilder' })"
+                  @click="goToDecorate()"
                 >
                   <template #icon>
-                    <NIcon :component="DocumentTextOutline" />
+                    <NIcon :component="ColorPaletteOutline" />
                   </template>
-                  自定义页面
+                  主页装修
+                </NButton>
+                <NButton
+                  v-if="accountInfo?.name"
+                  size="small"
+                  quaternary
+                  title="在新标签页查看公开主页"
+                  @click="goToUserPublicPage"
+                >
+                  <template #icon>
+                    <NIcon :component="OpenOutline" />
+                  </template>
+                  查看主页
                 </NButton>
                 <NText
                   depth="3"
@@ -621,6 +715,45 @@ onUnmounted(() => {
 .dashboard-role {
   display: flex;
   justify-content: flex-end;
+}
+
+.home-decorate-banner {
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: border-color 0.2s ease;
+}
+
+.home-decorate-banner:hover {
+  border-color: var(--vtsuru-primary);
+}
+
+.home-decorate-banner__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--vtsuru-brand-tint, rgba(99, 102, 241, 0.08));
+  color: var(--vtsuru-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-decorate-banner__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-decorate-banner__desc {
+  font-size: 13px;
+  color: var(--vtsuru-fg-muted);
+}
+
+.home-decorate-banner__actions {
+  align-items: center;
 }
 
 .dashboard-tabs :deep(.n-tabs-nav) {

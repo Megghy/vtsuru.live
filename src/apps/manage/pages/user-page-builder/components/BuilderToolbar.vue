@@ -168,13 +168,14 @@ function handleMoreAction(key: string) {
     </NTooltip>
     <NButton
       size="small"
+      type="primary"
       secondary
       @click="emit('open-global-style')"
     >
       <template #icon>
         <NIcon><ColorPaletteOutline /></NIcon>
       </template>
-      全局主题
+      外观与主题
     </NButton>
     <NTooltip>
       <template #trigger>

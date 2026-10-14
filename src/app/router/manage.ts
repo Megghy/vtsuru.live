@@ -305,7 +305,7 @@ const manageRoute: RouteRecordRaw = {
       name: 'manage-userPageBuilder',
       component: async () => import('@/apps/manage/pages/UserPageBuilderView.vue'),
       meta: {
-        title: '自定义页面',
+        title: '主页装修',
         pageWidth: 'full',
       },
     },

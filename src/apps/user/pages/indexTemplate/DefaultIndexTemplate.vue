@@ -2,6 +2,7 @@
 import {
   ArrowUpOutline,
   CalendarOutline,
+  ColorPaletteOutline,
   PlayOutline,
   RadioOutline,
   SettingsOutline,
@@ -189,12 +190,13 @@ export const Config = defineTemplateConfig([])
             <div class="profile-actions">
               <NButton
                 v-if="isOwner"
-                quaternary
+                secondary
+                type="primary"
                 size="large"
                 @click="$router.push({ name: 'manage-userPageBuilder' })"
               >
-                <template #icon><NIcon :component="SettingsOutline" /></template>
-                编辑主页
+                <template #icon><NIcon :component="ColorPaletteOutline" /></template>
+                主页装修
               </NButton>
               <NButton
                 v-if="props.userInfo?.biliId"

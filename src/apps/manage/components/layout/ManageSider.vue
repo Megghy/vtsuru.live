@@ -23,9 +23,11 @@ import {
   BookmarkOutline,
   Chatbox,
   ChatbubbleEllipsesOutline,
+  ColorPaletteOutline,
   DocumentTextOutline,
   Eye,
   GridOutline,
+  ImageOutline,
   MusicalNote,
   MusicalNotesOutline,
   PlayCircleOutline,
@@ -150,6 +152,14 @@ const baseItems = computed<ManageNavItem[]>(() => {
   const biliReason = biliDisabled ? '需要完成 Bilibili 认证后才能使用' : undefined
 
   return [
+    {
+      key: 'manage-userPageBuilder',
+      label: '主页装修',
+      icon: ColorPaletteOutline,
+      to: { name: 'manage-userPageBuilder' },
+      disabled: emailDisabled,
+      group: 'common',
+    },
     {
       key: 'manage-history',
       label: '历史',
@@ -425,8 +435,8 @@ function onClickDisabledItem(item: ManageNavItem) {
   }
 }
 
-async function go(name: string) {
-  await router.push({ name })
+async function go(name: string, query?: Record<string, string>) {
+  await router.push({ name, query })
 }
 </script>
 
@@ -535,29 +545,47 @@ async function go(name: string) {
           </NButton>
         </div>
 
-        <NButton
-          class="sider-top-btn"
-          size="small"
-          type="primary"
-          secondary
-          strong
-          :circle="collapsed"
-          :block="!collapsed"
-          :title="collapsed ? '自定义页面' : undefined"
-          @click="go('manage-userPageBuilder')"
-        >
-          <template #icon>
-            <component
-              :is="DocumentTextOutline"
-              class="sider-icon"
-            />
-          </template>
-          <span
-            v-if="!collapsed"
-            class="sider-btn-label"
-            >自定义页面</span
+        <div class="manage-sider__top-row sider-top-row--builder">
+          <NButton
+            class="sider-top-btn sider-top-btn--panel"
+            size="small"
+            type="primary"
+            secondary
+            strong
+            :circle="collapsed"
+            :title="collapsed ? '主页装修' : undefined"
+            @click="go('manage-userPageBuilder')"
           >
-        </NButton>
+            <template #icon>
+              <component
+                :is="ColorPaletteOutline"
+                class="sider-icon"
+              />
+            </template>
+            <span
+              v-if="!collapsed"
+              class="sider-btn-label"
+              >主页装修</span
+            >
+          </NButton>
+
+          <NButton
+            v-if="!collapsed"
+            class="sider-top-icon-btn"
+            size="small"
+            quaternary
+            circle
+            title="更换主页背景与主题"
+            @click="go('manage-userPageBuilder', { action: 'theme' })"
+          >
+            <template #icon>
+              <component
+                :is="ImageOutline"
+                class="sider-icon"
+              />
+            </template>
+          </NButton>
+        </div>
       </template>
     </div>
 
