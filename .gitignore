@@ -36,7 +36,6 @@ env.d.ts
 *.tsbuildinfo
 
 /VTsuru/
-VTsuru
 /docs
 # eslint cache
 .eslintcache
