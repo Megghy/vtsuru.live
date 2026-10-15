@@ -102,7 +102,7 @@ export function UpdateAccountLoop() {
   }, 60 * 1000)
 }
 function refreshCookie(token?: string) {
-  postApiAccountRefreshToken()
+  postApiAccountRefreshToken(token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
     .then((data) => {
       if (data.code == 200) {
         cookie.value = {

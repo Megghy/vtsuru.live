@@ -20893,6 +20893,11 @@
             "type": "integer",
             "format": "int32"
           },
+          "maxSubItemSelections": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "setting": {
             "$ref": "#/components/schemas/RequestPointGoodsModel_TempRequestGoodsSetting"
           },
@@ -21990,6 +21995,7 @@
           "sampleLikedBy",
           "isLiked",
           "isPinned",
+          "isLocked",
           "isDeleted"
         ],
         "type": "object",
@@ -22050,6 +22056,9 @@
           "isPinned": {
             "type": "boolean"
           },
+          "isLocked": {
+            "type": "boolean"
+          },
           "isDeleted": {
             "type": "boolean"
           }
@@ -22068,6 +22077,7 @@
           "sampleLikedBy",
           "isLiked",
           "isPinned",
+          "isLocked",
           "isDeleted"
         ],
         "type": "object",
@@ -22120,6 +22130,9 @@
             "type": "boolean"
           },
           "isPinned": {
+            "type": "boolean"
+          },
+          "isLocked": {
             "type": "boolean"
           },
           "isDeleted": {
@@ -23633,8 +23646,7 @@
             "format": "int32"
           },
           "data": {
-            "description": "业务数据，形状随接口而变",
-            "nullable": true
+            "description": "业务数据，形状随接口而变"
           }
         },
         "additionalProperties": false,

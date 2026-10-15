@@ -97,10 +97,16 @@ function shouldRetryOnFailover(error: QueryRequestError, retryOnFailover: boolea
 
 function buildAuthHeaders(headers?: [string, string][]) {
   const h: Record<string, string> = {}
+  let hasAuthorization = false
   ;(headers ?? []).forEach((header) => {
     h[header[0]] = header[1]
+    if (header[0].toLowerCase() === 'authorization') {
+      hasAuthorization = true
+    }
   })
-  if (cookie.value?.cookie) h.Authorization = `Bearer ${cookie.value.cookie}`
+  if (!hasAuthorization && cookie.value?.cookie) {
+    h.Authorization = `Bearer ${cookie.value.cookie}`
+  }
   return h
 }
 

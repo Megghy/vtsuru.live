@@ -35,8 +35,19 @@ vi.mock('@/shared/config', () => ({
   resolveFileUrl: (path: string) => path,
 }))
 
+const authState = {
+  cookie: undefined as { cookie: string; refreshDate: number } | undefined,
+}
+
 vi.mock('@/api/auth', () => ({
-  cookie: { value: undefined },
+  cookie: {
+    get value() {
+      return authState.cookie
+    },
+    set value(v: { cookie: string; refreshDate: number } | undefined) {
+      authState.cookie = v
+    },
+  },
 }))
 
 import { QueryGetAPI, QueryRequestError } from '../query'
@@ -102,5 +113,35 @@ describe('QueryGetAPI failover', () => {
     )
 
     await expect(QueryGetAPI(MAIN)).rejects.toBeInstanceOf(QueryRequestError)
+  })
+
+  it('显式传入的 Authorization 优先于本地保存的 cookie', async () => {
+    authState.cookie = { cookie: 'stored-jwt-cookie', refreshDate: Date.now() }
+    let capturedHeaders: Record<string, string> = {}
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+        capturedHeaders = (init?.headers as Record<string, string>) ?? {}
+        return jsonResponse(okBody)
+      }),
+    )
+
+    await QueryGetAPI(MAIN, undefined, [['Authorization', 'Bearer explicit-token']])
+    expect(capturedHeaders.Authorization).toBe('Bearer explicit-token')
+  })
+
+  it('未提供 Authorization 时自动注入本地 cookie', async () => {
+    authState.cookie = { cookie: 'stored-jwt-cookie', refreshDate: Date.now() }
+    let capturedHeaders: Record<string, string> = {}
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+        capturedHeaders = (init?.headers as Record<string, string>) ?? {}
+        return jsonResponse(okBody)
+      }),
+    )
+
+    await QueryGetAPI(MAIN)
+    expect(capturedHeaders.Authorization).toBe('Bearer stored-jwt-cookie')
   })
 })
