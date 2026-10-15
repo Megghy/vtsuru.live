@@ -17,11 +17,14 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { prepareBiliAccount } from '@/api/account'
 import type { BiliAccountProof } from '@/api/account'
-import { QueryGetAPI } from '@/api/query'
+import {
+  getApiBiliAuthStatus,
+  postApiBiliAuthStart,
+} from '@/api/generated/bili-auth-v2/bili-auth-v2'
 import BiliAccountSetup from '@/apps/account/components/BiliAccountSetup.vue'
 import { createBiliAuthUrl } from '@/apps/account/components/biliAuthCredential'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
-import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
@@ -82,7 +85,7 @@ function syncStatus() {
 
 async function readStatus() {
   const key = guidKey.value
-  const response = await QueryGetAPI(`${BILI_AUTH_API_URL}status`, { key })
+  const response = await getApiBiliAuthStatus({ key })
   if (key !== guidKey.value) return
 
   if (response.code === 201) {
@@ -115,7 +118,13 @@ async function readStatus() {
 async function startVerify() {
   isStarting.value = true
   try {
-    const response = await QueryGetAPI<AuthStartModel>(`${BILI_AUTH_API_URL}start`, { key: guidKey.value })
+    const response = (await postApiBiliAuthStart({
+      key: guidKey.value,
+    })) as unknown as {
+      code: number
+      message?: string
+      data: AuthStartModel
+    }
     if (response.code !== 200) throw new Error(response.message)
 
     startModel.value = response.data

@@ -4,8 +4,7 @@ import type { SelectOption } from 'naive-ui'
 import { NSelect } from 'naive-ui'
 import { ref, watch } from 'vue'
 
-import { QueryGetAPI } from '@/api/query'
-import { USER_API_URL } from '@/shared/config'
+import { getApiUserAutocomplete } from '@/api/generated/user/user'
 
 interface UserAutocompleteInfo {
   id: number
@@ -50,10 +49,14 @@ async function fetchOptions(q: string) {
 
   loading.value = true
   try {
-    const resp = await QueryGetAPI<UserAutocompleteInfo[]>(`${USER_API_URL}autocomplete`, {
+    const resp = (await getApiUserAutocomplete({
       q: keyword,
       limit: props.limit,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data?: UserAutocompleteInfo[]
+    }
 
     if (resp.code !== 200) {
       options.value = []

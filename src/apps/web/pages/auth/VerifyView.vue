@@ -11,8 +11,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { ACCOUNT, GetSelfAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
-import { QueryGetAPI } from '@/api/query'
-import { ACCOUNT_API_URL } from '@/shared/config'
+import { getApiAccountVerify } from '@/api/generated/account/account'
 
 type Phase = 'checking' | 'success' | 'need-login' | 'error'
 const PHASES: readonly Phase[] = ['checking', 'success', 'need-login', 'error']
@@ -70,7 +69,7 @@ async function verify() {
   }
 
   try {
-    const data = await QueryGetAPI(`${ACCOUNT_API_URL}verify`, { target: target.value })
+    const data = await getApiAccountVerify({ target: target.value })
     if (data.code === 200) {
       if (cookie.value?.cookie) {
         await GetSelfAccount()

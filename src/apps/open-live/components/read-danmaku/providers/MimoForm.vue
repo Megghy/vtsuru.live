@@ -4,7 +4,8 @@ import { NButton, NEmpty, NFlex, NIcon, NInput, NPopconfirm, NTag, NText, useMes
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { QueryGetAPI, GetHeaders } from '@/api/query'
+import { getApiTtsMimoVoicesCustom } from '@/api/generated/tts/tts'
+import { GetHeaders } from '@/api/query'
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
 import { MimoVoiceProvider, type MimoCustomVoiceInfo } from '@/apps/open-live/voice-providers/mimo'
 import { deleteVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
@@ -59,7 +60,11 @@ async function loadCustomVoices() {
     return
   }
   try {
-    const resp = await QueryGetAPI<CustomVoice[]>(`${TTS_API_URL}mimo/voices/custom`)
+    const resp = (await getApiTtsMimoVoicesCustom()) as unknown as {
+      code: number
+      message?: string
+      data?: CustomVoice[]
+    }
     if (resp.code !== 200) throw new Error(resp.message || '加载自定义音色失败')
     if (!Array.isArray(resp.data)) throw new Error('自定义音色数据格式错误')
 

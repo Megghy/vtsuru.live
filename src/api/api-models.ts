@@ -1,4 +1,14 @@
-import type { UserConsumptionSetting } from './models/consumption'
+import type { EventModel as GeneratedEventModel } from './generated/model/eventModel'
+import type { ResponsePointHistoryModel } from './generated/model/responsePointHistoryModel'
+import type { ResponseQueueModel as GeneratedQueueModel } from './generated/model/responseQueueModel'
+import type { ResponseSongRequestModel } from './generated/model/responseSongRequestModel'
+import type { SupportTicketMessageModel } from './generated/model/supportTicketMessageModel'
+import type { SupportTicketModel } from './generated/model/supportTicketModel'
+import type { APIFileModel } from './generated/model/aPIFileModel'
+import type { DanmakuModel as GeneratedDanmakuModel } from './generated/model/danmakuModel'
+import type { ResponsePointGoodsModel } from './generated/model/responsePointGoodsModel'
+import type { ResponseSelectedSubItemOrderInfo } from './generated/model/responseSelectedSubItemOrderInfo'
+import type { ResponseUserBasicInfo } from './generated/model/responseUserBasicInfo'
 
 export interface APIRoot<T> {
   code: number
@@ -11,6 +21,147 @@ export interface PaginationResponse<T> extends APIRoot<T> {
   ps: number
   more: boolean
 }
+
+export type { ResponseUserBasicInfo as UserBasicInfo } from './generated/model/responseUserBasicInfo'
+export type { ResponseUserInfo as UserInfo } from './generated/model/responseUserInfo'
+export type { ResponseAccountInfo as AccountInfo } from './generated/model/responseAccountInfo'
+export type { EventFetcherStateModel } from './generated/model/eventFetcherStateModel'
+export type { LiveReserveInfo } from './generated/model/liveReserveInfo'
+export type { ResponseBiliLiveReserveItem as BiliLiveReserveItem } from './generated/model/responseBiliLiveReserveItem'
+export type { ResponseBiliLiveReserveModel as BiliLiveReserveModel } from './generated/model/responseBiliLiveReserveModel'
+export type { StreamerBaseModel as BaseStreamerModel } from './generated/model/streamerBaseModel'
+export type { StreamerModel } from './generated/model/streamerModel'
+export type { SettingSendEmail as Setting_SendEmail } from './generated/model/settingSendEmail'
+export type { SettingQuestionBox as Setting_QuestionBox } from './generated/model/settingQuestionBox'
+export type { UserSetting } from './generated/model/userSetting'
+export type { SettingIndex as Setting_Index } from './generated/model/settingIndex'
+export type { SettingSongRequest as Setting_LiveRequest } from './generated/model/settingSongRequest'
+export type { SettingQueue as Setting_Queue } from './generated/model/settingQueue'
+export type { SettingPoint as Setting_Point } from './generated/model/settingPoint'
+export type { SettingQuestionDisplay as Setting_QuestionDisplay } from './generated/model/settingQuestionDisplay'
+export type { ResponseSongModel as SongsInfo } from './generated/model/responseSongModel'
+export type { SongDataSongRequestOption as SongRequestOption } from './generated/model/songDataSongRequestOption'
+export type { ResponseQAInfoResponseQATextReviewInfo as QAReviewInfo } from './generated/model/responseQAInfoResponseQATextReviewInfo'
+export type { ResponseQAInfoToTarget as QAInfo } from './generated/model/responseQAInfoToTarget'
+export type { LotteryUserInfo } from './generated/model/lotteryUserInfo'
+export type { LotteryUserCardInfo } from './generated/model/lotteryUserCardInfo'
+export type { ResponseScheduleModel as ScheduleWeekInfo } from './generated/model/responseScheduleModel'
+export type { ResponseScheduleDayModel as ScheduleDayInfo } from './generated/model/responseScheduleDayModel'
+export type { RequestAddBatchScheduleModel as BatchScheduleRequest } from './generated/model/requestAddBatchScheduleModel'
+export type { RequestVideoTable as VideoCollectCreateModel } from './generated/model/requestVideoTable'
+export type { ResponseVideoCollectModel as VideoCollectTable } from './generated/model/responseVideoCollectModel'
+export type { VideoData as VideoCollectVideo } from './generated/model/videoData'
+export type { VideoCollectInfoVideoSender as VideoSender } from './generated/model/videoCollectInfoVideoSender'
+export type { VideoCollectInfo as VideoInfo } from './generated/model/videoCollectInfo'
+export type { ResponseVideoCollectDetail as VideoCollectDetail } from './generated/model/responseVideoCollectDetail'
+export type { OpenBLiveClientDataAppStartGameInfo as GameInfo } from './generated/model/openBLiveClientDataAppStartGameInfo'
+export type { OpenBLiveClientDataAppStartWebsocketInfo as WebsocketInfo } from './generated/model/openBLiveClientDataAppStartWebsocketInfo'
+export type { OpenBLiveClientDataAppStartAnchorInfo as AnchorInfo } from './generated/model/openBLiveClientDataAppStartAnchorInfo'
+export type { OpenBLiveClientDataAppStartData as OpenLiveInfo } from './generated/model/openBLiveClientDataAppStartData'
+export type { LiveLotteryUserInfo as OpenLiveLotteryUserInfo } from './generated/model/liveLotteryUserInfo'
+export type { UpdateLiveLotteryUsersModel } from './generated/model/updateLiveLotteryUsersModel'
+export type { DanmakuUserInfo } from './generated/model/danmakuUserInfo'
+export type { ResponseLiveInfoModel } from './generated/model/responseLiveInfoModel'
+export type { ResponseCurrentLiveModel } from './generated/model/responseCurrentLiveModel'
+export type { ResponseLiveRankingEntryModel } from './generated/model/responseLiveRankingEntryModel'
+export type DanmakuModel = GeneratedDanmakuModel & { id?: number | string }
+export type { SupportTicketImageModel as SupportTicketImage } from './generated/model/supportTicketImageModel'
+export type { SupportTicketMessageModel as SupportTicketMessage } from './generated/model/supportTicketMessageModel'
+export type { CreateSupportTicketModel as CreateSupportTicketRequest } from './generated/model/createSupportTicketModel'
+export type { PointGoodsDataServiceField as ServiceField } from './generated/model/pointGoodsDataServiceField'
+export type { PointGoodsDataServiceConfigData as ServiceConfig } from './generated/model/pointGoodsDataServiceConfigData'
+export type { RequestPointGoodsModelTempRequestGoodsSetting as PointGoodsSetting } from './generated/model/requestPointGoodsModelTempRequestGoodsSetting'
+export type { ResponseSubPointGoodsModel as ResponseSubPointGoodModel } from './generated/model/responseSubPointGoodsModel'
+export type { ResponseBasePointGoodsModel } from './generated/model/responseBasePointGoodsModel'
+export type { ResponsePointGoodsModel } from './generated/model/responsePointGoodsModel'
+export type ResponsePointGoodModel = import('./generated/model/responseBasePointGoodsModel').ResponseBasePointGoodsModel & Partial<Pick<import('./generated/model/responsePointGoodsModel').ResponsePointGoodsModel, 'content' | 'collectUrl' | 'embedCollectUrl' | 'setting' | 'serviceConfig' | 'virtualKeys' | 'keySelectionMode'>>
+export type { RequestPointGoodsModelTempSubPointGoodsModel as UploadSubPointGoodsModel } from './generated/model/requestPointGoodsModelTempSubPointGoodsModel'
+export type UploadPointGoodsModel = import('./generated/model/requestPointGoodsModel').RequestPointGoodsModel & {
+  maxSubItemSelections?: number | null
+}
+export type { ShippingAddressInfo as AddressInfo } from './generated/model/shippingAddressInfo'
+export type { ResponseBiliAuthBasicModel as BiliAuthBaseModel } from './generated/model/responseBiliAuthBasicModel'
+export type { ResponseBiliAuthModel as BiliAuthModel } from './generated/model/responseBiliAuthModel'
+export type { ResponsePointUserModel } from './generated/model/responsePointUserModel'
+export type { ResponsePointGuardDuplicatePointValues } from './generated/model/responsePointGuardDuplicatePointValues'
+export type { ResponsePointGuardDuplicateLevelCounts } from './generated/model/responsePointGuardDuplicateLevelCounts'
+export type { ResponsePointGuardDuplicateUserModel } from './generated/model/responsePointGuardDuplicateUserModel'
+export type { ResponsePointGuardDuplicateEntryModel } from './generated/model/responsePointGuardDuplicateEntryModel'
+export type { ResponsePointGuardDuplicateGroupModel } from './generated/model/responsePointGuardDuplicateGroupModel'
+export type { ResponsePointGuardDuplicateScanModel } from './generated/model/responsePointGuardDuplicateScanModel'
+export type { ResponsePointGuardDuplicateDetailModel } from './generated/model/responsePointGuardDuplicateDetailModel'
+export type { RequestPointGuardDuplicatePointValues } from './generated/model/requestPointGuardDuplicatePointValues'
+export type { PointControllerRequestApplyPointGuardDuplicateFixModel as RequestApplyPointGuardDuplicateFixModel } from './generated/model/pointControllerRequestApplyPointGuardDuplicateFixModel'
+export type { VTsuruCorePointGuardDuplicateApplyResult as ResponsePointGuardDuplicateApplyResult } from './generated/model/vTsuruCorePointGuardDuplicateApplyResult'
+export type { ResponsePointOrder2OwnerModel } from './generated/model/responsePointOrder2OwnerModel'
+export type { ResponsePointOrder2UserModel } from './generated/model/responsePointOrder2UserModel'
+export type { ResponseSelectedSubItemOrderInfo }
+export type { PointOrderDataServiceAnswer as ServiceAnswer } from './generated/model/pointOrderDataServiceAnswer'
+export type { PointOrderDataServiceTimelineEntry as ServiceTimelineEntry } from './generated/model/pointOrderDataServiceTimelineEntry'
+export type { PointOrderDataServiceOrderData as ServiceOrderData } from './generated/model/pointOrderDataServiceOrderData'
+export type { ResponseUserIndexModel } from './generated/model/responseUserIndexModel'
+export type { ResponseUserCheckInModel as CheckInRankingInfo } from './generated/model/responseUserCheckInModel'
+export type { CheckInControllerCheckInResponse as CheckInResult } from './generated/model/checkInControllerCheckInResponse'
+export type { VoteConfig } from './generated/model/voteConfig'
+export type { VoteOption } from './generated/model/voteOption'
+export type { VoteOptionDto } from './generated/model/voteOptionDto'
+export type { ResponseVoteSession } from './generated/model/responseVoteSession'
+export type { RequestCreateBulletVote } from './generated/model/requestCreateBulletVote'
+export type { RequestExtendVote } from './generated/model/requestExtendVote'
+export type { VoteOBSData } from './generated/model/voteOBSData'
+export type { ResponseNotifaction as NotifactionInfo } from './generated/model/responseNotifaction'
+export type { ResponseQAInfo } from './generated/model/responseQAInfo'
+
+export type { APIFileModel }
+export type UploadFileResponse = APIFileModel
+export type SongRequestInfo = ResponseSongRequestModel & { isInLocal?: boolean }
+export type ResponseQueueModel = GeneratedQueueModel & { isInLocal?: boolean }
+export type EventModel = Omit<GeneratedEventModel, 'id' | 'type' | 'guard_level' | 'ouId' | 'uid' | 'open_id'> & {
+  id?: number
+  eventId?: string
+  type: EventDataTypes
+  uid: number
+  open_id: string
+  guard_level: GuardLevel
+  ouid: string
+  gift_icon?: string
+  data?: unknown
+}
+export type SupportTicketSummary = SupportTicketModel
+export type SupportTicketDetail = SupportTicketModel & { messages?: SupportTicketMessageModel[] }
+
+export interface PointHistoryExtraBase {
+  user?: ResponseUserBasicInfo
+  danmaku?: DanmakuModel
+  reason?: string
+  goods?: ResponsePointGoodsModel | null
+  isDiscontinued?: boolean
+  remark?: string
+  selectedSubItems?: ResponseSelectedSubItemOrderInfo[]
+  interactionType?: string
+}
+export type ResponsePointHisrotyModel = Omit<ResponsePointHistoryModel, 'extra'> & {
+  extra?: PointHistoryExtraBase
+}
+
+export interface SongAuthorInfo {
+  name: string
+  id: number
+}
+export interface ExtendedUploadFileInfo {
+  id: string
+  name: string
+  status: 'uploading' | 'finished' | 'error' | 'removed'
+  thumbnailUrl?: string
+  file?: File
+}
+export interface ServiceOrderSummary {
+  active: boolean
+  appointmentAt?: number
+  deliveryUrl?: string
+  cancelReason?: string
+}
+
 export enum IndexTypes {
   Default,
 }
@@ -23,109 +174,11 @@ export enum GuardLevel {
   Tidu = 2,
   Jianzhang = 3,
 }
-export interface UserBasicInfo {
-  name: string
-  id: number
-  isBiliAuthed: boolean
-  faceUrl?: string
-}
-export interface UserInfo extends UserBasicInfo {
-  createAt: number
-  biliId?: number
-  biliRoomId?: number
-  canRequestSong: boolean
-  streamerInfo?: BaseStreamerModel
-  liveReserve?: LiveReserveInfo
-  extra?: {
-    enableFunctions: FunctionTypes[]
-    isInBlackList: boolean
-    templateTypes: { [key: string]: string }
-    allowCheckInRanking?: boolean // 是否允许查看签到排行
-    allowQuestionBoxUploadImage?: boolean // 是否允许问题箱上传图片
-    showQuestionBoxPublicReplies?: boolean // 是否在提问页显示公开回复
-    questionBoxDefaultPublic?: boolean // 新提问是否默认公开展示
-  }
-}
-export interface EventFetcherStateModel {
-  online: boolean
-  status: { [errorCode: string]: string }
-  version?: string
-  todayReceive: number
-  useCookie: boolean
-  type: EventFetcherType
-}
-
 export enum EventFetcherType {
   Application,
   OBS,
   Tauri,
   Server,
-}
-export interface AccountInfo extends UserInfo {
-  isEmailVerified: boolean
-  isBiliVerified: boolean
-  biliVerifyCode?: string
-  bindEmail?: string
-  settings: UserSetting
-  currentQuestionId?: number
-  consumptionSettings: UserConsumptionSetting
-  token: string
-  point: number
-
-  biliAuthCode?: string
-  biliAuthCodeStatus: BiliAuthCodeStatusType
-
-  eventFetcherState: EventFetcherStateModel
-
-  nextSendEmailTime?: number
-  isServerFetcherOnline: boolean
-  blackList: UserBasicInfo[]
-  biliBlackList: { [key: string]: string }
-  streamerInfo?: StreamerModel
-  biliUserAuthInfo?: BiliAuthModel
-}
-export interface LiveReserveInfo {
-  sid: number
-  title: string
-  planStart: number
-  total: number
-}
-export interface BiliLiveReserveItem {
-  sid: number
-  title: string
-  planStart: number
-  expire: number
-  total: number
-  year: number
-  week: number
-  dayOfWeek: number
-  time: string
-}
-export interface BiliLiveReserveModel {
-  items: BiliLiveReserveItem[]
-  fetchedAt: number
-  intervalMinutes: number
-  syncEnabled: boolean
-}
-export interface BaseStreamerModel {
-  name: string
-  uId: number
-  roomId: number
-  faceUrl: string
-  title: string
-  coverUrl: string
-  frameUrl: string
-  area: string
-  parentArea: string
-  lastStreamAt: number
-  isStreaming: boolean
-}
-export interface StreamerModel extends BaseStreamerModel {
-  totalDanmakuCount: number
-  totalIncome: number
-  totalStreamCount: number
-  totalStreamTime: number
-  lastDanmakuCount: number
 }
 export enum BiliAuthCodeStatusType {
   NotBind,
@@ -133,194 +186,12 @@ export enum BiliAuthCodeStatusType {
   Notfound,
   Inactive,
 }
-export interface Setting_SendEmail {
-  recieveQA: boolean
-  recieveQAReply: boolean
-  receiveOrder: boolean
-}
 export enum SaftyLevels {
   Disabled,
   Low,
   Medium,
   High,
 }
-export interface Setting_QuestionBox {
-  allowUnregistedUser: boolean
-  saftyLevel: SaftyLevels
-  allowImageUpload: boolean
-  showPublicReplies?: boolean
-  defaultPublic?: boolean
-}
-export interface UserSetting {
-  sendEmail: Setting_SendEmail
-  questionBox: Setting_QuestionBox
-  songRequest: Setting_LiveRequest
-  queue: Setting_Queue
-  point: Setting_Point
-  questionDisplay: Setting_QuestionDisplay
-  index: Setting_Index
-
-  enableFunctions: FunctionTypes[]
-
-  indexTemplate: string | null
-  songListTemplate: string | null
-  scheduleTemplate: string | null
-  syncBiliLiveReserveToSchedule?: boolean
-}
-export interface Setting_Index {
-  allowDisplayInIndex: boolean
-  videos: string[]
-  notification: string
-  links: { [key: string]: string }
-  /**
-   * 自定义链接顺序（存储链接名称的有序数组）
-   * 旧数据无此字段时在前端初始化为 Object.keys(links)
-   */
-  linkOrder?: string[]
-}
-export interface Setting_LiveRequest {
-  orderPrefix: string
-  sortType?: QueueSortType
-  enableOnStreaming: boolean
-  onlyAllowSongList: boolean
-  queueMaxSize: number
-  allowAllDanmaku: boolean
-  allowFromWeb: boolean
-  allowAnonymousFromWeb: boolean
-  needWearFanMedal: boolean
-  needJianzhang: boolean
-  needTidu: boolean
-  needZongdu: boolean
-  allowSC: boolean
-  scIgnoreLimit: boolean
-  scMinPrice: number
-  fanMedalMinLevel: number
-  allowReorderSong: boolean
-  enableCooldown: boolean
-  cooldownSecond: number
-  zongduCooldownSecond: number
-  tiduCooldownSecond: number
-  jianzhangCooldownSecond: number
-  enableWebCooldown: boolean
-  webCooldownSecond: number
-
-  allowGift: boolean
-  giftNames?: string[]
-  minGiftPrice?: number
-  giftFilterType: QueueGiftFilterType
-  allowIncreasePaymentBySendGift: boolean
-  allowIncreaseByAnyPayment: boolean
-  sendGiftIgnoreLimit: boolean
-
-  showRequireInfo: boolean
-  showUserName: boolean
-  showFanMadelInfo: boolean
-  obsTitle: string
-  obsTitleToday: string
-
-  isReverse: boolean
-}
-export interface Setting_Queue {
-  keyword: string
-  enableOnStreaming: boolean
-  matchType: KeywordMatchType
-  sortType?: QueueSortType
-  queueMaxSize: number
-
-  allowAllDanmaku: boolean
-  allowFromWeb: boolean
-  needJianzhang: boolean
-  needTidu: boolean
-  needZongdu: boolean
-  fanMedalMinLevel?: number
-
-  allowGift: boolean
-  giftNames?: string[]
-  minGiftPrice?: number
-  giftFilterType: QueueGiftFilterType
-  allowIncreasePaymentBySendGift: boolean
-  allowIncreaseByAnyPayment: boolean
-  sendGiftDirectJoin: boolean
-  sendGiftIgnoreLimit: boolean
-
-  enableCooldown: boolean
-  cooldownSecond: number
-  zongduCooldownSecond: number
-  tiduCooldownSecond: number
-  jianzhangCooldownSecond: number
-
-  showRequireInfo: boolean
-  showPayment: boolean
-  showFanMadelInfo: boolean
-
-  isReverse: boolean
-}
-export interface Setting_Point {
-  allowType: EventDataTypes[]
-  jianzhangPoint: number // decimal maps to number in TypeScript
-  tiduPoint: number // decimal maps to number in TypeScript
-  zongduPoint: number // decimal maps to number in TypeScript
-  giftPercentMap: { [key: string]: number } // Dictionary<string, double> maps to an index signature in TypeScript
-  scPointPercent: number // double maps to number in TypeScript
-  giftPointPercent: number // double maps to number in TypeScript
-  giftAllowType: SettingPointGiftAllowType
-  shouldDiscontinueWhenSoldOut: boolean
-
-  // 签到系统设置
-  enableCheckIn: boolean // 是否启用签到功能
-  checkInKeyword: string // 签到关键词
-  givePointsForCheckIn: boolean // 是否为签到提供积分
-  baseCheckInPoints: number // 基础签到积分
-  enableConsecutiveBonus: boolean // 是否启用连续签到奖励
-  bonusPointsPerDay: number // 每天额外奖励积分
-  maxBonusPoints: number // 最大奖励积分
-  allowSelfCheckIn: boolean // 是否允许自己签到
-  requireAuth: boolean // 是否需要认证
-
-  // 每日首次互动奖励设置
-  enableDailyFirstDanmaku: boolean // 是否启用每日首次弹幕奖励
-  dailyFirstDanmakuPoints: number // 每日首次弹幕积分
-  enableDailyFirstGift: boolean // 是否启用每日首次礼物奖励
-  dailyFirstGiftPoints: number // 每日首次礼物积分（固定积分）
-  useDailyFirstGiftPercent: boolean // 是否使用礼物价值比例计算
-  dailyFirstGiftPercent: number // 每日首次礼物价值比例
-
-  // 仅开播时生效设置
-  dailyFirstOnlyOnStreaming: boolean
-  checkInOnlyOnStreaming: boolean
-}
-export interface Setting_QuestionDisplay {
-  font?: string // Optional string, with a maximum length of 50 characters
-  nameFont: string // Optional string, with a maximum length of 50 characters
-  fontSize: number // Default is 20
-  fontWeight: number
-  nameFontSize: number // Default is 20
-  lineHeight: number
-  letterSpacing: number
-  nameLetterSpacing: number
-  contentMaxWidth: number
-  fontColor?: string // Optional string, must exactly be 6 characters long
-  nameFontColor?: string // Optional string, must exactly be 6 characters long
-  nameFontWeight?: number
-  backgroundColor?: string // Optional string, must exactly be 6 characters long
-  backgroundOpacity: number
-  contentPadding: number
-  borderRadius: number
-  imageMaxHeight: number
-  showUserName: boolean // Default is true
-  showBrand: boolean
-  align: QuestionDisplayAlign // Default is QuestionDisplayAlign.Left, 对齐
-  verticalAlign: QuestionDisplayVerticalAlign
-  showImage: boolean // Default is false
-  borderColor?: string
-  borderWidth?: number
-  transition: QuestionDisplayTransition
-  imageLayout: QuestionDisplayImageLayout
-  shadow: QuestionDisplayShadow
-  textShadow: QuestionDisplayShadow
-  syncScroll: boolean
-}
-
 export enum QuestionDisplayAlign {
   Left,
   Right,
@@ -355,14 +226,12 @@ export enum KeywordMatchType {
   Contains,
   Regex,
 }
-
 export enum QueueSortType {
   GuardFirst,
   PaymentFist,
   TimeFirst,
   FansMedalFirst,
 }
-
 export enum QueueGiftFilterType {
   Or,
   And,
@@ -377,47 +246,19 @@ export enum FunctionTypes {
   VideoCollect,
   CheckInRanking,
 }
-export interface SongAuthorInfo {
-  name: string
-  id: number
-}
 export enum SongFrom {
   Custom,
   Netease,
   FiveSing,
   Kugou,
 }
-export interface SongsInfo {
-  id: number
-  key: string
-  name: string
-  translateName?: string
-  author: string[]
-  url: string
-  from: SongFrom
-  language: string[]
-  description?: string
-  tags?: string[]
-  createTime: number
-  updateTime: number
-  // paidSong: boolean
-  options?: SongRequestOption
-  cover?: string
-}
-export interface SongRequestOption {
-  needJianzhang: boolean
-  needTidu: boolean
-  needZongdu: boolean
-  scMinPrice?: number
-  fanMedalMinLevel?: number
-}
 export enum SongLanguage {
-  Chinese, // 中文
-  English, // 英文
-  Japanese, // 日文
-  Spanish, // 西班牙文
-  French, // 法文
-  Other, // 其他
+  Chinese,
+  English,
+  Japanese,
+  Spanish,
+  French,
+  Other,
 }
 export enum LevelTypes {
   Info,
@@ -425,14 +266,6 @@ export enum LevelTypes {
   Warn,
   Error,
 }
-export interface NotifactionInfo {
-  id: string
-  createTime: number
-  title: string
-  message: string
-  type: LevelTypes
-}
-// SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION
 export enum ViolationTypes {
   SENSITIVE_TERM,
   HATE,
@@ -441,73 +274,6 @@ export enum ViolationTypes {
   POLITICS,
   ADVERTISING,
   AGGRESSION,
-}
-export interface QAReviewInfo {
-  isApproved: boolean
-  saftyScore: number
-  violationType: ViolationTypes[]
-}
-export interface QAInfo {
-  id: number
-  sender: UserBasicInfo
-  senderBiliAuthInfo?: BiliAuthBaseModel
-  target: UserBasicInfo
-  question: { message: string }
-  answer?: { message: string; createdAt: number }
-  isReaded?: boolean
-  isSenderRegisted: boolean
-  isPublic: boolean
-  senderAllowsPublic?: boolean | null
-  isFavorite: boolean
-  sendAt: number
-  isAnonymous: boolean
-  isSenderBiliAuthed: boolean
-
-  answerImages?: UploadFileResponse[]
-  questionImages?: UploadFileResponse[]
-
-  tag?: string
-  reviewResult?: QAReviewInfo
-  anonymousName?: string
-  anonymousEmail?: string
-}
-export interface LotteryUserInfo {
-  name: string
-  uId: number
-  level?: number
-  avatar: string
-  location?: string
-  isVIP?: boolean
-  card?: LotteryUserCardInfo
-  visiable: boolean
-}
-export interface LotteryUserCardInfo {
-  name: string
-  level: number
-  guardLevel: number
-  isGuard: boolean
-  isCharge: boolean
-}
-export interface ScheduleWeekInfo {
-  year: number
-  week: number
-  version?: string
-  days: ScheduleDayInfo[][]
-}
-export interface ScheduleDayInfo {
-  title: string | null
-  tag: string | null
-  tagColor: string | null
-  time: string | null
-  id: string | null
-}
-
-export interface BatchScheduleRequest {
-  startYear: number
-  startWeek: number
-  count: number
-  dayOfWeek: number
-  schedule: ScheduleDayInfo
 }
 export enum ThemeType {
   Auto = 'auto',
@@ -518,54 +284,6 @@ export enum DuplicateVideoPolicy {
   MergeRecommendations,
   Reject,
 }
-export interface VideoCollectCreateModel {
-  id?: string
-  name: string
-  description: string
-  startAt: number
-  endAt: number
-  maxVideoCount: number
-  minVideoDuration: number
-  maxVideoDuration: number
-  allowedPartitions: string[]
-  allowUnregisteredUser: boolean
-  maxVideoPerUser: number
-  requireDescription: boolean
-  duplicatePolicy: DuplicateVideoPolicy
-}
-export interface VideoCollectTable {
-  id: string
-  shortId: string
-  name: string
-  description: string
-  createAt: number
-  startAt: number
-  endAt: number
-  isFinish: boolean
-  videoCount: number
-  maxVideoCount: number
-  minVideoDuration: number
-  maxVideoDuration: number
-  allowedPartitions: string[]
-  allowUnregisteredUser: boolean
-  maxVideoPerUser: number
-  requireDescription: boolean
-  duplicatePolicy: DuplicateVideoPolicy
-  owner: UserBasicInfo
-}
-export interface VideoCollectVideo {
-  id: string
-  title: string
-  description: string
-  publistTime: number
-  ownerName: string
-  ownerUId: number
-  cover: string
-  length: number
-  partitionId: number
-  partitionName: string
-  watched?: boolean
-}
 export enum VideoFrom {
   Collect,
   Spam,
@@ -575,88 +293,11 @@ export enum VideoStatus {
   Accepted,
   Rejected,
 }
-export interface VideoSender {
-  sendAt: number
-  sender?: string
-  senderId?: number
-  description?: string
-  from: VideoFrom
-}
-export interface VideoInfo {
-  bvid: string
-  senders: VideoSender[]
-  status: VideoStatus
-}
-export interface VideoCollectDetail {
-  table: VideoCollectTable
-  videos: { info: VideoInfo; video: VideoCollectVideo }[]
-}
-export interface GameInfo {
-  game_id: string
-}
-
-export interface WebsocketInfo {
-  auth_body: string
-  wss_link: string[]
-}
-
-export interface AnchorInfo {
-  room_id: number
-  uname: string
-  uface: string
-  uid: number
-  open_id: string
-}
-
-export interface OpenLiveInfo {
-  game_info: GameInfo
-  websocket_info: WebsocketInfo
-  anchor_info: AnchorInfo
-}
-export interface OpenLiveLotteryUserInfo {
-  name: string
-  uId: number
-  openId: string
-  level?: number
-  avatar: string
-  fans_medal_level: number
-  fans_medal_name: string // 粉丝勋章名
-  fans_medal_wearing_status: boolean // 该房间粉丝勋章佩戴情况
-  guard_level: number
-}
 export enum OpenLiveLotteryType {
   Waiting,
   Result,
   Drawing,
 }
-export interface UpdateLiveLotteryUsersModel {
-  users: OpenLiveLotteryUserInfo[]
-  resultUsers: OpenLiveLotteryUserInfo[]
-  type: OpenLiveLotteryType
-}
-export interface SongRequestInfo {
-  id: number
-  songName: string
-  song?: SongsInfo
-  status: SongRequestStatus
-  from: SongRequestFrom
-  price?: number
-  user?: DanmakuUserInfo
-  createAt: number
-  finishAt?: number
-  isInLocal?: boolean
-}
-export interface DanmakuUserInfo {
-  name: string
-  uid: number
-  oid: string
-  face: string
-  guard_level: number
-  fans_medal_level: number
-  fans_medal_name: string
-  fans_medal_wearing_status: boolean
-}
-
 export enum SongRequestFrom {
   Manual,
   Danmaku,
@@ -670,7 +311,6 @@ export enum QueueFrom {
   Gift,
   Web,
 }
-
 export enum SongRequestStatus {
   Waiting,
   Singing,
@@ -683,29 +323,6 @@ export enum QueueStatus {
   Finish,
   Cancel,
 }
-export interface EventModel {
-  /** Stable source event identity, preserved across RPC and tab forwarding. */
-  eventId?: string
-  id?: number
-  type: EventDataTypes
-  uname: string
-  uface: string
-  uid: number
-  open_id: string
-  msg: string
-  time: number
-  num: number
-  price: number
-  mystery_box_name?: string | null
-  mystery_box_price?: number | null
-  guard_level: GuardLevel
-  fans_medal_level: number
-  fans_medal_name: string
-  fans_medal_wearing_status: boolean
-  emoji?: string
-  ouid: string
-  gift_icon?: string
-}
 export enum EventDataTypes {
   Guard,
   SC,
@@ -716,141 +333,36 @@ export enum EventDataTypes {
   Enter,
   Follow,
 }
-export interface ResponseQueueModel {
-  id: number
-  status: QueueStatus
-  from: QueueFrom
-  giftPrice?: number | null
-  mysteryBoxName?: string | null
-  mysteryBoxPrice?: number | null
-  content?: string
-  user?: DanmakuUserInfo
-  createAt: number
-  finishAt?: number | null
-  isInLocal?: boolean
-}
-export interface ResponseLiveInfoModel {
-  liveId: string
-  isFinish: boolean
-  parentArea: string
-  area: string
-  coverUrl: string
-  danmakusCount: number
-  startAt: number
-  stopAt: number | null
-  title: string
-  totalIncome: number
-  totalIncomeWithGuard: number
-  likeCount: number
-  paymentCount: number
-  interactionCount: number
-}
-export interface ResponseCurrentLiveModel {
-  live: ResponseLiveInfoModel | null
-}
-export interface ResponseLiveRankingEntryModel {
-  ouId: string
-  uName: string
-  uFace?: string | null
-  totalPaid: number
-}
-export interface DanmakuModel {
-  id: string
-  uId: number
-  uName: string
-  type: EventDataTypes // Assuming EventDataTypes is an enum or type available in your TypeScript codebase
-  time: number
-  msg: string | null
-  price: number | null
-  mysteryBoxName?: string | null
-  mysteryBoxPrice?: number | null
-  isEmoji: boolean
-  num: number
-  ouId: string
-}
 export enum SupportTicketType {
   Bug,
   Feature,
   Account,
   Other,
 }
-
 export enum SupportTicketStatus {
   Open,
   InProgress,
   WaitingForUser,
   Resolved,
 }
-
 export enum SupportTicketSource {
   User,
   Assistant,
 }
-
 export enum SupportTicketAuthorType {
   User,
   Staff,
   System,
 }
-
-export interface SupportTicketImage {
-  id: number
-  path: string
-  name: string
-  size: number
-}
-
-export interface SupportTicketMessage {
-  id: number
-  authorType: SupportTicketAuthorType
-  authorUserId?: number | null
-  content: string
-  createTime: number
-  images?: SupportTicketImage[]
-}
-
-export interface SupportTicketSummary {
-  id: number
-  title: string
-  type: SupportTicketType
-  status: SupportTicketStatus
-  source: SupportTicketSource
-  isPublic: boolean
-  emailOnStaffReply: boolean
-  createTime: number
-  updateTime: number
-  lastMessageTime: number
-  userLastReadMessageId?: number | null
-  lastMessageId?: number
-  images: SupportTicketImage[]
-  messages?: SupportTicketMessage[]
-}
-
-export type SupportTicketDetail = SupportTicketSummary & { messages: SupportTicketMessage[] }
-
-export interface CreateSupportTicketRequest {
-  title: string
-  content: string
-  type: SupportTicketType
-  isPublic: boolean
-  emailOnStaffReply: boolean
-  imageFileIds: number[]
-}
-export interface TagInfo {
-  name: string
-  color: string
-}
 export enum GoodsStatus {
-  Normal, // 商品正常
-  // OutOfStock,  // 商品无货
-  Discontinued, // 商品下架
+  Normal,
+  Discontinued,
 }
 export enum GoodsTypes {
   Physical,
   Virtual,
   Service,
 }
-
 export enum ServiceFieldType {
   Text,
   Textarea,
@@ -860,314 +372,10 @@ export enum ServiceFieldType {
   Date,
   Number,
 }
-export interface ServiceField { id: string; label: string; type: ServiceFieldType; required: boolean; options: string[] }
-export interface ServiceConfig { fields: ServiceField[]; rules?: string; estimatedDays?: number; paused: boolean; maxActiveOrders?: number }
-
-
-// 添加密钥选择模式枚举
 export enum KeySelectionMode {
   None,
-  Random, // 随机选择
-  Sequential, // 顺序选择
-}
-
-export interface PointGoodsSetting {
-  guardFree?: { year: number; month: number }
-  guardFreeMonths?: { year: number; month: number }[]
-  allowGuardFreeMinLevel?: GuardLevel
-  guardLevelMonths?: { year: number; month: number }[]
-  allowGuardLevel?: GuardLevel
-}
-
-export interface ResponseSubPointGoodModel {
-  id: number
-  name: string
-  description?: string
-  count?: number
-  price: number
-  tags: string[]
-  type: GoodsTypes
-  collectUrl?: string
-  embedCollectUrl?: boolean
-  isAllowRebuy: boolean
-  maxBuyCount: number
-  canFreeBuy: boolean
-  allowGuardLevel: GuardLevel
-  setting: PointGoodsSetting
-  cover?: UploadFileResponse
-
-  // 虚拟礼物专用（仅管理端/订单快照可能存在）
-  content?: string
-  virtualKeys?: string[]
-  keySelectionMode?: KeySelectionMode
-}
-export interface ResponsePointGoodModel {
-  serviceConfig?: ServiceConfig
-  serviceSummary?: ServiceOrderSummary
-  id: number
-  name: string
-  description: string
-  content?: string
-  count?: number
-  price: number
-  tags: string[]
-  cover?: UploadFileResponse
-  images: string[]
-  status: GoodsStatus
-  type: GoodsTypes
-  isAllowRebuy: boolean
-  maxBuyCount?: number
-  maxSubItemSelections?: number
-  collectUrl?: string
-  embedCollectUrl?: boolean
-  isPinned: boolean
-  createAt: number
-
-  canFreeBuy: boolean
-  allowGuardLevel: GuardLevel
-  setting: PointGoodsSetting
-
-  // 购买状态信息
-  purchasedCount: number
-  soldCount?: number
-  hasPurchased: boolean
-  canPurchase: boolean
-  cannotPurchaseReason?: string
-
-  // 添加虚拟礼物多Key支持
-  virtualKeys?: string[]
-  keySelectionMode?: KeySelectionMode
-  currentKeyIndex?: number
-
-  // 子选项（可多选规格）
-  subItems?: ResponseSubPointGoodModel[]
-}
-
-export interface UploadSubPointGoodsModel {
-  id?: number
-  name: string
-  price: number
-  stock?: number
-  description?: string
-  type?: GoodsTypes
-  tags?: string[]
-  cover?: UploadFileResponse
-  collectUrl?: string
-  embedCollectUrl?: boolean
-  isAllowRebuy?: boolean
-  maxBuyCount?: number
-  content?: string
-  virtualKeys?: string[]
-  keySelectionMode?: KeySelectionMode
-  setting?: PointGoodsSetting
-}
-export interface UploadPointGoodsModel {
-  serviceConfig?: ServiceConfig
-  id?: number
-  name: string
-  count?: number
-  price: number
-  tags: string[]
-  cover?: UploadFileResponse
-  status: GoodsStatus
-  type: GoodsTypes
-  collectUrl?: string
-  embedCollectUrl?: boolean
-  description: string
-  content?: string
-  isAllowRebuy: boolean
-  maxBuyCount?: number
-  maxSubItemSelections?: number
-  isPinned: boolean
-
-  setting: PointGoodsSetting
-
-  // 添加虚拟礼物多Key支持
-  virtualKeys?: string[]
-  keySelectionMode?: KeySelectionMode
-  currentKeyIndex?: number
-
-  // 子选项（可多选规格）
-  subItems?: UploadSubPointGoodsModel[]
-}
-export interface AddressInfo {
-  id?: string
-  province: string
-  city?: string
-  district?: string
-  street?: string
-  address: string
-  phone: number
-  name: string
-}
-export interface BiliAuthBaseModel {
-  id: number
-  userId: number
-  openId: string
-  avatar: string
-  name: string
-  createAt: number
-}
-export interface BiliAuthModel extends BiliAuthBaseModel {
-  address?: AddressInfo[]
-  guardInfo: Record<number, GuardLevel>
-}
-export interface ResponsePointUserModel {
-  point: number
-  orderCount: number
-  isAuthed: boolean
-  info: BiliAuthBaseModel
-  updateAt: number
-  createAt: number
-
-  trackingNumber?: string
-  expressCompany?: string
-}
-
-export interface ResponsePointGuardDuplicatePointValues {
-  jianzhang: number
-  tidu: number
-  zongdu: number
-}
-
-export interface ResponsePointGuardDuplicateLevelCounts {
-  jianzhang: number
-  tidu: number
-  zongdu: number
-  total: number
-}
-
-export interface ResponsePointGuardDuplicateUserModel {
-  guardOUId: string
-  info: BiliAuthBaseModel
-  duplicateGroups: number
-  duplicateEventCount: number
-  duplicateLiveCount: number
-  duplicateCount: number
-  affectedLiveCount: number
-  levelCounts: ResponsePointGuardDuplicateLevelCounts
-  estimatedPoints: number
-  firstEventAt: number
-  lastEventAt: number
-}
-
-export interface ResponsePointGuardDuplicateEntryModel {
-  eventId: number
-  time: number
-  message: string
-  guardLevel: number
-  num: number
-  price: number
-  isDuplicate: boolean
-}
-
-export interface ResponsePointGuardDuplicateGroupModel {
-  sourceType: string
-  liveId?: string | null
-  liveTitle?: string | null
-  anchorAt: number
-  lastAt: number
-  duplicateCount: number
-  levelCounts: ResponsePointGuardDuplicateLevelCounts
-  entries: ResponsePointGuardDuplicateEntryModel[]
-}
-
-export interface ResponsePointGuardDuplicateScanModel {
-  from: number
-  to: number
-  windowSeconds: number
-  livesScanned: number
-  guardEventsScanned: number
-  liveGuardEventsScanned: number
-  duplicatedUserCount: number
-  duplicateGroupCount: number
-  duplicateEventCount: number
-  duplicateLiveCount: number
-  currentPointValues: ResponsePointGuardDuplicatePointValues
-  users: ResponsePointGuardDuplicateUserModel[]
-}
-
-export interface ResponsePointGuardDuplicateDetailModel {
-  user: ResponsePointGuardDuplicateUserModel
-  currentPointValues: ResponsePointGuardDuplicatePointValues
-  groups: ResponsePointGuardDuplicateGroupModel[]
-}
-
-export interface RequestPointGuardDuplicatePointValues {
-  jianzhang: number
-  tidu: number
-  zongdu: number
-}
-
-export interface RequestApplyPointGuardDuplicateFixModel {
-  dayCount: number
-  windowSeconds: number
-  includeLiving: boolean
-  includeFinished: boolean
-  excludeFixed: boolean
-  deductPoints: boolean
-  deleteEvents: boolean
-  cleanLiveData: boolean
-  useManualPointValues: boolean
-  manualPointValues?: RequestPointGuardDuplicatePointValues | null
-  guardOuIds?: string[] | null
-}
-
-export interface ResponsePointGuardDuplicateApplyResult {
-  batchId: string
-  selectedUserCount: number
-  fixRowsInserted: number
-  pointHistoryInserted: number
-  totalPointsDeducted: number
-  eventRowsDeleted: number
-  tempEventRowsDeleted: number
-  liveRowsUpdated: number
-  liveDuplicateRowsRemoved: number
-}
-export interface ResponsePointOrder2OwnerModel {
-  serviceData?: ServiceOrderData
-  instanceOf: 'owner'
-  id: number
-  point: number
-  vTsuruId: number
-  type: GoodsTypes
-  customer: BiliAuthModel
-  address?: AddressInfo
-  goods: ResponsePointGoodModel
-  count: number
-  createAt: number
-  updateAt: number
-  status: PointOrderStatus
-  remark?: string
-  trackingNumber?: string
-  expressCompany?: string
-  selectedSubItems?: ResponseSelectedSubItemOrderInfo[]
-}
-
-export interface ResponsePointOrder2UserModel {
-  serviceData?: ServiceOrderData
-  instanceOf: 'user'
-  id: number
-  point: number
-  type: GoodsTypes
-  address?: AddressInfo
-  goods: ResponsePointGoodModel
-  status: PointOrderStatus
-  createAt: number
-  remark?: string
-
-  trackingNumber?: string
-  expressCompany?: string
-  selectedSubItems?: ResponseSelectedSubItemOrderInfo[]
-}
-
-export interface ResponseSelectedSubItemOrderInfo {
-  subItemId: number
-  nameSnapshot: string
-  priceSnapshot: number
-  quantity: number
-  typeSnapshot: GoodsTypes
-  assignedVirtualKeys: string[]
+  Random,
+  Sequential,
 }
 export enum PointOrderStatus {
   Pending,
@@ -1177,8 +385,6 @@ export enum PointOrderStatus {
   Rejected,
   Cancelled,
 }
-
-export interface ServiceOrderSummary { active: boolean; appointmentAt?: number; deliveryUrl?: string; cancelReason?: string }
 export enum ServiceTimelineActor {
   Buyer,
   Owner,
@@ -1191,46 +397,6 @@ export enum ServiceTimelineType {
   Delivery,
   Refund,
 }
-export interface ServiceAnswer { fieldId: string; label: string; type: ServiceFieldType; value: string | string[] }
-export interface ServiceTimelineEntry { id: string; createdAt: number; actor: ServiceTimelineActor; type: ServiceTimelineType; message: string; status?: PointOrderStatus }
-export interface ServiceOrderData { answers: ServiceAnswer[]; appointmentAt?: number; deliveryUrl?: string; cancelReason?: string; refundedAt?: number; refundHistoryId?: number; timeline: ServiceTimelineEntry[] }
-
-// 积分历史记录的 extra 字段类型定义
-// 为了保持向后兼容并避免类型检查问题，使用通用的 extra 接口，但提供详细注释
-export interface PointHistoryExtraBase {
-  user?: UserBasicInfo
-  // Danmaku 类型特有字段
-  danmaku?: DanmakuModel
-  // Manual 类型特有字段
-  reason?: string
-  // Use 类型特有字段
-  goods?: ResponsePointGoodModel | null
-  isDiscontinued?: boolean
-  remark?: string
-  selectedSubItems?: ResponseSelectedSubItemOrderInfo[]
-  // DailyFirstInteraction 类型特有字段
-  interactionType?: string // 'danmaku' | 'gift'
-}
-
-export interface ResponsePointHisrotyModel {
-  point: number
-  ouId: string
-  type: EventDataTypes
-  from: PointFrom
-  createAt: number
-  count: number
-
-  /**
-   * 根据 from 字段，extra 包含不同的数据：
-   * - PointFrom.Danmaku: { user: UserBasicInfo, danmaku: DanmakuModel }
-   * - PointFrom.Manual: { user: UserBasicInfo, reason?: string }
-   * - PointFrom.Use: { user: UserBasicInfo, goods: ResponsePointGoodModel | null, isDiscontinued: boolean, remark?: string, selectedSubItems?: ResponseSelectedSubItemOrderInfo[] }
-   * - PointFrom.CheckIn: { user: UserBasicInfo }
-   * - PointFrom.DailyFirstInteraction: { user: UserBasicInfo, interactionType: string, danmaku?: DanmakuModel | null }
-   */
-  extra?: PointHistoryExtraBase
-}
-
 export enum PointFrom {
   Danmaku,
   Manual,
@@ -1238,138 +404,7 @@ export enum PointFrom {
   CheckIn,
   DailyFirstInteraction,
 }
-
-export interface ResponseUserIndexModel {
-  notification: string
-  videos: VideoCollectVideo[]
-  links: { [key: string]: string }
-  linkOrder?: string[]
-}
-
-// 签到排行信息
-export interface CheckInRankingInfo {
-  ouId: string
-  name: string
-  consecutiveDays: number
-  points: number
-  lastCheckInTime: number
-  isAuthed: boolean
-  monthlyCheckInCount?: number // 本月签到次数
-  totalCheckInCount?: number // 总签到次数
-}
-
-// 签到结果
-export interface CheckInResult {
-  success: boolean
-  message: string
-  points: number
-  consecutiveDays: number
-  todayRank: number
-}
-
-export interface UploadFileResponse {
-  id: number
-  path: string
-  name: string
-  hash: string
-  size?: number
-}
-
-/**
- * 扩展的文件信息接口，用于文件上传组件
- */
-export interface ExtendedUploadFileInfo {
-  id: string // 文件唯一标识符
-  name: string // 文件名称
-  status: 'uploading' | 'finished' | 'error' | 'removed' // 上传状态
-  thumbnailUrl?: string // 缩略图URL
-  file?: File // 可选的文件对象
-}
-
-// 弹幕投票相关类型定义
 export enum VoteResultMode {
-  ByCount = 0, // 按人数计票
-  ByGiftValue = 1, // 按礼物价值计票
-}
-
-export interface APIFileModel {
-  id: number
-  path: string
-  name: string
-  hash: string
-  size?: number
-}
-
-export interface VoteConfig {
-  isEnabled: boolean
-  showResults: boolean
-  voteDurationSeconds: number
-  voteCommand: string
-  voteEndCommand: string
-  voteTitle: string
-  allowMultipleVotes: boolean
-  allowCustomOptions: boolean
-  defaultOptions: string[]
-  theme: string
-  roundedCorners: boolean
-  displayPosition: string
-  allowGiftVoting: boolean
-  minGiftPrice?: number
-  voteResultMode: VoteResultMode
-}
-
-export interface VoteOption {
-  text: string
-  count: number
-  voters: string[]
-  percentage?: number
-}
-
-export interface VoteOptionDto {
-  index: number
-  text: string
-  count: number
-  percentage: number
-}
-
-export interface ResponseVoteSession {
-  id: number
-  title: string
-  options: VoteOption[]
-  /** 毫秒时间戳（后端 Utils.ToUnix 返回毫秒） */
-  startTime: number
-  /** 毫秒时间戳（后端 Utils.ToUnix 返回毫秒） */
-  endTime?: number
-  isActive: boolean
-  totalVotes: number
-  creator?: UserBasicInfo
-}
-
-export interface RequestCreateBulletVote {
-  title: string
-  options: string[]
-  allowMultipleVotes: boolean
-  durationSeconds?: number
-}
-
-export interface RequestExtendVote {
-  seconds: number
-}
-
-export interface VoteOBSData {
-  sessionId: number
-  title: string
-  options: VoteOptionDto[]
-  totalVotes: number
-  showResults: boolean
-  isActive: boolean
-  isEnding: boolean
-  winnerOption?: string | null
-  theme: string
-  roundedCorners: boolean
-  displayPosition: string
-  /** 毫秒时间戳（后端 Utils.ToUnix 返回毫秒） */
-  startTime: number
-  /** 毫秒时间戳（后端 Utils.ToUnix 返回毫秒） */
-  endTime?: number
+  ByCount = 0,
+  ByGiftValue = 1,
 }

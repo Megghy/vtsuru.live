@@ -1,8 +1,8 @@
 import { useMessage } from 'naive-ui'
 import { computed, nextTick, ref } from 'vue'
 
-import { QueryGetAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import { getApiOrgOrgIdAnalyze } from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 
 import type { AnalyzeData, SummaryRange } from '../types'
 import type { OrgContext } from './useOrgContext'
@@ -21,7 +21,7 @@ export function useOrgAnalyze(ctx: OrgContext) {
     loading.value = true
     try {
       data.value = unwrapOk(
-        await QueryGetAPI<AnalyzeData>(`${ORG_API_URL}${ctx.orgId.value}/analyze`),
+        (await getApiOrgOrgIdAnalyze(ctx.orgId.value)) as any,
         '加载分析数据失败',
       )
       await nextTick()

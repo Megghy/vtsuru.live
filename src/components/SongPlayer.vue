@@ -6,8 +6,7 @@ import APlayer from 'vue3-aplayer'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { SONG_API_URL } from '@/shared/config'
+import { getApiSongListGetNeteaseLyric } from '@/api/generated/song-list/song-list'
 
 const props = defineProps<{
   song: SongsInfo | undefined
@@ -46,7 +45,12 @@ function OnPlayMusic(song: SongsInfo) {
 }
 async function GetLyric(song: SongsInfo) {
   emits('update:isLrcLoading', song.key)
-  QueryGetAPI<{ lyric: string; tlyric: string }>(`${SONG_API_URL}get-netease-lyric`, { id: song.id })
+  ;(
+    getApiSongListGetNeteaseLyric({ id: song.id }) as unknown as Promise<{
+      code: number
+      data: { lyric: string; tlyric: string }
+    }>
+  )
     .then((data) => {
       console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
       if (data.code == 200) {

@@ -2,10 +2,9 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { QueryGetAPI } from '@/api/query'
 import type { VoteOBSData } from '@/api/api-models'
+import { getApiVoteObsData, getApiVoteObsHash } from '@/api/generated/bullet-vote/bullet-vote'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
-import { VOTE_API_URL } from '@/shared/config'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
 const route = useRoute()
@@ -42,7 +41,10 @@ async function pollHash() {
     if (targetUserId.value) params.id = targetUserId.value
     if (token.value) params.token = token.value
 
-    const res = await QueryGetAPI<string>(`${VOTE_API_URL}obs-hash`, params)
+    const res = (await getApiVoteObsHash(params)) as unknown as {
+      code: number
+      data?: string
+    }
     if (res.code === 200) {
       const hash = res.data || 'empty'
       if (hash === 'empty') {
@@ -69,7 +71,10 @@ async function fetchFullData() {
     if (targetUserId.value) params.id = targetUserId.value
     if (token.value) params.token = token.value
 
-    const res = await QueryGetAPI<VoteOBSData>(`${VOTE_API_URL}obs-data`, params)
+    const res = (await getApiVoteObsData(params)) as unknown as {
+      code: number
+      data?: VoteOBSData
+    }
     if (res.code === 200 && res.data) {
       voteData.value = res.data
     } else {

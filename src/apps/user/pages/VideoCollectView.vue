@@ -3,9 +3,8 @@ import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive
 import { onMounted, ref } from 'vue'
 
 import type { UserInfo, VideoCollectTable } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiVideoCollectGetActive } from '@/api/generated/video-collect/video-collect'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
-import { VIDEO_COLLECT_API_URL } from '@/shared/config'
 
 const props = defineProps<{
   userInfo: UserInfo
@@ -19,9 +18,13 @@ const videoTables = ref<VideoCollectTable[]>([])
 async function get() {
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<VideoCollectTable[]>(`${VIDEO_COLLECT_API_URL}get-active`, {
-      id: props.userInfo.id,
-    })
+    const data = (await getApiVideoCollectGetActive({
+      id: String(props.userInfo.id),
+    })) as unknown as {
+      code: number
+      message?: string
+      data?: VideoCollectTable[]
+    }
     if (data.code === 200) {
       videoTables.value = data.data ?? []
     } else {

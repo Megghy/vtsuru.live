@@ -53,12 +53,21 @@ import type {
   VoteConfig,
   VoteOBSData,
 } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiVoteGetActive,
+  getApiVoteGetConfig,
+  getApiVoteHistory,
+  postApiVoteCreate,
+  postApiVoteDelete,
+  postApiVoteEnd,
+  postApiVoteExtend,
+  postApiVoteSaveConfig,
+} from '@/api/generated/bullet-vote/bullet-vote'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
 import { getVoteStandings, voteOutcomeLabel } from '@/shared/utils/voteStandings'
 import { createVotePreviewScene, type VotePreviewScene } from './votePreview'
-import { CURRENT_HOST, VOTE_API_URL } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { copyToClipboard } from '@/shared/utils'
 import { formatCountdown, remainingMs } from '@/shared/utils/countdown'
@@ -351,7 +360,10 @@ const activePreviewCardData = computed<VoteOBSData | null>(() => {
 // API 操作
 async function fetchVoteConfig() {
   try {
-    const res = await QueryGetAPI<VoteConfig>(`${VOTE_API_URL}get-config`)
+    const res = (await getApiVoteGetConfig()) as unknown as {
+      code: number
+      data?: VoteConfig
+    }
     if (res.code === 200 && res.data) {
       voteConfig.value = { ...voteConfig.value, ...res.data }
       previewTheme.value = (res.data.theme as any) || 'glass'
@@ -365,7 +377,7 @@ async function fetchVoteConfig() {
 async function saveVoteConfig() {
   try {
     isLoading.value = true
-    const res = await QueryPostAPI(`${VOTE_API_URL}save-config`, voteConfig.value)
+    const res = await postApiVoteSaveConfig(voteConfig.value as any)
     if (res.code === 200) {
       message.success('设置已保存')
       showSettingsModal.value = false
@@ -381,7 +393,10 @@ async function saveVoteConfig() {
 
 async function fetchActiveVote() {
   try {
-    const res = await QueryGetAPI<ResponseVoteSession>(`${VOTE_API_URL}get-active`)
+    const res = (await getApiVoteGetActive()) as unknown as {
+      code: number
+      data?: ResponseVoteSession
+    }
     if (res.code === 200) {
       currentVote.value = res.data
     }
@@ -392,7 +407,10 @@ async function fetchActiveVote() {
 
 async function fetchHistory() {
   try {
-    const res = await QueryGetAPI<ResponseVoteSession[]>(`${VOTE_API_URL}history`, { limit: 15 })
+    const res = (await getApiVoteHistory({ limit: 15 })) as unknown as {
+      code: number
+      data?: ResponseVoteSession[]
+    }
     if (res.code === 200 && res.data) {
       voteHistory.value = res.data
     }
@@ -422,7 +440,11 @@ async function createVote() {
 
   try {
     isLoading.value = true
-    const res = await QueryPostAPI<ResponseVoteSession>(`${VOTE_API_URL}create`, payload)
+    const res = (await postApiVoteCreate(payload as any)) as unknown as {
+      code: number
+      data?: ResponseVoteSession
+      message?: string
+    }
     if (res.code === 200 && res.data) {
       message.success('投票已发起！')
       currentVote.value = res.data
@@ -441,7 +463,11 @@ async function extendDuration(seconds: number) {
   if (!currentVote.value) return
   try {
     isLoading.value = true
-    const res = await QueryGetAPI<ResponseVoteSession>(`${VOTE_API_URL}extend`, { seconds })
+    const res = (await postApiVoteExtend({ seconds })) as unknown as {
+      code: number
+      data?: ResponseVoteSession
+      message?: string
+    }
     if (res.code === 200 && res.data) {
       message.success(`已延长 ${seconds} 秒`)
       currentVote.value = res.data
@@ -457,7 +483,7 @@ async function endVote() {
   if (!currentVote.value) return
   try {
     isLoading.value = true
-    const res = await QueryGetAPI<ResponseVoteSession>(`${VOTE_API_URL}end`, { id: currentVote.value.id })
+    const res = await postApiVoteEnd({ id: currentVote.value.id })
     if (res.code === 200) {
       message.success('投票已结束并生成结算快照')
       currentVote.value = null
@@ -474,7 +500,7 @@ async function endVote() {
 
 async function deleteHistoryVote(id: number) {
   try {
-    const res = await QueryGetAPI(`${VOTE_API_URL}delete`, { id })
+    const res = await postApiVoteDelete({ id })
     if (res.code === 200) {
       message.success('已删除该记录')
       await fetchHistory()

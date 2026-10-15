@@ -1,16 +1,25 @@
-import type { PointOrderStatus, ResponsePointOrder2OwnerModel } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL, POINT_API_URL } from '@/shared/config'
+import type { PointOrderStatus } from '@/api/api-models'
+import {
+  getApiOrgOrgIdPointsOrders,
+  postApiOrgOrgIdPointsOrdersExpress,
+  postApiOrgOrgIdPointsOrdersStatus,
+} from '@/api/generated/org/org'
+import {
+  getApiPointGetOrders,
+  postApiPointBatchUpdateOrderStatus,
+  postApiPointUpdateOrderExpress,
+} from '@/api/generated/point/point'
+import { unwrapOk } from '@/api/query'
 
 export type PointOrderScope = { kind: 'owner' } | { kind: 'org'; orgId: number; streamerId?: number; customer?: number }
 
-export async function fetchOwnerOrders(scope: PointOrderScope): Promise<ResponsePointOrder2OwnerModel[]> {
+export async function fetchOwnerOrders(scope: PointOrderScope) {
   if (scope.kind === 'owner') {
-    return unwrapOk(await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-orders`), '获取订单失败')
+    return unwrapOk(await getApiPointGetOrders(), '获取订单失败')
   }
 
   return unwrapOk(
-    await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${ORG_API_URL}${scope.orgId}/points/orders`, {
+    await getApiOrgOrgIdPointsOrders(scope.orgId, {
       ...(scope.streamerId ? { streamerId: scope.streamerId } : {}),
       ...(scope.customer ? { customerId: scope.customer } : {}),
     }),
@@ -27,14 +36,14 @@ export async function updateOrdersStatus(
 
   if (scope.kind === 'owner') {
     unwrapOk(
-      await QueryPostAPI<number[]>(`${POINT_API_URL}batch-update-order-status`, { orderIds: ids, status }),
+      await postApiPointBatchUpdateOrderStatus({ orderIds: ids, status }),
       '更新订单状态失败',
     )
     return
   }
 
   unwrapOk(
-    await QueryPostAPI<number>(`${ORG_API_URL}${scope.orgId}/points/orders/status`, { orderIds: ids, status }),
+    await postApiOrgOrgIdPointsOrdersStatus(scope.orgId, { orderIds: ids, status }),
     '更新订单状态失败',
   )
 }
@@ -50,7 +59,7 @@ export async function updateOrderExpress(
 
   if (scope.kind === 'owner') {
     unwrapOk(
-      await QueryPostAPI<void>(`${POINT_API_URL}update-order-express`, {
+      await postApiPointUpdateOrderExpress({
         id: orderId,
         trackingNumber: tn,
         expressCompany: (expressCompany ?? '').trim(),
@@ -61,7 +70,7 @@ export async function updateOrderExpress(
   }
 
   unwrapOk(
-    await QueryPostAPI<number>(`${ORG_API_URL}${scope.orgId}/points/orders/express`, {
+    await postApiOrgOrgIdPointsOrdersExpress(scope.orgId, {
       orderId,
       trackingNumber: tn,
       expressCompany: expressCompany?.trim() || undefined,

@@ -4,7 +4,7 @@ import { NAlert, NButton, NEmpty, NIcon, NSpin } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { UserInfo } from '@/api/api-models'
+import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
 import { fetchPublicCheckInRanking } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
@@ -26,7 +26,7 @@ const count = computed<3 | 10>(() => (values.value.count === 10 ? 10 : 3))
 const showMonthly = computed(() => values.value.showMonthly !== false)
 const showTotal = computed(() => values.value.showTotal === true)
 const enabled = computed(() => getEnabledUserFunctions(props.userInfo).has(FunctionTypes.CheckInRanking))
-const query = useUserPageRuntimeQuery({
+const query = useUserPageRuntimeQuery<CheckInRankingInfo[]>({
   key: () => `check-in-ranking:${props.userInfo?.id ?? 0}:${count.value}`,
   ttlMs: 60_000,
   loader: (signal) => fetchPublicCheckInRanking(props.userInfo!.id, count.value, { signal }),

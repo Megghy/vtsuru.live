@@ -1,12 +1,33 @@
 import { isSameDay } from 'date-fns'
 import { computed, ref } from 'vue'
 
-import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import { ACCOUNT_API_URL, USER_CONFIG_API_URL } from '@/shared/config'
+import {
+  postApiAccountBiliAuthComplete,
+  postApiAccountBiliAuthPrepare,
+  postApiAccountBlackListAddBili,
+  postApiAccountBlackListDelete,
+  postApiAccountBlackListDeleteBili,
+  postApiAccountLogin,
+  postApiAccountRefreshToken,
+  postApiAccountRegister,
+  postApiAccountSelf,
+  postApiAccountUpdateEnableFunctions,
+  postApiAccountUpdateSetting,
+  postApiAccountUpdateSingleSetting,
+} from '@/api/generated/account/account'
+import {
+  getApiUserConfigGet,
+  getApiUserConfigGetHash,
+  getApiUserConfigGetUser,
+  postApiUserConfigSet,
+} from '@/api/generated/config/config'
 import { persistedRemoveItem } from '@/shared/storage/persist'
 import { createNaiveUIApi } from '@/shared/utils'
 
-import type { AccountInfo, APIRoot, FunctionTypes } from './api-models'
+import type { AccountControllerTempResponseAloginModel } from '@/api/generated/model/accountControllerTempResponseAloginModel'
+import type { PrepareAccountBiliAuthResponse } from '@/api/generated/model/prepareAccountBiliAuthResponse'
+import type { ResponseAccountInfo } from '@/api/generated/model/responseAccountInfo'
+import type { FunctionTypes } from './api-models'
 import { cookie } from './auth'
 
 // 手动登出后本次标签页会话内不再 dev 自动登录；关闭标签页后恢复。生产构建不会读写该键。
@@ -26,7 +47,7 @@ export function logoutAccount() {
   window.location.reload()
 }
 
-export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
+export const ACCOUNT = ref<ResponseAccountInfo>({} as ResponseAccountInfo)
 export const isLoadingAccount = ref(true)
 export const isLoggedIn = computed<boolean>(() => {
   return ACCOUNT.value.id > 0
@@ -81,7 +102,7 @@ export function UpdateAccountLoop() {
   }, 60 * 1000)
 }
 function refreshCookie(token?: string) {
-  QueryPostAPIWithParams<string>(`${ACCOUNT_API_URL}refresh-token`, { token })
+  postApiAccountRefreshToken()
     .then((data) => {
       if (data.code == 200) {
         cookie.value = {
@@ -96,22 +117,16 @@ function refreshCookie(token?: string) {
     })
 }
 export async function SaveAccountSettings() {
-  return QueryPostAPI(`${ACCOUNT_API_URL}update-setting`, ACCOUNT.value?.settings)
+  return postApiAccountUpdateSetting(ACCOUNT.value?.settings)
 }
 export async function SaveEnableFunctions(functions: FunctionTypes[]) {
-  return QueryPostAPI(`${ACCOUNT_API_URL}update-enable-functions`, functions)
+  return postApiAccountUpdateEnableFunctions(functions)
 }
 export async function SaveSetting(
   name: 'Queue' | 'Point' | 'Index' | 'General' | 'QuestionDisplay' | 'SongRequest' | 'QuestionBox' | 'SendEmail',
   setting: unknown,
 ) {
-  const result = await QueryPostAPIWithParams(
-    `${ACCOUNT_API_URL}update-single-setting`,
-    {
-      name,
-    },
-    setting,
-  )
+  const result = await postApiAccountUpdateSingleSetting(setting, { name })
   return result.message
 }
 export async function UpdateFunctionEnable(func: FunctionTypes) {
@@ -144,76 +159,61 @@ export function useAccount() {
   return ACCOUNT
 }
 
-export async function Register(name: string, email: string, password: string, token: string): Promise<APIRoot<string>> {
-  return QueryPostAPI<string>(`${ACCOUNT_API_URL}register`, {
-    name,
-    email,
-    password,
-    token,
-  })
+export async function Register(name: string, email: string, password: string, token: string) {
+  return postApiAccountRegister(
+    { name, email, password },
+    { headers: { Turnstile: token } },
+  )
 }
 
-export interface AccountSession {
-  account: AccountInfo
-  token: string
-}
+export type AccountSession = AccountControllerTempResponseAloginModel
 
 export function applyAccountSession(session: AccountSession) {
   ACCOUNT.value = session.account
   cookie.value = { cookie: session.token, refreshDate: Date.now() }
 }
 
-export interface BiliAccountProof {
-  proof: string
-  userId: number
-  linked: boolean
-  expiresAt: number
-}
+export type BiliAccountProof = PrepareAccountBiliAuthResponse
 
 export async function prepareBiliAccount(key: string) {
-  return QueryPostAPI<BiliAccountProof>(`${ACCOUNT_API_URL}bili-auth/prepare`, { key })
+  return postApiAccountBiliAuthPrepare({ key })
 }
 
 export async function completeBiliAccount(proof: string, password?: string, resetPassword = false) {
-  return QueryPostAPI<AccountSession>(`${ACCOUNT_API_URL}bili-auth/complete`, { proof, password, resetPassword })
+  return postApiAccountBiliAuthComplete({ proof, password, resetPassword })
 }
 
-export async function Login(nameOrEmail: string, password: string): Promise<APIRoot<AccountSession>> {
-  return QueryPostAPI<AccountSession>(`${ACCOUNT_API_URL}login`, {
-    nameOrEmail,
-    password,
-  })
+export async function Login(nameOrEmail: string, password: string) {
+  return postApiAccountLogin({ nameOrEmail, password })
 }
-export async function Self(token?: string): Promise<APIRoot<AccountInfo>> {
-  return QueryPostAPIWithParams<AccountInfo>(`${ACCOUNT_API_URL}self`, token ? { token } : undefined)
+export async function Self(token?: string) {
+  return postApiAccountSelf(
+    token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+  )
 }
 export function isInBiliBlackList(ouid?: string | null) {
   return !!ouid && Object.hasOwn(ACCOUNT.value.biliBlackList ?? {}, ouid)
 }
 
 /** id 为后端 OUId（uid 派生 Guid 或开放平台 open_id，见 GuidUtils.toOuid）；成功后同步本地账户的黑名单 */
-export async function AddBiliBlackList(id: string, name: string): Promise<APIRoot<unknown>> {
-  const resp = await QueryGetAPI<unknown>(`${ACCOUNT_API_URL}black-list/add-bili`, { id, name })
+export async function AddBiliBlackList(id: string, name: string) {
+  const resp = await postApiAccountBlackListAddBili({ id, name })
   if (resp.code === 200) ACCOUNT.value.biliBlackList = { ...ACCOUNT.value.biliBlackList, [id]: name }
   return resp
 }
-export async function DelBiliBlackList(id: string): Promise<APIRoot<unknown>> {
-  const resp = await QueryGetAPI<unknown>(`${ACCOUNT_API_URL}black-list/del-bili`, { id })
+export async function DelBiliBlackList(id: string) {
+  const resp = await postApiAccountBlackListDeleteBili({ id })
   if (resp.code === 200) {
     const { [id]: _removed, ...rest } = ACCOUNT.value.biliBlackList ?? {}
     ACCOUNT.value.biliBlackList = rest
   }
   return resp
 }
-export async function DelBlackList(id: number): Promise<APIRoot<unknown>> {
-  return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/del`, {
-    id,
-  })
+export async function DelBlackList(id: number) {
+  return postApiAccountBlackListDelete({ id })
 }
 export async function downloadConfigDirect(name: string) {
-  return QueryGetAPI<string>(`${USER_CONFIG_API_URL}get`, {
-    name,
-  })
+  return getApiUserConfigGet({ name })
 }
 export type ConfigStatus = 'success' | 'error' | 'notfound'
 export async function DownloadConfig<T>(
@@ -232,10 +232,9 @@ export async function DownloadConfig<T>(
     }
 > {
   try {
-    const resp = await QueryGetAPI<string>(USER_CONFIG_API_URL + (id ? 'get-user' : 'get'), {
-      name,
-      id,
-    })
+    const resp = id
+      ? await getApiUserConfigGetUser({ name, id })
+      : await getApiUserConfigGet({ name })
     if (resp.code == 200) {
       console.log(`已获取配置文件: ${name}`)
       return {
@@ -269,11 +268,7 @@ export async function DownloadConfig<T>(
 }
 export async function UploadConfig(name: string, data: unknown, isPublic: boolean = false) {
   try {
-    const resp = await QueryPostAPI(`${USER_CONFIG_API_URL}set`, {
-      name,
-      json: JSON.stringify(data),
-      public: isPublic,
-    })
+    const resp = await postApiUserConfigSet({ name, json: JSON.stringify(data), public: isPublic })
     if (resp.code == 200) {
       console.log(`已保存配置文件至服务器:${name}`)
       return true
@@ -287,9 +282,7 @@ export async function UploadConfig(name: string, data: unknown, isPublic: boolea
 }
 export async function GetConfigHash(name: string) {
   try {
-    const resp = await QueryGetAPI<string>(`${USER_CONFIG_API_URL}get-hash`, {
-      name,
-    })
+    const resp = await getApiUserConfigGetHash({ name })
     if (resp.code == 200) {
       return resp.data
     } else {

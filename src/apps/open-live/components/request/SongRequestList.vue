@@ -167,7 +167,7 @@ async function updateSettings() {
             @update:checked="
               (value) => {
                 if (songRequest.configCanEdit) {
-                  const songRequestSettings = accountInfo.value?.settings?.songRequest
+                  const songRequestSettings = accountInfo?.settings?.songRequest
                   if (!songRequestSettings) return
                   songRequestSettings.isReverse = value
                   updateSettings()

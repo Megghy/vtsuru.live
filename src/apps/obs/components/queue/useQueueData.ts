@@ -3,8 +3,7 @@ import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { ResponseQueueModel, Setting_Queue } from '@/api/api-models'
 import { QueueFrom, QueueStatus } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { QUEUE_API_URL } from '@/shared/config'
+import { getApiQueueGetActiveAndSettings } from '@/api/generated/queue/queue'
 import { sortByQueueType } from '@/shared/utils/queue'
 
 export function useQueueData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
@@ -89,12 +88,14 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
     try {
       const rawId = toValue(currentId)
       const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
-      const params = idStr ? { id: idStr } : {}
+      const params = idStr ? { id: Number(idStr) } : {}
 
-      const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(
-        `${QUEUE_API_URL}get-active-and-settings`,
+      const data = (await getApiQueueGetActiveAndSettings(
         params,
-      )
+      )) as unknown as {
+        code: number
+        data: { queue: ResponseQueueModel[]; setting: Setting_Queue }
+      }
 
       if (data.code === 200) {
         return data.data

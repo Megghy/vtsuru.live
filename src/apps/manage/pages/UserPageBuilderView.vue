@@ -265,7 +265,7 @@ function focusPublishValidationIssue(issue: UserPageValidationIssue) {
   }
   editor.publishModal.value = false
   const request = editor.validationFocusRequest.value
-  if (request?.scope === 'settings') globalBgModal.value = true
+  if (request?.scope === 'settings') openThemeDrawer('global')
   else if (
     request?.scope === 'page' &&
     editor.currentPage.value.mode === 'block' &&

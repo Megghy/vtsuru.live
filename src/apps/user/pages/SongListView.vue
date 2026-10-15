@@ -5,10 +5,13 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import { DownloadConfig, useAccount } from '@/api/account'
 import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
+import {
+  getApiLiveRequestGetActiveAndSettings,
+  postApiLiveRequestAddFromWeb,
+} from '@/api/generated/live-request/live-request'
+import { getApiSongListGet } from '@/api/generated/song-list/song-list'
 import type { BiliProfile } from '@/apps/user-page/types'
 import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
-import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/shared/config'
 import { SongListTemplateMap } from '@/shared/config/templates'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
@@ -81,12 +84,13 @@ async function getSongRequestInfo() {
   if (!props.userInfo?.id) return { songs: [], setting: settings.value }
 
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
-      `${SONG_REQUEST_API_URL}get-active-and-settings`,
-      {
-        id: props.userInfo.id,
-      },
-    )
+    const data = (await getApiLiveRequestGetActiveAndSettings({
+      id: props.userInfo.id,
+    })) as unknown as {
+      code: number
+      data: { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+      message?: string
+    }
 
     if (data.code === 200) {
       return data.data
@@ -113,9 +117,13 @@ async function getSongs() {
   isDataLoading.value = true
 
   try {
-    const data = await QueryGetAPI<SongsInfo[]>(`${SONG_API_URL}get`, {
-      id: props.userInfo.id,
-    })
+    const data = (await getApiSongListGet({
+      id: String(props.userInfo.id),
+    })) as unknown as {
+      code: number
+      data: SongsInfo[]
+      message?: string
+    }
 
     if (data.code === 200) {
       currentData.value = data.data || []
@@ -205,9 +213,15 @@ async function requestSong(song: SongsInfo) {
       target: props.userInfo.id,
       song: song.key,
     }
-    const data = biliAuth.isAuthed
-      ? await biliAuth.QueryBiliAuthPostAPIWithParams(`${SONG_REQUEST_API_URL}add-from-web`, params)
-      : await QueryPostAPIWithParams(`${SONG_REQUEST_API_URL}add-from-web`, params)
+    const data = (await postApiLiveRequestAddFromWeb(
+      params,
+      biliAuth.isAuthed
+        ? { headers: Object.fromEntries(await biliAuth.getBiliAuthHeaders()) }
+        : undefined,
+    )) as unknown as {
+      code: number
+      message?: string
+    }
 
     if (data.code === 200) {
       message.success('点歌成功')

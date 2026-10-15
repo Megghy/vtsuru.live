@@ -1,6 +1,5 @@
 import type { UploadFileResponse } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
-import { FILE_API_URL } from '@/shared/config'
+import { postApiFilesUpload } from '@/api/generated/file/file'
 
 export const FileStore = {
   Library: 'library',
@@ -31,13 +30,14 @@ export async function uploadFiles(
   try {
     onProgress?.(UploadStage.Preparing)
 
-    const formData = new FormData()
-    for (const file of Array.isArray(files) ? files : [files]) formData.append('files', file)
-    formData.append('store', store)
-
     onProgress?.(UploadStage.Uploading)
 
-    const result = await QueryPostAPI<UploadFileResponse[]>(`${FILE_API_URL}upload`, formData)
+    const fileList = Array.isArray(files) ? files : [files]
+    const result = (await postApiFilesUpload({ files: fileList, store })) as unknown as {
+      code: number
+      message?: string
+      data: UploadFileResponse[]
+    }
     if (result.code === 200) {
       onProgress?.(UploadStage.Success)
       return result.data

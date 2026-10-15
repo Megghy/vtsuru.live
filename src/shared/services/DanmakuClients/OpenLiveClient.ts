@@ -3,8 +3,11 @@ import { clearTimeout, setTimeout } from 'worker-timers'
 
 import type { OpenLiveInfo } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { OPEN_LIVE_API_URL } from '@/shared/config'
+import {
+  getApiOpenLiveHeartbeatInternal,
+  postApiOpenLiveHeartbeat,
+  postApiOpenLiveStart,
+} from '@/api/generated/open-live/open-live'
 import { GuidUtils } from '@/shared/utils'
 
 import BaseDanmakuClient from './BaseDanmakuClient'
@@ -101,13 +104,14 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     message: string
   }> {
     try {
-      const data = await QueryPostAPI<OpenLiveInfo>(
-        `${OPEN_LIVE_API_URL}start`,
-        this.authInfo?.Code ? this.authInfo : undefined,
-        undefined,
-        undefined,
-        { signal, timeoutMs: 15_000 },
-      )
+      const data = (await postApiOpenLiveStart(
+        this.authInfo?.Code ? (this.authInfo as any) : undefined,
+        { signal },
+      )) as unknown as {
+        code: number
+        data: OpenLiveInfo
+        message: string
+      }
       if (data.code == 200) {
         console.log(`[${this.type}] 已获取场次信息`)
         return {
@@ -165,15 +169,16 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     this.heartbeatController = controller
 
     try {
-      const data = await (this.authInfo
-        ? QueryPostAPI<string>(`${OPEN_LIVE_API_URL}heartbeat`, this.authInfo, undefined, undefined, {
+      const data = (await (this.authInfo
+        ? postApiOpenLiveHeartbeat(this.authInfo as any, {
             signal: controller.signal,
-            timeoutMs: 15_000,
           })
-        : QueryGetAPI<string>(`${OPEN_LIVE_API_URL}heartbeat-internal`, undefined, undefined, {
+        : getApiOpenLiveHeartbeatInternal({
             signal: controller.signal,
-            timeoutMs: 15_000,
-          }))
+          }))) as unknown as {
+        code: number
+        message: string
+      }
 
       if (this.isHeartbeatActive(generation) && data.code !== 200) {
         this.reportConnectionLoss(`心跳失败: ${data.message}`)

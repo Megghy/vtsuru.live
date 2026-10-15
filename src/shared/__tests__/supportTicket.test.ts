@@ -33,6 +33,7 @@ function message(partial: Partial<SupportTicketMessage> = {}): SupportTicketMess
     authorType: SupportTicketAuthorType.User,
     content: '第一条',
     createTime: 1,
+    images: [],
     ...partial,
   }
 }

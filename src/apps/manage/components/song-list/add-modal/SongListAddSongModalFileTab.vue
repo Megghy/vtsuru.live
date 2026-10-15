@@ -231,7 +231,7 @@ async function addUploadFileSong() {
     }
 
     message.success(`已添加 ${data.data.length} 首歌曲`)
-    emit('added', data.data)
+    emit('added', data.data as unknown as SongsInfo[])
   } catch (err) {
     message.error(`添加失败: ${err}`)
     console.error(err)

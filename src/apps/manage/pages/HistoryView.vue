@@ -32,9 +32,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 
 import { useAccount } from '@/api/account'
-import { QueryGetAPI } from '@/api/query'
+import { getApiHistoryGetAll } from '@/api/generated/history/history'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import { HISTORY_API_URL } from '@/shared/config'
 
 // 初始化ECharts组件
 use([
@@ -136,7 +135,11 @@ const chartHeight = computed(() => {
  */
 async function getHistory() {
   try {
-    const response = await QueryGetAPI<HistoryModel>(`${HISTORY_API_URL}get-all`)
+    const response = (await getApiHistoryGetAll()) as unknown as {
+      code: number
+      data: HistoryModel
+      message?: string
+    }
     if (response.code === 200) {
       fansHistory.value = response.data.fan.records
       guardHistory.value = response.data.guard.records

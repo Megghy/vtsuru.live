@@ -30,6 +30,10 @@ describe('VideoCollectResultCard.vue', () => {
       length: 185,
       partitionId: 1,
       partitionName: '游戏',
+      createTime: '',
+      updateTime: '',
+      isDeleted: false,
+      sort: 0,
     },
   }
 

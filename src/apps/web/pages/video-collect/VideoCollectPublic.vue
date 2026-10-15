@@ -21,10 +21,12 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { DuplicateVideoPolicy } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiVideoCollectGet,
+  postApiVideoCollectAdd,
+} from '@/api/generated/video-collect/video-collect'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
-import { VIDEO_COLLECT_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
@@ -145,7 +147,13 @@ function currentId() {
 async function loadTable() {
   isPageLoading.value = true
   try {
-    const response = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: currentId() })
+    const response = (await getApiVideoCollectGet({
+      id: currentId(),
+    })) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectDetail
+    }
     table.value =
       response.code === 200
         ? { ...response.data.table, allowedPartitions: [...(response.data.table.allowedPartitions ?? [])] }
@@ -174,11 +182,17 @@ async function addVideo() {
     const response = await requestWithCaptchaRetry({
       getToken: () => token.value,
       refresh: () => refreshCaptcha(turnstile.value),
-      request: (captchaToken) => {
-        const headers: [string, string][] = [['Turnstile', captchaToken]]
-        return isBiliAuthed.value
-          ? biliAuth.QueryBiliAuthPostAPI(`${VIDEO_COLLECT_API_URL}add`, payload, headers)
-          : QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, payload, headers)
+      request: async (captchaToken) => {
+        const headers: Record<string, string> = { Turnstile: captchaToken }
+        if (isBiliAuthed.value) {
+          const authHeaders = await biliAuth.getBiliAuthHeaders()
+          for (const [k, v] of authHeaders) {
+            headers[k] = v
+          }
+        }
+        return postApiVideoCollectAdd(payload as any, {
+          headers,
+        }) as any
       },
     })
     if (response.code !== 200) throw new Error(response.message)

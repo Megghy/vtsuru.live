@@ -122,9 +122,11 @@ const ownerActions = computed(() => {
 })
 const canBuyerCancel = computed(() => props.role === 'buyer' && current.value?.status === PointOrderStatus.Pending)
 
-function normalizeTimestamp(value?: number | null) {
-  if (!value) return undefined
-  return value < 10_000_000_000 ? value * 1000 : value
+function normalizeTimestamp(value?: number | string | null) {
+  if (value == null || value === '') return undefined
+  const n = typeof value === 'number' ? value : Date.parse(value)
+  if (!Number.isFinite(n)) return undefined
+  return n < 10_000_000_000 ? n * 1000 : n
 }
 
 function startOfDay(time: number) {

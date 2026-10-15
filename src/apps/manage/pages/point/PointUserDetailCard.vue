@@ -29,10 +29,12 @@ import type {
   ResponsePointOrder2OwnerModel,
   ResponsePointUserModel,
 } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import {
+  getApiPointGetUserHistories,
+  getApiPointGetUserOrders,
+  postApiPointGivePoint,
+} from '@/api/generated/point/point'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
-import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
-import { POINT_API_URL } from '@/shared/config'
 
 const props = defineProps<{
   user: ResponsePointUserModel
@@ -105,9 +107,13 @@ async function getOrders() {
 
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-user-orders`, {
+    const data = (await getApiPointGetUserOrders({
       authId: info.id,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: ResponsePointOrder2OwnerModel[]
+    }
 
     if (data.code == 200) {
       return data.data
@@ -134,10 +140,13 @@ async function getPointHistory() {
       return []
     }
 
-    const data = await QueryGetAPI<ResponsePointHisrotyModel[]>(
-      `${POINT_API_URL}get-user-histories`,
-      getHistoryParams(target),
-    )
+    const data = (await getApiPointGetUserHistories(
+      getHistoryParams(target) as any,
+    )) as unknown as {
+      code: number
+      message?: string
+      data: ResponsePointHisrotyModel[]
+    }
 
     if (data.code == 200) {
       return data.data
@@ -169,11 +178,11 @@ async function givePoint() {
       return
     }
 
-    const data = await QueryGetAPI(`${POINT_API_URL}give-point`, {
+    const data = await postApiPointGivePoint({
       ...getGivePointParams(target),
       count: addPointCount.value,
       reason: addPointReason.value,
-    })
+    } as any)
 
     if (data.code == 200) {
       message.success('添加成功')

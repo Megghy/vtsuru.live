@@ -48,13 +48,17 @@ import { computed, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import type { ResponsePointGoodModel, UploadSubPointGoodsModel, UploadPointGoodsModel } from '@/api/api-models'
 import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode, ServiceFieldType } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  postApiPointDeleteGoods,
+  postApiPointUpdateGoods,
+  postApiPointUpdateGoodsStatus,
+} from '@/api/generated/point/point'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
-import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -523,7 +527,13 @@ async function updateGoods(e: MouseEvent) {
       code,
       data,
       message: errMsg,
-    } = await QueryPostAPI<ResponsePointGoodModel>(`${POINT_API_URL}update-goods`, currentGoodsModel.value.goods)
+    } = (await postApiPointUpdateGoods(
+      currentGoodsModel.value.goods as any,
+    )) as unknown as {
+      code: number
+      data: ResponsePointGoodModel
+      message: string
+    }
 
     if (code === 200) {
       message.success('商品信息保存成功')
@@ -671,10 +681,14 @@ async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus
       const originStatus = item.status
 
       try {
-        const { code, message: errMsg } = await QueryPostAPI(`${POINT_API_URL}update-goods-status`, {
-          ids: [item.id],
-          status,
-        })
+        const { code, message: errMsg } =
+          (await postApiPointUpdateGoodsStatus({
+            ids: [item.id],
+            status: status as any,
+          })) as unknown as {
+            code: number
+            message: string
+          }
 
         if (code === 200) {
           message.success('成功')
@@ -708,9 +722,12 @@ function onDeleteClick(item: ResponsePointGoodModel) {
       d.loading = true
 
       try {
-        const { code, message: errMsg } = await QueryGetAPI(`${POINT_API_URL}delete-goods`, {
+        const { code, message: errMsg } = (await postApiPointDeleteGoods({
           id: item.id,
-        })
+        })) as unknown as {
+          code: number
+          message: string
+        }
 
         if (code === 200) {
           message.success('成功')

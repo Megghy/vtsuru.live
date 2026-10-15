@@ -28,13 +28,19 @@ import { useAccount } from '@/api/account'
 import type { UserBasicInfo } from '@/api/api-models'
 import type { ForumModel, ForumUserModel } from '@/api/models/forum'
 import { ForumUserLevels } from '@/api/models/forum'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  postApiForumCreate,
+  postApiForumManageAddAdmin,
+  postApiForumManageBan,
+  postApiForumManageDeleteAdmin,
+  postApiForumManageUnban,
+  postApiForumManageUpdateSetting,
+} from '@/api/generated/forum/forum'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import UserBasicInfoCard from '@/apps/manage/components/UserBasicInfoCard.vue'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
 // @ts-ignore
 import Agreement from '@/content/agreements/EnableForumAgreement.md'
-import { FORUM_API_URL } from '@/shared/config'
 import { useForumStore } from '@/store/useForumStore'
 
 const useForum = useForumStore()
@@ -43,7 +49,10 @@ const message = useMessage()
 const { run } = useApiAction()
 
 const managedForums = ref((await useForum.GetManagedForums()) ?? [])
-const currentForum = ref((await useForum.GetForumInfo(accountInfo.value.id)) ?? ({} as ForumModel))
+function forumByOwner(owner: number) {
+  return managedForums.value.find((f) => f.owner.id === owner)
+}
+const currentForum = ref(forumByOwner(accountInfo.value.id) ?? ({} as ForumModel))
 const selectedForum = ref()
 
 const readedAgreement = ref(false)
@@ -93,7 +102,7 @@ async function createForum() {
     message.warning('请输入名称')
     return
   }
-  const data = await run(() => QueryPostAPI<ForumModel>(`${FORUM_API_URL}create`, { name: create_Name.value }), {
+  const data = await run<ForumModel>(() => postApiForumCreate({ name: create_Name.value }), {
     success: '创建成功',
     fail: '创建失败',
   })
@@ -101,10 +110,11 @@ async function createForum() {
 }
 async function SwitchForum(owner: number) {
   selectedForum.value = owner
-  currentForum.value = (await useForum.GetForumInfo(owner)) ?? ({} as ForumModel)
+  managedForums.value = (await useForum.GetManagedForums()) ?? []
+  currentForum.value = forumByOwner(owner) ?? ({} as ForumModel)
 }
 async function refreshForumInfo() {
-  currentForum.value = (await useForum.GetForumInfo(currentForum.value.owner.id)) ?? ({} as ForumModel)
+  await SwitchForum(currentForum.value.owner.id)
 }
 const defaultColumns: DataTableColumns<ForumUserModel> = [
   {
@@ -221,7 +231,7 @@ const adminColumns: DataTableColumns<ForumUserModel> = [
 
 async function addAdmin(id: number) {
   const ok = await run(
-    () => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/add-admin`, { forum: currentForum.value.owner.id, id }),
+    () => postApiForumManageAddAdmin({ forum: currentForum.value.owner.id, id }),
     { success: '已设置为管理员' },
   )
   if (ok) {
@@ -233,7 +243,7 @@ async function addAdmin(id: number) {
 async function removeAdmin(id: number) {
   if (
     await run(
-      () => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/del-admin`, { forum: currentForum.value.owner.id, id }),
+      () => postApiForumManageDeleteAdmin({ forum: currentForum.value.owner.id, id }),
       { success: '已取消管理员权限' },
     )
   )
@@ -241,7 +251,7 @@ async function removeAdmin(id: number) {
 }
 async function banUser(id: number) {
   if (
-    await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/ban`, { forum: currentForum.value.owner.id, id }), {
+    await run(() => postApiForumManageBan({ forum: currentForum.value.owner.id, id }), {
       success: '已封禁用户',
     })
   )
@@ -250,7 +260,7 @@ async function banUser(id: number) {
 async function unbanUser(id: number) {
   if (
     await run(
-      () => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/unban`, { forum: currentForum.value.owner.id, id }),
+      () => postApiForumManageUnban({ forum: currentForum.value.owner.id, id }),
       { success: '已解禁' },
     )
   )
@@ -258,7 +268,7 @@ async function unbanUser(id: number) {
 }
 async function updateForumSettings() {
   if (
-    await run(() => QueryPostAPI(`${FORUM_API_URL}manage/update-setting`, currentForum.value.settings), {
+    await run(() => postApiForumManageUpdateSetting(currentForum.value.settings as any), {
       success: '修改成功',
       fail: '修改失败',
     })

@@ -1,8 +1,13 @@
 import { useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import {
+  getApiOrgOrgIdMembers,
+  postApiOrgOrgIdMemberRemove,
+  postApiOrgOrgIdMemberRole,
+  postApiOrgOrgIdTransferOwner,
+} from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 
 import type { OrgMemberItem } from '../types'
 import type { OrgContext } from './useOrgContext'
@@ -24,7 +29,7 @@ export function useOrgMembers(ctx: OrgContext) {
     loading.value = true
     try {
       members.value = unwrapOk(
-        await QueryGetAPI<OrgMemberItem[]>(`${ORG_API_URL}${ctx.orgId.value}/members`),
+        (await getApiOrgOrgIdMembers(ctx.orgId.value)) as any,
         '加载成员失败',
       )
     } catch (err) {
@@ -38,7 +43,7 @@ export function useOrgMembers(ctx: OrgContext) {
     if (!ctx.isOrgAdmin.value || userId <= 0) return
     try {
       unwrapOk(
-        await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/member/remove`, { targetUserId: userId }),
+        (await postApiOrgOrgIdMemberRemove(ctx.orgId.value, { targetUserId: userId })) as any,
         '移除失败',
       )
       message.success('移除成功')
@@ -52,7 +57,7 @@ export function useOrgMembers(ctx: OrgContext) {
     if (ctx.myRole.value !== 0 || userId <= 0) return
     try {
       unwrapOk(
-        await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/member/role`, { targetUserId: userId, role }),
+        (await postApiOrgOrgIdMemberRole(ctx.orgId.value, { targetUserId: userId, role: role as never })) as any,
         '更新角色失败',
       )
       message.success('已更新角色')
@@ -66,7 +71,7 @@ export function useOrgMembers(ctx: OrgContext) {
     if (ctx.myRole.value !== 0 || userId <= 0) return
     try {
       unwrapOk(
-        await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/transfer-owner`, { targetUserId: userId }),
+        (await postApiOrgOrgIdTransferOwner(ctx.orgId.value, { targetUserId: userId })) as any,
         '移交失败',
       )
       message.success('已移交所有权')

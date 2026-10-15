@@ -267,8 +267,8 @@ function handleExport() {
 function insertDanmakus(targetDanmakus: DanmakuModel[]) {
   if (!Array.isArray(targetDanmakus) || targetDanmakus.length === 0) return
   const existingIds = new Set<string>([
-    ...baseDanmakus.value.map((item) => item.id),
-    ...dynamicDanmakus.value.map((item) => item.id),
+    ...baseDanmakus.value.map((item) => String(item.id ?? '')),
+    ...dynamicDanmakus.value.map((item) => String(item.id ?? '')),
   ])
   const normalized = normalizeDanmakuList(targetDanmakus, existingIds)
   if (!normalized.length) return

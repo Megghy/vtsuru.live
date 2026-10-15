@@ -2,9 +2,9 @@ import type { MaybeRefOrGetter } from 'vue'
 import { computed, ref, toValue, watch } from 'vue'
 
 import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiMusicRequestGetWaiting } from '@/api/generated/music-request/music-request'
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
-import { AVATAR_URL, MUSIC_REQUEST_API_URL } from '@/shared/config'
+import { AVATAR_URL } from '@/shared/config'
 
 interface WaitMusicInfo {
   from: DanmakuUserInfo
@@ -51,10 +51,12 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
     try {
       const rawId = toValue(currentId)
       const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
-      const data = await QueryGetAPI<{ playing?: WaitMusicInfo; waiting: WaitMusicInfo[] }>(
-        `${MUSIC_REQUEST_API_URL}get-waiting`,
-        idStr ? { id: idStr } : {},
-      )
+      const data = (await getApiMusicRequestGetWaiting(
+        idStr ? { id: Number(idStr) } : {},
+      )) as unknown as {
+        code: number
+        data: { playing?: WaitMusicInfo; waiting: WaitMusicInfo[] }
+      }
       if (data.code === 200) return data.data
     } catch (err) {
       console.error('[MUSIC-REQUEST-OBS] 获取点歌队列失败', err)

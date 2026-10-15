@@ -5,9 +5,8 @@ import { computed, nextTick, ref, watch } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiSongListGetNeteaseList } from '@/api/generated/song-list/song-list'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
-import { SONG_API_URL } from '@/shared/config'
 
 const props = defineProps<{
   existingSongs: SongsInfo[]
@@ -105,7 +104,13 @@ async function getNeteaseSongList() {
 
   emit('loadingChange', true)
   try {
-    const data = await QueryGetAPI<SongsInfo[]>(`${SONG_API_URL}get-netease-list`, { id: neteaseSongListId.value })
+    const data = (await getApiSongListGetNeteaseList({
+      id: neteaseSongListId.value,
+    })) as unknown as {
+      code: number
+      message?: string
+      data: SongsInfo[]
+    }
     if (data.code !== 200) {
       message.error(`获取歌单失败: ${data.message}`)
       return
@@ -166,7 +171,7 @@ async function addNeteaseSongs() {
       message.success(`已添加 ${addedCount} 首歌曲`)
     }
 
-    if (addedCount > 0) emit('added', data.data)
+    if (addedCount > 0) emit('added', data.data as unknown as SongsInfo[])
   } catch (err) {
     console.error(err)
     message.error('添加失败')

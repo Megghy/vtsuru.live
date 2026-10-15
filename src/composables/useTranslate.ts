@@ -1,7 +1,6 @@
 import { computed, ref } from 'vue'
 
-import { QueryPostAPI } from '@/api/query'
-import { VTSURU_API_URL } from '@/shared/config'
+import { postApiVtsuruTranslate } from '@/api/generated/vtsuru/vtsuru'
 
 export type TranslateMode = 'browser' | 'cloud'
 
@@ -62,10 +61,14 @@ export function useTranslate() {
   }
 
   async function translateCloud(text: string): Promise<string> {
-    const resp = await QueryPostAPI<string>(`${VTSURU_API_URL}translate`, {
+    const resp = (await postApiVtsuruTranslate({
       text,
       targetLang: targetLang.value,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: string
+    }
     if (resp.code !== 200) throw new Error(resp.message)
     return resp.data
   }

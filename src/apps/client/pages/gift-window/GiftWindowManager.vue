@@ -46,11 +46,10 @@ import {
 import { computed, ref } from 'vue'
 
 import { GuardLevel, type ResponseLiveInfoModel, type ResponseLiveRankingEntryModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiLiveGetAll, getApiLiveRanking } from '@/api/generated/live/live'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
-import { LIVE_API_URL } from '@/shared/config'
 
 const giftWindow = useGiftWindow()
 const message = useMessage()
@@ -184,10 +183,14 @@ async function loadHistoryRanking() {
     return
   }
 
-  const response = await QueryGetAPI<ResponseLiveRankingEntryModel[]>(`${LIVE_API_URL}ranking`, {
+  const response = (await getApiLiveRanking({
     liveId: selectedHistoryLiveId.value,
     limit: 100,
-  })
+  })) as unknown as {
+    code: number
+    message?: string
+    data: ResponseLiveRankingEntryModel[]
+  }
   if (response.code !== 200) throw new Error(response.message)
   historyRanking.value = response.data
 }
@@ -196,7 +199,11 @@ async function loadHistory() {
   if (isHistoryLoading.value) return
   isHistoryLoading.value = true
   try {
-    const response = await QueryGetAPI<ResponseLiveInfoModel[]>(`${LIVE_API_URL}get-all`)
+    const response = (await getApiLiveGetAll()) as unknown as {
+      code: number
+      message?: string
+      data: ResponseLiveInfoModel[]
+    }
     if (response.code !== 200) throw new Error(response.message)
 
     historyLives.value = response.data.filter((live) => live.isFinish)

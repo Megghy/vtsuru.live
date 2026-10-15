@@ -2,8 +2,8 @@ import { useMessage } from 'naive-ui'
 import { computed, inject, provide, ref } from 'vue'
 import type { InjectionKey } from 'vue'
 
-import { QueryGetAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import { getApiOrgOrgIdLives } from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 
 import type { OrgLiveItem } from '../types'
 import type { OrgContext } from './useOrgContext'
@@ -78,7 +78,7 @@ export function useOrgLives(ctx: OrgContext) {
     loading.value = true
     try {
       lives.value = unwrapOk(
-        await QueryGetAPI<OrgLiveItem[]>(`${ORG_API_URL}${ctx.orgId.value}/lives`),
+        (await getApiOrgOrgIdLives(ctx.orgId.value)) as any,
         '加载直播记录失败',
       )
       loaded.value = true

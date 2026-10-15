@@ -3,9 +3,8 @@ import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { QAInfo, UserInfo } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
+import { postApiQaSend } from '@/api/generated/qa/qa'
 import { refreshCaptcha, requestWithCaptchaRetry, type CaptchaHandle } from '@/shared/captcha'
-import { QUESTION_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -162,27 +161,29 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
       const response = await requestWithCaptchaRetry({
         getToken: () => token.value,
         refresh: () => refreshCaptcha(turnstile.value),
-        request: (captchaToken) => {
-          const formData = new FormData()
-          formData.append(
-            'Data',
-            JSON.stringify({
-              Target: targetId,
-              IsAnonymous: !isIdentified.value || submittedDraft.isAnonymous,
-              Message: submittedDraft.message,
-              Tag: submittedDraft.tag,
-              AnonymousName:
-                !isIdentified.value && submittedDraft.anonymousName ? submittedDraft.anonymousName : undefined,
-              AnonymousEmail:
-                !isIdentified.value && submittedDraft.anonymousEmail ? submittedDraft.anonymousEmail : undefined,
-              AllowPublic: allowDefaultPublic.value ? submittedDraft.allowPublic !== false : undefined,
-            }),
-          )
-          selectedFiles.value.forEach((file) => formData.append('Files', file))
-          const headers: [string, string][] = [['Turnstile', captchaToken]]
-          return isBiliAuthed.value
-            ? biliAuth.QueryBiliAuthPostAPI<QAInfo>(`${QUESTION_API_URL}send`, formData, headers)
-            : QueryPostAPI<QAInfo>(`${QUESTION_API_URL}send`, formData, headers)
+        request: async (captchaToken) => {
+          const dataStr = JSON.stringify({
+            Target: targetId,
+            IsAnonymous: !isIdentified.value || submittedDraft.isAnonymous,
+            Message: submittedDraft.message,
+            Tag: submittedDraft.tag,
+            AnonymousName:
+              !isIdentified.value && submittedDraft.anonymousName ? submittedDraft.anonymousName : undefined,
+            AnonymousEmail:
+              !isIdentified.value && submittedDraft.anonymousEmail ? submittedDraft.anonymousEmail : undefined,
+            AllowPublic: allowDefaultPublic.value ? submittedDraft.allowPublic !== false : undefined,
+          })
+          const headers: Record<string, string> = { Turnstile: captchaToken }
+          if (isBiliAuthed.value) {
+            const authHeaders = await biliAuth.getBiliAuthHeaders()
+            for (const [k, v] of authHeaders) {
+              headers[k] = v
+            }
+          }
+          return postApiQaSend(
+            { data: dataStr, files: selectedFiles.value },
+            { headers },
+          ) as any
         },
       })
       if (response.code !== 200) throw new Error(response.message)

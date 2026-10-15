@@ -17,8 +17,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
-import { QueryGetAPI } from '@/api/query'
-import { QUESTION_API_URL } from '@/shared/config'
+import { getApiQaGetTags } from '@/api/generated/qa/qa'
 
 import PropsGrid from '../PropsGrid.vue'
 import TextAppearanceFields from './TextAppearanceFields.vue'
@@ -33,7 +32,11 @@ async function loadFeedbackTags() {
   const userId = editor.account.value?.id
   if (!userId) return
   try {
-    const response = await QueryGetAPI<unknown[]>(`${QUESTION_API_URL}get-tags`, { id: userId })
+    const response = (await getApiQaGetTags({ id: String(userId) })) as unknown as {
+      code: number
+      message?: string
+      data: unknown[]
+    }
     if (response.code !== 200) throw new Error(response.message)
     feedbackTags.value = response.data
       .map((value) => (typeof value === 'string' ? value : (value as Record<string, unknown> | null)?.name))

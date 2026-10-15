@@ -22,9 +22,9 @@ import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { isLoggedIn } from '@/api/account'
-import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
+import { getApiOrgMy, postApiOrgCreate } from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { ORG_API_URL } from '@/shared/config'
 
 import '@/apps/org/styles/org-page.css'
 import type { OrgInfoModel } from '../types'
@@ -44,7 +44,7 @@ async function loadMyOrgs() {
   if (!isLoggedIn.value) return
   isLoading.value = true
   try {
-    orgs.value = unwrapOk(await QueryGetAPI<OrgInfoModel[]>(`${ORG_API_URL}my`), '加载失败')
+    orgs.value = unwrapOk(await getApiOrgMy(), '加载失败')
   } catch (err) {
     message.error(err instanceof Error ? err.message : '加载失败')
   } finally {
@@ -61,7 +61,7 @@ async function createOrg() {
   }
   creating.value = true
   try {
-    unwrapOk(await QueryPostAPI(`${ORG_API_URL}create`, { name }), '创建失败')
+    unwrapOk(await postApiOrgCreate({ name }), '创建失败')
     message.success('创建成功')
     orgName.value = ''
     showCreateModal.value = false

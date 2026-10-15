@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue'
 
 import { DownloadConfig } from '@/api/account'
 import type { BiliLiveReserveModel, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiScheduleBiliReserve, getApiScheduleGet } from '@/api/generated/schedule/schedule'
 import type { BiliProfile } from '@/apps/user-page/types'
 import BiliLiveReservePanel from '@/components/BiliLiveReservePanel.vue'
 import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
@@ -61,7 +61,13 @@ async function loadSchedule() {
 
   loadingData.value = true
   try {
-    const response = await QueryGetAPI<ScheduleWeekInfo[]>(`${SCHEDULE_API_URL}get`, { id: userId })
+    const response = (await getApiScheduleGet({
+      id: String(userId),
+    })) as unknown as {
+      code: number
+      data?: ScheduleWeekInfo[]
+      message?: string
+    }
     if (response.code !== 200) throw new Error(response.message)
     currentData.value = response.data ?? []
   } catch (error) {
@@ -94,9 +100,12 @@ async function loadBiliReserve() {
     return
   }
   try {
-    const response = await QueryGetAPI<BiliLiveReserveModel>(`${SCHEDULE_API_URL}bili-reserve`, {
-      id: props.userInfo.id,
-    })
+    const response = (await getApiScheduleBiliReserve({
+      id: String(props.userInfo.id),
+    })) as unknown as {
+      code: number
+      data?: BiliLiveReserveModel
+    }
     if (response.code === 200 && response.data) biliReserve.value = response.data
   } catch (error) {
     console.error('加载 B 站预约失败', error)

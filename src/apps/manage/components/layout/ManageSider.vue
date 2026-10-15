@@ -153,14 +153,6 @@ const baseItems = computed<ManageNavItem[]>(() => {
 
   return [
     {
-      key: 'manage-userPageBuilder',
-      label: '主页装修',
-      icon: ColorPaletteOutline,
-      to: { name: 'manage-userPageBuilder' },
-      disabled: emailDisabled,
-      group: 'common',
-    },
-    {
       key: 'manage-history',
       label: '历史',
       icon: AnalyticsSharp,

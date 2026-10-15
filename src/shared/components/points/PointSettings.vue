@@ -30,8 +30,11 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import type { Setting_Point } from '@/api/api-models'
 import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import {
+  getApiOrgOrgIdPointsSettingsDetail,
+  postApiOrgOrgIdPointsSettingsUpdate,
+} from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 
 const props = defineProps<{
   orgId?: number
@@ -78,9 +81,9 @@ async function loadOrgSetting() {
   isLoading.value = true
   try {
     orgSetting.value = unwrapOk(
-      await QueryGetAPI<Setting_Point>(`${ORG_API_URL}${props.orgId}/points/settings/detail`, {
+      (await getApiOrgOrgIdPointsSettingsDetail(props.orgId, {
         streamerId: props.streamerId,
-      }),
+      })) as any,
       '加载积分规则失败',
     )
   } catch (err) {
@@ -140,10 +143,11 @@ async function updateSettings() {
     setting.value.giftPercentMap ??= {}
     try {
       unwrapOk(
-        await QueryPostAPI<number>(
-          `${ORG_API_URL}${props.orgId}/points/settings/update?streamerId=${props.streamerId}`,
-          setting.value,
-        ),
+        (await postApiOrgOrgIdPointsSettingsUpdate(
+          props.orgId,
+          setting.value as any,
+          { streamerId: props.streamerId },
+        )) as any,
         '保存失败',
       )
       message.success('已保存')

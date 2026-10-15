@@ -34,9 +34,15 @@ import { useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
 import type { VideoCollectCreateModel, VideoCollectTable } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiVideoCollectGetAll,
+  postApiVideoCollectCreate,
+  postApiVideoCollectDelete,
+  postApiVideoCollectFinish,
+  postApiVideoCollectUpdate,
+} from '@/api/generated/video-collect/video-collect'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import { copyToClipboard } from '@/shared/utils'
 
 import VideoCollectFormModal from './VideoCollectFormModal.vue'
@@ -114,7 +120,11 @@ function capacityPercentage(table: VideoCollectTable) {
 async function loadTables() {
   isLoading.value = true
   try {
-    const response = await QueryGetAPI<VideoCollectTable[]>(`${VIDEO_COLLECT_API_URL}get-all`)
+    const response = (await getApiVideoCollectGetAll()) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectTable[]
+    }
     if (response.code !== 200) throw new Error(response.message)
     videoTables.value = response.data
   } catch (error) {
@@ -128,7 +138,13 @@ async function loadTables() {
 async function createTable(model: VideoCollectCreateModel) {
   isCreating.value = true
   try {
-    const response = await QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}create`, model)
+    const response = (await postApiVideoCollectCreate(
+      model as any,
+    )) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectTable
+    }
     if (response.code !== 200) throw new Error(response.message)
     videoTables.value.unshift(response.data)
     createModalVisible.value = false
@@ -145,10 +161,14 @@ async function updateTable(model: VideoCollectCreateModel) {
   if (!currentEditingTable.value) return
   isCreating.value = true
   try {
-    const response = await QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}update`, {
+    const response = (await postApiVideoCollectUpdate({
       ...model,
       id: currentEditingTable.value.id,
-    })
+    } as any)) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectTable
+    }
     if (response.code !== 200) throw new Error(response.message)
     const idx = videoTables.value.findIndex((t) => t.id === currentEditingTable.value?.id)
     if (idx !== -1) videoTables.value[idx] = response.data
@@ -180,7 +200,7 @@ function openEditModal(table: VideoCollectTable) {
 async function toggleFinish(table: VideoCollectTable) {
   const finish = !table.isFinish
   try {
-    const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}finish`, { id: table.id, finish })
+    const response = await postApiVideoCollectFinish({ id: table.id, finish: finish as any })
     if (response.code !== 200) throw new Error(response.message)
     table.isFinish = finish
     message.success(finish ? '征集已结束' : '征集已重新开启')
@@ -198,7 +218,7 @@ function confirmDelete(table: VideoCollectTable) {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}del`, { id: table.id })
+        const response = await postApiVideoCollectDelete({ id: table.id })
         if (response.code !== 200) throw new Error(response.message)
         videoTables.value = videoTables.value.filter((t) => t.id !== table.id)
         message.success('征集已删除')

@@ -9,6 +9,7 @@ export const schedulePreviewData: ScheduleWeekInfo[] = [
   {
     year: getISOWeekYear(new Date()),
     week: getISOWeek(new Date()),
+    version: 'preview',
     days: [
       [{ title: '早安杂谈与新衣预告', tag: '杂谈', tagColor: '#E97A9B', time: '09:30', id: 'preview-1' }],
       [{ title: '夏日歌回：听海的颜色', tag: '歌回', tagColor: '#3FB8B0', time: '20:00', id: 'preview-2' }],
@@ -74,6 +75,7 @@ export const songListPreviewData: SongsInfo[] = [
     key: 'song4',
     name: '歌曲4',
     author: ['作者4'],
+    tags: [],
     url: 'https://example.com/song4.mp3',
     from: SongFrom.Custom,
     language: ['中文'],

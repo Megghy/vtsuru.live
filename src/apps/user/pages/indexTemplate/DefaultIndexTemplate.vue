@@ -13,9 +13,8 @@ import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ResponseUserIndexModel, UserInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiUserIndexGet } from '@/api/generated/user-index/user-index'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
-import { USER_INDEX_API_URL } from '@/shared/config'
 import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
@@ -106,7 +105,7 @@ const profileStats = computed(() => {
 
 const orderedLinks = computed(() => {
   const entries = Object.entries(indexInfo.value.links || {})
-  const order = accountInfo.value?.settings?.index?.linkOrder || indexInfo.value.linkOrder
+  const order = accountInfo.value?.settings?.index?.linkOrder
   if (!order?.length) return entries
   const map = new Map(entries)
   return order.filter((key) => map.has(key)).map((key) => [key, map.get(key)!]) as [string, string][]
@@ -114,7 +113,13 @@ const orderedLinks = computed(() => {
 
 async function loadIndexInfo() {
   try {
-    const data = await QueryGetAPI<ResponseUserIndexModel>(`${USER_INDEX_API_URL}get`, { id: props.userInfo?.name })
+    const data = (await getApiUserIndexGet({
+      id: props.userInfo?.name,
+    })) as unknown as {
+      code: number
+      message?: string
+      data: ResponseUserIndexModel
+    }
     if (data.code === 200) indexInfo.value = data.data
     else if (data.code !== 404) message.error(`无法获取主页数据: ${data.message}`)
   } catch (error) {

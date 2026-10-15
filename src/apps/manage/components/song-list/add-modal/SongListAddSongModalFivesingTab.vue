@@ -101,7 +101,7 @@ async function addFivesingSongs(song: SongsInfo) {
       return
     }
     message.success('已添加歌曲')
-    emit('added', data.data)
+    emit('added', data.data as unknown as SongsInfo[])
   } catch (err) {
     message.error('添加失败')
     console.error(err)

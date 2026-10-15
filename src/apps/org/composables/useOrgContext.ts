@@ -2,8 +2,7 @@ import type { InjectionKey, Ref } from 'vue'
 import { computed, inject, provide, ref } from 'vue'
 
 import { isLoggedIn } from '@/api/account'
-import { QueryGetAPI } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import { getApiOrgOrgId } from '@/api/generated/org/org'
 
 import type { OrgInfoModel } from '../types'
 
@@ -31,7 +30,10 @@ export function provideOrgContext(orgId: Ref<number>): OrgContext {
     if (!isLoggedIn.value || !orgId.value) return
     loadingOrgInfo.value = true
     try {
-      const resp = await QueryGetAPI<OrgInfoModel>(`${ORG_API_URL}${orgId.value}`)
+      const resp = (await getApiOrgOrgId(orgId.value)) as unknown as {
+        code: number
+        data: OrgInfoModel
+      }
       if (resp.code === 200) {
         orgInfo.value = resp.data
         orgName.value = resp.data.name

@@ -21,11 +21,10 @@ import { RouterView, useRoute } from 'vue-router'
 
 import { logoutAccount } from '@/api/account'
 import type { AccountInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { postApiAccountSendVerifyEmail } from '@/api/generated/account/account'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import ManageDanmakuStatusBanner from '@/apps/manage/components/event-fetcher/ManageDanmakuStatusBanner.vue'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
-import { ACCOUNT_API_URL } from '@/shared/config'
 
 const props = defineProps<{
   accountInfo: AccountInfo
@@ -69,7 +68,7 @@ async function resendEmail() {
     return
   }
   try {
-    const data = await QueryGetAPI(`${ACCOUNT_API_URL}send-verify-email`)
+    const data = await postApiAccountSendVerifyEmail()
     if (data.code !== 200) {
       message.error(`发送失败: ${data.message}`)
       return

@@ -22,8 +22,14 @@ import { ref, computed } from 'vue'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
 import type { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
-import { QueryPostAPI as Post, QueryGetAPI as Get } from '@/api/query'
-import { POINT_API_URL } from '@/shared/config'
+import {
+  getApiPointCheckEligibility,
+  getApiPointGetAllUsers,
+  getApiPointGetGoods,
+  getApiPointGetTestAccountPoint,
+  postApiPointResetTestAccount,
+  postApiPointTestPoint,
+} from '@/api/generated/point/point'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -129,7 +135,10 @@ const showGuardFields = computed(() => testForm.value.type === EventDataTypes.Gu
 async function fetchTestAccountPoint() {
   isLoading.value = true
   try {
-    const res = await Get<number>(POINT_API_URL + 'get-test-account-point')
+    const res = (await getApiPointGetTestAccountPoint()) as unknown as {
+      code: number
+      data?: number
+    }
     if (res.code === 200) {
       testAccountPoint.value = res.data ?? 0
     }
@@ -171,10 +180,11 @@ async function runTest() {
       payload.giftPrice = testForm.value.giftPrice
     }
 
-    const res = await Post<{ success: boolean; message: string; pointsAwarded?: number }>(
-      POINT_API_URL + 'test-point',
-      payload,
-    )
+    const res = (await postApiPointTestPoint(payload as any)) as unknown as {
+      code: number
+      data?: { success: boolean; message: string; pointsAwarded?: number }
+      message?: string
+    }
 
     if (res.code === 200 && res.data) {
       if (res.data.success) {
@@ -199,7 +209,7 @@ async function runTest() {
 async function resetTestAccount() {
   isLoading.value = true
   try {
-    const res = await Post(POINT_API_URL + 'reset-test-account', {})
+    const res = await postApiPointResetTestAccount()
     if (res.code === 200) {
       message.success('测试账户已重置')
       testAccountPoint.value = 0
@@ -222,10 +232,13 @@ async function loadEligibilityOptions() {
 
   isLoadingEligibilityOptions.value = true
   try {
-    const [usersRes, goodsRes] = await Promise.all([
-      Get<ResponsePointUserModel[]>(POINT_API_URL + 'get-all-users'),
-      Get<ResponsePointGoodModel[]>(POINT_API_URL + 'get-goods', { id: accountInfo.value.id }),
-    ])
+    const [usersRes, goodsRes] = (await Promise.all([
+      getApiPointGetAllUsers(),
+      getApiPointGetGoods({ id: String(accountInfo.value.id) }),
+    ])) as unknown as [
+      { code: number; data?: ResponsePointUserModel[]; message?: string },
+      { code: number; data?: ResponsePointGoodModel[]; message?: string },
+    ]
 
     if (usersRes.code === 200) {
       allUsers.value = usersRes.data ?? []
@@ -281,7 +294,11 @@ async function checkEligibility() {
       params.oId = key.slice('oid:'.length)
     }
 
-    const res = await Get<EligibilityResult>(POINT_API_URL + 'check-eligibility', params)
+    const res = (await getApiPointCheckEligibility(params)) as unknown as {
+      code: number
+      data?: EligibilityResult
+      message?: string
+    }
     if (res.code === 200 && res.data) {
       eligibilityResult.value = res.data
     } else {

@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
-import { QueryGetAPI } from '@/api/query'
-import { BILI_API_URL, isTauri } from '@/shared/config'
+import { getApiBiliRoomStats } from '@/api/generated/bili/bili'
+import { isTauri } from '@/shared/config'
 
 export interface OfficialLiveStats {
   /** 官方在线人数 (高能用户数/真实在线观众) */
@@ -63,10 +63,14 @@ export async function fetchOfficialLiveStats(roomId: number, uid?: number): Prom
 
   try {
     // 1. 优先调用后端统一接口
-    const res = await QueryGetAPI<ResponseLiveRoomStats>(`${BILI_API_URL}room-stats`, {
+    const res = (await getApiBiliRoomStats({
       roomId,
       uid: uid || 0,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data?: ResponseLiveRoomStats
+    }
 
     if (res.code === 200 && res.data) {
       updateOfficialStats({

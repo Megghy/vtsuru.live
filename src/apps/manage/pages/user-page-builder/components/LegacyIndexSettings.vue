@@ -20,9 +20,13 @@ import { computed, ref } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiUserIndexGet,
+  postApiUserIndexAddVideo,
+  postApiUserIndexDeleteVideo,
+  postApiUserIndexUpdateSetting,
+} from '@/api/generated/user-index/user-index'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
-import { USER_INDEX_API_URL } from '@/shared/config'
 import { IndexTemplateMap } from '@/shared/config/templates'
 
 const accountInfo = useAccount()
@@ -62,7 +66,13 @@ async function loadIndexInfo() {
   if (!accountInfo.value?.name) return
   isLoading.value = true
   try {
-    const data = await QueryGetAPI<ResponseUserIndexModel>(`${USER_INDEX_API_URL}get`, { id: accountInfo.value.name })
+    const data = (await getApiUserIndexGet({
+      id: accountInfo.value.name,
+    })) as unknown as {
+      code: number
+      message?: string
+      data: ResponseUserIndexModel
+    }
     if (data.code === 200) {
       indexDisplayInfo.value = data.data
       return
@@ -93,7 +103,9 @@ async function updateUserIndexSettings() {
 async function updateIndexSettings() {
   isLoading.value = true
   try {
-    const response = await QueryPostAPI(`${USER_INDEX_API_URL}update-setting`, accountInfo.value.settings.index)
+    const response = await postApiUserIndexUpdateSetting(
+      accountInfo.value.settings.index,
+    )
     if (response.code !== 200) throw new Error(response.message || `保存失败: ${response.code}`)
     message.success('已保存')
   } catch (err) {
@@ -121,9 +133,13 @@ async function addVideo() {
   }
   isLoading.value = true
   try {
-    const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}add-video`, {
+    const response = (await postApiUserIndexAddVideo({
       video: addVideoUrl.value,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectVideo
+    }
     if (response.code !== 200) throw new Error(response.message || `保存失败: ${response.code}`)
     message.success('添加成功')
     if (indexDisplayInfo.value) {
@@ -142,7 +158,13 @@ async function addVideo() {
 async function removeVideo(id: string) {
   isLoading.value = true
   try {
-    const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}del-video`, { video: id })
+    const response = (await postApiUserIndexDeleteVideo({
+      video: id,
+    })) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectVideo
+    }
     if (response.code !== 200) throw new Error(response.message || `删除失败: ${response.code}`)
     message.success('删除成功')
     if (indexDisplayInfo.value) {

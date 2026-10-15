@@ -56,8 +56,8 @@ function copy(text: string, label: string) {
 
 async function toggleLiveStart(group: QqBotGroup, liveStart: boolean) {
   const data = await run(() => updateQqBotGroupNotify(group.groupOpenId, liveStart), { success: '已更新开播推送' })
-  if (data) {
-    group.notify = data.notify
+  if (data && typeof data === 'object' && data !== null && 'notify' in data) {
+    group.notify = (data as QqBotGroup).notify
     return
   }
   group.notify.liveStart = !liveStart

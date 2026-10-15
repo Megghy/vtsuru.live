@@ -11,8 +11,8 @@ import {
   useAccount,
 } from '@/api/account'
 import { cookie } from '@/api/auth'
-import { QueryGetAPI } from '@/api/query'
-import { BASE_API_URL, isAutomaticAPIFailover, isTauri, markAPIFailover, setSelectedAPIKey } from '@/shared/config'
+import { getApiVtsuruVersion } from '@/api/generated/vtsuru/vtsuru'
+import { isAutomaticAPIFailover, isTauri, markAPIFailover, setSelectedAPIKey } from '@/shared/config'
 import { setSentryUser } from '@/shared/services/sentry'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
 import { createNaiveUIApi } from '@/shared/utils'
@@ -36,7 +36,10 @@ export function InitVTsuru() {
 
 async function loadVersionAndStart() {
   try {
-    const version = await QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
+    const version = (await getApiVtsuruVersion()) as unknown as {
+      code: number
+      data: string
+    }
     if (version.code == 200) {
       currentVersion = version.data
       const savedVersion = await persistedGetItemRaw('Version')
@@ -190,7 +193,12 @@ function InitVersionCheck() {
     if (isHaveNewVersion) {
       return
     }
-    QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`).then((keepCheckData) => {
+    ;(
+      getApiVtsuruVersion() as Promise<unknown> as Promise<{
+        code: number
+        data: string
+      }>
+    ).then((keepCheckData) => {
       if (keepCheckData.code == 200 && keepCheckData.data != currentVersion) {
         isHaveNewVersion = true
         currentVersion = keepCheckData.data

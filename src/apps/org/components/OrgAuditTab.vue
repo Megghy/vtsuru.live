@@ -2,8 +2,8 @@
 import { NButton, NCard, NInput, NSpin } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
-import { QueryGetAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import { getApiOrgOrgIdAudit } from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 
 import { useOrgContext } from '../composables/useOrgContext'
 import OrgAuditList from './OrgAuditList.vue'
@@ -28,10 +28,10 @@ async function loadLogs() {
   isLoading.value = true
   try {
     logs.value = unwrapOk(
-      await QueryGetAPI<OrgAuditItem[]>(`${ORG_API_URL}${orgId.value}/audit`, {
+      (await getApiOrgOrgIdAudit(orgId.value, {
         take: 50,
         actionPrefix: actionPrefix.value || undefined,
-      }),
+      })) as any,
       '获取审计日志失败',
     )
   } finally {

@@ -38,9 +38,8 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { VideoCollectDetail, VideoCollectVideo, VideoInfo } from '@/api/api-models'
 import { VideoStatus } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiVideoCollectGet } from '@/api/generated/video-collect/video-collect'
 import { formatDuration } from '@/apps/manage/composables/formatters'
-import { VIDEO_COLLECT_API_URL } from '@/shared/config'
 
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
 import VideoCollectResultCard from './VideoCollectResultCard.vue'
@@ -186,7 +185,13 @@ async function loadData() {
   isLoading.value = true
   loadError.value = null
   try {
-    const response = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: currentId() })
+    const response = (await getApiVideoCollectGet({
+      id: currentId(),
+    })) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectDetail
+    }
     if (response.code === 200) {
       videoDetail.value = response.data
       loadProgress()

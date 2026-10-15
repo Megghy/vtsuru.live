@@ -3,12 +3,11 @@ import { useMessage } from 'naive-ui'
 import { computed, ref, toRef, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiQaGetPublic, getApiQaGetTags } from '@/api/generated/qa/qa'
 import LocalQuestionDrawer from '@/apps/user/components/question-box/LocalQuestionDrawer.vue'
 import PublicQuestionFeed from '@/apps/user/components/question-box/PublicQuestionFeed.vue'
 import { useQuestionBoxHistory } from '@/apps/user/components/question-box/questionBoxHistory'
 import QuestionComposer from '@/apps/user/components/question-box/QuestionComposer.vue'
-import { QUESTION_API_URL } from '@/shared/config'
 
 const props = defineProps<{
   userInfo?: UserInfo
@@ -51,7 +50,13 @@ async function loadPublicQuestions() {
   if (!target.value?.id || !showPublicReplies.value) return
   isLoadingQuestions.value = true
   try {
-    const response = await QueryGetAPI<QAInfo[]>(`${QUESTION_API_URL}get-public`, { id: target.value.id })
+    const response = (await getApiQaGetPublic({
+      id: String(target.value.id),
+    })) as unknown as {
+      code: number
+      message?: string
+      data: QAInfo[]
+    }
     if (response.code !== 200) throw new Error(response.message)
     publicQuestions.value = response.data
   } catch (error) {
@@ -65,7 +70,13 @@ async function loadPublicQuestions() {
 async function loadTags() {
   if (!target.value?.id) return
   try {
-    const response = await QueryGetAPI<unknown[]>(`${QUESTION_API_URL}get-tags`, { id: target.value.id })
+    const response = (await getApiQaGetTags({
+      id: String(target.value.id),
+    })) as unknown as {
+      code: number
+      message?: string
+      data: unknown[]
+    }
     if (response.code !== 200) throw new Error(response.message)
     tags.value = response.data.map(normalizeTag)
   } catch (error) {

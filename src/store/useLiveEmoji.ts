@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
 
-import { QueryGetAPI } from '@/api/query'
-import { VTSURU_API_URL } from '@/shared/config'
+import { getApiVtsuruClientLiveEmoji } from '@/api/generated/vtsuru/vtsuru'
 import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 
 export interface LiveEmojiData {
@@ -21,7 +20,11 @@ export const useLiveEmoji = defineStore('LiveEmoji', () => {
   const merged = computed<Record<string, string>>(() => ({ ...emojiData.value.data.plain, ...emojiData.value.data.inline }))
 
   async function refresh() {
-    const resp = await QueryGetAPI<LiveEmojiData>(`${VTSURU_API_URL}client/live-emoji`)
+    const resp = (await getApiVtsuruClientLiveEmoji()) as unknown as {
+      code: number
+      message?: string
+      data: LiveEmojiData
+    }
     if (resp.code !== 200) throw new Error(`获取表情数据失败: ${resp.message}`)
     emojiData.value = { updateAt: Date.now(), data: resp.data }
   }

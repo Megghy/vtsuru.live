@@ -5,9 +5,9 @@ import { computed, onMounted, ref } from 'vue'
 
 import type { ResponsePointOrder2UserModel } from '@/api/api-models'
 import { PointOrderStatus } from '@/api/api-models'
+import { getApiPointUserGetOrders } from '@/api/generated/point/point'
 import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
 import UserPointOrderList from '@/apps/account/components/UserPointOrderList.vue'
-import { POINT_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const emit = defineEmits<{ dataLoaded: [] }>()
@@ -68,7 +68,13 @@ async function loadOrders(force = false) {
   loading.value = true
   const currentGeneration = generation
   const promise = (async () => {
-    const result = await auth.QueryBiliAuthGetAPI<ResponsePointOrder2UserModel[]>(`${POINT_API_URL}user/get-orders`)
+    const result = (await getApiPointUserGetOrders({
+      headers: Object.fromEntries(await auth.getBiliAuthHeaders()),
+    })) as unknown as {
+      code: number
+      message?: string
+      data: ResponsePointOrder2UserModel[]
+    }
     if (result.code !== 200) throw new Error(result.message || '获取订单失败')
     if (currentGeneration !== generation) return
     orders.value = result.data

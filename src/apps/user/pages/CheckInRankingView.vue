@@ -17,8 +17,10 @@ import {
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { CHECKIN_API_URL } from '@/shared/config'
+import {
+  getApiCheckinKeyword,
+  getApiCheckinRanking,
+} from '@/api/generated/check-in/check-in'
 
 const props = defineProps<{
   userInfo: UserInfo | undefined
@@ -80,10 +82,14 @@ watch([timeRange, userFilter, () => pagination.value.pageSize], () => {
 async function loadCheckInRanking() {
   isLoading.value = true
   try {
-    const response = await QueryGetAPI<CheckInRankingInfo[]>(`${CHECKIN_API_URL}ranking`, {
+    const response = (await getApiCheckinRanking({
       vId: props.userInfo?.id,
       count: 100,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: CheckInRankingInfo[]
+    }
 
     if (response.code !== 200) {
       rankingData.value = []
@@ -105,9 +111,12 @@ async function fetchCheckInKeyword() {
   if (!props.userInfo?.id) return
 
   try {
-    const response = await QueryGetAPI<{ keyword: string }>(`${CHECKIN_API_URL}keyword`, {
+    const response = (await getApiCheckinKeyword({
       vId: props.userInfo.id,
-    })
+    })) as unknown as {
+      code: number
+      data: { keyword: string }
+    }
     if (response.code === 200) checkInKeyword.value = response.data.keyword
   } catch (error) {
     console.error('获取签到关键词失败:', error)

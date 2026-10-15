@@ -30,7 +30,11 @@ import { useRouter } from 'vue-router'
 
 import type { AddressInfo, ResponsePointGoodModel, ResponsePointOrder2UserModel } from '@/api/api-models'
 import { GoodsTypes, ServiceFieldType } from '@/api/api-models'
-import { POINT_API_URL, IMGUR_URL } from '@/shared/config'
+import {
+  postApiPointBuy,
+  postApiPointUserUpdateAddress,
+} from '@/api/generated/point/point'
+import { IMGUR_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { NavigateToNewTab } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -291,10 +295,14 @@ async function updateAddress() {
   await formRef.value?.validate()
   isLoading.value = true
   try {
-    const data = await useAuth.QueryBiliAuthPostAPI<AddressInfo>(
-      `${POINT_API_URL}user/update-address`,
-      currentAddress.value,
-    )
+    const data = (await postApiPointUserUpdateAddress(
+      currentAddress.value as any,
+      { headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()) },
+    )) as unknown as {
+      code: number
+      message?: string
+      data: AddressInfo
+    }
     if (data.code !== 200) {
       message.error(`保存失败: ${data.message}`)
       return
@@ -451,24 +459,37 @@ async function buyGoods() {
     onPositiveClick: async () => {
       isLoading.value = true
       try {
-        const data = await useAuth.QueryBiliAuthPostAPI<ResponsePointOrder2UserModel>(`${POINT_API_URL}buy`, {
-          vId: props.vId,
-          goodsId: good.id,
-          count: hasSubItems.value ? selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0) : buyCount.value,
-          addressId: selectedAddress.value?.id ?? null,
-          remark: remark.value,
-          ...(isService.value
-            ? {
-                serviceAnswers: Object.fromEntries(
-                  Object.entries(serviceAnswers.value).map(([id, value]) => [
-                    id,
-                    Array.isArray(value) ? value.join('\n') : value == null ? '' : String(value),
-                  ]),
-                ),
-              }
-            : {}),
-          ...(hasSubItems.value ? { selectedSubItems: selectedSubItems.value } : {}),
-        })
+        const data = (await postApiPointBuy(
+          {
+            vId: props.vId,
+            goodsId: good.id,
+            count: hasSubItems.value
+              ? selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0)
+              : buyCount.value,
+            addressId: selectedAddress.value?.id ?? null,
+            remark: remark.value,
+            ...(isService.value
+              ? {
+                  serviceAnswers: Object.fromEntries(
+                    Object.entries(serviceAnswers.value).map(([id, value]) => [
+                      id,
+                      Array.isArray(value)
+                        ? value.join('\n')
+                        : value == null
+                          ? ''
+                          : String(value),
+                    ]),
+                  ),
+                }
+              : {}),
+            ...(hasSubItems.value ? { selectedSubItems: selectedSubItems.value } : {}),
+          } as any,
+          { headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()) },
+        )) as unknown as {
+          code: number
+          message?: string
+          data: ResponsePointOrder2UserModel
+        }
 
         if (data.code !== 200) {
           message.error(`兑换失败: ${data.message}`)

@@ -5,8 +5,11 @@ import { computed, ref } from 'vue'
 
 import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL } from '@/shared/config'
+import {
+  postApiAccountChangePassword,
+  postApiAccountResetEmail,
+  postApiAccountResetEmailCode,
+} from '@/api/generated/account/account'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const account = useAccount()
@@ -36,7 +39,7 @@ async function sendEmailCode() {
   }
   sendingCode.value = true
   try {
-    const result = await QueryGetAPI(`${ACCOUNT_API_URL}reset-email/code`, { email: email.value.trim() })
+    const result = await postApiAccountResetEmailCode({ email: email.value.trim() })
     if (result.code !== 200) throw new Error(result.message)
     canSendCode.value = false
     message.success('验证码已发送，请检查邮箱')
@@ -54,7 +57,7 @@ async function saveEmail() {
   }
   saving.value = true
   try {
-    const result = await QueryGetAPI(`${ACCOUNT_API_URL}reset-email`, {
+    const result = await postApiAccountResetEmail({
       email: email.value.trim(),
       code: emailCode.value.trim(),
     })
@@ -82,10 +85,14 @@ async function savePassword() {
   }
   saving.value = true
   try {
-    const result = await QueryPostAPI<string>(`${ACCOUNT_API_URL}change-password`, {
+    const result = (await postApiAccountChangePassword({
       oldPassword: oldPassword.value,
       password: password.value,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: string
+    }
     if (result.code !== 200) throw new Error(result.message)
     cookie.value = { cookie: result.data, refreshDate: Date.now() }
     passwordModalVisible.value = false

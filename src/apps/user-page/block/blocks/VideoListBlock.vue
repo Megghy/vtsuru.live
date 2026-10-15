@@ -4,10 +4,9 @@ import { NAlert, NButton, NFlex, NSpin, NIcon } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ResponseUserIndexModel, UserInfo, VideoCollectVideo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiUserIndexGet } from '@/api/generated/user-index/user-index'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
-import { USER_INDEX_API_URL } from '@/shared/config'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -63,12 +62,14 @@ const userIndexQuery = useUserPageRuntimeQuery<ResponseUserIndexModel>({
   loader: async (signal) => {
     const userName = props.userInfo?.name
     if (!userName) throw new Error('missing user name')
-    const response = await QueryGetAPI<ResponseUserIndexModel>(
-      `${USER_INDEX_API_URL}get`,
-      { id: userName, _ts: Date.now() },
-      undefined,
+    const response = (await getApiUserIndexGet(
+      { id: userName },
       { signal },
-    )
+    )) as unknown as {
+      code: number
+      message?: string
+      data: ResponseUserIndexModel
+    }
     if (response.code !== 200) throw new Error(response.message || `HTTP ${response.code}`)
     return response.data
   },

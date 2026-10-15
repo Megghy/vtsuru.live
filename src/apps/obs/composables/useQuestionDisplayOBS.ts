@@ -2,7 +2,11 @@ import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, toVa
 import type { MaybeRefOrGetter } from 'vue'
 
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { QueryGetAPI, QueryRequestError } from '@/api/query'
+import {
+  getApiQaGetCurrentAndSettings,
+  getApiQaGetHash,
+} from '@/api/generated/qa/qa'
+import { QueryRequestError } from '@/api/query'
 import { QUESTION_API_URL } from '@/shared/config'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
 import { normalizeQuestionDisplaySetting } from '@/shared/questionDisplay'
@@ -86,12 +90,13 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
       return false
     }
 
-    const response = await QueryGetAPI<QuestionDisplaySnapshot>(
-      QUESTION_DISPLAY_OBS_ENDPOINTS.snapshot,
+    const response = (await getApiQaGetCurrentAndSettings(
       identityParams(),
-      undefined,
-      { signal, timeoutMs: REQUEST_TIMEOUT_MS, retryOnFailover: false },
-    )
+      { signal, timeoutMs: REQUEST_TIMEOUT_MS, retryOnFailover: false } as any,
+    )) as unknown as {
+      code: number
+      data: QuestionDisplaySnapshot
+    }
 
     if (response.code !== 200) {
       applyFailure(response.code)
@@ -105,12 +110,13 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
   async function fetchVersion(signal: AbortSignal): Promise<void> {
     if (!hasIdentity.value) return
 
-    const response = await QueryGetAPI<string>(
-      QUESTION_DISPLAY_OBS_ENDPOINTS.version,
+    const response = (await getApiQaGetHash(
       identityParams(),
-      undefined,
-      { signal, timeoutMs: REQUEST_TIMEOUT_MS, retryOnFailover: false },
-    )
+      { signal, timeoutMs: REQUEST_TIMEOUT_MS, retryOnFailover: false } as any,
+    )) as unknown as {
+      code: number
+      data?: string
+    }
 
     if (response.code !== 200) {
       applyFailure(response.code)

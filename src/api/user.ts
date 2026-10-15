@@ -1,19 +1,17 @@
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { QueryGetAPI } from '@/api/query'
-import { USER_API_URL } from '@/shared/config'
+import { getApiUserBasicValue, getApiUserInfo } from '@/api/generated/user/user'
+import type { ResponseUserInfo } from '@/api/generated/model/responseUserInfo'
 
-import type { APIRoot, UserBasicInfo, UserInfo } from './api-models'
-
-export const USERS = ref<{ [id: string]: UserInfo }>({})
+export const USERS = ref<{ [id: string]: ResponseUserInfo }>({})
 
 export async function useUser(id: string | undefined = undefined) {
   const route = useRoute()
   id ??= route.params.id.toString()
   if (id) {
     if (!USERS.value[id]) {
-      const result: APIRoot<UserInfo> = await GetInfo(id)
+      const result = await GetInfo(id)
       if (result.code == 200) {
         USERS.value[id] = result.data
       }
@@ -25,9 +23,7 @@ export async function useUser(id: string | undefined = undefined) {
 }
 export async function useUserWithUId(id: number) {
   if (!USERS.value[id.toString()]) {
-    const result = await QueryGetAPI<UserInfo>(`${USER_API_URL}info`, {
-      uId: id,
-    })
+    const result = await getApiUserInfo({ uId: id })
     if (result.code == 200) {
       USERS.value[id.toString()] = result.data
     }
@@ -36,11 +32,9 @@ export async function useUserWithUId(id: number) {
 }
 export async function getUserBasicInfo(id: string | number | undefined) {
   if (!id) return undefined
-  return (await QueryGetAPI<UserBasicInfo>(`${USER_API_URL}basic/${id}`)).data
+  return (await getApiUserBasicValue(String(id))).data
 }
 
-export async function GetInfo(id: string): Promise<APIRoot<UserInfo>> {
-  return QueryGetAPI<UserInfo>(`${USER_API_URL}info`, {
-    id,
-  })
+export async function GetInfo(id: string) {
+  return getApiUserInfo({ id })
 }

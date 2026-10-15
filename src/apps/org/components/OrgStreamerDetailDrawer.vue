@@ -116,7 +116,7 @@ watch([() => d.show.value, () => d.selectedId.value], ([show, id]) => {
               >
                 <NStatistic
                   label="直播时长"
-                  :value="d.detail.value.summary.totalLiveMinutes"
+                  :value="d.detail.value.summary.liveDurationMinutes"
                 >
                   <template #suffix> min </template>
                 </NStatistic>
@@ -130,7 +130,7 @@ watch([() => d.show.value, () => d.selectedId.value], ([show, id]) => {
               >
                 <NStatistic
                   label="互动"
-                  :value="d.detail.value.summary.totalInteractionCount"
+                  :value="d.detail.value.summary.interactionCount"
                 />
               </NCard>
             </NGridItem>
@@ -142,7 +142,7 @@ watch([() => d.show.value, () => d.selectedId.value], ([show, id]) => {
               >
                 <NStatistic
                   label="弹幕"
-                  :value="d.detail.value.summary.totalDanmakuCount"
+                  :value="d.detail.value.summary.danmakuCount"
                 />
               </NCard>
             </NGridItem>
@@ -155,7 +155,7 @@ watch([() => d.show.value, () => d.selectedId.value], ([show, id]) => {
             style="margin-top: 12px"
           >
             <NHeatmap
-              :data="d.detail.value.heatmap"
+              :data="d.detail.value.heatmap.map((item) => ({ timestamp: item.date, value: item.value }))"
               size="small"
               :tooltip="true"
             >

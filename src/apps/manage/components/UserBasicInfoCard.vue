@@ -4,8 +4,7 @@ import { NAvatar, NCard, NDivider, NEmpty, NFlex, NSpin, NText } from 'naive-ui'
 import { onMounted, ref, watch } from 'vue'
 
 import type { UserBasicInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { USER_API_URL } from '@/shared/config'
+import { getApiUserBasicValue } from '@/api/generated/user/user'
 import { getUserAvatarUrl } from '@/shared/utils'
 
 const props = defineProps<{
@@ -32,7 +31,10 @@ async function getUserInfo(user: string | number) {
       return
     }
     isLoading.value = true
-    const data = await QueryGetAPI<UserBasicInfo>(`${USER_API_URL}basic/${user}`)
+    const data = (await getApiUserBasicValue(String(user))) as unknown as {
+      code: number
+      data: UserBasicInfo
+    }
     if (data.code == 200) {
       currentUser.value = data.data
     } else {

@@ -51,6 +51,9 @@ vi.mock('worker-timers', () => ({
 vi.mock('@/api/query', () => ({
   QueryGetAPI: mocks.queryGet,
   QueryPostAPI: mocks.queryPost,
+  QueryPostAPIWithParams: vi.fn(async (url, _params, body, contentType, headers, options) =>
+    mocks.queryPost(url, body, headers, contentType, options),
+  ),
 }))
 
 class TestDanmakuClient extends BaseDanmakuClient {

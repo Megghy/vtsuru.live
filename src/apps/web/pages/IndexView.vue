@@ -27,9 +27,8 @@ import { NButton, NIcon, NNumberAnimation, NTooltip } from 'naive-ui'
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { QueryGetAPI } from '@/api/query'
+import { getApiVtsuruGetIndexData } from '@/api/generated/vtsuru/vtsuru'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
-import { VTSURU_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import vtb from '@/svgs/ic_vtuber.svg'
@@ -243,7 +242,10 @@ useResizeObserver(roomsScroller, updateRoomsScrollState)
 async function loadIndexData() {
   isRefreshingRooms.value = true
   try {
-    const data = await QueryGetAPI<IndexDataType>(`${VTSURU_API_URL}get-index-data`)
+    const data = (await getApiVtsuruGetIndexData()) as unknown as {
+      code: number
+      data: IndexDataType
+    }
     if (data.code !== 200) throw new Error(`Failed to load index data: ${data.code}`)
 
     indexData.value = data.data

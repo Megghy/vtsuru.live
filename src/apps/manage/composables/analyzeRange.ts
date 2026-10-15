@@ -18,26 +18,8 @@ export interface AnalyzeDayPoint {
   sessionCount?: number
 }
 
-export interface AnalyzeSessionItem {
-  id: string
-  title: string
-  area: string
-  parentArea: string
-  coverUrl: string
-  startTime: number
-  endTime?: number | null
-  liveMinutes: number
-  totalIncome: number
-  giftIncome: number
-  scIncome: number
-  guardIncome: number
-  totalIncomeWithGuard: number
-  danmakuCount: number
-  interactionCount: number
-  uniqueInteractionCount: number
-  uniquePayingCount: number
-  likeCount: number
-}
+import type { AnalyzeSessionItem } from '@/api/generated/model/analyzeSessionItem'
+export type { AnalyzeSessionItem }
 
 export interface AnalyzeAreaStat {
   parentArea: string

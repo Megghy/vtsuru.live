@@ -17,10 +17,9 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ResponseCurrentLiveModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiLiveCurrent } from '@/api/generated/live/live'
 import { useTranscription } from '@/apps/client/store/useTranscription'
 import { createTranscriptionProfile, useTranscriptionSettings } from '@/apps/client/store/useTranscriptionSettings'
-import { LIVE_API_URL } from '@/shared/config'
 import {
   clientSupportsTranscription,
   clientVersion,
@@ -177,7 +176,11 @@ function profileReady(profile: TranscriptionProfile | undefined) {
 
 async function refreshLive() {
   try {
-    const current = await QueryGetAPI<ResponseCurrentLiveModel>(`${LIVE_API_URL}current`)
+    const current = (await getApiLiveCurrent()) as unknown as {
+      code: number
+      message?: string
+      data?: ResponseCurrentLiveModel
+    }
     const live = current.code === 200 ? current.data?.live : undefined
     if (current.code !== 200) {
       liveState.value = 'unknown'

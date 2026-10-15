@@ -35,8 +35,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import type { DanmakuModel, ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { LIVE_API_URL } from '@/shared/config'
+import { getApiLiveRanking } from '@/api/generated/live/live'
 
 const props = defineProps<{
   live: ResponseLiveInfoModel
@@ -183,10 +182,13 @@ async function fetchRanking() {
   if (!props.live.liveId) return
   isRankingLoading.value = true
   try {
-    const res = await QueryGetAPI<ResponseLiveRankingEntryModel[]>(`${LIVE_API_URL}ranking`, {
+    const res = (await getApiLiveRanking({
       liveId: props.live.liveId,
       limit: 10,
-    })
+    })) as unknown as {
+      code: number
+      data?: ResponseLiveRankingEntryModel[]
+    }
     if (res.code === 200 && res.data) {
       rankingList.value = res.data
     }

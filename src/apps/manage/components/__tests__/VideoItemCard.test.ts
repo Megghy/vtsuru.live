@@ -30,6 +30,10 @@ describe('VideoItemCard.vue', () => {
     length: 125,
     partitionId: 1,
     partitionName: '游戏',
+    createTime: '',
+    updateTime: '',
+    isDeleted: false,
+    sort: 0,
   }
 
   it('正确渲染标题、UP主、BV号、粉丝推荐人与推荐理由', () => {

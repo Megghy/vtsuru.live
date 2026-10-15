@@ -88,7 +88,7 @@ async function addCustomSong() {
     }
 
     message.success(`成功添加歌曲: ${addSongModel.value.name}`)
-    emit('added', result.data)
+    emit('added', result.data as unknown as SongsInfo[])
     resetAddingSong(onlyResetNameOnAdded.value)
   } catch (err) {
     console.error(err)

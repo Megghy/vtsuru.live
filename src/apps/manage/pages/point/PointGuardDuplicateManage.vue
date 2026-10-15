@@ -33,9 +33,13 @@ import type {
   ResponsePointGuardDuplicateScanModel,
   ResponsePointGuardDuplicateUserModel,
 } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
+import {
+  getApiPointGetDuplicateGuardDetail,
+  getApiPointScanDuplicateGuards,
+  postApiPointApplyDuplicateGuardsFix,
+} from '@/api/generated/point/point'
+import { unwrapOk } from '@/api/query'
 import { formatPoints, formatTime } from '@/apps/manage/composables/formatters'
-import { POINT_API_URL } from '@/shared/config'
 
 interface DuplicateUserRow extends ResponsePointGuardDuplicateUserModel {
   previewPoints: number
@@ -146,7 +150,7 @@ async function scanDuplicates() {
   applyResult.value = null
   try {
     const result = unwrapOk(
-      await QueryGetAPI<ResponsePointGuardDuplicateScanModel>(`${POINT_API_URL}scan-duplicate-guards`, {
+      await getApiPointScanDuplicateGuards({
         dayCount: dayCount.value,
         windowSeconds: windowSeconds.value,
         includeLiving: includeLiving.value,
@@ -172,14 +176,14 @@ async function openDetail(row: ResponsePointGuardDuplicateUserModel) {
   detailResult.value = null
   try {
     detailResult.value = unwrapOk(
-      await QueryGetAPI<ResponsePointGuardDuplicateDetailModel>(`${POINT_API_URL}get-duplicate-guard-detail`, {
+      (await getApiPointGetDuplicateGuardDetail({
         guardOuId: row.guardOUId,
         dayCount: dayCount.value,
         windowSeconds: windowSeconds.value,
         includeLiving: includeLiving.value,
         includeFinished: includeFinished.value,
         excludeFixed: excludeFixed.value,
-      }),
+      })) as any,
       '获取重复详情失败',
     )
   } catch (error) {
@@ -224,10 +228,7 @@ async function applyCleanup(applyAll: boolean) {
   applyLoading.value = true
   try {
     const result = unwrapOk(
-      await QueryPostAPI<ResponsePointGuardDuplicateApplyResult>(
-        `${POINT_API_URL}apply-duplicate-guards-fix`,
-        createApplyPayload(applyAll),
-      ),
+      await postApiPointApplyDuplicateGuardsFix(createApplyPayload(applyAll)),
       '执行重复上舰清理失败',
     )
     applyResult.value = result

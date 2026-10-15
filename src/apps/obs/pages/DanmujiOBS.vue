@@ -5,7 +5,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { isInBiliBlackList } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiVtsuruBlivechatEmoticon } from '@/api/generated/vtsuru/vtsuru'
 // @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'
 import { getRichContent } from '@/apps/obs/components/blivechat/richContent'
@@ -14,7 +14,7 @@ import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
 import * as pronunciation from '@/apps/obs/components/blivechat/utils/pronunciation'
 // @ts-ignore
 import * as trie from '@/apps/obs/components/blivechat/utils/trie'
-import { VTSURU_API_URL } from '@/shared/config'
+
 import { buildDanmujiCss } from '@/shared/danmujiStyle'
 import { useDanmujiConfig } from '@/apps/obs/composables/useDanmujiConfig'
 import { type DanmujiConfig } from '@/shared/danmujiConfig'
@@ -237,7 +237,8 @@ function onDelSuperChat(event: EventModel, _command: unknown) {
  * 获取用户类型：0-普通用户，1-舰长，3-主播
  */
 function getAuthorType(open_id: string, guard_level: number): number {
-  if (client?.authInfo?.anchor_info?.open_id && open_id === client.authInfo.anchor_info.open_id) {
+  const anchor = client?.authInfo?.anchor_info as { uid?: number; open_id?: string } | undefined
+  if (anchor && (anchor.open_id === open_id || (anchor.uid != null && String(anchor.uid) === open_id))) {
     return 3 // 主播
   } else if (guard_level !== 0) {
     return 1 // 舰长
@@ -422,7 +423,10 @@ onMounted(async () => {
 
   // 加载通用静态表情包
   try {
-    const result = await QueryGetAPI<{ keyword: string; url: string }[]>(`${VTSURU_API_URL}blivechat/emoticon`)
+    const result = (await getApiVtsuruBlivechatEmoticon()) as unknown as {
+      code: number
+      data?: { keyword: string; url: string }[]
+    }
     if (result.code === 200 && Array.isArray(result.data)) {
       textEmoticons = result.data
     }

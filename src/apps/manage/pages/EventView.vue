@@ -45,12 +45,20 @@ import { computed, h, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiEventGet,
+  postApiEventGuardDelete,
+  postApiEventGuardManual,
+} from '@/api/generated/event/event'
+import {
+  getApiHistoryGuardsList,
+  getApiHistoryGuardsStats,
+} from '@/api/generated/history/history'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
-import { AVATAR_URL, EVENT_API_URL, HISTORY_API_URL } from '@/shared/config'
+import { AVATAR_URL } from '@/shared/config'
 import { GuidUtils } from '@/shared/utils'
 
 // 定义数据模型类型 (从 HistoryView 迁移)
@@ -174,7 +182,7 @@ function currentQueryKey() {
 
 async function get(currentOffset: number, currentLimit: number) {
   try {
-    const data = await QueryGetAPI<EventModel[]>(`${EVENT_API_URL}get`, {
+    const data = (await getApiEventGet({
       start: selectedDate.value[0],
       end: selectedDate.value[1],
       offset: currentOffset,
@@ -183,7 +191,11 @@ async function get(currentOffset: number, currentLimit: number) {
       uid: userFilterApplied.value.uid,
       ouid: userFilterApplied.value.ouid,
       uname: userFilterApplied.value.uname,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: EventModel[]
+    }
     if (data.code == 200) {
       return data.data
     } else {
@@ -314,7 +326,7 @@ async function addManualGuard() {
 
   manualGuardLoading.value = true
   try {
-    const resp = await QueryPostAPI<EventModel>(`${EVENT_API_URL}guard/manual`, {
+    const resp = (await postApiEventGuardManual({
       uid,
       ouid,
       uname,
@@ -322,7 +334,11 @@ async function addManualGuard() {
       time: manualGuardTime.value ?? undefined,
       num,
       price: manualGuardPrice.value ?? undefined,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: EventModel
+    }
     if (resp.code !== 200) {
       message.error(`添加失败: ${resp.message}`)
       return
@@ -342,10 +358,18 @@ async function deleteGuardEvent(item: EventModel) {
     message.error('无法删除：缺少 id')
     return
   }
-  const ok = await run(() => QueryPostAPI<string>(`${EVENT_API_URL}guard/delete`, { id: item.id }), {
-    success: '已删除',
-    fail: '删除失败',
-  })
+  const ok = await run(
+    () =>
+      postApiEventGuardDelete({ id: item.id }) as unknown as Promise<{
+        code: number
+        message?: string
+        data: string
+      }>,
+    {
+      success: '已删除',
+      fail: '删除失败',
+    },
+  )
   if (ok !== undefined) events.value = events.value.filter((e) => e.id !== item.id)
 }
 
@@ -500,10 +524,13 @@ const guardColumns: DataTableColumns<GuardMemberModel> = [
 async function loadGuardList() {
   guardListLoading.value = true
   try {
-    const [listResponse, statsResponse] = await Promise.all([
-      QueryGetAPI<GuardMemberModel[]>(`${HISTORY_API_URL}guards-list?activeOnly=true`),
-      QueryGetAPI<GuardStatsModel>(`${HISTORY_API_URL}guards/stats`),
-    ])
+    const [listResponse, statsResponse] = (await Promise.all([
+      getApiHistoryGuardsList({ activeOnly: true }),
+      getApiHistoryGuardsStats(),
+    ])) as unknown as [
+      { code: number; data: GuardMemberModel[]; message?: string },
+      { code: number; data: GuardStatsModel; message?: string },
+    ]
 
     if (listResponse.code === 200) {
       guardList.value = listResponse.data

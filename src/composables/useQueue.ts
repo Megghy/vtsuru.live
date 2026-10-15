@@ -13,8 +13,15 @@ import {
   QueueSortType,
   QueueStatus,
 } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import { QUEUE_API_URL } from '@/shared/config'
+import {
+  getApiQueueGetActive,
+  getApiQueueGetAll,
+  postApiQueueAdd,
+  postApiQueueDeactivate,
+  postApiQueueDelete,
+  postApiQueueSetStatus,
+  postApiQueueTryAdd,
+} from '@/api/generated/queue/queue'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
 import { formatDanmakuPrice, getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
@@ -198,7 +205,11 @@ export const useQueue = defineStore('queue', () => {
     if (!isLoggedIn.value) return localQueues.value
     try {
       isLoading.value = true
-      const data = await QueryGetAPI<ResponseQueueModel[]>(`${QUEUE_API_URL}get-all`, { id: accountInfo.value.id })
+      const data = (await getApiQueueGetAll()) as unknown as {
+        code: number
+        data: ResponseQueueModel[]
+        message?: string
+      }
       if (data.code === 200) {
         return data.data ?? []
       }
@@ -222,7 +233,11 @@ export const useQueue = defineStore('queue', () => {
     if (isLoggedIn.value) {
       if (!enabled.value) return
       try {
-        const data = await QueryPostAPI<ResponseQueueModel>(`${QUEUE_API_URL}try-add`, danmaku)
+        const data = (await postApiQueueTryAdd(danmaku as any)) as unknown as {
+      code: number
+      message?: string
+      data: ResponseQueueModel
+    }
         if (data.code === 200) {
           if (data.message === 'EventFetcher') return
           const existingIndex = originQueue.value.findIndex((q) => q.id === data.data.id)
@@ -292,9 +307,13 @@ export const useQueue = defineStore('queue', () => {
     }
     if (isLoggedIn.value) {
       try {
-        const data = await QueryPostAPIWithParams<ResponseQueueModel>(`${QUEUE_API_URL}add`, {
+        const data = (await postApiQueueAdd({
           name: newQueueName.value,
-        })
+        })) as unknown as {
+          code: number
+          message?: string
+          data: ResponseQueueModel
+        }
         if (data.code === 200) {
           window.$message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
           originQueue.value.unshift(data.data)
@@ -332,7 +351,7 @@ export const useQueue = defineStore('queue', () => {
     }
     isLoading.value = true
     try {
-      const data = await QueryGetAPI(`${QUEUE_API_URL}set-status`, { id: queueData.id, status })
+        const data = await postApiQueueSetStatus({ id: queueData.id, status: status as any })
       if (data.code === 200) {
         const item = originQueue.value.find((q) => q.id === queueData.id)
         if (item) {
@@ -357,7 +376,7 @@ export const useQueue = defineStore('queue', () => {
       isLoading.value = true
       try {
         const ids = values.map((s) => s.id)
-        const data = await QueryPostAPI(`${QUEUE_API_URL}del`, ids)
+        const data = await postApiQueueDelete(ids)
         if (data.code === 200) {
           window.$message.success(`成功删除 ${values.length} 条记录`)
           originQueue.value = originQueue.value.filter((s) => !ids.includes(s.id))
@@ -388,7 +407,7 @@ export const useQueue = defineStore('queue', () => {
     if (isLoggedIn.value) {
       isLoading.value = true
       try {
-        const data = await QueryGetAPI(`${QUEUE_API_URL}deactive`)
+        const data = await postApiQueueDeactivate()
         if (data.code === 200) {
           window.$message.success('已全部取消')
           cancelLocal(originQueue.value)
@@ -409,7 +428,11 @@ export const useQueue = defineStore('queue', () => {
   async function updateActive() {
     if (!isLoggedIn.value) return
     try {
-      const data = await QueryGetAPI<ResponseQueueModel[]>(`${QUEUE_API_URL}get-active`, { id: accountInfo.value?.id })
+      const data = (await getApiQueueGetActive({ id: accountInfo.value?.id })) as unknown as {
+        code: number
+        data: ResponseQueueModel[]
+        message?: string
+      }
       if (data.code !== 200) {
         console.warn(`[QUEUE] 无法获取活动队列: ${data.message}`)
         return

@@ -5,14 +5,13 @@ import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 
 import { OpenLiveLotteryType, type UpdateLiveLotteryUsersModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiLotteryLiveGetUsers } from '@/api/generated/lottery/lottery'
 import {
   DEFAULT_LOTTERY_AVATAR,
   formatLotteryAvatar,
   type LotteryObsMode,
   type LotteryObsStyle,
 } from '@/apps/open-live/components/lottery/lotteryUtils'
-import { LOTTERY_API_URL } from '@/shared/config'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
 const props = defineProps<{
@@ -66,10 +65,13 @@ let pollTimer: number | undefined
 async function refreshUsers() {
   if (!currentId.value && !currentCode.value) return
   try {
-    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(`${LOTTERY_API_URL}live/get-users`, {
-      ...(currentId.value ? { id: currentId.value } : {}),
+    const data = (await getApiLotteryLiveGetUsers({
+      ...(currentId.value ? { id: Number(currentId.value) } : {}),
       ...(currentCode.value ? { code: currentCode.value } : {}),
-    })
+    })) as unknown as {
+      code: number
+      data?: UpdateLiveLotteryUsersModel
+    }
     if (data.code === 200 && data.data) {
       result.value = data.data
     }

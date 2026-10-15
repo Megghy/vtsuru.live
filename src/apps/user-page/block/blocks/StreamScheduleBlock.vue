@@ -4,7 +4,7 @@ import { NAlert, NButton, NIcon, NSpin, NTag } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ScheduleDayInfo, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiScheduleGet } from '@/api/generated/schedule/schedule'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
 import { SCHEDULE_API_URL } from '@/shared/config'
@@ -58,12 +58,14 @@ const scheduleQuery = useUserPageRuntimeQuery<ScheduleWeekInfo[]>({
   loader: async (signal) => {
     const userId = props.userInfo?.id
     if (!userId) return []
-    const response = await QueryGetAPI<ScheduleWeekInfo[]>(
-      `${SCHEDULE_API_URL}get`,
-      { id: userId, _ts: Date.now() },
-      undefined,
+    const response = (await getApiScheduleGet(
+      { id: String(userId) },
       { signal },
-    )
+    )) as unknown as {
+      code: number
+      message?: string
+      data?: ScheduleWeekInfo[]
+    }
     if (response.code !== 200) throw new Error(response.message || `HTTP ${response.code}`)
     return Array.isArray(response.data) ? response.data : []
   },

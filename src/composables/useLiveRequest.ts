@@ -5,8 +5,18 @@ import { computed, h, ref } from 'vue'
 import { AddBiliBlackList, useAccount } from '@/api/account'
 import type { EventModel, SongRequestInfo, SongsInfo } from '@/api/api-models'
 import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import { SONG_REQUEST_API_URL } from '@/shared/config'
+import {
+  getApiLiveRequestGetActive,
+  getApiLiveRequestGetAll,
+  postApiLiveRequestActive,
+  postApiLiveRequestAdd,
+  postApiLiveRequestCancel,
+  postApiLiveRequestDeactivate,
+  postApiLiveRequestDelete,
+  postApiLiveRequestFinish,
+  postApiLiveRequestSinging,
+  postApiLiveRequestTryAdd,
+} from '@/api/generated/live-request/live-request'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
 import { sortByQueueType } from '@/shared/utils/queue'
@@ -99,9 +109,11 @@ export const useLiveRequest = defineStore('songRequest', () => {
   async function getAllSong() {
     if (isLoggedIn.value) {
       try {
-        const data = await QueryGetAPI<SongRequestInfo[]>(`${SONG_REQUEST_API_URL}get-all`, {
-          id: accountInfo.value.id,
-        })
+        const data = (await getApiLiveRequestGetAll()) as unknown as {
+          code: number
+          data: SongRequestInfo[]
+          message: string
+        }
         if (data.code == 200) {
           console.log('[SONG-REQUEST] 已获取所有数据')
           return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
@@ -140,7 +152,13 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
 
     if (isLoggedIn.value) {
-      await QueryPostAPI<SongRequestInfo>(`${SONG_REQUEST_API_URL}try-add`, danmaku).then((data) => {
+      await (
+        postApiLiveRequestTryAdd(danmaku as any) as Promise<unknown> as Promise<{
+          code: number
+          message: string
+          data: SongRequestInfo
+        }>
+      ).then((data) => {
         if (data.code == 200) {
           window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
           if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
@@ -189,9 +207,15 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
 
     if (isLoggedIn.value) {
-      await QueryPostAPIWithParams<SongRequestInfo>(`${SONG_REQUEST_API_URL}add`, {
-        name: newSongName.value,
-      }).then((data) => {
+      await (
+        postApiLiveRequestAdd({
+          name: newSongName.value,
+        }) as Promise<unknown> as Promise<{
+          code: number
+          message: string
+          data: SongRequestInfo
+        }>
+      ).then((data) => {
         if (data.code == 200) {
           window.$message.success(`已手动添加: ${data.data.songName}`)
           originSongs.value.unshift(data.data)
@@ -249,7 +273,16 @@ export const useLiveRequest = defineStore('songRequest', () => {
         break
     }
 
-    await QueryGetAPI(SONG_REQUEST_API_URL + statusString, {
+    const postFn =
+      statusString === 'active'
+        ? postApiLiveRequestActive
+        : statusString === 'cancel'
+          ? postApiLiveRequestCancel
+          : statusString === 'finish'
+            ? postApiLiveRequestFinish
+            : postApiLiveRequestSinging
+
+    await postFn({
       id: song.id,
     })
       .then((data) => {
@@ -277,8 +310,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     isLoading.value = true
 
     try {
-      const data = await QueryPostAPI(
-        `${SONG_REQUEST_API_URL}del`,
+      const data = await postApiLiveRequestDelete(
         values.map((s) => s.id),
       )
 
@@ -300,7 +332,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     isLoading.value = true
 
     try {
-      const data = await QueryGetAPI(`${SONG_REQUEST_API_URL}deactive`)
+      const data = await postApiLiveRequestDeactivate()
 
       if (data.code == 200) {
         window.$message.success('已全部取消')
@@ -324,9 +356,13 @@ export const useLiveRequest = defineStore('songRequest', () => {
     if (!isLoggedIn.value) return
 
     try {
-      const data = await QueryGetAPI<SongRequestInfo[]>(`${SONG_REQUEST_API_URL}get-active`, {
+      const data = (await getApiLiveRequestGetActive({
         id: accountInfo.value?.id,
-      })
+      })) as unknown as {
+        code: number
+        data: SongRequestInfo[]
+        message?: string
+      }
 
       if (data.code == 200) {
         data.data.forEach((item) => {

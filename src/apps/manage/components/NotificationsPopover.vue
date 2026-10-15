@@ -21,8 +21,12 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import { QueryPostAPIWithParams } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import {
+  postApiOrgInviteMemberAccept,
+  postApiOrgInviteMemberReject,
+  postApiOrgInviteStreamerAccept,
+  postApiOrgInviteStreamerReject,
+} from '@/api/generated/org/org'
 import { getOrgInviteToken, getOrgInviteType, isOrgInviteNotification } from '@/shared/services/notifications/orgInvite'
 import { NavigateToNewTab } from '@/shared/utils'
 import { useNotificationStore } from '@/store/useNotificationStore'
@@ -81,9 +85,13 @@ async function acceptOrgInvite(item: any) {
   try {
     const type = getOrgInviteType(item)
     const token = getOrgInviteToken(item)
-    const url = type === 'member' ? `${ORG_API_URL}invite/member/accept` : `${ORG_API_URL}invite/streamer/accept`
-
-    const resp = await QueryPostAPIWithParams<{ orgId: number; orgName: string }>(url, { token }, undefined)
+    const resp = (await (type === 'member'
+      ? postApiOrgInviteMemberAccept({ token })
+      : postApiOrgInviteStreamerAccept({ token }))) as unknown as {
+      code: number
+      message?: string
+      data: { orgId: number; orgName: string }
+    }
     if (resp.code !== 200) {
       message.error(resp.message)
       return
@@ -102,9 +110,13 @@ async function rejectOrgInvite(item: any) {
   try {
     const type = getOrgInviteType(item)
     const token = getOrgInviteToken(item)
-    const url = type === 'member' ? `${ORG_API_URL}invite/member/reject` : `${ORG_API_URL}invite/streamer/reject`
-
-    const resp = await QueryPostAPIWithParams<{ orgId: number; orgName: string }>(url, { token }, undefined)
+    const resp = (await (type === 'member'
+      ? postApiOrgInviteMemberReject({ token })
+      : postApiOrgInviteStreamerReject({ token }))) as unknown as {
+      code: number
+      message?: string
+      data: { orgId: number; orgName: string }
+    }
     if (resp.code !== 200) {
       message.error(resp.message)
       return

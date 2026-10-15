@@ -5,12 +5,13 @@ import { NButton, NDropdown, NFlex, NIcon, NTag, NText, NTime, NTooltip, useDial
 import { h } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ForumModel, ForumTopicBaseModel } from '@/api/models/forum'
+import type { ResponseForumBaseModel } from '@/api/generated/model/responseForumBaseModel'
+import type { ForumTopicBaseModel } from '@/api/models/forum'
 import { useForumStore } from '@/store/useForumStore'
 
 const props = defineProps<{
   item: ForumTopicBaseModel
-  forum: ForumModel
+  forum: ResponseForumBaseModel
 }>()
 
 const useForum = useForumStore()

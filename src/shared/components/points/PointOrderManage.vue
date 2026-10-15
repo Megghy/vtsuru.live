@@ -31,9 +31,8 @@ import { useAccount } from '@/api/account'
 import type { ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
 import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
 import { fetchOwnerOrders, updateOrdersStatus } from '@/api/point-orders'
-import { QueryPostAPI } from '@/api/query'
+import { postApiPointDeleteOrders } from '@/api/generated/point/point'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
-import { POINT_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { objectsToCSV } from '@/shared/utils'
 
@@ -139,7 +138,7 @@ async function deleteOrder() {
     return
   }
   try {
-    const data = await QueryPostAPI(`${POINT_API_URL}delete-orders`, ids)
+    const data = await postApiPointDeleteOrders(ids.map(Number))
     if (data.code == 200) {
       message.success('删除成功')
       orders.value = orders.value.filter((o) => !ids.includes(o.id))

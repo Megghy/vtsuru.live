@@ -4,9 +4,17 @@ import type { Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  postApiSongListDelete,
+  postApiSongListDeleteBatch,
+  postApiSongListUpdate,
+  postApiSongListUpdateBatch,
+  postApiSongListUpdateBatchAuthor,
+  postApiSongListUpdateBatchLanguage,
+  postApiSongListUpdateBatchOption,
+  postApiSongListUpdateBatchTag,
+} from '@/api/generated/song-list/song-list'
 import { applySongOrder, moveSongInOrder } from '@/apps/manage/composables/songListCsv'
-import { SONG_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
@@ -120,10 +128,14 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
         code,
         data,
         message: err,
-      } = await QueryPostAPI<SongsInfo>(`${SONG_API_URL}update`, {
+      } = (await postApiSongListUpdate({
         key: song.key,
-        song,
-      })
+        song: song as any,
+      })) as unknown as {
+        code: number
+        data: SongsInfo
+        message: string
+      }
       if (code === 200 && data) {
         const idx = songsInternal.value.findIndex((s) => s.key === data.key)
         if (idx !== -1) songsInternal.value.splice(idx, 1, data)
@@ -145,7 +157,11 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     isLoading.value = true
     try {
       const payload = songs.map((song) => ({ key: song.key, song }))
-      const { code, data, message: err } = await QueryPostAPI<SongsInfo[]>(`${SONG_API_URL}update-batch`, payload)
+      const { code, data, message: err } = (await postApiSongListUpdateBatch(payload as any)) as unknown as {
+        code: number
+        data: SongsInfo[]
+        message: string
+      }
       if (code === 200 && data) {
         const updated = new Map(data.map((song) => [song.key, song]))
         songsInternal.value = songsInternal.value.map((song) => updated.get(song.key) ?? song)
@@ -162,7 +178,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
   async function deleteSong(song: SongsInfo) {
     isLoading.value = true
     try {
-      const { code, message: err } = await QueryGetAPI<SongsInfo>(`${SONG_API_URL}del`, { key: song.key })
+      const { code, message: err } = await postApiSongListDelete({ key: song.key })
       if (code === 200) {
         songsInternal.value = songsInternal.value.filter((s) => s.key !== song.key)
         message.success(`已删除《${song.name}》`)
@@ -184,7 +200,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     }
     isLoading.value = true
     try {
-      const { code, message: err } = await QueryPostAPI(`${SONG_API_URL}del-batch`, selectedKeys.value)
+      const { code, message: err } = await postApiSongListDeleteBatch(selectedKeys.value as any)
       if (code === 200) {
         const ids = new Set(selectedKeys.value)
         songsInternal.value = songsInternal.value.filter((s) => !ids.has(s.key))
@@ -208,7 +224,17 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     isLoading.value = true
     try {
       const payload = { ids: selectedKeys.value, data }
-      const { code, message: err } = await QueryPostAPI(`${SONG_API_URL}${endpoint}`, payload)
+      const fn =
+        endpoint === 'update-batch-author'
+          ? postApiSongListUpdateBatchAuthor
+          : endpoint === 'update-batch-tag'
+            ? postApiSongListUpdateBatchTag
+            : endpoint === 'update-batch-language'
+              ? postApiSongListUpdateBatchLanguage
+              : endpoint === 'update-batch-option'
+                ? postApiSongListUpdateBatchOption
+                : postApiSongListUpdateBatch
+      const { code, message: err } = await fn(payload as any)
       if (code === 200) {
         message.success(`已为 ${selectedKeys.value.length} 首歌曲更新${label}`)
         songsInternal.value = songsInternal.value.map((song) =>

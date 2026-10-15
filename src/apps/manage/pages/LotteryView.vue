@@ -69,7 +69,11 @@ import type {
   OpenLiveLotteryUserInfo,
   UpdateLiveLotteryUsersModel,
 } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiLotteryComments,
+  getApiLotteryForward,
+  postApiLotteryLiveUpdateUsers,
+} from '@/api/generated/lottery/lottery'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import LotteryAddUserModal from '@/apps/open-live/components/lottery/LotteryAddUserModal.vue'
 import LotteryHistoryModal from '@/apps/open-live/components/lottery/LotteryHistoryModal.vue'
@@ -93,7 +97,7 @@ import {
 } from '@/apps/open-live/components/lottery/lotteryUtils'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
-import { CURRENT_HOST, LOTTERY_API_URL } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import type { DanmakuInfo, GiftInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard, objectsToCSV } from '@/shared/utils'
@@ -175,15 +179,14 @@ function updateLiveUsers(force = false) {
   ) {
     return
   }
-  QueryPostAPI(
-    `${LOTTERY_API_URL}live/update-users`,
+  postApiLotteryLiveUpdateUsers(
     buildLiveLotterySyncBody({
       code: lotteryCode.value,
       users: currentUsers.value,
       resultUsers: liveResultUsers.value,
       drawing: isLiveLottering.value,
       finished: isLiveLotteried.value,
-    }),
+    }) as any,
   ).catch((err) => {
     console.error('[Lottery] 更新历史抽奖用户失败', err)
   })
@@ -398,24 +401,24 @@ async function fetchDynamicUsers() {
   }
   isDynamicLoading.value = true
   try {
-    const endpoint = dynamicType.value === 'comment' ? 'comments' : 'forward'
     const res = await requestWithCaptchaRetry({
       getToken: () => turnstileToken.value,
       refresh: () => refreshCaptcha(turnstile.value),
-      request: (captchaToken) =>
-        QueryGetAPI<TempLotteryResponseModel>(
-          `${LOTTERY_API_URL}${endpoint}`,
-          { id: dynamicId.toString() },
-          [['Turnstile', captchaToken]],
-        ),
+      request: (captchaToken) => {
+        const params = { id: dynamicId as unknown as number }
+        const options = { headers: { Turnstile: captchaToken } }
+        return dynamicType.value === 'comment'
+          ? getApiLotteryComments(params, options)
+          : getApiLotteryForward(params, options)
+      },
     })
     if (res.code === 200 && res.data) {
       res.data.users = new List(res.data.users).DistinctBy((u) => u.uId).ToArray()
       res.data.total = res.data.users.length
       if (dynamicType.value === 'comment') {
-        commentUsers.value = res.data
+        commentUsers.value = res.data as unknown as TempLotteryResponseModel
       } else {
-        forwardUsers.value = res.data
+        forwardUsers.value = res.data as unknown as TempLotteryResponseModel
       }
       dynamicResultUsers.value = []
       dynamicEliminatedIds.value = new Set()

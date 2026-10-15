@@ -18,11 +18,15 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
 import type { AccountInfo } from '@/api/api-models'
+import {
+  postApiAccountLogin,
+  postApiAccountRegister,
+  postApiAccountResetPassword,
+} from '@/api/generated/account/account'
 import { cookie } from '@/api/auth'
-import { QueryGetAPI, QueryPostAPI, QueryRequestError } from '@/api/query'
+import { QueryRequestError } from '@/api/query'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
-import { ACCOUNT_API_URL } from '@/shared/config'
 
 interface RegisterModel {
   username: string
@@ -408,25 +412,23 @@ async function onRegisterButtonClick() {
   const controller = beginRequest('register', '注册')
 
   try {
-    const data = await requestWithCaptchaRetry({
+    const data = await requestWithCaptchaRetry<{ code: number; message?: string; data: string }>({
       getToken: () => token.value,
       refresh: () => refreshCaptcha(turnstile.value),
       request: (captchaToken) =>
-        QueryPostAPI<string>(
-          `${ACCOUNT_API_URL}register`,
+        postApiAccountRegister(
           {
             name: registerModel.value.username,
             email: registerModel.value.email,
             password: registerModel.value.password,
           },
-          [['Turnstile', captchaToken]],
-          undefined,
           {
+            headers: { Turnstile: captchaToken },
             signal: controller.signal,
             timeoutMs: 8000,
             retryOnFailover: false,
-          },
-        ),
+          } as any,
+        ) as any,
     })
 
     if (data.code !== 200) {
@@ -454,23 +456,24 @@ async function onLoginButtonClick() {
   const controller = beginRequest('login', '登录')
 
   try {
-    const data = await QueryPostAPI<{
-      account: AccountInfo
-      token: string
-    }>(
-      `${ACCOUNT_API_URL}login`,
+    const data = (await postApiAccountLogin(
       {
         nameOrEmail: loginModel.value.account,
         password: loginModel.value.password,
       },
-      undefined,
-      undefined,
       {
         signal: controller.signal,
         timeoutMs: 8000,
         retryOnFailover: false,
-      },
-    )
+      } as any,
+    )) as unknown as {
+      code: number
+      message?: string
+      data: {
+        account: AccountInfo
+        token: string
+      }
+    }
 
     if (data.code !== 200) {
       setFeedback('error', 'error', data.message || '登录失败')
@@ -502,20 +505,19 @@ async function onForgetPassword() {
   const controller = beginRequest('forget', '重置密码')
 
   try {
-    const data = await requestWithCaptchaRetry({
+    const data = await requestWithCaptchaRetry<{ code: number; message?: string; data: string }>({
       getToken: () => token.value,
       refresh: () => refreshCaptcha(turnstile.value),
       request: (captchaToken) =>
-        QueryGetAPI(
-          `${ACCOUNT_API_URL}reset-password`,
+        postApiAccountResetPassword(
           { email: inputForgetPasswordValue.value.trim() },
-          [['Turnstile', captchaToken]],
           {
+            headers: { Turnstile: captchaToken },
             signal: controller.signal,
             timeoutMs: 8000,
             retryOnFailover: false,
           },
-        ),
+        ) as Promise<{ code: number; message?: string; data: string }>,
     })
 
     if (data.code !== 200) {

@@ -204,8 +204,8 @@ async function addFolderSongs() {
     }
 
     message.success(`已添加 ${result.data.length} 首歌曲`)
-    emit('added', result.data)
-    updateFolderSongsOptions(result.data)
+    emit('added', result.data as unknown as SongsInfo[])
+    updateFolderSongsOptions(result.data as unknown as SongsInfo[])
   } catch (err: any) {
     message.error(`添加失败: ${err.message}`)
     console.error(err)

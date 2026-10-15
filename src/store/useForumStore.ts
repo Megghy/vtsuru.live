@@ -12,10 +12,28 @@ import type {
   ForumTopicModel,
   ForumTopicSortTypes,
 } from '@/api/models/forum'
-import type { APIRoot } from '@/api/api-models'
-import { QueryGetAPI, QueryGetPaginationAPI, QueryPostAPI } from '@/api/query'
+import type { APIRoot, PaginationResponse } from '@/api/api-models'
+import {
+  getApiForumGetComments,
+  getApiForumGetForum,
+  getApiForumGetManagedForums,
+  getApiForumGetTopic,
+  getApiForumGetTopics,
+  postApiForumApply,
+  postApiForumLikeComment,
+  postApiForumLikeTopic,
+  postApiForumManageConfirmApply,
+  postApiForumManageDeleteComment,
+  postApiForumManageDeleteReply,
+  postApiForumManageDeleteTopic,
+  postApiForumManageRestoreComment,
+  postApiForumManageRestoreTopic,
+  postApiForumManageSetTopicTop,
+  postApiForumPostComment,
+  postApiForumPostReply,
+  postApiForumPostTopic,
+} from '@/api/generated/forum/forum'
 import { requestWithCaptchaRetry } from '@/shared/captcha'
-import { FORUM_API_URL } from '@/shared/config'
 import { createNaiveUIApi } from '@/shared/utils'
 
 export const useForumStore = defineStore('forum', () => {
@@ -31,7 +49,7 @@ export const useForumStore = defineStore('forum', () => {
   async function GetForumInfo(owner: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}get-forum`, { owner })
+      const data = await getApiForumGetForum({ owner: String(owner) })
       if (data.code == 200) {
         return data.data
       } else if (data.code != 404) {
@@ -48,7 +66,7 @@ export const useForumStore = defineStore('forum', () => {
   async function GetManagedForums() {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI<ForumModel[]>(`${FORUM_API_URL}get-managed-forums`)
+      const data = await getApiForumGetManagedForums()
       if (data.code == 200) {
         return data.data
       } else {
@@ -72,11 +90,11 @@ export const useForumStore = defineStore('forum', () => {
   ) {
     try {
       isLoading.value = true
-      const data = await QueryGetPaginationAPI<ForumTopicBaseModel[]>(`${FORUM_API_URL}get-topics`, {
-        owner,
+      const data = await getApiForumGetTopics({
+        owner: String(owner),
         pageSize: ps,
-        pageNum: pn,
-        sort,
+        page: pn,
+        sort: sort as any,
         section,
       })
       if (data.code == 200) {
@@ -101,7 +119,7 @@ export const useForumStore = defineStore('forum', () => {
   async function GetTopicDetail(topic: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI<ForumTopicModel>(`${FORUM_API_URL}get-topic`, { topic })
+      const data = await getApiForumGetTopic({ topic })
       if (data.code == 200) {
         return data.data
       } else {
@@ -120,11 +138,11 @@ export const useForumStore = defineStore('forum', () => {
   async function GetComments(topic: number, pn: number, ps: number, sort: ForumCommentSortTypes) {
     try {
       isLoading.value = true
-      const data = await QueryGetPaginationAPI<ForumCommentModel[]>(`${FORUM_API_URL}get-comments`, {
+      const data = await getApiForumGetComments({
         topic,
         pageSize: ps,
-        pageNum: pn,
-        sort,
+        page: pn,
+        sort: sort as any,
       })
       if (data.code == 200) {
         return data
@@ -144,7 +162,7 @@ export const useForumStore = defineStore('forum', () => {
   async function ApplyToForum(owner: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}apply`, { owner })
+      const data = await postApiForumApply({ owner })
       if (data.code == 200) {
         message?.success('已提交申请, 等待管理员审核')
         return true
@@ -163,7 +181,7 @@ export const useForumStore = defineStore('forum', () => {
   }
 
   async function postWithCaptcha<T>(
-    request: (token: string) => Promise<APIRoot<T>>,
+    request: (token: string) => Promise<{ code: number; message?: string; data: T }>,
     token: string,
     refresh: (() => Promise<string>) | undefined,
     successText: string,
@@ -193,7 +211,10 @@ export const useForumStore = defineStore('forum', () => {
   }
   function PostTopic(topic: ForumPostTopicModel, token: string, refresh?: () => Promise<string>) {
     return postWithCaptcha(
-      (captchaToken) => QueryPostAPI<ForumTopicModel>(`${FORUM_API_URL}post-topic`, topic, [['Turnstile', captchaToken]]),
+      (captchaToken) =>
+        postApiForumPostTopic(topic as any, {
+          headers: { Turnstile: captchaToken },
+        }),
       token,
       refresh,
       '发布成功',
@@ -207,7 +228,9 @@ export const useForumStore = defineStore('forum', () => {
   ) {
     return postWithCaptcha(
       (captchaToken) =>
-        QueryPostAPI<ForumCommentModel>(`${FORUM_API_URL}post-comment`, model, [['Turnstile', captchaToken]]),
+        postApiForumPostComment(model, {
+          headers: { Turnstile: captchaToken },
+        }),
       token,
       refresh,
       '评论成功',
@@ -221,7 +244,9 @@ export const useForumStore = defineStore('forum', () => {
   ) {
     return postWithCaptcha(
       (captchaToken) =>
-        QueryPostAPI<ForumCommentModel>(`${FORUM_API_URL}post-reply`, model, [['Turnstile', captchaToken]]),
+        postApiForumPostReply(model, {
+          headers: { Turnstile: captchaToken },
+        }),
       token,
       refresh,
       '评论成功',
@@ -231,7 +256,7 @@ export const useForumStore = defineStore('forum', () => {
   async function LikeTopic(topic: number, like: boolean) {
     try {
       isLikeLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}like-topic`, { topic, like })
+      const data = await postApiForumLikeTopic({ topic, like })
       if (data.code == 200) {
         // message?.success('已点赞')
         return true
@@ -251,7 +276,7 @@ export const useForumStore = defineStore('forum', () => {
   async function LikeComment(comment: number, like: boolean) {
     try {
       isLikeLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}like-comment`, { comment, like })
+      const data = await postApiForumLikeComment({ comment, like })
       if (data.code == 200) {
         // message?.success('已点赞')
         return true
@@ -286,7 +311,7 @@ export const useForumStore = defineStore('forum', () => {
   async function SetTopicTop(topic: number, top: boolean) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}manage/set-topic-top`, { topic, top })
+      const data = await postApiForumManageSetTopicTop({ topic, top })
       if (data.code == 200) {
         message?.success('完成')
         return true
@@ -306,7 +331,7 @@ export const useForumStore = defineStore('forum', () => {
   async function DelTopic(topic: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}manage/delete-topic`, { topic })
+      const data = await postApiForumManageDeleteTopic({ topic })
       if (data.code == 200) {
         message?.success('删除成功')
         return true
@@ -326,7 +351,7 @@ export const useForumStore = defineStore('forum', () => {
   async function DelComment(comment: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}delete-comment`, { comment })
+      const data = await postApiForumManageDeleteComment({ comment })
       if (data.code == 200) {
         message?.success('删除成功')
         return true
@@ -346,7 +371,7 @@ export const useForumStore = defineStore('forum', () => {
   async function DelReply(reply: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}manage/delete-reply`, { reply })
+      const data = await postApiForumManageDeleteReply({ reply })
       if (data.code == 200) {
         message?.success('删除成功')
         return true
@@ -366,7 +391,7 @@ export const useForumStore = defineStore('forum', () => {
   async function RestoreComment(comment: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}manage/restore-comment`, { comment })
+      const data = await postApiForumManageRestoreComment({ comment })
       if (data.code == 200) {
         message?.success('恢复成功')
         return true
@@ -386,7 +411,7 @@ export const useForumStore = defineStore('forum', () => {
   async function RestoreTopic(topic: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}manage/restore-topic`, { topic })
+      const data = await postApiForumManageRestoreTopic({ topic })
       if (data.code == 200) {
         message?.success('恢复成功')
         return true
@@ -406,7 +431,7 @@ export const useForumStore = defineStore('forum', () => {
   async function ConfirmApply(owner: number, id: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(`${FORUM_API_URL}manage/confirm-apply`, { forum: owner, id })
+      const data = await postApiForumManageConfirmApply({ forum: owner, id })
       if (data.code == 200) {
         message?.success('已通过申请')
         return true

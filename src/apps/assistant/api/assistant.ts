@@ -1,12 +1,123 @@
 import { cookie } from '@/api/auth'
-import { QueryGetAPI, QueryGetPaginationAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiAssistantConversations,
+  getApiAssistantConversationsIdMessages,
+  getApiAssistantDigest,
+  postApiAssistantActionsIdApprove,
+  postApiAssistantActionsIdCancelSchedule,
+  postApiAssistantActionsIdReject,
+  postApiAssistantActionsIdSchedule,
+  postApiAssistantActionsIdUpdate,
+  postApiAssistantConversationsIdDelete,
+  postApiAssistantConversationsIdRename,
+} from '@/api/generated/assistant/assistant'
 import { BASE_API_URL, mapToCurrentAPI } from '@/shared/config'
-
-import type { ActionStatus, ActionRisk } from '../schemas/assistant'
 
 const ASSISTANT_API_URL = `${BASE_API_URL}assistant/`
 
-/** 助手页面上下文, 由 Modal 打开时注入 */
+import type { ActionStatus, ActionRisk } from '../schemas/assistant'
+
+/** 会话列表 (按最后活动时间倒序, 分页) */
+export async function listConversations(pn = 0, ps = 20): Promise<AssistantConversation[]> {
+  const resp = (await getApiAssistantConversations({ pn, ps })) as unknown as {
+    code: number
+    message?: string
+    data?: AssistantConversation[]
+  }
+  if (resp.code !== 200) throw new Error(resp.message || '获取会话列表失败')
+  return resp.data ?? []
+}
+
+/** 某会话的全部历史消息 */
+export async function getConversationMessages(id: number): Promise<AssistantHistoryMessage[]> {
+  const resp = (await getApiAssistantConversationsIdMessages(id)) as unknown as {
+    code: number
+    message?: string
+    data?: AssistantHistoryMessage[]
+  }
+  if (resp.code !== 200) throw new Error(resp.message || '获取会话消息失败')
+  return resp.data ?? []
+}
+
+/** 主动建议提示: 后台待办概览 */
+export async function getDigest(): Promise<AssistantDigestItem[]> {
+  const resp = (await getApiAssistantDigest()) as unknown as {
+    code: number
+    message?: string
+    data?: AssistantDigestItem[]
+  }
+  if (resp.code !== 200) throw new Error(resp.message || '获取建议失败')
+  return resp.data ?? []
+}
+
+/** 重命名会话 */
+export async function renameConversation(id: number, title: string): Promise<void> {
+  const resp = await postApiAssistantConversationsIdRename(id, { title })
+  if (resp.code !== 200) throw new Error(resp.message || '重命名失败')
+}
+
+/** 删除会话 */
+export async function deleteConversation(id: number): Promise<void> {
+  const resp = await postApiAssistantConversationsIdDelete(id)
+  if (resp.code !== 200) throw new Error(resp.message || '删除失败')
+}
+
+/** 审批并执行提案 */
+export async function approveAction(proposalId: string): Promise<AssistantProposal> {
+  const resp = (await postApiAssistantActionsIdApprove(Number(proposalId))) as unknown as {
+    code: number
+    message?: string
+    data: AssistantProposal
+  }
+  if (resp.code !== 200) throw new Error(resp.message || '执行失败')
+  return resp.data
+}
+
+/** 拒绝提案 */
+export async function rejectAction(proposalId: string): Promise<AssistantProposal> {
+  const resp = (await postApiAssistantActionsIdReject(Number(proposalId))) as unknown as {
+    code: number
+    message?: string
+    data: AssistantProposal
+  }
+  if (resp.code !== 200) throw new Error(resp.message || '拒绝失败')
+  return resp.data
+}
+
+/** 设定提案定时执行 (scheduledTime: Unix 毫秒, UTC) */
+export async function scheduleAction(proposalId: string, scheduledTime: number): Promise<AssistantProposal> {
+  const resp = (await postApiAssistantActionsIdSchedule(Number(proposalId), {
+    scheduledTime,
+  })) as unknown as {
+    code: number
+    message?: string
+    data: AssistantProposal
+  }
+  if (resp.code !== 200) throw new Error(resp.message || '定时设定失败')
+  return resp.data
+}
+
+/** 取消提案定时执行 */
+export async function cancelScheduleAction(proposalId: string): Promise<AssistantProposal> {
+  const resp = (await postApiAssistantActionsIdCancelSchedule(Number(proposalId))) as unknown as {
+    code: number
+    message?: string
+    data: AssistantProposal
+  }
+  if (resp.code !== 200) throw new Error(resp.message || '取消定时失败')
+  return resp.data
+}
+
+/** 编辑提案展示字段, 重新校验后回到待确认 */
+export async function updateAction(proposalId: string, items: ProposalEditItem[]): Promise<AssistantProposal> {
+  const resp = (await postApiAssistantActionsIdUpdate(Number(proposalId), { items: items as any })) as unknown as {
+    code: number
+    message?: string
+    data: AssistantProposal
+  }
+  if (resp.code !== 200) throw new Error(resp.message || '保存失败')
+  return resp.data
+}
 export interface AssistantContext {
   routeName: string
   title: string
@@ -227,72 +338,4 @@ export async function streamMessage(
   if (errorMsg) throw new Error(errorMsg)
 }
 
-/** 会话列表 (按最后活动时间倒序, 分页) */
-export async function listConversations(pn = 0, ps = 20): Promise<AssistantConversation[]> {
-  const resp = await QueryGetPaginationAPI<AssistantConversation[]>(`${ASSISTANT_API_URL}conversations`, { pn, ps })
-  if (resp.code !== 200) throw new Error(resp.message || '获取会话列表失败')
-  return resp.data ?? []
-}
-
-/** 某会话的全部历史消息 */
-export async function getConversationMessages(id: number): Promise<AssistantHistoryMessage[]> {
-  const resp = await QueryGetAPI<AssistantHistoryMessage[]>(`${ASSISTANT_API_URL}conversations/${id}/messages`)
-  if (resp.code !== 200) throw new Error(resp.message || '获取会话消息失败')
-  return resp.data ?? []
-}
-
-/** 主动建议提示: 后台待办概览 */
-export async function getDigest(): Promise<AssistantDigestItem[]> {
-  const resp = await QueryGetAPI<AssistantDigestItem[]>(`${ASSISTANT_API_URL}digest`)
-  if (resp.code !== 200) throw new Error(resp.message || '获取建议失败')
-  return resp.data ?? []
-}
-
-/** 重命名会话 */
-export async function renameConversation(id: number, title: string): Promise<void> {
-  const resp = await QueryPostAPI(`${ASSISTANT_API_URL}conversations/${id}/rename`, { title })
-  if (resp.code !== 200) throw new Error(resp.message || '重命名失败')
-}
-
-/** 删除会话 */
-export async function deleteConversation(id: number): Promise<void> {
-  const resp = await QueryPostAPI(`${ASSISTANT_API_URL}conversations/${id}/delete`)
-  if (resp.code !== 200) throw new Error(resp.message || '删除失败')
-}
-
-/** 审批并执行提案 */
-export async function approveAction(proposalId: string): Promise<AssistantProposal> {
-  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/approve`)
-  if (resp.code !== 200) throw new Error(resp.message || '执行失败')
-  return resp.data
-}
-
-/** 拒绝提案 */
-export async function rejectAction(proposalId: string): Promise<AssistantProposal> {
-  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/reject`)
-  if (resp.code !== 200) throw new Error(resp.message || '拒绝失败')
-  return resp.data
-}
-
-/** 设定提案定时执行 (scheduledTime: Unix 毫秒, UTC) */
-export async function scheduleAction(proposalId: string, scheduledTime: number): Promise<AssistantProposal> {
-  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/schedule`, {
-    scheduledTime,
-  })
-  if (resp.code !== 200) throw new Error(resp.message || '定时设定失败')
-  return resp.data
-}
-
-/** 取消提案定时执行 */
-export async function cancelScheduleAction(proposalId: string): Promise<AssistantProposal> {
-  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/cancel-schedule`)
-  if (resp.code !== 200) throw new Error(resp.message || '取消定时失败')
-  return resp.data
-}
-
-/** 编辑提案展示字段, 重新校验后回到待确认 */
-export async function updateAction(proposalId: string, items: ProposalEditItem[]): Promise<AssistantProposal> {
-  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/update`, { items })
-  if (resp.code !== 200) throw new Error(resp.message || '保存失败')
-  return resp.data
-}
+/** 助手页面上下文, 由 Modal 打开时注入 */

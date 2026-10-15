@@ -27,7 +27,13 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  postApiAccountBindBili,
+  postApiAccountChangeBili,
+  postApiAccountChangeName,
+  postApiAccountResetBili,
+  postApiAccountResetToken,
+} from '@/api/generated/account/account'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
@@ -37,7 +43,7 @@ import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
-import { ACCOUNT_API_URL, availableAPIs, currentAPIKey, isDev, setSelectedAPIKey } from '@/shared/config'
+import { availableAPIs, currentAPIKey, isDev, setSelectedAPIKey } from '@/shared/config'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
@@ -103,7 +109,7 @@ async function refreshAccountState() {
 
 function resetBili() {
   isLoading.value = true
-  QueryGetAPI(`${ACCOUNT_API_URL}reset-bili`)
+  postApiAccountResetBili()
     .then(async (data) => {
       if (data.code === 200) {
         message.success('已解绑 Bilibili 主播账号')
@@ -127,7 +133,7 @@ async function resetName() {
   }
   isLoading.value = true
   try {
-    const data = await QueryGetAPI(`${ACCOUNT_API_URL}change-name`, { name: newName.value })
+    const data = await postApiAccountChangeName({ name: newName.value })
     if (data.code === 200) {
       message.success('用户名已修改')
       resetNameModalVisiable.value = false
@@ -144,7 +150,11 @@ async function resetName() {
 }
 async function resetToken() {
   isLoading.value = true
-  await QueryPostAPI<string>(`${ACCOUNT_API_URL}reset-token`)
+  await (postApiAccountResetToken() as unknown as Promise<{
+    code: number
+    message?: string
+    data: string
+  }>)
     .then(async (data) => {
       if (data.code === 200) {
         message.success('已重新生成 Token')
@@ -168,15 +178,15 @@ async function submitBiliCode(path: 'bind-bili' | 'change-bili', successText: st
   }
   isLoading.value = true
   try {
-    const data = await requestWithCaptchaRetry({
+    const data = await requestWithCaptchaRetry<{ code: number; message?: string }>({
       getToken: () => token.value,
       refresh: () => refreshCaptcha(turnstile.value),
-      request: (captchaToken) =>
-        QueryGetAPI<{ uname: string; uid: number; uface: string; room_id: number }>(
-          `${ACCOUNT_API_URL}${path}`,
-          { code: biliCode.value },
-          [['Turnstile', captchaToken]],
-        ),
+      request: (captchaToken) => {
+        const headers = { Turnstile: captchaToken }
+        return path === 'bind-bili'
+          ? (postApiAccountBindBili({ code: biliCode.value }, { headers }) as any)
+          : (postApiAccountChangeBili({ code: biliCode.value }, { headers }) as any)
+      },
     })
     if (data.code == 200) {
       message.success(successText)

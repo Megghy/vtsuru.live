@@ -27,13 +27,12 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiLiveGet } from '@/api/generated/live/live'
 import DanmakuContainer from '@/apps/manage/components/live/DanmakuContainer.vue'
 import LiveInfoContainer from '@/apps/manage/components/live/LiveInfoContainer.vue'
 import LiveOverviewPanel from '@/apps/manage/components/live/LiveOverviewPanel.vue'
 import LiveTranscriptPanel from '@/apps/manage/components/live/LiveTranscriptPanel.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import { LIVE_API_URL } from '@/shared/config'
 import { useVTsuruHub } from '@/store/useVTsuruHub'
 
 interface ResponseLiveDetail {
@@ -67,11 +66,15 @@ async function get() {
   isLoading.value = true
   loadError.value = null
   try {
-    const data = await QueryGetAPI<ResponseLiveDetail>(`${LIVE_API_URL}get`, {
+    const data = (await getApiLiveGet({
       id: String(route.params.id ?? ''),
       useEmoji: true,
       includeDanmakus: true,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data?: ResponseLiveDetail
+    }
     if (data.code === 200 && data.data) {
       return data.data
     } else {

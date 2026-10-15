@@ -99,6 +99,7 @@ export function mergeBiliReservesIntoWeeks(
       week = {
         year: item.year,
         week: item.week,
+        version: '',
         days: Array.from({ length: 7 }, () => [] as ScheduleDayInfo[]),
       }
       cloned.push(week)

@@ -2,8 +2,11 @@ import type { ComputedRef } from 'vue'
 import { computed, ref } from 'vue'
 
 import type { APIFileModel } from '@/api/api-models'
-import { QueryDeleteAPI, QueryGetPaginationAPI, unwrapOk } from '@/api/query'
-import { FILE_API_URL } from '@/shared/config'
+import {
+  deleteApiFilesDeleteId,
+  getApiFilesList,
+} from '@/api/generated/file/file'
+import { unwrapOk } from '@/api/query'
 
 import type { FileRefEntry } from './editorResources'
 
@@ -22,12 +25,12 @@ interface UseBuilderResourcesOptions {
 
 async function fetchAllFiles() {
   const pageSize = 100
-  const first = await QueryGetPaginationAPI<APIFileModel[]>(`${FILE_API_URL}list`, { page: 1, pageSize })
-  const files = [...unwrapOk(first, '加载资源失败')]
+  const first = await getApiFilesList({ page: 1, pageSize })
+  const files = [...(unwrapOk(first, '加载资源失败') ?? [])]
   const pageCount = Math.ceil(first.total / pageSize)
   for (let page = 2; page <= pageCount; page++) {
-    const response = await QueryGetPaginationAPI<APIFileModel[]>(`${FILE_API_URL}list`, { page, pageSize })
-    files.push(...unwrapOk(response, '加载资源失败'))
+    const response = await getApiFilesList({ page, pageSize })
+    files.push(...(unwrapOk(response, '加载资源失败') ?? []))
   }
   return files
 }
@@ -96,7 +99,7 @@ export function useBuilderResources(options: UseBuilderResourcesOptions) {
   async function deleteResource(resource: BuilderResource) {
     deletingId.value = resource.id
     try {
-      const response = await QueryDeleteAPI<unknown>(`${FILE_API_URL}delete/${resource.id}`)
+      const response = (await deleteApiFilesDeleteId(resource.id)) as any
       unwrapOk(response, '删除资源失败')
       allFiles.value = allFiles.value.filter((file) => file.id !== resource.id)
       options.notifySuccess('资源已删除')

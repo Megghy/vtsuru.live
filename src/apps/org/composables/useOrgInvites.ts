@@ -1,8 +1,14 @@
 import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
-import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams, unwrapOk } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import {
+  getApiOrgOrgIdInvitesMember,
+  getApiOrgOrgIdInvitesStreamer,
+  postApiOrgOrgIdInvitesMember,
+  postApiOrgOrgIdInvitesRevoke,
+  postApiOrgOrgIdInvitesStreamer,
+} from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 
 import type { OrgInviteMemberListItem, OrgInviteResponseModel, OrgInviteStreamerListItem } from '../types'
 import type { OrgContext } from './useOrgContext'
@@ -32,7 +38,9 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
     loading.value = true
     try {
       invites.value = unwrapOk(
-        await QueryGetAPI<T[]>(`${ORG_API_URL}${ctx.orgId.value}/invites/${kind}`),
+        (await (kind === 'member'
+          ? getApiOrgOrgIdInvitesMember(ctx.orgId.value)
+          : getApiOrgOrgIdInvitesStreamer(ctx.orgId.value))) as any,
         '加载邀请失败',
       )
     } catch (err) {
@@ -46,10 +54,11 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
     if (!ctx.isOrgAdmin.value || !ctx.orgId.value) return
     creating.value = true
     try {
-      const data = unwrapOk(
-        await QueryPostAPI<OrgInviteResponseModel>(`${ORG_API_URL}${ctx.orgId.value}/invite/${kind}`, payload),
-        '生成邀请失败',
-      )
+      const resp =
+        kind === 'member'
+          ? await postApiOrgOrgIdInvitesMember(ctx.orgId.value, payload as never)
+          : await postApiOrgOrgIdInvitesStreamer(ctx.orgId.value, payload as never)
+      const data = unwrapOk(resp, '生成邀请失败')
       lastUrl.value = data.joinUrl
       await load()
       return data.joinUrl
@@ -64,7 +73,10 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
     if (!ctx.isOrgAdmin.value || !ctx.orgId.value || !token) return
     try {
       unwrapOk(
-        await QueryPostAPIWithParams(`${ORG_API_URL}${ctx.orgId.value}/invite/revoke`, { type: kind, token }),
+        (await postApiOrgOrgIdInvitesRevoke(ctx.orgId.value, {
+          type: kind as any,
+          token,
+        })) as any,
         '撤销失败',
       )
       message.success('已撤销邀请')

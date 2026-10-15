@@ -51,22 +51,8 @@ export interface AnalyzeData {
 
 export type SummaryRange = 'last7Days' | 'last30Days'
 
-export interface LiveInfoModel {
-  liveId: string
-  isFinish: boolean
-  parentArea: string
-  area: string
-  coverUrl: string
-  danmakusCount: number
-  startAt: number
-  stopAt: number | null
-  title: string
-  totalIncome: number
-  totalIncomeWithGuard: number
-  likeCount: number
-  paymentCount: number
-  interactionCount: number
-}
+import type { ResponseLiveInfoModel } from '@/api/generated/model/responseLiveInfoModel'
+export type LiveInfoModel = ResponseLiveInfoModel
 
 export interface OrgLiveItem {
   streamer: UserBasicInfo
@@ -105,18 +91,7 @@ export interface HeatmapDataItem {
   value: number
 }
 
-export interface OrgStreamerDetailModel {
-  streamer: UserBasicInfo
-  status: number
-  note: string | null
-  addedAt: number
-  respondedAt: number | null
-  summary: StreamerLiveSummary
-  heatmap: HeatmapDataItem[]
-  lives: LiveInfoModel[]
-  page: number
-  pageSize: number
-}
+export type { ResponseOrgStreamerDetailModel as OrgStreamerDetailModel } from '@/api/generated/model/responseOrgStreamerDetailModel'
 
 export interface OrgInviteResponseModel {
   token: string

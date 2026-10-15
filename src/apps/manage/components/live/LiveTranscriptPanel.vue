@@ -27,8 +27,11 @@ import {
 } from 'naive-ui'
 import { computed, h, ref } from 'vue'
 
-import { QueryGetAPI, unwrapOk } from '@/api/query'
-import { LIVE_API_URL } from '@/shared/config'
+import {
+  getApiLiveGetTranscriptSegments,
+  getApiLiveGetTranscriptSessions,
+} from '@/api/generated/live/live'
+import { unwrapOk } from '@/api/query'
 import type { TranscriptSegment, TranscriptSegmentPage, TranscriptSession } from '@/shared/models/transcription'
 
 const props = defineProps<{
@@ -183,9 +186,13 @@ async function load() {
   loading.value = true
   error.value = undefined
   try {
-    const response = await QueryGetAPI<TranscriptSession[]>(`${LIVE_API_URL}get-transcript-sessions`, {
+    const response = (await getApiLiveGetTranscriptSessions({
       liveId: props.liveId,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: TranscriptSession[]
+    }
     sessions.value = unwrapOk(response, '无法获取直播转写会话').toReversed()
     selectedSessionId.value = sessions.value[0]?.id
     if (selectedSessionId.value) await loadSegments(selectedSessionId.value)
@@ -204,12 +211,16 @@ async function loadSegments(id: string) {
     let page = 1
     let more = true
     while (more) {
-      const response = await QueryGetAPI<TranscriptSegmentPage>(`${LIVE_API_URL}get-transcript-segments`, {
+      const response = (await getApiLiveGetTranscriptSegments({
         liveId: props.liveId,
         sessionId: id,
         page,
         pageSize: 1000,
-      })
+      })) as unknown as {
+        code: number
+        message?: string
+        data: TranscriptSegmentPage
+      }
       const data = unwrapOk(response, '无法获取转写字幕')
       result.push(...data.segments)
       more = data.more

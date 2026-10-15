@@ -44,6 +44,8 @@ export default antfu(
       '**/__snapshots__',
       '**/auto-import?(s).d.ts',
       '**/components.d.ts',
+      'src/api/generated/**',
+      'openapi.json',
     ],
   },
   {

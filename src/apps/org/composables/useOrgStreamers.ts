@@ -2,8 +2,13 @@ import { useMessage } from 'naive-ui'
 import { computed, inject, provide, ref } from 'vue'
 import type { InjectionKey } from 'vue'
 
-import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL } from '@/shared/config'
+import {
+  getApiOrgOrgIdStreamers,
+  getApiOrgOrgIdStreamersStreamerUserIdDetail,
+  postApiOrgOrgIdStreamerRemove,
+  postApiOrgOrgIdStreamerUpdate,
+} from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 
 import type { OrgStreamerDetailModel, OrgStreamerItem, StreamerOption } from '../types'
 import type { OrgContext } from './useOrgContext'
@@ -31,9 +36,9 @@ export function useOrgStreamers(ctx: OrgContext) {
     try {
       const includeAllParam = ctx.isOrgAdmin.value ? includeAll.value : false
       streamers.value = unwrapOk(
-        await QueryGetAPI<OrgStreamerItem[]>(`${ORG_API_URL}${ctx.orgId.value}/streamers`, {
+        (await getApiOrgOrgIdStreamers(ctx.orgId.value, {
           includeAll: includeAllParam ? true : undefined,
-        }),
+        })) as any,
         '加载主播失败',
       )
     } catch (err) {
@@ -46,9 +51,9 @@ export function useOrgStreamers(ctx: OrgContext) {
   async function remove(streamerUserId: number) {
     try {
       unwrapOk(
-        await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/streamer/remove`, {
+        (await postApiOrgOrgIdStreamerRemove(ctx.orgId.value, {
           targetStreamerUserId: streamerUserId,
-        }),
+        })) as any,
         '移除失败',
       )
       message.success('移除成功')
@@ -109,8 +114,9 @@ export function useStreamerDetail(ctx: OrgContext) {
     loading.value = true
     try {
       const data = unwrapOk(
-        await QueryGetAPI<OrgStreamerDetailModel>(
-          `${ORG_API_URL}${ctx.orgId.value}/streamers/${selectedId.value}/detail`,
+        await getApiOrgOrgIdStreamersStreamerUserIdDetail(
+          ctx.orgId.value,
+          selectedId.value,
           { page: page.value, pageSize: pageSize.value },
         ),
         '加载失败',
@@ -138,11 +144,11 @@ export function useStreamerDetail(ctx: OrgContext) {
     saving.value = true
     try {
       unwrapOk(
-        await QueryPostAPI(`${ORG_API_URL}${ctx.orgId.value}/streamer/update`, {
+        (await postApiOrgOrgIdStreamerUpdate(ctx.orgId.value, {
           targetStreamerUserId: selectedId.value,
-          status: editStatus.value ?? undefined,
+          status: (editStatus.value ?? undefined) as never,
           note: editNote.value,
-        }),
+        })) as any,
         '保存失败',
       )
       message.success('已保存')

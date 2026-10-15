@@ -11,8 +11,7 @@ import type {
   ResponseLiveRankingEntryModel,
 } from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { LIVE_API_URL } from '@/shared/config'
+import { getApiLiveCurrent, getApiLiveRanking } from '@/api/generated/live/live'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -501,7 +500,11 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     if (isSyncingLive) return
     isSyncingLive = true
     try {
-      const current = await QueryGetAPI<ResponseCurrentLiveModel>(`${LIVE_API_URL}current`)
+      const current = (await getApiLiveCurrent()) as unknown as {
+        code: number
+        message?: string
+        data: ResponseCurrentLiveModel
+      }
       if (current.code !== 200) throw new Error(current.message)
 
       const nextLive = current.data.live
@@ -515,10 +518,14 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       }
       if (!nextLive) return
 
-      const ranking = await QueryGetAPI<ResponseLiveRankingEntryModel[]>(`${LIVE_API_URL}ranking`, {
+      const ranking = (await getApiLiveRanking({
         liveId: nextLive.liveId,
         limit: Math.max(100, settings.value.rankDisplayCount || 50),
-      })
+      })) as unknown as {
+        code: number
+        message?: string
+        data: ResponseLiveRankingEntryModel[]
+      }
       if (ranking.code !== 200) throw new Error(ranking.message)
       replaceRank(ranking.data)
     } catch (error) {

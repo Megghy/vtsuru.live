@@ -1,5 +1,10 @@
-import { QQ_BOT_API_URL } from '@/shared/config'
-import { QueryGetAPI, QueryPostAPI } from './query'
+import {
+  getApiQqBotGroups,
+  getApiQqBotStatus,
+  postApiQqBotBindCode,
+  postApiQqBotGroupsNotify,
+  postApiQqBotGroupsUnbind,
+} from '@/api/generated/qq-bot/qq-bot'
 
 export interface QqBotStatus {
   configured: boolean
@@ -31,21 +36,21 @@ export interface QqBotGroup {
 }
 
 export function getQqBotStatus() {
-  return QueryGetAPI<QqBotStatus>(`${QQ_BOT_API_URL}status`)
+  return getApiQqBotStatus()
 }
 
 export function createQqBotBindCode() {
-  return QueryPostAPI<QqBotBindCode>(`${QQ_BOT_API_URL}bind-code`)
+  return postApiQqBotBindCode()
 }
 
 export function getQqBotGroups() {
-  return QueryGetAPI<QqBotGroup[]>(`${QQ_BOT_API_URL}groups`)
+  return getApiQqBotGroups()
 }
 
 export function unbindQqBotGroup(groupOpenId: string) {
-  return QueryPostAPI(`${QQ_BOT_API_URL}groups/unbind`, { groupOpenId })
+  return postApiQqBotGroupsUnbind({ groupOpenId })
 }
 
 export function updateQqBotGroupNotify(groupOpenId: string, liveStart: boolean) {
-  return QueryPostAPI<QqBotGroup>(`${QQ_BOT_API_URL}groups/notify`, { groupOpenId, liveStart })
+  return postApiQqBotGroupsNotify({ groupOpenId, liveStart })
 }

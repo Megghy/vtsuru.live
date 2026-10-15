@@ -14,6 +14,7 @@ export function createMockUploadFile(overrides?: Partial<UploadFileResponse>): U
     name: 'test-image.png',
     hash: 'hash-mock',
     path: 'https://example.com/test-image.png',
+    size: 0,
     ...overrides,
   }
 }
@@ -40,6 +41,7 @@ export function createMockQuestion(overrides?: Partial<QAInfo>): QAInfo {
     isSenderBiliAuthed: false,
     isReaded: false,
     isFavorite: false,
+    isEdited: false,
     isPublic: true,
     tag: '杂谈',
     sendAt: 1700000000,

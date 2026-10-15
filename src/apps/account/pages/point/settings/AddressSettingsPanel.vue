@@ -19,8 +19,11 @@ import {
 import { computed, ref } from 'vue'
 
 import type { AddressInfo } from '@/api/api-models'
+import {
+  postApiPointUserDeleteAddress,
+  postApiPointUserUpdateAddress,
+} from '@/api/generated/point/point'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
-import { POINT_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -142,7 +145,13 @@ async function saveAddress() {
   saving.value = true
   try {
     const payload = { ...draft.value, phone: draft.value.phone as number }
-    const response = await auth.QueryBiliAuthPostAPI<AddressInfo>(`${POINT_API_URL}user/update-address`, payload)
+    const response = (await postApiPointUserUpdateAddress(payload as any, {
+      headers: Object.fromEntries(await auth.getBiliAuthHeaders()),
+    })) as unknown as {
+      code: number
+      message?: string
+      data: AddressInfo
+    }
     if (response.code !== 200) throw new Error(response.message)
 
     const current = auth.biliAuth.address ?? []
@@ -165,7 +174,10 @@ async function deleteAddress(address: AddressInfo) {
 
   saving.value = true
   try {
-    const response = await auth.QueryBiliAuthGetAPI(`${POINT_API_URL}user/del-address`, { id: address.id })
+    const response = await postApiPointUserDeleteAddress(
+      { id: address.id },
+      { headers: Object.fromEntries(await auth.getBiliAuthHeaders()) },
+    )
     if (response.code !== 200) throw new Error(response.message)
     auth.biliAuth.address = addresses.value.filter((item) => item.id !== address.id)
     message.success('收货地址已删除')

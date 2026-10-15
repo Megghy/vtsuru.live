@@ -44,11 +44,17 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoInfo } from '@/api/api-models'
 import { DuplicateVideoPolicy, VideoStatus } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiVideoCollectGet,
+  postApiVideoCollectDelete,
+  postApiVideoCollectFinish,
+  postApiVideoCollectSetStatus,
+  postApiVideoCollectUpdate,
+} from '@/api/generated/video-collect/video-collect'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
 import { formatDuration } from '@/apps/manage/composables/formatters'
-import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import { copyToClipboard, objectsToCSV } from '@/shared/utils'
 
 import VideoCollectFormModal from './VideoCollectFormModal.vue'
@@ -173,7 +179,11 @@ function latestSubmitTime(info: VideoInfo) {
 async function loadData() {
   isLoading.value = true
   try {
-    const response = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: currentId() })
+    const response = (await getApiVideoCollectGet({ id: currentId() })) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectDetail
+    }
     if (response.code !== 200) throw new Error(response.message)
     videoDetail.value = response.data
   } catch (error) {
@@ -188,10 +198,10 @@ async function loadData() {
 async function setStatus(status: VideoStatus, video: VideoInfo) {
   videoOperation.value = video.bvid
   try {
-    const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}set-status`, {
+    const response = await postApiVideoCollectSetStatus({
       id: currentId(),
       bvid: video.bvid,
-      status,
+      status: status as any,
     })
     if (response.code !== 200) throw new Error(response.message)
     updateLocalStatus(video, status)
@@ -245,10 +255,10 @@ async function batchSetStatus(status: VideoStatus) {
     while (queueIndex < targets.length) {
       const current = targets[queueIndex++]
       try {
-        const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}set-status`, {
+        const response = await postApiVideoCollectSetStatus({
           id: currentId(),
           bvid: current.info.bvid,
-          status,
+          status: status as any,
         })
         if (response.code !== 200) throw new Error(response.message)
         updateLocalStatus(current.info, status)
@@ -273,10 +283,14 @@ async function batchSetStatus(status: VideoStatus) {
 async function updateTable(model: VideoCollectCreateModel) {
   tableOperation.value = 'edit'
   try {
-    const response = await QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}update`, {
+    const response = (await postApiVideoCollectUpdate({
       ...model,
       id: currentId(),
-    })
+    } as any)) as unknown as {
+      code: number
+      message?: string
+      data: VideoCollectTable
+    }
     if (response.code !== 200) throw new Error(response.message)
     if (videoDetail.value) videoDetail.value.table = response.data
     editModalVisible.value = false
@@ -294,7 +308,7 @@ async function toggleCollection() {
   tableOperation.value = 'toggle'
   const finish = !table.value.isFinish
   try {
-    const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}finish`, { id: table.value.id, finish })
+    const response = await postApiVideoCollectFinish({ id: table.value.id, finish: finish as any })
     if (response.code !== 200) throw new Error(response.message)
     table.value.isFinish = finish
     message.success(finish ? '征集已结束' : '征集已重新开启')
@@ -320,7 +334,7 @@ async function deleteTable() {
   if (!table.value) return
   tableOperation.value = 'delete'
   try {
-    const response = await QueryGetAPI(`${VIDEO_COLLECT_API_URL}del`, { id: table.value.id })
+    const response = await postApiVideoCollectDelete({ id: table.value.id })
     if (response.code !== 200) throw new Error(response.message)
     message.success('征集已删除')
     await router.replace({ name: 'manage-videoCollect' })

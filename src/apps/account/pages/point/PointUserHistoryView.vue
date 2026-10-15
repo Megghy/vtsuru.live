@@ -7,9 +7,9 @@ import { computed, onMounted, ref } from 'vue'
 
 import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { PointFrom } from '@/api/api-models'
+import { getApiPointUserGetHistories } from '@/api/generated/point/point'
 import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
-import { POINT_API_URL } from '@/shared/config'
 import { objectsToCSV } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -68,7 +68,13 @@ async function loadHistories(force = false) {
   loading.value = true
   const currentGeneration = generation
   const promise = (async () => {
-    const result = await auth.QueryBiliAuthGetAPI<ResponsePointHisrotyModel[]>(`${POINT_API_URL}user/get-histories`)
+    const result = (await getApiPointUserGetHistories({
+      headers: Object.fromEntries(await auth.getBiliAuthHeaders()),
+    })) as unknown as {
+      code: number
+      message?: string
+      data: ResponsePointHisrotyModel[]
+    }
     if (result.code !== 200) throw new Error(result.message || '获取积分记录失败')
     if (currentGeneration !== generation) return
     histories.value = result.data

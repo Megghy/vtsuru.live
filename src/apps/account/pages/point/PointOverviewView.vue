@@ -5,8 +5,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { UserInfo } from '@/api/api-models'
+import { getApiPointUserGetAllPoint } from '@/api/generated/point/point'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
-import { POINT_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 interface PointAccount {
@@ -25,7 +25,13 @@ const totalPoints = computed(() => points.value.reduce((total, item) => total + 
 async function loadPoints() {
   isLoading.value = true
   try {
-    const response = await auth.QueryBiliAuthGetAPI<PointAccount[]>(`${POINT_API_URL}user/get-all-point`)
+    const response = (await getApiPointUserGetAllPoint({
+      headers: Object.fromEntries(await auth.getBiliAuthHeaders()),
+    })) as unknown as {
+      code: number
+      message?: string
+      data: PointAccount[]
+    }
     if (response.code !== 200) throw new Error(response.message)
     points.value = response.data
   } catch (error) {

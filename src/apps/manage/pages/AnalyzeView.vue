@@ -66,7 +66,7 @@ import {
 } from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { QueryGetAPI } from '@/api/query'
+import { getApiAnalyzeAll } from '@/api/generated/analyze/analyze'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import {
@@ -86,7 +86,6 @@ import {
   type AnalyzeTopUser,
 } from '@/apps/manage/composables/analyzeRange'
 import { formatCurrency, formatDate, formatNumber } from '@/apps/manage/composables/formatters'
-import { ANALYZE_API_URL } from '@/shared/config'
 
 // 注册 ECharts 必要组件
 echarts.use([
@@ -692,7 +691,7 @@ function updateChartOption() {
 async function loadData() {
   try {
     loading.value = true
-    const response = await QueryGetAPI<BackendAnalyzeData>(`${ANALYZE_API_URL}all`)
+    const response = await getApiAnalyzeAll()
     if (response.code === 200 && response.data) {
       analyzeData.value = response.data
       lastUpdateTime.value = Date.now()
@@ -711,7 +710,7 @@ async function loadData() {
 async function refreshData() {
   try {
     refreshing.value = true
-    const response = await QueryGetAPI<BackendAnalyzeData>(`${ANALYZE_API_URL}all`)
+    const response = await getApiAnalyzeAll()
     if (response.code === 200 && response.data) {
       analyzeData.value = response.data
       lastUpdateTime.value = Date.now()

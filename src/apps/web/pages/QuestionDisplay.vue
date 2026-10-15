@@ -31,11 +31,11 @@ import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
+import { postApiQaUpdateSetting } from '@/api/generated/qa/qa'
 import QuestionDisplayQueue from '@/apps/web/components/question-display/QuestionDisplayQueue.vue'
 import QuestionDisplayStylePanel from '@/apps/web/components/question-display/QuestionDisplayStylePanel.vue'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
-import { CURRENT_HOST, QUESTION_API_URL } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import {
   getAdjacentQuestion,
@@ -227,7 +227,7 @@ async function saveSettings() {
   const payload = normalizeQuestionDisplaySetting(settingDraft.value)
   saving.value = true
   try {
-    const response = await QueryPostAPI(`${QUESTION_API_URL}update-setting`, payload)
+    const response = await postApiQaUpdateSetting(payload as any)
     if (response.code !== 200) throw new Error(response.message)
     settingDraft.value = payload
     accountInfo.value.settings.questionDisplay = structuredClone(toRaw(payload))

@@ -4,8 +4,11 @@ import { useRoute } from 'vue-router'
 
 import { isLoggedIn } from '@/api/account'
 import type { LevelTypes, PaginationResponse } from '@/api/api-models'
-import { QueryGetAPI, QueryGetPaginationAPI } from '@/api/query'
-import { NOTIFICATION_API_URL } from '@/shared/config'
+import {
+  getApiNotificationGet,
+  getApiNotificationGetUnread,
+  postApiNotificationRead,
+} from '@/api/generated/notifaction/notifaction'
 
 export interface NotificationItem {
   id: string
@@ -45,7 +48,10 @@ export const useNotificationStore = defineStore('notification', () => {
 
   async function refreshUnread() {
     try {
-      const result = await QueryGetAPI<any[]>(`${NOTIFICATION_API_URL}get-unread`)
+      const result = (await getApiNotificationGetUnread()) as unknown as {
+        code: number
+        data?: any[]
+      }
       if (result.code === 200) {
         unread.value = (result.data ?? []).map(normalizeNotification)
       }
@@ -55,11 +61,11 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   async function refreshLatest(pn: number = 0, ps: number = 20, onlyUnread: boolean = false) {
-    const result = await QueryGetPaginationAPI<any[]>(`${NOTIFICATION_API_URL}get`, {
+    const result = (await getApiNotificationGet({
       pn,
       ps,
       unread: onlyUnread ? true : undefined,
-    })
+    })) as unknown as PaginationResponse<any[]>
 
     if (result.code === 200) {
       latest.value = (result.data ?? []).map(normalizeNotification)
@@ -71,11 +77,10 @@ export const useNotificationStore = defineStore('notification', () => {
   async function markRead(ids: string[]) {
     if (!ids.length) return
 
-    const params = new URLSearchParams()
-    for (const id of ids) {
-      params.append('id', id)
+    const result = (await postApiNotificationRead({ id: ids as any })) as unknown as {
+      code: number
+      message?: string
     }
-    const result = await QueryGetAPI<number>(`${NOTIFICATION_API_URL}read`, params)
     if (result.code !== 200) {
       throw new Error(result.message)
     }

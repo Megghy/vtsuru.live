@@ -1,8 +1,7 @@
 import { fetch } from '@tauri-apps/plugin-http'
 import { error } from '@tauri-apps/plugin-log'
 
-import { QueryPostAPI } from '@/api/query'
-import { OPEN_LIVE_API_URL } from '@/shared/config'
+import { postApiOpenLiveStart } from '@/api/generated/open-live/open-live'
 
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
@@ -82,7 +81,11 @@ export async function getAuthInfo(): Promise<{
   message: string
 }> {
   try {
-    const data = await QueryPostAPI<any>(`${OPEN_LIVE_API_URL}start`)
+    const data = (await postApiOpenLiveStart()) as unknown as {
+      code: number
+      data: any
+      message: string
+    }
     if (data.code == 200) {
       console.log(`[open-live] 已获取认证信息`)
       return {

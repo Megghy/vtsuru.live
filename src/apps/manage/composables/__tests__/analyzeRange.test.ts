@@ -98,7 +98,7 @@ describe('analyzeRange', () => {
   it('filters sessions by timestamp range and aggregates area statistics', () => {
     const sessions: AnalyzeSessionItem[] = [
       {
-        id: 's1',
+        id: 1,
         title: '测试单机',
         area: '单机游戏',
         parentArea: '单机',
@@ -117,7 +117,7 @@ describe('analyzeRange', () => {
         likeCount: 200,
       },
       {
-        id: 's2',
+        id: 2,
         title: '测试杂谈',
         area: '视频聊天',
         parentArea: '娱乐',
@@ -136,7 +136,7 @@ describe('analyzeRange', () => {
         likeCount: 500,
       },
       {
-        id: 's3',
+        id: 3,
         title: '早前直播',
         area: '单机游戏',
         parentArea: '单机',

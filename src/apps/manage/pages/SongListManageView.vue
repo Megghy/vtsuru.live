@@ -10,13 +10,13 @@ import { useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
 import type { SongsInfo } from '@/api/api-models'
 import { FunctionTypes, SongFrom } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiSongListGet } from '@/api/generated/song-list/song-list'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import SongListAddSongModal from '@/apps/manage/components/song-list/SongListAddSongModal.vue'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { parseSongListCsv, parsedRowsToSongsInfo } from '@/apps/manage/composables/songListCsv'
 import SongList from '@/components/SongList.vue'
-import { CURRENT_HOST, SONG_API_URL } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import { objectsToCSV } from '@/shared/utils'
 
 const message = useMessage()
@@ -35,7 +35,10 @@ const songListUrl = computed(() =>
 async function getSongs() {
   isLoading.value = true
   try {
-    const data = await QueryGetAPI<any>(`${SONG_API_URL}get`, { id: accountInfo.value?.id })
+    const data = (await getApiSongListGet({ id: accountInfo.value?.id != null ? String(accountInfo.value.id) : undefined })) as unknown as {
+      code: number
+      data: any
+    }
     if (data.code === 200) songs.value = data.data
   } catch (err) {
     message.error(`获取歌曲失败: ${err}`)
@@ -135,7 +138,7 @@ async function onCsvFileChange(ev: Event) {
     for (const [from, list] of groups) {
       const resp = await addSongsToSongList(list, from)
       if (resp.code !== 200) throw new Error(resp.message || '导入失败')
-      if (resp.data?.length) added.push(...resp.data)
+      if (resp.data?.length) added.push(...(resp.data as unknown as SongsInfo[]))
     }
     songs.value.push(...added)
     message.success(`已导入 ${added.length} 首歌曲`)

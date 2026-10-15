@@ -38,12 +38,11 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import type { ResponseLiveInfoModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { getApiLiveGetAll } from '@/api/generated/live/live'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import LiveInfoContainer from '@/apps/manage/components/live/LiveInfoContainer.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import { LIVE_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 defineOptions({ name: 'ManageLiveView' })
@@ -149,7 +148,11 @@ async function getAll() {
   isLoading.value = true
   loadError.value = null
   try {
-    const data = await QueryGetAPI<ResponseLiveInfoModel[]>(`${LIVE_API_URL}get-all`)
+    const data = (await getApiLiveGetAll()) as unknown as {
+      code: number
+      message?: string
+      data: ResponseLiveInfoModel[]
+    }
     if (data.code === 200) {
       lives.value = data.data
     } else {

@@ -8,8 +8,7 @@ import { Vue3Marquee } from 'vue3-marquee'
 
 import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
 import { QueueSortType, SongRequestFrom } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { SONG_REQUEST_API_URL } from '@/shared/config'
+import { getApiLiveRequestGetToday } from '@/api/generated/live-request/live-request'
 
 const props = defineProps<{
   id?: number
@@ -68,10 +67,12 @@ const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
-      `${SONG_REQUEST_API_URL}get-today`,
-      currentId.value ? { id: currentId.value } : {},
-    )
+    const data = (await getApiLiveRequestGetToday(
+      currentId.value ? { id: Number(currentId.value) } : {},
+    )) as unknown as {
+      code: number
+      data: { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+    }
     if (data.code === 200) {
       return data.data
     }

@@ -40,10 +40,13 @@ import { computed, h, onMounted, ref } from 'vue'
 import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import type { CheckInRankingInfo, CheckInResult, Setting_Point } from '@/api/api-models'
 import { FunctionTypes } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import {
+  getApiCheckinAdminUsers,
+  postApiCheckinAdminReset,
+  postApiCheckinCheckInFor,
+} from '@/api/generated/check-in/check-in'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
-import { CHECKIN_API_URL } from '@/shared/config'
 
 import AutoActionEditor from '../AutoActionEditor.vue'
 import { CHECKIN_PLACEHOLDERS } from '../placeholders'
@@ -344,7 +347,11 @@ async function loadCheckInRanking() {
 
   isLoadingRanking.value = true
   try {
-    const response = await QueryGetAPI<CheckInRankingInfo[]>(`${CHECKIN_API_URL}admin/users`)
+    const response = (await getApiCheckinAdminUsers()) as unknown as {
+      code: number
+      message?: string
+      data: CheckInRankingInfo[]
+    }
 
     if (response.code == 200) {
       rankingData.value = response.data
@@ -378,7 +385,7 @@ async function resetUserCheckInByGuid(ouId: string) {
   resetTargetId.value = ouId
 
   try {
-    const response = await QueryGetAPI(`${CHECKIN_API_URL}admin/reset`, {
+    const response = await postApiCheckinAdminReset({
       ouId,
     })
 
@@ -417,7 +424,7 @@ async function resetAllCheckIn() {
 
   isResetting.value = true
   try {
-    const response = await QueryGetAPI(`${CHECKIN_API_URL}admin/reset`, {})
+    const response = await postApiCheckinAdminReset()
 
     if (response && response.code === 200) {
       window.$notification.success({
@@ -464,10 +471,14 @@ async function handleTestCheckIn() {
 
   try {
     // 直接调用服务端签到API
-    const response = await QueryGetAPI<CheckInResult>(`${CHECKIN_API_URL}check-in-for`, {
+    const response = (await postApiCheckinCheckInFor({
       uId: testUid.value,
       name: testUsername.value || '测试用户',
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: CheckInResult
+    }
 
     if (response.code === 200 && response.data) {
       const result = response.data

@@ -3,8 +3,7 @@ import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
 import { QueueSortType, SongRequestStatus } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { SONG_REQUEST_API_URL } from '@/shared/config'
+import { getApiLiveRequestGetActiveAndSettings } from '@/api/generated/live-request/live-request'
 import { useWebRTC } from '@/store/useRTC'
 
 export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
@@ -70,12 +69,14 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
     try {
       const rawId = toValue(currentId)
       const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
-      const params = idStr ? { id: idStr } : {}
+      const params = idStr ? { id: Number(idStr) } : {}
 
-      const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
-        `${SONG_REQUEST_API_URL}get-active-and-settings`,
+      const data = (await getApiLiveRequestGetActiveAndSettings(
         params,
-      )
+      )) as unknown as {
+        code: number
+        data: { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+      }
       if (data.code == 200) {
         return data.data
       }

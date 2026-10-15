@@ -2,16 +2,28 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { QAInfo } from '@/api/api-models'
 import { ViolationTypes } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/shared/config'
+import type { QAControllerQATagInfo } from '@/api/generated/model/qAControllerQATagInfo'
+import type { ResponseQAInfo } from '@/api/generated/model/responseQAInfo'
+import type { ResponseQAInfoToTarget } from '@/api/generated/model/responseQAInfoToTarget'
+import { postApiAccountBlackListAdd } from '@/api/generated/account/account'
+import {
+  getApiQaGetReceive,
+  getApiQaGetSend,
+  getApiQaGetTags,
+  postApiQaAddTag,
+  postApiQaDelete,
+  postApiQaDeleteTag,
+  postApiQaFavorite,
+  postApiQaMarkAsNormal,
+  postApiQaPublic,
+  postApiQaRead,
+  postApiQaReply,
+  postApiQaSetCurrent,
+  postApiQaUpdateTagVisible,
+} from '@/api/generated/qa/qa'
 
-export interface QATagInfo {
-  name: string
-  createAt: number
-  visiable: boolean
-}
+export type QATagInfo = QAControllerQATagInfo
 
 export type SortMode = 'default' | 'newest' | 'oldest' | 'unreadFirst' | 'repliedFirst' | 'unrepliedFirst'
 
@@ -27,8 +39,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     error: (msg?: string) => window.$message?.error(msg ?? ''),
   }
 
-  const recieveQuestions = ref<QAInfo[]>([])
-  const sendQuestions = ref<QAInfo[]>([])
+  const recieveQuestions = ref<ResponseQAInfoToTarget[]>([])
+  const sendQuestions = ref<ResponseQAInfo[]>([])
   const tags = ref<QATagInfo[]>([])
   const reviewing = ref(0)
 
@@ -45,8 +57,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   const selectedIds = ref<number[]>([])
 
   // 展示相关
-  const currentQuestion = ref<QAInfo>()
-  const displayQuestion = ref<QAInfo>()
+  const currentQuestion = ref<ResponseQAInfoToTarget>()
+  const displayQuestion = ref<ResponseQAInfoToTarget>()
 
   let isRecieveGetted = false
   let isSendGetted = false
@@ -55,7 +67,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     recieveQuestions.value.filter((q) => q.reviewResult && q.reviewResult.isApproved === false),
   )
 
-  function applySorting(list: QAInfo[]): QAInfo[] {
+  function applySorting(list: ResponseQAInfoToTarget[]): ResponseQAInfoToTarget[] {
     const sorted = [...list]
     switch (sortMode.value) {
       case 'newest':
@@ -101,7 +113,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function GetRecieveQAInfo() {
     isLoading.value = true
     try {
-      const resp = await QueryGetAPI<{ questions: QAInfo[]; reviewCount: number }>(`${QUESTION_API_URL}get-recieve`)
+      const resp = await getApiQaGetReceive()
       if (resp.code === 200) {
         recieveQuestions.value = [...resp.data.questions].toSorted((a, b) => {
           if (a.isReaded !== b.isReaded) return a.isReaded ? 1 : -1
@@ -124,7 +136,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function GetSendQAInfo() {
     isLoading.value = true
     try {
-      const resp = await QueryGetAPI<QAInfo[]>(`${QUESTION_API_URL}get-send`)
+      const resp = await getApiQaGetSend()
       if (resp.code === 200) {
         sendQuestions.value = resp.data
         isSendGetted = true
@@ -140,7 +152,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   async function DelQA(id: number) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}del`, { id })
+      const resp = await postApiQaDelete({ id })
       if (resp.code === 200) {
         message.success('删除成功')
         recieveQuestions.value = recieveQuestions.value.filter((q) => q.id !== id)
@@ -162,7 +174,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
     isLoading.value = true
     try {
-      const resp = await QueryGetAPI<QATagInfo[]>(`${QUESTION_API_URL}get-tags`, { id })
+      const resp = await getApiQaGetTags({ id: String(id) })
       if (resp.code === 200) {
         tags.value = resp.data
       } else {
@@ -182,7 +194,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
 
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}add-tag`, { tag: tagName.trim() })
+      const resp = await postApiQaAddTag({ tag: tagName.trim() })
       if (resp.code === 200) {
         message.success('添加成功')
         await GetTags()
@@ -196,7 +208,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   async function delTag(tagName: string) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}del-tag`, { tag: tagName })
+      const resp = await postApiQaDeleteTag({ tag: tagName })
       if (resp.code === 200) {
         message.success('删除成功')
         await GetTags()
@@ -210,7 +222,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   async function changeTagVisiable(tagName: string, isVisiable: boolean) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}update-tag-visiable`, {
+      const resp = await postApiQaUpdateTagVisible({
         tag: tagName,
         visiable: isVisiable,
       })
@@ -228,11 +240,11 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function reply(id: number, replyMsg: string, files: File[] = []) {
     isRepling.value = true
     try {
-      const form = new FormData()
-      form.append('id', String(id))
-      form.append('message', replyMsg)
-      for (const file of files) form.append('files', file)
-      const resp = await QueryPostAPI(`${QUESTION_API_URL}reply`, form)
+      const resp = await postApiQaReply({
+        id,
+        message: replyMsg,
+        files: files.length ? (files as any) : undefined,
+      })
       if (resp.code === 200) {
         message.success('回复成功')
         const q = recieveQuestions.value.find((item) => item.id === id)
@@ -250,11 +262,11 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function read(question: QAInfo, isRead: boolean) {
+  async function read(question: ResponseQAInfoToTarget, isRead: boolean) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}read`, {
+      const resp = await postApiQaRead({
         id: question.id,
-        read: isRead ? 'true' : 'false',
+        read: isRead ? 'true' : ('false' as any),
       })
       if (resp.code === 200) {
         question.isReaded = isRead
@@ -266,9 +278,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function favorite(question: QAInfo, fav: boolean) {
+  async function favorite(question: ResponseQAInfoToTarget, fav: boolean) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}favorite`, { id: question.id, favorite: fav })
+      const resp = await postApiQaFavorite({ id: question.id, favorite: fav as any })
       if (resp.code === 200) {
         question.isFavorite = fav
       } else {
@@ -279,16 +291,16 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function setPublic(question: QAInfo, pub: boolean, options?: { force?: boolean }) {
+  async function setPublic(question: ResponseQAInfoToTarget, pub: boolean, options?: { force?: boolean }) {
     if (pub && question.senderAllowsPublic === false && !options?.force) {
       message.warning('提问者选择不公开展示，请确认后强制公开')
       return false
     }
     isChangingPublic.value = true
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}public`, {
+      const resp = await postApiQaPublic({
         id: question.id,
-        public: pub,
+        public: pub as any,
         ...(options?.force ? { force: true } : {}),
       })
       if (resp.code === 200) {
@@ -307,16 +319,16 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function blacklist(question: QAInfo) {
+  async function blacklist(question: ResponseQAInfoToTarget) {
     if (question.isAnonymous || !question.sender?.id) {
       message.warning('匿名提问无法拉黑提问者账号')
       return
     }
 
     try {
-      const resp = await QueryGetAPI(`${ACCOUNT_API_URL}black-list/add`, { id: question.sender.id })
+      const resp = await postApiAccountBlackListAdd({ id: question.sender.id })
       if (resp.code === 200) {
-        const delResp = await QueryGetAPI(`${QUESTION_API_URL}del`, { id: question.id })
+        const delResp = await postApiQaDelete({ id: question.id })
         if (delResp.code === 200) {
           message.success(`已拉黑 ${question.sender.name}`)
           recieveQuestions.value = recieveQuestions.value.filter((q) => q.id !== question.id)
@@ -332,9 +344,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function markAsNormal(question: QAInfo) {
+  async function markAsNormal(question: ResponseQAInfoToTarget) {
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}mark-as-normal`, { id: question.id })
+      const resp = await postApiQaMarkAsNormal({ id: question.id })
       if (resp.code === 200) {
         message.success('已标记为正常')
         question.reviewResult.isApproved = true
@@ -344,14 +356,14 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
   }
 
-  async function setCurrentQuestion(item: QAInfo | undefined) {
+  async function setCurrentQuestion(item: ResponseQAInfoToTarget | undefined) {
     const nextId = item?.id
     const previousQuestion = displayQuestion.value
     // 乐观更新：本地状态与 UI 立即切换，杜绝等待网络请求的卡顿与空隙
     displayQuestion.value = item
     if (accountInfo.value) accountInfo.value.currentQuestionId = nextId
     try {
-      const resp = await QueryGetAPI(`${QUESTION_API_URL}set-current`, nextId ? { id: nextId } : null)
+      const resp = await postApiQaSetCurrent(nextId ? { id: nextId } : undefined)
       if (resp.code !== 200) throw new Error(resp.message)
     } catch (err) {
       displayQuestion.value = previousQuestion
@@ -386,7 +398,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     const ids = [...selectedIds.value]
     if (!ids.length) return
     await Promise.allSettled(
-      ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}read`, { id, read: isRead ? 'true' : 'false' })),
+      ids.map(async (id) => postApiQaRead({ id, read: isRead ? 'true' : ('false' as any) })),
     )
     ids.forEach((id) => {
       const q = recieveQuestions.value.find((item) => item.id === id)
@@ -399,7 +411,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function batchDelete() {
     const ids = [...selectedIds.value]
     if (!ids.length) return
-    await Promise.allSettled(ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}del`, { id })))
+    await Promise.allSettled(ids.map(async (id) => postApiQaDelete({ id })))
     recieveQuestions.value = recieveQuestions.value.filter((q) => !ids.includes(q.id))
     if (displayQuestion.value && ids.includes(displayQuestion.value.id)) {
       displayQuestion.value = undefined
@@ -420,7 +432,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       return
     }
     await Promise.allSettled(
-      targets.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}public`, { id, public: pub })),
+      targets.map(async (id) => postApiQaPublic({ id, public: pub as any })),
     )
     targets.forEach((id) => {
       const q = recieveQuestions.value.find((item) => item.id === id)
@@ -437,7 +449,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function batchFavorite(fav: boolean) {
     const ids = [...selectedIds.value]
     if (!ids.length) return
-    await Promise.allSettled(ids.map(async (id) => QueryGetAPI(`${QUESTION_API_URL}favorite`, { id, favorite: fav })))
+    await Promise.allSettled(ids.map(async (id) => postApiQaFavorite({ id, favorite: fav as any })))
     ids.forEach((id) => {
       const q = recieveQuestions.value.find((item) => item.id === id)
       if (q) q.isFavorite = fav

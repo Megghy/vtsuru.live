@@ -17,9 +17,13 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { isLoggedIn } from '@/api/account'
-import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
+import {
+  getApiOrgInvitePreview,
+  postApiOrgInviteMemberAccept,
+  postApiOrgInviteStreamerAccept,
+  postApiOrgInviteStreamerReject,
+} from '@/api/generated/org/org'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { ORG_API_URL } from '@/shared/config'
 
 import '@/apps/web/styles/web-page.css'
 
@@ -84,10 +88,14 @@ async function loadPreview() {
   previewLoading.value = true
   previewError.value = ''
   try {
-    const resp = await QueryGetAPI<OrgInvitePreviewModel>(`${ORG_API_URL}invite/preview`, {
-      type: joinType.value,
+    const resp = (await getApiOrgInvitePreview({
+      type: joinType.value as any,
       token: token.value,
-    })
+    })) as unknown as {
+      code: number
+      message?: string
+      data: OrgInvitePreviewModel
+    }
     if (resp.code === 200) {
       preview.value = resp.data
       return
@@ -115,11 +123,13 @@ async function acceptMember() {
   if (!isValid.value || joinType.value !== 'member') return
   isBusy.value = true
   try {
-    const resp = await QueryPostAPIWithParams<OrgJoinResponseModel>(
-      `${ORG_API_URL}invite/member/accept`,
-      { token: token.value },
-      undefined,
-    )
+    const resp = (await postApiOrgInviteMemberAccept({
+      token: token.value,
+    })) as unknown as {
+      code: number
+      message?: string
+      data: OrgJoinResponseModel
+    }
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName
@@ -139,11 +149,13 @@ async function acceptStreamer() {
   if (!isValid.value || joinType.value !== 'streamer') return
   isBusy.value = true
   try {
-    const resp = await QueryPostAPIWithParams<OrgJoinResponseModel>(
-      `${ORG_API_URL}invite/streamer/accept`,
-      { token: token.value },
-      undefined,
-    )
+    const resp = (await postApiOrgInviteStreamerAccept({
+      token: token.value,
+    })) as unknown as {
+      code: number
+      message?: string
+      data: OrgJoinResponseModel
+    }
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName
@@ -162,11 +174,13 @@ async function rejectStreamer() {
   if (!isValid.value || joinType.value !== 'streamer') return
   isBusy.value = true
   try {
-    const resp = await QueryPostAPIWithParams<OrgJoinResponseModel>(
-      `${ORG_API_URL}invite/streamer/reject`,
-      { token: token.value },
-      undefined,
-    )
+    const resp = (await postApiOrgInviteStreamerReject({
+      token: token.value,
+    })) as unknown as {
+      code: number
+      message?: string
+      data: OrgJoinResponseModel
+    }
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName

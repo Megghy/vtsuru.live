@@ -5,9 +5,12 @@ import { computed, ref, watch } from 'vue'
 import { ACCOUNT } from '@/api/account'
 import type { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
 import { cookie } from '@/api/auth'
-import type { QueryParams, QueryRequestOptions } from '@/api/query'
-import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import { BILI_AUTH_API_URL, POINT_API_URL } from '@/shared/config'
+import {
+  getApiBiliAuthInfo,
+  postApiBiliAuthMigrate,
+  postApiBiliAuthSessionRotate,
+} from '@/api/generated/bili-auth-v2/bili-auth-v2'
+import { getApiPointGetGoods, getApiPointUserGetPoint } from '@/api/generated/point/point'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const useBiliAuth = defineStore('BiliAuth', () => {
@@ -85,7 +88,9 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     const promise = (async () => {
       try {
         isLoading.value = true
-        const data = await QueryBiliAuthGetAPI<BiliAuthModel>(`${BILI_AUTH_API_URL}info`)
+        const data = (await getApiBiliAuthInfo({
+          headers: Object.fromEntries(await getBiliAuthHeaders()),
+        })) as unknown as { code: number; message: string; data: BiliAuthModel }
         // 切换账号后到达的旧响应不能覆盖当前身份。
         if (identity.value !== requestIdentity) return false
         if (data.code == 200) {
@@ -130,7 +135,12 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
 
   async function migrateLegacyToken() {
     if (!legacyToken.value) return false
-    const response = await QueryPostAPI<SessionResponse>(`${BILI_AUTH_API_URL}migrate`, { token: legacyToken.value })
+    const response = (await postApiBiliAuthMigrate({
+      token: legacyToken.value,
+    })) as unknown as {
+      code: number
+      data: SessionResponse
+    }
     if (response.code !== 200) return false
 
     currentToken.value = response.data.token
@@ -145,7 +155,9 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   }
 
   async function rotateSession() {
-    const response = await QueryBiliAuthPostAPI<SessionResponse>(`${BILI_AUTH_API_URL}session/rotate`)
+    const response = (await postApiBiliAuthSessionRotate({
+      headers: Object.fromEntries(await getBiliAuthHeaders()),
+    })) as unknown as { code: number; data: SessionResponse }
     if (response.code !== 200) return false
 
     currentToken.value = response.data.token
@@ -166,31 +178,12 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     return result
   }
 
-  async function QueryBiliAuthGetAPI<T>(url: string, params?: any, headers?: [string, string][]) {
-    const resolvedHeaders = await getBiliAuthHeaders(headers)
-    return QueryGetAPI<T>(url, params, resolvedHeaders)
-  }
-
-  async function QueryBiliAuthPostAPI<T>(url: string, body?: unknown, headers?: [string, string][]) {
-    const resolvedHeaders = await getBiliAuthHeaders(headers)
-    return QueryPostAPI<T>(url, body, resolvedHeaders)
-  }
-
-  async function QueryBiliAuthPostAPIWithParams<T>(
-    url: string,
-    params?: QueryParams,
-    body?: unknown,
-    contentType: string = 'application/json',
-    headers?: [string, string][],
-    options?: QueryRequestOptions,
-  ) {
-    const resolvedHeaders = await getBiliAuthHeaders(headers)
-    return QueryPostAPIWithParams<T>(url, params, body, contentType, resolvedHeaders, options)
-  }
-
   async function GetSpecificPoint(id: number) {
     try {
-      const data = await QueryBiliAuthGetAPI<number>(`${POINT_API_URL}user/get-point`, { id })
+      const data = await getApiPointUserGetPoint(
+        { id },
+        { headers: Object.fromEntries(await getBiliAuthHeaders()) },
+      )
       if (data.code == 200) {
         return data.data
       } else {
@@ -207,9 +200,10 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
       return []
     }
     try {
-      const resp = await QueryBiliAuthGetAPI<ResponsePointGoodModel[]>(`${POINT_API_URL}get-goods`, {
-        id,
-      })
+      const resp = (await getApiPointGetGoods(
+        { id: String(id) },
+        { headers: Object.fromEntries(await getBiliAuthHeaders()) },
+      )) as unknown as { code: number; message: string; data: ResponsePointGoodModel[] }
       if (resp.code == 200) {
         return resp.data
       } else {
@@ -248,9 +242,6 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     requiresLegacyMigration,
     currentToken,
     getAuthInfo,
-    QueryBiliAuthGetAPI,
-    QueryBiliAuthPostAPI,
-    QueryBiliAuthPostAPIWithParams,
     getBiliAuthHeaders,
     GetSpecificPoint,
     GetGoods,

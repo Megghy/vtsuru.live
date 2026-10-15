@@ -58,11 +58,17 @@ import { clearInterval, setInterval } from 'worker-timers'
 
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import type { OpenLiveInfo, SongsInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import {
+  getApiMusicRequestGet,
+  postApiMusicRequestAdd,
+  postApiMusicRequestClear,
+  postApiMusicRequestDelete,
+} from '@/api/generated/music-request/music-request'
+import { getApiSongListGet, getApiSongListGetNeteaseList } from '@/api/generated/song-list/song-list'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
 import MusicRequestItem from '@/apps/open-live/components/request/MusicRequestItem.vue'
-import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/shared/config'
+import { CURRENT_HOST, MUSIC_REQUEST_API_URL } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { copyToClipboard } from '@/shared/utils'
@@ -202,7 +208,10 @@ async function copyObsLink() {
 async function fetchOriginMusics() {
   isLoadingSongs.value = true
   try {
-    const res = await QueryGetAPI<SongsInfo[]>(`${MUSIC_REQUEST_API_URL}get`)
+    const res = (await getApiMusicRequestGet()) as unknown as {
+      code: number
+      data?: SongsInfo[]
+    }
     if (res.code === 200 && res.data) {
       musicRquestStore.originMusics = res.data
     }
@@ -215,7 +224,10 @@ async function fetchOriginMusics() {
 
 async function delMusic(song: SongsInfo) {
   try {
-    const res = await QueryPostAPI<number>(`${MUSIC_REQUEST_API_URL}del`, [song.key])
+    const res = (await postApiMusicRequestDelete([song.key])) as unknown as {
+      code: number
+      message?: string
+    }
     if (res.code === 200) {
       message.success(`已删除歌曲: ${song.name}`)
       await fetchOriginMusics()
@@ -229,7 +241,7 @@ async function delMusic(song: SongsInfo) {
 
 async function clearOriginMusics() {
   try {
-    const res = await QueryGetAPI(`${MUSIC_REQUEST_API_URL}clear`)
+    const res = await postApiMusicRequestClear()
     if (res.code === 200) {
       message.success('已清空闲置歌单')
       musicRquestStore.originMusics = []
@@ -246,9 +258,12 @@ const isSyncingMySongList = ref(false)
 async function syncFromMySongList() {
   isSyncingMySongList.value = true
   try {
-    const res = await QueryGetAPI<SongsInfo[]>(`${SONG_API_URL}get`)
+    const res = (await getApiSongListGet()) as unknown as {
+      code: number
+      data?: SongsInfo[]
+    }
     if (res.code === 200 && res.data && res.data.length > 0) {
-      const addRes = await QueryPostAPI(`${MUSIC_REQUEST_API_URL}add`, res.data)
+      const addRes = await postApiMusicRequestAdd(res.data as any)
       if (addRes.code === 200) {
         message.success(`已成功从我的歌单同步 ${res.data.length} 首歌曲`)
         await fetchOriginMusics()
@@ -284,9 +299,9 @@ async function loadNeteasePlaylist() {
   }
   isNeteaseLoading.value = true
   try {
-    const res = await QueryGetAPI<SongsInfo[]>(`${SONG_API_URL}netease/playlist?id=${neteaseSongListId.value}`)
+    const res = await getApiSongListGetNeteaseList({ id: Number(neteaseSongListId.value) })
     if (res.code === 200 && res.data) {
-      neteaseSongs.value = res.data
+      neteaseSongs.value = res.data as unknown as SongsInfo[]
       selectedNeteaseKeys.value = res.data
         .filter((s) => !originMusics.value.some((exist) => exist.id === s.id))
         .map((s) => s.key)
@@ -317,7 +332,7 @@ async function confirmImportNetease() {
   }
   isNeteaseLoading.value = true
   try {
-    const res = await QueryPostAPI(`${MUSIC_REQUEST_API_URL}add`, toImport)
+    const res = await postApiMusicRequestAdd(toImport as any)
     if (res.code === 200) {
       message.success(`已成功导入 ${toImport.length} 首歌曲到曲库`)
       showNeteaseModal.value = false

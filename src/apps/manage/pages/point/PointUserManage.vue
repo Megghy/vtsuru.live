@@ -42,11 +42,15 @@ import { computed, h, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import type { ResponsePointGoodModel, ResponsePointUserModel, Setting_Point } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import {
+  getApiPointGetAllUsers,
+  postApiPointDeleteUser,
+  postApiPointGivePoint,
+  postApiPointReset,
+} from '@/api/generated/point/point'
 import { formatNumber } from '@/apps/manage/composables/formatters'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
-import { POINT_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { objectsToCSV } from '@/shared/utils'
 
@@ -325,7 +329,7 @@ const column: DataTableColumns<ResponsePointUserModel> = [
 // 获取所有用户
 async function getUsers() {
   return (
-    (await run(() => QueryGetAPI<ResponsePointUserModel[]>(`${POINT_API_URL}get-all-users`), {
+    (await run<ResponsePointUserModel[]>(() => getApiPointGetAllUsers(), {
       fail: '获取用户失败',
     })) ?? []
   )
@@ -351,7 +355,7 @@ async function givePoint() {
 
   const data = await run(
     () =>
-      QueryGetAPI<{ totalPoint: number; userName?: string; uId?: number }>(`${POINT_API_URL}give-point`, {
+      postApiPointGivePoint({
         uId: addPointTarget.value,
         count: addPointCount.value,
         reason: addPointReason.value || '',
@@ -380,7 +384,12 @@ async function deleteUser(user: ResponsePointUserModel) {
     return
   }
 
-  if (await run(() => QueryGetAPI(`${POINT_API_URL}delete-user`, params), { success: '已删除', fail: '删除失败' }))
+  if (
+    await run(() => postApiPointDeleteUser(params as any), {
+      success: '已删除',
+      fail: '删除失败',
+    })
+  )
     users.value = users.value.filter((u) => u != user)
 }
 
@@ -391,7 +400,7 @@ async function resetAllPoints() {
     return
   }
 
-  if (await run(() => QueryGetAPI(`${POINT_API_URL}reset`), { success: '已重置所有用户积分', fail: '重置失败' })) {
+  if (await run(() => postApiPointReset(), { success: '已重置所有用户积分', fail: '重置失败' })) {
     resetConfirmText.value = ''
     showResetAllPointsModal.value = false
     setTimeout(() => refresh(), 1500)

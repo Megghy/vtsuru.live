@@ -3,9 +3,8 @@ import { NButton, NCard, NInput, NLayoutContent, NFlex, useMessage } from 'naive
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { QueryGetAPI } from '@/api/query'
+import { postApiAccountVerifyResetPassword } from '@/api/generated/account/account'
 import router from '@/app/router'
-import { ACCOUNT_API_URL } from '@/shared/config'
 
 import '@/apps/web/styles/web-page.css'
 
@@ -29,7 +28,7 @@ function changePassword() {
     return
   }
   isLoading.value = true
-  QueryGetAPI(`${ACCOUNT_API_URL}verify/reset-password`, {
+  postApiAccountVerifyResetPassword({
     key: key.value,
     password: password.value,
   })

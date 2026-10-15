@@ -27,9 +27,13 @@ import {
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
-import { QueryGetAPI, unwrapOk } from '@/api/query'
+import {
+  getApiOrgOrgIdAudit,
+  getApiOrgOrgIdPointsGoods,
+  getApiOrgOrgIdPointsStats,
+} from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
-import { ORG_API_URL } from '@/shared/config'
 
 import { useOrgContext } from '../composables/useOrgContext'
 import { injectOrgStreamers } from '../composables/useOrgStreamers'
@@ -72,15 +76,15 @@ async function loadData() {
   const streamerParam = selectedStreamerId.value ? { streamerId: selectedStreamerId.value } : undefined
   try {
     pointStats.value = unwrapOk(
-      await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/stats`, streamerParam),
+      (await getApiOrgOrgIdPointsStats(orgId.value, streamerParam)) as any,
       '加载积分统计失败',
     )
     pointGoods.value = unwrapOk(
-      await QueryGetAPI(`${ORG_API_URL}${orgId.value}/points/goods`, streamerParam),
+      (await getApiOrgOrgIdPointsGoods(orgId.value, streamerParam)) as any,
       '加载积分商品失败',
     )
     auditLogs.value = unwrapOk(
-      await QueryGetAPI(`${ORG_API_URL}${orgId.value}/audit`, { take: 100 }),
+      (await getApiOrgOrgIdAudit(orgId.value, { take: 100 })) as any,
       '加载操作审计失败',
     )
   } catch (err) {

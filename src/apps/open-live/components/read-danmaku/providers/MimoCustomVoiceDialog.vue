@@ -4,7 +4,8 @@ import type { UploadFileInfo } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { QueryPostAPI, GetHeaders } from '@/api/query'
+import { postApiTtsMimoVoicesCustom } from '@/api/generated/tts/tts'
+import { GetHeaders } from '@/api/query'
 import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from '@/apps/open-live/voice-providers/ai-client'
 import { saveVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
 import { TTS_API_URL } from '@/shared/config'
@@ -185,9 +186,23 @@ async function save() {
       }
       message.success('已更新')
     } else {
-      const fd = buildFormData(false)
-      fd.append('name', name.value)
-      const resp = await QueryPostAPI(`${TTS_API_URL}mimo/voices/custom`, fd)
+      const body = {
+        name: name.value,
+        type: type.value,
+        description: type.value === 'design' ? description.value : undefined,
+        directorNote: directorNote.value.trim() ? directorNote.value : undefined,
+        audioFile:
+          type.value === 'clone' && audioFileList.value[0]?.file
+            ? audioFileList.value[0].file
+            : undefined,
+      }
+      const resp = (await postApiTtsMimoVoicesCustom(
+        body as any,
+      )) as unknown as {
+        code: number
+        message?: string
+        data?: any
+      }
       if (resp.code !== 200) throw new Error(resp.message || '保存失败')
       const voiceId = (resp.data as any)?.Id ?? (resp.data as any)?.id
       if (type.value === 'clone' && audioFileList.value[0]?.file && voiceId) {

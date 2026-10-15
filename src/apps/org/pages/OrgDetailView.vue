@@ -23,12 +23,16 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { isLoggedIn } from '@/api/account'
-import { QueryPostAPI, unwrapOk } from '@/api/query'
+import {
+  postApiOrgOrgIdDissolve,
+  postApiOrgOrgIdLeave,
+  postApiOrgOrgIdRename,
+} from '@/api/generated/org/org'
+import { unwrapOk } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 
 import '@/apps/org/styles/org-page.css'
-import { ORG_API_URL } from '@/shared/config'
 
 import OrgAdminGate from '../components/OrgAdminGate.vue'
 import OrgAuditTab from '../components/OrgAuditTab.vue'
@@ -73,7 +77,7 @@ async function renameOrg() {
   }
   renaming.value = true
   try {
-    unwrapOk(await QueryPostAPI(`${ORG_API_URL}${orgId.value}/rename`, { name }), '重命名失败')
+    unwrapOk(await postApiOrgOrgIdRename(orgId.value, { name }), '重命名失败')
     message.success('重命名成功')
     showRenameModal.value = false
     await loadOrgInfo()
@@ -87,7 +91,7 @@ async function renameOrg() {
 async function leaveOrg() {
   if (!orgId.value) return
   try {
-    unwrapOk(await QueryPostAPI(`${ORG_API_URL}${orgId.value}/leave`), '退出失败')
+    unwrapOk(await postApiOrgOrgIdLeave(orgId.value), '退出失败')
     message.success('已退出组织')
     router.push({ name: 'org-index' })
   } catch (err) {
@@ -98,7 +102,7 @@ async function leaveOrg() {
 async function dissolveOrg() {
   if (!orgId.value) return
   try {
-    unwrapOk(await QueryPostAPI(`${ORG_API_URL}${orgId.value}/dissolve`), '解散失败')
+    unwrapOk(await postApiOrgOrgIdDissolve(orgId.value), '解散失败')
     message.success('组织已解散')
     router.push({ name: 'org-index' })
   } catch (err) {
