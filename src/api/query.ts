@@ -1,4 +1,11 @@
-import { getAPIUrl, isManagedAPIUrl, mapToCurrentAPI, markAPIFailover, selectedAPIKey, resolveFileUrl } from '@/shared/config'
+import {
+  getAPIUrl,
+  isManagedAPIUrl,
+  mapToCurrentAPI,
+  markAPIFailover,
+  selectedAPIKey,
+  resolveFileUrl,
+} from '@/shared/config'
 
 import type { APIRoot, PaginationResponse } from './api-models'
 import { cookie } from './auth'

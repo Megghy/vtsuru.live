@@ -21,12 +21,12 @@ import {
   getApiUserConfigGetUser,
   postApiUserConfigSet,
 } from '@/api/generated/config/config'
-import { persistedRemoveItem } from '@/shared/storage/persist'
-import { createNaiveUIApi } from '@/shared/utils'
-
 import type { AccountControllerTempResponseAloginModel } from '@/api/generated/model/accountControllerTempResponseAloginModel'
 import type { PrepareAccountBiliAuthResponse } from '@/api/generated/model/prepareAccountBiliAuthResponse'
 import type { ResponseAccountInfo } from '@/api/generated/model/responseAccountInfo'
+import { persistedRemoveItem } from '@/shared/storage/persist'
+import { createNaiveUIApi } from '@/shared/utils'
+
 import type { FunctionTypes } from './api-models'
 import { cookie } from './auth'
 
@@ -160,10 +160,7 @@ export function useAccount() {
 }
 
 export async function Register(name: string, email: string, password: string, token: string) {
-  return postApiAccountRegister(
-    { name, email, password },
-    { headers: { Turnstile: token } },
-  )
+  return postApiAccountRegister({ name, email, password }, { headers: { Turnstile: token } })
 }
 
 export type AccountSession = AccountControllerTempResponseAloginModel
@@ -187,9 +184,7 @@ export async function Login(nameOrEmail: string, password: string) {
   return postApiAccountLogin({ nameOrEmail, password })
 }
 export async function Self(token?: string) {
-  return postApiAccountSelf(
-    token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
-  )
+  return postApiAccountSelf(token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
 }
 export function isInBiliBlackList(ouid?: string | null) {
   return !!ouid && Object.hasOwn(ACCOUNT.value.biliBlackList ?? {}, ouid)
@@ -232,9 +227,7 @@ export async function DownloadConfig<T>(
     }
 > {
   try {
-    const resp = id
-      ? await getApiUserConfigGetUser({ name, id })
-      : await getApiUserConfigGet({ name })
+    const resp = id ? await getApiUserConfigGetUser({ name, id }) : await getApiUserConfigGet({ name })
     if (resp.code == 200) {
       console.log(`已获取配置文件: ${name}`)
       return {

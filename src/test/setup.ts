@@ -1,7 +1,45 @@
 import { afterEach, beforeEach, vi } from 'vitest'
 
+// 模拟 localStorage（修复 Node 22+ 实验性 localStorage 导致的属性未初始化问题）
+function createStorageMock(): Storage {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => (Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = String(value)
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+    get length() {
+      return Object.keys(store).length
+    },
+  }
+}
+
+const memoryLocalStorage = createStorageMock()
+try {
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: memoryLocalStorage,
+    writable: true,
+    configurable: true,
+  })
+} catch {}
+
 // 模拟 window.matchMedia
 if (typeof window !== 'undefined') {
+  try {
+    Object.defineProperty(window, 'localStorage', {
+      value: memoryLocalStorage,
+      writable: true,
+      configurable: true,
+    })
+  } catch {}
+
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({

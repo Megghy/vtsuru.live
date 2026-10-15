@@ -84,9 +84,9 @@ describe('QueryGetAPI failover', () => {
 
     expect(results.every((r) => r.code === 200)).toBe(true)
     expect(apiState.fail).toBe(true)
-    expect(fetchMock.mock.calls.some((call) => String(call[0]).startsWith('https://failover-api.vtsuru.suki.club/'))).toBe(
-      true,
-    )
+    expect(
+      fetchMock.mock.calls.some((call) => String(call[0]).startsWith('https://failover-api.vtsuru.suki.club/')),
+    ).toBe(true)
   })
 
   it('空 404 不当成网络失败，也不切备用节点', async () => {

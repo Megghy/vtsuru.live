@@ -27,9 +27,13 @@ vi.mock('@/api/generated/config/config', () => ({
   postApiUserConfigSet: vi.fn(),
 }))
 
-vi.mock('@/shared/storage/persist', () => ({
-  persistedRemoveItem: vi.fn(),
-}))
+vi.mock('@/shared/storage/persist', () => {
+  const { ref } = require('vue')
+  return {
+    persistedRemoveItem: vi.fn(),
+    usePersistedStorage: (_key: string, initial: unknown) => ref(initial),
+  }
+})
 
 vi.mock('@/shared/utils', () => ({
   createNaiveUIApi: () => ({
