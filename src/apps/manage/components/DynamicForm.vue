@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
+import { Image24Regular, Info24Filled } from '@vicons/fluent'
 import type { SelectOption, UploadFileInfo } from 'naive-ui'
 import {
   NButton,
@@ -29,6 +29,7 @@ import type { UploadFileResponse } from '@/api/api-models'
 import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
 import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { rgbaToString } from '@/shared/types/VTsuruConfigTypes'
+import { toImageUploadFileList } from '@/shared/utils/uploadFileHelper'
 
 import DecorativeImageEditor from './DecorativeImageEditor.vue'
 
@@ -98,12 +99,7 @@ function getUploadedFiles(key: string): UploadFileResponse[] {
 }
 
 function toUploadFileList(files: UploadFileResponse[]): UploadFileInfo[] {
-  return files.map((file) => ({
-    id: String(file.id),
-    thumbnailUrl: file.path,
-    name: file.name || '',
-    status: 'finished',
-  }))
+  return toImageUploadFileList(files, '文件')
 }
 
 function syncUploadedFileList(key: string) {
@@ -540,9 +536,22 @@ onBeforeUnmount(() => {
             list-type="image-card"
             :default-upload="false"
             :max="item.fileLimit"
+            :should-use-thumbnail-url="() => true"
             @update:file-list="(files) => onFileListChange(item, files)"
           >
-            上传文件
+            <NFlex
+              vertical
+              align="center"
+              justify="center"
+              style="width: 100%; height: 100%"
+            >
+              <NIcon
+                size="24"
+                :depth="3"
+                :component="Image24Regular"
+              />
+              <span style="font-size: 12px">上传文件</span>
+            </NFlex>
           </NUpload>
         </NFormItemGi>
       </NGrid>
@@ -628,5 +637,11 @@ onBeforeUnmount(() => {
 
 .dynamic-form--fill .dynamic-form__scroll :deep(.n-scrollbar-content) {
   padding-right: 8px;
+}
+
+:deep(.n-upload-file.n-upload-file--image-card-type .n-upload-file-info__thumbnail img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

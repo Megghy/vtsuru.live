@@ -25,16 +25,12 @@ import type { CreateSupportTicketRequest, SupportTicketDetail, SupportTicketSumm
 import { SupportTicketStatus, SupportTicketType } from '@/api/api-models'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import {
-  filterSupportTickets,
-  supportTicketStatusOptions,
-  supportTicketTypeOptions,
-} from '@/shared/supportTicket'
-import {
   createSupportTicket,
   getMySupportTickets,
   getPublicSupportTickets,
   getSupportTicket,
 } from '@/shared/services/supportTickets'
+import { filterSupportTickets, supportTicketStatusOptions, supportTicketTypeOptions } from '@/shared/supportTicket'
 
 import PublicTicketCard from './support-ticket/PublicTicketCard.vue'
 import SupportTicketDetailView from './support-ticket/SupportTicketDetail.vue'
@@ -74,7 +70,9 @@ const editable = computed(
 const isDetailRoute = computed(() => selectedId.value !== undefined)
 const showPublicCards = computed(() => view.value === 'public' && !isDetailRoute.value)
 const inManage = computed(() => route.path.startsWith('/manage'))
-const filtering = computed(() => Boolean(keyword.value.trim() || statusFilter.value != null || typeFilter.value != null))
+const filtering = computed(() =>
+  Boolean(keyword.value.trim() || statusFilter.value != null || typeFilter.value != null),
+)
 const filteredTickets = computed(() =>
   filterSupportTickets(tickets.value, {
     keyword: keyword.value,
@@ -417,6 +415,7 @@ watch(
             :default-upload="false"
             :max="5"
             multiple
+            :should-use-thumbnail-url="() => true"
             :on-before-upload="beforeUpload"
           >
             <NIcon

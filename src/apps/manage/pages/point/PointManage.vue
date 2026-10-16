@@ -5,6 +5,7 @@ import {
   Delete24Filled,
   Edit24Filled,
   Eye24Filled,
+  Image24Regular,
   Info24Filled,
   ShoppingBag24Filled,
 } from '@vicons/fluent'
@@ -63,6 +64,7 @@ import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUploa
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
+import { createCoverFileInfo } from './goodsCoverHelper'
 import PointGuardDuplicateManage from './PointGuardDuplicateManage.vue'
 import PointTestPanel from './PointTestPanel.vue'
 import PointUserManage from './PointUserManage.vue'
@@ -390,7 +392,10 @@ async function updateGoods(e: MouseEvent) {
           throw new Error(`服务需求字段 ID 重复：${fieldId}`)
         }
         ids.add(fieldId)
-        if ((field.type === ServiceFieldType.Select || field.type === ServiceFieldType.MultiSelect) && field.options.length === 0) {
+        if (
+          (field.type === ServiceFieldType.Select || field.type === ServiceFieldType.MultiSelect) &&
+          field.options.length === 0
+        ) {
           goodsModalTab.value = 'basic'
           throw new Error(`服务需求字段“${field.label}”至少需要一个选项`)
         }
@@ -476,10 +481,7 @@ async function updateGoods(e: MouseEvent) {
         if (uploadedFileIndex > -1) {
           currentGoodsModel.value.fileList[uploadedFileIndex] = {
             ...currentGoodsModel.value.fileList[uploadedFileIndex],
-            id: uploadResults[0].id.toString(),
-            status: 'finished',
-            thumbnailUrl: uploadResults[0].path,
-            url: uploadResults[0].path,
+            ...createCoverFileInfo(uploadResults[0])[0],
           }
         }
       } else {
@@ -505,15 +507,7 @@ async function updateGoods(e: MouseEvent) {
           sub.cover = uploadResults[0]
           message.success(`款式封面上传成功: ${sub.name || uploadResults[0].name || '封面'}`)
           // 同步 fileList 状态
-          subItemFileLists.value[key] = [
-            {
-              id: uploadResults[0].id.toString(),
-              name: uploadResults[0].name || '封面',
-              status: 'finished',
-              thumbnailUrl: uploadResults[0].path,
-              url: uploadResults[0].path,
-            },
-          ]
+          subItemFileLists.value[key] = createCoverFileInfo(uploadResults[0])
         } else {
           throw new Error(`款式封面上传失败: ${sub.name || '未命名'}`)
         }
@@ -527,9 +521,7 @@ async function updateGoods(e: MouseEvent) {
       code,
       data,
       message: errMsg,
-    } = (await postApiPointUpdateGoods(
-      currentGoodsModel.value.goods as any,
-    )) as unknown as {
+    } = (await postApiPointUpdateGoods(currentGoodsModel.value.goods as any)) as unknown as {
       code: number
       data: ResponsePointGoodModel
       message: string
@@ -637,31 +629,11 @@ function onUpdateClick(item: ResponsePointGoodModel) {
   subItemFileLists.value = {}
   for (const s of copiedItem.subItems as UploadSubPointGoodsModel[]) {
     const key = getSubItemKey(s)
-    subItemFileLists.value[key] = s.cover
-      ? [
-          {
-            id: s.cover.id.toString(),
-            name: s.cover.name || '封面',
-            status: 'finished',
-            url: s.cover.path,
-            thumbnailUrl: s.cover.path,
-          },
-        ]
-      : []
+    subItemFileLists.value[key] = createCoverFileInfo(s.cover)
   }
   currentGoodsModel.value = {
     goods: copiedItem,
-    fileList: item.cover
-      ? [
-          {
-            id: item.cover.id.toString(),
-            name: item.cover.name || '封面',
-            status: 'finished',
-            url: item.cover.path,
-            thumbnailUrl: item.cover.path,
-          },
-        ]
-      : [],
+    fileList: createCoverFileInfo(item.cover),
   }
   isAllowedPrivacyPolicy.value = true
   shouldWatermarkCover.value = true
@@ -681,14 +653,13 @@ async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus
       const originStatus = item.status
 
       try {
-        const { code, message: errMsg } =
-          (await postApiPointUpdateGoodsStatus({
-            ids: [item.id],
-            status: status as any,
-          })) as unknown as {
-            code: number
-            message: string
-          }
+        const { code, message: errMsg } = (await postApiPointUpdateGoodsStatus({
+          ids: [item.id],
+          status: status as any,
+        })) as unknown as {
+          code: number
+          message: string
+        }
 
         if (code === 200) {
           message.success('成功')
@@ -1205,9 +1176,7 @@ function resetGoods() {
                     label="展示设置"
                   >
                     <div style="padding-top: 4px">
-                      <NCheckbox v-model:checked="currentGoodsModel.goods.isPinned">
-                        在礼物列表顶部置顶显示
-                      </NCheckbox>
+                      <NCheckbox v-model:checked="currentGoodsModel.goods.isPinned"> 在礼物列表顶部置顶显示 </NCheckbox>
                     </div>
                   </NFormItem>
                 </NGridItem>
@@ -1408,6 +1377,7 @@ function resetGoods() {
                         list-type="image-card"
                         :default-upload="false"
                         :disabled="isUploadingCover"
+                        :should-use-thumbnail-url="() => true"
                         @update:file-list="OnFileListChange"
                       >
                         <NFlex
@@ -1419,8 +1389,9 @@ function resetGoods() {
                           <NIcon
                             size="24"
                             :depth="3"
+                            :component="Image24Regular"
                           />
-                          <span>{{ currentGoodsModel.goods.cover ? '更换封面' : '上传封面' }}</span>
+                          <span>上传封面</span>
                           <span style="font-size: 11px; color: var(--vtsuru-fg-muted)">&lt; 10MB</span>
                         </NFlex>
                       </NUpload>
@@ -1679,8 +1650,23 @@ function resetGoods() {
                               list-type="image-card"
                               :default-upload="false"
                               :disabled="isUploadingCover"
+                              :should-use-thumbnail-url="() => true"
                               @update:file-list="(list) => updateSubItemFileList(getSubItemKey(sub), list)"
-                            />
+                            >
+                              <NFlex
+                                vertical
+                                align="center"
+                                justify="center"
+                                style="width: 100%; height: 100%"
+                              >
+                                <NIcon
+                                  size="20"
+                                  :depth="3"
+                                  :component="Image24Regular"
+                                />
+                                <span style="font-size: 12px">上传封面</span>
+                              </NFlex>
+                            </NUpload>
                           </NFormItem>
                         </NGridItem>
                         <NGridItem>
@@ -2226,12 +2212,19 @@ function resetGoods() {
   padding: 12px 0 8px;
 }
 
-.goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card) {
+.goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card),
+.goods-modal :deep(.n-upload-file.n-upload-file--image-card-type) {
   width: 104px;
   height: 104px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.goods-modal :deep(.n-upload-file.n-upload-file--image-card-type .n-upload-file-info__thumbnail img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .manage-sub-item-card {

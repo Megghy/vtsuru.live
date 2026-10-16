@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled } from '@vicons/fluent'
+import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Image24Regular } from '@vicons/fluent'
 import type { UploadFileInfo } from 'naive-ui'
 import { NButton, NCard, NEmpty, NFlex, NIcon, NInputNumber, NSlider, NText, NUpload, useMessage } from 'naive-ui'
 import { ref, watch } from 'vue'
@@ -87,9 +87,22 @@ function moveImage(id: number, offset: -1 | 1) {
       list-type="image-card"
       :default-upload="false"
       :max="20"
+      :should-use-thumbnail-url="() => true"
       @update:file-list="onPendingFilesChange"
     >
-      添加装饰图片
+      <NFlex
+        vertical
+        align="center"
+        justify="center"
+        style="width: 100%; height: 100%"
+      >
+        <NIcon
+          size="24"
+          :depth="3"
+          :component="Image24Regular"
+        />
+        <span style="font-size: 12px">添加装饰图片</span>
+      </NFlex>
     </NUpload>
 
     <NText
@@ -253,6 +266,12 @@ function moveImage(id: number, offset: -1 | 1) {
 
 .image-summary {
   min-width: 0;
+}
+
+:deep(.n-upload-file.n-upload-file--image-card-type .n-upload-file-info__thumbnail img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .image-summary img {

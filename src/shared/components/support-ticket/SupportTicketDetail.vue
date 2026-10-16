@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { ArrowLeft24Regular, CheckmarkCircle24Regular, Image24Regular, Send24Regular, Settings24Regular } from '@vicons/fluent'
+import {
+  ArrowLeft24Regular,
+  CheckmarkCircle24Regular,
+  Image24Regular,
+  Send24Regular,
+  Settings24Regular,
+} from '@vicons/fluent'
 import type { UploadFileInfo } from 'naive-ui'
 import {
   NButton,
@@ -263,6 +269,7 @@ async function savePreferences() {
           :default-upload="false"
           :max="remainingImageSlots"
           multiple
+          :should-use-thumbnail-url="() => true"
           :on-before-upload="beforeReplyUpload"
         >
           <NIcon
