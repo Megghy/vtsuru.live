@@ -133,6 +133,19 @@ export const ScheduleTemplateMap: TemplateMapType = {
     ),
     capabilities: [...scheduleCoreCapabilities, 'templateConfig', 'customHeading', 'appearancePreset'],
   },
+  timegrid: {
+    name: '时序周历',
+    settingName: 'Template.Schedule.TimeGrid',
+    component: markRaw(
+      defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/TimeGridSchedule.vue')),
+    ),
+    capabilities: [
+      ...scheduleCoreCapabilities,
+      'categorySummary',
+      ...scheduleConfigCapabilities,
+      'backgroundImage',
+    ],
+  },
 }
 
 export const IndexTemplateMap: TemplateMapType = {

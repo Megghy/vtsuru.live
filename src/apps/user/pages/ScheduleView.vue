@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NSpin, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { DownloadConfig } from '@/api/account'
 import type { BiliLiveReserveModel, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
@@ -39,8 +40,13 @@ const displayData = computed(() =>
     : currentData.value,
 )
 
+const route = useRoute()
 const componentType = computed(
-  () => props.template ?? props.userInfo?.extra?.templateTypes.schedule?.toLowerCase() ?? '',
+  () =>
+    props.template ??
+    (route.query.template as string)?.toLowerCase() ??
+    props.userInfo?.extra?.templateTypes.schedule?.toLowerCase() ??
+    '',
 )
 const selectedTemplate = computed(() => ScheduleTemplateMap[componentType.value] ?? ScheduleTemplateMap[''])
 const isLoading = computed(() => loadingData.value || loadingConfig.value)
