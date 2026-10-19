@@ -142,6 +142,7 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
     />
     <ScheduleSubscription
       v-if="userInfo?.id"
+      docked
       :url="`${SCHEDULE_API_URL}${userInfo.id}.ics`"
     />
   </div>
@@ -153,5 +154,12 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
   grid-template-columns: minmax(0, 1fr);
   gap: var(--vtsuru-page-spacing);
   min-width: 0;
+  padding-bottom: 20px;
+}
+
+@media (max-width: 520px) {
+  .schedule-page {
+    padding-bottom: 12px;
+  }
 }
 </style>

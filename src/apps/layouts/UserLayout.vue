@@ -1564,7 +1564,8 @@ watch(
     overflow-y: auto;
   }
 
-  .page-root {
+  .page-root,
+  .page-root.bg-host {
     height: auto;
     min-height: 100dvh;
     overflow: visible;
