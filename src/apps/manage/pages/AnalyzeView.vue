@@ -64,9 +64,9 @@ import {
   useMessage,
   useThemeVars,
 } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { getApiAnalyzeAll } from '@/api/generated/analyze/analyze'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import {
@@ -84,7 +84,9 @@ import {
   type AnalyzeRangeSummary,
   type AnalyzeSessionItem,
   type AnalyzeTopUser,
+  type BackendAnalyzeData,
 } from '@/apps/manage/composables/analyzeRange'
+import { useAnalyzeStore } from '@/apps/manage/composables/useAnalyzeStore'
 import { formatCurrency, formatDate, formatNumber } from '@/apps/manage/composables/formatters'
 
 // 注册 ECharts 必要组件
@@ -102,81 +104,11 @@ echarts.use([
   DataZoomComponent,
 ])
 
-interface BackendChartItem {
-  income: number
-  giftIncome?: number
-  scIncome?: number
-  guardIncome?: number
-  offlineIncome?: number
-  offlineGuardIncome?: number
-  offlineScIncome?: number
-  grandTotalIncome?: number
-  totalIncomeWithGuard?: number
-  interactionCount: number
-  danmakuCount: number
-  payingUsers: number
-  interactionUsers: number
-  liveMinutes: number
-  likeCount: number
-  sessionCount?: number
-}
-
-interface BackendPeriodSummary {
-  totalIncome: number
-  giftIncome?: number
-  scIncome?: number
-  guardIncome?: number
-  offlineIncome?: number
-  offlineGuardIncome?: number
-  offlineScIncome?: number
-  grandTotalIncome?: number
-  offlineGuardCount?: number
-  totalIncomeWithGuard?: number
-  totalInteractions: number
-  totalDanmakuCount: number
-  totalLiveMinutes: number
-  dailyAvgIncome: number
-  dailyAvgDanmaku: number
-  incomeTrend?: number
-  interactionTrend?: number
-  danmakuTrend?: number
-  activeLiveDays: number
-  interactionUsers: number
-  payingUsers: number
-  interactionUsersTrend?: number
-  payingUsersTrend?: number
-}
-
-interface BackendAnalyzeData {
-  summary: {
-    last7Days: BackendPeriodSummary
-    last30Days: BackendPeriodSummary
-  }
-  chartData: Record<string, BackendChartItem>
-  sessions?: AnalyzeSessionItem[]
-  areaStats?: AnalyzeAreaStat[]
-  topSpenders?: AnalyzeTopUser[]
-  topChatters?: AnalyzeTopUser[]
-  offlineEvents?: AnalyzeOfflineEventItem[]
-}
-
-// 状态管理
-const loading = ref(true)
-const refreshing = ref(false)
+// 状态管理（SWR 跨页面保活）
+const analyzeStore = useAnalyzeStore()
+const { analyzeData, loading, refreshing, lastUpdateTime, hasData } = storeToRefs(analyzeStore)
 const message = useMessage()
-const analyzeData = ref<BackendAnalyzeData>()
 const themeVars = useThemeVars()
-const lastUpdateTime = ref<number>(0)
-const hasData = computed(() => {
-  if (!analyzeData.value) return false
-  const chartKeys = Object.keys(analyzeData.value.chartData || {})
-  const hasSessions = (analyzeData.value.sessions?.length || 0) > 0
-  const hasSummary =
-    (analyzeData.value.summary?.last30Days?.totalLiveMinutes || 0) > 0 ||
-    (analyzeData.value.summary?.last30Days?.totalDanmakuCount || 0) > 0 ||
-    (analyzeData.value.summary?.last30Days?.totalIncome || 0) > 0
-  return chartKeys.length > 0 || hasSessions || hasSummary
-})
 
 // 区间预设与选择
 type RangePreset = '7d' | '30d' | '60d' | 'all' | 'custom'
@@ -210,8 +142,8 @@ function handleDateRangeChange(val: [number, number] | null) {
   }
 }
 
-// 格式化全部图表点数组（按日期升序）
-function getChartDataArray(): Array<AnalyzeDayPoint & { date: string }> {
+// 格式化全部图表点数组（按日期升序，单例响应式缓存）
+const allChartPoints = computed<Array<AnalyzeDayPoint & { date: string }>>(() => {
   if (!analyzeData.value?.chartData) return []
 
   return Object.entries(analyzeData.value.chartData)
@@ -240,11 +172,11 @@ function getChartDataArray(): Array<AnalyzeDayPoint & { date: string }> {
       }
     })
     .toSorted((a, b) => a.timestamp - b.timestamp)
-}
+})
 
 // 过滤后的时间序列数据
 const filteredChartData = computed(() => {
-  const all = getChartDataArray()
+  const all = allChartPoints.value
   if (!dateRange.value) return all
   return filterChartDataByRange(all, dateRange.value[0], dateRange.value[1]).map((p) => ({
     ...p,
@@ -398,7 +330,7 @@ function getHeatmapLevel(liveMinutes: number): number {
   return 4
 }
 
-const heatmapDays = computed(() => getChartDataArray())
+const heatmapDays = computed(() => allChartPoints.value)
 
 const heatmapStats = computed(() => {
   const days = heatmapDays.value
@@ -687,21 +619,13 @@ function updateChartOption() {
   mainChart.setOption(option, true)
 }
 
-// 加载数据
+// 加载数据（利用 SWR 策略）
 async function loadData() {
   try {
-    loading.value = true
-    const response = await getApiAnalyzeAll()
-    if (response.code === 200 && response.data) {
-      analyzeData.value = response.data
-      lastUpdateTime.value = Date.now()
-    } else {
-      throw new Error(response.message || '获取分析数据失败')
-    }
+    await analyzeStore.loadData()
   } catch (err: any) {
     message.error(err?.message || '获取分析数据失败')
   } finally {
-    loading.value = false
     await nextTick()
     initChart()
   }
@@ -709,19 +633,11 @@ async function loadData() {
 
 async function refreshData() {
   try {
-    refreshing.value = true
-    const response = await getApiAnalyzeAll()
-    if (response.code === 200 && response.data) {
-      analyzeData.value = response.data
-      lastUpdateTime.value = Date.now()
-      message.success('数据已刷新')
-    } else {
-      throw new Error(response.message || '刷新数据失败')
-    }
+    await analyzeStore.loadData(true)
+    message.success('数据已刷新')
   } catch (err: any) {
     message.error(err?.message || '刷新数据失败')
   } finally {
-    refreshing.value = false
     await nextTick()
     updateChartOption()
   }
@@ -731,8 +647,12 @@ watch([filteredChartData, selectedMetrics, isDark, chartViewType], () => {
   updateChartOption()
 })
 
-onMounted(() => {
-  loadData()
+onMounted(async () => {
+  if (hasData.value) {
+    await nextTick()
+    initChart()
+  }
+  await loadData()
 })
 
 onUnmounted(() => {
@@ -804,16 +724,80 @@ onUnmounted(() => {
     <!-- 异常状态提示 -->
     <EventFetcherAlert />
 
-    <!-- 加载骨架屏 -->
+    <!-- 高保真 Bento 骨架屏 (1:1 消除 Layout Shift) -->
     <div v-if="loading" class="dashboard-skeleton">
-      <NGrid :cols="4" :x-gap="12" :y-gap="12" responsive="screen">
-        <NGridItem v-for="i in 4" :key="i">
-          <NSkeleton height="116px" :sharp="false" />
-        </NGridItem>
-        <NGridItem :span="4">
-          <NSkeleton height="380px" :sharp="false" />
-        </NGridItem>
-      </NGrid>
+      <!-- 状态微提示 -->
+      <div class="skeleton-header-hint">
+        <div class="skeleton-pulse-dot"></div>
+        <span>正在盘点过去 60 天直播战报与全盘指标...</span>
+      </div>
+
+      <!-- 高光胶囊条骨架 -->
+      <div class="skeleton-milestone-ribbon">
+        <NSkeleton height="16px" width="70px" :sharp="false" />
+        <div class="skeleton-pills-row">
+          <NSkeleton height="26px" width="160px" :sharp="false" style="border-radius: 6px;" />
+          <NSkeleton height="26px" width="170px" :sharp="false" style="border-radius: 6px;" />
+          <NSkeleton height="26px" width="150px" :sharp="false" style="border-radius: 6px;" />
+          <NSkeleton height="26px" width="165px" :sharp="false" style="border-radius: 6px;" />
+        </div>
+      </div>
+
+      <!-- 4 宫格 Bento 核心指标大卡骨架 (1:1 高度对齐) -->
+      <div class="bento-metric-grid">
+        <div v-for="i in 4" :key="i" class="bento-skeleton-card">
+          <div class="skeleton-card-top">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <NSkeleton circle size="medium" />
+              <NSkeleton height="16px" width="100px" :sharp="false" />
+            </div>
+            <NSkeleton height="20px" width="48px" :sharp="false" style="border-radius: 4px;" />
+          </div>
+          <div class="skeleton-card-mid">
+            <NSkeleton height="36px" width="140px" :sharp="false" style="border-radius: 6px;" />
+            <NSkeleton height="14px" width="100%" :sharp="false" style="margin-top: 14px; border-radius: 4px;" />
+          </div>
+          <div class="skeleton-card-bot">
+            <NSkeleton height="14px" width="45%" :sharp="false" />
+            <NSkeleton height="14px" width="45%" :sharp="false" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 全维交互主趋势看板骨架 -->
+      <div class="chart-skeleton-card">
+        <div class="skeleton-chart-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <NSkeleton height="18px" width="18px" :sharp="false" />
+            <NSkeleton height="18px" width="200px" :sharp="false" />
+          </div>
+          <NSkeleton height="24px" width="220px" :sharp="false" style="border-radius: 6px;" />
+        </div>
+        <div class="skeleton-chart-metrics">
+          <NSkeleton v-for="j in 6" :key="j" height="20px" width="76px" :sharp="false" style="border-radius: 4px;" />
+        </div>
+        <div class="skeleton-chart-body">
+          <NSkeleton height="380px" width="100%" :sharp="false" style="border-radius: 8px;" />
+        </div>
+      </div>
+
+      <!-- 双列深度洞察 Bento 骨架 -->
+      <div class="insight-bento-grid">
+        <div v-for="k in 2" :key="k" class="insight-skeleton-card">
+          <div class="skeleton-card-top" style="margin-bottom: 18px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <NSkeleton height="18px" width="18px" :sharp="false" />
+              <NSkeleton height="18px" width="160px" :sharp="false" />
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <NSkeleton height="28px" width="100%" :sharp="false" style="border-radius: 6px;" />
+            <NSkeleton height="28px" width="100%" :sharp="false" style="border-radius: 6px;" />
+            <NSkeleton height="28px" width="100%" :sharp="false" style="border-radius: 6px;" />
+            <NSkeleton height="90px" width="100%" :sharp="false" style="border-radius: 8px; margin-top: 8px;" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 空数据态 -->
@@ -1610,7 +1594,121 @@ onUnmounted(() => {
 }
 
 /* 骨架屏与空状态 */
-.dashboard-skeleton,
+.dashboard-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.skeleton-header-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--vtsuru-fg-muted);
+  padding: 2px 4px;
+}
+
+.skeleton-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #f59e0b;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.skeleton-milestone-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 10px;
+  padding: 8px 14px;
+}
+
+.skeleton-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.bento-skeleton-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 180px;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.skeleton-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skeleton-card-mid {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.skeleton-card-bot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--vtsuru-border);
+}
+
+.chart-skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.skeleton-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skeleton-chart-metrics {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.insight-skeleton-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 320px;
+}
+
 .dashboard-empty {
   margin-top: 8px;
 }

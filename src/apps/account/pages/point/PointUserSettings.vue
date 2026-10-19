@@ -4,6 +4,7 @@ import { NButton, NIcon } from 'naive-ui'
 import { ref } from 'vue'
 
 import { useAccount } from '@/api/account'
+import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 
 import AccountAccessPanel from './settings/AccountAccessPanel.vue'
@@ -30,20 +31,21 @@ defineExpose({ reset })
 
 <template>
   <div class="point-settings">
-    <header class="point-settings__header">
-      <div>
-        <span class="point-settings__eyebrow">ACCOUNT</span>
-        <h1>账户设置</h1>
-      </div>
-      <NButton
-        quaternary
-        size="small"
-        @click="showAgreement = true"
-      >
-        <template #icon><NIcon :component="DocumentText24Regular" /></template>
-        用户协议
-      </NButton>
-    </header>
+    <AccountPageHeader
+      title="账户设置"
+      subtitle="管理你的收件地址、B站登录凭证与账户安全设置。"
+    >
+      <template #actions>
+        <NButton
+          secondary
+          size="medium"
+          @click="showAgreement = true"
+        >
+          <template #icon><NIcon :component="DocumentText24Regular" /></template>
+          用户协议
+        </NButton>
+      </template>
+    </AccountPageHeader>
 
     <div class="point-settings__sections">
       <AddressSettingsPanel

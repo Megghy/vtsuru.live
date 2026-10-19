@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import {
+  ArrowSync24Regular,
+  CheckmarkCircle24Regular,
+  DismissCircle24Regular,
+  Prohibited24Regular,
+  Timer24Regular,
+  VehicleTruck24Regular,
+} from '@vicons/fluent'
 import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import {
   NAlert,
@@ -10,6 +18,7 @@ import {
   NEllipsis,
   NEmpty,
   NFlex,
+  NIcon,
   NInput,
   NInputGroup,
   NInputGroupLabel,
@@ -22,6 +31,7 @@ import {
   useDialog,
   useMessage,
 } from 'naive-ui'
+import type { Component } from 'vue'
 import { computed, h, ref, watch } from 'vue'
 
 import type { ResponsePointOrder2OwnerModel } from '@/api/api-models'
@@ -53,14 +63,19 @@ const pageSize = 10
 
 const statusMeta: Record<
   PointOrderStatus,
-  { label: string; type: 'default' | 'warning' | 'info' | 'success' | 'error'; hint: string }
+  { label: string; type: 'default' | 'warning' | 'info' | 'success' | 'error'; hint: string; icon: Component }
 > = {
-  [PointOrderStatus.Pending]: { label: '等待发货', type: 'warning', hint: '订单已创建，等待处理' },
-  [PointOrderStatus.Shipped]: { label: '已发货', type: 'info', hint: '订单已发货，可填写或更新物流信息' },
-  [PointOrderStatus.Completed]: { label: '已完成', type: 'success', hint: '订单流程已完成' },
-  [PointOrderStatus.InProgress]: { label: '进行中', type: 'info', hint: '服务已接单，正在履约' },
-  [PointOrderStatus.Rejected]: { label: '已拒绝', type: 'error', hint: '服务订单已拒绝，积分已退回' },
-  [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default', hint: '订单已取消，积分已退回' },
+  [PointOrderStatus.Pending]: { label: '等待发货', type: 'warning', hint: '订单已创建，等待处理', icon: Timer24Regular },
+  [PointOrderStatus.Shipped]: {
+    label: '已发货',
+    type: 'info',
+    hint: '订单已发货，可填写或更新物流信息',
+    icon: VehicleTruck24Regular,
+  },
+  [PointOrderStatus.Completed]: { label: '已完成', type: 'success', hint: '订单流程已完成', icon: CheckmarkCircle24Regular },
+  [PointOrderStatus.InProgress]: { label: '进行中', type: 'info', hint: '服务已接单，正在履约', icon: ArrowSync24Regular },
+  [PointOrderStatus.Rejected]: { label: '已拒绝', type: 'error', hint: '服务订单已拒绝，积分已退回', icon: Prohibited24Regular },
+  [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default', hint: '订单已取消，积分已退回', icon: DismissCircle24Regular },
 }
 
 const loading = computed(() => !!props.loading || actionLoading.value)
@@ -86,7 +101,14 @@ function statusTag(row: ResponsePointOrder2OwnerModel) {
         ? '已发货 · 待填单号'
         : meta.label
   const type = row.status === PointOrderStatus.Shipped && !row.trackingNumber ? 'warning' : meta.type
-  return h(NTag, { type, size: 'small', bordered: false }, () => label)
+  return h(
+    NTag,
+    { type, size: 'small', bordered: false },
+    {
+      default: () => label,
+      icon: () => h(NIcon, { component: meta.icon }),
+    },
+  )
 }
 
 function openDetail(row: ResponsePointOrder2OwnerModel) {
@@ -312,6 +334,9 @@ const columns: DataTableColumns<ResponsePointOrder2OwnerModel> = [
               size="small"
               :bordered="false"
             >
+              <template #icon>
+                <NIcon :component="statusMeta[item.status].icon" />
+              </template>
               {{
                 item.status === PointOrderStatus.Shipped && !item.trackingNumber
                   ? '已发货 · 待填单号'

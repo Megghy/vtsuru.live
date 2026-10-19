@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import {
   ArrowClockwise24Regular,
+  ArrowSync24Regular,
   CalendarLtr24Regular,
   CheckmarkCircle24Regular,
   DismissCircle24Regular,
   Link24Regular,
+  Prohibited24Regular,
   Send24Regular,
+  Timer24Regular,
+  VehicleTruck24Regular,
 } from '@vicons/fluent'
 import {
   NAlert,
@@ -75,14 +79,14 @@ function displayAnswer(value: string | string[] | undefined) {
 
 const statusMeta: Record<
   PointOrderStatus,
-  { label: string; type: 'default' | 'warning' | 'info' | 'success' | 'error'; hint: string }
+  { label: string; type: 'default' | 'warning' | 'info' | 'success' | 'error'; hint: string; icon: Component }
 > = {
-  [PointOrderStatus.Pending]: { label: '待接单', type: 'warning', hint: '需求已提交，等待创作者确认。' },
-  [PointOrderStatus.Shipped]: { label: '已发货', type: 'info', hint: '订单已发货。' },
-  [PointOrderStatus.Completed]: { label: '已完成', type: 'success', hint: '服务已完成。' },
-  [PointOrderStatus.InProgress]: { label: '进行中', type: 'info', hint: '创作者已接单，正在安排或制作。' },
-  [PointOrderStatus.Rejected]: { label: '已拒绝', type: 'error', hint: '创作者无法承接，积分已退回。' },
-  [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default', hint: '订单已取消，符合条件的积分已退回。' },
+  [PointOrderStatus.Pending]: { label: '待接单', type: 'warning', hint: '需求已提交，等待创作者确认。', icon: Timer24Regular },
+  [PointOrderStatus.Shipped]: { label: '已发货', type: 'info', hint: '订单已发货。', icon: VehicleTruck24Regular },
+  [PointOrderStatus.Completed]: { label: '已完成', type: 'success', hint: '服务已完成。', icon: CheckmarkCircle24Regular },
+  [PointOrderStatus.InProgress]: { label: '进行中', type: 'info', hint: '创作者已接单，正在安排或制作。', icon: ArrowSync24Regular },
+  [PointOrderStatus.Rejected]: { label: '已拒绝', type: 'error', hint: '创作者无法承接，积分已退回。', icon: Prohibited24Regular },
+  [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default', hint: '订单已取消，符合条件的积分已退回。', icon: DismissCircle24Regular },
 }
 
 const isService = computed(() => current.value?.type === GoodsTypes.Service)
@@ -308,8 +312,12 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
                 :type="statusMeta[current.status].type"
                 size="small"
                 :bordered="false"
-                >{{ statusMeta[current.status].label }}</NTag
               >
+                <template #icon>
+                  <NIcon :component="statusMeta[current.status].icon" />
+                </template>
+                {{ statusMeta[current.status].label }}
+              </NTag>
             </div>
           </div>
 

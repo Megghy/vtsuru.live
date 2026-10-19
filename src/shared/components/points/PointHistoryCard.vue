@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import {
+  CalendarCheckmark24Regular,
+  Chat24Regular,
+  Gift24Regular,
+  Person24Regular,
+  Star24Regular,
+} from '@vicons/fluent'
 import type { DataTableColumns, TagProps } from 'naive-ui'
 import {
   NButton,
@@ -6,6 +13,7 @@ import {
   NDivider,
   NEmpty,
   NFlex,
+  NIcon,
   NInput,
   NModal,
   NPagination,
@@ -14,6 +22,7 @@ import {
   NTime,
   NTooltip,
 } from 'naive-ui'
+import type { Component } from 'vue'
 import { computed, h, ref, watch } from 'vue'
 
 import type { ResponsePointHisrotyModel } from '@/api/api-models'
@@ -49,18 +58,22 @@ const sourceOptions = [
   { label: '首次互动', value: PointFrom.DailyFirstInteraction },
 ]
 
-function sourceMeta(row: ResponsePointHisrotyModel): { label: string; type: TagType } {
+function sourceMeta(row: ResponsePointHisrotyModel): { label: string; type: TagType; icon: Component } {
   switch (row.from) {
     case PointFrom.Danmaku:
-      return { label: '直播互动', type: 'info' }
+      return { label: '直播互动', type: 'info', icon: Chat24Regular }
     case PointFrom.Manual:
-      return { label: row.point >= 0 ? '主播赠予' : '主播扣除', type: row.point >= 0 ? 'success' : 'error' }
+      return {
+        label: row.point >= 0 ? '主播赠予' : '主播扣除',
+        type: row.point >= 0 ? 'success' : 'error',
+        icon: Person24Regular,
+      }
     case PointFrom.Use:
-      return { label: '礼物兑换', type: 'warning' }
+      return { label: '礼物兑换', type: 'warning', icon: Gift24Regular }
     case PointFrom.CheckIn:
-      return { label: '签到', type: 'success' }
+      return { label: '签到', type: 'success', icon: CalendarCheckmark24Regular }
     case PointFrom.DailyFirstInteraction:
-      return { label: '首次互动', type: 'info' }
+      return { label: '首次互动', type: 'info', icon: Star24Regular }
   }
 }
 
@@ -107,7 +120,14 @@ function openGoods(row: ResponsePointHisrotyModel) {
 function renderSource(row: ResponsePointHisrotyModel) {
   const source = sourceMeta(row)
   return h(NFlex, { align: 'center', gap: 6, wrap: false }, () => [
-    h(NTag, { type: source.type, bordered: false, size: 'small' }, () => source.label),
+    h(
+      NTag,
+      { type: source.type, bordered: false, size: 'small' },
+      {
+        default: () => source.label,
+        icon: () => h(NIcon, { component: source.icon }),
+      },
+    ),
     row.extra?.user?.name
       ? h(
           NButton,
@@ -167,10 +187,19 @@ const columns: DataTableColumns<ResponsePointHisrotyModel> = [
 </script>
 
 <template>
-  <NEmpty
+  <div
     v-if="histories.length === 0"
-    description="暂无积分记录"
-  />
+    class="history-empty-state"
+  >
+    <NEmpty
+      description="暂无积分明细记录"
+      size="medium"
+    >
+      <template #extra>
+        <span class="empty-tip">在已开通积分的主播直播间互动、签到或进行礼物兑换后，每笔流水变动都会详细记录在此。</span>
+      </template>
+    </NEmpty>
+  </div>
 
   <template v-else>
     <NDataTable
@@ -193,6 +222,9 @@ const columns: DataTableColumns<ResponsePointHisrotyModel> = [
             size="small"
             :bordered="false"
           >
+            <template #icon>
+              <NIcon :component="sourceMeta(item).icon" />
+            </template>
             {{ sourceMeta(item).label }}
           </NTag>
           <strong :class="item.point < 0 ? 'point-value--out' : 'point-value--in'">
@@ -294,6 +326,18 @@ const columns: DataTableColumns<ResponsePointHisrotyModel> = [
 </template>
 
 <style scoped>
+.history-empty-state {
+  padding: 48px 16px;
+  border: 1px dashed var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background: var(--vtsuru-bg-surface);
+}
+
+.empty-tip {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
 :deep(.point-value),
 .mobile-history-card strong {
   font-variant-numeric: tabular-nums;

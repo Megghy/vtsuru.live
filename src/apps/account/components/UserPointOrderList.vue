@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { Open24Regular } from '@vicons/fluent'
+import {
+  ArrowSync24Regular,
+  CheckmarkCircle24Regular,
+  DismissCircle24Regular,
+  Open24Regular,
+  Prohibited24Regular,
+  Timer24Regular,
+  VehicleTruck24Regular,
+} from '@vicons/fluent'
 import type { DataTableColumns } from 'naive-ui'
 import {
   NButton,
@@ -16,6 +24,7 @@ import {
   NText,
   NTime,
 } from 'naive-ui'
+import type { Component } from 'vue'
 import { computed, h, ref, watch } from 'vue'
 
 import type { ResponsePointOrder2UserModel } from '@/api/api-models'
@@ -35,13 +44,16 @@ const showServiceDetail = ref(false)
 const page = ref(1)
 const pageSize = 10
 
-const statusMeta = {
-  [PointOrderStatus.Pending]: { label: '等待发货', type: 'warning' as const },
-  [PointOrderStatus.Shipped]: { label: '已发货', type: 'info' as const },
-  [PointOrderStatus.Completed]: { label: '已完成', type: 'success' as const },
-  [PointOrderStatus.InProgress]: { label: '进行中', type: 'info' as const },
-  [PointOrderStatus.Rejected]: { label: '已拒绝', type: 'error' as const },
-  [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default' as const },
+const statusMeta: Record<
+  PointOrderStatus,
+  { label: string; type: 'default' | 'warning' | 'info' | 'success' | 'error'; icon: Component }
+> = {
+  [PointOrderStatus.Pending]: { label: '等待发货', type: 'warning', icon: Timer24Regular },
+  [PointOrderStatus.Shipped]: { label: '已发货', type: 'info', icon: VehicleTruck24Regular },
+  [PointOrderStatus.Completed]: { label: '已完成', type: 'success', icon: CheckmarkCircle24Regular },
+  [PointOrderStatus.InProgress]: { label: '进行中', type: 'info', icon: ArrowSync24Regular },
+  [PointOrderStatus.Rejected]: { label: '已拒绝', type: 'error', icon: Prohibited24Regular },
+  [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default', icon: DismissCircle24Regular },
 }
 
 const pagedOrders = computed(() => props.orders.slice((page.value - 1) * pageSize, page.value * pageSize))
@@ -98,10 +110,17 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
   {
     title: '状态',
     key: 'status',
-    width: 108,
+    width: 116,
     render: (row) => {
       const meta = statusMeta[row.status]
-      return h(NTag, { type: meta.type, size: 'small', bordered: false }, () => meta.label)
+      return h(
+        NTag,
+        { type: meta.type, size: 'small', bordered: false },
+        {
+          default: () => statusLabel(row),
+          icon: () => h(NIcon, { component: meta.icon }),
+        },
+      )
     },
   },
   {
@@ -114,10 +133,19 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
 </script>
 
 <template>
-  <NEmpty
+  <div
     v-if="orders.length === 0"
-    description="暂无符合条件的订单"
-  />
+    class="orders-empty-state"
+  >
+    <NEmpty
+      description="暂无符合条件的订单记录"
+      size="medium"
+    >
+      <template #extra>
+        <span class="empty-tip">在主播频道使用积分兑换礼物或互动服务后，相关进度将在此展示。</span>
+      </template>
+    </NEmpty>
+  </div>
 
   <template v-else>
     <NDataTable
@@ -144,6 +172,9 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
             size="small"
             :bordered="false"
           >
+            <template #icon>
+              <NIcon :component="statusMeta[order.status].icon" />
+            </template>
             {{ statusLabel(order) }}
           </NTag>
         </span>
@@ -318,6 +349,18 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
 </template>
 
 <style scoped>
+.orders-empty-state {
+  padding: 48px 16px;
+  border: 1px dashed var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius);
+  background: var(--vtsuru-bg-surface);
+}
+
+.empty-tip {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
+}
+
 :deep(.order-goods-cell) {
   display: grid;
   gap: 2px;

@@ -9,6 +9,7 @@ import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { PointFrom } from '@/api/api-models'
 import { getApiPointUserGetHistories } from '@/api/generated/point/point'
 import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
+import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
 import { objectsToCSV } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -138,85 +139,147 @@ onMounted(() => void loadHistories())
 </script>
 
 <template>
-  <NSpin :show="loading">
-    <AccountDataPanel :stats="stats">
-      <template #toolbar>
-        <NFlex
-          class="history-toolbar"
-          align="center"
-          justify="space-between"
-          wrap
-          :gap="8"
+  <div class="point-history-page">
+    <AccountPageHeader
+      title="积分记录"
+      subtitle="追溯在所有主播频道的积分获取、消耗明细与时间流水。"
+    >
+      <template #actions>
+        <NButton
+          secondary
+          :disabled="filteredHistories.length === 0"
+          @click="exportHistories"
         >
-          <NFlex
-            class="history-filters"
-            align="center"
-            wrap
-            :gap="8"
-          >
-            <NSelect
-              v-model:value="streamer"
-              :options="streamerOptions"
-              clearable
-              filterable
-              placeholder="全部主播"
-              style="width: 160px"
-            />
-            <NRadioGroup v-model:value="direction">
-              <NRadioButton value="all">全部</NRadioButton>
-              <NRadioButton value="increase">增加</NRadioButton>
-              <NRadioButton value="decrease">减少</NRadioButton>
-            </NRadioGroup>
-            <NDatePicker
-              v-model:value="dateRange"
-              type="datetimerange"
-              clearable
-              placeholder="选择时间范围"
-              style="width: 330px"
-            />
-            <span class="filter-result">显示 {{ filteredHistories.length }} / {{ histories.length }} 条</span>
-          </NFlex>
-
-          <NFlex :gap="8">
-            <NButton
-              secondary
-              :disabled="filteredHistories.length === 0"
-              @click="exportHistories"
-            >
-              <template #icon><NIcon :component="ArrowDownload24Regular" /></template>
-              导出
-            </NButton>
-            <NButton
-              secondary
-              @click="refresh"
-            >
-              <template #icon><NIcon :component="ArrowSync24Regular" /></template>
-              刷新
-            </NButton>
-          </NFlex>
-        </NFlex>
+          <template #icon><NIcon :component="ArrowDownload24Regular" /></template>
+          导出
+        </NButton>
+        <NButton
+          secondary
+          :loading="loading"
+          @click="refresh"
+        >
+          <template #icon><NIcon :component="ArrowSync24Regular" /></template>
+          刷新
+        </NButton>
       </template>
-    </AccountDataPanel>
+    </AccountPageHeader>
 
-    <PointHistoryCard :histories="filteredHistories" />
-  </NSpin>
+    <NSpin :show="loading">
+      <AccountDataPanel :stats="stats">
+        <template #toolbar>
+          <div class="history-toolbar">
+            <div class="history-filters">
+              <NSelect
+                v-model:value="streamer"
+                :options="streamerOptions"
+                clearable
+                filterable
+                placeholder="全部主播"
+                class="filter-streamer"
+              />
+              <NRadioGroup
+                v-model:value="direction"
+                size="medium"
+                class="filter-direction"
+              >
+                <NRadioButton value="all">全部</NRadioButton>
+                <NRadioButton value="increase">增加</NRadioButton>
+                <NRadioButton value="decrease">减少</NRadioButton>
+              </NRadioGroup>
+              <NDatePicker
+                v-model:value="dateRange"
+                type="datetimerange"
+                clearable
+                placeholder="选择时间范围"
+                class="filter-datepicker"
+              />
+            </div>
+
+            <div class="history-toolbar__meta">
+              <span class="filter-result">显示 {{ filteredHistories.length }} / {{ histories.length }} 条</span>
+            </div>
+          </div>
+        </template>
+      </AccountDataPanel>
+
+      <PointHistoryCard :histories="filteredHistories" />
+    </NSpin>
+  </div>
 </template>
 
 <style scoped>
+.point-history-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.history-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.history-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+.filter-streamer {
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.filter-direction {
+  flex-shrink: 0;
+}
+
+.filter-datepicker {
+  width: 290px;
+  max-width: 100%;
+}
+
+.history-toolbar__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
 .filter-result {
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
-  .history-toolbar,
   .history-filters {
     width: 100%;
   }
 
-  .history-filters :deep(.n-select),
-  .history-filters :deep(.n-date-picker) {
+  .filter-streamer,
+  .filter-datepicker {
     width: 100% !important;
+  }
+
+  .filter-direction {
+    width: 100%;
+    display: flex;
+  }
+
+  .filter-direction :deep(.n-radio-button) {
+    flex: 1;
+    text-align: center;
+  }
+
+  .history-toolbar__meta {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 </style>

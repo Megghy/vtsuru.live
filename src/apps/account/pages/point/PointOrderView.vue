@@ -7,6 +7,7 @@ import type { ResponsePointOrder2UserModel } from '@/api/api-models'
 import { PointOrderStatus } from '@/api/api-models'
 import { getApiPointUserGetOrders } from '@/api/generated/point/point'
 import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
+import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import UserPointOrderList from '@/apps/account/components/UserPointOrderList.vue'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -40,13 +41,13 @@ const stats = computed(() => [
     tone: 'warning' as const,
   },
   {
-    label: '已发货',
-    value: orders.value.filter((item) => item.status === PointOrderStatus.Shipped).length,
+    label: '服务进行中',
+    value: orders.value.filter((item) => item.status === PointOrderStatus.InProgress).length,
     tone: 'info' as const,
   },
   {
-    label: '服务进行中',
-    value: orders.value.filter((item) => item.status === PointOrderStatus.InProgress).length,
+    label: '已发货',
+    value: orders.value.filter((item) => item.status === PointOrderStatus.Shipped).length,
     tone: 'info' as const,
   },
   {
@@ -116,75 +117,125 @@ onMounted(() => void loadOrders())
 </script>
 
 <template>
-  <NSpin :show="loading">
-    <AccountDataPanel :stats="stats">
-      <template #toolbar>
-        <NFlex
-          align="center"
-          justify="space-between"
-          wrap
-          :gap="8"
+  <div class="point-orders-page">
+    <AccountPageHeader
+      title="我的订单"
+      subtitle="查看并跟踪你使用积分兑换的实物礼物与互动服务。"
+    >
+      <template #actions>
+        <NButton
+          secondary
+          :loading="loading"
+          @click="refresh"
         >
-          <NFlex
-            class="order-filters"
-            align="center"
-            wrap
-            :gap="8"
-          >
-            <NInput
-              v-model:value="keyword"
-              clearable
-              placeholder="搜索礼物名或订单号"
-              style="width: 240px"
-            >
-              <template #prefix><NIcon :component="Search24Regular" /></template>
-            </NInput>
-            <NSelect
-              v-model:value="status"
-              clearable
-              :options="[
-                { label: '全部状态', value: null },
-                { label: '待处理', value: PointOrderStatus.Pending },
-                { label: '已发货', value: PointOrderStatus.Shipped },
-                { label: '服务进行中', value: PointOrderStatus.InProgress },
-                { label: '已拒绝', value: PointOrderStatus.Rejected },
-                { label: '已取消', value: PointOrderStatus.Cancelled },
-                { label: '已完成', value: PointOrderStatus.Completed },
-              ]"
-              placeholder="订单状态"
-              style="width: 140px"
-            />
-            <span class="filter-result">显示 {{ filteredOrders.length }} / {{ orders.length }} 条</span>
-          </NFlex>
-          <NButton
-            secondary
-            @click="refresh"
-          >
-            <template #icon><NIcon :component="ArrowSync24Regular" /></template>
-            刷新
-          </NButton>
-        </NFlex>
+          <template #icon><NIcon :component="ArrowSync24Regular" /></template>
+          刷新
+        </NButton>
       </template>
-    </AccountDataPanel>
+    </AccountPageHeader>
 
-    <UserPointOrderList :orders="filteredOrders" />
-  </NSpin>
+    <NSpin :show="loading">
+      <AccountDataPanel :stats="stats">
+        <template #toolbar>
+          <div class="order-toolbar">
+            <div class="order-filters">
+              <NInput
+                v-model:value="keyword"
+                clearable
+                placeholder="搜索礼物名或订单号"
+                class="filter-keyword"
+              >
+                <template #prefix><NIcon :component="Search24Regular" /></template>
+              </NInput>
+              <NSelect
+                v-model:value="status"
+                clearable
+                :options="[
+                  { label: '全部状态', value: null },
+                  { label: '待处理', value: PointOrderStatus.Pending },
+                  { label: '已发货', value: PointOrderStatus.Shipped },
+                  { label: '服务进行中', value: PointOrderStatus.InProgress },
+                  { label: '已拒绝', value: PointOrderStatus.Rejected },
+                  { label: '已取消', value: PointOrderStatus.Cancelled },
+                  { label: '已完成', value: PointOrderStatus.Completed },
+                ]"
+                placeholder="订单状态"
+                class="filter-status"
+              />
+            </div>
+
+            <div class="order-toolbar__meta">
+              <span class="filter-result">显示 {{ filteredOrders.length }} / {{ orders.length }} 条</span>
+            </div>
+          </div>
+        </template>
+      </AccountDataPanel>
+
+      <UserPointOrderList :orders="filteredOrders" />
+    </NSpin>
+  </div>
 </template>
 
 <style scoped>
+.point-orders-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.order-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.order-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1 1 360px;
+}
+
+.filter-keyword {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+.filter-status {
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.order-toolbar__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .filter-result {
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
+  white-space: nowrap;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .order-filters {
+    flex-direction: column;
+    align-items: stretch;
     width: 100%;
   }
 
-  .order-filters :deep(.n-input),
-  .order-filters :deep(.n-select) {
+  .filter-keyword,
+  .filter-status {
     width: 100% !important;
+  }
+
+  .order-toolbar__meta {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 </style>

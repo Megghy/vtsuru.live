@@ -331,3 +331,61 @@ export function computeAreaStatsFromSessions(sessions: AnalyzeSessionItem[]): An
     }))
     .toSorted((a, b) => b.totalIncome - a.totalIncome)
 }
+
+export interface BackendChartItem {
+  income: number
+  giftIncome?: number
+  scIncome?: number
+  guardIncome?: number
+  offlineIncome?: number
+  offlineGuardIncome?: number
+  offlineScIncome?: number
+  grandTotalIncome?: number
+  totalIncomeWithGuard?: number
+  interactionCount: number
+  danmakuCount: number
+  payingUsers: number
+  interactionUsers: number
+  liveMinutes: number
+  likeCount: number
+  sessionCount?: number
+}
+
+export interface BackendPeriodSummary {
+  totalIncome: number
+  giftIncome?: number
+  scIncome?: number
+  guardIncome?: number
+  offlineIncome?: number
+  offlineGuardIncome?: number
+  offlineScIncome?: number
+  grandTotalIncome?: number
+  offlineGuardCount?: number
+  totalIncomeWithGuard?: number
+  totalInteractions: number
+  totalDanmakuCount: number
+  totalLiveMinutes: number
+  dailyAvgIncome: number
+  dailyAvgDanmaku: number
+  incomeTrend?: number
+  interactionTrend?: number
+  danmakuTrend?: number
+  activeLiveDays: number
+  interactionUsers: number
+  payingUsers: number
+  interactionUsersTrend?: number
+  payingUsersTrend?: number
+}
+
+export interface BackendAnalyzeData {
+  summary: {
+    last7Days: BackendPeriodSummary
+    last30Days: BackendPeriodSummary
+  }
+  chartData: Record<string, BackendChartItem>
+  sessions?: AnalyzeSessionItem[]
+  areaStats?: AnalyzeAreaStat[]
+  topSpenders?: AnalyzeTopUser[]
+  topChatters?: AnalyzeTopUser[]
+  offlineEvents?: AnalyzeOfflineEventItem[]
+}
