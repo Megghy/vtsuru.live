@@ -56,6 +56,8 @@ export interface RequestPointGoodsModel {
   isPinned?: boolean | null;
   isAllowRebuy: boolean;
   maxBuyCount: number;
+  /** @nullable */
+  maxSubItemSelections?: number | null;
   setting: RequestPointGoodsModelTempRequestGoodsSetting;
   serviceConfig?: PointGoodsDataServiceConfigData;
   /** @nullable */

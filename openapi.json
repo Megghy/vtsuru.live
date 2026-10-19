@@ -29319,8 +29319,13 @@
           "usage": {
             "$ref": "#/components/schemas/VTsuru_Core_AI_Contracts_AssistantTokenUsageDto"
           },
-          "proposal": {
-            "$ref": "#/components/schemas/VTsuru_Core_AI_Contracts_AssistantProposalDto"
+          "proposals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VTsuru_Core_AI_Contracts_AssistantProposalDto"
+            },
+            "description": "本条回复关联的待审批提案 (可能多个)",
+            "nullable": true
           },
           "process": {
             "type": "array",

@@ -25,5 +25,6 @@ export interface ResponseForumTopicModel {
   sampleLikedBy: number[];
   isLiked: boolean;
   isPinned: boolean;
+  isLocked: boolean;
   isDeleted: boolean;
 }

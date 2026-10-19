@@ -23,7 +23,11 @@ export interface VTsuruCoreAIContractsAssistantHistoryMessageDto {
      */
   images?: string[] | null;
   usage?: VTsuruCoreAIContractsAssistantTokenUsageDto;
-  proposal?: VTsuruCoreAIContractsAssistantProposalDto;
+  /**
+     * 本条回复关联的待审批提案 (可能多个)
+     * @nullable
+     */
+  proposals?: VTsuruCoreAIContractsAssistantProposalDto[] | null;
   /**
      * 答复前的工作过程 (思考 + 工具调用), 按时序排列; 仅 assistant 消息有
      * @nullable

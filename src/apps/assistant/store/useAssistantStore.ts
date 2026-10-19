@@ -159,7 +159,7 @@ export const useAssistantStore = defineStore('assistant', () => {
       ),
       reasoningDone: true,
       usage: h.usage,
-      actions: h.proposal ? [{ id: nextId(), proposal: h.proposal }] : [],
+      actions: (h.proposals ?? []).map((p) => ({ id: nextId(), proposal: p })),
       images: h.images,
       hasImage: h.hasImage || !!h.images?.length,
     }))
