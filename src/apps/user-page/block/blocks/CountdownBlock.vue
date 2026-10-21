@@ -197,8 +197,8 @@ const breakdown = computed(() => {
 .countdown-inner--bare {
   border-radius: var(--vtsuru-page-radius);
   background: color-mix(in srgb, var(--vtsuru-page-content-color, var(--user-page-ui-surface-bg)) 54%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(var(--user-page-bg-blur, 6px));
+  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 6px));
 }
 
 .cd-header-integrated {

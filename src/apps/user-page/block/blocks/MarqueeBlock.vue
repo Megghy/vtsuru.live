@@ -148,8 +148,8 @@ watch(
   padding: 4px 8px;
   border-radius: var(--vtsuru-page-radius);
   background: var(--marquee-surface);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--user-page-bg-blur, 4px));
+  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 4px));
 }
 
 .icon {
