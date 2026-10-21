@@ -782,7 +782,8 @@ onMounted(() => {
     padding: 22px 16px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--popover);
+    backdrop-filter: blur(12px);
+    background-color: unquote('rgba(var(--popover-rgb), 0.85)');
     color: var(--foreground);
     cursor: pointer;
     font: inherit;
@@ -885,7 +886,8 @@ onMounted(() => {
     padding: 18px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--popover);
+    backdrop-filter: blur(12px);
+    background-color: unquote('rgba(var(--popover-rgb), 0.85)');
     color: var(--foreground);
     cursor: pointer;
     font: inherit;
@@ -1464,4 +1466,12 @@ article.feature-card
         scroll-padding-inline: 18px;
     .room-mini-card
         width: 180px;
+</style>
+
+<style scoped>
+/* 使用纯 CSS 避免 Stylus 解析问题 */
+.entry-card,
+.feature-card {
+  background-color: rgb(var(--popover-rgb) / 0.85);
+}
 </style>

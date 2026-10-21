@@ -11,7 +11,7 @@ export const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border-[length:var(--ui-border-width,1px)] [border-style:var(--ui-border-style,solid)] border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "text-foreground hover:bg-accent hover:text-accent-foreground",
@@ -19,14 +19,14 @@ export const buttonVariants = cva(
         brand: "bg-brand text-brand-foreground shadow-sm hover:opacity-90",
       },
       size: {
-        "default": "h-[var(--ui-height,2rem)] px-3 text-xs",
-        "sm": "h-[var(--ui-height-sm,1.75rem)] rounded px-2.5 text-xs",
-        "xs": "h-6 rounded px-2 text-[11px]",
-        "lg": "h-[var(--ui-height-lg,2.25rem)] rounded-md px-4 text-sm",
-        "icon": "h-8 w-8",
-        "icon-sm": "size-7",
-        "icon-xs": "size-6",
-        "icon-lg": "size-9",
+        "default": "h-9 px-4 py-2",
+        "sm": "h-8 rounded-md px-3 text-xs",
+        "xs": "h-7 rounded px-2.5 text-xs",
+        "lg": "h-10 rounded-md px-8",
+        "icon": "h-9 w-9",
+        "icon-sm": "size-8",
+        "icon-xs": "size-7",
+        "icon-lg": "size-10",
       },
     },
     defaultVariants: {

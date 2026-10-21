@@ -1,5 +1,11 @@
-import { error, pickByMode } from './colors'
+import { error, hexToRgb, pickByMode } from './colors'
 import type { ThemeTokens } from './tokens'
+
+/** 将十六进制颜色转换为 CSS RGB 格式（用于 rgba() 的变量替代） */
+function toRgbString(hex: string): string {
+  const { r, g, b } = hexToRgb(hex)
+  return `${r} ${g} ${b}`
+}
 
 /** Shadcn 标准 CSS 变量 + VTsuru 品牌扩展 */
 export function getShadcnCssVars(t: ThemeTokens): Record<string, string> {
@@ -10,6 +16,7 @@ export function getShadcnCssVars(t: ThemeTokens): Record<string, string> {
     '--card': t.surface,
     '--card-foreground': t.foreground,
     '--popover': t.elevated,
+    '--popover-rgb': toRgbString(t.elevated),
     '--popover-foreground': t.foreground,
     '--primary': t.primary,
     '--primary-foreground': t.primaryForeground,

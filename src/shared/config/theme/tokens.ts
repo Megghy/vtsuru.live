@@ -151,8 +151,8 @@ export function buildSiteTokens(isDark: boolean): ThemeTokens {
       : {
           canvas: '#ffffff',
           surface: '#ffffff',
-          surfaceHover: neutral[100],
-          inset: neutral[100],
+          surfaceHover: neutral[50],
+          inset: neutral[50],
           elevated: '#ffffff',
           cardBorderColor: neutral[300],
         },
@@ -174,7 +174,7 @@ export function buildManageTokens(isDark: boolean): ThemeTokens {
       : {
           canvas: neutral[100],
           surface: '#ffffff',
-          surfaceHover: neutral[100],
+          surfaceHover: neutral[50],
           inset: neutral[200],
           elevated: '#ffffff',
           cardBorderColor: neutral[300],

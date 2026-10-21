@@ -46,6 +46,14 @@ export default defineConfig({
   ],
   preflights: [
     { getCSS: () => animatePreflightCSS },
+    {
+      getCSS: () => `
+*, ::before, ::after {
+  --un-default-border-color: var(--border);
+  border-color: var(--border);
+}
+`.trim(),
+    },
   ],
   content: {
     pipeline: {

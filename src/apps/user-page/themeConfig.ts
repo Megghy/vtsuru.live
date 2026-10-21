@@ -67,9 +67,9 @@ export interface ResolvedUserPageAppearance {
 
 const borderWidths: Record<PageBorderStrength, string> = {
   none: '0px',
-  subtle: '1px',
+  subtle: '0.5px',
   normal: '1px',
-  strong: '2px',
+  strong: '1.5px',
 }
 
 const spacingValues: Record<PageSpacingLevel, number> = {
@@ -80,15 +80,15 @@ const spacingValues: Record<PageSpacingLevel, number> = {
 
 const controlHeights: Record<PageControlSize, ResolvedUserPageAppearance['controlHeights']> = {
   compact: { small: '24px', medium: '28px', large: '32px' },
-  normal: { small: '26px', medium: '30px', large: '36px' },
-  comfortable: { small: '30px', medium: '36px', large: '42px' },
+  normal: { small: '28px', medium: '32px', large: '38px' },
+  comfortable: { small: '32px', medium: '38px', large: '44px' },
 }
 
 const shadows: Record<PageShadowLevel, string> = {
   none: 'none',
-  subtle: '0 1px 2px rgba(9, 9, 11, 0.04)',
-  normal: '0 2px 8px rgba(9, 9, 11, 0.08)',
-  floating: '0 8px 24px rgba(9, 9, 11, 0.14)',
+  subtle: '0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02)',
+  normal: '0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
+  floating: '0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)',
 }
 
 function readEnum<T extends string>(theme: unknown, key: string, values: readonly T[], fallback: T): T {
@@ -122,7 +122,7 @@ export function resolveUserPageAppearance(theme: unknown): ResolvedUserPageAppea
   const rawOpacity = readNumber(theme, 'surfaceOpacity', -1, 15, 100)
 
   return {
-    radius: readNumber(theme, 'radius', 6, 0, 32),
+    radius: readNumber(theme, 'radius', 8, 0, 32),
     borderStrength,
     borderWidth: borderWidths[borderStrength],
     borderStyle: readEnum(theme, 'borderStyle', PAGE_BORDER_STYLES, 'solid'),

@@ -467,7 +467,7 @@ const requestClose = () => {
         </div>
       </DialogHeader>
 
-      <ScrollArea class="flex-1 min-h-0 pr-2">
+      <ScrollArea class="flex-1 min-h-0 pr-4">
         <div class="space-y-3.5 text-xs">
           <Alert
             v-if="rebuyWarning"
