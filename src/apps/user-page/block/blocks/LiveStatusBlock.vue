@@ -285,6 +285,18 @@ const hasCover = computed(
 </template>
 
 <style scoped>
+:scope {
+  --livestatus-brand-color: #fb7299;
+  --livestatus-status-online-light: #ff8a9c;
+  --livestatus-status-reserve-light: #ffb1c7;
+  --livestatus-immersive-bg: #111111;
+  --livestatus-immersive-fg: #ffffff;
+  --livestatus-immersive-fg-muted: rgba(255, 255, 255, 0.78);
+  --livestatus-immersive-status-fg: rgba(255, 255, 255, 0.82);
+  --livestatus-immersive-status-border: rgba(255, 255, 255, 0.28);
+  --livestatus-immersive-status-bg: rgba(0, 0, 0, 0.42);
+}
+
 .live-card {
   container-type: inline-size;
   position: relative;
@@ -369,7 +381,7 @@ const hasCover = computed(
   color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--brand)));
 }
 .status.reserve {
-  color: #fb7299;
+  color: var(--livestatus-brand-color);
 }
 .body {
   display: grid;
@@ -392,7 +404,7 @@ const hasCover = computed(
   text-decoration: none;
 }
 .meta-link:hover {
-  color: #fb7299;
+  color: var(--livestatus-brand-color);
 }
 .actions {
   gap: 10px;
@@ -403,8 +415,8 @@ const hasCover = computed(
 
 .immersive {
   min-height: 220px;
-  color: #ffffff;
-  background: #111111;
+  color: var(--livestatus-immersive-fg);
+  background: var(--livestatus-immersive-bg);
 }
 .immersive .content {
   min-height: 220px;
@@ -412,18 +424,18 @@ const hasCover = computed(
 }
 .immersive .platform,
 .immersive .meta {
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--livestatus-immersive-fg-muted);
 }
 .immersive .status {
-  color: rgba(255, 255, 255, 0.82);
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(0, 0, 0, 0.42);
+  color: var(--livestatus-immersive-status-fg);
+  border-color: var(--livestatus-immersive-status-border);
+  background: var(--livestatus-immersive-status-bg);
 }
 .immersive .status.online {
-  color: #ff8a9c;
+  color: var(--livestatus-status-online-light);
 }
 .immersive .status.reserve {
-  color: #ffb1c7;
+  color: var(--livestatus-status-reserve-light);
 }
 
 .compact .content {
