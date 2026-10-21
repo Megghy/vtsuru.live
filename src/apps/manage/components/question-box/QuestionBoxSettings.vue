@@ -57,7 +57,7 @@ const remarkLevel = {
       '宽松',
       h(NTooltip, null, {
         trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.infoColor }),
-        default: () => '仅过滤极端内容 (得分 > 30)',
+        default: () => '仅拦截极端内容 (得分 ≤ 30)',
       }),
     ]),
   2: () =>
@@ -65,7 +65,7 @@ const remarkLevel = {
       '一般',
       h(NTooltip, null, {
         trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.warningColor }),
-        default: () => '过滤潜在冒犯性内容 (得分 > 60)',
+        default: () => '拦截潜在冒犯性内容 (得分 ≤ 60)',
       }),
     ]),
   3: () =>
@@ -73,7 +73,7 @@ const remarkLevel = {
       '严格',
       h(NTooltip, null, {
         trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.errorColor }),
-        default: () => '过滤所有可能不适内容 (得分 > 90)',
+        default: () => '拦截所有可能不适内容 (得分 ≤ 90)',
       }),
     ]),
 }
