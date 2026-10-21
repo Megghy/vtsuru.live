@@ -37,7 +37,9 @@ const target = toRef(props, 'userInfo')
 const composer = useQuestionComposer(target, () => emit('submitted'))
 const {
   addFiles,
+  allowAnonymous,
   allowDefaultPublic,
+  allowUnregistedUser,
   canSubmit,
   canUploadImages,
   characterCount,
@@ -320,11 +322,29 @@ async function submit() {
             </div>
           </div>
           <NCheckbox
-            v-if="isIdentified"
+            v-if="isIdentified && allowAnonymous"
             v-model:checked="draft.isAnonymous"
           >
             隐藏我的身份
           </NCheckbox>
+          <span
+            v-else-if="isIdentified && !allowAnonymous"
+            style="font-size: 12px; color: var(--vtsuru-fg-muted);"
+          >
+            对方已开启实名提问，将以当前身份提交
+          </span>
+          <span
+            v-else-if="!allowUnregistedUser"
+            style="font-size: 12px; color: var(--vtsuru-error, #f56c6c);"
+          >
+            对方已禁止未登录用户提问，请先登录或完成 B 站认证
+          </span>
+          <span
+            v-else-if="!allowAnonymous"
+            style="font-size: 12px; color: var(--vtsuru-error, #f56c6c);"
+          >
+            对方已禁止匿名提问，请先登录以实名提交
+          </span>
           <div
             v-else
             class="guest-fields"

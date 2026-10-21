@@ -142,7 +142,14 @@ function addTag() {
               :disabled="useQB.isLoading"
               @update:checked="saveQuestionBoxSettings"
             >
-              允许未注册/匿名用户进行提问
+              允许未注册/未认证用户进行提问
+            </NCheckbox>
+            <NCheckbox
+              v-model:checked="accountInfo.settings.questionBox.allowAnonymous"
+              :disabled="useQB.isLoading"
+              @update:checked="saveQuestionBoxSettings"
+            >
+              允许匿名提问
             </NCheckbox>
             <NCheckbox
               v-model:checked="accountInfo.settings.questionBox.allowImageUpload"

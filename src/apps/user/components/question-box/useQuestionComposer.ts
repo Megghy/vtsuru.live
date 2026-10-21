@@ -76,6 +76,8 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
     return accountInfo.value?.name || biliAuth.biliAuth?.name || '已认证身份'
   })
   const allowUploadImage = computed(() => target.value?.extra?.allowQuestionBoxUploadImage ?? false)
+  const allowAnonymous = computed(() => target.value?.extra?.allowQuestionBoxAnonymous !== false)
+  const allowUnregistedUser = computed(() => target.value?.extra?.allowQuestionBoxUnregistedUser !== false)
   const allowDefaultPublic = computed(() => target.value?.extra?.questionBoxDefaultPublic !== false)
   const canUploadImages = computed(() => !isSelf.value && (isIdentified.value || allowUploadImage.value))
   const maxImages = computed(() => (isIdentified.value ? 9 : 3))
@@ -87,6 +89,17 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
     else pause()
   })
 
+  // 当主播关闭匿名提问且用户已登录/已认证时，强制实名
+  watch(
+    [allowAnonymous, isIdentified],
+    ([allowed, identified]) => {
+      if (!allowed && identified && draft.value.isAnonymous) {
+        draft.value = { ...draft.value, isAnonymous: false }
+      }
+    },
+    { immediate: true },
+  )
+
   const canSubmit = computed(
     () =>
       !isSelf.value &&
@@ -94,7 +107,9 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
       Boolean(token.value) &&
       characterCount.value >= 3 &&
       cooldownSeconds.value === 0 &&
-      isValidEmail(draft.value.anonymousEmail),
+      isValidEmail(draft.value.anonymousEmail) &&
+      (allowUnregistedUser.value || isIdentified.value) &&
+      (allowAnonymous.value || isIdentified.value),
   )
 
   function isValidEmail(email: string) {
@@ -225,7 +240,9 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
 
   return {
     addFiles,
+    allowAnonymous,
     allowDefaultPublic,
+    allowUnregistedUser,
     allowUploadImage,
     canSubmit,
     canUploadImages,

@@ -14,6 +14,8 @@ export interface ResponseUserInfoResponseUserInfoExtra {
   /** @nullable */
   isInBlackList?: boolean | null;
   allowQuestionBoxUploadImage: boolean;
+  allowQuestionBoxAnonymous: boolean;
+  allowQuestionBoxUnregistedUser: boolean;
   showQuestionBoxPublicReplies: boolean;
   questionBoxDefaultPublic: boolean;
 }

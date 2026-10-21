@@ -9,6 +9,7 @@ import type { SettingQuestionBoxSaftyLevels } from './settingQuestionBoxSaftyLev
 
 export interface SettingQuestionBox {
   allowUnregistedUser: boolean;
+  allowAnonymous: boolean;
   saftyLevel: SettingQuestionBoxSaftyLevels;
   allowImageUpload: boolean;
   showPublicReplies: boolean;
