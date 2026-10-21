@@ -751,7 +751,7 @@ onMounted(() => {
     height: 5px;
     margin-top: 14px;
     border-radius: 999px;
-    background: #27abd9;
+    background: var(--primary);
 
 .hero-tagline
     margin: 18px 0 0;
@@ -781,17 +781,16 @@ onMounted(() => {
     min-height: 152px;
     padding: 22px 16px;
     border: 1px solid var(--border);
-    border-bottom: 3px solid var(--card-accent);
     border-radius: 8px;
     background: var(--popover);
     color: var(--foreground);
     cursor: pointer;
     font: inherit;
-    transition: transform 160ms var(--vtsuru-bezier), border-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
+    transition: transform 160ms var(--vtsuru-bezier), background-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
 
 .entry-card:hover
     transform: translateY(-3px);
-    border-color: var(--card-accent);
+    background: var(--card-soft);
     box-shadow: 0 10px 26px var(--card-shadow);
 
 .entry-card .n-icon
@@ -885,14 +884,13 @@ onMounted(() => {
     min-width: 0;
     padding: 18px;
     border: 1px solid var(--border);
-    border-bottom: 3px solid var(--card-accent);
     border-radius: 8px;
     background: var(--popover);
     color: var(--foreground);
     cursor: pointer;
     font: inherit;
     text-align: left;
-    transition: transform 160ms var(--vtsuru-bezier), border-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
+    transition: transform 160ms var(--vtsuru-bezier), background-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
 
 article.feature-card
     cursor: default;
@@ -900,7 +898,7 @@ article.feature-card
 .feature-card:hover,
 .feature-card:focus-visible
     transform: translateY(-2px);
-    border-color: var(--card-accent);
+    background: var(--card-soft);
     box-shadow: 0 8px 20px var(--card-shadow);
     outline: none;
 
@@ -981,7 +979,7 @@ article.feature-card
 .userpage-intro-list li::before
     content: '•';
     margin-right: 8px;
-    color: #22a8d6;
+    color: var(--primary);
 
 .userpage-intro-media
     min-width: 0;
@@ -1070,14 +1068,20 @@ article.feature-card
     .feature-grid
         grid-template-columns: repeat(2, minmax(0, 1fr));
 
+@media (max-width: 720px)
+    .client-grid
+        grid-template-columns: 1fr;
+
 @media (max-width: 700px)
     .main-container
         gap: 42px;
         width: min(92vw, 560px);
         padding-top: 24px;
+        padding-bottom: 48px;
 
     .hero-section
         padding-top: 8px;
+        padding-bottom: 24px;
 
     .hero-layout
         flex-direction: column;
@@ -1098,6 +1102,50 @@ article.feature-card
         grid-template-columns: 1fr;
         width: 100%;
         max-width: 340px;
+        margin-left: auto;
+        margin-right: auto;
+
+    .feature-grid
+        grid-template-columns: 1fr;
+
+    .userpage-intro-layout
+        grid-template-columns: 1fr;
+        gap: 24px;
+
+    .userpage-intro-media
+        max-width: 100%;
+
+    .streamers-section-header
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+    .streamers-controls
+        width: 100%;
+        justify-content: space-between;
+
+    .section-actions
+        justify-content: center;
+
+@media (max-width: 480px)
+    .main-container
+        width: min(95vw, 100%);
+        gap: 32px;
+        padding-left: 8px;
+        padding-right: 8px;
+
+    .feature-card
+        padding: 14px;
+        gap: 12px;
+
+    .entry-card
+        padding: 16px 12px;
+
+    .section-title
+        font-size: 1.15rem;
+
+    .section-subtitle
+        font-size: 0.85rem;
 
     .entry-card
         min-height: 142px;

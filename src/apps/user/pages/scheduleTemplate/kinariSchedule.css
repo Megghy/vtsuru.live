@@ -35,7 +35,14 @@
 }
 
 .kinari-template :deep(.schedule-week-toolbar__save) {
-  border-bottom: 3px solid #d94f30;
+  background: #d94f30;
+  color: white;
+  border-radius: 4px;
+  transition: opacity 0.15s ease;
+}
+
+.kinari-template :deep(.schedule-week-toolbar__save:hover) {
+  opacity: 0.9;
 }
 
 .kinari-board {

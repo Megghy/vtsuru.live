@@ -238,7 +238,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   background: rgb(255 255 255 / 82%);
-  border-bottom: 2px solid var(--pinky-accent-2);
+  box-shadow: 0 2px 0 var(--pinky-accent-2);
   rotate: -6deg;
 }
 
