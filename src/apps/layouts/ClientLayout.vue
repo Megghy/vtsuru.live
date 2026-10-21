@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import {
   Board24Filled,
@@ -52,6 +53,7 @@ const rpcServer = useFetcherRpcServer()
 
 const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
 const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
+provideThemeScope(manageCssVars)
 
 const danmakuWindow = useDanmakuWindow()
 const giftWindow = useGiftWindow()

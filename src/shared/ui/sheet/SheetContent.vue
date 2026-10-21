@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useThemeScope } from '@/shared/config/theme/scope'
 import type { DialogContentEmits, DialogContentProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
 import type { SheetVariants } from "."
@@ -30,6 +31,7 @@ const emits = defineEmits<DialogContentEmits>()
 const delegatedProps = reactiveOmit(props, "class", "side")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const themeStyle = useThemeScope()
 </script>
 
 <template>
@@ -37,7 +39,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     <DialogOverlay
       class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
     />
-    <DialogContent
+    <DialogContent :style="themeStyle"
       :class="cn(sheetVariants({ side }), props.class)"
       v-bind="{ ...forwarded, ...$attrs }"
     >

@@ -1,11 +1,11 @@
+import { getShadcnCssVars } from './shadcn'
 import { brand, error, hexToRgb, info, pickByMode, rgba, success, warning } from './colors'
 /**
- * 主题入口：聚合 colors / tokens / overrides，并产出可在 .vue / .ts 中直接引用的 CSS 变量。
+ * 主题入口：聚合 colors / tokens，并产出可在 .vue / .ts 中直接引用的 CSS 变量。
  */
 import type { ThemeTokens } from './tokens'
 
 export { brand, error, hexToRgb, info, neutral, pickByMode, rgba, success, warning } from './colors'
-export { getThemeOverrides } from './overrides'
 export type { ThemeTokens } from './tokens'
 export { buildManageTokens, buildSiteTokens } from './tokens'
 
@@ -26,6 +26,7 @@ export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
   const warningColor = pickByMode(tokens.isDark, warning.light, warning.dark)
   const errorColor = pickByMode(tokens.isDark, error.light, error.dark)
   const vars: Record<string, string> = {
+    ...getShadcnCssVars(tokens),
     '--vtsuru-bezier': 'cubic-bezier(.4, 0, .2, 1)',
     '--vtsuru-primary': tokens.primary,
     '--vtsuru-primary-hover': tokens.primaryHover,
@@ -52,9 +53,9 @@ export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
     '--vtsuru-bg-inset': tokens.inset,
     '--vtsuru-bg-elevated': tokens.elevated,
     '--vtsuru-border': tokens.borderColor,
-    '--vtsuru-border-hover': tokens.inputBorderHover,
-    '--vtsuru-radius': tokens.radiusSurface,
-    '--vtsuru-radius-control': tokens.radiusControl,
+    '--vtsuru-border-hover': 'var(--input)',
+    '--vtsuru-radius': 'var(--radius)',
+    '--vtsuru-radius-control': 'var(--radius-control)',
     '--vtsuru-shadow-1': tokens.shadow1,
     '--vtsuru-shadow-2': tokens.shadow2,
     '--vtsuru-shadow-popover': tokens.shadowPopover,

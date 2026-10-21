@@ -324,10 +324,10 @@ function togglePlayerMinimize() {
 <style scoped>
 /* 深度暗色模式与风格适配 APlayer */
 :deep(.aplayer) {
-  background: hsl(var(--card)) !important;
-  color: hsl(var(--card-foreground)) !important;
+  background: var(--card) !important;
+  color: var(--card-foreground) !important;
   box-shadow: none !important;
-  border: 1px solid hsl(var(--border)) !important;
+  border: 1px solid var(--border) !important;
   border-radius: var(--radius) !important;
   margin: 0 !important;
 }
@@ -342,45 +342,45 @@ function togglePlayerMinimize() {
 }
 
 :deep(.aplayer .aplayer-info .aplayer-music .aplayer-title) {
-  color: hsl(var(--foreground)) !important;
+  color: var(--foreground) !important;
   font-size: 13px !important;
   font-weight: 600 !important;
 }
 
 :deep(.aplayer .aplayer-info .aplayer-music .aplayer-author) {
-  color: hsl(var(--muted-foreground)) !important;
+  color: var(--muted-foreground) !important;
   font-size: 11px !important;
 }
 
 :deep(.aplayer .aplayer-info .aplayer-controller .aplayer-time) {
-  color: hsl(var(--muted-foreground)) !important;
+  color: var(--muted-foreground) !important;
   font-size: 11px !important;
 }
 
 :deep(.aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon) {
-  color: hsl(var(--muted-foreground)) !important;
+  color: var(--muted-foreground) !important;
 }
 
 :deep(.aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon:hover) {
-  color: hsl(var(--foreground)) !important;
+  color: var(--foreground) !important;
 }
 
 :deep(.aplayer .aplayer-list) {
-  background: hsl(var(--card)) !important;
+  background: var(--card) !important;
 }
 
 :deep(.aplayer .aplayer-list ol li) {
-  border-top-color: hsl(var(--border)) !important;
-  color: hsl(var(--muted-foreground)) !important;
+  border-top-color: var(--border) !important;
+  color: var(--muted-foreground) !important;
 }
 
 :deep(.aplayer .aplayer-list ol li:hover) {
-  background: hsl(var(--muted) / 0.5) !important;
+  background: color-mix(in srgb, var(--muted) 50%, transparent) !important;
 }
 
 :deep(.aplayer .aplayer-list ol li.aplayer-list-light) {
-  background: hsl(var(--muted)) !important;
-  color: hsl(var(--foreground)) !important;
+  background: var(--muted) !important;
+  color: var(--foreground) !important;
 }
 
 :deep(.aplayer .aplayer-list ol li .aplayer-list-title) {
@@ -389,6 +389,6 @@ function togglePlayerMinimize() {
 
 :deep(.aplayer .aplayer-list ol li .aplayer-list-author) {
   font-size: 11px !important;
-  color: hsl(var(--muted-foreground)) !important;
+  color: var(--muted-foreground) !important;
 }
 </style>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import { WindowWrench20Filled } from '@vicons/fluent'
 import { ChevronBackOutline, ChevronForwardOutline, ColorPaletteOutline, HeartOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useMediaQuery } from '@vueuse/core'
@@ -346,6 +347,7 @@ const layoutUiVars = computed(() =>
 )
 
 const mergedLayoutVars = computed(() => ({ ...layoutUiVars.value, ...layoutPageBgVars.value }))
+provideThemeScope(mergedLayoutVars)
 
 const layoutPageBgClass = computed(() => ({
   'bg-host': !!layoutPageBg.value,
@@ -938,14 +940,17 @@ function scrollToTop() {
   justify-content: center;
 }
 
-.layout-header {
+.layout-header,
+.page-root .layout-header,
+.page-root.bg-host .layout-header {
   height: var(--vtsuru-header-height);
   padding: 0 12px;
   background-color: var(--vtsuru-bg-elevated, var(--background));
   border-bottom: 1px solid var(--vtsuru-border, var(--border));
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  flex-shrink: 0;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -1068,7 +1073,9 @@ function scrollToTop() {
 
 .main-layout-body {
   display: flex;
-  min-height: calc(100vh - var(--vtsuru-header-height));
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .user-sider {
@@ -1198,6 +1205,30 @@ function scrollToTop() {
   flex-shrink: 0;
 }
 
+/* 折叠状态下侧边栏元素水平居中对齐 */
+.user-sider.collapsed .sider-top {
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.user-sider.collapsed .sider-profile {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.user-sider.collapsed .nav-item,
+.sider-nav.collapsed .nav-item {
+  justify-content: center;
+  padding: 8px 0;
+  gap: 0;
+}
+
+.user-sider.collapsed .nav-item__icon,
+.sider-nav.collapsed .nav-item__icon {
+  margin: 0 auto;
+}
+
 .sider-footer {
   padding: 8px;
   border-top: 1px solid var(--vtsuru-border, var(--border));
@@ -1220,10 +1251,29 @@ function scrollToTop() {
   padding: var(--vtsuru-content-padding);
 }
 
+@media (min-width: 769px) {
+  .page-root {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 768px) {
   .page-root.bg-host {
     height: auto;
     min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .main-layout-body {
+    height: auto;
+    min-height: calc(100dvh - var(--vtsuru-header-height));
+    overflow: visible;
+  }
+
+  .viewer-scroll {
     overflow: visible;
   }
 

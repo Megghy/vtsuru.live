@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { provideThemeScope } from '@/shared/config/theme/scope'
+import { computed } from 'vue'
 
-import { applyThemeCssVars, buildSiteTokens } from '@/shared/config/theme'
+import { getThemeCssVars, buildSiteTokens } from '@/shared/config/theme'
 
 export type PreviewViewport = 'phone' | 'tablet' | 'desktop'
 
@@ -16,17 +17,13 @@ const props = withDefaults(
   },
 )
 
-const previewRoot = ref<HTMLElement | null>(null)
-
-watchEffect(() => {
-  if (!previewRoot.value) return
-  applyThemeCssVars(buildSiteTokens(props.isDark), previewRoot.value)
-})
+const previewStyle = computed(() => getThemeCssVars(buildSiteTokens(props.isDark)))
+provideThemeScope(previewStyle)
 </script>
 
 <template>
   <div
-    ref="previewRoot"
+    :style="previewStyle"
     class="responsive-preview"
     :class="`responsive-preview--${props.viewport}`"
   >

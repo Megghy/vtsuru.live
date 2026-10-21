@@ -3,11 +3,15 @@ import { describe, expect, it } from 'vitest'
 import { buildManageTokens, buildSiteTokens, getThemeCssVars } from '../index'
 
 describe('getThemeCssVars', () => {
-  it('creates site variables without exposing naive-ui internals', () => {
+  it('creates shadcn and site semantic variables', () => {
     const light = getThemeCssVars(buildSiteTokens(false))
     const dark = getThemeCssVars(buildSiteTokens(true))
 
     expect(light['--vtsuru-bg']).toBe('#ffffff')
+    expect(light['--background']).toBe('#ffffff')
+    expect(light['--card']).toBe('#ffffff')
+    expect(light['--primary']).toBe('#18181b')
+    expect(dark['--background']).toBe('#09090b')
     expect(light['--vtsuru-fg']).toBe('#09090b')
     expect(light['--vtsuru-brand-fg']).toBe('#03202d')
     expect(light['--vtsuru-primary']).toBe('#18181b')
@@ -36,7 +40,6 @@ describe('getThemeCssVars', () => {
     ])
 
     // 暗色控件边框必须比 manage surface/control(800) 更亮，placeholder 不能过暗
-    expect(darkTokens.control).toBe('#27272a')
     expect(darkTokens.borderColor).toBe('#3f3f46')
     expect(darkTokens.inputBorderColor).toBe('#3f3f46')
     expect(darkTokens.placeholder).toBe('#a1a1aa')

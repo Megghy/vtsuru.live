@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import { useMediaQuery, useNow } from '@vueuse/core'
 import { computed, provide } from 'vue'
 
@@ -30,6 +31,7 @@ const emit = defineEmits<{
 }>()
 
 const userThemeVars = computed(() => getUserPageThemeCssVars(props.project.theme, props.isDark, props.canvasColor))
+provideThemeScope(userThemeVars)
 
 const blockComponents = BLOCK_COMPONENTS
 const isMobile = useMediaQuery('(max-width: 767px)')

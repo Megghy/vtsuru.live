@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
+import { provideThemeScope, type ThemeStyle } from '@/shared/config/theme/scope'
 import { computed } from 'vue'
 
 const props = withDefaults(
@@ -40,7 +41,10 @@ const palette = computed(() => {
   }
 })
 
-const cardStyle = computed<CSSProperties>(() => ({
+const cardStyle = computed<ThemeStyle>(() => ({
+  '--foreground': palette.value.foreground,
+  '--card-foreground': palette.value.foreground,
+  '--muted-foreground': palette.value.muted,
   '--vtsuru-block-fg': palette.value.foreground,
   '--vtsuru-block-fg-muted': palette.value.muted,
   '--vtsuru-block-fg-subtle': palette.value.subtle,
@@ -50,6 +54,11 @@ const cardStyle = computed<CSSProperties>(() => ({
   '--vtsuru-fg-muted': palette.value.muted,
   '--vtsuru-border': 'var(--user-page-border-color)',
 }))
+
+provideThemeScope(computed(() => ({
+  ...cardStyle.value,
+  ...(isUnbackgrounded.value ? { '--foreground': 'var(--vtsuru-page-text)', '--card-foreground': 'var(--vtsuru-page-text)', '--muted-foreground': 'var(--vtsuru-page-text-muted)' } : {}),
+})))
 
 const borderTitleText = computed(() => (typeof props.borderTitle === 'string' ? props.borderTitle.trim() : ''))
 const showBorderTitle = computed(() => !isUnframed.value && borderTitleText.value.length > 0)

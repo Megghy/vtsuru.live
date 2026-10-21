@@ -1,6 +1,6 @@
 /**
  * 主题语义令牌：尺寸、字体、阴影、圆角等与具体组件无关的设计变量。
- * 组件 override 直接消费场景对应的 ThemeTokens。
+ * shadcn CSS 变量和页面画布变量共用此处生成的调色板。
  */
 import { brand, neutral, pickByMode, rgba } from './colors'
 
@@ -22,12 +22,6 @@ export interface ThemeTokens {
   // 文本与控件
   foreground: string
   mutedForeground: string
-  control: string
-  controlHover: string
-  controlPressed: string
-  secondary: string
-  secondaryHover: string
-  secondaryPressed: string
   borderColor: string
   cardBorderColor: string
   inputBorderColor: string
@@ -52,16 +46,12 @@ export interface ThemeTokens {
 
   // 焦点 ring
   ringColor: string
-  ringShadow: string
 
   // 阴影
   shadow1: string
   shadow2: string
   shadowPopover: string
 
-  // tooltip
-  tooltipColor: string
-  tooltipTextColor: string
 }
 
 interface SurfacePalette {
@@ -70,12 +60,6 @@ interface SurfacePalette {
   surfaceHover: string
   inset: string
   elevated: string
-  control: string
-  controlHover: string
-  controlPressed: string
-  secondary: string
-  secondaryHover: string
-  secondaryPressed: string
   cardBorderColor: string
 }
 
@@ -94,7 +78,6 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
   const mutedForeground = isDark ? neutral[400] : neutral[600]
 
   const ringColor = isDark ? neutral[300] : neutral[400]
-  const ringShadow = `0 0 0 2px ${rgba(ringColor, isDark ? 0.35 : 0.3)}`
 
   // primary：保留 shadcn 风格的中性灰
   const primary = isDark ? neutral[200] : neutral[900]
@@ -110,8 +93,6 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
   const brandSoft = pickByMode(isDark, rgba(brand[400], 0.14), rgba(brand[400], 0.1))
   const brandTint = pickByMode(isDark, rgba(brand[400], 0.18), rgba(brand[400], 0.14))
 
-  const tooltipColor = isDark ? neutral[800] : neutral[900]
-  const tooltipTextColor = neutral[50]
 
   // 浮层阴影：暗色统一加 1px 极弱描边，与页面背景剥离
   const shadowGlow = isDark ? `0 0 0 1px ${rgba(neutral[50], 0.06)}` : ''
@@ -149,12 +130,9 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
     brandSoft,
     brandTint,
     ringColor,
-    ringShadow,
     shadow1,
     shadow2,
     shadowPopover,
-    tooltipColor,
-    tooltipTextColor,
   }
 }
 
@@ -168,12 +146,6 @@ export function buildSiteTokens(isDark: boolean): ThemeTokens {
           surfaceHover: neutral[800],
           inset: neutral[950],
           elevated: neutral[800],
-          control: neutral[900],
-          controlHover: neutral[800],
-          controlPressed: neutral[700],
-          secondary: neutral[700],
-          secondaryHover: neutral[600],
-          secondaryPressed: neutral[500],
           cardBorderColor: neutral[800],
         }
       : {
@@ -182,12 +154,6 @@ export function buildSiteTokens(isDark: boolean): ThemeTokens {
           surfaceHover: neutral[100],
           inset: neutral[100],
           elevated: '#ffffff',
-          control: '#ffffff',
-          controlHover: neutral[100],
-          controlPressed: neutral[200],
-          secondary: neutral[200],
-          secondaryHover: neutral[300],
-          secondaryPressed: neutral[400],
           cardBorderColor: neutral[300],
         },
   )
@@ -203,12 +169,6 @@ export function buildManageTokens(isDark: boolean): ThemeTokens {
           surfaceHover: neutral[700],
           inset: neutral[950],
           elevated: neutral[700],
-          control: neutral[800],
-          controlHover: neutral[700],
-          controlPressed: neutral[600],
-          secondary: neutral[700],
-          secondaryHover: neutral[600],
-          secondaryPressed: neutral[500],
           cardBorderColor: neutral[700],
         }
       : {
@@ -217,12 +177,6 @@ export function buildManageTokens(isDark: boolean): ThemeTokens {
           surfaceHover: neutral[100],
           inset: neutral[200],
           elevated: '#ffffff',
-          control: '#ffffff',
-          controlHover: neutral[100],
-          controlPressed: neutral[200],
-          secondary: neutral[200],
-          secondaryHover: neutral[300],
-          secondaryPressed: neutral[400],
           cardBorderColor: neutral[300],
         },
   )

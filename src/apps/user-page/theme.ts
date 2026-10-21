@@ -98,19 +98,6 @@ export function resolveUserPageReadableAccent(
   return ensureTextContrast(primaryColor, activeSurface, isDark).color
 }
 
-export function resolveUserPageControlOverlay(value: string) {
-  const color = parseRgb(value)
-  const white = parseRgb('#ffffff')
-  const luminance = color ? 1.05 / wcagContrast(white, { ...color, alpha: 1 }) - 0.05 : 0
-  // 暗色表面只叠极淡白色（与 naive 暗色控件一致），否则控件变成中灰、彩色文字失去对比度
-  const alpha = 0.08 + luminance * 0.38
-  return {
-    color: formatRgb({ ...white, alpha }),
-    focus: formatRgb({ ...white, alpha: Math.min(0.52, alpha + 0.06) }),
-    disabled: formatRgb({ ...white, alpha: alpha * 0.56 }),
-  }
-}
-
 function deriveMutedColor(textColor: string, surface: Rgb, desiredStrength: number) {
   const text = parseRgb(textColor)
   const mix = interpolate([surface, text], 'rgb')

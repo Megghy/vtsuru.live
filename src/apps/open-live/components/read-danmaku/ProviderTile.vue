@@ -53,12 +53,12 @@ defineEmits<{ (e: 'click'): void }>()
   color: inherit;
 }
 .provider-tile:hover {
-  border-color: var(--vtsuru-brand, hsl(var(--primary)));
+  border-color: var(--vtsuru-brand, var(--primary));
 }
 .provider-tile.active {
-  border-color: var(--vtsuru-brand, hsl(var(--primary)));
+  border-color: var(--vtsuru-brand, var(--primary));
   background: var(--vtsuru-brand-soft, rgba(56, 189, 248, 0.12));
-  box-shadow: 0 0 0 1.5px var(--vtsuru-brand, hsl(var(--primary))) inset;
+  box-shadow: 0 0 0 1.5px var(--vtsuru-brand, var(--primary)) inset;
 }
 .row {
   display: flex;

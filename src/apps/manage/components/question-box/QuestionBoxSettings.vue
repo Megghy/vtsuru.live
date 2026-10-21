@@ -35,9 +35,9 @@ watch(
 
 const levels = [
   { level: 0, label: '无', desc: '完全关闭内容审查' },
-  { level: 1, label: '宽松', desc: '仅过滤极端内容 (得分 > 30)' },
-  { level: 2, label: '一般', desc: '过滤潜在冒犯性内容 (得分 > 60)' },
-  { level: 3, label: '严格', desc: '过滤所有可能不适内容 (得分 > 90)' },
+  { level: 1, label: '宽松', desc: '仅拦截极端内容 (得分 ≤ 30)' },
+  { level: 2, label: '一般', desc: '拦截潜在冒犯性内容 (得分 ≤ 60)' },
+  { level: 3, label: '严格', desc: '拦截所有可能不适内容 (得分 ≤ 90)' },
 ]
 
 async function saveQuestionBoxSettings() {

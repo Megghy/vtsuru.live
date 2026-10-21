@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import { computed, defineAsyncComponent, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { Toaster } from 'vue-sonner'
 
 import TempComponent from '@/app/components/TempComponent.vue'
-import { applyThemeCssVars, buildSiteTokens } from '@/shared/config/theme'
+import { applyThemeCssVars, buildSiteTokens, getThemeCssVars } from '@/shared/config/theme'
 import { isDarkMode } from '@/shared/utils'
 
 // 将大型布局组件改为异步组件，避免打入入口包
@@ -39,6 +40,7 @@ const layout = computed(() => {
 })
 
 const siteTokens = computed(() => buildSiteTokens(isDarkMode.value))
+provideThemeScope(computed(() => getThemeCssVars(siteTokens.value)))
 const shellStyle = computed(() =>
   layout.value === 'user' || layout.value === '' ? { minHeight: '100dvh' } : { height: '100dvh' },
 )
