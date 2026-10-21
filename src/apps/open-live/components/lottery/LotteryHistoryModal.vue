@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import { NButton, NCard, NEmpty, NList, NListItem, NModal, NScrollbar, NFlex, NTime, NAvatar } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { LotteryHistory } from '@/apps/open-live/components/lottery/lotteryTypes'
+import { formatTime } from '@/apps/manage/composables/formatters'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 const props = defineProps<{
   show: boolean
@@ -22,79 +28,62 @@ const showModel = computed({
 </script>
 
 <template>
-  <NModal
-    v-model:show="showModel"
-    preset="card"
-    title="抽奖结果"
-    style="width: 900px; max-width: 90vw"
-    closable
-  >
-    <template #header-extra>
-      <NButton
-        type="error"
-        secondary
-        size="small"
-        @click="emit('clear')"
-      >
-        清空
-      </NButton>
-    </template>
-    <NScrollbar
-      v-if="history.length > 0"
-      style="max-height: 80vh"
-    >
-      <NList
-        size="small"
-        bordered
-      >
-        <NListItem
-          v-for="item in history"
-          :key="item.time"
+  <Dialog v-model:open="showModel">
+    <DialogContent class="max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col p-6">
+      <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
+        <DialogTitle class="text-base font-semibold">抽奖结果</DialogTitle>
+        <Button
+          variant="destructive"
+          size="sm"
+          class="mr-6"
+          @click="emit('clear')"
         >
-          <NCard
-            size="small"
-            bordered
+          清空
+        </Button>
+      </DialogHeader>
+
+      <ScrollArea
+        v-if="history.length > 0"
+        class="max-h-[75vh] pr-4 mt-2"
+      >
+        <div class="flex flex-col gap-3">
+          <Card
+            v-for="item in history"
+            :key="item.time"
+            class="overflow-hidden"
           >
-            <template #header>
-              <NTime :time="item.time" />
-            </template>
-            <template #header-extra>
-              <NButton
-                type="error"
-                secondary
-                size="small"
+            <CardHeader class="py-2 px-3 border-b flex flex-row items-center justify-between bg-muted/30">
+              <span class="text-xs text-muted-foreground font-mono">{{ formatTime(item.time) }}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="h-7 text-xs text-destructive hover:bg-destructive/10"
                 @click="emit('remove', item.time)"
               >
                 删除
-              </NButton>
-            </template>
-            <NFlex
-              vertical
-              :size="10"
-            >
-              <NFlex
+              </Button>
+            </CardHeader>
+            <CardContent class="p-3 flex flex-col gap-2">
+              <div
                 v-for="user in item.users"
                 :key="user.openId"
-                align="center"
-                :size="10"
+                class="flex items-center gap-2.5 text-xs"
               >
-                <NAvatar
-                  round
-                  lazy
-                  :src="`${user.avatar}@64w_64h`"
-                  :img-props="{ referrerpolicy: 'no-referrer' }"
-                />
-                {{ user.name }}
-              </NFlex>
-            </NFlex>
-          </NCard>
-        </NListItem>
-      </NList>
-    </NScrollbar>
-    <NEmpty
-      v-else
-      description="暂无记录"
-      size="small"
-    />
-  </NModal>
+                <Avatar class="size-6">
+                  <AvatarImage :src="`${user.avatar}@64w_64h`" />
+                  <AvatarFallback class="text-[10px]">{{ user.name.slice(0, 1) }}</AvatarFallback>
+                </Avatar>
+                <span class="font-medium">{{ user.name }}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
+      <Empty
+        v-else
+        description="暂无记录"
+        class="py-12"
+      />
+    </DialogContent>
+  </Dialog>
 </template>

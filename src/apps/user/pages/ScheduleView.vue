@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NSpin, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -12,6 +11,8 @@ import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
 import { SCHEDULE_API_URL } from '@/shared/config'
 import { ScheduleTemplateMap } from '@/shared/config/templates'
 import { mergeBiliReservesIntoWeeks } from '@/apps/user/pages/scheduleTemplate/scheduleTemplateUtils'
+import { Spin } from '@/shared/ui/spin'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   biliInfo: BiliProfile | undefined
@@ -124,9 +125,9 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
 </script>
 
 <template>
-  <NSpin
+  <Spin
     v-if="isLoading"
-    show
+    :show="true"
   />
   <div
     v-else

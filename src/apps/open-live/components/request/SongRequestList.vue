@@ -1,33 +1,25 @@
 <script setup lang="ts">
 import { Checkmark12Regular, PeopleQueue24Filled } from '@vicons/fluent'
 import { isSameDay } from 'date-fns'
-import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NEmpty,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NFlex,
-  NTag,
-} from 'naive-ui'
 import { computed, provide } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { SaveSetting, useAccount } from '@/api/account'
 import { QueueSortType, SongRequestStatus } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
 
 import SongRequestItem from './SongRequestItem.vue'
 
-// 使用useLiveRequest
 const songRequest = useLiveRequest()
 const accountInfo = useAccount()
 
-// 提供activeSongs给子组件
 provide('activeSongs', songRequest.activeSongs)
 
 const todayFinishedCount = computed(() => {
@@ -39,7 +31,6 @@ const waitingCount = computed(() => {
   return songRequest.activeSongs.filter((s) => s.status === SongRequestStatus.Waiting).length
 })
 
-// 当前的排序顺序
 const currentIsReverse = computed(() =>
   songRequest.configCanEdit ? accountInfo.value?.settings?.songRequest?.isReverse : songRequest.isReverse,
 )
@@ -52,149 +43,130 @@ const sortType = computed({
   },
 })
 
-// 保存排序设置
+const sortOptions = [
+  { label: '时间', value: QueueSortType.TimeFirst },
+  { label: '付费', value: QueueSortType.PaymentFist },
+  { label: '舰长', value: QueueSortType.GuardFirst },
+  { label: '粉丝牌', value: QueueSortType.FansMedalFirst },
+]
+
 async function updateSettings() {
   if (accountInfo.value?.id) {
     songRequest.isLoading = true
-    await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
-      .then((msg) => {
-        if (msg) {
-          window.$message.success('已保存')
-          return true
-        } else {
-          window.$message.error(`保存失败: ${msg}`)
-        }
-      })
-      .finally(() => {
-        songRequest.isLoading = false
-      })
+    try {
+      const msg = await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
+      if (msg) {
+        toast.success('已保存')
+      } else {
+        toast.error(`保存失败: ${msg}`)
+      }
+    } finally {
+      songRequest.isLoading = false
+    }
   } else {
-    window.$message.success('完成')
+    toast.success('完成')
   }
 }
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-  >
-    <NCard
-      size="small"
-      bordered
-      content-style="padding: 10px 14px;"
-    >
-      <NFlex
-        justify="space-between"
-        align="center"
-        wrap
-        :size="[12, 10]"
-      >
-        <!-- 左侧统计指示 -->
-        <NFlex
-          align="center"
-          :size="10"
-        >
-          <NTag
-            type="info"
-            round
-            :bordered="false"
-            size="small"
-          >
-            <template #icon>
-              <NIcon :component="PeopleQueue24Filled" />
-            </template>
-            待唱: {{ waitingCount }}
-          </NTag>
-          <NTag
-            type="success"
-            round
-            :bordered="false"
-            size="small"
-          >
-            <template #icon>
-              <NIcon :component="Checkmark12Regular" />
-            </template>
-            今日已点: {{ todayFinishedCount }}
-          </NTag>
-          <NText
-            depth="3"
-            style="font-size: 12px; margin-left: 4px;"
-          >
-            共 {{ songRequest.activeSongs.length }} 首
-          </NText>
-        </NFlex>
-
-        <!-- 右侧操作与过滤 -->
-        <NFlex
-          align="center"
-          wrap
-          :size="8"
-        >
-          <NInputGroup style="width: 220px">
-            <NInput
-              :value="songRequest.newSongName"
-              placeholder="手动输入歌曲名"
-              size="small"
-              clearable
-              @update:value="songRequest.newSongName = $event"
-              @keyup.enter="songRequest.addSongManual()"
-            />
-            <NButton
-              type="primary"
-              size="small"
-              @click="songRequest.addSongManual()"
+  <div class="flex flex-col gap-3">
+    <Card class="border bg-card">
+      <CardContent class="p-2.5 sm:p-3.5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <!-- 左侧统计指示 -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <Badge
+              variant="outline"
+              class="h-6 px-2 text-xs gap-1 border-sky-500/40 text-sky-600 bg-sky-500/10"
             >
-              添加
-            </NButton>
-          </NInputGroup>
+              <PeopleQueue24Filled class="size-3.5" />
+              待唱: {{ waitingCount }}
+            </Badge>
+            <Badge
+              variant="outline"
+              class="h-6 px-2 text-xs gap-1 border-emerald-500/40 text-emerald-600 bg-emerald-500/10"
+            >
+              <Checkmark12Regular class="size-3.5" />
+              今日已点: {{ todayFinishedCount }}
+            </Badge>
+            <span class="text-xs text-muted-foreground ml-1">
+              共 {{ songRequest.activeSongs.length }} 首
+            </span>
+          </div>
 
-          <NRadioGroup
-            v-model:value="sortType"
-            :disabled="!songRequest.configCanEdit"
-            size="small"
-            @update:value="updateSettings"
-          >
-            <NRadioButton :value="QueueSortType.TimeFirst"> 时间 </NRadioButton>
-            <NRadioButton :value="QueueSortType.PaymentFist"> 付费 </NRadioButton>
-            <NRadioButton :value="QueueSortType.GuardFirst"> 舰长 </NRadioButton>
-            <NRadioButton :value="QueueSortType.FansMedalFirst"> 粉丝牌 </NRadioButton>
-          </NRadioGroup>
-
-          <NCheckbox
-            :checked="currentIsReverse"
-            size="small"
-            @update:checked="
-              (value) => {
-                if (songRequest.configCanEdit) {
-                  const songRequestSettings = accountInfo?.settings?.songRequest
-                  if (!songRequestSettings) return
-                  songRequestSettings.isReverse = value
-                  updateSettings()
-                } else {
-                  songRequest.isReverse = value
-                }
-              }
-            "
-          >
-            倒序
-          </NCheckbox>
-
-          <NPopconfirm @positive-click="songRequest.deactiveAllSongs()">
-            <template #trigger>
-              <NButton
-                type="error"
-                size="small"
-                secondary
+          <!-- 右侧操作与过滤 -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 w-[220px]">
+              <Input
+                :value="songRequest.newSongName"
+                placeholder="手动输入歌曲名"
+                class="h-8 text-xs flex-1"
+                @input="songRequest.newSongName = ($event.target as HTMLInputElement).value"
+                @keyup.enter="songRequest.addSongManual()"
+              />
+              <Button
+                size="sm"
+                class="h-8 text-xs shrink-0"
+                @click="songRequest.addSongManual()"
               >
-                全部取消
-              </NButton>
-            </template>
-            确定要取消全部待唱歌曲吗?
-          </NPopconfirm>
-        </NFlex>
-      </NFlex>
-    </NCard>
+                添加
+              </Button>
+            </div>
+
+            <!-- 排序单选条 -->
+            <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
+              <button
+                v-for="opt in sortOptions"
+                :key="opt.value"
+                type="button"
+                :disabled="!songRequest.configCanEdit"
+                class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
+                :class="sortType === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                @click="sortType = opt.value; updateSettings()"
+              >
+                {{ opt.label }}
+              </button>
+            </div>
+
+            <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+              <Checkbox
+                :checked="currentIsReverse"
+                @update:checked="
+                  (value) => {
+                    if (songRequest.configCanEdit) {
+                      const songRequestSettings = accountInfo?.settings?.songRequest
+                      if (!songRequestSettings) return
+                      songRequestSettings.isReverse = value
+                      updateSettings()
+                    } else {
+                      songRequest.isReverse = value
+                    }
+                  }
+                "
+              />
+              <span>倒序</span>
+            </label>
+
+            <Popconfirm
+              title="确认取消全部"
+              @positive-click="songRequest.deactiveAllSongs()"
+            >
+              <template #trigger>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
+                >
+                  全部取消
+                </Button>
+              </template>
+              确定要取消全部待唱歌曲吗?
+            </Popconfirm>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
 
     <div
       v-if="songRequest.activeSongs.length > 0"
@@ -214,12 +186,12 @@ async function updateSettings() {
         />
       </div>
     </div>
-    <NEmpty
+    <Empty
       v-else
       description="暂无点播内容"
-      style="margin-top: 40px"
+      class="mt-10"
     />
-  </NFlex>
+  </div>
 </template>
 
 <style scoped>

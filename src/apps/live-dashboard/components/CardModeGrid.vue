@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { EyeOff16Regular } from '@vicons/fluent'
-import { NIcon, NPopover } from 'naive-ui'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { computed } from 'vue'
 
 import { formatClock } from '../core/format'
@@ -40,38 +40,35 @@ const victim = computed(() => grid.value.nextVictim())
           >
             {{ card.display.uname }}
           </button>
-          <NPopover
-            v-if="card.count > 1"
-            trigger="click"
-            scrollable
-            style="max-height: 280px"
-          >
-            <template #trigger>
+          <Popover v-if="card.count > 1">
+            <PopoverTrigger as-child>
               <button
                 class="card-slot__count"
                 type="button"
               >
                 ×{{ card.count }}
               </button>
-            </template>
-            <div class="card-users">
-              <div
-                v-for="[key, user] in [...card.users].sort((a, b) => b[1].count - a[1].count)"
-                :key="key"
-                class="card-users__row"
-              >
-                <span>{{ user.uname }}</span>
-                <span>×{{ user.count }} · {{ formatClock(user.lastAt) }}</span>
+            </PopoverTrigger>
+            <PopoverContent class="max-h-[280px] overflow-y-auto p-2 w-auto">
+              <div class="card-users">
+                <div
+                  v-for="[key, user] in [...card.users].sort((a, b) => b[1].count - a[1].count)"
+                  :key="key"
+                  class="card-users__row"
+                >
+                  <span>{{ user.uname }}</span>
+                  <span>×{{ user.count }} · {{ formatClock(user.lastAt) }}</span>
+                </div>
               </div>
-            </div>
-          </NPopover>
+            </PopoverContent>
+          </Popover>
           <button
             class="card-slot__hide"
             type="button"
             title="隐藏这条弹幕（刷新后恢复）"
             @click="grid.hide(index)"
           >
-            <NIcon :component="EyeOff16Regular" />
+            <component :is="EyeOff16Regular" class="h-4 w-4" />
           </button>
         </div>
         <div class="card-slot__body">

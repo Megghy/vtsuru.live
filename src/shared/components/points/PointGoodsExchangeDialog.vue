@@ -1,31 +1,6 @@
 <script setup lang="ts">
 import { Add24Regular, ArrowSync24Regular } from '@vicons/fluent'
-import type { FormRules, SelectOption } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCheckbox,
-  NDatePicker,
-  NDivider,
-  NFlex,
-  NForm,
-  NFormItem,
-  NGi,
-  NGrid,
-  NIcon,
-  NImage,
-  NInput,
-  NInputNumber,
-  NModal,
-  NScrollbar,
-  NSelect,
-  NSpin,
-  NTag,
-  NText,
-  useDialog,
-  useMessage,
-} from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { AddressInfo, ResponsePointGoodModel, ResponsePointOrder2UserModel } from '@/api/api-models'
@@ -36,7 +11,20 @@ import {
 } from '@/api/generated/point/point'
 import { IMGUR_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { NavigateToNewTab } from '@/shared/utils'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
+import { Spin } from '@/shared/ui/spin'
+import { Textarea } from '@/shared/ui/textarea'
+import { NavigateToNewTab, toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import AddressDisplay from './AddressDisplay.vue'
@@ -55,8 +43,6 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const useAuth = useBiliAuth()
-const message = useMessage()
-const dialog = useDialog()
 const biliAuth = computed(() => useAuth.biliAuth)
 
 const show = defineModel<boolean>('show', { required: true })
@@ -64,10 +50,8 @@ const goods = defineModel<ResponsePointGoodModel | undefined>('goods', { require
 
 // --- 状态 ---
 const isLoading = ref(false)
-const showAddressSelect = ref(false)
 const showAddressModal = ref(false)
-const currentAddress = ref<AddressInfo>()
-const formRef = ref()
+const currentAddress = ref<AddressInfo>({} as AddressInfo)
 const userAgree = ref(false)
 const buyCount = ref(1)
 const selectedAddress = ref<AddressInfo>()
@@ -75,6 +59,8 @@ const remark = ref('')
 const serviceAnswers = ref<Record<string, string | string[] | number | undefined>>({})
 type BuySubItem = { subItemId: number; quantity: number }
 const selectedSubItems = ref<BuySubItem[]>([])
+const successOrder = ref<ResponsePointOrder2UserModel>()
+const showSuccessModal = ref(false)
 
 const emptyCover = `${IMGUR_URL}None.png`
 
@@ -174,7 +160,7 @@ const blockedReason = computed(() => {
   return goods.value.cannotPurchaseReason || '积分不足或条件不满足'
 })
 
-/** 已售 / 已购合并为一行摘要,避免三块 Alert 撑高弹窗 */
+/** 已售 / 已购合并为一行摘要 */
 const statusSummary = computed(() => {
   if (!goods.value) return []
   const list: string[] = []
@@ -240,9 +226,7 @@ async function getArea() {
   areas.value = { createAt: Date.now(), data: await res.json() }
 }
 
-const addressOptions = computed(
-  () => biliAuth.value.address?.map((item) => ({ label: item.address, value: item.id })) ?? [],
-)
+const addressList = computed(() => biliAuth.value.address ?? [])
 const provinceOptions = computed(() => Object.keys(areas.value?.data ?? {}).map((p) => ({ label: p, value: p })))
 const cityOptions = (province?: string) =>
   province ? Object.keys(areas.value?.data?.[province] ?? {}).map((c) => ({ label: c, value: c })) : []
@@ -253,17 +237,6 @@ const streetOptions = (province?: string, city?: string, district?: string) =>
     label: s,
     value: s,
   })) ?? []
-
-const addressFormRules: FormRules = {
-  phone: { required: true, message: '请输入手机号' },
-  address: { required: true, message: '请输入详细地址' },
-  name: { required: true, message: '请输入收件人姓名' },
-  area: {
-    required: true,
-    message: '请选择地区',
-    validator: () => !!(currentAddress.value?.province && currentAddress.value?.city && currentAddress.value?.district),
-  },
-}
 
 function onAreaSelectChange(level: number) {
   if (!currentAddress.value) return
@@ -280,9 +253,9 @@ function onAreaSelectChange(level: number) {
 }
 
 async function openAddressModal() {
-  showAddressModal.value = true
   currentAddress.value = {} as AddressInfo
   userAgree.value = false
+  showAddressModal.value = true
   await getArea()
 }
 
@@ -292,7 +265,27 @@ async function refreshAddressList() {
 }
 
 async function updateAddress() {
-  await formRef.value?.validate()
+  if (!currentAddress.value.province || !currentAddress.value.city || !currentAddress.value.district) {
+    toast.warning('请选择完整的省市区')
+    return
+  }
+  if (!currentAddress.value.address?.trim()) {
+    toast.warning('请输入详细地址')
+    return
+  }
+  if (!currentAddress.value.name?.trim()) {
+    toast.warning('请输入联系人姓名')
+    return
+  }
+  if (!currentAddress.value.phone) {
+    toast.warning('请输入联系电话')
+    return
+  }
+  if (!userAgree.value) {
+    toast.warning('请确认信息真实有效')
+    return
+  }
+
   isLoading.value = true
   try {
     const data = (await postApiPointUserUpdateAddress(
@@ -304,10 +297,10 @@ async function updateAddress() {
       data: AddressInfo
     }
     if (data.code !== 200) {
-      message.error(`保存失败: ${data.message}`)
+      toast.error(`保存失败: ${data.message}`)
       return
     }
-    message.success('地址已保存')
+    toast.success('地址已保存')
     showAddressModal.value = false
     const list = biliAuth.value.address
     if (list) {
@@ -317,84 +310,10 @@ async function updateAddress() {
     } else {
       biliAuth.value.address = [data.data]
     }
+    selectedAddress.value = data.data
   } finally {
     isLoading.value = false
   }
-}
-
-function renderLabel(option: SelectOption) {
-  return h(AddressDisplay, { address: biliAuth.value.address?.find((a) => a.id === option.value), size: 'small' })
-}
-
-function renderOption({ option }: { option: SelectOption }) {
-  const address = biliAuth.value.address?.find((a) => a.id === option.value)
-  return h(
-    NButton,
-    {
-      style: 'width: 100%; justify-content: flex-start;',
-      secondary: true,
-      type: selectedAddress.value?.id === option.value ? 'info' : 'default',
-      onClick: () => {
-        selectedAddress.value = address
-        showAddressSelect.value = false
-      },
-    },
-    () => h(AddressDisplay, { address }),
-  )
-}
-
-// --- 提交 ---
-function showSuccessDialog(order: ResponsePointOrder2UserModel) {
-  dialog.success({
-    title: '兑换成功',
-    content: () => {
-      const elements: ReturnType<typeof h>[] = [h(NText, null, { default: () => `订单号:${order.id}` })]
-
-      const subItems = order.selectedSubItems ?? []
-      if (subItems.length) {
-        elements.push(
-          h(NDivider, { style: 'margin: 16px 0;' }, { default: () => '已选款式' }),
-          h(NText, null, { default: () => subItems.map((s) => `${s.nameSnapshot}×${s.quantity}`).join('、') }),
-        )
-      }
-
-      const keys = subItems
-        .flatMap((s) => (s.assignedVirtualKeys || []).map((k) => `${s.nameSnapshot}: ${k}`))
-        .join('\n')
-      if (keys) {
-        elements.push(
-          h(NDivider, { style: 'margin: 16px 0;' }, { default: () => '密钥' }),
-          h(
-            NAlert,
-            { type: 'success', bordered: false, style: 'white-space: pre-wrap; word-break: break-word;' },
-            { default: () => keys },
-          ),
-        )
-      }
-
-      if (order.type === GoodsTypes.Virtual && order.goods.content) {
-        elements.push(
-          h(NDivider, { style: 'margin: 16px 0;' }, { default: () => '礼物内容' }),
-          h(
-            NAlert,
-            { type: 'success', bordered: false, style: 'white-space: pre-wrap; word-break: break-word;' },
-            { default: () => order.goods.content },
-          ),
-        )
-      }
-
-      return h(NFlex, { vertical: true, size: 'small' }, { default: () => elements })
-    },
-    positiveText: '前往查看',
-    negativeText: '关闭',
-    onPositiveClick: () => {
-      show.value = false
-      router.push({ name: 'bili-user-orders' })
-    },
-    onNegativeClick: () => {
-      show.value = false
-    },
-  })
 }
 
 /** 表单校验:返回错误文案,通过则返回空串 */
@@ -438,80 +357,65 @@ async function buyGoods() {
 
   const invalid = validateForm()
   if (invalid) {
-    message.error(invalid)
+    toast.error(invalid)
     return
   }
 
-  const subMap = new Map((good.subItems ?? []).map((s) => [String(s.id), s]))
-  const summary = hasSubItems.value
-    ? selectedSubItems.value
-        .map((s) => `${subMap.get(String(s.subItemId))?.name ?? s.subItemId}×${s.quantity}`)
-        .join('、')
-    : `${buyCount.value} 个`
+  isLoading.value = true
+  try {
+    const data = (await postApiPointBuy(
+      {
+        vId: props.vId,
+        goodsId: good.id,
+        count: hasSubItems.value
+          ? selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0)
+          : buyCount.value,
+        addressId: selectedAddress.value?.id ?? null,
+        remark: remark.value,
+        ...(isService.value
+          ? {
+              serviceAnswers: Object.fromEntries(
+                Object.entries(serviceAnswers.value).map(([id, value]) => [
+                  id,
+                  Array.isArray(value)
+                    ? value.join('\n')
+                    : value == null
+                      ? ''
+                      : String(value),
+                ]),
+              ),
+            }
+          : {}),
+        ...(hasSubItems.value ? { selectedSubItems: selectedSubItems.value } : {}),
+      } as any,
+      { headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()) },
+    )) as unknown as {
+      code: number
+      message?: string
+      data: ResponsePointOrder2UserModel
+    }
 
-  dialog.warning({
-    title: '确认兑换',
-    content: hasSubItems.value
-      ? `确定要花费 ${cost.value} 积分兑换 "${good.name}" 吗?\n款式:${summary}`
-      : `确定要花费 ${cost.value} 积分兑换 ${buyCount.value} 个 "${good.name}" 吗?`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      isLoading.value = true
-      try {
-        const data = (await postApiPointBuy(
-          {
-            vId: props.vId,
-            goodsId: good.id,
-            count: hasSubItems.value
-              ? selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0)
-              : buyCount.value,
-            addressId: selectedAddress.value?.id ?? null,
-            remark: remark.value,
-            ...(isService.value
-              ? {
-                  serviceAnswers: Object.fromEntries(
-                    Object.entries(serviceAnswers.value).map(([id, value]) => [
-                      id,
-                      Array.isArray(value)
-                        ? value.join('\n')
-                        : value == null
-                          ? ''
-                          : String(value),
-                    ]),
-                  ),
-                }
-              : {}),
-            ...(hasSubItems.value ? { selectedSubItems: selectedSubItems.value } : {}),
-          } as any,
-          { headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()) },
-        )) as unknown as {
-          code: number
-          message?: string
-          data: ResponsePointOrder2UserModel
-        }
+    if (data.code !== 200) {
+      toast.error(`兑换失败: ${data.message}`)
+      return
+    }
 
-        if (data.code !== 200) {
-          message.error(`兑换失败: ${data.message}`)
-          return
-        }
-
-        show.value = false
-        showSuccessDialog(data.data)
-        emit('success')
-      } finally {
-        isLoading.value = false
-      }
-    },
-  })
+    show.value = false
+    successOrder.value = data.data
+    showSuccessModal.value = true
+    emit('success')
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : `兑换出错: ${error}`)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-// 关闭即重置,避免下次打开残留上一次的选择
+// 关闭即重置
 watch(show, (visible) => {
   if (visible) return
   selectedSubItems.value = []
   selectedAddress.value = undefined
-  showAddressSelect.value = false
   buyCount.value = 1
   remark.value = ''
   serviceAnswers.value = {}
@@ -525,787 +429,566 @@ const requestClose = () => {
 </script>
 
 <template>
-  <NModal
+  <Dialog
     v-if="goods"
-    v-model:show="show"
-    preset="card"
-    style="width: min(760px, 95vw)"
-    :mask-closable="!isLoading"
-    :close-on-esc="!isLoading"
-    :segmented="{ content: true, action: true }"
+    :open="show"
+    @update:open="!$event && requestClose()"
   >
-    <!-- 紧凑头部:小图 + 名称 + 价格/库存 + 类型 -->
-    <template #header>
-      <div class="dialog-header">
-        <NImage
-          :src="goods.cover ? goods.cover.path : emptyCover"
-          :fallback-src="emptyCover"
-          object-fit="cover"
-          :preview-disabled="!goods.cover"
-          class="header-cover"
-        />
-        <div class="header-body">
-          <NText
-            strong
-            class="header-title"
-          >
-            {{ goods.name }}
-          </NText>
-          <NFlex
-            align="center"
-            :gap="8"
-            wrap
-          >
-            <NTag
-              size="small"
-              :bordered="false"
-              round
-              type="primary"
-              secondary
-            >
-              {{ priceText }} 积分
-            </NTag>
-            <NTag
-              size="small"
-              :bordered="false"
-              round
-            >
-              {{ typeLabel }}
-            </NTag>
-            <NText
-              depth="3"
-              class="header-meta"
-            >
-              {{ stockText }}
-            </NText>
-            <NText
-              v-for="item in statusSummary"
-              :key="item"
-              depth="3"
-              class="header-meta"
-            >
-              · {{ item }}
-            </NText>
-          </NFlex>
+    <DialogContent class="sm:max-w-2xl max-h-[88vh] flex flex-col p-4 gap-3">
+      <!-- 紧凑头部 -->
+      <DialogHeader class="pb-2 border-b border-border/60">
+        <div class="flex items-start gap-3">
+          <img
+            :src="goods.cover ? goods.cover.path : emptyCover"
+            class="size-14 rounded-lg object-cover border border-border/80 shrink-0"
+            alt="封面"
+          />
+          <div class="flex-1 min-w-0 flex flex-col gap-1">
+            <DialogTitle class="text-sm font-semibold truncate text-foreground">
+              {{ goods.name }}
+            </DialogTitle>
+            <div class="flex items-center gap-1.5 flex-wrap text-xs">
+              <Badge variant="default" class="text-[10px] h-4.5 px-1.5 font-normal">
+                {{ priceText }} 积分
+              </Badge>
+              <Badge variant="secondary" class="text-[10px] h-4.5 px-1.5 font-normal">
+                {{ typeLabel }}
+              </Badge>
+              <span class="text-muted-foreground text-[11px]">{{ stockText }}</span>
+              <span
+                v-for="item in statusSummary"
+                :key="item"
+                class="text-muted-foreground text-[11px]"
+              >
+                · {{ item }}
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
-    </template>
+      </DialogHeader>
 
-    <div class="dialog-body">
-      <NScrollbar class="dialog-scroll">
-        <div class="dialog-content">
-          <NAlert
+      <ScrollArea class="flex-1 min-h-0 pr-2">
+        <div class="space-y-3.5 text-xs">
+          <Alert
             v-if="rebuyWarning"
-            type="warning"
-            :bordered="false"
-            class="dialog-alert"
+            class="text-xs bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
           >
-            {{ rebuyWarning }}
-          </NAlert>
+            <AlertDescription class="text-xs">{{ rebuyWarning }}</AlertDescription>
+          </Alert>
 
           <template v-if="isService">
-            <NAlert
+            <Alert
               v-if="serviceConfig?.rules"
-              type="info"
-              :bordered="false"
-              class="dialog-alert dialog-alert--pre"
+              class="text-xs bg-muted/40 border-border/80"
             >
-              {{ serviceConfig.rules }}
-            </NAlert>
-            <NAlert
-              type="default"
-              :bordered="false"
-              class="dialog-alert"
-            >
-              提交后进入待接单状态<span v-if="serviceConfig?.estimatedDays"
-                >，预计 {{ serviceConfig.estimatedDays }} 天内完成</span
-              >。主播确认接单后会在订单中更新进度。
-            </NAlert>
+              <AlertDescription class="text-xs whitespace-pre-wrap leading-relaxed">{{ serviceConfig.rules }}</AlertDescription>
+            </Alert>
+            <Alert class="text-xs bg-muted/30 border-border/60">
+              <AlertDescription class="text-xs text-muted-foreground">
+                提交后进入待接单状态<span v-if="serviceConfig?.estimatedDays">，预计 {{ serviceConfig.estimatedDays }} 天内完成</span>。主播确认接单后会在订单中更新进度。
+              </AlertDescription>
+            </Alert>
           </template>
 
-          <NForm
-            label-placement="top"
-            :show-feedback="false"
-            label-width="auto"
-            class="dialog-form"
+          <!-- 服务字段表单 -->
+          <div
+            v-if="serviceConfig?.fields?.length"
+            class="space-y-3 p-3 rounded-lg bg-muted/20 border border-border/60"
           >
-            <NFormItem
-              v-for="field in serviceConfig?.fields ?? []"
+            <div
+              v-for="field in serviceConfig.fields"
               :key="field.id"
-              :label="field.label"
-              :required="field.required"
-              class="dialog-form-item"
+              class="space-y-1"
             >
-              <NSelect
-                v-if="field.type === ServiceFieldType.Select"
-                v-model:value="serviceAnswers[field.id] as string"
-                :options="field.options.map((option) => ({ label: option, value: option }))"
-                :placeholder="`请选择${field.label}`"
-              />
-              <NSelect
-                v-else-if="field.type === ServiceFieldType.MultiSelect"
-                v-model:value="serviceAnswers[field.id] as string[]"
-                multiple
-                :options="field.options.map((option) => ({ label: option, value: option }))"
-                :placeholder="`请选择${field.label}`"
-              />
-              <NInput
-                v-else-if="field.type === ServiceFieldType.Number"
-                :value="serviceAnswers[field.id] == null ? null : String(serviceAnswers[field.id])"
-                :input-props="{ type: 'number', step: 'any' }"
-                :placeholder="`请输入${field.label}`"
-                @update:value="serviceAnswers[field.id] = $event"
-              />
-              <NDatePicker
-                v-else-if="field.type === ServiceFieldType.Date"
-                :formatted-value="
-                  typeof serviceAnswers[field.id] === 'string' ? String(serviceAnswers[field.id]) : null
-                "
-                type="date"
-                value-format="yyyy-MM-dd"
-                :placeholder="`请选择${field.label}`"
-                class="field-full"
-                @update:formatted-value="serviceAnswers[field.id] = $event ?? ''"
-              />
-              <NInput
-                v-else
-                :value="serviceAnswers[field.id] == null ? '' : String(serviceAnswers[field.id])"
-                :type="field.type === ServiceFieldType.Textarea ? 'textarea' : 'text'"
-                :placeholder="field.type === ServiceFieldType.Url ? '请输入链接' : `请输入${field.label}`"
-                :input-props="field.type === ServiceFieldType.Url ? { type: 'url' } : undefined"
-                :autosize="field.type === ServiceFieldType.Textarea ? { minRows: 3, maxRows: 8 } : undefined"
-                :maxlength="field.type === ServiceFieldType.Textarea ? 2000 : 300"
-                show-count
-                @update:value="serviceAnswers[field.id] = String($event ?? '')"
-              />
-            </NFormItem>
+              <label class="font-medium text-foreground text-xs flex items-center gap-1">
+                <span>{{ field.label }}</span>
+                <span v-if="field.required" class="text-destructive">*</span>
+              </label>
 
-            <!-- 款式选择:多款式时两列排布 -->
-            <NFormItem
-              v-if="hasSubItems"
-              label="选择款式"
-              required
-              class="dialog-form-item"
-            >
-              <div class="sub-item-field">
-                <div class="sub-item-grid">
-                  <div
-                    v-for="sub in goods.subItems ?? []"
-                    :key="sub.id"
-                    class="sub-item-card"
-                    :class="{
-                      active: isSubItemChecked(sub.id),
-                      disabled: isSubItemDisabled(sub.id),
-                    }"
-                    @click="toggleSubItem(sub.id, !isSubItemChecked(sub.id))"
+              <Select
+                v-if="field.type === ServiceFieldType.Select"
+                :model-value="(serviceAnswers[field.id] as string) || ''"
+                @update:model-value="serviceAnswers[field.id] = String($event)"
+              >
+                <SelectTrigger class="h-8 text-xs">
+                  <SelectValue :placeholder="`请选择${field.label}`" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in field.options"
+                    :key="opt"
+                    :value="opt"
+                    class="text-xs"
                   >
-                    <NCheckbox
-                      :checked="isSubItemChecked(sub.id)"
-                      :disabled="isSubItemDisabled(sub.id)"
-                      @click.stop
-                      @update:checked="(v) => toggleSubItem(sub.id, v)"
-                    />
-                    <NImage
-                      v-if="sub.cover?.path"
-                      :src="sub.cover.path"
-                      width="44"
-                      height="44"
-                      class="sub-item-cover"
-                      object-fit="cover"
-                      @click.stop
-                    />
-                    <div class="sub-item-info">
-                      <NFlex
-                        align="center"
-                        :gap="8"
-                      >
-                        <NText
-                          strong
-                          :depth="sub.count === 0 ? 3 : 1"
-                          class="sub-item-name"
-                        >
-                          {{ sub.name }}
-                        </NText>
-                        <NTag
-                          size="tiny"
-                          :bordered="false"
-                          round
-                          type="primary"
-                          secondary
-                        >
-                          {{ sub.price }} 积分
-                        </NTag>
-                      </NFlex>
-                      <NText
-                        v-if="sub.description"
-                        depth="3"
-                        class="sub-item-meta"
-                      >
-                        {{ sub.description }}
-                      </NText>
-                      <NText
-                        depth="3"
-                        class="sub-item-meta"
-                      >
-                        <span v-if="sub.count === 0">缺货</span>
-                        <span v-else-if="sub.count != null">库存 {{ sub.count }}</span>
-                        <span v-else>库存不限</span>
-                      </NText>
+                    {{ opt }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Input
+                v-else-if="field.type === ServiceFieldType.Date"
+                :model-value="(serviceAnswers[field.id] as string) || ''"
+                type="date"
+                class="h-8 text-xs"
+                @update:model-value="serviceAnswers[field.id] = $event"
+              />
+
+              <Input
+                v-else-if="field.type === ServiceFieldType.Number"
+                :model-value="serviceAnswers[field.id] == null ? '' : String(serviceAnswers[field.id])"
+                type="number"
+                step="any"
+                class="h-8 text-xs"
+                @update:model-value="serviceAnswers[field.id] = Number($event) || undefined"
+              />
+
+              <Textarea
+                v-else-if="field.type === ServiceFieldType.Textarea"
+                :model-value="(serviceAnswers[field.id] as string) || ''"
+                rows="3"
+                :placeholder="`请输入${field.label}`"
+                maxlength="2000"
+                class="text-xs resize-none"
+                @update:model-value="serviceAnswers[field.id] = $event"
+              />
+
+              <Input
+                v-else
+                :model-value="(serviceAnswers[field.id] as string) || ''"
+                :type="field.type === ServiceFieldType.Url ? 'url' : 'text'"
+                :placeholder="field.type === ServiceFieldType.Url ? '请输入链接' : `请输入${field.label}`"
+                maxlength="300"
+                class="h-8 text-xs"
+                @update:model-value="serviceAnswers[field.id] = $event"
+              />
+            </div>
+          </div>
+
+          <!-- 款式选择 -->
+          <div
+            v-if="hasSubItems"
+            class="space-y-2"
+          >
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-foreground text-xs">选择款式 *</span>
+              <span class="text-[11px] text-muted-foreground">
+                可多选，价格累计
+                <template v-if="goods.maxSubItemSelections">
+                  （最多选 {{ goods.maxSubItemSelections }} 种）
+                </template>
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div
+                v-for="sub in goods.subItems ?? []"
+                :key="sub.id"
+                class="p-2.5 rounded-lg border flex items-center justify-between gap-2.5 transition cursor-pointer select-none"
+                :class="
+                  isSubItemChecked(sub.id)
+                    ? 'border-primary bg-primary/5 shadow-2xs'
+                    : isSubItemDisabled(sub.id)
+                      ? 'border-border/40 opacity-50 cursor-not-allowed bg-muted/20'
+                      : 'border-border/80 hover:bg-muted/30 bg-background'
+                "
+                @click="toggleSubItem(sub.id, !isSubItemChecked(sub.id))"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <Checkbox
+                    :checked="isSubItemChecked(sub.id)"
+                    :disabled="isSubItemDisabled(sub.id)"
+                    @click.stop
+                    @update:checked="toggleSubItem(sub.id, $event)"
+                  />
+                  <img
+                    v-if="sub.cover?.path"
+                    :src="sub.cover.path"
+                    class="size-10 rounded object-cover border border-border/60 shrink-0"
+                    alt=""
+                  />
+                  <div class="min-w-0 flex flex-col gap-0.5">
+                    <div class="flex items-center gap-1.5">
+                      <strong class="font-medium text-foreground text-xs truncate">{{ sub.name }}</strong>
+                      <Badge variant="secondary" class="text-[10px] h-4 px-1 font-mono shrink-0">
+                        {{ sub.price }}分
+                      </Badge>
                     </div>
-                    <div
-                      v-if="isSubItemChecked(sub.id)"
-                      @click.stop
-                    >
-                      <NInputNumber
-                        :value="selectedSubItems.find((s) => s.subItemId === sub.id)?.quantity ?? 1"
-                        :min="1"
-                        :max="subItemMax(sub)"
-                        button-placement="both"
-                        size="small"
-                        class="sub-item-quantity"
-                        step="1"
-                        :precision="0"
-                        @update:value="(v) => updateSubItemQuantity(sub.id, v)"
-                      />
-                    </div>
+                    <span class="text-[11px] text-muted-foreground truncate">
+                      {{ sub.count === 0 ? '缺货' : sub.count != null ? `余 ${sub.count}` : '库存不限' }}
+                    </span>
                   </div>
                 </div>
-                <div class="sub-item-hint">
-                  <NText
-                    depth="3"
-                    class="form-hint"
-                  >
-                    * 可多选，价格按所选款式累计计算
-                    <span v-if="goods.maxSubItemSelections">
-                      （最多选 {{ goods.maxSubItemSelections }} 种，已选 {{ selectedSubItems.length }} 种）
-                    </span>
-                  </NText>
+
+                <div
+                  v-if="isSubItemChecked(sub.id)"
+                  class="w-20 shrink-0"
+                  @click.stop
+                >
+                  <NInputNumber
+                    :value="selectedSubItems.find((s) => s.subItemId === sub.id)?.quantity ?? 1"
+                    :min="1"
+                    :max="subItemMax(sub)"
+                    size="small"
+                    @update:value="updateSubItemQuantity(sub.id, $event)"
+                  />
                 </div>
               </div>
-            </NFormItem>
+            </div>
+          </div>
 
-            <!-- 单商品数量 -->
-            <NFormItem
-              v-else
-              label="兑换数量"
-              required
-              class="dialog-form-item"
-            >
-              <NFlex
-                align="center"
-                :gap="12"
-              >
-                <NInputNumber
-                  v-model:value="buyCount"
-                  :min="1"
-                  :max="
-                    Math.min(goods.maxBuyCount ?? 100000, (goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0))
-                  "
-                  button-placement="both"
-                  class="quantity-input"
-                  step="1"
-                  :precision="0"
-                />
-                <NText
-                  depth="3"
-                  class="form-hint"
-                >
-                  {{
-                    goods.hasPurchased
-                      ? `已兑换 ${goods.purchasedCount} / ${goods.maxBuyCount ?? '∞'}`
-                      : `库存 ${goods.count ?? '无限'} · 限购 ${goods.maxBuyCount ?? '无限'}`
-                  }}
-                </NText>
-              </NFlex>
-            </NFormItem>
-
-            <!-- 收货地址 -->
-            <NFormItem
-              v-if="needAddress"
-              label="收货地址"
-              required
-              class="dialog-form-item"
-            >
-              <NFlex
-                vertical
-                :gap="8"
-                class="field-full"
-              >
-                <NFlex
-                  :gap="8"
-                  class="field-full"
-                >
-                  <NSelect
-                    v-model:show="showAddressSelect"
-                    :value="selectedAddress?.id"
-                    :options="addressOptions"
-                    :render-label="renderLabel"
-                    :render-option="renderOption"
-                    placeholder="请选择收货地址"
-                    class="field-grow"
-                  />
-                  <NButton
-                    secondary
-                    type="primary"
-                    @click="openAddressModal"
-                  >
-                    <template #icon>
-                      <NIcon :component="Add24Regular" />
-                    </template>
-                  </NButton>
-                  <NButton
-                    secondary
-                    @click="refreshAddressList"
-                  >
-                    <template #icon>
-                      <NIcon :component="ArrowSync24Regular" />
-                    </template>
-                  </NButton>
-                </NFlex>
-                <NText
-                  depth="3"
-                  class="form-hint"
-                >
-                  可新增或刷新地址，也可前往
-                  <NButton
-                    text
-                    type="primary"
-                    size="tiny"
-                    @click="NavigateToNewTab('/bili-user/settings')"
-                  >
-                    账号设置
-                  </NButton>
-                  管理
-                </NText>
-              </NFlex>
-            </NFormItem>
-
-            <NFormItem
-              label="备注信息"
-              class="dialog-form-item dialog-form-item--last"
-            >
-              <NInput
-                v-model:value="remark"
-                type="textarea"
-                placeholder="如有特殊需求请留言（可选）"
-                :autosize="{ minRows: 2, maxRows: 4 }"
-                maxlength="100"
-                show-count
-              />
-            </NFormItem>
-          </NForm>
-        </div>
-      </NScrollbar>
-    </div>
-
-    <!-- 粘性操作栏 -->
-    <template #action>
-      <div class="dialog-footer">
-        <NFlex
-          justify="space-between"
-          align="center"
-          :gap="16"
-          wrap
-        >
-          <NFlex
-            align="baseline"
-            :gap="4"
+          <!-- 单商品数量 -->
+          <div
+            v-else
+            class="space-y-1.5"
           >
-            <NText
-              depth="3"
-              class="footer-label"
-            >
-              总计
-            </NText>
-            <NText
-              type="primary"
-              class="footer-cost"
-            >
-              {{ cost }}
-            </NText>
-            <NText
-              depth="3"
-              class="footer-label"
-            >
-              积分 · 持有 {{ currentPoint >= 0 ? currentPoint : '--' }}
-            </NText>
-          </NFlex>
-
-          <NFlex :gap="12">
-            <NButton
-              :disabled="isLoading"
-              @click="requestClose"
-            >
-              取消
-            </NButton>
-            <NButton
-              type="primary"
-              :disabled="!canDoBuy || isLoading"
-              :loading="isLoading"
-              @click="buyGoods"
-            >
-              确认兑换
-            </NButton>
-          </NFlex>
-        </NFlex>
-        <NText
-          v-if="blockedReason"
-          type="error"
-          class="footer-reason"
-        >
-          {{ blockedReason }}
-        </NText>
-      </div>
-    </template>
-  </NModal>
-
-  <!-- 新增收货地址 -->
-  <NModal
-    v-model:show="showAddressModal"
-    preset="card"
-    style="width: min(640px, 95vw)"
-    title="新增收货地址"
-    :segmented="{ content: true, action: true }"
-  >
-    <NSpin
-      v-if="currentAddress"
-      :show="isLoading"
-    >
-      <NForm
-        ref="formRef"
-        :model="currentAddress"
-        :rules="addressFormRules"
-        label-placement="top"
-      >
-        <NFormItem
-          label="地区选择"
-          path="area"
-          required
-        >
-          <NGrid
-            :cols="24"
-            :x-gap="8"
-            :y-gap="8"
-            class="field-full"
-          >
-            <NGi :span="12">
-              <NSelect
-                v-model:value="currentAddress.province"
-                :options="provinceOptions"
-                placeholder="省份"
-                filterable
-                @update:value="onAreaSelectChange(0)"
-              />
-            </NGi>
-            <NGi :span="12">
-              <NSelect
-                :key="currentAddress.province"
-                v-model:value="currentAddress.city"
-                :options="cityOptions(currentAddress.province)"
-                :disabled="!currentAddress.province"
-                placeholder="城市"
-                filterable
-                @update:value="onAreaSelectChange(1)"
-              />
-            </NGi>
-            <NGi :span="12">
-              <NSelect
-                :key="currentAddress.city"
-                v-model:value="currentAddress.district"
-                :options="districtOptions(currentAddress.province, currentAddress.city)"
-                :disabled="!currentAddress.city"
-                placeholder="区/县"
-                filterable
-                @update:value="onAreaSelectChange(2)"
-              />
-            </NGi>
-            <NGi :span="12">
-              <NSelect
-                :key="currentAddress.district"
-                v-model:value="currentAddress.street"
-                :options="streetOptions(currentAddress.province, currentAddress.city, currentAddress.district)"
-                :disabled="!currentAddress.district"
-                placeholder="街道"
-                filterable
-              />
-            </NGi>
-          </NGrid>
-        </NFormItem>
-        <NFormItem
-          label="详细地址"
-          path="address"
-          required
-        >
-          <NInput
-            v-model:value="currentAddress.address"
-            placeholder="请输入详细地址（楼栋号、单元号、门牌号等）"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 4 }"
-          />
-        </NFormItem>
-        <NGrid
-          :cols="2"
-          :x-gap="12"
-        >
-          <NGi>
-            <NFormItem
-              label="联系电话"
-              path="phone"
-              required
-            >
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-foreground text-xs">兑换数量 *</span>
+              <span class="text-[11px] text-muted-foreground">
+                {{
+                  goods.hasPurchased
+                    ? `已兑换 ${goods.purchasedCount} / ${goods.maxBuyCount ?? '∞'}`
+                    : `库存 ${goods.count ?? '无限'} · 限购 ${goods.maxBuyCount ?? '无限'}`
+                }}
+              </span>
+            </div>
+            <div class="w-32">
               <NInputNumber
-                v-model:value="currentAddress.phone"
-                placeholder="请输入联系电话"
-                :show-button="false"
-                class="field-full"
+                v-model:value="buyCount"
+                :min="1"
+                :max="Math.min(goods.maxBuyCount ?? 100000, (goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0))"
+                size="small"
               />
-            </NFormItem>
-          </NGi>
-          <NGi>
-            <NFormItem
-              label="联系人"
-              path="name"
-              required
-            >
-              <NInput
-                v-model:value="currentAddress.name"
-                placeholder="请输入联系人姓名"
-              />
-            </NFormItem>
-          </NGi>
-        </NGrid>
-        <NCheckbox v-model:checked="userAgree"> 我确认以上信息真实有效 </NCheckbox>
-      </NForm>
-    </NSpin>
+            </div>
+          </div>
 
-    <template #action>
-      <NFlex
-        justify="end"
-        :gap="12"
+          <!-- 收货地址 -->
+          <div
+            v-if="needAddress"
+            class="space-y-1.5"
+          >
+            <span class="font-medium text-foreground text-xs">收货地址 *</span>
+            <div class="flex items-center gap-2">
+              <Select
+                :model-value="selectedAddress?.id ? String(selectedAddress.id) : ''"
+                class="flex-1"
+                @update:model-value="selectedAddress = addressList.find((a) => String(a.id) === $event)"
+              >
+                <SelectTrigger class="h-8 text-xs flex-1">
+                  <SelectValue placeholder="请选择收货地址" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="addr in addressList"
+                    :key="addr.id"
+                    :value="String(addr.id)"
+                    class="text-xs"
+                  >
+                    {{ addr.name }} ({{ addr.phone }}) · {{ addr.province }}{{ addr.city }}{{ addr.district }}{{ addr.address }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                size="icon"
+                class="size-8 shrink-0"
+                aria-label="新增收货地址"
+                @click="openAddressModal"
+              >
+                <component :is="Add24Regular" class="size-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                class="size-8 shrink-0"
+                aria-label="刷新地址列表"
+                @click="refreshAddressList"
+              >
+                <component :is="ArrowSync24Regular" class="size-3.5" />
+              </Button>
+            </div>
+          </div>
+
+          <!-- 留言 -->
+          <div class="space-y-1">
+            <span class="font-medium text-foreground text-xs">备注留言 (可选)</span>
+            <Textarea
+              v-model="remark"
+              rows="2"
+              placeholder="如有特殊需求请留言..."
+              maxlength="100"
+              class="text-xs resize-none"
+            />
+          </div>
+        </div>
+      </ScrollArea>
+
+      <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-between sm:justify-between">
+        <div class="flex items-baseline gap-1 text-xs">
+          <span class="text-muted-foreground">总计</span>
+          <strong class="text-primary font-mono text-base font-semibold">{{ cost }}</strong>
+          <span class="text-muted-foreground">积分 · 持有 {{ currentPoint >= 0 ? currentPoint : '--' }}</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            class="text-xs"
+            :disabled="isLoading"
+            @click="requestClose"
+          >
+            取消
+          </Button>
+
+          <Popconfirm
+            title="确认兑换"
+            positive-text="确认"
+            negative-text="取消"
+            :disabled="!canDoBuy || isLoading"
+            @positive-click="buyGoods"
+          >
+            <template #trigger>
+              <Button
+                size="sm"
+                class="text-xs"
+                :disabled="!canDoBuy || isLoading"
+              >
+                确认兑换
+              </Button>
+            </template>
+            确定要花费 {{ cost }} 积分兑换 "{{ goods.name }}" 吗？
+          </Popconfirm>
+        </div>
+      </DialogFooter>
+
+      <p
+        v-if="blockedReason"
+        class="text-destructive text-xs text-right -mt-1 m-0"
       >
-        <NButton @click="showAddressModal = false"> 取消 </NButton>
-        <NButton
-          type="primary"
+        {{ blockedReason }}
+      </p>
+    </DialogContent>
+  </Dialog>
+
+  <!-- 新增收货地址弹窗 -->
+  <Dialog v-model:open="showAddressModal">
+    <DialogContent class="sm:max-w-md p-4 space-y-3">
+      <DialogHeader class="pb-2 border-b border-border/60">
+        <DialogTitle class="text-sm font-semibold">新增收货地址</DialogTitle>
+      </DialogHeader>
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="text-muted-foreground text-[11px]">省份</label>
+            <Select
+              :model-value="currentAddress.province || ''"
+              @update:model-value="currentAddress.province = String($event); onAreaSelectChange(0)"
+            >
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="省份" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="p in provinceOptions"
+                  :key="p.value"
+                  :value="p.value"
+                  class="text-xs"
+                >
+                  {{ p.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-muted-foreground text-[11px]">城市</label>
+            <Select
+              :model-value="currentAddress.city || ''"
+              :disabled="!currentAddress.province"
+              @update:model-value="currentAddress.city = String($event); onAreaSelectChange(1)"
+            >
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="城市" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="c in cityOptions(currentAddress.province)"
+                  :key="c.value"
+                  :value="c.value"
+                  class="text-xs"
+                >
+                  {{ c.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-muted-foreground text-[11px]">区县</label>
+            <Select
+              :model-value="currentAddress.district || ''"
+              :disabled="!currentAddress.city"
+              @update:model-value="currentAddress.district = String($event); onAreaSelectChange(2)"
+            >
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="区/县" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="d in districtOptions(currentAddress.province, currentAddress.city)"
+                  :key="d.value"
+                  :value="d.value"
+                  class="text-xs"
+                >
+                  {{ d.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-muted-foreground text-[11px]">街道 (选填)</label>
+            <Select
+              :model-value="currentAddress.street || ''"
+              :disabled="!currentAddress.district"
+              @update:model-value="currentAddress.street = $event ? String($event) : undefined"
+            >
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="街道" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="s in streetOptions(currentAddress.province, currentAddress.city, currentAddress.district)"
+                  :key="s.value"
+                  :value="s.value"
+                  class="text-xs"
+                >
+                  {{ s.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-muted-foreground text-[11px]">详细地址</label>
+          <Textarea
+            v-model="currentAddress.address"
+            rows="2"
+            placeholder="楼栋号、单元号、门牌号等"
+            class="text-xs resize-none"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="text-muted-foreground text-[11px]">联系电话</label>
+            <Input
+              :model-value="currentAddress.phone ? String(currentAddress.phone) : ''"
+              type="tel"
+              placeholder="手机号"
+              class="h-8 text-xs font-mono"
+              @update:model-value="currentAddress.phone = Number($event) || undefined"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-muted-foreground text-[11px]">联系人</label>
+            <Input
+              v-model="currentAddress.name"
+              placeholder="姓名"
+              class="h-8 text-xs"
+            />
+          </div>
+        </div>
+
+        <label class="flex items-center gap-1.5 cursor-pointer pt-1">
+          <Checkbox v-model:checked="userAgree" />
+          <span class="text-xs text-foreground">我确认以上收件信息真实有效</span>
+        </label>
+      </div>
+
+      <DialogFooter class="pt-2 border-t border-border/60">
+        <Button
+          variant="outline"
+          size="sm"
+          class="text-xs"
+          @click="showAddressModal = false"
+        >
+          取消
+        </Button>
+        <Button
+          size="sm"
+          class="text-xs"
           :disabled="!userAgree || isLoading"
-          :loading="isLoading"
           @click="updateAddress"
         >
-          保存
-        </NButton>
-      </NFlex>
-    </template>
-  </NModal>
+          保存地址
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <!-- 兑换成功弹窗 -->
+  <Dialog
+    v-if="successOrder"
+    v-model:open="showSuccessModal"
+  >
+    <DialogContent class="sm:max-w-md p-4 space-y-3">
+      <DialogHeader class="pb-2 border-b border-border/60">
+        <DialogTitle class="text-sm font-semibold text-emerald-600 flex items-center gap-1.5">
+          兑换成功！
+        </DialogTitle>
+      </DialogHeader>
+
+      <div class="space-y-3 text-xs">
+        <p class="text-muted-foreground font-mono">订单号: #{{ successOrder.id }}</p>
+
+        <template v-if="successOrder.selectedSubItems?.length">
+          <Separator />
+          <div class="space-y-1">
+            <span class="text-[11px] font-medium text-muted-foreground block">已选款式</span>
+            <p class="text-foreground">
+              {{ successOrder.selectedSubItems.map((s) => `${s.nameSnapshot}×${s.quantity}`).join('、') }}
+            </p>
+          </div>
+        </template>
+
+        <template v-if="successOrder.type === GoodsTypes.Virtual && successOrder.goods?.content">
+          <Separator />
+          <div class="space-y-1">
+            <span class="text-[11px] font-medium text-muted-foreground block">礼物内容</span>
+            <Alert class="text-xs bg-muted/40 whitespace-pre-wrap break-words">
+              <AlertDescription class="text-xs">{{ successOrder.goods.content }}</AlertDescription>
+            </Alert>
+          </div>
+        </template>
+      </div>
+
+      <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          class="text-xs"
+          @click="showSuccessModal = false"
+        >
+          关闭
+        </Button>
+        <Button
+          size="sm"
+          class="text-xs"
+          @click="showSuccessModal = false; router.push({ name: 'bili-user-orders' })"
+        >
+          查看我的订单
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <style scoped>
-.dialog-header {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  min-width: 0;
-}
-
-.header-cover {
-  width: 64px;
-  height: 64px;
-  flex: 0 0 auto;
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-}
-
-.header-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.header-title {
-  font-size: 1.1rem;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
-}
-
-.header-meta {
-  font-size: 12px;
-}
-
-.dialog-body {
-  display: flex;
-  min-height: 0;
-  flex-direction: column;
-}
-
-.dialog-scroll {
-  max-height: min(58vh, 560px);
-}
-
-.dialog-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 4px 12px 16px 2px;
-}
-
-.dialog-alert {
-  white-space: normal;
-}
-
-.dialog-alert--pre {
-  white-space: pre-wrap;
-}
-
-.dialog-form :deep(.n-form-item-label) {
-  font-weight: 600;
-}
-
-.dialog-form-item {
-  margin-bottom: 14px;
-}
-
-.dialog-form-item--last {
-  margin-bottom: 0;
-}
-
 .field-full {
   width: 100%;
-}
-
-.field-grow {
-  flex: 1;
-  min-width: 0;
-}
-
-.form-hint {
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.quantity-input {
-  width: 140px;
-}
-
-/* 款式:窄屏单列,宽屏两列 */
-.sub-item-field {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-}
-
-.sub-item-grid {
-  display: grid;
-  width: 100%;
-  gap: 10px;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-}
-
-.sub-item-hint {
-  margin-top: 8px;
-}
-
-.sub-item-card {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-bg-surface);
-  cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.sub-item-card:hover:not(.disabled) {
-  border-color: var(--vtsuru-primary);
-  background-color: color-mix(in srgb, var(--vtsuru-primary), transparent 95%);
-}
-
-.sub-item-card.active {
-  border-color: var(--vtsuru-primary);
-  background-color: color-mix(in srgb, var(--vtsuru-primary), transparent 90%);
-}
-
-.sub-item-card.disabled {
-  opacity: 0.6;
-  background-color: var(--vtsuru-bg-elevated);
-  cursor: not-allowed;
-}
-
-.sub-item-cover {
-  display: flex;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background-color: var(--vtsuru-bg-elevated);
-}
-
-.sub-item-cover :deep(img) {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.sub-item-info {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.sub-item-name {
-  font-size: 14px;
-}
-
-.sub-item-meta {
-  font-size: 12px;
-  line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sub-item-quantity {
-  width: 92px;
-  flex: 0 0 auto;
-}
-
-.dialog-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.footer-label {
-  font-size: 12px;
-}
-
-.footer-cost {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.footer-reason {
-  font-size: 12px;
-  text-align: right;
-}
-
-@media (max-width: 560px) {
-  .sub-item-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .sub-item-meta {
-    white-space: normal;
-  }
 }
 </style>

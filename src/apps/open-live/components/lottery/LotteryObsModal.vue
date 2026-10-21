@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Copy24Regular, Open24Regular } from '@vicons/fluent'
-import { NAlert, NButton, NCollapse, NCollapseItem, NIcon, NInput, NInputGroup, NLi, NModal, NUl } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import LiveLotteryOBS from '@/apps/obs/pages/LiveLotteryOBS.vue'
@@ -10,6 +9,11 @@ import {
   type LotteryObsStyle,
 } from '@/apps/open-live/components/lottery/lotteryUtils'
 import { CURRENT_HOST } from '@/shared/config'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
 import { copyToClipboard } from '@/shared/utils'
 
 const props = defineProps<{
@@ -78,139 +82,146 @@ const previewBoxStyle = computed(() => {
 </script>
 
 <template>
-  <NModal
-    v-model:show="showModel"
-    preset="card"
-    class="lottery-obs-modal"
-    title="OBS 抽奖组件"
-    style="width: 860px; max-width: 95vw; max-height: 90vh"
-    closable
-    content-style="overflow-y: auto; max-height: calc(90vh - 110px); padding: 16px 20px;"
-  >
-    <template #header-extra>
-      <NButton
-        v-if="url"
-        tag="a"
-        type="primary"
-        size="small"
-        target="_blank"
-        :href="url"
-      >
-        <template #icon>
-          <NIcon :component="Open24Regular" />
-        </template>
-        浏览
-      </NButton>
-    </template>
-
-    <div class="lottery-obs-modal__body">
-      <!-- 左侧：链接与配置 -->
-      <div class="lottery-obs-modal__main">
-        <NAlert
-          type="info"
-          size="small"
-          :bordered="false"
+  <Dialog v-model:open="showModel">
+    <DialogContent class="max-w-[860px] max-h-[90vh] overflow-hidden flex flex-col p-6">
+      <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
+        <DialogTitle class="text-base font-semibold">OBS 抽奖组件</DialogTitle>
+        <Button
+          v-if="url"
+          as="a"
+          variant="outline"
+          size="sm"
+          target="_blank"
+          :href="url"
+          class="mr-6 gap-1"
         >
-          将抽奖等待队列与中奖揭榜结果实时展示在 OBS 浏览器源中。
-        </NAlert>
+          <Open24Regular class="size-4" />
+          浏览
+        </Button>
+      </DialogHeader>
 
-        <!-- 显示版型 -->
-        <div class="lottery-obs-modal__section">
-          <div class="lottery-obs-modal__section-title">显示版型</div>
-          <div class="lottery-segmented-grid">
-            <button
-              v-for="opt in modeOptions"
-              :key="opt.value"
-              type="button"
-              class="lottery-segmented-btn"
-              :class="{ 'is-active': selectedMode === opt.value }"
-              @click="selectedMode = opt.value"
+      <div class="overflow-y-auto max-h-[calc(90vh-110px)] pr-1 pt-4">
+        <div class="lottery-obs-modal__body">
+          <!-- 左侧：链接与配置 -->
+          <div class="lottery-obs-modal__main">
+            <Alert class="text-xs py-2 bg-muted/50 border-muted">
+              <AlertDescription>
+                将抽奖等待队列与中奖揭榜结果实时展示在 OBS 浏览器源中。
+              </AlertDescription>
+            </Alert>
+
+            <!-- 显示版型 -->
+            <div class="lottery-obs-modal__section">
+              <div class="lottery-obs-modal__section-title">显示版型</div>
+              <div class="lottery-segmented-grid">
+                <button
+                  v-for="opt in modeOptions"
+                  :key="opt.value"
+                  type="button"
+                  class="lottery-segmented-btn"
+                  :class="{ 'is-active': selectedMode === opt.value }"
+                  @click="selectedMode = opt.value"
+                >
+                  <span class="btn-label">{{ opt.label }}</span>
+                  <span class="btn-desc">{{ opt.desc }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 视觉风格 -->
+            <div class="lottery-obs-modal__section">
+              <div class="lottery-obs-modal__section-title">视觉风格</div>
+              <div class="lottery-segmented-grid">
+                <button
+                  v-for="opt in styleOptions"
+                  :key="opt.value"
+                  type="button"
+                  class="lottery-segmented-btn"
+                  :class="{ 'is-active': selectedStyle === opt.value }"
+                  @click="selectedStyle = opt.value"
+                >
+                  <span class="btn-label">{{ opt.label }}</span>
+                  <span class="btn-desc">{{ opt.desc }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 链接复制 -->
+            <div class="lottery-obs-modal__section">
+              <div class="lottery-obs-modal__section-title">OBS 浏览器源链接</div>
+              <Alert
+                v-if="!url"
+                class="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-xs py-2"
+              >
+                <AlertDescription class="text-xs text-amber-700 dark:text-amber-400">
+                  未获取到用户信息，无法生成 OBS 链接。请先登录，或通过幻星平台打开本页。
+                </AlertDescription>
+              </Alert>
+              <div
+                v-else
+                class="flex items-center gap-2"
+              >
+                <Input
+                  :model-value="url"
+                  readonly
+                  class="font-mono text-xs"
+                />
+                <Button
+                  size="sm"
+                  class="shrink-0 gap-1.5"
+                  @click="copyToClipboard(url)"
+                >
+                  <Copy24Regular class="size-4" />
+                  复制
+                </Button>
+              </div>
+            </div>
+
+            <Accordion
+              type="single"
+              collapsible
+              class="border rounded-md px-3 text-xs"
             >
-              <span class="btn-label">{{ opt.label }}</span>
-              <span class="btn-desc">{{ opt.desc }}</span>
-            </button>
+              <AccordionItem
+                value="help"
+                class="border-none"
+              >
+                <AccordionTrigger class="py-2 text-xs hover:no-underline">
+                  OBS 使用说明
+                </AccordionTrigger>
+                <AccordionContent class="text-muted-foreground text-xs pb-3 space-y-1">
+                  <p>1. 在 OBS 来源中添加一个新的「浏览器」源。</p>
+                  <p>2. 将上方链接复制并粘贴到「URL」栏中。</p>
+                  <p>3. 当前推荐尺寸：{{ recommendedSize.text }}。</p>
+                  <p>4. 选择版型与风格后链接自动更新，直接点击「复制」即可。</p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+
+          <!-- 右侧：实时预览 -->
+          <div class="lottery-obs-modal__side">
+            <div class="lottery-obs-modal__preview-label">
+              实时预览 ({{ recommendedSize.width }} × {{ recommendedSize.height }})
+            </div>
+            <div class="lottery-obs-modal__preview-stage">
+              <div
+                class="lottery-obs-modal__preview-wrapper"
+                :style="previewBoxStyle"
+              >
+                <LiveLotteryOBS
+                  :code="code"
+                  :id="userId"
+                  :style="selectedStyle"
+                  :mode="selectedMode"
+                />
+              </div>
+            </div>
           </div>
         </div>
-
-        <!-- 视觉风格 -->
-        <div class="lottery-obs-modal__section">
-          <div class="lottery-obs-modal__section-title">视觉风格</div>
-          <div class="lottery-segmented-grid">
-            <button
-              v-for="opt in styleOptions"
-              :key="opt.value"
-              type="button"
-              class="lottery-segmented-btn"
-              :class="{ 'is-active': selectedStyle === opt.value }"
-              @click="selectedStyle = opt.value"
-            >
-              <span class="btn-label">{{ opt.label }}</span>
-              <span class="btn-desc">{{ opt.desc }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 链接复制 -->
-        <div class="lottery-obs-modal__section">
-          <div class="lottery-obs-modal__section-title">OBS 浏览器源链接</div>
-          <NAlert
-            v-if="!url"
-            type="warning"
-            size="small"
-            :bordered="false"
-          >
-            未获取到用户信息，无法生成 OBS 链接。请先登录，或通过幻星平台打开本页。
-          </NAlert>
-          <NInputGroup v-else>
-            <NInput
-              :value="url"
-              readonly
-            />
-            <NButton
-              type="primary"
-              @click="copyToClipboard(url)"
-            >
-              <template #icon>
-                <NIcon :component="Copy24Regular" />
-              </template>
-              复制
-            </NButton>
-          </NInputGroup>
-        </div>
-
-        <NCollapse class="lottery-obs-modal__help">
-          <NCollapseItem title="OBS 使用说明">
-            <NUl style="padding-left: 18px; margin: 4px 0">
-              <NLi>在 OBS 来源中添加一个新的「浏览器」源。</NLi>
-              <NLi>将上方链接复制并粘贴到「URL」栏中。</NLi>
-              <NLi>当前推荐尺寸：{{ recommendedSize.text }}。</NLi>
-              <NLi>选择版型与风格后链接自动更新，直接点击「复制」即可。</NLi>
-            </NUl>
-          </NCollapseItem>
-        </NCollapse>
       </div>
-
-      <!-- 右侧：实时预览 -->
-      <div class="lottery-obs-modal__side">
-        <div class="lottery-obs-modal__preview-label">
-          实时预览 ({{ recommendedSize.width }} × {{ recommendedSize.height }})
-        </div>
-        <div class="lottery-obs-modal__preview-stage">
-          <div
-            class="lottery-obs-modal__preview-wrapper"
-            :style="previewBoxStyle"
-          >
-            <LiveLotteryOBS
-              :code="code"
-              :id="userId"
-              :style="selectedStyle"
-              :mode="selectedMode"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  </NModal>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <style scoped>
@@ -246,7 +257,6 @@ const previewBoxStyle = computed(() => {
   color: var(--vtsuru-fg);
 }
 
-/* 2x2 规整分段卡片网格 */
 .lottery-segmented-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -328,9 +338,5 @@ const previewBoxStyle = computed(() => {
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.lottery-obs-modal__help {
-  margin-top: 4px;
 }
 </style>

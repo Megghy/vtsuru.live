@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Dismiss20Filled } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NScrollbar, NText } from 'naive-ui'
 import { ref } from 'vue'
 
 import { useSpeechService } from '@/store/useSpeechService'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import QueueItem from './QueueItem.vue'
 
@@ -40,42 +42,33 @@ function onDragEnd() {
 <template>
   <div class="queue-list">
     <div class="header">
-      <NText
-        strong
-        style="font-size: 13px"
-      >
+      <span class="font-semibold text-xs text-foreground">
         播报队列
-      </NText>
-      <NText
-        depth="3"
-        style="font-size: 11px"
-      >
+      </span>
+      <span class="text-xs text-muted-foreground">
         {{ speakQueue.length }} 项
-      </NText>
-      <NButton
+      </span>
+      <Button
         v-if="speakQueue.length > 0"
-        size="tiny"
-        tertiary
-        type="error"
-        style="margin-left: auto"
+        variant="ghost"
+        size="sm"
+        class="h-6 text-xs text-destructive hover:bg-destructive/10 ml-auto gap-1 px-2"
         @click="speakQueue.splice(0)"
       >
-        <template #icon>
-          <NIcon :component="Dismiss20Filled" />
-        </template>
+        <Dismiss20Filled class="size-3.5" />
         清空
-      </NButton>
+      </Button>
     </div>
 
-    <NEmpty
+    <Empty
       v-if="speakQueue.length === 0"
       description="队列为空"
-      size="small"
+      class="py-8"
     />
 
-    <NScrollbar
+    <ScrollArea
       v-else
-      style="max-height: 400px"
+      class="max-h-[400px] pr-2"
     >
       <div
         class="items"
@@ -95,7 +88,7 @@ function onDragEnd() {
           />
         </div>
       </div>
-    </NScrollbar>
+    </ScrollArea>
   </div>
 </template>
 

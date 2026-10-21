@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Image24Regular } from '@vicons/fluent'
-import type { UploadFileInfo } from 'naive-ui'
-import { NButton, NCard, NEmpty, NFlex, NIcon, NInputNumber, NSlider, NText, NUpload, useMessage } from 'naive-ui'
+import { X } from 'lucide-vue-next'
 import { ref, watch } from 'vue'
 
 import type { DecorativeImageProperties } from '@/shared/types/VTsuruConfigTypes'
+import type { UploadFileInfo } from '@/shared/types/upload'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Slider } from '@/shared/ui/slider'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   images: DecorativeImageProperties[]
@@ -20,6 +26,7 @@ const emit = defineEmits<{
 
 const message = useMessage()
 const selectedImageId = ref<number>()
+const fileInputRef = ref<HTMLInputElement>()
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'bmp', 'tiff', 'heic', 'heif'])
 
 watch(
@@ -30,6 +37,24 @@ watch(
     }
   },
 )
+
+function onFileInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const newFiles: UploadFileInfo[] = []
+  for (let i = 0; i < target.files.length; i++) {
+    const file = target.files[i]
+    newFiles.push({
+      id: `${Date.now()}_${i}`,
+      name: file.name,
+      file,
+      status: 'finished',
+      url: URL.createObjectURL(file),
+    })
+  }
+  target.value = ''
+  onPendingFilesChange([...props.pendingFiles, ...newFiles])
+}
 
 function onPendingFilesChange(files: UploadFileInfo[]) {
   const fingerprints = new Set<string>()
@@ -43,6 +68,12 @@ function onPendingFilesChange(files: UploadFileInfo[]) {
   })
   if (accepted.length !== files.length) message.error('仅支持不超过 10MB 的图片文件')
   emit('update:pendingFiles', accepted)
+}
+
+function removePendingFile(index: number) {
+  const next = [...props.pendingFiles]
+  next.splice(index, 1)
+  emit('update:pendingFiles', next)
 }
 
 function updateImage(id: number, values: Partial<DecorativeImageProperties>) {
@@ -74,244 +105,187 @@ function moveImage(id: number, offset: -1 | 1) {
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-    style="width: 100%"
-  >
-    <NUpload
-      :file-list="pendingFiles"
-      :disabled="disabled"
-      accept="image/*"
-      multiple
-      list-type="image-card"
-      :default-upload="false"
-      :max="20"
-      :should-use-thumbnail-url="() => true"
-      @update:file-list="onPendingFilesChange"
-    >
-      <NFlex
-        vertical
-        align="center"
-        justify="center"
-        style="width: 100%; height: 100%"
+  <div class="flex flex-col gap-3 w-full">
+    <!-- 上传区域 -->
+    <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+      <div
+        v-for="(f, idx) in pendingFiles"
+        :key="f.id"
+        class="relative aspect-square rounded-md border border-border overflow-hidden group bg-muted/20"
       >
-        <NIcon
-          size="24"
-          :depth="3"
-          :component="Image24Regular"
-        />
-        <span style="font-size: 12px">添加装饰图片</span>
-      </NFlex>
-    </NUpload>
+        <img :src="f.url" :alt="f.name" class="w-full h-full object-cover" />
+        <button
+          type="button"
+          class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+          @click.stop="removePendingFile(idx)"
+        >
+          <X class="size-3" />
+        </button>
+      </div>
 
-    <NText
-      v-if="pendingFiles.length"
-      depth="3"
-      class="pending-note"
-    >
+      <button
+        v-if="pendingFiles.length < 20"
+        type="button"
+        class="aspect-square flex flex-col items-center justify-center rounded-md border border-dashed border-input hover:border-primary bg-background/50 hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-all cursor-pointer p-2 disabled:opacity-50 disabled:pointer-events-none"
+        :disabled="disabled"
+        @click="fileInputRef?.click()"
+      >
+        <Image24Regular class="size-6 mb-1 text-muted-foreground/60" />
+        <span class="text-[11px]">添加装饰图片</span>
+      </button>
+      <input
+        ref="fileInputRef"
+        type="file"
+        multiple
+        accept="image/*"
+        class="hidden"
+        @change="onFileInput"
+      />
+    </div>
+
+    <p v-if="pendingFiles.length" class="text-[11px] text-muted-foreground">
       {{ pendingFiles.length }} 张图片将在保存时上传，可在上方直接移除。
-    </NText>
+    </p>
 
-    <NEmpty
+    <Empty
       v-if="images.length === 0"
       size="small"
       description="暂无已保存的装饰图片"
     />
 
-    <NCard
+    <Card
       v-for="image in images"
       :key="image.id"
-      size="small"
-      :class="['image-card', { 'image-card--selected': selectedImageId === image.id }]"
+      class="cursor-pointer transition-all border"
+      :class="selectedImageId === image.id ? 'border-primary ring-1 ring-primary/30' : 'hover:border-input'"
       @click="selectedImageId = selectedImageId === image.id ? undefined : image.id"
     >
-      <NFlex
-        justify="space-between"
-        align="center"
-        :wrap="false"
-      >
-        <NFlex
-          align="center"
-          :wrap="false"
-          class="image-summary"
-        >
-          <img
-            :src="image.path"
-            :alt="image.name"
-          />
-          <NText class="image-name">{{ image.name || `图片 #${image.id}` }}</NText>
-        </NFlex>
-        <NFlex :wrap="false">
-          <NButton
-            circle
-            secondary
-            size="tiny"
-            title="下移一层"
-            :disabled="disabled"
-            @click.stop="moveImage(image.id, -1)"
-          >
-            <template #icon><NIcon :component="ArrowDown20Filled" /></template>
-          </NButton>
-          <NButton
-            circle
-            secondary
-            size="tiny"
-            title="上移一层"
-            :disabled="disabled"
-            @click.stop="moveImage(image.id, 1)"
-          >
-            <template #icon><NIcon :component="ArrowUp20Filled" /></template>
-          </NButton>
-          <NButton
-            circle
-            secondary
-            type="error"
-            size="tiny"
-            title="删除"
-            :disabled="disabled"
-            @click.stop="removeImage(image.id)"
-          >
-            <template #icon><NIcon :component="Delete20Filled" /></template>
-          </NButton>
-        </NFlex>
-      </NFlex>
+      <CardHeader class="p-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <img
+              :src="image.path"
+              :alt="image.name"
+              class="size-10 rounded object-cover border border-border shrink-0"
+            />
+            <span class="text-xs font-medium text-foreground truncate max-w-[200px]">
+              {{ image.name || `图片 #${image.id}` }}
+            </span>
+          </div>
 
-      <template
-        v-if="selectedImageId === image.id"
-        #footer
-      >
-        <div class="property-grid">
-          <label>
-            <span>X (%)</span>
+          <div class="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 text-muted-foreground hover:text-foreground"
+              title="下移一层"
+              :disabled="disabled"
+              @click.stop="moveImage(image.id, -1)"
+            >
+              <ArrowDown20Filled class="size-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 text-muted-foreground hover:text-foreground"
+              title="上移一层"
+              :disabled="disabled"
+              @click.stop="moveImage(image.id, 1)"
+            >
+              <ArrowUp20Filled class="size-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+              title="删除"
+              :disabled="disabled"
+              @click.stop="removeImage(image.id)"
+            >
+              <Delete20Filled class="size-3.5" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardFooter v-if="selectedImageId === image.id" class="p-3 pt-0 flex flex-col gap-3 border-t bg-muted/10">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-3">
+          <div class="space-y-1">
+            <span class="text-[11px] text-muted-foreground">X (%)</span>
             <NInputNumber
-              :value="image.x"
+              :model-value="image.x"
               :disabled="disabled"
               :min="0"
               :max="100"
               size="small"
-              @update:value="updateImage(image.id, { x: $event ?? 0 })"
+              class="w-full"
+              @update:model-value="updateImage(image.id, { x: $event ?? 0 })"
             />
-          </label>
-          <label>
-            <span>Y (%)</span>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] text-muted-foreground">Y (%)</span>
             <NInputNumber
-              :value="image.y"
+              :model-value="image.y"
               :disabled="disabled"
               :min="0"
               :max="100"
               size="small"
-              @update:value="updateImage(image.id, { y: $event ?? 0 })"
+              class="w-full"
+              @update:model-value="updateImage(image.id, { y: $event ?? 0 })"
             />
-          </label>
-          <label>
-            <span>宽度 (%)</span>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] text-muted-foreground">宽度 (%)</span>
             <NInputNumber
-              :value="image.width"
+              :model-value="image.width"
               :disabled="disabled"
               :min="1"
               size="small"
-              @update:value="updateImage(image.id, { width: $event ?? 1 })"
+              class="w-full"
+              @update:model-value="updateImage(image.id, { width: $event ?? 1 })"
             />
-          </label>
-          <label>
-            <span>层级</span>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] text-muted-foreground">层级</span>
             <NInputNumber
-              :value="image.zIndex"
+              :model-value="image.zIndex"
               size="small"
               readonly
+              class="w-full opacity-60"
             />
-          </label>
+          </div>
         </div>
-        <label class="slider-row">
-          <span>旋转 {{ image.rotation }}°</span>
-          <NSlider
-            :value="image.rotation"
+
+        <div class="space-y-1.5 w-full">
+          <div class="flex justify-between text-[11px] text-muted-foreground">
+            <span>旋转</span>
+            <span>{{ image.rotation }}°</span>
+          </div>
+          <Slider
+            :model-value="[image.rotation]"
             :disabled="disabled"
             :min="-180"
             :max="180"
-            @update:value="updateImage(image.id, { rotation: Array.isArray($event) ? $event[0] : $event })"
+            :step="1"
+            @update:model-value="updateImage(image.id, { rotation: $event?.[0] ?? 0 })"
           />
-        </label>
-        <label class="slider-row">
-          <span>透明度 {{ Math.round(image.opacity * 100) }}%</span>
-          <NSlider
-            :value="image.opacity"
+        </div>
+
+        <div class="space-y-1.5 w-full">
+          <div class="flex justify-between text-[11px] text-muted-foreground">
+            <span>透明度</span>
+            <span>{{ Math.round(image.opacity * 100) }}%</span>
+          </div>
+          <Slider
+            :model-value="[image.opacity]"
             :disabled="disabled"
             :min="0"
             :max="1"
             :step="0.01"
-            @update:value="updateImage(image.id, { opacity: Array.isArray($event) ? $event[0] : $event })"
+            @update:model-value="updateImage(image.id, { opacity: $event?.[0] ?? 1 })"
           />
-        </label>
-      </template>
-    </NCard>
-  </NFlex>
+        </div>
+      </CardFooter>
+    </Card>
+  </div>
 </template>
-
-<style scoped>
-.pending-note {
-  margin-top: -4px;
-}
-
-.image-card {
-  cursor: pointer;
-  border: 1px solid var(--vtsuru-border);
-  transition: border-color 160ms ease;
-}
-
-.image-card--selected {
-  border-color: var(--vtsuru-brand);
-}
-
-.image-summary {
-  min-width: 0;
-}
-
-:deep(.n-upload-file.n-upload-file--image-card-type .n-upload-file-info__thumbnail img) {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.image-summary img {
-  width: 42px;
-  height: 42px;
-  flex: 0 0 auto;
-  object-fit: contain;
-  background: var(--vtsuru-bg-muted);
-  border-radius: 6px;
-}
-
-.image-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.property-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.property-grid label,
-.slider-row {
-  display: grid;
-  gap: 6px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.slider-row {
-  grid-template-columns: 96px minmax(0, 1fr);
-  align-items: center;
-  margin-top: 10px;
-}
-
-@media (max-width: 560px) {
-  .property-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

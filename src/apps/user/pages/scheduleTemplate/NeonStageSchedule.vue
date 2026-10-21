@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Live24Regular } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
@@ -192,7 +191,7 @@ defineExpose({ Config, DefaultConfig })
           <div class="program-head">
             <span>PROGRAM QUEUE</span>
             <span
-              ><NIcon><Live24Regular /></NIcon> LIVE LOG</span
+              ><component :is="Live24Regular" class="size-4 inline" /> LIVE LOG</span
             >
           </div>
 

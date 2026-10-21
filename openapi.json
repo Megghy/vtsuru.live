@@ -27311,6 +27311,8 @@
           "templateTypes",
           "enableFunctions",
           "allowQuestionBoxUploadImage",
+          "allowQuestionBoxAnonymous",
+          "allowQuestionBoxUnregistedUser",
           "showQuestionBoxPublicReplies",
           "questionBoxDefaultPublic"
         ],
@@ -27333,6 +27335,12 @@
             "nullable": true
           },
           "allowQuestionBoxUploadImage": {
+            "type": "boolean"
+          },
+          "allowQuestionBoxAnonymous": {
+            "type": "boolean"
+          },
+          "allowQuestionBoxUnregistedUser": {
             "type": "boolean"
           },
           "showQuestionBoxPublicReplies": {
@@ -27715,6 +27723,7 @@
       "Setting_QuestionBox": {
         "required": [
           "allowUnregistedUser",
+          "allowAnonymous",
           "saftyLevel",
           "allowImageUpload",
           "showPublicReplies",
@@ -27723,6 +27732,9 @@
         "type": "object",
         "properties": {
           "allowUnregistedUser": {
+            "type": "boolean"
+          },
+          "allowAnonymous": {
             "type": "boolean"
           },
           "saftyLevel": {

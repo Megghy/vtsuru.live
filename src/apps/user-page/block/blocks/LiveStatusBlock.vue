@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { CalendarOutline, GameControllerOutline, HomeOutline, PlayCircleOutline, TvOutline } from '@vicons/ionicons5'
-import { NAlert, NAvatar, NButton, NIcon } from 'naive-ui'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
 import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Button } from '@/shared/ui/button'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -125,9 +127,6 @@ const hasCover = computed(
     model.value.coverUrl &&
     !coverFailed.value,
 )
-const actionButtonProps = computed(() =>
-  hasCover.value ? { color: 'rgba(255, 255, 255, 0.16)', textColor: '#ffffff' } : { secondary: true },
-)
 </script>
 
 <template>
@@ -136,13 +135,14 @@ const actionButtonProps = computed(() =>
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <NAlert
+    <Alert
       v-if="!model.available"
-      type="info"
-      :show-icon="false"
+      class="text-xs py-2 m-2"
     >
-      直播信息暂不可用
-    </NAlert>
+      <AlertDescription>
+        直播信息暂不可用
+      </AlertDescription>
+    </Alert>
 
     <article
       v-else
@@ -167,13 +167,19 @@ const actionButtonProps = computed(() =>
       <div class="content">
         <header class="header">
           <div class="identity">
-            <NAvatar
+            <Avatar
               v-if="model.avatarUrl"
-              :src="model.avatarUrl"
-              round
-              :size="cfg.variant === 'compact' ? 34 : 42"
-              :img-props="{ referrerpolicy: 'no-referrer', loading: 'lazy', alt: model.displayName }"
-            />
+              class="border border-border shrink-0"
+              :class="cfg.variant === 'compact' ? 'size-8.5' : 'size-10.5'"
+            >
+              <AvatarImage
+                :src="model.avatarUrl"
+                :alt="model.displayName"
+                referrerpolicy="no-referrer"
+                loading="lazy"
+              />
+              <AvatarFallback>{{ model.displayName.slice(0, 1) }}</AvatarFallback>
+            </Avatar>
             <div class="identity-text">
               <strong class="name">{{ model.displayName }}</strong>
               <span class="platform">哔哩哔哩直播</span>
@@ -201,7 +207,7 @@ const actionButtonProps = computed(() =>
             v-if="cfg.showArea && model.area"
             class="meta"
           >
-            <NIcon><GameControllerOutline /></NIcon>
+            <component :is="GameControllerOutline" class="size-4 shrink-0" />
             <span>{{ model.area }}</span>
           </div>
           <div
@@ -209,7 +215,7 @@ const actionButtonProps = computed(() =>
             class="meta"
             aria-live="polite"
           >
-            <NIcon><PlayCircleOutline /></NIcon>
+            <component :is="PlayCircleOutline" class="size-4 shrink-0" />
             <span>{{ durationText }}</span>
           </div>
           <a
@@ -219,21 +225,21 @@ const actionButtonProps = computed(() =>
             target="_blank"
             rel="noopener noreferrer"
           >
-            <NIcon><CalendarOutline /></NIcon>
+            <component :is="CalendarOutline" class="size-4 shrink-0" />
             <span>下次直播 {{ formatBiliLiveReserveTime(model.liveReserve.planStart) }} · {{ model.liveReserve.title }}</span>
           </a>
           <div
             v-else-if="!model.isStreaming && model.liveReserve"
             class="meta"
           >
-            <NIcon><CalendarOutline /></NIcon>
+            <component :is="CalendarOutline" class="size-4 shrink-0" />
             <span>下次直播 {{ formatBiliLiveReserveTime(model.liveReserve.planStart) }} · {{ model.liveReserve.title }}</span>
           </div>
           <div
             v-else-if="model.lastStreamAt"
             class="meta"
           >
-            <NIcon><CalendarOutline /></NIcon>
+            <component :is="CalendarOutline" class="size-4 shrink-0" />
             <span>上次直播：{{ formatTime(model.lastStreamAt) }}</span>
           </div>
         </div>
@@ -242,35 +248,36 @@ const actionButtonProps = computed(() =>
           v-if="cfg.showButtons && (model.spaceUrl || model.liveRoomUrl)"
           class="actions"
         >
-          <NButton
+          <Button
             v-if="model.spaceUrl"
-            v-bind="actionButtonProps"
-            tag="a"
+            as="a"
+            variant="outline"
+            size="sm"
+            class="h-8 text-xs font-medium"
+            :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover }"
             target="_blank"
             rel="noopener noreferrer"
             :href="model.spaceUrl"
             aria-label="打开主播主页（新窗口打开）"
           >
-            <template #icon>
-              <NIcon><HomeOutline /></NIcon>
-            </template>
+            <component :is="HomeOutline" class="size-3.5 mr-1.5" />
             主页
-          </NButton>
-          <NButton
+          </Button>
+          <Button
             v-if="model.liveRoomUrl"
-            :type="model.isStreaming ? 'primary' : 'default'"
-            v-bind="actionButtonProps"
-            tag="a"
+            as="a"
+            :variant="model.isStreaming ? 'default' : 'outline'"
+            size="sm"
+            class="h-8 text-xs font-medium"
+            :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover && !model.isStreaming }"
             target="_blank"
             rel="noopener noreferrer"
             :href="model.liveRoomUrl"
             aria-label="打开直播间（新窗口打开）"
           >
-            <template #icon>
-              <NIcon><TvOutline /></NIcon>
-            </template>
+            <component :is="TvOutline" class="size-3.5 mr-1.5" />
             直播间
-          </NButton>
+          </Button>
         </div>
       </div>
     </article>
@@ -379,9 +386,6 @@ const actionButtonProps = computed(() =>
   color: var(--vtsuru-block-fg-muted);
   font-size: 13px;
   line-height: 1.4;
-}
-.meta .n-icon {
-  flex: none;
 }
 .meta-link {
   color: inherit;

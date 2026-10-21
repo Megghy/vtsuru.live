@@ -4,33 +4,11 @@ import {
   Copy24Regular,
   Desktop24Regular,
   Eye24Regular,
-  Play24Filled,
   Settings24Regular,
   ShieldCheckmark24Regular,
-  Sparkle24Regular,
-  Video24Filled,
   Video24Regular,
 } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NFlex,
-  NGi,
-  NGrid,
-  NIcon,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSpin,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
+import {  useMessage  } from '@/shared/utils'
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -42,14 +20,18 @@ import SongRequestHistory from '@/apps/open-live/components/request/SongRequestH
 import SongRequestList from '@/apps/open-live/components/request/SongRequestList.vue'
 import SongRequestSettings from '@/apps/open-live/components/request/SongRequestSettings.vue'
 import SongPlayer from '@/components/SongPlayer.vue'
-import { useFunctionToggle } from '@/composables/useFunctionToggle'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { Separator } from '@/shared/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { copyToClipboard } from '@/shared/utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
-const props = defineProps<{
+defineProps<{
   roomInfo?: OpenLiveInfo
   code?: string | undefined
   isOpenLive?: boolean
@@ -87,16 +69,6 @@ const obsUrl = computed(() => {
 const liveRequest = useLiveRequest()
 provide('activeSongs', liveRequest.activeSongs)
 
-const { enabled: liveRequestEnabled, toggle: onUpdateFunctionEnable } = useFunctionToggle(FunctionTypes.LiveRequest, {
-  label: '点播功能',
-  onBeforeEnable: () => {
-    const songRequest = accountInfo.value?.settings?.songRequest
-    if (songRequest && !songRequest.orderPrefix) {
-      songRequest.orderPrefix = liveRequest.defaultPrefix
-    }
-  },
-})
-
 async function copyObsLink() {
   if (!obsUrl.value) {
     message.warning('尚未登录或未生成有效链接')
@@ -127,7 +99,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="live-request-manage-view">
+  <div class="space-y-4 w-full">
     <ManagePageHeader
       title="弹幕点播系统"
       subtitle="观众通过发送弹幕指令（如 点播 BV号）或醒目留言触发点歌/点播，支持自动拉取信息、播放控制与 OBS 动态呈现"
@@ -141,69 +113,117 @@ onUnmounted(() => {
       ]"
     />
 
-    <NTabs
-      v-model:value="activeMainTab"
-      type="segment"
-      animated
-      class="main-nav-tabs"
-      style="margin-top: 14px"
+    <Tabs
+      v-model="activeMainTab"
+      class="w-full"
     >
-      <!-- ================= Tab 1: 当前点播与播放器 ================= -->
-      <NTabPane name="requests">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="Video24Regular" />
-            <span>当前点播与控制</span>
-          </NFlex>
-        </template>
-        <NFlex vertical :size="14" style="margin-top: 14px">
-          <!-- 内嵌播放器 -->
-          <Transition>
-            <div v-if="liveRequest.selectedSong" class="song-player-box">
-              <SongPlayer
-                v-model:is-lrc-loading="liveRequest.isLrcLoading"
-                :song="liveRequest.selectedSong"
-              />
-              <NDivider style="margin: 10px 0" />
-            </div>
-          </Transition>
+      <TabsList class="grid w-full grid-cols-3 max-w-md h-8 p-0.5 bg-muted">
+        <TabsTrigger
+          value="requests"
+          class="text-xs h-7 gap-1"
+        >
+          <component
+            :is="Video24Regular"
+            class="h-3.5 w-3.5"
+          />
+          当前点播与控制
+        </TabsTrigger>
+        <TabsTrigger
+          value="preview"
+          class="text-xs h-7 gap-1"
+        >
+          <component
+            :is="Desktop24Regular"
+            class="h-3.5 w-3.5"
+          />
+          OBS 舞台预览
+        </TabsTrigger>
+        <TabsTrigger
+          value="settings"
+          class="text-xs h-7 gap-1"
+        >
+          <component
+            :is="Settings24Regular"
+            class="h-3.5 w-3.5"
+          />
+          规则与历史
+        </TabsTrigger>
+      </TabsList>
 
-          <!-- 点播清单 -->
-          <SongRequestList />
-        </NFlex>
-      </NTabPane>
+      <!-- Tab 1: 当前点播与控制 -->
+      <TabsContent
+        value="requests"
+        class="mt-3 space-y-3"
+      >
+        <!-- 内嵌播放器 -->
+        <Transition>
+          <div
+            v-if="liveRequest.selectedSong"
+            class="space-y-3"
+          >
+            <SongPlayer
+              v-model:is-lrc-loading="liveRequest.isLrcLoading"
+              :song="liveRequest.selectedSong"
+            />
+            <Separator />
+          </div>
+        </Transition>
 
-      <!-- ================= Tab 2: OBS 1080P 舞台预览与仿真调试 ================= -->
-      <NTabPane name="preview">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="Desktop24Regular" />
-            <span>OBS 舞台预览与仿真</span>
-          </NFlex>
-        </template>
-        <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen" style="margin-top: 14px">
-          <!-- 舞台视口 (占 8 列) -->
-          <NGi :span="8">
-            <NCard size="small">
-              <template #header>
-                <NFlex justify="space-between" align="center">
-                  <NFlex align="center" :size="8">
-                    <NIcon :component="Eye24Regular" />
-                    <NText strong>OBS 画布实时预览 (1080P 比例视口)</NText>
-                  </NFlex>
+        <!-- 点播清单 -->
+        <SongRequestList />
+      </TabsContent>
 
-                  <NRadioGroup v-model:value="previewBg" size="small">
-                    <NRadioButton value="checker">透明网格</NRadioButton>
-                    <NRadioButton value="dark">纯黑背景</NRadioButton>
-                    <NRadioButton value="light">浅色背景</NRadioButton>
-                    <NRadioButton value="game">游戏场景</NRadioButton>
-                  </NRadioGroup>
-                </NFlex>
-              </template>
+      <!-- Tab 2: OBS 舞台预览 -->
+      <TabsContent
+        value="preview"
+        class="mt-3"
+      >
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- 舞台视口 (8 列) -->
+          <Card class="lg:col-span-8 flex flex-col">
+            <CardHeader class="p-3.5 pb-2">
+              <div class="flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2">
+                  <component
+                    :is="Eye24Regular"
+                    class="h-4 w-4 text-muted-foreground"
+                  />
+                  <CardTitle class="text-xs font-semibold">
+                    OBS 画布实时预览 (1080P 比例视口)
+                  </CardTitle>
+                </div>
 
-              <!-- 视口容器 -->
-              <div class="stage-viewport" :class="[`bg-${previewBg}`]">
-                <div class="stage-canvas">
+                <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
+                  <Button
+                    v-for="bg in [
+                      { key: 'checker', label: '网格' },
+                      { key: 'dark', label: '纯黑' },
+                      { key: 'light', label: '浅色' },
+                      { key: 'game', label: '模拟游戏' },
+                    ]"
+                    :key="bg.key"
+                    size="xs"
+                    :variant="previewBg === bg.key ? 'default' : 'ghost'"
+                    class="h-6 text-xs px-2"
+                    @click="previewBg = bg.key as any"
+                  >
+                    {{ bg.label }}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent class="p-4 flex-1 flex flex-col justify-between space-y-4">
+              <div
+                class="rounded-lg border border-border p-6 flex items-center justify-center min-h-[460px] transition-colors"
+                :class="{
+                  'bg-[#121214]': previewBg === 'dark',
+                  'bg-[#f4f4f5]': previewBg === 'light',
+                  'bg-[#0b132b]': previewBg === 'game',
+                  'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]': previewBg === 'checker',
+                }"
+              >
+                <div class="w-[380px] max-w-full">
                   <LiveRequestOBS
                     :id="accountInfo?.id"
                     :key="`${accountInfo?.id}-${obsStyleType}-${obsScrollSpeed}`"
@@ -213,161 +233,115 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <template #action>
-                <NFlex justify="space-between" align="center">
-                  <NText depth="3" style="font-size: 12px">
-                    推荐 OBS 来源尺寸：宽 380px ~ 440px，高 540px ~ 680px。
-                  </NText>
-                  <NButton size="small" type="primary" @click="copyObsLink">
-                    <template #icon><NIcon :component="Copy24Regular" /></template>
-                    复制当前样式 OBS 链接
-                  </NButton>
-                </NFlex>
-              </template>
-            </NCard>
-          </NGi>
+              <div class="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-border/60">
+                <span class="text-xs text-muted-foreground">推荐 OBS 来源尺寸：宽 380px ~ 440px，高 540px ~ 680px。</span>
+                <Button
+                  size="xs"
+                  variant="brand"
+                  @click="copyObsLink"
+                >
+                  <component
+                    :is="Copy24Regular"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
+                  复制当前样式 OBS 链接
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-          <!-- 样式与仿真控制器 (占 4 列) -->
-          <NGi :span="4">
-            <NFlex vertical :size="16">
-              <NCard size="small">
-                <template #header>
-                  <NFlex align="center" :size="6">
-                    <NIcon :component="Color24Regular" />
-                    <span>OBS 视觉预设</span>
-                  </NFlex>
-                </template>
-                <NFlex vertical :size="12">
-                  <NRadioGroup v-model:value="obsStyleType" size="small">
-                    <NFlex vertical :size="8">
-                      <NRadioButton value="glass" style="width: 100%">
-                        毛玻璃质感 (Modern Glass)
-                      </NRadioButton>
-                      <NRadioButton value="transparent" style="width: 100%">
-                        纯透明无底壳 (Transparent - 贴图专用)
-                      </NRadioButton>
-                      <NRadioButton value="minimal" style="width: 100%">
-                        极简通透流 (Minimal Text)
-                      </NRadioButton>
-                      <NRadioButton value="classic" style="width: 100%">
-                        经典卡片 (Classic Dark)
-                      </NRadioButton>
-                      <NRadioButton value="fresh" style="width: 100%">
-                        清新自然 (Fresh Light)
-                      </NRadioButton>
-                    </NFlex>
-                  </NRadioGroup>
+          <!-- 视觉预设 (4 列) -->
+          <div class="lg:col-span-4 space-y-4">
+            <Card>
+              <CardHeader class="p-3.5 pb-2">
+                <div class="flex items-center gap-2">
+                  <component
+                    :is="Color24Regular"
+                    class="h-4 w-4 text-muted-foreground"
+                  />
+                  <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+                    OBS 视觉预设
+                  </CardTitle>
+                </div>
+              </CardHeader>
 
-                  <NDivider style="margin: 4px 0" />
+              <CardContent class="p-3.5 space-y-3.5">
+                <div class="grid grid-cols-1 gap-1.5">
+                  <Button
+                    v-for="st in [
+                      { key: 'glass', label: '毛玻璃质感 (Modern Glass)' },
+                      { key: 'transparent', label: '纯透明无底壳 (Transparent)' },
+                      { key: 'minimal', label: '极简通透流 (Minimal Text)' },
+                      { key: 'classic', label: '经典卡片 (Classic Dark)' },
+                      { key: 'fresh', label: '清新自然 (Fresh Light)' },
+                    ]"
+                    :key="st.key"
+                    size="sm"
+                    :variant="obsStyleType === st.key ? 'default' : 'outline'"
+                    class="w-full justify-start text-xs font-normal"
+                    @click="obsStyleType = st.key as any"
+                  >
+                    {{ st.label }}
+                  </Button>
+                </div>
 
-                  <NFlex justify="space-between" align="center">
-                    <span style="font-size: 12px; color: var(--vtsuru-fg-muted)">滚动轮播速度：</span>
-                    <NInputNumber
-                      v-model:value="obsScrollSpeed"
-                      :min="0.5"
-                      :max="3"
-                      :step="0.2"
-                      size="tiny"
-                      style="width: 100px"
-                    >
-                      <template #suffix>x</template>
-                    </NInputNumber>
-                  </NFlex>
-                </NFlex>
-              </NCard>
-            </NFlex>
-          </NGi>
-        </NGrid>
-      </NTabPane>
+                <Separator />
 
-      <!-- ================= Tab 3: 点播历史与规则配置 ================= -->
-      <NTabPane name="settings">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="Settings24Regular" />
-            <span>规则设置与历史</span>
-          </NFlex>
-        </template>
-        <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen" style="margin-top: 14px">
-          <!-- 历史 (占 7 列) -->
-          <NGi :span="7">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs text-muted-foreground">滚动轮播速度</span>
+                  <div class="flex items-center gap-1.5">
+                    <Input
+                      v-model.number="obsScrollSpeed"
+                      type="number"
+                      step="0.2"
+                      min="0.5"
+                      max="3"
+                      class="w-20 h-7 text-xs font-mono"
+                    />
+                    <span class="text-xs text-muted-foreground">x</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </TabsContent>
+
+      <!-- Tab 3: 规则设置与历史 -->
+      <TabsContent
+        value="settings"
+        class="mt-3"
+      >
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- 历史 (7 列) -->
+          <div class="lg:col-span-7">
             <SongRequestHistory />
-          </NGi>
+          </div>
 
-          <!-- 规则 (占 5 列) -->
-          <NGi :span="5">
-            <NCard size="small">
-              <template #header>
-                <NFlex align="center" :size="6">
-                  <NIcon :component="ShieldCheckmark24Regular" />
-                  <span>点播指令与权限设置</span>
-                </NFlex>
-              </template>
-              <SongRequestSettings
-                :is-loading="liveRequest.isLoading"
-                :is-logged-in="!!accountInfo.id"
-              />
-            </NCard>
-          </NGi>
-        </NGrid>
-      </NTabPane>
-    </NTabs>
+          <!-- 规则 (5 列) -->
+          <div class="lg:col-span-5">
+            <Card>
+              <CardHeader class="p-3.5 pb-2">
+                <div class="flex items-center gap-2">
+                  <component
+                    :is="ShieldCheckmark24Regular"
+                    class="h-4 w-4 text-muted-foreground"
+                  />
+                  <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+                    点播指令与权限设置
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent class="p-3.5">
+                <SongRequestSettings
+                  :is-loading="liveRequest.isLoading"
+                  :is-logged-in="!!accountInfo.id"
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>
-
-<style scoped>
-.live-request-manage-view {
-  width: 100%;
-}
-
-.main-nav-tabs {
-  --n-tab-padding: 6px 16px !important;
-}
-
-.main-nav-tabs :deep(.n-tabs-rail) {
-  width: fit-content;
-  max-width: 100%;
-}
-
-.main-nav-tabs :deep(.n-tabs-tab) {
-  white-space: nowrap;
-  font-weight: 500;
-}
-
-/* 1080P 舞台视口 */
-.stage-viewport {
-  width: 100%;
-  height: 520px;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid var(--vtsuru-border);
-}
-
-.stage-viewport.bg-checker {
-  background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%),
-    linear-gradient(-45deg, #1e293b 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #1e293b 75%),
-    linear-gradient(-45deg, transparent 75%, #1e293b 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-  background-color: #0f172a;
-}
-
-.stage-viewport.bg-dark { background-color: #000000; }
-.stage-viewport.bg-light { background-color: #f1f5f9; }
-.stage-viewport.bg-game {
-  background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)),
-    radial-gradient(circle at 80% 20%, #3b82f6 0%, transparent 40%),
-    radial-gradient(circle at 20% 80%, #ec4899 0%, transparent 40%), #090d16;
-}
-
-.stage-canvas {
-  width: 380px;
-  height: 480px;
-  position: relative;
-}
-</style>

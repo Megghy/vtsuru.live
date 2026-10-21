@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMessage } from 'naive-ui'
 import { computed, ref, toRef, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
@@ -8,6 +7,7 @@ import LocalQuestionDrawer from '@/apps/user/components/question-box/LocalQuesti
 import PublicQuestionFeed from '@/apps/user/components/question-box/PublicQuestionFeed.vue'
 import { useQuestionBoxHistory } from '@/apps/user/components/question-box/questionBoxHistory'
 import QuestionComposer from '@/apps/user/components/question-box/QuestionComposer.vue'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   userInfo?: UserInfo

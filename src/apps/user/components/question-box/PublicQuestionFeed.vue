@@ -1,10 +1,25 @@
 <script setup lang="ts">
 import { Chat24Regular } from '@vicons/fluent'
-import { NAvatar, NEmpty, NIcon, NImage, NPagination, NSpin, NTime } from 'naive-ui'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Empty } from '@/shared/ui/empty'
+import { Pagination } from '@/shared/ui/pagination'
+import { Spin } from '@/shared/ui/spin'
+
+function formatRelativeTime(val: number | string | Date | undefined | null) {
+  if (!val) return ''
+  try {
+    const d = typeof val === 'number' ? new Date(val > 1e11 ? val : val * 1000) : new Date(val)
+    return formatDistanceToNow(d, { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(val)
+  }
+}
 
 const props = defineProps<{
   questions: QAInfo[]
@@ -135,7 +150,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
       </div>
     </div>
 
-    <NSpin :show="isLoading">
+    <Spin :show="isLoading">
       <Transition
         name="feed-swap"
         mode="out-in"
@@ -157,14 +172,11 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
               :style="{ '--thread-index': index }"
             >
               <div class="question-marker">
-                <NIcon :component="Chat24Regular" />
+                <Chat24Regular class="size-4" />
               </div>
               <div class="thread-content">
                 <div class="question-meta">
-                  <NTime
-                    :time="item.sendAt"
-                    type="relative"
-                  />
+                  <span>{{ formatRelativeTime(item.sendAt) }}</span>
                   <span v-if="item.tag">{{ item.tag }}</span>
                 </div>
                 <p class="question-message">{{ item.question.message }}</p>
@@ -172,11 +184,13 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
                   v-if="item.questionImages?.length"
                   class="thread-images"
                 >
-                  <NImage
+                  <img
                     v-for="image in item.questionImages"
                     :key="image.path"
                     :src="image.path"
-                    object-fit="cover"
+                    alt=""
+                    class="object-cover rounded max-h-48 cursor-pointer"
+                    loading="lazy"
                   />
                 </div>
 
@@ -185,34 +199,39 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
                   class="answer-block"
                 >
                   <div class="answer-author">
-                    <NAvatar
-                      round
-                      :size="28"
-                      :src="
-                        userInfo?.faceUrl ||
-                        userInfo?.streamerInfo?.faceUrl ||
-                        (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=64` : undefined)
-                      "
-                      :img-props="{ referrerpolicy: 'no-referrer', alt: `${userInfo?.name || '主播'} 的头像` }"
-                    />
+                    <Avatar class="size-7 rounded-full">
+                      <AvatarImage
+                        :src="
+                          userInfo?.faceUrl ||
+                          userInfo?.streamerInfo?.faceUrl ||
+                          (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=64` : undefined)
+                        "
+                        referrerpolicy="no-referrer"
+                        :alt="`${userInfo?.name || '主播'} 的头像`"
+                      />
+                      <AvatarFallback>{{ (userInfo?.name || '主')[0] }}</AvatarFallback>
+                    </Avatar>
                     <strong>{{ userInfo?.name || '主播' }}</strong>
                     <span>的回复</span>
-                    <NTime
+                    <span
                       v-if="item.answer.createdAt"
-                      :time="item.answer.createdAt"
-                      type="relative"
-                    />
+                      class="text-xs text-muted-foreground"
+                    >
+                      {{ formatRelativeTime(item.answer.createdAt) }}
+                    </span>
                   </div>
                   <p>{{ item.answer.message }}</p>
                   <div
                     v-if="item.answerImages?.length"
                     class="thread-images"
                   >
-                    <NImage
+                    <img
                       v-for="image in item.answerImages"
                       :key="image.path"
                       :src="image.path"
-                      object-fit="cover"
+                      alt=""
+                      class="object-cover rounded max-h-48 cursor-pointer"
+                      loading="lazy"
                     />
                   </div>
                 </div>
@@ -221,21 +240,21 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
           </TransitionGroup>
         </div>
 
-        <NEmpty
+        <Empty
           v-else-if="!isLoading"
           :key="`empty-${listKey}`"
           class="feed-empty"
           :description="selectedTag ? '该话题暂无公开回复' : '暂无公开回复'"
         />
       </Transition>
-    </NSpin>
+    </Spin>
 
-    <NPagination
+    <Pagination
       v-if="filteredQuestions.length > pageSize"
       v-model:page="page"
-      :item-count="filteredQuestions.length"
+      :total="filteredQuestions.length"
       :page-size="pageSize"
-      class="feed-pagination"
+      class="feed-pagination justify-center mt-6"
     />
   </section>
 </template>

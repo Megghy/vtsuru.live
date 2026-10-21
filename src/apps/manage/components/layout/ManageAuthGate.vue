@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NFlex, NSpin, NText, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -7,10 +6,11 @@ import { isLoadingAccount } from '@/api/account'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { currentAPIKey, setSelectedAPIKey } from '@/shared/config'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import VtsuruLogo from '@/svgs/ic_vtuber.svg?component'
 
-const message = useMessage()
 const route = useRoute()
 const router = useRouter()
 const biliAuth = useBiliAuth()
@@ -44,7 +44,6 @@ watch(
 
 async function switchToBackupAPI() {
   await setSelectedAPIKey('failover')
-  message.info('已切换到备用API，正在重新加载...')
   showAPISwitchDialog.value = false
   location.reload()
 }
@@ -76,19 +75,22 @@ async function switchToBackupAPI() {
         v-if="isUserWorkspace"
         class="auth-actions"
       >
-        <NButton
-          type="primary"
+        <Button
+          variant="brand"
+          size="default"
+          class="font-semibold"
           @click="router.push({ name: 'bili-auth' })"
         >
           开始认证
-        </NButton>
-        <NButton
+        </Button>
+        <Button
           v-if="!showSiteLogin"
-          quaternary
+          variant="ghost"
+          size="default"
           @click="showSiteLogin = true"
         >
           已有本站账号，登录
-        </NButton>
+        </Button>
       </div>
 
       <div
@@ -98,37 +100,34 @@ async function switchToBackupAPI() {
         <RegisterAndLogin initial-tab="login" />
       </div>
 
-      <NAlert
+      <Alert
         v-if="!isUserWorkspace"
-        type="info"
-        :bordered="false"
-        title="不是主播？"
+        class="bg-muted/30 border-border"
       >
-        <NFlex
-          vertical
-          :size="10"
-        >
-          <NText>看积分和订单不用注册。用 Bilibili 发一条弹幕完成认证即可。</NText>
+        <AlertTitle class="text-xs font-semibold">不是主播？</AlertTitle>
+        <AlertDescription class="text-xs text-muted-foreground mt-1 space-y-2">
+          <p>看积分和订单不用注册。用 Bilibili 发一条弹幕完成认证即可。</p>
           <div>
-            <NButton
-              size="small"
-              type="primary"
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-7 text-xs"
               @click="router.push({ name: 'bili-auth' })"
             >
               前往观众认证
-            </NButton>
+            </Button>
           </div>
-        </NFlex>
-      </NAlert>
+        </AlertDescription>
+      </Alert>
 
-      <NButton
-        secondary
-        tag="a"
-        href="/"
-        class="home-action"
+      <Button
+        variant="outline"
+        size="sm"
+        as-child
+        class="home-action mx-auto"
       >
-        回到主页
-      </NButton>
+        <a href="/">回到主页</a>
+      </Button>
     </section>
 
     <section
@@ -136,40 +135,38 @@ async function switchToBackupAPI() {
       class="loading-panel"
       aria-live="polite"
     >
-      <NSpin
-        :loading="pending"
-        size="large"
-      >
-        <NText>正在请求账户数据...</NText>
-      </NSpin>
-      <NAlert
+      <div class="flex flex-col items-center gap-3 py-6">
+        <div class="w-8 h-8 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+        <span class="text-xs text-muted-foreground">正在请求账户数据...</span>
+      </div>
+
+      <Alert
         v-if="showAPISwitchDialog"
-        type="warning"
-        :bordered="false"
-        title="加载时间较长"
+        class="w-full border-warning/50 bg-warning/10 text-warning-foreground"
       >
-        <NFlex vertical>
-          <NText>当前API响应较慢，是否切换到备用API？</NText>
-          <NFlex
-            justify="end"
-            :size="8"
-          >
-            <NButton
-              size="small"
+        <AlertTitle class="text-xs font-semibold">加载时间较长</AlertTitle>
+        <AlertDescription class="text-xs text-muted-foreground mt-1 space-y-2.5">
+          <p>当前 API 响应较慢，是否切换到备用 API？</p>
+          <div class="flex justify-end gap-2">
+            <Button
+              size="xs"
+              variant="ghost"
+              class="h-7 text-xs"
               @click="showAPISwitchDialog = false"
             >
               继续等待
-            </NButton>
-            <NButton
-              type="primary"
-              size="small"
+            </Button>
+            <Button
+              size="xs"
+              variant="brand"
+              class="h-7 text-xs"
               @click="switchToBackupAPI"
             >
-              切换到备用API
-            </NButton>
-          </NFlex>
-        </NFlex>
-      </NAlert>
+              切换到备用 API
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
     </section>
   </main>
 </template>
@@ -209,6 +206,7 @@ async function switchToBackupAPI() {
 .auth-logo {
   width: 72px;
   height: 72px;
+  margin: 0 auto;
   color: var(--vtsuru-brand);
 }
 
@@ -223,10 +221,10 @@ async function switchToBackupAPI() {
 .auth-header h1 {
   margin: 0;
   color: var(--vtsuru-fg);
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 750;
   line-height: 1.2;
-  letter-spacing: 0;
+  letter-spacing: -0.02em;
 }
 
 .auth-lead {
@@ -257,7 +255,6 @@ async function switchToBackupAPI() {
 }
 
 .home-action {
-  justify-self: center;
   min-width: 112px;
 }
 
@@ -275,10 +272,6 @@ async function switchToBackupAPI() {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.loading-panel :deep(.n-alert) {
-  width: 100%;
-}
-
 @media (max-width: 480px) {
   .auth-page {
     align-items: start;
@@ -288,23 +281,6 @@ async function switchToBackupAPI() {
   .auth-logo {
     width: 58px;
     height: 58px;
-  }
-
-  .auth-header h1 {
-    font-size: 26px;
-  }
-
-  .auth-form {
-    padding: 16px;
-  }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .auth-form,
-  .loading-panel {
-    background: var(--vtsuru-bg-elevated);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 }
 </style>

@@ -1,26 +1,8 @@
 <script setup lang="ts">
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
-import type { SelectOption } from 'naive-ui'
-import {
-  NAlert,
-  NBadge,
-  NButton,
-  NCard,
-  NColorPicker,
-  NDivider,
-  NFlex,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NModal,
-  NSelect,
-  NSpin,
-  NText,
-  NTimePicker,
-  useMessage,
-} from 'naive-ui'
-import type { VNode } from 'vue'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { useMessage } from '@/shared/utils'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { BiliLiveReserveModel, ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
@@ -38,52 +20,66 @@ import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import BiliLiveReservePanel from '@/components/BiliLiveReservePanel.vue'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { CURRENT_HOST, SCHEDULE_API_URL } from '@/shared/config'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+const currentYear = new Date().getFullYear()
 const yearOptions = [
-  {
-    label: new Date().getFullYear().toString(),
-    value: new Date().getFullYear(),
-  },
-  {
-    label: (new Date().getFullYear() + 1).toString(),
-    value: new Date().getFullYear() + 1,
-  },
-] as SelectOption[]
+  { label: currentYear.toString(), value: currentYear.toString() },
+  { label: (currentYear + 1).toString(), value: (currentYear + 1).toString() },
+]
+
 const weekOptions = computed(() => {
-  const weeks = [] as SelectOption[]
-  const all = getAllWeeks(selectedScheduleYear.value)
-  all.forEach((week) => {
-    const isExist =
-      (schedules.value?.findIndex((s) => s.year == selectedScheduleYear.value && s.week == week[0] + 1) ?? -1) > -1
-    weeks.push({
-      label: `${isExist ? '(已安排)' : ''} 第${week[0] + 1}周 (${week[1]})`,
-      value: week[0] + 1,
+  const all = getAllWeeks(Number(selectedScheduleYear.value))
+  return all.map((week) => {
+    const isExist = (schedules.value?.findIndex((s) => s.year === Number(selectedScheduleYear.value) && s.week === week[0] + 1) ?? -1) > -1
+    return {
+      label: `${isExist ? '(已安排) ' : ''}第${week[0] + 1}周 (${week[1]})`,
+      value: String(week[0] + 1),
       disabled: isExist,
-    })
+    }
   })
-  return weeks
 })
+
 const copyWeekOptions = computed(() =>
-  getAllWeeks(selectedScheduleYear.value).map((week) => ({
-    label: `${schedules.value.some((s) => s.year === selectedScheduleYear.value && s.week === week[0] + 1) ? '(已有行程) ' : ''}第${week[0] + 1}周 (${week[1]})`,
-    value: week[0] + 1,
+  getAllWeeks(Number(selectedScheduleYear.value)).map((week) => ({
+    label: `${schedules.value.some((s) => s.year === Number(selectedScheduleYear.value) && s.week === week[0] + 1) ? '(已有行程) ' : ''}第${week[0] + 1}周 (${week[1]})`,
+    value: String(week[0] + 1),
   })),
 )
+
 const dayOptions = computed(() => {
-  const days: SelectOption[] = []
-  for (let i = 0; i < 7; i++) {
-    const entries = updateScheduleModel.value?.days?.[i] ?? []
+  return weekdays.map((label, index) => {
+    const entries = updateScheduleModel.value?.days?.[index] ?? []
     const count = entries.length
-    days.push({
-      label: count > 0 ? `${weekdays[i]} (共${count}项)` : weekdays[i],
-      value: i,
-    })
-  }
-  return days
+    return {
+      label: count > 0 ? `${label} (共${count}项)` : label,
+      value: String(index),
+    }
+  })
 })
+
 const existTagOptions = computed(() => {
-  const colors: SelectOption[] = []
+  const colors: { label: string; value: string }[] = []
   const exists = new Set<string>()
   schedules.value?.forEach((s) => {
     s.days.forEach((dayList) => {
@@ -94,10 +90,7 @@ const existTagOptions = computed(() => {
           const key = `${tag}__${color}`
           if (!exists.has(key)) {
             exists.add(key)
-            colors.push({
-              label: tag,
-              value: color,
-            })
+            colors.push({ label: tag, value: color })
           }
         }
       })
@@ -107,12 +100,10 @@ const existTagOptions = computed(() => {
 })
 
 function normalizeColor(color: any): string | null {
-  // 如果是 null 或 undefined，返回 null
   if (color == null) return null
 
-  // 将 HSL 转 RGB，返回 #RRGGBB
   const hslToHex = (hue360: number, s: number, l: number) => {
-    const hue = (((hue360 % 360) + 360) % 360) / 360 // 归一化到 [0, 1)
+    const hue = (((hue360 % 360) + 360) % 360) / 360
     const saturation = Math.min(Math.max(s / 100, 0), 1)
     const lightness = Math.min(Math.max(l / 100, 0), 1)
 
@@ -144,11 +135,8 @@ function normalizeColor(color: any): string | null {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
   }
 
-  // 如果是字符串，尝试解析并规范化
   if (typeof color === 'string') {
     const str = color.trim()
-
-    // 1) 处理 hex，统一为 #RRGGBB 大写
     if (str.startsWith('#')) {
       const hex = str.replace('#', '')
       if (hex.length === 3) {
@@ -163,7 +151,6 @@ function normalizeColor(color: any): string | null {
       return str.toUpperCase()
     }
 
-    // 2) 处理 hsla/hsl 字符串
     const hslMatch = str.match(
       /^hsla?\(\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)%\s*,\s*([+-]?\d+(?:\.\d+)?)%(?:\s*,\s*([+-]?\d+(?:\.\d+)?))?\s*\)$/i,
     )
@@ -174,7 +161,6 @@ function normalizeColor(color: any): string | null {
       return hslToHex(hue, s, l)
     }
 
-    // 3) 处理 rgba/rgb 字符串，忽略 alpha
     const rgbMatch = str.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([+-]?\d+(?:\.\d+)?))?\s*\)$/i)
     if (rgbMatch) {
       const r = Math.min(255, Math.max(0, Number.parseInt(rgbMatch[1])))
@@ -184,11 +170,9 @@ function normalizeColor(color: any): string | null {
       return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
     }
 
-    // 4) 其他字符串，原样返回（交由下游使用场景判断）
     return str
   }
 
-  // 如果是数组（[h, s, l, (a)] HS(L)A），转换为十六进制
   if (Array.isArray(color) && color.length >= 3) {
     const [hue, s, l] = color
     return hslToHex(Number(hue), Number(s), Number(l))
@@ -233,7 +217,6 @@ function normalizeWeek(week?: ScheduleWeekInfo): ScheduleWeekInfo {
 }
 
 function cloneWeek(week: ScheduleWeekInfo, options: { resetIds?: boolean } = {}): ScheduleWeekInfo {
-  // 深度克隆以完全断开响应式引用
   const deepCloned = JSON.parse(JSON.stringify(week))
   const normalized = normalizeWeek(deepCloned)
   return {
@@ -277,7 +260,7 @@ function sanitizeDays(days?: ScheduleDayInfo[][]): ScheduleDayInfo[][] {
   return Array.from({ length: 7 }, (_, index) => {
     const list = days?.[index] ?? []
     return list
-      .filter((item) => !!item && (item.title?.trim() || item.tag?.trim() || item.time?.trim()))
+      .filter((item) => Boolean(item) && Boolean(item.title?.trim() || item.tag?.trim() || item.time?.trim()))
       .map((item) => ({
         title: item.title?.trim() || null,
         tag: item.tag?.trim() || null,
@@ -287,27 +270,26 @@ function sanitizeDays(days?: ScheduleDayInfo[][]): ScheduleDayInfo[][] {
       }))
   })
 }
+
 function getAllWeeks(year: number) {
   const startDate = startOfYear(new Date(year, 0, 1))
   const endDate = endOfYear(new Date(year, 11, 31))
 
   let date = startOfWeek(startDate, { weekStartsOn: 1 })
   const weeks: [number, string][] = []
-
   let index = 0
 
   while (isBefore(date, endDate)) {
     const weekStart = format(date, 'MM/dd')
     const weekEnd = format(endOfWeek(date, { weekStartsOn: 1 }), 'MM/dd')
-
     weeks.push([index, `${weekStart} - ${weekEnd}`])
-
     date = addWeeks(date, 1)
     index++
   }
 
   return weeks
 }
+
 const accountInfo = useAccount()
 const schedules = ref<ScheduleWeekInfo[]>([])
 const message = useMessage()
@@ -331,49 +313,40 @@ const showBatchAddModal = ref(false)
 const updateScheduleModel = ref<ScheduleWeekInfo>(createEmptyWeek())
 const scheduleConflict = ref(false)
 const copyMode = ref<'merge' | 'replace'>('merge')
-const copyModeOptions: SelectOption[] = [
-  { label: '合并（保留目标周已有行程）', value: 'merge' },
-  { label: '替换手工行程', value: 'replace' },
-]
 
-const selectedDay = ref(0)
-const selectedScheduleYear = ref(new Date().getFullYear())
-const selectedScheduleWeek = ref(Number(format(Date.now(), 'w')) + 1)
+const selectedDay = ref('0')
+const selectedScheduleYear = ref(String(new Date().getFullYear()))
+const selectedScheduleWeek = ref(String(Number(format(Date.now(), 'w')) + 1))
 
-const batchAddYear = ref(new Date().getFullYear())
-const batchAddWeekFrom = ref(Number(format(Date.now(), 'w')) + 1)
-const batchAddWeekTo = ref(Number(format(Date.now(), 'w')) + 1)
-const batchAddDay = ref(0)
+const batchAddYear = ref(String(new Date().getFullYear()))
+const batchAddWeekFrom = ref(String(Number(format(Date.now(), 'w')) + 1))
+const batchAddWeekTo = ref(String(Number(format(Date.now(), 'w')) + 1))
+const batchAddDay = ref('0')
 const batchAddItem = ref<ScheduleDayInfo>(createEmptyDay())
+
 const batchWeekOptions = computed(() => {
-  const all = getAllWeeks(batchAddYear.value)
-  return all.map(
-    (week) =>
-      ({
-        label: `第${week[0] + 1}周 (${week[1]})`,
-        value: week[0] + 1,
-      }) satisfies SelectOption,
-  )
+  const all = getAllWeeks(Number(batchAddYear.value))
+  return all.map((week) => ({
+    label: `第${week[0] + 1}周 (${week[1]})`,
+    value: String(week[0] + 1),
+  }))
 })
-const batchDayOptions = computed(() => {
-  return weekdays.map(
-    (label, index) =>
-      ({
-        label,
-        value: index,
-      }) satisfies SelectOption,
-  )
-})
+
+const batchDayOptions = computed(() =>
+  weekdays.map((label, index) => ({
+    label,
+    value: String(index),
+  })),
+)
 
 const showItemTransferModal = ref(false)
 const itemTransferMode = ref<'copy' | 'move'>('copy')
 const itemTransferItemIndex = ref<number | null>(null)
-const itemTransferTargetDay = ref(0)
+const itemTransferTargetDay = ref('0')
 
 watch(showUpdateModal, (visible) => {
   if (visible) {
-    ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
-    // 清理所有可能的数组格式颜色值
+    ensureDayInitialized(updateScheduleModel.value, Number(selectedDay.value))
     updateScheduleModel.value.days.forEach((dayList) => {
       dayList.forEach((item) => {
         if (item.tagColor && Array.isArray(item.tagColor)) {
@@ -384,23 +357,8 @@ watch(showUpdateModal, (visible) => {
   }
 })
 
-// 深度监听 updateScheduleModel 的 tagColor，确保它们始终是字符串格式
-watch(
-  () => updateScheduleModel.value.days,
-  (days) => {
-    days?.forEach((dayList) => {
-      dayList?.forEach((item) => {
-        if (item.tagColor && Array.isArray(item.tagColor)) {
-          item.tagColor = normalizeColor(item.tagColor)
-        }
-      })
-    })
-  },
-  { deep: true },
-)
-
 watch(selectedDay, (value) => {
-  ensureDayInitialized(updateScheduleModel.value, value)
+  ensureDayInitialized(updateScheduleModel.value, Number(value))
 })
 
 async function get() {
@@ -422,11 +380,13 @@ async function get() {
     isLoading.value = false
   }
 }
+
 async function reloadAfterConflict() {
   scheduleConflict.value = true
   message.warning('日程已在其他窗口更新，已保留当前草稿；请加载最新版本后重试')
   await get()
 }
+
 async function loadLatestScheduleVersion() {
   await get()
   const latest = schedules.value.find(
@@ -435,10 +395,11 @@ async function loadLatestScheduleVersion() {
   updateScheduleModel.value = latest
     ? cloneWeek(latest, { resetIds: showCopyModal.value })
     : createEmptyWeek(updateScheduleModel.value.year, updateScheduleModel.value.week)
-  ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
+  ensureDayInitialized(updateScheduleModel.value, Number(selectedDay.value))
   scheduleConflict.value = false
   message.success('已加载最新版本，请重新确认修改')
 }
+
 const isFetching = ref(false)
 const biliReserve = ref<BiliLiveReserveModel>({
   items: [],
@@ -463,8 +424,9 @@ async function loadBiliReserve() {
     }
     if (response.code === 200 && response.data) {
       biliReserve.value = response.data
-      if (accountInfo.value.settings)
+      if (accountInfo.value.settings) {
         accountInfo.value.settings.syncBiliLiveReserveToSchedule = response.data.syncEnabled
+      }
     }
   } catch {
     message.error('加载 B 站预约失败')
@@ -504,8 +466,9 @@ async function setBiliReserveAutoSync(enable: boolean) {
     }
     if (response.code === 200 && response.data) {
       biliReserve.value = response.data
-      if (accountInfo.value?.settings)
+      if (accountInfo.value?.settings) {
         accountInfo.value.settings.syncBiliLiveReserveToSchedule = response.data.syncEnabled
+      }
       message.success(enable ? '已开启写入日程表' : '已关闭写入日程表')
     } else {
       message.error(response.message || '设置失败')
@@ -516,9 +479,10 @@ async function setBiliReserveAutoSync(enable: boolean) {
     syncingReserve.value = false
   }
 }
+
 async function addSchedule() {
   isFetching.value = true
-  const emptyWeek = createEmptyWeek(selectedScheduleYear.value, selectedScheduleWeek.value)
+  const emptyWeek = createEmptyWeek(Number(selectedScheduleYear.value), Number(selectedScheduleWeek.value))
   try {
     const data = (await postApiScheduleUpdate({
       year: emptyWeek.year,
@@ -539,17 +503,18 @@ async function addSchedule() {
     isFetching.value = false
   }
 }
+
 async function onCopySchedule() {
   isFetching.value = true
-  const target = schedules.value.find(
-    (schedule) => schedule.year === selectedScheduleYear.value && schedule.week === selectedScheduleWeek.value,
-  )
+  const targetYear = Number(selectedScheduleYear.value)
+  const targetWeek = Number(selectedScheduleWeek.value)
+  const target = schedules.value.find((s) => s.year === targetYear && s.week === targetWeek)
   try {
     const response = (await postApiScheduleCopy({
       sourceYear: updateScheduleModel.value.year,
       sourceWeek: updateScheduleModel.value.week,
-      targetYear: selectedScheduleYear.value,
-      targetWeek: selectedScheduleWeek.value,
+      targetYear,
+      targetWeek,
       sourceVersion: updateScheduleModel.value.version ?? '',
       targetVersion: target?.version ?? '',
       mode: copyMode.value as any,
@@ -567,9 +532,7 @@ async function onCopySchedule() {
       return
     }
     const copied = normalizeWeek(response.data)
-    const index = schedules.value.findIndex(
-      (schedule) => schedule.year === copied.year && schedule.week === copied.week,
-    )
+    const index = schedules.value.findIndex((s) => s.year === copied.year && s.week === copied.week)
     if (index >= 0) schedules.value.splice(index, 1, copied)
     else schedules.value.push(copied)
     schedules.value = sortSchedules(schedules.value)
@@ -579,6 +542,7 @@ async function onCopySchedule() {
     isFetching.value = false
   }
 }
+
 async function saveSchedule(day: number | null) {
   isFetching.value = true
   const sanitizedDays = sanitizeDays(updateScheduleModel.value.days)
@@ -606,14 +570,12 @@ async function saveSchedule(day: number | null) {
       data?: ScheduleWeekInfo
     }
     if (data.code === 409) return await reloadAfterConflict()
-    if (data.code == 200 && data.data) {
+    if (data.code === 200 && data.data) {
       message.success('成功')
       const normalizedWeek = normalizeWeek(data.data)
-
       const index = schedules.value.findIndex(
-        (s) => s.year == updateScheduleModel.value.year && s.week == updateScheduleModel.value.week,
+        (s) => s.year === updateScheduleModel.value.year && s.week === updateScheduleModel.value.week,
       )
-
       if (index >= 0) schedules.value.splice(index, 1, normalizedWeek)
       else schedules.value.push(normalizedWeek)
       schedules.value = sortSchedules(schedules.value)
@@ -623,15 +585,15 @@ async function saveSchedule(day: number | null) {
         version: normalizedWeek.version,
         days: normalizedWeek.days,
       })
-      ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
-    } else message.error(`修改失败: ${data.message}`)
+      ensureDayInitialized(updateScheduleModel.value, Number(selectedDay.value))
+    } else {
+      message.error(`修改失败: ${data.message}`)
+    }
   } finally {
     isFetching.value = false
   }
 }
-async function onUpdateSchedule() {
-  await saveSchedule(selectedDay.value)
-}
+
 async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
   const data = await postApiScheduleDelete({
     year: schedule.year,
@@ -639,32 +601,38 @@ async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
     expectedVersion: schedule.version ?? '',
   })
   if (data.code === 409) await reloadAfterConflict()
-  else if (data.code == 200) {
+  else if (data.code === 200) {
     message.success('已删除')
     await get()
-  } else message.error(`删除失败: ${data.message}`)
+  } else {
+    message.error(`删除失败: ${data.message}`)
+  }
 }
+
 function onOpenUpdateModal(schedule: ScheduleWeekInfo) {
   scheduleConflict.value = false
   updateScheduleModel.value = cloneWeek(schedule)
-  selectedDay.value = 0
-  ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
+  selectedDay.value = '0'
+  ensureDayInitialized(updateScheduleModel.value, Number(selectedDay.value))
   showUpdateModal.value = true
 }
+
 function onOpenCopyModal(schedule: ScheduleWeekInfo) {
   scheduleConflict.value = false
   updateScheduleModel.value = cloneWeek(schedule, { resetIds: true })
   copyMode.value = 'merge'
-  selectedDay.value = 0
-  ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
+  selectedDay.value = '0'
+  ensureDayInitialized(updateScheduleModel.value, Number(selectedDay.value))
   showCopyModal.value = true
 }
+
 function onEditScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number, _item: ScheduleDayInfo) {
   updateScheduleModel.value = cloneWeek(schedule)
-  selectedDay.value = dayIndex
+  selectedDay.value = String(dayIndex)
   ensureDayInitialized(updateScheduleModel.value, dayIndex)
   showUpdateModal.value = true
 }
+
 async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo) {
   const targetSchedule = schedules.value.find((s) => s.year === schedule.year && s.week === schedule.week)
   if (!targetSchedule) return
@@ -672,7 +640,6 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
   const itemIndex = targetSchedule.days[dayIndex].findIndex(
     (i) => i.id === item.id || (i.title === item.title && i.time === item.time && i.tag === item.tag),
   )
-
   if (itemIndex === -1) return
 
   const updatedDays = targetSchedule.days.map((dayList, idx) => {
@@ -693,34 +660,20 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
     data?: ScheduleWeekInfo
   }
   if (data.code === 409) await reloadAfterConflict()
-  else if (data.code == 200 && data.data) {
+  else if (data.code === 200 && data.data) {
     message.success('已删除')
     const index = schedules.value.findIndex((s) => s.year === schedule.year && s.week === schedule.week)
     if (index >= 0) schedules.value[index] = normalizeWeek(data.data)
-  } else message.error(`删除失败: ${data.message}`)
-}
-function onSelectChange(value: string | null, option: SelectOption, itemIndex: number) {
-  if (value) {
-    ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
-    const entry = updateScheduleModel.value.days[selectedDay.value][itemIndex]
-    if (entry) {
-      entry.tagColor = value
-      entry.tag = option.label as string
-    }
+  } else {
+    message.error(`删除失败: ${data.message}`)
   }
 }
 
-function onBatchSelectChange(value: string | null, option: SelectOption) {
-  if (!value) return
-  batchAddItem.value.tagColor = value
-  batchAddItem.value.tag = option.label as string
-}
-
 async function onBatchAddSchedule() {
-  const year = batchAddYear.value
-  const weekFrom = batchAddWeekFrom.value
-  const weekTo = batchAddWeekTo.value
-  const dayIndex = batchAddDay.value
+  const year = Number(batchAddYear.value)
+  const weekFrom = Number(batchAddWeekFrom.value)
+  const weekTo = Number(batchAddWeekTo.value)
+  const dayIndex = Number(batchAddDay.value)
 
   const maxWeeks = getAllWeeks(year).length
   if (weekTo < weekFrom) {
@@ -807,8 +760,8 @@ function onConfirmItemTransfer() {
   const itemIndex = itemTransferItemIndex.value
   if (itemIndex === null) return
 
-  const fromDay = selectedDay.value
-  const toDay = itemTransferTargetDay.value
+  const fromDay = Number(selectedDay.value)
+  const toDay = Number(itemTransferTargetDay.value)
 
   if (itemTransferMode.value === 'move' && fromDay === toDay) {
     message.error('移动目标不能是当前星期')
@@ -844,12 +797,12 @@ function onConfirmItemTransfer() {
 }
 
 function addScheduleItem() {
-  ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
-  updateScheduleModel.value.days[selectedDay.value].push(createEmptyDay())
+  ensureDayInitialized(updateScheduleModel.value, Number(selectedDay.value))
+  updateScheduleModel.value.days[Number(selectedDay.value)].push(createEmptyDay())
 }
 
 function removeScheduleItem(index: number) {
-  const dayList = updateScheduleModel.value.days[selectedDay.value]
+  const dayList = updateScheduleModel.value.days[Number(selectedDay.value)]
   if (dayList && dayList.length > 0) {
     dayList.splice(index, 1)
     if (dayList.length === 0) {
@@ -859,7 +812,7 @@ function removeScheduleItem(index: number) {
 }
 
 function moveScheduleItem(index: number, direction: 'up' | 'down') {
-  const dayList = updateScheduleModel.value.days[selectedDay.value]
+  const dayList = updateScheduleModel.value.days[Number(selectedDay.value)]
   if (!dayList) return
 
   const targetIndex = direction === 'up' ? index - 1 : index + 1
@@ -869,12 +822,6 @@ function moveScheduleItem(index: number, direction: 'up' | 'down') {
   dayList[index] = dayList[targetIndex]
   dayList[targetIndex] = temp
 }
-function renderOption({ node, option }: { node: VNode; option: SelectOption }) {
-  return h(NFlex, { align: 'center', size: 3, style: 'margin-left: 5px' }, () => [
-    option.value ? h(NBadge, { dot: true, color: option.value?.toString() }) : null,
-    node,
-  ])
-}
 
 onMounted(() => {
   void get()
@@ -883,493 +830,613 @@ onMounted(() => {
 </script>
 
 <template>
-  <ManagePageHeader
-    title="日程表管理"
-    :function-type="FunctionTypes.Schedule"
-    :links="[
-      { label: '日程表展示页链接', value: schedulePageUrl },
-      { label: '订阅链接', value: scheduleSubscribeUrl, description: '通过订阅链接可以订阅日程表到日历软件中' },
-    ]"
-  >
-    <template #action>
-      <NButton
-        type="primary"
-        @click="showAddModal = true"
-      >
-        添加周程
-      </NButton>
-      <NButton
-        secondary
-        @click="showBatchAddModal = true"
-      >
-        批量添加
-      </NButton>
-      <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })">
-        修改模板
-      </NButton>
-    </template>
-  </ManagePageHeader>
-
-  <NModal
-    v-model:show="showAddModal"
-    style="width: 600px; max-width: 90vw"
-    preset="card"
-    title="添加周程"
-  >
-    <NFlex vertical>
-      年份
-      <NSelect
-        v-model:value="selectedScheduleYear"
-        :options="yearOptions"
-      />
-      第几周
-      <NSelect
-        v-model:value="selectedScheduleWeek"
-        :options="weekOptions"
-      />
-    </NFlex>
-    <NDivider />
-    <NButton
-      :loading="isFetching"
-      @click="addSchedule"
+  <div class="space-y-4 w-full">
+    <ManagePageHeader
+      title="日程表管理"
+      subtitle="安排直播预告与周程计划，支持 B 站预约自动同步、多周复制、iCal 日历订阅与自定义展示"
+      :function-type="FunctionTypes.Schedule"
+      :links="[
+        { label: '日程表展示页链接', value: schedulePageUrl },
+        { label: '订阅链接', value: scheduleSubscribeUrl, description: '通过订阅链接可以订阅日程表到日历软件中' },
+      ]"
     >
-      添加
-    </NButton>
-  </NModal>
-  <NModal
-    v-model:show="showCopyModal"
-    style="width: 600px; max-width: 90vw"
-    preset="card"
-    title="复制周程"
-  >
-    <NAlert
-      v-if="scheduleConflict"
-      type="warning"
-      style="margin-bottom: 12px"
-    >
-      <NFlex
-        vertical
-        align="start"
-        :size="8"
-      >
-        源周或目标周已更新。当前复制内容仍保留，加载最新版本后请重新确认并点击复制。
-        <NButton
-          size="small"
-          @click="loadLatestScheduleVersion"
-          >加载最新版本</NButton
-        >
-      </NFlex>
-    </NAlert>
-    <NAlert type="info">只复制手工行程，B站同步预约不受影响。</NAlert>
-    <NFlex vertical>
-      年份
-      <NSelect
-        v-model:value="selectedScheduleYear"
-        :options="yearOptions"
-      />
-      第几周
-      <NSelect
-        v-model:value="selectedScheduleWeek"
-        :options="copyWeekOptions"
-      />
-      复制方式
-      <NSelect
-        v-model:value="copyMode"
-        :options="copyModeOptions"
-      />
-    </NFlex>
-    <NDivider />
-    <NButton
-      :loading="isFetching"
-      @click="onCopySchedule"
-    >
-      复制
-    </NButton>
-  </NModal>
-  <NModal
-    v-model:show="showBatchAddModal"
-    style="width: 700px; max-width: 95vw"
-    preset="card"
-    title="批量添加固定行程"
-  >
-    <NAlert type="info"> 一次性把同一条行程添加到连续周的同一天（不存在的周程会自动创建）。 </NAlert>
-    <NFlex
-      vertical
-      :size="12"
-      style="margin-top: 12px"
-    >
-      年份
-      <NSelect
-        v-model:value="batchAddYear"
-        :options="yearOptions"
-      />
-      周范围
-      <NFlex
-        align="center"
-        wrap
-        :size="8"
-      >
-        <NSelect
-          v-model:value="batchAddWeekFrom"
-          :options="batchWeekOptions"
-          style="min-width: 220px"
-        />
-        <NText depth="3"> 到 </NText>
-        <NSelect
-          v-model:value="batchAddWeekTo"
-          :options="batchWeekOptions"
-          style="min-width: 220px"
-        />
-      </NFlex>
-      星期
-      <NSelect
-        v-model:value="batchAddDay"
-        :options="batchDayOptions"
-      />
-      <NDivider />
-      <NFlex
-        align="center"
-        :size="8"
-        style="flex-wrap: wrap"
-      >
-        <NInputGroup style="width: auto; min-width: 200px">
-          <NInputGroupLabel
-            type="primary"
-            style="min-width: 50px"
+      <template #action>
+        <div class="flex items-center gap-2">
+          <Button
+            size="xs"
+            variant="brand"
+            @click="showAddModal = true"
           >
-            标签
-          </NInputGroupLabel>
-          <NInput
-            v-model:value="batchAddItem.tag"
-            placeholder="标签名称"
-            style="width: 150px"
-            maxlength="10"
-            show-count
-          />
-        </NInputGroup>
-        <NSelect
-          :value="null"
-          :options="existTagOptions"
-          filterable
-          clearable
-          placeholder="选择已用标签"
-          style="width: 160px"
-          :render-option="renderOption"
-          @update:value="(val, opt) => onBatchSelectChange(val, opt)"
-        />
-      </NFlex>
-      <NInputGroup>
-        <NInputGroupLabel style="min-width: 50px"> 内容 </NInputGroupLabel>
-        <NInput
-          v-model:value="batchAddItem.title"
-          placeholder="事件内容描述"
-          maxlength="50"
-          show-count
-        />
-      </NInputGroup>
-      <NFlex
-        align="center"
-        :size="8"
-      >
-        <NInputGroup style="width: auto">
-          <NInputGroupLabel style="min-width: 50px"> 时间 </NInputGroupLabel>
-          <NTimePicker
-            v-model:formatted-value="batchAddItem.time"
-            default-formatted-value="20:00"
-            format="HH:mm"
-            style="width: 140px"
-            clearable
-          />
-        </NInputGroup>
-        <NInputGroup style="width: auto">
-          <NInputGroupLabel style="min-width: 50px"> 颜色 </NInputGroupLabel>
-          <NColorPicker
-            :value="normalizeColor(batchAddItem.tagColor)"
-            :swatches="['#18A058', '#2080F0', '#F0A020', '#D03050', '#9333EA', '#14B8A6']"
-            default-value="#2080F0"
-            :show-alpha="false"
-            :modes="['hex']"
-            style="width: 140px"
-            @update:value="(val) => (batchAddItem.tagColor = normalizeColor(val))"
-          />
-        </NInputGroup>
-      </NFlex>
-    </NFlex>
-    <NDivider />
-    <NButton
-      type="primary"
-      :loading="isFetching"
-      @click="onBatchAddSchedule"
-    >
-      批量添加
-    </NButton>
-  </NModal>
-  <NModal
-    v-model:show="showUpdateModal"
-    style="width: 800px; max-width: 95vw; max-height: 90vh"
-    preset="card"
-    title="编辑周程"
-  >
-    <NAlert
-      v-if="scheduleConflict"
-      type="warning"
-      style="margin-bottom: 12px"
-    >
-      <NFlex
-        vertical
-        align="start"
-        :size="8"
-      >
-        当前草稿已保留。加载最新版本会替换草稿，请确认后操作。
-        <NButton
-          size="small"
-          @click="loadLatestScheduleVersion"
-          >加载最新版本</NButton
-        >
-      </NFlex>
-    </NAlert>
-    <NSelect
-      v-model:value="selectedDay"
-      :options="dayOptions"
+            添加周程
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            @click="showBatchAddModal = true"
+          >
+            批量添加
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })"
+          >
+            修改模板
+          </Button>
+        </div>
+      </template>
+    </ManagePageHeader>
+
+    <BiliLiveReservePanel
+      class="my-3"
+      manage
+      :items="biliReserve.items"
+      :fetched-at="biliReserve.fetchedAt"
+      :interval-minutes="biliReserve.intervalMinutes"
+      :live-room-url="liveRoomUrl"
+      :auto-sync="biliReserve.syncEnabled"
+      :refreshing="refreshingReserve"
+      :syncing="syncingReserve"
+      @refresh="refreshBiliReserve"
+      @update:auto-sync="setBiliReserveAutoSync"
     />
-    <NDivider />
-    <template v-if="updateScheduleModel">
-      <div
-        style="
-          max-height: calc(90vh - 300px);
-          overflow-y: auto;
-          padding-right: 8px;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-        "
-      >
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <NButton
-            type="primary"
-            secondary
-            @click="addScheduleItem"
-          >
-            + 添加行程项
-          </NButton>
-          <NCard
-            v-for="(item, itemIndex) in updateScheduleModel.days[selectedDay]"
-            :key="itemIndex"
-            size="small"
-            :bordered="true"
-            :style="{
-              borderLeft: item.tagColor ? `4px solid ${item.tagColor}` : 'none',
-              backgroundColor: item.tagColor ? `${item.tagColor}08` : 'transparent',
-            }"
-          >
-            <template #header>
-              <NFlex
-                align="center"
-                :size="8"
-              >
-                <NText
-                  strong
-                  style="font-size: 14px"
-                >
-                  行程 {{ itemIndex + 1 }}
-                </NText>
-                <NButton
-                  v-if="itemIndex > 0"
-                  size="tiny"
-                  quaternary
-                  @click="moveScheduleItem(itemIndex, 'up')"
-                >
-                  ↑
-                </NButton>
-                <NButton
-                  v-if="itemIndex < updateScheduleModel.days[selectedDay].length - 1"
-                  size="tiny"
-                  quaternary
-                  @click="moveScheduleItem(itemIndex, 'down')"
-                >
-                  ↓
-                </NButton>
-              </NFlex>
-            </template>
-            <template #header-extra>
-              <NFlex :size="6">
-                <NButton
-                  size="tiny"
-                  quaternary
-                  @click="onOpenItemTransferModal('copy', itemIndex)"
-                >
-                  复制
-                </NButton>
-                <NButton
-                  size="tiny"
-                  quaternary
-                  @click="onOpenItemTransferModal('move', itemIndex)"
-                >
-                  移动
-                </NButton>
-                <NButton
-                  size="tiny"
-                  type="error"
-                  quaternary
-                  @click="removeScheduleItem(itemIndex)"
-                >
-                  删除
-                </NButton>
-              </NFlex>
-            </template>
-            <NFlex
-              vertical
-              :size="12"
-            >
-              <NFlex
-                align="center"
-                :size="8"
-                style="flex-wrap: wrap"
-              >
-                <NInputGroup style="width: auto; min-width: 200px">
-                  <NInputGroupLabel
-                    type="primary"
-                    style="min-width: 50px"
-                  >
-                    标签
-                  </NInputGroupLabel>
-                  <NInput
-                    v-model:value="item.tag"
-                    placeholder="标签名称"
-                    style="width: 150px"
-                    maxlength="10"
-                    show-count
-                  />
-                </NInputGroup>
-                <NSelect
-                  :value="null"
-                  :options="existTagOptions"
-                  filterable
-                  clearable
-                  placeholder="选择已用标签"
-                  style="width: 140px"
-                  :render-option="renderOption"
-                  @update:value="(val, opt) => onSelectChange(val, opt, itemIndex)"
-                />
-              </NFlex>
-              <NInputGroup>
-                <NInputGroupLabel style="min-width: 50px"> 内容 </NInputGroupLabel>
-                <NInput
-                  v-model:value="item.title"
-                  placeholder="事件内容描述"
-                  maxlength="50"
-                  show-count
-                />
-              </NInputGroup>
-              <NFlex
-                align="center"
-                :size="8"
-              >
-                <NInputGroup style="width: auto">
-                  <NInputGroupLabel style="min-width: 50px"> 时间 </NInputGroupLabel>
-                  <NTimePicker
-                    v-model:formatted-value="item.time"
-                    default-formatted-value="20:00"
-                    format="HH:mm"
-                    style="width: 120px"
-                    clearable
-                  />
-                </NInputGroup>
-                <NInputGroup style="width: auto">
-                  <NInputGroupLabel style="min-width: 50px"> 颜色 </NInputGroupLabel>
-                  <NColorPicker
-                    :key="`color-${selectedDay}-${itemIndex}-${item.id || 'new'}`"
-                    :value="normalizeColor(item.tagColor)"
-                    :swatches="['#18A058', '#2080F0', '#F0A020', '#D03050', '#9333EA', '#14B8A6']"
-                    default-value="#2080F0"
-                    :show-alpha="false"
-                    :modes="['hex']"
-                    style="width: 120px"
-                    @update:value="(val) => (item.tagColor = normalizeColor(val))"
-                  />
-                </NInputGroup>
-              </NFlex>
-            </NFlex>
-          </NCard>
-        </NFlex>
-      </div>
-      <NDivider />
-      <NButton
-        type="primary"
-        :loading="isFetching"
-        block
-        @click="onUpdateSchedule()"
-      >
-        保存全部
-      </NButton>
-    </template>
-  </NModal>
-  <NModal
-    v-model:show="showItemTransferModal"
-    style="width: 520px; max-width: 90vw"
-    preset="card"
-    title="复制/移动行程项"
-  >
-    <NAlert
-      v-if="itemTransferMode === 'copy'"
-      type="info"
-    >
-      复制会在目标星期新增一条行程项（不会影响当前行程项）。
-    </NAlert>
-    <NAlert
-      v-else
-      type="warning"
-    >
-      移动会把当前行程项从本星期移到目标星期。
-    </NAlert>
-    <NFlex
-      vertical
-      :size="12"
-      style="margin-top: 12px"
-    >
-      目标星期
-      <NSelect
-        v-model:value="itemTransferTargetDay"
-        :options="batchDayOptions"
-      />
-    </NFlex>
-    <NDivider />
-    <NButton
-      type="primary"
-      @click="onConfirmItemTransfer"
-    >
-      确定
-    </NButton>
-  </NModal>
-  <BiliLiveReservePanel
-    style="margin: 12px 0"
-    manage
-    :items="biliReserve.items"
-    :fetched-at="biliReserve.fetchedAt"
-    :interval-minutes="biliReserve.intervalMinutes"
-    :live-room-url="liveRoomUrl"
-    :auto-sync="biliReserve.syncEnabled"
-    :refreshing="refreshingReserve"
-    :syncing="syncingReserve"
-    @refresh="refreshBiliReserve"
-    @update:auto-sync="setBiliReserveAutoSync"
-  />
-  <NSpin
-    v-if="isLoading"
-    show
-  />
-  <ScheduleList
-    v-else
-    :schedules="schedules ?? []"
-    is-self
-    @on-update="onOpenUpdateModal"
-    @on-delete="onDeleteSchedule"
-    @on-copy="onOpenCopyModal"
-    @on-edit-item="onEditScheduleItem"
-    @on-delete-item="onDeleteScheduleItem"
-  />
-</template>
 
-<style scoped></style>
+    <div
+      v-if="isLoading"
+      class="text-center py-20 text-xs text-muted-foreground"
+    >
+      正在加载日程表…
+    </div>
+    <ScheduleList
+      v-else
+      :schedules="schedules ?? []"
+      is-self
+      @on-update="onOpenUpdateModal"
+      @on-delete="onDeleteSchedule"
+      @on-copy="onOpenCopyModal"
+      @on-edit-item="onEditScheduleItem"
+      @on-delete-item="onDeleteScheduleItem"
+    />
+
+    <!-- 添加周程弹窗 -->
+    <Dialog v-model:open="showAddModal">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            添加周程
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            选择年份和未安排的周次以创建新的一周行程表。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-3 py-2">
+          <div class="space-y-1">
+            <span class="text-xs text-muted-foreground">年份</span>
+            <Select v-model="selectedScheduleYear">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="y in yearOptions"
+                  :key="y.value"
+                  :value="y.value"
+                >
+                  {{ y.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-xs text-muted-foreground">第几周</span>
+            <Select v-model="selectedScheduleWeek">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="w in weekOptions"
+                  :key="w.value"
+                  :value="w.value"
+                  :disabled="w.disabled"
+                >
+                  {{ w.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showAddModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            :loading="isFetching"
+            @click="addSchedule"
+          >
+            添加
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 复制周程弹窗 -->
+    <Dialog v-model:open="showCopyModal">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            复制周程
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            只复制手工行程，B 站同步预约不受影响。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-3 py-2">
+          <Alert
+            v-if="scheduleConflict"
+            variant="destructive"
+            class="py-2"
+          >
+            <AlertDescription class="text-xs flex items-center justify-between">
+              <span>源周或目标周已更新，请加载最新版本。</span>
+              <Button
+                size="xs"
+                variant="outline"
+                @click="loadLatestScheduleVersion"
+              >
+                加载最新
+              </Button>
+            </AlertDescription>
+          </Alert>
+
+          <div class="space-y-1">
+            <span class="text-xs text-muted-foreground">目标年份</span>
+            <Select v-model="selectedScheduleYear">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="y in yearOptions"
+                  :key="y.value"
+                  :value="y.value"
+                >
+                  {{ y.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-xs text-muted-foreground">目标周</span>
+            <Select v-model="selectedScheduleWeek">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="w in copyWeekOptions"
+                  :key="w.value"
+                  :value="w.value"
+                >
+                  {{ w.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-xs text-muted-foreground">复制方式</span>
+            <Select v-model="copyMode">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="merge">
+                  合并（保留目标周已有行程）
+                </SelectItem>
+                <SelectItem value="replace">
+                  替换手工行程
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showCopyModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            :loading="isFetching"
+            @click="onCopySchedule"
+          >
+            确认复制
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 编辑周程弹窗 -->
+    <Dialog v-model:open="showUpdateModal">
+      <DialogContent class="sm:max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            编辑周程项
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            选择星期并为当天安排标签、活动内容与开播时间。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="flex-1 overflow-y-auto space-y-3 py-2 pr-1">
+          <Alert
+            v-if="scheduleConflict"
+            variant="destructive"
+            class="py-2"
+          >
+            <AlertDescription class="text-xs flex items-center justify-between">
+              <span>当前草稿已保留，加载最新版本会替换草稿。</span>
+              <Button
+                size="xs"
+                variant="outline"
+                @click="loadLatestScheduleVersion"
+              >
+                加载最新版本
+              </Button>
+            </AlertDescription>
+          </Alert>
+
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex-1">
+              <Select v-model="selectedDay">
+                <SelectTrigger class="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="d in dayOptions"
+                    :key="d.value"
+                    :value="d.value"
+                  >
+                    {{ d.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              size="xs"
+              variant="outline"
+              @click="addScheduleItem"
+            >
+              + 添加行程项
+            </Button>
+          </div>
+
+          <Separator />
+
+          <!-- 当天行程项列表 -->
+          <div class="space-y-3">
+            <Card
+              v-for="(item, itemIndex) in updateScheduleModel.days[Number(selectedDay)]"
+              :key="itemIndex"
+              class="border-border bg-card/60"
+              :style="{
+                borderLeft: item.tagColor ? `4px solid ${item.tagColor}` : undefined,
+              }"
+            >
+              <CardHeader class="p-3 pb-2 flex-row items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-semibold">行程 {{ itemIndex + 1 }}</span>
+                  <Button
+                    v-if="itemIndex > 0"
+                    size="icon-xs"
+                    variant="ghost"
+                    @click="moveScheduleItem(itemIndex, 'up')"
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    v-if="itemIndex < updateScheduleModel.days[Number(selectedDay)].length - 1"
+                    size="icon-xs"
+                    variant="ghost"
+                    @click="moveScheduleItem(itemIndex, 'down')"
+                  >
+                    ↓
+                  </Button>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    @click="onOpenItemTransferModal('copy', itemIndex)"
+                  >
+                    复制
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    @click="onOpenItemTransferModal('move', itemIndex)"
+                  >
+                    移动
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    @click="removeScheduleItem(itemIndex)"
+                  >
+                    删除
+                  </Button>
+                </div>
+              </CardHeader>
+
+              <CardContent class="p-3 pt-0 space-y-2.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <Input
+                    v-model="item.tag"
+                    placeholder="标签名称 (如 杂谈)"
+                    class="w-36 h-7 text-xs"
+                    maxlength="10"
+                  />
+                  <Input
+                    v-model="item.title"
+                    placeholder="事件内容描述"
+                    class="flex-1 h-7 text-xs min-w-[180px]"
+                    maxlength="50"
+                  />
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                  <div class="flex items-center gap-1">
+                    <span class="text-xs text-muted-foreground">时间:</span>
+                    <Input
+                      v-model="item.time"
+                      type="time"
+                      class="w-24 h-8 text-xs"
+                    />
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="text-xs text-muted-foreground">颜色:</span>
+                    <ColorPicker
+                      :value="normalizeColor(item.tagColor)"
+                      :swatches="['#18A058', '#2080F0', '#F0A020', '#D03050', '#9333EA', '#14B8A6']"
+                      default-value="#2080F0"
+                      :show-alpha="false"
+                      :modes="['hex']"
+                      size="small"
+                      @update:value="(val) => (item.tagColor = normalizeColor(val))"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showUpdateModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            :loading="isFetching"
+            @click="saveSchedule(Number(selectedDay))"
+          >
+            保存当天
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 复制/移动跨星期弹窗 -->
+    <Dialog v-model:open="showItemTransferModal">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            {{ itemTransferMode === 'copy' ? '复制行程项到其他星期' : '移动行程项到其他星期' }}
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            {{ itemTransferMode === 'copy' ? '复制会在目标星期新增一条行程项。' : '移动会把当前行程项从本星期移到目标星期。' }}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="py-2 space-y-1">
+          <span class="text-xs text-muted-foreground">目标星期</span>
+          <Select v-model="itemTransferTargetDay">
+            <SelectTrigger class="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="d in batchDayOptions"
+                :key="d.value"
+                :value="d.value"
+              >
+                {{ d.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showItemTransferModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            @click="onConfirmItemTransfer"
+          >
+            确定
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 批量添加固定行程弹窗 -->
+    <Dialog v-model:open="showBatchAddModal">
+      <DialogContent class="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            批量添加固定行程
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            一次性把同一条行程添加到连续周的同一天（不存在的周程会自动创建）。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-3 py-2 text-xs">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="space-y-1">
+              <span class="text-muted-foreground">年份</span>
+              <Select v-model="batchAddYear">
+                <SelectTrigger class="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="y in yearOptions"
+                    :key="y.value"
+                    :value="y.value"
+                  >
+                    {{ y.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div class="space-y-1">
+              <span class="text-muted-foreground">星期</span>
+              <Select v-model="batchAddDay">
+                <SelectTrigger class="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="d in batchDayOptions"
+                    :key="d.value"
+                    :value="d.value"
+                  >
+                    {{ d.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-muted-foreground">周范围</span>
+            <div class="flex items-center gap-2">
+              <Select v-model="batchAddWeekFrom">
+                <SelectTrigger class="h-8 text-xs flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="w in batchWeekOptions"
+                    :key="w.value"
+                    :value="w.value"
+                  >
+                    {{ w.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <span class="text-muted-foreground">至</span>
+              <Select v-model="batchAddWeekTo">
+                <SelectTrigger class="h-8 text-xs flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="w in batchWeekOptions"
+                    :key="w.value"
+                    :value="w.value"
+                  >
+                    {{ w.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <Input
+                v-model="batchAddItem.tag"
+                placeholder="标签名称"
+                class="w-36 h-8 text-xs"
+                maxlength="10"
+              />
+              <Input
+                v-model="batchAddItem.title"
+                placeholder="事件描述"
+                class="flex-1 h-8 text-xs"
+                maxlength="50"
+              />
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-1">
+                <span class="text-muted-foreground">时间:</span>
+                <Input
+                  v-model="batchAddItem.time"
+                  type="time"
+                  class="w-24 h-8 text-xs"
+                />
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-muted-foreground">颜色:</span>
+                <ColorPicker
+                  :value="normalizeColor(batchAddItem.tagColor)"
+                  :swatches="['#18A058', '#2080F0', '#F0A020', '#D03050', '#9333EA', '#14B8A6']"
+                  default-value="#2080F0"
+                  :show-alpha="false"
+                  :modes="['hex']"
+                  size="small"
+                  @update:value="(val) => (batchAddItem.tagColor = normalizeColor(val))"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showBatchAddModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            :loading="isFetching"
+            @click="onBatchAddSchedule"
+          >
+            批量添加
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
+</template>

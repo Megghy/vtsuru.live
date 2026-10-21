@@ -2,10 +2,16 @@
 import { useNow } from '@vueuse/core'
 import { Open16Regular, Stop16Regular } from '@vicons/fluent'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { NButton, NCheckbox, NIcon, NInput, NInputNumber, NPopconfirm, NTag } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { CURRENT_HOST, isTauri } from '@/shared/config'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
 import { formatCountdown, remainingMs } from '@/shared/utils/countdown'
 import type { VotePreset } from '@/shared/utils/votePresets'
 import { useVoteTemplates, VOTE_QUICK_PRESETS } from '@/shared/utils/votePresets'
@@ -63,15 +69,14 @@ function openManage() {
     :blurred="blurred"
   >
     <template #actions>
-      <NTag
+      <Tag
         v-if="pollError"
-        size="tiny"
-        type="error"
-        :bordered="false"
+        variant="destructive"
+        class="text-xs"
         :title="pollError"
       >
         同步失败
-      </NTag>
+      </Tag>
       <IconAction
         :icon="Open16Regular"
         tip="打开投票管理（OBS 链接、全局设置、历史）"
@@ -108,41 +113,41 @@ function openManage() {
         <div class="vote__foot">
           <span class="vote__outcome">{{ outcome }}</span>
           <template v-if="active">
-            <NButton
+            <Button
               v-for="seconds in [30, 60]"
               :key="seconds"
-              size="tiny"
-              secondary
+              size="sm"
+              variant="secondary"
+              class="h-6 text-xs px-2"
               :disabled="busy"
               @click="vote.extend(seconds)"
             >
               +{{ seconds }}s
-            </NButton>
-            <NPopconfirm @positive-click="vote.end(session.id)">
+            </Button>
+            <Popconfirm @positive-click="vote.end(session.id)">
               <template #trigger>
-                <NButton
-                  size="tiny"
-                  type="warning"
-                  secondary
-                  :loading="busy"
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-6 text-xs px-2 text-amber-500 border-amber-500 hover:bg-amber-500/10"
+                  :disabled="busy"
                 >
-                  <template #icon>
-                    <NIcon :component="Stop16Regular" />
-                  </template>
+                  <component :is="Stop16Regular" class="h-3.5 w-3.5 mr-1" />
                   结束
-                </NButton>
+                </Button>
               </template>
               提前结束并展示结果？
-            </NPopconfirm>
+            </Popconfirm>
           </template>
-          <NButton
+          <Button
             v-else
-            size="tiny"
-            secondary
+            size="sm"
+            variant="secondary"
+            class="h-6 text-xs px-2"
             @click="reuse"
           >
             复用选项
-          </NButton>
+          </Button>
         </div>
       </section>
 
@@ -150,60 +155,56 @@ function openManage() {
         v-if="!active && loaded"
         class="vote__form"
       >
-        <div class="vote__presets">
-          <NButton
+        <div class="vote__presets flex flex-wrap gap-1">
+          <Button
             v-for="(preset, index) in presets"
             :key="index"
-            size="tiny"
-            quaternary
+            size="sm"
+            variant="ghost"
+            class="h-6 text-xs px-2 text-muted-foreground"
             @click="applyPreset(preset)"
           >
             {{ preset.name }}
-          </NButton>
+          </Button>
         </div>
-        <NInput
-          v-model:value="title"
-          size="small"
+        <Input
+          v-model="title"
+          class="h-8 text-xs"
           placeholder="投票标题"
           maxlength="50"
         />
-        <NInput
-          v-model:value="optionsText"
-          type="textarea"
-          size="small"
+        <Textarea
+          v-model="optionsText"
+          class="text-xs min-h-[64px]"
           placeholder="每行一个选项，观众发送序号或选项文字投票"
-          :autosize="{ minRows: 3, maxRows: 8 }"
         />
-        <div class="vote__row">
-          <NInputNumber
-            v-model:value="duration"
-            size="small"
-            :min="0"
-            :step="30"
-            style="width: 120px"
-          >
-            <template #suffix>
-              秒
-            </template>
-          </NInputNumber>
-          <NCheckbox
-            v-model:checked="allowMultiple"
-            size="small"
-          >
+        <div class="vote__row flex items-center gap-2">
+          <div class="flex items-center gap-1 w-[120px]">
+            <NInputNumber
+              v-model="duration"
+              size="small"
+              :min="0"
+              :step="30"
+              class="w-full"
+            />
+            <span class="text-xs text-muted-foreground shrink-0">秒</span>
+          </div>
+          <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+            <Checkbox
+              v-model:checked="allowMultiple"
+            />
             允许多选
-          </NCheckbox>
-          <NButton
-            size="small"
-            type="primary"
-            :loading="busy"
-            :disabled="!title.trim() || draftOptions.length < 2"
-            style="margin-left: auto"
+          </label>
+          <Button
+            size="sm"
+            class="h-8 text-xs ml-auto"
+            :disabled="busy || !title.trim() || draftOptions.length < 2"
             @click="create"
           >
             发起
-          </NButton>
+          </Button>
         </div>
-        <div class="vote__hint">
+        <div class="vote__hint text-xs text-muted-foreground">
           时长为 0 表示不限时；新投票会结束当前进行中的投票
         </div>
       </section>

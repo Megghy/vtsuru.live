@@ -1,8 +1,24 @@
 <script setup lang="ts">
-import { NButton, NCollapse, NCollapseItem, NFlex, NFormItem, NInput, NInputNumber, NSelect, NTag, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserPageAppearanceTheme } from '@/apps/user-page/themeConfig'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/shared/ui/accordion'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { NInputNumber } from '@/shared/ui/NInputNumber'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Tag } from '@/shared/ui/tag'
 
 import PropsGrid from './PropsGrid.vue'
 
@@ -78,171 +94,153 @@ const radiusPresets = [
 </script>
 
 <template>
-  <NCollapse class="advanced-options">
-    <NCollapseItem
-      name="appearance"
-      title="高级外观选项"
-    >
-      <template #header-extra>
-        <NTag
-          size="tiny"
-          :type="hasAdvancedSettings ? 'primary' : 'default'"
-          :bordered="false"
-        >
-          {{ hasAdvancedSettings ? `已自定义 ${customCount} 项` : '默认' }}
-        </NTag>
-      </template>
-
-      <NText
-        depth="3"
-        class="advanced-hint"
-      >
-        未设置的项目会继承全局主题或使用站点默认值。
-      </NText>
-      <PropsGrid :min-item-width="210">
-        <NFormItem label="圆角大小">
-          <NFlex
-            vertical
-            :size="4"
-            style="width: 100%"
+  <Accordion class="advanced-options mt-2 border-t border-border">
+    <AccordionItem value="appearance" class="border-b-0">
+      <AccordionTrigger class="text-xs font-semibold py-2">
+        <div class="flex items-center justify-between w-full pr-2">
+          <span>高级外观选项</span>
+          <Tag
+            :variant="hasAdvancedSettings ? 'default' : 'outline'"
+            class="text-[10px] h-4.5 px-1.5"
           >
+            {{ hasAdvancedSettings ? `已自定义 ${customCount} 项` : '默认' }}
+          </Tag>
+        </div>
+      </AccordionTrigger>
+
+      <AccordionContent class="pt-1 pb-3 flex flex-col gap-3">
+        <span class="text-xs text-muted-foreground">
+          未设置的项目会继承全局主题或使用站点默认值。
+        </span>
+
+        <PropsGrid :min-item-width="210">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-muted-foreground">圆角大小</label>
             <NInputNumber
-              v-model:value="radius"
+              v-model="radius"
               :min="0"
               :max="32"
-              clearable
               placeholder="默认 6px"
-              style="width: 100%"
-            >
-              <template #suffix> px </template>
-            </NInputNumber>
-            <NFlex
-              :size="4"
-              style="margin-top: 2px"
-            >
-              <NButton
+              class="h-8 text-xs"
+            />
+            <div class="flex items-center gap-1 mt-1">
+              <Button
                 v-for="preset in radiusPresets"
                 :key="preset.value"
-                size="tiny"
-                quaternary
-                :type="radius === preset.value ? 'primary' : 'default'"
+                size="sm"
+                :variant="radius === preset.value ? 'default' : 'ghost'"
+                class="h-5 px-1.5 text-[10px]"
                 @click="radius = preset.value"
               >
                 {{ preset.label }}
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NFormItem>
-        <NFormItem label="边框强度">
-          <NSelect
-            v-model:value="borderStrength"
-            clearable
-            placeholder="继承（标准）"
-            :options="[
-              { label: '无边框', value: 'none' },
-              { label: '轻微', value: 'subtle' },
-              { label: '标准', value: 'normal' },
-              { label: '明显', value: 'strong' },
-            ]"
-          />
-        </NFormItem>
-        <NFormItem label="边框样式">
-          <NSelect
-            v-model:value="borderStyle"
-            clearable
-            placeholder="继承（实线）"
-            :options="[
-              { label: '实线 (solid)', value: 'solid' },
-              { label: '虚线 (dashed)', value: 'dashed' },
-            ]"
-          />
-        </NFormItem>
-        <NFormItem label="阴影层级">
-          <NSelect
-            v-model:value="shadowLevel"
-            clearable
-            placeholder="继承（标准）"
-            :options="[
-              { label: '无阴影', value: 'none' },
-              { label: '轻微', value: 'subtle' },
-              { label: '标准', value: 'normal' },
-              { label: '悬浮立体', value: 'floating' },
-            ]"
-          />
-        </NFormItem>
-        <NFormItem label="表面不透明度">
-          <NInputNumber
-            v-model:value="surfaceOpacity"
-            :min="15"
-            :max="100"
-            clearable
-            placeholder="跟随主题"
-            style="width: 100%"
+              </Button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-muted-foreground">边框强度</label>
+            <Select v-model="borderStrength">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="继承（标准）" />
+              </SelectTrigger>
+              <SelectContent class="text-xs">
+                <SelectItem value="none">无边框</SelectItem>
+                <SelectItem value="subtle">轻微</SelectItem>
+                <SelectItem value="normal">标准</SelectItem>
+                <SelectItem value="strong">明显</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-muted-foreground">边框样式</label>
+            <Select v-model="borderStyle">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="继承（实线）" />
+              </SelectTrigger>
+              <SelectContent class="text-xs">
+                <SelectItem value="solid">实线 (solid)</SelectItem>
+                <SelectItem value="dashed">虚线 (dashed)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-muted-foreground">阴影层级</label>
+            <Select v-model="shadowLevel">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="继承（标准）" />
+              </SelectTrigger>
+              <SelectContent class="text-xs">
+                <SelectItem value="none">无阴影</SelectItem>
+                <SelectItem value="subtle">轻微</SelectItem>
+                <SelectItem value="normal">标准</SelectItem>
+                <SelectItem value="floating">悬浮立体</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-muted-foreground">表面不透明度 %</label>
+            <NInputNumber
+              v-model="surfaceOpacity"
+              :min="15"
+              :max="100"
+              placeholder="跟随主题"
+              class="h-8 text-xs"
+            />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-muted-foreground">布局密度</label>
+            <Select v-model="spacing">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="继承（标准）" />
+              </SelectTrigger>
+              <SelectContent class="text-xs">
+                <SelectItem value="compact">紧凑 (compact)</SelectItem>
+                <SelectItem value="normal">标准 (normal)</SelectItem>
+                <SelectItem value="relaxed">宽松 (relaxed)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-muted-foreground">组件尺寸</label>
+            <Select v-model="controlSize">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue placeholder="继承（标准）" />
+              </SelectTrigger>
+              <SelectContent class="text-xs">
+                <SelectItem value="compact">紧凑 (compact)</SelectItem>
+                <SelectItem value="normal">标准 (normal)</SelectItem>
+                <SelectItem value="comfortable">舒适 (comfortable)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-muted-foreground">内容最大宽度</label>
+            <Input
+              v-model="pageMaxWidth"
+              placeholder="默认 820px；例如 100% / 1200px"
+              class="h-8 text-xs"
+            />
+          </div>
+        </PropsGrid>
+
+        <div class="flex justify-end pt-1">
+          <Button
+            size="sm"
+            variant="outline"
+            class="h-7 text-xs"
+            :disabled="!hasAdvancedSettings"
+            @click="clearAdvancedSettings"
           >
-            <template #suffix> % </template>
-          </NInputNumber>
-        </NFormItem>
-        <NFormItem label="布局密度">
-          <NSelect
-            v-model:value="spacing"
-            clearable
-            placeholder="继承（标准）"
-            :options="[
-              { label: '紧凑 (compact)', value: 'compact' },
-              { label: '标准 (normal)', value: 'normal' },
-              { label: '宽松 (relaxed)', value: 'relaxed' },
-            ]"
-          />
-        </NFormItem>
-        <NFormItem label="组件尺寸">
-          <NSelect
-            v-model:value="controlSize"
-            clearable
-            placeholder="继承（标准）"
-            :options="[
-              { label: '紧凑 (compact)', value: 'compact' },
-              { label: '标准 (normal)', value: 'normal' },
-              { label: '舒适 (comfortable)', value: 'comfortable' },
-            ]"
-          />
-        </NFormItem>
-        <NFormItem label="内容最大宽度">
-          <NInput
-            v-model:value="pageMaxWidth"
-            clearable
-            placeholder="默认 820px；例如 100% / 1200px"
-          />
-        </NFormItem>
-      </PropsGrid>
-      <div class="advanced-actions">
-        <NButton
-          size="small"
-          secondary
-          :disabled="!hasAdvancedSettings"
-          @click="clearAdvancedSettings"
-        >
-          恢复高级选项默认值
-        </NButton>
-      </div>
-    </NCollapseItem>
-  </NCollapse>
+            恢复高级选项默认值
+          </Button>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  </Accordion>
 </template>
-
-<style scoped>
-.advanced-options {
-  margin-top: 8px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.advanced-hint {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 12px;
-}
-
-.advanced-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 6px;
-}
-</style>

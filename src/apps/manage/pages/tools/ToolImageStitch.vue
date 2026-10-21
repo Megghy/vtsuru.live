@@ -2,27 +2,27 @@
 import './tool-page.css'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NColorPicker,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NInputNumber,
-  NSelect,
-  NSlider,
-  NSwitch,
-  NTag,
-  NText,
-} from 'naive-ui'
 import { computed, onBeforeUnmount, reactive, ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import { formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { canvasToBlob } from '@/shared/utils'
+import { canvasToBlob, useMessage } from '@/shared/utils'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
+import { Tag } from '@/shared/ui/tag'
 
 type LayoutMode = 'vertical' | 'horizontal' | 'grid'
 type FitMode = 'contain' | 'cover' | 'stretch'
@@ -372,381 +372,394 @@ onBeforeUnmount(clearAll)
 
 <template>
   <div class="stitch-page">
-    <NCard title="图片拼接">
-      <template #header-extra>
-        <NFlex
-          align="center"
-          :size="8"
-        >
-          <NText
+    <Card>
+      <CardHeader class="flex flex-row items-center justify-between pb-4">
+        <CardTitle class="text-base font-semibold">图片拼接</CardTitle>
+        <div class="flex items-center gap-2">
+          <span
             v-if="lastExportSize"
-            depth="3"
+            class="text-xs text-muted-foreground"
           >
             上次导出 {{ formatFileSize(lastExportSize) }}
-          </NText>
-          <NButton
-            type="primary"
+          </span>
+          <Button
             :loading="exporting"
             :disabled="!items.length || outputTooLarge"
             @click="exportImage"
           >
             导出图片
-          </NButton>
-        </NFlex>
-      </template>
+          </Button>
+        </div>
+      </CardHeader>
 
-      <div
-        v-if="!items.length"
-        ref="dropZoneRef"
-        class="empty-drop"
-        :class="{ active: isOverDropZone }"
-        @click="openFilePicker()"
-      >
-        <NText style="font-size: 16px"> 拖拽图片到这里，或点击选择 </NText>
-        <NText depth="3"> 支持长图、横向对比图和多列网格拼图 </NText>
-      </div>
+      <CardContent class="pt-0">
+        <div
+          v-if="!items.length"
+          ref="dropZoneRef"
+          class="empty-drop"
+          :class="{ active: isOverDropZone }"
+          @click="openFilePicker()"
+        >
+          <span class="text-base text-foreground font-medium"> 拖拽图片到这里，或点击选择 </span>
+          <span class="text-xs text-muted-foreground"> 支持长图、横向对比图和多列网格拼图 </span>
+        </div>
 
-      <div
-        v-else
-        class="workspace"
-      >
-        <section class="preview-panel">
-          <div class="preview-toolbar">
-            <div>
-              <NText strong> 实时预览 </NText>
-              <NText
-                depth="3"
-                class="preview-meta"
-              >
-                {{ outputSizeText }}，预览 {{ Math.round(previewScale * 100) }}%
-              </NText>
-            </div>
-            <NButton
-              size="small"
-              secondary
-              @click="openFilePicker()"
-            >
-              添加图片
-            </NButton>
-          </div>
-
-          <NAlert
-            v-if="outputTooLarge"
-            type="warning"
-            :show-icon="false"
-          >
-            当前画布超过 80MP，导出可能导致浏览器卡死，请降低尺寸或图片数量。
-          </NAlert>
-
-          <div
-            ref="dropZoneRef"
-            class="preview-shell tool-checkerboard"
-            :class="{ active: isOverDropZone }"
-            @click.self="openFilePicker()"
-          >
-            <canvas
-              ref="previewCanvas"
-              class="preview-canvas"
-            />
-          </div>
-        </section>
-
-        <aside class="control-panel">
-          <div class="panel-block">
-            <NText strong> 布局预设 </NText>
-            <div class="preset-grid">
-              <button
-                v-for="preset in layoutPresets"
-                :key="preset.key"
-                class="preset-card"
-                :class="{
-                  active:
-                    settings.layout === preset.layout && (preset.columns ? settings.columns === preset.columns : true),
-                }"
-                type="button"
-                @click="applyPreset(preset)"
-              >
-                <span
-                  class="preset-visual"
-                  :class="preset.key"
-                >
-                  <i
-                    v-for="n in 4"
-                    :key="n"
-                  />
+        <div
+          v-else
+          class="workspace"
+        >
+          <section class="preview-panel">
+            <div class="preview-toolbar">
+              <div>
+                <div class="font-medium text-foreground"> 实时预览 </div>
+                <span class="preview-meta text-xs text-muted-foreground">
+                  {{ outputSizeText }}，预览 {{ Math.round(previewScale * 100) }}%
                 </span>
-                <span>{{ preset.label }}</span>
-                <small>{{ preset.desc }}</small>
-              </button>
-            </div>
-          </div>
-
-          <div class="panel-block">
-            <NText strong> 画布参数 </NText>
-            <NGrid
-              cols="2"
-              :x-gap="10"
-              :y-gap="10"
-            >
-              <NGridItem>
-                <label class="field">
-                  <span>布局</span>
-                  <NSelect
-                    v-model:value="settings.layout"
-                    :options="layoutOptions"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem>
-                <label class="field">
-                  <span>格式</span>
-                  <NSelect
-                    v-model:value="settings.format"
-                    :options="formatOptions"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem v-if="settings.layout === 'vertical'">
-                <label class="field">
-                  <span>输出宽度</span>
-                  <NInputNumber
-                    v-model:value="settings.outputWidth"
-                    :min="320"
-                    :max="6000"
-                    :step="20"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem v-if="settings.layout === 'horizontal'">
-                <label class="field">
-                  <span>图片高度</span>
-                  <NInputNumber
-                    v-model:value="settings.stripHeight"
-                    :min="120"
-                    :max="4000"
-                    :step="20"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem v-if="settings.layout === 'grid'">
-                <label class="field">
-                  <span>列数</span>
-                  <NInputNumber
-                    v-model:value="settings.columns"
-                    :min="1"
-                    :max="8"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem v-if="settings.layout === 'grid'">
-                <label class="field">
-                  <span>单格尺寸</span>
-                  <NInputNumber
-                    v-model:value="settings.cellSize"
-                    :min="120"
-                    :max="2400"
-                    :step="20"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem>
-                <label class="field">
-                  <span>间距</span>
-                  <NInputNumber
-                    v-model:value="settings.gap"
-                    :min="0"
-                    :max="200"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem>
-                <label class="field">
-                  <span>边距</span>
-                  <NInputNumber
-                    v-model:value="settings.padding"
-                    :min="0"
-                    :max="300"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem v-if="settings.layout === 'grid'">
-                <label class="field">
-                  <span>填充方式</span>
-                  <NSelect
-                    v-model:value="settings.fit"
-                    :options="fitOptions"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-              <NGridItem>
-                <label class="field">
-                  <span>圆角</span>
-                  <NInputNumber
-                    v-model:value="settings.radius"
-                    :min="0"
-                    :max="300"
-                    size="small"
-                  />
-                </label>
-              </NGridItem>
-            </NGrid>
-
-            <div class="field quality-field">
-              <span>导出质量 {{ Math.round(settings.quality * 100) }}%</span>
-              <NSlider
-                v-model:value="settings.quality"
-                :disabled="settings.format === 'png'"
-                :min="0.2"
-                :max="1"
-                :step="0.02"
-              />
-            </div>
-
-            <div class="color-row">
-              <label class="field color-field">
-                <span>背景色</span>
-                <NColorPicker
-                  v-model:value="settings.background"
-                  size="small"
-                  :disabled="settings.transparent && settings.format !== 'jpeg'"
-                />
-              </label>
-              <NFlex
-                align="center"
-                :size="8"
-              >
-                <NSwitch
-                  v-model:value="settings.transparent"
-                  size="small"
-                  :disabled="settings.format === 'jpeg'"
-                />
-                <NText depth="3"> 透明背景 </NText>
-              </NFlex>
-            </div>
-          </div>
-
-          <div class="panel-block">
-            <NFlex
-              justify="space-between"
-              align="center"
-            >
-              <NText strong> 图片顺序 </NText>
-              <NFlex :size="6">
-                <NButton
-                  size="tiny"
-                  @click="sortByName"
-                >
-                  按文件名
-                </NButton>
-                <NButton
-                  size="tiny"
-                  tertiary
-                  @click="clearAll"
-                >
-                  清空
-                </NButton>
-              </NFlex>
-            </NFlex>
-
-            <VueDraggable
-              v-model="items"
-              handle=".drag-handle"
-              :animation="150"
-              class="image-list"
-            >
-              <div
-                v-for="(element, index) in items"
-                :key="element.id"
-                class="image-row"
-                :class="{ active: selectedId === element.id }"
-                @click="selectedId = element.id"
-              >
-                <span
-                  class="drag-handle"
-                  title="拖拽排序"
-                  >{{ index + 1 }}</span
-                >
-                <img
-                  :src="element.url"
-                  alt=""
-                  class="thumb"
-                />
-                <div class="image-row__body">
-                  <NText
-                    class="image-name"
-                    :title="element.file.name"
-                  >
-                    {{ element.file.name }}
-                  </NText>
-                  <NText
-                    depth="3"
-                    class="image-meta"
-                  >
-                    {{ element.width }} x {{ element.height }} · {{ formatFileSize(element.file.size) }}
-                  </NText>
-                </div>
-                <NButton
-                  size="tiny"
-                  quaternary
-                  type="error"
-                  @click.stop="removeItem(element.id)"
-                >
-                  删除
-                </NButton>
               </div>
-            </VueDraggable>
+              <Button
+                size="sm"
+                variant="outline"
+                @click="openFilePicker()"
+              >
+                添加图片
+              </Button>
+            </div>
+
+            <Alert
+              v-if="outputTooLarge"
+              variant="destructive"
+            >
+              <AlertDescription>
+                当前画布超过 80MP，导出可能导致浏览器卡死，请降低尺寸或图片数量。
+              </AlertDescription>
+            </Alert>
 
             <div
-              v-if="selectedItem"
-              class="selected-box"
+              ref="dropZoneRef"
+              class="preview-shell tool-checkerboard"
+              :class="{ active: isOverDropZone }"
+              @click.self="openFilePicker()"
             >
-              <NFlex
-                align="center"
-                justify="space-between"
-              >
-                <NTag
-                  size="small"
-                  :bordered="false"
-                >
-                  已选中
-                </NTag>
-                <NFlex :size="6">
-                  <NButton
-                    size="tiny"
-                    :disabled="!canMoveSelectedUp"
-                    @click="moveSelected(-1)"
-                  >
-                    上移
-                  </NButton>
-                  <NButton
-                    size="tiny"
-                    :disabled="!canMoveSelectedDown"
-                    @click="moveSelected(1)"
-                  >
-                    下移
-                  </NButton>
-                </NFlex>
-              </NFlex>
-              <NText
-                depth="3"
-                class="selected-name"
-              >
-                {{ selectedItem.file.name }}
-              </NText>
+              <canvas
+                ref="previewCanvas"
+                class="preview-canvas"
+              />
             </div>
-          </div>
-        </aside>
-      </div>
-    </NCard>
+          </section>
+
+          <aside class="control-panel">
+            <div class="panel-block">
+              <span class="font-medium text-foreground text-sm"> 布局预设 </span>
+              <div class="preset-grid">
+                <button
+                  v-for="preset in layoutPresets"
+                  :key="preset.key"
+                  class="preset-card"
+                  :class="{
+                    active:
+                      settings.layout === preset.layout && (preset.columns ? settings.columns === preset.columns : true),
+                  }"
+                  type="button"
+                  @click="applyPreset(preset)"
+                >
+                  <span
+                    class="preset-visual"
+                    :class="preset.key"
+                  >
+                    <i
+                      v-for="n in 4"
+                      :key="n"
+                    />
+                  </span>
+                  <span>{{ preset.label }}</span>
+                  <small>{{ preset.desc }}</small>
+                </button>
+              </div>
+            </div>
+
+            <div class="panel-block">
+              <span class="font-medium text-foreground text-sm"> 画布参数 </span>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label class="field">
+                    <span>布局</span>
+                    <Select v-model="settings.layout">
+                      <SelectTrigger class="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in layoutOptions"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </label>
+                </div>
+                <div>
+                  <label class="field">
+                    <span>格式</span>
+                    <Select v-model="settings.format">
+                      <SelectTrigger class="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in formatOptions"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </label>
+                </div>
+                <div v-if="settings.layout === 'vertical'">
+                  <label class="field">
+                    <span>输出宽度</span>
+                    <NInputNumber
+                      v-model="settings.outputWidth"
+                      :min="320"
+                      :max="6000"
+                      :step="20"
+                      size="small"
+                    />
+                  </label>
+                </div>
+                <div v-if="settings.layout === 'horizontal'">
+                  <label class="field">
+                    <span>图片高度</span>
+                    <NInputNumber
+                      v-model="settings.stripHeight"
+                      :min="120"
+                      :max="4000"
+                      :step="20"
+                      size="small"
+                    />
+                  </label>
+                </div>
+                <div v-if="settings.layout === 'grid'">
+                  <label class="field">
+                    <span>列数</span>
+                    <NInputNumber
+                      v-model="settings.columns"
+                      :min="1"
+                      :max="8"
+                      size="small"
+                    />
+                  </label>
+                </div>
+                <div v-if="settings.layout === 'grid'">
+                  <label class="field">
+                    <span>单格尺寸</span>
+                    <NInputNumber
+                      v-model="settings.cellSize"
+                      :min="120"
+                      :max="2400"
+                      :step="20"
+                      size="small"
+                    />
+                  </label>
+                </div>
+                <div>
+                  <label class="field">
+                    <span>间距</span>
+                    <NInputNumber
+                      v-model="settings.gap"
+                      :min="0"
+                      :max="200"
+                      size="small"
+                    />
+                  </label>
+                </div>
+                <div>
+                  <label class="field">
+                    <span>边距</span>
+                    <NInputNumber
+                      v-model="settings.padding"
+                      :min="0"
+                      :max="300"
+                      size="small"
+                    />
+                  </label>
+                </div>
+                <div v-if="settings.layout === 'grid'">
+                  <label class="field">
+                    <span>填充方式</span>
+                    <Select v-model="settings.fit">
+                      <SelectTrigger class="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in fitOptions"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </label>
+                </div>
+                <div>
+                  <label class="field">
+                    <span>圆角</span>
+                    <NInputNumber
+                      v-model="settings.radius"
+                      :min="0"
+                      :max="300"
+                      size="small"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div class="field quality-field">
+                <span>导出质量 {{ Math.round(settings.quality * 100) }}%</span>
+                <Slider
+                  :model-value="[settings.quality]"
+                  :disabled="settings.format === 'png'"
+                  :min="0.2"
+                  :max="1"
+                  :step="0.02"
+                  @update:model-value="(val) => { if (val?.[0] !== undefined) settings.quality = val[0] }"
+                />
+              </div>
+
+              <div class="color-row">
+                <label class="field color-field">
+                  <span>背景色</span>
+                  <ColorPicker
+                    v-model="settings.background"
+                    size="small"
+                    :disabled="settings.transparent && settings.format !== 'jpeg'"
+                  />
+                </label>
+                <div class="flex items-center gap-2">
+                  <Switch
+                    :checked="settings.transparent"
+                    :disabled="settings.format === 'jpeg'"
+                    @update:checked="(v) => (settings.transparent = v)"
+                  />
+                  <span class="text-xs text-muted-foreground"> 透明背景 </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-block">
+              <div class="flex justify-between items-center">
+                <span class="font-medium text-foreground text-sm"> 图片顺序 </span>
+                <div class="flex items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    class="h-7 px-2 text-xs"
+                    @click="sortByName"
+                  >
+                    按文件名
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    class="h-7 px-2 text-xs"
+                    @click="clearAll"
+                  >
+                    清空
+                  </Button>
+                </div>
+              </div>
+
+              <VueDraggable
+                v-model="items"
+                handle=".drag-handle"
+                :animation="150"
+                class="image-list"
+              >
+                <div
+                  v-for="(element, index) in items"
+                  :key="element.id"
+                  class="image-row"
+                  :class="{ active: selectedId === element.id }"
+                  @click="selectedId = element.id"
+                >
+                  <span
+                    class="drag-handle"
+                    title="拖拽排序"
+                    >{{ index + 1 }}</span
+                  >
+                  <img
+                    :src="element.url"
+                    alt=""
+                    class="thumb"
+                  />
+                  <div class="image-row__body">
+                    <span
+                      class="image-name font-medium"
+                      :title="element.file.name"
+                    >
+                      {{ element.file.name }}
+                    </span>
+                    <span class="image-meta text-muted-foreground">
+                      {{ element.width }} x {{ element.height }} · {{ formatFileSize(element.file.size) }}
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    class="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                    @click.stop="removeItem(element.id)"
+                  >
+                    删除
+                  </Button>
+                </div>
+              </VueDraggable>
+
+              <div
+                v-if="selectedItem"
+                class="selected-box"
+              >
+                <div class="flex items-center justify-between">
+                  <Tag
+                    size="small"
+                    variant="secondary"
+                  >
+                    已选中
+                  </Tag>
+                  <div class="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="h-6 px-1.5 text-xs"
+                      :disabled="!canMoveSelectedUp"
+                      @click="moveSelected(-1)"
+                    >
+                      上移
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="h-6 px-1.5 text-xs"
+                      :disabled="!canMoveSelectedDown"
+                      @click="moveSelected(1)"
+                    >
+                      下移
+                    </Button>
+                  </div>
+                </div>
+                <span class="selected-name text-muted-foreground">
+                  {{ selectedItem.file.name }}
+                </span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
 

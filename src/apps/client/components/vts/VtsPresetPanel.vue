@@ -1,9 +1,21 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInput, NInputNumber, NModal, NPopconfirm, NText } from 'naive-ui'
 import { computed, reactive, ref } from 'vue'
 
 import type { VtsPreset } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Separator } from '@/shared/ui/separator'
 
 import { useVtsAction } from './useVtsAction'
 
@@ -58,174 +70,173 @@ function addFromCurrent() {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="机位预设"
-  >
-    <NFlex
-      vertical
-      :size="8"
-    >
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="8"
-      >
-        <NButton
-          size="small"
+  <Card>
+    <CardHeader class="py-3 px-4">
+      <CardTitle class="text-sm font-semibold">机位预设</CardTitle>
+    </CardHeader>
+    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-2.5">
+      <div class="flex items-center gap-2 flex-wrap">
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 text-xs"
           @click="addPreset"
         >
           新建预设
-        </NButton>
-        <NButton
-          size="small"
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 text-xs"
           :disabled="!canReadCurrent"
           @click="addFromCurrent"
         >
           从当前位置创建
-        </NButton>
-      </NFlex>
+        </Button>
+      </div>
 
-      <NDivider style="margin: 4px 0" />
+      <Separator />
 
-      <NFlex
-        v-for="p in vts.presets"
-        :key="p.id"
-        align="center"
-        justify="space-between"
-        :wrap="true"
-        :size="8"
-      >
-        <NFlex
-          align="center"
-          :wrap="true"
-          :size="8"
+      <div class="flex flex-col gap-2">
+        <div
+          v-for="p in vts.presets"
+          :key="p.id"
+          class="flex items-center justify-between gap-2 flex-wrap py-1 border-b border-[var(--vtsuru-border)] last:border-0"
         >
-          <NText strong>
-            {{ p.name }}
-          </NText>
-          <NText depth="3">
-            x={{ p.positionX.toFixed(2) }} y={{ p.positionY.toFixed(2) }} rot={{ p.rotation.toFixed(1) }} size={{
-              p.size.toFixed(1)
-            }}
-            t={{ p.timeInSeconds }}s
-          </NText>
-        </NFlex>
-        <NFlex
-          :wrap="true"
-          :size="8"
-        >
-          <NButton
-            size="small"
-            type="primary"
-            :disabled="!vts.connected"
-            @click="run(() => vts.applyPreset(p.id), '已应用')"
-          >
-            应用
-          </NButton>
-          <NButton
-            size="small"
-            @click="openEdit(p)"
-          >
-            编辑
-          </NButton>
-          <NPopconfirm @positive-click="vts.removePreset(p.id)">
-            <template #trigger>
-              <NButton
-                size="small"
-                type="error"
+          <div class="flex items-center gap-2 flex-wrap text-xs">
+            <span class="font-bold text-[var(--vtsuru-fg)]">{{ p.name }}</span>
+            <span class="text-[var(--vtsuru-fg-muted)]">
+              x={{ p.positionX.toFixed(2) }} y={{ p.positionY.toFixed(2) }} rot={{ p.rotation.toFixed(1) }} size={{ p.size.toFixed(1) }} t={{ p.timeInSeconds }}s
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <Button
+              size="sm"
+              class="h-7 text-xs"
+              :disabled="!vts.connected"
+              @click="run(() => vts.applyPreset(p.id), '已应用')"
+            >
+              应用
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-7 text-xs"
+              @click="openEdit(p)"
+            >
+              编辑
+            </Button>
+            <Popconfirm
+              title="确认删除此预设?"
+              @confirm="vts.removePreset(p.id)"
+            >
+              <Button
+                size="sm"
+                variant="destructive"
+                class="h-7 text-xs"
               >
                 删除
-              </NButton>
-            </template>
-            确认删除此预设?
-          </NPopconfirm>
-        </NFlex>
-      </NFlex>
-    </NFlex>
-  </NCard>
+              </Button>
+            </Popconfirm>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
 
-  <NModal
-    v-model:show="showEdit"
-    preset="card"
-    title="编辑机位预设"
-    style="width: 560px"
+  <Dialog
+    :open="showEdit"
+    @update:open="(val) => showEdit = val"
   >
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NInput
-        v-model:value="form.name"
-        placeholder="预设名称"
-      />
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="8"
-      >
-        <NButton
-          size="small"
-          :disabled="!canReadCurrent"
-          @click="
-            run(() => {
-              fillFromCurrent()
-            }, '已填入当前位姿')
-          "
+    <DialogContent class="max-w-lg">
+      <DialogHeader>
+        <DialogTitle class="text-base font-semibold">编辑机位预设</DialogTitle>
+      </DialogHeader>
+      <div class="flex flex-col gap-3 py-2 text-xs">
+        <Input
+          v-model="form.name"
+          placeholder="预设名称"
+          class="h-8 text-xs"
+        />
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            class="h-7 text-xs"
+            :disabled="!canReadCurrent"
+            @click="run(() => { fillFromCurrent() }, '已填入当前位姿')"
+          >
+            填入当前位置
+          </Button>
+          <span class="text-[11px] text-[var(--vtsuru-fg-muted)]">需要 VTS 已鉴权且模型有移动事件</span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+          <div class="space-y-1">
+            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">过渡时间 (s)</label>
+            <NInputNumber
+              v-model="form.timeInSeconds"
+              :min="0"
+              :step="0.05"
+              placeholder="过渡时间(s)"
+              class="h-8 text-xs"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">X 坐标</label>
+            <NInputNumber
+              v-model="form.positionX"
+              :step="0.01"
+              placeholder="X"
+              class="h-8 text-xs"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">Y 坐标</label>
+            <NInputNumber
+              v-model="form.positionY"
+              :step="0.01"
+              placeholder="Y"
+              class="h-8 text-xs"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">旋转</label>
+            <NInputNumber
+              v-model="form.rotation"
+              :step="0.1"
+              placeholder="旋转"
+              class="h-8 text-xs"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">缩放大小</label>
+            <NInputNumber
+              v-model="form.size"
+              :step="0.5"
+              placeholder="大小"
+              class="h-8 text-xs"
+            />
+          </div>
+        </div>
+      </div>
+      <DialogFooter class="flex justify-end gap-2 pt-2">
+        <Button
+          variant="outline"
+          size="sm"
+          @click="showEdit = false"
         >
-          填入当前位置
-        </NButton>
-        <NText depth="3"> 需要 VTS 已鉴权且模型有移动事件 </NText>
-      </NFlex>
-      <NFlex
-        :wrap="true"
-        :size="12"
-      >
-        <NInputNumber
-          v-model:value="form.timeInSeconds"
-          :min="0"
-          :step="0.05"
-          placeholder="过渡时间(s)"
-          style="width: 150px"
-        />
-        <NInputNumber
-          v-model:value="form.positionX"
-          :step="0.01"
-          placeholder="X"
-          style="width: 130px"
-        />
-        <NInputNumber
-          v-model:value="form.positionY"
-          :step="0.01"
-          placeholder="Y"
-          style="width: 130px"
-        />
-        <NInputNumber
-          v-model:value="form.rotation"
-          :step="0.1"
-          placeholder="旋转"
-          style="width: 130px"
-        />
-        <NInputNumber
-          v-model:value="form.size"
-          :step="0.5"
-          placeholder="大小"
-          style="width: 130px"
-        />
-      </NFlex>
-      <NFlex
-        justify="end"
-        :size="8"
-      >
-        <NButton @click="showEdit = false"> 取消 </NButton>
-        <NButton
-          type="primary"
+          取消
+        </Button>
+        <Button
+          size="sm"
           @click="saveEdit"
         >
           保存
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>

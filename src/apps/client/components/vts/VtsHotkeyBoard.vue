@@ -1,25 +1,29 @@
 <script setup lang="ts">
-import {
-  NButton,
-  NCard,
-  NColorPicker,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGi,
-  NGrid,
-  NInput,
-  NModal,
-  NSelect,
-  NSwitch,
-  NText,
-} from 'naive-ui'
 import { computed, onUnmounted, reactive, ref } from 'vue'
 
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
-import { newDeckTile } from '@/apps/client/store/vts/deck'
 import type { VtsHotkeyCustomization } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { newDeckTile } from '@/apps/client/store/vts/deck'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
 
 import { useVtsAction } from './useVtsAction'
 import VtsHotkeyButton from './VtsHotkeyButton.vue'
@@ -163,91 +167,88 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="表情与动作热键"
-  >
-    <template #header-extra>
-      <NText
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+      <CardTitle class="text-sm font-semibold">表情与动作热键</CardTitle>
+      <div
         v-if="modelName"
-        depth="3"
+        class="text-xs text-muted-foreground"
       >
         当前模型: {{ modelName }}
-      </NText>
-    </template>
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="8"
-      >
-        <NInput
-          v-model:value="query"
+      </div>
+    </CardHeader>
+
+    <CardContent class="p-3 space-y-3">
+      <div class="flex items-center gap-2 flex-wrap">
+        <Input
+          v-model="query"
           placeholder="搜索名称 / 描述 / 类型"
-          clearable
-          style="min-width: 240px; flex: 1"
+          class="h-8 text-xs min-w-[200px] flex-1"
         />
-        <NSwitch
-          v-model:value="safeClick"
-          size="small"
-          @update:value="disarm"
-        >
-          <template #checked> 防误触 </template>
-          <template #unchecked> 防误触 </template>
-        </NSwitch>
-        <NSelect
-          v-model:value="groupMode"
-          size="small"
-          style="width: 130px"
-          :options="groupModeOptions"
-        />
-        <NButton
-          size="small"
+        <div class="flex items-center gap-1.5 cursor-pointer select-none">
+          <Switch
+            :checked="safeClick"
+            @update:checked="safeClick = $event; disarm()"
+          />
+          <span class="text-xs text-muted-foreground">防误触</span>
+        </div>
+        <div class="w-[110px]">
+          <Select v-model="groupMode">
+            <SelectTrigger class="h-8 text-xs w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in groupModeOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-8 text-xs"
           :disabled="disabled"
           @click="emit('refresh')"
         >
           刷新
-        </NButton>
-      </NFlex>
-      <NText
+        </Button>
+      </div>
+
+      <div
         v-if="safeClick"
-        depth="3"
-        style="font-size: 12px"
+        class="text-xs text-muted-foreground"
       >
         防误触已开启：同一按钮需连续点击两次才会触发
-      </NText>
+      </div>
 
-      <NEmpty
+      <div
         v-if="filtered.length === 0"
-        :description="disabled ? '连接 VTS 后显示当前模型的热键' : '当前模型没有匹配的热键'"
-      />
+        class="py-6 flex flex-col items-center justify-center"
+      >
+        <Empty :description="disabled ? '连接 VTS 后显示当前模型的热键' : '当前模型没有匹配的热键'" />
+      </div>
 
       <div
         v-for="[key, list] in groups"
         v-else
         :key="key"
+        class="space-y-2"
       >
         <template v-if="key">
-          <NFlex
-            align="center"
-            justify="space-between"
-          >
-            <NText strong>{{ key }}</NText>
-            <NText depth="3">{{ list.length }}</NText>
-          </NFlex>
-          <NDivider style="margin: 6px 0" />
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-xs font-semibold text-foreground">{{ key }}</span>
+            <span class="text-xs text-muted-foreground">{{ list.length }}</span>
+          </div>
+          <div class="h-px bg-border my-1" />
         </template>
-        <NGrid
-          x-gap="8"
-          y-gap="8"
-          cols="2 600:4 900:6"
-          responsive="self"
-        >
-          <NGi
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          <div
             v-for="hk in list"
             :key="hk.hotkeyID"
           >
@@ -262,113 +263,119 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
               @toggle-pinned="togglePinned(hk)"
               @add-to-deck="addToDeck(hk)"
             />
-          </NGi>
-        </NGrid>
+          </div>
+        </div>
       </div>
-    </NFlex>
-  </NCard>
+    </CardContent>
+  </Card>
 
-  <NModal
-    v-model:show="showEdit"
-    preset="card"
-    title="自定义热键外观"
-    style="width: 600px"
-  >
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NText depth="3"> ID: {{ editForm.hotkeyID }} </NText>
+  <Dialog v-model:open="showEdit">
+    <DialogContent class="sm:max-w-[500px]">
+      <DialogHeader>
+        <DialogTitle class="text-base font-semibold">自定义热键外观</DialogTitle>
+      </DialogHeader>
 
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="12"
-      >
-        <NSwitch
-          v-model:value="editForm.pinned"
-          size="small"
-        >
-          <template #checked> 置顶 </template>
-          <template #unchecked> 置顶 </template>
-        </NSwitch>
-        <NInput
-          v-model:value="editForm.group"
-          placeholder="分组"
-          style="width: 140px"
-        />
-        <NInput
-          v-model:value="editForm.displayName"
-          placeholder="显示名称"
-          style="width: 200px"
-        />
-        <NColorPicker
-          v-model:value="editForm.color"
-          :modes="['hex']"
-          :show-alpha="false"
-          style="width: 180px"
-        />
-      </NFlex>
+      <div class="space-y-3 pt-2 text-xs">
+        <div class="text-xs text-muted-foreground">ID: {{ editForm.hotkeyID }}</div>
 
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="12"
-      >
-        <NButton
-          size="small"
-          tag="label"
-        >
-          选择图标
-          <input
-            type="file"
-            accept="image/*"
-            style="display: none"
-            @change="onIconFileChange"
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5 cursor-pointer select-none">
+            <Switch
+              :checked="editForm.pinned"
+              @update:checked="editForm.pinned = $event"
+            />
+            <span>置顶</span>
+          </div>
+          <Input
+            v-model="editForm.group"
+            placeholder="分组"
+            class="h-8 text-xs flex-1"
           />
-        </NButton>
-        <NButton
-          size="small"
-          :disabled="!editForm.iconDataUrl"
-          @click="editForm.iconDataUrl = ''"
-        >
-          清除图标
-        </NButton>
-        <img
-          v-if="editForm.iconDataUrl"
-          class="hotkey-icon-preview"
-          :src="editForm.iconDataUrl"
-          alt=""
-        />
-      </NFlex>
+        </div>
 
-      <NFlex
-        justify="end"
-        :size="8"
-      >
-        <NButton @click="showEdit = false"> 取消 </NButton>
-        <NButton
-          type="error"
-          @click="clearCustomization"
-        >
-          重置
-        </NButton>
-        <NButton
-          type="primary"
-          @click="saveEdit"
-        >
-          保存
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+        <div class="flex items-center gap-3">
+          <Input
+            v-model="editForm.displayName"
+            placeholder="显示名称"
+            class="h-8 text-xs flex-1"
+          />
+          <div class="w-32 shrink-0">
+            <ColorPicker
+              v-model="editForm.color"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="cursor-pointer">
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-8 text-xs"
+              as-child
+            >
+              <span>选择图标</span>
+            </Button>
+            <input
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="onIconFileChange"
+            />
+          </label>
+          <Button
+            size="sm"
+            variant="ghost"
+            class="h-8 text-xs"
+            :disabled="!editForm.iconDataUrl"
+            @click="editForm.iconDataUrl = ''"
+          >
+            清除图标
+          </Button>
+          <img
+            v-if="editForm.iconDataUrl"
+            class="hotkey-icon-preview"
+            :src="editForm.iconDataUrl"
+            alt=""
+          />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            class="h-8 text-xs"
+            @click="showEdit = false"
+          >
+            取消
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
+            @click="clearCustomization"
+          >
+            重置
+          </Button>
+          <Button
+            size="sm"
+            class="h-8 text-xs"
+            @click="saveEdit"
+          >
+            保存
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <style scoped>
 .hotkey-icon-preview {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 4px;
   object-fit: cover;
+  border: 1px solid var(--vtsuru-border);
 }
 </style>

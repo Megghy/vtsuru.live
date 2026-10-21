@@ -1,31 +1,27 @@
 <script setup lang="ts">
 import { ArchiveOutline } from '@vicons/ionicons5'
-import type { SelectOption } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NIcon,
-  NSelect,
-  NFlex,
-  NText,
-  NTransfer,
-  useMessage,
-} from 'naive-ui'
-import type { Option } from 'naive-ui/es/transfer/src/interface'
 import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Separator } from '@/shared/ui/separator'
+import { Transfer, type TransferOption } from '@/shared/ui/transfer'
+import { useMessage } from '@/shared/utils'
+
+interface OptionItem {
+  label: string
+  value: string
+}
 
 const props = defineProps<{
   existingSongs: SongsInfo[]
-  authors: SelectOption[]
-  tags: SelectOption[]
-  languageSelectOption: SelectOption[]
+  authors: OptionItem[]
+  tags: OptionItem[]
+  languageSelectOption: OptionItem[]
 }>()
 
 const emit = defineEmits<{
@@ -36,9 +32,14 @@ const emit = defineEmits<{
 const message = useMessage()
 
 const folderSongs = ref<SongsInfo[]>([])
-const folderSongsOptions = ref<Option[]>([])
+const folderSongsOptions = ref<TransferOption[]>([])
 const selectedFolderSongs = ref<string[]>([])
 const isScanningFolder = ref(false)
+
+const showBatchEdit = ref(false)
+const batchAuthorInput = ref('')
+const batchLanguageInput = ref('')
+const batchTagInput = ref('')
 
 defineExpose({
   add: addFolderSongs,
@@ -152,14 +153,14 @@ function updateFolderSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
     label: `${s.name} - ${s.author?.join('/') || '未知'}`,
     value: `${s.name}_${(s as any)._filePath}`,
     disabled:
-      props.existingSongs.findIndex((exist) => exist.name === s.name) > -1 ||
-      newlyAddedSongs.findIndex((add) => add.name === s.name) > -1,
+      props.existingSongs.some((exist) => exist.name === s.name) ||
+      newlyAddedSongs.some((add) => add.name === s.name),
   }))
 }
 
 function batchEditFolderSongs(field: 'author' | 'language' | 'tags', value: string[]) {
   const selectedSongs = folderSongs.value.filter((s) =>
-    selectedFolderSongs.value.find((select) => select === `${s.name}_${(s as any)._filePath}`),
+    selectedFolderSongs.value.includes(`${s.name}_${(s as any)._filePath}`),
   )
 
   selectedSongs.forEach((song) => {
@@ -187,7 +188,7 @@ async function addFolderSongs() {
   emit('loadingChange', true)
   try {
     const songsToAdd = folderSongs.value.filter((s) =>
-      selectedFolderSongs.value.find((select) => select === `${s.name}_${(s as any)._filePath}`),
+      selectedFolderSongs.value.includes(`${s.name}_${(s as any)._filePath}`),
     )
 
     const result = await addSongsToSongList(
@@ -258,98 +259,73 @@ async function selectFolder() {
 </script>
 
 <template>
-  <NAlert
-    type="info"
-    style="margin-bottom: 16px"
-  >
-    <template #header> 功能说明 </template>
-    <NFlex vertical>
-      <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>
-      <div>支持的文件名格式：</div>
-      <ul style="margin: 8px 0; padding-left: 20px">
-        <li>歌名.mp3</li>
-        <li>歌手 - 歌名.mp3</li>
-        <li>歌手-歌名.mp3</li>
-        <li>[歌手] 歌名.mp3</li>
-        <li>歌手 《歌名》.mp3</li>
-      </ul>
-      <NText type="error">
-        <strong>注意：</strong>导入的歌曲链接为本地文件地址，仅在当前浏览器会话有效。刷新页面后可能需要重新导入。
-      </NText>
-    </NFlex>
-  </NAlert>
+  <div class="space-y-4">
+    <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5">
+      <AlertTitle class="text-xs font-semibold">功能说明</AlertTitle>
+      <AlertDescription class="text-xs space-y-1 mt-1">
+        <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>
+        <p class="text-destructive font-medium">
+          注意：导入的歌曲链接为本地文件地址，仅在当前浏览器会话有效。刷新页面后可能需要重新导入。
+        </p>
+      </AlertDescription>
+    </Alert>
 
-  <NButton
-    type="primary"
-    :loading="isScanningFolder"
-    @click="selectFolder"
-  >
-    <template #icon>
-      <NIcon :component="ArchiveOutline" />
-    </template>
-    选择文件夹
-  </NButton>
-
-  <template v-if="folderSongsOptions.length > 0">
-    <NDivider style="margin: 16px 0" />
-
-    <NCollapse>
-      <NCollapseItem
-        title="批量编辑工具"
-        name="batch-edit"
+    <div class="flex items-center gap-2">
+      <Button
+        size="sm"
+        :disabled="isScanningFolder"
+        class="gap-1.5"
+        @click="selectFolder"
       >
-        <NFlex
-          vertical
-          style="width: 100%"
+        <ArchiveOutline class="size-4" />
+        {{ isScanningFolder ? '正在扫描...' : '选择本地文件夹' }}
+      </Button>
+    </div>
+
+    <template v-if="folderSongsOptions.length > 0">
+      <Separator />
+
+      <!-- 批量工具 -->
+      <div class="space-y-2">
+        <Button
+          variant="outline"
+          size="xs"
+          @click="showBatchEdit = !showBatchEdit"
         >
-          <NAlert type="info"> 选中歌曲后，可以批量设置作者、语言或标签信息 </NAlert>
-          <NFlex align="center">
-            <span>批量设置作者：</span>
-            <NSelect
-              style="width: 300px"
-              :options="authors"
-              filterable
-              multiple
-              tag
-              placeholder="选择或输入作者"
-              @update:value="(value) => batchEditFolderSongs('author', value)"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <span>批量设置语言：</span>
-            <NSelect
-              style="width: 300px"
-              :options="languageSelectOption"
-              filterable
-              multiple
-              tag
-              placeholder="选择或输入语言"
-              @update:value="(value) => batchEditFolderSongs('language', value)"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <span>批量设置标签：</span>
-            <NSelect
-              style="width: 300px"
-              :options="tags"
-              filterable
-              multiple
-              tag
-              placeholder="选择或输入标签"
-              @update:value="(value) => batchEditFolderSongs('tags', value)"
-            />
-          </NFlex>
-        </NFlex>
-      </NCollapseItem>
-    </NCollapse>
+          {{ showBatchEdit ? '收起批量设置工具' : '展开批量设置工具' }}
+        </Button>
 
-    <NDivider style="margin: 16px 0" />
+        <div v-if="showBatchEdit" class="p-3 rounded-lg border border-border bg-muted/20 space-y-2 text-xs">
+          <p class="text-muted-foreground text-[11px]">选中歌曲后，可以批量设置作者、语言或标签信息</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="flex items-center gap-1.5">
+              <Input v-model="batchAuthorInput" placeholder="输入作者" class="h-7 text-xs flex-1" />
+              <Button size="xs" variant="outline" @click="batchEditFolderSongs('author', [batchAuthorInput]); batchAuthorInput = ''">
+                设置作者
+              </Button>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <Input v-model="batchLanguageInput" placeholder="输入语言" class="h-7 text-xs flex-1" />
+              <Button size="xs" variant="outline" @click="batchEditFolderSongs('language', [batchLanguageInput]); batchLanguageInput = ''">
+                设置语言
+              </Button>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <Input v-model="batchTagInput" placeholder="输入标签" class="h-7 text-xs flex-1" />
+              <Button size="xs" variant="outline" @click="batchEditFolderSongs('tags', [batchTagInput]); batchTagInput = ''">
+                设置标签
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <NTransfer
-      v-model:value="selectedFolderSongs"
-      style="height: 500px"
-      :options="folderSongsOptions"
-      source-filterable
-    />
-  </template>
+      <Transfer
+        v-model="selectedFolderSongs"
+        :options="folderSongsOptions"
+        source-title="文件夹音频"
+        target-title="待添加歌曲"
+      />
+    </template>
+  </div>
 </template>

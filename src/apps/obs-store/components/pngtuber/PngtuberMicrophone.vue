@@ -1,9 +1,20 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core'
-import { NAlert, NButton, NFormItem, NProgress, NSelect, NSpace, NText } from 'naive-ui'
+import { computed } from 'vue'
 
 import type { PngtuberState } from '@/shared/pngtuber/types'
 import { useAudioReactive } from '@/shared/pngtuber/useAudioReactive'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Progress } from '@/shared/ui/progress'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+
 const props = withDefaults(
   defineProps<{
     state: PngtuberState
@@ -20,6 +31,7 @@ const emit = defineEmits<{
   sample: [volume: number, speaking: boolean]
   error: [message: string]
 }>()
+
 // OBS has its own storage key; browser-specific device IDs never enter bridge state.
 const deviceId = useLocalStorage(props.obs ? 'pngtuber:obs:microphone' : 'pngtuber:manager:microphone', 'default')
 const audio = useAudioReactive({
@@ -44,6 +56,7 @@ const {
   errorMessage,
   permissionState,
 } = audio
+
 // This component also runs in OBS, where a message provider is not guaranteed.
 async function calibrate() {
   try {
@@ -52,70 +65,113 @@ async function calibrate() {
     emit('error', error instanceof Error ? error.message : String(error))
   }
 }
+
+const currentDeviceLabel = computed(() => {
+  return deviceList.value.find((d) => d.deviceId === deviceId.value)?.label || deviceId.value
+})
 </script>
+
 <template>
-  <NSpace
+  <div
     v-if="controls"
-    vertical
-    :size="12"
+    class="space-y-3"
   >
-    <NAlert
+    <Alert
       v-if="errorMessage"
-      type="warning"
-      >{{ errorMessage }}</NAlert
+      class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
     >
-    <NText
+      <AlertDescription class="text-xs m-0">
+        {{ errorMessage }}
+      </AlertDescription>
+    </Alert>
+
+    <div
       v-if="obs"
-      depth="3"
-      >这里选择的是当前 OBS 浏览器源的输入设备。网页管理页的设备选择不会同步到
-      OBS。若无法采集，请使用控制页或客户端输入。</NText
+      class="text-xs text-muted-foreground leading-relaxed"
     >
-    <NFormItem
-      :label="obs ? '当前 OBS 麦克风' : '本机麦克风（仅本地保存）'"
-      :show-feedback="false"
-      ><NSelect
-        v-model:value="deviceId"
-        :options="[
-          { label: '系统默认麦克风', value: 'default' },
-          ...deviceList.filter((d) => d.deviceId !== 'default').map((d) => ({ label: d.label, value: d.deviceId })),
-        ]"
-    /></NFormItem>
-    <NText depth="3"
-      >设备：{{ deviceList.find((d) => d.deviceId === deviceId)?.label || deviceId }} · 权限：{{ permissionState }} ·
-      {{ isListening ? '采集中' : '未采集' }}</NText
-    >
-    <NSpace
-      ><NButton
-        size="small"
-        :loading="isStarting"
+      这里选择的是当前 OBS 浏览器源的输入设备。网页管理页的设备选择不会同步到 OBS。若无法采集，请使用控制页或客户端输入。
+    </div>
+
+    <div class="space-y-1">
+      <label class="text-xs text-muted-foreground font-medium">
+        {{ obs ? '当前 OBS 麦克风' : '本机麦克风（仅本地保存）' }}
+      </label>
+      <Select v-model="deviceId">
+        <SelectTrigger class="h-8 text-xs w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="default" class="text-xs">系统默认麦克风</SelectItem>
+          <SelectItem
+            v-for="d in deviceList.filter((item) => item.deviceId !== 'default')"
+            :key="d.deviceId"
+            :value="d.deviceId"
+            class="text-xs"
+          >
+            {{ d.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div class="text-xs text-muted-foreground">
+      设备：{{ currentDeviceLabel }} · 权限：{{ permissionState }} ·
+      {{ isListening ? '采集中' : '未采集' }}
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <Button
+        size="sm"
+        variant="outline"
+        class="h-8 text-xs"
+        :disabled="isStarting"
         @click="isListening ? audio.stopListening() : audio.startListening()"
-        >{{ isListening ? '停止麦克风' : '启动 / 重试麦克风' }}</NButton
-      ><NButton
-        size="small"
+      >
+        {{ isListening ? '停止麦克风' : '启动 / 重试麦克风' }}
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        class="h-8 text-xs"
         @click="audio.refreshDevices()"
-        >刷新设备</NButton
-      ><NButton
+      >
+        刷新设备
+      </Button>
+      <Button
         v-if="!obs"
-        size="small"
+        size="sm"
+        variant="outline"
+        class="h-8 text-xs"
         @click="audio.simulateSpeaking(true)"
-        >模拟说话 1.5s</NButton
-      ><NButton
+      >
+        模拟说话 1.5s
+      </Button>
+      <Button
         v-if="!obs"
-        size="small"
-        :disabled="disabled || !isListening"
-        :loading="isCalibrating"
+        size="sm"
+        variant="outline"
+        class="h-8 text-xs"
+        :disabled="disabled || !isListening || isCalibrating"
         @click="calibrate"
-        >噪声校准</NButton
-      ></NSpace
-    >
-    <NText v-if="isCalibrating">请保持安静，正在采样环境噪声（3 秒）…</NText>
-    <NProgress
-      type="line"
-      :percentage="Math.round(smoothedVolume)"
-      :status="isSpeaking ? 'success' : 'default'"
-    />
-  </NSpace>
+      >
+        噪声校准
+      </Button>
+    </div>
+
+    <div v-if="isCalibrating" class="text-xs text-amber-500">
+      请保持安静，正在采样环境噪声（3 秒）…
+    </div>
+
+    <div class="space-y-1">
+      <Progress
+        :model-value="Math.round(smoothedVolume)"
+        class="h-2"
+        :class="isSpeaking ? '[&>div]:bg-emerald-500' : ''"
+      />
+    </div>
+  </div>
 </template>
+
 <style scoped>
 .fields {
   display: grid;

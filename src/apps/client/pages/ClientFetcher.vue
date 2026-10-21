@@ -4,13 +4,6 @@ import {
   DataTrending24Filled,
   Desktop24Filled,
 } from '@vicons/fluent'
-import {
-  NCard,
-  NFlex,
-  NIcon,
-  NTabPane,
-  NTabs,
-} from 'naive-ui'
 import { ref } from 'vue'
 
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
@@ -22,119 +15,72 @@ import FetcherStatisticsCard from '@/apps/client/components/fetcher/FetcherStati
 import FetcherStatusCard from '@/apps/client/components/fetcher/FetcherStatusCard.vue'
 import FetcherSystemCard from '@/apps/client/components/fetcher/FetcherSystemCard.vue'
 import { useSettings } from '@/apps/client/store/useSettings'
+import { Card } from '@/shared/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const settings = useSettings()
 const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="14"
-  >
-    <NCard
-      size="small"
-      bordered
-    >
-      <ClientPageHeader
-        title="EventFetcher"
-        description="事件采集引擎、连接状态与运行监控"
-      />
-    </NCard>
+  <div class="flex flex-col gap-3.5">
+    <Card class="border bg-card">
+      <div class="p-3">
+        <ClientPageHeader
+          title="EventFetcher"
+          description="事件采集引擎、连接状态与运行监控"
+        />
+      </div>
+    </Card>
 
-    <NTabs
-      v-model:value="activeTab"
-      type="segment"
-      animated
-      class="fetcher-tabs"
+    <Tabs
+      v-model="activeTab"
+      class="w-full fetcher-tabs"
     >
+      <TabsList class="grid w-full max-w-md grid-cols-3 h-8">
+        <TabsTrigger value="connection" class="text-xs gap-1.5">
+          <CloudArchive24Filled class="size-3.5" />
+          连接与凭据
+        </TabsTrigger>
+        <TabsTrigger value="stats" class="text-xs gap-1.5">
+          <DataTrending24Filled class="size-3.5" />
+          监控与统计
+        </TabsTrigger>
+        <TabsTrigger value="system" class="text-xs gap-1.5">
+          <Desktop24Filled class="size-3.5" />
+          系统与诊断
+        </TabsTrigger>
+      </TabsList>
+
       <!-- 连接与凭据 -->
-      <NTabPane
-        name="connection"
-        tab="连接与凭据"
-      >
-        <template #tab>
-          <NFlex
-            align="center"
-            :size="6"
-          >
-            <NIcon :component="CloudArchive24Filled" />
-            <span>连接与凭据</span>
-          </NFlex>
-        </template>
+      <TabsContent value="connection" class="pt-3 space-y-3 fetcher-tab-content">
+        <FetcherSettingsCard class="client-readable" />
 
-        <NFlex
-          vertical
-          :size="12"
-          class="fetcher-tab-content"
-        >
-          <FetcherSettingsCard class="client-readable" />
+        <FetcherStatusCard
+          v-if="settings.settings.enableEventFetcher"
+          class="client-readable"
+        />
 
-          <FetcherStatusCard
-            v-if="settings.settings.enableEventFetcher"
-            class="client-readable"
-          />
+        <FetcherLoginCard class="client-readable" />
 
-          <FetcherLoginCard class="client-readable" />
-
-          <FetcherLiveInfoCard
-            v-if="settings.settings.enableEventFetcher && settings.settings.useDanmakuClientType === 'openlive'"
-            class="client-readable"
-          />
-        </NFlex>
-      </NTabPane>
+        <FetcherLiveInfoCard
+          v-if="settings.settings.enableEventFetcher && settings.settings.useDanmakuClientType === 'openlive'"
+          class="client-readable"
+        />
+      </TabsContent>
 
       <!-- 实时监控与统计 -->
-      <NTabPane
-        name="stats"
-        tab="监控与统计"
-      >
-        <template #tab>
-          <NFlex
-            align="center"
-            :size="6"
-          >
-            <NIcon :component="DataTrending24Filled" />
-            <span>监控与统计</span>
-          </NFlex>
-        </template>
-
-        <NFlex
-          vertical
-          :size="12"
-          class="fetcher-tab-content"
-        >
-          <FetcherStatisticsCard v-if="settings.settings.enableEventFetcher" />
-
-          <FetcherDailyStatsCard v-if="settings.settings.enableEventFetcher" />
-        </NFlex>
-      </NTabPane>
+      <TabsContent value="stats" class="pt-3 space-y-3 fetcher-tab-content">
+        <FetcherStatisticsCard v-if="settings.settings.enableEventFetcher" />
+        <FetcherDailyStatsCard v-if="settings.settings.enableEventFetcher" />
+      </TabsContent>
 
       <!-- 系统与诊断 -->
-      <NTabPane
-        name="system"
-        tab="系统与诊断"
-      >
-        <template #tab>
-          <NFlex
-            align="center"
-            :size="6"
-          >
-            <NIcon :component="Desktop24Filled" />
-            <span>系统与诊断</span>
-          </NFlex>
-        </template>
-
-        <NFlex
-          vertical
-          :size="12"
-          class="fetcher-tab-content"
-        >
-          <FetcherSystemCard class="client-readable" />
-        </NFlex>
-      </NTabPane>
-    </NTabs>
-  </NFlex>
+      <TabsContent value="system" class="pt-3 space-y-3 fetcher-tab-content">
+        <FetcherSystemCard class="client-readable" />
+      </TabsContent>
+    </Tabs>
+  </div>
 </template>
 
 <style scoped>

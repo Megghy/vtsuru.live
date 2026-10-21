@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { ArrowClockwise16Filled, Info16Regular } from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSwitch,
-  NTooltip,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType } from '@/apps/client/store/useAutoAction'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
   action: AutoActionItem
@@ -49,200 +49,241 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
 
 <template>
   <div v-if="isVtsAction">
-    <NCard
-      title="VTS 动作配置"
-      size="small"
-      bordered
-      embedded
-    >
-      <template #header-extra>
-        <NTooltip trigger="hover">
-          <template #trigger>
-            <NIcon
-              :component="Info16Regular"
-              depth="3"
-            />
-          </template>
-          需要 VTS 已连接且已授权
-        </NTooltip>
-      </template>
+    <Card class="border bg-card">
+      <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+        <CardTitle class="text-sm font-semibold">VTS 动作配置</CardTitle>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Info16Regular class="size-4 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent class="text-xs">
+              需要 VTS 已连接且已授权
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </CardHeader>
 
-      <NForm
-        label-placement="left"
-        :label-width="100"
-        size="small"
-        :show-feedback="false"
-      >
-        <NFlex
-          vertical
-          :size="12"
+      <CardContent class="p-3 space-y-3">
+        <!-- 热键 -->
+        <div
+          v-if="action.actionType === ActionType.VTS_HOTKEY"
+          class="space-y-1"
         >
-          <NFormItem
-            v-if="action.actionType === ActionType.VTS_HOTKEY"
-            label="热键"
-          >
-            <NFlex
-              align="center"
-              :wrap="false"
-              style="width: 100%"
+          <span class="text-xs text-muted-foreground">热键</span>
+          <div class="flex items-center gap-1.5">
+            <div class="flex-1">
+              <Select v-model="action.actionConfig.vtsHotkeyId">
+                <SelectTrigger class="h-8 text-xs w-full">
+                  <SelectValue placeholder="选择热键" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in hotkeyOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                    class="text-xs"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              size="xs"
+              variant="ghost"
+              class="h-8 w-8 p-0"
+              title="刷新"
+              @click="vts.refreshHotkeys()"
             >
-              <NSelect
-                v-model:value="action.actionConfig.vtsHotkeyId"
-                filterable
-                clearable
-                placeholder="选择热键"
-                :options="hotkeyOptions"
-                style="flex: 1"
-              />
-              <NButton
-                size="small"
-                quaternary
-                circle
+              <ArrowClockwise16Filled class="size-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        <!-- 机位预设 -->
+        <div
+          v-if="action.actionType === ActionType.VTS_PRESET"
+          class="space-y-1"
+        >
+          <span class="text-xs text-muted-foreground">机位预设</span>
+          <Select v-model="action.actionConfig.vtsPresetId">
+            <SelectTrigger class="h-8 text-xs w-full">
+              <SelectValue placeholder="选择预设" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in presetOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <!-- 掉落道具 -->
+        <template v-if="action.actionType === ActionType.VTS_DROP_ITEM">
+          <div class="space-y-1">
+            <span class="text-xs text-muted-foreground">道具文件</span>
+            <div class="flex items-center gap-1.5">
+              <div class="flex-1">
+                <Select v-model="action.actionConfig.vtsItemFileName">
+                  <SelectTrigger class="h-8 text-xs w-full">
+                    <SelectValue placeholder="选择道具文件" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="opt in itemFileOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                      class="text-xs"
+                    >
+                      {{ opt.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-8 w-8 p-0"
+                :disabled="!vts.connected"
                 title="刷新"
-                @click="vts.refreshHotkeys()"
+                @click="vts.refreshItems({ includeFiles: true })"
               >
-                <template #icon>
-                  <NIcon :component="ArrowClockwise16Filled" />
-                </template>
-              </NButton>
-            </NFlex>
-          </NFormItem>
+                <ArrowClockwise16Filled class="size-3.5" />
+              </Button>
+            </div>
+          </div>
 
-          <NFormItem
-            v-if="action.actionType === ActionType.VTS_PRESET"
-            label="机位预设"
-          >
-            <NSelect
-              v-model:value="action.actionConfig.vtsPresetId"
-              filterable
-              clearable
-              placeholder="选择预设"
-              :options="presetOptions"
-            />
-          </NFormItem>
-
-          <template v-if="action.actionType === ActionType.VTS_DROP_ITEM">
-            <NFormItem label="道具文件">
-              <NFlex
-                align="center"
-                :wrap="false"
-                style="width: 100%"
-              >
-                <NSelect
-                  v-model:value="action.actionConfig.vtsItemFileName"
-                  filterable
-                  clearable
-                  placeholder="选择道具文件"
-                  :options="itemFileOptions"
-                  style="flex: 1"
-                />
-                <NButton
-                  size="small"
-                  quaternary
-                  circle
-                  :disabled="!vts.connected"
-                  title="刷新"
-                  @click="vts.refreshItems({ includeFiles: true })"
-                >
-                  <template #icon>
-                    <NIcon :component="ArrowClockwise16Filled" />
-                  </template>
-                </NButton>
-              </NFlex>
-            </NFormItem>
-            <NFormItem label="位置与缩放">
-              <NFlex
-                align="center"
-                :size="12"
-              >
+          <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+            <span class="text-xs font-medium text-foreground">位置与缩放</span>
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-muted-foreground">X:</span>
                 <NInputNumber
-                  v-model:value="action.actionConfig.vtsItemDropX"
+                  :value="action.actionConfig.vtsItemDropX"
                   placeholder="X"
                   :step="0.05"
-                  style="width: 130px"
-                >
-                  <template #prefix> X: </template>
-                </NInputNumber>
+                  size="small"
+                  class="w-24"
+                  @update:value="action.actionConfig.vtsItemDropX = $event"
+                />
+              </div>
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-muted-foreground">S:</span>
                 <NInputNumber
-                  v-model:value="action.actionConfig.vtsItemDropSize"
+                  :value="action.actionConfig.vtsItemDropSize"
                   placeholder="大小"
                   :step="0.01"
                   :min="0"
                   :max="1"
-                  style="width: 130px"
-                >
-                  <template #prefix> S: </template>
-                </NInputNumber>
-              </NFlex>
-            </NFormItem>
-          </template>
+                  size="small"
+                  class="w-24"
+                  @update:value="action.actionConfig.vtsItemDropSize = $event"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
 
-          <template v-if="action.actionType === ActionType.VTS_PARAM_ADD">
-            <NFormItem label="参数 ID">
-              <NInput
-                v-model:value="action.actionConfig.vtsParamId"
-                placeholder="如 Blush, EyeOpen"
-              />
-            </NFormItem>
-            <NFormItem label="数值与权重">
-              <NFlex
-                align="center"
-                :size="12"
-              >
+        <!-- 参数调节 -->
+        <template v-if="action.actionType === ActionType.VTS_PARAM_ADD">
+          <div class="space-y-1">
+            <span class="text-xs text-muted-foreground">参数 ID</span>
+            <Input
+              v-model="action.actionConfig.vtsParamId"
+              placeholder="如 Blush, EyeOpen"
+              class="h-8 text-xs"
+            />
+          </div>
+
+          <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+            <span class="text-xs font-medium text-foreground">数值与权重</span>
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-muted-foreground">值:</span>
                 <NInputNumber
-                  v-model:value="action.actionConfig.vtsParamValue"
+                  :value="action.actionConfig.vtsParamValue"
                   placeholder="值"
                   :step="0.01"
-                  style="width: 130px"
-                >
-                  <template #prefix> 值: </template>
-                </NInputNumber>
+                  size="small"
+                  class="w-24"
+                  @update:value="action.actionConfig.vtsParamValue = $event"
+                />
+              </div>
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-muted-foreground">W:</span>
                 <NInputNumber
-                  v-model:value="action.actionConfig.vtsParamWeight"
+                  :value="action.actionConfig.vtsParamWeight"
                   placeholder="权重"
                   :step="0.1"
                   :min="0"
                   :max="1"
-                  style="width: 130px"
+                  size="small"
+                  class="w-24"
+                  @update:value="action.actionConfig.vtsParamWeight = $event"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- 宏 -->
+        <div
+          v-if="action.actionType === ActionType.VTS_MACRO"
+          class="space-y-1"
+        >
+          <span class="text-xs text-muted-foreground">宏</span>
+          <Select v-model="action.actionConfig.vtsMacroId">
+            <SelectTrigger class="h-8 text-xs w-full">
+              <SelectValue placeholder="选择要运行的宏" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in macroOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <!-- 配饰 -->
+        <template v-if="action.actionType === ActionType.VTS_ACCESSORY">
+          <div class="space-y-1">
+            <span class="text-xs text-muted-foreground">配饰</span>
+            <Select v-model="action.actionConfig.vtsAccessoryId">
+              <SelectTrigger class="h-8 text-xs w-full">
+                <SelectValue placeholder="选择配饰" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in accessoryOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
                 >
-                  <template #prefix> W: </template>
-                </NInputNumber>
-              </NFlex>
-            </NFormItem>
-          </template>
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <NFormItem
-            v-if="action.actionType === ActionType.VTS_MACRO"
-            label="宏"
-          >
-            <NSelect
-              v-model:value="action.actionConfig.vtsMacroId"
-              filterable
-              clearable
-              placeholder="选择要运行的宏"
-              :options="macroOptions"
-            />
-          </NFormItem>
-
-          <template v-if="action.actionType === ActionType.VTS_ACCESSORY">
-            <NFormItem label="配饰">
-              <NSelect
-                v-model:value="action.actionConfig.vtsAccessoryId"
-                filterable
-                clearable
-                placeholder="选择配饰"
-                :options="accessoryOptions"
-              />
-            </NFormItem>
-            <NFormItem label="操作">
-              <NSwitch v-model:value="action.actionConfig.vtsAccessoryVisible">
-                <template #checked> 显示 </template>
-                <template #unchecked> 隐藏 </template>
-              </NSwitch>
-            </NFormItem>
-          </template>
-        </NFlex>
-      </NForm>
-    </NCard>
+          <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+            <span class="text-xs font-medium text-foreground">
+              {{ action.actionConfig.vtsAccessoryVisible ? '操作: 显示' : '操作: 隐藏' }}
+            </span>
+            <Switch v-model:checked="action.actionConfig.vtsAccessoryVisible" />
+          </div>
+        </template>
+      </CardContent>
+    </Card>
   </div>
 </template>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CalendarNumberOutline, RefreshOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NIcon, NSpin, NTag } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ScheduleDayInfo, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
@@ -8,6 +7,10 @@ import { getApiScheduleGet } from '@/api/generated/schedule/schedule'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
 import { SCHEDULE_API_URL } from '@/shared/config'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -148,147 +151,149 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
       class="schedule"
       aria-labelledby="schedule-title"
     >
-      <header class="schedule-header">
-        <div class="header-title-wrap">
-          <NIcon size="20">
-            <CalendarNumberOutline />
-          </NIcon>
-          <h2 id="schedule-title">直播日程</h2>
+      <header class="schedule-header flex items-center justify-between gap-3 p-4 border-b border-border bg-muted/40">
+        <div class="header-title-wrap flex items-center gap-2 min-w-0">
+          <component :is="CalendarNumberOutline" class="size-5 text-primary" />
+          <h2 id="schedule-title" class="text-sm font-semibold m-0 leading-none">直播日程</h2>
         </div>
-        <span class="week-count">未来 {{ cfg.weeksCount }} 周</span>
+        <span class="week-count text-xs text-muted-foreground shrink-0">未来 {{ cfg.weeksCount }} 周</span>
       </header>
 
-      <div class="schedule-body">
-        <NSpin
-          :show="loading"
-          size="small"
+      <div class="schedule-body min-h-[90px] p-4">
+        <div
+          v-if="loading"
+          class="py-6 flex justify-center"
         >
-          <NAlert
-            v-if="failed"
-            type="error"
-            :show-icon="true"
-          >
-            <div class="remote-state">
-              <span>日程加载失败，请稍后重试</span>
-              <NButton
-                size="small"
-                type="primary"
-                secondary
-                @click="loadSchedule(true)"
-              >
-                <template #icon>
-                  <NIcon><RefreshOutline /></NIcon>
-                </template>
-                重试
-              </NButton>
-            </div>
-          </NAlert>
-          <div
-            v-else-if="!userInfo?.id"
-            class="empty-state"
-          >
-            暂未关联用户信息
-          </div>
-          <div
-            v-else-if="!loading && rows.length === 0"
-            class="empty-state"
-          >
-            暂无直播日程
-          </div>
+          <Spin />
+        </div>
+        <Alert
+          v-else-if="failed"
+          variant="destructive"
+          class="text-xs py-2"
+        >
+          <AlertDescription class="flex items-center justify-between w-full">
+            <span>日程加载失败，请稍后重试</span>
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-6 px-2 text-xs"
+              @click="loadSchedule(true)"
+            >
+              <component :is="RefreshOutline" class="size-3 mr-1" />
+              重试
+            </Button>
+          </AlertDescription>
+        </Alert>
+        <div
+          v-else-if="!userInfo?.id"
+          class="empty-state text-xs text-muted-foreground text-center py-6"
+        >
+          暂未关联用户信息
+        </div>
+        <div
+          v-else-if="rows.length === 0"
+          class="empty-state text-xs text-muted-foreground text-center py-6"
+        >
+          暂无直播日程
+        </div>
 
-          <div
-            v-else-if="cfg.layout === 'table'"
-            class="table-wrap"
-            tabindex="0"
-            aria-label="直播日程表，可横向滚动"
-          >
-            <table>
-              <thead>
-                <tr>
-                  <th>周次</th>
-                  <th>日期</th>
-                  <th>时间</th>
-                  <th>内容</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="row in rows"
-                  :key="row.key"
-                  :class="{ today: cfg.highlightToday && row.isToday }"
-                >
-                  <td>{{ row.year }} 年第 {{ row.week }} 周</td>
-                  <td>
-                    {{ dayLabel(row.dayIndex) }}
-                    <NTag
+        <div
+          v-else-if="cfg.layout === 'table'"
+          class="table-wrap max-w-full overflow-x-auto border border-border rounded-lg"
+          tabindex="0"
+          aria-label="直播日程表，可横向滚动"
+        >
+          <table class="w-full min-w-[500px] border-collapse text-xs">
+            <thead>
+              <tr class="bg-muted text-muted-foreground font-semibold">
+                <th class="p-2.5 text-left">周次</th>
+                <th class="p-2.5 text-left">日期</th>
+                <th class="p-2.5 text-left">时间</th>
+                <th class="p-2.5 text-left">内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in rows"
+                :key="row.key"
+                class="border-b border-border last:border-0"
+                :class="{ 'bg-primary/10': cfg.highlightToday && row.isToday }"
+              >
+                <td class="p-2.5">{{ row.year }} 年第 {{ row.week }} 周</td>
+                <td class="p-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <span>{{ dayLabel(row.dayIndex) }}</span>
+                    <Badge
                       v-if="cfg.highlightToday && row.isToday"
-                      type="primary"
-                      size="small"
-                      :bordered="false"
+                      variant="default"
+                      class="h-4 px-1.5 text-[10px]"
                     >
                       今天
-                    </NTag>
-                  </td>
-                  <td class="time">
-                    {{ row.time }}
-                  </td>
-                  <td>
-                    {{ row.title }}
-                    <NTag
+                    </Badge>
+                  </div>
+                </td>
+                <td class="p-2.5 font-mono">
+                  {{ row.time }}
+                </td>
+                <td class="p-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <span>{{ row.title }}</span>
+                    <Badge
                       v-if="cfg.showTag && row.tag"
-                      size="small"
-                      :bordered="false"
+                      variant="secondary"
+                      class="h-4 px-1.5 text-[10px]"
                       :style="{ color: row.tagColor || undefined }"
                     >
                       {{ row.tag }}
-                    </NTag>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    </Badge>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          <div
-            v-else
-            class="timeline"
+        <div
+          v-else
+          class="timeline grid gap-2"
+        >
+          <article
+            v-for="row in rows"
+            :key="row.key"
+            class="timeline-item grid grid-cols-[64px_minmax(0,1fr)] gap-3 p-3 rounded-lg border-l-3 border-border bg-muted/40"
+            :class="{ 'border-l-primary bg-primary/10': cfg.highlightToday && row.isToday }"
           >
-            <article
-              v-for="row in rows"
-              :key="row.key"
-              class="timeline-item"
-              :class="{ today: cfg.highlightToday && row.isToday }"
-            >
-              <time class="timeline-time"
-                >{{ dayLabel(row.dayIndex) }}<strong>{{ row.time }}</strong></time
-              >
-              <div class="timeline-content">
-                <div class="item-heading">
-                  <strong>{{ row.title }}</strong>
-                  <NTag
-                    v-if="cfg.highlightToday && row.isToday"
-                    type="primary"
-                    size="small"
-                    :bordered="false"
-                  >
-                    今天
-                  </NTag>
-                </div>
-                <div class="item-meta">
-                  <span
-                    v-if="cfg.showTag && row.tag"
-                    :style="{ color: row.tagColor || undefined }"
-                    >#{{ row.tag }}</span
-                  >
-                  <span>{{ row.year }} 年第 {{ row.week }} 周</span>
-                </div>
+            <time class="timeline-time text-xs text-muted-foreground text-right flex flex-col justify-center">
+              <span>{{ dayLabel(row.dayIndex) }}</span>
+              <strong class="font-mono text-foreground font-semibold">{{ row.time }}</strong>
+            </time>
+            <div class="timeline-content min-w-0">
+              <div class="item-heading flex items-center gap-2">
+                <strong class="text-xs font-semibold leading-relaxed">{{ row.title }}</strong>
+                <Badge
+                  v-if="cfg.highlightToday && row.isToday"
+                  variant="default"
+                  class="h-4 px-1.5 text-[10px]"
+                >
+                  今天
+                </Badge>
               </div>
-            </article>
-          </div>
-        </NSpin>
+              <div class="item-meta flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                <span
+                  v-if="cfg.showTag && row.tag"
+                  :style="{ color: row.tagColor || undefined }"
+                >
+                  #{{ row.tag }}
+                </span>
+                <span>{{ row.year }} 年第 {{ row.week }} 周</span>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
       <ScheduleSubscription
         v-if="cfg.showIcs && icsUrl"
-        class="schedule-subscription-entry"
+        class="schedule-subscription-entry mx-4 mb-4"
         :url="icsUrl"
       />
     </section>
@@ -298,162 +303,5 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
 <style scoped>
 .schedule {
   container-type: inline-size;
-  color: var(--vtsuru-block-fg);
-}
-.schedule-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--vtsuru-page-primary-border);
-  background: var(--vtsuru-page-content-color, var(--vtsuru-block-bg-muted));
-}
-.header-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-}
-.header-title-wrap :deep(.n-icon) {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-block-fg));
-}
-.header-title-wrap h2 {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.4;
-  letter-spacing: 0;
-}
-.week-count {
-  flex: none;
-  color: var(--vtsuru-block-fg-muted);
-  font-size: 12px;
-}
-.schedule-body {
-  min-height: 90px;
-  padding: 20px;
-}
-.schedule-subscription-entry {
-  margin: 0 20px 20px;
-}
-.remote-state {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.empty-state {
-  padding: 24px;
-  color: var(--vtsuru-block-fg-muted);
-  text-align: center;
-}
-.table-wrap {
-  max-width: 100%;
-  overflow-x: auto;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-  border-radius: var(--vtsuru-page-radius);
-}
-.table-wrap:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary);
-  outline-offset: 2px;
-}
-table {
-  width: 100%;
-  min-width: 600px;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-th,
-td {
-  padding: 11px 12px;
-  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-  text-align: left;
-  vertical-align: middle;
-}
-th {
-  color: var(--vtsuru-block-fg-muted);
-  background: var(--vtsuru-block-bg-muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-tbody tr:last-child td {
-  border-bottom: 0;
-}
-tr.today {
-  background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent);
-}
-.time {
-  font-family: ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-}
-.timeline {
-  display: grid;
-  gap: 2px;
-}
-.timeline-item {
-  display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
-  gap: 16px;
-  padding: 14px;
-  border-left: 3px solid var(--vtsuru-block-border);
-}
-.timeline-item.today {
-  border-left-color: var(--vtsuru-page-primary);
-  background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent);
-}
-.timeline-time {
-  color: var(--vtsuru-block-fg-muted);
-  font-size: 12px;
-  text-align: right;
-}
-.timeline-time strong {
-  display: block;
-  margin-top: 4px;
-  color: var(--vtsuru-block-fg);
-  font:
-    600 13px ui-monospace,
-    monospace;
-}
-.timeline-content {
-  min-width: 0;
-}
-.item-heading {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.item-heading strong {
-  overflow-wrap: anywhere;
-  line-height: 1.45;
-}
-.item-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 6px;
-  color: var(--vtsuru-block-fg-muted);
-  font-size: 12px;
-}
-
-@container (max-width: 440px) {
-  .schedule-header {
-    align-items: flex-start;
-    padding: 14px;
-  }
-  .schedule-body {
-    padding: 14px;
-  }
-  .schedule-subscription-entry {
-    margin: 0 14px 14px;
-  }
-  .timeline-item {
-    grid-template-columns: 58px minmax(0, 1fr);
-    gap: 10px;
-    padding: 12px 8px;
-  }
-  .remote-state {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 }
 </style>

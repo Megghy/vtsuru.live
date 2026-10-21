@@ -33,7 +33,6 @@ import {
   PlayCircleOutline,
   StatsChartOutline,
 } from '@vicons/ionicons5'
-import { NAvatar, NButton, NDropdown, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui'
 import { computed, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
@@ -41,6 +40,16 @@ import type { AccountInfo } from '@/api/api-models'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const props = defineProps<{
@@ -444,144 +453,130 @@ async function go(name: string, query?: Record<string, string>) {
         :collapsed="collapsed"
       />
 
-      <NDropdown
-        v-if="workspace === 'user' && biliAuth.biliAuth.id && !biliAuth.usesAccountIdentity"
-        trigger="click"
-        placement="bottom-start"
-        :options="biliAccountOptions"
-        @select="switchBiliAccount"
-      >
-        <NButton
-          class="identity-button"
-          secondary
-          block
-          :circle="collapsed"
-        >
-          <template #icon>
-            <NAvatar
-              :size="20"
-              round
+      <DropdownMenu v-if="workspace === 'user' && biliAuth.biliAuth.id && !biliAuth.usesAccountIdentity">
+        <DropdownMenuTrigger as-child>
+          <Button
+            variant="secondary"
+            class="h-8.5 w-full flex items-center justify-start gap-2 px-2"
+            :class="{ 'justify-center p-0 w-8.5': collapsed }"
+          >
+            <img
+              v-if="biliAuth.biliAuth.avatar"
               :src="biliAuth.biliAuth.avatar"
-            >
-              {{ biliAuth.biliAuth.name?.slice(0, 1) }}
-            </NAvatar>
-          </template>
-          <span
-            v-if="!collapsed"
-            class="identity-button__label"
-            >{{ biliAuth.biliAuth.name }}</span
+              class="size-5 rounded-full object-cover shrink-0"
+              alt="avatar"
+            />
+            <span
+              v-if="!collapsed"
+              class="truncate text-xs font-normal"
+            >{{ biliAuth.biliAuth.name }}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" class="w-48">
+          <DropdownMenuItem
+            v-for="account in biliAuth.biliTokens"
+            :key="account.id"
+            :disabled="account.id === biliAuth.biliAuth.id"
+            @click="switchBiliAccount(String(account.id))"
           >
-        </NButton>
-      </NDropdown>
-      <NButton
+            {{ account.name || `UID ${account.uId}` }}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem @click="switchBiliAccount('add')">
+            认证其他账号
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Button
         v-else-if="workspace === 'user' && biliAuth.biliAuth.id"
-        class="identity-button"
-        secondary
-        block
-        :circle="collapsed"
+        variant="secondary"
+        class="h-8.5 w-full flex items-center justify-start gap-2 px-2"
+        :class="{ 'justify-center p-0 w-8.5': collapsed }"
       >
-        <template #icon>
-          <NAvatar
-            :size="20"
-            round
-            :src="biliAuth.biliAuth.avatar"
-          >
-            {{ biliAuth.biliAuth.name?.slice(0, 1) }}
-          </NAvatar>
-        </template>
+        <img
+          v-if="biliAuth.biliAuth.avatar"
+          :src="biliAuth.biliAuth.avatar"
+          class="size-5 rounded-full object-cover shrink-0"
+          alt="avatar"
+        />
         <span
           v-if="!collapsed"
-          class="identity-button__label"
-          >{{ biliAuth.biliAuth.name }}</span
-        >
-      </NButton>
+          class="truncate text-xs font-normal"
+        >{{ biliAuth.biliAuth.name }}</span>
+      </Button>
 
       <template v-if="workspace === 'streamer'">
         <div class="manage-sider__top-row">
-          <NButton
-            class="sider-top-btn sider-top-btn--panel"
-            size="small"
-            secondary
-            :circle="collapsed"
+          <Button
+            size="sm"
+            variant="secondary"
+            class="sider-top-btn sider-top-btn--panel h-8.5"
+            :class="{ 'w-8.5 p-0 justify-center flex-none': collapsed, 'flex-1 justify-start px-2.5 gap-2.5': !collapsed }"
             :title="collapsed ? '面板' : undefined"
             @click="go('manage-index')"
           >
-            <template #icon>
-              <component
-                :is="GridOutline"
-                class="sider-icon"
-              />
-            </template>
+            <component
+              :is="GridOutline"
+              class="sider-icon"
+            />
             <span
               v-if="!collapsed"
               class="sider-top-label"
-              >面板</span
-            >
-          </NButton>
+            >面板</span>
+          </Button>
 
-          <NButton
+          <Button
             v-if="!collapsed"
-            class="sider-top-icon-btn"
-            size="small"
-            quaternary
-            circle
-            :title="collapsed ? '反馈' : '反馈'"
+            size="icon-sm"
+            variant="ghost"
+            class="sider-top-icon-btn h-8.5 w-8.5"
+            title="反馈"
             @click="go('manage-feedback')"
           >
-            <template #icon>
-              <component
-                :is="PersonFeedback24Filled"
-                class="sider-icon"
-              />
-            </template>
-          </NButton>
+            <component
+              :is="PersonFeedback24Filled"
+              class="sider-icon"
+            />
+          </Button>
         </div>
 
         <div class="manage-sider__top-row sider-top-row--builder">
-          <NButton
-            class="sider-top-btn sider-top-btn--panel"
-            size="small"
-            type="primary"
-            secondary
-            strong
-            :circle="collapsed"
+          <Button
+            size="sm"
+            variant="brand"
+            class="sider-top-btn sider-top-btn--panel h-8.5"
+            :class="{ 'w-8.5 p-0 justify-center flex-none': collapsed, 'flex-1 justify-start px-2.5 gap-2.5': !collapsed }"
             :title="collapsed ? '主页装修' : undefined"
             @click="go('manage-userPageBuilder')"
           >
-            <template #icon>
-              <component
-                :is="ColorPaletteOutline"
-                class="sider-icon"
-              />
-            </template>
+            <component
+              :is="ColorPaletteOutline"
+              class="sider-icon"
+            />
             <span
               v-if="!collapsed"
               class="sider-btn-label"
-              >主页装修</span
-            >
-          </NButton>
+            >主页装修</span>
+          </Button>
 
-          <NButton
+          <Button
             v-if="!collapsed"
-            class="sider-top-icon-btn"
-            size="small"
-            quaternary
-            circle
+            size="icon-sm"
+            variant="ghost"
+            class="sider-top-icon-btn h-8.5 w-8.5"
             title="更换主页背景与主题"
             @click="go('manage-userPageBuilder', { action: 'theme' })"
           >
-            <template #icon>
-              <component
-                :is="ImageOutline"
-                class="sider-icon"
-              />
-            </template>
-          </NButton>
+            <component
+              :is="ImageOutline"
+              class="sider-icon"
+            />
+          </Button>
         </div>
       </template>
     </div>
 
-    <NScrollbar class="manage-sider__nav">
+    <div class="manage-sider__nav overflow-y-auto">
       <nav
         class="manage-sider__nav-inner"
         :class="{ collapsed }"
@@ -610,59 +605,29 @@ async function go(name: string, query?: Record<string, string>) {
                 >
               </button>
 
-              <NTooltip
-                v-if="g.key === 'group-danmaku'"
-                placement="right"
-                :show-arrow="false"
-                trigger="hover"
-              >
-                <template #trigger>
-                  <button
-                    class="nav-group__info"
-                    type="button"
-                    :title="g.hint || '提示'"
-                  >
-                    <component
-                      :is="Info24Filled"
-                      class="nav-group__info-icon"
-                    />
-                  </button>
-                </template>
-                <div class="danmaku-tooltip">
-                  <div class="danmaku-tooltip__title">可用性警告</div>
-                  <div class="danmaku-tooltip__body">
-                    当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作（详见
-                    <a
-                      href="https://developer.chrome.com/blog/background_tabs/"
-                      target="_blank"
-                      rel="noreferrer"
-                      >此文章</a
-                    >）。 为避免遗漏事件，建议使用
-                    <a
-                      href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-                      target="_blank"
-                      rel="noreferrer"
-                      >VtsuruEventFetcher</a
+              <TooltipProvider v-if="g.key === 'group-danmaku'">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <button
+                      class="nav-group__info"
+                      type="button"
+                      :title="g.hint || '提示'"
                     >
-                    或尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。
-                    <div style="margin-top: 6px">
-                      <a
-                        href="https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Chrome: 让特定网站保持活动状态</a
-                      >
-                      ，
-                      <a
-                        href="https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Edge: 永远不想进入睡眠状态的网站</a
-                      >
+                      <component
+                        :is="Info24Filled"
+                        class="nav-group__info-icon"
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" class="max-w-xs text-xs p-3">
+                    <div class="font-medium text-destructive mb-1">可用性警告</div>
+                    <div class="text-[11px] text-muted-foreground space-y-1">
+                      <div>当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作。</div>
+                      <div>建议尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。</div>
                     </div>
-                  </div>
-                </div>
-              </NTooltip>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             <div
@@ -700,12 +665,10 @@ async function go(name: string, query?: Record<string, string>) {
                     :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
                   >
-                    <NIcon
-                      class="nav-item__fav-icon"
-                      :class="{ active: isFavorite(item.key) }"
-                      :size="12"
-                      :component="Bookmark"
-                      :color="isFavorite(item.key) ? '#f59e0b' : '#777'"
+                    <component
+                      :is="Bookmark"
+                      class="nav-item__fav-icon w-3 h-3 transition-colors"
+                      :class="isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'"
                     />
                   </button>
                 </RouterLink>
@@ -734,12 +697,10 @@ async function go(name: string, query?: Record<string, string>) {
                     :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
                   >
-                    <NIcon
-                      class="nav-item__fav-icon"
-                      :class="{ active: isFavorite(item.key) }"
-                      :size="12"
-                      :component="isFavorite(item.key) ? Bookmark : BookmarkOutline"
-                      :color="isFavorite(item.key) ? '#f59e0b' : '#777'"
+                    <component
+                      :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
+                      class="nav-item__fav-icon w-3 h-3 transition-colors"
+                      :class="isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'"
                     />
                   </button>
                 </div>
@@ -748,7 +709,7 @@ async function go(name: string, query?: Record<string, string>) {
           </div>
         </template>
       </nav>
-    </NScrollbar>
+    </div>
 
     <div
       v-if="!collapsed"
@@ -756,24 +717,22 @@ async function go(name: string, query?: Record<string, string>) {
     >
       <div class="footer-line">
         有更多功能建议请
-        <NButton
-          text
-          type="primary"
-          size="tiny"
+        <button
+          type="button"
+          class="text-xs text-brand hover:underline cursor-pointer bg-transparent border-0 p-0 font-medium"
           @click="go('manage-feedback')"
         >
           反馈
-        </NButton>
+        </button>
       </div>
       <div class="footer-line">
-        <NButton
-          text
-          type="primary"
-          size="tiny"
+        <button
+          type="button"
+          class="text-xs text-brand hover:underline cursor-pointer bg-transparent border-0 p-0 font-medium"
           @click="go('about')"
         >
           关于本站
-        </NButton>
+        </button>
       </div>
     </div>
   </aside>
@@ -850,14 +809,6 @@ async function go(name: string, query?: Record<string, string>) {
   padding: 0;
   justify-content: center;
   margin: 0 auto;
-}
-
-.sider-top-btn :deep(.n-button__content) {
-  gap: 10px;
-}
-
-.manage-sider.collapsed .sider-top-btn :deep(.n-button__content) {
-  gap: 0;
 }
 
 .sider-icon {

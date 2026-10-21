@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ChevronBackOutline, ChevronForwardOutline, HomeOutline } from '@vicons/ionicons5'
-import { NButton, NCard, NFlex, NIcon, NScrollbar, NText, NTooltip } from 'naive-ui'
 import { inject } from 'vue'
 
 import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
+import { Button } from '@/shared/ui/button'
+import { Card, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { UserPageEditorKey } from '../context'
 import { usePageEntries } from '../usePageEntries'
@@ -27,62 +29,44 @@ const { pageEntries } = usePageEntries(editor)
 </script>
 
 <template>
-  <NCard
-    class="pane-card pages-pane"
+  <Card
+    class="pane-card pages-pane w-full h-full flex flex-col overflow-hidden relative"
     :class="{ 'pages-pane--collapsed': props.collapsed }"
-    content-style="padding: 0; height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; position: relative"
   >
-    <template #header>
-      <NFlex
-        justify="space-between"
-        align="center"
-        :wrap="false"
-        style="gap: 6px"
-      >
-        <Transition name="fade">
-          <NText
-            v-if="!props.collapsed"
-            strong
-          >
-            页面
-          </NText>
-        </Transition>
-        <NTooltip
-          v-if="props.collapsible"
-          placement="right"
-        >
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="small"
+    <CardHeader class="p-2 border-b border-border flex flex-row items-center justify-between space-y-0">
+      <Transition name="fade">
+        <CardTitle v-if="!props.collapsed" class="text-xs font-semibold">
+          页面
+        </CardTitle>
+      </Transition>
+      <TooltipProvider v-if="props.collapsible">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="size-7 p-0"
               :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'"
               @click="emit('toggle-collapse')"
             >
-              <template #icon>
-                <NIcon>
-                  <ChevronBackOutline v-if="!props.collapsed" />
-                  <ChevronForwardOutline v-else />
-                </NIcon>
-              </template>
-            </NButton>
-          </template>
-          {{ props.collapsed ? '展开页面栏' : '收起页面栏' }}
-        </NTooltip>
-      </NFlex>
-    </template>
-    <div class="pages-pane__views">
+              <component :is="props.collapsed ? ChevronForwardOutline : ChevronBackOutline" class="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {{ props.collapsed ? '展开页面栏' : '收起页面栏' }}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </CardHeader>
+
+    <div class="pages-pane__views flex-1 min-h-0 relative overflow-hidden">
       <div
         class="pages-pane__view pages-pane__view--expanded"
         :class="{ 'is-active': !props.collapsed }"
         :aria-hidden="props.collapsed"
       >
-        <div class="pane-scroll">
-          <NScrollbar style="height: 100%">
-            <div style="padding: 12px">
-              <PageManager />
-            </div>
-          </NScrollbar>
+        <div class="pane-scroll h-full w-full overflow-y-auto p-3">
+          <PageManager />
         </div>
       </div>
       <div
@@ -90,55 +74,52 @@ const { pageEntries } = usePageEntries(editor)
         :class="{ 'is-active': props.collapsed }"
         :aria-hidden="!props.collapsed"
       >
-        <NScrollbar class="compact-page-scroll">
-          <NFlex
-            class="compact-page-nav"
-            vertical
-            align="center"
-            :wrap="false"
-          >
-            <NTooltip placement="right">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="tiny"
-                  :type="editor.currentKey.value === 'home' ? 'primary' : 'default'"
-                  aria-label="主页"
-                  @click="editor.currentKey.value = 'home'"
-                >
-                  <template #icon>
-                    <NIcon><HomeOutline /></NIcon>
-                  </template>
-                </NButton>
-              </template>
-              主页
-            </NTooltip>
-            <NTooltip
+        <div class="compact-page-scroll h-full w-full overflow-y-auto">
+          <div class="compact-page-nav flex flex-col items-center gap-2 py-2.5">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="sm"
+                    class="size-7 p-0 rounded-full"
+                    :variant="editor.currentKey.value === 'home' ? 'default' : 'ghost'"
+                    aria-label="主页"
+                    @click="editor.currentKey.value = 'home'"
+                  >
+                    <component :is="HomeOutline" class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">主页</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider
               v-for="page in pageEntries"
               :key="page.slug"
-              placement="right"
             >
-              <template #trigger>
-                <NButton
-                  circle
-                  size="tiny"
-                  :type="editor.currentKey.value === page.slug ? 'primary' : 'default'"
-                  :class="{ 'compact-page-button--hidden': !page.navVisible }"
-                  :aria-label="page.title"
-                  @click="editor.currentKey.value = page.slug"
-                >
-                  <template #icon>
-                    <NIcon :component="resolveUserPageNavIcon(page.navIcon)" />
-                  </template>
-                </NButton>
-              </template>
-              {{ page.title }}{{ page.navVisible ? '' : '（导航隐藏）' }}
-            </NTooltip>
-          </NFlex>
-        </NScrollbar>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="sm"
+                    class="size-7 p-0 rounded-full"
+                    :variant="editor.currentKey.value === page.slug ? 'default' : 'ghost'"
+                    :class="{ 'opacity-60': !page.navVisible }"
+                    :aria-label="page.title"
+                    @click="editor.currentKey.value = page.slug"
+                  >
+                    <component :is="resolveUserPageNavIcon(page.navIcon)" class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {{ page.title }}{{ page.navVisible ? '' : '（导航隐藏）' }}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
       </div>
     </div>
-  </NCard>
+  </Card>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
@@ -146,14 +127,6 @@ const { pageEntries } = usePageEntries(editor)
 <style scoped>
 .pages-pane {
   transition: box-shadow 180ms ease;
-}
-
-.pages-pane--collapsed :deep(.n-card-header) {
-  padding-inline: 9px;
-}
-
-.pages-pane--collapsed :deep(.n-card-header__main) {
-  min-width: 0;
 }
 
 .pages-pane__views {
@@ -192,38 +165,5 @@ const { pageEntries } = usePageEntries(editor)
 
 .pages-pane__view--collapsed {
   transform: translateX(5px);
-}
-
-.pages-pane__view .pane-scroll {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-}
-
-.compact-page-scroll {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-}
-
-.compact-page-nav {
-  gap: 8px;
-  padding: 10px 0;
-}
-
-.compact-page-nav :deep(.n-button) {
-  flex: 0 0 auto;
-  transition:
-    transform 140ms ease,
-    color 140ms ease,
-    background-color 140ms ease;
-}
-
-.compact-page-nav :deep(.n-button:hover) {
-  transform: translateY(-1px);
-}
-
-.compact-page-button--hidden {
-  opacity: 0.58;
 }
 </style>

@@ -9,32 +9,25 @@ import {
   Tv20Regular,
 } from '@vicons/fluent'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NPagination,
-  NPopconfirm,
-  NSelect,
-  NTooltip,
-  useThemeVars,
-} from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { QAInfo } from '@/api/api-models'
 import QuestionItems from '@/components/QuestionItems.vue'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Pagination } from '@/shared/ui/pagination'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Separator } from '@/shared/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import type { SortMode } from '@/store/useQuestionBox'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const emit = defineEmits<{ (e: 'reply', item: QAInfo): void }>()
 const useQB = useQuestionBox()
 const router = useRouter()
-const themeVars = useThemeVars()
 
 const ps = ref(20)
 const pn = ref(1)
@@ -99,97 +92,99 @@ const sortOptions = [
 </script>
 
 <template>
-  <div class="received-tab-root">
-    <!-- 筛选栏 -->
-    <NFlex
-      class="received-toolbar"
-      align="center"
-      justify="space-between"
-      wrap
-      :size="8"
-      style="margin-bottom: 12px"
-    >
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NButton
-          secondary
-          type="primary"
-          size="small"
+  <div class="relative min-h-[200px]">
+    <!-- 筛选工具栏 -->
+    <div class="flex items-center justify-between gap-3 flex-wrap mb-3 text-xs">
+      <div class="flex items-center gap-3">
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 text-xs"
           @click="router.push({ name: 'question-display' })"
         >
           打开展示展板
-        </NButton>
-        <NCheckbox
-          :checked="isAllSelected"
-          @update:checked="toggleSelectAll"
-        >
-          本页全选
-        </NCheckbox>
-      </NFlex>
+        </Button>
+        <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+          <Checkbox
+            :checked="isAllSelected"
+            @update:checked="toggleSelectAll"
+          />
+          <span>本页全选</span>
+        </label>
+      </div>
 
-      <NFlex
-        :size="8"
-        align="center"
-        wrap
-      >
-        <NInput
-          v-model:value="useQB.searchKeyword"
+      <div class="flex items-center gap-2 flex-wrap">
+        <Input
+          v-model="useQB.searchKeyword"
           placeholder="搜索内容..."
-          clearable
-          size="small"
-          style="width: 160px"
+          class="h-8 w-36 text-xs"
         />
-        <NSelect
-          v-model:value="useQB.displayTag"
-          placeholder="话题"
-          clearable
-          filterable
-          size="small"
-          :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))"
-          style="width: 120px"
-        />
-        <NSelect
-          v-model:value="useQB.sortMode"
-          size="small"
-          :options="sortOptions"
-          style="width: 130px"
-        />
-        <NCheckbox v-model:checked="useQB.onlyUnreplied"> 未回复 </NCheckbox>
-        <NCheckbox v-model:checked="useQB.onlyUnread"> 未读 </NCheckbox>
-        <NCheckbox v-model:checked="useQB.onlyFavorite"> 收藏 </NCheckbox>
-        <NCheckbox v-model:checked="useQB.onlyPublic"> 公开 </NCheckbox>
-        <NButton
+
+        <select
+          v-model="useQB.displayTag"
+          class="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option :value="null">全部话题</option>
+          <option v-for="t in useQB.tags" :key="t.name" :value="t.name">
+            #{{ t.name }}
+          </option>
+        </select>
+
+        <select
+          v-model="useQB.sortMode"
+          class="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+
+        <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
+          <Checkbox v-model:checked="useQB.onlyUnreplied" />
+          <span>未回复</span>
+        </label>
+        <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
+          <Checkbox v-model:checked="useQB.onlyUnread" />
+          <span>未读</span>
+        </label>
+        <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
+          <Checkbox v-model:checked="useQB.onlyFavorite" />
+          <span>收藏</span>
+        </label>
+        <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
+          <Checkbox v-model:checked="useQB.onlyPublic" />
+          <span>公开</span>
+        </label>
+
+        <Button
           v-if="hasActiveFilters"
-          text
-          size="small"
-          type="primary"
+          variant="ghost"
+          size="sm"
+          class="h-8 text-xs text-primary"
           @click="clearFilters"
         >
           清除筛选
-        </NButton>
-      </NFlex>
-    </NFlex>
+        </Button>
+      </div>
+    </div>
 
-    <NDivider style="margin: 10px 0" />
+    <Separator class="my-3" />
 
-    <NEmpty
+    <Empty
       v-if="useQB.recieveQuestionsFiltered.length === 0"
       description="暂无符合条件的提问"
-      style="padding: 40px 0"
+      class="py-12"
     />
 
-    <div v-else>
-      <NPagination
+    <div v-else class="space-y-3">
+      <Pagination
         v-if="useQB.recieveQuestionsFiltered.length > ps"
         v-model:page="pn"
         v-model:page-size="ps"
-        :item-count="useQB.recieveQuestionsFiltered.length"
-        show-quick-jumper
-        show-size-picker
+        :total="useQB.recieveQuestionsFiltered.length"
+        :show-size-picker="true"
         :page-sizes="[20, 50, 100]"
-        style="margin-bottom: 12px"
+        class="mb-3"
       />
 
       <QuestionItems
@@ -199,303 +194,188 @@ const sortOptions = [
         @select="useQB.toggleSelect"
       >
         <template #footer="{ item }">
-          <NFlex
-            class="question-actions"
-            align="center"
-            wrap
-            :size="8"
-          >
+          <div class="flex items-center gap-2 flex-wrap text-xs pt-1">
             <!-- OBS 投屏快捷切换 -->
-            <NButton
+            <Button
               v-if="useQB.displayQuestion?.id === item.id"
-              size="small"
-              type="success"
-              secondary
+              size="xs"
+              variant="outline"
+              class="text-emerald-600 dark:text-emerald-400 gap-1 border-emerald-500/30"
               @click="useQB.clearCurrentQuestion"
             >
-              <template #icon><NIcon :component="Tv20Regular" /></template>
+              <Tv20Regular class="size-3.5" />
               取消展示
-            </NButton>
-            <NButton
+            </Button>
+            <Button
               v-else
-              size="small"
-              secondary
+              size="xs"
+              variant="outline"
+              class="gap-1"
               @click="useQB.setCurrentQuestion(item)"
             >
-              <template #icon><NIcon :component="Tv20Regular" /></template>
+              <Tv20Regular class="size-3.5" />
               投到 OBS
-            </NButton>
+            </Button>
 
-            <NButton
-              size="small"
-              :type="item.isReaded ? 'warning' : 'info'"
-              ghost
+            <Button
+              size="xs"
+              variant="outline"
+              :class="item.isReaded ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'"
               @click="useQB.read(item, !item.isReaded)"
             >
               {{ item.isReaded ? '设为未读' : '设为已读' }}
-            </NButton>
+            </Button>
 
-            <NButton
-              size="small"
-              ghost
+            <Button
+              size="xs"
+              variant="outline"
+              class="gap-1"
               @click="useQB.favorite(item, !item.isFavorite)"
             >
-              <template #icon>
-                <NIcon
-                  :component="item.isFavorite ? Heart : HeartOutline"
-                  :color="item.isFavorite ? themeVars.errorColor : undefined"
-                />
-              </template>
+              <Heart v-if="item.isFavorite" class="size-3.5 text-rose-500" />
+              <HeartOutline v-else class="size-3.5" />
               {{ item.isFavorite ? '取消收藏' : '收藏' }}
-            </NButton>
+            </Button>
 
             <!-- 拉黑提问者（仅非匿名且有 ID 时可用，带二次确认） -->
-            <NPopconfirm
+            <Popconfirm
               v-if="!item.isAnonymous && item.sender?.id"
-              @positive-click="useQB.blacklist(item)"
+              title="确认拉黑？"
+              :description="`确认拉黑 ${item.sender.name} 吗？该用户的所有提问将被清理。`"
+              @confirm="useQB.blacklist(item)"
             >
-              <template #trigger>
-                <NButton
-                  size="small"
-                  type="warning"
-                  ghost
-                >
-                  拉黑提问者
-                </NButton>
-              </template>
-              确认拉黑 {{ item.sender.name }} 吗？该用户的所有提问将被清理。
-            </NPopconfirm>
+              <Button size="xs" variant="outline" class="text-amber-600 dark:text-amber-400">
+                拉黑提问者
+              </Button>
+            </Popconfirm>
 
-            <NTooltip v-else>
-              <template #trigger>
-                <NButton
-                  size="small"
-                  disabled
-                  ghost
-                >
-                  拉黑
-                </NButton>
-              </template>
-              匿名提问无法拉黑账号
-            </NTooltip>
+            <TooltipProvider v-else>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button size="xs" variant="outline" disabled>
+                    拉黑
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p class="text-xs">匿名提问无法拉黑账号</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-            <NPopconfirm @positive-click="useQB.DelQA(item.id)">
-              <template #trigger>
-                <NButton
-                  size="small"
-                  type="error"
-                  ghost
-                >
-                  <template #icon>
-                    <NIcon :component="Delete24Filled" />
-                  </template>
-                  删除
-                </NButton>
-              </template>
-              确认删除这条提问？
-            </NPopconfirm>
-          </NFlex>
+            <Popconfirm
+              title="确认删除？"
+              description="确认删除这条提问？"
+              @confirm="useQB.DelQA(item.id)"
+            >
+              <Button size="xs" variant="outline" class="text-destructive gap-1 hover:text-destructive">
+                <Delete24Filled class="size-3.5" />
+                删除
+              </Button>
+            </Popconfirm>
+          </div>
         </template>
 
         <template #header-extra="{ item }">
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <NPopconfirm
+          <div class="flex items-center gap-1.5">
+            <Popconfirm
               v-if="!item.isPublic && item.senderAllowsPublic === false"
-              @positive-click="useQB.setPublic(item, true, { force: true })"
+              title="提问者选择不公开"
+              description="提问者选择不公开展示这条内容。确定仍要放到提问页公开列表吗？"
+              @confirm="useQB.setPublic(item, true, { force: true })"
             >
-              <template #trigger>
-                <NButton
-                  size="small"
-                  ghost
-                >
-                  <template #icon><NIcon :component="Eye24Regular" /></template>
-                  公开
-                </NButton>
-              </template>
-              提问者选择不公开展示这条内容。确定仍要放到提问页公开列表吗？
-            </NPopconfirm>
-            <NButton
+              <Button size="xs" variant="outline" class="gap-1">
+                <Eye24Regular class="size-3.5" />
+                公开
+              </Button>
+            </Popconfirm>
+            <Button
               v-else
-              size="small"
-              ghost
+              size="xs"
+              variant="outline"
+              class="gap-1"
               @click="useQB.setPublic(item, !item.isPublic)"
             >
-              <template #icon>
-                <NIcon :component="item.isPublic ? EyeOff24Regular : Eye24Regular" />
-              </template>
+              <EyeOff24Regular v-if="item.isPublic" class="size-3.5" />
+              <Eye24Regular v-else class="size-3.5" />
               {{ item.isPublic ? '取消公开' : '公开' }}
-            </NButton>
-            <NButton
-              :type="item.answer ? 'primary' : 'info'"
-              :tertiary="item.isReaded && !item.answer"
-              :secondary="!item.isReaded && !item.answer"
+            </Button>
+            <Button
+              size="xs"
+              :variant="item.answer ? 'default' : 'secondary'"
               @click="emit('reply', item)"
             >
               {{ item.answer ? '修改回复' : '回复' }}
-            </NButton>
-          </NFlex>
+            </Button>
+          </div>
         </template>
       </QuestionItems>
 
-      <NDivider
-        v-if="useQB.recieveQuestionsFiltered.length > ps"
-        style="margin: 16px 0"
-      />
+      <Separator v-if="useQB.recieveQuestionsFiltered.length > ps" class="my-3" />
 
-      <NPagination
+      <Pagination
         v-if="useQB.recieveQuestionsFiltered.length > ps"
         v-model:page="pn"
         v-model:page-size="ps"
-        :item-count="useQB.recieveQuestionsFiltered.length"
-        show-quick-jumper
-        show-size-picker
+        :total="useQB.recieveQuestionsFiltered.length"
+        :show-size-picker="true"
         :page-sizes="[20, 50, 100]"
-        style="margin-bottom: 24px"
+        class="mb-6"
       />
     </div>
 
     <!-- 底部浮动批量操作栏 -->
-    <Transition name="batch-bar-slide">
+    <Transition name="fade">
       <div
         v-if="useQB.selectedIds.length > 0"
-        class="floating-batch-bar"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center bg-card border border-border rounded-full shadow-lg px-4 py-2 gap-2 text-xs"
       >
-        <div class="batch-bar-content">
-          <span class="batch-bar-count"> 已选 {{ useQB.selectedIds.length }} 项 </span>
+        <span class="font-medium text-foreground whitespace-nowrap">已选 {{ useQB.selectedIds.length }} 项</span>
+        <div class="h-4 w-px bg-border mx-1" />
 
-          <span class="batch-bar-divider" />
+        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchRead(true)">
+          <Checkmark24Regular class="size-3.5" />
+          批量已读
+        </Button>
+        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchRead(false)">
+          <MailUnread24Regular class="size-3.5" />
+          批量未读
+        </Button>
+        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchSetPublic(true)">
+          <Eye24Regular class="size-3.5" />
+          批量公开
+        </Button>
+        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchSetPublic(false)">
+          <EyeOff24Regular class="size-3.5" />
+          批量私密
+        </Button>
+        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchFavorite(true)">
+          <Heart class="size-3.5 text-rose-500" />
+          批量收藏
+        </Button>
 
-          <NButton
-            size="small"
-            secondary
-            @click="useQB.batchRead(true)"
-          >
-            <template #icon><NIcon :component="Checkmark24Regular" /></template>
-            批量已读
-          </NButton>
+        <Popconfirm
+          title="确认批量删除？"
+          :description="`确认批量删除已选中的 ${useQB.selectedIds.length} 条提问？`"
+          @confirm="useQB.batchDelete"
+        >
+          <Button size="xs" variant="destructive" class="gap-1">
+            <Delete24Filled class="size-3.5" />
+            批量删除
+          </Button>
+        </Popconfirm>
 
-          <NButton
-            size="small"
-            secondary
-            @click="useQB.batchRead(false)"
-          >
-            <template #icon><NIcon :component="MailUnread24Regular" /></template>
-            批量未读
-          </NButton>
+        <div class="h-4 w-px bg-border mx-1" />
 
-          <NButton
-            size="small"
-            secondary
-            @click="useQB.batchSetPublic(true)"
-          >
-            <template #icon><NIcon :component="Eye24Regular" /></template>
-            批量公开
-          </NButton>
-
-          <NButton
-            size="small"
-            secondary
-            @click="useQB.batchSetPublic(false)"
-          >
-            <template #icon><NIcon :component="EyeOff24Regular" /></template>
-            批量私密
-          </NButton>
-
-          <NButton
-            size="small"
-            secondary
-            @click="useQB.batchFavorite(true)"
-          >
-            <template #icon><NIcon :component="Heart" /></template>
-            批量收藏
-          </NButton>
-
-          <NPopconfirm @positive-click="useQB.batchDelete">
-            <template #trigger>
-              <NButton
-                size="small"
-                type="error"
-                secondary
-              >
-                <template #icon><NIcon :component="Delete24Filled" /></template>
-                批量删除
-              </NButton>
-            </template>
-            确认批量删除已选中的 {{ useQB.selectedIds.length }} 条提问？
-          </NPopconfirm>
-
-          <span class="batch-bar-divider" />
-
-          <NButton
-            size="small"
-            quaternary
-            circle
-            aria-label="取消选择"
-            @click="useQB.clearSelection"
-          >
-            <template #icon><NIcon :component="Dismiss24Regular" /></template>
-          </NButton>
-        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          class="size-6 rounded-full"
+          aria-label="取消选择"
+          @click="useQB.clearSelection"
+        >
+          <Dismiss24Regular class="size-3.5" />
+        </Button>
       </div>
     </Transition>
   </div>
 </template>
-
-<style scoped>
-.received-tab-root {
-  position: relative;
-  min-height: 200px;
-}
-
-.floating-batch-bar {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
-  display: flex;
-  align-items: center;
-}
-
-.batch-bar-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 30px;
-  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
-  backdrop-filter: blur(12px);
-}
-
-.batch-bar-count {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  padding: 0 4px;
-}
-
-.batch-bar-divider {
-  width: 1px;
-  height: 18px;
-  margin: 0 2px;
-  background: var(--vtsuru-border);
-}
-
-.batch-bar-slide-enter-active,
-.batch-bar-slide-leave-active {
-  transition:
-    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.25s ease;
-}
-
-.batch-bar-slide-enter-from,
-.batch-bar-slide-leave-to {
-  opacity: 0;
-  transform: translate(-50%, 20px);
-}
-</style>

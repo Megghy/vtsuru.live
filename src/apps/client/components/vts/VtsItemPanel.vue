@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInput, NSelect, NSwitch, NTabPane, NTabs, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsAccessoryBinding, VtsPrankBinding } from '@/apps/client/store/useVtsStore'
+import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { useVtsAction } from './useVtsAction'
 
@@ -98,202 +109,217 @@ function dropPrank(p: VtsPrankBinding) {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="道具管理"
-  >
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="8"
-      >
-        <NButton
-          size="small"
-          :loading="refreshing"
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+      <CardTitle class="text-sm font-semibold">道具管理</CardTitle>
+      <div class="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-7 text-xs"
           :disabled="!vts.connected || refreshing"
           @click="refresh"
         >
-          刷新列表
-        </NButton>
-        <NText depth="3">
+          {{ refreshing ? '刷新中...' : '刷新列表' }}
+        </Button>
+        <span class="text-xs text-muted-foreground">
           {{ vts.canLoadItems == null ? '状态未知' : vts.canLoadItems ? '可操作' : '当前不可操作 (VTS 有弹窗)' }}
-        </NText>
-      </NFlex>
+        </span>
+      </div>
+    </CardHeader>
 
-      <NTabs
-        type="line"
-        animated
-      >
-        <NTabPane
-          name="accessories"
-          tab="配饰"
-        >
-          <NFlex
-            vertical
-            :size="8"
-          >
-            <NFlex
-              align="center"
-              :wrap="true"
-              :size="8"
+    <CardContent class="p-3">
+      <Tabs defaultValue="accessories" class="w-full">
+        <TabsList class="grid w-full grid-cols-2 h-8 max-w-[200px]">
+          <TabsTrigger value="accessories" class="text-xs">
+            配饰
+          </TabsTrigger>
+          <TabsTrigger value="pranks" class="text-xs">
+            整活
+          </TabsTrigger>
+        </TabsList>
+
+        <!-- 配饰 Tab -->
+        <TabsContent value="accessories" class="pt-3 space-y-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              class="h-8 text-xs"
+              @click="addAccessory"
             >
-              <NButton
-                size="small"
-                @click="addAccessory"
-              >
-                添加配饰
-              </NButton>
-              <NText depth="3"> 绑定场景中的道具实例，通过透明度切换显隐 </NText>
-            </NFlex>
-            <NDivider style="margin: 4px 0" />
-            <NFlex
+              添加配饰
+            </Button>
+            <span class="text-xs text-muted-foreground">
+              绑定场景中的道具实例，通过透明度切换显隐
+            </span>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <div
               v-for="acc in vts.accessories"
               :key="acc.id"
-              align="center"
-              justify="space-between"
-              :wrap="true"
-              :size="12"
+              class="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-md border bg-muted/20"
             >
-              <NFlex
-                align="center"
-                :wrap="true"
-                :size="12"
-              >
-                <NInput
-                  v-model:value="acc.name"
+              <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+                <Input
+                  v-model="acc.name"
                   placeholder="名称"
-                  style="width: 140px"
+                  class="h-8 text-xs w-[120px]"
                   @blur="saveAccessory({ ...acc })"
                 />
-                <NSelect
-                  style="width: 380px"
-                  :options="instanceOptions"
-                  :value="acc.itemInstanceID"
-                  placeholder="选择场景中的道具实例"
-                  @update:value="(val) => saveAccessory({ ...acc, itemInstanceID: val as string })"
-                />
-                <NSwitch
-                  :value="acc.visible"
-                  :disabled="!vts.connected"
-                  @update:value="(val) => toggleAccessory(acc, val)"
-                >
-                  <template #checked> 显示 </template>
-                  <template #unchecked> 隐藏 </template>
-                </NSwitch>
-              </NFlex>
-              <NButton
-                size="small"
-                type="error"
+                <div class="flex-1 min-w-[200px]">
+                  <Select
+                    :model-value="acc.itemInstanceID"
+                    @update:model-value="(val) => saveAccessory({ ...acc, itemInstanceID: String(val ?? '') })"
+                  >
+                    <SelectTrigger class="h-8 text-xs w-full">
+                      <SelectValue placeholder="选择场景中的道具实例" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="opt in instanceOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                        class="text-xs"
+                      >
+                        {{ opt.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div class="flex items-center gap-1.5 cursor-pointer select-none">
+                  <Switch
+                    :checked="acc.visible"
+                    :disabled="!vts.connected"
+                    @update:checked="(val) => toggleAccessory(acc, val)"
+                  />
+                  <span class="text-xs text-muted-foreground">{{ acc.visible ? '显示' : '隐藏' }}</span>
+                </div>
+              </div>
+
+              <Button
+                size="xs"
+                variant="outline"
+                class="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
                 @click="vts.removeAccessory(acc.id)"
               >
                 删除
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
 
-        <NTabPane
-          name="pranks"
-          tab="整活"
-        >
-          <NFlex
-            vertical
-            :size="8"
-          >
-            <NFlex
-              align="center"
-              :wrap="true"
-              :size="8"
+        <!-- 整活 Tab -->
+        <TabsContent value="pranks" class="pt-3 space-y-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              class="h-8 text-xs"
+              @click="addPrank"
             >
-              <NButton
-                size="small"
-                @click="addPrank"
-              >
-                添加整活
-              </NButton>
-              <NText depth="3"> 通过文件掉落或触发热键来丢道具 </NText>
-            </NFlex>
-            <NDivider style="margin: 4px 0" />
-            <NFlex
+              添加整活
+            </Button>
+            <span class="text-xs text-muted-foreground">
+              通过文件掉落或触发热键来丢道具
+            </span>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <div
               v-for="p in vts.pranks"
               :key="p.id"
-              align="center"
-              justify="space-between"
-              :wrap="true"
-              :size="12"
+              class="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-md border bg-muted/20"
             >
-              <NFlex
-                align="center"
-                :wrap="true"
-                :size="12"
-              >
-                <NInput
-                  v-model:value="p.name"
+              <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[320px]">
+                <Input
+                  v-model="p.name"
                   placeholder="名称"
-                  style="width: 140px"
+                  class="h-8 text-xs w-[110px]"
                   @blur="savePrank({ ...p })"
                 />
-                <NSelect
-                  style="width: 360px"
-                  :options="fileOptions"
-                  :value="p.fileName"
-                  placeholder="选择道具文件"
-                  @update:value="(val) => savePrank({ ...p, fileName: val as string })"
-                />
-                <NSelect
-                  style="width: 360px"
-                  :options="hotkeyOptions"
-                  :value="p.hotkeyID"
-                  placeholder="或绑定热键 (可选)"
-                  clearable
-                  @update:value="
-                    (val) => savePrank({ ...p, hotkeyID: typeof val === 'string' && val ? val : undefined })
-                  "
-                />
-              </NFlex>
-              <NFlex
-                :wrap="true"
-                :size="8"
-              >
-                <NButton
-                  size="small"
+                <div class="w-[200px]">
+                  <Select
+                    :model-value="p.fileName"
+                    @update:model-value="(val) => savePrank({ ...p, fileName: String(val ?? '') })"
+                  >
+                    <SelectTrigger class="h-8 text-xs w-full">
+                      <SelectValue placeholder="选择道具文件" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="opt in fileOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                        class="text-xs"
+                      >
+                        {{ opt.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div class="w-[200px]">
+                  <Select
+                    :model-value="p.hotkeyID || ''"
+                    @update:model-value="(val) => savePrank({ ...p, hotkeyID: val ? String(val) : undefined })"
+                  >
+                    <SelectTrigger class="h-8 text-xs w-full">
+                      <SelectValue placeholder="或绑定热键 (可选)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="" class="text-xs">无热键</SelectItem>
+                      <SelectItem
+                        v-for="opt in hotkeyOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                        class="text-xs"
+                      >
+                        {{ opt.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="h-7 text-xs"
                   :disabled="!vts.connected || !p.fileName"
                   @click="loadPrank(p)"
                 >
                   加载
-                </NButton>
-                <NButton
-                  size="small"
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="h-7 text-xs"
                   :disabled="!vts.connected || !p.fileName"
                   @click="unloadPrank(p)"
                 >
                   卸载
-                </NButton>
-                <NButton
-                  size="small"
-                  type="primary"
+                </Button>
+                <Button
+                  size="xs"
+                  class="h-7 text-xs"
                   :disabled="!vts.connected"
                   @click="dropPrank(p)"
                 >
                   掉落
-                </NButton>
-                <NButton
-                  size="small"
-                  type="error"
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
                   @click="vts.removePrank(p.id)"
                 >
                   删除
-                </NButton>
-              </NFlex>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
-      </NTabs>
-    </NFlex>
-  </NCard>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </CardContent>
+  </Card>
 </template>

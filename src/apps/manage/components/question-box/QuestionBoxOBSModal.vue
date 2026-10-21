@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Copy24Regular, Open24Regular } from '@vicons/fluent'
-import { NButton, NIcon, NInput, NModal, useMessage } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -10,7 +9,10 @@ import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { normalizeQuestionDisplaySetting } from '@/shared/questionDisplay'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { copyToClipboard } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { copyToClipboard, useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const show = defineModel<boolean>('show', { required: true })
@@ -47,100 +49,54 @@ function openWorkbench() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
-    class="obs-quick-modal"
-    title="OBS 提问展示"
-    style="max-height: 90vh"
-    content-style="overflow-y: auto; max-height: calc(90vh - 110px);"
-    closable
-  >
-    <div class="quick-layout">
-      <div class="quick-preview">
-        <div
-          class="preview-frame"
-          :style="previewStyle"
-        >
-          <QuestionDisplayCard
-            :question="questionBox.displayQuestion"
-            :setting="setting"
-            :status="questionBox.displayQuestion ? 'ready' : 'empty'"
-          />
+  <Dialog v-model:open="show">
+    <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle class="text-sm font-semibold">OBS 提问展示</DialogTitle>
+      </DialogHeader>
+
+      <div class="grid grid-cols-1 sm:grid-cols-5 gap-5 items-center py-2">
+        <div class="sm:col-span-3 flex flex-col items-center gap-2 text-xs text-muted-foreground">
+          <div
+            class="w-full overflow-hidden bg-[#34383c] border border-border rounded-md"
+            :style="previewStyle"
+          >
+            <QuestionDisplayCard
+              :question="questionBox.displayQuestion"
+              :setting="setting"
+              :status="questionBox.displayQuestion ? 'ready' : 'empty'"
+            />
+          </div>
+          <span class="text-[11px]">{{ savedCardSize.width }} × {{ savedCardSize.height }}</span>
         </div>
-        <span>{{ savedCardSize.width }} × {{ savedCardSize.height }}</span>
-      </div>
 
-      <div class="quick-actions">
-        <label>
-          <span>浏览器源链接</span>
-          <NInput
-            readonly
-            :value="obsUrl"
-            placeholder="登录后可复制 OBS 链接"
-          />
-        </label>
-        <NButton
-          type="primary"
-          @click="copyUrl"
-        >
-          <template #icon><NIcon :component="Copy24Regular" /></template>
-          复制链接
-        </NButton>
-        <NButton
-          secondary
-          @click="openWorkbench"
-        >
-          <template #icon><NIcon :component="Open24Regular" /></template>
-          打开展示页
-        </NButton>
+        <div class="sm:col-span-2 space-y-3">
+          <div class="space-y-1.5">
+            <label class="text-xs text-muted-foreground">浏览器源链接</label>
+            <Input
+              readonly
+              :model-value="obsUrl"
+              placeholder="登录后可复制 OBS 链接"
+              class="h-8 text-xs font-mono"
+            />
+          </div>
+          <Button
+            class="w-full h-8 text-xs gap-1.5"
+            @click="copyUrl"
+          >
+            <Copy24Regular class="size-4" />
+            复制链接
+          </Button>
+          <Button
+            variant="outline"
+            class="w-full h-8 text-xs gap-1.5"
+            @click="openWorkbench"
+          >
+            <Open24Regular class="size-4" />
+            打开展示页
+          </Button>
+        </div>
       </div>
-    </div>
-  </NModal>
+    </DialogContent>
+  </Dialog>
 </template>
-
-<style scoped>
-:global(.obs-quick-modal) {
-  width: min(760px, 92vw);
-}
-
-.quick-layout {
-  display: grid;
-  grid-template-columns: minmax(280px, 1.25fr) minmax(220px, 0.75fr);
-  gap: 20px;
-  align-items: center;
-}
-
-.quick-preview {
-  display: grid;
-  gap: 8px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
-  text-align: center;
-}
-
-.preview-frame {
-  width: 100%;
-  overflow: hidden;
-  background: #34383c;
-  border: 1px solid var(--vtsuru-border);
-}
-
-.quick-actions {
-  display: grid;
-  gap: 10px;
-}
-
-.quick-actions label {
-  display: grid;
-  gap: 6px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-@media (max-width: 640px) {
-  .quick-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-</style>

@@ -23,7 +23,8 @@ import {
   OpenOutline,
 } from '@vicons/ionicons5'
 import { useResizeObserver } from '@vueuse/core'
-import { NButton, NIcon, NNumberAnimation, NTooltip } from 'naive-ui'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -274,74 +275,80 @@ onMounted(() => {
             <p class="hero-tagline">一个给主播提供便利功能的网站 😊</p>
 
             <div class="entry-grid">
-              <NTooltip placement="bottom">
-                <template #trigger>
-                  <button
-                    type="button"
-                    class="entry-card tone-cyan"
-                    @click="$router.push({ name: 'manage-index' })"
-                  >
-                    <NIcon
-                      :component="PersonFeedback24Filled"
-                      size="36"
-                    />
-                    <strong>我是主播</strong>
-                    <span>开始使用</span>
-                  </button>
-                </template>
-                进入主播后台，管理直播相关工具与设置
-              </NTooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <button
+                      type="button"
+                      class="entry-card tone-cyan"
+                      @click="$router.push({ name: 'manage-index' })"
+                    >
+                      <component
+                        :is="PersonFeedback24Filled"
+                        class="size-9"
+                      />
+                      <strong>我是主播</strong>
+                      <span>开始使用</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    进入主播后台，管理直播相关工具与设置
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-              <NTooltip placement="bottom">
-                <template #trigger>
-                  <button
-                    type="button"
-                    class="entry-card tone-yellow"
-                    @click="openAudience"
-                  >
-                    <NIcon
-                      :component="Chat24Filled"
-                      size="36"
-                    />
-                    <strong>我是观众</strong>
-                    <span>查看积分</span>
-                  </button>
-                </template>
-                用 Bilibili 认证查看积分和订单，不用注册
-              </NTooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <button
+                      type="button"
+                      class="entry-card tone-yellow"
+                      @click="openAudience"
+                    >
+                      <component
+                        :is="Chat24Filled"
+                        class="size-9"
+                      />
+                      <strong>我是观众</strong>
+                      <span>查看积分</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    用 Bilibili 认证查看积分和订单，不用注册
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             <div class="hero-actions">
-              <NButton
-                secondary
+              <Button
+                variant="secondary"
                 @click="$router.push('/@Megghy')"
               >
                 展示
-              </NButton>
-              <NButton
-                type="primary"
-                tag="a"
-                href="https://play-live.bilibili.com/details/1698742711771"
-                target="_blank"
+              </Button>
+              <Button
+                as-child
               >
-                幻星平台
-              </NButton>
-              <NButton
-                type="info"
+                <a
+                  href="https://play-live.bilibili.com/details/1698742711771"
+                  target="_blank"
+                >
+                  幻星平台
+                </a>
+              </Button>
+              <Button
+                variant="outline"
                 @click="$router.push({ name: 'about' })"
               >
                 关于
-              </NButton>
+              </Button>
             </div>
 
             <div class="hero-stat">
               <span>注册用户</span>
               <strong>
-                <NNumberAnimation
-                  :from="0"
-                  :to="indexData?.userCount ?? 0"
-                  show-separator
-                />
+                {{ (indexData?.userCount ?? 0).toLocaleString() }}
               </strong>
             </div>
           </div>
@@ -364,9 +371,9 @@ onMounted(() => {
           >
             <span class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="item.icon"
-                  size="24"
+                <component
+                  :is="item.icon"
+                  class="size-6"
                 />
               </span>
               <span class="feature-card-title">{{ item.name }}</span>
@@ -398,18 +405,17 @@ onMounted(() => {
               <li>支持区块组合、拖拽排序、组件级样式与预览</li>
             </ul>
             <div class="section-actions">
-              <NButton
-                type="primary"
+              <Button
                 @click="$router.push({ name: 'manage-userPageBuilder' })"
               >
                 打开编辑器
-              </NButton>
-              <NButton
-                secondary
+              </Button>
+              <Button
+                variant="secondary"
                 @click="$router.push('/@Megghy')"
               >
                 查看示例
-              </NButton>
+              </Button>
             </div>
           </div>
           <div class="userpage-intro-media">
@@ -433,9 +439,9 @@ onMounted(() => {
           <article class="feature-card tone-coral">
             <div class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="PersonFeedback24Filled"
-                  size="24"
+                <component
+                  :is="PersonFeedback24Filled"
+                  class="size-6"
                 />
               </span>
               <span class="feature-card-title">自动操作</span>
@@ -449,9 +455,9 @@ onMounted(() => {
           <article class="feature-card tone-cyan">
             <div class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="Chat24Filled"
-                  size="24"
+                <component
+                  :is="Chat24Filled"
+                  class="size-6"
                 />
               </span>
               <span class="feature-card-title">弹幕机（客户端）</span>
@@ -460,33 +466,40 @@ onMounted(() => {
           </article>
         </div>
         <div class="section-actions centered-actions">
-          <NButton
-            type="primary"
-            tag="a"
-            href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
-            target="_blank"
+          <Button
+            as-child
           >
-            <template #icon>
-              <NIcon :component="Info24Filled" />
-            </template>
-            客户端安装说明
-          </NButton>
-          <NButton
-            ghost
-            tag="a"
-            href="https://github.com/Megghy/vtsuru-fetvher-client"
-            target="_blank"
+            <a
+              href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
+              target="_blank"
+              class="flex items-center gap-1.5"
+            >
+              <component :is="Info24Filled" class="size-4" />
+              客户端安装说明
+            </a>
+          </Button>
+          <Button
+            variant="outline"
+            as-child
           >
-            客户端代码
-          </NButton>
-          <NButton
-            ghost
-            tag="a"
-            href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
-            target="_blank"
+            <a
+              href="https://github.com/Megghy/vtsuru-fetvher-client"
+              target="_blank"
+            >
+              客户端代码
+            </a>
+          </Button>
+          <Button
+            variant="outline"
+            as-child
           >
-            逻辑代码
-          </NButton>
+            <a
+              href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
+              target="_blank"
+            >
+              逻辑代码
+            </a>
+          </Button>
         </div>
       </section>
 
@@ -494,72 +507,59 @@ onMounted(() => {
       <section class="home-section streamers-home-section">
         <header class="section-header streamers-section-header">
           <div class="streamers-heading">
-            <h2 class="section-title">
+            <h2 class="section-title flex items-center gap-1.5">
               正在使用本站的主播们
-              <NTooltip>
-                <template #trigger>
-                  <NIcon
-                    :component="Info24Filled"
-                    size="16"
-                    class="section-info-icon"
-                  />
-                </template>
-                随机展示不分先后，仅粉丝数大于 500 的主播；展示其直播间信息与开播状态
-              </NTooltip>
+              <span
+                class="inline-flex cursor-help text-muted-foreground hover:text-foreground"
+                title="随机展示不分先后，仅粉丝数大于 500 的主播；展示其直播间信息与开播状态"
+              >
+                <component
+                  :is="Info24Filled"
+                  class="size-4"
+                />
+              </span>
             </h2>
             <p class="section-subtitle">感谢支持</p>
           </div>
 
-          <div class="streamers-controls">
-            <RouterLink to="/live"><NButton size="small">直播与关注</NButton></RouterLink>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
-                  aria-label="向左滚动"
-                  :disabled="!canScrollRoomsLeft"
-                  @click="scrollRooms(-1)"
-                >
-                  <template #icon>
-                    <NIcon :component="ChevronLeft24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              向左滚动
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
-                  aria-label="向右滚动"
-                  :disabled="!canScrollRoomsRight"
-                  @click="scrollRooms(1)"
-                >
-                  <template #icon>
-                    <NIcon :component="ChevronRight24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              向右滚动
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
-                  aria-label="刷新主播列表"
-                  :loading="isRefreshingRooms"
-                  @click="loadIndexData"
-                >
-                  <template #icon>
-                    <NIcon :component="ArrowClockwise24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              刷新主播列表
-            </NTooltip>
+          <div class="streamers-controls flex items-center gap-1.5">
+            <RouterLink to="/live">
+              <Button size="sm" variant="outline" class="h-8 text-xs">直播与关注</Button>
+            </RouterLink>
+            <button
+              type="button"
+              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="向左滚动"
+              title="向左滚动"
+              :disabled="!canScrollRoomsLeft"
+              @click="scrollRooms(-1)"
+            >
+              <component :is="ChevronLeft24Regular" class="size-4" />
+            </button>
+            <button
+              type="button"
+              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="向右滚动"
+              title="向右滚动"
+              :disabled="!canScrollRoomsRight"
+              @click="scrollRooms(1)"
+            >
+              <component :is="ChevronRight24Regular" class="size-4" />
+            </button>
+            <button
+              type="button"
+              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40"
+              aria-label="刷新主播列表"
+              title="刷新主播列表"
+              :disabled="isRefreshingRooms"
+              @click="loadIndexData"
+            >
+              <component
+                :is="ArrowClockwise24Regular"
+                class="size-4"
+                :class="{ 'animate-spin': isRefreshingRooms }"
+              />
+            </button>
           </div>
         </header>
 
@@ -627,9 +627,9 @@ onMounted(() => {
                         :title="hasReserve(room) ? '打开直播间预告' : '打开直播间'"
                         @click.stop
                       >
-                        <NIcon
-                          :component="OpenOutline"
-                          size="16"
+                        <component
+                          :is="OpenOutline"
+                          class="size-4"
                         />
                       </a>
                     </div>
@@ -658,20 +658,20 @@ onMounted(() => {
 
           <!-- 底部信息 -->
           <div class="streamers-footer">
-            <div class="streamers-note">
-              <NIcon
-                :component="Info24Filled"
-                size="14"
+            <div class="streamers-note flex items-center gap-1.5 text-xs text-muted-foreground">
+              <component
+                :is="Info24Filled"
+                class="size-3.5"
               />
               <span>
                 不想被展示？前往
-                <NButton
-                  text
-                  size="tiny"
+                <button
+                  type="button"
+                  class="text-primary hover:underline cursor-pointer"
                   @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
                 >
                   设置页面（渲染模式-传统-允许展示在主页）
-                </NButton>
+                </button>
                 关闭展示
               </span>
             </div>
@@ -680,16 +680,16 @@ onMounted(() => {
       </section>
     </main>
     <footer class="footer">
-      <span>
+      <span class="flex items-center gap-1 text-sm text-muted-foreground">
         BY
-        <NButton
-          tag="a"
+        <a
           href="https://space.bilibili.com/10021741"
           target="_blank"
-          text
+          rel="noreferrer"
+          class="font-semibold text-foreground hover:text-primary transition"
         >
           Megghy
-        </NButton>
+        </a>
       </span>
     </footer>
   </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useEventListener, whenever } from '@vueuse/core'
-import { NButton, NResult, NSpin } from 'naive-ui'
+import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 import { Pane, Splitpanes } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted } from 'vue'
@@ -97,27 +98,23 @@ onUnmounted(() => void dashboard.stop())
     class="live-dashboard"
     :style="{ fontSize: `${dashboard.settings.fontSize}px` }"
   >
-    <NSpin
+    <Spin
       v-if="isLoadingAccount"
       class="live-dashboard__center"
     />
-    <NResult
+    <div
       v-else-if="!isLoggedIn"
-      class="live-dashboard__center"
-      status="403"
-      title="请先登录"
-      description="中控台需要登录并绑定直播间后使用"
+      class="live-dashboard__center flex flex-col items-center justify-center p-6 text-center"
     >
-      <template #footer>
-        <NButton
-          type="primary"
-          tag="a"
-          href="/manage"
-        >
-          前往登录
-        </NButton>
-      </template>
-    </NResult>
+      <h2 class="text-xl font-semibold mb-2">请先登录</h2>
+      <p class="text-sm text-muted-foreground mb-4">中控台需要登录并绑定直播间后使用</p>
+      <Button
+        as="a"
+        href="/manage"
+      >
+        前往登录
+      </Button>
+    </div>
     <template v-else>
       <DashboardToolbar />
       <Splitpanes

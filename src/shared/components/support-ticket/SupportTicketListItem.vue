@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { NTag, NTime } from 'naive-ui'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
+import { computed } from 'vue'
 
 import type { SupportTicketSummary } from '@/api/api-models'
 import { SupportTicketStatus } from '@/api/api-models'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
+import { Badge } from '@/shared/ui/badge'
 
-defineProps<{
+const props = defineProps<{
   ticket: SupportTicketSummary
   active: boolean
 }>()
@@ -15,6 +18,21 @@ function hasUnread(ticket: SupportTicketSummary) {
     ticket.status !== SupportTicketStatus.Resolved && (ticket.lastMessageId ?? 0) > (ticket.userLastReadMessageId ?? 0)
   )
 }
+
+const relativeTime = computed(() => {
+  try {
+    return formatDistanceToNow(new Date(props.ticket.lastMessageTime), { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(props.ticket.lastMessageTime)
+  }
+})
+
+const badgeVariant = computed(() => {
+  const type = supportTicketStatusMeta[props.ticket.status].type
+  if (type === 'success') return 'default'
+  if (type === 'info') return 'secondary'
+  return 'outline'
+})
 </script>
 
 <template>
@@ -30,20 +48,16 @@ function hasUnread(ticket: SupportTicketSummary) {
         aria-label="有新消息"
       />
       <span class="ticket-item__title">{{ ticket.title }}</span>
-      <NTag
-        size="small"
-        :type="supportTicketStatusMeta[ticket.status].type"
-        :bordered="false"
+      <Badge
+        :variant="badgeVariant"
+        class="text-[10px] h-4.5 px-1.5 font-normal shrink-0"
       >
         {{ supportTicketStatusMeta[ticket.status].label }}
-      </NTag>
+      </Badge>
     </span>
     <span class="ticket-item__meta">
       <span>#{{ ticket.id }} · {{ supportTicketTypeLabel(ticket.type) }}</span>
-      <NTime
-        :time="ticket.lastMessageTime"
-        type="relative"
-      />
+      <span>{{ relativeTime }}</span>
     </span>
   </button>
 </template>

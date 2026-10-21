@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Info16Regular } from '@vicons/fluent'
-import { NInputNumber, NFlex, NSwitch, NForm, NFormItem, NTooltip, NIcon } from 'naive-ui'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 defineProps({
   action: {
@@ -16,71 +18,47 @@ defineProps({
 <template>
   <div
     v-if="action.triggerType === TriggerType.FOLLOW"
-    class="follow-trigger-settings"
+    class="follow-trigger-settings space-y-3"
   >
-    <NForm
-      label-placement="left"
-      :label-width="140"
-      size="small"
-      :show-feedback="false"
-    >
-      <NFlex
-        vertical
-        :size="16"
-      >
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <NFormItem label="防止重复发送">
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >防止重复
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                同一用户在单次直播中多次关注仅触发一次感谢
-              </NTooltip>
-            </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.preventRepeat"
-              size="small"
-            />
-          </NFormItem>
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">防止重复发送</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            同一用户在单次直播中多次关注仅触发一次感谢
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <Switch v-model:checked="action.triggerConfig.preventRepeat" />
+    </div>
 
-          <NFormItem label="单次合并上限">
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >单次合并上限
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                单条感谢弹幕中最多合并展示的用户数量
-              </NTooltip>
-            </template>
-            <NInputNumber
-              v-model:value="action.actionConfig.maxUsersPerMsg"
-              :min="1"
-              :max="50"
-              style="width: 140px"
-            />
-          </NFormItem>
-        </NFlex>
-      </NFlex>
-    </NForm>
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">单次合并上限</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            单条感谢弹幕中最多合并展示的用户数量
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <NInputNumber
+        :value="action.actionConfig.maxUsersPerMsg"
+        :min="1"
+        :max="50"
+        size="small"
+        class="w-32"
+        @update:value="action.actionConfig.maxUsersPerMsg = $event || 1"
+      />
+    </div>
   </div>
 </template>
-
-<style scoped>
-.follow-trigger-settings {
-  width: 100%;
-}
-</style>

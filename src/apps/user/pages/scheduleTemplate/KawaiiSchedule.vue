@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Sparkle24Filled } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
@@ -174,7 +173,7 @@ defineExpose({ Config, DefaultConfig })
           aria-hidden="true"
         />
         <div class="head-mark">
-          <NIcon size="13"><Sparkle24Filled /></NIcon>
+          <component :is="Sparkle24Filled" class="size-3.5 inline" />
           <span>MY WEEKLY SCRAPBOOK</span>
         </div>
         <h2>{{ effectiveConfig.heading }}</h2>

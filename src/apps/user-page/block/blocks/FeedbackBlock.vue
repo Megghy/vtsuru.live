@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ChatbubbleOutline, OpenOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NFlex, NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
 import QuestionBoxView from '@/apps/user/pages/QuestionBoxView.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
 
 import BlockCard from '../BlockCard.vue'
 import { parseFeedbackEmbedUrl } from '../embed'
@@ -107,18 +108,10 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
       v-if="!canEmbedInternalQuestionBox"
       #header
     >
-      <NFlex
-        align="center"
-        style="gap: 8px"
-      >
-        <NIcon
-          size="18"
-          depth="2"
-        >
-          <ChatbubbleOutline />
-        </NIcon>
-        <span>{{ cfg.title }}</span>
-      </NFlex>
+      <div class="flex items-center gap-2">
+        <component :is="ChatbubbleOutline" class="size-4.5 text-muted-foreground" />
+        <span class="font-medium text-sm">{{ cfg.title }}</span>
+      </div>
     </template>
 
     <div class="feedback-body">
@@ -130,14 +123,14 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           :default-tag="cfg.defaultTag"
           :show-public-questions="cfg.showPublicQuestions"
         />
-        <NAlert
+        <Alert
           v-else
-          type="info"
-          :show-icon="false"
-          style="border-radius: var(--vtsuru-page-radius)"
+          class="text-xs py-2"
         >
-          未加载到用户信息，无法展示站内提问箱
-        </NAlert>
+          <AlertDescription>
+            未加载到用户信息，无法展示站内提问箱
+          </AlertDescription>
+        </Alert>
       </template>
 
       <template v-else>
@@ -148,32 +141,30 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           {{ cfg.description }}
         </div>
 
-        <NAlert
+        <Alert
           v-if="!url"
-          type="info"
-          :show-icon="false"
-          style="border-radius: var(--vtsuru-page-radius)"
+          class="text-xs py-2"
         >
-          未配置跳转链接
-        </NAlert>
+          <AlertDescription>
+            未配置跳转链接
+          </AlertDescription>
+        </Alert>
 
         <template v-else>
-          <div class="action-row">
-            <NButton
-              type="primary"
-              secondary
-              tag="a"
+          <div class="action-row flex items-center gap-3 mb-4">
+            <Button
+              as="a"
+              variant="outline"
+              size="sm"
               target="_blank"
               rel="noopener noreferrer"
               :href="url"
-              class="open-btn"
+              class="open-btn h-8 text-xs font-semibold"
             >
-              <template #icon>
-                <NIcon><OpenOutline /></NIcon>
-              </template>
+              <component :is="OpenOutline" class="size-3.5 mr-1.5" />
               {{ cfg.buttonText }}
-            </NButton>
-            <span class="url-hint">
+            </Button>
+            <span class="url-hint text-xs text-muted-foreground truncate flex-1">
               {{ url }}
             </span>
           </div>
@@ -192,14 +183,14 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
               loading="lazy"
             />
           </div>
-          <NAlert
+          <Alert
             v-else-if="externalEmbedRejected"
-            type="info"
-            :show-icon="false"
-            class="embed-notice"
+            class="embed-notice text-xs py-2"
           >
-            该来源暂不支持安全内嵌，请使用上方按钮访问
-          </NAlert>
+            <AlertDescription>
+              该来源暂不支持安全内嵌，请使用上方按钮访问
+            </AlertDescription>
+          </Alert>
         </template>
       </template>
     </div>
@@ -219,30 +210,6 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
   color: var(--vtsuru-fg-muted);
 }
 
-.action-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.open-btn {
-  border-radius: var(--vtsuru-page-radius);
-  font-weight: 600;
-}
-
-.url-hint {
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  color: var(--vtsuru-fg-muted);
-}
-
-.embed-notice {
-  border-radius: var(--vtsuru-page-radius);
-}
 .iframe-container {
   width: 100%;
   overflow: hidden;

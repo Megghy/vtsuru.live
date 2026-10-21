@@ -1,8 +1,6 @@
-import type { GlobalThemeOverrides } from 'naive-ui'
-
 import { resolveReadableForeground, resolveReadableTextColor, shiftColorForInteraction } from './contrast'
 
-type ButtonOverrides = NonNullable<GlobalThemeOverrides['Button']>
+type ButtonOverrides = Record<string, any>
 type ButtonVariantName = 'Primary' | 'Info' | 'Success' | 'Warning' | 'Error'
 
 interface ButtonVariantColors {

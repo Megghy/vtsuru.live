@@ -3,7 +3,7 @@ import { MoreHorizontal24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { NButton, NDropdown, NIcon, NSpin, useMessage } from 'naive-ui'
+import { useMessage } from '@/shared/utils'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -17,6 +17,13 @@ import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongLi
 import { parseSongListCsv, parsedRowsToSongsInfo } from '@/apps/manage/composables/songListCsv'
 import SongList from '@/components/SongList.vue'
 import { CURRENT_HOST } from '@/shared/config'
+import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
 import { objectsToCSV } from '@/shared/utils'
 
 const message = useMessage()
@@ -85,14 +92,6 @@ function exportData() {
   saveAs(new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }), fileName)
 }
 
-const moreActions = [
-  { label: '修改展示模板', key: 'template' },
-  { label: '导出为 CSV', key: 'export' },
-  { label: '从 CSV 导入', key: 'import' },
-  { label: '前往点播管理页', key: 'live-request' },
-  { label: '前往歌单展示页', key: 'song-list' },
-]
-
 function handleMoreAction(key: string) {
   switch (key) {
     case 'template':
@@ -118,6 +117,7 @@ async function onCsvFileChange(ev: Event) {
   const file = input.files?.[0]
   input.value = ''
   if (!file) return
+
   isImporting.value = true
   try {
     const text = await file.text()
@@ -127,7 +127,6 @@ async function onCsvFileChange(ev: Event) {
       return
     }
     const payload = parsedRowsToSongsInfo(rows)
-    // 按来源分组调用真实 add 接口
     const groups = new Map<SongFrom, SongsInfo[]>()
     for (const song of payload) {
       const list = groups.get(song.from) ?? []
@@ -153,63 +152,92 @@ onMounted(getSongs)
 </script>
 
 <template>
-  <ManagePageHeader
-    title="歌单管理"
-    :function-type="FunctionTypes.SongList"
-    :links="[{ label: '展示页链接', value: songListUrl }]"
-  >
-    <template #action>
-      <NButton
-        type="primary"
-        @click="showModal = true"
-      >
-        添加歌曲
-      </NButton>
-      <NButton
-        :loading="isLoading || isImporting"
-        secondary
-        @click="getSongs"
-      >
-        刷新
-      </NButton>
-      <NDropdown
-        :options="moreActions"
-        trigger="click"
-        @select="handleMoreAction"
-      >
-        <NButton
-          secondary
-          :loading="isImporting"
-        >
-          <template #icon>
-            <NIcon :component="MoreHorizontal24Filled" />
-          </template>
-          更多
-        </NButton>
-      </NDropdown>
-      <input
-        ref="csvInputRef"
-        type="file"
-        accept=".csv,text/csv"
-        style="display: none"
-        @change="onCsvFileChange"
-      />
-    </template>
-  </ManagePageHeader>
+  <div class="space-y-4 w-full">
+    <ManagePageHeader
+      title="歌单管理"
+      subtitle="管理你的演唱/翻唱曲目库，支持批量增删改查、从 CSV 导入导出及网易云同步"
+      :function-type="FunctionTypes.SongList"
+      :links="[{ label: '展示页链接', value: songListUrl }]"
+    >
+      <template #action>
+        <div class="flex items-center gap-2">
+          <Button
+            size="xs"
+            variant="brand"
+            @click="showModal = true"
+          >
+            添加歌曲
+          </Button>
 
-  <SongListAddSongModal
-    v-model:show="showModal"
-    :songs="songs"
-    @added="onSongsAdded"
-  />
+          <Button
+            size="xs"
+            variant="outline"
+            :loading="isLoading || isImporting"
+            @click="getSongs"
+          >
+            刷新
+          </Button>
 
-  <NSpin
-    v-if="isLoading"
-    show
-  />
-  <SongList
-    v-else
-    :songs="songs"
-    is-self
-  />
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button
+                size="xs"
+                variant="outline"
+                :loading="isImporting"
+              >
+                <component
+                  :is="MoreHorizontal24Filled"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                更多
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @click="handleMoreAction('template')">
+                修改展示模板
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('export')">
+                导出为 CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('import')">
+                从 CSV 导入
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('live-request')">
+                前往点播管理页
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('song-list')">
+                前往歌单展示页
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <input
+            ref="csvInputRef"
+            type="file"
+            accept=".csv,text/csv"
+            style="display: none"
+            @change="onCsvFileChange"
+          />
+        </div>
+      </template>
+    </ManagePageHeader>
+
+    <SongListAddSongModal
+      v-model:show="showModal"
+      :songs="songs"
+      @added="onSongsAdded"
+    />
+
+    <div
+      v-if="isLoading"
+      class="text-center py-20 text-xs text-muted-foreground"
+    >
+      正在加载歌单…
+    </div>
+    <SongList
+      v-else
+      :songs="songs"
+      is-self
+    />
+  </div>
 </template>

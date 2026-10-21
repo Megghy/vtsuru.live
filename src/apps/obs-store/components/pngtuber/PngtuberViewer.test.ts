@@ -31,9 +31,8 @@ vi.mock('@/shared/pngtuber/modelPackage', () => ({
   importPngtuberPackage: () => mocks.imported,
 }))
 vi.mock('file-saver', () => ({ saveAs: vi.fn() }))
-vi.mock('naive-ui', async () => ({
-  ...(await vi.importActual('naive-ui')),
-  useMessage: () => ({ error: vi.fn(), success: vi.fn() }),
+vi.mock('vue-sonner', () => ({
+  toast: { error: vi.fn(), success: vi.fn(), warning: vi.fn(), info: vi.fn() },
 }))
 const children = [
   'PngtuberDisplay',
@@ -43,12 +42,16 @@ const children = [
   'PngtuberInputSettings',
 ]
 const stubs = Object.fromEntries(
-  [...children, 'NCard', 'NAlert', 'NButton', 'NInput', 'NInputGroup', 'NSelect', 'NSpace', 'NTag', 'NText'].map(
+  [...children, 'Alert', 'AlertDescription', 'Button', 'Input', 'Select', 'Badge'].map(
     (name) => [name, true],
   ),
 )
-// Slot-bearing wrappers must render the UI children so interaction contracts can be tested.
-Object.assign(stubs, { NCard: { template: '<div><slot/></div>' }, NSpace: { template: '<div><slot/></div>' } })
+Object.assign(stubs, {
+  Card: { template: '<div><slot/></div>' },
+  CardHeader: { template: '<div><slot/></div>' },
+  CardTitle: { template: '<div><slot/></div>' },
+  CardContent: { template: '<div><slot/></div>' },
+})
 let wrapper: ReturnType<typeof mount> | undefined
 beforeEach(() => {
   mocks.account = ref({ id: 12 })

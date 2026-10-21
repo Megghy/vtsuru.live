@@ -1,23 +1,21 @@
 <script setup lang="ts">
 import { Info16Regular } from '@vicons/fluent'
-import {
-  NCollapse,
-  NCollapseItem,
-  NInput,
-  NInputNumber,
-  NFlex,
-  NSwitch,
-  NForm,
-  NFormItem,
-  NText,
-  NTooltip,
-  NIcon,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import { createDefaultAutoAction } from '@/apps/client/store/autoAction/utils'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/shared/ui/accordion'
+import { Badge } from '@/shared/ui/badge'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Switch } from '@/shared/ui/switch'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
   action: {
@@ -44,7 +42,6 @@ function isModified(path: string, value: any) {
   let defaultValue: any = defaultAction.value
   let currentValue: any = props.action
 
-  // 遍历路径获取值
   for (const part of pathParts) {
     defaultValue =
       defaultValue && typeof defaultValue === 'object' ? defaultValue[part as keyof typeof defaultValue] : undefined
@@ -52,7 +49,6 @@ function isModified(path: string, value: any) {
       currentValue && typeof currentValue === 'object' ? currentValue[part as keyof typeof currentValue] : undefined
   }
 
-  // 处理特殊情况，如果指定了具体值进行比较
   if (value !== undefined) {
     return value !== defaultValue
   }
@@ -92,299 +88,195 @@ const customJsModified = computed(() => {
 
 <template>
   <div class="advanced-settings">
-    <NCollapse
-      :default-expanded-names="[]"
-      accordion
+    <Accordion
+      type="single"
+      collapsible
+      class="w-full space-y-2"
     >
-      <NCollapseItem
+      <AccordionItem
         v-if="showUserFilter"
-        key="user-filter"
-        name="user-filter"
-        class="settings-section"
-        :class="{ 'section-modified': userFilterModified }"
+        value="user-filter"
+        class="border rounded-md px-3 bg-card"
       >
-        <template #header>
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <NText
-              strong
-              :type="userFilterModified ? 'warning' : 'default'"
+        <AccordionTrigger class="py-2.5 hover:no-underline">
+          <div class="flex items-center gap-2">
+            <span
+              class="text-xs font-semibold"
+              :class="userFilterModified ? 'text-amber-500' : 'text-foreground'"
             >
               用户过滤条件
-            </NText>
-            <NTag
+            </span>
+            <Badge
               v-if="userFilterModified"
-              size="tiny"
-              type="warning"
-              round
-              border-weight="0"
+              variant="outline"
+              class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
             >
               已修改
-            </NTag>
-          </NFlex>
-        </template>
+            </Badge>
+          </div>
+        </AccordionTrigger>
 
-        <div class="section-content">
-          <NForm
-            label-placement="left"
-            label-width="120"
-            size="small"
-            :show-feedback="false"
+        <AccordionContent class="pt-2 pb-3 space-y-3">
+          <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
+            <span class="text-xs font-medium text-foreground">启用过滤</span>
+            <Switch v-model:checked="action.triggerConfig.userFilterEnabled" />
+          </div>
+
+          <div
+            v-if="action.triggerConfig.userFilterEnabled"
+            class="space-y-2 pl-2 border-l-2 border-primary/30"
           >
-            <NFormItem label="启用过滤">
-              <NSwitch
-                v-model:value="action.triggerConfig.userFilterEnabled"
-                size="small"
-              />
-            </NFormItem>
+            <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
+              <span class="text-xs font-medium text-foreground">要求本房勋章</span>
+              <Switch v-model:checked="action.triggerConfig.requireMedal" />
+            </div>
+            <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
+              <span class="text-xs font-medium text-foreground">要求任意舰长</span>
+              <Switch v-model:checked="action.triggerConfig.requireCaptain" />
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
 
-            <transition name="fade">
-              <NFlex
-                v-if="action.triggerConfig.userFilterEnabled"
-                vertical
-                :size="8"
-                style="padding-top: 8px"
-              >
-                <NFormItem label="要求本房勋章">
-                  <NSwitch
-                    v-model:value="action.triggerConfig.requireMedal"
-                    size="small"
-                  />
-                </NFormItem>
-                <NFormItem label="要求任意舰长">
-                  <NSwitch
-                    v-model:value="action.triggerConfig.requireCaptain"
-                    size="small"
-                  />
-                </NFormItem>
-              </NFlex>
-            </transition>
-          </NForm>
-        </div>
-      </NCollapseItem>
-
-      <NCollapseItem
-        key="cooldown"
-        name="cooldown"
-        class="settings-section"
-        :class="{ 'section-modified': cooldownModified }"
+      <AccordionItem
+        value="cooldown"
+        class="border rounded-md px-3 bg-card"
       >
-        <template #header>
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <NText
-              strong
-              :type="cooldownModified ? 'warning' : 'default'"
+        <AccordionTrigger class="py-2.5 hover:no-underline">
+          <div class="flex items-center gap-2">
+            <span
+              class="text-xs font-semibold"
+              :class="cooldownModified ? 'text-amber-500' : 'text-foreground'"
             >
               频率与延迟控制
-            </NText>
-            <NTag
+            </span>
+            <Badge
               v-if="cooldownModified"
-              size="tiny"
-              type="warning"
-              round
-              border-weight="0"
+              variant="outline"
+              class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
             >
               已修改
-            </NTag>
-          </NFlex>
-        </template>
+            </Badge>
+          </div>
+        </AccordionTrigger>
 
-        <div class="section-content">
-          <NForm
-            label-placement="left"
-            label-width="120"
-            size="small"
-            :show-feedback="false"
-          >
-            <NFormItem label="忽略全局冷却">
-              <template #label>
-                <NTooltip trigger="hover">
-                  <template #trigger>
-                    <span
-                      >忽略全局冷却
-                      <NIcon
-                        :component="Info16Regular"
-                        style="vertical-align: -2px"
-                    /></span>
-                  </template>
+        <AccordionContent class="pt-2 pb-3 space-y-3">
+          <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <div class="flex items-center gap-1 cursor-help">
+                    <span class="text-xs font-medium text-foreground">忽略全局冷却</span>
+                    <Info16Regular class="size-3.5 text-muted-foreground" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent class="text-xs">
                   开启后此操作不受全局发送频率限制的影响
-                </NTooltip>
-              </template>
-              <NSwitch
-                v-model:value="action.ignoreCooldown"
-                size="small"
-              />
-            </NFormItem>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Switch v-model:checked="action.ignoreCooldown" />
+          </div>
 
-            <NFormItem label="延迟执行(秒)">
-              <NInputNumber
-                v-model:value="action.actionConfig.delaySeconds"
-                :min="0"
-                :max="600"
-                style="width: 120px"
-                placeholder="0"
-              />
-            </NFormItem>
+          <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
+            <span class="text-xs font-medium text-foreground">延迟执行 (秒)</span>
+            <NInputNumber
+              :value="action.actionConfig.delaySeconds"
+              :min="0"
+              :max="600"
+              placeholder="0"
+              size="small"
+              class="w-28"
+              @update:value="action.actionConfig.delaySeconds = $event || 0"
+            />
+          </div>
 
-            <NFormItem label="冷却时间(秒)">
-              <NInputNumber
-                v-model:value="action.actionConfig.cooldownSeconds"
-                :min="0"
-                :max="3600"
-                style="width: 120px"
-                placeholder="0"
-              />
-            </NFormItem>
-          </NForm>
-        </div>
-      </NCollapseItem>
+          <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
+            <span class="text-xs font-medium text-foreground">冷却时间 (秒)</span>
+            <NInputNumber
+              :value="action.actionConfig.cooldownSeconds"
+              :min="0"
+              :max="3600"
+              placeholder="0"
+              size="small"
+              class="w-28"
+              @update:value="action.actionConfig.cooldownSeconds = $event || 0"
+            />
+          </div>
+        </AccordionContent>
+      </AccordionItem>
 
-      <NCollapseItem
-        key="logical-expression"
-        name="logical-expression"
-        class="settings-section"
-        :class="{ 'section-modified': logicalExpressionModified }"
+      <AccordionItem
+        value="logical-expression"
+        class="border rounded-md px-3 bg-card"
       >
-        <template #header>
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <NText
-              strong
-              :type="logicalExpressionModified ? 'warning' : 'default'"
+        <AccordionTrigger class="py-2.5 hover:no-underline">
+          <div class="flex items-center gap-2">
+            <span
+              class="text-xs font-semibold"
+              :class="logicalExpressionModified ? 'text-amber-500' : 'text-foreground'"
             >
               逻辑判断表达式
-            </NText>
-            <NTag
+            </span>
+            <Badge
               v-if="logicalExpressionModified"
-              size="tiny"
-              type="warning"
-              round
-              border-weight="0"
+              variant="outline"
+              class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
             >
               已配置
-            </NTag>
-          </NFlex>
-        </template>
+            </Badge>
+          </div>
+        </AccordionTrigger>
 
-        <div class="section-content">
-          <NFlex
-            vertical
-            :size="8"
-          >
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              使用 JavaScript 语法，仅在返回值为真时执行。例如：
-              <NText code> user.guardLevel &gt; 0 || gift.price &gt;= 10 </NText>
-            </NText>
-            <NInput
-              v-model:value="action.logicalExpression"
-              type="textarea"
-              placeholder="输入表达式..."
-              :autosize="{ minRows: 2, maxRows: 5 }"
-              class="code-input"
-            />
-          </NFlex>
-        </div>
-      </NCollapseItem>
+        <AccordionContent class="pt-2 pb-3 space-y-2">
+          <div class="text-xs text-muted-foreground">
+            使用 JavaScript 语法，仅在返回值为真时执行。例如：
+            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]">user.guardLevel &gt; 0 || gift.price &gt;= 10</code>
+          </div>
+          <Textarea
+            v-model="action.logicalExpression"
+            placeholder="输入表达式..."
+            class="font-mono text-xs resize-none min-h-[64px]"
+          />
+        </AccordionContent>
+      </AccordionItem>
 
-      <NCollapseItem
-        key="custom-js"
-        name="custom-js"
-        class="settings-section"
-        :class="{ 'section-modified': customJsModified }"
+      <AccordionItem
+        value="custom-js"
+        class="border rounded-md px-3 bg-card"
       >
-        <template #header>
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <NText
-              strong
-              :type="customJsModified ? 'warning' : 'default'"
+        <AccordionTrigger class="py-2.5 hover:no-underline">
+          <div class="flex items-center gap-2">
+            <span
+              class="text-xs font-semibold"
+              :class="customJsModified ? 'text-amber-500' : 'text-foreground'"
             >
               自定义脚本 (JS)
-            </NText>
-            <NTag
+            </span>
+            <Badge
               v-if="customJsModified"
-              size="tiny"
-              type="warning"
-              round
-              border-weight="0"
+              variant="outline"
+              class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
             >
               已编写
-            </NTag>
-          </NFlex>
-        </template>
+            </Badge>
+          </div>
+        </AccordionTrigger>
 
-        <div class="section-content">
-          <NFlex
-            vertical
-            :size="8"
-          >
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              在操作执行前运行。可访问
-              <NText code> context </NText>, <NText code> event </NText>, <NText code> biliFunc </NText> 等变量。
-            </NText>
-            <NInput
-              v-model:value="action.executeCommand"
-              type="textarea"
-              placeholder="输入要执行的JS代码..."
-              :autosize="{ minRows: 3, maxRows: 8 }"
-              class="code-input"
-            />
-          </NFlex>
-        </div>
-      </NCollapseItem>
-    </NCollapse>
+        <AccordionContent class="pt-2 pb-3 space-y-2">
+          <div class="text-xs text-muted-foreground">
+            在操作执行前运行。可访问
+            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]">context</code>,
+            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]">event</code>,
+            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]">biliFunc</code> 等变量。
+          </div>
+          <Textarea
+            v-model="action.executeCommand"
+            placeholder="输入要执行的JS代码..."
+            class="font-mono text-xs resize-none min-h-[96px]"
+          />
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   </div>
 </template>
-
-<style scoped>
-.advanced-settings {
-  width: 100%;
-}
-
-.settings-section {
-  border-radius: var(--vtsuru-radius);
-  margin-bottom: 4px;
-}
-
-.section-content {
-  padding: 8px 12px 12px;
-  background-color: var(--vtsuru-bg-muted);
-  border-radius: var(--vtsuru-radius);
-}
-
-.section-modified :deep(.n-collapse-item__header-main) {
-  font-weight: 500;
-}
-
-.code-input :deep(textarea) {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
-  background-color: var(--vtsuru-bg-elevated);
-}
-
-/* Fade animation for internal form items */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

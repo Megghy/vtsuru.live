@@ -1,4 +1,4 @@
-import { useMessage } from 'naive-ui'
+import { useMessage } from '@/shared/utils'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'

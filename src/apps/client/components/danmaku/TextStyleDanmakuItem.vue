@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 
 import { useLiveEmoji } from '@/store/useLiveEmoji'
 import { AVATAR_URL } from '@/shared/config'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { useDanmakuUtils } from './danmakuUtils'
@@ -72,38 +73,42 @@ const {
       >{{ setting.textStyleNameSeparator }}</span
     >
 
-    <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
-      <template #trigger>
-        <span
-          class="mystery-box-text-mode"
-          :style="{ color: textModeColor }"
-          >盲盒 ￥{{ giftDisplay.mysteryBoxPriceText }}</span
-        >
-      </template>
-      <div class="mystery-box-text-tooltip">
-        <div
-          v-if="giftDisplay.mysteryBoxName"
-          class="mystery-box-text-tooltip__row"
-        >
-          <span class="mystery-box-text-tooltip__label">来源</span>
-          <span class="mystery-box-text-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
-        </div>
-        <div
-          v-if="giftDisplay.mysteryBoxPriceText"
-          class="mystery-box-text-tooltip__row"
-        >
-          <span class="mystery-box-text-tooltip__label">盲盒价</span>
-          <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
-        </div>
-        <div
-          v-if="giftDisplay.giftPriceText"
-          class="mystery-box-text-tooltip__row"
-        >
-          <span class="mystery-box-text-tooltip__label">开出价</span>
-          <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
-        </div>
-      </div>
-    </NTooltip>
+    <TooltipProvider v-if="giftDisplay.hasMysteryBoxGift">
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <span
+            class="mystery-box-text-mode"
+            :style="{ color: textModeColor }"
+            >盲盒 ￥{{ giftDisplay.mysteryBoxPriceText }}</span
+          >
+        </TooltipTrigger>
+        <TooltipContent>
+          <div class="mystery-box-text-tooltip">
+            <div
+              v-if="giftDisplay.mysteryBoxName"
+              class="mystery-box-text-tooltip__row"
+            >
+              <span class="mystery-box-text-tooltip__label">来源</span>
+              <span class="mystery-box-text-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
+            </div>
+            <div
+              v-if="giftDisplay.mysteryBoxPriceText"
+              class="mystery-box-text-tooltip__row"
+            >
+              <span class="mystery-box-text-tooltip__label">盲盒价</span>
+              <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+            </div>
+            <div
+              v-if="giftDisplay.giftPriceText"
+              class="mystery-box-text-tooltip__row"
+            >
+              <span class="mystery-box-text-tooltip__label">开出价</span>
+              <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
 
     <!-- 价格信息(如果有) -->
     <span

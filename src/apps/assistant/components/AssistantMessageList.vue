@@ -2,18 +2,21 @@
 import {
   ArrowClockwise16Regular,
   BrainCircuit20Regular,
-  ChevronDown12Regular,
   Checkmark16Regular,
+  ChevronDown12Regular,
   Copy16Regular,
   Dismiss16Regular,
   Edit16Regular,
 } from '@vicons/fluent'
-import { NButton, NCollapseTransition, NIcon, NInput, NPopconfirm, NText, NTooltip } from 'naive-ui'
 import { reactive } from 'vue'
 
+import { Button } from '@/shared/ui/button'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { copyToClipboard } from '@/shared/utils'
 
-import type { ProposalEditItem, AssistantToolEvent } from '../api/assistant'
+import type { AssistantToolEvent, ProposalEditItem } from '../api/assistant'
 import type { AssistantMessage } from '../store/useAssistantStore'
 import AssistantActionCard from './AssistantActionCard.vue'
 import AssistantToolCallList from './AssistantToolCallList.vue'
@@ -134,345 +137,268 @@ function formatTokens(value?: number): string {
 </script>
 
 <template>
-  <div class="msg-list">
-    <div
-      v-for="msg in messages"
-      :key="msg.id"
-      class="msg-row"
-      :class="`msg-row--${msg.role}`"
-    >
+  <TooltipProvider>
+    <div class="msg-list flex flex-col gap-3 p-1">
       <div
-        class="msg-bubble"
-        :class="`msg-bubble--${msg.role}`"
+        v-for="msg in messages"
+        :key="msg.id"
+        class="msg-row flex"
+        :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
       >
-        <!-- 答复前的工作过程: 思考与只读工具调用按时序交错, 共享一条时间轴 -->
         <div
-          v-if="msg.process.length"
-          class="msg-process"
-          :class="{ 'is-thinking': hasReasoning(msg) && !msg.reasoningDone }"
+          class="msg-bubble max-w-[88%] min-w-0 p-3 rounded-xl border flex flex-col gap-1.5 break-words overflow-wrap-anywhere text-xs"
+          :class="
+            msg.role === 'user'
+              ? 'bg-primary/10 border-primary/20 text-foreground'
+              : 'bg-muted/40 border-border text-foreground w-full'
+          "
         >
-          <!-- 折叠头: 仅当有思考文本时出现, 控制思考片段的展开/收起 -->
+          <!-- 答复前的工作过程: 思考与只读工具调用按时序交错, 共享一条时间轴 -->
           <div
-            v-if="hasReasoning(msg)"
-            class="msg-think__head"
-            @click="toggleThinking(msg)"
+            v-if="msg.process.length"
+            class="msg-process relative pl-4 mb-0.5"
+            :class="{ 'is-thinking': hasReasoning(msg) && !msg.reasoningDone }"
           >
-            <NIcon
-              :component="BrainCircuit20Regular"
-              size="14"
-              class="msg-think__icon"
-            />
-            <span class="msg-think__title">{{ thinkLabel(msg) }}</span>
-            <NIcon
-              :component="ChevronDown12Regular"
-              size="12"
-              class="msg-think__chevron"
-              :class="{ 'is-open': isThinkingOpen(msg) }"
-            />
-          </div>
-
-          <div class="msg-process__body">
-            <template
-              v-for="block in processBlocks(msg)"
-              :key="block.id"
+            <!-- 折叠头: 仅当有思考文本时出现, 控制思考片段的展开/收起 -->
+            <div
+              v-if="hasReasoning(msg)"
+              class="msg-think__head flex items-center gap-1.5 cursor-pointer select-none mb-1.5 text-muted-foreground text-xs"
+              @click="toggleThinking(msg)"
             >
-              <!-- 思考片段: 随折叠头展开/收起 -->
-              <NCollapseTransition
-                v-if="block.type === 'reasoning'"
-                :show="isThinkingOpen(msg)"
+              <component
+                :is="BrainCircuit20Regular"
+                class="size-3.5 shrink-0"
+              />
+              <span class="msg-think__title flex-1 font-medium">{{ thinkLabel(msg) }}</span>
+              <component
+                :is="ChevronDown12Regular"
+                class="size-3 transition-transform duration-200"
+                :class="{ 'rotate-180': isThinkingOpen(msg) }"
+              />
+            </div>
+
+            <div class="msg-process__body flex flex-col gap-1.5">
+              <template
+                v-for="block in processBlocks(msg)"
+                :key="block.id"
               >
-                <NText
-                  depth="3"
-                  class="msg-think__body"
+                <!-- 思考片段: 随折叠头展开/收起 -->
+                <div
+                  v-if="block.type === 'reasoning' && isThinkingOpen(msg)"
+                  class="msg-think__body p-2 rounded-lg bg-muted/60 border border-border/60 text-muted-foreground whitespace-pre-wrap leading-relaxed text-[11px]"
                 >
                   {{ block.text }}
-                </NText>
-              </NCollapseTransition>
-              <!-- 工具调用: 始终常驻可见, 不随思考折叠 -->
-              <AssistantToolCallList
-                v-else
-                :tools="block.tools"
-              />
-            </template>
-          </div>
-        </div>
-
-        <div
-          v-if="msg.role === 'assistant' && msg.status === 'sending' && !msg.text && !msg.process.length"
-          class="msg-typing"
-        >
-          <span class="msg-typing__dot" />
-          <span class="msg-typing__dot" />
-          <span class="msg-typing__dot" />
-        </div>
-
-        <div
-          v-if="msg.images?.length"
-          class="msg-images"
-        >
-          <img
-            v-for="(img, i) in msg.images"
-            :key="i"
-            :src="img"
-            class="msg-image"
-            alt="附件"
-          />
-        </div>
-        <NText
-          v-else-if="msg.hasImage"
-          depth="3"
-          class="msg-image-hint"
-        >
-          [图片]
-        </NText>
-
-        <div
-          v-if="isEditing(msg)"
-          class="msg-editor"
-        >
-          <NInput
-            v-model:value="editing[msg.id]"
-            type="textarea"
-            class="msg-editor__input"
-            :autosize="{ minRows: 2, maxRows: 8 }"
-            :disabled="busy"
-          />
-          <div class="msg-editor__actions">
-            <NButton
-              tertiary
-              size="tiny"
-              :disabled="busy || !canSubmitEdit(msg)"
-              @click="submitEditing(msg)"
-            >
-              <template #icon>
-                <NIcon :component="Checkmark16Regular" />
+                </div>
+                <!-- 工具调用: 始终常驻可见, 不随思考折叠 -->
+                <AssistantToolCallList
+                  v-else-if="block.type === 'tools'"
+                  :tools="block.tools"
+                />
               </template>
-              保存
-            </NButton>
-            <NButton
-              quaternary
-              size="tiny"
+            </div>
+          </div>
+
+          <div
+            v-if="msg.role === 'assistant' && msg.status === 'sending' && !msg.text && !msg.process.length"
+            class="msg-typing inline-flex items-center gap-1 h-5 px-0.5"
+          >
+            <span class="msg-typing__dot size-1.5 rounded-full bg-primary" />
+            <span class="msg-typing__dot size-1.5 rounded-full bg-primary" />
+            <span class="msg-typing__dot size-1.5 rounded-full bg-primary" />
+          </div>
+
+          <div
+            v-if="msg.images?.length"
+            class="msg-images flex flex-wrap gap-1.5"
+          >
+            <img
+              v-for="(img, i) in msg.images"
+              :key="i"
+              :src="img"
+              class="msg-image max-w-40 max-h-40 rounded-lg object-cover"
+              alt="附件"
+            />
+          </div>
+          <span
+            v-else-if="msg.hasImage"
+            class="msg-image-hint text-muted-foreground text-xs"
+          >
+            [图片]
+          </span>
+
+          <div
+            v-if="isEditing(msg)"
+            class="msg-editor flex flex-col gap-1.5 min-w-[min(360px,72vw)]"
+          >
+            <Textarea
+              v-model="editing[msg.id]"
+              rows="2"
+              class="msg-editor__input text-xs resize-none"
               :disabled="busy"
-              @click="cancelEditing(msg)"
-            >
-              <template #icon>
-                <NIcon :component="Dismiss16Regular" />
-              </template>
-              取消
-            </NButton>
-          </div>
-        </div>
-
-        <StreamingMarkdown
-          v-if="msg.text && msg.role === 'assistant' && !isEditing(msg)"
-          class="msg-text"
-          :content="msg.text"
-          :streaming="msg.status === 'sending'"
-        />
-        <NText
-          v-else-if="msg.text && !isEditing(msg)"
-          class="msg-text"
-        >
-          {{ msg.text }}
-        </NText>
-
-        <div
-          v-if="msg.role === 'assistant' && msg.usage"
-          class="msg-usage"
-        >
-          <span>输入 {{ formatTokens(msg.usage.inputTokens) }}</span>
-          <span>输出 {{ formatTokens(msg.usage.outputTokens) }}</span>
-          <span v-if="msg.usage.reasoningTokens">推理 {{ formatTokens(msg.usage.reasoningTokens) }}</span>
-          <span>总计 {{ formatTokens(msg.usage.totalTokens) }}</span>
-        </div>
-
-        <div
-          v-if="(msg.text || msg.images?.length || msg.hasImage) && !isEditing(msg)"
-          class="msg-actions"
-        >
-          <NTooltip v-if="msg.text">
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                class="msg-action"
-                @click="copyMessage(msg)"
+            />
+            <div class="msg-editor__actions flex items-center justify-end gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                class="h-7 text-xs flex items-center gap-1"
+                :disabled="busy || !canSubmitEdit(msg)"
+                @click="submitEditing(msg)"
               >
-                <template #icon>
-                  <NIcon :component="Copy16Regular" />
-                </template>
-              </NButton>
-            </template>
-            复制
-          </NTooltip>
-          <NTooltip v-if="msg.role === 'user'">
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                class="msg-action"
-                :disabled="busy || !canEditUser(msg)"
-                @click="startEditing(msg)"
-              >
-                <template #icon>
-                  <NIcon :component="Edit16Regular" />
-                </template>
-              </NButton>
-            </template>
-            编辑
-          </NTooltip>
-          <NTooltip v-if="msg.role === 'assistant'">
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                class="msg-action"
+                <component :is="Checkmark16Regular" class="size-3.5" />
+                保存
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="h-7 text-xs flex items-center gap-1"
                 :disabled="busy"
-                @click="emit('rerun', msg.id)"
+                @click="cancelEditing(msg)"
               >
-                <template #icon>
-                  <NIcon :component="ArrowClockwise16Regular" />
-                </template>
-              </NButton>
-            </template>
-            重新生成
-          </NTooltip>
-        </div>
+                <component :is="Dismiss16Regular" class="size-3.5" />
+                取消
+              </Button>
+            </div>
+          </div>
 
-        <div
-          v-if="msg.status === 'error'"
-          class="msg-error"
-        >
-          <NText
-            type="error"
-            class="msg-error__text"
+          <StreamingMarkdown
+            v-if="msg.text && msg.role === 'assistant' && !isEditing(msg)"
+            class="msg-text text-sm leading-relaxed"
+            :content="msg.text"
+            :streaming="msg.status === 'sending'"
+          />
+          <p
+            v-else-if="msg.text && !isEditing(msg)"
+            class="msg-text text-xs leading-relaxed m-0"
           >
-            {{ msg.error ?? '出错了' }}
-          </NText>
-          <NButton
-            size="tiny"
-            type="error"
-            tertiary
-            @click="emit('retry', msg.id)"
-          >
-            重试
-          </NButton>
-        </div>
+            {{ msg.text }}
+          </p>
 
-        <div
-          v-if="batchActions(msg).length >= 2"
-          class="msg-batch"
-        >
-          <NPopconfirm
-            v-if="batchHighRisk(msg) && !batchRunning(msg)"
-            @positive-click="emit('confirm-all', msg.id)"
+          <div
+            v-if="msg.role === 'assistant' && msg.usage"
+            class="msg-usage flex items-center gap-2.5 flex-wrap mt-0.5 pt-1.5 border-t border-dashed border-border/60 text-muted-foreground text-[10px]"
           >
-            <template #trigger>
-              <NButton
-                size="small"
-                type="primary"
-                secondary
-              >
-                全部执行 {{ batchActions(msg).length }} 项
-              </NButton>
-            </template>
-            其中包含高风险操作，确认全部执行？
-          </NPopconfirm>
-          <NButton
-            v-else
-            size="small"
-            type="primary"
-            secondary
-            :loading="batchRunning(msg)"
-            :disabled="batchRunning(msg)"
-            @click="emit('confirm-all', msg.id)"
-          >
-            全部执行 {{ batchActions(msg).length }} 项
-          </NButton>
-        </div>
+            <span>输入 {{ formatTokens(msg.usage.inputTokens) }}</span>
+            <span>输出 {{ formatTokens(msg.usage.outputTokens) }}</span>
+            <span v-if="msg.usage.reasoningTokens">推理 {{ formatTokens(msg.usage.reasoningTokens) }}</span>
+            <span>总计 {{ formatTokens(msg.usage.totalTokens) }}</span>
+          </div>
 
-        <AssistantActionCard
-          v-for="action in msg.actions"
-          :key="action.id"
-          :action="action"
-          @confirm="emit('confirm', msg.id, action.id)"
-          @reject="emit('reject', msg.id, action.id)"
-          @save="(patch) => emit('save', msg.id, action.id, patch)"
-          @schedule="(ts) => emit('schedule', msg.id, action.id, ts)"
-          @cancel-schedule="emit('cancel-schedule', msg.id, action.id)"
-        />
+          <div
+            v-if="(msg.text || msg.images?.length || msg.hasImage) && !isEditing(msg)"
+            class="msg-actions flex items-center gap-0.5 min-h-6 -mt-0.5 opacity-70 hover:opacity-100 transition"
+            :class="{ 'justify-end': msg.role === 'user' }"
+          >
+            <Tooltip v-if="msg.text">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
+                  @click="copyMessage(msg)"
+                >
+                  <component :is="Copy16Regular" class="size-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>复制</TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="msg.role === 'user'">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
+                  :disabled="busy || !canEditUser(msg)"
+                  @click="startEditing(msg)"
+                >
+                  <component :is="Edit16Regular" class="size-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>编辑</TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="msg.role === 'assistant'">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
+                  :disabled="busy"
+                  @click="emit('rerun', msg.id)"
+                >
+                  <component :is="ArrowClockwise16Regular" class="size-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>重新生成</TooltipContent>
+            </Tooltip>
+          </div>
+
+          <div
+            v-if="msg.status === 'error'"
+            class="msg-error flex items-center justify-between gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs"
+          >
+            <span class="msg-error__text flex-1">{{ msg.error ?? '出错了' }}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              class="h-6 text-[11px] border-destructive/30 hover:bg-destructive/20"
+              @click="emit('retry', msg.id)"
+            >
+              重试
+            </Button>
+          </div>
+
+          <div
+            v-if="batchActions(msg).length >= 2"
+            class="msg-batch mt-1 flex justify-end"
+          >
+            <Popconfirm
+              v-if="batchHighRisk(msg) && !batchRunning(msg)"
+              title="其中包含高风险操作，确认全部执行？"
+              positive-text="确认全部执行"
+              negative-text="取消"
+              @positive-click="emit('confirm-all', msg.id)"
+            >
+              <template #trigger>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-7 text-xs border-primary text-primary"
+                >
+                  全部执行 {{ batchActions(msg).length }} 项
+                </Button>
+              </template>
+              其中包含高风险操作，确认全部执行？
+            </Popconfirm>
+            <Button
+              v-else
+              variant="outline"
+              size="sm"
+              class="h-7 text-xs border-primary text-primary"
+              :disabled="batchRunning(msg)"
+              @click="emit('confirm-all', msg.id)"
+            >
+              全部执行 {{ batchActions(msg).length }} 项
+            </Button>
+          </div>
+
+          <AssistantActionCard
+            v-for="action in msg.actions"
+            :key="action.id"
+            :action="action"
+            @confirm="emit('confirm', msg.id, action.id)"
+            @reject="emit('reject', msg.id, action.id)"
+            @save="(patch) => emit('save', msg.id, action.id, patch)"
+            @schedule="(ts) => emit('schedule', msg.id, action.id, ts)"
+            @cancel-schedule="emit('cancel-schedule', msg.id, action.id)"
+          />
+        </div>
       </div>
     </div>
-  </div>
+  </TooltipProvider>
 </template>
 
 <style scoped>
-.msg-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 4px;
-}
-.msg-row {
-  display: flex;
-  animation: msg-row-in 0.26s ease both;
-}
-.msg-row--user {
-  justify-content: flex-end;
-}
-.msg-row--assistant {
-  justify-content: flex-start;
-}
-@keyframes msg-row-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.msg-bubble {
-  --msg-bubble-bg: transparent;
-  --msg-bubble-border: transparent;
-  --msg-bubble-text: var(--vtsuru-fg, var(--vtsuru-fg));
-
-  max-width: 88%;
-  min-width: 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--msg-bubble-border);
-  background: var(--msg-bubble-bg);
-  color: var(--msg-bubble-text);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-.msg-bubble--user {
-  --msg-bubble-bg: var(--vtsuru-brand-soft, rgba(35, 173, 229, 0.1));
-  --msg-bubble-border: var(--vtsuru-brand-tint, rgba(35, 173, 229, 0.16));
-  --msg-bubble-text: var(--vtsuru-fg, #09090b);
-}
-.msg-bubble--assistant {
-  --msg-bubble-bg: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
-  --msg-bubble-border: var(--vtsuru-border, rgba(128, 128, 128, 0.14));
-  width: 100%;
-}
-.msg-text {
-  color: inherit;
-  font-size: 14px;
-}
-.msg-process {
-  position: relative;
-  padding-left: 16px;
-  margin-bottom: 2px;
-}
 .msg-process::before {
   content: '';
   position: absolute;
@@ -485,24 +411,6 @@ function formatTokens(value?: number): string {
 }
 .msg-process.is-thinking::before {
   background: linear-gradient(var(--vtsuru-brand, #23ade5), var(--vtsuru-border, rgba(128, 128, 128, 0.2)));
-}
-.msg-process__body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.msg-think__head {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  user-select: none;
-  margin-bottom: 6px;
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-  font-size: 12px;
-}
-.msg-think__icon {
-  flex: 0 0 auto;
 }
 .msg-process.is-thinking .msg-think__icon {
   color: var(--vtsuru-brand, #23ade5);
@@ -522,85 +430,7 @@ function formatTokens(value?: number): string {
     transform: scale(1.06);
   }
 }
-.msg-think__title {
-  flex: 1 1 auto;
-}
-.msg-think__chevron {
-  transition: transform 0.2s;
-}
-.msg-think__chevron.is-open {
-  transform: rotate(180deg);
-}
-.msg-think__body {
-  display: block;
-  padding: 6px 9px;
-  border-radius: 8px;
-  font-size: 12px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.05));
-  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.14));
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-}
-.msg-images {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.msg-image {
-  max-width: 160px;
-  max-height: 160px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-.msg-image-hint {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-  font-size: 13px;
-}
-.msg-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: min(360px, 72vw);
-}
-.msg-editor__input {
-  min-width: 0;
-}
-.msg-editor__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-.msg-usage {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 2px;
-  padding-top: 6px;
-  border-top: 1px dashed var(--vtsuru-border, rgba(128, 128, 128, 0.16));
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-  font-size: 11px;
-  line-height: 1.4;
-}
-.msg-usage span {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-.msg-typing {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 20px;
-  padding: 0 2px;
-}
 .msg-typing__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--vtsuru-brand, #23ade5);
   opacity: 0.35;
   animation: msg-typing-bounce 1.3s ease-in-out infinite;
 }
@@ -621,36 +451,5 @@ function formatTokens(value?: number): string {
     opacity: 1;
     transform: translateY(-3px);
   }
-}
-.msg-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 24px;
-  margin-top: -2px;
-  opacity: 0.72;
-}
-.msg-row--user .msg-actions {
-  justify-content: flex-end;
-}
-.msg-actions:hover {
-  opacity: 1;
-}
-.msg-action {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-}
-.msg-batch {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 8px;
-}
-.msg-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.msg-error__text {
-  font-size: 13px;
 }
 </style>

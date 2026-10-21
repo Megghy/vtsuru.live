@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { NCard, NColorPicker, NFormItem, NInputNumber, NSelect, NSpace, NSwitch } from 'naive-ui'
-
 import type { PngtuberState } from '@/shared/pngtuber/types'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+
 defineProps<{ state: PngtuberState; disabled: boolean }>()
 const emit = defineEmits<{ change: [patch: Partial<PngtuberState>] }>()
+
 const selects = [
   {
     key: 'speakingAnimation',
@@ -46,6 +57,7 @@ const selects = [
     ],
   },
 ] as const
+
 const numbers = [
   { key: 'scale', label: '立绘缩放', min: 0.1, max: 3, step: 0.05 },
   { key: 'transitionMs', label: '切图过渡（ms）', min: 0, max: 1000, step: 10 },
@@ -56,6 +68,7 @@ const numbers = [
   { key: 'blinkMax', label: '眨眼最长间隔（ms）', min: 500, max: 60000, step: 100 },
   { key: 'blinkDuration', label: '闭眼时长（ms）', min: 50, max: 2000, step: 10 },
 ] as const
+
 const switches = [
   ['flipH', '水平镜像'],
   ['idleDim', '静止时微暗'],
@@ -65,79 +78,98 @@ const switches = [
   ['pixelated', '像素画渲染'],
 ] as const
 </script>
+
 <template>
-  <NCard
-    title="动效、眨眼与画布"
-    size="small"
-  >
-    <NSpace
-      vertical
-      :size="12"
-    >
+  <Card class="p-3">
+    <CardHeader class="p-0 pb-2">
+      <CardTitle class="text-sm font-semibold">动效、眨眼与画布</CardTitle>
+    </CardHeader>
+    <CardContent class="p-0 space-y-3">
       <div class="fields">
-        <NFormItem
+        <div
           v-for="f in selects"
           :key="f.key"
-          :label="f.label"
-          :show-feedback="false"
-          ><NSelect
-            :value="state[f.key]"
+          class="space-y-1"
+        >
+          <label class="text-xs text-muted-foreground font-medium">{{ f.label }}</label>
+          <Select
+            :model-value="state[f.key]"
             :disabled="disabled"
-            :options="f.options.map(([value, label]) => ({ value, label }))"
-            @update:value="emit('change', { [f.key]: $event })"
-        /></NFormItem>
-        <NFormItem
+            @update:model-value="emit('change', { [f.key]: $event as any })"
+          >
+            <SelectTrigger class="h-8 text-xs w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="[value, label] in f.options"
+                :key="value"
+                :value="value"
+                class="text-xs"
+              >
+                {{ label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div
           v-for="f in numbers"
           :key="f.key"
-          :label="f.label"
-          :show-feedback="false"
-          ><NInputNumber
+          class="space-y-1"
+        >
+          <label class="text-xs text-muted-foreground font-medium">{{ f.label }}</label>
+          <NInputNumber
             :value="state[f.key]"
             :disabled="disabled"
             :min="f.min"
             :max="f.max"
             :step="f.step"
+            class="w-full"
             @update:value="(value) => value !== null && emit('change', { [f.key]: value })"
-        /></NFormItem>
+          />
+        </div>
       </div>
+
       <div class="fields">
         <div
           v-for="[key, label] in switches"
           :key="key"
-          class="toggle"
+          class="toggle flex items-center justify-between p-1.5 border rounded-md"
         >
-          <span>{{ label }}</span
-          ><NSwitch
-            :value="state[key]"
+          <span class="text-xs font-medium">{{ label }}</span>
+          <Switch
+            :checked="state[key]"
             :disabled="disabled"
-            @update:value="emit('change', { [key]: $event })"
+            @update:checked="emit('change', { [key]: $event })"
           />
         </div>
       </div>
-      <NFormItem
+
+      <div
         v-if="state.showGlow"
-        label="光晕颜色"
-        :show-feedback="false"
-        ><NColorPicker
-          :value="state.glowColor"
+        class="space-y-1"
+      >
+        <label class="text-xs text-muted-foreground font-medium">光晕颜色</label>
+        <ColorPicker
+          :model-value="state.glowColor"
           :disabled="disabled"
-          :show-alpha="false"
-          :modes="['hex']"
-          @update:value="emit('change', { glowColor: $event })"
-      /></NFormItem>
-    </NSpace>
-  </NCard>
+          @update:model-value="emit('change', { glowColor: $event })"
+        />
+      </div>
+    </CardContent>
+  </Card>
 </template>
+
 <style scoped>
 .fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
-.toggle {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+@media (max-width: 640px) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

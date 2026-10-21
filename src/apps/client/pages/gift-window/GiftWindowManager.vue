@@ -2,7 +2,6 @@
 import {
   ArrowReset24Regular,
   ArrowSync24Filled,
-  Checkmark24Filled,
   Color24Filled,
   Copy24Regular,
   Delete24Regular,
@@ -15,44 +14,33 @@ import {
   VehicleShip20Regular,
   WindowShield20Regular,
 } from '@vicons/fluent'
-import {
-  NAvatar,
-  NButton,
-  NButtonGroup,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NColorPicker,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NFormItem,
-  NGi,
-  NGrid,
-  NIcon,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSlider,
-  NSpin,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { GuardLevel, type ResponseLiveInfoModel, type ResponseLiveRankingEntryModel } from '@/api/api-models'
 import { getApiLiveGetAll, getApiLiveRanking } from '@/api/generated/live/live'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Empty } from '@/shared/ui/empty'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const giftWindow = useGiftWindow()
-const message = useMessage()
 
 const filterOptions = [
   { label: '普通礼物', value: 'Gift' },
@@ -96,18 +84,17 @@ const presets = {
 function applyPreset(preset: keyof typeof presets) {
   Object.assign(giftWindow.settings, presets[preset])
   const names = { dark: '暗黑星空', warm: '暖色流金', purple: '梦幻浅紫' } as const
-  message.success(`已应用${names[preset]}预设`)
+  toast.success(`已应用${names[preset]}预设`)
 }
 
 function resetWindowPosition() {
   giftWindow.setPosition(0, 0)
-  message.success('窗口位置已重置至默认坐标')
+  toast.success('窗口位置已重置至默认坐标')
 }
 
 // 实时感谢数据
 const realtimeRankList = computed(() => giftWindow.getRankedList())
 const realtimeGuardList = computed(() => giftWindow.getOnlineGuardList())
-const realtimeThankList = computed(() => giftWindow.getThankSummaryList())
 
 function getGuardTitle(level: GuardLevel): string {
   switch (level) {
@@ -156,10 +143,10 @@ function copyThankText() {
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      message.success('已复制下播感谢文案至剪贴板')
+      toast.success('已复制下播感谢文案至剪贴板')
     })
     .catch(() => {
-      message.error('复制到剪贴板失败')
+      toast.error('复制到剪贴板失败')
     })
 }
 
@@ -213,1043 +200,845 @@ async function loadHistory() {
     await loadHistoryRanking()
     isHistoryLoaded.value = true
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '加载历史榜单失败')
+    toast.error(error instanceof Error ? error.message : '加载历史榜单失败')
   } finally {
     isHistoryLoading.value = false
   }
 }
 
-async function onHistoryLiveChange() {
+async function onHistoryLiveChange(val: string) {
+  selectedHistoryLiveId.value = val
   try {
     await loadHistoryRanking()
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '加载历史榜单失败')
+    toast.error(error instanceof Error ? error.message : '加载历史榜单失败')
   }
 }
 
 function onTabChange(tab: string) {
   if (tab === 'history' && !isHistoryLoaded.value) void loadHistory()
 }
+
+function toggleFilterType(val: string, checked: boolean) {
+  const current = giftWindow.settings.filterTypes || []
+  if (checked) {
+    if (!current.includes(val as any)) current.push(val as any)
+  } else {
+    const idx = current.indexOf(val as any)
+    if (idx !== -1) current.splice(idx, 1)
+  }
+}
 </script>
 
 <template>
-  <div class="gift-manage-view">
-    <NFlex
-      vertical
-      :size="14"
+  <div class="gift-manage-view flex flex-col gap-3.5">
+    <!-- 标准管理页标头 -->
+    <ClientPageHeader
+      title="礼物与高能榜浮窗管理"
+      description="桌面半透明置顶礼物浮窗与高能排行榜，同窗口分屏或独立展示，支持实时打赏动画、在场舰长名单与下播感谢"
     >
-      <!-- 标准管理页标头 -->
-      <ClientPageHeader
-        title="礼物与高能榜浮窗管理"
-        description="桌面半透明置顶礼物浮窗与高能排行榜，同窗口分屏或独立展示，支持实时打赏动画、在场舰长名单与下播感谢"
-      >
-        <template #actions>
-          <NTag
-            :type="giftWindow.isGiftWindowOpen ? 'success' : 'default'"
-            round
-            :bordered="false"
-          >
-            {{ giftWindow.isGiftWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
-          </NTag>
-
-          <NButton
-            size="small"
-            :type="giftWindow.isGiftWindowOpen ? 'error' : 'primary'"
-            secondary
-            @click="giftWindow.isGiftWindowOpen ? giftWindow.closeWindow() : giftWindow.openWindow()"
-          >
-            {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '打开浮窗' }}
-          </NButton>
-
-          <NButtonGroup size="small">
-            <NButton
-              secondary
-              type="info"
-              :disabled="!giftWindow.isGiftWindowOpen"
-              @click="giftWindow.sendTestGift()"
-            >
-              <template #icon>
-                <NIcon :component="Send24Filled" />
-              </template>
-              测试礼物
-            </NButton>
-            <NButton
-              secondary
-              type="warning"
-              :disabled="!giftWindow.isGiftWindowOpen"
-              @click="giftWindow.clearGifts()"
-            >
-              <template #icon>
-                <NIcon :component="Delete24Regular" />
-              </template>
-              清空
-            </NButton>
-          </NButtonGroup>
-        </template>
-      </ClientPageHeader>
-
-      <!-- 统一 Segmented Tabs 导航 -->
-      <NTabs
-        type="segment"
-        animated
-        default-value="thank"
-        class="gift-tabs"
-        @update:value="onTabChange"
-      >
-        <!-- 下播感谢与实时榜单 -->
-        <NTabPane
-          name="thank"
-          tab="下播感谢看板"
+      <template #actions>
+        <Badge
+          variant="outline"
+          class="text-xs h-6 px-2.5"
+          :class="giftWindow.isGiftWindowOpen ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
         >
-          <template #tab>
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <NIcon :component="Megaphone24Filled" />
-              <span>下播感谢看板</span>
-            </NFlex>
-          </template>
+          {{ giftWindow.isGiftWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
+        </Badge>
 
-          <NFlex
-            vertical
-            :size="12"
-            class="client-readable"
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-8 text-xs"
+          :class="giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'"
+          @click="giftWindow.isGiftWindowOpen ? giftWindow.closeWindow() : giftWindow.openWindow()"
+        >
+          {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '打开浮窗' }}
+        </Button>
+
+        <div class="inline-flex rounded-md shadow-sm">
+          <Button
+            size="sm"
+            variant="secondary"
+            class="h-8 text-xs gap-1 rounded-r-none border-r border-border"
+            :disabled="!giftWindow.isGiftWindowOpen"
+            @click="giftWindow.sendTestGift()"
           >
-            <NCard
-              title="本场打赏前 50 ➕ 在场舰长名单"
-              size="small"
-              bordered
+            <Send24Filled class="size-3.5 text-sky-500" />
+            测试礼物
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            class="h-8 text-xs gap-1 rounded-l-none"
+            :disabled="!giftWindow.isGiftWindowOpen"
+            @click="giftWindow.clearGifts()"
+          >
+            <Delete24Regular class="size-3.5 text-amber-500" />
+            清空
+          </Button>
+        </div>
+      </template>
+    </ClientPageHeader>
+
+    <!-- 统一 Segmented Tabs 导航 -->
+    <Tabs
+      default-value="thank"
+      class="w-full gift-tabs"
+      @update:model-value="onTabChange"
+    >
+      <TabsList class="grid w-full max-w-xl grid-cols-5 h-8">
+        <TabsTrigger value="thank" class="text-xs gap-1.5">
+          <Megaphone24Filled class="size-3.5" />
+          下播感谢
+        </TabsTrigger>
+        <TabsTrigger value="appearance" class="text-xs gap-1.5">
+          <Color24Filled class="size-3.5" />
+          外观与主题
+        </TabsTrigger>
+        <TabsTrigger value="window" class="text-xs gap-1.5">
+          <Desktop24Filled class="size-3.5" />
+          窗口与布局
+        </TabsTrigger>
+        <TabsTrigger value="filter" class="text-xs gap-1.5">
+          <Filter24Filled class="size-3.5" />
+          筛选与规则
+        </TabsTrigger>
+        <TabsTrigger value="history" class="text-xs gap-1.5">
+          <History24Filled class="size-3.5" />
+          往期榜单
+        </TabsTrigger>
+      </TabsList>
+
+      <!-- 下播感谢与实时榜单 -->
+      <TabsContent value="thank" class="pt-3 space-y-3 client-readable">
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+            <CardTitle class="text-sm font-semibold">本场打赏前 50 ➕ 在场舰长名单</CardTitle>
+            <Button
+              size="sm"
+              variant="secondary"
+              class="h-7 text-xs gap-1 text-primary"
+              @click="copyThankText"
             >
-              <template #header-extra>
-                <NFlex :size="8">
-                  <NButton
-                    size="small"
-                    type="primary"
-                    secondary
-                    @click="copyThankText"
+              <Copy24Regular class="size-3.5" />
+              一键复制感谢文案
+            </Button>
+          </CardHeader>
+
+          <CardContent class="p-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- 左列: 本场打赏榜 Top 50 -->
+              <div>
+                <div class="thank-section-header">
+                  <span class="thank-section-title flex items-center gap-1.5">
+                    <Trophy20Regular class="size-4 text-amber-500" />
+                    本场打赏贡献榜 (前 {{ realtimeRankList.length }} 名)
+                  </span>
+                  <Badge variant="secondary" class="text-[10px] text-amber-600 bg-amber-500/10">
+                    上限 {{ giftWindow.settings.rankDisplayCount }} 人
+                  </Badge>
+                </div>
+
+                <div class="thank-scroll-box">
+                  <Empty
+                    v-if="realtimeRankList.length === 0"
+                    description="本场暂无打赏记录"
+                    class="py-8"
+                  />
+                  <div
+                    v-else
+                    class="thank-list"
                   >
-                    <template #icon>
-                      <NIcon :component="Copy24Regular" />
-                    </template>
-                    一键复制感谢文案
-                  </NButton>
-                </NFlex>
-              </template>
-
-              <NGrid
-                cols="1 m:2"
-                :x-gap="16"
-                :y-gap="12"
-              >
-                <!-- 左列: 本场打赏榜 Top 50 -->
-                <NGi>
-                  <div class="thank-section-header">
-                    <span class="thank-section-title">
-                      <NIcon
-                        :component="Trophy20Regular"
-                        style="vertical-align: -2px; margin-right: 4px;"
-                      />
-                      本场打赏贡献榜 (前 {{ realtimeRankList.length }} 名)
-                    </span>
-                    <NTag
-                      size="small"
-                      :bordered="false"
-                      type="warning"
-                    >
-                      上限 {{ giftWindow.settings.rankDisplayCount }} 人
-                    </NTag>
-                  </div>
-
-                  <div class="thank-scroll-box">
-                    <NEmpty
-                      v-if="realtimeRankList.length === 0"
-                      description="本场暂无打赏记录"
-                      style="padding: 30px 0"
-                    />
                     <div
-                      v-else
-                      class="thank-list"
+                      v-for="(r, idx) in realtimeRankList"
+                      :key="r.id"
+                      class="thank-item"
+                      :class="{ 'thank-item--top': idx < 3 }"
                     >
-                      <div
-                        v-for="(r, idx) in realtimeRankList"
-                        :key="r.id"
-                        class="thank-item"
-                        :class="{ 'thank-item--top': idx < 3 }"
-                      >
-                        <NFlex
-                          align="center"
-                          justify="space-between"
-                          style="width: 100%"
-                        >
-                          <NFlex
-                            align="center"
-                            :size="8"
+                      <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center gap-2">
+                          <span
+                            class="thank-idx"
+                            :class="{
+                              'thank-idx--1': idx === 0,
+                              'thank-idx--2': idx === 1,
+                              'thank-idx--3': idx === 2,
+                            }"
                           >
+                            {{ idx + 1 }}
+                          </span>
+                          <div class="thank-avatar-wrap">
+                            <img
+                              :src="r.uface || 'https://static.hdslb.com/images/member/noface.gif'"
+                              class="size-6 rounded-full object-cover"
+                              alt="avatar"
+                            />
                             <span
-                              class="thank-idx"
-                              :class="{
-                                'thank-idx--1': idx === 0,
-                                'thank-idx--2': idx === 1,
-                                'thank-idx--3': idx === 2,
-                              }"
-                            >
-                              {{ idx + 1 }}
-                            </span>
-                            <div class="thank-avatar-wrap">
-                              <NAvatar
-                                round
-                                size="small"
-                                :src="r.uface || undefined"
-                              />
-                              <span
-                                class="thank-online-dot"
-                                :class="{ online: r.isOnline }"
-                                :title="r.isOnline ? '在场活跃' : '离线'"
-                              />
-                            </div>
-                            <NText strong>{{ r.uname }}</NText>
-                            <NTag
-                              v-if="r.guardLevel > 0"
-                              size="tiny"
-                              :bordered="false"
-                              :type="r.guardLevel === GuardLevel.Zongdu ? 'error' : r.guardLevel === GuardLevel.Tidu ? 'warning' : 'info'"
-                            >
-                              {{ getGuardTitle(r.guardLevel) }}
-                            </NTag>
-                          </NFlex>
-
-                          <NFlex
-                            align="center"
-                            :size="6"
+                              class="thank-online-dot"
+                              :class="{ online: r.isOnline }"
+                              :title="r.isOnline ? '在场活跃' : '离线'"
+                            />
+                          </div>
+                          <span class="text-xs font-semibold text-foreground">{{ r.uname }}</span>
+                          <Badge
+                            v-if="r.guardLevel > 0"
+                            variant="outline"
+                            class="text-[9px] h-4 px-1"
+                            :class="r.guardLevel === GuardLevel.Zongdu ? 'text-destructive border-destructive/40 bg-destructive/10' : r.guardLevel === GuardLevel.Tidu ? 'text-amber-600 border-amber-500/40 bg-amber-500/10' : 'text-sky-600 border-sky-500/40 bg-sky-500/10'"
                           >
-                            <NTag
-                              v-if="r.isOnline"
-                              size="tiny"
-                              type="success"
-                              :bordered="false"
-                            >
-                              在场
-                            </NTag>
-                            <NText
-                              type="warning"
-                              strong
-                            >
-                              ¥{{ r.score.toLocaleString() }}
-                            </NText>
-                          </NFlex>
-                        </NFlex>
+                            {{ getGuardTitle(r.guardLevel) }}
+                          </Badge>
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                          <Badge
+                            v-if="r.isOnline"
+                            variant="outline"
+                            class="text-[9px] h-4 px-1 border-emerald-500/40 text-emerald-600 bg-emerald-500/10"
+                          >
+                            在场
+                          </Badge>
+                          <span class="text-xs font-bold text-amber-500">
+                            ¥{{ r.score.toLocaleString() }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </NGi>
+                </div>
+              </div>
 
-                <!-- 右列: 还在直播间的在场舰长 -->
-                <NGi>
-                  <div class="thank-section-header">
-                    <span class="thank-section-title">
-                      <NIcon
-                        :component="VehicleShip20Regular"
-                        style="vertical-align: -2px; margin-right: 4px;"
-                      />
-                      还在直播间的舰长 ({{ realtimeGuardList.length }} 人)
-                    </span>
-                    <NText depth="3" style="font-size: 12px">
-                      {{ giftWindow.settings.onlineThresholdMinutes }} 分钟内有互动
-                    </NText>
-                  </div>
+              <!-- 右列: 还在直播间的在场舰长 -->
+              <div>
+                <div class="thank-section-header">
+                  <span class="thank-section-title flex items-center gap-1.5">
+                    <VehicleShip20Regular class="size-4 text-sky-500" />
+                    还在直播间的舰长 ({{ realtimeGuardList.length }} 人)
+                  </span>
+                  <span class="text-[11px] text-muted-foreground">
+                    {{ giftWindow.settings.onlineThresholdMinutes }} 分钟内有互动
+                  </span>
+                </div>
 
-                  <div class="thank-scroll-box">
-                    <NEmpty
-                      v-if="realtimeGuardList.length === 0"
-                      description="当前暂无在场大航海观众活跃"
-                      style="padding: 30px 0"
-                    />
+                <div class="thank-scroll-box">
+                  <Empty
+                    v-if="realtimeGuardList.length === 0"
+                    description="当前暂无在场大航海观众活跃"
+                    class="py-8"
+                  />
+                  <div
+                    v-else
+                    class="thank-list"
+                  >
                     <div
-                      v-else
-                      class="thank-list"
+                      v-for="g in realtimeGuardList"
+                      :key="g.id"
+                      class="thank-item thank-item--guard"
                     >
-                      <div
-                        v-for="g in realtimeGuardList"
-                        :key="g.id"
-                        class="thank-item thank-item--guard"
-                      >
-                        <NFlex
-                          align="center"
-                          justify="space-between"
-                          style="width: 100%"
-                        >
-                          <NFlex
-                            align="center"
-                            :size="8"
+                      <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            class="text-[9px] h-4 px-1"
+                            :class="g.guardLevel === GuardLevel.Zongdu ? 'text-destructive border-destructive/40 bg-destructive/10' : g.guardLevel === GuardLevel.Tidu ? 'text-amber-600 border-amber-500/40 bg-amber-500/10' : 'text-sky-600 border-sky-500/40 bg-sky-500/10'"
                           >
-                            <NTag
-                              size="small"
-                              :bordered="false"
-                              :type="g.guardLevel === GuardLevel.Zongdu ? 'error' : g.guardLevel === GuardLevel.Tidu ? 'warning' : 'info'"
-                            >
-                              {{ getGuardTitle(g.guardLevel) }}
-                            </NTag>
-                            <div class="thank-avatar-wrap">
-                              <NAvatar
-                                round
-                                size="small"
-                                :src="g.uface || undefined"
-                              />
-                              <span class="thank-online-dot online" />
-                            </div>
-                            <NText strong>{{ g.uname }}</NText>
-                          </NFlex>
+                            {{ getGuardTitle(g.guardLevel) }}
+                          </Badge>
+                          <div class="thank-avatar-wrap">
+                            <img
+                              :src="g.uface || 'https://static.hdslb.com/images/member/noface.gif'"
+                              class="size-6 rounded-full object-cover"
+                              alt="avatar"
+                            />
+                            <span class="thank-online-dot online" />
+                          </div>
+                          <span class="text-xs font-semibold text-foreground">{{ g.uname }}</span>
+                        </div>
 
-                          <NFlex
-                            align="center"
-                            :size="6"
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[11px] text-muted-foreground">
+                            {{ g.lastAction }}
+                          </span>
+                          <Badge
+                            v-if="g.rankIndex"
+                            variant="outline"
+                            class="text-[9px] h-4 px-1 border-amber-500/40 text-amber-600 bg-amber-500/10"
                           >
-                            <NText
-                              depth="3"
-                              style="font-size: 11px"
-                            >
-                              {{ g.lastAction }}
-                            </NText>
-                            <NTag
-                              v-if="g.rankIndex"
-                              size="tiny"
-                              type="warning"
-                              :bordered="false"
-                            >
-                              榜 #{{ g.rankIndex }}
-                            </NTag>
-                          </NFlex>
-                        </NFlex>
+                            榜 #{{ g.rankIndex }}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </NGi>
-              </NGrid>
-            </NCard>
-          </NFlex>
-        </NTabPane>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
 
-        <!-- 外观与主题 -->
-        <NTabPane
-          name="appearance"
-          tab="外观与主题"
-        >
-          <template #tab>
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <NIcon :component="Color24Filled" />
-              <span>外观与主题</span>
-            </NFlex>
-          </template>
-
-          <NFlex
-            vertical
-            :size="12"
-            class="client-readable"
-          >
-            <!-- 主题预设 -->
-            <NCard
-              title="配色预设"
-              size="small"
-              bordered
-            >
-              <NGrid
-                cols="1 s:3"
-                :x-gap="12"
-                :y-gap="8"
+      <!-- 外观与主题 -->
+      <TabsContent value="appearance" class="pt-3 space-y-3 client-readable">
+        <!-- 主题预设 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">配色预设</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div
+                class="preset-card preset-card--dark"
+                @click="applyPreset('dark')"
               >
-                <NGi>
-                  <div
-                    class="preset-card preset-card--dark"
-                    @click="applyPreset('dark')"
-                  >
-                    <div class="preset-name">暗黑星空</div>
-                    <div class="preset-desc">深色沉浸背景搭配琥珀金高亮</div>
-                  </div>
-                </NGi>
-                <NGi>
-                  <div
-                    class="preset-card preset-card--warm"
-                    @click="applyPreset('warm')"
-                  >
-                    <div class="preset-name">暖色流金</div>
-                    <div class="preset-desc">暖咖质感底色搭配蜜橙重点色</div>
-                  </div>
-                </NGi>
-                <NGi>
-                  <div
-                    class="preset-card preset-card--purple"
-                    @click="applyPreset('purple')"
-                  >
-                    <div class="preset-name">梦幻浅紫</div>
-                    <div class="preset-desc">神秘浅紫渐变搭配霓虹高光</div>
-                  </div>
-                </NGi>
-              </NGrid>
-            </NCard>
-
-            <!-- 颜色自定义 -->
-            <NCard
-              title="色彩调节"
-              size="small"
-              bordered
-            >
-              <NGrid
-                cols="1 s:2"
-                :x-gap="16"
-                :y-gap="6"
+                <div class="preset-name">暗黑星空</div>
+                <div class="preset-desc">深色沉浸背景搭配琥珀金高亮</div>
+              </div>
+              <div
+                class="preset-card preset-card--warm"
+                @click="applyPreset('warm')"
               >
-                <NGi>
-                  <NFormItem
-                    label="卡片背景色"
-                    label-placement="left"
-                  >
-                    <NColorPicker
-                      v-model:value="giftWindow.settings.backgroundColor"
-                      :show-alpha="true"
-                    />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="窗口背景色"
-                    label-placement="left"
-                  >
-                    <NColorPicker
-                      v-model:value="giftWindow.settings.windowBackgroundColor"
-                      :show-alpha="true"
-                    />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="文字主色"
-                    label-placement="left"
-                  >
-                    <NColorPicker
-                      v-model:value="giftWindow.settings.textColor"
-                      :show-alpha="true"
-                    />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="金额高亮色"
-                    label-placement="left"
-                  >
-                    <NColorPicker
-                      v-model:value="giftWindow.settings.highlightColor"
-                      :show-alpha="true"
-                    />
-                  </NFormItem>
-                </NGi>
-              </NGrid>
-            </NCard>
-
-            <!-- 样式细节 -->
-            <NCard
-              title="排版与细节"
-              size="small"
-              bordered
-            >
-              <NFlex
-                vertical
-                :size="6"
+                <div class="preset-name">暖色流金</div>
+                <div class="preset-desc">暖咖质感底色搭配蜜橙重点色</div>
+              </div>
+              <div
+                class="preset-card preset-card--purple"
+                @click="applyPreset('purple')"
               >
-                <NFormItem
-                  label="整体不透明度"
-                  label-placement="left"
-                >
-                  <NSlider
-                    v-model:value="giftWindow.settings.opacity"
-                    :min="0.1"
-                    :max="1"
-                    :step="0.05"
-                    style="max-width: 320px"
-                  />
-                </NFormItem>
-                <NFormItem
-                  label="字号大小 (px)"
-                  label-placement="left"
-                >
-                  <NSlider
-                    v-model:value="giftWindow.settings.fontSize"
-                    :min="10"
-                    :max="24"
-                    :step="1"
-                    style="max-width: 320px"
-                  />
-                </NFormItem>
-                <NFormItem
-                  label="卡片圆角 (px)"
-                  label-placement="left"
-                >
-                  <NSlider
-                    v-model:value="giftWindow.settings.borderRadius"
-                    :min="0"
-                    :max="20"
-                    :step="1"
-                    style="max-width: 320px"
-                  />
-                </NFormItem>
-                <NFormItem
-                  label="条目间距 (px)"
-                  label-placement="left"
-                >
-                  <NSlider
-                    v-model:value="giftWindow.settings.itemSpacing"
-                    :min="0"
-                    :max="20"
-                    :step="1"
-                    style="max-width: 320px"
-                  />
-                </NFormItem>
+                <div class="preset-name">梦幻浅紫</div>
+                <div class="preset-desc">神秘浅紫渐变搭配霓虹高光</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                <NDivider style="margin: 8px 0" />
+        <!-- 颜色自定义 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">色彩调节</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-muted-foreground">卡片背景色</span>
+                <ColorPicker
+                  v-model:value="giftWindow.settings.backgroundColor"
+                  :show-alpha="true"
+                />
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-muted-foreground">窗口背景色</span>
+                <ColorPicker
+                  v-model:value="giftWindow.settings.windowBackgroundColor"
+                  :show-alpha="true"
+                />
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-muted-foreground">文字主色</span>
+                <ColorPicker
+                  v-model:value="giftWindow.settings.textColor"
+                  :show-alpha="true"
+                />
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-muted-foreground">金额高亮色</span>
+                <ColorPicker
+                  v-model:value="giftWindow.settings.highlightColor"
+                  :show-alpha="true"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                <NGrid
-                  cols="2 s:3"
-                  :x-gap="12"
-                  :y-gap="6"
-                >
-                  <NGi>
-                    <LabelItem label="显示头像">
-                      <NSwitch v-model:value="giftWindow.settings.showAvatar" />
-                    </LabelItem>
-                  </NGi>
-                  <NGi>
-                    <LabelItem label="显示金额">
-                      <NSwitch v-model:value="giftWindow.settings.showPrice" />
-                    </LabelItem>
-                  </NGi>
-                  <NGi>
-                    <LabelItem label="显示时间">
-                      <NSwitch v-model:value="giftWindow.settings.showTime" />
-                    </LabelItem>
-                  </NGi>
-                  <NGi>
-                    <LabelItem label="紧凑模式">
-                      <NSwitch v-model:value="giftWindow.settings.compactMode" />
-                    </LabelItem>
-                  </NGi>
-                  <NGi>
-                    <LabelItem
-                      label="浮窗滚动条"
-                      description="显示极简半透明细滚动条"
-                    >
-                      <NSwitch v-model:value="giftWindow.settings.showScrollbar" />
-                    </LabelItem>
-                  </NGi>
-                </NGrid>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NTabPane>
+        <!-- 样式细节 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">排版与细节</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3 space-y-3">
+            <div class="flex items-center justify-between gap-4 text-xs">
+              <span class="text-muted-foreground w-28 shrink-0">整体不透明度</span>
+              <div class="flex-1 max-w-xs flex items-center gap-3">
+                <Slider
+                  :model-value="[giftWindow.settings.opacity]"
+                  :min="0.1"
+                  :max="1"
+                  :step="0.05"
+                  @update:model-value="giftWindow.settings.opacity = $event?.[0] ?? 1"
+                />
+                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
+                  {{ Math.round(giftWindow.settings.opacity * 100) }}%
+                </span>
+              </div>
+            </div>
 
-        <!-- 窗口与布局 -->
-        <NTabPane
-          name="window"
-          tab="窗口与布局"
-        >
-          <template #tab>
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <NIcon :component="Desktop24Filled" />
-              <span>窗口与布局</span>
-            </NFlex>
-          </template>
+            <div class="flex items-center justify-between gap-4 text-xs">
+              <span class="text-muted-foreground w-28 shrink-0">字号大小 (px)</span>
+              <div class="flex-1 max-w-xs flex items-center gap-3">
+                <Slider
+                  :model-value="[giftWindow.settings.fontSize]"
+                  :min="10"
+                  :max="24"
+                  :step="1"
+                  @update:model-value="giftWindow.settings.fontSize = $event?.[0] ?? 14"
+                />
+                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
+                  {{ giftWindow.settings.fontSize }}
+                </span>
+              </div>
+            </div>
 
-          <NFlex
-            vertical
-            :size="12"
-            class="client-readable"
-          >
-            <!-- 尺寸与坐标 -->
-            <NCard
-              title="尺寸与屏幕坐标"
-              size="small"
-              bordered
-            >
-              <NGrid
-                cols="2 s:4"
-                :x-gap="12"
-                :y-gap="6"
+            <div class="flex items-center justify-between gap-4 text-xs">
+              <span class="text-muted-foreground w-28 shrink-0">卡片圆角 (px)</span>
+              <div class="flex-1 max-w-xs flex items-center gap-3">
+                <Slider
+                  :model-value="[giftWindow.settings.borderRadius]"
+                  :min="0"
+                  :max="20"
+                  :step="1"
+                  @update:model-value="giftWindow.settings.borderRadius = $event?.[0] ?? 6"
+                />
+                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
+                  {{ giftWindow.settings.borderRadius }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-4 text-xs">
+              <span class="text-muted-foreground w-28 shrink-0">条目间距 (px)</span>
+              <div class="flex-1 max-w-xs flex items-center gap-3">
+                <Slider
+                  :model-value="[giftWindow.settings.itemSpacing]"
+                  :min="0"
+                  :max="20"
+                  :step="1"
+                  @update:model-value="giftWindow.settings.itemSpacing = $event?.[0] ?? 6"
+                />
+                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
+                  {{ giftWindow.settings.itemSpacing }}
+                </span>
+              </div>
+            </div>
+
+            <div class="h-px bg-border my-2" />
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <LabelItem label="显示头像">
+                <Switch v-model:checked="giftWindow.settings.showAvatar" />
+              </LabelItem>
+              <LabelItem label="显示金额">
+                <Switch v-model:checked="giftWindow.settings.showPrice" />
+              </LabelItem>
+              <LabelItem label="显示时间">
+                <Switch v-model:checked="giftWindow.settings.showTime" />
+              </LabelItem>
+              <LabelItem label="紧凑模式">
+                <Switch v-model:checked="giftWindow.settings.compactMode" />
+              </LabelItem>
+              <LabelItem
+                label="浮窗滚动条"
+                description="显示极简半透明细滚动条"
               >
-                <NGi>
-                  <NFormItem
-                    label="宽度 (px)"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.width"
-                      :min="200"
-                      :max="3840"
-                      @update:value="(v) => giftWindow.setSize(v as number, giftWindow.settings.height)"
-                    />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="高度 (px)"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.height"
-                      :min="200"
-                      :max="2160"
-                      @update:value="(v) => giftWindow.setSize(giftWindow.settings.width, v as number)"
-                    />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="X 坐标"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.x"
-                      :min="0"
-                      @update:value="() => giftWindow.updateWindowPosition()"
-                    />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="Y 坐标"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.y"
-                      :min="0"
-                      @update:value="() => giftWindow.updateWindowPosition()"
-                    />
-                  </NFormItem>
-                </NGi>
-              </NGrid>
-              <NFlex
-                justify="end"
-                style="margin-top: 10px"
-              >
-                <NButton
-                  secondary
+                <Switch v-model:checked="giftWindow.settings.showScrollbar" />
+              </LabelItem>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <!-- 窗口与布局 -->
+      <TabsContent value="window" class="pt-3 space-y-3 client-readable">
+        <!-- 尺寸与坐标 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">尺寸与屏幕坐标</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3 space-y-3">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">宽度 (px)</span>
+                <NInputNumber
+                  :value="giftWindow.settings.width"
+                  :min="200"
+                  :max="3840"
                   size="small"
-                  @click="resetWindowPosition"
-                >
-                  <template #icon>
-                    <NIcon :component="ArrowReset24Regular" />
-                  </template>
-                  重置至默认坐标
-                </NButton>
-              </NFlex>
-            </NCard>
+                  class="w-full"
+                  @update:value="giftWindow.setSize($event || 300, giftWindow.settings.height)"
+                />
+              </div>
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">高度 (px)</span>
+                <NInputNumber
+                  :value="giftWindow.settings.height"
+                  :min="200"
+                  :max="2160"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.setSize(giftWindow.settings.width, $event || 400)"
+                />
+              </div>
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">X 坐标</span>
+                <NInputNumber
+                  :value="giftWindow.settings.x"
+                  :min="0"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.settings.x = $event || 0; giftWindow.updateWindowPosition()"
+                />
+              </div>
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">Y 坐标</span>
+                <NInputNumber
+                  :value="giftWindow.settings.y"
+                  :min="0"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.settings.y = $event || 0; giftWindow.updateWindowPosition()"
+                />
+              </div>
+            </div>
 
-            <!-- 模块展示开关 -->
-            <NCard
-              title="同窗口展示模块"
-              size="small"
-              bordered
-            >
-              <NFlex
-                vertical
-                :size="10"
+            <div class="flex justify-end pt-1">
+              <Button
+                size="sm"
+                variant="secondary"
+                class="h-7 text-xs gap-1.5"
+                @click="resetWindowPosition"
               >
-                <LabelItem
-                  label="启用礼物列表"
-                  description="实时滚动显示观众送出的礼物、SC 与大航海"
-                >
-                  <NSwitch v-model:value="giftWindow.settings.showGiftList" />
-                </LabelItem>
-                <LabelItem
-                  label="启用高能排行榜"
-                  description="在同窗口内展示本场直播打赏榜与在场舰长名单"
-                >
-                  <NSwitch v-model:value="giftWindow.settings.showRanking" />
-                </LabelItem>
-                <LabelItem
-                  v-if="giftWindow.settings.showRanking"
-                  label="浮窗默认排行视图"
-                  description="打开浮窗时默认聚焦的排行板块"
-                >
-                  <NRadioGroup v-model:value="giftWindow.settings.rankViewMode">
-                    <NFlex :size="8">
-                      <NRadioButton
-                        v-for="opt in rankViewOptions"
-                        :key="opt.value"
-                        :value="opt.value"
-                      >
-                        {{ opt.label }}
-                      </NRadioButton>
-                    </NFlex>
-                  </NRadioGroup>
-                </LabelItem>
-              </NFlex>
-            </NCard>
+                <ArrowReset24Regular class="size-3.5" />
+                重置至默认坐标
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-            <!-- 窗口行为 -->
-            <NCard
-              title="浮窗行为属性"
-              size="small"
-              bordered
+        <!-- 模块展示开关 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">同窗口展示模块</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3 space-y-2.5">
+            <LabelItem
+              label="启用礼物列表"
+              description="实时滚动显示观众送出的礼物、SC 与大航海"
             >
-              <NFlex
-                vertical
-                :size="10"
+              <Switch v-model:checked="giftWindow.settings.showGiftList" />
+            </LabelItem>
+            <LabelItem
+              label="启用高能排行榜"
+              description="在同窗口内展示本场直播打赏榜与在场舰长名单"
+            >
+              <Switch v-model:checked="giftWindow.settings.showRanking" />
+            </LabelItem>
+
+            <div
+              v-if="giftWindow.settings.showRanking"
+              class="flex items-center justify-between text-xs py-1 border-t pt-2"
+            >
+              <div class="flex flex-col gap-0.5">
+                <span class="font-medium text-foreground">浮窗默认排行视图</span>
+                <span class="text-[11px] text-muted-foreground">打开浮窗时默认聚焦的排行板块</span>
+              </div>
+              <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
+                <button
+                  v-for="opt in rankViewOptions"
+                  :key="opt.value"
+                  type="button"
+                  class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+                  :class="giftWindow.settings.rankViewMode === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                  @click="giftWindow.settings.rankViewMode = opt.value as any"
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- 窗口行为 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">浮窗行为属性</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3 space-y-2.5">
+            <LabelItem
+              label="总是置顶"
+              description="让礼物窗口始终保持在游戏等应用程序上层"
+            >
+              <Switch v-model:checked="giftWindow.settings.alwaysOnTop" />
+            </LabelItem>
+            <LabelItem
+              label="鼠标穿透 (点击忽略)"
+              description="点击事件穿透到下层游戏界面，不影响直播操作"
+            >
+              <Switch v-model:checked="giftWindow.settings.interactive" />
+            </LabelItem>
+            <LabelItem
+              label="防 OBS / 屏幕共享捕捉 (防抓取)"
+              description="开启后 OBS 抓屏、全屏捕获与截屏工具将无法捕捉到此浮窗，防止遮挡游戏画面与隐私泄露"
+            >
+              <template #icon>
+                <WindowShield20Regular class="size-4 text-muted-foreground" />
+              </template>
+              <Switch v-model:checked="giftWindow.settings.contentProtected" />
+            </LabelItem>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <!-- 筛选与规则 -->
+      <TabsContent value="filter" class="pt-3 space-y-3 client-readable">
+        <!-- 显示类型过滤 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">礼物类型过滤</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3">
+            <div class="flex flex-wrap gap-4 text-xs">
+              <label
+                v-for="opt in filterOptions"
+                :key="opt.value"
+                class="flex items-center gap-2 cursor-pointer"
               >
-                <LabelItem
-                  label="总是置顶"
-                  description="让礼物窗口始终保持在游戏等应用程序上层"
-                >
-                  <NSwitch v-model:value="giftWindow.settings.alwaysOnTop" />
-                </LabelItem>
-                <LabelItem
-                  label="鼠标穿透 (点击忽略)"
-                  description="点击事件穿透到下层游戏界面，不影响直播操作"
-                >
-                  <NSwitch v-model:value="giftWindow.settings.interactive" />
-                </LabelItem>
-                <LabelItem
-                  label="防 OBS / 屏幕共享捕捉 (防抓取)"
-                  description="开启后 OBS 抓屏、全屏捕获与截屏工具将无法捕捉到此浮窗，防止遮挡游戏画面与隐私泄露"
-                >
-                  <template #icon>
-                    <NIcon :component="WindowShield20Regular" />
-                  </template>
-                  <NSwitch v-model:value="giftWindow.settings.contentProtected" />
-                </LabelItem>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NTabPane>
+                <Checkbox
+                  :checked="giftWindow.settings.filterTypes?.includes(opt.value as any)"
+                  @update:checked="toggleFilterType(opt.value, $event)"
+                />
+                <span>{{ opt.label }}</span>
+              </label>
+            </div>
+          </CardContent>
+        </Card>
 
-        <!-- 筛选与规则 -->
-        <NTabPane
-          name="filter"
-          tab="筛选与规则"
-        >
-          <template #tab>
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <NIcon :component="Filter24Filled" />
-              <span>筛选与规则</span>
-            </NFlex>
-          </template>
-
-          <NFlex
-            vertical
-            :size="12"
-            class="client-readable"
-          >
-            <!-- 显示类型过滤 -->
-            <NCard
-              title="礼物类型过滤"
-              size="small"
-              bordered
-            >
-              <NCheckboxGroup v-model:value="giftWindow.settings.filterTypes">
-                <NFlex
-                  :size="[20, 10]"
-                  wrap
-                >
-                  <NCheckbox
-                    v-for="opt in filterOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    :label="opt.label"
-                  />
-                </NFlex>
-              </NCheckboxGroup>
-            </NCard>
-
-            <!-- 排序方式 -->
-            <NCard
-              title="礼物排序方式"
-              size="small"
-              bordered
-            >
-              <NFlex
-                vertical
-                :size="10"
+        <!-- 排序方式 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">礼物排序方式</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3 space-y-2.5">
+            <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
+              <button
+                v-for="opt in sortOptions"
+                :key="opt.value"
+                type="button"
+                class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+                :class="giftWindow.settings.sortBy === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                @click="giftWindow.settings.sortBy = opt.value as any"
               >
-                <NRadioGroup v-model:value="giftWindow.settings.sortBy">
-                  <NFlex :size="12">
-                    <NRadioButton
-                      v-for="opt in sortOptions"
+                {{ opt.label }}
+              </button>
+            </div>
+            <LabelItem label="倒序呈现 (新消息排在前面)">
+              <Switch v-model:checked="giftWindow.settings.reverseOrder" />
+            </LabelItem>
+          </CardContent>
+        </Card>
+
+        <!-- 过滤与合并规则 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">合并与过滤阈值</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3 space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">最低展示金额 (金瓜子)</span>
+                <NInputNumber
+                  :value="giftWindow.settings.minPrice"
+                  :min="0"
+                  :step="100"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.settings.minPrice = $event || 0"
+                />
+                <span class="text-[11px] text-muted-foreground block">
+                  1000 金瓜子 = ¥1。设为 0 则不过滤免费或微额礼物。
+                </span>
+              </div>
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">合并时间窗口 (秒)</span>
+                <NInputNumber
+                  :value="giftWindow.settings.mergeWindowSeconds"
+                  :min="0"
+                  :max="60"
+                  :step="5"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.settings.mergeWindowSeconds = $event || 0"
+                />
+                <span class="text-[11px] text-muted-foreground block">
+                  同一用户在此时间内送出的相同礼物自动合并为一条连击。
+                </span>
+              </div>
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">列表最大保留条数</span>
+                <NInputNumber
+                  :value="giftWindow.settings.maxItemCount"
+                  :min="5"
+                  :max="100"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.settings.maxItemCount = $event || 50"
+                />
+              </div>
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">礼物自动淡出消失 (秒)</span>
+                <NInputNumber
+                  :value="giftWindow.settings.autoDisappearTime"
+                  :min="0"
+                  :max="600"
+                  :step="5"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.settings.autoDisappearTime = $event || 0"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- 排行榜与在场规则 -->
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">排行榜与在场规则</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3 space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">排行榜显示人数上限</span>
+                <NInputNumber
+                  :value="giftWindow.settings.rankDisplayCount"
+                  :min="5"
+                  :max="200"
+                  :step="10"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.settings.rankDisplayCount = $event || 50"
+                />
+                <span class="text-[11px] text-muted-foreground block">
+                  依据本场直播累计送出的付费礼物与大航海总价值计算，建议设为 50。
+                </span>
+              </div>
+              <div class="space-y-1">
+                <span class="text-xs text-muted-foreground">在场活跃判定时间 (分钟)</span>
+                <NInputNumber
+                  :value="giftWindow.settings.onlineThresholdMinutes"
+                  :min="5"
+                  :max="120"
+                  :step="5"
+                  size="small"
+                  class="w-full"
+                  @update:value="giftWindow.settings.onlineThresholdMinutes = $event || 10"
+                />
+                <span class="text-[11px] text-muted-foreground block">
+                  观众在该时间内有发言、送礼、进入或点赞即视为「还在直播间」。
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <!-- 历史打赏榜 -->
+      <TabsContent value="history" class="pt-3 space-y-3 client-readable">
+        <Card class="border bg-card">
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">查询历史直播场次榜单</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3 space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="flex-1 min-w-[280px]">
+                <Select
+                  :model-value="selectedHistoryLiveId || undefined"
+                  @update:model-value="onHistoryLiveChange"
+                >
+                  <SelectTrigger class="h-8 text-xs w-full">
+                    <SelectValue placeholder="选择已结束的直播场次" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="opt in historyLiveOptions"
                       :key="opt.value"
                       :value="opt.value"
+                      class="text-xs"
                     >
                       {{ opt.label }}
-                    </NRadioButton>
-                  </NFlex>
-                </NRadioGroup>
-                <LabelItem label="倒序呈现 (新消息排在前面)">
-                  <NSwitch v-model:value="giftWindow.settings.reverseOrder" />
-                </LabelItem>
-              </NFlex>
-            </NCard>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <!-- 过滤与合并规则 -->
-            <NCard
-              title="合并与过滤阈值"
-              size="small"
-              bordered
-            >
-              <NGrid
-                cols="1 s:2"
-                :x-gap="16"
-                :y-gap="8"
+              <Button
+                size="sm"
+                variant="secondary"
+                class="h-8 text-xs gap-1.5"
+                :disabled="isHistoryLoading"
+                @click="loadHistory"
               >
-                <NGi>
-                  <NFormItem
-                    label="最低展示金额 (金瓜子)"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.minPrice"
-                      :min="0"
-                      :step="100"
+                <ArrowSync24Filled class="size-3.5" :class="{ 'animate-spin': isHistoryLoading }" />
+                刷新场次
+              </Button>
+            </div>
+
+            <div
+              v-if="isHistoryLoading"
+              class="py-12 flex items-center justify-center"
+            >
+              <div class="size-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+            </div>
+
+            <Empty
+              v-else-if="historyRanking.length === 0"
+              description="该场次暂无打赏记录"
+              class="py-8"
+            />
+
+            <div
+              v-else
+              class="flex flex-col gap-2"
+            >
+              <div
+                v-for="(item, index) in historyRanking"
+                :key="item.ouId"
+                class="history-rank-item"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <span
+                      class="rank-num"
+                      :class="{
+                        'rank-num--top1': index === 0,
+                        'rank-num--top2': index === 1,
+                        'rank-num--top3': index === 2,
+                      }"
                     >
-                      <template #suffix> 金瓜子 </template>
-                    </NInputNumber>
-                  </NFormItem>
-                  <NText
-                    depth="3"
-                    style="font-size: 12px; display: block; margin-top: -6px;"
-                  >
-                    1000 金瓜子 = ¥1。设为 0 则不过滤免费或微额礼物。
-                  </NText>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="合并时间窗口 (秒)"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.mergeWindowSeconds"
-                      :min="0"
-                      :max="60"
-                      :step="5"
-                    >
-                      <template #suffix> 秒 </template>
-                    </NInputNumber>
-                  </NFormItem>
-                  <NText
-                    depth="3"
-                    style="font-size: 12px; display: block; margin-top: -6px;"
-                  >
-                    同一用户在此时间内送出的相同礼物自动合并为一条连击。
-                  </NText>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="列表最大保留条数"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.maxItemCount"
-                      :min="5"
-                      :max="100"
+                      {{ index + 1 }}
+                    </span>
+                    <img
+                      :src="item.uFace || 'https://static.hdslb.com/images/member/noface.gif'"
+                      class="size-6 rounded-full object-cover"
+                      alt="avatar"
                     />
-                  </NFormItem>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="礼物自动淡出消失 (秒)"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.autoDisappearTime"
-                      :min="0"
-                      :max="600"
-                      :step="5"
-                    >
-                      <template #suffix> 秒 </template>
-                    </NInputNumber>
-                  </NFormItem>
-                </NGi>
-              </NGrid>
-            </NCard>
-
-            <!-- 排行榜与在场规则 -->
-            <NCard
-              title="排行榜与在场规则"
-              size="small"
-              bordered
-            >
-              <NGrid
-                cols="1 s:2"
-                :x-gap="16"
-                :y-gap="8"
-              >
-                <NGi>
-                  <NFormItem
-                    label="排行榜显示人数上限"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.rankDisplayCount"
-                      :min="5"
-                      :max="200"
-                      :step="10"
-                    />
-                  </NFormItem>
-                  <NText
-                    depth="3"
-                    style="font-size: 12px; display: block; margin-top: -6px;"
-                  >
-                    依据本场直播累计送出的付费礼物与大航海总价值计算，建议设为 50。
-                  </NText>
-                </NGi>
-                <NGi>
-                  <NFormItem
-                    label="在场活跃判定时间 (分钟)"
-                    label-placement="top"
-                  >
-                    <NInputNumber
-                      v-model:value="giftWindow.settings.onlineThresholdMinutes"
-                      :min="5"
-                      :max="120"
-                      :step="5"
-                    >
-                      <template #suffix> 分钟 </template>
-                    </NInputNumber>
-                  </NFormItem>
-                  <NText
-                    depth="3"
-                    style="font-size: 12px; display: block; margin-top: -6px;"
-                  >
-                    观众在该时间内有发言、送礼、进入或点赞即视为「还在直播间」。
-                  </NText>
-                </NGi>
-              </NGrid>
-            </NCard>
-          </NFlex>
-        </NTabPane>
-
-        <!-- 历史打赏榜 -->
-        <NTabPane
-          name="history"
-          tab="往期打赏榜单"
-        >
-          <template #tab>
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <NIcon :component="History24Filled" />
-              <span>往期打赏榜单</span>
-            </NFlex>
-          </template>
-
-          <NFlex
-            vertical
-            :size="12"
-            class="client-readable"
-          >
-            <NCard
-              title="查询历史直播场次榜单"
-              size="small"
-              bordered
-            >
-              <NFlex
-                :size="12"
-                align="center"
-                style="margin-bottom: 14px"
-              >
-                <NSelect
-                  v-model:value="selectedHistoryLiveId"
-                  :options="historyLiveOptions"
-                  placeholder="选择已结束的直播场次"
-                  filterable
-                  style="min-width: 280px; flex: 1"
-                  @update:value="onHistoryLiveChange"
-                />
-                <NButton
-                  size="small"
-                  secondary
-                  :loading="isHistoryLoading"
-                  @click="loadHistory"
-                >
-                  <template #icon>
-                    <NIcon :component="ArrowSync24Filled" />
-                  </template>
-                  刷新场次
-                </NButton>
-              </NFlex>
-
-              <NSpin :show="isHistoryLoading">
-                <NEmpty
-                  v-if="!isHistoryLoading && historyRanking.length === 0"
-                  description="该场次暂无打赏记录"
-                  style="padding: 24px 0"
-                />
-                <NFlex
-                  v-else
-                  vertical
-                  :size="8"
-                >
-                  <div
-                    v-for="(item, index) in historyRanking"
-                    :key="item.ouId"
-                    class="history-rank-item"
-                  >
-                    <NFlex
-                      align="center"
-                      justify="space-between"
-                    >
-                      <NFlex
-                        align="center"
-                        :size="10"
-                      >
-                        <span
-                          class="rank-num"
-                          :class="{
-                            'rank-num--top1': index === 0,
-                            'rank-num--top2': index === 1,
-                            'rank-num--top3': index === 2,
-                          }"
-                        >
-                          {{ index + 1 }}
-                        </span>
-                        <NAvatar
-                          round
-                          size="small"
-                          :src="item.uFace || undefined"
-                        />
-                        <NText strong>{{ item.uName }}</NText>
-                      </NFlex>
-                      <NTag
-                        type="warning"
-                        size="small"
-                        :bordered="false"
-                      >
-                        {{ formatPaid(item.totalPaid) }}
-                      </NTag>
-                    </NFlex>
+                    <span class="text-xs font-semibold text-foreground">{{ item.uName }}</span>
                   </div>
-                </NFlex>
-              </NSpin>
-            </NCard>
-          </NFlex>
-        </NTabPane>
-      </NTabs>
-    </NFlex>
+                  <Badge variant="secondary" class="text-xs font-bold text-amber-500">
+                    {{ formatPaid(item.totalPaid) }}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>
 
 <style scoped>
 .gift-manage-view {
   width: 100%;
-}
-
-.gift-tabs :deep(.n-tabs-rail) {
-  max-width: 580px;
 }
 
 /* 感谢看板 */
@@ -1287,7 +1076,7 @@ function onTabChange(tab: string) {
 }
 
 .thank-item:hover {
-  border-color: var(--vtsuru-primary);
+  border-color: var(--vtsuru-brand);
 }
 
 .thank-item--top {
@@ -1358,7 +1147,7 @@ function onTabChange(tab: string) {
 }
 
 .preset-card:hover {
-  border-color: var(--vtsuru-primary);
+  border-color: var(--vtsuru-brand);
   transform: translateY(-2px);
   box-shadow: var(--vtsuru-shadow-1);
 }

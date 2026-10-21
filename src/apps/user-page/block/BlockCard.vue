@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { GlobalThemeOverrides } from 'naive-ui'
-import { NCard, NConfigProvider } from 'naive-ui'
 import type { CSSProperties } from 'vue'
 import { computed } from 'vue'
 
@@ -42,42 +40,7 @@ const palette = computed(() => {
   }
 })
 
-const textThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const { foreground, muted, subtle } = palette.value
-
-  return {
-    common: {
-      textColorBase: foreground,
-      textColor1: foreground,
-      textColor2: muted,
-      textColor3: subtle,
-    },
-    Card: {
-      textColor: foreground,
-      titleTextColor: foreground,
-    },
-    Typography: {
-      textColor: foreground,
-      textColor1Depth: foreground,
-      textColor2Depth: muted,
-      textColor3Depth: subtle,
-      pTextColor: muted,
-      pTextColor1Depth: foreground,
-      pTextColor2Depth: muted,
-      pTextColor3Depth: subtle,
-    },
-  }
-})
-
 const cardStyle = computed<CSSProperties>(() => ({
-  '--n-border-color': isUnframed.value
-    ? 'transparent'
-    : 'var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))',
-  '--n-text-color': palette.value.foreground,
-  '--n-text-color-1': palette.value.foreground,
-  '--n-text-color-2': palette.value.muted,
-  '--n-text-color-3': palette.value.subtle,
-  '--n-title-text-color': palette.value.foreground,
   '--vtsuru-block-fg': palette.value.foreground,
   '--vtsuru-block-fg-muted': palette.value.muted,
   '--vtsuru-block-fg-subtle': palette.value.subtle,
@@ -99,55 +62,55 @@ const borderTitleAlignClass = computed(() => {
 </script>
 
 <template>
-  <NConfigProvider :theme-overrides="textThemeOverrides">
+  <div
+    class="vtsuru-block-card-wrap"
+    :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded, 'has-border-title': showBorderTitle }"
+    :style="props.wrapStyle"
+  >
     <div
-      class="vtsuru-block-card-wrap"
-      :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded, 'has-border-title': showBorderTitle }"
-      :style="props.wrapStyle"
+      v-if="showBorderTitle"
+      class="border-title"
+      :class="borderTitleAlignClass"
+    >
+      <span class="border-title__text">
+        {{ borderTitleText }}
+      </span>
+    </div>
+    <div
+      class="vtsuru-block-card"
+      :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded }"
+      :style="cardStyle"
     >
       <div
-        v-if="showBorderTitle"
-        class="border-title"
-        :class="borderTitleAlignClass"
+        v-if="$slots.header || $slots['header-extra']"
+        class="vtsuru-block-card-header flex items-center justify-between"
+        :style="props.headerStyle"
       >
-        <span class="border-title__text">
-          {{ borderTitleText }}
-        </span>
-      </div>
-      <NCard
-        size="small"
-        :bordered="false"
-        class="vtsuru-block-card"
-        :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded }"
-        :content-style="resolvedContentStyle"
-        :header-style="props.headerStyle"
-        :footer-style="props.footerStyle"
-        :style="cardStyle"
-      >
-        <template
-          v-if="$slots.header"
-          #header
-        >
+        <div class="vtsuru-block-card-header-main flex-1 min-w-0">
           <slot name="header" />
-        </template>
-        <template
+        </div>
+        <div
           v-if="$slots['header-extra']"
-          #header-extra
+          class="vtsuru-block-card-header-extra shrink-0 ml-2"
         >
           <slot name="header-extra" />
-        </template>
-        <template v-if="$slots.default">
-          <slot />
-        </template>
-        <template
-          v-if="$slots.footer"
-          #footer
-        >
-          <slot name="footer" />
-        </template>
-      </NCard>
+        </div>
+      </div>
+      <div
+        class="vtsuru-block-card-content"
+        :style="resolvedContentStyle"
+      >
+        <slot />
+      </div>
+      <div
+        v-if="$slots.footer"
+        class="vtsuru-block-card-footer"
+        :style="props.footerStyle"
+      >
+        <slot name="footer" />
+      </div>
     </div>
-  </NConfigProvider>
+  </div>
 </template>
 
 <style scoped>
@@ -197,6 +160,8 @@ const borderTitleAlignClass = computed(() => {
 .vtsuru-block-card {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--vtsuru-page-radius);
   color: var(--vtsuru-block-fg);
   background: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--vtsuru-bg-muted)));
@@ -224,12 +189,18 @@ const borderTitleAlignClass = computed(() => {
   color: var(--vtsuru-block-fg);
 }
 
-.vtsuru-block-card :deep(.n-card-header) {
+.vtsuru-block-card-header {
   padding: var(--vtsuru-page-spacing);
   border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
 }
 
-.vtsuru-block-card :deep(.n-card__content) {
+.vtsuru-block-card-content {
   min-width: 0;
+  flex: 1;
+}
+
+.vtsuru-block-card-footer {
+  padding: var(--vtsuru-page-spacing);
+  border-top: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
 }
 </style>

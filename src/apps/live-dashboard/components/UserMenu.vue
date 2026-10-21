@@ -8,12 +8,15 @@ import {
   Open16Regular,
   PersonProhibited16Regular,
 } from '@vicons/fluent'
-import { NButton, NIcon, NInput, NPopover } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
-import { copyToClipboard } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Textarea } from '@/shared/ui/textarea'
+import { copyToClipboard, useMessage } from '@/shared/utils'
+
+const message = useMessage()
 
 import { avatarUrl, formatClock, formatRelative } from '../core/format'
 import { userKeyOf } from '../core/types'
@@ -54,7 +57,7 @@ async function saveNote() {
   const e = event.value
   if (!e || noteDraft.value.trim() === (dashboard.notes.get(userKey.value)?.note ?? '')) return
   await dashboard.notes.set(userKey.value, e.uname, noteDraft.value)
-  window.$message.success(noteDraft.value.trim() ? '备注已保存' : '备注已清除')
+  message.success(noteDraft.value.trim() ? '备注已保存' : '备注已清除')
 }
 
 function toggleFilter() {
@@ -68,26 +71,34 @@ function run(action: () => void) {
   action()
   close()
 }
+
+const popoverStyle = computed(() => {
+  if (!menu.value) return {}
+  const maxX = typeof window !== 'undefined' ? window.innerWidth - 350 : 0
+  const maxY = typeof window !== 'undefined' ? window.innerHeight - 450 : 0
+  return {
+    left: `${Math.min(menu.value.x, maxX)}px`,
+    top: `${Math.min(menu.value.y, maxY)}px`,
+  }
+})
+
+onMounted(() => {
+  window.addEventListener('click', onClickOutside)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', onClickOutside)
+})
 </script>
 
 <template>
-  <NPopover
-    :show="!!menu"
-    :x="menu?.x"
-    :y="menu?.y"
-    trigger="manual"
-    placement="bottom-start"
-    :style="{ width: '340px', padding: '10px 12px' }"
-    @clickoutside="onClickOutside"
+  <div
+    v-if="menu && event"
+    class="user-menu-popover fixed z-50 w-[340px] rounded-md border bg-popover p-3 text-popover-foreground shadow-md"
+    :style="popoverStyle"
+    @click.stop
   >
-    <template #trigger>
-      <!-- 按 x/y 定位；trigger 插槽不可为空，放一个不可见占位 -->
-      <span class="user-menu-anchor" />
-    </template>
-    <div
-      v-if="event"
-      class="user-menu"
-    >
+    <div class="user-menu">
       <div class="user-menu__head">
         <img
           v-if="event.uface"
@@ -112,72 +123,65 @@ function run(action: () => void) {
         </div>
       </div>
 
-      <div class="user-menu__actions">
-        <NButton
-          size="tiny"
-          secondary
+      <div class="user-menu__actions flex flex-wrap gap-1">
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-7 text-xs px-2"
           @click="toggleFilter"
         >
-          <template #icon>
-            <NIcon :component="filtering ? ArrowHookUpLeft16Regular : Filter16Regular" />
-          </template>
+          <component :is="filtering ? ArrowHookUpLeft16Regular : Filter16Regular" class="h-3.5 w-3.5 mr-1" />
           {{ filtering ? '转至上下文' : '筛选该用户' }}
-        </NButton>
-        <NButton
-          size="tiny"
-          secondary
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-7 text-xs px-2"
           @click="run(() => dashboard.toggleRead(event!))"
         >
-          <template #icon>
-            <NIcon :component="Checkmark16Regular" />
-          </template>
+          <component :is="Checkmark16Regular" class="h-3.5 w-3.5 mr-1" />
           {{ dashboard.isRead(event) ? '标为未读' : '标为已读' }}
-        </NButton>
-        <NButton
-          size="tiny"
-          secondary
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-7 text-xs px-2"
           @click="run(() => (ui.imageTarget = event!))"
         >
-          <template #icon>
-            <NIcon :component="Image16Regular" />
-          </template>
+          <component :is="Image16Regular" class="h-3.5 w-3.5 mr-1" />
           保存为图片
-        </NButton>
-        <NButton
-          size="tiny"
-          secondary
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-7 text-xs px-2"
           @click="run(() => copyToClipboard(event!.uname))"
         >
-          <template #icon>
-            <NIcon :component="Copy16Regular" />
-          </template>
+          <component :is="Copy16Regular" class="h-3.5 w-3.5 mr-1" />
           复制用户名
-        </NButton>
-        <NButton
+        </Button>
+        <Button
           v-if="event.uid > 0"
-          size="tiny"
-          secondary
-          tag="a"
+          size="sm"
+          variant="secondary"
+          as="a"
           :href="`https://space.bilibili.com/${event.uid}`"
           target="_blank"
+          class="h-7 text-xs px-2"
         >
-          <template #icon>
-            <NIcon :component="Open16Regular" />
-          </template>
+          <component :is="Open16Regular" class="h-3.5 w-3.5 mr-1" />
           个人空间
-        </NButton>
-        <NButton
+        </Button>
+        <Button
           v-if="event.ouid"
-          size="tiny"
-          secondary
-          :type="actions.isBlocked(event) ? 'default' : 'error'"
+          size="sm"
+          :variant="actions.isBlocked(event) ? 'secondary' : 'destructive'"
+          class="h-7 text-xs px-2"
           @click="run(() => actions.toggleBlock(event!))"
         >
-          <template #icon>
-            <NIcon :component="PersonProhibited16Regular" />
-          </template>
+          <component :is="PersonProhibited16Regular" class="h-3.5 w-3.5 mr-1" />
           {{ actions.isBlocked(event) ? '移出黑名单' : '拉黑' }}
-        </NButton>
+        </Button>
       </div>
 
       <UserPoints
@@ -185,18 +189,16 @@ function run(action: () => void) {
         :event="event"
       />
 
-      <NInput
-        v-model:value="noteDraft"
-        type="textarea"
-        size="small"
+      <Textarea
+        v-model="noteDraft"
+        class="text-xs min-h-[38px] max-h-[96px]"
         placeholder="备注（仅保存在本机，失焦后保存）"
-        :autosize="{ minRows: 1, maxRows: 4 }"
         @blur="saveNote"
       />
 
       <UserHistory :event="event" />
     </div>
-  </NPopover>
+  </div>
 </template>
 
 <style scoped>

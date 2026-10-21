@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
-import { addDays, endOfDay, format, startOfDay } from 'date-fns'
+import { ArrowClockwise24Regular, Info24Filled } from '@vicons/fluent'
+import { addDays, endOfDay, format, formatDistanceToNow, startOfDay } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -12,30 +13,22 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDatePicker,
-  NDivider,
-  NEmpty,
-  NIcon,
-  NFlex,
-  NSpin,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+import { useMessage } from '@/shared/utils'
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 
 import { useAccount } from '@/api/account'
 import { getApiHistoryGetAll } from '@/api/generated/history/history'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { isDarkMode } from '@/shared/utils'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Separator } from '@/shared/ui/separator'
 
-// 初始化ECharts组件
+// 初始化 ECharts 组件
 use([
   CanvasRenderer,
   LineChart,
@@ -44,12 +37,10 @@ use([
   LegendComponent,
   GridComponent,
   DataZoomComponent,
-  LineChart,
   ToolboxComponent,
   BarChart,
 ])
 
-// 定义数据模型类型
 interface HistoryModel {
   fan: {
     records: HistoryRecordModel[]
@@ -80,7 +71,6 @@ interface HistoryUpstatRecordModel {
 
 const accountInfo = useAccount()
 const message = useMessage()
-const themeVars = useThemeVars()
 
 // 历史数据引用
 const fansHistory = ref<HistoryRecordModel[]>()
@@ -104,31 +94,59 @@ const isLoading = ref(true)
 const statisticStartDate = new Date(2023, 10, 4)
 const statisticStartDateTime = statisticStartDate.getTime()
 
-// 日期范围选择（毫秒时间戳区间）
+// 日期范围与预设
+type DatePreset = '7d' | '30d' | '90d' | 'all' | 'custom'
+const activePreset = ref<DatePreset>('all')
 const dateRange = ref<[number, number] | null>(null)
-const dateShortcuts: Record<string, [number, number] | (() => [number, number])> = {
-  最近7天: () => {
-    const end = endOfDay(new Date()).getTime()
-    const start = startOfDay(addDays(new Date(), -6)).getTime()
-    return [start, end] as [number, number]
-  },
-  最近30天: () => {
-    const end = endOfDay(new Date()).getTime()
-    const start = startOfDay(addDays(new Date(), -29)).getTime()
-    return [start, end] as [number, number]
-  },
-  最近90天: () => {
-    const end = endOfDay(new Date()).getTime()
-    const start = startOfDay(addDays(new Date(), -89)).getTime()
-    return [start, end] as [number, number]
-  },
+const customStartDate = ref('')
+const customEndDate = ref('')
+
+function setPreset(preset: DatePreset) {
+  activePreset.value = preset
+  const now = new Date()
+  if (preset === '7d') {
+    dateRange.value = [startOfDay(addDays(now, -6)).getTime(), endOfDay(now).getTime()]
+    customStartDate.value = format(addDays(now, -6), 'yyyy-MM-dd')
+    customEndDate.value = format(now, 'yyyy-MM-dd')
+  } else if (preset === '30d') {
+    dateRange.value = [startOfDay(addDays(now, -29)).getTime(), endOfDay(now).getTime()]
+    customStartDate.value = format(addDays(now, -29), 'yyyy-MM-dd')
+    customEndDate.value = format(now, 'yyyy-MM-dd')
+  } else if (preset === '90d') {
+    dateRange.value = [startOfDay(addDays(now, -89)).getTime(), endOfDay(now).getTime()]
+    customStartDate.value = format(addDays(now, -89), 'yyyy-MM-dd')
+    customEndDate.value = format(now, 'yyyy-MM-dd')
+  } else if (preset === 'all') {
+    dateRange.value = null
+    customStartDate.value = ''
+    customEndDate.value = ''
+  }
 }
 
-// 响应式图表高度
+function handleCustomDateApply() {
+  if (!customStartDate.value || !customEndDate.value) return
+  activePreset.value = 'custom'
+  const start = startOfDay(new Date(customStartDate.value)).getTime()
+  const end = endOfDay(new Date(customEndDate.value)).getTime()
+  if (start <= end) {
+    dateRange.value = [start, end]
+  } else {
+    dateRange.value = [end, start]
+  }
+}
+
 const chartHeight = computed(() => {
-  // 可以根据窗口大小动态调整图表高度
-  return window.innerWidth < 768 ? '250px' : '300px'
+  return window.innerWidth < 768 ? '260px' : '320px'
 })
+
+function formatRelativeTime(ts: number) {
+  if (!ts) return ''
+  try {
+    return formatDistanceToNow(new Date(ts), { addSuffix: true, locale: zhCN })
+  } catch {
+    return ''
+  }
+}
 
 /**
  * 获取所有历史数据
@@ -168,22 +186,22 @@ async function refreshHistory() {
 const hasFansData = computed(() => (fansHistory.value?.length ?? 0) > 0)
 const hasGuardData = computed(() => (guardHistory.value?.length ?? 0) > 0)
 
-/**
- * 获取基础图表配置
- */
 function getBaseChartOptions() {
+  const textColor = isDarkMode.value ? '#a1a1aa' : '#52525b'
+  const borderColor = isDarkMode.value ? 'rgba(255, 255, 255, 0.1)' : '#e4e4e7'
+
   return {
     tooltip: {
       trigger: 'axis',
       axisPointer: {
         type: 'cross',
         crossStyle: {
-          color: themeVars.value.textColor3,
+          color: textColor,
         },
       },
     },
     textStyle: {
-      color: themeVars.value.textColor2,
+      color: textColor,
     },
     toolbox: {
       feature: {
@@ -193,7 +211,11 @@ function getBaseChartOptions() {
         saveAsImage: { show: true },
       },
     },
-    legend: {},
+    legend: {
+      textStyle: {
+        color: textColor,
+      },
+    },
     dataZoom: [
       {
         show: true,
@@ -201,19 +223,12 @@ function getBaseChartOptions() {
         start: 0,
         end: 100,
         xAxisIndex: [0, 1],
+        borderColor,
       },
     ],
   }
 }
 
-/**
- * 生成每日时间序列数据的通用函数
- * @param historyData 原始历史记录
- * @param startTime 开始时间
- * @param endTime 结束时间
- * @param initialTimeIndex 起始索引
- * @param initialCount 初始计数值
- */
 function generateTimeSeries(
   historyData: HistoryRecordModel[],
   startTime: Date,
@@ -232,12 +247,9 @@ function generateTimeSeries(
 
     while (true) {
       const data = historyData[lastTimeIndex]
-      if (!data) {
-        break
-      }
+      if (!data) break
 
       if ((historyData[lastTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
-        const _changed = data.count !== lastDayCount
         lastDayCount = data.count
         dayExist = true
         break
@@ -258,9 +270,6 @@ function generateTimeSeries(
   return timeSeries
 }
 
-/**
- * 处理粉丝历史数据并生成图表选项
- */
 function processFansChartOptions() {
   if (!fansHistory.value || fansHistory.value.length === 0) return
 
@@ -270,7 +279,7 @@ function processFansChartOptions() {
   const endTime = dateRange.value ? new Date(dateRange.value[1]) : new Date()
 
   if (startTime > endTime) {
-    fansOption.value = { ...getBaseChartOptions(), series: [] } // Simplified empty state
+    fansOption.value = { ...getBaseChartOptions(), series: [] }
     return
   }
 
@@ -295,6 +304,8 @@ function processFansChartOptions() {
     incrementData: fansIncreacement.map((entry) => entry.count),
   }
 
+  const textColorMuted = isDarkMode.value ? '#71717a' : '#a1a1aa'
+
   fansOption.value = {
     ...getBaseChartOptions(),
     tooltip: {
@@ -306,7 +317,7 @@ function processFansChartOptions() {
           const status =
             param[i].seriesName === '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
           const statusHtml =
-            status === '' ? '' : `&nbsp;<span style="color:${themeVars.value.textColor3}">${status}</span>`
+            status === '' ? '' : `&nbsp;<span style="color:${textColorMuted}">${status}</span>`
           str += `${param[i].marker + param[i].seriesName}：${param[i].data}${statusHtml}<br>`
         }
         return name + str
@@ -318,7 +329,7 @@ function processFansChartOptions() {
     ],
     xAxis: [
       { type: 'category', data: chartData.xAxisData },
-      { type: 'category', data: chartData.xAxisData.slice(1) }, // Align increments
+      { type: 'category', data: chartData.xAxisData.slice(1) },
     ],
     series: [
       {
@@ -329,10 +340,10 @@ function processFansChartOptions() {
           color: (data: any) => {
             const item = completeTimeSeries[data.dataIndex]
             return !item.exist
-              ? themeVars.value.textColor3
+              ? textColorMuted
               : item.change
-                ? themeVars.value.successColor
-                : themeVars.value.primaryColor
+                ? '#10b981'
+                : '#3b82f6'
           },
         },
       },
@@ -343,16 +354,13 @@ function processFansChartOptions() {
         xAxisIndex: 1,
         data: chartData.incrementData,
         itemStyle: {
-          color: (params: any) => (params.value < 0 ? themeVars.value.errorColor : themeVars.value.infoColor),
+          color: (params: any) => (params.value < 0 ? '#ef4444' : '#06b6d4'),
         },
       },
     ],
   }
 }
 
-/**
- * 处理舰长历史数据并生成图表选项
- */
 function processGuardsChartOptions() {
   if (!guardHistory.value || guardHistory.value.length === 0) return
 
@@ -362,7 +370,7 @@ function processGuardsChartOptions() {
   const endTime = dateRange.value ? new Date(dateRange.value[1]) : new Date()
 
   if (startTime > endTime) {
-    guardsOption.value = { ...getBaseChartOptions(), series: [] } // Simplified empty state
+    guardsOption.value = { ...getBaseChartOptions(), series: [] }
     return
   }
 
@@ -381,6 +389,7 @@ function processGuardsChartOptions() {
   })
 
   const xAxisData = completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd'))
+  const textColorMuted = isDarkMode.value ? '#71717a' : '#a1a1aa'
 
   guardsOption.value = {
     ...getBaseChartOptions(),
@@ -400,7 +409,7 @@ function processGuardsChartOptions() {
         data: completeTimeSeries.map((item) => item.count),
         itemStyle: {
           color: (data: any) =>
-            completeTimeSeries[data.dataIndex].exist ? themeVars.value.primaryColor : themeVars.value.textColor3,
+            completeTimeSeries[data.dataIndex].exist ? '#3b82f6' : textColorMuted,
         },
       },
       {
@@ -410,115 +419,16 @@ function processGuardsChartOptions() {
         xAxisIndex: 1,
         data: guardIncrements,
         itemStyle: {
-          color: (params: any) => (params.value < 0 ? themeVars.value.errorColor : themeVars.value.infoColor),
+          color: (params: any) => (params.value < 0 ? '#ef4444' : '#06b6d4'),
         },
       },
     ],
   }
 }
 
-/**
- * 处理投稿数据并生成图表选项的通用函数
- * @param {('views' | 'likes')} dataType - 要处理的数据类型 ('views' 或 'likes')
- * @param {string} title - 图表主标题
- */
-function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
-  if (!upstatHistory.value || upstatHistory.value.length === 0) {
-    return {
-      ...getBaseChartOptions(),
-      xAxis: [{ type: 'category', data: [] }],
-      yAxis: [{ type: 'value' }, { type: 'value' }],
-      series: [
-        { name: title, type: 'line', data: [] },
-        { name: '日增', type: 'bar', data: [], yAxisIndex: 1 },
-      ],
-    }
-  }
-
-  const rangeStart = dateRange.value ? dateRange.value[0] : -Infinity
-  const rangeEnd = dateRange.value ? dateRange.value[1] : Infinity
-  const filtered = upstatHistory.value.filter((u) => u.time >= rangeStart && u.time <= rangeEnd)
-
-  if (filtered.length === 0) {
-    return {
-      ...getBaseChartOptions(),
-      xAxis: [{ type: 'category', data: [] }],
-      yAxis: [{ type: 'value' }, { type: 'value' }],
-      series: [
-        { name: title, type: 'line', data: [] },
-        { name: '日增', type: 'bar', data: [], yAxisIndex: 1 },
-      ],
-    }
-  }
-
-  const increments: { time: number; value: number }[] = []
-  let lastValue = filtered[0].stats[dataType]
-
-  filtered.forEach((u) => {
-    const currentValue = u.stats[dataType]
-    increments.push({
-      time: u.time,
-      value: currentValue - lastValue,
-    })
-    lastValue = currentValue
-  })
-
-  return {
-    ...getBaseChartOptions(),
-    yAxis: [{ type: 'value', min: 'dataMin' }, { type: 'value' }],
-    xAxis: [
-      {
-        type: 'category',
-        axisTick: { alignWithLabel: true },
-        axisLine: { onZero: false, lineStyle: { color: themeVars.value.errorColor } },
-        data: filtered.map((f) => format(f.time, 'yyyy-MM-dd')),
-      },
-    ],
-    series: [
-      {
-        name: title,
-        type: 'line',
-        emphasis: { focus: 'series' },
-        data: filtered.map((f) => f.stats[dataType]),
-        itemStyle: {
-          color(data: any) {
-            return increments[data.dataIndex].value !== 0 ? themeVars.value.primaryColor : themeVars.value.textColor3
-          },
-        },
-      },
-      {
-        name: '日增',
-        type: 'bar',
-        yAxisIndex: 1,
-        emphasis: { focus: 'series' },
-        data: increments.map((f) => f.value),
-      },
-    ],
-  }
-}
-
-/**
- * 处理播放量历史数据并生成图表选项
- */
-function processUpstatViewChartOptions() {
-  upstatViewOption.value = processUpstatChartOptions('views', '播放数')
-}
-
-/**
- * 处理点赞量历史数据并生成图表选项
- */
-function processUpstatLikeChartOptions() {
-  upstatLikeOption.value = processUpstatChartOptions('likes', '点赞数')
-}
-
-/**
- * 处理所有图表选项
- */
 function processAllChartOptions() {
   processFansChartOptions()
   processGuardsChartOptions()
-  processUpstatViewChartOptions()
-  processUpstatLikeChartOptions()
 }
 
 onMounted(async () => {
@@ -529,7 +439,6 @@ onMounted(async () => {
   }
 })
 
-// 选择日期范围后，自动刷新图表
 watch(
   () => dateRange.value,
   () => {
@@ -539,241 +448,203 @@ watch(
 </script>
 
 <template>
-  <div class="history-view">
+  <div class="space-y-4 w-full">
     <ManagePageHeader
-      title="历史"
-      subtitle="粉丝/舰长趋势（需 EventFetcher 提供数据）"
+      title="历史趋势"
+      subtitle="粉丝与舰长成长轨迹，需 VTsuruEventFetcher 持续采集"
     >
       <template #action>
-        <NButton
+        <Button
           v-if="accountInfo?.isBiliVerified === true"
-          secondary
-          size="small"
+          size="xs"
+          variant="outline"
           :loading="isLoading"
           @click="refreshHistory"
         >
+          <component
+            :is="ArrowClockwise24Regular"
+            class="h-3.5 w-3.5 mr-1"
+          />
           刷新数据
-        </NButton>
+        </Button>
       </template>
     </ManagePageHeader>
-    <NAlert
+
+    <Alert
       v-if="accountInfo?.isBiliVerified !== true"
-      type="info"
-      :bordered="false"
+      variant="default"
     >
-      尚未进行 Bilibili 认证，无法加载历史数据。请前往面板完成绑定。
-    </NAlert>
-    <NSpin
+      <AlertTitle>尚未进行 Bilibili 认证</AlertTitle>
+      <AlertDescription class="text-xs">
+        尚未绑定认证 Bilibili 账号，无法加载历史数据。请前往面板完成认证。
+      </AlertDescription>
+    </Alert>
+
+    <div
       v-else
-      :show="isLoading"
+      class="space-y-4"
     >
-    <NCard
-      size="small"
-      :bordered="true"
-      class="history-card"
-    >
-      <NAlert
-        type="warning"
-        :bordered="false"
-      >
-        由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
-        <NButton
-          text
-          type="info"
-          tag="a"
-          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-          target="_blank"
-        >
-          VTsuruEventFetcher
-        </NButton>
-        来帮助本站获取你的数据记录
-      </NAlert>
-      <br />
-      <NTooltip
-        trigger="click"
-        placement="bottom"
-      >
-        <template #trigger>
-          <NButton type="info">
-            <template #icon>
-              <NIcon :component="Info24Filled" />
-            </template>
-            关于数据更新
-          </NButton>
-        </template>
-        <NFlex vertical>
-          <NText strong> 所有数据改为每天更新一次 </NText>
-          <NDivider style="margin: 0" />
-          <NText
-            delete
-            :depth="3"
+      <Alert variant="default">
+        <AlertDescription class="text-xs flex items-center justify-between flex-wrap gap-2">
+          <span>
+            由于 B 站收紧风控策略，平台已无法直接抓取公开数据。请主播安装 1.0.6.4 及以上版本的 EventFetcher 本地采集端同步。
+          </span>
+          <a
+            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+            target="_blank"
+            class="text-brand hover:underline font-semibold shrink-0"
           >
-            粉丝数: 200粉以下: 每3天一次, 200-1000粉: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次
-          </NText>
-          <NText
-            delete
-            :depth="3"
-          >
-            舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次
-          </NText>
-          <NText
-            delete
-            :depth="3"
-          >
-            投稿数据: 500粉以上: 每天一次
-          </NText>
-        </NFlex>
-      </NTooltip>
-      <br />
-      <br />
-      <NFlex
-        align="center"
-        wrap
-        :size="10"
-      >
-        <NText depth="3"> 日期范围： </NText>
-        <NDatePicker
-          v-model:value="dateRange"
-          type="daterange"
-          clearable
-          separator="至"
-          :shortcuts="dateShortcuts"
-        />
-      </NFlex>
-      <br />
-      <NFlex
-        vertical
-        class="charts-container"
-      >
-        <NDivider>
-          粉丝
-          <NDivider vertical />
-          <NTooltip v-if="fansUpdateAt">
-            <template #trigger>
-              <span>
-                <NTime
-                  :time="fansUpdateAt"
-                  type="relative"
-                />
-                更新
-              </span>
-            </template>
-            <NTime :time="fansUpdateAt" />
-          </NTooltip>
-        </NDivider>
-        <VChart
-          v-if="hasFansData && fansOption"
-          :option="fansOption"
-          :style="{ height: chartHeight }"
-          class="chart"
-        />
-        <NEmpty
-          v-else
-          description="暂无粉丝历史数据"
-          style="padding: 32px 0"
-        />
-        <NDivider>
-          舰长
-          <NDivider vertical />
-          <NTooltip v-if="guardUpdateAt">
-            <template #trigger>
-              <span>
-                <NTime
-                  :time="guardUpdateAt"
-                  type="relative"
-                />
-                更新
-              </span>
-            </template>
-            <NTime :time="guardUpdateAt" />
-          </NTooltip>
-        </NDivider>
-        <VChart
-          v-if="hasGuardData && guardsOption"
-          :option="guardsOption"
-          :style="{ height: chartHeight }"
-          class="chart"
-        />
-        <NEmpty
-          v-else
-          description="暂无舰长历史数据"
-          style="padding: 32px 0"
-        />
+            下载采集端教程 →
+          </a>
+        </AlertDescription>
+      </Alert>
 
-        <!-- 投稿图表已下线：站点无法再爬取投稿数据，保留 upstat 字段兼容旧缓存
-        <NDivider>
-        投稿播放量
-        <NDivider vertical />
-        <NTooltip>
-          <template #trigger>
-            <span>
-              <NTime
-                :time="upstatUpdateAt"
-                type="relative"
-              />
-              更新
-            </span>
-          </template>
-          <NTime :time="upstatUpdateAt" />
-        </NTooltip>
-      </NDivider>
-      <VChart
-        :option="upstatViewOption"
-        :style="{ height: chartHeight }"
-        class="chart"
-      />
+      <!-- 主控制与图表大卡片 -->
+      <Card class="p-4 space-y-4">
+        <!-- 顶部工具条 -->
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <!-- 预设选择器 -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
+              <Button
+                size="xs"
+                :variant="activePreset === '7d' ? 'brand' : 'ghost'"
+                class="h-6 px-2 text-xs"
+                @click="setPreset('7d')"
+              >
+                近7天
+              </Button>
+              <Button
+                size="xs"
+                :variant="activePreset === '30d' ? 'brand' : 'ghost'"
+                class="h-6 px-2 text-xs"
+                @click="setPreset('30d')"
+              >
+                近30天
+              </Button>
+              <Button
+                size="xs"
+                :variant="activePreset === '90d' ? 'brand' : 'ghost'"
+                class="h-6 px-2 text-xs"
+                @click="setPreset('90d')"
+              >
+                近90天
+              </Button>
+              <Button
+                size="xs"
+                :variant="activePreset === 'all' ? 'brand' : 'ghost'"
+                class="h-6 px-2 text-xs"
+                @click="setPreset('all')"
+              >
+                全部
+              </Button>
+            </div>
 
-      <NDivider>
-        投稿点赞量
-        <NDivider vertical />
-        <NTooltip>
-          <template #trigger>
-            <span>
-              <NTime
-                :time="upstatUpdateAt"
-                type="relative"
+            <!-- 自定义日期区间 -->
+            <div class="flex items-center gap-1.5">
+              <Input
+                v-model="customStartDate"
+                type="date"
+                class="h-7 text-xs w-32"
+                @change="handleCustomDateApply"
               />
-              更新
+              <span class="text-xs text-muted-foreground">至</span>
+              <Input
+                v-model="customEndDate"
+                type="date"
+                class="h-7 text-xs w-32"
+                @change="handleCustomDateApply"
+              />
+            </div>
+          </div>
+
+          <!-- 关于数据更新弹窗说明 -->
+          <Popover>
+            <PopoverTrigger as-child>
+              <Button
+                size="xs"
+                variant="outline"
+              >
+                <component
+                  :is="Info24Filled"
+                  class="h-3.5 w-3.5 mr-1 text-brand"
+                />
+                关于更新频次
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-80 p-3 text-xs space-y-2">
+              <div class="font-semibold text-foreground">
+                数据采集更新规则
+              </div>
+              <Separator />
+              <div class="space-y-1 text-muted-foreground text-[11px] leading-relaxed">
+                <div>• 当前所有数据均调整为由本地 EventFetcher 每日汇总更新一次。</div>
+                <div class="line-through opacity-60">
+                  • 历史规则：粉丝数按梯度 1~72 小时轮询，舰长数 6~24 小时更新。
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <!-- 粉丝历史图表 -->
+        <div class="space-y-2 pt-2 border-t border-border">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-semibold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500" />
+              <span>粉丝总量与每日增量</span>
+            </div>
+            <span
+              v-if="fansUpdateAt"
+              class="text-[11px] text-muted-foreground"
+            >
+              更新于 {{ formatRelativeTime(fansUpdateAt) }}
             </span>
-          </template>
-          <NTime :time="upstatUpdateAt" />
-        </NTooltip>
-      </NDivider>
-      <VChart
-        :option="upstatLikeOption"
-        :style="{ height: chartHeight }"
-        class="chart"
-      /> -->
-      </NFlex>
-    </NCard>
-    </NSpin>
+          </div>
+
+          <VChart
+            v-if="hasFansData && fansOption"
+            :option="fansOption"
+            :style="{ height: chartHeight }"
+            class="w-full"
+          />
+          <div
+            v-else
+            class="py-12 text-center text-xs text-muted-foreground"
+          >
+            暂无粉丝历史数据
+          </div>
+        </div>
+
+        <!-- 舰长历史图表 -->
+        <div class="space-y-2 pt-4 border-t border-border">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-semibold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-500" />
+              <span>舰长在籍总量与增减</span>
+            </div>
+            <span
+              v-if="guardUpdateAt"
+              class="text-[11px] text-muted-foreground"
+            >
+              更新于 {{ formatRelativeTime(guardUpdateAt) }}
+            </span>
+          </div>
+
+          <VChart
+            v-if="hasGuardData && guardsOption"
+            :option="guardsOption"
+            :style="{ height: chartHeight }"
+            class="w-full"
+          />
+          <div
+            v-else
+            class="py-12 text-center text-xs text-muted-foreground"
+          >
+            暂无舰长历史数据
+          </div>
+        </div>
+      </Card>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.history-view {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.history-card {
-  width: 100%;
-}
-
-.charts-container {
-  width: 100%;
-}
-
-.chart {
-  width: 100%;
-  min-height: 200px;
-  transition: height 0.3s ease;
-}
-
-@media (max-width: 768px) {
-  .chart {
-    min-height: 250px;
-  }
-}
-</style>

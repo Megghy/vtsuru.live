@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { CodeSlashOutline } from '@vicons/ionicons5'
-import { NButton, NFlex, NFormItem, NIcon, NInputNumber, NRadioButton, NRadioGroup, NText } from 'naive-ui'
+import { Code2 } from 'lucide-vue-next'
 import { computed, defineAsyncComponent, ref } from 'vue'
 
 import {
@@ -11,6 +10,8 @@ import {
   utf8ByteLength,
 } from '@/apps/user-page/block/customHtmlContract'
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { Button } from '@/shared/ui/button'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -43,64 +44,67 @@ const maxHeight = computed({
 </script>
 
 <template>
-  <NFlex
-    vertical
-    size="small"
-  >
-    <NButton
-      type="primary"
-      secondary
-      block
+  <div class="flex flex-col gap-2">
+    <Button
+      variant="outline"
+      class="w-full text-xs"
       @click="editorOpen = true"
     >
-      <template #icon>
-        <NIcon><CodeSlashOutline /></NIcon>
-      </template>
+      <Code2 class="mr-1.5 size-4" />
       打开代码编辑器
-    </NButton>
-    <NText
-      depth="3"
-      style="font-size: 12px"
-    >
+    </Button>
+    <span class="text-xs text-muted-foreground">
       HTML + CSS {{ codeBytes }} bytes · {{ config.assets.length }} 个资源
-    </NText>
+    </span>
 
     <PropsGrid :row-gap="0">
-      <NFormItem label="高度方式">
-        <NRadioGroup
-          v-model:value="heightMode"
-          size="small"
-        >
-          <NRadioButton value="auto"> 自动 </NRadioButton>
-          <NRadioButton value="fixed"> 固定 </NRadioButton>
-        </NRadioGroup>
-      </NFormItem>
-      <NFormItem
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">高度方式</label>
+        <div class="inline-flex rounded-md border border-input p-0.5 bg-muted/40">
+          <Button
+            size="sm"
+            :variant="heightMode === 'auto' ? 'secondary' : 'ghost'"
+            class="h-7 px-3 text-xs"
+            @click="heightMode = 'auto'"
+          >
+            自动
+          </Button>
+          <Button
+            size="sm"
+            :variant="heightMode === 'fixed' ? 'secondary' : 'ghost'"
+            class="h-7 px-3 text-xs"
+            @click="heightMode = 'fixed'"
+          >
+            固定
+          </Button>
+        </div>
+      </div>
+      <div
         v-if="heightMode === 'fixed'"
-        label="固定高度"
+        class="space-y-1"
       >
+        <label class="text-xs text-muted-foreground">固定高度</label>
         <NInputNumber
           v-model:value="fixedHeight"
           :min="CUSTOM_HTML_MIN_HEIGHT"
           :max="CUSTOM_HTML_MAX_HEIGHT"
           :step="20"
-        >
-          <template #suffix> px </template>
-        </NInputNumber>
-      </NFormItem>
-      <NFormItem
+          class="w-full"
+        />
+      </div>
+      <div
         v-else
-        label="最大高度"
+        class="space-y-1"
       >
+        <label class="text-xs text-muted-foreground">最大高度</label>
         <NInputNumber
           v-model:value="maxHeight"
           :min="CUSTOM_HTML_MIN_AUTO_HEIGHT"
           :max="CUSTOM_HTML_MAX_HEIGHT"
           :step="20"
-        >
-          <template #suffix> px </template>
-        </NInputNumber>
-      </NFormItem>
+          class="w-full"
+        />
+      </div>
     </PropsGrid>
 
     <CustomHtmlEditorModal
@@ -108,5 +112,5 @@ const maxHeight = computed({
       v-model:show="editorOpen"
       :block="props.block"
     />
-  </NFlex>
+  </div>
 </template>

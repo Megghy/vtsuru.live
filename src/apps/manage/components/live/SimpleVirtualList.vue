@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import type { ScrollbarInst } from 'naive-ui/es/_internal'
-import { NScrollbar } from 'naive-ui/es/_internal'
+import { useVirtualList } from '@vueuse/core'
 import type { PropType } from 'vue'
-import { computed, onMounted, ref } from 'vue'
-import type { VirtualListInst } from 'vueuc'
-import { VVirtualList } from 'vueuc'
-import type { ItemData } from 'vueuc/lib/virtual-list/src/type'
+import { computed, ref, toRef } from 'vue'
 
 const props = defineProps({
   items: {
-    type: Array as PropType<ItemData[]>,
+    type: Array as PropType<any[]>,
     default: () => [],
   },
   defaultSize: {
@@ -24,37 +20,14 @@ const props = defineProps({
     type: Boolean,
   },
 })
-const scrollerInstRef = ref<ScrollbarInst | null>(null)
-const vlInstRef = ref<VirtualListInst | null>(null)
 
-function scrollContainer(): HTMLElement | null {
-  const { value } = vlInstRef
-  if (!value) return null
-  const { listElRef } = value
-  return listElRef
-}
-function scrollContent(): HTMLElement | null {
-  const { value } = vlInstRef
-  if (!value) return null
-  const { itemsElRef } = value
-  return itemsElRef
-}
-function syncVLScroller(): void {
-  scrollerInstRef.value?.sync()
-}
-
-onMounted(() => {
-  if (props.scrollToEndDefault) {
-    scrollerInstRef.value?.scrollTo({
-      position: 'bottom',
-      behavior: 'smooth',
-    })
-  }
-})
+const containerRef = ref<HTMLElement | null>(null)
+const itemsRef = toRef(props, 'items')
 
 const parentHeight = computed(() => {
-  return scrollerInstRef.value?.$el.parentElement?.clientHeight ?? 0
+  return containerRef.value?.parentElement?.clientHeight ?? 0
 })
+
 const height = computed(() => {
   if (typeof props.defaultHeight === 'number') {
     return props.defaultHeight < 0 ? `${parentHeight.value}px` : `${props.defaultHeight}px`
@@ -72,28 +45,30 @@ const height = computed(() => {
   }
   return '600px'
 })
+
+const { list, containerProps, wrapperProps } = useVirtualList(itemsRef, {
+  itemHeight: props.defaultSize,
+})
 </script>
 
 <template>
-  <NScrollbar
-    ref="scrollerInstRef"
-    :style="`height:${height}`"
-    :container="scrollContainer"
-    :content="scrollContent"
-    trigger="none"
+  <div
+    ref="containerRef"
+    class="simple-virtual-list-wrapper"
+    :style="`height:${height}; width: 100%;`"
   >
-    <VVirtualList
-      ref="vlInstRef"
-      :items="items"
-      :item-size="defaultSize"
-      item-resizable
-      key-field="id"
-      :show-scrollbar="false"
-      @scroll="syncVLScroller"
+    <div
+      v-bind="containerProps"
+      style="height: 100%; width: 100%; overflow-y: auto;"
     >
-      <template #default="{ item }">
-        <slot :item="item" />
-      </template>
-    </VVirtualList>
-  </NScrollbar>
+      <div v-bind="wrapperProps">
+        <template
+          v-for="item in list"
+          :key="item.data?.id ?? item.index"
+        >
+          <slot :item="item.data" />
+        </template>
+      </div>
+    </div>
+  </div>
 </template>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { TimerOutline, HourglassOutline } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
+import { HourglassOutline, TimerOutline } from '@vicons/ionicons5'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -89,18 +88,13 @@ const breakdown = computed(() => {
     >
       <!-- 集成式标题区 -->
       <div class="cd-header-integrated">
-        <NIcon
-          size="14"
-          class="cd-icon"
-        >
-          <TimerOutline />
-        </NIcon>
+        <component :is="TimerOutline" class="cd-icon size-3.5" />
         <span class="cd-title">{{ cfg.title || '倒计时' }}</span>
       </div>
 
       <div
         v-if="!targetMs"
-        class="cd-placeholder"
+        class="cd-placeholder text-xs"
       >
         未设置目标时间
       </div>
@@ -110,12 +104,10 @@ const breakdown = computed(() => {
         class="done-display"
       >
         <div class="done-icon-wrapper">
-          <NIcon
-            size="32"
-            color="var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)))"
-          >
-            <HourglassOutline />
-          </NIcon>
+          <component
+            :is="HourglassOutline"
+            class="size-8 text-primary"
+          />
         </div>
         <div class="done-text">
           {{ cfg.doneText || '已到达' }}
@@ -193,14 +185,6 @@ const breakdown = computed(() => {
   background: var(--vtsuru-bg-elevated);
 }
 
-/* 移除默认 Header 占位影响 */
-.countdown-card.bold-mode :deep(.n-card-header) {
-  display: none;
-}
-.countdown-card.bold-mode :deep(.n-card__content) {
-  padding: 0 !important;
-}
-
 .countdown-inner {
   padding: 20px;
   display: flex;
@@ -267,7 +251,7 @@ const breakdown = computed(() => {
   line-height: 1;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
-  font-family: ui-monospace, 'Menlo', 'Monaco', monospace; /* Monospace for tech feel */
+  font-family: ui-monospace, 'Menlo', 'Monaco', monospace;
 }
 
 .digit-box .lbl {

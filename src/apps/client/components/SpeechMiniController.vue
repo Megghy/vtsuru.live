@@ -1,24 +1,19 @@
 <script setup lang="ts">
 import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NText, NTooltip, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useSpeechService } from '@/store/useSpeechService'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const router = useRouter()
 const route = useRoute()
 const speechService = useSpeechService()
 const { speechState, speakQueue, isPaused } = speechService
-const themeVars = useThemeVars()
 
 const isActive = computed(() => speechState.canSpeech && route.name !== 'client-read-danmaku')
 const queueCount = computed(() => speakQueue.value.length)
-const containerStyle = computed(() => ({
-  '--mini-bg': themeVars.value.popoverColor,
-  '--mini-border': themeVars.value.borderColor,
-  '--mini-badge-bg': themeVars.value.actionColor,
-}))
 
 function goToPage() {
   router.push({ name: 'client-read-danmaku' })
@@ -30,79 +25,83 @@ function goToPage() {
     <div
       v-if="isActive"
       class="speech-mini-controller"
-      :style="containerStyle"
     >
-      <NFlex
-        align="center"
-        :size="8"
-        :wrap="false"
-        style="flex: 1; overflow: hidden"
-      >
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              size="tiny"
-              quaternary
-              @click="goToPage"
-            >
-              <template #icon>
-                <NIcon
-                  :component="Mic24Filled"
-                  color="#18a058"
+      <div class="flex items-center gap-2 flex-1 overflow-hidden">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="icon"
+                variant="ghost"
+                class="h-6 w-6 p-0"
+                @click="goToPage"
+              >
+                <component
+                  :is="Mic24Filled"
+                  class="w-4 h-4 text-emerald-500"
                 />
-              </template>
-            </NButton>
-          </template>
-          前往读弹幕页面
-        </NTooltip>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              前往读弹幕页面
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-        <NText
-          class="status-text"
-          :type="speechState.isSpeaking ? 'success' : isPaused ? 'warning' : 'default'"
+        <span
+          class="status-text font-medium"
+          :class="{
+            'text-emerald-500': speechState.isSpeaking,
+            'text-amber-500': isPaused,
+            'text-[var(--vtsuru-fg)]': !speechState.isSpeaking && !isPaused
+          }"
         >
           {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停' : '待机' }}
-        </NText>
+        </span>
 
-        <NText
+        <span
           v-if="queueCount > 0"
-          depth="3"
           class="queue-badge"
         >
           {{ queueCount }}
-        </NText>
-      </NFlex>
-      <NFlex
-        :size="4"
-        :wrap="false"
-      >
-        <NButton
-          size="tiny"
-          :type="isPaused ? 'warning' : 'default'"
+        </span>
+      </div>
+      <div class="flex items-center gap-1 shrink-0">
+        <Button
+          size="icon"
+          :variant="isPaused ? 'default' : 'outline'"
+          class="h-6 w-6 p-0"
           @click="speechService.togglePause()"
         >
-          <template #icon>
-            <NIcon :component="isPaused ? Play20Filled : Pause20Filled" />
-          </template>
-        </NButton>
-        <NButton
-          size="tiny"
+          <component
+            :is="isPaused ? Play20Filled : Pause20Filled"
+            class="w-3.5 h-3.5"
+          />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          class="h-6 w-6 p-0"
           :disabled="!speechState.isSpeaking"
           @click="speechService.skipCurrent()"
         >
-          <template #icon>
-            <NIcon :component="Next20Filled" />
-          </template>
-        </NButton>
-        <NButton
-          size="tiny"
-          type="error"
+          <component
+            :is="Next20Filled"
+            class="w-3.5 h-3.5"
+          />
+        </Button>
+        <Button
+          size="icon"
+          variant="destructive"
+          class="h-6 w-6 p-0"
           @click="speechService.stopSpeech()"
         >
-          <template #icon>
-            <NIcon :component="MicOff24Filled" />
-          </template>
-        </NButton>
-      </NFlex>
+          <component
+            :is="MicOff24Filled"
+            class="w-3.5 h-3.5"
+          />
+        </Button>
+      </div>
     </div>
   </Teleport>
 </template>
@@ -113,8 +112,8 @@ function goToPage() {
   bottom: 16px;
   right: 16px;
   z-index: 9999;
-  background: var(--mini-bg);
-  border: 1px solid var(--mini-border);
+  background: var(--vtsuru-bg-elevated, #242428);
+  border: 1px solid var(--vtsuru-border, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   padding: 6px 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
@@ -133,7 +132,8 @@ function goToPage() {
 }
 .queue-badge {
   font-size: 11px;
-  background: var(--mini-badge-bg);
+  background: var(--vtsuru-bg-muted, rgba(255, 255, 255, 0.08));
+  color: var(--vtsuru-fg-muted, #9ca3af);
   border-radius: 10px;
   padding: 0 6px;
   min-width: 18px;

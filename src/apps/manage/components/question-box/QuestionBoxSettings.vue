@@ -1,82 +1,44 @@
 <script setup lang="ts">
 import { Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
 import { SettingsOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NEmpty,
-  NFlex,
-  NGi,
-  NGrid,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NSlider,
-  NTag,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
+import type { SettingQuestionBoxSaftyLevels } from '@/api/generated/model'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Slider } from '@/shared/ui/slider'
+import { Tag } from '@/shared/ui/tag'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
 const useQB = useQuestionBox()
 const message = useMessage()
-const themeVars = useThemeVars()
 
 const addTagName = ref('')
-const tempSaftyLevel = ref(accountInfo.value?.settings?.questionBox?.saftyLevel ?? 0)
+const tempSaftyLevel = ref<number[]>([accountInfo.value?.settings?.questionBox?.saftyLevel ?? 0])
 const sortedTags = computed(() => useQB.tags.toSorted((a, b) => b.createAt - a.createAt))
 
 watch(
   () => accountInfo.value?.settings?.questionBox?.saftyLevel,
   (v) => {
-    if (v !== undefined) tempSaftyLevel.value = v
+    if (v !== undefined) tempSaftyLevel.value = [v]
   },
   { immediate: true },
 )
 
-const remarkLevel = {
-  0: () =>
-    h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
-      '无',
-      h(NTooltip, null, {
-        trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.successColor }),
-        default: () => '完全关闭内容审查',
-      }),
-    ]),
-  1: () =>
-    h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
-      '宽松',
-      h(NTooltip, null, {
-        trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.infoColor }),
-        default: () => '仅过滤极端内容 (得分 > 30)',
-      }),
-    ]),
-  2: () =>
-    h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
-      '一般',
-      h(NTooltip, null, {
-        trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.warningColor }),
-        default: () => '过滤潜在冒犯性内容 (得分 > 60)',
-      }),
-    ]),
-  3: () =>
-    h(NFlex, { align: 'center', justify: 'center', size: 3, wrap: false }, () => [
-      '严格',
-      h(NTooltip, null, {
-        trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.errorColor }),
-        default: () => '过滤所有可能不适内容 (得分 > 90)',
-      }),
-    ]),
-}
+const levels = [
+  { level: 0, label: '无', desc: '完全关闭内容审查' },
+  { level: 1, label: '宽松', desc: '仅过滤极端内容 (得分 > 30)' },
+  { level: 2, label: '一般', desc: '过滤潜在冒犯性内容 (得分 > 60)' },
+  { level: 3, label: '严格', desc: '过滤所有可能不适内容 (得分 > 90)' },
+]
 
 async function saveQuestionBoxSettings() {
   if (!accountInfo.value?.settings?.questionBox) return
@@ -108,277 +70,229 @@ function addTag() {
 </script>
 
 <template>
-  <NGrid
-    class="question-box-settings-grid"
-    x-gap="12"
-    y-gap="12"
-    cols="1 800:2"
-  >
-    <NGi>
-      <NFlex
-        class="question-box-settings-stack"
-        vertical
-        :size="12"
-      >
-        <NCard
-          class="setting-card"
-          title="基础设定"
-          size="small"
-          segmented
-        >
-          <template #header-extra>
-            <NIcon
-              :component="SettingsOutline"
-              size="18"
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1">
+    <!-- 左栏：基础设定、内容审查、通知设置 -->
+    <div class="space-y-4">
+      <Card>
+        <CardHeader class="py-3 px-4 border-b flex flex-row items-center justify-between">
+          <CardTitle class="text-xs font-semibold">基础设定</CardTitle>
+          <SettingsOutline class="size-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent class="p-4 space-y-3" v-if="accountInfo?.settings?.questionBox">
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <Checkbox
+              v-model="accountInfo.settings.questionBox.allowUnregistedUser"
+              :disabled="useQB.isLoading"
+              @update:model-value="saveQuestionBoxSettings"
             />
-          </template>
-          <NFlex
-            class="question-box-settings-content"
-            vertical
-            :size="12"
-          >
-            <NCheckbox
-              v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
+            <span>允许未注册/未登录用户提问</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <Checkbox
+              v-model="accountInfo.settings.questionBox.allowAnonymous"
               :disabled="useQB.isLoading"
-              @update:checked="saveQuestionBoxSettings"
-            >
-              允许未注册/匿名用户进行提问
-            </NCheckbox>
-            <NCheckbox
-              v-model:checked="accountInfo.settings.questionBox.allowImageUpload"
+              @update:model-value="saveQuestionBoxSettings"
+            />
+            <span>允许匿名提问（关闭后必须以登录/认证身份实名提交）</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <Checkbox
+              v-model="accountInfo.settings.questionBox.allowImageUpload"
               :disabled="useQB.isLoading"
-              @update:checked="saveQuestionBoxSettings"
-            >
-              允许上传图片
-            </NCheckbox>
-            <NCheckbox
-              :checked="accountInfo.settings.questionBox.showPublicReplies !== false"
+              @update:model-value="saveQuestionBoxSettings"
+            />
+            <span>允许上传图片</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <Checkbox
+              :model-value="accountInfo.settings.questionBox.showPublicReplies !== false"
               :disabled="useQB.isLoading"
-              @update:checked="
+              @update:model-value="
                 (checked) => {
-                  accountInfo.settings.questionBox.showPublicReplies = checked
-                  saveQuestionBoxSettings()
-                }
-              "
-            >
-              在提问页显示公开回复
-            </NCheckbox>
-            <NCheckbox
-              :checked="accountInfo.settings.questionBox.defaultPublic !== false"
-              :disabled="useQB.isLoading"
-              @update:checked="
-                (checked) => {
-                  accountInfo.settings.questionBox.defaultPublic = checked
-                  saveQuestionBoxSettings()
-                }
-              "
-            >
-              新提问默认公开展示
-            </NCheckbox>
-          </NFlex>
-        </NCard>
-
-        <NCard
-          class="setting-card"
-          title="内容审查"
-          size="small"
-          segmented
-        >
-          <div class="question-box-safety-content">
-            <div class="question-box-help-text">设置过滤强度，自动拦截恶意提问</div>
-            <NSlider
-              v-model:value="tempSaftyLevel"
-              :marks="remarkLevel"
-              step="mark"
-              :max="3"
-              :disabled="useQB.isLoading"
-              @dragend="
-                () => {
                   if (accountInfo?.settings?.questionBox) {
-                    accountInfo.settings.questionBox.saftyLevel = tempSaftyLevel
+                    accountInfo.settings.questionBox.showPublicReplies = Boolean(checked)
                     saveQuestionBoxSettings()
                   }
                 }
               "
             />
-          </div>
-        </NCard>
+            <span>在提问页显示公开回复</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <Checkbox
+              :model-value="accountInfo.settings.questionBox.defaultPublic !== false"
+              :disabled="useQB.isLoading"
+              @update:model-value="
+                (checked) => {
+                  if (accountInfo?.settings?.questionBox) {
+                    accountInfo.settings.questionBox.defaultPublic = Boolean(checked)
+                    saveQuestionBoxSettings()
+                  }
+                }
+              "
+            />
+            <span>新提问默认公开展示</span>
+          </label>
+        </CardContent>
+      </Card>
 
-        <NCard
-          class="setting-card"
-          title="通知设置"
-          size="small"
-          segmented
-        >
-          <NFlex
-            class="question-box-settings-content"
-            vertical
-            :size="12"
-          >
-            <NCheckbox
+      <Card>
+        <CardHeader class="py-3 px-4 border-b">
+          <CardTitle class="text-xs font-semibold">内容审查</CardTitle>
+        </CardHeader>
+        <CardContent class="p-4 space-y-4">
+          <div class="text-xs text-muted-foreground">设置过滤强度，自动拦截恶意提问</div>
+          <div class="px-2">
+            <Slider
+              v-model="tempSaftyLevel"
+              :min="0"
+              :max="3"
+              :step="1"
+              :disabled="useQB.isLoading"
+              @update:model-value="
+                (val) => {
+                  if (accountInfo?.settings?.questionBox && val[0] !== undefined) {
+                    accountInfo.settings.questionBox.saftyLevel = val[0] as SettingQuestionBoxSaftyLevels
+                    saveQuestionBoxSettings()
+                  }
+                }
+              "
+            />
+            <div class="flex justify-between items-center text-xs text-muted-foreground mt-2">
+              <div
+                v-for="item in levels"
+                :key="item.level"
+                class="flex flex-col items-center cursor-pointer"
+                @click="
+                  () => {
+                    tempSaftyLevel = [item.level]
+                    if (accountInfo?.settings?.questionBox) {
+                      accountInfo.settings.questionBox.saftyLevel = item.level as SettingQuestionBoxSaftyLevels
+                      saveQuestionBoxSettings()
+                    }
+                  }
+                "
+              >
+                <span :class="{ 'font-semibold text-primary': tempSaftyLevel[0] === item.level }">
+                  {{ item.label }}
+                </span>
+                <span class="text-[10px] text-muted-foreground/80 scale-90">{{ item.desc }}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader class="py-3 px-4 border-b">
+          <CardTitle class="text-xs font-semibold">通知设置</CardTitle>
+        </CardHeader>
+        <CardContent class="p-4 space-y-3" v-if="accountInfo?.settings?.sendEmail">
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <Checkbox
               v-model:checked="accountInfo.settings.sendEmail.recieveQA"
               :disabled="useQB.isLoading"
               @update:checked="saveNotificationSetting"
-            >
-              收到新提问时发送邮件通知
-            </NCheckbox>
-            <NCheckbox
+            />
+            <span>收到新提问时发送邮件通知</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <Checkbox
               v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
               :disabled="useQB.isLoading"
               @update:checked="saveNotificationSetting"
+            />
+            <span>我发送的提问收到回复时发送邮件通知</span>
+          </label>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- 右栏：标签/话题管理 -->
+    <div>
+      <Card class="h-full flex flex-col">
+        <CardHeader class="py-3 px-4 border-b flex flex-row items-center justify-between">
+          <CardTitle class="text-xs font-semibold">标签/话题管理</CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Info24Filled class="size-4 text-muted-foreground/70 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p class="text-xs">用于对收到的提问进行分类，或让提问者选择相关话题。</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </CardHeader>
+        <CardContent class="p-4 flex-1 flex flex-col space-y-3">
+          <div class="flex items-center gap-2">
+            <Input
+              v-model="addTagName"
+              placeholder="输入新标签名称..."
+              maxlength="20"
+              class="h-8 text-xs flex-1"
+              @keydown.enter="addTag"
+            />
+            <Button
+              size="sm"
+              :disabled="!addTagName.trim()"
+              @click="addTag"
             >
-              我发送的提问收到回复时发送邮件通知
-            </NCheckbox>
-          </NFlex>
-        </NCard>
-      </NFlex>
-    </NGi>
+              添加
+            </Button>
+          </div>
 
-    <NGi>
-      <NCard
-        class="setting-card question-box-tags-card"
-        title="标签/话题管理"
-        size="small"
-        segmented
-      >
-        <template #header-extra>
-          <NTooltip placement="left">
-            <template #trigger>
-              <NIcon
-                :component="Info24Filled"
-                style="cursor: help"
-              />
-            </template>
-            用于对收到的提问进行分类，或让提问者选择相关话题。
-          </NTooltip>
-        </template>
-
-        <NInputGroup class="question-box-tag-input">
-          <NInput
-            v-model:value="addTagName"
-            placeholder="输入新标签名称..."
-            maxlength="20"
-            show-count
-            clearable
-            @keydown.enter="addTag"
+          <Empty
+            v-if="sortedTags.length === 0"
+            description="暂无标签，添加后提问者可选择分类"
+            class="py-8"
           />
-          <NButton
-            type="primary"
-            :disabled="!addTagName.trim()"
-            @click="addTag"
-          >
-            添加
-          </NButton>
-        </NInputGroup>
 
-        <NEmpty
-          v-if="sortedTags.length === 0"
-          description="暂无标签，添加后提问者可选择分类"
-          style="margin-top: 24px"
-        />
-
-        <NList
-          v-else
-          class="question-box-tags-list"
-        >
-          <NListItem
-            v-for="item in sortedTags"
-            :key="item.name"
-            class="tag-item"
-          >
-            <NFlex
-              align="center"
-              justify="space-between"
+          <div v-else class="space-y-1.5 overflow-y-auto max-h-[460px] pr-1">
+            <div
+              v-for="item in sortedTags"
+              :key="item.name"
+              class="flex items-center justify-between p-2 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors text-xs"
             >
-              <NFlex
-                align="center"
-                :size="8"
-              >
-                <NTag
-                  size="small"
-                  :type="item.visiable ? 'primary' : 'default'"
-                >
-                  {{ item.name }}
-                </NTag>
-                <NTag
-                  v-if="!item.visiable"
-                  size="small"
-                  :bordered="false"
-                >
-                  已隐藏
-                </NTag>
-              </NFlex>
+              <div class="flex items-center gap-2">
+                <Tag :type="item.visiable ? 'primary' : 'default'" size="small">
+                  #{{ item.name }}
+                </Tag>
+                <span v-if="!item.visiable" class="text-[11px] text-muted-foreground">
+                  (已隐藏)
+                </span>
+              </div>
 
-              <NFlex :size="6">
-                <NTooltip>
-                  <template #trigger>
-                    <NButton
-                      size="tiny"
-                      quaternary
-                      circle
-                      @click="useQB.changeTagVisiable(item.name, !item.visiable)"
-                    >
-                      <template #icon>
-                        <NIcon :component="item.visiable ? Eye24Filled : EyeOff24Filled" />
-                      </template>
-                    </NButton>
-                  </template>
-                  {{ item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题' }}
-                </NTooltip>
+              <div class="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  class="size-6 text-muted-foreground hover:text-foreground"
+                  :title="item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题'"
+                  @click="useQB.changeTagVisiable(item.name, !item.visiable)"
+                >
+                  <Eye24Filled v-if="item.visiable" class="size-3.5" />
+                  <EyeOff24Filled v-else class="size-3.5" />
+                </Button>
 
-                <NPopconfirm @positive-click="useQB.delTag(item.name)">
-                  <template #trigger>
-                    <NButton
-                      size="tiny"
-                      quaternary
-                      circle
-                      type="error"
-                    >
-                      <template #icon>
-                        <NIcon :component="Delete24Regular" />
-                      </template>
-                    </NButton>
-                  </template>
-                  确认删除标签「{{ item.name }}」吗？
-                </NPopconfirm>
-              </NFlex>
-            </NFlex>
-          </NListItem>
-        </NList>
-      </NCard>
-    </NGi>
-  </NGrid>
+                <Popconfirm
+                  title="确认删除标签？"
+                  :description="`确认删除标签「${item.name}」吗？`"
+                  @confirm="useQB.delTag(item.name)"
+                >
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    class="size-6 text-muted-foreground hover:text-destructive"
+                  >
+                    <Delete24Regular class="size-3.5" />
+                  </Button>
+                </Popconfirm>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
 </template>
-
-<style scoped>
-.question-box-settings-grid {
-  margin-top: 4px;
-}
-
-.setting-card {
-  border-radius: 8px;
-}
-
-.question-box-safety-content {
-  padding: 8px 12px 16px;
-}
-
-.question-box-help-text {
-  margin-bottom: 16px;
-  font-size: 13px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.question-box-tag-input {
-  margin-bottom: 12px;
-}
-
-.question-box-tags-list {
-  max-height: 380px;
-  overflow-y: auto;
-}
-
-.tag-item {
-  padding: 8px 4px !important;
-}
-</style>

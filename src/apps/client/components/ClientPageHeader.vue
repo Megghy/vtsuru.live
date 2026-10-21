@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NFlex, NText } from 'naive-ui'
 defineProps<{
   title?: string
   description?: string
@@ -7,18 +6,13 @@ defineProps<{
 </script>
 
 <template>
-  <NFlex
-    justify="space-between"
-    align="center"
-    :wrap="true"
-    :size="12"
-  >
+  <div class="flex items-center justify-between flex-wrap gap-3">
     <div class="client-page-header__text">
       <div class="client-page-header__title">
         <slot name="title">
-          <NText strong>
+          <span class="font-semibold text-foreground">
             {{ title }}
-          </NText>
+          </span>
         </slot>
       </div>
       <div
@@ -33,7 +27,7 @@ defineProps<{
     <div class="client-page-header__actions">
       <slot name="actions" />
     </div>
-  </NFlex>
+  </div>
 </template>
 
 <style scoped>

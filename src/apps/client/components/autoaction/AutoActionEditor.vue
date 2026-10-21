@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { NCard, NCollapse, NCollapseItem, NDivider, NFlex, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Separator } from '@/shared/ui/separator'
 
 import AdvancedSettings from './settings/AdvancedSettings.vue'
-// 引入拆分的子组件
 import BasicSettings from './settings/BasicSettings.vue'
 import DanmakuSettings from './settings/DanmakuSettings.vue'
 import EnterSettings from './settings/EnterSettings.vue'
@@ -59,7 +60,6 @@ const showVtsSettings = computed(() => {
   ].includes(props.action.actionType)
 })
 
-// 根据触发类型获取对应的设置组件
 function getTriggerSettings() {
   switch (props.action.triggerType) {
     case TriggerType.DANMAKU:
@@ -83,7 +83,6 @@ function getTriggerSettings() {
 
 const TriggerSettings = getTriggerSettings()
 
-// 获取高级设置的简要状态
 function getAdvancedSummary() {
   const summaries: string[] = []
   const { triggerConfig, ignoreCooldown, actionConfig, logicalExpression, executeCommand } = props.action
@@ -100,11 +99,7 @@ function getAdvancedSummary() {
 </script>
 
 <template>
-  <NFlex
-    class="auto-action-editor"
-    vertical
-    :size="16"
-  >
+  <div class="auto-action-editor flex flex-col gap-4">
     <!-- 1. 基础设置 -->
     <BasicSettings
       :action="action"
@@ -113,73 +108,76 @@ function getAdvancedSummary() {
     />
 
     <!-- 2. 内容配置 (模板或VTS) -->
-    <NCard
+    <Card
       v-if="showTemplate || showVtsSettings || action.actionType === ActionType.PNGTUBER_EXPRESSION"
-      size="small"
-      embedded
-      :bordered="false"
-      content-style="padding: 0;"
-      class="content-settings-card"
+      class="content-settings-card border-none bg-muted/40"
     >
-      <TemplateSettings
-        v-if="showTemplate"
-        :action="action"
-        :custom-test-context="customTestContext"
-      />
-      <PngtuberSettings
-        v-if="action.actionType === ActionType.PNGTUBER_EXPRESSION"
-        :action="action"
-      />
-      <VtsSettings
-        v-if="showVtsSettings"
-        :action="action"
-      />
-    </NCard>
+      <CardContent class="p-0">
+        <TemplateSettings
+          v-if="showTemplate"
+          :action="action"
+          :custom-test-context="customTestContext"
+        />
+        <PngtuberSettings
+          v-if="action.actionType === ActionType.PNGTUBER_EXPRESSION"
+          :action="action"
+        />
+        <VtsSettings
+          v-if="showVtsSettings"
+          :action="action"
+        />
+      </CardContent>
+    </Card>
 
     <!-- 3. 高级设置 (触发器特定 & 通用高级) -->
-    <NCollapse>
-      <NCollapseItem
-        title="高级规则与触发条件"
-        name="advanced"
+    <Accordion
+      type="single"
+      collapsible
+      class="w-full border rounded-lg px-3 bg-card"
+    >
+      <AccordionItem
+        value="advanced"
+        class="border-none"
       >
-        <template #header-extra>
-          <NText
-            depth="3"
-            style="font-size: 12px"
-          >
-            {{ getAdvancedSummary() }}
-          </NText>
-        </template>
-        <NFlex
-          vertical
-          :size="16"
-          style="padding-top: 8px"
-        >
-          <!-- 触发器特定设置 -->
-          <component
-            :is="TriggerSettings"
-            v-if="TriggerSettings"
-            :action="action"
-            class="trigger-settings"
-          />
+        <AccordionTrigger class="py-3 text-sm font-medium hover:no-underline">
+          <div class="flex items-center gap-2">
+            <span>高级规则与触发条件</span>
+            <span class="text-xs text-muted-foreground font-normal">
+              {{ getAdvancedSummary() }}
+            </span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent class="pt-2 pb-4">
+          <div class="flex flex-col gap-4">
+            <!-- 触发器特定设置 -->
+            <component
+              :is="TriggerSettings"
+              v-if="TriggerSettings"
+              :action="action"
+              class="trigger-settings"
+            />
 
-          <NDivider
-            v-if="TriggerSettings"
-            style="margin: 0"
-          >
-            通用高级设置
-          </NDivider>
+            <div
+              v-if="TriggerSettings"
+              class="relative my-2 text-center"
+            >
+              <Separator />
+              <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                通用高级设置
+              </span>
+            </div>
 
-          <!-- 通用高级设置 -->
-          <AdvancedSettings
-            :action="action"
-            :hide-user-filter="hideUserFilter"
-            class="advanced-settings"
-          />
-        </NFlex>
-      </NCollapseItem>
-    </NCollapse>
-  </NFlex>
+            <!-- 通用高级设置 -->
+            <AdvancedSettings
+              :action="action"
+              :hide-user-filter="hideUserFilter"
+              class="advanced-settings"
+            />
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </div>
 </template>
 
 <style scoped>
@@ -187,16 +185,7 @@ function getAdvancedSummary() {
   width: 100%;
 }
 
-.content-settings-card {
-  background-color: var(--vtsuru-bg-elevated);
-  border-radius: var(--vtsuru-radius);
-}
-
 .trigger-settings {
   width: 100%;
-}
-
-:deep(.n-collapse-item__header) {
-  font-weight: 500;
 }
 </style>

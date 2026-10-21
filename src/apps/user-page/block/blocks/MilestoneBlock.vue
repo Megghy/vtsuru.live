@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { FlagOutline } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -55,19 +54,14 @@ const items = computed(() => {
   >
     <template #header>
       <div class="header">
-        <NIcon
-          size="18"
-          depth="2"
-        >
-          <FlagOutline />
-        </NIcon>
+        <component :is="FlagOutline" class="size-4.5 text-muted-foreground" />
         <span>{{ cfg.title }}</span>
       </div>
     </template>
 
     <div
       v-if="items.length === 0"
-      class="empty"
+      class="empty text-xs"
     >
       暂无里程碑
     </div>

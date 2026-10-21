@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { NTag } from 'naive-ui'
 import { computed } from 'vue'
+
+import { Badge } from '@/shared/ui/badge'
 
 const props = withDefaults(
   defineProps<{
     songKey: string
     singingKeys: Set<string>
     queuedKeys: Set<string>
-    /** tag: NTag；text: 纯文本 span */
+    /** tag: Badge；text: 纯文本 span */
     variant?: 'tag' | 'text'
     size?: 'tiny' | 'small'
   }>(),
@@ -26,16 +27,19 @@ const status = computed(() => {
 
 <template>
   <template v-if="status">
-    <NTag
+    <Badge
       v-if="variant === 'tag'"
-      class="song-status-badge"
-      :class="status"
-      :size="size"
-      :type="status === 'singing' ? 'warning' : 'success'"
-      :bordered="false"
+      class="song-status-badge text-[10px] font-normal"
+      :class="[
+        size === 'tiny' ? 'h-4 px-1' : 'h-4.5 px-1.5',
+        status === 'singing'
+          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+          : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      ]"
+      variant="outline"
     >
       {{ status === 'singing' ? '演唱中' : '排队中' }}
-    </NTag>
+    </Badge>
     <span
       v-else
       class="song-status-badge text"

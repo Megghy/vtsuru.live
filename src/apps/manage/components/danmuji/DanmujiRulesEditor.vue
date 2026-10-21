@@ -1,59 +1,82 @@
 <script setup lang="ts">
-import { NCheckbox, NForm, NFormItem, NInput, NInputNumber, NPopconfirm, NButton } from 'naive-ui'
 import type { DanmujiConfig } from '@/shared/danmujiConfig'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Textarea } from '@/shared/ui/textarea'
 
 const config = defineModel<DanmujiConfig>({ required: true })
 defineEmits<{ reset: [] }>()
 </script>
 
 <template>
-  <NForm label-placement="top" size="small" class="rules-form">
-    <section>
-      <h3>消息显示</h3>
-      <div class="checks">
-        <NCheckbox v-model:checked="config.showDanmaku">普通弹幕</NCheckbox>
-        <NCheckbox v-model:checked="config.showGift">礼物消息</NCheckbox>
-        <NCheckbox v-model:checked="config.showGiftName">显示礼物名</NCheckbox>
+  <div class="space-y-4 text-xs">
+    <section class="space-y-2">
+      <h3 class="font-medium text-foreground">消息显示</h3>
+      <div class="flex items-center gap-4 flex-wrap">
+        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+          <Checkbox v-model:checked="config.showDanmaku" />
+          <span>普通弹幕</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+          <Checkbox v-model:checked="config.showGift" />
+          <span>礼物消息</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+          <Checkbox v-model:checked="config.showGiftName" />
+          <span>显示礼物名</span>
+        </label>
       </div>
     </section>
-    <section>
-      <h3>合并与限制</h3>
-      <div class="checks">
-        <NCheckbox v-model:checked="config.mergeSimilarDanmaku">合并相似弹幕</NCheckbox>
-        <NCheckbox v-model:checked="config.mergeGift">合并连击礼物</NCheckbox>
-      </div>
-      <div class="fields">
-        <NFormItem label="最大消息积压数">
-          <NInputNumber v-model:value="config.maxNumber" :min="10" :max="300" :update-value-on-input="false" />
-        </NFormItem>
-        <NFormItem label="最低礼物价值">
-          <NInputNumber v-model:value="config.minGiftPrice" :min="0" :step="0.1" :update-value-on-input="false">
-            <template #suffix>元</template>
-          </NInputNumber>
-        </NFormItem>
-      </div>
-    </section>
-    <section>
-      <h3>屏蔽与过滤</h3>
-      <NFormItem label="屏蔽用户名（一行一个）">
-        <NInput v-model:value="config.blockUsers" type="textarea" :rows="3" placeholder="输入要屏蔽的用户名" />
-      </NFormItem>
-      <NFormItem label="屏蔽关键词（一行一个）">
-        <NInput v-model:value="config.blockKeywords" type="textarea" :rows="3" placeholder="输入要屏蔽的关键词" />
-      </NFormItem>
-      <p>规则对新收到的消息生效，可在右侧发送测试消息验证。</p>
-    </section>
-    <NPopconfirm @positive-click="$emit('reset')">
-      <template #trigger><NButton size="small" secondary>恢复默认规则</NButton></template>
-      确定恢复默认功能配置吗？
-    </NPopconfirm>
-  </NForm>
-</template>
 
-<style scoped>
-.rules-form { display: grid; gap: 20px; }
-h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; }
-.checks { display: flex; flex-wrap: wrap; gap: 10px 18px; }
-.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
-p { margin: 0; color: var(--vtsuru-fg-muted); font-size: 12px; }
-</style>
+    <section class="space-y-2">
+      <h3 class="font-medium text-foreground">合并与限制</h3>
+      <div class="flex items-center gap-4 flex-wrap">
+        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+          <Checkbox v-model:checked="config.mergeSimilarDanmaku" />
+          <span>合并相似弹幕</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+          <Checkbox v-model:checked="config.mergeGift" />
+          <span>合并连击礼物</span>
+        </label>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div class="space-y-1">
+          <label class="text-xs text-muted-foreground">最大消息积压数</label>
+          <NInputNumber v-model="config.maxNumber" :min="10" :max="300" />
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs text-muted-foreground">最低礼物价值 (元)</label>
+          <NInputNumber v-model="config.minGiftPrice" :min="0" :step="0.1" />
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-2">
+      <h3 class="font-medium text-foreground">屏蔽与过滤</h3>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">屏蔽用户名（一行一个）</label>
+        <Textarea v-model="config.blockUsers" :rows="3" placeholder="输入要屏蔽的用户名" class="text-xs" />
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">屏蔽关键词（一行一个）</label>
+        <Textarea v-model="config.blockKeywords" :rows="3" placeholder="输入要屏蔽的关键词" class="text-xs" />
+      </div>
+      <p class="text-[11px] text-muted-foreground">规则对新收到的消息生效，可在右侧发送测试消息验证。</p>
+    </section>
+
+    <div class="pt-2">
+      <Popconfirm
+        title="确认恢复默认？"
+        description="确定恢复默认功能配置吗？"
+        @confirm="$emit('reset')"
+      >
+        <Button size="sm" variant="outline">
+          恢复默认规则
+        </Button>
+      </Popconfirm>
+    </div>
+  </div>
+</template>

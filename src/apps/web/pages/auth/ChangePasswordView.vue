@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { NButton, NCard, NInput, NLayoutContent, NFlex, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { postApiAccountVerifyResetPassword } from '@/api/generated/account/account'
 import router from '@/app/router'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { toast } from '@/shared/utils'
 
 import '@/apps/web/styles/web-page.css'
 
 const password = ref('')
 const password2 = ref('')
-const message = useMessage()
 const route = useRoute()
 const key = computed(() => {
   const v = Array.isArray(route.query.key) ? route.query.key[0] : route.query.key
@@ -19,12 +21,12 @@ const key = computed(() => {
 const isLoading = ref(false)
 
 function changePassword() {
-  if (password.value != password2.value) {
-    message.error('两次密码不一致')
+  if (password.value !== password2.value) {
+    toast.error('两次密码不一致')
     return
   }
   if (!key.value) {
-    message.error('链接无效：缺少 key')
+    toast.error('链接无效：缺少 key')
     return
   }
   isLoading.value = true
@@ -33,16 +35,16 @@ function changePassword() {
     password: password.value,
   })
     .then((data) => {
-      if (data.code == 200) {
-        message.success('密码已修改')
+      if (data.code === 200) {
+        toast.success('密码已修改')
         router.push({ name: 'manage-index' })
       } else {
-        message.error(data.message)
+        toast.error(data.message || '修改失败')
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('发生错误')
+      toast.error('发生错误')
     })
     .finally(() => {
       isLoading.value = false
@@ -51,33 +53,32 @@ function changePassword() {
 </script>
 
 <template>
-  <NLayoutContent class="web-center">
-    <div class="web-page web-page--md">
-      <NCard
-        title="修改密码"
-        size="small"
-        bordered
-      >
-        <NFlex vertical>
-          <NInput
-            v-model:value="password"
+  <main class="web-center flex flex-col items-center justify-center min-h-[60vh] p-6">
+    <div class="web-page web-page--md w-full max-w-sm">
+      <Card>
+        <CardHeader class="pb-4">
+          <CardTitle class="text-lg">修改密码</CardTitle>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <Input
+            v-model="password"
             type="password"
             placeholder="新密码"
           />
-          <NInput
-            v-model:value="password2"
+          <Input
+            v-model="password2"
             type="password"
             placeholder="确认密码"
           />
-          <NButton
-            type="primary"
-            :loading="isLoading"
+          <Button
+            class="w-full"
+            :disabled="isLoading"
             @click="changePassword"
           >
-            修改密码
-          </NButton>
-        </NFlex>
-      </NCard>
+            {{ isLoading ? '提交中...' : '修改密码' }}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
-  </NLayoutContent>
+  </main>
 </template>

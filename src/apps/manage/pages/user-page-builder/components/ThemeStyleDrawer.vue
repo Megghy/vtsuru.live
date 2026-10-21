@@ -1,47 +1,47 @@
 <script setup lang="ts">
 import {
-  ColorPaletteOutline,
-  SparklesOutline,
-  ImageOutline,
-  ContrastOutline,
-  TextOutline,
-  CodeSlashOutline,
-  TrashOutline,
-  CheckmarkOutline,
-  RefreshOutline,
   ArrowUndoOutline,
+  CheckmarkOutline,
+  CodeSlashOutline,
+  ColorPaletteOutline,
+  ContrastOutline,
+  ImageOutline,
+  RefreshOutline,
+  SparklesOutline,
+  TextOutline,
+  TrashOutline,
 } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NColorPicker,
-  NDivider,
-  NDrawer,
-  NDrawerContent,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NPopconfirm,
-  NRadio,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSelect,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { BlockPageTheme, PageThemeMode } from '@/apps/user-page/block/schema'
 import { extractThemeFromImage, type ExtractedThemePalette } from '@/apps/user-page/colorExtraction'
 import type { UserPageAppearanceTheme } from '@/apps/user-page/themeConfig'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/shared/ui/sheet'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/shared/ui/tabs'
+import { useMessage } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor, { type BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
@@ -326,347 +326,272 @@ function clearCurrentTheme() {
 </script>
 
 <template>
-  <NDrawer
-    v-model:show="show"
-    :width="460"
-    placement="right"
-    :mask="false"
-    class="theme-style-drawer"
-  >
-    <NDrawerContent
-      closable
-      body-content-style="padding: 16px 20px;"
-    >
-      <template #header>
-        <NFlex
-          align="center"
-          :size="8"
-        >
-          <NIcon
-            size="20"
-            color="var(--vtsuru-primary)"
-          >
-            <ColorPaletteOutline />
-          </NIcon>
-          <span style="font-weight: 600; font-size: 16px">主页外观与主题</span>
-        </NFlex>
-      </template>
+  <Sheet v-model:open="show">
+    <SheetContent side="right" class="w-full sm:max-w-md p-0 flex flex-col">
+      <SheetHeader class="p-4 border-b border-border">
+        <SheetTitle class="flex items-center gap-2 text-base font-semibold">
+          <component :is="ColorPaletteOutline" class="size-5 text-primary" />
+          <span>主页外观与主题</span>
+        </SheetTitle>
+      </SheetHeader>
 
-      <!-- 作用域控制：主页时固定，子页时可选 -->
-      <div class="scope-control-box">
-        <template v-if="isCurrentHome">
-          <div class="scope-tip">
-            <NTag
-              size="small"
-              type="primary"
-              secondary
-              round
-            >
-              全局主页
-            </NTag>
-            <span class="scope-desc">配置将直接应用到主页，并作为全站各页面的默认底色。</span>
-          </div>
-        </template>
-        <template v-else>
-          <NFlex
-            justify="space-between"
-            align="center"
-          >
-            <span class="scope-title">配置作用范围：</span>
-            <NRadioGroup
-              v-model:value="currentScope"
-              size="small"
-            >
-              <NRadioButton value="global"> 全局通用 </NRadioButton>
-              <NRadioButton value="page"> 本页专属 </NRadioButton>
-            </NRadioGroup>
-          </NFlex>
-          <NText
-            depth="3"
-            class="scope-desc"
-          >
-            {{
-              isPageScope
-                ? '当前正在为当前子页面定制独立专属外观，将优先覆盖全局主题。'
-                : '当前正在编辑全局默认外观，未单独设置外观的子页面均会继承此配置。'
-            }}
-          </NText>
-        </template>
-      </div>
-
-      <!-- 智能提取板块 -->
-      <div class="smart-extract-card">
-        <NFlex
-          justify="space-between"
-          align="center"
-        >
-          <NFlex
-            align="center"
-            :size="6"
-          >
-            <NIcon
-              color="var(--vtsuru-primary)"
-              size="16"
-            >
-              <SparklesOutline />
-            </NIcon>
-            <span style="font-weight: 600; font-size: 13px">智能提取配色</span>
-          </NFlex>
-          <NFlex :size="8">
-            <NButton
-              size="tiny"
-              type="primary"
-              secondary
-              :loading="isExtracting"
-              :disabled="!avatarUrl"
-              @click="runExtractFromUrl(avatarUrl, '头像')"
-            >
-              从头像提取
-            </NButton>
-            <NButton
-              v-if="currentBackgroundImageUrl"
-              size="tiny"
-              secondary
-              :loading="isExtracting"
-              @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')"
-            >
-              从壁纸提取
-            </NButton>
-          </NFlex>
-        </NFlex>
-
-        <!-- 提取结果展示与一键应用 -->
-        <div
-          v-if="extractedResult"
-          class="extract-result"
-        >
-          <NFlex
-            align="center"
-            justify="space-between"
-            style="margin-bottom: 8px"
-          >
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <span
-                class="color-dot"
-                :style="{ backgroundColor: extractedResult.primaryColor }"
-              />
-              <span style="font-size: 12px; font-weight: 500">
-                主色：{{ extractedResult.primaryColor }}
-              </span>
-            </NFlex>
-            <NFlex :size="6">
-              <NButton
-                size="tiny"
-                @click="applyExtracted('light')"
-              >
-                套用浅色
-              </NButton>
-              <NButton
-                size="tiny"
-                type="primary"
-                @click="applyExtracted('dark')"
-              >
-                套用深色
-              </NButton>
-            </NFlex>
-          </NFlex>
-
-          <div
-            v-if="extractedResult.swatches.length > 1"
-            class="swatches-row"
-          >
-            <span style="font-size: 11px; color: var(--vtsuru-fg-muted)">候选色彩：</span>
-            <button
-              v-for="swatch in extractedResult.swatches"
-              :key="swatch"
-              type="button"
-              class="swatch-btn"
-              :style="{ backgroundColor: swatch }"
-              :title="`设为主题色 ${swatch}`"
-              @click="applyCustomSwatch(swatch)"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- 推荐精选预设卡片 -->
-      <div class="presets-section">
-        <div class="section-title">推荐预设配色</div>
-        <div class="presets-grid">
-          <button
-            v-for="preset in PRESET_THEMES"
-            :key="preset.id"
-            type="button"
-            class="preset-card"
-            @click="applyPreset(preset)"
-          >
-            <div
-              class="preset-preview"
-              :style="{ backgroundColor: preset.backgroundColor }"
-            >
-              <span
-                class="preset-accent"
-                :style="{ backgroundColor: preset.primaryColor }"
-              />
-              <span
-                class="preset-text"
-                :style="{ color: preset.textColor }"
-              >
-                Aa
-              </span>
+      <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        <!-- 作用域控制：主页时固定，子页时可选 -->
+        <div class="scope-control-box">
+          <template v-if="isCurrentHome">
+            <div class="scope-tip">
+              <Badge variant="default" class="text-xs">
+                全局主页
+              </Badge>
+              <span class="scope-desc">配置将直接应用到主页，并作为全站各页面的默认底色。</span>
             </div>
-            <div class="preset-name">{{ preset.name }}</div>
-          </button>
+          </template>
+          <template v-else>
+            <div class="flex items-center justify-between">
+              <span class="scope-title">配置作用范围：</span>
+              <div class="grid grid-cols-2 gap-1 bg-muted p-0.5 rounded-lg">
+                <Button
+                  size="sm"
+                  :variant="currentScope === 'global' ? 'default' : 'ghost'"
+                  class="h-7 text-xs px-2.5"
+                  @click="currentScope = 'global'"
+                >
+                  全局通用
+                </Button>
+                <Button
+                  size="sm"
+                  :variant="currentScope === 'page' ? 'default' : 'ghost'"
+                  class="h-7 text-xs px-2.5"
+                  @click="currentScope = 'page'"
+                >
+                  本页专属
+                </Button>
+              </div>
+            </div>
+            <span class="scope-desc">
+              {{
+                isPageScope
+                  ? '当前正在为当前子页面定制独立专属外观，将优先覆盖全局主题。'
+                  : '当前正在编辑全局默认外观，未单独设置外观的子页面均会继承此配置。'
+              }}
+            </span>
+          </template>
         </div>
-      </div>
 
-      <NDivider style="margin: 16px 0 12px" />
-
-      <!-- 三大选项卡配置 -->
-      <NTabs
-        v-model:value="activeTab"
-        type="segment"
-        size="small"
-        animated
-      >
-        <NTabPane
-          name="colors"
-          tab="色彩与模式"
-        >
-          <div class="tab-body">
-            <NForm
-              label-placement="top"
-              size="small"
-            >
-              <NFlex
-                :wrap="true"
-                style="gap: 12px"
+        <!-- 智能提取板块 -->
+        <div class="smart-extract-card">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
+              <component :is="SparklesOutline" class="size-4 text-primary" />
+              <span>智能提取配色</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-6 px-2 text-xs"
+                :disabled="isExtracting || !avatarUrl"
+                @click="runExtractFromUrl(avatarUrl, '头像')"
               >
-                <NFormItem
-                  label="主题主色"
-                  class="field-col"
-                >
-                  <NColorPicker
-                    v-model:value="primaryColor"
-                    :modes="['hex']"
-                  />
-                </NFormItem>
-                <NFormItem
-                  label="内容底色"
-                  class="field-col"
-                >
-                  <NColorPicker
-                    v-model:value="backgroundColor"
-                    :modes="['hex']"
-                  />
-                </NFormItem>
-                <NFormItem
-                  label="主题模式"
-                  class="field-col"
-                >
-                  <NSelect
-                    v-model:value="themeMode"
-                    :options="[
-                      { label: '跟随站点 (自适应)', value: 'auto' },
-                      { label: '强制浅色', value: 'light' },
-                      { label: '强制深色', value: 'dark' },
-                    ]"
-                  />
-                </NFormItem>
-              </NFlex>
-
-              <NDivider style="margin: 12px 0 8px"> 文字与对比度 </NDivider>
-              <ThemeTextColorEditor :target="textColorTarget" />
-            </NForm>
+                从头像提取
+              </Button>
+              <Button
+                v-if="currentBackgroundImageUrl"
+                size="sm"
+                variant="outline"
+                class="h-6 px-2 text-xs"
+                :disabled="isExtracting"
+                @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')"
+              >
+                从壁纸提取
+              </Button>
+            </div>
           </div>
-        </NTabPane>
 
-        <NTabPane
-          name="background"
-          tab="壁纸与背景"
-        >
-          <div class="tab-body">
+          <!-- 提取结果展示与一键应用 -->
+          <div
+            v-if="extractedResult"
+            class="extract-result"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-1.5 text-xs font-medium">
+                <span
+                  class="color-dot"
+                  :style="{ backgroundColor: extractedResult.primaryColor }"
+                />
+                <span>主色：{{ extractedResult.primaryColor }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-6 px-2 text-xs"
+                  @click="applyExtracted('light')"
+                >
+                  套用浅色
+                </Button>
+                <Button
+                  size="sm"
+                  class="h-6 px-2 text-xs"
+                  @click="applyExtracted('dark')"
+                >
+                  套用深色
+                </Button>
+              </div>
+            </div>
+
+            <div
+              v-if="extractedResult.swatches.length > 1"
+              class="swatches-row"
+            >
+              <span class="text-[11px] text-muted-foreground">候选色彩：</span>
+              <button
+                v-for="swatch in extractedResult.swatches"
+                :key="swatch"
+                type="button"
+                class="swatch-btn"
+                :style="{ backgroundColor: swatch }"
+                :title="`设为主题色 ${swatch}`"
+                @click="applyCustomSwatch(swatch)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 推荐精选预设卡片 -->
+        <div class="presets-section">
+          <div class="section-title">推荐预设配色</div>
+          <div class="presets-grid">
+            <button
+              v-for="preset in PRESET_THEMES"
+              :key="preset.id"
+              type="button"
+              class="preset-card"
+              @click="applyPreset(preset)"
+            >
+              <div
+                class="preset-preview"
+                :style="{ backgroundColor: preset.backgroundColor }"
+              >
+                <span
+                  class="preset-accent"
+                  :style="{ backgroundColor: preset.primaryColor }"
+                />
+                <span
+                  class="preset-text"
+                  :style="{ color: preset.textColor }"
+                >
+                  Aa
+                </span>
+              </div>
+              <div class="preset-name">{{ preset.name }}</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="h-px bg-border my-1" />
+
+        <!-- 三大选项卡配置 -->
+        <Tabs v-model="activeTab" class="w-full">
+          <TabsList class="grid grid-cols-3 w-full h-8">
+            <TabsTrigger value="colors" class="text-xs">色彩与模式</TabsTrigger>
+            <TabsTrigger value="background" class="text-xs">壁纸与背景</TabsTrigger>
+            <TabsTrigger value="advanced" class="text-xs">排版与质感</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="colors" class="pt-3 flex flex-col gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">主题主色</label>
+                <ColorPicker v-model="primaryColor" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">内容底色</label>
+                <ColorPicker v-model="backgroundColor" />
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-muted-foreground">主题模式</label>
+              <Select v-model="themeMode">
+                <SelectTrigger class="h-8 text-xs">
+                  <SelectValue placeholder="主题模式" />
+                </SelectTrigger>
+                <SelectContent class="text-xs">
+                  <SelectItem value="auto">跟随站点 (自适应)</SelectItem>
+                  <SelectItem value="light">强制浅色</SelectItem>
+                  <SelectItem value="dark">强制深色</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div class="pt-2 border-t border-border flex flex-col gap-2">
+              <span class="text-xs font-semibold text-muted-foreground uppercase">文字与对比度</span>
+              <ThemeTextColorEditor :target="textColorTarget" />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="background" class="pt-3">
             <BackgroundSettingsEditor
               :target="backgroundTarget"
               :none-hint="isPageScope ? '未设置时继承全局默认壁纸背景。' : '未设置时使用站点默认背景。'"
             />
-          </div>
-        </NTabPane>
+          </TabsContent>
 
-        <NTabPane
-          name="advanced"
-          tab="排版与质感"
-        >
-          <div class="tab-body">
+          <TabsContent value="advanced" class="pt-3 flex flex-col gap-3">
             <ThemeAdvancedOptions :target="appearanceTarget" />
 
-            <NDivider style="margin: 16px 0 12px"> 自定义 CSS </NDivider>
-            <NFlex
-              justify="space-between"
-              align="center"
-              class="css-bar"
-            >
-              <span class="css-label">
-                {{ editor.settings.value.customCss ? '已配置全局 CSS' : '未配置全局 CSS' }}
-              </span>
-              <NButton
-                size="small"
-                secondary
-                @click="cssEditorVisible = true"
-              >
-                <template #icon>
-                  <NIcon><CodeSlashOutline /></NIcon>
-                </template>
-                编辑 CSS
-              </NButton>
-            </NFlex>
-          </div>
-        </NTabPane>
-      </NTabs>
+            <div class="pt-2 border-t border-border flex flex-col gap-2">
+              <span class="text-xs font-semibold text-muted-foreground uppercase">自定义 CSS</span>
+              <div class="flex items-center justify-between p-2.5 rounded-lg border border-border bg-muted text-xs">
+                <span class="text-muted-foreground">
+                  {{ editor.settings.value.customCss ? '已配置全局 CSS' : '未配置全局 CSS' }}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-7 text-xs"
+                  @click="cssEditorVisible = true"
+                >
+                  <component :is="CodeSlashOutline" class="size-3.5 mr-1" />
+                  编辑 CSS
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
 
-      <template #footer>
-        <NFlex
-          justify="space-between"
-          align="center"
-          style="width: 100%"
+      <SheetFooter class="p-3 border-t border-border flex items-center justify-between sm:justify-between">
+        <Popconfirm
+          title="确定要清空当前的样式与主题配置吗？"
+          ok-text="确定清空"
+          cancel-text="取消"
+          @confirm="clearCurrentTheme"
         >
-          <NPopconfirm
-            @positive-click="clearCurrentTheme"
+          <Button
+            size="sm"
+            variant="destructive"
+            class="h-8 text-xs"
           >
-            <template #trigger>
-              <NButton
-                size="small"
-                quaternary
-                type="error"
-              >
-                <template #icon>
-                  <NIcon><TrashOutline /></NIcon>
-                </template>
-                {{ isPageScope ? '重置为继承全局' : '清空当前主题' }}
-              </NButton>
-            </template>
-            确定要清空当前的样式与主题配置吗？
-          </NPopconfirm>
+            <component :is="TrashOutline" class="size-3.5 mr-1" />
+            {{ isPageScope ? '重置为继承全局' : '清空当前主题' }}
+          </Button>
+        </Popconfirm>
 
-          <NButton
-            size="small"
-            type="primary"
-            @click="show = false"
-          >
-            <template #icon>
-              <NIcon><CheckmarkOutline /></NIcon>
-            </template>
-            完成
-          </NButton>
-        </NFlex>
-      </template>
+        <Button
+          size="sm"
+          class="h-8 text-xs"
+          @click="show = false"
+        >
+          <component :is="CheckmarkOutline" class="size-3.5 mr-1" />
+          完成
+        </Button>
+      </SheetFooter>
 
       <GlobalCssEditorModal v-model:show="cssEditorVisible" />
-    </NDrawerContent>
-  </NDrawer>
+    </SheetContent>
+  </Sheet>
 </template>
 
 <style scoped>
@@ -675,7 +600,6 @@ function clearCurrentTheme() {
   border: 1px solid var(--vtsuru-border);
   border-radius: 8px;
   padding: 10px 14px;
-  margin-bottom: 12px;
 }
 
 .scope-tip {
@@ -702,7 +626,6 @@ function clearCurrentTheme() {
   border: 1px dashed var(--vtsuru-border);
   border-radius: 8px;
   padding: 10px 14px;
-  margin-bottom: 14px;
 }
 
 .extract-result {
@@ -798,25 +721,5 @@ function clearCurrentTheme() {
   color: var(--vtsuru-fg);
   text-align: center;
   font-weight: 500;
-}
-
-.tab-body {
-  padding-top: 10px;
-}
-
-.field-col {
-  flex: 1;
-  min-width: 180px;
-}
-
-.css-bar {
-  background: var(--vtsuru-bg-muted);
-  padding: 8px 12px;
-  border-radius: 6px;
-}
-
-.css-label {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
 }
 </style>

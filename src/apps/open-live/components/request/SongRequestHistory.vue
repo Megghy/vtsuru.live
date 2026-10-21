@@ -1,295 +1,318 @@
 <script setup lang="ts">
 import { ArrowCounterclockwise24Regular, Delete24Filled } from '@vicons/fluent'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NDataTable,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NPopconfirm,
-  NFlex,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
-import { computed, h, ref } from 'vue'
+import { format } from 'date-fns'
+import { computed, ref } from 'vue'
 
 import type { SongRequestInfo } from '@/api/api-models'
 import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Pagination } from '@/shared/ui/pagination'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
-// 使用useLiveRequest
 const songRequest = useLiveRequest()
 
-const table = ref()
+const currentPage = ref(1)
+const pageSize = ref(10)
+const selectedStatusFilter = ref<string>('all')
 
-const statusFilterOptions = computed(() => {
-  return Object.values(SongRequestStatus)
-    .filter((t) => /^\d+$/.test(t.toString()))
-    .map((t) => {
-      return {
-        label: songRequest.STATUS_MAP[t as SongRequestStatus],
-        value: t,
-      }
+const statusFilterOptions = [
+  { label: '全部状态', value: 'all' },
+  { label: '等待中', value: String(SongRequestStatus.Waiting) },
+  { label: '正在演唱', value: String(SongRequestStatus.Singing) },
+  { label: '已完成', value: String(SongRequestStatus.Finish) },
+  { label: '已取消', value: String(SongRequestStatus.Cancel) },
+]
+
+const filteredSongs = computed(() => {
+  let list = songRequest.songs || []
+
+  // 状态筛选
+  if (selectedStatusFilter.value !== 'all') {
+    const targetStatus = Number(selectedStatusFilter.value)
+    list = list.filter((s) => s.status === targetStatus)
+  }
+
+  // 曲名筛选
+  if (songRequest.filterSongName) {
+    const term = songRequest.filterSongName.toLowerCase()
+    list = list.filter((s) =>
+      songRequest.filterSongNameContains
+        ? s.songName.toLowerCase().includes(term)
+        : s.songName.toLowerCase() === term,
+    )
+  }
+
+  // 用户筛选
+  if (songRequest.filterName) {
+    const term = songRequest.filterName.toLowerCase()
+    list = list.filter((s) => {
+      const uName = (s.user?.name || '').toLowerCase()
+      return songRequest.filterNameContains ? uName.includes(term) : uName === term
     })
+  }
+
+  return list
 })
 
-const columns: DataTableColumns<SongRequestInfo> = [
-  {
-    title: '曲名',
-    key: 'songName',
-  },
-  {
-    title: '用户名',
-    key: 'user.name',
-    render: (row: SongRequestInfo) => {
-      return h(
-        NTooltip,
-        { trigger: 'hover' },
-        {
-          trigger: () =>
-            h(
-              NTag,
-              { bordered: false, size: 'small' },
-              row.from == 3 // Manual
-                ? () => h(NText, { italic: true }, () => '手动添加')
-                : () => row.user?.name || '未知用户',
-            ),
-          default: () => (row.from == 3 ? '就是主播自己' : row.user?.uid || '未知ID'),
-        },
-      )
-    },
-  },
-  {
-    title: '来自',
-    key: 'from',
-    render(row: SongRequestInfo) {
-      let fromType: 'info' | 'success' | 'default' | 'error' = 'info'
-      switch (row.from) {
-        case SongRequestFrom.Danmaku: {
-          // Danmaku
-          fromType = 'info'
-          break
-        }
-        case SongRequestFrom.SC: {
-          // SC
-          fromType = 'error'
-          break
-        }
-        case SongRequestFrom.Web: {
-          // Web
-          fromType = 'success'
-          break
-        }
-        case SongRequestFrom.Manual: {
-          // Manual
-          fromType = 'default'
-          break
-        }
-      }
-      return h(NTag, { size: 'small', type: fromType }, () => {
-        switch (row.from) {
-          case SongRequestFrom.Danmaku: {
-            return '弹幕'
-          }
-          case SongRequestFrom.SC: {
-            return `SuperChat${row.price ? ` | ${row.price}` : ''}`
-          }
-          case SongRequestFrom.Gift: {
-            return `礼物${row.price ? ` | ${row.price}` : ''}`
-          }
-          case SongRequestFrom.Manual: {
-            return '手动添加'
-          }
-          case SongRequestFrom.Web: {
-            return '网页添加'
-          }
-          default:
-            return '未知'
-        }
-      })
-    },
-  },
-  {
-    title: '状态',
-    key: 'status',
-    filter(value, row: SongRequestInfo) {
-      return ~row.status == Number(value)
-    },
-    filterOptions: statusFilterOptions.value,
-    render(row: SongRequestInfo) {
-      let statusType: 'info' | 'success' | 'warning' | 'error' = 'info'
-      switch (row.status) {
-        case SongRequestStatus.Singing: {
-          statusType = 'success'
-          break
-        }
-        case SongRequestStatus.Waiting: {
-          statusType = 'warning'
-          break
-        }
-        case SongRequestStatus.Finish: {
-          statusType = 'info'
-          break
-        }
-        case SongRequestStatus.Cancel: {
-          statusType = 'error'
-          break
-        }
-      }
-      return h(
-        NTag,
-        {
-          type: statusType,
-          size: 'small',
-          bordered: false,
-        },
-        () => songRequest.STATUS_MAP[row.status],
-      )
-    },
-  },
-  {
-    title: '时间',
-    key: 'time',
-    sorter: (a: SongRequestInfo, b: SongRequestInfo) => a.createAt - b.createAt,
-    render: (row: SongRequestInfo) => {
-      return h(NTime, { time: row.createAt })
-    },
-  },
-  {
-    title: '操作',
-    key: 'manage',
-    width: 100,
-    render(row: SongRequestInfo) {
-      return h(
-        NFlex,
-        {
-          justify: 'center',
-          size: 10,
-        },
-        () => [
-          row.status == SongRequestStatus.Finish || row.status == SongRequestStatus.Cancel
-            ? h(NTooltip, null, {
-                trigger: () =>
-                  h(
-                    NButton,
-                    {
-                      size: 'small',
-                      type: 'info',
-                      circle: true,
-                      loading: songRequest.isLoading,
-                      onClick: () => {
-                        songRequest.updateSongStatus(row, SongRequestStatus.Waiting)
-                      },
-                    },
-                    {
-                      icon: () => h(NIcon, { component: ArrowCounterclockwise24Regular }),
-                    },
-                  ),
-                default: () => '重新放回等待列表',
-              })
-            : undefined,
-          h(
-            NPopconfirm,
-            { onPositiveClick: () => songRequest.deleteSongs([row]) },
-            {
-              trigger: () =>
-                h(NTooltip, null, {
-                  trigger: () =>
-                    h(
-                      NButton,
-                      {
-                        size: 'small',
-                        type: 'error',
-                        circle: true,
-                        loading: songRequest.isLoading,
-                      },
-                      {
-                        icon: () => h(NIcon, { component: Delete24Filled }),
-                      },
-                    ),
-                  default: () => '删除记录',
-                }),
-              default: () => '确定删除?',
-            },
-          ),
-        ],
-      )
-    },
-  },
-]
+const paginatedSongs = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredSongs.value.slice(start, start + pageSize.value)
+})
+
+function formatTime(time: number | string | Date) {
+  try {
+    return format(new Date(time), 'yyyy-MM-dd HH:mm:ss')
+  } catch {
+    return ''
+  }
+}
+
+function getFromBadge(row: SongRequestInfo) {
+  switch (row.from) {
+    case SongRequestFrom.Danmaku:
+      return { text: '弹幕', class: 'border-sky-500/40 text-sky-600 bg-sky-500/10' }
+    case SongRequestFrom.SC:
+      return { text: `SuperChat${row.price ? ` | ${row.price}` : ''}`, class: 'border-rose-500/40 text-rose-600 bg-rose-500/10' }
+    case SongRequestFrom.Gift:
+      return { text: `礼物${row.price ? ` | ${row.price}` : ''}`, class: 'border-amber-500/40 text-amber-600 bg-amber-500/10' }
+    case SongRequestFrom.Manual:
+      return { text: '手动添加', class: 'border-border text-muted-foreground bg-muted/40' }
+    case SongRequestFrom.Web:
+      return { text: '网页添加', class: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' }
+    default:
+      return { text: '未知', class: 'border-border text-muted-foreground' }
+  }
+}
+
+function getStatusBadge(status: SongRequestStatus) {
+  switch (status) {
+    case SongRequestStatus.Singing:
+      return { text: '正在演唱', class: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' }
+    case SongRequestStatus.Waiting:
+      return { text: '等待中', class: 'border-amber-500/40 text-amber-600 bg-amber-500/10' }
+    case SongRequestStatus.Finish:
+      return { text: '已完成', class: 'border-sky-500/40 text-sky-600 bg-sky-500/10' }
+    case SongRequestStatus.Cancel:
+      return { text: '已取消', class: 'border-destructive/40 text-destructive bg-destructive/10' }
+    default:
+      return { text: songRequest.STATUS_MAP[status] || '未知', class: 'border-border' }
+  }
+}
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-  >
-    <NFlex>
-      <NInputGroup style="width: 250px">
-        <NInputGroupLabel> 筛选曲名 </NInputGroupLabel>
-        <NInput
+  <div class="flex flex-col gap-3">
+    <!-- 筛选工具栏 -->
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <div class="flex items-center gap-1.5 w-[250px]">
+        <Input
           :value="songRequest.filterSongName"
-          clearable
           placeholder="搜索歌曲..."
-          @update:value="songRequest.filterSongName = $event"
-        >
-          <template #suffix>
-            <NCheckbox
-              :checked="songRequest.filterSongNameContains"
-              @update:checked="songRequest.filterSongNameContains = $event"
-            >
-              包含
-            </NCheckbox>
-          </template>
-        </NInput>
-      </NInputGroup>
-      <NInputGroup style="width: 250px">
-        <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
-        <NInput
+          class="h-8 text-xs flex-1"
+          @input="songRequest.filterSongName = ($event.target as HTMLInputElement).value; currentPage = 1"
+        />
+        <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
+          <Checkbox
+            :checked="songRequest.filterSongNameContains"
+            @update:checked="songRequest.filterSongNameContains = $event"
+          />
+          <span>包含</span>
+        </label>
+      </div>
+
+      <div class="flex items-center gap-1.5 w-[250px]">
+        <Input
           :value="songRequest.filterName"
-          clearable
           placeholder="搜索用户..."
-          @update:value="songRequest.filterName = $event"
+          class="h-8 text-xs flex-1"
+          @input="songRequest.filterName = ($event.target as HTMLInputElement).value; currentPage = 1"
+        />
+        <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
+          <Checkbox
+            :checked="songRequest.filterNameContains"
+            @update:checked="songRequest.filterNameContains = $event"
+          />
+          <span>包含</span>
+        </label>
+      </div>
+
+      <div class="w-[120px]">
+        <Select
+          v-model="selectedStatusFilter"
+          @update:model-value="currentPage = 1"
         >
-          <template #suffix>
-            <NCheckbox
-              :checked="songRequest.filterNameContains"
-              @update:checked="songRequest.filterNameContains = $event"
+          <SelectTrigger class="h-8 text-xs w-full">
+            <SelectValue placeholder="状态筛选" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in statusFilterOptions"
+              :key="opt.value"
+              :value="opt.value"
+              class="text-xs"
             >
-              包含
-            </NCheckbox>
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="border rounded-md overflow-hidden bg-card">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="text-xs">曲名</TableHead>
+            <TableHead class="text-xs">用户名</TableHead>
+            <TableHead class="text-xs">来自</TableHead>
+            <TableHead class="text-xs">状态</TableHead>
+            <TableHead class="text-xs">时间</TableHead>
+            <TableHead class="text-xs text-right w-[100px]">操作</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <template v-if="paginatedSongs.length > 0">
+            <TableRow
+              v-for="row in paginatedSongs"
+              :key="row.id"
+              :class="row.status === SongRequestStatus.Singing || row.status === SongRequestStatus.Waiting ? 'bg-primary/5 hover:bg-primary/10' : ''"
+            >
+              <TableCell class="text-xs font-medium">
+                {{ row.songName }}
+              </TableCell>
+
+              <TableCell class="text-xs">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Badge
+                        variant="outline"
+                        class="text-[10px] h-4.5 px-1.5 cursor-help"
+                      >
+                        {{ row.from === 3 ? '手动添加' : row.user?.name || '未知用户' }}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {{ row.from === 3 ? '就是主播自己' : row.user?.uid || '未知ID' }}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
+
+              <TableCell class="text-xs">
+                <Badge
+                  variant="outline"
+                  class="text-[10px] h-4.5 px-1.5"
+                  :class="getFromBadge(row).class"
+                >
+                  {{ getFromBadge(row).text }}
+                </Badge>
+              </TableCell>
+
+              <TableCell class="text-xs">
+                <Badge
+                  variant="outline"
+                  class="text-[10px] h-4.5 px-1.5"
+                  :class="getStatusBadge(row.status).class"
+                >
+                  {{ getStatusBadge(row.status).text }}
+                </Badge>
+              </TableCell>
+
+              <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
+                {{ formatTime(row.createAt) }}
+              </TableCell>
+
+              <TableCell class="text-xs text-right">
+                <div class="flex items-center justify-end gap-1.5">
+                  <TooltipProvider>
+                    <Tooltip v-if="row.status === SongRequestStatus.Finish || row.status === SongRequestStatus.Cancel">
+                      <TooltipTrigger as-child>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          class="h-6 w-6 p-0 text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+                          :disabled="songRequest.isLoading"
+                          @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)"
+                        >
+                          <ArrowCounterclockwise24Regular class="size-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>重新放回等待列表</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <div>
+                          <Popconfirm
+                            title="确认删除"
+                            @positive-click="songRequest.deleteSongs([row])"
+                          >
+                            <template #trigger>
+                              <Button
+                                size="xs"
+                                variant="ghost"
+                                class="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                :disabled="songRequest.isLoading"
+                              >
+                                <Delete24Filled class="size-3.5" />
+                              </Button>
+                            </template>
+                            确定删除此点歌记录？
+                          </Popconfirm>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>删除记录</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </TableCell>
+            </TableRow>
           </template>
-        </NInput>
-      </NInputGroup>
-    </NFlex>
-    <NDataTable
-      ref="table"
-      size="small"
-      :columns="columns"
-      :data="songRequest.songs"
-      :bordered="false"
-      :loading="songRequest.isLoading"
-      :pagination="{ pageSize: 10 }"
-      :row-class-name="
-        (row, index) =>
-          row.status === SongRequestStatus.Singing || row.status === SongRequestStatus.Waiting ? 'song-active' : ''
-      "
-    />
-  </NFlex>
+          <template v-else>
+            <TableRow>
+              <TableCell colspan="6" class="text-center py-8">
+                <Empty description="暂无符合条件的点歌记录" />
+              </TableCell>
+            </TableRow>
+          </template>
+        </TableBody>
+      </Table>
+    </div>
+
+    <!-- 分页 -->
+    <div
+      v-if="filteredSongs.length > pageSize"
+      class="flex justify-end pt-2"
+    >
+      <Pagination
+        v-model:page="currentPage"
+        v-model:page-size="pageSize"
+        :total="filteredSongs.length"
+        size="small"
+      />
+    </div>
+  </div>
 </template>
-
-<style>
-.song-active {
-  color: var(--vtsuru-fg);
-  background-color: rgba(var(--vtsuru-primary-rgb), 0.08);
-}
-
-.song-active:hover {
-  background-color: rgba(var(--vtsuru-primary-rgb), 0.12) !important;
-}
-</style>

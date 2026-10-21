@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { LineHorizontal320Regular, Add20Regular, QuestionCircle20Regular } from '@vicons/fluent'
-import { NButton, NDrawer, NDrawerContent, NFlex, NIcon, NModal, NPopover, NTag, NText } from 'naive-ui'
+import { Add20Regular, LineHorizontal320Regular, QuestionCircle20Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
+
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 
 import { useAssistantStore } from '../store/useAssistantStore'
 import AssistantChatWindow from './AssistantChatWindow.vue'
@@ -33,180 +38,101 @@ function onClose() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="store.visible"
-    preset="card"
-    class="assistant-modal"
-    :title="undefined"
-    :bordered="false"
-    :mask-closable="true"
-    @after-leave="onClose"
+  <Dialog
+    :open="store.visible"
+    @update:open="!$event && onClose()"
   >
-    <template #header>
-      <NFlex
-        align="center"
-        :size="8"
-        :wrap="false"
-        class="assistant-modal__header"
-      >
-        <NButton
-          class="assistant-modal__menu-btn"
-          size="tiny"
-          quaternary
-          circle
-          @click="drawerVisible = true"
-        >
-          <template #icon>
-            <NIcon :component="LineHorizontal320Regular" />
-          </template>
-        </NButton>
-        <NText class="assistant-modal__brand"> VTsuru 助手 </NText>
-        <NPopover
-          trigger="hover"
-          placement="bottom-start"
-          style="max-width: 300px"
-        >
-          <template #trigger>
-            <NButton
-              size="tiny"
-              quaternary
-              circle
-              class="assistant-modal__help"
-            >
-              <template #icon>
-                <NIcon :component="QuestionCircle20Regular" />
-              </template>
-            </NButton>
-          </template>
-          <div class="assistant-features">
-            <div class="assistant-features__title">我能帮你做这些</div>
-            <div
-              v-for="f in features"
-              :key="f.title"
-              class="assistant-features__item"
-            >
-              <NText strong>
-                {{ f.title }}
-              </NText>
-              <NText
-                depth="3"
-                class="assistant-features__desc"
+    <DialogContent class="sm:max-w-4xl h-[85vh] max-h-[850px] p-0 flex flex-col overflow-hidden gap-0">
+      <DialogHeader class="px-4 py-3 border-b border-border/80 flex flex-row items-center justify-between space-y-0 shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            class="assistant-modal__menu-btn size-7 -ml-1 text-muted-foreground"
+            @click="drawerVisible = true"
+          >
+            <component :is="LineHorizontal320Regular" class="size-4" />
+          </Button>
+
+          <DialogTitle class="text-sm font-semibold text-foreground">VTsuru 助手</DialogTitle>
+
+          <Popover>
+            <PopoverTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-6 text-muted-foreground hover:text-foreground"
               >
-                {{ f.desc }}
-              </NText>
-            </div>
-          </div>
-        </NPopover>
-        <NTag
-          size="small"
-          :bordered="false"
-          type="info"
-        >
-          {{ ctx.title || '管理后台' }}
-        </NTag>
-      </NFlex>
-    </template>
-    <template #header-extra>
-      <NButton
-        size="tiny"
-        quaternary
-        @click="store.reset"
-      >
-        <template #icon>
-          <NIcon :component="Add20Regular" />
-        </template>
-        新对话
-      </NButton>
-    </template>
+                <component :is="QuestionCircle20Regular" class="size-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-72 p-3 text-xs space-y-2">
+              <strong class="text-xs font-semibold block text-foreground">我能帮你做这些</strong>
+              <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                <div
+                  v-for="f in features"
+                  :key="f.title"
+                  class="space-y-0.5"
+                >
+                  <strong class="text-foreground block text-[11px]">{{ f.title }}</strong>
+                  <p class="text-muted-foreground text-[11px] leading-relaxed">{{ f.desc }}</p>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
-    <div class="assistant-modal__layout">
-      <aside class="assistant-modal__sidebar">
-        <AssistantConversationList />
-      </aside>
+          <Badge
+            variant="secondary"
+            class="text-[10px] h-5 px-1.5 font-normal text-muted-foreground bg-muted"
+          >
+            {{ ctx.title || '管理后台' }}
+          </Badge>
+        </div>
 
-      <div class="assistant-modal__main">
-        <div class="assistant-modal__body">
+        <div class="flex items-center gap-1 mr-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 text-xs flex items-center gap-1"
+            @click="store.reset"
+          >
+            <component :is="Add20Regular" class="size-3.5" />
+            新对话
+          </Button>
+        </div>
+      </DialogHeader>
+
+      <div class="assistant-modal__layout flex flex-1 min-h-0 overflow-hidden p-4 gap-3">
+        <aside class="assistant-modal__sidebar w-52 shrink-0 border-r border-border/60 pr-3 overflow-hidden flex flex-col">
+          <AssistantConversationList />
+        </aside>
+
+        <div class="assistant-modal__main flex-1 min-w-0 flex flex-col min-h-0 overflow-hidden">
           <AssistantChatWindow />
         </div>
       </div>
-    </div>
+    </DialogContent>
+  </Dialog>
 
-    <!-- 窄屏: 会话列表抽屉 -->
-    <NDrawer
-      v-model:show="drawerVisible"
-      :width="260"
-      placement="left"
-    >
-      <NDrawerContent
-        title="历史会话"
-        closable
-      >
+  <!-- 窄屏: 会话列表抽屉 -->
+  <Sheet
+    :open="drawerVisible"
+    @update:open="drawerVisible = $event"
+  >
+    <SheetContent side="left" class="w-64 p-4 flex flex-col">
+      <SheetHeader class="pb-3 border-b border-border/60">
+        <SheetTitle class="text-sm font-semibold">历史会话</SheetTitle>
+      </SheetHeader>
+      <div class="flex-1 min-h-0 pt-3">
         <AssistantConversationList @click="drawerVisible = false" />
-      </NDrawerContent>
-    </NDrawer>
-  </NModal>
+      </div>
+    </SheetContent>
+  </Sheet>
 </template>
 
 <style scoped>
-.assistant-modal__header {
-  min-width: 0;
-}
-.assistant-modal__brand {
-  font-size: 15px;
-  font-weight: 600;
-}
 .assistant-modal__menu-btn {
   display: none;
-}
-
-.assistant-features {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.assistant-features__title {
-  font-weight: 600;
-  font-size: 13px;
-  margin-bottom: 2px;
-}
-.assistant-features__item {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.assistant-features__desc {
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.assistant-modal__layout {
-  display: flex;
-  gap: 12px;
-  height: 100%;
-  min-height: 0;
-}
-.assistant-modal__sidebar {
-  flex: 0 0 200px;
-  min-width: 0;
-  border-right: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
-  padding-right: 12px;
-}
-.assistant-modal__main {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.assistant-modal__body {
-  flex: 1 1 0;
-  min-height: 0;
-}
-
-:deep(.n-card__content) {
-  display: flex;
-  flex-direction: column;
 }
 
 @media (max-width: 720px) {
@@ -215,25 +141,6 @@ function onClose() {
   }
   .assistant-modal__sidebar {
     display: none;
-  }
-}
-</style>
-
-<!-- 非 scoped：class 透传到 NModal 内部 card 元素上，scoped 属性无法命中 -->
-<style>
-.assistant-modal {
-  width: 840px;
-  max-width: calc(100vw - 32px);
-}
-.assistant-modal .assistant-modal__layout {
-  height: min(64vh, 560px);
-}
-@media (max-width: 720px) {
-  .assistant-modal {
-    width: calc(100vw - 24px);
-  }
-  .assistant-modal .assistant-modal__layout {
-    height: 70vh;
   }
 }
 </style>

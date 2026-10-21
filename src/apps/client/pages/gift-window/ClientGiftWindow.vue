@@ -6,7 +6,6 @@ import {
   VehicleShip20Regular,
 } from '@vicons/fluent'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { NIcon, NSpin } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
@@ -166,10 +165,12 @@ watch(
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="!setting"
-    show
-  />
+    class="flex items-center justify-center w-full h-full min-h-[100px]"
+  >
+    <div class="size-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+  </div>
   <div
     v-else
     class="gw"
@@ -181,14 +182,14 @@ watch(
     <div class="gw-header">
       <span class="gw-header__title">礼物与排行</span>
       <div class="gw-header__status">
-        <span
-          v-if="onlineGuardList.length > 0"
-          class="gw-guard-badge"
-          title="当前在场大航海人数"
-        >
-          <NIcon :component="VehicleShip20Regular" />
-          <span>在场 {{ onlineGuardList.length }}</span>
-        </span>
+          <span
+            v-if="onlineGuardList.length > 0"
+            class="gw-guard-badge"
+            title="当前在场大航海人数"
+          >
+            <VehicleShip20Regular class="size-3.5 inline-block" />
+            <span>在场 {{ onlineGuardList.length }}</span>
+          </span>
       </div>
     </div>
     <div class="gw-body">
@@ -278,10 +279,7 @@ watch(
             :class="{ active: activeRankTab === 'thank_summary' }"
             @click="activeRankTab = 'thank_summary'"
           >
-            <NIcon
-              :component="Gift20Regular"
-              class="gw-tab-icon"
-            />
+            <Gift20Regular class="gw-tab-icon size-3.5" />
             <span>下播感谢</span>
           </button>
           <button
@@ -290,10 +288,7 @@ watch(
             :class="{ active: activeRankTab === 'rank' }"
             @click="activeRankTab = 'rank'"
           >
-            <NIcon
-              :component="Trophy20Regular"
-              class="gw-tab-icon"
-            />
+            <Trophy20Regular class="gw-tab-icon size-3.5" />
             <span>打赏榜 ({{ rankList.length }})</span>
           </button>
           <button
@@ -302,10 +297,7 @@ watch(
             :class="{ active: activeRankTab === 'online_guard' }"
             @click="activeRankTab = 'online_guard'"
           >
-            <NIcon
-              :component="VehicleShip20Regular"
-              class="gw-tab-icon"
-            />
+            <VehicleShip20Regular class="gw-tab-icon size-3.5" />
             <span>在场舰长 ({{ onlineGuardList.length }})</span>
           </button>
         </div>
@@ -336,7 +328,7 @@ watch(
                 v-else
                 class="gw-rank-guard-icon"
               >
-                <NIcon :component="VehicleShip20Regular" />
+                <VehicleShip20Regular class="size-3.5" />
               </span>
 
               <div class="gw-avatar-wrap">

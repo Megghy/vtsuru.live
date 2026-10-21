@@ -9,13 +9,19 @@ import {
   Mail24Regular,
   Send24Regular,
 } from '@vicons/fluent'
-import { NAvatar, NButton, NCheckbox, NIcon, NInput, NTag, useMessage } from 'naive-ui'
 import { onBeforeUnmount, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type { UserInfo } from '@/api/api-models'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { AVATAR_URL } from '@/shared/config'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Input } from '@/shared/ui/input'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
+import { useMessage } from '@/shared/utils'
 
 import { useQuestionComposer } from './useQuestionComposer'
 
@@ -37,7 +43,9 @@ const target = toRef(props, 'userInfo')
 const composer = useQuestionComposer(target, () => emit('submitted'))
 const {
   addFiles,
+  allowAnonymous,
   allowDefaultPublic,
+  allowUnregistedUser,
   canSubmit,
   canUploadImages,
   characterCount,
@@ -129,42 +137,44 @@ async function submit() {
     :class="{ 'is-embedded': embedded }"
   >
     <header class="composer-header">
-      <NAvatar
-        round
-        :size="48"
-        :src="
-          userInfo?.faceUrl ||
-          userInfo?.streamerInfo?.faceUrl ||
-          (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=96` : undefined)
-        "
-        :img-props="{ referrerpolicy: 'no-referrer', alt: `${userInfo?.name || '主播'} 的头像` }"
-      />
+      <Avatar class="size-12 rounded-full">
+        <AvatarImage
+          :src="
+            userInfo?.faceUrl ||
+            userInfo?.streamerInfo?.faceUrl ||
+            (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=96` : undefined)
+          "
+          referrerpolicy="no-referrer"
+          :alt="`${userInfo?.name || '主播'} 的头像`"
+        />
+        <AvatarFallback>{{ (userInfo?.name || '主')[0] }}</AvatarFallback>
+      </Avatar>
       <div class="header-copy">
         <span class="header-kicker">私密留言</span>
         <h1>给 {{ userInfo?.name || '主播' }} 留句话</h1>
         <p>说说你正在想的事。</p>
       </div>
-      <NButton
+      <Button
         v-if="!isIdentified"
-        secondary
-        size="small"
+        variant="secondary"
+        size="sm"
         class="history-action"
         @click="emit('openHistory')"
       >
-        <template #icon><NIcon :component="History24Regular" /></template>
+        <History24Regular class="size-4 mr-1 inline-block" />
         本地记录
-      </NButton>
-      <NButton
+      </Button>
+      <Button
         v-else-if="isUserLoggedIn"
-        secondary
-        size="small"
+        variant="secondary"
+        size="sm"
         class="history-action"
         :disabled="isSelf"
         @click="router.push({ name: 'manage-questionBox', query: { send: '1' } })"
       >
-        <template #icon><NIcon :component="History24Regular" /></template>
+        <History24Regular class="size-4 mr-1 inline-block" />
         已发送
-      </NButton>
+      </Button>
     </header>
 
     <Transition
@@ -176,18 +186,17 @@ async function submit() {
         key="sent"
         class="sent-state"
       >
-        <span class="sent-icon"><NIcon :component="CheckmarkCircle24Regular" /></span>
+        <span class="sent-icon"><CheckmarkCircle24Regular class="size-8 text-green-500 inline-block" /></span>
         <span class="sent-kicker">MESSAGE DELIVERED</span>
         <h2>已经送达</h2>
         <p>这条留言已进入 {{ userInfo?.name || '主播' }} 的提问箱。</p>
-        <NButton
-          type="primary"
-          secondary
+        <Button
+          variant="secondary"
           @click="composeAgain"
         >
           再写一条
-          <template #icon><NIcon :component="ArrowRight24Regular" /></template>
-        </NButton>
+          <ArrowRight24Regular class="size-4 ml-1 inline-block" />
+        </Button>
       </div>
 
       <div
@@ -243,19 +252,17 @@ async function submit() {
           @dragleave.self="isDragging = false"
           @drop.prevent="handleDrop"
         >
-          <NInput
-            v-model:value="draft.message"
-            class="message-input"
+          <Textarea
+            v-model="draft.message"
+            class="message-input min-h-[140px] resize-y"
             :disabled="isSelf"
-            type="textarea"
             maxlength="10000"
-            :autosize="{ minRows: 6, maxRows: 14 }"
             placeholder="写下你想说的话..."
             @paste="handlePaste"
           />
           <div class="editor-footer">
             <span class="identity-state">
-              <NIcon :component="LockClosed24Regular" />
+              <LockClosed24Regular class="size-4 inline-block mr-1" />
               {{ identityName }}
             </span>
             <span :class="{ 'is-invalid': characterCount > 0 && characterCount < 3 }">
@@ -276,7 +283,7 @@ async function submit() {
                 accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/x-icon"
                 @change="handleFileSelect"
               />
-              <NIcon :component="Image24Regular" />
+              <Image24Regular class="size-4 inline-block mr-1" />
               <span>添加图片</span>
             </label>
             <span>{{ selectedFiles.length }} / {{ maxImages }}</span>
@@ -302,7 +309,7 @@ async function submit() {
                 :title="`移除第 ${index + 1} 张图片`"
                 @click="removeImage(index)"
               >
-                <NIcon :component="Dismiss24Regular" />
+                <Dismiss24Regular class="size-4" />
               </button>
             </figure>
           </TransitionGroup>
@@ -313,35 +320,59 @@ async function submit() {
           class="identity-panel"
         >
           <div class="identity-copy">
-            <NIcon :component="LockClosed24Regular" />
+            <LockClosed24Regular class="size-4 inline-block mr-1 text-muted-foreground" />
             <div>
               <strong>{{ isIdentified ? '提交身份' : '匿名留言' }}</strong>
               <span>{{ isIdentified ? identityName : '邮箱仅用于接收回复通知' }}</span>
             </div>
           </div>
-          <NCheckbox
-            v-if="isIdentified"
-            v-model:checked="draft.isAnonymous"
+          <div
+            v-if="isIdentified && allowAnonymous"
+            class="flex items-center space-x-2"
           >
-            隐藏我的身份
-          </NCheckbox>
+            <Checkbox
+              id="hide-identity"
+              v-model="draft.isAnonymous"
+            />
+            <label for="hide-identity" class="text-sm cursor-pointer select-none">隐藏我的身份</label>
+          </div>
+          <div
+            v-else-if="isIdentified && !allowAnonymous"
+            class="text-xs text-muted-foreground"
+          >
+            <span>对方已开启实名提问，将以当前身份提交</span>
+          </div>
+          <div
+            v-else-if="!allowUnregistedUser"
+            class="text-xs text-destructive"
+          >
+            <span>对方已禁止未登录用户提问，请先登录或完成 B 站认证</span>
+          </div>
+          <div
+            v-else-if="!allowAnonymous"
+            class="text-xs text-destructive"
+          >
+            <span>对方已禁止匿名提问，请先登录以实名提交</span>
+          </div>
           <div
             v-else
             class="guest-fields"
           >
-            <NInput
-              v-model:value="draft.anonymousName"
+            <Input
+              v-model="draft.anonymousName"
               maxlength="20"
               placeholder="昵称（可选）"
             />
-            <NInput
-              v-model:value="draft.anonymousEmail"
-              maxlength="100"
-              placeholder="邮箱（可选）"
-              :status="draft.anonymousEmail && !isValidEmail(draft.anonymousEmail) ? 'error' : undefined"
-            >
-              <template #prefix><NIcon :component="Mail24Regular" /></template>
-            </NInput>
+            <div class="relative flex items-center">
+              <Mail24Regular class="size-4 absolute left-3 text-muted-foreground pointer-events-none" />
+              <Input
+                v-model="draft.anonymousEmail"
+                maxlength="100"
+                class="pl-9"
+                placeholder="邮箱（可选）"
+                :class="draft.anonymousEmail && !isValidEmail(draft.anonymousEmail) ? 'border-destructive' : ''"
+              />
+            </div>
           </div>
         </div>
 
@@ -349,15 +380,21 @@ async function submit() {
           v-if="!isSelf && allowDefaultPublic"
           class="public-consent"
         >
-          <NCheckbox v-model:checked="draft.allowPublic"> 公开展示这条 </NCheckbox>
-          <span>取消后只有主播能看到，不会出现在提问页公开列表</span>
+          <div class="flex items-center space-x-2">
+            <Checkbox
+              id="allow-public"
+              v-model="draft.allowPublic"
+            />
+            <label for="allow-public" class="text-sm font-medium cursor-pointer select-none">公开展示这条</label>
+          </div>
+          <span class="text-xs text-muted-foreground ml-6">取消后只有主播能看到，不会出现在提问页公开列表</span>
         </div>
 
         <div
           v-if="isSelf"
           class="self-state"
         >
-          <NIcon :component="LockClosed24Regular" />
+          <LockClosed24Regular class="size-4 inline-block mr-1" />
           <span>当前是你自己的提问箱</span>
         </div>
         <footer
@@ -371,23 +408,21 @@ async function submit() {
             />
           </div>
           <div class="submit-action">
-            <NTag
+            <Tag
               v-if="cooldownSeconds > 0"
-              size="small"
-              :bordered="false"
+              variant="secondary"
             >
               {{ cooldownSeconds }} 秒后可再次提交
-            </NTag>
-            <NButton
-              type="primary"
-              size="large"
+            </Tag>
+            <Button
+              size="lg"
               :disabled="!canSubmit"
               :loading="isSending"
               @click="submit"
             >
               {{ selectedFiles.length && isSending ? '正在上传' : '送出留言' }}
-              <template #icon><NIcon :component="Send24Regular" /></template>
-            </NButton>
+              <Send24Regular class="size-4 ml-1 inline-block" />
+            </Button>
           </div>
         </footer>
       </div>

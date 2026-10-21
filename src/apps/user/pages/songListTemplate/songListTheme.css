@@ -36,3 +36,59 @@
 .song-list-surface :is(.n-flex, .n-grid, .n-grid-item) {
   min-width: 0;
 }
+
+
+/* 传统歌单模板背景与暗色模式模糊/压暗 */
+.traditional-song-list.has-background {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--vtsuru-page-radius, 16px);
+  overflow: hidden;
+  background-image: none !important;
+}
+
+.traditional-song-list.has-background::before {
+  content: '';
+  position: absolute;
+  inset: -32px;
+  z-index: -2;
+  pointer-events: none;
+  background-image: var(--song-list-bg-image);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(20px) saturate(1.2);
+  transform: translateZ(0);
+  transition: filter 0.3s ease;
+}
+
+.traditional-song-list.has-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--vtsuru-bg, #ffffff) 60%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: background-color 0.3s ease;
+}
+
+.dark .traditional-song-list.has-background::before {
+  filter: blur(20px) brightness(0.48) saturate(1.15);
+}
+
+.dark .traditional-song-list.has-background::after {
+  background: rgba(9, 9, 11, 0.65);
+}
+
+/* 歌单面板在有背景时使用毛玻璃半透明透景，避免死黑块遮挡背景 */
+.traditional-song-list.has-background .profile-panel,
+.traditional-song-list.has-background .song-panel,
+.page-root.bg-host .traditional-song-list .profile-panel,
+.page-root.bg-host .traditional-song-list .song-panel {
+  background-color: var(--vtsuru-page-card-bg, rgba(24, 24, 27, 0.65)) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--vtsuru-card-border-color, rgba(255, 255, 255, 0.1)) !important;
+}

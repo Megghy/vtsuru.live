@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { OpenOutline, RefreshOutline, TrophyOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NEmpty, NIcon, NSpin } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -9,6 +8,10 @@ import { FunctionTypes } from '@/api/api-models'
 import { fetchPublicCheckInRanking } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -61,9 +64,9 @@ watch(
     :backgrounded="values.backgrounded !== false"
   >
     <template #header>
-      <div class="ranking-header">
-        <span class="ranking-heading">
-          <NIcon><TrophyOutline /></NIcon>
+      <div class="ranking-header flex items-center justify-between w-full">
+        <span class="ranking-heading flex items-center gap-1.5 font-semibold text-sm">
+          <component :is="TrophyOutline" class="size-4" />
           签到排行
         </span>
         <RouterLink
@@ -72,135 +75,96 @@ watch(
           :to="{ name: 'user-checkin', params: { id: props.userInfo.name } }"
           custom
         >
-          <NButton
-            text
-            type="primary"
-            size="small"
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 text-xs text-primary font-medium p-0"
             @click="navigate"
           >
             完整排行
-            <template #icon>
-              <NIcon><OpenOutline /></NIcon>
-            </template>
-          </NButton>
+            <component :is="OpenOutline" class="size-3.5 ml-1" />
+          </Button>
         </RouterLink>
       </div>
     </template>
 
-    <NAlert
+    <Alert
       v-if="!enabled"
-      type="info"
-      :show-icon="false"
+      class="text-xs py-2"
     >
-      签到排行未开放
-    </NAlert>
-    <NAlert
+      <AlertDescription>
+        签到排行未开放
+      </AlertDescription>
+    </Alert>
+    <Alert
       v-else-if="query.status.value === 'error'"
-      type="error"
-      :show-icon="true"
+      variant="destructive"
+      class="text-xs py-2"
     >
-      <div class="error-row">
+      <AlertDescription class="flex items-center justify-between w-full">
         <span>签到排行加载失败</span>
-        <NButton
-          size="small"
-          secondary
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-6 px-2 text-xs"
           @click="load(true)"
         >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon>
-          </template>
+          <component :is="RefreshOutline" class="size-3 mr-1" />
           重试
-        </NButton>
-      </div>
-    </NAlert>
-    <NSpin
-      v-else
-      :show="query.status.value === 'loading' || query.status.value === 'idle'"
-      size="small"
+        </Button>
+      </AlertDescription>
+    </Alert>
+    <div
+      v-else-if="query.status.value === 'loading' || query.status.value === 'idle'"
+      class="py-6 flex justify-center"
     >
-      <NEmpty
+      <Spin />
+    </div>
+    <div v-else>
+      <Empty
         v-if="query.status.value === 'success' && !query.data.value?.length"
-        size="small"
         description="暂无签到记录"
+        class="py-4 text-xs"
       />
       <ol
         v-else
-        class="ranking-list"
+        class="ranking-list grid gap-1.5 p-0 m-0 list-none"
       >
         <li
           v-for="(item, index) in query.data.value"
           :key="item.ouId"
-          class="ranking-item"
+          class="ranking-item flex items-center gap-2.5 p-2 rounded-lg border border-border bg-muted text-xs"
         >
           <span
-            class="rank"
+            class="rank size-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
             :class="`rank--${index + 1}`"
-            >{{ index + 1 }}</span
           >
-          <strong class="name">{{ item.name }}</strong>
-          <span class="streak">连续 {{ item.consecutiveDays }} 天</span>
+            {{ index + 1 }}
+          </span>
+          <strong class="name flex-1 min-w-0 truncate font-semibold">{{ item.name }}</strong>
+          <span class="streak font-medium shrink-0">连续 {{ item.consecutiveDays }} 天</span>
           <span
             v-if="showMonthly"
-            class="count"
-            >本月 {{ item.monthlyCheckInCount ?? 0 }} 次</span
+            class="count text-muted-foreground shrink-0"
           >
+            本月 {{ item.monthlyCheckInCount ?? 0 }} 次
+          </span>
           <span
             v-if="showTotal"
-            class="count"
-            >累计 {{ item.totalCheckInCount ?? 0 }} 次</span
+            class="count text-muted-foreground shrink-0"
           >
+            累计 {{ item.totalCheckInCount ?? 0 }} 次
+          </span>
         </li>
       </ol>
-    </NSpin>
+    </div>
   </BlockCard>
 </template>
 
 <style scoped>
-.ranking-header,
-.ranking-heading,
-.error-row,
-.ranking-item {
-  display: flex;
-  align-items: center;
-}
-.ranking-header,
-.error-row {
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-}
-.ranking-heading {
-  gap: 7px;
-  font-weight: 600;
-}
-.ranking-list {
-  container-type: inline-size;
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.ranking-item {
-  gap: 9px;
-  min-width: 0;
-  min-height: 42px;
-  padding: 7px 10px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-bg-muted);
-}
 .rank {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
   color: var(--vtsuru-fg-muted);
   background: var(--vtsuru-bg-elevated);
-  font-size: 12px;
-  font-weight: 700;
 }
 .rank--1 {
   color: #6b4d00;
@@ -213,35 +177,5 @@ watch(
 .rank--3 {
   color: #5e351c;
   background: #e9b58f;
-}
-.name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-}
-.streak {
-  flex: none;
-  font-size: 13px;
-  font-weight: 600;
-}
-.count {
-  flex: none;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-@container (max-width: 520px) {
-  .ranking-item {
-    flex-wrap: wrap;
-  }
-  .name {
-    flex-basis: calc(100% - 44px);
-  }
-  .streak {
-    margin-left: 34px;
-  }
 }
 </style>

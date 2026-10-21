@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Add20Filled, Delete20Filled, Edit20Filled, Mic20Filled, TextDescription20Filled } from '@vicons/fluent'
-import { NButton, NEmpty, NFlex, NIcon, NInput, NPopconfirm, NTag, NText, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import { getApiTtsMimoVoicesCustom } from '@/api/generated/tts/tts'
@@ -11,6 +11,11 @@ import { MimoVoiceProvider, type MimoCustomVoiceInfo } from '@/apps/open-live/vo
 import { deleteVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
 import { TTS_API_URL } from '@/shared/config'
 import { useSpeechService } from '@/store/useSpeechService'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
 
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
@@ -26,7 +31,6 @@ interface CustomVoice {
   createdAt: string
 }
 
-const message = useMessage()
 const account = useAccount()
 const speechService = useSpeechService()
 const { settings } = speechService
@@ -74,7 +78,7 @@ async function loadCustomVoices() {
       provider.setCustomVoices(resp.data as MimoCustomVoiceInfo[])
     }
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '加载自定义音色失败')
+    toast.error(error instanceof Error ? error.message : '加载自定义音色失败')
   }
 }
 
@@ -97,10 +101,10 @@ async function deleteCustomVoice(id: number) {
         settings.value.providers.mimo.mimoVoice = '冰糖'
       }
       await deleteVoiceAudio(id)
-      message.success('已删除')
+      toast.success('已删除')
     }
   } catch {
-    message.error('删除失败')
+    toast.error('删除失败')
   }
 }
 
@@ -146,44 +150,44 @@ watch(
 
     <SectionField label="风格标签">
       <template #hint>
-        <div style="font-size: 12px; line-height: 1.7">
-          <p style="margin: 0 0 6px">在文本开头用 <code>()</code> 或 <code>[]</code> 包裹风格词，可组合多个。</p>
-          <table style="border-collapse: collapse; width: 100%; font-size: 11px">
+        <div class="text-xs leading-relaxed">
+          <p class="mb-1.5">在文本开头用 <code>()</code> 或 <code>[]</code> 包裹风格词，可组合多个。</p>
+          <table class="w-full text-[11px] border-collapse">
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">基础情绪</td>
-              <td style="padding: 2px 6px">开心 / 悲伤 / 愤怒 / 恐惧 / 惊讶 / 兴奋 / 委屈 / 冷漠</td>
+              <td class="py-0.5 px-1.5 whitespace-nowrap text-foreground font-medium">基础情绪</td>
+              <td class="py-0.5 px-1.5 text-muted-foreground">开心 / 悲伤 / 愤怒 / 恐惧 / 惊讶 / 兴奋 / 委屈 / 冷漠</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">复合情绪</td>
-              <td style="padding: 2px 6px">怅然 / 欣慰 / 无奈 / 愧疚 / 释然 / 忐忑 / 动情</td>
+              <td class="py-0.5 px-1.5 whitespace-nowrap text-foreground font-medium">复合情绪</td>
+              <td class="py-0.5 px-1.5 text-muted-foreground">怅然 / 欣慰 / 无奈 / 愧疚 / 释然 / 忐忑 / 动情</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">语调风格</td>
-              <td style="padding: 2px 6px">温柔 / 高冷 / 活泼 / 慵懒 / 俏皮 / 深沉 / 凌厉</td>
+              <td class="py-0.5 px-1.5 whitespace-nowrap text-foreground font-medium">语调风格</td>
+              <td class="py-0.5 px-1.5 text-muted-foreground">温柔 / 高冷 / 活泼 / 慵懒 / 俏皮 / 深沉 / 凌厉</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">音色定位</td>
-              <td style="padding: 2px 6px">磁性 / 醇厚 / 清亮 / 空灵 / 甜美 / 沙哑</td>
+              <td class="py-0.5 px-1.5 whitespace-nowrap text-foreground font-medium">音色定位</td>
+              <td class="py-0.5 px-1.5 text-muted-foreground">磁性 / 醇厚 / 清亮 / 空灵 / 甜美 / 沙哑</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">腔调方言</td>
-              <td style="padding: 2px 6px">夹子音 / 御姐音 / 正太音 / 台湾腔 / 东北话 / 粤语</td>
+              <td class="py-0.5 px-1.5 whitespace-nowrap text-foreground font-medium">腔调方言</td>
+              <td class="py-0.5 px-1.5 text-muted-foreground">夹子音 / 御姐音 / 正太音 / 台湾腔 / 东北话 / 粤语</td>
             </tr>
             <tr>
-              <td style="padding: 2px 6px; white-space: nowrap; color: var(--vtsuru-fg)">特殊</td>
-              <td style="padding: 2px 6px">(唱歌) — 需放在最开头</td>
+              <td class="py-0.5 px-1.5 whitespace-nowrap text-foreground font-medium">特殊</td>
+              <td class="py-0.5 px-1.5 text-muted-foreground">(唱歌) — 需放在最开头</td>
             </tr>
           </table>
-          <p style="margin: 6px 0 0; color: var(--vtsuru-fg-muted)">
+          <p class="mt-1.5 text-muted-foreground">
             文中还可插入 [叹气] [笑] [哽咽] [颤抖] [气声] 等音频标签做细粒度控制
           </p>
         </div>
       </template>
-      <NInput
-        v-model:value="settings.providers.mimo.mimoStyleTag"
+      <Input
+        v-model="settings.providers.mimo.mimoStyleTag"
         placeholder="(慵懒 磁性) 或 [开心]，可留空"
-        size="small"
-        :input-props="{ autocomplete: 'off' }"
+        class="h-8 text-xs"
+        autocomplete="off"
       />
     </SectionField>
 
@@ -191,60 +195,47 @@ watch(
       label="自定义 API Key (可选)"
       hint="填写后将直接从浏览器调用 MiMo API, 不经过本站服务器, 速度更快"
     >
-      <NInput
-        v-model:value="settings.providers.mimo.mimoApiKey"
+      <Input
+        v-model="settings.providers.mimo.mimoApiKey"
         type="password"
-        show-password-on="click"
         placeholder="sk-xxxx"
-        size="small"
-        :input-props="{ autocomplete: 'new-password' }"
+        autocomplete="new-password"
+        class="h-8 text-xs"
       />
-      <NText
-        depth="3"
-        style="font-size: 11px"
-      >
+      <span class="text-[11px] text-muted-foreground">
         <a
           href="https://platform.xiaomimimo.com"
           target="_blank"
           rel="noopener"
-          style="color: var(--vtsuru-fg-muted)"
+          class="hover:underline"
         >
           前往 MiMo 开放平台获取 API Key →
         </a>
-      </NText>
+      </span>
     </SectionField>
 
     <!-- 自定义音色 -->
     <SectionField label="自定义音色">
-      <NFlex
-        justify="space-between"
-        align="center"
-        style="margin-bottom: 6px"
-      >
-        <NText
-          depth="3"
-          style="font-size: 11px"
-        >
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-[11px] text-muted-foreground">
           {{ account.id ? `${customVoices.length} 个自定义音色` : '登录后可用' }}
-        </NText>
-        <NButton
-          size="tiny"
-          type="primary"
-          tertiary
+        </span>
+        <Button
+          size="xs"
+          variant="secondary"
+          class="h-6 text-[11px] gap-1"
           :disabled="!account.id"
           @click="showCreateDialog = true"
         >
-          <template #icon>
-            <NIcon :component="Add20Filled" />
-          </template>
+          <Add20Filled class="size-3.5" />
           新建
-        </NButton>
-      </NFlex>
+        </Button>
+      </div>
 
-      <NEmpty
+      <Empty
         v-if="customVoices.length === 0 && account.id"
         description="暂无自定义音色"
-        size="small"
+        class="py-4 text-xs"
       />
 
       <div
@@ -257,51 +248,51 @@ watch(
           class="voice-item"
           :class="{ active: isCustomSelected(v) }"
         >
-          <NIcon
-            :component="v.type === 'clone' ? Mic20Filled : TextDescription20Filled"
-            :size="14"
-            style="flex-shrink: 0"
-          />
+          <Mic20Filled v-if="v.type === 'clone'" class="size-3.5 shrink-0 text-muted-foreground" />
+          <TextDescription20Filled v-else class="size-3.5 shrink-0 text-muted-foreground" />
+
           <span class="voice-name">{{ v.name }}</span>
-          <NTag
-            size="tiny"
-            :bordered="false"
-            :type="v.type === 'clone' ? 'info' : 'success'"
+
+          <Badge
+            variant="outline"
+            class="text-[10px] h-4.5 px-1"
+            :class="v.type === 'clone' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'"
           >
             {{ v.type === 'clone' ? '克隆' : '描述' }}
-          </NTag>
+          </Badge>
+
           <div class="voice-actions">
-            <NButton
-              size="tiny"
-              :type="isCustomSelected(v) ? 'primary' : 'default'"
-              tertiary
+            <Button
+              size="xs"
+              :variant="isCustomSelected(v) ? 'default' : 'ghost'"
+              class="h-6 px-2 text-[11px]"
               @click="useCustomVoice(v)"
             >
               {{ isCustomSelected(v) ? '使用中' : '使用' }}
-            </NButton>
-            <NButton
-              size="tiny"
-              tertiary
+            </Button>
+            <Button
+              size="xs"
+              variant="ghost"
+              class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
               @click="editCustomVoice(v)"
             >
-              <template #icon>
-                <NIcon :component="Edit20Filled" />
-              </template>
-            </NButton>
-            <NPopconfirm @positive-click="deleteCustomVoice(v.id)">
+              <Edit20Filled class="size-3.5" />
+            </Button>
+            <Popconfirm
+              title="确认删除"
+              @positive-click="deleteCustomVoice(v.id)"
+            >
               <template #trigger>
-                <NButton
-                  size="tiny"
-                  tertiary
-                  type="error"
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="h-6 w-6 p-0 text-destructive hover:text-destructive"
                 >
-                  <template #icon>
-                    <NIcon :component="Delete20Filled" />
-                  </template>
-                </NButton>
+                  <Delete20Filled class="size-3.5" />
+                </Button>
               </template>
               确定删除「{{ v.name }}」？
-            </NPopconfirm>
+            </Popconfirm>
           </div>
         </div>
       </div>
@@ -354,6 +345,7 @@ watch(
 }
 .voice-actions {
   display: flex;
+  align-items: center;
   gap: 2px;
   flex-shrink: 0;
 }

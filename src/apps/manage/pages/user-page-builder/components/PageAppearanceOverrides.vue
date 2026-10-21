@@ -1,8 +1,21 @@
 <script setup lang="ts">
-import { NButton, NCollapseItem, NColorPicker, NFlex, NForm, NFormItem, NSelect, NText } from 'naive-ui'
 import { computed, inject } from 'vue'
 
 import type { UserPageThemeConfigV1 } from '@/apps/user-page/types'
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/shared/ui/accordion'
+import { Button } from '@/shared/ui/button'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
@@ -72,113 +85,103 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
 </script>
 
 <template>
-  <NCollapseItem
+  <AccordionItem
     v-if="page.mode !== 'block'"
-    class="page-bg-section"
-    title="页面背景"
-    name="page-bg"
+    value="page-bg"
+    class="border-b border-border"
   >
-    <NFlex
-      justify="space-between"
-      align="center"
-      style="margin-bottom: 10px"
-    >
-      <NText depth="3"> 不设置时将使用全局背景或默认背景。 </NText>
-      <NButton
-        size="small"
-        secondary
-        :disabled="!page.background"
-        @click="page.background = undefined"
-      >
-        使用全局背景
-      </NButton>
-    </NFlex>
-    <BackgroundSettingsEditor :target="backgroundTarget" />
-  </NCollapseItem>
+    <AccordionTrigger class="text-xs font-semibold py-2.5">
+      页面背景
+    </AccordionTrigger>
+    <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
+      <div class="flex items-center justify-between text-xs text-muted-foreground">
+        <span>不设置时将使用全局背景或默认背景。</span>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-6 px-2 text-xs"
+          :disabled="!page.background"
+          @click="page.background = undefined"
+        >
+          使用全局背景
+        </Button>
+      </div>
+      <BackgroundSettingsEditor :target="backgroundTarget" />
+    </AccordionContent>
+  </AccordionItem>
 
-  <NCollapseItem
+  <AccordionItem
     v-if="page.mode !== 'block'"
-    class="page-theme-section"
-    title="页面主题"
-    name="page-theme"
+    value="page-theme"
+    class="border-b border-border"
   >
-    <NFlex
-      justify="space-between"
-      align="center"
-      style="margin-bottom: 10px"
-    >
-      <NText depth="3"> 不设置时将使用全局主题或站点主题。 </NText>
-      <NButton
-        size="small"
-        secondary
-        :disabled="!page.theme"
-        @click="page.theme = undefined"
-      >
-        清除页面主题
-      </NButton>
-    </NFlex>
-    <NForm
-      label-placement="top"
-      size="small"
-    >
+    <AccordionTrigger class="text-xs font-semibold py-2.5">
+      页面主题
+    </AccordionTrigger>
+    <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
+      <div class="flex items-center justify-between text-xs text-muted-foreground">
+        <span>不设置时将使用全局主题或站点主题。</span>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-6 px-2 text-xs"
+          :disabled="!page.theme"
+          @click="page.theme = undefined"
+        >
+          清除页面主题
+        </Button>
+      </div>
+
       <PropsGrid>
-        <NFormItem label="主题色 primary">
-          <NFlex
-            align="center"
-            :wrap="false"
-            style="gap: 10px"
-          >
-            <div style="flex: 1; min-width: 0">
-              <NColorPicker
-                v-model:value="primaryColor"
-                :modes="['hex']"
-              />
-            </div>
-            <NButton
-              size="tiny"
-              secondary
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">主题色 primary</label>
+          <div class="flex items-center gap-2">
+            <ColorPicker v-model="primaryColor" class="flex-1" />
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-8 px-2 text-xs"
               :disabled="primaryColor == null"
               @click="primaryColor = undefined"
             >
               清除
-            </NButton>
-          </NFlex>
-        </NFormItem>
-        <NFormItem label="内容区域底色">
-          <NFlex
-            align="center"
-            :wrap="false"
-            style="gap: 10px"
-          >
-            <div style="flex: 1; min-width: 0">
-              <NColorPicker
-                v-model:value="backgroundColor"
-                :modes="['hex']"
-              />
-            </div>
-            <NButton
-              size="tiny"
-              secondary
+            </Button>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">内容区域底色</label>
+          <div class="flex items-center gap-2">
+            <ColorPicker v-model="backgroundColor" class="flex-1" />
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-8 px-2 text-xs"
               :disabled="backgroundColor == null"
               @click="backgroundColor = undefined"
             >
               清除
-            </NButton>
-          </NFlex>
-        </NFormItem>
-        <NFormItem label="页面主题模式">
-          <NSelect
-            v-model:value="themeMode"
-            :options="[
-              { label: '跟随站点', value: 'auto' },
-              { label: '强制亮色', value: 'light' },
-              { label: '强制暗色', value: 'dark' },
-            ]"
-          />
-        </NFormItem>
+            </Button>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">页面主题模式</label>
+          <Select v-model="themeMode">
+            <SelectTrigger class="h-8 text-xs">
+              <SelectValue placeholder="模式" />
+            </SelectTrigger>
+            <SelectContent class="text-xs">
+              <SelectItem value="auto">跟随站点</SelectItem>
+              <SelectItem value="light">强制亮色</SelectItem>
+              <SelectItem value="dark">强制暗色</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </PropsGrid>
+
       <ThemeTextColorEditor :target="textColorTarget" />
       <ThemeAdvancedOptions :target="appearanceTarget" />
-    </NForm>
-  </NCollapseItem>
+    </AccordionContent>
+  </AccordionItem>
 </template>

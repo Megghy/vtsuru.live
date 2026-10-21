@@ -1,5 +1,4 @@
 import { List } from 'linqts'
-import { NTime } from 'naive-ui'
 import { computed, h, ref } from 'vue'
 
 import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
@@ -268,7 +267,7 @@ export const useQueue = defineStore('queue', () => {
             title: `${danmaku.uname} 排队失败`,
             description: data.message,
             duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: () => h(NTime, { type: 'relative', time, key: updateKey.value }),
+            meta: new Date(time).toLocaleTimeString(),
           })
         }
       } catch (err: any) {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NButton, NEmpty } from 'naive-ui'
 
 import ObsComponentCard from '@/apps/obs-store/components/store/ObsComponentCard.vue'
 import ObsComponentDrawer from '@/apps/obs-store/components/store/ObsComponentDrawer.vue'
@@ -9,6 +8,8 @@ import ObsStoreHeader from '@/apps/obs-store/components/store/ObsStoreHeader.vue
 import { filterObsComponents, getObsComponentById } from '@/apps/obs-store/registry'
 import type { ObsCategory, ObsComponentStatus, ObsComponentDefinition } from '@/apps/obs-store/registry'
 import { firstQueryValue } from '@/shared/obs/obsUrl'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
 
 const route = useRoute()
 const router = useRouter()
@@ -108,17 +109,18 @@ watch(
       v-else
       class="empty-state"
     >
-      <NEmpty description="没有匹配的组件">
+      <Empty description="没有匹配的组件">
         <template #extra>
-          <NButton
-            size="small"
-            secondary
+          <Button
+            size="sm"
+            variant="secondary"
+            class="h-8 text-xs"
             @click="resetFilters"
           >
             清除筛选
-          </NButton>
+          </Button>
         </template>
-      </NEmpty>
+      </Empty>
     </div>
 
     <ObsComponentDrawer

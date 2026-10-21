@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { Play24Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
-import { NButton, NEmpty, NIcon, NInput, NSelect } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import SongOptionBadges from './components/SongOptionBadges.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
@@ -78,51 +81,71 @@ function requestSong(song: SongsInfo) {
       </span>
     </header>
 
-    <div class="toolbar">
-      <NInput
-        v-model:value="searchKeyword"
-        class="search"
-        clearable
-        placeholder="搜索歌曲 / 歌手 / 标签…"
+    <div class="toolbar flex flex-wrap gap-2.5 items-center mb-3.5">
+      <div class="relative search flex-1 min-w-48">
+        <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          v-model="searchKeyword"
+          class="h-8 pl-8 text-xs"
+          placeholder="搜索歌曲 / 歌手 / 标签…"
+        />
+      </div>
+      <Select
+        :model-value="selectedAuthor || 'all'"
+        @update:model-value="selectedAuthor = $event === 'all' ? null : String($event)"
       >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
-        </template>
-      </NInput>
-      <NSelect
-        v-model:value="selectedAuthor"
-        class="filter"
-        clearable
-        filterable
-        placeholder="歌手"
-        :options="authorOptions"
-      />
-      <NSelect
-        v-model:value="selectedTag"
-        class="filter"
-        clearable
-        filterable
-        placeholder="标签"
-        :options="tagOptions"
-      />
+        <SelectTrigger class="w-36 h-8 text-xs">
+          <SelectValue placeholder="歌手" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all" class="text-xs">全部歌手</SelectItem>
+          <SelectItem
+            v-for="opt in authorOptions"
+            :key="opt.value"
+            :value="opt.value"
+            class="text-xs"
+          >
+            {{ opt.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        :model-value="selectedTag || 'all'"
+        @update:model-value="selectedTag = $event === 'all' ? null : String($event)"
+      >
+        <SelectTrigger class="w-36 h-8 text-xs">
+          <SelectValue placeholder="标签" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all" class="text-xs">全部标签</SelectItem>
+          <SelectItem
+            v-for="opt in tagOptions"
+            :key="opt.value"
+            :value="opt.value"
+            class="text-xs"
+          >
+            {{ opt.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </div>
 
     <SongPlayer
       v-if="previewSong"
       v-model:is-lrc-loading="isLrcLoading"
       :song="previewSong"
-      class="preview-player"
+      class="preview-player mb-3"
     />
 
     <Transition
       name="compact-swap"
       mode="out-in"
     >
-      <NEmpty
+      <Empty
         v-if="filteredSongs.length === 0"
         :key="`empty-${listKey}`"
         description="暂无曲目"
-        style="margin-top: 48px"
+        class="mt-12 py-8"
       />
 
       <div
@@ -205,20 +228,18 @@ function requestSong(song: SongsInfo) {
               {{ tag }}
             </button>
           </div>
-          <div class="row-actions">
-            <NButton
+          <div class="row-actions flex items-center gap-1">
+            <Button
               v-if="song.url"
-              quaternary
-              circle
-              size="small"
-              :loading="isLrcLoading === song.key"
+              variant="ghost"
+              size="icon"
+              class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+              :disabled="isLrcLoading === song.key"
               title="试听"
               @click="previewSong = song"
             >
-              <template #icon>
-                <NIcon :component="Play24Filled" />
-              </template>
-            </NButton>
+              <component :is="Play24Filled" class="size-3.5" />
+            </Button>
             <SongRequestButton
               :song="song"
               :live-request-settings="liveRequestSettings"
@@ -267,127 +288,43 @@ function requestSong(song: SongsInfo) {
   line-height: 1.15;
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border: var(--vtsuru-page-border, 1px solid var(--song-border));
-  border-radius: var(--vtsuru-page-radius, 8px);
-  background: var(--song-panel);
-  box-shadow: var(--vtsuru-page-shadow, none);
-  gap: 8px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-
-.search {
-  flex: 1;
-  min-width: 180px;
-  max-width: 360px;
-}
-
-.filter {
-  width: 140px;
-}
-
-.count {
-  flex: 0 0 auto;
-  font-size: 13px;
-  color: var(--song-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.count.is-pulsing {
-  animation: count-pop 0.38s cubic-bezier(0.22, 1.4, 0.36, 1);
-}
-
-.compact-swap-enter-active,
-.compact-swap-leave-active {
-  transition:
-    opacity 0.26s ease,
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.26s ease;
-}
-
-.compact-swap-enter-from {
-  opacity: 0;
-  filter: blur(3px);
-  transform: translateY(12px);
-}
-
-.compact-swap-leave-to {
-  opacity: 0;
-  filter: blur(2px);
-  transform: translateY(-8px);
-}
-
-.preview-player {
-  margin-bottom: 14px;
-}
-
 .list-container {
-  height: min(680px, 70dvh);
-  min-height: 360px;
-  border: var(--vtsuru-page-border, 1px solid var(--song-border));
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--song-panel);
-  box-shadow: var(--vtsuru-page-shadow);
-  overflow: auto;
+  height: clamp(480px, 68vh, 840px);
+  overflow-y: auto;
 }
 
 .row {
-  height: 60px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 36px 40px minmax(140px, 1fr) auto auto;
   align-items: center;
   gap: 12px;
-  padding: 0 14px;
-  box-sizing: border-box;
-  border-bottom: 1px solid color-mix(in srgb, var(--song-border) 64%, transparent);
-  transition:
-    background-color 0.16s ease,
-    transform 0.16s ease;
-}
-
-.row.is-odd {
-  background: color-mix(in srgb, var(--song-fg) 2.5%, transparent);
+  height: 60px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--song-border, rgba(128, 128, 128, 0.1));
+  transition: background-color 0.15s ease;
 }
 
 .row:hover {
-  background: var(--song-bg-hover);
-  transform: translateX(2px);
+  background-color: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.04));
 }
 
-.row.is-tag-active {
-  background: color-mix(in srgb, var(--song-accent) 8%, transparent);
-}
-
-.row.is-singing {
-  box-shadow: inset 3px 0 0 0 var(--song-warning);
-}
-
-.row.is-queued {
-  box-shadow: inset 3px 0 0 0 var(--song-success);
+.row.is-odd {
+  background-color: var(--vtsuru-bg-subtle, rgba(128, 128, 128, 0.02));
 }
 
 .row-index {
-  width: 28px;
-  flex: 0 0 auto;
-  text-align: right;
   font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--song-subtle);
+  font-family: monospace;
+  color: var(--song-muted, #888);
+  text-align: center;
 }
 
 .row-cover {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 auto;
-  border-radius: var(--vtsuru-page-radius);
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
   overflow: hidden;
-  background: var(--song-panel-strong);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
 }
 
 .row-cover img {
@@ -397,176 +334,73 @@ function requestSong(song: SongsInfo) {
 }
 
 .row-cover-fallback {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--song-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--song-muted, #888);
 }
 
 .row-main {
-  flex: 1;
   min-width: 0;
 }
 
 .row-title {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--song-fg);
 }
 
 .row-title .name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--song-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
 }
 
 .row-title .translate {
-  font-size: 12px;
-  color: var(--song-subtle);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex-shrink: 1;
-  min-width: 0;
+  font-size: 11px;
+  color: var(--song-muted, #888);
 }
 
 .row-author {
-  margin-top: 1px;
-  font-size: 12px;
-  color: var(--song-subtle);
+  font-size: 11px;
+  color: var(--song-muted, #888);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .row-tags {
-  flex: 0 0 auto;
   display: flex;
   gap: 4px;
-  max-width: 200px;
-  overflow: hidden;
 }
 
 .clickable-tag {
-  max-width: 84px;
-  height: 20px;
-  padding: 0 7px;
-  overflow: hidden;
-  border: 0;
-  border-radius: 999px;
-  background: var(--song-panel-strong);
-  color: var(--song-muted);
-  font: inherit;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--song-muted, #888);
+  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
+  border: none;
   cursor: pointer;
-  transition:
-    color 0.16s ease,
-    background-color 0.16s ease,
-    transform 0.2s cubic-bezier(0.22, 1.4, 0.36, 1),
-    box-shadow 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .clickable-tag:hover,
-.clickable-tag:focus-visible {
-  background: var(--song-accent-soft);
-  color: var(--song-accent);
-  outline: none;
-  transform: translateY(-1px);
-}
-
 .clickable-tag.is-active {
-  color: var(--song-accent);
-  background: var(--song-accent-soft);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--song-accent) 18%, transparent);
-  transform: scale(1.06);
-  animation: tag-pop 0.34s cubic-bezier(0.22, 1.4, 0.36, 1);
+  color: var(--song-accent, #23ade5);
+  background: var(--vtsuru-brand-soft, rgba(35, 173, 229, 0.12));
 }
 
-.row-actions {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-@media (max-width: 640px) {
-  .compact-template {
-    padding: 8px 0 16px;
-  }
-
-  .search {
-    max-width: none;
-    flex-basis: 100%;
-  }
-
-  .row-tags {
-    display: none;
-  }
-
-  .filter {
-    flex: 1;
-    width: auto;
-  }
-
-  .row-index {
-    display: none;
-  }
-
-  .list-container {
-    height: min(620px, 68dvh);
-    min-height: 320px;
-  }
-}
-
-@keyframes count-pop {
-  0% {
-    transform: scale(0.9);
-    color: var(--song-accent);
-  }
-  55% {
-    transform: scale(1.08);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes tag-pop {
-  0% {
-    transform: scale(0.94);
-  }
-  55% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1.06);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .count.is-pulsing,
-  .clickable-tag.is-active {
-    animation: none;
-  }
-
-  .compact-swap-enter-active,
-  .compact-swap-leave-active,
-  .row,
-  .clickable-tag {
-    transition: none;
-  }
-
-  .row:hover,
-  .clickable-tag:hover,
-  .clickable-tag.is-active {
-    transform: none;
-  }
+.count {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--song-muted, #888);
 }
 </style>

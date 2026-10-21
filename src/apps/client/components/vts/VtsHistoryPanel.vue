@@ -1,100 +1,135 @@
 <script setup lang="ts">
-import { NButton, NCard, NDataTable, NFlex, NTag } from 'naive-ui'
-import { computed, h } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
-import type { VtsOpRecord } from '@/apps/client/store/useVtsStore'
 import { REPLAYABLE_KINDS } from '@/apps/client/store/vts/operations'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Tag } from '@/shared/ui/tag'
 
 import { useVtsAction } from './useVtsAction'
 
 const vts = useVtsStore()
 const { run } = useVtsAction()
 
+const currentPage = ref(1)
+const pageSize = 10
 
-const columns = computed(() => [
-  {
-    title: '时间',
-    key: 'ts',
-    width: 100,
-    render: (row: VtsOpRecord) => new Date(row.ts).toLocaleTimeString(),
-  },
-  {
-    title: '操作',
-    key: 'kind',
-    width: 120,
-  },
-  {
-    title: '状态',
-    key: 'ok',
-    width: 80,
-    render: (row: VtsOpRecord) =>
-      h(NTag, { type: row.ok ? 'success' : 'error', size: 'small' }, { default: () => (row.ok ? 'OK' : '失败') }),
-  },
-  {
-    title: '耗时',
-    key: 'durationMs',
-    width: 80,
-    render: (row: VtsOpRecord) => (row.durationMs != null ? `${row.durationMs}ms` : '-'),
-  },
-  {
-    title: '详情',
-    key: 'detail',
-    ellipsis: { tooltip: true as const },
-    render: (row: VtsOpRecord) => row.detail ?? '',
-  },
-  {
-    title: '错误',
-    key: 'error',
-    ellipsis: { tooltip: true as const },
-    render: (row: VtsOpRecord) => row.error ?? '',
-  },
-  {
-    title: '',
-    key: 'op',
-    width: 80,
-    render: (row: VtsOpRecord) => {
-      if (!row.payload || !REPLAYABLE_KINDS.has(row.kind)) return ''
-      return h(
-        NButton,
-        {
-          size: 'tiny',
-          disabled: !vts.connected,
-          onClick: () => run(() => vts.replayHistoryRecord(row.id), '已回放'),
-        },
-        { default: () => '回放' },
-      )
-    },
-  },
-])
+const totalPages = computed(() => Math.max(1, Math.ceil(vts.history.length / pageSize)))
+const pagedHistory = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return vts.history.slice(start, start + pageSize)
+})
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="操作记录"
-  >
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NFlex justify="end">
-        <NButton
-          size="small"
-          type="error"
-          @click="run(() => vts.clearHistory(), '已清空')"
+  <Card>
+    <CardHeader class="py-3 px-4 flex flex-row items-center justify-between">
+      <CardTitle class="text-sm font-semibold">操作记录</CardTitle>
+      <Button
+        size="sm"
+        variant="destructive"
+        class="h-7 text-xs"
+        @click="run(() => vts.clearHistory(), '已清空')"
+      >
+        清空
+      </Button>
+    </CardHeader>
+    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-[var(--vtsuru-border)] text-[var(--vtsuru-fg-muted)]">
+              <th class="py-2 px-2 font-medium w-24">时间</th>
+              <th class="py-2 px-2 font-medium w-28">操作</th>
+              <th class="py-2 px-2 font-medium w-20">状态</th>
+              <th class="py-2 px-2 font-medium w-20">耗时</th>
+              <th class="py-2 px-2 font-medium">详情</th>
+              <th class="py-2 px-2 font-medium">错误</th>
+              <th class="py-2 px-2 font-medium w-16 text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-if="pagedHistory.length === 0"
+              class="border-b border-[var(--vtsuru-border)]"
+            >
+              <td
+                colspan="7"
+                class="py-6 text-center text-[var(--vtsuru-fg-muted)]"
+              >
+                暂无记录
+              </td>
+            </tr>
+            <tr
+              v-for="row in pagedHistory"
+              :key="row.id"
+              class="border-b border-[var(--vtsuru-border)] hover:bg-[var(--vtsuru-bg-elevated)]"
+            >
+              <td class="py-2 px-2 whitespace-nowrap">{{ new Date(row.ts).toLocaleTimeString() }}</td>
+              <td class="py-2 px-2 font-medium whitespace-nowrap">{{ row.kind }}</td>
+              <td class="py-2 px-2 whitespace-nowrap">
+                <Tag
+                  :variant="row.ok ? 'default' : 'destructive'"
+                  class="text-[10px] py-0 px-1.5"
+                >
+                  {{ row.ok ? 'OK' : '失败' }}
+                </Tag>
+              </td>
+              <td class="py-2 px-2 whitespace-nowrap">{{ row.durationMs != null ? `${row.durationMs}ms` : '-' }}</td>
+              <td
+                class="py-2 px-2 truncate max-w-xs"
+                :title="row.detail"
+              >
+                {{ row.detail ?? '' }}
+              </td>
+              <td
+                class="py-2 px-2 truncate max-w-xs text-red-400"
+                :title="row.error"
+              >
+                {{ row.error ?? '' }}
+              </td>
+              <td class="py-2 px-2 text-right whitespace-nowrap">
+                <Button
+                  v-if="row.payload && REPLAYABLE_KINDS.has(row.kind)"
+                  size="sm"
+                  variant="outline"
+                  class="h-6 text-[11px] px-1.5"
+                  :disabled="!vts.connected"
+                  @click="run(() => vts.replayHistoryRecord(row.id), '已回放')"
+                >
+                  回放
+                </Button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        v-if="totalPages > 1"
+        class="flex items-center justify-end gap-2 pt-2 text-xs"
+      >
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-7 text-xs"
+          :disabled="currentPage <= 1"
+          @click="currentPage--"
         >
-          清空
-        </NButton>
-      </NFlex>
-      <NDataTable
-        size="small"
-        :columns="columns"
-        :data="vts.history"
-        :pagination="{ pageSize: 10 }"
-        :bordered="false"
-      />
-    </NFlex>
-  </NCard>
+          上一页
+        </Button>
+        <span class="text-[var(--vtsuru-fg-muted)]">{{ currentPage }} / {{ totalPages }}</span>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-7 text-xs"
+          :disabled="currentPage >= totalPages"
+          @click="currentPage++"
+        >
+          下一页
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
 </template>

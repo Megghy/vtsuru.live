@@ -1,30 +1,24 @@
 <script setup lang="ts">
 import { SearchOutline, TrashOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NEmpty,
-  NIcon,
-  NInput,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NSkeleton,
-  NFlex,
-  NSwitch,
-  NTag,
-  NTime,
-} from 'naive-ui'
+import { format } from 'date-fns'
 import { onMounted } from 'vue'
 
 import { useFollowingStates } from '@/api/following'
 import FollowButton from '@/components/common/FollowButton.vue'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Spin } from '@/shared/ui/spin'
+import { Switch } from '@/shared/ui/switch'
 
 import { useOrgContext } from '../../composables/useOrgContext'
 import { useOrgInvites } from '../../composables/useOrgInvites'
 import { injectOrgStreamers, useStreamerDetail } from '../../composables/useOrgStreamers'
 import type { OrgInviteStreamerListItem } from '../../types'
-import { streamerStatusLabel, streamerStatusTagType } from '../../utils'
+import { streamerStatusLabel } from '../../utils'
 import OrgInviteManager from '../OrgInviteManager.vue'
 import OrgStreamerDetailDrawer from '../OrgStreamerDetailDrawer.vue'
 import OrgUserAvatar from '../OrgUserAvatar.vue'
@@ -46,12 +40,11 @@ async function onSaved() {
 </script>
 
 <template>
-  <NSkeleton
-    v-if="loading"
-    text
-    :repeat="6"
-  />
-  <template v-else>
+  <div v-if="loading" class="py-12 flex justify-center">
+    <Spin />
+  </div>
+
+  <div v-else class="space-y-3.5 text-xs">
     <OrgInviteManager
       v-if="isOrgAdmin"
       kind="streamer"
@@ -63,134 +56,103 @@ async function onSaved() {
       @revoke="invites.revoke"
     />
 
-    <NCard
-      size="small"
-      style="margin-bottom: 12px; background: transparent"
-      :bordered="false"
-    >
-      <NFlex
-        align="center"
-        justify="space-between"
-        wrap
-      >
-        <NInput
-          v-model:value="search"
+    <!-- 工具栏 -->
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div class="relative w-56">
+        <Input
+          v-model="search"
           placeholder="搜索主播名称或ID"
-          size="small"
-          style="width: 200px"
-        >
-          <template #prefix>
-            <NIcon :component="SearchOutline" />
-          </template>
-        </NInput>
-        <NFlex
-          v-if="isOrgAdmin"
-          align="center"
-        >
-          <span style="opacity: 0.8; font-size: 12px">包含非 Active 状态</span>
-          <NSwitch
-            v-model:value="includeAll"
-            size="small"
-          />
-        </NFlex>
-      </NFlex>
-    </NCard>
+          class="h-8 text-xs pl-7"
+        />
+        <component :is="SearchOutline" class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
 
-    <NEmpty
-      v-if="filtered.length === 0"
-      description="暂无主播"
-    />
-    <NList
-      v-else
-      hoverable
-      clickable
-    >
-      <NListItem
-        v-for="s in filtered"
-        :key="s.streamer.id"
-        @click="detail.open(s.streamer.id)"
+      <div
+        v-if="isOrgAdmin"
+        class="flex items-center gap-2"
       >
-        <NFlex
-          align="center"
-          justify="space-between"
-          :wrap="false"
-        >
-          <NFlex align="center">
-            <FollowButton
-              :user-id="s.streamer.id"
-              :following="follows.states.value[s.streamer.id]?.isFollowing"
-              @changed="follows.refresh"
-            />
-            <OrgUserAvatar
-              :face-url="s.streamer.faceUrl"
-              :size="48"
-            />
-            <NFlex
-              vertical
-              :size="2"
-            >
-              <div style="font-weight: 600; font-size: 15px">
-                {{ s.streamer.name }}
-              </div>
-              <div style="font-size: 12px; opacity: 0.6">ID: {{ s.streamer.id }}</div>
-            </NFlex>
-            <NTag
-              :bordered="false"
-              :type="streamerStatusTagType(s.status)"
-              size="small"
-            >
-              {{ streamerStatusLabel(s.status) }}
-            </NTag>
-            <NTag
-              :bordered="false"
-              :type="s.streamer.isBiliAuthed ? 'success' : 'default'"
-              size="small"
-            >
-              {{ s.streamer.isBiliAuthed ? '已绑定B站' : '未绑定' }}
-            </NTag>
-          </NFlex>
+        <span class="text-xs text-muted-foreground">包含非 Active 状态</span>
+        <Switch v-model:checked="includeAll" />
+      </div>
+    </div>
 
-          <NFlex align="center">
-            <div style="font-size: 12px; opacity: 0.7; text-align: right">
-              <div>
-                加入:
-                <NTime
-                  :time="s.addedAt"
-                  format="yyyy-MM-dd"
+    <div v-if="filtered.length === 0" class="py-10">
+      <Empty description="暂无主播" />
+    </div>
+
+    <!-- 主播列表 -->
+    <Card v-else class="border border-border/80 overflow-hidden">
+      <CardContent class="p-0">
+        <div class="divide-y divide-border/60">
+          <div
+            v-for="s in filtered"
+            :key="s.streamer.id"
+            class="p-3 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors cursor-pointer select-none"
+            @click="detail.open(s.streamer.id)"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <div @click.stop>
+                <FollowButton
+                  :user-id="s.streamer.id"
+                  :following="follows.states.value[s.streamer.id]?.isFollowing"
+                  @changed="follows.refresh"
                 />
               </div>
-              <div v-if="s.respondedAt">
-                响应:
-                <NTime
-                  :time="s.respondedAt"
-                  format="yyyy-MM-dd"
-                />
+
+              <OrgUserAvatar
+                :face-url="s.streamer.faceUrl"
+                :size="42"
+              />
+
+              <div class="min-w-0 flex flex-col gap-0.5">
+                <div class="flex items-center gap-2">
+                  <strong class="font-medium text-foreground text-sm truncate">{{ s.streamer.name }}</strong>
+                  <Badge variant="secondary" class="text-[10px] h-4.5 px-1.5 font-normal">
+                    {{ streamerStatusLabel(s.status) }}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    class="text-[10px] h-4.5 px-1.5 font-normal"
+                    :class="s.streamer.isBiliAuthed ? 'text-emerald-600 border-emerald-500/30' : 'text-muted-foreground border-border/60'"
+                  >
+                    {{ s.streamer.isBiliAuthed ? '已绑定B站' : '未绑定' }}
+                  </Badge>
+                </div>
+                <span class="text-[11px] text-muted-foreground font-mono">ID: {{ s.streamer.id }}</span>
               </div>
             </div>
-            <NPopconfirm
-              v-if="isOrgAdmin"
-              @positive-click="() => remove(s.streamer.id)"
-            >
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  type="error"
-                  ghost
-                  circle
-                  @click.stop
+
+            <div class="flex items-center gap-3 shrink-0">
+              <div class="text-[11px] text-muted-foreground text-right space-y-0.5">
+                <div>加入: {{ format(s.addedAt, 'yyyy-MM-dd') }}</div>
+                <div v-if="s.respondedAt">响应: {{ format(s.respondedAt, 'yyyy-MM-dd') }}</div>
+              </div>
+
+              <div v-if="isOrgAdmin" @click.stop>
+                <Popconfirm
+                  title="确定要移除该主播吗？"
+                  positive-text="确认移除"
+                  negative-text="取消"
+                  @positive-click="remove(s.streamer.id)"
                 >
-                  <template #icon>
-                    <NIcon :component="TrashOutline" />
+                  <template #trigger>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                    >
+                      <component :is="TrashOutline" class="size-3.5" />
+                    </Button>
                   </template>
-                </NButton>
-              </template>
-              确定要移除该主播吗？
-            </NPopconfirm>
-          </NFlex>
-        </NFlex>
-      </NListItem>
-    </NList>
-  </template>
+                  确定要移除该主播吗？
+                </Popconfirm>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
 
   <OrgStreamerDetailDrawer
     :detail="detail"

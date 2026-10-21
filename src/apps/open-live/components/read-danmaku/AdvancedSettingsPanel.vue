@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import {
-  NCheckbox,
-  NDivider,
-  NFlex,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NSelect,
-  NSlider,
-  NText,
-} from 'naive-ui'
-
 import { useSpeechService } from '@/store/useSpeechService'
+import { Badge } from '@/shared/ui/badge'
+import { Checkbox } from '@/shared/ui/checkbox'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
+import { Slider } from '@/shared/ui/slider'
 
 import SectionField from './SectionField.vue'
 
@@ -31,118 +31,165 @@ const eventOptions = [
   { label: '进入', value: 'enter' },
 ]
 
-const queueStrategyOptions = [
-  { label: '丢弃最旧', value: 'drop-oldest' },
-  { label: '拒绝新消息', value: 'reject-new' },
-]
+function togglePriorityEvent(val: string) {
+  const idx = settings.value.priorityEvents.indexOf(val)
+  if (idx > -1) {
+    settings.value.priorityEvents.splice(idx, 1)
+  } else {
+    settings.value.priorityEvents.push(val)
+  }
+}
+
+function toggleNotificationEvent(val: string) {
+  const list = settings.value.notificationSound.events as string[]
+  const idx = list.indexOf(val)
+  if (idx > -1) {
+    list.splice(idx, 1)
+  } else {
+    list.push(val)
+  }
+}
 </script>
 
 <template>
   <div class="panel">
     <SectionField label="音频输出设备">
-      <NSelect
-        v-model:value="settings.outputDeviceId"
-        :options="audioOutputDevices"
-        :loading="audioOutputDevicesLoading"
-        size="small"
-        @update:value="emit('deviceChange')"
-      />
+      <Select
+        v-model="settings.outputDeviceId"
+        @update:model-value="emit('deviceChange')"
+      >
+        <SelectTrigger class="w-full h-8 text-xs">
+          <SelectValue placeholder="默认设备" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="d in audioOutputDevices"
+            :key="d.value"
+            :value="d.value"
+            class="text-xs"
+          >
+            {{ d.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </SectionField>
 
-    <NDivider style="margin: 4px 0" />
+    <Separator class="my-1" />
 
     <SectionField label="礼物合并">
-      <NFlex
-        align="center"
-        :size="8"
-      >
-        <NCheckbox
-          :checked="settings.combineGiftDelay != null"
-          @update:checked="(c: boolean) => (settings.combineGiftDelay = c ? 2 : undefined)"
-        >
-          <NText style="font-size: 12px"> 启用 </NText>
-        </NCheckbox>
-        <NInputGroup
+      <div class="flex items-center gap-3">
+        <label class="flex items-center gap-2 cursor-pointer text-xs">
+          <Checkbox
+            :checked="settings.combineGiftDelay != null"
+            @update:checked="(c: boolean) => (settings.combineGiftDelay = c ? 2 : undefined)"
+          />
+          <span>启用</span>
+        </label>
+        <div
           v-if="settings.combineGiftDelay != null"
-          size="small"
-          style="max-width: 180px"
+          class="flex items-center border rounded-md overflow-hidden text-xs w-[180px]"
         >
-          <NInputGroupLabel size="small"> 间隔(秒) </NInputGroupLabel>
+          <span class="bg-muted px-2 py-1 text-muted-foreground border-r shrink-0">间隔(秒)</span>
           <NInputNumber
             v-model:value="settings.combineGiftDelay"
             :min="1"
             :max="10"
             size="small"
+            class="border-0 shadow-none flex-1"
           />
-        </NInputGroup>
-      </NFlex>
+        </div>
+      </div>
     </SectionField>
 
     <SectionField
       label="优先级插队"
       hint="这些事件类型会插到队列最前面"
     >
-      <NSelect
-        v-model:value="settings.priorityEvents"
-        :options="eventOptions"
-        multiple
-        size="small"
-        placeholder="选择优先事件类型"
-      />
+      <div class="flex flex-wrap gap-1.5">
+        <Badge
+          v-for="opt in eventOptions"
+          :key="opt.value"
+          :variant="settings.priorityEvents.includes(opt.value) ? 'default' : 'outline'"
+          class="cursor-pointer text-xs py-0.5"
+          @click="togglePriorityEvent(opt.value)"
+        >
+          {{ opt.label }}
+        </Badge>
+      </div>
     </SectionField>
 
-    <NDivider style="margin: 4px 0" />
+    <Separator class="my-1" />
 
     <SectionField label="提示音">
-      <NFlex
-        vertical
-        :size="8"
-      >
-        <NCheckbox v-model:checked="settings.notificationSound.enabled">
-          <NText style="font-size: 12px"> 播报前播放提示音 </NText>
-        </NCheckbox>
-        <template v-if="settings.notificationSound.enabled">
-          <NSelect
-            v-model:value="settings.notificationSound.events"
-            :options="eventOptions"
-            multiple
-            size="small"
-            placeholder="哪些事件触发提示音"
+      <div class="flex flex-col gap-2.5">
+        <label class="flex items-center gap-2 cursor-pointer text-xs">
+          <Checkbox
+            :checked="settings.notificationSound.enabled"
+            @update:checked="settings.notificationSound.enabled = $event"
           />
+          <span>播报前播放提示音</span>
+        </label>
+        <template v-if="settings.notificationSound.enabled">
+          <div class="flex flex-wrap gap-1.5">
+            <Badge
+              v-for="opt in eventOptions"
+              :key="opt.value"
+              :variant="(settings.notificationSound.events as string[]).includes(opt.value) ? 'default' : 'outline'"
+              class="cursor-pointer text-xs py-0.5"
+              @click="toggleNotificationEvent(opt.value)"
+            >
+              {{ opt.label }}
+            </Badge>
+          </div>
           <SectionField
             label="提示音音量"
             :value="`${(settings.notificationSound.volume * 100).toFixed(0)}%`"
           >
-            <NSlider
-              v-model:value="settings.notificationSound.volume"
+            <Slider
+              :model-value="[settings.notificationSound.volume]"
               :min="0"
               :max="1"
               :step="0.05"
+              @update:model-value="settings.notificationSound.volume = $event?.[0] ?? 0.5"
             />
           </SectionField>
         </template>
-      </NFlex>
+      </div>
     </SectionField>
 
-    <NDivider style="margin: 4px 0" />
+    <Separator class="my-1" />
 
     <SectionField label="队列上限">
-      <NInputNumber
-        v-model:value="settings.maxQueueSize"
-        :min="10"
-        :max="200"
-        size="small"
-        style="max-width: 140px"
-      />
+      <div class="max-w-[140px]">
+        <NInputNumber
+          v-model:value="settings.maxQueueSize"
+          :min="10"
+          :max="200"
+          size="small"
+        />
+      </div>
     </SectionField>
 
     <SectionField label="队列满时策略">
-      <NSelect
-        v-model:value="settings.queueFullStrategy"
-        :options="queueStrategyOptions"
-        size="small"
-        style="max-width: 180px"
-      />
+      <Select v-model="settings.queueFullStrategy">
+        <SelectTrigger class="w-[180px] h-8 text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            value="drop-oldest"
+            class="text-xs"
+          >
+            丢弃最旧
+          </SelectItem>
+          <SelectItem
+            value="reject-new"
+            class="text-xs"
+          >
+            拒绝新消息
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </SectionField>
   </div>
 </template>

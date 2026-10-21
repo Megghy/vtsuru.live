@@ -2,12 +2,11 @@
 import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef, watch } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
-import { isDarkMode } from '@/shared/utils'
+import { isDarkMode, toast } from '@/shared/utils'
 
 import '@/assets/editorDarkMode.css'
 import '@wangeditor/editor/dist/css/style.css'
@@ -16,9 +15,6 @@ type InsertFnType = (url: string, alt: string, href: string) => void
 
 const html = defineModel<string>('html', { required: true })
 const imagesFile = defineModel<UploadFileResponse[]>('imagesFile', { default: () => [] })
-
-const message = useMessage()
-const themeVars = useThemeVars()
 
 const editorRef = shallowRef()
 
@@ -105,13 +101,13 @@ const editorConfig: Partial<IEditorConfig> = {
       maxNumberOfFiles: 1,
       async customUpload(file: File, insertFn: InsertFnType) {
         try {
-          message.info('图片上传中')
+          toast.info('图片上传中')
           const [result] = await uploadFiles(file, FileStore.Configs)
           if (!imagesFile.value.some((x) => x.id === result.id)) imagesFile.value = [...imagesFile.value, result]
           insertFn(result.path, result.name || '', result.path)
-          message.success('图片上传成功')
+          toast.success('图片上传成功')
         } catch (e) {
-          message.error((e as Error).message || '图片上传失败')
+          toast.error((e as Error).message || '图片上传失败')
           throw e
         }
       },
@@ -155,10 +151,10 @@ onBeforeUnmount(() => {
 <template>
   <div
     :class="{ 'dark-theme': isDarkMode }"
-    :style="{ border: `1px solid ${themeVars.borderColor}`, borderRadius: themeVars.borderRadius, overflow: 'hidden' }"
+    class="border border-border rounded-lg overflow-hidden bg-card"
   >
     <Toolbar
-      :style="{ borderBottom: `1px solid ${themeVars.borderColor}` }"
+      class="border-b border-border"
       :editor="editorRef"
       :default-config="toolbarConfig"
       mode="default"

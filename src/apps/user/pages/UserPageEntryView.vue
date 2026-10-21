@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NResult } from 'naive-ui'
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -15,6 +14,7 @@ import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import type { BiliProfile, BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
 import { IndexTemplateMap } from '@/shared/config/templates'
+import { Button } from '@/shared/ui/button'
 import { isDarkMode } from '@/shared/utils'
 
 const props = defineProps<{
@@ -132,12 +132,13 @@ const contentClass = computed(() => ({
         />
 
         <template v-else-if="renderMode === 'block'">
-          <NResult
+          <div
             v-if="blockValidation && !blockValidation.ok"
-            status="error"
-            title="页面配置错误"
-            description="该页面的发布配置无效，请联系页面所有者处理"
-          />
+            class="flex flex-col items-center justify-center p-12 text-center"
+          >
+            <div class="text-destructive font-semibold text-lg mb-2">页面配置错误</div>
+            <div class="text-sm text-muted-foreground">该页面的发布配置无效，请联系页面所有者处理</div>
+          </div>
           <BlockPageRenderer
             v-else-if="blockValidation?.ok && mergedBlockProject"
             :project="mergedBlockProject"
@@ -156,21 +157,19 @@ const contentClass = computed(() => ({
           :bili-info="biliInfo"
         />
 
-        <NResult
+        <div
           v-else-if="pageSlug"
-          status="404"
-          title="页面不存在"
-          description="该主播未配置此页面"
+          class="flex flex-col items-center justify-center p-12 text-center"
         >
-          <template #footer>
-            <NButton
-              type="primary"
-              @click="$router.push({ name: 'user-index', params: { id: route.params.id } })"
-            >
-              返回主页
-            </NButton>
-          </template>
-        </NResult>
+          <div class="text-3xl font-bold mb-2">404</div>
+          <div class="text-lg font-medium mb-1">页面不存在</div>
+          <div class="text-sm text-muted-foreground mb-4">该主播未配置此页面</div>
+          <Button
+            @click="$router.push({ name: 'user-index', params: { id: route.params.id } })"
+          >
+            返回主页
+          </Button>
+        </div>
       </main>
     </div>
   </div>

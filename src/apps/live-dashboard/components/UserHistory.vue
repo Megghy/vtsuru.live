@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { NTabPane, NTabs } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
+
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { EventDataTypes } from '@/api/api-models'
 
@@ -88,32 +89,28 @@ function describe(e: DashboardEvent) {
         class="history__medal"
       >{{ name }} {{ m.first === m.current ? m.current : `${m.first}→${m.current}` }}<template v-if="m.max > m.current">（最高 {{ m.max }}）</template></span>
     </div>
-    <NTabs
-      v-model:value="tab"
-      size="small"
-      type="segment"
+    <Tabs
+      v-model="tab"
+      class="w-full"
     >
-      <NTabPane
-        name="all"
-        tab="全部"
-      />
-      <NTabPane
-        name="message"
-        tab="弹幕"
-      />
-      <NTabPane
-        name="sc"
-        tab="SC"
-      />
-      <NTabPane
-        name="gift"
-        tab="礼物"
-      />
-      <NTabPane
-        name="interaction"
-        tab="互动"
-      />
-    </NTabs>
+      <TabsList class="grid w-full grid-cols-5 h-7">
+        <TabsTrigger value="all" class="text-xs py-1">
+          全部
+        </TabsTrigger>
+        <TabsTrigger value="message" class="text-xs py-1">
+          弹幕
+        </TabsTrigger>
+        <TabsTrigger value="sc" class="text-xs py-1">
+          SC
+        </TabsTrigger>
+        <TabsTrigger value="gift" class="text-xs py-1">
+          礼物
+        </TabsTrigger>
+        <TabsTrigger value="interaction" class="text-xs py-1">
+          互动
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
     <div class="history__list">
       <div
         v-for="e in list"

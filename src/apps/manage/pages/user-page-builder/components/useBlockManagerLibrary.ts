@@ -7,17 +7,26 @@ import {
   LayersOutline,
   TrashOutline,
 } from '@vicons/ionicons5'
-import type { MenuOption } from 'naive-ui'
-import { NIcon, useDialog } from 'naive-ui'
 import { computed, h, inject, ref } from 'vue'
 
 import { BLOCK_LIBRARY, createBlockNode } from '@/apps/user-page/block/registry'
 import type { BlockNode, BlockType } from '@/apps/user-page/block/schema'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useDialog } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
 import { cloneBlockNode, createId, deepCloneJson } from '../editorHelpers'
 import { USER_PAGE_BLOCK_TEMPLATES_KEY } from '../storageKeys'
+
+export interface MenuOption {
+  key: string
+  label?: string | (() => any)
+  icon?: () => any
+  disabled?: boolean
+  children?: MenuOption[]
+  type?: 'divider'
+  props?: Record<string, any>
+}
 
 interface BlockTemplate {
   key: string
@@ -103,7 +112,7 @@ function createBlockOption(item: (typeof BLOCK_LIBRARY)[number]): MenuOption {
   return {
     label: item.label,
     key: item.type,
-    icon: item.icon ? () => h(NIcon, null, { default: () => h(item.icon) }) : undefined,
+    icon: item.icon ? () => h(item.icon, { class: 'size-4' }) : undefined,
   }
 }
 
@@ -177,34 +186,34 @@ export function useBlockManagerLibrary() {
   })
 
   const blockActionOptions = computed<MenuOption[]>(() => [
-    { label: '上移', key: 'move-up', icon: () => h(NIcon, null, { default: () => h(ArrowUpOutline) }) },
-    { label: '下移', key: 'move-down', icon: () => h(NIcon, null, { default: () => h(ArrowDownOutline) }) },
+    { label: '上移', key: 'move-up', icon: () => h(ArrowUpOutline, { class: 'size-4' }) },
+    { label: '下移', key: 'move-down', icon: () => h(ArrowDownOutline, { class: 'size-4' }) },
     {
       label: '移动到',
       key: 'move-to',
       children: moveTargets.value,
-      icon: () => h(NIcon, null, { default: () => h(LayersOutline) }),
+      icon: () => h(LayersOutline, { class: 'size-4' }),
     },
     { type: 'divider', key: 'movement-divider' },
-    { label: '重命名', key: 'rename', icon: () => h(NIcon, null, { default: () => h(CreateOutline) }) },
-    { label: '复制', key: 'copy', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
+    { label: '重命名', key: 'rename', icon: () => h(CreateOutline, { class: 'size-4' }) },
+    { label: '复制', key: 'copy', icon: () => h(CopyOutline, { class: 'size-4' }) },
     {
       label: '粘贴到下方',
       key: 'paste-after',
       disabled: editor.getClipboardBlocksCount() === 0,
-      icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }),
+      icon: () => h(AddCircleOutline, { class: 'size-4' }),
     },
     { type: 'divider', key: 'duplicate-divider' },
-    { label: '在上方插入副本', key: 'dup-up', icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
-    { label: '在下方插入副本', key: 'dup-down', icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
+    { label: '在上方插入副本', key: 'dup-up', icon: () => h(AddCircleOutline, { class: 'size-4' }) },
+    { label: '在下方插入副本', key: 'dup-down', icon: () => h(AddCircleOutline, { class: 'size-4' }) },
     { type: 'divider', key: 'layout-divider' },
-    { label: '解散分组 - 仅布局', key: 'ungroup', icon: () => h(NIcon, null, { default: () => h(LayersOutline) }) },
+    { label: '解散分组 - 仅布局', key: 'ungroup', icon: () => h(LayersOutline, { class: 'size-4' }) },
     { type: 'divider', key: 'delete-divider' },
     {
       label: '删除区块',
       key: 'delete',
-      icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
-      props: { style: 'color: #d03050' },
+      icon: () => h(TrashOutline, { class: 'size-4 text-destructive' }),
+      props: { class: 'text-destructive' },
     },
   ])
 

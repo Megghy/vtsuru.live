@@ -8,12 +8,20 @@ import {
   LocateOutline,
   ReorderThreeOutline,
 } from '@vicons/ionicons5'
-import { NButton, NDropdown, NIcon, NText, NTooltip } from 'naive-ui'
 import { computed, inject } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import { BLOCK_LIBRARY, getBlockLabel } from '@/apps/user-page/block/registry'
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { UserPageEditorKey } from '../context'
 
@@ -158,18 +166,7 @@ function scrollToPreviewBlock(blockId: string) {
     return
   }
 
-  const scrollbar = previewRoot.closest('.n-scrollbar') as HTMLElement | null
-  const container = (scrollbar?.querySelector?.('.n-scrollbar-container') as HTMLElement | null) ?? null
-  if (!container) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
-    return
-  }
-
-  const containerRect = container.getBoundingClientRect()
-  const elRect = el.getBoundingClientRect()
-  const targetTop =
-    elRect.top - containerRect.top + container.scrollTop - container.clientHeight / 2 + elRect.height / 2
-  container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' })
+  el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
 }
 
 function focusTreeItem(row: HTMLElement | undefined) {
@@ -260,140 +257,130 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
           :style="{ width: indentWidth }"
         />
 
-        <NIcon
+        <component
+          :is="ChevronForwardOutline"
           v-if="b.type === 'layout'"
-          class="expand-toggle"
-          :class="{ expanded: props.expandedLayoutIdSet.has(b.id) }"
-          size="16"
+          class="expand-toggle size-4 cursor-pointer text-muted-foreground transition-transform"
+          :class="{ 'rotate-90': props.expandedLayoutIdSet.has(b.id) }"
           title="折叠/展开"
           @click.stop="props.onToggleExpanded(b.id)"
-        >
-          <ChevronForwardOutline />
-        </NIcon>
+        />
         <div
           v-else
-          class="expand-placeholder"
+          class="expand-placeholder w-4 h-4 shrink-0"
         />
 
-        <NIcon
-          class="drag-handle"
-          size="18"
-          title="拖拽排序：靠近上下边缘；拖到区块中间松开：成组/加入组"
-        >
-          <ReorderThreeOutline />
-        </NIcon>
+        <component
+          :is="ReorderThreeOutline"
+          class="drag-handle size-4.5 cursor-grab text-muted-foreground shrink-0"
+          title="拖拽排序"
+        />
 
-        <NIcon
+        <component
+          :is="getIcon(b.type)!"
           v-if="getIcon(b.type)"
-          class="type-icon"
-          size="16"
-        >
-          <component :is="getIcon(b.type)!" />
-        </NIcon>
+          class="type-icon size-4 shrink-0 text-muted-foreground"
+        />
         <div
           v-else
-          class="type-icon-placeholder"
+          class="type-icon-placeholder w-4 h-4 shrink-0"
         />
 
-        <div class="block-label">
-          <span class="truncate-text">
+        <div class="block-label flex-1 min-w-0 flex items-center">
+          <span class="truncate-text text-xs">
             {{ getDisplayTitle(b) }}
           </span>
-          <NText
+          <span
             v-if="b.name && b.name.trim().length"
-            depth="3"
-            class="type-hint"
+            class="type-hint text-[11px] text-muted-foreground ml-2 truncate"
           >
             {{ getBlockLabel(b.type) }}
-          </NText>
-          <NText
+          </span>
+          <span
             v-if="b.type === 'layout'"
-            depth="3"
-            style="margin-left: 6px; font-size: 12px"
+            class="text-[11px] text-muted-foreground ml-1.5"
           >
             ({{ getLayoutChildrenModel(b).length }})
-          </NText>
+          </span>
         </div>
 
         <Transition name="fade-scale">
-          <NText
+          <span
             v-if="props.dragGroupTargetId === b.id"
-            depth="3"
-            class="drag-group-hint"
+            class="drag-group-hint text-xs text-primary border border-primary px-1.5 rounded-full"
           >
             {{ props.dragGroupTargetMode === 'into-layout' ? '松开加入组' : '松开成组' }}
-          </NText>
+          </span>
         </Transition>
 
-        <NIcon
+        <component
+          :is="AlertCircleOutline"
           v-if="props.invalidSet.has(b.id)"
-          size="18"
+          class="size-4 text-destructive shrink-0"
           title="该区块配置有误"
-          style="color: var(--vtsuru-error, #d03050)"
-        >
-          <AlertCircleOutline />
-        </NIcon>
+        />
 
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="tiny"
-              :type="b.hidden ? 'default' : 'primary'"
-              :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
-              @click.stop="b.hidden = !b.hidden"
-            >
-              <template #icon>
-                <NIcon>
-                  <EyeOutline v-if="!b.hidden" />
-                  <EyeOffOutline v-else />
-                </NIcon>
-              </template>
-            </NButton>
-          </template>
-          {{ b.hidden ? '显示区块' : '隐藏区块' }}
-        </NTooltip>
-
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="tiny"
-              aria-label="在预览中定位"
-              @click.stop="scrollToPreviewBlock(b.id)"
-            >
-              <template #icon>
-                <NIcon><LocateOutline /></NIcon>
-              </template>
-            </NButton>
-          </template>
-          在预览中定位
-        </NTooltip>
-
-        <NTooltip>
-          <template #trigger>
-            <NDropdown
-              trigger="click"
-              :options="props.blockActionOptions"
-              @select="(key) => props.onBlockAction(String(key), b.id)"
-            >
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                aria-label="更多区块操作"
-                @click.stop
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="size-6 p-0"
+                :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
+                @click.stop="b.hidden = !b.hidden"
               >
-                <template #icon>
-                  <NIcon><EllipsisHorizontalOutline /></NIcon>
-                </template>
-              </NButton>
-            </NDropdown>
-          </template>
-          更多区块操作
-        </NTooltip>
+                <component :is="b.hidden ? EyeOffOutline : EyeOutline" class="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{{ b.hidden ? '显示区块' : '隐藏区块' }}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="size-6 p-0"
+                aria-label="在预览中定位"
+                @click.stop="scrollToPreviewBlock(b.id)"
+              >
+                <component :is="LocateOutline" class="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>在预览中定位</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="size-6 p-0"
+              aria-label="更多区块操作"
+              @click.stop
+            >
+              <component :is="EllipsisHorizontalOutline" class="size-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" class="w-44 text-xs">
+            <template v-for="item in props.blockActionOptions" :key="item.key">
+              <DropdownMenuSeparator v-if="item.type === 'divider'" />
+              <DropdownMenuItem
+                v-else
+                :disabled="item.disabled"
+                :class="item.key === 'delete' ? 'text-destructive focus:text-destructive' : ''"
+                @click="props.onBlockAction(String(item.key), b.id)"
+              >
+                <component :is="item.icon" v-if="item.icon" class="mr-2" />
+                {{ item.label }}
+              </DropdownMenuItem>
+            </template>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Transition
@@ -460,26 +447,22 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 }
 
 .block-item-row.is-layout {
-  box-shadow: inset 3px 0 0 var(--vtsuru-primary);
-}
-
-.block-item-row.is-layout .block-label {
-  font-weight: 650;
+  box-shadow: inset 3px 0 0 var(--primary);
 }
 
 .block-item-row:hover {
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 .block-item-row.active {
-  border-color: var(--vtsuru-bg-muted);
-  background: var(--vtsuru-bg-inset);
+  border-color: var(--border);
+  background: var(--muted);
 }
 
 .block-item-row.drag-group-target {
-  border-color: var(--vtsuru-primary);
-  background: var(--vtsuru-bg-inset);
-  box-shadow: 0 0 0 1px var(--vtsuru-primary);
+  border-color: var(--primary);
+  background: var(--muted);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
 .block-item-row.drag-group-target-wrap {
@@ -495,7 +478,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
   z-index: 3;
   height: 2px;
   border-radius: 2px;
-  background: var(--vtsuru-primary);
+  background: var(--primary);
 }
 
 .block-item-row.drag-insert-before::before {
@@ -508,19 +491,12 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 
 .drag-group-hint {
   margin-right: 6px;
-  padding: 0 6px;
-  border-radius: 999px;
-  font-size: 12px;
-  line-height: 18px;
-  color: var(--vtsuru-primary);
-  border: 1px solid var(--vtsuru-primary);
-  opacity: 0.9;
   flex: 0 0 auto;
 }
 
 .block-item-row.invalid,
 .block-item-row.active.invalid {
-  border-color: var(--vtsuru-error-pressed, var(--vtsuru-error, #d03050));
+  border-color: var(--destructive);
 }
 
 .block-item-row.hidden .block-label {
@@ -532,52 +508,21 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
   flex: 0 0 auto;
 }
 
-.expand-toggle {
-  cursor: pointer;
-  opacity: 0.85;
-  transition:
-    transform 160ms ease,
-    opacity 160ms ease;
-  transform: rotate(0deg);
-}
-
-.expand-toggle.expanded {
-  transform: rotate(90deg);
-}
-
 .expand-placeholder {
-  width: 16px;
-  height: 16px;
   flex: 0 0 auto;
 }
 
 .type-icon,
 .type-icon-placeholder {
-  width: 16px;
-  height: 16px;
   flex: 0 0 auto;
-  opacity: 0.92;
-}
-
-.type-hint {
-  margin-left: 8px;
-  font-size: 12px;
 }
 
 .drag-handle {
   cursor: grab;
-  opacity: 0.8;
 }
 
 .drag-handle:active {
   cursor: grabbing;
-}
-
-.block-label {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
 }
 
 .children {
@@ -588,10 +533,9 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
   opacity: 0.45;
 }
 
-/* 拖放时的插入线指示 */
 .sortable-chosen {
   opacity: 0.9;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 .sortable-drag {

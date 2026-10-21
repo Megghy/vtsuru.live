@@ -12,32 +12,7 @@ import {
 import { useDebounceFn } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCheckbox,
-  NDataTable,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGrid,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NScrollbar,
-  NSpin,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ResponsePointGoodModel, ResponsePointUserModel, Setting_Point } from '@/api/api-models'
@@ -48,18 +23,39 @@ import {
   postApiPointGivePoint,
   postApiPointReset,
 } from '@/api/generated/point/point'
-import { formatNumber } from '@/apps/manage/composables/formatters'
+import { formatNumber, formatTime } from '@/apps/manage/composables/formatters'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Separator } from '@/shared/ui/separator'
+import { Spin } from '@/shared/ui/spin'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/table'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { objectsToCSV } from '@/shared/utils'
+import { objectsToCSV, useMessage } from '@/shared/utils'
 
 import PointUserDetailCard from './PointUserDetailCard.vue'
 
-// 用户积分设置类型定义
 interface PointUserSettings {
-  onlyAuthed: boolean // 只显示已认证用户
-  searchKeyword?: string // 搜索关键词
+  onlyAuthed: boolean
+  searchKeyword?: string
 }
 
 const props = defineProps<{
@@ -73,12 +69,10 @@ const emit = defineEmits<{
 const message = useMessage()
 const accountInfo = useAccount()
 
-// 默认筛选设置
 const defaultSettings: PointUserSettings = {
   onlyAuthed: false,
 }
 
-// 使用持久化存储保存筛选设置
 const settings = usePersistedStorage<PointUserSettings>(
   'Settings.Point.Users',
   JSON.parse(JSON.stringify(defaultSettings)),
@@ -87,15 +81,6 @@ const settings = usePersistedStorage<PointUserSettings>(
 // 分页参数
 const pn = ref(1)
 const ps = ref(25)
-
-function onUpdateUserPage(page: number) {
-  pn.value = page
-}
-
-function onUpdateUserPageSize(pageSize: number) {
-  ps.value = pageSize
-  pn.value = 1
-}
 
 // 弹窗控制
 const showModal = ref(false)
@@ -129,18 +114,10 @@ type PointUserTargetParams = { authId: number } | { uId: number } | { oId: strin
 
 function getPointUserTargetParams(user: ResponsePointUserModel): PointUserTargetParams | null {
   const info = user.info
-  if (!info) {
-    return null
-  }
-  if (info.id > 0) {
-    return { authId: info.id }
-  }
-  if (info.userId > 0) {
-    return { uId: info.userId }
-  }
-  if (info.openId && info.openId !== emptyOpenId) {
-    return { oId: info.openId }
-  }
+  if (!info) return null
+  if (info.id > 0) return { authId: info.id }
+  if (info.userId > 0) return { uId: info.userId }
+  if (info.openId && info.openId !== emptyOpenId) return { oId: info.openId }
   return null
 }
 
@@ -174,7 +151,6 @@ const pointSourceHelpText = computed(() => {
 const searchKeyword = ref('')
 const debouncedSearchKeyword = ref('')
 
-// 防抖搜索
 const updateSearch = useDebounceFn((value: string) => {
   debouncedSearchKeyword.value = value
 }, 300)
@@ -191,7 +167,6 @@ watch(
   },
 )
 
-// 根据筛选条件过滤后的用户（认证筛选与搜索同时生效）
 const filteredUsers = computed(() => {
   const keyword = debouncedSearchKeyword.value.trim().toLowerCase()
   return users.value
@@ -201,6 +176,13 @@ const filteredUsers = computed(() => {
       return user.info.name?.toLowerCase().includes(keyword) === true || user.info.userId?.toString() === keyword
     })
     .toSorted((a, b) => b.updateAt - a.updateAt)
+})
+
+const totalPages = computed(() => Math.ceil(filteredUsers.value.length / ps.value) || 1)
+
+const paginatedUsers = computed(() => {
+  const start = (pn.value - 1) * ps.value
+  return filteredUsers.value.slice(start, start + ps.value)
 })
 
 // 用户统计
@@ -220,113 +202,6 @@ const userStats = computed(() => {
 // 当前查看的用户详情
 const currentUser = ref<ResponsePointUserModel>()
 
-// 渲染用户名或用户ID
-function renderUsername(user: ResponsePointUserModel) {
-  if (user.info?.name) {
-    return user.info.name
-  }
-
-  return h(NFlex, null, () => [
-    '未知',
-    h(NText, { depth: 3 }, { default: () => `(${user.info.userId ?? user.info.openId})` }),
-  ])
-}
-
-// 渲染订单数量，更友好的显示方式
-function renderOrderCount(user: ResponsePointUserModel) {
-  if (!user.isAuthed) return h(NText, { depth: 3 }, { default: () => '未认证' })
-  return user.orderCount > 0
-    ? h(NText, {}, { default: () => formatNumber(user.orderCount) })
-    : h(NText, { depth: 3 }, { default: () => '无订单' })
-}
-
-// 渲染时间戳为相对时间和绝对时间
-function renderTime(timestamp: number) {
-  return h(NTooltip, null, {
-    trigger: () => h(NTime, { time: timestamp, type: 'relative' }),
-    default: () => h(NTime, { time: timestamp }),
-  })
-}
-
-// 渲染操作按钮
-function renderActions(user: ResponsePointUserModel) {
-  return h(NFlex, { justify: 'center', gap: 8 }, () => [
-    h(
-      NButton,
-      {
-        onClick: () => {
-          currentUser.value = user
-          showModal.value = true
-        },
-        type: 'info',
-        size: 'small',
-      },
-      { default: () => '详情' },
-    ),
-    h(
-      NPopconfirm,
-      { onPositiveClick: () => deleteUser(user) },
-      {
-        default: () => '确定要删除这个用户吗？记录将无法恢复',
-        trigger: () =>
-          h(
-            NButton,
-            {
-              type: 'error',
-              size: 'small',
-            },
-            { default: () => '删除' },
-          ),
-      },
-    ),
-  ])
-}
-
-// 渲染积分，添加千位符并加粗，保留一位小数
-function renderPoint(num: number) {
-  const formattedNum = Number(num.toFixed(1))
-  return h(NText, { strong: true }, { default: () => formatNumber(formattedNum) })
-}
-
-// 数据表格列定义
-const column: DataTableColumns<ResponsePointUserModel> = [
-  {
-    title: '认证',
-    key: 'auth',
-    render: (row: ResponsePointUserModel) => {
-      return h(NTag, { type: row.isAuthed ? 'success' : 'error' }, () => (row.isAuthed ? '已认证' : '未认证'))
-    },
-  },
-  {
-    title: '用户名',
-    key: 'username',
-    render: (row: ResponsePointUserModel) => renderUsername(row),
-  },
-  {
-    title: '积分',
-    key: 'point',
-    sorter: (row1: ResponsePointUserModel, row2: ResponsePointUserModel) => row1.point - row2.point,
-    render: (row: ResponsePointUserModel) => renderPoint(row.point),
-  },
-  {
-    title: '订单数量',
-    key: 'orderCount',
-    render: (row: ResponsePointUserModel) => renderOrderCount(row),
-  },
-  {
-    title: '最后更新于',
-    key: 'updateAt',
-    sorter: (row1: ResponsePointUserModel, row2: ResponsePointUserModel) => row1.updateAt - row2.updateAt,
-    render: (row: ResponsePointUserModel) => renderTime(row.updateAt),
-  },
-  {
-    title: '操作',
-    key: 'action',
-    render: (row: ResponsePointUserModel) => renderActions(row),
-  },
-]
-
-// 获取所有用户
 async function getUsers() {
   return (
     (await run<ResponsePointUserModel[]>(() => getApiPointGetAllUsers(), {
@@ -335,15 +210,12 @@ async function getUsers() {
   )
 }
 
-// 刷新用户数据
 async function refresh() {
   users.value = await getUsers()
 }
 
-// 给指定用户添加积分
 async function givePoint() {
-  // 表单验证
-  if (addPointCount.value == 0) {
+  if (addPointCount.value === 0) {
     message.error('积分数量不能为 0')
     return
   }
@@ -376,7 +248,6 @@ async function givePoint() {
   }
 }
 
-// 删除用户
 async function deleteUser(user: ResponsePointUserModel) {
   const params = getPointUserTargetParams(user)
   if (!params) {
@@ -389,11 +260,11 @@ async function deleteUser(user: ResponsePointUserModel) {
       success: '已删除',
       fail: '删除失败',
     })
-  )
-    users.value = users.value.filter((u) => u != user)
+  ) {
+    users.value = users.value.filter((u) => u !== user)
+  }
 }
 
-// 重置所有用户积分
 async function resetAllPoints() {
   if (resetConfirmText.value !== RESET_CONFIRM_TEXT) {
     message.error(`请输入"${RESET_CONFIRM_TEXT}"以确认操作`)
@@ -407,23 +278,19 @@ async function resetAllPoints() {
   }
 }
 
-// 导出用户积分数据
 function exportData() {
   try {
     const text = objectsToCSV(
-      users.value.map((user) => {
-        return {
-          用户ID: user.info.userId || user.info.openId,
-          用户名: user.info.name || '未知',
-          认证状态: user.isAuthed ? '已认证' : '未认证',
-          积分: Number(user.point.toFixed(1)),
-          订单数量: user.orderCount || 0,
-          最后更新时间: format(user.updateAt, 'yyyy-MM-dd HH:mm:ss'),
-        }
-      }),
+      users.value.map((user) => ({
+        用户ID: user.info.userId || user.info.openId,
+        用户名: user.info.name || '未知',
+        认证状态: user.isAuthed ? '已认证' : '未认证',
+        积分: Number(user.point.toFixed(1)),
+        订单数量: user.orderCount || 0,
+        最后更新时间: format(user.updateAt, 'yyyy-MM-dd HH:mm:ss'),
+      })),
     )
 
-    // 添加BOM标记，确保Excel正确识别UTF-8编码
     const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
     const utf8encoder = new TextEncoder()
     const utf8array = utf8encoder.encode(text)
@@ -440,427 +307,357 @@ function exportData() {
   }
 }
 
-// 组件挂载时加载数据
 onMounted(async () => {
   await refresh()
 })
 </script>
 
 <template>
-  <NSpin
-    :show="isLoading"
-    class="user-manage-container"
-  >
+  <div class="space-y-4">
     <!-- 统计卡片 -->
-    <NGrid
-      cols="2 600:4 800:5"
-      :x-gap="12"
-      :y-gap="12"
-      style="margin-bottom: 16px"
-    >
-      <div class="stat-card">
-        <div class="stat-label">总用户</div>
-        <div class="stat-value">
-          {{ userStats.total }}
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">已认证</div>
-        <div class="stat-value success">
-          {{ userStats.authed }}
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">总积分</div>
-        <div class="stat-value primary">
-          {{ userStats.totalPoints }}
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">总订单</div>
-        <div class="stat-value info">
-          {{ userStats.totalOrders }}
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">平均积分</div>
-        <div class="stat-value">
-          {{ userStats.avgPoints }}
-        </div>
-      </div>
-    </NGrid>
-
-    <NAlert
-      class="point-source-alert"
-      :type="pointSourceAlertType"
-      :bordered="false"
-    >
-      <NFlex
-        align="center"
-        justify="space-between"
-        :gap="12"
-        wrap
-      >
-        <NFlex
-          vertical
-          :gap="2"
-        >
-          <NText strong> 当前积分来源：{{ pointSourceText }} </NText>
-          <NText
-            depth="3"
-            style="font-size: 13px"
-          >
-            {{ pointSourceHelpText }}
-          </NText>
-        </NFlex>
-        <NButton
-          size="small"
-          secondary
-          @click="emit('openSourceSettings')"
-        >
-          <template #icon>
-            <NIcon :component="Settings24Regular" />
-          </template>
-          来源设置
-        </NButton>
-      </NFlex>
-    </NAlert>
-
-    <!-- 工具栏 -->
-    <div class="toolbar-section">
-      <NFlex
-        justify="space-between"
-        align="center"
-        wrap
-        :gap="12"
-      >
-        <!-- 左侧：筛选与搜索 -->
-        <NFlex
-          align="center"
-          :gap="12"
-          wrap
-        >
-          <NInput
-            v-model:value="searchKeyword"
-            placeholder="搜索用户 (用户名或UID)"
-            style="width: 240px"
-            clearable
-            size="medium"
-          >
-            <template #prefix>
-              <NIcon :component="Search24Regular" />
-            </template>
-          </NInput>
-
-          <NCheckbox v-model:checked="settings.onlyAuthed"> 只显示已认证用户 </NCheckbox>
-
-          <NTooltip>
-            <template #trigger>
-              <NIcon
-                :component="Info24Filled"
-                class="info-icon"
-              />
-            </template>
-            <div class="tooltip-content">
-              <p>
-                1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户 (OpenID不通用)
-              </p>
-              <p>2. 用户名只会保持在首条记录出现时的用户名</p>
-            </div>
-          </NTooltip>
-        </NFlex>
-
-        <!-- 右侧：操作按钮 -->
-        <NFlex
-          align="center"
-          :gap="8"
-          wrap
-        >
-          <NButton
-            secondary
-            size="medium"
-            @click="refresh"
-          >
-            <template #icon>
-              <NIcon :component="ArrowSync24Regular" />
-            </template>
-            刷新
-          </NButton>
-
-          <NButton
-            secondary
-            type="info"
-            size="medium"
-            @click="showGivePointModal = true"
-          >
-            <template #icon>
-              <NIcon :component="AddSquare24Regular" />
-            </template>
-            积分调整
-          </NButton>
-
-          <NButton
-            secondary
-            type="info"
-            size="medium"
-            @click="exportData"
-          >
-            <template #icon>
-              <NIcon :component="ArrowDownload24Regular" />
-            </template>
-            导出
-          </NButton>
-
-          <NPopconfirm @positive-click="showResetAllPointsModal = true">
-            <template #trigger>
-              <NButton
-                secondary
-                type="error"
-                size="medium"
-              >
-                <template #icon>
-                  <NIcon :component="Delete24Regular" />
-                </template>
-                重置
-              </NButton>
-            </template>
-            确定要重置所有用户的积分吗？慎点！
-          </NPopconfirm>
-        </NFlex>
-      </NFlex>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      <Card class="border border-border">
+        <CardContent class="p-3.5 space-y-1">
+          <span class="text-xs text-muted-foreground">总用户</span>
+          <span class="text-xl font-bold font-mono text-foreground block">{{ userStats.total }}</span>
+        </CardContent>
+      </Card>
+      <Card class="border border-border">
+        <CardContent class="p-3.5 space-y-1">
+          <span class="text-xs text-muted-foreground">已认证</span>
+          <span class="text-xl font-bold font-mono text-emerald-500 block">{{ userStats.authed }}</span>
+        </CardContent>
+      </Card>
+      <Card class="border border-border">
+        <CardContent class="p-3.5 space-y-1">
+          <span class="text-xs text-muted-foreground">总积分</span>
+          <span class="text-xl font-bold font-mono text-primary block">{{ userStats.totalPoints }}</span>
+        </CardContent>
+      </Card>
+      <Card class="border border-border">
+        <CardContent class="p-3.5 space-y-1">
+          <span class="text-xs text-muted-foreground">总订单</span>
+          <span class="text-xl font-bold font-mono text-blue-500 block">{{ userStats.totalOrders }}</span>
+        </CardContent>
+      </Card>
+      <Card class="border border-border">
+        <CardContent class="p-3.5 space-y-1">
+          <span class="text-xs text-muted-foreground">平均积分</span>
+          <span class="text-xl font-bold font-mono text-foreground block">{{ userStats.avgPoints }}</span>
+        </CardContent>
+      </Card>
     </div>
 
-    <NDivider style="margin: 16px 0" />
-
-    <!-- 无数据提示 -->
-    <NEmpty
-      v-if="filteredUsers.length === 0"
-      :description="isLoading ? '加载中...' : settings.onlyAuthed ? '没有已认证的用户' : '没有用户'"
-    />
-
-    <!-- 用户数据表格 -->
-    <NDataTable
-      v-else
-      v-model:page="pn"
-      scroll-x="600"
-      :columns="column"
-      :data="filteredUsers"
-      :pagination="{
-        page: pn,
-        pageSize: ps,
-        showSizePicker: true,
-        pageSizes: [10, 25, 50, 100],
-        onUpdatePage: onUpdateUserPage,
-        onUpdatePageSize: onUpdateUserPageSize,
-      }"
-      :loading="isLoading"
-    />
-  </NSpin>
-
-  <!-- 用户详情弹窗 -->
-  <NModal
-    v-model:show="showModal"
-    preset="card"
-    style="max-width: 90vw; min-width: 400px; width: 1600px"
-    title="用户详情"
-    content-style="padding: 0"
-  >
-    <NScrollbar style="max-height: 80vh">
-      <PointUserDetailCard
-        v-if="currentUser"
-        :user="currentUser"
-        :goods="goods"
-      />
-    </NScrollbar>
-  </NModal>
-
-  <!-- 积分调整弹窗 -->
-  <NModal
-    v-model:show="showGivePointModal"
-    preset="card"
-    style="max-width: 500px"
-    title="给予/扣除积分"
-  >
-    <NFlex
-      vertical
-      :gap="16"
+    <!-- 积分来源提示 -->
+    <Alert
+      variant="default"
+      class="border"
+      :class="pointSourceAlertType === 'warning' ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'"
     >
-      <NFlex
-        :wrap="false"
-        align="center"
-        :gap="8"
-      >
-        <NFlex
-          vertical
-          :gap="4"
-          style="flex: 1"
-        >
-          <NText depth="3"> 目标用户 </NText>
-          <BiliUserSelector
-            v-model:value="addPointTarget"
-            placeholder="请输入B站用户UID"
-            @user-info-loaded="(userInfo) => (selectedTargetUserName = userInfo?.name)"
+      <div class="flex items-center justify-between flex-wrap gap-2 w-full">
+        <div>
+          <span class="text-xs font-semibold block">当前积分来源：{{ pointSourceText }}</span>
+          <span class="text-[11px] text-muted-foreground mt-0.5 block">{{ pointSourceHelpText }}</span>
+        </div>
+        <Button size="xs" variant="outline" class="gap-1 h-7" @click="emit('openSourceSettings')">
+          <Settings24Regular class="size-3.5" />
+          来源设置
+        </Button>
+      </div>
+    </Alert>
+
+    <!-- 工具栏 -->
+    <div class="flex items-center justify-between gap-3 flex-wrap bg-card p-3 rounded-lg border border-border">
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="relative w-56">
+          <Search24Regular class="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+          <Input
+            v-model="searchKeyword"
+            placeholder="搜索用户 (用户名或UID)"
+            class="h-8 pl-8 text-xs"
           />
-        </NFlex>
-        <NTooltip>
+        </div>
+
+        <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+          <Checkbox
+            :checked="settings.onlyAuthed"
+            @update:checked="settings.onlyAuthed = $event"
+          />
+          <span class="text-foreground">只显示已认证用户</span>
+        </label>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent class="max-w-xs text-xs space-y-1">
+              <p>1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户 (OpenID不通用)</p>
+              <p>2. 用户名只会保持在首条记录出现时的用户名</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <Button size="xs" variant="outline" class="gap-1 h-7" @click="refresh">
+          <ArrowSync24Regular class="size-3.5" />
+          刷新
+        </Button>
+        <Button size="xs" variant="outline" class="gap-1 h-7 text-blue-500 hover:text-blue-600" @click="showGivePointModal = true">
+          <AddSquare24Regular class="size-3.5" />
+          积分调整
+        </Button>
+        <Button size="xs" variant="outline" class="gap-1 h-7 text-blue-500 hover:text-blue-600" @click="exportData">
+          <ArrowDownload24Regular class="size-3.5" />
+          导出
+        </Button>
+
+        <Popconfirm positive-text="确认重置" negative-text="取消" @positive-click="showResetAllPointsModal = true">
           <template #trigger>
-            <NIcon :component="Info24Filled" />
+            <Button size="xs" variant="destructive" class="gap-1 h-7">
+              <Delete24Regular class="size-3.5" />
+              重置
+            </Button>
           </template>
-          <div class="tooltip-content">
-            <p>输入UID后会自动从B站获取用户信息</p>
-            <p>因为UID和B站提供的OpenID不兼容, 未认证用户可能会出现两个记录, 不过在认证完成后会合并成一个</p>
+          确定要重置所有用户的积分吗？慎点！
+        </Popconfirm>
+      </div>
+    </div>
+
+    <!-- 用户表格 -->
+    <Card class="border border-border">
+      <CardContent class="p-0">
+        <Spin :show="isLoading">
+          <Empty
+            v-if="filteredUsers.length === 0"
+            :description="isLoading ? '加载中...' : settings.onlyAuthed ? '没有已认证的用户' : '没有用户'"
+            class="py-12"
+          />
+          <div v-else>
+            <div class="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead class="w-20">认证</TableHead>
+                    <TableHead>用户名</TableHead>
+                    <TableHead class="w-28 text-right">积分</TableHead>
+                    <TableHead class="w-28 text-right">订单数量</TableHead>
+                    <TableHead class="w-44">最后更新于</TableHead>
+                    <TableHead class="w-28 text-center">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow v-for="user in paginatedUsers" :key="user.info.userId || user.info.openId">
+                    <TableCell>
+                      <Tag :type="user.isAuthed ? 'success' : 'default'" size="small">
+                        {{ user.isAuthed ? '已认证' : '未认证' }}
+                      </Tag>
+                    </TableCell>
+                    <TableCell>
+                      <div class="flex flex-col text-xs">
+                        <span class="font-medium text-foreground">{{ user.info?.name || '未知' }}</span>
+                        <span v-if="!user.info?.name" class="text-[11px] text-muted-foreground">
+                          ({{ user.info.userId ?? user.info.openId }})
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell class="text-right text-xs font-mono font-medium text-foreground">
+                      {{ formatNumber(Number(user.point.toFixed(1))) }}
+                    </TableCell>
+                    <TableCell class="text-right text-xs">
+                      <span v-if="!user.isAuthed" class="text-muted-foreground text-[11px]">未认证</span>
+                      <span v-else-if="user.orderCount > 0" class="font-mono">{{ formatNumber(user.orderCount) }}</span>
+                      <span v-else class="text-muted-foreground text-[11px]">无订单</span>
+                    </TableCell>
+                    <TableCell class="text-xs text-muted-foreground">
+                      {{ formatTime(user.updateAt) }}
+                    </TableCell>
+                    <TableCell class="text-center">
+                      <div class="flex items-center justify-center gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          class="h-7 text-xs text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
+                          @click="currentUser = user; showModal = true"
+                        >
+                          详情
+                        </Button>
+                        <Popconfirm positive-text="删除" negative-text="取消" @positive-click="deleteUser(user)">
+                          <template #trigger>
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              class="h-7 text-xs text-destructive hover:bg-destructive/10"
+                            >
+                              删除
+                            </Button>
+                          </template>
+                          确定要删除这个用户吗？记录将无法恢复
+                        </Popconfirm>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+
+            <!-- 分页栏 -->
+            <div class="flex items-center justify-between px-4 py-3 border-t text-xs">
+              <span class="text-muted-foreground">
+                共 {{ filteredUsers.length }} 位用户，第 {{ pn }} / {{ totalPages }} 页
+              </span>
+              <div class="flex items-center gap-2">
+                <select
+                  v-model="ps"
+                  class="h-7 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  @change="pn = 1"
+                >
+                  <option :value="10">10 条/页</option>
+                  <option :value="25">25 条/页</option>
+                  <option :value="50">50 条/页</option>
+                  <option :value="100">100 条/页</option>
+                </select>
+
+                <div class="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    :disabled="pn <= 1"
+                    @click="pn--"
+                  >
+                    上一页
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    :disabled="pn >= totalPages"
+                    @click="pn++"
+                  >
+                    下一页
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-        </NTooltip>
-      </NFlex>
+        </Spin>
+      </CardContent>
+    </Card>
 
-      <NFlex
-        :wrap="false"
-        align="center"
-        :gap="5"
-      >
-        <NInputGroup style="max-width: 220px">
-          <NInputGroupLabel> 积分数量 </NInputGroupLabel>
-          <NInputNumber
-            v-model:value="addPointCount"
-            type="number"
-            placeholder="输入要给予的积分"
+    <!-- 用户详情弹窗 -->
+    <Dialog v-model:open="showModal">
+      <DialogContent class="max-w-4xl max-h-[85vh] flex flex-col p-0">
+        <DialogHeader class="p-4 border-b">
+          <DialogTitle class="text-sm font-semibold">用户详情</DialogTitle>
+        </DialogHeader>
+        <div class="flex-1 overflow-y-auto">
+          <PointUserDetailCard
+            v-if="currentUser"
+            :user="currentUser"
+            :goods="goods"
           />
-        </NInputGroup>
-        <NTooltip>
-          <template #trigger>
-            <NIcon :component="Info24Filled" />
-          </template>
-          负数为扣除积分
-        </NTooltip>
-      </NFlex>
+        </div>
+      </DialogContent>
+    </Dialog>
 
-      <NInput
-        v-model:value="addPointReason"
-        placeholder="(选填) 请输入备注"
-        :maxlength="100"
-        show-count
-        clearable
-      />
+    <!-- 积分调整弹窗 -->
+    <Dialog v-model:open="showGivePointModal">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold">给予 / 扣除积分</DialogTitle>
+        </DialogHeader>
 
-      <NButton
-        type="primary"
-        :loading="isLoading"
-        :disabled="!addPointTarget || !addPointCount"
-        @click="givePoint"
-      >
-        {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '给予' : '扣除' }}
-      </NButton>
-    </NFlex>
-  </NModal>
+        <div class="space-y-3 py-2">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">目标用户</label>
+            <BiliUserSelector
+              v-model:value="addPointTarget"
+              placeholder="请输入B站用户UID"
+              @user-info-loaded="(userInfo) => (selectedTargetUserName = userInfo?.name)"
+            />
+          </div>
 
-  <!-- 重置所有用户积分弹窗 -->
-  <NModal
-    v-model:show="showResetAllPointsModal"
-    preset="card"
-    style="max-width: 500px"
-    title="重置所有用户积分"
-  >
-    <NFlex
-      vertical
-      :gap="16"
-    >
-      <NFlex
-        align="center"
-        :gap="8"
-      >
-        <NIcon
-          :component="Warning24Regular"
-          color="red"
-        />
-        <NText type="error"> 警告：此操作将删除所有用户积分记录，不可恢复！ </NText>
-      </NFlex>
-      <NText
-        >请输入 <b>"{{ RESET_CONFIRM_TEXT }}"</b> 以确认操作</NText
-      >
-      <NInput
-        v-model:value="resetConfirmText"
-        placeholder="请输入确认文本"
-      />
+          <div class="space-y-1">
+            <div class="flex items-center gap-1.5">
+              <label class="text-xs font-medium text-foreground">积分数量</label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p class="text-xs">正数为给予，负数为扣除</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <NInputNumber
+              v-model="addPointCount"
+              placeholder="输入要给予或扣除的积分"
+              class="w-full"
+            />
+          </div>
 
-      <NButton
-        type="error"
-        :loading="isLoading"
-        :disabled="resetConfirmText !== RESET_CONFIRM_TEXT"
-        @click="resetAllPoints"
-      >
-        确认重置所有用户积分
-      </NButton>
-    </NFlex>
-  </NModal>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">备注说明 (选填)</label>
+            <Input
+              v-model="addPointReason"
+              placeholder="请输入备注"
+              maxlength="100"
+              class="h-8 text-xs"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            size="sm"
+            :loading="isLoading"
+            :disabled="!addPointTarget || !addPointCount"
+            @click="givePoint"
+          >
+            {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '给予' : '扣除' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 重置所有用户积分弹窗 -->
+    <Dialog v-model:open="showResetAllPointsModal">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold text-destructive flex items-center gap-2">
+            <Warning24Regular class="size-5" />
+            重置所有用户积分
+          </DialogTitle>
+          <DialogDescription class="text-xs text-destructive">
+            警告：此操作将删除所有用户积分记录，不可恢复！
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-3 py-2">
+          <p class="text-xs text-foreground">
+            请输入 <strong class="text-destructive">"{{ RESET_CONFIRM_TEXT }}"</strong> 以确认操作
+          </p>
+          <Input
+            v-model="resetConfirmText"
+            placeholder="请输入确认文本"
+            class="h-8 text-xs"
+          />
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="destructive"
+            size="sm"
+            :loading="isLoading"
+            :disabled="resetConfirmText !== RESET_CONFIRM_TEXT"
+            @click="resetAllPoints"
+          >
+            确认重置所有用户积分
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
 </template>
-
-<style scoped>
-.user-manage-container {
-  min-height: 200px;
-  min-width: 200px;
-}
-
-.tooltip-content {
-  max-width: 300px;
-}
-
-.stat-card {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: all 0.3s var(--vtsuru-bezier);
-}
-
-.stat-card:hover {
-  border-color: var(--vtsuru-primary);
-  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--vtsuru-fg);
-}
-
-.stat-label {
-  font-size: 13px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.stat-value.primary {
-  color: var(--vtsuru-primary);
-}
-.stat-value.success {
-  color: var(--vtsuru-success);
-}
-.stat-value.info {
-  color: var(--vtsuru-info);
-}
-
-.point-source-alert {
-  margin-bottom: 16px;
-}
-
-.toolbar-section {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 12px 16px;
-}
-
-.info-icon {
-  color: var(--vtsuru-fg-muted);
-  cursor: help;
-}
-
-@media (max-width: 768px) {
-  .stat-value {
-    font-size: 20px;
-  }
-}
-</style>

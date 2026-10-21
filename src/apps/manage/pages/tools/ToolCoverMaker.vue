@@ -1,26 +1,20 @@
 <script setup lang="ts">
-import { ImageOutline, TextOutline, TrashOutline, EyeOutline, EyeOffOutline } from '@vicons/ionicons5'
+import { EyeOffOutline, EyeOutline, ImageOutline, TextOutline, TrashOutline } from '@vicons/ionicons5'
 import { useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import {
-  NButton,
-  NButtonGroup,
-  NColorPicker,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSlider,
-  NText,
-} from 'naive-ui'
 import { computed, onMounted, reactive, ref } from 'vue'
 
 import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
 import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/components/tools/CanvasEditor.vue'
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
-import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
+import { markFontUsed, useLocalFonts } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { Button } from '@/shared/ui/button'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Slider } from '@/shared/ui/slider'
+import { Textarea } from '@/shared/ui/textarea'
+import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
 const WIDTH = 1146
@@ -132,113 +126,81 @@ async function onRemoveBgConfirm(blob: Blob) {
   <div class="editor-layout">
     <!-- Toolbar -->
     <div class="editor-toolbar">
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NText strong> 直播封面 </NText>
-        <NText
-          depth="3"
-          style="font-size: 12px"
-        >
-          {{ WIDTH }}×{{ HEIGHT }}
-        </NText>
-      </NFlex>
-      <NFlex
-        :size="6"
-        align="center"
-      >
-        <NButton
-          size="small"
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-sm">直播封面</span>
+        <span class="text-xs text-muted-foreground">{{ WIDTH }}×{{ HEIGHT }}</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <Button
+          size="sm"
+          variant="outline"
           :disabled="!editorRef?.canUndo"
           @click="editorRef?.undo()"
         >
           撤销
-        </NButton>
-        <NButton
-          size="small"
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
           :disabled="!editorRef?.canRedo"
           @click="editorRef?.redo()"
         >
           重做
-        </NButton>
-        <NButton
-          size="small"
-          tertiary
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
           @click="exportProject"
         >
           导出项目
-        </NButton>
-        <NButton
-          size="small"
-          tertiary
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
           @click="() => openImportPicker()"
         >
           导入项目
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
+        </Button>
+        <Button
+          size="sm"
           @click="download"
         >
           下载 PNG
-        </NButton>
-      </NFlex>
+        </Button>
+      </div>
     </div>
 
     <div class="editor-body">
       <!-- Left panel: layers -->
       <div class="editor-panel panel-left">
         <div class="panel-section">
-          <NFlex
-            justify="space-between"
-            align="center"
-            class="panel-header"
-          >
-            <NText
-              strong
-              style="font-size: 13px"
-            >
-              图层
-            </NText>
-            <NFlex :size="2">
-              <NButton
-                size="tiny"
-                quaternary
+          <div class="flex items-center justify-between panel-header">
+            <span class="text-xs font-semibold">图层</span>
+            <div class="flex gap-0.5">
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-6 p-0"
                 @click="editorRef?.addTextLayer()"
               >
-                <template #icon>
-                  <NIcon
-                    :component="TextOutline"
-                    size="14"
-                  />
-                </template>
-              </NButton>
-              <NButton
-                size="tiny"
-                quaternary
+                <component :is="TextOutline" class="size-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-6 p-0"
                 @click="() => openImgPicker()"
               >
-                <template #icon>
-                  <NIcon
-                    :component="ImageOutline"
-                    size="14"
-                  />
-                </template>
-              </NButton>
-            </NFlex>
-          </NFlex>
+                <component :is="ImageOutline" class="size-3.5" />
+              </Button>
+            </div>
+          </div>
           <div class="layer-list">
             <div
               v-if="!editorRef?.layers.length"
               class="layer-empty"
             >
-              <NText
-                depth="3"
-                style="font-size: 11px"
-              >
-                添加图层开始编辑
-              </NText>
+              <span class="text-[11px] text-muted-foreground">添加图层开始编辑</span>
             </div>
             <div
               v-for="layer in [...(editorRef?.layers ?? [])].reverse()"
@@ -255,50 +217,46 @@ async function onRemoveBgConfirm(blob: Blob) {
                 }
               "
             >
-              <NIcon
-                :component="layer.type === 'text' ? TextOutline : ImageOutline"
-                size="13"
+              <component
+                :is="layer.type === 'text' ? TextOutline : ImageOutline"
+                class="size-3.5 shrink-0"
               />
               <span class="layer-name">{{ layer.name }}</span>
-              <NButton
-                size="tiny"
-                quaternary
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-5 p-0"
                 @click.stop="layer.visible = !layer.visible"
               >
-                <template #icon>
-                  <NIcon
-                    :component="layer.visible ? EyeOutline : EyeOffOutline"
-                    size="11"
-                  />
-                </template>
-              </NButton>
-              <NButton
-                size="tiny"
-                quaternary
+                <component
+                  :is="layer.visible ? EyeOutline : EyeOffOutline"
+                  class="size-3"
+                />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-5 p-0 text-xs"
                 @click.stop="editorRef?.moveLayer(layer.id, 'up')"
               >
                 ↑
-              </NButton>
-              <NButton
-                size="tiny"
-                quaternary
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-5 p-0 text-xs"
                 @click.stop="editorRef?.moveLayer(layer.id, 'down')"
               >
                 ↓
-              </NButton>
-              <NButton
-                size="tiny"
-                quaternary
-                type="error"
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-5 p-0 text-destructive"
                 @click.stop="editorRef?.removeLayer(layer.id)"
               >
-                <template #icon>
-                  <NIcon
-                    :component="TrashOutline"
-                    size="11"
-                  />
-                </template>
-              </NButton>
+                <component :is="TrashOutline" class="size-3" />
+              </Button>
             </div>
           </div>
         </div>
@@ -320,211 +278,186 @@ async function onRemoveBgConfirm(blob: Blob) {
       </div>
 
       <!-- Right panel: properties -->
-      <div class="editor-panel panel-right">
-        <!-- RIGHT_PANEL_CONTENT -->
+      <div class="editor-panel panel-right text-xs">
         <!-- Background -->
         <div class="panel-section">
-          <NText
-            strong
-            style="font-size: 13px"
-            class="panel-header"
+          <span class="text-xs font-semibold panel-header">背景</span>
+          <select
+            v-model="bg.type"
+            class="h-7 w-full rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
           >
-            背景
-          </NText>
-          <NSelect
-            v-model:value="bg.type"
-            :options="bgTypeOptions"
-            size="small"
-          />
-          <NColorPicker
+            <option v-for="opt in bgTypeOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+          <ColorPicker
             v-if="bg.type === 'solid'"
-            v-model:value="bg.color"
-            size="small"
+            v-model="bg.color"
           />
           <template v-if="bg.type === 'gradient'">
-            <NFlex :size="6">
-              <NColorPicker
-                v-model:value="bg.gradientFrom"
-                size="small"
-                style="flex: 1"
-              /><NColorPicker
-                v-model:value="bg.gradientTo"
-                size="small"
-                style="flex: 1"
-              />
-            </NFlex>
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <NText
-                depth="3"
-                style="font-size: 11px"
-              >
-                角度 </NText
-              ><NSlider
-                v-model:value="bg.gradientAngle"
-                :min="0"
-                :max="360"
-                style="flex: 1"
-              />
-            </NFlex>
+            <div class="flex gap-1.5">
+              <ColorPicker v-model="bg.gradientFrom" class="flex-1" />
+              <ColorPicker v-model="bg.gradientTo" class="flex-1" />
+            </div>
+            <div class="flex items-center gap-2 pt-1">
+              <span class="text-[11px] text-muted-foreground w-8 shrink-0">角度</span>
+              <div class="flex-1">
+                <Slider
+                  :model-value="[bg.gradientAngle]"
+                  :min="0"
+                  :max="360"
+                  @update:model-value="bg.gradientAngle = $event?.[0] ?? bg.gradientAngle"
+                />
+              </div>
+              <span class="w-8 text-right font-mono text-[11px]">{{ bg.gradientAngle }}°</span>
+            </div>
           </template>
-          <NButton
+          <Button
             v-if="bg.type === 'image'"
-            size="small"
-            block
+            size="sm"
+            variant="outline"
+            class="w-full text-xs"
             @click="() => openBgPicker()"
           >
             选择背景图
-          </NButton>
+          </Button>
         </div>
 
         <!-- Properties -->
         <div class="panel-section">
-          <NText
-            strong
-            style="font-size: 13px"
-            class="panel-header"
-          >
-            属性
-          </NText>
+          <span class="text-xs font-semibold panel-header">属性</span>
           <div
             v-if="!selectedLayer"
-            class="props-empty"
+            class="props-empty py-4 text-center"
           >
-            <NText
-              depth="3"
-              style="font-size: 11px"
-            >
-              选中图层编辑属性
-            </NText>
+            <span class="text-[11px] text-muted-foreground">选中图层编辑属性</span>
           </div>
           <template v-if="selectedLayer?.type === 'text'">
-            <NInput
-              v-model:value="(selectedLayer as TextLayer).text"
-              type="textarea"
-              :autosize="{ minRows: 2, maxRows: 4 }"
-              size="small"
+            <Textarea
+              v-model="(selectedLayer as TextLayer).text"
+              class="text-xs min-h-[60px]"
             />
             <div class="prop-row">
-              <span>字号</span
-              ><NInputNumber
-                v-model:value="(selectedLayer as TextLayer).fontSize"
-                :min="12"
-                :max="300"
-                size="small"
-                style="width: 70px"
-              />
+              <span class="text-muted-foreground">字号</span>
+              <div class="w-20">
+                <NInputNumber
+                  v-model="(selectedLayer as TextLayer).fontSize"
+                  :min="12"
+                  :max="300"
+                />
+              </div>
             </div>
             <div class="prop-row">
-              <span>字体</span
-              ><NSelect
+              <span class="text-muted-foreground">字体</span>
+              <select
                 :value="(selectedLayer as TextLayer).fontFamily"
-                :options="fontOptions"
-                :loading="fontsLoading"
-                filterable
-                size="small"
-                style="flex: 1"
-                @update:value="onFontChange"
-              />
+                class="flex-1 h-7 rounded border border-input bg-background px-1 text-xs text-foreground focus:outline-none"
+                @change="onFontChange(($event.target as HTMLSelectElement).value)"
+              >
+                <option v-for="opt in fontOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
             </div>
             <div class="prop-row">
-              <span>对齐</span
-              ><NSelect
-                v-model:value="(selectedLayer as TextLayer).align"
-                :options="alignOptions"
-                size="small"
-                style="width: 70px"
-              />
+              <span class="text-muted-foreground">对齐</span>
+              <select
+                v-model="(selectedLayer as TextLayer).align"
+                class="w-20 h-7 rounded border border-input bg-background px-1 text-xs text-foreground focus:outline-none"
+              >
+                <option v-for="opt in alignOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
             </div>
             <div class="prop-row">
-              <span>样式</span>
-              <NButtonGroup size="small">
-                <NButton
-                  :type="(selectedLayer as TextLayer).bold ? 'primary' : 'default'"
-                  style="font-weight: bold"
+              <span class="text-muted-foreground">样式</span>
+              <div class="flex border border-border rounded overflow-hidden">
+                <button
+                  type="button"
+                  class="px-2 py-0.5 text-xs font-bold"
+                  :class="(selectedLayer as TextLayer).bold ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
                   @click="(selectedLayer as TextLayer).bold = !(selectedLayer as TextLayer).bold"
                 >
                   B
-                </NButton>
-                <NButton
-                  :type="(selectedLayer as TextLayer).italic ? 'primary' : 'default'"
-                  style="font-style: italic"
+                </button>
+                <button
+                  type="button"
+                  class="px-2 py-0.5 text-xs italic border-x border-border"
+                  :class="(selectedLayer as TextLayer).italic ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
                   @click="(selectedLayer as TextLayer).italic = !(selectedLayer as TextLayer).italic"
                 >
                   I
-                </NButton>
-                <NButton
-                  :type="(selectedLayer as TextLayer).underline ? 'primary' : 'default'"
-                  style="text-decoration: underline"
+                </button>
+                <button
+                  type="button"
+                  class="px-2 py-0.5 text-xs underline"
+                  :class="(selectedLayer as TextLayer).underline ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
                   @click="(selectedLayer as TextLayer).underline = !(selectedLayer as TextLayer).underline"
                 >
                   U
-                </NButton>
-              </NButtonGroup>
+                </button>
+              </div>
             </div>
             <div class="prop-row">
-              <span>颜色</span
-              ><NColorPicker
-                v-model:value="(selectedLayer as TextLayer).fill"
-                size="small"
-                style="flex: 1"
-              />
+              <span class="text-muted-foreground">颜色</span>
+              <ColorPicker v-model="(selectedLayer as TextLayer).fill" class="flex-1" />
             </div>
             <div class="prop-row">
-              <span>描边</span
-              ><NColorPicker
-                v-model:value="(selectedLayer as TextLayer).stroke"
-                size="small"
-                style="flex: 1"
-              />
+              <span class="text-muted-foreground">描边</span>
+              <ColorPicker v-model="(selectedLayer as TextLayer).stroke" class="flex-1" />
             </div>
             <div class="prop-row">
-              <span>描边宽</span
-              ><NSlider
-                v-model:value="(selectedLayer as TextLayer).strokeWidth"
-                :min="0"
-                :max="20"
-                style="flex: 1"
-              />
+              <span class="text-muted-foreground">描边宽</span>
+              <div class="flex-1 flex items-center gap-2">
+                <Slider
+                  :model-value="[(selectedLayer as TextLayer).strokeWidth]"
+                  :min="0"
+                  :max="20"
+                  @update:model-value="(selectedLayer as TextLayer).strokeWidth = $event?.[0] ?? (selectedLayer as TextLayer).strokeWidth"
+                />
+                <span class="font-mono text-[11px] w-4">{{ (selectedLayer as TextLayer).strokeWidth }}</span>
+              </div>
             </div>
           </template>
           <template v-if="selectedLayer?.type === 'image'">
             <div class="prop-row">
-              <span>透明度</span
-              ><NSlider
-                v-model:value="(selectedLayer as ImageLayer).opacity"
-                :min="0"
-                :max="1"
-                :step="0.05"
-                style="flex: 1"
-              />
+              <span class="text-muted-foreground">透明度</span>
+              <div class="flex-1 flex items-center gap-2">
+                <Slider
+                  :model-value="[(selectedLayer as ImageLayer).opacity]"
+                  :min="0"
+                  :max="1"
+                  :step="0.05"
+                  @update:model-value="(selectedLayer as ImageLayer).opacity = $event?.[0] ?? (selectedLayer as ImageLayer).opacity"
+                />
+                <span class="font-mono text-[11px] w-6">{{ Math.round((selectedLayer as ImageLayer).opacity * 100) }}%</span>
+              </div>
             </div>
             <div class="prop-row">
-              <span>描边</span
-              ><NColorPicker
-                v-model:value="(selectedLayer as ImageLayer).stroke"
-                size="small"
-                style="flex: 1"
-              />
+              <span class="text-muted-foreground">描边</span>
+              <ColorPicker v-model="(selectedLayer as ImageLayer).stroke" class="flex-1" />
             </div>
             <div class="prop-row">
-              <span>描边宽</span
-              ><NSlider
-                v-model:value="(selectedLayer as ImageLayer).strokeWidth"
-                :min="0"
-                :max="20"
-                style="flex: 1"
-              />
+              <span class="text-muted-foreground">描边宽</span>
+              <div class="flex-1 flex items-center gap-2">
+                <Slider
+                  :model-value="[(selectedLayer as ImageLayer).strokeWidth]"
+                  :min="0"
+                  :max="20"
+                  @update:model-value="(selectedLayer as ImageLayer).strokeWidth = $event?.[0] ?? (selectedLayer as ImageLayer).strokeWidth"
+                />
+                <span class="font-mono text-[11px] w-4">{{ (selectedLayer as ImageLayer).strokeWidth }}</span>
+              </div>
             </div>
-            <NButton
-              size="small"
-              block
+            <Button
+              size="sm"
+              variant="outline"
+              class="w-full mt-2"
               @click="showRemoveBg = true"
             >
               去背景
-            </NButton>
+            </Button>
           </template>
         </div>
       </div>
@@ -537,6 +470,7 @@ async function onRemoveBgConfirm(blob: Blob) {
     @cancel="showRemoveBg = false"
   />
 </template>
+
 <style scoped>
 .editor-layout {
   display: flex;
@@ -599,64 +533,44 @@ async function onRemoveBgConfirm(blob: Blob) {
 .layer-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 4px;
 }
 .layer-empty {
-  padding: 12px;
+  padding: 16px 0;
   text-align: center;
 }
 .layer-item {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 3px 4px;
+  gap: 4px;
+  padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
   border: 1px solid transparent;
-  font-size: 12px;
+  transition: all 0.15s ease;
 }
 .layer-item:hover {
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 .layer-item.active {
-  border-color: var(--primary-color, #18a058);
-  background: color-mix(in srgb, var(--primary-color) 6%, transparent);
+  background: var(--muted);
+  border-color: var(--primary);
 }
 .layer-item.dragging {
-  opacity: 0.4;
+  opacity: 0.5;
 }
 .layer-name {
   flex: 1;
+  font-size: 11px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 11px;
 }
 
-.props-empty {
-  padding: 12px;
-  text-align: center;
-}
 .prop-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-.prop-row > span {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  width: 40px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .editor-body {
-    flex-direction: column;
-  }
-  .editor-panel {
-    width: 100%;
-    border: none;
-    border-bottom: 1px solid var(--vtsuru-border);
-  }
+  justify-content: space-between;
+  gap: 8px;
 }
 </style>

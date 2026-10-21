@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import { ImageOutline } from '@vicons/ionicons5'
-import { NButton, NDynamicTags, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect } from 'naive-ui'
+import { ImageIcon, Plus, X } from 'lucide-vue-next'
+import { ref } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
 
 import PropsGrid from '../PropsGrid.vue'
 import RepeaterEditor from '../RepeaterEditor.vue'
@@ -14,43 +20,59 @@ const { editor, blockProps, ensureArrayProp, propertyAvailable, internalPageOpti
   () => props.block,
 )
 const items = ensureArrayProp<Record<string, any>>('items')
+const newTagInput = ref<Record<number, string>>({})
 
 function ensureAction(item: Record<string, any>, key: 'primaryAction' | 'secondaryAction') {
   item[key] ??= key === 'primaryAction' ? { label: '', page: 'home' } : { label: '', url: 'https://' }
   return item[key]
 }
+
+function addTag(item: Record<string, any>, index: number) {
+  const val = (newTagInput.value[index] || '').trim()
+  if (!val) return
+  item.tags = Array.isArray(item.tags) ? item.tags : []
+  if (!item.tags.includes(val)) {
+    item.tags.push(val)
+  }
+  newTagInput.value[index] = ''
+}
+
+function removeTag(item: Record<string, any>, tagIdx: number | string) {
+  if (Array.isArray(item.tags)) {
+    item.tags.splice(Number(tagIdx), 1)
+  }
+}
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="space-y-3">
     <PropsGrid>
-      <NFormItem label="布局">
-        <NSelect
-          v-model:value="blockProps.layout"
-          :options="[
-            { label: '网格', value: 'grid' },
-            { label: '列表', value: 'list' },
-          ]"
-        />
-      </NFormItem>
-      <NFormItem
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">布局</label>
+        <Select v-model="blockProps.layout">
+          <SelectTrigger class="h-8 text-xs">
+            <SelectValue placeholder="布局" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="grid">网格</SelectItem>
+            <SelectItem value="list">列表</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div
         v-if="propertyAvailable('columns')"
-        label="列数"
+        class="space-y-1"
       >
+        <label class="text-xs text-muted-foreground">列数</label>
         <NInputNumber
           v-model:value="blockProps.columns"
           :min="1"
           :max="4"
-          style="width: 100%"
+          class="w-full"
         />
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="卡片"
-      >
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">卡片</label>
         <RepeaterEditor
           :items="items"
           :create-item="
@@ -69,62 +91,83 @@ function ensureAction(item: Record<string, any>, key: 'primaryAction' | 'seconda
           </template>
           <template #default="{ item, index }">
             <PropsGrid>
-              <NFormItem
-                class="span-full"
-                label="图片"
-              >
-                <NFlex align="center">
-                  <NButton
-                    size="small"
+              <div class="span-full space-y-1">
+                <label class="text-xs text-muted-foreground">图片</label>
+                <div class="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    class="h-8 text-xs"
                     :loading="editor.isUploading.value"
                     @click="editor.triggerUploadItemImage(props.block, index)"
                   >
-                    <template #icon>
-                      <NIcon><ImageOutline /></NIcon>
-                    </template>
+                    <ImageIcon class="mr-1.5 size-3.5" />
                     选择图片
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    class="h-8 text-xs"
                     :disabled="!item.imageFile"
                     @click="editor.clearUploadedItemImage(props.block, index)"
                   >
                     清除
-                  </NButton>
+                  </Button>
                   <img
                     v-if="item.imageFile?.path"
                     :src="item.imageFile.path"
                     alt=""
                     class="card-image-preview"
                   />
-                </NFlex>
-              </NFormItem>
-              <NFormItem label="标题">
-                <NInput
-                  v-model:value="item.title"
+                </div>
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs text-muted-foreground">标题</label>
+                <Input
+                  v-model="item.title"
                   maxlength="100"
-                  show-count
+                  class="h-8 text-xs"
                 />
-              </NFormItem>
-              <NFormItem
-                class="span-full"
-                label="正文"
-              >
-                <NInput
-                  v-model:value="item.body"
-                  type="textarea"
+              </div>
+              <div class="span-full space-y-1">
+                <label class="text-xs text-muted-foreground">正文</label>
+                <Textarea
+                  v-model="item.body"
                   maxlength="1000"
-                  show-count
-                  :autosize="{ minRows: 3, maxRows: 8 }"
+                  rows="3"
+                  class="text-xs"
                 />
-              </NFormItem>
-              <NFormItem
-                class="span-full"
-                label="标签"
-              >
-                <NDynamicTags v-model:value="item.tags" />
-              </NFormItem>
+              </div>
+              <div class="span-full space-y-1">
+                <label class="text-xs text-muted-foreground">标签</label>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <Tag
+                    v-for="(t, tagIdx) in item.tags || []"
+                    :key="tagIdx"
+                    closable
+                    size="small"
+                    @close="removeTag(item, tagIdx)"
+                  >
+                    {{ t }}
+                  </Tag>
+                  <div class="flex items-center gap-1">
+                    <Input
+                      v-model="newTagInput[index]"
+                      placeholder="新标签"
+                      class="h-6 w-20 text-xs px-2"
+                      @keydown.enter.prevent="addTag(item, index)"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="h-6 px-1.5 text-xs"
+                      @click="addTag(item, index)"
+                    >
+                      <Plus class="size-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </PropsGrid>
             <CardActionEditor
               :action="ensureAction(item, 'primaryAction')"
@@ -138,9 +181,9 @@ function ensureAction(item: Record<string, any>, key: 'primaryAction' | 'seconda
             />
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </div>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>
 
 <style scoped>

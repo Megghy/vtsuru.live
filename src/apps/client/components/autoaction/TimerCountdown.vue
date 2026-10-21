@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Clock16Regular } from '@vicons/fluent'
-import { NTooltip, NTag, NIcon } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
+import { Badge } from '@/shared/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
   actionId: {
@@ -123,48 +124,36 @@ watch(
 
 const isCountingDown = computed(() => {
   const timerInfo = getTimerInfo()
-  return !!(timerInfo && timerInfo.remainingMs > 0)
+  return Boolean(timerInfo && timerInfo.remainingMs > 0)
 })
 </script>
 
 <template>
-  <div class="timer-countdown">
-    <NTooltip trigger="hover">
-      <template #trigger>
-        <NTag
-          :type="isCountingDown ? 'primary' : 'default'"
-          size="small"
-          round
-          :bordered="false"
-          class="countdown-tag"
-        >
-          <template #icon>
-            <NIcon :component="Clock16Regular" />
-          </template>
-          <span class="timer-text">{{ remainingSecondsDisplay }}</span>
-        </NTag>
-      </template>
-      <div v-if="isCountingDown">距离下次触发还剩 {{ remainingSecondsDisplay }}</div>
-      <div v-else>
-        {{ targetAction?.triggerConfig.useGlobalTimer ? '正在等待全局计时器触发' : '独立计时器未启动或已停止' }}
-      </div>
-    </NTooltip>
+  <div class="timer-countdown inline-flex items-center">
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Badge
+            :variant="isCountingDown ? 'default' : 'secondary'"
+            class="countdown-tag h-6 px-2 text-xs font-mono rounded-full flex items-center justify-center gap-1 cursor-default"
+          >
+            <Clock16Regular class="h-3.5 w-3.5" />
+            <span class="timer-text font-bold">{{ remainingSecondsDisplay }}</span>
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>
+          <div v-if="isCountingDown">距离下次触发还剩 {{ remainingSecondsDisplay }}</div>
+          <div v-else>
+            {{ targetAction?.triggerConfig.useGlobalTimer ? '正在等待全局计时器触发' : '独立计时器未启动或已停止' }}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   </div>
 </template>
 
 <style scoped>
-.timer-countdown {
-  display: inline-flex;
-  align-items: center;
-}
-
 .countdown-tag {
   min-width: 80px;
-  justify-content: center;
-  font-family: monospace;
-}
-
-.timer-text {
-  font-weight: bold;
 }
 </style>

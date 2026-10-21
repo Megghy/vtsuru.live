@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import type { UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { Live20Filled, Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent' // Maximize 和 Restore 图标
-import { Close, RemoveOutline as Minus } from '@vicons/ionicons5' // Close 和 Minimize 图标
-import { NButton, NFlex, NIcon, NTag, NText, NTooltip } from 'naive-ui'
-// 显式导入 Naive UI 组件（好习惯）
+import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent'
+import { Close, RemoveOutline as Minus } from '@vicons/ionicons5'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { Badge } from '@/shared/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const router = useRouter()
 const giftWindow = useGiftWindow()
@@ -18,62 +18,43 @@ let unlisten: UnlistenFn | null = null
 
 const currentLive = computed(() => giftWindow.currentLive)
 const isLiving = computed(() => {
-  return currentLive.value && !currentLive.value.isFinish
+  return Boolean(currentLive.value && !currentLive.value.isFinish)
 })
 
 function goToLiveManage() {
   router.push({ name: 'client-live-manage' })
 }
 
-// --- Window State Handling ---
-
-// 更新最大化状态的函数
 async function updateMaximizedState() {
   isMaximized.value = await appWindow.isMaximized()
 }
 
-// --- Event Handlers ---
-
-// 处理标题栏的鼠标按下事件 (拖动/双击最大化)
 function handleTitlebarMouseDown(event: MouseEvent) {
-  // 确保是鼠标左键 (mousedown 时 button === 0 表示左键)
   if (event.button === 0) {
-    // event.detail 在 mousedown 事件中可以用来检测点击次数
     if (event.detail === 2) {
-      // 双击：切换最大化
       toggleMaximizeWindow()
     } else {
-      // 单击：开始拖动
       appWindow.startDragging()
     }
   }
 }
 
-// --- Lifecycle Hooks ---
-
 onMounted(async () => {
-  // 1. 组件挂载时，获取并设置初始的最大化状态
   await updateMaximizedState()
-
-  // 2. 监听窗口大小变化事件，当窗口状态改变时（包括最大化/恢复）更新状态
-  //    Tauri v1 使用 'tauri://resize'， Tauri v2 可能有更具体的事件，但 resize 通常会触发
   unlisten = await appWindow.onResized(() => {
     updateMaximizedState()
   })
 })
 
 onUnmounted(() => {
-  // 组件卸载时，移除事件监听器，防止内存泄漏
   if (unlisten) {
     unlisten()
   }
 })
 
-// --- Window Control Functions ---
 const minimizeWindow = () => appWindow.minimize()
 async function toggleMaximizeWindow() {
   await appWindow.toggleMaximize()
-  // 某些窗口管理器下 toggleMaximize 不会触发 onResized, 主动补一次状态查询
   await updateMaximizedState()
 }
 const closeWindow = () => appWindow.hide()
@@ -91,46 +72,38 @@ const closeWindow = () => appWindow.hide()
       <span class="title">VTsuru.Client</span>
 
       <!-- 开播状态指示 (可点击跳转直播管理) -->
-      <NTooltip
-        v-if="isLiving"
-        placement="bottom"
-      >
-        <template #trigger>
-          <NTag
-            type="error"
-            size="tiny"
-            round
-            :bordered="false"
-            class="live-status-tag live-status-tag--active"
-            @click.stop="goToLiveManage"
-          >
-            <template #icon>
+      <TooltipProvider v-if="isLiving">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Badge
+              variant="destructive"
+              class="live-status-tag live-status-tag--active h-5 px-2 text-[11px] font-normal cursor-pointer rounded-full"
+              @click.stop="goToLiveManage"
+            >
               <span class="live-dot pulse" />
-            </template>
-            直播中{{ currentLive?.title ? ` · ${currentLive.title}` : '' }}
-          </NTag>
-        </template>
-        <div>
-          <div><strong>{{ currentLive?.title || '直播中' }}</strong></div>
-          <div style="font-size: 12px; opacity: 0.85">
-            点击前往「直播管理」页面
-          </div>
-        </div>
-      </NTooltip>
+              直播中{{ currentLive?.title ? ` · ${currentLive.title}` : '' }}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <div>
+              <div class="font-bold">{{ currentLive?.title || '直播中' }}</div>
+              <div class="text-xs opacity-85">
+                点击前往「直播管理」页面
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
-      <NTag
+      <Badge
         v-else
-        size="tiny"
-        round
-        :bordered="false"
-        class="live-status-tag live-status-tag--idle"
+        variant="secondary"
+        class="live-status-tag live-status-tag--idle h-5 px-2 text-[11px] font-normal cursor-pointer rounded-full"
         @click.stop="goToLiveManage"
       >
-        <template #icon>
-          <span class="live-dot" />
-        </template>
+        <span class="live-dot" />
         未开播
-      </NTag>
+      </Badge>
     </div>
 
     <div
@@ -138,24 +111,20 @@ const closeWindow = () => appWindow.hide()
       data-tauri-drag-region="true"
       @dblclick="toggleMaximizeWindow"
     >
-      <NButton
-        quaternary
-        circle
-        size="tiny"
+      <button
+        type="button"
         title="最小化"
         aria-label="Minimize"
-        class="window-btn"
+        class="window-btn flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         @click="minimizeWindow"
       >
         <Minus class="icon" />
-      </NButton>
-      <NButton
-        quaternary
-        circle
-        size="tiny"
+      </button>
+      <button
+        type="button"
         :title="isMaximized ? '还原' : '最大化'"
         :aria-label="isMaximized ? 'Restore' : 'Maximize'"
-        class="window-btn"
+        class="window-btn flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         @click="toggleMaximizeWindow"
       >
         <component
@@ -163,18 +132,16 @@ const closeWindow = () => appWindow.hide()
           class="icon"
           style="width: 14px; height: 14px"
         />
-      </NButton>
-      <NButton
-        quaternary
-        circle
-        size="tiny"
+      </button>
+      <button
+        type="button"
         title="关闭"
         aria-label="Close"
-        class="window-btn window-btn--close"
+        class="window-btn window-btn--close flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
         @click="closeWindow"
       >
         <Close class="icon" />
-      </NButton>
+      </button>
     </div>
   </header>
 </template>
@@ -216,12 +183,6 @@ const closeWindow = () => appWindow.hide()
   height: 100%;
 }
 
-/* 如果需要让按钮区域不可拖动（虽然 NButton 通常没问题），可以这样设置 */
-/* .titlebar > .n-button {
-  -webkit-app-region: no-drag;
-  app-region: no-drag;
-} */
-
 .title {
   font-weight: 600;
   font-size: 12px;
@@ -232,7 +193,6 @@ const closeWindow = () => appWindow.hide()
 .live-status-tag {
   cursor: pointer;
   max-width: 320px;
-  font-size: 11px;
   transition: all 0.2s ease;
   -webkit-app-region: no-drag;
 }
@@ -247,7 +207,7 @@ const closeWindow = () => appWindow.hide()
   height: 6px;
   border-radius: 50%;
   background: var(--vtsuru-fg-muted, #9ca3af);
-  margin-right: 2px;
+  margin-right: 4px;
 }
 
 .live-dot.pulse {
@@ -272,7 +232,7 @@ const closeWindow = () => appWindow.hide()
 }
 
 .icon {
-  width: 16px; /* 统一设置图标大小 */
+  width: 16px;
   height: 16px;
 }
 

@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { NButton, NInput, NModal, NResult, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
+import { AlertCircle, CheckCircle2, Copy, ShieldAlert } from 'lucide-vue-next'
 
 import { useAccount } from '@/api/account'
 import { createBiliAuthUrl, hasBiliAuthInUrl, readBiliAuthFromUrl } from '@/apps/account/components/biliAuthCredential'
 import { CURRENT_HOST } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { Spin } from '@/shared/ui/spin'
+import { useMessage } from '@/shared/utils'
 
 const auth = useBiliAuth()
 const accountInfo = useAccount()
@@ -86,10 +92,10 @@ onMounted(async () => {
 <template>
   <div
     v-if="auth.isLoading && !isReady"
-    class="user-workspace-state"
+    class="flex flex-col items-center justify-center min-h-[280px] gap-3 text-muted-foreground"
   >
-    <NSpin size="large" />
-    <span>正在载入 Bilibili 账户</span>
+    <Spin size="large" />
+    <span class="text-xs">正在载入 Bilibili 账户</span>
   </div>
 
   <RouterView
@@ -109,102 +115,82 @@ onMounted(async () => {
 
   <div
     v-else
-    class="manage-page manage-page--md"
+    class="manage-page manage-page--md flex items-center justify-center p-6"
   >
-    <NResult
-      :status="auth.isInvalid ? 'warning' : 'info'"
-      :title="auth.isInvalid ? 'Bilibili 认证已失效' : '先完成 Bilibili 认证'"
-      description="认证后即可查看积分、订单和积分记录。"
-    >
-      <template #footer>
-        <div class="user-workspace-actions">
-          <NButton
-            type="primary"
-            @click="router.push({ name: 'bili-auth' })"
-          >
-            {{ auth.isInvalid ? '重新认证' : accountInfo.id ? '绑定 Bilibili' : '开始认证' }}
-          </NButton>
+    <Card class="w-full max-w-md text-center p-6">
+      <CardHeader class="flex flex-col items-center p-0 space-y-3">
+        <div
+          class="size-12 rounded-full flex items-center justify-center"
+          :class="auth.isInvalid ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'"
+        >
+          <ShieldAlert v-if="auth.isInvalid" class="size-6" />
+          <AlertCircle v-else class="size-6" />
         </div>
-      </template>
-    </NResult>
+        <CardTitle class="text-base font-semibold">
+          {{ auth.isInvalid ? 'Bilibili 认证已失效' : '先完成 Bilibili 认证' }}
+        </CardTitle>
+        <CardDescription class="text-xs text-muted-foreground">
+          认证后即可查看积分、订单和积分记录。
+        </CardDescription>
+      </CardHeader>
+      <CardFooter class="flex justify-center p-0 pt-6">
+        <Button
+          size="sm"
+          @click="router.push({ name: 'bili-auth' })"
+        >
+          {{ auth.isInvalid ? '重新认证' : accountInfo.id ? '绑定 Bilibili' : '开始认证' }}
+        </Button>
+      </CardFooter>
+    </Card>
   </div>
 
-  <NModal
-    :show="auth.requiresLegacyMigration"
-    :mask-closable="false"
-    :closable="false"
-  >
-    <section class="legacy-migration-modal">
+  <Dialog :open="auth.requiresLegacyMigration">
+    <DialogContent class="sm:max-w-md">
       <template v-if="auth.replacementToken">
-        <p>登录链接已更新</p>
-        <h2>保存新的登录链接</h2>
-        <NInput
-          :value="migrationLink"
-          readonly
-          type="password"
-          show-password-on="click"
-        />
-        <div class="legacy-migration-modal__actions">
-          <NButton @click="copyMigrationLink">复制链接</NButton>
-          <NButton
-            type="primary"
-            @click="auth.finishLegacyMigration()"
-          >
-            我已保存
-          </NButton>
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold">保存新的登录链接</DialogTitle>
+          <DialogDescription class="text-xs text-muted-foreground">
+            登录链接已更新，请复制并妥善保存新的长期登录链接。
+          </DialogDescription>
+        </DialogHeader>
+        <div class="py-2">
+          <Input
+            :model-value="migrationLink"
+            readonly
+            type="text"
+            class="text-xs font-mono"
+          />
         </div>
+        <DialogFooter class="flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" class="gap-1.5" @click="copyMigrationLink">
+            <Copy class="size-3.5" />
+            复制链接
+          </Button>
+          <Button size="sm" @click="auth.finishLegacyMigration()">
+            我已保存
+          </Button>
+        </DialogFooter>
       </template>
       <template v-else>
-        <h2>{{ migrationError ? '无法生成新链接' : '正在更新登录链接' }}</h2>
-        <p>{{ migrationError || '完成后会在这里显示新的长期登录链接。' }}</p>
-        <NButton
-          v-if="migrationError"
-          type="primary"
-          @click="migrateLegacyAuth"
-        >
-          重试
-        </NButton>
-        <NSpin v-else />
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold">
+            {{ migrationError ? '无法生成新链接' : '正在更新登录链接' }}
+          </DialogTitle>
+          <DialogDescription class="text-xs text-muted-foreground">
+            {{ migrationError || '完成后会在这里显示新的长期登录链接。' }}
+          </DialogDescription>
+        </DialogHeader>
+        <div class="flex items-center justify-center py-6">
+          <Button
+            v-if="migrationError"
+            size="sm"
+            @click="migrateLegacyAuth"
+          >
+            重试
+          </Button>
+          <Spin v-else size="medium" />
+        </div>
       </template>
-    </section>
-  </NModal>
+    </DialogContent>
+  </Dialog>
 </template>
-
-<style scoped>
-.user-workspace-state {
-  min-height: 280px;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.user-workspace-actions {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.legacy-migration-modal {
-  width: min(460px, calc(100vw - 32px));
-  padding: 22px;
-  box-sizing: border-box;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 12px;
-  background: var(--vtsuru-bg-elevated);
-  color: var(--vtsuru-fg);
-}
-
-.legacy-migration-modal h2 {
-  margin: 0 0 8px;
-}
-
-.legacy-migration-modal__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-}
-</style>

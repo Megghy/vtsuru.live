@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { Add16Regular, Subtract16Regular } from '@vicons/fluent'
-import { NButton, NIcon, NInput, NInputNumber, NSpin } from 'naive-ui'
 import { ref, watch } from 'vue'
 
 import { getUserPointHistories, giveUserPoint } from '@/api/point-user'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Spin } from '@/shared/ui/spin'
+import { useMessage } from '@/shared/utils'
+
+const message = useMessage()
 
 import type { DashboardEvent } from '../core/types'
 
@@ -36,10 +42,10 @@ async function give(sign: 1 | -1) {
   try {
     const result = await giveUserPoint(props.event, sign * count.value, reason.value.trim() || '中控台手动调整')
     total.value = result.totalPoint
-    window.$message.success(`${sign > 0 ? '已增加' : '已扣除'} ${count.value} 积分`)
+    message.success(`${sign > 0 ? '已增加' : '已扣除'} ${count.value} 积分`)
     reason.value = ''
   } catch (err) {
-    window.$message.error(err instanceof Error ? err.message : String(err))
+    message.error(err instanceof Error ? err.message : String(err))
   } finally {
     submitting.value = false
   }
@@ -50,9 +56,9 @@ async function give(sign: 1 | -1) {
   <div class="user-points">
     <div class="user-points__head">
       <span class="user-points__label">积分</span>
-      <NSpin
+      <Spin
         v-if="loading"
-        :size="12"
+        class="h-3 w-3"
       />
       <span
         v-else-if="error"
@@ -64,46 +70,40 @@ async function give(sign: 1 | -1) {
         class="user-points__value"
       >{{ Number((total ?? 0).toFixed(1)) }}</span>
     </div>
-    <div class="user-points__form">
+    <div class="user-points__form flex items-center gap-1.5">
       <NInputNumber
-        v-model:value="count"
+        v-model="count"
         size="tiny"
         :min="0.1"
-        :precision="1"
         :show-button="false"
-        style="width: 64px"
+        class="w-16"
       />
-      <NInput
-        v-model:value="reason"
-        size="tiny"
+      <Input
+        v-model="reason"
+        class="h-7 text-xs flex-1"
         placeholder="原因（可选）"
         :maxlength="100"
       />
-      <NButton
-        size="tiny"
-        secondary
-        type="primary"
-        :disabled="!count || !!error"
-        :loading="submitting"
+      <Button
+        size="icon"
+        variant="secondary"
+        class="h-7 w-7 shrink-0 text-primary"
+        :disabled="!count || !!error || submitting"
         aria-label="增加积分"
         @click="give(1)"
       >
-        <template #icon>
-          <NIcon :component="Add16Regular" />
-        </template>
-      </NButton>
-      <NButton
-        size="tiny"
-        secondary
-        :disabled="!count || !!error || !total"
-        :loading="submitting"
+        <component :is="Add16Regular" class="h-4 w-4" />
+      </Button>
+      <Button
+        size="icon"
+        variant="secondary"
+        class="h-7 w-7 shrink-0"
+        :disabled="!count || !!error || !total || submitting"
         aria-label="扣除积分"
         @click="give(-1)"
       >
-        <template #icon>
-          <NIcon :component="Subtract16Regular" />
-        </template>
-      </NButton>
+        <component :is="Subtract16Regular" class="h-4 w-4" />
+      </Button>
     </div>
   </div>
 </template>

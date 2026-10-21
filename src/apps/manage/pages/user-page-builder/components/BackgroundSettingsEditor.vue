@@ -1,22 +1,19 @@
 <script setup lang="ts">
 import { ImageOutline, TrashOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NColorPicker,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSlider,
-  NSwitch,
-  NText,
-} from 'naive-ui'
 import { computed } from 'vue'
+
+import { Button } from '@/shared/ui/button'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { NInputNumber } from '@/shared/ui/NInputNumber'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
 
 type PageBackgroundType = 'none' | 'color' | 'image'
 type PageBackgroundBlurMode = 'none' | 'background' | 'glass'
@@ -173,270 +170,227 @@ function clearAll() {
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
-    <NFormItem label="背景类型">
-      <NFlex
-        justify="space-between"
-        align="center"
-        :wrap="false"
-        style="gap: 10px; width: 100%"
-      >
-        <NRadioGroup
-          v-model:value="type"
-          size="small"
-          style="flex: 1"
-        >
-          <NRadioButton
-            value="none"
-            style="width: 33.3%; text-align: center"
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs text-muted-foreground font-medium">背景类型</label>
+      <div class="flex items-center gap-2">
+        <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg flex-1">
+          <Button
+            size="sm"
+            :variant="type === 'none' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="type = 'none'"
           >
             无背景
-          </NRadioButton>
-          <NRadioButton
-            value="color"
-            style="width: 33.3%; text-align: center"
+          </Button>
+          <Button
+            size="sm"
+            :variant="type === 'color' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="type = 'color'"
           >
             纯色底
-          </NRadioButton>
-          <NRadioButton
-            value="image"
-            style="width: 33.4%; text-align: center"
+          </Button>
+          <Button
+            size="sm"
+            :variant="type === 'image' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="type = 'image'"
           >
             图片背景
-          </NRadioButton>
-        </NRadioGroup>
-        <NButton
-          size="small"
-          secondary
+          </Button>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 px-2 text-xs"
           :disabled="type === 'none'"
           @click="clearAll"
         >
           清空
-        </NButton>
-      </NFlex>
-    </NFormItem>
+        </Button>
+      </div>
+    </div>
 
     <div
       v-if="type === 'none' && noneHint"
-      style="margin-bottom: 10px; font-size: 12px; color: var(--vtsuru-fg-muted)"
+      class="text-xs text-muted-foreground"
     >
       {{ noneHint }}
     </div>
 
-    <Transition
-      name="fade-slide"
-      mode="out-in"
-    >
-      <div :key="type">
-        <template v-if="type === 'color'">
-          <NFormItem label="背景颜色">
-            <NColorPicker
-              v-model:value="color"
-              :modes="['hex']"
-              :show-alpha="true"
-            />
-          </NFormItem>
-        </template>
+    <div v-if="type === 'color'" class="flex flex-col gap-1.5">
+      <label class="text-xs text-muted-foreground">背景颜色</label>
+      <ColorPicker v-model="color" />
+    </div>
 
-        <template v-else-if="type === 'image'">
-          <NFormItem label="背景图片">
-            <div
-              v-if="!imagePath"
-              class="upload-dropzone"
+    <div v-else-if="type === 'image'" class="flex flex-col gap-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs text-muted-foreground">背景图片</label>
+        <div
+          v-if="!imagePath"
+          class="upload-dropzone"
+          @click="props.target.uploadImage?.()"
+        >
+          <component :is="ImageOutline" class="size-6 text-muted-foreground mb-1" />
+          <div class="text-xs font-medium">点击上传背景图</div>
+          <div class="text-[11px] text-muted-foreground">支持 PNG, JPG, WebP 格式</div>
+        </div>
+        <div
+          v-else
+          class="image-preview-bar"
+        >
+          <img
+            :src="imagePath"
+            alt="背景预览"
+            referrerpolicy="no-referrer"
+            class="image-thumb"
+          />
+          <div class="image-info">
+            <span class="image-filename">已上传背景图</span>
+            <span class="image-sub">已设置生效</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-7 px-2 text-xs"
               @click="props.target.uploadImage?.()"
             >
-              <NIcon
-                size="24"
-                :component="ImageOutline"
-                style="color: var(--vtsuru-fg-muted); margin-bottom: 4px"
-              />
-              <div style="font-size: 13px; font-weight: 500">点击上传背景图</div>
-              <div style="font-size: 11px; color: var(--vtsuru-fg-muted)">支持 PNG, JPG, WebP 格式</div>
-            </div>
-            <div
-              v-else
-              class="image-preview-bar"
+              更换
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              class="h-7 px-2 text-xs"
+              @click="props.target.clearImage?.()"
             >
-              <img
-                :src="imagePath"
-                alt="背景预览"
-                referrerpolicy="no-referrer"
-                class="image-thumb"
-              />
-              <div class="image-info">
-                <span class="image-filename">已上传背景图</span>
-                <span class="image-sub">已设置生效</span>
-              </div>
-              <NFlex :size="6">
-                <NButton
-                  size="tiny"
-                  secondary
-                  @click="props.target.uploadImage?.()"
-                >
-                  更换
-                </NButton>
-                <NButton
-                  size="tiny"
-                  type="error"
-                  secondary
-                  @click="props.target.clearImage?.()"
-                >
-                  <template #icon>
-                    <NIcon :component="TrashOutline" />
-                  </template>
-                </NButton>
-              </NFlex>
-            </div>
-          </NFormItem>
-          <NFormItem label="图片填充方式">
-            <NSelect
-              v-model:value="fit"
-              :options="[
-                { label: '铺满裁剪 (cover)', value: 'cover' },
-                { label: '完整显示 (contain)', value: 'contain' },
-                { label: '拉伸填满 (fill)', value: 'fill' },
-                { label: '原始大小 (none)', value: 'none' },
-              ]"
-            />
-          </NFormItem>
-        </template>
+              <component :is="TrashOutline" class="size-3.5" />
+            </Button>
+          </div>
+        </div>
       </div>
-    </Transition>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">图片填充方式</label>
+        <Select v-model="fit">
+          <SelectTrigger class="h-8 text-xs">
+            <SelectValue placeholder="填充方式" />
+          </SelectTrigger>
+          <SelectContent class="text-xs">
+            <SelectItem value="cover">铺满裁剪 (cover)</SelectItem>
+            <SelectItem value="contain">完整显示 (contain)</SelectItem>
+            <SelectItem value="fill">拉伸填满 (fill)</SelectItem>
+            <SelectItem value="none">原始大小 (none)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
 
     <template v-if="type !== 'none'">
-      <NFlex
-        justify="space-between"
-        align="center"
-        :wrap="false"
-        style="margin-bottom: 12px; margin-top: 4px"
-      >
-        <div
-          style="font-size: 13px; color: var(--vtsuru-fg)"
+      <div class="flex items-center justify-between py-1">
+        <span
+          class="text-xs text-foreground cursor-help"
           title="开启后背景将延伸覆盖左侧导航区域"
         >
           延伸覆盖侧边导航栏
+        </span>
+        <Switch :checked="coverSidebar" @update:checked="coverSidebar = $event" />
+      </div>
+
+      <div class="flex flex-col gap-2 pt-2 border-t border-border">
+        <label class="text-xs text-muted-foreground font-medium">遮罩色调与透明度</label>
+        <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
+          <Button
+            size="sm"
+            :variant="scrimMode === 'auto' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="scrimMode = 'auto'"
+          >
+            自适应
+          </Button>
+          <Button
+            size="sm"
+            :variant="scrimMode === 'black' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="scrimMode = 'black'"
+          >
+            暗黑遮罩
+          </Button>
+          <Button
+            size="sm"
+            :variant="scrimMode === 'white' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="scrimMode = 'white'"
+          >
+            纯白遮罩
+          </Button>
         </div>
-        <NSwitch
-          v-model:value="coverSidebar"
-          size="small"
-        />
-      </NFlex>
+        <div class="flex items-center gap-3">
+          <Slider
+            :model-value="[scrimStrength]"
+            :min="0"
+            :max="100"
+            :step="1"
+            class="flex-1"
+            @update:model-value="scrimStrength = $event?.[0] ?? 0"
+          />
+          <NInputNumber
+            v-model="scrimStrength"
+            :min="0"
+            :max="100"
+            class="w-20 h-7 text-xs"
+          />
+        </div>
+      </div>
 
-      <NFormItem label="遮罩色调与透明度">
-        <NFlex
-          vertical
-          :size="8"
-          style="width: 100%"
-        >
-          <NRadioGroup
-            v-model:value="scrimMode"
-            size="small"
-            style="width: 100%"
+      <div class="flex flex-col gap-2 pt-2 border-t border-border">
+        <label class="text-xs text-muted-foreground font-medium">视觉滤镜与模糊</label>
+        <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
+          <Button
+            size="sm"
+            :variant="blurMode === 'none' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="blurMode = 'none'"
           >
-            <NRadioButton
-              value="auto"
-              style="width: 33.3%; text-align: center"
-            >
-              自适应
-            </NRadioButton>
-            <NRadioButton
-              value="black"
-              style="width: 33.3%; text-align: center"
-            >
-              暗黑遮罩
-            </NRadioButton>
-            <NRadioButton
-              value="white"
-              style="width: 33.4%; text-align: center"
-            >
-              纯白遮罩
-            </NRadioButton>
-          </NRadioGroup>
-          <NFlex
-            align="center"
-            :size="10"
-            style="width: 100%"
+            清晰无滤镜
+          </Button>
+          <Button
+            size="sm"
+            :variant="blurMode === 'background' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="blurMode = 'background'"
           >
-            <NSlider
-              v-model:value="scrimStrength"
-              :min="0"
-              :max="100"
-              :step="1"
-              style="flex: 1"
-            />
-            <NInputNumber
-              v-model:value="scrimStrength"
-              :min="0"
-              :max="100"
-              size="small"
-              style="width: 80px"
-            >
-              <template #suffix> % </template>
-            </NInputNumber>
-          </NFlex>
-        </NFlex>
-      </NFormItem>
-
-      <NFormItem label="视觉滤镜与模糊">
-        <NFlex
-          vertical
-          :size="8"
-          style="width: 100%"
-        >
-          <NRadioGroup
-            v-model:value="blurMode"
-            size="small"
-            style="width: 100%"
+            模糊背景
+          </Button>
+          <Button
+            size="sm"
+            :variant="blurMode === 'glass' ? 'default' : 'ghost'"
+            class="h-7 text-xs"
+            @click="blurMode = 'glass'"
           >
-            <NRadioButton
-              value="none"
-              style="width: 33.3%; text-align: center"
-            >
-              清晰无滤镜
-            </NRadioButton>
-            <NRadioButton
-              value="background"
-              style="width: 33.3%; text-align: center"
-            >
-              模糊背景
-            </NRadioButton>
-            <NRadioButton
-              value="glass"
-              style="width: 33.4%; text-align: center"
-            >
-              磨砂玻璃
-            </NRadioButton>
-          </NRadioGroup>
-          <NFlex
-            v-if="blurMode !== 'none'"
-            align="center"
-            :size="10"
-            style="width: 100%"
-          >
-            <NSlider
-              v-model:value="blur"
-              :min="0"
-              :max="40"
-              :step="1"
-              style="flex: 1"
-            />
-            <NInputNumber
-              v-model:value="blur"
-              :min="0"
-              :max="40"
-              size="small"
-              style="width: 80px"
-            >
-              <template #suffix> px </template>
-            </NInputNumber>
-          </NFlex>
-        </NFlex>
-      </NFormItem>
+            磨砂玻璃
+          </Button>
+        </div>
+        <div v-if="blurMode !== 'none'" class="flex items-center gap-3">
+          <Slider
+            :model-value="[blur]"
+            :min="0"
+            :max="40"
+            :step="1"
+            class="flex-1"
+            @update:model-value="blur = $event?.[0] ?? 0"
+          />
+          <NInputNumber
+            v-model="blur"
+            :min="0"
+            :max="40"
+            class="w-20 h-7 text-xs"
+          />
+        </div>
+      </div>
     </template>
-  </NForm>
+  </div>
 </template>
 
 <style scoped>

@@ -1,7 +1,7 @@
 import type { Options } from '@tauri-apps/plugin-notification'
 import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notification'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { NButton, NFlex } from 'naive-ui'
+import { h } from 'vue'
 
 import type { QAInfo, ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
 import QuestionItem from '@/components/QuestionItem.vue'
@@ -39,12 +39,11 @@ export async function onReceivedQuestion(question: QAInfo) {
       description: `收到来自 [${question.sender?.name || question.anonymousName || '匿名用户'}] 的提问`,
       duration: 0,
       action: () =>
-        h(NFlex, {}, () => [
+        h('div', { class: 'flex items-center gap-2' }, [
           h(
-            NButton,
+            'button',
             {
-              text: true,
-              type: 'info',
+              class: 'text-sm text-sky-500 hover:underline',
               onClick: () => {
                 window.$modal.create({
                   title: '快速查看',
@@ -54,18 +53,17 @@ export async function onReceivedQuestion(question: QAInfo) {
                 })
               },
             },
-            () => '快速查看',
+            '快速查看',
           ),
           h(
-            NButton,
+            'button',
             {
-              text: true,
-              type: 'primary',
+              class: 'text-sm text-primary hover:underline font-medium',
               onClick: () => {
                 openUrl(`${CN_HOST}manage/question-box`)
               },
             },
-            () => '查看详情',
+            '查看详情',
           ),
         ]),
     })
@@ -88,15 +86,14 @@ export function onGoodsBuy(info: { data: ResponsePointOrder2OwnerModel; goods: R
       duration: 0,
       action: () =>
         h(
-          NButton,
+          'button',
           {
-            text: true,
-            type: 'primary',
+            class: 'text-sm text-primary hover:underline font-medium',
             onClick: () => {
               openUrl(`${CN_HOST}manage/goods-buy`)
             },
           },
-          () => '查看详情',
+          '查看详情',
         ),
     })
     trySendNotification({

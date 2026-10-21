@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { NFlex, NTag } from 'naive-ui'
 import { computed } from 'vue'
+
+import { Badge } from '@/shared/ui/badge'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -80,46 +81,27 @@ function getContrastColor(color: string) {
     :border-title="cfg.framed ? cfg.borderTitle : ''"
     :border-title-align="cfg.borderTitleAlign"
   >
-    <NFlex
-      justify="center"
-      wrap
-      style="gap: 8px"
-    >
-      <NTag
+    <div class="flex justify-center flex-wrap gap-2">
+      <Badge
         v-for="(it, idx) in items"
         :key="idx"
-        :type="it.type"
-        :round="cfg.rounded"
-        :size="cfg.size"
-        :bordered="false"
-        class="vtsuru-tag"
-        :color="
-          it.color ? { color: it.color, textColor: getContrastColor(it.color), borderColor: 'transparent' } : undefined
-        "
+        variant="secondary"
+        class="vtsuru-tag font-medium transition-all"
+        :class="[
+          cfg.rounded ? 'rounded-full' : 'rounded-md',
+          cfg.size === 'small' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1',
+        ]"
+        :style="it.color ? { backgroundColor: it.color, color: getContrastColor(it.color) } : undefined"
       >
         {{ it.text }}
-      </NTag>
-    </NFlex>
+      </Badge>
+    </div>
   </BlockCard>
 </template>
 
 <style scoped>
 .vtsuru-tag {
-  font-weight: 500;
-  transition:
-    filter 0.2s ease,
-    transform 0.2s ease;
   cursor: default;
-}
-
-/* Semi-transparent background for typed tags */
-:deep(.n-tag--default-type) {
-  background: var(--vtsuru-bg-muted) !important;
-  color: var(--vtsuru-fg-muted) !important;
-}
-
-.vtsuru-tag:not(.n-tag--round) {
-  border-radius: var(--vtsuru-page-radius);
 }
 
 .vtsuru-tag:hover {

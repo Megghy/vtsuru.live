@@ -1,25 +1,24 @@
 <script setup lang="ts">
 import { Add20Filled, Delete20Filled } from '@vicons/fluent'
-import {
-  NButton,
-  NAlert,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSwitch,
-  NText,
-  useMessage,
-} from 'naive-ui'
 import { reactive } from 'vue'
 
 import { EventDataTypes } from '@/api/api-models'
-import { copyToClipboard } from '@/shared/utils'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
+import { Switch } from '@/shared/ui/switch'
+import { copyToClipboard, useMessage } from '@/shared/utils'
 import {
   type ConditionField,
   type ConditionOp,
@@ -182,7 +181,6 @@ function generateMockDataForEvent(eventKey: string, type: EventDataTypes, specif
       break
   }
 
-  // 若存在条件规则，提取条件并设置对应值，使 mock 满足条件
   const targetRule = specificRule || rules.find((r) => r.conditions.length > 0) || rules[0]
   if (targetRule?.conditions?.length) {
     for (const cond of targetRule.conditions) {
@@ -273,54 +271,47 @@ function fireMock() {
 
 <template>
   <div class="panel">
-    <NAlert
+    <Alert
       v-if="!supportsFollow"
-      type="warning"
-      size="small"
-      :bordered="false"
+      class="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-xs py-2"
     >
-      开放平台不推送关注事件。关注播报需要使用桌面客户端的直连弹幕源。
-    </NAlert>
+      <AlertDescription class="text-xs text-amber-700 dark:text-amber-400">
+        开放平台不推送关注事件。关注播报需要使用桌面客户端的直连弹幕源。
+      </AlertDescription>
+    </Alert>
 
-    <NText
-      depth="3"
-      style="font-size: 11px"
-    >
+    <span class="text-[11px] text-muted-foreground">
       每种类型可设置多条模板，按条件匹配；无条件的模板随机选一条播报。点击变量复制。
-    </NText>
+    </span>
 
-    <NFlex
-      :size="4"
-      :wrap="true"
-      style="margin: 4px 0"
-    >
-      <NButton
+    <div class="flex flex-wrap gap-1 my-1">
+      <Button
         v-for="item in Object.values(templateConstants)"
         :key="item.name"
-        size="tiny"
-        tertiary
+        variant="outline"
+        size="sm"
+        class="h-6 text-[11px] px-2"
         @click="copyToClipboard(item.words)"
       >
         {{ item.words }}
-      </NButton>
-    </NFlex>
+      </Button>
+    </div>
 
-    <NCollapse
-      :default-expanded-names="['message']"
-      accordion
+    <Accordion
+      type="single"
+      collapsible
+      default-value="message"
+      class="border rounded-md px-3"
     >
-      <NCollapseItem
+      <AccordionItem
         v-for="row in templateRows"
         :key="row.eventKey"
-        :name="row.eventKey"
+        :value="row.eventKey"
+        class="border-b last:border-b-0"
       >
-        <template #header>
-          <NFlex
-            align="center"
-            :size="8"
-            style="width: 100%"
-          >
-            <NCheckbox
+        <div class="flex items-center justify-between py-2">
+          <div class="flex items-center gap-2">
+            <Checkbox
               :checked="settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents]"
               :disabled="row.type === EventDataTypes.Follow && !supportsFollow"
               @update:checked="
@@ -328,302 +319,283 @@ function fireMock() {
               "
               @click.stop
             />
-            <NText>{{ row.label }}</NText>
-            <NText
-              depth="3"
-              style="font-size: 11px"
-            >
+            <span class="text-xs font-medium">{{ row.label }}</span>
+            <span class="text-[11px] text-muted-foreground">
               ({{ settings.templates[row.eventKey]?.rules.length ?? 0 }} 条规则)
-            </NText>
-          </NFlex>
-        </template>
-        <template #header-extra>
-          <NButton
-            size="tiny"
-            type="primary"
-            tertiary
-            :disabled="
-              !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] ||
-              (row.type === EventDataTypes.Follow && !supportsFollow)
-            "
-            :loading="speechState.isApiAudioLoading"
-            @click.stop="test(row.type, row.eventKey)"
-          >
-            测试
-          </NButton>
-        </template>
-        <!-- Rules list for this event type -->
-        <div class="rules-list">
-          <div
-            v-for="(rule, ri) in settings.templates[row.eventKey]?.rules ?? []"
-            :key="ri"
-            class="rule-card"
-          >
-            <div class="rule-header">
-              <NText
-                depth="3"
-                style="font-size: 11px"
-              >
-                规则 {{ ri + 1 }}
-              </NText>
-              <NFlex :size="4">
-                <NButton
-                  size="tiny"
-                  tertiary
-                  type="primary"
-                  :loading="speechState.isApiAudioLoading"
-                  @click="test(row.type, row.eventKey, rule)"
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-6 text-[11px] px-2 text-primary"
+              :disabled="
+                !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] ||
+                (row.type === EventDataTypes.Follow && !supportsFollow)
+              "
+              :loading="speechState.isApiAudioLoading"
+              @click.stop="test(row.type, row.eventKey)"
+            >
+              测试
+            </Button>
+            <AccordionTrigger class="p-0 hover:no-underline" />
+          </div>
+        </div>
+
+        <AccordionContent class="pb-3 pt-1">
+          <div class="rules-list">
+            <div
+              v-for="(rule, ri) in settings.templates[row.eventKey]?.rules ?? []"
+              :key="ri"
+              class="rule-card"
+            >
+              <div class="rule-header">
+                <span class="text-[11px] text-muted-foreground">规则 {{ ri + 1 }}</span>
+                <div class="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    class="h-6 text-[11px] px-2 text-primary hover:bg-primary/10"
+                    :loading="speechState.isApiAudioLoading"
+                    @click="test(row.type, row.eventKey, rule)"
+                  >
+                    测试此条
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                    @click="removeRule(row.eventKey, ri)"
+                  >
+                    <Delete20Filled class="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+              <Input
+                v-model="rule.template"
+                class="text-xs h-8"
+                :placeholder="`模板文本，如: ${row.label}...`"
+              />
+              <div class="conditions-section">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] text-muted-foreground">
+                    {{ rule.conditions.length === 0 ? '无条件 (随机选取)' : '条件 (全部满足时使用此模板)' }}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    class="h-6 text-[11px] px-2 gap-1"
+                    @click="addCondition(rule, row.eventKey)"
+                  >
+                    <Add20Filled class="size-3" />
+                    添加条件
+                  </Button>
+                </div>
+                <div
+                  v-for="(cond, ci) in rule.conditions"
+                  :key="ci"
+                  class="condition-row"
                 >
-                  测试此条
-                </NButton>
-                <NButton
-                  size="tiny"
-                  tertiary
-                  type="error"
-                  @click="removeRule(row.eventKey, ri)"
-                >
-                  <template #icon>
-                    <NIcon :component="Delete20Filled" />
-                  </template>
-                </NButton>
-              </NFlex>
-            </div>
-            <NInput
-              v-model:value="rule.template"
-              size="small"
-              :placeholder="`模板文本，如: ${row.label}...`"
-            />
-            <div class="conditions-section">
-              <NFlex
-                align="center"
-                :size="4"
-                style="margin-bottom: 4px"
-              >
-                <NText
-                  depth="3"
-                  style="font-size: 11px"
-                >
-                  {{ rule.conditions.length === 0 ? '无条件 (随机选取)' : '条件 (全部满足时使用此模板)' }}
-                </NText>
-                <NButton
-                  size="tiny"
-                  tertiary
-                  type="primary"
-                  @click="addCondition(rule, row.eventKey)"
-                >
-                  <template #icon>
-                    <NIcon :component="Add20Filled" />
-                  </template>
-                  添加条件
-                </NButton>
-              </NFlex>
-              <div
-                v-for="(cond, ci) in rule.conditions"
-                :key="ci"
-                class="condition-row"
-              >
-                <NSelect
-                  v-model:value="cond.field"
-                  :options="fieldOptionsByEvent[row.eventKey]"
-                  size="small"
-                  style="width: 120px"
-                  @update:value="() => onFieldChange(cond)"
-                />
-                <NSelect
-                  v-model:value="cond.op"
-                  :options="getOpsForField(cond.field)"
-                  size="small"
-                  style="width: 80px"
-                />
-                <NInputNumber
-                  v-if="!isTextField(cond.field)"
-                  :value="cond.value as number"
-                  size="small"
-                  style="width: 100px"
-                  :min="0"
-                  @update:value="(v: number | null) => (cond.value = v ?? 0)"
-                />
-                <NInput
-                  v-else
-                  :value="String(cond.value)"
-                  size="small"
-                  style="width: 140px"
-                  placeholder="匹配内容"
-                  @update:value="(v: string) => (cond.value = v)"
-                />
-                <NButton
-                  size="tiny"
-                  tertiary
-                  type="error"
-                  @click="removeCondition(rule, ci)"
-                >
-                  <template #icon>
-                    <NIcon :component="Delete20Filled" />
-                  </template>
-                </NButton>
+                  <Select
+                    v-model="cond.field"
+                    @update:model-value="() => onFieldChange(cond)"
+                  >
+                    <SelectTrigger class="w-[120px] h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="f in fieldOptionsByEvent[row.eventKey]"
+                        :key="f.value"
+                        :value="f.value"
+                        class="text-xs"
+                      >
+                        {{ f.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select v-model="cond.op">
+                    <SelectTrigger class="w-[80px] h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="op in getOpsForField(cond.field)"
+                        :key="op.value"
+                        :value="op.value"
+                        class="text-xs"
+                      >
+                        {{ op.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <div
+                    v-if="!isTextField(cond.field)"
+                    class="w-[100px]"
+                  >
+                    <NInputNumber
+                      :value="cond.value as number"
+                      size="small"
+                      :min="0"
+                      @update:value="(v: number | null) => (cond.value = v ?? 0)"
+                    />
+                  </div>
+                  <Input
+                    v-else
+                    :model-value="String(cond.value)"
+                    class="w-[140px] h-7 text-xs"
+                    placeholder="匹配内容"
+                    @update:model-value="(v: string | number) => (cond.value = v)"
+                  />
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    class="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
+                    @click="removeCondition(rule, ci)"
+                  >
+                    <Delete20Filled class="size-3.5" />
+                  </Button>
+                </div>
               </div>
             </div>
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-7 text-xs gap-1 w-fit"
+              @click="addRule(row.eventKey)"
+            >
+              <Add20Filled class="size-3.5" />
+              添加模板规则
+            </Button>
           </div>
-          <NButton
-            size="tiny"
-            tertiary
-            type="primary"
-            @click="addRule(row.eventKey)"
-          >
-            <template #icon>
-              <NIcon :component="Add20Filled" />
-            </template>
-            添加模板规则
-          </NButton>
-        </div>
-      </NCollapseItem>
-    </NCollapse>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
 
-    <NDivider style="margin: 4px 0" />
+    <Separator class="my-1" />
 
-    <NCollapse>
-      <NCollapseItem
-        name="mock"
-        title="模拟触发"
-      >
-        <div class="mock-section">
-          <NFlex
-            :size="8"
-            :wrap="true"
-            align="center"
-          >
-            <NSelect
-              v-model:value="mockData.type"
-              :options="mockTypeOptions"
-              size="small"
-              style="width: 90px"
-            />
-            <NInput
-              v-model:value="mockData.uname"
-              size="small"
-              placeholder="用户名"
-              style="width: 100px"
-            />
-            <NInput
-              v-model:value="mockData.msg"
-              size="small"
-              placeholder="消息/礼物名"
-              style="width: 140px"
-            />
-          </NFlex>
-          <NFlex
-            :size="8"
-            :wrap="true"
-            align="center"
-          >
-            <NFlex
-              align="center"
-              :size="4"
-            >
-              <NText
-                depth="3"
-                style="font-size: 11px"
-              >
-                价格
-              </NText>
-              <NInputNumber
-                v-model:value="mockData.price"
-                size="small"
-                :min="0"
-                style="width: 80px"
-              />
-            </NFlex>
-            <NFlex
-              align="center"
-              :size="4"
-            >
-              <NText
-                depth="3"
-                style="font-size: 11px"
-              >
-                数量
-              </NText>
-              <NInputNumber
-                v-model:value="mockData.num"
-                size="small"
-                :min="0"
-                style="width: 80px"
-              />
-            </NFlex>
-            <NFlex
-              align="center"
-              :size="4"
-            >
-              <NText
-                depth="3"
-                style="font-size: 11px"
-              >
-                舰长
-              </NText>
-              <NInputNumber
-                v-model:value="mockData.guard_level"
-                size="small"
-                :min="0"
-                :max="3"
-                style="width: 70px"
-              />
-            </NFlex>
-            <NFlex
-              align="center"
-              :size="4"
-            >
-              <NText
-                depth="3"
-                style="font-size: 11px"
-              >
-                勋章
-              </NText>
-              <NInputNumber
-                v-model:value="mockData.fans_medal_level"
-                size="small"
-                :min="0"
-                :max="40"
-                style="width: 70px"
-              />
-            </NFlex>
-          </NFlex>
-          <NButton
-            size="small"
-            type="primary"
-            @click="fireMock"
-          >
-            触发事件
-          </NButton>
-        </div>
-      </NCollapseItem>
-    </NCollapse>
-
-    <NDivider style="margin: 4px 0" />
-
-    <NFlex
-      align="center"
-      :size="8"
+    <Accordion
+      type="single"
+      collapsible
+      class="border rounded-md px-3"
     >
-      <NSwitch
-        v-model:value="settings.timedBroadcast.enabled"
-        size="small"
-      />
-      <NText style="font-size: 12px"> 定时播报 </NText>
-      <NInputNumber
-        v-model:value="settings.timedBroadcast.intervalMinutes"
-        :min="1"
-        :max="120"
-        size="small"
-        :disabled="!settings.timedBroadcast.enabled"
-        style="width: 80px"
-      />
-      <NText
-        depth="3"
-        style="font-size: 11px"
+      <AccordionItem
+        value="mock"
+        class="border-none"
       >
-        分钟/次
-      </NText>
-    </NFlex>
+        <AccordionTrigger class="py-2 text-xs hover:no-underline font-medium">
+          模拟触发
+        </AccordionTrigger>
+        <AccordionContent class="pb-3">
+          <div class="mock-section text-xs">
+            <div class="flex items-center gap-2 flex-wrap">
+              <Select
+                :model-value="String(mockData.type)"
+                @update:model-value="mockData.type = Number($event)"
+              >
+                <SelectTrigger class="w-[90px] h-7 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in mockTypeOptions"
+                    :key="opt.value"
+                    :value="String(opt.value)"
+                    class="text-xs"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                v-model="mockData.uname"
+                class="w-[100px] h-7 text-xs"
+                placeholder="用户名"
+              />
+              <Input
+                v-model="mockData.msg"
+                class="w-[140px] h-7 text-xs"
+                placeholder="消息/礼物名"
+              />
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] text-muted-foreground">价格</span>
+                <div class="w-[80px]">
+                  <NInputNumber
+                    v-model:value="mockData.price"
+                    size="small"
+                    :min="0"
+                  />
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] text-muted-foreground">数量</span>
+                <div class="w-[80px]">
+                  <NInputNumber
+                    v-model:value="mockData.num"
+                    size="small"
+                    :min="0"
+                  />
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] text-muted-foreground">舰长</span>
+                <div class="w-[70px]">
+                  <NInputNumber
+                    v-model:value="mockData.guard_level"
+                    size="small"
+                    :min="0"
+                    :max="3"
+                  />
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] text-muted-foreground">勋章</span>
+                <div class="w-[70px]">
+                  <NInputNumber
+                    v-model:value="mockData.fans_medal_level"
+                    size="small"
+                    :min="0"
+                    :max="40"
+                  />
+                </div>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              class="w-fit h-7 text-xs"
+              @click="fireMock"
+            >
+              触发事件
+            </Button>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+
+    <Separator class="my-1" />
+
+    <div class="flex items-center gap-2 text-xs">
+      <Switch
+        :checked="settings.timedBroadcast.enabled"
+        @update:checked="settings.timedBroadcast.enabled = $event"
+      />
+      <span>定时播报</span>
+      <div class="w-[80px]">
+        <NInputNumber
+          v-model:value="settings.timedBroadcast.intervalMinutes"
+          :min="1"
+          :max="120"
+          size="small"
+          :disabled="!settings.timedBroadcast.enabled"
+        />
+      </div>
+      <span class="text-[11px] text-muted-foreground">分钟/次</span>
+    </div>
 
     <template v-if="settings.timedBroadcast.enabled">
       <div
@@ -631,34 +603,29 @@ function fireMock() {
         :key="i"
         class="broadcast-row"
       >
-        <NInput
-          v-model:value="settings.timedBroadcast.texts[i]"
-          size="small"
+        <Input
+          v-model="settings.timedBroadcast.texts[i]"
+          class="h-7 text-xs flex-1"
           placeholder="播报文本"
-          style="flex: 1"
         />
-        <NButton
-          size="tiny"
-          tertiary
-          type="error"
+        <Button
+          size="sm"
+          variant="ghost"
+          class="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
           @click="settings.timedBroadcast.texts.splice(i, 1)"
         >
-          <template #icon>
-            <NIcon :component="Delete20Filled" />
-          </template>
-        </NButton>
+          <Delete20Filled class="size-3.5" />
+        </Button>
       </div>
-      <NButton
-        size="tiny"
-        tertiary
-        type="primary"
+      <Button
+        size="sm"
+        variant="outline"
+        class="h-7 text-xs gap-1 w-fit"
         @click="settings.timedBroadcast.texts.push('')"
       >
-        <template #icon>
-          <NIcon :component="Add20Filled" />
-        </template>
+        <Add20Filled class="size-3.5" />
         添加播报文本
-      </NButton>
+      </Button>
     </template>
   </div>
 </template>

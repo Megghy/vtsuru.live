@@ -1,4 +1,4 @@
-import type { UploadFileInfo } from 'naive-ui'
+import type { UploadFileInfo } from '@/shared/types/upload'
 
 export interface UploadSourceFile {
   id?: number | string | null

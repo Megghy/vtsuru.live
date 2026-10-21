@@ -43,19 +43,6 @@
   }
 }
 
-/* shadcn-like card rhythm */
-.manage-page .n-card {
-  border-radius: var(--vtsuru-radius);
-}
-
-.manage-page .n-card .n-card-header {
-  padding: 12px 14px;
-}
-
-.manage-page .n-card .n-card__content {
-  padding: 14px;
-}
-
 .manage-muted {
   color: var(--vtsuru-fg-muted);
 }
@@ -66,10 +53,4 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--vtsuru-fg-muted);
-}
-
-/* Manage modals: subtle shadcn-like border */
-.n-modal > .n-card {
-  box-sizing: border-box;
-  border: 1px solid var(--vtsuru-border);
 }

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://shadcn-vue.com/schema.json",
+  "style": "default",
+  "typescript": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/shared/styles/shadcn-theme.css",
+    "baseColor": "zinc",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@/shared/ui",
+    "utils": "@/shared/utils/cn",
+    "ui": "@/shared/ui",
+    "lib": "@/shared/utils",
+    "hooks": "@/shared/composables"
+  }
+}

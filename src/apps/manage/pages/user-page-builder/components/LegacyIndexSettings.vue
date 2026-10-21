@@ -1,21 +1,6 @@
 <script setup lang="ts">
 import { Delete24Regular } from '@vicons/fluent'
 import { ArrowDownOutline, ArrowUpOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NTag,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
@@ -28,6 +13,28 @@ import {
 } from '@/api/generated/user-index/user-index'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { IndexTemplateMap } from '@/shared/config/templates'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -342,316 +349,320 @@ await loadIndexInfo()
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-  >
-    <NDivider style="margin: 0"> 主页模板 </NDivider>
-    <div class="index-template-picker">
-      <div class="index-template-picker__copy">
-        <div class="index-template-picker__title">
-          {{ selectedIndexTemplate.name }}
+  <div class="flex flex-col gap-4">
+    <!-- 主页模板 -->
+    <div class="flex flex-col gap-2">
+      <div class="text-xs font-semibold text-muted-foreground uppercase">主页模板</div>
+      <div class="index-template-picker">
+        <div class="index-template-picker__copy">
+          <div class="index-template-picker__title">
+            {{ selectedIndexTemplate.name }}
+          </div>
+          <div class="index-template-picker__desc">支持头图、头像框、荣誉、直播状态和精选内容。</div>
         </div>
-        <div class="index-template-picker__desc">支持头图、头像框、荣誉、直播状态和精选内容。</div>
-      </div>
-      <NFlex
-        :size="8"
-        align="center"
-        style="width: 100%"
-        :wrap="false"
-      >
-        <NSelect
-          v-model:value="selectedIndexTemplateKey"
-          size="small"
-          :options="indexTemplateOptions"
-          style="flex: 1; min-width: 0"
-          @update:value="saveIndexTemplate"
-        />
-        <NButton
-          size="small"
-          secondary
-          @click="showTemplatePreview = true"
-        >
-          浏览预览
-        </NButton>
-      </NFlex>
-    </div>
-
-    <NDivider style="margin: 0"> 常规 </NDivider>
-    <NCheckbox
-      v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
-      :disabled="isLoading"
-      @update:checked="updateUserIndexSettings"
-    >
-      允许显示在网站主页与直播列表
-    </NCheckbox>
-
-    <NDivider style="margin: 0"> 通知 </NDivider>
-    <NInput
-      v-model:value="accountInfo.settings.index.notification"
-      type="textarea"
-      placeholder="可选"
-    />
-    <NFlex justify="end">
-      <NButton
-        type="primary"
-        size="small"
-        :loading="isLoading"
-        @click="updateIndexSettings"
-      >
-        保存
-      </NButton>
-    </NFlex>
-
-    <NDivider style="margin: 0"> 展示视频 </NDivider>
-    <NButton
-      type="primary"
-      size="small"
-      :disabled="isLoading"
-      @click="showAddVideoModal = true"
-    >
-      添加视频
-    </NButton>
-    <NEmpty v-if="accountInfo.settings.index.videos.length === 0" />
-    <NFlex
-      v-else
-      wrap
-      :size="12"
-      style="width: 100%"
-    >
-      <div
-        v-for="item in indexDisplayInfo?.videos ?? []"
-        :key="item.id"
-        style="width: 100%"
-      >
-        <SimpleVideoCard :video="item" />
-        <NFlex
-          style="margin-top: 6px"
-          :size="6"
-        >
-          <NButton
-            size="tiny"
-            secondary
-            :disabled="isLoading"
-            @click="moveVideo(item.id, 'up')"
+        <div class="flex items-center gap-2 w-full">
+          <Select
+            v-model="selectedIndexTemplateKey"
+            class="flex-1 min-w-0"
+            @update:model-value="saveIndexTemplate"
           >
-            上移
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
-            :disabled="isLoading"
-            @click="moveVideo(item.id, 'down')"
-          >
-            下移
-          </NButton>
-          <NButton
-            type="warning"
-            size="tiny"
-            secondary
-            :disabled="isLoading"
-            @click="removeVideo(item.id)"
-          >
-            删除
-          </NButton>
-        </NFlex>
-      </div>
-    </NFlex>
-
-    <NDivider style="margin: 0"> 其他链接 </NDivider>
-    <NButton
-      type="primary"
-      size="small"
-      :disabled="isLoading"
-      @click="showAddLinkModal = true"
-    >
-      添加链接
-    </NButton>
-    <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
-    <div
-      v-else
-      :key="linkKey"
-      class="links-list"
-    >
-      <div
-        v-for="link in orderedLinks"
-        :key="link[0]"
-        class="link-item-row"
-      >
-        <template v-if="editingLinkName === link[0]">
-          <NFlex
-            :size="6"
-            align="center"
-            style="width: 100%"
-            :wrap="false"
-          >
-            <NInput
-              v-model:value="newLinkName"
-              size="small"
-              style="flex: 1; min-width: 0"
-            />
-            <NButton
-              size="tiny"
-              type="primary"
-              @click="confirmEditLink(link[0])"
-            >
-              保存
-            </NButton>
-            <NButton
-              size="tiny"
-              secondary
-              @click="cancelEditLink"
-            >
-              取消
-            </NButton>
-          </NFlex>
-        </template>
-        <template v-else>
-          <NTooltip>
-            <template #trigger>
-              <NTag
-                :bordered="false"
-                size="small"
-                type="info"
-                class="link-tag"
+            <SelectTrigger class="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent class="text-xs">
+              <SelectItem
+                v-for="opt in indexTemplateOptions"
+                :key="opt.value"
+                :value="opt.value"
               >
-                {{ link[0] }}
-              </NTag>
-            </template>
-            {{ link[1] }}
-          </NTooltip>
-          <NFlex
-            :size="4"
-            align="center"
-            :wrap="false"
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            size="sm"
+            variant="outline"
+            class="h-8 text-xs"
+            @click="showTemplatePreview = true"
           >
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  quaternary
-                  circle
-                  aria-label="上移链接"
-                  @click="moveLink(link[0], 'up')"
-                >
-                  <template #icon>
-                    <NIcon><ArrowUpOutline /></NIcon>
-                  </template>
-                </NButton>
-              </template>
-              上移链接
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  quaternary
-                  circle
-                  aria-label="下移链接"
-                  @click="moveLink(link[0], 'down')"
-                >
-                  <template #icon>
-                    <NIcon><ArrowDownOutline /></NIcon>
-                  </template>
-                </NButton>
-              </template>
-              下移链接
-            </NTooltip>
-            <NButton
-              size="tiny"
-              secondary
-              @click="startEditLink(link[0])"
-            >
-              改名
-            </NButton>
-            <NTooltip>
-              <template #trigger>
-                <NPopconfirm @positive-click="removeLink(link[0])">
-                  <template #trigger>
-                    <NButton
-                      type="error"
-                      secondary
-                      size="tiny"
-                      aria-label="删除链接"
-                    >
-                      <template #icon>
-                        <NIcon :component="Delete24Regular" />
-                      </template>
-                    </NButton>
-                  </template>
-                  确定要删除这个链接吗?
-                </NPopconfirm>
-              </template>
-              删除链接
-            </NTooltip>
-          </NFlex>
-        </template>
+            浏览预览
+          </Button>
+        </div>
       </div>
     </div>
-  </NFlex>
 
-  <NModal
-    v-model:show="showAddVideoModal"
-    preset="card"
-    closable
-    style="width: 600px; max-width: 90vw"
-    title="添加视频"
-  >
-    <NInput
-      v-model:value="addVideoUrl"
-      placeholder="请输入视频链接"
-    />
-    <NDivider />
-    <NButton
-      type="primary"
-      :loading="isLoading"
-      @click="addVideo"
-    >
-      添加视频
-    </NButton>
-  </NModal>
-
-  <NModal
-    v-model:show="showAddLinkModal"
-    preset="card"
-    closable
-    style="width: 600px; max-width: 90vw"
-    title="添加链接"
-  >
-    <NFlex vertical>
-      <NInput
-        v-model:value="addLinkName"
-        placeholder="链接名称"
-      />
-      <NInput
-        v-model:value="addLinkUrl"
-        placeholder="链接地址"
-      />
-      <NButton
-        type="primary"
-        :loading="isLoading"
-        @click="addLink"
-      >
-        添加链接
-      </NButton>
-    </NFlex>
-  </NModal>
-
-  <NModal
-    v-model:show="showTemplatePreview"
-    preset="card"
-    title="主页模板预览"
-    style="width: min(960px, 94vw)"
-    :bordered="false"
-  >
-    <div class="index-template-preview">
-      <component
-        :is="selectedIndexTemplate.component"
-        :user-info="accountInfo"
-        :bili-info="undefined"
-      />
+    <!-- 常规 -->
+    <div class="flex flex-col gap-2 pt-2 border-t border-border">
+      <div class="text-xs font-semibold text-muted-foreground uppercase">常规</div>
+      <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
+        <Checkbox
+          :checked="accountInfo.settings.index.allowDisplayInIndex"
+          :disabled="isLoading"
+          @update:checked="accountInfo.settings.index.allowDisplayInIndex = $event; updateUserIndexSettings()"
+        />
+        允许显示在网站主页与直播列表
+      </label>
     </div>
-  </NModal>
+
+    <!-- 通知 -->
+    <div class="flex flex-col gap-2 pt-2 border-t border-border">
+      <div class="text-xs font-semibold text-muted-foreground uppercase">通知</div>
+      <Textarea
+        v-model="accountInfo.settings.index.notification"
+        placeholder="可选，向访问你主页的访客展示的置顶通知"
+        class="text-xs"
+        rows="3"
+      />
+      <div class="flex justify-end">
+        <Button
+          size="sm"
+          :disabled="isLoading"
+          @click="updateIndexSettings"
+        >
+          保存
+        </Button>
+      </div>
+    </div>
+
+    <!-- 展示视频 -->
+    <div class="flex flex-col gap-2 pt-2 border-t border-border">
+      <div class="flex items-center justify-between">
+        <div class="text-xs font-semibold text-muted-foreground uppercase">展示视频</div>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-7 text-xs"
+          :disabled="isLoading"
+          @click="showAddVideoModal = true"
+        >
+          添加视频
+        </Button>
+      </div>
+
+      <Empty
+        v-if="accountInfo.settings.index.videos.length === 0"
+        description="暂无展示视频"
+        class="py-4"
+      />
+      <div
+        v-else
+        class="flex flex-col gap-3 w-full"
+      >
+        <div
+          v-for="item in indexDisplayInfo?.videos ?? []"
+          :key="item.id"
+          class="w-full flex flex-col gap-1.5"
+        >
+          <SimpleVideoCard :video="item" />
+          <div class="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-6 px-2 text-xs"
+              :disabled="isLoading"
+              @click="moveVideo(item.id, 'up')"
+            >
+              上移
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-6 px-2 text-xs"
+              :disabled="isLoading"
+              @click="moveVideo(item.id, 'down')"
+            >
+              下移
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              class="h-6 px-2 text-xs"
+              :disabled="isLoading"
+              @click="removeVideo(item.id)"
+            >
+              删除
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 其他链接 -->
+    <div class="flex flex-col gap-2 pt-2 border-t border-border">
+      <div class="flex items-center justify-between">
+        <div class="text-xs font-semibold text-muted-foreground uppercase">其他链接</div>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-7 text-xs"
+          :disabled="isLoading"
+          @click="showAddLinkModal = true"
+        >
+          添加链接
+        </Button>
+      </div>
+
+      <Empty
+        v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0"
+        description="暂无外部链接"
+        class="py-4"
+      />
+      <div
+        v-else
+        :key="linkKey"
+        class="links-list flex flex-col gap-1.5"
+      >
+        <div
+          v-for="link in orderedLinks"
+          :key="link[0]"
+          class="link-item-row flex items-center justify-between p-2 rounded-lg border border-border bg-card text-xs gap-2"
+        >
+          <template v-if="editingLinkName === link[0]">
+            <div class="flex items-center gap-1.5 w-full">
+              <Input
+                v-model="newLinkName"
+                class="h-7 text-xs flex-1"
+              />
+              <Button
+                size="sm"
+                class="h-7 px-2 text-xs"
+                @click="confirmEditLink(link[0])"
+              >
+                保存
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-7 px-2 text-xs"
+                @click="cancelEditLink"
+              >
+                取消
+              </Button>
+            </div>
+          </template>
+          <template v-else>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Tag variant="secondary" class="max-w-[140px] truncate cursor-help">
+                    {{ link[0] }}
+                  </Tag>
+                </TooltipTrigger>
+                <TooltipContent class="text-xs max-w-xs break-all">
+                  {{ link[1] }}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <div class="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                class="size-6 p-0"
+                aria-label="上移链接"
+                @click="moveLink(link[0], 'up')"
+              >
+                <component :is="ArrowUpOutline" class="size-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="size-6 p-0"
+                aria-label="下移链接"
+                @click="moveLink(link[0], 'down')"
+              >
+                <component :is="ArrowDownOutline" class="size-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-6 px-2 text-xs"
+                @click="startEditLink(link[0])"
+              >
+                改名
+              </Button>
+              <Popconfirm
+                title="确定要删除这个链接吗？"
+                ok-text="删除"
+                cancel-text="取消"
+                @confirm="removeLink(link[0])"
+              >
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  class="size-6 p-0 text-destructive hover:text-destructive"
+                  aria-label="删除链接"
+                >
+                  <component :is="Delete24Regular" class="size-3.5" />
+                </Button>
+              </Popconfirm>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加视频弹窗 -->
+  <Dialog v-model:open="showAddVideoModal">
+    <DialogContent class="max-w-md p-4">
+      <DialogHeader>
+        <DialogTitle class="text-sm font-semibold">添加视频</DialogTitle>
+      </DialogHeader>
+      <div class="py-2 flex flex-col gap-2">
+        <Input
+          v-model="addVideoUrl"
+          placeholder="请输入 Bilibili 视频链接或 BV 号"
+          class="text-xs"
+        />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <Button size="sm" variant="outline" @click="showAddVideoModal = false">取消</Button>
+        <Button size="sm" :disabled="isLoading" @click="addVideo">添加视频</Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+
+  <!-- 添加链接弹窗 -->
+  <Dialog v-model:open="showAddLinkModal">
+    <DialogContent class="max-w-md p-4">
+      <DialogHeader>
+        <DialogTitle class="text-sm font-semibold">添加链接</DialogTitle>
+      </DialogHeader>
+      <div class="py-2 flex flex-col gap-2">
+        <Input
+          v-model="addLinkName"
+          placeholder="链接名称（如：个人博客、网易云等）"
+          class="text-xs"
+        />
+        <Input
+          v-model="addLinkUrl"
+          placeholder="链接地址（必须以 http:// 或 https:// 开头）"
+          class="text-xs"
+        />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <Button size="sm" variant="outline" @click="showAddLinkModal = false">取消</Button>
+        <Button size="sm" :disabled="isLoading" @click="addLink">添加链接</Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+
+  <!-- 模板预览弹窗 -->
+  <Dialog v-model:open="showTemplatePreview">
+    <DialogContent class="max-w-4xl p-4 max-h-[85vh] flex flex-col">
+      <DialogHeader>
+        <DialogTitle class="text-sm font-semibold">主页模板预览 - {{ selectedIndexTemplate.name }}</DialogTitle>
+      </DialogHeader>
+      <div class="flex-1 overflow-y-auto mt-2 border border-border rounded-lg p-2 bg-background">
+        <component
+          :is="selectedIndexTemplate.component"
+          :user-info="accountInfo"
+          :bili-info="undefined"
+        />
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <style scoped>
@@ -679,34 +690,5 @@ await loadIndexInfo()
   color: var(--vtsuru-fg-muted);
   font-size: 12px;
   line-height: 1.5;
-}
-.links-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-.link-item-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 6px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  background: var(--vtsuru-bg-inset, rgba(127, 127, 127, 0.06));
-  box-sizing: border-box;
-}
-.link-tag {
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.index-template-preview {
-  max-height: min(72vh, 760px);
-  overflow: auto;
-  margin: -12px;
-  background: var(--vtsuru-bg);
 }
 </style>

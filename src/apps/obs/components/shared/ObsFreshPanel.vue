@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NEmpty } from 'naive-ui'
+import { Empty } from '@/shared/ui/empty'
 import { toRef } from 'vue'
 
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
@@ -132,7 +132,7 @@ const { listContainerRef, listInnerRef, isMoreThanContainer, animationTranslateY
           </TransitionGroup>
         </div>
       </template>
-      <NEmpty
+      <Empty
         v-else
         :description="emptyText"
         class="obs-fresh-empty"

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { NButton, NDivider, NInput, NRadioButton, NRadioGroup, NFlex, NTag, useMessage, NText } from 'naive-ui'
 import { ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { KeywordMatchType } from '@/apps/client/store/autoAction/types'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 
 const props = defineProps({
   action: {
@@ -12,8 +15,6 @@ const props = defineProps({
     required: true,
   },
 })
-
-const message = useMessage()
 
 // 弹幕关键词相关
 const tempKeyword = ref('')
@@ -41,7 +42,7 @@ function addKeyword() {
     props.action.triggerConfig.keywords.push(keyword)
     tempKeyword.value = ''
   } else {
-    message.warning('此关键词已存在')
+    toast.warning('此关键词已存在')
   }
 }
 
@@ -65,7 +66,7 @@ function addBlockword() {
     props.action.triggerConfig.blockwords.push(blockword)
     tempBlockword.value = ''
   } else {
-    message.warning('此屏蔽词已存在')
+    toast.warning('此屏蔽词已存在')
   }
 }
 
@@ -80,185 +81,161 @@ function removeBlockword(index: number) {
 <template>
   <div
     v-if="action.triggerType === TriggerType.DANMAKU"
-    class="danmaku-trigger-settings"
+    class="danmaku-trigger-settings space-y-4"
   >
-    <NFlex
-      vertical
-      :size="16"
-    >
-      <!-- 触发关键词 -->
-      <div class="settings-group">
-        <NText
-          strong
-          class="group-title"
+    <!-- 触发关键词 -->
+    <div class="settings-group space-y-2.5">
+      <span class="font-semibold text-xs text-foreground block">触发关键词</span>
+      <div class="flex items-center gap-2">
+        <Input
+          v-model="tempKeyword"
+          placeholder="输入关键词..."
+          class="h-8 text-xs flex-1"
+          @keyup.enter="addKeyword"
+        />
+        <Button
+          size="sm"
+          class="h-8 text-xs"
+          @click="addKeyword"
         >
-          触发关键词
-        </NText>
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <NFlex :wrap="false">
-            <NInput
-              v-model:value="tempKeyword"
-              placeholder="输入关键词..."
-              size="small"
-              @keyup.enter="addKeyword"
-            />
-            <NButton
-              size="small"
-              type="primary"
-              secondary
-              @click="addKeyword"
-            >
-              添加
-            </NButton>
-          </NFlex>
-
-          <NFlex
-            align="center"
-            :size="12"
-          >
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              匹配方式:
-            </NText>
-            <NRadioGroup
-              v-model:value="action.triggerConfig.keywordMatchType"
-              size="small"
-            >
-              <NRadioButton :value="KeywordMatchType.Full"> 完全 </NRadioButton>
-              <NRadioButton :value="KeywordMatchType.Contains"> 包含 </NRadioButton>
-              <NRadioButton :value="KeywordMatchType.Regex"> 正则 </NRadioButton>
-            </NRadioGroup>
-          </NFlex>
-
-          <NFlex
-            :size="8"
-            class="tag-container"
-          >
-            <template v-if="action.triggerConfig.keywords && action.triggerConfig.keywords.length > 0">
-              <NTag
-                v-for="(keyword, index) in action.triggerConfig.keywords"
-                :key="index"
-                closable
-                size="small"
-                @close="removeKeyword(index)"
-              >
-                {{ keyword }}
-              </NTag>
-            </template>
-            <NText
-              v-else
-              depth="3"
-              italic
-              style="font-size: 12px"
-            >
-              未设置关键词 (将匹配所有弹幕)
-            </NText>
-          </NFlex>
-        </NFlex>
+          添加
+        </Button>
       </div>
 
-      <NDivider style="margin: 0" />
-
-      <!-- 屏蔽词 -->
-      <div class="settings-group">
-        <NText
-          strong
-          class="group-title"
-        >
-          屏蔽关键词
-        </NText>
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <NFlex :wrap="false">
-            <NInput
-              v-model:value="tempBlockword"
-              placeholder="输入屏蔽词..."
-              size="small"
-              @keyup.enter="addBlockword"
-            />
-            <NButton
-              size="small"
-              type="warning"
-              secondary
-              @click="addBlockword"
-            >
-              添加
-            </NButton>
-          </NFlex>
-
-          <NFlex
-            align="center"
-            :size="12"
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-muted-foreground">匹配方式:</span>
+        <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
+          <button
+            type="button"
+            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+            :class="action.triggerConfig.keywordMatchType === KeywordMatchType.Full ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Full"
           >
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              匹配方式:
-            </NText>
-            <NRadioGroup
-              v-model:value="action.triggerConfig.blockwordMatchType"
-              size="small"
-            >
-              <NRadioButton :value="KeywordMatchType.Full"> 完全 </NRadioButton>
-              <NRadioButton :value="KeywordMatchType.Contains"> 包含 </NRadioButton>
-              <NRadioButton :value="KeywordMatchType.Regex"> 正则 </NRadioButton>
-            </NRadioGroup>
-          </NFlex>
-
-          <NFlex
-            :size="8"
-            class="tag-container"
+            完全
+          </button>
+          <button
+            type="button"
+            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+            :class="action.triggerConfig.keywordMatchType === KeywordMatchType.Contains ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Contains"
           >
-            <template v-if="action.triggerConfig.blockwords && action.triggerConfig.blockwords.length > 0">
-              <NTag
-                v-for="(blockword, index) in action.triggerConfig.blockwords"
-                :key="index"
-                closable
-                type="warning"
-                size="small"
-                @close="removeBlockword(index)"
-              >
-                {{ blockword }}
-              </NTag>
-            </template>
-            <NText
-              v-else
-              depth="3"
-              italic
-              style="font-size: 12px"
-            >
-              无屏蔽词
-            </NText>
-          </NFlex>
-        </NFlex>
+            包含
+          </button>
+          <button
+            type="button"
+            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+            :class="action.triggerConfig.keywordMatchType === KeywordMatchType.Regex ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Regex"
+          >
+            正则
+          </button>
+        </div>
       </div>
-    </NFlex>
+
+      <div class="tag-container flex flex-wrap items-center gap-1.5 p-2 rounded-md border bg-muted/20 min-h-[36px]">
+        <template v-if="action.triggerConfig.keywords && action.triggerConfig.keywords.length > 0">
+          <Badge
+            v-for="(keyword, index) in action.triggerConfig.keywords"
+            :key="index"
+            variant="secondary"
+            class="text-xs h-6 px-2 gap-1.5 font-normal"
+          >
+            <span>{{ keyword }}</span>
+            <button
+              type="button"
+              class="hover:text-destructive transition-colors text-muted-foreground"
+              @click="removeKeyword(index)"
+            >
+              ✕
+            </button>
+          </Badge>
+        </template>
+        <span
+          v-else
+          class="text-xs italic text-muted-foreground"
+        >
+          未设置关键词 (将匹配所有弹幕)
+        </span>
+      </div>
+    </div>
+
+    <div class="h-px bg-border my-2" />
+
+    <!-- 屏蔽词 -->
+    <div class="settings-group space-y-2.5">
+      <span class="font-semibold text-xs text-foreground block">屏蔽关键词</span>
+      <div class="flex items-center gap-2">
+        <Input
+          v-model="tempBlockword"
+          placeholder="输入屏蔽词..."
+          class="h-8 text-xs flex-1"
+          @keyup.enter="addBlockword"
+        />
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-8 text-xs text-amber-600 dark:text-amber-400"
+          @click="addBlockword"
+        >
+          添加
+        </Button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-muted-foreground">匹配方式:</span>
+        <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
+          <button
+            type="button"
+            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+            :class="action.triggerConfig.blockwordMatchType === KeywordMatchType.Full ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Full"
+          >
+            完全
+          </button>
+          <button
+            type="button"
+            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+            :class="action.triggerConfig.blockwordMatchType === KeywordMatchType.Contains ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Contains"
+          >
+            包含
+          </button>
+          <button
+            type="button"
+            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+            :class="action.triggerConfig.blockwordMatchType === KeywordMatchType.Regex ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Regex"
+          >
+            正则
+          </button>
+        </div>
+      </div>
+
+      <div class="tag-container flex flex-wrap items-center gap-1.5 p-2 rounded-md border bg-muted/20 min-h-[36px]">
+        <template v-if="action.triggerConfig.blockwords && action.triggerConfig.blockwords.length > 0">
+          <Badge
+            v-for="(blockword, index) in action.triggerConfig.blockwords"
+            :key="index"
+            variant="outline"
+            class="text-xs h-6 px-2 gap-1.5 font-normal border-amber-500/40 text-amber-600 bg-amber-500/10"
+          >
+            <span>{{ blockword }}</span>
+            <button
+              type="button"
+              class="hover:text-destructive transition-colors text-amber-600/70"
+              @click="removeBlockword(index)"
+            >
+              ✕
+            </button>
+          </Badge>
+        </template>
+        <span
+          v-else
+          class="text-xs italic text-muted-foreground"
+        >
+          无屏蔽词
+        </span>
+      </div>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.danmaku-trigger-settings {
-  width: 100%;
-}
-
-.group-title {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 13px;
-}
-
-.tag-container {
-  min-height: 28px;
-  padding: 4px 8px;
-  background-color: var(--vtsuru-bg-muted);
-  border-radius: var(--vtsuru-radius);
-}
-</style>

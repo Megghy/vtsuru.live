@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { PlayCircleOutline, RefreshOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NFlex, NSpin, NIcon } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ResponseUserIndexModel, UserInfo, VideoCollectVideo } from '@/api/api-models'
 import { getApiUserIndexGet } from '@/api/generated/user-index/user-index'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -145,91 +147,92 @@ const containerStyle = computed(() => {
     </template>
 
     <div class="video-content">
-      <NSpin
-        :show="isLoading"
-        size="small"
+      <div
+        v-if="isLoading"
+        class="py-6 flex justify-center"
       >
-        <NAlert
-          v-if="error"
-          type="error"
-          :show-icon="true"
-          class="remote-error"
+        <Spin />
+      </div>
+
+      <Alert
+        v-else-if="error"
+        variant="destructive"
+        class="text-xs py-2 mb-2.5"
+      >
+        <AlertDescription class="flex items-center justify-between w-full">
+          <span>{{ error }}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            class="h-6 px-2 text-xs"
+            @click="loadUserIndex(true)"
+          >
+            <component :is="RefreshOutline" class="size-3 mr-1" />
+            重试
+          </Button>
+        </AlertDescription>
+      </Alert>
+
+      <template v-else-if="cfg.source === 'userIndex'">
+        <Alert
+          v-if="videos.length === 0"
+          class="text-xs py-2"
         >
-          <div class="remote-error-content">
-            <span>{{ error }}</span>
-            <NButton
-              size="small"
-              secondary
-              @click="loadUserIndex(true)"
-            >
-              <template #icon>
-                <NIcon><RefreshOutline /></NIcon>
-              </template>
-              重试
-            </NButton>
-          </div>
-        </NAlert>
-
-        <template v-else-if="cfg.source === 'userIndex'">
-          <NAlert
-            v-if="videos.length === 0 && !isLoading"
-            type="info"
-            :show-icon="false"
-          >
+          <AlertDescription>
             暂无视频
-          </NAlert>
-          <div
-            v-else
-            class="video-list"
-            :class="cfg.layout"
-            :style="containerStyle"
-          >
-            <SimpleVideoCard
-              v-for="video in videos"
-              :key="video.id"
-              :video="video"
-              :width="cfg.layout === 'row' ? 260 : undefined"
-            />
-          </div>
-        </template>
+          </AlertDescription>
+        </Alert>
+        <div
+          v-else
+          class="video-list"
+          :class="cfg.layout"
+          :style="containerStyle"
+        >
+          <SimpleVideoCard
+            v-for="video in videos"
+            :key="video.id"
+            :video="video"
+            :width="cfg.layout === 'row' ? 260 : undefined"
+          />
+        </div>
+      </template>
 
-        <template v-else>
-          <NAlert
-            v-if="manualItems.length === 0"
-            type="info"
-            :show-icon="false"
-          >
+      <template v-else>
+        <Alert
+          v-if="manualItems.length === 0"
+          class="text-xs py-2"
+        >
+          <AlertDescription>
             未配置视频链接
-          </NAlert>
-          <NFlex
-            v-else
-            vertical
-            style="gap: 8px"
+          </AlertDescription>
+        </Alert>
+        <div
+          v-else
+          class="flex flex-col gap-2"
+        >
+          <a
+            v-for="(it, idx) in manualItems"
+            :key="idx"
+            :href="it.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="manual-item"
+            :aria-label="`${it.title || '打开视频'}（新窗口打开）`"
           >
-            <a
-              v-for="(it, idx) in manualItems"
-              :key="idx"
-              :href="it.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="manual-item"
-              :aria-label="`${it.title || '打开视频'}（新窗口打开）`"
-            >
-              <div class="manual-icon">
-                <NIcon><PlayCircleOutline /></NIcon>
-              </div>
-              <div class="manual-content">
-                <strong class="manual-title">
-                  {{ it.title || it.url }}
-                </strong>
-                <span class="manual-url">
-                  {{ it.url }}
-                </span>
-              </div>
-            </a>
-          </NFlex>
-        </template>
-      </NSpin>
+            <div class="manual-icon">
+              <component :is="PlayCircleOutline" class="size-5" />
+            </div>
+            <div class="manual-content">
+              <strong class="manual-title">
+                {{ it.title || it.url }}
+              </strong>
+              <span class="manual-url">
+                {{ it.url }}
+              </span>
+            </div>
+          </a>
+        </div>
+      </template>
     </div>
   </BlockCard>
 </template>
@@ -249,15 +252,6 @@ const containerStyle = computed(() => {
   display: flex;
   padding-bottom: 4px;
   overflow-x: auto;
-}
-.remote-error {
-  margin-bottom: 10px;
-}
-.remote-error-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
 }
 .manual-item {
   display: flex;
@@ -316,10 +310,6 @@ const containerStyle = computed(() => {
 @container (max-width: 520px) {
   .video-list.grid {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-  }
-  .remote-error-content {
-    align-items: flex-start;
-    flex-direction: column;
   }
 }
 @media (prefers-reduced-motion: reduce) {

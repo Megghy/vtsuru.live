@@ -1,21 +1,12 @@
 <script setup lang="ts">
 import { Info16Regular } from '@vicons/fluent'
-import {
-  NDivider,
-  NInputNumber,
-  NRadio,
-  NRadioGroup,
-  NFlex,
-  NSwitch,
-  NText,
-  NForm,
-  NFormItem,
-  NTooltip,
-  NIcon,
-} from 'naive-ui'
+import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
   action: {
@@ -47,142 +38,85 @@ const useGlobalTimer = computed({
 const schedulingModeOptions = [
   { label: '随机模式 (每次随机选一个模板)', value: 'random' },
   { label: '顺序模式 (按列表顺序循环)', value: 'sequential' },
-]
+] as const
 </script>
 
 <template>
   <div
     v-if="action.triggerType === TriggerType.SCHEDULED"
-    class="scheduled-trigger-settings"
+    class="scheduled-trigger-settings space-y-3"
   >
-    <NForm
-      label-placement="left"
-      :label-width="140"
-      size="small"
-      :show-feedback="false"
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">使用全局设置</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            开启后将遵循【自动化 -> 消息队列】中的全局定时设置
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <Switch v-model:checked="useGlobalTimer" />
+    </div>
+
+    <div
+      v-if="useGlobalTimer"
+      class="info-box text-xs text-muted-foreground p-2.5 rounded border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
     >
-      <NFlex
-        vertical
-        :size="16"
+      当前正在使用全局定时器。此操作将与其他全局任务共享发送频率和顺序。<br />
+      修改全局间隔请前往：功能设置 -> 消息队列。
+    </div>
+
+    <div class="space-y-3 pt-1">
+      <div class="border-b pb-1">
+        <span class="font-semibold text-xs text-foreground block">独立定时设置</span>
+      </div>
+
+      <div
+        class="space-y-3"
+        :class="{ 'opacity-50 pointer-events-none': useGlobalTimer }"
       >
-        <NFormItem label="使用全局设置">
-          <template #label>
-            <NTooltip trigger="hover">
-              <template #trigger>
-                <span
-                  >使用全局设置
-                  <NIcon
-                    :component="Info16Regular"
-                    style="vertical-align: -2px"
-                /></span>
-              </template>
-              开启后将遵循【自动化 -> 消息队列】中的全局定时设置
-            </NTooltip>
-          </template>
-          <NSwitch v-model:value="useGlobalTimer">
-            <template #checked> 是 </template>
-            <template #unchecked> 否 </template>
-          </NSwitch>
-        </NFormItem>
-
-        <transition name="fade">
-          <div
-            v-if="useGlobalTimer"
-            class="info-box"
-          >
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              当前正在使用全局定时器。此操作将与其他全局任务共享发送频率和顺序。
-              <br />修改全局间隔请前往：功能设置 -> 消息队列。
-            </NText>
-          </div>
-        </transition>
-
-        <NDivider
-          title-placement="left"
-          style="margin: 8px 0"
-        >
-          <NText
-            strong
-            depth="2"
-          >
-            独立定时设置
-          </NText>
-        </NDivider>
-
-        <div :class="{ 'disabled-overlay': useGlobalTimer }">
-          <NFlex
-            vertical
-            :size="12"
-          >
-            <NFormItem label="发送间隔 (秒)">
-              <NInputNumber
-                v-model:value="action.triggerConfig.intervalSeconds"
-                :min="10"
-                :max="86400"
-                style="width: 140px"
-                :disabled="useGlobalTimer"
-                placeholder="300"
-              >
-                <template #suffix> 秒 </template>
-              </NInputNumber>
-            </NFormItem>
-
-            <NFormItem label="发送模式">
-              <NRadioGroup
-                v-model:value="action.triggerConfig.schedulingMode"
-                :disabled="useGlobalTimer"
-              >
-                <NFlex
-                  vertical
-                  :size="8"
-                >
-                  <NRadio
-                    v-for="option in schedulingModeOptions"
-                    :key="option.value"
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </NRadio>
-                </NFlex>
-              </NRadioGroup>
-            </NFormItem>
-          </NFlex>
+        <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+          <span class="text-xs font-medium text-foreground">发送间隔 (秒)</span>
+          <NInputNumber
+            :value="action.triggerConfig.intervalSeconds"
+            :min="10"
+            :max="86400"
+            :disabled="useGlobalTimer"
+            placeholder="300"
+            size="small"
+            class="w-32"
+            @update:value="action.triggerConfig.intervalSeconds = $event || 300"
+          />
         </div>
-      </NFlex>
-    </NForm>
+
+        <div class="space-y-1.5 p-2.5 rounded border bg-muted/20">
+          <span class="text-xs font-medium text-foreground block">发送模式</span>
+          <div class="flex flex-col gap-2">
+            <label
+              v-for="opt in schedulingModeOptions"
+              :key="opt.value"
+              class="flex items-center gap-2 cursor-pointer text-xs"
+              :class="useGlobalTimer ? 'cursor-not-allowed' : ''"
+            >
+              <input
+                type="radio"
+                name="schedulingMode"
+                :value="opt.value"
+                :checked="action.triggerConfig.schedulingMode === opt.value"
+                :disabled="useGlobalTimer"
+                class="accent-primary"
+                @change="action.triggerConfig.schedulingMode = opt.value"
+              />
+              <span>{{ opt.label }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.scheduled-trigger-settings {
-  width: 100%;
-}
-
-.info-box {
-  padding: 8px 12px;
-  background-color: var(--vtsuru-bg-muted);
-  border-radius: var(--vtsuru-radius);
-  border-left: 4px solid var(--vtsuru-info);
-}
-
-.disabled-overlay {
-  opacity: 0.5;
-  pointer-events: none;
-  filter: grayscale(0.5);
-  transition: all 0.3s ease;
-}
-
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

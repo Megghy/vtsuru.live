@@ -1,4 +1,4 @@
-import type { UploadFileInfo } from 'naive-ui'
+import type { UploadFileInfo } from '@/shared/types/upload'
 
 import { toImageUploadFileInfo, type UploadSourceFile } from '@/shared/utils/uploadFileHelper'
 

@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { AddOutline, ImageOutline, TrashOutline } from '@vicons/ionicons5'
-import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import { isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabilities'
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { NInputNumber } from '@/shared/ui/NInputNumber'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from './PropsGrid.vue'
 
@@ -75,349 +85,264 @@ function propertyAvailable(property: string) {
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="image-gallery-props-editor flex flex-col gap-3">
     <PropsGrid>
-      <NFormItem label="样式">
-        <NSelect
-          v-model:value="gallery.layout"
-          :options="[
-            { label: '网格', value: 'grid' },
-            { label: '瀑布流', value: 'masonry' },
-            { label: '轮播', value: 'carousel' },
-          ]"
-        />
-      </NFormItem>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">样式</label>
+        <Select v-model="gallery.layout">
+          <SelectTrigger class="h-8 text-xs">
+            <SelectValue placeholder="选择样式" />
+          </SelectTrigger>
+          <SelectContent class="text-xs">
+            <SelectItem value="grid">网格</SelectItem>
+            <SelectItem value="masonry">瀑布流</SelectItem>
+            <SelectItem value="carousel">轮播</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      <NFormItem
-        v-if="propertyAvailable('columns')"
-        label="列数"
-      >
+      <div v-if="propertyAvailable('columns')" class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">列数</label>
         <NInputNumber
-          v-model:value="gallery.columns"
+          v-model="gallery.columns"
           :min="1"
           :max="12"
-          style="width: 100%"
+          class="h-8 text-xs"
         />
-      </NFormItem>
+      </div>
 
-      <NFormItem
-        v-if="propertyAvailable('gap')"
-        label="间距 px"
-      >
+      <div v-if="propertyAvailable('gap')" class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">间距 px</label>
         <NInputNumber
-          v-model:value="gallery.gap"
+          v-model="gallery.gap"
           :min="0"
           :max="80"
-          style="width: 100%"
+          class="h-8 text-xs"
         />
-      </NFormItem>
+      </div>
 
-      <NFormItem label="最大宽度">
-        <NInput
-          v-model:value="gallery.maxWidth"
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">最大宽度</label>
+        <Input
+          v-model="gallery.maxWidth"
           placeholder="例如 100% 或 720px"
+          class="h-8 text-xs"
         />
-      </NFormItem>
+      </div>
 
-      <NFormItem
-        v-if="propertyAvailable('maxHeight')"
-        label="图片最大高度"
-      >
-        <NInput
-          v-model:value="gallery.maxHeight"
+      <div v-if="propertyAvailable('maxHeight')" class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">图片最大高度</label>
+        <Input
+          v-model="gallery.maxHeight"
           placeholder="例如 320px"
+          class="h-8 text-xs"
         />
-      </NFormItem>
+      </div>
 
-      <NFormItem
-        v-if="propertyAvailable('fit')"
-        label="图片裁剪方式"
-      >
-        <NSelect
-          v-model:value="gallery.fit"
-          :options="[
-            { label: '裁剪铺满 - cover', value: 'cover' },
-            { label: '完整显示 - contain', value: 'contain' },
-          ]"
-        />
-      </NFormItem>
+      <div v-if="propertyAvailable('fit')" class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">图片裁剪方式</label>
+        <Select v-model="gallery.fit">
+          <SelectTrigger class="h-8 text-xs">
+            <SelectValue placeholder="裁剪方式" />
+          </SelectTrigger>
+          <SelectContent class="text-xs">
+            <SelectItem value="cover">裁剪铺满 - cover</SelectItem>
+            <SelectItem value="contain">完整显示 - contain</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      <NFormItem
-        v-if="propertyAvailable('autoplay')"
-        label="自动轮播"
-      >
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="gallery.autoplay"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
+      <div v-if="propertyAvailable('autoplay')" class="flex items-center justify-between pt-4">
+        <label class="text-xs text-muted-foreground">自动轮播</label>
+        <Switch :checked="gallery.autoplay" @update:checked="gallery.autoplay = $event" />
+      </div>
     </PropsGrid>
 
     <template v-if="gallery.layout === 'carousel'">
       <PropsGrid>
-        <NFormItem
-          v-if="propertyAvailable('effect')"
-          label="切换动效"
-        >
-          <NSelect
-            v-model:value="gallery.effect"
-            :options="[
-              { label: '滑动 - slide', value: 'slide' },
-              { label: '淡入淡出 - fade', value: 'fade' },
-              { label: '卡片 - card', value: 'card' },
-            ]"
-          />
-        </NFormItem>
+        <div v-if="propertyAvailable('effect')" class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">切换动效</label>
+          <Select v-model="gallery.effect">
+            <SelectTrigger class="h-8 text-xs">
+              <SelectValue placeholder="动效" />
+            </SelectTrigger>
+            <SelectContent class="text-xs">
+              <SelectItem value="slide">滑动 - slide</SelectItem>
+              <SelectItem value="fade">淡入淡出 - fade</SelectItem>
+              <SelectItem value="card">卡片 - card</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <NFormItem
-          v-if="propertyAvailable('interval')"
-          label="轮播间隔 ms"
-        >
+        <div v-if="propertyAvailable('interval')" class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">轮播间隔 ms</label>
           <NInputNumber
-            v-model:value="gallery.interval"
+            v-model="gallery.interval"
             :min="1000"
             :max="20000"
-            style="width: 100%"
+            class="h-8 text-xs"
           />
-        </NFormItem>
+        </div>
 
-        <NFormItem
-          v-if="propertyAvailable('showDots')"
-          label="显示指示点"
-        >
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.showDots"
-              size="small"
-            />
-          </NFlex>
-        </NFormItem>
+        <div v-if="propertyAvailable('showDots')" class="flex items-center justify-between pt-4">
+          <label class="text-xs text-muted-foreground">显示指示点</label>
+          <Switch :checked="gallery.showDots" @update:checked="gallery.showDots = $event" />
+        </div>
 
-        <NFormItem
-          v-if="propertyAvailable('showArrow')"
-          label="显示切换箭头"
-        >
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.showArrow"
-              size="small"
-            />
-          </NFlex>
-        </NFormItem>
+        <div v-if="propertyAvailable('showArrow')" class="flex items-center justify-between pt-4">
+          <label class="text-xs text-muted-foreground">显示切换箭头</label>
+          <Switch :checked="gallery.showArrow" @update:checked="gallery.showArrow = $event" />
+        </div>
 
-        <NFormItem
-          v-if="propertyAvailable('dotType')"
-          label="指示点样式"
-        >
-          <NSelect
-            v-model:value="gallery.dotType"
-            :options="[
-              { label: '短线', value: 'line' },
-              { label: '圆点', value: 'dot' },
-            ]"
-          />
-        </NFormItem>
+        <div v-if="propertyAvailable('dotType')" class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">指示点样式</label>
+          <Select v-model="gallery.dotType">
+            <SelectTrigger class="h-8 text-xs">
+              <SelectValue placeholder="样式" />
+            </SelectTrigger>
+            <SelectContent class="text-xs">
+              <SelectItem value="line">短线</SelectItem>
+              <SelectItem value="dot">圆点</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <NFormItem
-          v-if="propertyAvailable('dotPlacement')"
-          label="指示点位置"
-        >
-          <NSelect
-            v-model:value="gallery.dotPlacement"
-            :options="[
-              { label: '底部', value: 'bottom' },
-              { label: '顶部', value: 'top' },
-              { label: '左侧', value: 'left' },
-              { label: '右侧', value: 'right' },
-            ]"
-          />
-        </NFormItem>
+        <div v-if="propertyAvailable('dotPlacement')" class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">指示点位置</label>
+          <Select v-model="gallery.dotPlacement">
+            <SelectTrigger class="h-8 text-xs">
+              <SelectValue placeholder="位置" />
+            </SelectTrigger>
+            <SelectContent class="text-xs">
+              <SelectItem value="bottom">底部</SelectItem>
+              <SelectItem value="top">顶部</SelectItem>
+              <SelectItem value="left">左侧</SelectItem>
+              <SelectItem value="right">右侧</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <NFormItem label="循环播放">
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.loop"
-              size="small"
-            />
-          </NFlex>
-        </NFormItem>
+        <div class="flex items-center justify-between pt-4">
+          <label class="text-xs text-muted-foreground">循环播放</label>
+          <Switch :checked="gallery.loop" @update:checked="gallery.loop = $event" />
+        </div>
 
-        <NFormItem label="鼠标拖拽切换">
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.draggable"
-              size="small"
-            />
-          </NFlex>
-        </NFormItem>
+        <div class="flex items-center justify-between pt-4">
+          <label class="text-xs text-muted-foreground">鼠标拖拽切换</label>
+          <Switch :checked="gallery.draggable" @update:checked="gallery.draggable = $event" />
+        </div>
 
-        <NFormItem label="触屏滑动切换">
-          <NFlex justify="end">
-            <NSwitch
-              v-model:value="gallery.touchable"
-              size="small"
-            />
-          </NFlex>
-        </NFormItem>
+        <div class="flex items-center justify-between pt-4">
+          <label class="text-xs text-muted-foreground">触屏滑动切换</label>
+          <Switch :checked="gallery.touchable" @update:checked="gallery.touchable = $event" />
+        </div>
 
-        <NFormItem label="切换触发方式">
-          <NSelect
-            v-model:value="gallery.trigger"
-            :options="[
-              { label: '点击', value: 'click' },
-              { label: '悬停', value: 'hover' },
-            ]"
-          />
-        </NFormItem>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">切换触发方式</label>
+          <Select v-model="gallery.trigger">
+            <SelectTrigger class="h-8 text-xs">
+              <SelectValue placeholder="方式" />
+            </SelectTrigger>
+            <SelectContent class="text-xs">
+              <SelectItem value="click">点击</SelectItem>
+              <SelectItem value="hover">悬停</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </PropsGrid>
     </template>
 
-    <NFormItem label="图片列表">
-      <NFlex
-        vertical
-        style="width: 100%"
-      >
-        <NFlex
-          justify="space-between"
-          align="center"
-          :wrap="false"
+    <div class="flex flex-col gap-2 pt-2 border-t border-border">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-muted-foreground">图片列表（可拖拽排序）</span>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-7 text-xs"
+          :disabled="props.editor.isUploading.value"
+          @click="props.editor.triggerUploadGalleryBulk(props.block)"
         >
-          <NText depth="3"> 可拖拽排序 </NText>
-          <NButton
-            size="tiny"
-            type="info"
-            secondary
-            :loading="props.editor.isUploading.value"
-            @click="props.editor.triggerUploadGalleryBulk(props.block)"
-          >
-            <template #icon>
-              <NIcon><ImageOutline /></NIcon>
-            </template>
-            批量上传
-          </NButton>
-        </NFlex>
-        <VueDraggable
-          v-model="itemsModel"
-          handle=".drag-handle"
-          style="display: flex; flex-direction: column; gap: 10px"
-        >
-          <div
-            v-for="(element, index) in itemsModel"
-            :key="getItemKey(element)"
-            style="border: 1px solid var(--vtsuru-border); border-radius: 10px; padding: 10px"
-          >
-            <NFlex
-              align="center"
-              justify="space-between"
-            >
-              <NFlex
-                align="center"
-                :wrap="false"
-                style="gap: 10px; min-width: 0"
-              >
-                <NText
-                  depth="3"
-                  class="drag-handle"
-                  style="cursor: grab; user-select: none"
-                >
-                  ≡
-                </NText>
-                <img
-                  v-if="getItemPreviewSrc(element)"
-                  :src="getItemPreviewSrc(element)"
-                  alt=""
-                  referrerpolicy="no-referrer"
-                  style="
-                    width: 44px;
-                    height: 44px;
-                    object-fit: cover;
-                    border-radius: 8px;
-                    border: 1px solid var(--vtsuru-border);
-                    flex: 0 0 auto;
-                  "
-                />
-                <NText
-                  depth="3"
-                  style="white-space: nowrap"
-                >
-                  #{{ index + 1 }}
-                </NText>
-              </NFlex>
-              <NFlex
-                align="center"
-                :wrap="false"
-                style="gap: 8px"
-              >
-                <NButton
-                  size="tiny"
-                  :loading="props.editor.isUploading.value"
-                  @click="props.editor.triggerUploadItemImage(props.block, index)"
-                >
-                  <template #icon>
-                    <NIcon><ImageOutline /></NIcon>
-                  </template>
-                  上传
-                </NButton>
-                <NButton
-                  size="tiny"
-                  secondary
-                  @click="props.editor.clearUploadedItemImage(props.block, index)"
-                >
-                  清除
-                </NButton>
-                <NButton
-                  size="tiny"
-                  type="error"
-                  secondary
-                  @click="removeItem(index)"
-                >
-                  <template #icon>
-                    <NIcon><TrashOutline /></NIcon>
-                  </template>
-                  删除
-                </NButton>
-              </NFlex>
-            </NFlex>
+          <component :is="ImageOutline" class="size-3.5 mr-1" />
+          批量上传
+        </Button>
+      </div>
 
-            <div style="margin-top: 10px">
-              <NFormItem
-                label="替代文本"
-                :show-feedback="false"
+      <VueDraggable
+        v-model="itemsModel"
+        handle=".drag-handle"
+        class="flex flex-col gap-2"
+      >
+        <div
+          v-for="(element, index) in itemsModel"
+          :key="getItemKey(element)"
+          class="border border-border rounded-lg p-2.5 bg-card flex flex-col gap-2"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="drag-handle cursor-grab text-muted-foreground font-mono select-none">≡</span>
+              <img
+                v-if="getItemPreviewSrc(element)"
+                :src="getItemPreviewSrc(element)"
+                alt=""
+                referrerpolicy="no-referrer"
+                class="size-10 object-cover rounded border border-border shrink-0"
+              />
+              <span class="text-xs text-muted-foreground font-mono">#{{ index + 1 }}</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-6 px-2 text-xs"
+                :disabled="props.editor.isUploading.value"
+                @click="props.editor.triggerUploadItemImage(props.block, index)"
               >
-                <NInput
-                  v-model:value="ensureItem(index).alt"
-                  placeholder="说明图片内容；装饰图片可留空"
-                />
-              </NFormItem>
-              <NFormItem
-                label="图片描述"
-                :show-feedback="false"
+                上传
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                class="h-6 px-2 text-xs"
+                @click="props.editor.clearUploadedItemImage(props.block, index)"
               >
-                <NInput
-                  v-model:value="ensureItem(index).desc"
-                  placeholder="可选，显示在图片下方"
-                />
-              </NFormItem>
+                清除
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                class="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                @click="removeItem(index)"
+              >
+                <component :is="TrashOutline" class="size-3.5" />
+              </Button>
             </div>
           </div>
-        </VueDraggable>
 
-        <NButton
-          type="info"
-          secondary
-          @click="addItem"
-        >
-          <template #icon>
-            <NIcon><AddOutline /></NIcon>
-          </template>
-          添加图片
-        </NButton>
-      </NFlex>
-    </NFormItem>
-  </NForm>
+          <div class="flex flex-col gap-1.5 pt-1">
+            <Input
+              v-model="ensureItem(index).alt"
+              placeholder="替代文本（说明图片内容；装饰图片可留空）"
+              class="h-7 text-xs"
+            />
+            <Input
+              v-model="ensureItem(index).desc"
+              placeholder="图片描述（可选，显示在图片下方）"
+              class="h-7 text-xs"
+            />
+          </div>
+        </div>
+      </VueDraggable>
+
+      <Button
+        size="sm"
+        variant="outline"
+        class="w-full text-xs"
+        @click="addItem"
+      >
+        <component :is="AddOutline" class="size-3.5 mr-1" />
+        添加图片
+      </Button>
+    </div>
+  </div>
 </template>

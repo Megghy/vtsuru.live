@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
-import { NDivider, NEmpty, NMessageProvider } from 'naive-ui'
+import { Separator } from '@/shared/ui/separator'
+import { Empty } from '@/shared/ui/empty'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
@@ -163,7 +164,7 @@ onUnmounted(() => {
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </div>
-          <NDivider
+          <Separator
             v-if="isMoreThanContainer"
             class="live-request-footer-divider"
             style="margin: 10px 0 10px 0"
@@ -174,7 +175,7 @@ onUnmounted(() => {
         v-else
         style="position: relative; top: 20%"
       >
-        <NEmpty
+        <Empty
           class="live-request-empty"
           description="今日暂无"
         />

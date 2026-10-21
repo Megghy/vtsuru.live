@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CheckmarkCircle16Regular, ChevronDown12Regular, ErrorCircle16Regular, Toolbox16Regular } from '@vicons/fluent'
-import { NCollapseTransition, NIcon, NText } from 'naive-ui'
 import { computed, reactive } from 'vue'
 
 import type { AssistantToolEvent } from '../api/assistant'
@@ -48,9 +47,9 @@ function formatDuration(ms?: number): string {
         @click="toggle(tool)"
       >
         <span class="tool-line__state">
-          <NIcon
-            :component="STATUS_META[tool.status].icon"
-            size="15"
+          <component
+            :is="STATUS_META[tool.status].icon"
+            class="size-3.5"
           />
         </span>
         <span class="tool-line__title">{{ tool.title || tool.name }}</span>
@@ -58,39 +57,36 @@ function formatDuration(ms?: number): string {
           {{ STATUS_META[tool.status].label }}
           <template v-if="formatDuration(tool.durationMs)"> · {{ formatDuration(tool.durationMs) }} </template>
         </span>
-        <NIcon
-          :component="ChevronDown12Regular"
-          size="12"
-          class="tool-line__chevron"
-          :class="{ 'is-open': isOpen(tool) }"
+        <component
+          :is="ChevronDown12Regular"
+          class="size-3 tool-line__chevron transition-transform duration-200"
+          :class="{ 'rotate-180': isOpen(tool) }"
         />
       </button>
 
-      <NCollapseTransition :show="isOpen(tool)">
-        <div class="tool-line__body">
-          <NText
-            v-if="tool.error"
-            type="error"
-            class="tool-line__detail"
-          >
-            {{ tool.error }}
-          </NText>
-          <NText
-            v-else-if="tool.summary"
-            depth="3"
-            class="tool-line__detail"
-          >
-            {{ tool.summary }}
-          </NText>
-          <NText
-            v-else
-            depth="3"
-            class="tool-line__detail tool-line__detail--muted"
-          >
-            {{ tool.name }}
-          </NText>
-        </div>
-      </NCollapseTransition>
+      <div
+        v-if="isOpen(tool)"
+        class="tool-line__body"
+      >
+        <p
+          v-if="tool.error"
+          class="tool-line__detail text-destructive text-xs"
+        >
+          {{ tool.error }}
+        </p>
+        <p
+          v-else-if="tool.summary"
+          class="tool-line__detail text-muted-foreground text-xs"
+        >
+          {{ tool.summary }}
+        </p>
+        <p
+          v-else
+          class="tool-line__detail tool-line__detail--muted text-muted-foreground/60 text-xs"
+        >
+          {{ tool.name }}
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -134,7 +130,7 @@ function formatDuration(ms?: number): string {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
+  color: var(--vtsuru-fg-muted);
 }
 
 .tool-line--running .tool-line__state {
@@ -160,18 +156,13 @@ function formatDuration(ms?: number): string {
 }
 
 .tool-line__meta {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
+  color: var(--vtsuru-fg-muted);
   font-size: 11px;
   white-space: nowrap;
 }
 
 .tool-line__chevron {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-  transition: transform 0.2s;
-}
-
-.tool-line__chevron.is-open {
-  transform: rotate(180deg);
+  color: var(--vtsuru-fg-muted);
 }
 
 .tool-line__body {
@@ -179,25 +170,20 @@ function formatDuration(ms?: number): string {
 }
 
 .tool-line__detail {
-  display: block;
-  min-width: 0;
-  font-size: 12px;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.tool-line__detail--muted {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
+  margin: 0;
+  line-height: 1.5;
+  word-break: break-all;
 }
 
 @keyframes tool-pulse {
   0%,
   100% {
-    opacity: 0.52;
+    opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 1;
+    opacity: 0.5;
+    transform: scale(0.9);
   }
 }
 </style>

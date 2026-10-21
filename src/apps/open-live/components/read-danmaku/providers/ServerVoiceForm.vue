@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { NSelect, NSlider, NText, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
 import { useSpeechService } from '@/store/useSpeechService'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
 
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
@@ -11,7 +19,6 @@ import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 const props = defineProps<{ providerId: string }>()
 const speechService = useSpeechService()
 const { settings } = speechService
-const message = useMessage()
 const voices = ref<VoiceOption[]>([])
 const loading = ref(false)
 const rateLimits = computed(() => (props.providerId === 'grok-tts' ? [0.7, 1.5] : [0.5, 2]))
@@ -28,7 +35,7 @@ async function loadVoices() {
   try {
     voices.value = await speechService.getCurrentProvider()!.getVoices()
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '获取音色失败')
+    toast.error(error instanceof Error ? error.message : '获取音色失败')
   } finally {
     loading.value = false
   }
@@ -39,11 +46,8 @@ onMounted(loadVoices)
 
 <template>
   <div class="form">
-    <NText
-      depth="3"
-      style="font-size: 12px"
-      >第三方渠道，不保证可用性。</NText
-    >
+    <span class="text-xs text-muted-foreground">第三方渠道，不保证可用性。</span>
+
     <SectionField label="音色">
       <VoiceSelectWithPreview
         v-model="settings.providers[providerId].voice"
@@ -53,25 +57,38 @@ onMounted(loadVoices)
         @focus="loadVoices"
       />
     </SectionField>
+
     <SectionField
       v-if="providerId === 'grok-tts'"
       label="语言"
     >
-      <NSelect
-        v-model:value="settings.providers[providerId].language"
-        :options="languageOptions"
-        size="small"
-      />
+      <Select v-model="settings.providers[providerId].language">
+        <SelectTrigger class="h-8 text-xs w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="opt in languageOptions"
+            :key="opt.value"
+            :value="opt.value"
+            class="text-xs"
+          >
+            {{ opt.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </SectionField>
+
     <SectionField
       label="语速"
       :value="settings.speechInfo.rate.toFixed(2)"
     >
-      <NSlider
-        v-model:value="settings.speechInfo.rate"
+      <Slider
+        :model-value="[settings.speechInfo.rate]"
         :min="rateLimits[0]"
         :max="rateLimits[1]"
         :step="0.01"
+        @update:model-value="(val) => { if (val?.[0] !== undefined) settings.speechInfo.rate = val[0] }"
       />
     </SectionField>
   </div>

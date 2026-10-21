@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { NColorPicker, NForm, NFormItem, NInput, NInputNumber, NSelect } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Textarea } from '@/shared/ui/textarea'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -18,74 +21,81 @@ const levelOptions = [
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="space-y-3">
     <PropsGrid>
-      <NFormItem
-        class="span-full"
-        label="内容"
-        required
-      >
-        <NInput
-          v-model:value="blockProps.content"
-          type="textarea"
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground flex items-center gap-1">
+          内容 <span class="text-destructive">*</span>
+        </label>
+        <Textarea
+          v-model="blockProps.content"
           maxlength="500"
-          show-count
-          :autosize="{ minRows: 2, maxRows: 6 }"
           placeholder="文本或 https 链接"
+          class="text-xs min-h-[60px]"
         />
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="标题"
-      >
-        <NInput
-          v-model:value="blockProps.title"
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">标题</label>
+        <Input
+          v-model="blockProps.title"
           maxlength="100"
-          show-count
           placeholder="可选"
+          class="h-8 text-xs"
         />
-      </NFormItem>
-      <NFormItem label="尺寸">
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">尺寸</label>
         <NInputNumber
           v-model:value="blockProps.size"
           :min="128"
           :max="512"
           :step="16"
-          style="width: 100%"
+          class="w-full"
         />
-      </NFormItem>
-      <NFormItem label="纠错等级">
-        <NSelect
-          v-model:value="blockProps.level"
-          :options="levelOptions"
-        />
-      </NFormItem>
-      <NFormItem label="前景色">
-        <NColorPicker
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">纠错等级</label>
+        <Select v-model="blockProps.level">
+          <SelectTrigger class="h-8 text-xs">
+            <SelectValue placeholder="纠错等级" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in levelOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">前景色</label>
+        <ColorPicker
           v-model:value="blockProps.foreground"
           :show-alpha="false"
           :modes="['hex']"
         />
-      </NFormItem>
-      <NFormItem label="背景色">
-        <NColorPicker
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">背景色</label>
+        <ColorPicker
           v-model:value="blockProps.background"
           :show-alpha="false"
           :modes="['hex']"
         />
-      </NFormItem>
-      <NFormItem label="边距">
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">边距</label>
         <NInputNumber
           v-model:value="blockProps.margin"
           :min="0"
           :max="32"
           :step="1"
-          style="width: 100%"
+          class="w-full"
         />
-      </NFormItem>
+      </div>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

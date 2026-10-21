@@ -1,5 +1,5 @@
 import { formatRgb } from 'culori'
-import type { GlobalThemeOverrides } from 'naive-ui'
+export type GlobalThemeOverrides = Record<string, any>
 
 import { resolveFileUrl } from '@/shared/config/api'
 import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'

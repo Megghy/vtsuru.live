@@ -1,12 +1,30 @@
 <script setup lang="ts">
-import { NTag, NTime } from 'naive-ui'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
+import { computed } from 'vue'
 
 import type { SupportTicketSummary } from '@/api/api-models'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
+import { Badge } from '@/shared/ui/badge'
 
-defineProps<{
+const props = defineProps<{
   ticket: SupportTicketSummary
 }>()
+
+const relativeTime = computed(() => {
+  try {
+    return formatDistanceToNow(new Date(props.ticket.lastMessageTime), { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(props.ticket.lastMessageTime)
+  }
+})
+
+const badgeVariant = computed(() => {
+  const type = supportTicketStatusMeta[props.ticket.status].type
+  if (type === 'success') return 'default'
+  if (type === 'info') return 'secondary'
+  return 'outline'
+})
 </script>
 
 <template>
@@ -22,22 +40,18 @@ defineProps<{
     />
     <div class="public-ticket-card__body">
       <div class="public-ticket-card__tags">
-        <NTag
-          size="small"
-          :type="supportTicketStatusMeta[ticket.status].type"
-          :bordered="false"
+        <Badge
+          :variant="badgeVariant"
+          class="text-[10px] h-4.5 px-1.5 font-normal"
         >
           {{ supportTicketStatusMeta[ticket.status].label }}
-        </NTag>
+        </Badge>
         <span>{{ supportTicketTypeLabel(ticket.type) }}</span>
       </div>
       <h2>{{ ticket.title }}</h2>
       <div class="public-ticket-card__meta">
         <span>#{{ ticket.id }}</span>
-        <NTime
-          :time="ticket.lastMessageTime"
-          type="relative"
-        />
+        <span>{{ relativeTime }}</span>
       </div>
     </div>
   </button>

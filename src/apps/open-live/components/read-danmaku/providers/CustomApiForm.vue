@@ -1,9 +1,19 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCheckbox, NCollapse, NCollapseItem, NInput, NInputGroup, NSelect, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import { copyToClipboard } from '@/shared/utils'
 import { useSpeechService } from '@/store/useSpeechService'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 import SectionField from '../SectionField.vue'
 
@@ -27,85 +37,108 @@ function test() {
 
 <template>
   <div class="form">
-    <NCollapse>
-      <NCollapseItem
-        title="使用说明"
-        name="requirements"
-      >
-        <ul style="margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.6">
+    <details class="group border rounded-md p-2.5 text-xs bg-muted/20">
+      <summary class="font-medium cursor-pointer list-none flex items-center justify-between text-foreground">
+        <span>使用说明</span>
+        <span class="text-muted-foreground transition-transform group-open:rotate-180">▾</span>
+      </summary>
+      <div class="mt-2.5 pt-2 border-t space-y-2">
+        <ul class="m-0 pl-5 text-xs leading-relaxed list-disc text-muted-foreground">
           <li>API 需直接返回音频数据 (wav/mp3/m4a)</li>
           <li>建议使用 HTTPS</li>
           <li>HTTP 将通过代理转发，速度较慢</li>
         </ul>
-        <NButton
-          text
-          type="info"
-          tag="a"
-          size="small"
-          style="margin-top: 8px"
-          href="https://github.com/Artrajz/vits-simple-api"
-          target="_blank"
+        <Button
+          variant="link"
+          size="sm"
+          class="h-auto p-0 text-xs text-sky-600 dark:text-sky-400"
+          as-child
         >
-          推荐：vits-simple-api
-        </NButton>
-      </NCollapseItem>
-    </NCollapse>
+          <a
+            href="https://github.com/Artrajz/vits-simple-api"
+            target="_blank"
+          >
+            推荐：vits-simple-api
+          </a>
+        </Button>
+      </div>
+    </details>
 
-    <NAlert
+    <Alert
       v-if="isVtsuruVoiceAPI"
-      type="warning"
-      :bordered="false"
-      size="small"
+      class="py-2 px-3 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
     >
-      <NText style="font-size: 12px"> 当前使用本站测试 API，不保证可用性 </NText>
-    </NAlert>
+      <AlertDescription class="text-xs text-current m-0">
+        当前使用本站测试 API，不保证可用性
+      </AlertDescription>
+    </Alert>
 
     <SectionField
       label="API 地址"
       hint="用 {{text}} 占位符代表要朗读的文本"
     >
-      <NInputGroup>
-        <NSelect
-          v-model:value="settings.providers.api.voiceAPISchemeType"
-          :options="schemeOptions"
-          style="width: 88px"
-          size="small"
-        />
-        <NInput
-          v-model:value="settings.providers.api.voiceAPI"
+      <div class="flex items-center gap-1.5">
+        <Select v-model="settings.providers.api.voiceAPISchemeType">
+          <SelectTrigger class="h-8 text-xs w-[88px] shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in schemeOptions"
+              :key="opt.value"
+              :value="opt.value"
+              class="text-xs"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Input
+          v-model="settings.providers.api.voiceAPI"
           placeholder="xxx.com/voice?text={{text}}&id=0"
-          size="small"
-          :status="/^(?:https?:\/\/)/.test(settings.providers.api?.voiceAPI?.toLowerCase() ?? '') ? 'error' : undefined"
+          class="h-8 text-xs flex-1"
+          :class="/^(?:https?:\/\/)/.test(settings.providers.api?.voiceAPI?.toLowerCase() ?? '') ? 'border-destructive' : ''"
         />
-        <NButton
-          type="info"
-          size="small"
-          :loading="speechState.isApiAudioLoading"
+
+        <Button
+          size="sm"
+          class="h-8 text-xs shrink-0"
+          :disabled="speechState.isApiAudioLoading"
           @click="test"
         >
-          测试
-        </NButton>
-      </NInputGroup>
-      <NButton
-        size="tiny"
-        text
-        type="primary"
+          {{ speechState.isApiAudioLoading ? '加载中...' : '测试' }}
+        </Button>
+      </div>
+
+      <Button
+        variant="link"
+        size="xs"
+        class="h-auto p-0 text-[11px] text-primary"
         @click="copyToClipboard('{{text}}')"
       >
         点击复制 &#123;&#123;text&#125;&#125; 占位符
-      </NButton>
+      </Button>
     </SectionField>
 
-    <NCheckbox
+    <label
       v-if="settings.providers.api?.voiceAPISchemeType === 'http'"
-      v-model:checked="settings.providers.api.useAPIDirectly"
+      class="flex items-center gap-2 cursor-pointer text-xs"
     >
-      <NText style="font-size: 12px"> 不使用代理 (了解可能产生的影响) </NText>
-    </NCheckbox>
+      <Checkbox
+        :checked="settings.providers.api.useAPIDirectly"
+        @update:checked="settings.providers.api.useAPIDirectly = $event"
+      />
+      <span>不使用代理 (了解可能产生的影响)</span>
+    </label>
 
-    <NCheckbox v-model:checked="settings.providers.api.splitText">
-      <NText style="font-size: 12px"> 启用句子拆分 (英文用户名加引号、大写单词拆字) </NText>
-    </NCheckbox>
+    <label class="flex items-center gap-2 cursor-pointer text-xs">
+      <Checkbox
+        :checked="settings.providers.api.splitText"
+        @update:checked="settings.providers.api.splitText = $event"
+      />
+      <span>启用句子拆分 (英文用户名加引号、大写单词拆字)</span>
+    </label>
   </div>
 </template>
 

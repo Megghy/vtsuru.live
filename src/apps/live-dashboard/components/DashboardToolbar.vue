@@ -2,7 +2,6 @@
 import {
   ArrowClockwise16Regular,
   Board16Regular,
-  CalendarLtr20Regular,
   Dismiss16Regular,
   Eye16Regular,
   EyeOff16Regular,
@@ -14,10 +13,14 @@ import {
   WeatherSunny16Regular,
 } from '@vicons/fluent'
 import { OpenOutline } from '@vicons/ionicons5'
-import { NButton, NDatePicker, NFlex, NIcon, NInput, NPopover, NTag, NText, NTooltip } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 
 import { avatarUrl, formatDuration, formatPrice } from '../core/format'
@@ -32,7 +35,7 @@ const ui = useDashboardUi()
 const stats = computed(() => dashboard.stats)
 const officialStats = computed(() => dashboard.officialStats)
 const client = computed(() => dashboard.client)
-const searchRef = ref<InstanceType<typeof NInput>>()
+const searchInputRef = ref<HTMLInputElement | null>(null)
 const reconnecting = ref(false)
 
 const activeToolbarKeys = computed({
@@ -59,7 +62,7 @@ function formatStatCount(num: number | null | undefined): string {
 
 watch(
   () => ui.searchFocusTick,
-  () => searchRef.value?.focus(),
+  () => searchInputRef.value?.focus(),
 )
 
 const statusColor = computed(() => {
@@ -82,6 +85,26 @@ const range = computed({
   set: (value) => void dashboard.setHistoryRange(value),
 })
 
+const customStart = ref('')
+const customEnd = ref('')
+
+function applyQuickRange(ms: number) {
+  range.value = [Date.now() - ms, Date.now()]
+}
+
+function applyTodayRange() {
+  range.value = [new Date().setHours(0, 0, 0, 0), Date.now()]
+}
+
+function applyCustomRange() {
+  if (!customStart.value || !customEnd.value) return
+  const s = new Date(customStart.value).getTime()
+  const e = new Date(customEnd.value).getTime()
+  if (!Number.isNaN(s) && !Number.isNaN(e) && e > s) {
+    range.value = [s, e]
+  }
+}
+
 function openInNewWindow() {
   window.open('/live-dashboard', '_blank', 'noopener,noreferrer')
 }
@@ -97,99 +120,137 @@ const SEARCH_HELP = [
 <template>
   <header class="toolbar">
     <div class="toolbar__search">
-      <NInput
-        ref="searchRef"
-        v-model:value="dashboard.search"
-        size="small"
-        clearable
-        placeholder="搜索（Ctrl+F）"
-        class="toolbar__search-input"
-      >
-        <template #prefix>
-          <NTooltip placement="bottom-start">
-            <template #trigger>
-              <NIcon :component="Search16Regular" />
-            </template>
-            <div
-              v-for="line in SEARCH_HELP"
-              :key="line"
-            >
-              {{ line }}
-            </div>
-          </NTooltip>
-        </template>
-      </NInput>
+      <div class="relative w-[180px]">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent class="text-xs space-y-0.5">
+              <div
+                v-for="line in SEARCH_HELP"
+                :key="line"
+              >
+                {{ line }}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-      <!-- 历史筛选：默认收起为紧凑 Popover 按钮，大幅释放顶栏水平空间 -->
-      <NPopover
-        trigger="click"
-        placement="bottom-start"
-        style="padding: 12px"
-      >
-        <template #trigger>
-          <NButton
-            size="small"
-            :type="range ? 'primary' : 'default'"
-            :quaternary="!range"
-            :secondary="!!range"
-            class="toolbar__history-btn"
+        <Input
+          ref="searchInputRef"
+          v-model="dashboard.search"
+          placeholder="搜索（Ctrl+F）"
+          class="toolbar__search-input h-7 text-xs pl-8 pr-6"
+        />
+
+        <button
+          v-if="dashboard.search"
+          type="button"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          @click="dashboard.search = ''"
+        >
+          <Dismiss16Regular class="size-3" />
+        </button>
+      </div>
+
+      <!-- 历史筛选：Popover 按钮 -->
+      <Popover>
+        <PopoverTrigger as-child>
+          <Button
+            size="xs"
+            :variant="range ? 'default' : 'ghost'"
+            class="toolbar__history-btn h-7 text-xs gap-1"
           >
-            <template #icon>
-              <NIcon :component="History24Regular" />
-            </template>
+            <History24Regular class="size-3.5" />
             <span>{{ range ? '已选历史' : '历史回溯' }}</span>
-            <NIcon
+            <Dismiss16Regular
               v-if="range"
-              :component="Dismiss16Regular"
-              style="margin-left: 4px"
+              class="size-3 ml-1 hover:text-destructive"
               @click.stop="range = null"
             />
-          </NButton>
-        </template>
+          </Button>
+        </PopoverTrigger>
 
-        <NFlex
-          vertical
-          :size="8"
-        >
-          <div style="font-weight: 600; font-size: 13px">历史事件回溯筛选</div>
-          <NDatePicker
-            v-model:value="range"
-            type="datetimerange"
-            size="small"
-            clearable
-            :shortcuts="{
-              '最近 1 小时': () => [Date.now() - 3600_000, Date.now()],
-              今天: () => [new Date().setHours(0, 0, 0, 0), Date.now()],
-              '最近 7 天': () => [Date.now() - 7 * 86400_000, Date.now()],
-            }"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            style="width: 320px"
-          />
-          <NFlex
-            v-if="range"
-            justify="flex-end"
-          >
-            <NButton
-              size="tiny"
-              quaternary
-              @click="range = null"
+        <PopoverContent align="start" class="w-80 p-3 space-y-3">
+          <div class="font-semibold text-xs text-foreground">历史事件回溯筛选</div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-6 text-[11px]"
+              @click="applyQuickRange(3600_000)"
             >
-              清除时间筛选
-            </NButton>
-          </NFlex>
-        </NFlex>
-      </NPopover>
+              最近 1 小时
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-6 text-[11px]"
+              @click="applyTodayRange"
+            >
+              今天
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-6 text-[11px]"
+              @click="applyQuickRange(7 * 86400_000)"
+            >
+              最近 7 天
+            </Button>
+          </div>
 
-      <NTag
+          <div class="space-y-1.5 pt-1 border-t">
+            <div class="text-[11px] text-muted-foreground">自定义时间范围</div>
+            <div class="grid grid-cols-2 gap-1.5">
+              <input
+                v-model="customStart"
+                type="datetime-local"
+                class="h-7 text-[11px] px-1.5 rounded border border-input bg-background"
+              />
+              <input
+                v-model="customEnd"
+                type="datetime-local"
+                class="h-7 text-[11px] px-1.5 rounded border border-input bg-background"
+              />
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 text-[11px] text-muted-foreground"
+                :disabled="!range"
+                @click="range = null"
+              >
+                清除时间筛选
+              </Button>
+              <Button
+                size="xs"
+                class="h-6 text-[11px]"
+                @click="applyCustomRange"
+              >
+                应用
+              </Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <Badge
         v-if="dashboard.userFilter"
-        size="small"
-        closable
-        type="primary"
-        @close="dashboard.backToContext()"
+        variant="outline"
+        class="text-xs h-6 px-2 gap-1.5 border-primary/40 text-primary bg-primary/10"
       >
-        仅看 {{ dashboard.userFilter.uname }}
-      </NTag>
+        <span>仅看 {{ dashboard.userFilter.uname }}</span>
+        <button
+          type="button"
+          class="hover:text-destructive cursor-pointer"
+          @click="dashboard.backToContext()"
+        >
+          <Dismiss16Regular class="size-3" />
+        </button>
+      </Badge>
     </div>
 
     <VueDraggable
@@ -203,19 +264,21 @@ const SEARCH_HELP = [
         :key="key"
       >
         <!-- 统计时长 -->
-        <NTooltip v-if="key === 'duration'">
-          <template #trigger>
-            <button
-              class="stat stat--button"
-              type="button"
-              @click="stats.reset()"
-            >
-              <span class="stat__label">统计时长</span>
-              <span class="stat__value">{{ formatDuration(stats.duration) }}</span>
-            </button>
-          </template>
-          点击重置统计（仅影响顶部数据）
-        </NTooltip>
+        <TooltipProvider v-if="key === 'duration'">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <button
+                class="stat stat--button"
+                type="button"
+                @click="stats.reset()"
+              >
+                <span class="stat__label">统计时长</span>
+                <span class="stat__value">{{ formatDuration(stats.duration) }}</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs">点击重置统计（仅影响顶部数据）</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         <!-- 弹幕数 -->
         <div
@@ -361,18 +424,23 @@ const SEARCH_HELP = [
     </VueDraggable>
 
     <div class="toolbar__actions">
-      <NTooltip>
-        <template #trigger>
-          <span
-            class="status-dot"
-            :style="{ background: statusColor }"
-          />
-        </template>
-        {{
-          client.hasRemoteSource && client.phase !== 'connected' ? '已通过其他标签页接收弹幕' : client.connectionStatus
-        }}
-        <template v-if="client.reconnectCount"> · 已重连 {{ client.reconnectCount }} 次 </template>
-      </NTooltip>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span
+              class="status-dot"
+              :style="{ background: statusColor }"
+            />
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            {{
+              client.hasRemoteSource && client.phase !== 'connected' ? '已通过其他标签页接收弹幕' : client.connectionStatus
+            }}
+            <template v-if="client.reconnectCount"> · 已重连 {{ client.reconnectCount }} 次 </template>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
       <IconAction
         :icon="ArrowClockwise16Regular"
         tip="重新连接弹幕源"
@@ -384,23 +452,23 @@ const SEARCH_HELP = [
         :active="dashboard.settings.hideRead"
         @click="dashboard.settings.hideRead = !dashboard.settings.hideRead"
       />
-      <NPopover
-        trigger="click"
-        placement="bottom-end"
-      >
-        <template #trigger>
-          <NButton
-            quaternary
-            size="tiny"
+
+      <Popover>
+        <PopoverTrigger as-child>
+          <Button
+            variant="ghost"
+            size="xs"
+            class="h-7 w-7 p-0"
             aria-label="布局"
           >
-            <template #icon>
-              <NIcon :component="Board16Regular" />
-            </template>
-          </NButton>
-        </template>
-        <LayoutMenu />
-      </NPopover>
+            <Board16Regular class="size-4 text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" class="p-2 w-auto">
+          <LayoutMenu />
+        </PopoverContent>
+      </Popover>
+
       <IconAction
         :icon="isDarkMode ? WeatherSunny16Regular : WeatherMoon16Regular"
         tip="切换深色 / 浅色 (Alt+D)"
@@ -450,122 +518,131 @@ const SEARCH_HELP = [
   flex-shrink: 0;
 }
 
-.toolbar__search :deep(.n-input) {
-  width: 140px;
-  transition: width 0.2s ease;
-}
-
-.toolbar__search :deep(.n-input.n-input--focus),
-.toolbar__search :deep(.n-input:hover) {
-  width: 200px;
-}
-
-.toolbar__history-btn {
-  flex-shrink: 0;
-}
-
 .toolbar__stats {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
-
 .toolbar__stats::-webkit-scrollbar {
   display: none;
 }
 
+.stat-ghost {
+  opacity: 0.35;
+}
+
 .stat {
-  display: grid;
-  line-height: 1.15;
+  display: flex;
+  flex-direction: column;
+  padding: 2px 8px;
+  border-radius: var(--vtsuru-radius);
+  background: var(--vtsuru-bg-muted);
   flex-shrink: 0;
   cursor: grab;
   user-select: none;
 }
-
 .stat:active {
   cursor: grabbing;
 }
-
-.stat-ghost {
-  opacity: 0.3;
-}
-
 .stat--button {
-  all: unset;
-  display: grid;
-  line-height: 1.15;
+  border: none;
+  font: inherit;
+  color: inherit;
   cursor: pointer;
+  text-align: left;
+}
+.stat--button:hover {
+  background: var(--vtsuru-bg-elevated);
 }
 
 .stat__label {
   font-size: 10px;
   color: var(--vtsuru-fg-muted);
-  max-width: 72px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.1;
   white-space: nowrap;
 }
 
 .stat__value {
-  font-size: 13px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vtsuru-fg);
+  font-feature-settings: 'tnum';
+  white-space: nowrap;
 }
 
 .payer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--vtsuru-radius);
+  background: var(--vtsuru-bg-muted);
+  flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+}
+.payer img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.payer__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.payer .stat__label {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar__actions {
   display: flex;
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
 }
 
-.payer img {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-}
-
-.payer__text {
-  display: grid;
-  line-height: 1.15;
-}
-
-.toolbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
 .status-dot {
-  display: inline-block;
   width: 8px;
   height: 8px;
-  margin: 0 6px;
   border-radius: 50%;
+  display: inline-block;
+  cursor: help;
 }
 
 .toolbar__progress {
   position: absolute;
   left: 0;
+  bottom: 0;
   right: 0;
-  bottom: -1px;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--vtsuru-primary), transparent);
-  background-size: 50% 100%;
-  animation: progress 1s linear infinite;
+  background: var(--vtsuru-brand);
+  animation: progress 1s infinite linear;
 }
 
 @keyframes progress {
-  from {
-    background-position: -50% 0;
+  0% {
+    transform: scaleX(0);
+    transform-origin: left;
   }
-  to {
-    background-position: 150% 0;
+  50% {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  50.1% {
+    transform: scaleX(1);
+    transform-origin: right;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right;
   }
 }
 </style>

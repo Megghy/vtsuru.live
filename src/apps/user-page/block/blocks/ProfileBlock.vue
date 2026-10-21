@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { NAvatar } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -41,19 +41,21 @@ const model = computed(() => {
   >
     <div class="profile-hero">
       <div class="avatar-container">
-        <NAvatar
+        <Avatar
           v-if="model.avatarUrl"
-          :src="model.avatarUrl"
-          :img-props="{
-            referrerpolicy: 'no-referrer',
-            loading: 'lazy',
-            decoding: 'async',
-            alt: model.displayName || '用户头像',
-          }"
-          round
-          :size="120"
-          class="profile-avatar"
-        />
+          class="profile-avatar size-28 border-4 border-muted shadow-md"
+        >
+          <AvatarImage
+            :src="model.avatarUrl"
+            :alt="model.displayName || '用户头像'"
+            referrerpolicy="no-referrer"
+            loading="lazy"
+            decoding="async"
+          />
+          <AvatarFallback class="text-xl font-bold">
+            {{ (model.displayName || 'U').slice(0, 1) }}
+          </AvatarFallback>
+        </Avatar>
       </div>
 
       <div class="profile-info">
@@ -91,7 +93,7 @@ const model = computed(() => {
 }
 
 .profile-avatar {
-  border: 4px solid var(--vtsuru-block-bg-muted);
+  border-color: var(--vtsuru-block-bg-muted);
   position: relative;
   z-index: 2;
   box-shadow: var(--vtsuru-page-shadow);

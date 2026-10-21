@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NSelect, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -11,36 +11,26 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
-    <PropsGrid>
-      <NFormItem label="展示人数">
-        <NSelect
-          v-model:value="blockProps.count"
-          :options="[
-            { label: '前三名', value: 3 },
-            { label: '前十名', value: 10 },
-          ]"
-        />
-      </NFormItem>
-      <NFormItem label="显示本月次数">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showMonthly"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示累计次数">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showTotal"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
-    </PropsGrid>
-  </NForm>
+  <PropsGrid>
+    <div class="space-y-1">
+      <label class="text-xs text-muted-foreground">展示人数</label>
+      <Select :model-value="String(blockProps.count ?? 3)" @update:model-value="(val) => (blockProps.count = Number(val))">
+        <SelectTrigger class="h-8 text-xs">
+          <SelectValue placeholder="展示人数" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="3">前三名</SelectItem>
+          <SelectItem value="10">前十名</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+    <div class="flex items-center justify-between py-1">
+      <label class="text-xs text-muted-foreground">显示本月次数</label>
+      <Switch v-model:checked="blockProps.showMonthly" />
+    </div>
+    <div class="flex items-center justify-between py-1">
+      <label class="text-xs text-muted-foreground">显示累计次数</label>
+      <Switch v-model:checked="blockProps.showTotal" />
+    </div>
+  </PropsGrid>
 </template>

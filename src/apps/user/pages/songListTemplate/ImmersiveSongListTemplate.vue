@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { MusicNote224Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
-import { NEmpty, NIcon, NInput, NTag } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
+import { Badge } from '@/shared/ui/badge'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
 
 import SongOptionBadges from './components/SongOptionBadges.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
@@ -92,10 +94,10 @@ const stageRequestLabel = computed(() => {
             :alt="selectedSong.name"
             referrerpolicy="no-referrer"
           />
-          <NIcon
+          <component
+            :is="MusicNote224Filled"
             v-else
-            :component="MusicNote224Filled"
-            class="stage-cover-icon"
+            class="stage-cover-icon size-12 text-muted-foreground"
           />
         </div>
       </Transition>
@@ -127,25 +129,24 @@ const stageRequestLabel = computed(() => {
 
           <div
             v-if="selectedSong.language?.length || selectedSong.tags?.length"
-            class="stage-tags"
+            class="stage-tags flex flex-wrap gap-1"
           >
-            <NTag
+            <Badge
               v-for="lang in selectedSong.language ?? []"
               :key="`l-${lang}`"
-              size="small"
-              :bordered="false"
-              type="info"
+              variant="secondary"
+              class="text-xs h-5 px-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-normal"
             >
               {{ lang }}
-            </NTag>
-            <NTag
+            </Badge>
+            <Badge
               v-for="tag in (selectedSong.tags ?? []).slice(0, 4)"
               :key="`t-${tag}`"
-              size="small"
-              :bordered="false"
+              variant="secondary"
+              class="text-xs h-5 px-2 font-normal"
             >
               {{ tag }}
-            </NTag>
+            </Badge>
           </div>
 
           <SongOptionBadges
@@ -187,23 +188,21 @@ const stageRequestLabel = computed(() => {
         <span class="library-count">{{ filteredSongs.length }} 首</span>
       </header>
 
-      <div class="search-shell">
-        <NInput
-          v-model:value="searchKeyword"
-          class="library-search"
-          clearable
-          placeholder="搜索曲库…"
-        >
-          <template #prefix>
-            <NIcon :component="Search24Regular" />
-          </template>
-        </NInput>
+      <div class="search-shell mb-3">
+        <div class="relative w-full">
+          <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            v-model="searchKeyword"
+            class="h-8 pl-8 text-xs w-full"
+            placeholder="搜索曲库…"
+          />
+        </div>
       </div>
 
-      <NEmpty
+      <Empty
         v-if="filteredSongs.length === 0"
         description="暂无曲目"
-        style="margin-top: 48px"
+        class="mt-12 py-8"
       />
 
       <div
@@ -275,73 +274,42 @@ const stageRequestLabel = computed(() => {
 <style scoped>
 .immersive-template {
   position: relative;
-  isolation: isolate;
-  display: flex;
-  overflow: hidden;
-  padding: clamp(12px, 2vw, 22px);
-  border: var(--vtsuru-page-border, 1px solid var(--song-border));
-  border-radius: var(--vtsuru-page-radius, 8px);
-  background: var(--song-panel);
-  box-shadow: var(--vtsuru-page-shadow, none);
-  gap: clamp(16px, 3vw, 34px);
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(320px, 1fr);
+  gap: clamp(16px, 3vw, 40px);
   width: 100%;
-  max-width: var(--vtsuru-page-max-width, 1180px);
+  max-width: var(--vtsuru-page-max-width, 1280px);
+  min-width: 0;
   margin: 0 auto;
-  height: min(760px, calc(100dvh - 130px));
-  min-height: 480px;
+  padding: clamp(16px, 3vw, 36px);
 }
 
-.immersive-template::before {
-  position: absolute;
-  z-index: -1;
-  inset: -50px;
-  background-image: var(--immersive-cover);
-  background-position: center;
-  background-size: cover;
-  filter: blur(54px) saturate(1.18);
-  opacity: 0.16;
-  content: '';
-  transform: scale(1.08);
-  transition:
-    opacity 0.45s ease,
-    filter 0.45s ease,
-    transform 0.8s ease;
-}
-
-.stage,
-.library {
-  position: relative;
-  z-index: 1;
+@media (max-width: 768px) {
+  .immersive-template {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stage {
-  flex: 0 0 min(34%, 360px);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 4px 4px 16px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  gap: 12px;
 }
 
 .stage-kicker,
 .library-kicker {
-  align-self: flex-start;
-  margin-bottom: 8px;
-  color: var(--song-accent);
   font-size: 10px;
   font-weight: 750;
+  letter-spacing: 0.1em;
+  color: var(--song-accent, #23ade5);
 }
 
 .stage-cover {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: var(--vtsuru-page-radius);
+  aspect-ratio: 1;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: var(--vtsuru-page-shadow);
-  border: var(--vtsuru-page-border);
-  background: var(--song-panel-strong);
+  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -351,103 +319,22 @@ const stageRequestLabel = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: cover-kenburns 8s ease-in-out both;
-}
-
-.stage-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.stage-cover-enter-active,
-.stage-cover-leave-active,
-.stage-meta-enter-active,
-.stage-meta-leave-active {
-  transition:
-    opacity 0.32s ease,
-    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.32s ease;
-}
-
-.stage-cover-enter-from,
-.stage-meta-enter-from {
-  opacity: 0;
-  filter: blur(6px);
-  transform: translateY(14px) scale(0.96);
-}
-
-.stage-cover-leave-to,
-.stage-meta-leave-to {
-  opacity: 0;
-  filter: blur(4px);
-  transform: translateY(-10px) scale(0.98);
-}
-
-.stage-cover.is-empty {
-  background: color-mix(in srgb, var(--song-accent) 12%, var(--song-panel-strong));
-}
-
-.stage-cover-icon {
-  font-size: 80px;
-  color: var(--song-subtle);
-  opacity: 0.5;
 }
 
 .stage-title {
-  margin-top: 18px;
-  font-size: 20px;
-  font-weight: 750;
-  line-height: 1.25;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--song-fg);
 }
 
 .stage-subtitle {
-  margin-top: 4px;
-  font-size: 13px;
-  color: var(--song-subtle);
+  font-size: 12px;
+  color: var(--song-muted, #888);
 }
 
 .stage-author {
-  margin-top: 6px;
-  font-size: 14px;
-  color: var(--song-muted);
-}
-
-.stage-tags {
-  margin-top: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: center;
-}
-
-.stage-request {
-  margin-top: 18px;
-  width: 100%;
-  max-width: 100%;
-}
-
-.stage-request :deep(.n-button) {
-  width: 100%;
-  height: auto;
-  min-height: 34px;
-  padding: 8px 12px;
-  white-space: normal;
-  line-height: 1.35;
-}
-
-.stage-player {
-  margin-top: 16px;
-  width: 100%;
-}
-
-.library {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+  font-size: 13px;
+  color: var(--song-muted, #888);
 }
 
 .library-heading {
@@ -455,120 +342,66 @@ const stageRequestLabel = computed(() => {
   align-items: flex-end;
   justify-content: space-between;
   margin-bottom: 12px;
-  gap: 12px;
-}
-
-.library-kicker {
-  display: block;
-  margin-bottom: 3px;
 }
 
 .library-heading h2 {
   margin: 0;
+  font-size: 20px;
   color: var(--song-fg);
-  font-size: clamp(20px, 3vw, 28px);
-  line-height: 1.15;
 }
 
 .library-count {
-  color: var(--song-muted);
   font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.search-shell {
-  margin-bottom: 10px;
-  padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--song-border) 78%, transparent);
-  border-radius: var(--vtsuru-page-radius, 8px);
-  background: var(--song-panel-strong);
-}
-
-.library-search {
-  flex: 0 0 auto;
+  font-family: monospace;
+  color: var(--song-muted, #888);
 }
 
 .library-list {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  border: var(--vtsuru-page-border, 1px solid var(--song-border));
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--song-panel-strong);
-  backdrop-filter: blur(14px);
-  box-shadow: var(--vtsuru-page-shadow);
+  height: clamp(400px, 65vh, 760px);
+  overflow-y: auto;
 }
 
 .lib-row {
-  width: 100%;
-  height: 52px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 10px 0 0;
-  box-sizing: border-box;
-  border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--song-border) 62%, transparent);
-  background: transparent;
-  text-align: left;
-  transition: background-color 0.12s ease;
+  height: 52px;
+  padding: 0 8px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
 }
 
-.lib-row:last-child {
-  border-bottom: none;
-}
-
-.lib-row:hover {
-  background: var(--song-bg-hover);
-}
-
+.lib-row:hover,
 .lib-row.active {
-  background: var(--song-accent-soft);
-  box-shadow: inset 3px 0 0 0 var(--song-accent);
-}
-
-.lib-row.is-singing:not(.active) {
-  box-shadow: inset 3px 0 0 0 var(--song-warning);
-}
-
-.lib-row.is-queued:not(.active) {
-  box-shadow: inset 3px 0 0 0 var(--song-success);
+  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.06));
 }
 
 .lib-select {
   display: flex;
-  min-width: 0;
-  height: 100%;
-  flex: 1;
   align-items: center;
-  padding: 0 0 0 12px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
   gap: 10px;
-}
-
-.lib-select:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary-focus, var(--song-accent));
-  outline-offset: -3px;
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
 }
 
 .lib-cover {
   width: 36px;
   height: 36px;
-  flex: 0 0 auto;
-  border-radius: var(--vtsuru-page-radius);
+  border-radius: 6px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--song-fg) 7%, transparent);
+  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--song-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--song-muted);
+  flex-shrink: 0;
 }
 
 .lib-cover img {
@@ -578,15 +411,14 @@ const stageRequestLabel = computed(() => {
 }
 
 .lib-main {
-  flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .lib-name {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--song-fg);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -594,75 +426,10 @@ const stageRequestLabel = computed(() => {
 }
 
 .lib-author {
-  font-size: 12px;
-  color: var(--song-subtle);
+  font-size: 11px;
+  color: var(--song-muted, #888);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@media (max-width: 860px) {
-  .immersive-template {
-    flex-direction: column;
-    height: auto;
-    min-height: 0;
-    padding: 12px;
-  }
-
-  .stage {
-    flex: 0 0 auto;
-    overflow: visible;
-  }
-
-  .stage-cover {
-    max-width: 260px;
-  }
-
-  .library-list {
-    height: min(560px, 62dvh);
-    min-height: 360px;
-  }
-}
-
-@media (max-width: 520px) {
-  .immersive-template {
-    border-right: 0;
-    border-left: 0;
-  }
-
-  .stage-cover {
-    max-width: 220px;
-  }
-}
-
-@keyframes cover-kenburns {
-  from {
-    transform: scale(1.08);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .stage-cover img {
-    animation: none;
-  }
-
-  .stage-cover-enter-active,
-  .stage-cover-leave-active,
-  .stage-meta-enter-active,
-  .stage-meta-leave-active,
-  .immersive-template::before {
-    transition: none;
-  }
-
-  .stage-cover-enter-from,
-  .stage-meta-enter-from,
-  .stage-cover-leave-to,
-  .stage-meta-leave-to {
-    filter: none;
-    transform: none;
-  }
 }
 </style>

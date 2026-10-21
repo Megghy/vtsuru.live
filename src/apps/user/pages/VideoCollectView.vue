@@ -1,10 +1,13 @@
 <script lang="ts" setup>
-import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
 import type { UserInfo, VideoCollectTable } from '@/api/api-models'
 import { getApiVideoCollectGetActive } from '@/api/generated/video-collect/video-collect'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Spin } from '@/shared/ui/spin'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   userInfo: UserInfo
@@ -45,37 +48,36 @@ onMounted(() => {
 
 <template>
   <div class="video-collect-view">
-    <NCard
-      size="small"
-      :bordered="true"
-      title="视频征集"
-    >
-      <NSpin :show="isLoading">
-        <template v-if="videoTables.length === 0">
-          <NFlex
-            justify="center"
-            style="padding: 20px 0"
+    <Card>
+      <CardHeader class="py-3 px-4">
+        <CardTitle class="text-base font-medium">视频征集</CardTitle>
+      </CardHeader>
+      <CardContent class="p-4 pt-0">
+        <Spin :show="isLoading">
+          <template v-if="videoTables.length === 0">
+            <div class="flex justify-center py-5">
+              <Empty description="没有正在进行的征集表" />
+            </div>
+          </template>
+          <div
+            v-else
+            class="video-collect-list flex flex-col divide-y divide-border"
           >
-            <NEmpty description="没有正在进行的征集表" />
-          </NFlex>
-        </template>
-        <NList
-          v-else
-          class="video-collect-list"
-        >
-          <NListItem
-            v-for="item in videoTables"
-            :key="item.id"
-          >
-            <VideoCollectInfoCard
-              :item="item"
-              can-click
-              from="user"
-            />
-          </NListItem>
-        </NList>
-      </NSpin>
-    </NCard>
+            <div
+              v-for="item in videoTables"
+              :key="item.id"
+              class="py-3 first:pt-0 last:pb-0"
+            >
+              <VideoCollectInfoCard
+                :item="item"
+                can-click
+                from="user"
+              />
+            </div>
+          </div>
+        </Spin>
+      </CardContent>
+    </Card>
   </div>
 </template>
 

@@ -1,25 +1,17 @@
 <script setup lang="ts">
 import { CopyOutline, RefreshOutline, TrashOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NModal,
-  NPopover,
-  NScrollbar,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useDialog,
-} from 'naive-ui'
 import { computed, inject, reactive, watch } from 'vue'
 
 import { UploadStage } from '@/shared/services/fileUpload'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Spin } from '@/shared/ui/spin'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tag } from '@/shared/ui/tag'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useDialog } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
 import type { BuilderResource } from '../useBuilderResources'
@@ -38,9 +30,8 @@ const resources = useBuilderResources({
 })
 
 const uploadAlertType = computed(() => {
-  if (editor.uploadQueue.value.some((item) => item.stage === UploadStage.Failed)) return 'error'
-  if (editor.isUploading.value) return 'info'
-  return 'success'
+  if (editor.uploadQueue.value.some((item) => item.stage === UploadStage.Failed)) return 'destructive'
+  return 'default'
 })
 
 watch(
@@ -63,10 +54,10 @@ function formatBytes(bytes?: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MiB`
 }
 
-function uploadStageType(stage: UploadStage) {
-  if (stage === UploadStage.Failed) return 'error'
-  if (stage === UploadStage.Success) return 'success'
-  return 'info'
+function uploadStageVariant(stage: UploadStage): 'destructive' | 'default' | 'secondary' {
+  if (stage === UploadStage.Failed) return 'destructive'
+  if (stage === UploadStage.Success) return 'default'
+  return 'secondary'
 }
 
 async function copyResourcePath(path: string) {
@@ -98,314 +89,179 @@ function confirmDelete(resource: BuilderResource) {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
-    title="资源管理"
-    style="width: 900px; max-width: 95vw"
-    :auto-focus="false"
-  >
-    <NFlex
-      vertical
-      size="large"
-    >
-      <NAlert
-        v-if="editor.uploadQueue.value.length"
-        :type="uploadAlertType"
-        :show-icon="true"
-      >
-        <NFlex
-          vertical
-          size="small"
-        >
-          <NFlex
-            v-for="item in editor.uploadQueue.value"
-            :key="item.name"
-            align="center"
-            justify="space-between"
-          >
-            <NText>{{ item.name }}</NText>
-            <NTag
-              :type="uploadStageType(item.stage)"
-              size="small"
-            >
-              {{ item.stage }}
-            </NTag>
-          </NFlex>
-        </NFlex>
-      </NAlert>
+  <Dialog :open="show" @update:open="(val) => (show = val)">
+    <DialogContent class="max-w-[900px] w-[95vw] p-6 max-h-[88vh] flex flex-col gap-4">
+      <DialogHeader>
+        <DialogTitle class="text-base font-semibold"> 资源管理 </DialogTitle>
+      </DialogHeader>
 
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
-        <NText depth="3">
-          服务器资源 {{ resources.resources.value.length - resources.missingCount.value }} 个，引用中
-          {{ resources.usedCount.value }} 个<template v-if="resources.missingCount.value">
-            ，失效引用 {{ resources.missingCount.value }} 个
-          </template>
-        </NText>
-        <NFlex
-          :wrap="false"
-          size="small"
-        >
-          <NButton
-            size="small"
-            secondary
-            @click="editor.normalizeRichTextImagesFile"
-          >
-            整理富文本引用
-          </NButton>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                size="small"
-                circle
-                secondary
-                :loading="resources.isLoading.value"
-                aria-label="刷新资源"
-                @click="resources.loadResources"
+      <div class="flex flex-col gap-4 min-h-0 flex-1 overflow-hidden">
+        <Alert v-if="editor.uploadQueue.value.length" :variant="uploadAlertType">
+          <AlertDescription>
+            <div class="flex flex-col gap-1 text-xs">
+              <div
+                v-for="item in editor.uploadQueue.value"
+                :key="item.name"
+                class="flex items-center justify-between"
               >
-                <template #icon>
-                  <NIcon><RefreshOutline /></NIcon>
-                </template>
-              </NButton>
+                <span>{{ item.name }}</span>
+                <Tag :variant="uploadStageVariant(item.stage)" class="text-[10px]">
+                  {{ item.stage }}
+                </Tag>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+
+        <div class="flex justify-between items-center text-xs text-muted-foreground shrink-0">
+          <div>
+            服务器资源 {{ resources.resources.value.length - resources.missingCount.value }} 个，引用中
+            {{ resources.usedCount.value }} 个<template v-if="resources.missingCount.value">
+              ，失效引用 {{ resources.missingCount.value }} 个
             </template>
-            刷新资源
-          </NTooltip>
-        </NFlex>
-      </NFlex>
+          </div>
+          <div class="flex items-center gap-2">
+            <Button size="sm" variant="outline" class="h-7 text-xs" @click="editor.normalizeRichTextImagesFile">
+              整理富文本引用
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    class="size-7"
+                    :disabled="resources.isLoading.value"
+                    aria-label="刷新资源"
+                    @click="resources.loadResources"
+                  >
+                    <RefreshOutline class="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent> 刷新资源 </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
 
-      <NTabs
-        v-model:value="resources.currentView.value"
-        type="segment"
-        size="small"
-        animated
-      >
-        <NTabPane
-          name="all"
-          :tab="`全部 ${resources.resources.value.length}`"
-        />
-        <NTabPane
-          name="used"
-          :tab="`引用中 ${resources.usedCount.value}`"
-        />
-        <NTabPane
-          name="unused"
-          :tab="`未使用 ${resources.unusedCount.value}`"
-        />
-      </NTabs>
+        <Tabs :model-value="resources.currentView.value" class="w-full shrink-0" @update:model-value="(val) => (resources.currentView.value = val as any)">
+          <TabsList class="h-8 w-full justify-start">
+            <TabsTrigger value="all" class="text-xs"> 全部 {{ resources.resources.value.length }} </TabsTrigger>
+            <TabsTrigger value="used" class="text-xs"> 引用中 {{ resources.usedCount.value }} </TabsTrigger>
+            <TabsTrigger value="unused" class="text-xs"> 未使用 {{ resources.unusedCount.value }} </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-      <NAlert
-        v-if="resources.loadError.value"
-        type="error"
-        :show-icon="true"
-      >
-        {{ resources.loadError.value }}
-      </NAlert>
+        <Alert v-if="resources.loadError.value" variant="destructive" class="text-xs py-2 shrink-0">
+          <AlertDescription>{{ resources.loadError.value }}</AlertDescription>
+        </Alert>
 
-      <NSpin :show="resources.isLoading.value">
-        <NScrollbar style="max-height: 62vh">
-          <NFlex
-            v-if="resources.visibleResources.value.length"
-            vertical
-            size="small"
-          >
+        <div class="flex-1 min-h-0 overflow-y-auto relative">
+          <div v-if="resources.isLoading.value" class="py-12 flex items-center justify-center">
+            <Spin />
+          </div>
+          <div v-else-if="resources.visibleResources.value.length" class="space-y-2 pr-1">
             <div
               v-for="file in resources.visibleResources.value"
               :key="file.id"
-              class="resource-row"
+              class="resource-row p-3 rounded-lg border bg-card/60 flex flex-col gap-2"
             >
-              <NFlex
-                align="center"
-                justify="space-between"
-                :wrap="false"
-                style="gap: 12px"
-              >
-                <NFlex
-                  align="center"
-                  :wrap="false"
-                  style="gap: 10px; min-width: 0"
-                >
-                  <NPopover
-                    v-if="isImagePath(file.path) && !file.missing"
-                    trigger="hover"
-                    placement="right"
-                  >
-                    <template #trigger>
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <Popover v-if="isImagePath(file.path) && !file.missing">
+                    <PopoverTrigger as-child>
                       <img
                         :src="file.path"
                         :alt="file.name || `资源 ${file.id}`"
                         referrerpolicy="no-referrer"
                         loading="lazy"
                         decoding="async"
-                        class="resource-thumbnail"
+                        class="resource-thumbnail size-11 rounded object-cover cursor-pointer border"
                         @load="readImageDimensions(file.id, $event)"
                       />
-                    </template>
-                    <div style="max-width: 320px; max-height: 320px; overflow: hidden; border-radius: 4px">
+                    </PopoverTrigger>
+                    <PopoverContent class="p-1 max-w-[320px] max-h-[320px] overflow-hidden">
                       <img
                         :src="file.path"
                         :alt="file.name"
                         referrerpolicy="no-referrer"
-                        style="width: 100%; height: 100%; object-fit: contain; display: block"
+                        class="w-full h-full object-contain"
                       />
-                    </div>
-                  </NPopover>
+                    </PopoverContent>
+                  </Popover>
                   <div
                     v-else
-                    class="resource-thumbnail resource-placeholder"
+                    class="resource-thumbnail resource-placeholder size-11 rounded border bg-muted flex items-center justify-center text-[10px] text-muted-foreground font-mono"
                   >
                     #{{ file.id }}
                   </div>
-                  <div class="resource-main">
-                    <NFlex
-                      align="center"
-                      size="small"
-                    >
-                      <NText strong>
+                  <div class="resource-main flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <strong class="text-xs text-foreground truncate">
                         {{ file.name || `资源 #${file.id}` }}
-                      </NText>
-                      <NTag
-                        v-if="file.missing"
-                        type="error"
-                        size="small"
-                      >
+                      </strong>
+                      <Tag v-if="file.missing" variant="destructive" class="text-[10px]">
                         文件已失效
-                      </NTag>
-                      <NTag
-                        v-else
-                        :type="file.locations.length ? 'success' : 'default'"
-                        size="small"
-                      >
+                      </Tag>
+                      <Tag v-else :variant="file.locations.length ? 'default' : 'secondary'" class="text-[10px]">
                         {{ file.locations.length ? `引用 ${file.locations.length} 处` : '未使用' }}
-                      </NTag>
-                    </NFlex>
-                    <NText
-                      depth="3"
-                      class="resource-meta"
-                    >
-                      #{{ file.id }} · {{ formatBytes(file.size)
-                      }}<template v-if="imageDimensions[file.id]"> · {{ imageDimensions[file.id] }} </template>
-                    </NText>
-                    <NText
-                      depth="3"
-                      class="resource-path"
-                    >
+                      </Tag>
+                    </div>
+                    <div class="text-[11px] text-muted-foreground mt-0.5">
+                      #{{ file.id }} · {{ formatBytes(file.size) }}
+                      <template v-if="imageDimensions[file.id]"> · {{ imageDimensions[file.id] }} </template>
+                    </div>
+                    <div class="text-[11px] text-muted-foreground truncate font-mono">
                       {{ file.path || '无公开地址' }}
-                    </NText>
+                    </div>
                   </div>
-                </NFlex>
+                </div>
 
-                <NFlex
-                  v-if="!file.missing"
-                  :wrap="false"
-                  size="small"
-                >
-                  <NTooltip v-if="file.path">
-                    <template #trigger>
-                      <NButton
-                        circle
-                        secondary
-                        size="small"
-                        aria-label="复制资源链接"
-                        @click="copyResourcePath(file.path)"
-                      >
-                        <template #icon>
-                          <NIcon><CopyOutline /></NIcon>
-                        </template>
-                      </NButton>
-                    </template>
-                    复制资源链接
-                  </NTooltip>
-                  <NTooltip>
-                    <template #trigger>
-                      <NButton
-                        circle
-                        secondary
-                        type="error"
-                        size="small"
-                        aria-label="删除资源"
-                        :loading="resources.deletingId.value === file.id"
-                        @click="confirmDelete(file)"
-                      >
-                        <template #icon>
-                          <NIcon><TrashOutline /></NIcon>
-                        </template>
-                      </NButton>
-                    </template>
-                    删除资源
-                  </NTooltip>
-                </NFlex>
-              </NFlex>
+                <div v-if="!file.missing" class="flex items-center gap-1 shrink-0">
+                  <TooltipProvider>
+                    <Tooltip v-if="file.path">
+                      <TooltipTrigger as-child>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          class="size-7"
+                          aria-label="复制资源链接"
+                          @click="copyResourcePath(file.path)"
+                        >
+                          <CopyOutline class="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent> 复制资源链接 </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          class="size-7 text-destructive hover:text-destructive"
+                          aria-label="删除资源"
+                          :disabled="resources.deletingId.value === file.id"
+                          @click="confirmDelete(file)"
+                        >
+                          <TrashOutline class="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent> 删除资源 </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
 
-              <NText
-                v-if="file.locations.length"
-                depth="3"
-                class="resource-locations"
-              >
+              <div v-if="file.locations.length" class="text-[11px] text-muted-foreground bg-muted/40 p-1.5 rounded">
                 {{ file.locations.join('；') }}
-              </NText>
+              </div>
             </div>
-          </NFlex>
-          <NEmpty
-            v-else-if="!resources.isLoading.value"
-            description="当前分类没有资源"
-          />
-        </NScrollbar>
-      </NSpin>
-    </NFlex>
-  </NModal>
+          </div>
+          <div v-else class="py-12 text-center text-xs text-muted-foreground">
+            当前分类没有资源
+          </div>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>
-
-<style scoped>
-.resource-row {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--vtsuru-border);
-}
-
-.resource-thumbnail {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 auto;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  object-fit: cover;
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-
-.resource-thumbnail:hover {
-  transform: scale(1.05);
-}
-
-.resource-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
-}
-
-.resource-main {
-  min-width: 0;
-}
-
-.resource-meta {
-  display: block;
-  font-size: 12px;
-}
-
-.resource-path {
-  display: block;
-  font-size: 12px;
-  word-break: break-all;
-}
-
-.resource-locations {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
-}
-</style>

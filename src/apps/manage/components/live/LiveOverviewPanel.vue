@@ -1,48 +1,30 @@
 <script setup lang="ts">
 import {
-  Box24Regular,
   Chat24Regular,
   Clock24Regular,
   DataTrending24Regular,
   HandRight24Regular,
   Money24Regular,
-  People24Regular,
   Person24Regular,
-  Ribbon24Regular,
   Trophy24Filled,
-  VehicleShip24Filled,
 } from '@vicons/fluent'
-import {
-  NAvatar,
-  NButton,
-  NCard,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NNumberAnimation,
-  NProgress,
-  NSkeleton,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { DanmakuModel, ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { getApiLiveRanking } from '@/api/generated/live/live'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Progress } from '@/shared/ui/progress'
+import { Skeleton } from '@/shared/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
   live: ResponseLiveInfoModel
   danmakus: DanmakuModel[]
 }>()
 
-const message = useMessage()
 const rankingList = ref<ResponseLiveRankingEntryModel[]>([])
 const isRankingLoading = ref(false)
 
@@ -63,6 +45,13 @@ const durationText = computed(() => {
   }
   return `${mins} 分钟`
 })
+
+function formatTimeHHmm(val: number | string | undefined | null) {
+  if (!val) return ''
+  const d = new Date(Number(val))
+  if (isNaN(d.getTime())) return ''
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
 
 // 观众画像去重
 const chatterStats = computed(() => {
@@ -120,7 +109,7 @@ const incomeBreakdown = computed(() => {
   }
 })
 
-// 弹幕时段密度走势分桶 (Timeline Activity Waves)
+// 弹幕时段密度走势分桶
 interface TimeBucket {
   label: string
   timeRange: string
@@ -136,7 +125,6 @@ const activityBuckets = computed<TimeBucket[]>(() => {
   const end = props.live.isFinish ? Number(props.live.stopAt) || start + 3600000 : Date.now()
   const span = Math.max(60000, end - start)
 
-  // 根据总时长动态切分 12 ~ 24 个时间桶
   const bucketCount = Math.min(24, Math.max(12, Math.ceil(span / (10 * 60000))))
   const bucketDuration = span / bucketCount
 
@@ -203,7 +191,7 @@ function getRankBadgeStyle(index: number) {
   if (index === 0) return { background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff' }
   if (index === 1) return { background: 'linear-gradient(135deg, #94a3b8, #64748b)', color: '#fff' }
   if (index === 2) return { background: 'linear-gradient(135deg, #b45309, #78350f)', color: '#fff' }
-  return { background: 'var(--vtsuru-bg-muted)', color: 'var(--vtsuru-fg-muted)' }
+  return { background: 'var(--muted)', color: 'var(--muted-foreground)' }
 }
 
 onMounted(fetchRanking)
@@ -213,327 +201,225 @@ watch(() => props.live.liveId, fetchRanking)
 <template>
   <div class="live-overview-panel">
     <!-- 顶部核心指标 4 宫格 -->
-    <NGrid
-      :cols="4"
-      :x-gap="12"
-      :y-gap="12"
-      responsive="screen"
-      class="metrics-grid"
-    >
-      <NGridItem :span="1">
-        <NCard
-          size="small"
-          class="metric-card"
-          :bordered="true"
-        >
-          <div class="metric-inner">
-            <div class="metric-header">
-              <span class="metric-title">直播历时</span>
-              <NIcon
-                :component="Clock24Regular"
-                class="metric-icon"
-              />
-            </div>
-            <div class="metric-main">
-              <span class="metric-number">{{ durationText }}</span>
-            </div>
-            <div class="metric-footer">
-              <span class="metric-sub">
-                <NTime :time="live.startAt" format="HH:mm" />
-                ~
-                <template v-if="live.isFinish">
-                  <NTime :time="live.stopAt ?? 0" format="HH:mm" />
-                </template>
-                <template v-else>
-                  (直播中)
-                </template>
-              </span>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <Card class="p-3.5">
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>直播历时</span>
+            <component :is="Clock24Regular" class="size-4.5" />
           </div>
-        </NCard>
-      </NGridItem>
+          <div class="text-xl font-bold font-mono">
+            {{ durationText }}
+          </div>
+          <div class="text-[11px] text-muted-foreground">
+            {{ formatTimeHHmm(live.startAt) }} ~ {{ live.isFinish ? formatTimeHHmm(live.stopAt) : '(直播中)' }}
+          </div>
+        </div>
+      </Card>
 
-      <NGridItem :span="1">
-        <NCard
-          size="small"
-          class="metric-card"
-          :bordered="true"
-        >
-          <div class="metric-inner">
-            <div class="metric-header">
-              <span class="metric-title">弹幕总数 / 发言人数</span>
-              <NIcon
-                :component="Chat24Regular"
-                class="metric-icon"
-              />
-            </div>
-            <div class="metric-main">
-              <span class="metric-number">{{ live.danmakusCount.toLocaleString() }}</span>
-              <span class="metric-unit">条</span>
-            </div>
-            <div class="metric-footer">
-              <span class="metric-sub">
-                {{ chatterStats.uniqueChatters }} 位独立观众 · 人均 {{ chatterStats.avgDanmakuPerUser }} 条
-              </span>
-            </div>
+      <Card class="p-3.5">
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>弹幕总数 / 发言人数</span>
+            <component :is="Chat24Regular" class="size-4.5" />
           </div>
-        </NCard>
-      </NGridItem>
+          <div class="text-xl font-bold font-mono">
+            {{ live.danmakusCount.toLocaleString() }}
+            <span class="text-xs font-normal text-muted-foreground">条</span>
+          </div>
+          <div class="text-[11px] text-muted-foreground">
+            {{ chatterStats.uniqueChatters }} 位独立观众 · 人均 {{ chatterStats.avgDanmakuPerUser }} 条
+          </div>
+        </div>
+      </Card>
 
-      <NGridItem :span="1">
-        <NCard
-          size="small"
-          class="metric-card"
-          :bordered="true"
-        >
-          <div class="metric-inner">
-            <div class="metric-header">
-              <span class="metric-title">总打赏收益</span>
-              <NIcon
-                :component="Money24Regular"
-                class="metric-icon income-icon"
-              />
-            </div>
-            <div class="metric-main">
-              <span class="metric-unit currency">¥</span>
-              <span class="metric-number income-number">{{ live.totalIncome.toLocaleString() }}</span>
-            </div>
-            <div class="metric-footer">
-              <span class="metric-sub">
-                {{ chatterStats.uniquePayers }} 位付费观众打赏
-              </span>
-            </div>
+      <Card class="p-3.5">
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>总打赏收益</span>
+            <component :is="Money24Regular" class="size-4.5 text-emerald-500" />
           </div>
-        </NCard>
-      </NGridItem>
+          <div class="text-xl font-bold font-mono text-emerald-500">
+            <span class="text-xs mr-0.5">¥</span>{{ live.totalIncome.toLocaleString() }}
+          </div>
+          <div class="text-[11px] text-muted-foreground">
+            {{ chatterStats.uniquePayers }} 位付费观众打赏
+          </div>
+        </div>
+      </Card>
 
-      <NGridItem :span="1">
-        <NCard
-          size="small"
-          class="metric-card"
-          :bordered="true"
-        >
-          <div class="metric-inner">
-            <div class="metric-header">
-              <span class="metric-title">总互动人次</span>
-              <NIcon
-                :component="HandRight24Regular"
-                class="metric-icon"
-              />
-            </div>
-            <div class="metric-main">
-              <span class="metric-number">{{ live.interactionCount.toLocaleString() }}</span>
-              <span class="metric-unit">次</span>
-            </div>
-            <div class="metric-footer">
-              <span class="metric-sub">包含进场、点赞与关注</span>
-            </div>
+      <Card class="p-3.5">
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>总互动人次</span>
+            <component :is="HandRight24Regular" class="size-4.5" />
           </div>
-        </NCard>
-      </NGridItem>
-    </NGrid>
+          <div class="text-xl font-bold font-mono">
+            {{ live.interactionCount.toLocaleString() }}
+            <span class="text-xs font-normal text-muted-foreground">次</span>
+          </div>
+          <div class="text-[11px] text-muted-foreground">
+            包含进场、点赞与关注
+          </div>
+        </div>
+      </Card>
+    </div>
 
     <!-- 中间：时段密度波形走势 & 收入构成分析 -->
-    <NGrid
-      :cols="12"
-      :x-gap="12"
-      :y-gap="12"
-      responsive="screen"
-    >
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
       <!-- 左侧：弹幕热度时间轴波形走势 (8 cols) -->
-      <NGridItem :span="8">
-        <NCard
-          size="small"
-          title="弹幕热度时间轴走势"
-          :bordered="true"
-          class="bento-panel"
-        >
-          <template #header-extra>
-            <span class="panel-extra-hint">
-              <NIcon :component="DataTrending24Regular" />
-              直观定位直播高光时刻
-            </span>
-          </template>
+      <Card class="lg:col-span-8 p-3.5 flex flex-col">
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-border">
+          <span class="text-sm font-semibold">弹幕热度时间轴走势</span>
+          <span class="text-xs text-muted-foreground flex items-center gap-1">
+            <component :is="DataTrending24Regular" class="size-3.5" />
+            直观定位直播高光时刻
+          </span>
+        </div>
 
-          <div
-            v-if="activityBuckets.length > 0"
-            class="activity-timeline-container"
-          >
-            <div class="activity-bars-wrapper">
-              <div
-                v-for="(b, idx) in activityBuckets"
-                :key="idx"
-                class="activity-bar-col"
-              >
-                <NTooltip trigger="hover">
-                  <template #trigger>
-                    <div class="bar-hitbox">
-                      <div
-                        class="activity-bar"
-                        :style="{ height: `${b.danmakuHeightPercent}%` }"
-                        :class="{ 'has-income': b.income > 0 }"
-                      />
-                    </div>
-                  </template>
-                  <div class="activity-tooltip">
-                    <div class="tooltip-time">{{ b.timeRange }}</div>
-                    <div class="tooltip-row">
-                      <span>💬 弹幕数:</span>
-                      <strong>{{ b.danmakuCount }} 条</strong>
-                    </div>
+        <div
+          v-if="activityBuckets.length > 0"
+          class="activity-timeline-container flex-1 flex flex-col justify-end"
+        >
+          <div class="activity-bars-wrapper flex items-end gap-1 h-36 pt-4 pb-1">
+            <TooltipProvider v-for="(b, idx) in activityBuckets" :key="idx">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <div class="flex-1 flex flex-col items-center h-full justify-end cursor-pointer group">
                     <div
-                      v-if="b.income > 0"
-                      class="tooltip-row income-row"
+                      class="w-full rounded-t transition-all"
+                      :class="b.income > 0 ? 'bg-amber-500/80 group-hover:bg-amber-500' : 'bg-primary/50 group-hover:bg-primary'"
+                      :style="{ height: `${b.danmakuHeightPercent}%` }"
+                    />
+                    <span
+                      v-if="idx % Math.ceil(activityBuckets.length / 6) === 0"
+                      class="text-[10px] text-muted-foreground mt-1 select-none"
                     >
-                      <span>💰 打赏收益:</span>
-                      <strong>¥{{ b.income.toFixed(1) }}</strong>
+                      {{ b.label }}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div class="text-xs space-y-1">
+                    <div class="font-medium">{{ b.timeRange }}</div>
+                    <div>💬 弹幕数: <strong>{{ b.danmakuCount }} 条</strong></div>
+                    <div v-if="b.income > 0" class="text-amber-500">
+                      💰 打赏收益: <strong>¥{{ b.income.toFixed(1) }}</strong>
                     </div>
                   </div>
-                </NTooltip>
-                <span
-                  v-if="idx % Math.ceil(activityBuckets.length / 6) === 0"
-                  class="bar-label"
-                >
-                  {{ b.label }}
-                </span>
-              </div>
-            </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
-          <div
-            v-else
-            class="empty-timeline"
-          >
-            <NText depth="3">暂无详细时段弹幕事件</NText>
-          </div>
-        </NCard>
-      </NGridItem>
+        </div>
+        <div
+          v-else
+          class="h-36 flex items-center justify-center text-xs text-muted-foreground"
+        >
+          暂无详细时段弹幕事件
+        </div>
+      </Card>
 
       <!-- 右侧：打赏与收入构成 (4 cols) -->
-      <NGridItem :span="4">
-        <NCard
-          size="small"
-          title="本场打赏构成"
-          :bordered="true"
-          class="bento-panel"
-        >
-          <div class="income-breakdown-box">
-            <div class="breakdown-item">
-              <div class="breakdown-header">
-                <span class="breakdown-label">
-                  <span class="color-dot dot-sc" />
-                  醒目留言 (SC)
-                </span>
-                <span class="breakdown-value">¥{{ incomeBreakdown.sc }} ({{ incomeBreakdown.scPercent }}%)</span>
-              </div>
-              <NProgress
-                type="line"
-                :percentage="incomeBreakdown.scPercent"
-                color="#f59e0b"
-                :show-indicator="false"
-                :height="6"
-              />
+      <Card class="lg:col-span-4 p-3.5 flex flex-col">
+        <div class="text-sm font-semibold pb-2 mb-2 border-b border-border">
+          本场打赏构成
+        </div>
+        <div class="flex flex-col gap-3.5 py-1">
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="flex items-center gap-1.5 text-muted-foreground">
+                <span class="size-2 rounded-full bg-amber-500" />
+                醒目留言 (SC)
+              </span>
+              <span class="font-mono font-medium">¥{{ incomeBreakdown.sc }} ({{ incomeBreakdown.scPercent }}%)</span>
             </div>
-
-            <div class="breakdown-item">
-              <div class="breakdown-header">
-                <span class="breakdown-label">
-                  <span class="color-dot dot-gift" />
-                  付费礼物
-                </span>
-                <span class="breakdown-value">¥{{ incomeBreakdown.gift }} ({{ incomeBreakdown.giftPercent }}%)</span>
-              </div>
-              <NProgress
-                type="line"
-                :percentage="incomeBreakdown.giftPercent"
-                color="#10b981"
-                :show-indicator="false"
-                :height="6"
-              />
-            </div>
-
-            <div class="breakdown-item">
-              <div class="breakdown-header">
-                <span class="breakdown-label">
-                  <span class="color-dot dot-guard" />
-                  大航海 / 舰长
-                </span>
-                <span class="breakdown-value">¥{{ incomeBreakdown.guard }} ({{ incomeBreakdown.guardPercent }}%)</span>
-              </div>
-              <NProgress
-                type="line"
-                :percentage="incomeBreakdown.guardPercent"
-                color="#6366f1"
-                :show-indicator="false"
-                :height="6"
-              />
+            <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+              <div class="bg-amber-500 h-full rounded-full" :style="{ width: `${incomeBreakdown.scPercent}%` }" />
             </div>
           </div>
-        </NCard>
-      </NGridItem>
-    </NGrid>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="flex items-center gap-1.5 text-muted-foreground">
+                <span class="size-2 rounded-full bg-emerald-500" />
+                付费礼物
+              </span>
+              <span class="font-mono font-medium">¥{{ incomeBreakdown.gift }} ({{ incomeBreakdown.giftPercent }}%)</span>
+            </div>
+            <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+              <div class="bg-emerald-500 h-full rounded-full" :style="{ width: `${incomeBreakdown.giftPercent}%` }" />
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="flex items-center gap-1.5 text-muted-foreground">
+                <span class="size-2 rounded-full bg-indigo-500" />
+                大航海 / 舰长
+              </span>
+              <span class="font-mono font-medium">¥{{ incomeBreakdown.guard }} ({{ incomeBreakdown.guardPercent }}%)</span>
+            </div>
+            <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+              <div class="bg-indigo-500 h-full rounded-full" :style="{ width: `${incomeBreakdown.guardPercent}%` }" />
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
 
     <!-- 底部：本场打赏贡献榜 Top 10 -->
-    <NCard
-      size="small"
-      title="本场打赏贡献榜 (Top 10)"
-      :bordered="true"
-      class="bento-panel ranking-panel"
-    >
-      <template #header-extra>
-        <span class="panel-extra-hint">
-          <NIcon :component="Trophy24Filled" style="color: #f59e0b" />
+    <Card class="p-3.5">
+      <div class="flex items-center justify-between pb-2 mb-3 border-b border-border">
+        <span class="text-sm font-semibold">本场打赏贡献榜 (Top 10)</span>
+        <span class="text-xs text-muted-foreground flex items-center gap-1">
+          <component :is="Trophy24Filled" class="size-3.5 text-amber-500" />
           基于观众打赏总额排行
         </span>
-      </template>
+      </div>
 
-      <NSkeleton
-        v-if="isRankingLoading"
-        text
-        :repeat="4"
-      />
+      <div v-if="isRankingLoading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+        <Skeleton v-for="i in 5" :key="i" class="h-14 w-full rounded-lg" />
+      </div>
+
       <div
         v-else-if="rankingList.length > 0"
-        class="ranking-grid"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5"
       >
         <div
           v-for="(rank, idx) in rankingList"
           :key="rank.ouId"
-          class="ranking-card"
+          class="flex items-center gap-2.5 p-2 rounded-lg border border-border bg-card/50"
         >
           <div
-            class="rank-badge"
+            class="size-5 rounded flex items-center justify-center text-[11px] font-bold shrink-0"
             :style="getRankBadgeStyle(idx)"
           >
             {{ idx + 1 }}
           </div>
 
-          <NAvatar
-            round
-            size="medium"
-            :src="rank.uFace || undefined"
-            fallback-src="https://i0.hdslb.com/bfs/face/member/noface.jpg"
-            class="rank-avatar"
-          >
-            <template #fallback>
-              <NIcon :component="Person24Regular" />
-            </template>
-          </NAvatar>
+          <Avatar class="size-8">
+            <AvatarImage :src="rank.uFace" />
+            <AvatarFallback>
+              <component :is="Person24Regular" class="size-4" />
+            </AvatarFallback>
+          </Avatar>
 
-          <div class="rank-info">
-            <span class="rank-name" :title="rank.uName">{{ rank.uName }}</span>
-            <span class="rank-paid">
-              <span class="currency">¥</span>{{ rank.totalPaid.toLocaleString() }}
-            </span>
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-medium truncate" :title="rank.uName">{{ rank.uName }}</div>
+            <div class="text-xs font-mono font-semibold text-emerald-500">
+              <span class="text-[10px]">¥</span>{{ rank.totalPaid.toLocaleString() }}
+            </div>
           </div>
         </div>
       </div>
       <div
         v-else
-        class="empty-ranking"
+        class="py-8 flex justify-center"
       >
-        <NEmpty description="本场直播暂无观众打赏记录" />
+        <Empty description="本场直播暂无观众打赏记录" />
       </div>
-    </NCard>
+    </Card>
   </div>
 </template>
 
@@ -541,323 +427,7 @@ watch(() => props.live.liveId, fetchRanking)
 .live-overview-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-.metrics-grid {
-  margin-bottom: 2px;
-}
-
-.metric-card {
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-card);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.metric-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.metric-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.metric-title {
-  font-size: 13px;
-  color: var(--vtsuru-fg-muted);
-  font-weight: 500;
-}
-
-.metric-icon {
-  font-size: 18px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.income-icon {
-  color: #10b981;
-}
-
-.metric-main {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.metric-number {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--vtsuru-fg);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-}
-
-.income-number {
-  color: #10b981;
-}
-
-.metric-unit {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.metric-unit.currency {
-  font-size: 15px;
-  font-weight: 600;
-  color: #10b981;
-}
-
-.metric-footer {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  min-height: 18px;
-  display: flex;
-  align-items: center;
-}
-
-.metric-sub {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.bento-panel {
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-card);
-}
-
-.panel-extra-hint {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* 时间轴波形图 */
-.activity-timeline-container {
-  height: 160px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding-top: 10px;
-}
-
-.activity-bars-wrapper {
-  display: flex;
-  align-items: flex-end;
-  height: 120px;
-  gap: 4px;
-  border-bottom: 1px solid var(--vtsuru-border);
-  padding-bottom: 2px;
-}
-
-.activity-bar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  justify-content: flex-end;
-  position: relative;
-}
-
-.bar-hitbox {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  cursor: pointer;
-}
-
-.activity-bar {
-  width: 100%;
-  border-radius: 3px 3px 0 0;
-  background: var(--vtsuru-brand);
-  opacity: 0.75;
-  transition: all 0.2s ease;
-  min-height: 4px;
-}
-
-.activity-bar:hover {
-  opacity: 1;
-  transform: scaleY(1.05);
-}
-
-.activity-bar.has-income {
-  background: linear-gradient(to top, var(--vtsuru-brand), #10b981);
-}
-
-.bar-label {
-  font-size: 10px;
-  color: var(--vtsuru-fg-muted);
-  margin-top: 6px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.activity-tooltip {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.tooltip-time {
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  border-bottom: 1px solid var(--vtsuru-border);
-  padding-bottom: 2px;
-}
-
-.tooltip-row {
-  display: flex;
-  justify-content: space-between;
   gap: 12px;
-}
-
-.income-row {
-  color: #10b981;
-}
-
-.empty-timeline {
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 收入构成 */
-.income-breakdown-box {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 8px 0;
-}
-
-.breakdown-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.breakdown-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-}
-
-.breakdown-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--vtsuru-fg);
-  font-weight: 500;
-}
-
-.color-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.dot-sc {
-  background-color: #f59e0b;
-}
-
-.dot-gift {
-  background-color: #10b981;
-}
-
-.dot-guard {
-  background-color: #6366f1;
-}
-
-.breakdown-value {
-  color: var(--vtsuru-fg-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-/* 排行榜 */
-.ranking-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  padding: 4px 0;
-}
-
-.ranking-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.rank-badge {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.rank-avatar {
-  flex-shrink: 0;
-}
-
-.rank-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.rank-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.rank-paid {
-  font-size: 12px;
-  font-weight: 600;
-  color: #10b981;
-  font-variant-numeric: tabular-nums;
-}
-
-.rank-paid .currency {
-  font-size: 10px;
-  margin-right: 1px;
-}
-
-.empty-ranking {
-  padding: 24px 0;
-}
-
-@media (max-width: 992px) {
-  .ranking-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .ranking-grid {
-    grid-template-columns: 1fr;
-  }
+  width: 100%;
 }
 </style>

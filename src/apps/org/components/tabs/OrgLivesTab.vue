@@ -7,24 +7,17 @@ import {
   TimeOutline,
   WalletOutline,
 } from '@vicons/ionicons5'
-import {
-  NAvatar,
-  NButton,
-  NCard,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NImage,
-  NInput,
-  NSelect,
-  NSkeleton,
-  NFlex,
-  NTag,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
+import { format } from 'date-fns'
 import { computed, onMounted } from 'vue'
+
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Spin } from '@/shared/ui/spin'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { injectOrgLives } from '../../composables/useOrgLives'
 import { injectOrgStreamers } from '../../composables/useOrgStreamers'
@@ -63,241 +56,172 @@ onMounted(() => load())
 </script>
 
 <template>
-  <NFlex
-    align="center"
-    wrap
-    style="margin-bottom: 12px"
-  >
-    <NInput
-      v-model:value="search"
-      placeholder="搜索标题/主播"
-      size="small"
-      style="width: 200px"
-    >
-      <template #prefix>
-        <NIcon :component="SearchOutline" />
-      </template>
-    </NInput>
-    <NSelect
-      v-model:value="streamerFilter"
-      :options="streamerSelectOptions"
-      size="small"
-      style="width: 160px"
-      :consistent-menu-width="false"
-    />
-    <NSelect
-      v-model:value="sortKey"
-      :options="sortOptions"
-      size="small"
-      style="width: 120px"
-    />
-    <NButton
-      size="small"
-      secondary
-      :disabled="view.length === 0"
-      @click="exportLives"
-    >
-      <template #icon>
-        <NIcon :component="DownloadOutline" />
-      </template>
-      导出 CSV
-    </NButton>
-    <span style="opacity: 0.6; font-size: 12px">共 {{ view.length }} 场</span>
-  </NFlex>
+  <TooltipProvider>
+    <div class="space-y-3.5 text-xs">
+      <!-- 搜索与筛选工具栏 -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="relative w-52">
+          <Input
+            v-model="search"
+            placeholder="搜索标题/主播"
+            class="h-8 text-xs pl-7"
+          />
+          <component :is="SearchOutline" class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
 
-  <NSkeleton
-    v-if="loading"
-    text
-    :repeat="6"
-  />
-  <NEmpty
-    v-else-if="view.length === 0"
-    description="暂无直播记录"
-  />
-  <NGrid
-    v-else
-    :x-gap="12"
-    :y-gap="12"
-    cols="1 600:2 1100:3"
-    item-responsive
-  >
-    <NGridItem
-      v-for="item in view"
-      :key="item.live.liveId"
-    >
-      <NCard
-        hoverable
-        size="small"
-        class="live-card"
-      >
-        <template #cover>
-          <div class="live-cover">
-            <NImage
+        <Select
+          :model-value="String(streamerFilter)"
+          @update:model-value="streamerFilter = Number($event)"
+        >
+          <SelectTrigger class="w-40 h-8 text-xs">
+            <SelectValue placeholder="筛选主播" />
+          </SelectTrigger>
+          <SelectContent class="max-h-56">
+            <SelectItem
+              v-for="opt in streamerSelectOptions"
+              :key="opt.value"
+              :value="String(opt.value)"
+              class="text-xs"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          :model-value="sortKey"
+          @update:model-value="sortKey = $event as any"
+        >
+          <SelectTrigger class="w-28 h-8 text-xs">
+            <SelectValue placeholder="排序" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="s in sortOptions"
+              :key="s.value"
+              :value="s.value"
+              class="text-xs"
+            >
+              {{ s.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="outline"
+          size="sm"
+          class="h-8 text-xs gap-1"
+          :disabled="view.length === 0"
+          @click="exportLives"
+        >
+          <component :is="DownloadOutline" class="size-3.5" />
+          导出 CSV
+        </Button>
+
+        <span class="text-[11px] text-muted-foreground ml-auto">共 {{ view.length }} 场</span>
+      </div>
+
+      <div v-if="loading" class="py-12 flex justify-center">
+        <Spin />
+      </div>
+      <div v-else-if="view.length === 0" class="py-10">
+        <Empty description="暂无直播记录" />
+      </div>
+
+      <!-- 直播卡片网格 -->
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <Card
+          v-for="item in view"
+          :key="item.live.liveId"
+          class="border border-border/80 overflow-hidden flex flex-col hover:border-primary/50 transition-colors"
+        >
+          <!-- 封面大图 -->
+          <div class="h-36 overflow-hidden relative bg-muted/40">
+            <img
               v-if="item.live.coverUrl"
               :src="withImageSize(item.live.coverUrl, '@140h')"
-              object-fit="cover"
-              :img-props="{ referrerpolicy: 'no-referrer' }"
-              style="width: 100%; height: 100%"
-              preview-disabled
+              referrerpolicy="no-referrer"
+              class="w-full h-full object-cover"
+              alt=""
             />
             <div
               v-else
-              class="live-cover-empty"
+              class="w-full h-full flex items-center justify-center text-muted-foreground"
             >
-              <NIcon
-                size="48"
-                :component="TimeOutline"
-              />
+              <component :is="TimeOutline" class="size-10" />
             </div>
-            <div class="live-badge">
-              <NTag
+
+            <!-- 状态标签 -->
+            <div class="absolute top-2 right-2">
+              <Badge
                 v-if="!item.live.isFinish"
-                type="success"
-                size="small"
+                variant="default"
+                class="text-[10px] h-4.5 px-1.5 font-semibold bg-emerald-600 hover:bg-emerald-600 text-white shadow-xs"
               >
                 LIVE
-              </NTag>
-              <NTag
+              </Badge>
+              <Badge
                 v-else
-                :color="{ color: '#00000080' }"
-                text-color="#fff"
-                :bordered="false"
-                size="small"
+                variant="secondary"
+                class="text-[10px] h-4.5 px-1.5 font-normal bg-black/60 text-white border-none shadow-xs"
               >
                 已结束
-              </NTag>
+              </Badge>
             </div>
-            <div class="live-streamer">
-              <NAvatar
+
+            <!-- 主播信息条 -->
+            <div class="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px]">
+              <img
                 v-if="item.streamer.faceUrl"
-                round
-                :size="20"
                 :src="withImageSize(item.streamer.faceUrl, '@20w')"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
-                style="margin-right: 6px; border: 1px solid rgba(255, 255, 255, 0.5)"
+                referrerpolicy="no-referrer"
+                class="size-4 rounded-full object-cover border border-white/60"
+                alt=""
               />
-              {{ item.streamer.name }}
+              <span class="truncate max-w-[120px]">{{ item.streamer.name }}</span>
             </div>
           </div>
-        </template>
 
-        <NTooltip trigger="hover">
-          <template #trigger>
-            <div class="live-card-title text-ellipsis-2">
-              {{ item.live.title }}
+          <CardContent class="p-3 flex-1 flex flex-col justify-between gap-2.5">
+            <div>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <h4 class="font-medium text-xs text-foreground line-clamp-2 leading-snug m-0 hover:text-primary transition-colors cursor-default">
+                    {{ item.live.title }}
+                  </h4>
+                </TooltipTrigger>
+                <TooltipContent>{{ item.live.title }}</TooltipContent>
+              </Tooltip>
+
+              <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground mt-1.5">
+                <span>{{ item.live.parentArea }} / {{ item.live.area }}</span>
+                <span>
+                  {{ format(item.live.startAt, 'MM-dd HH:mm') }}
+                  <template v-if="item.live.stopAt">
+                    - {{ format(item.live.stopAt, 'HH:mm') }}
+                  </template>
+                  <template v-else> - Now </template>
+                </span>
+              </div>
             </div>
-          </template>
-          {{ item.live.title }}
-        </NTooltip>
 
-        <div class="live-card-meta">
-          <div>{{ item.live.parentArea }} / {{ item.live.area }}</div>
-          <div>
-            <NTime
-              :time="item.live.startAt"
-              format="MM-dd HH:mm"
-            />
-            <template v-if="item.live.stopAt">
-              -
-              <NTime
-                :time="item.live.stopAt"
-                format="HH:mm"
-              />
-            </template>
-            <template v-else> - Now </template>
-          </div>
-        </div>
-
-        <template #footer>
-          <NFlex
-            justify="space-between"
-            size="small"
-            style="font-size: 12px; opacity: 0.9"
-          >
-            <span title="营收">
-              <NIcon
-                :component="WalletOutline"
-                style="vertical-align: -2px"
-              />
-              {{ item.live.totalIncomeWithGuard.toFixed(0) }}
-            </span>
-            <span title="互动">
-              <NIcon
-                :component="PeopleOutline"
-                style="vertical-align: -2px"
-              />
-              {{ item.live.interactionCount }}
-            </span>
-            <span title="弹幕">
-              <NIcon
-                :component="ChatbubblesOutline"
-                style="vertical-align: -2px"
-              />
-              {{ item.live.danmakusCount }}
-            </span>
-          </NFlex>
-        </template>
-      </NCard>
-    </NGridItem>
-  </NGrid>
+            <div class="pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
+              <span class="inline-flex items-center gap-1" title="营收">
+                <component :is="WalletOutline" class="size-3" />
+                {{ item.live.totalIncomeWithGuard.toFixed(0) }}
+              </span>
+              <span class="inline-flex items-center gap-1" title="互动">
+                <component :is="PeopleOutline" class="size-3" />
+                {{ item.live.interactionCount }}
+              </span>
+              <span class="inline-flex items-center gap-1" title="弹幕">
+                <component :is="ChatbubblesOutline" class="size-3" />
+                {{ item.live.danmakusCount }}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  </TooltipProvider>
 </template>
-
-<style scoped>
-.live-card {
-  height: 100%;
-  border: 1px solid var(--vtsuru-border);
-}
-.live-card:hover {
-  border-color: var(--vtsuru-primary);
-}
-.live-cover {
-  height: 140px;
-  overflow: hidden;
-  position: relative;
-  background: var(--vtsuru-bg-inset);
-}
-.live-cover-empty {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--vtsuru-fg-muted);
-}
-.live-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-}
-.live-streamer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 4px 8px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-  color: #fff;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-}
-.live-card-title {
-  font-weight: 600;
-  margin-bottom: 6px;
-  height: 44px;
-  line-height: 22px;
-}
-.text-ellipsis-2 {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-.live-card-meta {
-  font-size: 12px;
-  opacity: 0.75;
-  margin-bottom: 8px;
-}
-</style>

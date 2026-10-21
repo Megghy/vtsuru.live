@@ -1,125 +1,150 @@
 <script setup lang="ts">
 import { FlashCheckmark16Filled, Info24Filled } from '@vicons/fluent'
-import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { EventFetcherType } from '@/api/api-models'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Separator } from '@/shared/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const accountInfo = useAccount()
-const state = accountInfo.value?.eventFetcherState
+const state = computed(() => accountInfo.value?.eventFetcherState)
 
 const eventFetcherVersionName = computed(() => {
-  if (state?.type == EventFetcherType.OBS) {
+  const current = state.value
+  if (current?.type === EventFetcherType.OBS) {
     return 'OBS/网页端'
-  } else if (state?.type == EventFetcherType.Application) {
+  } else if (current?.type === EventFetcherType.Application) {
     return '控制台应用'
-  } else if (state?.type == EventFetcherType.Server) {
+  } else if (current?.type === EventFetcherType.Server) {
     return '本站监听 (已删除)'
-  } else if (state?.type == EventFetcherType.Tauri) {
+  } else if (current?.type === EventFetcherType.Tauri) {
     return 'Tauri 应用'
   } else {
-    return state?.version ?? '未知'
+    return current?.version ?? '未知'
   }
 })
 
-const status = computed(() => {
-  if (state.online == true) {
-    if (state.status == undefined || state.status == null) {
-      return 'warning'
-    } else if (Object.keys(state.status ?? {}).length > 0) {
-      return 'warning'
-    } else {
+const status = computed<'success' | 'warning' | 'info'>(() => {
+  const current = state.value
+  if (current?.online === true) {
+    if (!current.status || Object.keys(current.status).length === 0) {
       return 'success'
     }
-  } else {
-    return 'info'
+    return 'warning'
   }
+  return 'info'
 })
 </script>
 
 <template>
-  <NAlert
-    v-if="status"
-    :type="status"
+  <Alert
+    class="border border-border bg-card/60"
+    :class="{
+      'border-emerald-500/30 bg-emerald-500/5': status === 'success',
+      'border-amber-500/30 bg-amber-500/5': status === 'warning',
+    }"
   >
-    <template #header>
-      EVENT-FETCHER 状态
-      <NTooltip>
-        <template #trigger>
-          <NIcon :component="Info24Filled" />
-        </template>
-        这是一个可以持续监听直播间内的 Superchat 和上舰事件并上传到本站进行记录的 .Net 程序
-        <br />
-        事件上传到本站后允许按照自定义范围进行查询, 并导出为 CSV 之类的表格
-        <br />
-        <NButton
-          type="info"
-          size="small"
-          tag="a"
-          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-          target="_blank"
-        >
-          关于 EVENT-FETCHER
-        </NButton>
-      </NTooltip>
-    </template>
-    <template v-if="status !== 'info' && !accountInfo?.isServerFetcherOnline">
-      <NTooltip>
-        <template #trigger>
-          <NTag size="small">
-            <NIcon :component="FlashCheckmark16Filled" />
+    <div class="flex items-center justify-between gap-2 flex-wrap">
+      <div class="flex items-center gap-2">
+        <AlertTitle class="mb-0 text-xs font-semibold tracking-wide uppercase flex items-center gap-1.5">
+          EVENT-FETCHER 状态
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <button
+                  type="button"
+                  class="inline-flex text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <component
+                    :is="Info24Filled"
+                    class="h-3.5 w-3.5"
+                  />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent class="max-w-xs text-xs leading-relaxed space-y-1.5 p-3">
+                <p>持续监听直播间内的 Superchat 和上舰事件并上传到本站记录。</p>
+                <p>支持按自定义范围查询并导出表格。</p>
+                <a
+                  href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+                  target="_blank"
+                  class="text-primary underline font-medium inline-block mt-1"
+                >
+                  关于 EVENT-FETCHER &rarr;
+                </a>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </AlertTitle>
+
+        <template v-if="status !== 'info' && !accountInfo?.isServerFetcherOnline">
+          <Badge
+            variant="outline"
+            class="text-[11px] gap-1 py-0 h-5"
+          >
+            <component
+              :is="FlashCheckmark16Filled"
+              class="h-3 w-3"
+            />
             {{ eventFetcherVersionName }}
-          </NTag>
+          </Badge>
+          <Separator
+            orientation="vertical"
+            class="h-3.5"
+          />
         </template>
-        你所使用的版本
-      </NTooltip>
-      <NDivider vertical />
-    </template>
-    <NTag :type="status">
-      <template v-if="state?.online === true && (state?.status === null || state?.status === undefined)">
-        此版本已过期, 请更新
-        <NTooltip trigger="click">
-          <template #trigger>
-            <NButton
-              type="warning"
-              size="tiny"
-            >
-              关于
-            </NButton>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <Badge
+          v-if="status === 'success'"
+          variant="success"
+          class="text-xs"
+        >
+          {{ accountInfo?.isServerFetcherOnline ? '正在由本站提供监听服务' : '运行中' }} | 今日已接收
+          <span class="font-bold ml-1">{{ state?.todayReceive ?? 0 }}</span> 条
+        </Badge>
+
+        <Badge
+          v-else-if="status === 'warning'"
+          variant="warning"
+          class="text-xs"
+        >
+          <template v-if="state?.status">
+            异常: {{ Object.values(state.status).join('; ') }}
           </template>
-          Node.js 版已不再更新, 如果是 Docker 的话请切换至 ghcr.io/megghy/vtsurueventfetcher.net, 其他环境请下载
-          https://github.com/Megghy/VtsuruEventFetcher.Net/releases/latest
-        </NTooltip>
-      </template>
-      <template v-else>
-        <template v-if="status === 'success'">
-          <NText>
-            {{ accountInfo?.isServerFetcherOnline ? '正在由本站提供监听服务' : '运行中' }}
-          </NText>
-          | 今日已接收
-          <NText strong>
-            {{ state.todayReceive }}
-          </NText>
-          条
+          <template v-else>
+            此版本已过期, 请更新
+          </template>
+        </Badge>
+
+        <Badge
+          v-else
+          variant="secondary"
+          class="text-xs"
+        >
+          未连接
+        </Badge>
+
+        <template v-if="!state?.online">
+          <Separator
+            orientation="vertical"
+            class="h-3.5"
+          />
+          <Button
+            as="a"
+            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+            target="_blank"
+            variant="outline"
+            size="xs"
+          >
+            关于
+          </Button>
         </template>
-        <template v-else-if="status === 'warning'">
-          <template v-if="state.status"> 异常: {{ Object.values(state.status).join('; ') }} </template>
-        </template>
-        <template v-else-if="status === 'info'"> 未连接 </template>
-      </template>
-    </NTag>
-    <template v-if="!state.online">
-      <NDivider vertical />
-      <NButton
-        type="info"
-        size="tiny"
-        tag="a"
-        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-        target="_blank"
-      >
-        关于 EVENT-FETCHER
-      </NButton>
-    </template>
-  </NAlert>
+      </div>
+    </div>
+  </Alert>
 </template>

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { Box24Regular, Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
-import { NButton, NCard, NDivider, NIcon, NTag, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { AccountInfo, DanmakuModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
+import { Button } from '@/shared/ui/button'
+import { Card } from '@/shared/ui/card'
+import { Tag } from '@/shared/ui/tag'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const {
   danmaku,
@@ -49,159 +52,133 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
 </script>
 
 <template>
-  <NCard
+  <Card
     v-if="danmaku.type === EventDataTypes.SC"
     :style="`margin: 4px 0; max-width: 540px; background-color: ${GetSCColor(danmaku.price ?? 0)};`"
-    content-style="border-radius: var(--vtsuru-radius); padding: 6px 10px; min-height: 40px; display: flex; align-items: center;"
-    header-style="padding: 6px 10px; background: rgba(255, 255, 255, 0.15); font-size: 13px;"
-    size="small"
-    hoverable
+    class="rounded-md border-0 text-white overflow-hidden shadow-sm"
   >
-    <template #header>
-      <div class="sc-header-row">
-        <NTooltip v-if="danmaku.uId > 0 && showAvatar">
-          <template #trigger>
+    <div class="px-2.5 py-1.5 bg-white/15 text-xs flex items-center gap-2">
+      <TooltipProvider v-if="danmaku.uId > 0 && showAvatar">
+        <Tooltip>
+          <TooltipTrigger as-child>
             <img
               :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=24`"
               alt="头像"
               referrerpolicy="no-referrer"
-              class="sc-avatar"
+              class="w-5 h-5 rounded-full object-cover shrink-0 cursor-pointer"
               loading="lazy"
             />
-          </template>
-          <img
-            :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`"
-            alt="头像"
-            referrerpolicy="no-referrer"
-            loading="lazy"
-          />
-        </NTooltip>
+          </TooltipTrigger>
+          <TooltipContent>
+            <img
+              :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`"
+              alt="头像"
+              referrerpolicy="no-referrer"
+              class="max-w-[120px] max-h-[120px] rounded"
+              loading="lazy"
+            />
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
-        <NTooltip>
-          <template #trigger>
-            <span class="sc-time">
-              {{ format(danmaku.time, 'HH:mm:ss') }}
-            </span>
-          </template>
-          {{ format(danmaku.time, 'yyyy-MM-dd HH:mm:ss') }}
-        </NTooltip>
+      <span class="text-[11px] opacity-80 font-mono">
+        {{ format(danmaku.time, 'HH:mm:ss') }}
+      </span>
 
-        <NButton
-          v-if="showName"
-          text
-          type="primary"
-          @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
-        >
-          <NTag
-            v-if="danmaku.uId === accountInfo?.biliId"
-            size="small"
-            type="warning"
-          >
-            {{ danmaku.uName }}
-          </NTag>
-          <span
-            v-else
-            class="sc-username"
-          >
-            {{ danmaku.uName }}
-          </span>
-        </NButton>
+      <button
+        v-if="showName"
+        type="button"
+        class="font-medium hover:underline text-xs cursor-pointer truncate max-w-[160px]"
+        @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
+      >
+        <span v-if="danmaku.uId === accountInfo?.biliId" class="bg-amber-500/80 px-1 py-0.5 rounded text-[10px]">
+          {{ danmaku.uName }}
+        </span>
+        <span v-else>{{ danmaku.uName }}</span>
+      </button>
 
-        <NTag
-          size="small"
-          class="sc-price-tag"
-          :bordered="false"
-        >
-          ¥{{ danmaku.price }}
-        </NTag>
-      </div>
-    </template>
-    <span class="sc-msg-text">
+      <span class="ml-auto bg-black/25 px-1.5 py-0.5 rounded text-[11px] font-bold">
+        ¥{{ danmaku.price }}
+      </span>
+    </div>
+    <div class="px-2.5 py-2 text-xs leading-relaxed min-h-[36px] flex items-center">
       {{ danmaku.msg }}
-    </span>
-  </NCard>
+    </div>
+  </Card>
 
   <div
     v-else
     class="danmaku-inline-row"
   >
     <!-- 1. 头像 -->
-    <NTooltip v-if="danmaku.uId > 0 && showAvatar">
-      <template #trigger>
-        <img
-          :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=22`"
-          alt="头像"
-          referrerpolicy="no-referrer"
-          class="danmaku-avatar"
-        />
-      </template>
-      <img
-        :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`"
-        alt="头像"
-        referrerpolicy="no-referrer"
-      />
-    </NTooltip>
+    <TooltipProvider v-if="danmaku.uId > 0 && showAvatar">
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <img
+            :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=22`"
+            alt="头像"
+            referrerpolicy="no-referrer"
+            class="danmaku-avatar"
+          />
+        </TooltipTrigger>
+        <TooltipContent>
+          <img
+            :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`"
+            alt="头像"
+            referrerpolicy="no-referrer"
+            class="max-w-[120px] max-h-[120px] rounded"
+          />
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
 
     <!-- 2. 时间戳 -->
-    <NTooltip>
-      <template #trigger>
-        <span class="danmaku-time-text">
-          {{ format(danmaku.time, 'HH:mm:ss') }}
-        </span>
-      </template>
-      {{ format(danmaku.time, 'yyyy-MM-dd HH:mm:ss') }}
-    </NTooltip>
+    <span class="danmaku-time-text">
+      {{ format(danmaku.time, 'HH:mm:ss') }}
+    </span>
 
     <!-- 3. 用户名 -->
     <template v-if="showName && danmaku.uId !== -1">
-      <NButton
-        class="danmaku-name-btn"
-        text
-        type="info"
+      <button
+        type="button"
+        class="danmaku-name-btn text-xs hover:underline cursor-pointer flex items-center gap-1"
         @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
       >
-        <NTooltip v-if="danmaku.uId === accountInfo?.biliId">
-          <template #trigger>
-            <NTag
-              size="small"
-              type="warning"
-              style="cursor: pointer"
-            >
-              {{ danmaku.uName && danmaku.uName !== '' ? danmaku.uName : '主播' }}
-            </NTag>
-          </template>
-          主播
-        </NTooltip>
-        <template v-else>
-          <span class="danmaku-uname-text">
-            {{ danmaku.uName }}
-            <span class="danmaku-colon">:</span>
-          </span>
-        </template>
-      </NButton>
+        <span v-if="danmaku.uId === accountInfo?.biliId" class="bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1 py-0.5 rounded text-[10px] font-medium">
+          {{ danmaku.uName && danmaku.uName !== '' ? danmaku.uName : '主播' }}
+        </span>
+        <span v-else class="danmaku-uname-text font-medium text-foreground">
+          {{ danmaku.uName }}<span class="danmaku-colon text-muted-foreground">:</span>
+        </span>
+      </button>
     </template>
 
     <!-- 4. 事件内容（弹幕 / 礼物 / 舰长 / 进场） -->
     <!-- 弹幕消息 -->
     <span
       v-if="danmaku.type === EventDataTypes.Message"
-      class="danmaku-body"
+      class="danmaku-body text-xs"
     >
       <template v-if="danmaku.isEmoji">
-        <NTooltip>
-          <template #trigger>
-            <img
-              :src="`https://${danmaku.msg}@22h`"
-              referrerpolicy="no-referrer"
-              class="danmaku-emoji"
-              :style="`max-height: ${height}px;`"
-            />
-          </template>
-          <img
-            :src="`https://${danmaku.msg}`"
-            referrerpolicy="no-referrer"
-          />
-        </NTooltip>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <img
+                :src="`https://${danmaku.msg}@22h`"
+                referrerpolicy="no-referrer"
+                class="danmaku-emoji inline-block"
+                :style="`max-height: ${height}px;`"
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <img
+                :src="`https://${danmaku.msg}`"
+                referrerpolicy="no-referrer"
+                class="max-w-[80px] max-h-[80px]"
+              />
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </template>
       <template v-else>
         {{ danmaku.msg }}
@@ -211,86 +188,70 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
     <!-- 礼物 -->
     <span
       v-else-if="danmaku.type === EventDataTypes.Gift"
-      class="gift-line"
+      class="gift-line text-xs flex items-center gap-1.5"
       :style="`color: ${(danmaku.price ?? 0) > 0 ? 'var(--vtsuru-error, #f43f5e)' : 'var(--vtsuru-fg-muted)'}`"
     >
-      <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
-        <template #trigger>
-          <span class="mystery-box-badge">
-            <NIcon
-              :component="Box24Regular"
-              size="12"
-            />
-            <span v-if="giftDisplay.mysteryBoxPriceText">{{ giftDisplay.mysteryBoxPriceText }}</span>
-          </span>
-        </template>
-        <div class="mystery-box-tooltip-card">
-          <div class="mystery-box-tooltip-card__title">盲盒礼物</div>
-          <div
-            v-if="giftDisplay.mysteryBoxName"
-            class="mystery-box-tooltip-card__row"
-          >
-            <span class="mystery-box-tooltip-card__label">来源</span>
-            <span class="mystery-box-tooltip-card__value">{{ giftDisplay.mysteryBoxName }}</span>
-          </div>
-          <div
-            v-if="giftDisplay.mysteryBoxPriceText"
-            class="mystery-box-tooltip-card__row"
-          >
-            <span class="mystery-box-tooltip-card__label">盲盒价</span>
-            <span class="mystery-box-tooltip-card__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
-          </div>
-          <div
-            v-if="giftDisplay.giftPriceText"
-            class="mystery-box-tooltip-card__row"
-          >
-            <span class="mystery-box-tooltip-card__label">开出价</span>
-            <span class="mystery-box-tooltip-card__value">￥{{ giftDisplay.giftPriceText }}</span>
-          </div>
-        </div>
-      </NTooltip>
+      <TooltipProvider v-if="giftDisplay.hasMysteryBoxGift">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span class="mystery-box-badge inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1 rounded text-[11px]">
+              <Box24Regular class="size-3" />
+              <span v-if="giftDisplay.mysteryBoxPriceText">{{ giftDisplay.mysteryBoxPriceText }}</span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs p-2.5 space-y-1">
+            <div class="font-semibold text-foreground">盲盒礼物</div>
+            <div v-if="giftDisplay.mysteryBoxName" class="flex justify-between gap-4 text-muted-foreground">
+              <span>来源</span>
+              <span class="text-foreground">{{ giftDisplay.mysteryBoxName }}</span>
+            </div>
+            <div v-if="giftDisplay.mysteryBoxPriceText" class="flex justify-between gap-4 text-muted-foreground">
+              <span>盲盒价</span>
+              <span class="text-foreground">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+            </div>
+            <div v-if="giftDisplay.giftPriceText" class="flex justify-between gap-4 text-muted-foreground">
+              <span>开出价</span>
+              <span class="text-foreground">￥{{ giftDisplay.giftPriceText }}</span>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <span>{{ giftDisplay.sourceLabelText }}</span>
-      <NDivider vertical />
-      <NTag
+      <div class="h-3 w-px bg-border inline-block" />
+      <span
         v-if="giftDisplay.giftPriceText"
-        size="tiny"
-        type="error"
-        :bordered="false"
+        class="inline-flex items-center gap-0.5 text-rose-500 font-medium text-[11px]"
       >
-        <NIcon :component="Money24Regular" /> {{ giftDisplay.giftPriceText }}
-      </NTag>
-      <NDivider vertical />
-      {{ danmaku.msg }}
-      <NTag
-        v-if="danmaku.num"
-        size="tiny"
-        :bordered="false"
-      >
-        <span style="color: var(--vtsuru-fg-muted)"> {{ danmaku.num }} 个 </span>
-      </NTag>
+        <Money24Regular class="size-3" /> {{ giftDisplay.giftPriceText }}
+      </span>
+      <div class="h-3 w-px bg-border inline-block" />
+      <span>{{ danmaku.msg }}</span>
+      <span v-if="danmaku.num" class="text-muted-foreground text-[11px]">
+        {{ danmaku.num }} 个
+      </span>
     </span>
 
     <!-- 上舰 -->
     <span
       v-else-if="danmaku.type === EventDataTypes.Guard"
-      class="guard-line"
+      class="guard-line text-xs flex items-center gap-1.5"
     >
-      上舰
-      <NTag
-        size="small"
+      <span>上舰</span>
+      <span
+        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-semibold text-[11px]"
         :style="`color: ${GetGuardColor(danmaku.price ?? 0)}`"
       >
-        <NIcon :component="VehicleShip24Filled" /> {{ danmaku.price }}
-      </NTag>
-      <NDivider vertical />
-      {{ danmaku.msg }}
+        <VehicleShip24Filled class="size-3.5" /> {{ danmaku.price }}
+      </span>
+      <div class="h-3 w-px bg-border inline-block" />
+      <span>{{ danmaku.msg }}</span>
     </span>
 
     <!-- 进场 -->
     <span
       v-else-if="danmaku.type === EventDataTypes.Enter"
-      class="enter-line"
+      class="enter-line text-xs text-muted-foreground"
     >
       进入直播间
     </span>
@@ -318,131 +279,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
 
 .danmaku-time-text {
   color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.danmaku-name-btn {
-  padding: 0;
-  font-size: 13px;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-.danmaku-uname-text {
-  color: var(--vtsuru-fg);
-}
-
-.danmaku-colon {
-  color: var(--vtsuru-fg-muted);
-  margin-left: 1px;
-}
-
-.danmaku-body {
-  color: var(--vtsuru-fg);
-  word-break: break-all;
-}
-
-.danmaku-emoji {
-  display: inline-flex;
-  vertical-align: middle;
-}
-
-.sc-header-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.sc-avatar {
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-}
-
-.sc-time {
-  color: #fff;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.sc-username {
-  color: #fff;
-  font-weight: 600;
-}
-
-.sc-price-tag {
-  display: flex;
-  margin-left: auto;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.2);
-  font-weight: 700;
-}
-
-.sc-msg-text {
-  color: #fff;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.gift-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.guard-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--vtsuru-info, #0284c7);
-}
-
-.enter-line {
-  color: var(--vtsuru-success, #10b981);
-  font-size: 12px;
-}
-
-.mystery-box-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(192, 120, 16, 0.14);
-  color: #8a5a00;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: help;
-}
-
-.mystery-box-tooltip-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 160px;
-}
-
-.mystery-box-tooltip-card__title {
-  font-weight: 700;
-}
-
-.mystery-box-tooltip-card__row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.mystery-box-tooltip-card__label {
-  color: var(--vtsuru-fg-muted);
-}
-
-.mystery-box-tooltip-card__value {
-  text-align: right;
-  word-break: break-all;
+  font-size: 11px;
+  font-family: monospace;
 }
 </style>

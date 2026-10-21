@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NIcon } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -89,9 +88,7 @@ const availableFeatures = computed(() =>
         :to="{ name: feature.routeName, params: { id: props.userInfo?.name } }"
         class="feature-link"
       >
-        <NIcon size="22">
-          <component :is="feature.icon" />
-        </NIcon>
+        <component :is="feature.icon" class="size-5.5 shrink-0" />
         <span>{{ feature.label }}</span>
       </RouterLink>
     </nav>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NModal } from 'naive-ui'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
 import { useDashboardUi } from '../store/ui'
 
@@ -14,34 +14,34 @@ const GROUPS = [
 </script>
 
 <template>
-  <NModal
-    v-model:show="ui.shortcutsOpen"
-    preset="card"
-    title="快捷键"
-    style="width: min(420px, 94vw)"
-  >
-    <div class="shortcuts">
-      <template
-        v-for="group in GROUPS"
-        :key="group.title"
-      >
-        <div class="shortcuts__title">
-          {{ group.title }}
-        </div>
-        <div
-          v-for="[key, desc] in group.items"
-          :key="key"
-          class="shortcuts__row"
+  <Dialog v-model:open="ui.shortcutsOpen">
+    <DialogContent class="sm:max-w-[420px]">
+      <DialogHeader>
+        <DialogTitle>快捷键</DialogTitle>
+      </DialogHeader>
+      <div class="shortcuts">
+        <template
+          v-for="group in GROUPS"
+          :key="group.title"
         >
-          <kbd>{{ key }}</kbd>
-          <span>{{ desc }}</span>
+          <div class="shortcuts__title">
+            {{ group.title }}
+          </div>
+          <div
+            v-for="[key, desc] in group.items"
+            :key="key"
+            class="shortcuts__row"
+          >
+            <kbd>{{ key }}</kbd>
+            <span>{{ desc }}</span>
+          </div>
+        </template>
+        <div class="shortcuts__hint">
+          输入框聚焦时快捷键不生效
         </div>
-      </template>
-      <div class="shortcuts__hint">
-        输入框聚焦时快捷键不生效
       </div>
-    </div>
-  </NModal>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <style scoped>

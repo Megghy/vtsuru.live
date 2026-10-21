@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { addSeconds } from 'date-fns'
-import { NButton, NModal, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { DownloadConfig, useAccount } from '@/api/account'
@@ -15,6 +14,10 @@ import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
 import { SongListTemplateMap } from '@/shared/config/templates'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Spin } from '@/shared/ui/spin'
+import { useMessage } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import { canRequestSong } from './songListTemplate/utils/songRequestUtils'
@@ -300,9 +303,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="song-list-surface">
+  <div class="song-list-surface relative">
     <!-- 加载中显示加载动画 -->
-    <NSpin :show="isLoading">
+    <Spin :show="isLoading">
       <component
         :is="selectedTemplate?.component"
         ref="dynamicConfigRef"
@@ -315,32 +318,32 @@ onMounted(async () => {
         v-bind="$attrs"
         @request-song="requestSong"
       />
-    </NSpin>
+    </Spin>
 
     <!-- 主播自定义按钮 -->
-    <NButton
+    <Button
       v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id"
-      type="info"
-      size="small"
-      style="position: absolute; right: 32px; top: 20px; z-index: 1000"
+      variant="outline"
+      size="sm"
+      class="absolute right-8 top-5 z-[1000]"
       @click="showSettingModal = true"
     >
       自定义
-    </NButton>
+    </Button>
 
     <!-- 设置弹窗 -->
-    <NModal
-      v-model:show="showSettingModal"
-      style="max-width: 90vw; width: 800px"
-      preset="card"
-      title="设置"
-    >
-      <DynamicForm
-        :key="selectedTemplate?.settingName"
-        :name="selectedTemplate?.settingName"
-        :config-data="currentConfig"
-        :config="selectedTemplateConfig"
-      />
-    </NModal>
+    <Dialog v-model:open="showSettingModal">
+      <DialogContent class="max-w-[90vw] sm:max-w-[800px] max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>设置</DialogTitle>
+        </DialogHeader>
+        <DynamicForm
+          :key="selectedTemplate?.settingName"
+          :name="selectedTemplate?.settingName"
+          :config-data="currentConfig"
+          :config="selectedTemplateConfig"
+        />
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

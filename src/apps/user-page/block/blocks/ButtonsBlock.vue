@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -84,19 +83,6 @@ const gap = computed(() => {
   return v
 })
 
-const buttonType = computed(() => {
-  const v = propsObj.value.type
-  if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default')
-    return v
-  return 'default'
-})
-
-const variant = computed<'solid' | 'secondary' | 'tertiary' | 'quaternary' | 'ghost'>(() => {
-  const v = propsObj.value.variant
-  if (v === 'secondary' || v === 'tertiary' || v === 'quaternary' || v === 'ghost' || v === 'solid') return v
-  return 'solid'
-})
-
 const align = computed<'start' | 'center' | 'end'>(() => {
   if (!isBlockPropertyAvailable('buttons', propsObj.value, 'align')) return 'start'
   const v = propsObj.value.align
@@ -127,12 +113,24 @@ const borderTitleAlign = computed<'left' | 'center' | 'right'>(() => {
 const appearance = computed(() => normalizeButtonAppearance(propsObj.value))
 const btnClass = computed(() => buttonAppearanceClass(appearance.value, fullWidth.value))
 const btnStyle = computed(() => buttonAppearanceStyle(appearance.value))
-const naiveSize = computed(() => (appearance.value.size === 'sm' ? 'small' : appearance.value.size === 'lg' ? 'large' : 'medium'))
 
-const flexJustify = computed<'start' | 'center' | 'end'>(() =>
-  direction.value === 'horizontal' ? align.value : 'start',
-)
-const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value === 'vertical' ? align.value : 'start'))
+const justifyClass = computed(() => {
+  if (direction.value === 'horizontal') {
+    if (align.value === 'center') return 'justify-center'
+    if (align.value === 'end') return 'justify-end'
+    return 'justify-start'
+  }
+  return 'justify-start'
+})
+
+const itemsClass = computed(() => {
+  if (direction.value === 'vertical') {
+    if (align.value === 'center') return 'items-center'
+    if (align.value === 'end') return 'items-end'
+    return 'items-start'
+  }
+  return 'items-start'
+})
 </script>
 
 <template>
@@ -142,51 +140,42 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
     :border-title="framed ? borderTitle : ''"
     :border-title-align="borderTitleAlign"
   >
-    <NFlex
-      :vertical="direction === 'vertical'"
-      :wrap="direction === 'horizontal'"
-      :justify="flexJustify"
-      :align="flexAlign"
-      class="buttons-container"
+    <div
+      class="buttons-container flex"
+      :class="[
+        direction === 'vertical' ? 'flex-col' : 'flex-row flex-wrap',
+        justifyClass,
+        itemsClass,
+      ]"
       :style="{ gap: `${gap}px` }"
     >
       <template
         v-for="(it, idx) in normalizedItems"
         :key="idx"
       >
-        <NButton
+        <a
           v-if="it.kind === 'external'"
-          tag="a"
-          :size="naiveSize"
-          :type="buttonType as any"
-          :secondary="variant === 'secondary'"
-          :tertiary="variant === 'tertiary'"
-          :quaternary="variant === 'quaternary'"
-          :ghost="variant === 'ghost'"
           target="_blank"
           rel="noopener noreferrer"
           :href="it.href"
+          class="inline-flex items-center justify-center font-medium cursor-pointer"
           :class="btnClass"
           :style="btnStyle"
         >
           {{ it.label }}
-        </NButton>
-        <NButton
+        </a>
+        <button
           v-else
-          :size="naiveSize"
-          :type="buttonType as any"
-          :secondary="variant === 'secondary'"
-          :tertiary="variant === 'tertiary'"
-          :quaternary="variant === 'quaternary'"
-          :ghost="variant === 'ghost'"
+          type="button"
+          class="inline-flex items-center justify-center font-medium cursor-pointer"
           :class="btnClass"
           :style="btnStyle"
           @click="it.kind === 'back' ? router.back() : router.push(it.to || route.fullPath)"
         >
           {{ it.label }}
-        </NButton>
+        </button>
       </template>
-    </NFlex>
+    </div>
   </BlockCard>
 </template>
 

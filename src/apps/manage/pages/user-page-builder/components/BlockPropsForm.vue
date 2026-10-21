@@ -1,22 +1,26 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NCollapse,
-  NCollapseItem,
-  NDatePicker,
-  NFlex,
-  NFormItem,
-  NInput,
-  NSelect,
-  NSwitch,
-  NTag,
-  NText,
-} from 'naive-ui'
 import type { Component } from 'vue'
 import { computed, ref, watch } from 'vue'
 
 import { isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabilities'
 import type { BlockNode, BlockType, BlockVisibility } from '@/apps/user-page/block/schema'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/shared/ui/accordion'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
 
 import BasicContentPropsEditor from './block-props-editors/BasicContentPropsEditor.vue'
 import ButtonsPropsEditor from './block-props-editors/ButtonsPropsEditor.vue'
@@ -122,18 +126,6 @@ const blockFramedModel = chromeModel('framed')
 const blockBackgroundedModel = chromeModel('backgrounded')
 const liveStateModel = visibilityModel('liveState')
 const deviceModel = visibilityModel('device')
-const dateRangeModel = computed<[number, number] | null>({
-  get: () =>
-    props.block.visibility?.startsAt !== undefined && props.block.visibility.endsAt !== undefined
-      ? ([props.block.visibility.startsAt * 1000, props.block.visibility.endsAt * 1000] as [number, number])
-      : null,
-  set(value) {
-    updateVisibility({
-      startsAt: value ? Math.floor(value[0] / 1000) : undefined,
-      endsAt: value ? Math.floor(value[1] / 1000) : undefined,
-    })
-  },
-})
 
 const visibilityTags = computed(() => {
   const tags: string[] = []
@@ -141,12 +133,11 @@ const visibilityTags = computed(() => {
   else if (liveStateModel.value === 'offline') tags.push('仅未开播')
   if (deviceModel.value === 'desktop') tags.push('仅桌面端')
   else if (deviceModel.value === 'mobile') tags.push('仅移动端')
-  if (dateRangeModel.value) tags.push('限时')
   return tags
 })
 
 const selectedEditor = computed(() => editorByType[props.block.type])
-const expandedCommonSections = ref<Array<string | number>>([])
+const expandedCommonSections = ref<string[]>([])
 const validationIssues = computed(() =>
   editor.liveValidationIssues.value.filter(
     (issue) => issue.scope === 'block' && issue.pageKey === editor.currentKey.value && issue.blockId === props.block.id,
@@ -187,7 +178,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
 </script>
 
 <template>
-  <div>
+  <div class="flex flex-col gap-3">
     <ImageGalleryPropsEditor
       v-if="props.block.type === 'imageGallery'"
       :block="props.block"
@@ -199,136 +190,142 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
       :key="props.block.id"
       :block="props.block"
     />
-    <NText
+    <div
       v-else
-      depth="3"
+      class="text-xs text-muted-foreground"
     >
       未知区块类型：{{ props.block.type }}
-    </NText>
+    </div>
 
-    <NCollapse
-      v-model:expanded-names="expandedCommonSections"
-      class="block-common-sections"
+    <Accordion
+      v-model="expandedCommonSections"
+      type="multiple"
+      class="block-common-sections border rounded-lg bg-card mt-2 p-2"
     >
-      <NCollapseItem
-        title="卡片外观与命名"
-        name="defaults"
+      <AccordionItem
+        value="defaults"
+        class="border-b-0"
       >
-        <PropsGrid :row-gap="0">
-          <NFormItem
-            label="区块备注名称"
-            style="justify-self: start; width: min(260px, 100%)"
-            data-validation-field="name"
-          >
-            <NInput
-              v-model:value="blockNameModel"
-              maxlength="50"
-              show-count
-              placeholder="例如：直播信息 · 紧凑"
-            />
-          </NFormItem>
-          <NFormItem
-            v-if="propertyAvailable('framed')"
-            label="显示边框"
-            style="justify-self: start; width: min(180px, 100%)"
-          >
-            <NSwitch
-              v-model:value="blockFramedModel"
-              size="small"
-            />
-          </NFormItem>
-          <NFormItem
-            v-if="propertyAvailable('backgrounded')"
-            label="显示背景"
-            style="justify-self: start; width: min(180px, 100%)"
-          >
-            <NSwitch
-              v-model:value="blockBackgroundedModel"
-              size="small"
-            />
-          </NFormItem>
-        </PropsGrid>
-      </NCollapseItem>
-
-      <NCollapseItem
-        title="显示条件"
-        name="visibility"
-      >
-        <template #header-extra>
-          <NFlex
-            :size="4"
-            align="center"
-          >
-            <NTag
-              v-for="tag in visibilityTags"
-              :key="tag"
-              size="tiny"
-              type="warning"
-              :bordered="false"
+        <AccordionTrigger class="text-xs font-semibold py-2">
+          卡片外观与命名
+        </AccordionTrigger>
+        <AccordionContent class="pt-2 pb-1">
+          <PropsGrid :row-gap="0">
+            <div
+              class="flex flex-col gap-1 w-full"
+              data-validation-field="name"
             >
-              {{ tag }}
-            </NTag>
-          </NFlex>
-        </template>
-        <PropsGrid :row-gap="0">
-          <NFormItem
-            label="直播状态"
-            data-validation-field="visibility.liveState"
-          >
-            <NSelect
-              v-model:value="liveStateModel"
-              :options="[
-                { label: '始终显示', value: 'always' },
-                { label: '仅直播中', value: 'live' },
-                { label: '仅未开播', value: 'offline' },
-              ]"
-            />
-          </NFormItem>
-          <NFormItem
-            label="设备"
-            data-validation-field="visibility.device"
-          >
-            <NSelect
-              v-model:value="deviceModel"
-              :options="[
-                { label: '所有设备', value: 'always' },
-                { label: '仅桌面端', value: 'desktop' },
-                { label: '仅移动端', value: 'mobile' },
-              ]"
-            />
-          </NFormItem>
-          <NFormItem
-            class="span-full"
-            label="显示时间范围"
-            data-validation-field="visibility.startsAt"
-          >
-            <NDatePicker
-              v-model:value="dateRangeModel"
-              type="datetimerange"
-              clearable
-              style="width: 100%"
-            />
-          </NFormItem>
-        </PropsGrid>
-      </NCollapseItem>
-    </NCollapse>
+              <label class="text-xs text-muted-foreground">区块备注名称</label>
+              <Input
+                v-model="blockNameModel"
+                maxlength="50"
+                placeholder="例如：直播信息 · 紧凑"
+                class="h-8 text-xs"
+              />
+            </div>
+
+            <div
+              v-if="propertyAvailable('framed')"
+              class="flex items-center justify-between pt-4"
+            >
+              <label class="text-xs text-muted-foreground">显示边框</label>
+              <Switch
+                :checked="blockFramedModel"
+                @update:checked="blockFramedModel = $event"
+              />
+            </div>
+
+            <div
+              v-if="propertyAvailable('backgrounded')"
+              class="flex items-center justify-between pt-4"
+            >
+              <label class="text-xs text-muted-foreground">显示背景</label>
+              <Switch
+                :checked="blockBackgroundedModel"
+                @update:checked="blockBackgroundedModel = $event"
+              />
+            </div>
+          </PropsGrid>
+        </AccordionContent>
+      </AccordionItem>
+
+      <AccordionItem
+        value="visibility"
+        class="border-b-0"
+      >
+        <AccordionTrigger class="text-xs font-semibold py-2">
+          <div class="flex items-center justify-between w-full pr-2">
+            <span>显示条件</span>
+            <div class="flex items-center gap-1">
+              <Badge
+                v-for="tag in visibilityTags"
+                :key="tag"
+                variant="outline"
+                class="text-[10px] h-4.5 px-1.5"
+              >
+                {{ tag }}
+              </Badge>
+            </div>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent class="pt-2 pb-1">
+          <PropsGrid :row-gap="0">
+            <div
+              class="flex flex-col gap-1"
+              data-validation-field="visibility.liveState"
+            >
+              <label class="text-xs text-muted-foreground">直播状态</label>
+              <Select v-model="liveStateModel">
+                <SelectTrigger class="h-8 text-xs">
+                  <SelectValue placeholder="直播状态" />
+                </SelectTrigger>
+                <SelectContent class="text-xs">
+                  <SelectItem value="always">始终显示</SelectItem>
+                  <SelectItem value="live">仅直播中</SelectItem>
+                  <SelectItem value="offline">仅未开播</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div
+              class="flex flex-col gap-1"
+              data-validation-field="visibility.device"
+            >
+              <label class="text-xs text-muted-foreground">设备</label>
+              <Select v-model="deviceModel">
+                <SelectTrigger class="h-8 text-xs">
+                  <SelectValue placeholder="设备" />
+                </SelectTrigger>
+                <SelectContent class="text-xs">
+                  <SelectItem value="always">所有设备</SelectItem>
+                  <SelectItem value="desktop">仅桌面端</SelectItem>
+                  <SelectItem value="mobile">仅移动端</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </PropsGrid>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
 
     <div
       v-if="validationIssues.length"
-      class="validation-issues"
+      class="validation-issues flex flex-col gap-1.5 mt-2"
       role="status"
       aria-live="polite"
     >
-      <NAlert
+      <Alert
         v-for="(issue, index) in validationIssues"
         :key="`${issue.fieldPath}:${index}`"
-        type="error"
-        :show-icon="true"
+        variant="destructive"
+        class="py-2 text-xs"
         :data-validation-field="issue.fieldPath || undefined"
       >
-        <strong v-if="issue.fieldPath">{{ issue.fieldPath }}</strong>
-        {{ issue.message }}
-      </NAlert>
+        <AlertDescription>
+          <strong v-if="issue.fieldPath">{{ issue.fieldPath }}: </strong>
+          {{ issue.message }}
+        </AlertDescription>
+      </Alert>
     </div>
   </div>
 </template>
@@ -336,29 +333,6 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
 <style scoped>
 .block-common-sections {
   width: auto;
-  margin-top: 8px;
-  padding-inline: 10px;
   box-sizing: border-box;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-muted);
-}
-
-.block-common-sections :deep(.n-collapse-item__header) {
-  min-height: 20px;
-  padding: 10px 0 !important;
-  line-height: 20px;
-}
-
-.block-common-sections :deep(.n-collapse-item__header-main),
-.block-common-sections :deep(.n-collapse-item-arrow) {
-  align-items: center;
-  min-height: 20px;
-}
-
-.validation-issues {
-  display: grid;
-  gap: 6px;
-  margin-top: 8px;
 }
 </style>

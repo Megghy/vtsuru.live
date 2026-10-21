@@ -1,4 +1,4 @@
-import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
+
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -86,7 +86,7 @@ export const useForumStore = defineStore('forum', () => {
     ps: number,
     sort: ForumTopicSortTypes,
     section?: number,
-    messageApi?: MessageApiInjection,
+    messageApi?: any,
   ) {
     try {
       isLoading.value = true

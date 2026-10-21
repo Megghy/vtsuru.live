@@ -1,29 +1,46 @@
 <script setup lang="ts">
-import { NEmpty, NScrollbar, NTabPane, NTabs, NText, NTime } from 'naive-ui'
-
 import { useSpeechService } from '@/store/useSpeechService'
+import { Empty } from '@/shared/ui/empty'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { formatTime } from '@/apps/manage/composables/formatters'
 
 const { spokenHistory, rejectedHistory } = useSpeechService()
 </script>
 
 <template>
   <div class="history">
-    <NTabs
-      type="segment"
-      size="small"
+    <Tabs
+      default-value="spoken"
+      class="w-full"
     >
-      <NTabPane
-        name="spoken"
-        :tab="`已播报 (${spokenHistory.length})`"
+      <TabsList class="grid grid-cols-2 w-full h-8">
+        <TabsTrigger
+          value="spoken"
+          class="text-xs"
+        >
+          已播报 ({{ spokenHistory.length }})
+        </TabsTrigger>
+        <TabsTrigger
+          value="rejected"
+          class="text-xs"
+        >
+          已拒绝 ({{ rejectedHistory.length }})
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent
+        value="spoken"
+        class="mt-2"
       >
-        <NEmpty
+        <Empty
           v-if="spokenHistory.length === 0"
           description="暂无记录"
-          size="small"
+          class="py-8"
         />
-        <NScrollbar
+        <ScrollArea
           v-else
-          style="max-height: 260px"
+          class="max-h-[260px] pr-2"
         >
           <div class="items">
             <div
@@ -32,33 +49,27 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
               class="item"
             >
               <span class="uname">{{ item.uname }}</span>
-              <NText
-                depth="3"
-                class="text"
-              >
+              <span class="text text-muted-foreground">
                 {{ item.text }}
-              </NText>
-              <NTime
-                :time="item.time"
-                type="relative"
-                class="time"
-              />
+              </span>
+              <span class="time">{{ formatTime(item.time) }}</span>
             </div>
           </div>
-        </NScrollbar>
-      </NTabPane>
-      <NTabPane
-        name="rejected"
-        :tab="`已拒绝 (${rejectedHistory.length})`"
+        </ScrollArea>
+      </TabsContent>
+
+      <TabsContent
+        value="rejected"
+        class="mt-2"
       >
-        <NEmpty
+        <Empty
           v-if="rejectedHistory.length === 0"
           description="暂无记录"
-          size="small"
+          class="py-8"
         />
-        <NScrollbar
+        <ScrollArea
           v-else
-          style="max-height: 260px"
+          class="max-h-[260px] pr-2"
         >
           <div class="items">
             <div
@@ -67,22 +78,15 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
               class="item"
             >
               <span class="uname">{{ item.uname }}</span>
-              <NText
-                type="error"
-                class="reason"
-              >
+              <span class="reason text-destructive">
                 {{ item.reason }}
-              </NText>
-              <NTime
-                :time="item.time"
-                type="relative"
-                class="time"
-              />
+              </span>
+              <span class="time">{{ formatTime(item.time) }}</span>
             </div>
           </div>
-        </NScrollbar>
-      </NTabPane>
-    </NTabs>
+        </ScrollArea>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>
 

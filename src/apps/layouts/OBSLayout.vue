@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NSpin } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -93,7 +92,9 @@ onUnmounted(() => {
             :open-live-auth="openLiveAuth"
           />
           <template #fallback>
-            <NSpin show />
+            <div class="flex items-center justify-center w-full h-full min-h-[100px]">
+              <div class="size-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+            </div>
           </template>
         </Suspense>
       </KeepAlive>

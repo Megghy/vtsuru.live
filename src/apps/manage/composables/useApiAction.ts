@@ -1,7 +1,7 @@
-import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 import { unwrapOk } from '@/api/query'
+import { useMessage } from '@/shared/utils'
 
 type ApiResponse<T> = { code: number; message?: string; data: T }
 

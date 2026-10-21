@@ -7,9 +7,15 @@ import {
   PeopleCommunity20Regular,
   ThumbLike20Regular,
 } from '@vicons/fluent'
-import { NIcon, NSpin } from 'naive-ui'
 import { nanoid } from 'nanoid'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+} from 'vue'
 
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
@@ -338,10 +344,12 @@ watch(
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="!setting"
-    show
-  />
+    class="flex items-center justify-center w-full h-full"
+  >
+    <div class="size-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+  </div>
 
   <div
     v-else
@@ -366,10 +374,7 @@ watch(
           class="status-pill"
           title="累计观看人次"
         >
-          <NIcon
-            :component="Eye20Regular"
-            class="status-icon"
-          />
+          <Eye20Regular class="status-icon size-4" />
           <span class="status-value">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
         </div>
 
@@ -379,10 +384,7 @@ watch(
           class="status-pill"
           title="本场累计点赞数"
         >
-          <NIcon
-            :component="ThumbLike20Regular"
-            class="status-icon"
-          />
+          <ThumbLike20Regular class="status-icon size-4" />
           <span class="status-value">{{ formatStatCount(liveStats.likeCount) }}</span>
         </div>
 
@@ -392,10 +394,7 @@ watch(
           class="status-pill"
           :title="setting.hideIncomeAmount ? '本场收益（已脱敏隐藏）' : `本场收益：¥${liveStats.totalIncome.toFixed(1)}`"
         >
-          <NIcon
-            :component="Payment20Regular"
-            class="status-icon"
-          />
+          <Payment20Regular class="status-icon size-4" />
           <span class="status-value">¥ {{ setting.hideIncomeAmount ? '***' : formatIncomeDisplay(liveStats.totalIncome) }}</span>
         </div>
 
@@ -405,10 +404,7 @@ watch(
           class="status-pill"
           title="在线观众人数"
         >
-          <NIcon
-            :component="PeopleCommunity20Regular"
-            class="status-icon"
-          />
+          <PeopleCommunity20Regular class="status-icon size-4" />
           <span class="status-value">{{ formatStatCount(liveStats.onlineCount) }} 在线</span>
         </div>
       </div>
@@ -421,9 +417,13 @@ watch(
         :title="setting.interactive ? '鼠标穿透：已开启（点击关闭穿透）' : '鼠标穿透：已关闭（点击开启穿透）'"
         @click="toggleInteractive"
       >
-        <NIcon
-          :component="setting.interactive ? LockClosed20Regular : LockOpen20Regular"
-          class="mini-btn-icon"
+        <LockClosed20Regular
+          v-if="setting.interactive"
+          class="mini-btn-icon size-3.5"
+        />
+        <LockOpen20Regular
+          v-else
+          class="mini-btn-icon size-3.5"
         />
       </button>
     </div>

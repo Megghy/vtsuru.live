@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { DocumentText24Regular } from '@vicons/fluent'
-import { NButton, NIcon } from 'naive-ui'
 import { ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
+import { Button } from '@/shared/ui/button'
 
 import AccountAccessPanel from './settings/AccountAccessPanel.vue'
 import AddressSettingsPanel from './settings/AddressSettingsPanel.vue'
@@ -36,14 +36,14 @@ defineExpose({ reset })
       subtitle="管理你的收件地址、B站登录凭证与账户安全设置。"
     >
       <template #actions>
-        <NButton
-          secondary
-          size="medium"
+        <Button
+          variant="outline"
+          class="flex items-center gap-1.5"
           @click="showAgreement = true"
         >
-          <template #icon><NIcon :component="DocumentText24Regular" /></template>
+          <component :is="DocumentText24Regular" class="size-4" />
           用户协议
-        </NButton>
+        </Button>
       </template>
     </AccountPageHeader>
 

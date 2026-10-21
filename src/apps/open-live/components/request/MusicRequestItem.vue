@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Dismiss16Filled, MusicNote2Play20Filled, PresenceBlocked16Regular } from '@vicons/fluent'
-import { NButton, NCard, NFlex, NIcon, NTag, NText, NTooltip } from 'naive-ui'
-import type { CSSProperties } from 'vue'
 import { computed } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
   music: SongsInfo
@@ -22,130 +23,102 @@ const emit = defineEmits<{
 const platformTag = computed(() => {
   switch (props.music.from) {
     case SongFrom.Netease:
-      return { label: '网易', type: 'error' as const }
+      return { label: '网易', variant: 'destructive' as const }
     case SongFrom.Kugou:
-      return { label: '酷狗', type: 'info' as const }
+      return { label: '酷狗', variant: 'brand' as const }
     default:
       return null
   }
 })
-
-const indexStyle = computed<CSSProperties>(() => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontWeight: 'bold',
-  width: '24px',
-  height: '24px',
-  borderRadius: '50%',
-  color: '#fff',
-  fontSize: '13px',
-  backgroundColor: 'var(--vtsuru-info)',
-  flexShrink: 0,
-}))
 </script>
 
 <template>
-  <NCard
-    embedded
-    size="small"
-    content-style="padding: 8px 12px;"
-  >
-    <NFlex
-      justify="space-between"
-      align="center"
-      :wrap="false"
-    >
-      <NFlex
-        align="center"
-        :size="8"
-        :wrap="false"
-        style="min-width: 0"
-      >
-        <span :style="indexStyle">{{ index }}</span>
-        <NText
-          strong
-          style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-        >
-          {{ music.name }}
-        </NText>
-        <NTag
-          v-if="platformTag"
-          size="tiny"
-          :type="platformTag.type"
-          :bordered="false"
-        >
-          {{ platformTag.label }}
-        </NTag>
-        <NText
-          depth="3"
-          style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-        >
-          {{ music.author?.join('/') }}
-        </NText>
-        <NText
-          depth="2"
-          style="font-size: 12px; white-space: nowrap"
-        >
-          点歌人: {{ fromName }}
-        </NText>
-      </NFlex>
+  <div class="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card hover:border-brand/30 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="inline-flex items-center justify-center font-bold w-6 h-6 rounded-full bg-brand/10 text-brand text-xs shrink-0 font-mono">
+        {{ index }}
+      </span>
 
-      <NFlex
-        justify="end"
-        align="center"
-        :size="6"
-        :wrap="false"
-        style="flex-shrink: 0"
+      <span class="font-medium text-sm text-foreground truncate max-w-[200px] sm:max-w-[320px]">
+        {{ music.name }}
+      </span>
+
+      <Badge
+        v-if="platformTag"
+        :variant="platformTag.variant"
+        class="text-[10px] px-1.5 py-0 h-4"
       >
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="success"
-              ghost
+        {{ platformTag.label }}
+      </Badge>
+
+      <span class="text-xs text-muted-foreground truncate hidden md:inline">
+        {{ music.author?.join('/') }}
+      </span>
+
+      <span class="text-xs text-muted-foreground/80 shrink-0">
+        点歌人: <span class="text-foreground font-medium">{{ fromName }}</span>
+      </span>
+    </div>
+
+    <div class="flex items-center gap-1 shrink-0">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
               @click="emit('play')"
             >
-              <template #icon>
-                <NIcon :component="MusicNote2Play20Filled" />
-              </template>
-            </NButton>
-          </template>
-          播放
-        </NTooltip>
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="warning"
-              ghost
+              <component
+                :is="MusicNote2Play20Filled"
+                class="h-4 w-4"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            播放
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
               @click="emit('block')"
             >
-              <template #icon>
-                <NIcon :component="PresenceBlocked16Regular" />
-              </template>
-            </NButton>
-          </template>
-          加入黑名单
-        </NTooltip>
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="error"
+              <component
+                :is="PresenceBlocked16Regular"
+                class="h-4 w-4"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            加入黑名单
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               @click="emit('cancel')"
             >
-              <template #icon>
-                <NIcon :component="Dismiss16Filled" />
-              </template>
-            </NButton>
-          </template>
-          取消
-        </NTooltip>
-      </NFlex>
-    </NFlex>
-  </NCard>
+              <component
+                :is="Dismiss16Filled"
+                class="h-4 w-4"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            取消
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  </div>
 </template>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -46,19 +45,6 @@ const label = computed(() => {
 const framed = computed(() => propsObj.value.framed === true)
 const backgrounded = computed(() => propsObj.value.backgrounded === true)
 
-const buttonType = computed(() => {
-  const v = propsObj.value.type
-  if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default')
-    return v
-  return 'default'
-})
-
-const variant = computed<'solid' | 'secondary' | 'tertiary' | 'quaternary' | 'ghost'>(() => {
-  const v = propsObj.value.variant
-  if (v === 'secondary' || v === 'tertiary' || v === 'quaternary' || v === 'ghost' || v === 'solid') return v
-  return 'solid'
-})
-
 const align = computed<'start' | 'center' | 'end'>(() => {
   if (!isBlockPropertyAvailable('button', propsObj.value, 'align')) return 'start'
   const v = propsObj.value.align
@@ -71,7 +57,6 @@ const fullWidth = computed(() => propsObj.value.fullWidth === true)
 const appearance = computed(() => normalizeButtonAppearance(propsObj.value))
 const btnClass = computed(() => buttonAppearanceClass(appearance.value, fullWidth.value))
 const btnStyle = computed(() => buttonAppearanceStyle(appearance.value))
-const naiveSize = computed(() => (appearance.value.size === 'sm' ? 'small' : appearance.value.size === 'lg' ? 'large' : 'medium'))
 
 const internalTarget = computed(() => {
   const v = propsObj.value.page
@@ -96,7 +81,11 @@ function handleClick() {
   }
 }
 
-const justify = computed<'start' | 'center' | 'end'>(() => align.value)
+const justifyClass = computed(() => {
+  if (align.value === 'center') return 'justify-center'
+  if (align.value === 'end') return 'justify-end'
+  return 'justify-start'
+})
 </script>
 
 <template>
@@ -104,42 +93,31 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
     :framed="framed"
     :backgrounded="backgrounded"
   >
-    <NFlex
-      :justify="justify"
-      align="center"
-      style="width: 100%"
+    <div
+      class="flex items-center w-full"
+      :class="justifyClass"
     >
-      <NButton
+      <button
         v-if="isBack || internalTarget"
-        :type="buttonType as any"
-        :size="naiveSize"
-        :secondary="variant === 'secondary'"
-        :tertiary="variant === 'tertiary'"
-        :quaternary="variant === 'quaternary'"
-        :ghost="variant === 'ghost'"
+        type="button"
+        class="inline-flex items-center justify-center font-medium cursor-pointer"
         :class="btnClass"
         :style="btnStyle"
         @click="handleClick"
       >
         {{ label }}
-      </NButton>
-      <NButton
+      </button>
+      <a
         v-else
-        tag="a"
-        :type="buttonType as any"
-        :size="naiveSize"
-        :secondary="variant === 'secondary'"
-        :tertiary="variant === 'tertiary'"
-        :quaternary="variant === 'quaternary'"
-        :ghost="variant === 'ghost'"
         target="_blank"
         rel="noopener noreferrer"
         :href="externalHref"
+        class="inline-flex items-center justify-center font-medium cursor-pointer"
         :class="btnClass"
         :style="btnStyle"
       >
         {{ label }}
-      </NButton>
-    </NFlex>
+      </a>
+    </div>
   </BlockCard>
 </template>

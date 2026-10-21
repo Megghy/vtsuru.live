@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Live24Filled } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
@@ -198,7 +197,7 @@ defineExpose({ Config, DefaultConfig })
 
       <div class="poster-schedule">
         <div class="poster-schedule__head">
-          <NIcon><Live24Filled /></NIcon>
+          <component :is="Live24Filled" class="size-4 inline" />
           <span>WEEKLY RUNSHEET</span>
           <span class="poster-schedule__range">MON — SUN</span>
         </div>

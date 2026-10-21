@@ -1,28 +1,8 @@
 <script setup lang="ts">
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
-import { ColorPaletteOutline, DocumentTextOutline, ImageOutline, OpenOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NEllipsis,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
-import { onUnmounted, ref, watch } from 'vue'
+import { ColorPaletteOutline, CopyOutline, EyeOffOutline, EyeOutline, ImageOutline, OpenOutline } from '@vicons/ionicons5'
+import { useMessage } from '@/shared/utils'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
@@ -45,7 +25,40 @@ import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { availableAPIs, currentAPIKey, isDev, setSelectedAPIKey } from '@/shared/config'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
-import { usePersistedStorage } from '@/shared/storage/persist'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { copyToClipboard } from '@/shared/utils'
 
 const token = ref('')
@@ -61,7 +74,6 @@ const selectedTab = useRouteQueryParam('tab', 'info', { transform: String })
 watch(
   () => [selectedTab.value, route.query.setting] as const,
   ([tab, setting]) => {
-    // 旧「主页设置」入口迁到自定义页面构建器
     if (tab === 'setting' && setting === 'index') {
       void router.replace({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })
     }
@@ -69,13 +81,20 @@ watch(
   { immediate: true },
 )
 
-const bindBiliCodeModalVisiable = ref(false)
-const resetNameModalVisiable = ref(false)
+const bindBiliCodeModalVisible = ref(false)
+const resetNameModalVisible = ref(false)
+const showToken = ref(false)
 
 const newName = ref('')
-
 const biliCode = ref('')
 const isLoading = ref(false)
+
+const formattedCreateAt = computed(() => {
+  const ts = accountInfo.value?.createAt
+  if (!ts) return ''
+  const date = new Date(typeof ts === 'number' && ts < 1e12 ? ts * 1000 : ts)
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+})
 
 function goToDecorate(action?: 'theme') {
   if (action) {
@@ -90,15 +109,14 @@ function goToUserPublicPage() {
   void router.push({ name: 'user-index', params: { id: accountInfo.value.name } })
 }
 
-// API选择器选项
 const apiOptions = availableAPIs.map((api) => ({
   label: api.name,
   value: api.key,
 }))
 
-// 切换 API 节点会改变全局 baseURL，必须整页重载
-async function handleAPIChange(value: string) {
-  message.info(`正在切换到${availableAPIs.find((api) => api.key === value)?.name}...`)
+async function handleAPIChange(value: any) {
+  const selected = availableAPIs.find((api) => api.key === value)
+  message.info(`正在切换到${selected?.name}...`)
   await setSelectedAPIKey(value as 'main' | 'failover')
   location.reload()
 }
@@ -119,58 +137,59 @@ function resetBili() {
       }
     })
     .catch((err) => {
-      console.error(err)
-      message.error('发生错误')
+      message.error(`解除失败: ${err}`)
     })
     .finally(() => {
       isLoading.value = false
     })
 }
-async function resetName() {
-  if (accountInfo.value?.name === newName.value) {
-    message.error('新用户名与旧用户名一致')
+
+function resetName() {
+  if (!newName.value.trim()) {
+    message.error('用户名不能为空')
     return
   }
   isLoading.value = true
-  try {
-    const data = await postApiAccountChangeName({ name: newName.value })
-    if (data.code === 200) {
-      message.success('用户名已修改')
-      resetNameModalVisiable.value = false
-      await GetSelfAccount()
-    } else {
-      message.error(data.message)
-    }
-  } catch (err) {
-    console.error(err)
-    message.error('发生错误')
-  } finally {
-    isLoading.value = false
-  }
-}
-async function resetToken() {
-  isLoading.value = true
-  await (postApiAccountResetToken() as unknown as Promise<{
-    code: number
-    message?: string
-    data: string
-  }>)
+  postApiAccountChangeName({ name: newName.value.trim() })
     .then(async (data) => {
       if (data.code === 200) {
-        message.success('已重新生成 Token')
-
-        accountInfo.value.token = data.data
+        message.success('已修改用户名')
+        resetNameModalVisible.value = false
+        newName.value = ''
+        await refreshAccountState()
       } else {
         message.error(data.message)
       }
     })
     .catch((err) => {
-      message.error(`发生错误: ${err}`)
+      message.error(`修改失败: ${err}`)
     })
     .finally(() => {
       isLoading.value = false
     })
 }
+
+async function resetToken() {
+  isLoading.value = true
+  try {
+    const data = (await postApiAccountResetToken()) as unknown as {
+      code: number
+      message?: string
+      data: string
+    }
+    if (data.code === 200) {
+      message.success('已重新生成 Token')
+      accountInfo.value.token = data.data
+    } else {
+      message.error(data.message)
+    }
+  } catch (err) {
+    message.error(`发生错误: ${err}`)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 async function submitBiliCode(path: 'bind-bili' | 'change-bili', successText: string) {
   if (!biliCode.value) {
     message.error('身份码不能为空')
@@ -188,9 +207,9 @@ async function submitBiliCode(path: 'bind-bili' | 'change-bili', successText: st
           : (postApiAccountChangeBili({ code: biliCode.value }, { headers }) as any)
       },
     })
-    if (data.code == 200) {
+    if (data.code === 200) {
       message.success(successText)
-      bindBiliCodeModalVisiable.value = false
+      bindBiliCodeModalVisible.value = false
       biliCode.value = ''
       await refreshAccountState()
       return
@@ -204,611 +223,604 @@ async function submitBiliCode(path: 'bind-bili' | 'change-bili', successText: st
     isLoading.value = false
   }
 }
+
 function BindBili() {
   return submitBiliCode(
     'bind-bili',
     '已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码',
   )
 }
+
 function ChangeBili() {
   return submitBiliCode('change-bili', '已更新身份码')
 }
+
 onMounted(() => {
   checkUpdateNote()
 })
+
 onUnmounted(() => {
   turnstile.value?.remove()
-  // 当进入管理页时检查更新日志
 })
 </script>
 
 <template>
   <div
-    class="dashboard-view"
-    :class="{ 'dashboard-view--wide': selectedTab === 'template' }"
+    class="flex flex-col gap-3 w-full mx-auto transition-all"
+    :class="selectedTab === 'template' ? 'max-w-none' : 'max-w-4xl'"
   >
-    <div class="dashboard-alerts">
-      <NAlert
-        v-if="accountInfo?.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
-        type="error"
-        title="身份码已失效"
-        :bordered="false"
-      >
-        <NFlex
-          justify="space-between"
-          align="center"
-          wrap
-          :size="12"
+    <!-- 身份码失效告警 -->
+    <Alert
+      v-if="accountInfo?.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
+      variant="destructive"
+      class="border-destructive/40 bg-destructive/10"
+    >
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <AlertTitle class="text-xs font-semibold">
+            身份码已失效
+          </AlertTitle>
+          <AlertDescription class="text-xs">
+            你的身份码已失效, 这会导致无法获取直播间数据.
+          </AlertDescription>
+        </div>
+        <Button
+          size="xs"
+          variant="destructive"
+          @click="bindBiliCodeModalVisible = true"
         >
-          <NText>你的身份码已失效, 这会导致无法获取直播间数据.</NText>
-          <NButton
-            size="small"
-            type="error"
-            @click="bindBiliCodeModalVisiable = true"
-          >
-            更新身份码
-          </NButton>
-        </NFlex>
-      </NAlert>
-    </div>
+          更新身份码
+        </Button>
+      </div>
+    </Alert>
 
+
+    <!-- 个人主页装扮常驻入口横幅 -->
     <div
       v-if="accountInfo"
-      class="dashboard-role"
+      class="rounded-lg border border-border bg-card p-3.5 shadow-sm transition-colors hover:border-brand/40 flex items-center justify-between gap-3 flex-wrap"
     >
-      <WorkspaceSwitch />
+      <div class="flex items-center gap-3">
+        <div class="h-9 w-9 rounded-md bg-brand/10 text-brand flex items-center justify-center shrink-0">
+          <component
+            :is="ColorPaletteOutline"
+            class="h-5 w-5"
+          />
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <div class="text-sm font-semibold text-foreground">
+            个性化你的主播主页
+          </div>
+          <div class="text-xs text-muted-foreground">
+            为展示页定制全站壁纸、主题色及日程/歌单/提问箱等模块，打造专属主播风格。
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <Button
+          size="xs"
+          variant="outline"
+          @click="goToDecorate('theme')"
+        >
+          <component
+            :is="ImageOutline"
+            class="h-3.5 w-3.5 mr-1"
+          />
+          设置背景与主题
+        </Button>
+        <Button
+          size="xs"
+          variant="brand"
+          @click="goToDecorate()"
+        >
+          <component
+            :is="ColorPaletteOutline"
+            class="h-3.5 w-3.5 mr-1"
+          />
+          主页装修
+        </Button>
+      </div>
     </div>
 
-    <!-- 个人主页装扮常驻入口卡片 -->
-    <div
+    <!-- 顶层 Tabs -->
+    <Tabs
       v-if="accountInfo"
-      class="home-decorate-banner"
+      v-model="selectedTab"
+      class="w-full"
     >
-      <NFlex
-        justify="space-between"
-        align="center"
-        wrap
-        :size="12"
-      >
-        <NFlex
-          align="center"
-          :size="10"
+      <TabsList class="inline-flex h-8 p-1 bg-muted rounded-lg">
+        <TabsTrigger
+          value="info"
+          class="text-xs px-3 h-6"
         >
-          <div class="home-decorate-banner__icon">
-            <NIcon
-              :component="ColorPaletteOutline"
-              size="20"
-            />
-          </div>
-          <div class="home-decorate-banner__text">
-            <NText strong>个性化你的主播主页</NText>
-            <div class="home-decorate-banner__desc">
-              为展示页定制全站壁纸、主题色及日程/歌单/提问箱等模块，打造专属主播风格。
-            </div>
-          </div>
-        </NFlex>
-        <NFlex
-          :size="8"
-          wrap
-          class="home-decorate-banner__actions"
+          个人信息
+        </TabsTrigger>
+        <TabsTrigger
+          value="setting"
+          class="text-xs px-3 h-6"
         >
-          <NButton
-            size="small"
-            secondary
-            @click="goToDecorate('theme')"
-          >
-            <template #icon>
-              <NIcon :component="ImageOutline" />
-            </template>
-            设置背景与主题
-          </NButton>
-          <NButton
-            size="small"
-            type="primary"
-            secondary
-            @click="goToDecorate()"
-          >
-            <template #icon>
-              <NIcon :component="ColorPaletteOutline" />
-            </template>
-            主页装修
-          </NButton>
-        </NFlex>
-      </NFlex>
-    </div>
+          设置
+        </TabsTrigger>
+        <TabsTrigger
+          value="template"
+          class="text-xs px-3 h-6"
+        >
+          模板
+        </TabsTrigger>
+        <TabsTrigger
+          v-if="isDev"
+          value="billing"
+          class="text-xs px-3 h-6"
+        >
+          增值 (dev)
+        </TabsTrigger>
+      </TabsList>
 
-    <NTabs
-      v-if="accountInfo"
-      v-model:value="selectedTab"
-      type="segment"
-      animated
-      size="small"
-      class="dashboard-tabs"
-    >
-      <NTabPane
-        name="info"
-        tab="个人信息"
-        style="width: 100%"
-        display-directive="show:lazy"
+      <!-- 个人信息 Tab -->
+      <TabsContent
+        value="info"
+        class="mt-3 space-y-3"
       >
-        <NCard
-          size="small"
-          bordered
-          :segmented="{ content: true }"
-        >
-          <NFlex
-            vertical
-            :size="12"
-          >
-            <NFlex
-              justify="space-between"
-              align="baseline"
-              wrap
-              :size="12"
-            >
-              <div class="dashboard-profile">
-                <NText
-                  strong
-                  class="dashboard-profile__name"
-                >
-                  {{ accountInfo?.name }}
-                </NText>
-                <NText
-                  depth="3"
-                  class="dashboard-profile__meta"
-                >
-                  注册于 <NTime :time="accountInfo?.createAt" />
-                </NText>
+        <Card>
+          <CardContent class="p-4 space-y-4">
+            <!-- 头部概览 -->
+            <div class="flex items-start justify-between gap-3 flex-wrap">
+              <div class="flex flex-col gap-1">
+                <span class="text-xl font-bold tracking-tight text-foreground">{{ accountInfo?.name }}</span>
+                <span
+                  v-if="formattedCreateAt"
+                  class="text-xs text-muted-foreground"
+                >注册于 {{ formattedCreateAt }}</span>
               </div>
-              <NFlex
-                align="center"
-                justify="end"
-                wrap
-                :size="8"
-              >
-                <NButton
-                  size="small"
-                  secondary
+
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <Button
+                  size="xs"
+                  variant="outline"
                   @click="goToDecorate('theme')"
                 >
-                  <template #icon>
-                    <NIcon :component="ImageOutline" />
-                  </template>
+                  <component
+                    :is="ImageOutline"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
                   更换背景
-                </NButton>
-                <NButton
-                  type="primary"
-                  secondary
-                  size="small"
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
                   @click="goToDecorate()"
                 >
-                  <template #icon>
-                    <NIcon :component="ColorPaletteOutline" />
-                  </template>
+                  <component
+                    :is="ColorPaletteOutline"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
                   主页装修
-                </NButton>
-                <NButton
+                </Button>
+                <Button
                   v-if="accountInfo?.name"
-                  size="small"
-                  quaternary
+                  size="xs"
+                  variant="ghost"
                   title="在新标签页查看公开主页"
                   @click="goToUserPublicPage"
                 >
-                  <template #icon>
-                    <NIcon :component="OpenOutline" />
-                  </template>
+                  <component
+                    :is="OpenOutline"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
                   查看主页
-                </NButton>
-                <NText
-                  depth="3"
-                  code
-                >
-                  {{ accountInfo?.id }}
-                </NText>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="resetNameModalVisiable = true"
+                </Button>
+                <code class="px-1.5 py-0.5 rounded bg-muted text-xs text-muted-foreground font-mono">
+                  #{{ accountInfo?.id }}
+                </code>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="resetNameModalVisible = true"
                 >
                   修改用户名
-                </NButton>
-                <NPopconfirm @positive-click="logoutAccount">
-                  <template #trigger>
-                    <NButton
-                      size="small"
-                      type="error"
-                      secondary
+                </Button>
+
+                <!-- 登出按钮 + AlertDialog -->
+                <AlertDialog>
+                  <AlertDialogTrigger as-child>
+                    <Button
+                      size="xs"
+                      variant="destructive"
                     >
                       登出
-                    </NButton>
-                  </template>
-                  确定登出?
-                </NPopconfirm>
-              </NFlex>
-            </NFlex>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent class="sm:max-w-md">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>确定登出账号？</AlertDialogTitle>
+                      <AlertDialogDescription class="text-xs">
+                        登出后你需要重新验证身份才能登录管理后台。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogAction
+                        class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        @click="logoutAccount"
+                      >
+                        确认登出
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
 
-            <NFlex vertical>
-              <AccountSecurityPanel />
-              <NCard
-                size="small"
-                bordered
+            <Separator />
+
+            <!-- 账号安全面板 -->
+            <AccountSecurityPanel />
+
+            <!-- 主播 Bilibili 账户卡片 -->
+            <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">
+              <div class="text-xs font-semibold tracking-wide text-foreground uppercase">
+                主播 Bilibili 账户
+              </div>
+
+              <div
+                v-if="accountInfo?.isBiliVerified"
+                class="flex items-center justify-between gap-3 flex-wrap"
               >
-                主播 Bilibili 账户:
-                <NEllipsis
-                  v-if="accountInfo?.isBiliVerified"
-                  style="max-width: 100%"
-                >
-                  <NText style="color: var(--vtsuru-primary)">
-                    <NFlex
-                      :size="5"
-                      align="center"
-                    >
-                      已认证 | {{ accountInfo?.biliId }}
-                      <NTag
-                        v-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Active"
-                        type="success"
-                        size="small"
-                        :bordered="false"
-                      >
-                        身份码: 有效
-                      </NTag>
-                      <NTag
-                        v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
-                        type="error"
-                        size="small"
-                        :bordered="false"
-                      >
-                        身份码: 需更新
-                      </NTag>
-                      <NTag
-                        v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Notfound"
-                        type="warning"
-                        size="small"
-                        :bordered="false"
-                      >
-                        身份码: 需绑定
-                        <NTooltip>
-                          <template #trigger>
-                            <NIcon :component="Mic24Filled" />
-                          </template>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-medium text-primary">已认证 | {{ accountInfo?.biliId }}</span>
+
+                  <Badge
+                    v-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Active"
+                    variant="success"
+                    class="text-[11px]"
+                  >
+                    身份码: 有效
+                  </Badge>
+                  <Badge
+                    v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
+                    variant="destructive"
+                    class="text-[11px]"
+                  >
+                    身份码: 需更新
+                  </Badge>
+                  <Badge
+                    v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Notfound"
+                    variant="warning"
+                    class="text-[11px] gap-1"
+                  >
+                    身份码: 需绑定
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger as-child>
+                          <component
+                            :is="Mic24Filled"
+                            class="h-3 w-3 inline cursor-help"
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent class="text-xs">
                           如果你不是主播的话则不需要在意这个提示
-                        </NTooltip>
-                      </NTag>
-                      <NButton
-                        size="tiny"
-                        type="info"
-                        @click="bindBiliCodeModalVisiable = true"
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </Badge>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    @click="bindBiliCodeModalVisible = true"
+                  >
+                    更新身份码
+                  </Button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger as-child>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="text-destructive hover:bg-destructive/10"
                       >
-                        更新身份码
-                      </NButton>
-                      <NPopconfirm @positive-click="resetBili">
-                        <template #trigger>
-                          <NButton
-                            size="tiny"
-                            type="error"
-                          >
-                            解除认证
-                          </NButton>
-                        </template>
-                        确定解除认证吗? 解除后现有的数据跟踪数据将被删除并且无法恢复
-                      </NPopconfirm>
-                    </NFlex>
-                  </NText>
-                </NEllipsis>
-                <template v-else>
-                  <NTag
-                    type="error"
-                    size="small"
+                        解除认证
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent class="sm:max-w-md">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>确定解除认证吗？</AlertDialogTitle>
+                        <AlertDialogDescription class="text-xs text-destructive">
+                          解除后现有的数据跟踪数据将被删除并且无法恢复！
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction
+                          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          @click="resetBili"
+                        >
+                          确认解除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+
+              <div
+                v-else
+                class="flex items-center justify-between gap-3 flex-wrap"
+              >
+                <div class="flex items-center gap-2">
+                  <Badge
+                    variant="destructive"
+                    class="text-[11px] gap-1"
                   >
                     未绑定
-                    <NTooltip>
-                      <template #trigger>
-                        <NIcon :component="Info24Filled" />
-                      </template>
-                      如果你不是主播的话则不需要在意这个
-                    </NTooltip>
-                  </NTag>
-                  <NDivider vertical />
-                  <NButton
-                    size="small"
-                    type="info"
-                    @click="bindBiliCodeModalVisiable = true"
-                  >
-                    进行绑定
-                  </NButton>
-                </template>
-              </NCard>
-              <EventFetcherStatusCard />
-              <NAlert
-                title="Token"
-                type="info"
-                size="small"
-                :bordered="false"
-              >
-                请注意保管，这个东西可以完全操作你的账号（EventFetcher / 部分 OBS 接口会用到）
-                <NInputGroup class="dashboard-token-group">
-                  <NInput
-                    type="password"
-                    :value="accountInfo?.token"
-                    show-password-on="click"
-                    status="error"
-                    readonly
-                  />
-                  <NButton
-                    size="small"
-                    secondary
-                    :disabled="!accountInfo?.token"
-                    @click="copyToClipboard(accountInfo?.token ?? '')"
-                  >
-                    复制
-                  </NButton>
-                  <NPopconfirm @positive-click="resetToken">
-                    <template #trigger>
-                      <NButton
-                        type="error"
-                        size="small"
-                      >
-                        重置
-                      </NButton>
-                    </template>
-                    确定要重新生成 Token 吗? EventFetcher 等设施将需要重新部署
-                  </NPopconfirm>
-                </NInputGroup>
-              </NAlert>
-            </NFlex>
-            <NDivider />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger as-child>
+                          <component
+                            :is="Info24Filled"
+                            class="h-3 w-3 inline cursor-help"
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent class="text-xs">
+                          如果你不是主播的话则不需要在意这个
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </Badge>
+                </div>
 
-            <NAlert
-              type="info"
-              title="API 设置"
-              size="small"
-              :bordered="false"
-            >
-              <NFlex
-                align="center"
-                :wrap="true"
-                :size="12"
-              >
-                <NText>当前使用的API:</NText>
-                <NSelect
-                  :value="currentAPIKey"
-                  :options="apiOptions"
-                  style="max-width: 220px"
-                  @update:value="handleAPIChange"
-                />
-                <NText
-                  depth="3"
-                  style="font-size: 12px"
+                <Button
+                  size="xs"
+                  variant="brand"
+                  @click="bindBiliCodeModalVisible = true"
                 >
-                  如果访问速度较慢可以尝试切换API
-                </NText>
-              </NFlex>
-            </NAlert>
-            <NDivider />
-          </NFlex>
-        </NCard>
-      </NTabPane>
-      <NTabPane
-        name="setting"
-        tab="设置"
-        display-directive="show:lazy"
+                  进行绑定
+                </Button>
+              </div>
+            </div>
+
+            <!-- EventFetcher 状态卡片 -->
+            <EventFetcherStatusCard />
+
+            <!-- Token 卡片 -->
+            <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold tracking-wide text-foreground uppercase">Token</span>
+                <span class="text-[11px] text-muted-foreground">敏感凭据，用于 EventFetcher / OBS 鉴权</span>
+              </div>
+
+              <div class="flex items-center gap-2 max-w-lg">
+                <div class="relative flex-1">
+                  <Input
+                    :type="showToken ? 'text' : 'password'"
+                    :model-value="accountInfo?.token"
+                    readonly
+                    class="pr-8 font-mono text-xs"
+                  />
+                  <button
+                    type="button"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    @click="showToken = !showToken"
+                  >
+                    <component
+                      :is="showToken ? EyeOffOutline : EyeOutline"
+                      class="h-4 w-4"
+                    />
+                  </button>
+                </div>
+
+                <Button
+                  size="xs"
+                  variant="outline"
+                  :disabled="!accountInfo?.token"
+                  @click="copyToClipboard(accountInfo?.token ?? '')"
+                >
+                  <component
+                    :is="CopyOutline"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
+                  复制
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger as-child>
+                    <Button
+                      size="xs"
+                      variant="destructive"
+                    >
+                      重置
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent class="sm:max-w-md">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>确定要重新生成 Token 吗？</AlertDialogTitle>
+                      <AlertDialogDescription class="text-xs">
+                        重新生成后，之前使用该 Token 部署的 EventFetcher 等外部设施将立即失效，需重新配置。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogAction
+                        class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        @click="resetToken"
+                      >
+                        确认重置
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+
+            <!-- API 节点切换 -->
+            <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">
+              <div class="text-xs font-semibold tracking-wide text-foreground uppercase">
+                API 节点设置
+              </div>
+
+              <div class="flex items-center gap-3 flex-wrap">
+                <span class="text-xs text-muted-foreground">当前使用的 API 节点:</span>
+                <Select
+                  :model-value="currentAPIKey"
+                  @update:model-value="handleAPIChange"
+                >
+                  <SelectTrigger class="w-48 h-8 text-xs">
+                    <SelectValue placeholder="选择 API 节点" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="api in apiOptions"
+                      :key="api.value"
+                      :value="api.value"
+                    >
+                      {{ api.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <span class="text-xs text-muted-foreground">如果访问速度较慢可以尝试切换 API</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <!-- 设置 Tab -->
+      <TabsContent
+        value="setting"
+        class="mt-3"
       >
         <SettingsManageView />
-      </NTabPane>
-      <NTabPane
-        name="template"
-        tab="模板"
-        display-directive="show:lazy"
+      </TabsContent>
+
+      <!-- 模板 Tab -->
+      <TabsContent
+        value="template"
+        class="mt-3"
       >
         <TemplateManager />
-      </NTabPane>
-      <!-- 增值服务仍在开发中，仅开发环境显示入口 -->
-      <NTabPane
+      </TabsContent>
+
+      <!-- 增值 Tab (仅 dev) -->
+      <TabsContent
         v-if="isDev"
-        name="billing"
-        tab="增值 (dev)"
-        display-directive="show:lazy"
+        value="billing"
+        class="mt-3"
       >
         <SettingPaymentView />
-      </NTabPane>
-    </NTabs>
-  </div>
-  <NModal
-    v-model:show="resetNameModalVisiable"
-    preset="card"
-    title="修改用户名"
-    style="width: 400px; max-width: 90%"
-  >
-    <NFlex vertical>
-      <NInput
-        v-model:value="newName"
-        placeholder="新用户名"
-      />
-    </NFlex>
-    <template #footer>
-      <NButton
-        type="warning"
-        :loading="isLoading"
-        @click="resetName"
-      >
-        确定修改
-      </NButton>
-    </template>
-  </NModal>
-  <NModal
-    v-model:show="bindBiliCodeModalVisiable"
-    preset="card"
-    title="绑定/更新身份码"
-    style="width: 400px; max-width: 90%"
-  >
-    <NFlex vertical>
-      <NInputGroup>
-        <NInput
-          v-model:value="biliCode"
-          placeholder="身份码"
-        />
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              type="primary"
-              tag="a"
+      </TabsContent>
+    </Tabs>
+
+    <!-- 修改用户名弹窗 -->
+    <Dialog v-model:open="resetNameModalVisible">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            修改用户名
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            用户名是你在 VTsuru 的公开标识，修改后展示页链接和提及名称将同步更新。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="py-2">
+          <Input
+            v-model="newName"
+            placeholder="新用户名"
+            @keyup.enter="resetName"
+          />
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="resetNameModalVisible = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            :loading="isLoading"
+            @click="resetName"
+          >
+            确定修改
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 绑定/更新身份码弹窗 -->
+    <Dialog v-model:open="bindBiliCodeModalVisible">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            绑定 / 更新身份码
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            用于获取 Bilibili 直播间数据。刷新身份码后需要在这里同步更新。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-3 py-2">
+          <div class="flex gap-2">
+            <Input
+              v-model="biliCode"
+              placeholder="请输入身份码"
+              class="flex-1 font-mono text-xs"
+            />
+            <Button
+              as="a"
               href="https://play-live.bilibili.com/"
               target="_blank"
+              variant="outline"
+              size="sm"
             >
-              <template #icon>
-                <NIcon>
-                  <Question24Regular />
-                </NIcon>
-              </template>
-              前往幻星页面
-            </NButton>
-          </template>
-          在幻星页面右侧 或者
-          <NButton
-            text
-            tag="a"
-            href="https://link.bilibili.com/p/center/index#/my-room/start-live"
-            target="_blank"
-            type="success"
-          >
-            开播页 </NButton
-          >直播信息处可以获取
-          <br />
-          刷新身份码后需要在这里更新
-          <img
-            src="https://files.vtsuru.suki.club/updatelog/dbc2b6fe-fc85-42f3-9167-78f15abe74ce.png"
-            style="max-width: 400px; display: block; margin-top: 8px"
+              <component
+                :is="Question24Regular"
+                class="h-3.5 w-3.5 mr-1"
+              />
+              幻星页面
+            </Button>
+          </div>
+
+          <div class="text-[11px] text-muted-foreground leading-relaxed p-2.5 rounded bg-muted/40 border border-border/50">
+            在幻星页面右侧，或前往
+            <a
+              href="https://link.bilibili.com/p/center/index#/my-room/start-live"
+              target="_blank"
+              class="text-primary underline font-medium"
+            >
+              开播页
+            </a>
+            直播信息处可获取身份码。
+          </div>
+
+          <CaptchaWidget
+            ref="turnstile"
+            v-model="token"
+            class="mt-2"
           />
-        </NTooltip>
-      </NInputGroup>
-    </NFlex>
-    <CaptchaWidget
-      ref="turnstile"
-      v-model="token"
-      class="bind-captcha"
-    />
-    <template #footer>
-      <NButton
-        type="success"
-        :disabled="!token"
-        :loading="isLoading"
-        @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()"
-      >
-        确定
-      </NButton>
-    </template>
-  </NModal>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="bindBiliCodeModalVisible = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            :disabled="!token"
+            :loading="isLoading"
+            @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()"
+          >
+            确定
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
 </template>
-
-<style scoped>
-.dashboard-view {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 920px;
-  width: 100%;
-  margin: 0 auto;
-  transition: max-width 0.3s ease;
-}
-
-/* 模板页解除 920px 居中限制, 填满外层放宽后的容器 */
-.dashboard-view--wide {
-  max-width: none;
-}
-
-.dashboard-alerts {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.dashboard-role {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.home-decorate-banner {
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  padding: 12px 16px;
-  transition: border-color 0.2s ease;
-}
-
-.home-decorate-banner:hover {
-  border-color: var(--vtsuru-primary);
-}
-
-.home-decorate-banner__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--vtsuru-brand-tint, rgba(99, 102, 241, 0.08));
-  color: var(--vtsuru-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.home-decorate-banner__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.home-decorate-banner__desc {
-  font-size: 13px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.home-decorate-banner__actions {
-  align-items: center;
-}
-
-.dashboard-tabs :deep(.n-tabs-nav) {
-  margin-bottom: 12px;
-}
-
-/* tab 切换淡入上移动画 */
-.dashboard-tabs :deep(.n-tab-pane) {
-  animation: dashboard-tab-in 0.28s ease;
-}
-
-@keyframes dashboard-tab-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dashboard-token-group {
-  max-width: 560px;
-  width: 100%;
-}
-
-.bind-captcha {
-  margin-top: 14px;
-}
-
-.dashboard-profile {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 220px;
-}
-
-.dashboard-profile__name {
-  font-size: 20px;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.dashboard-profile__meta {
-  font-size: 12px;
-}
-</style>

@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { useIntervalFn } from '@vueuse/core'
-import { NAlert, NAvatar, NButton, NEmpty, NInput, NSpin, NTabPane, NTabs, NTag, NTime } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { ACCOUNT, isLoggedIn } from '@/api/account'
 import { getDirectory, type LiveDirectoryEntry } from '@/api/following'
 import FollowButton from '@/components/common/FollowButton.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Spin } from '@/shared/ui/spin'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const route = useRoute()
 const tab = ref(route.query.tab === 'following' ? 'following' : 'live')
@@ -46,7 +53,7 @@ watch(
 watch(
   () => route.query.tab,
   (value) => {
-    if (value === 'following' || value === 'following-live' || value === 'live') tab.value = value
+    if (value === 'following' || value === 'following-live' || value === 'live') tab.value = String(value)
   },
 )
 watch(isLoggedIn, (loggedIn) => {
@@ -62,71 +69,83 @@ function changed(entry: LiveDirectoryEntry, following: boolean) {
   entry.isFollowing = following
   if (!following && tab.value !== 'live') entries.value = entries.value.filter((item) => item.id !== entry.id)
 }
+
+function formatTime(sec: number) {
+  try {
+    const d = new Date(sec * 1000)
+    return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  } catch {
+    return ''
+  }
+}
 </script>
 
 <template>
-  <main class="live-directory">
-    <header class="directory-header">
+  <main class="live-directory max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <header class="directory-header flex items-center justify-between gap-4">
       <div>
-        <h1>正在直播</h1>
-        <p>看看主播们在播什么，也可以在这里查看你的关注。</p>
+        <h1 class="text-2xl font-bold tracking-tight">正在直播</h1>
+        <p class="text-sm text-muted-foreground mt-1">看看主播们在播什么，也可以在这里查看你的关注。</p>
       </div>
-      <NButton
-        :loading="loading"
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="loading"
         @click="revision++"
-        >刷新</NButton
       >
+        {{ loading ? '刷新中...' : '刷新' }}
+      </Button>
     </header>
-    <NTabs
-      v-model:value="tab"
-      type="line"
-      animated
+
+    <Tabs
+      v-model="tab"
+      class="w-full"
     >
-      <NTabPane
-        name="live"
-        tab="全部直播"
+      <TabsList class="grid w-full max-w-xs grid-cols-3">
+        <TabsTrigger value="live">全部直播</TabsTrigger>
+        <TabsTrigger v-if="isLoggedIn" value="following-live">关注的直播</TabsTrigger>
+        <TabsTrigger v-if="isLoggedIn" value="following">全部关注</TabsTrigger>
+      </TabsList>
+    </Tabs>
+
+    <div class="max-w-md">
+      <Input
+        v-model="search"
+        placeholder="搜索主播、标题或分区..."
+        class="h-9"
       />
-      <NTabPane
-        v-if="isLoggedIn"
-        name="following-live"
-        tab="关注的直播"
-      />
-      <NTabPane
-        v-if="isLoggedIn"
-        name="following"
-        tab="全部关注"
-      />
-    </NTabs>
-    <NInput
-      v-model:value="search"
-      clearable
-      placeholder="搜索主播、标题或分区"
-      class="directory-search"
-    />
-    <NAlert
+    </div>
+
+    <Alert
       v-if="error"
-      type="error"
-      style="margin: 16px 0"
-      >{{ error }}</NAlert
+      variant="destructive"
     >
-    <NSpin :show="loading">
-      <NEmpty
-        v-if="!visible.length && !loading"
+      <AlertDescription>{{ error }}</AlertDescription>
+    </Alert>
+
+    <div v-if="loading && !entries.length" class="py-20 flex justify-center">
+      <Spin />
+    </div>
+
+    <template v-else>
+      <Empty
+        v-if="!visible.length"
         :description="tab === 'following' ? '还没有关注的主播，可从主播主页或公会页添加' : '暂无正在直播的主播'"
-        style="padding: 64px 0"
+        class="py-16 text-xs"
       />
-      <div class="directory-grid">
+
+      <div class="directory-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <article
           v-for="entry in visible"
           :key="entry.id"
-          class="streamer-card"
+          class="streamer-card group flex flex-col rounded-xl border border-border/80 bg-card overflow-hidden shadow-xs hover:border-primary/40 hover:shadow-md transition"
         >
           <a
             v-if="entry.roomId"
             :href="`https://live.bilibili.com/${entry.roomId}`"
             target="_blank"
             rel="noopener noreferrer"
-            class="streamer-cover"
+            class="streamer-cover relative aspect-video bg-muted/40 overflow-hidden block"
           >
             <img
               v-if="entry.cover"
@@ -134,135 +153,58 @@ function changed(entry: LiveDirectoryEntry, following: boolean) {
               alt=""
               loading="lazy"
               referrerpolicy="no-referrer"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
             />
-            <NTag
-              class="streamer-status"
-              size="small"
-              :type="freshStatus(entry) === 'live' ? 'success' : 'default'"
-            >
-              {{
-                freshStatus(entry) === 'live' ? '直播中' : freshStatus(entry) === 'offline' ? '未开播' : '状态待更新'
-              }}
-            </NTag>
-          </a>
-          <div class="streamer-body">
-            <h2>{{ entry.title || entry.name }}</h2>
-            <div class="streamer-person">
-              <RouterLink :to="`/@${entry.id}`"
-                ><NAvatar
-                  round
-                  :size="28"
-                  :src="entry.avatar"
-                />
-                <span>{{ entry.name }}</span></RouterLink
+            <div class="absolute top-2 left-2">
+              <Badge
+                class="text-[10px] h-5 px-1.5 font-medium"
+                :class="[
+                  freshStatus(entry) === 'live'
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-500'
+                    : 'bg-black/60 text-white/90 backdrop-blur-xs',
+                ]"
               >
+                {{
+                  freshStatus(entry) === 'live' ? '直播中' : freshStatus(entry) === 'offline' ? '未开播' : '状态待更新'
+                }}
+              </Badge>
+            </div>
+          </a>
+          <div class="streamer-body p-3.5 flex flex-col flex-1 gap-2">
+            <h2 class="text-sm font-semibold line-clamp-1 group-hover:text-primary transition" :title="entry.title || entry.name">
+              {{ entry.title || entry.name }}
+            </h2>
+            <div class="streamer-person flex items-center justify-between gap-2 mt-auto pt-1">
+              <RouterLink
+                :to="`/@${entry.id}`"
+                class="flex items-center gap-2 min-w-0 hover:text-primary transition"
+              >
+                <Avatar class="size-7 shrink-0 border border-border/50">
+                  <AvatarImage :src="entry.avatar" />
+                  <AvatarFallback>{{ entry.name?.slice(0, 1) }}</AvatarFallback>
+                </Avatar>
+                <span class="text-xs font-medium truncate">{{ entry.name }}</span>
+              </RouterLink>
               <FollowButton
                 :user-id="entry.id"
                 :following="entry.isFollowing"
                 @changed="changed(entry, $event)"
               />
             </div>
-            <p class="streamer-meta">
-              {{ entry.area
-              }}<template v-if="entry.updatedAt">
-                ·
-                <NTime
-                  :time="entry.updatedAt * 1000"
-                  format="HH:mm:ss"
-                />
-                更新</template
-              ><template v-else>状态待更新</template>
+            <p class="streamer-meta text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/50">
+              <span class="truncate">{{ entry.area }}</span>
+              <template v-if="entry.updatedAt">
+                <span>·</span>
+                <span class="font-mono">{{ formatTime(entry.updatedAt) }} 更新</span>
+              </template>
+              <template v-else>
+                <span>·</span>
+                <span>状态待更新</span>
+              </template>
             </p>
           </div>
         </article>
       </div>
-    </NSpin>
+    </template>
   </main>
 </template>
-
-<style scoped>
-.live-directory {
-  max-width: 1120px;
-  margin: auto;
-  padding: 32px 20px;
-  color: var(--vtsuru-fg);
-}
-.directory-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-h1 {
-  font-size: 26px;
-  margin: 0 0 8px;
-}
-.directory-header p,
-.streamer-meta {
-  color: var(--vtsuru-fg-muted);
-  font-size: 13px;
-}
-.directory-search {
-  max-width: 360px;
-  margin: 8px 0 24px;
-}
-.directory-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
-  gap: 18px;
-}
-.streamer-card {
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--vtsuru-bg-elevated);
-}
-.streamer-cover {
-  display: block;
-  position: relative;
-  aspect-ratio: 16 / 9;
-  background: var(--vtsuru-bg-muted);
-}
-.streamer-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.streamer-status {
-  position: absolute;
-  bottom: 10px;
-  left: 12px;
-}
-.streamer-body {
-  padding: 16px;
-}
-h2 {
-  margin: 0 0 14px;
-  font-size: 15px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.streamer-person {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.streamer-person a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  color: inherit;
-  text-decoration: none;
-}
-.streamer-person span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.streamer-meta {
-  margin: 12px 0 0;
-}
-</style>

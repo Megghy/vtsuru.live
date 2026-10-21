@@ -1,26 +1,5 @@
 <script setup lang="ts">
 import { AddSquare24Regular, Info24Filled } from '@vicons/fluent'
-import {
-  NAvatar,
-  NButton,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NSpin,
-  NStatistic,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 import type {
@@ -34,7 +13,23 @@ import {
   getApiPointGetUserOrders,
   postApiPointGivePoint,
 } from '@/api/generated/point/point'
+import { formatTime } from '@/apps/manage/composables/formatters'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
+import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Separator } from '@/shared/ui/separator'
+import { Spin } from '@/shared/ui/spin'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   user: ResponsePointUserModel
@@ -60,18 +55,10 @@ type PointTarget =
 
 const pointTarget = computed<PointTarget | null>(() => {
   const info = props.user.info
-  if (!info) {
-    return null
-  }
-  if (info.id > 0) {
-    return { type: 'auth', authId: info.id }
-  }
-  if (info.userId > 0) {
-    return { type: 'uid', userId: info.userId }
-  }
-  if (info.openId && info.openId !== emptyOpenId) {
-    return { type: 'openid', openId: info.openId }
-  }
+  if (!info) return null
+  if (info.id > 0) return { type: 'auth', authId: info.id }
+  if (info.userId > 0) return { type: 'uid', userId: info.userId }
+  if (info.openId && info.openId !== emptyOpenId) return { type: 'openid', openId: info.openId }
   return null
 })
 
@@ -101,9 +88,7 @@ function getGivePointParams(target: PointTarget) {
 
 async function getOrders() {
   const info = props.user.info
-  if (!info || info.id <= 0) {
-    return []
-  }
+  if (!info || info.id <= 0) return []
 
   try {
     isLoading.value = true
@@ -115,7 +100,7 @@ async function getOrders() {
       data: ResponsePointOrder2OwnerModel[]
     }
 
-    if (data.code == 200) {
+    if (data.code === 200) {
       return data.data
     } else {
       message.error(`获取订单失败: ${data.message}`)
@@ -134,11 +119,8 @@ async function getOrders() {
 async function getPointHistory() {
   try {
     isLoading.value = true
-
     const target = pointTarget.value
-    if (!target) {
-      return []
-    }
+    if (!target) return []
 
     const data = (await getApiPointGetUserHistories(
       getHistoryParams(target) as any,
@@ -148,7 +130,7 @@ async function getPointHistory() {
       data: ResponsePointHisrotyModel[]
     }
 
-    if (data.code == 200) {
+    if (data.code === 200) {
       return data.data
     } else {
       message.error(`获取积分历史失败: ${data.message}`)
@@ -165,7 +147,7 @@ async function getPointHistory() {
 }
 
 async function givePoint() {
-  if (addPointCount.value == 0) {
+  if (addPointCount.value === 0) {
     message.error('积分数量不能为 0')
     return
   }
@@ -184,7 +166,7 @@ async function givePoint() {
       reason: addPointReason.value,
     } as any)
 
-    if (data.code == 200) {
+    if (data.code === 200) {
       message.success('添加成功')
       showAddPointModal.value = false
       props.user.point = Number((props.user.point + addPointCount.value).toFixed(1))
@@ -209,7 +191,6 @@ async function givePoint() {
 
 onMounted(async () => {
   pointHistory.value = await getPointHistory()
-
   if ((props.user.info?.id ?? 0) > 0) {
     orders.value = await getOrders()
   }
@@ -217,264 +198,148 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="user-detail-container">
+  <div class="space-y-4 p-4">
     <!-- 用户基本信息 -->
-    <div class="user-header">
-      <NFlex
-        justify="space-between"
-        align="start"
-        :wrap="false"
-      >
-        <NFlex
-          :gap="16"
-          align="center"
-        >
-          <NAvatar
-            :src="user.info.avatar"
-            round
-            :size="64"
-            fallback-src="/img/no-face.png"
-            style="border: 1px solid var(--vtsuru-border)"
-          />
-          <div class="user-basic-info">
-            <NFlex
-              align="center"
-              :gap="8"
-              style="margin-bottom: 4px"
-            >
-              <span class="user-name">{{ user.info.name || '未知用户' }}</span>
-              <NTag
-                :type="user.isAuthed ? 'success' : 'warning'"
-                size="small"
-                round
-                :bordered="false"
-              >
-                {{ user.isAuthed ? '已认证' : '未认证' }}
-              </NTag>
-            </NFlex>
-            <NFlex
-              vertical
-              :gap="2"
-              class="user-ids"
-            >
-              <span v-if="user.info.userId > 0">UID: {{ user.info.userId }}</span>
-              <span v-if="user.info.openId && user.info.openId !== emptyOpenId">OpenId: {{ user.info.openId }}</span>
-            </NFlex>
-          </div>
-        </NFlex>
-
-        <NButton
-          type="primary"
-          secondary
-          :disabled="!canAdjustPoint"
-          @click="showAddPointModal = true"
-        >
-          <template #icon>
-            <NIcon :component="AddSquare24Regular" />
-          </template>
-          积分调整
-        </NButton>
-      </NFlex>
-
-      <NDivider style="margin: 20px 0" />
-
-      <NGrid
-        cols="2 400:4"
-        :x-gap="24"
-        :y-gap="12"
-      >
-        <NGridItem>
-          <NStatistic
-            label="当前积分"
-            :value="user.point"
-            :precision="1"
-          />
-        </NGridItem>
-        <NGridItem>
-          <NStatistic
-            label="订单总数"
-            :value="user.orderCount"
-          />
-        </NGridItem>
-        <NGridItem>
-          <div class="info-item-static">
-            <div class="info-label">认证时间</div>
-            <div class="info-value">
-              <NTime
-                v-if="user.isAuthed"
-                :time="user.info.createAt"
-              />
-              <span v-else>--</span>
+    <Card class="border border-border">
+      <CardContent class="p-5 space-y-4">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-4">
+            <Avatar class="size-14 border border-border">
+              <AvatarImage :src="user.info.avatar" fallback-src="/img/no-face.png" />
+              <AvatarFallback>{{ user.info.name?.slice(0, 2) || '用户' }}</AvatarFallback>
+            </Avatar>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-base font-semibold text-foreground">{{ user.info.name || '未知用户' }}</span>
+                <Tag :type="user.isAuthed ? 'success' : 'warning'" size="small" round :bordered="false">
+                  {{ user.isAuthed ? '已认证' : '未认证' }}
+                </Tag>
+              </div>
+              <div class="text-xs text-muted-foreground flex flex-col gap-0.5">
+                <span v-if="user.info.userId > 0">UID: {{ user.info.userId }}</span>
+                <span v-if="user.info.openId && user.info.openId !== emptyOpenId">OpenId: {{ user.info.openId }}</span>
+              </div>
             </div>
           </div>
-        </NGridItem>
-      </NGrid>
-    </div>
+
+          <Button
+            size="sm"
+            variant="outline"
+            class="gap-1.5"
+            :disabled="!canAdjustPoint"
+            @click="showAddPointModal = true"
+          >
+            <AddSquare24Regular class="size-4" />
+            积分调整
+          </Button>
+        </div>
+
+        <Separator />
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            <span class="text-xs text-muted-foreground block">当前积分</span>
+            <span class="text-lg font-bold font-mono text-foreground mt-0.5 block">
+              {{ user.point.toFixed(1) }}
+            </span>
+          </div>
+          <div>
+            <span class="text-xs text-muted-foreground block">订单总数</span>
+            <span class="text-lg font-bold font-mono text-foreground mt-0.5 block">
+              {{ user.orderCount }}
+            </span>
+          </div>
+          <div>
+            <span class="text-xs text-muted-foreground block">认证时间</span>
+            <span class="text-xs font-medium text-foreground mt-1.5 block">
+              {{ user.isAuthed && user.info.createAt ? formatTime(user.info.createAt) : '--' }}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
 
     <!-- 数据标签页 -->
-    <div class="data-tabs">
-      <NTabs
-        type="line"
-        animated
-        default-value="orders"
-      >
-        <NTabPane
-          name="orders"
-          tab="订单记录"
-        >
-          <NSpin :show="isLoading">
-            <NEmpty
-              v-if="orders.length === 0"
-              description="暂无订单"
-              class="empty-container"
-            />
-            <PointOrderCard
-              v-else
-              :order="orders"
-              type="owner"
-              :goods="goods"
-            />
-          </NSpin>
-        </NTabPane>
-        <NTabPane
-          name="history"
-          tab="积分流水"
-        >
-          <NSpin :show="isLoading">
-            <NEmpty
-              v-if="!pointHistory.length"
-              description="暂无积分记录"
-              class="empty-container"
-            />
-            <PointHistoryCard
-              v-else
-              :histories="pointHistory"
-            />
-          </NSpin>
-        </NTabPane>
-      </NTabs>
-    </div>
+    <Tabs default-value="orders" class="w-full">
+      <TabsList class="h-9">
+        <TabsTrigger value="orders" class="text-xs">订单记录</TabsTrigger>
+        <TabsTrigger value="history" class="text-xs">积分流水</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="orders" class="pt-3">
+        <Spin :show="isLoading">
+          <Empty v-if="orders.length === 0" description="暂无订单" class="py-8" />
+          <PointOrderCard
+            v-else
+            :order="orders"
+            type="owner"
+            :goods="goods"
+          />
+        </Spin>
+      </TabsContent>
+
+      <TabsContent value="history" class="pt-3">
+        <Spin :show="isLoading">
+          <Empty v-if="!pointHistory.length" description="暂无积分记录" class="py-8" />
+          <PointHistoryCard
+            v-else
+            :histories="pointHistory"
+          />
+        </Spin>
+      </TabsContent>
+    </Tabs>
 
     <!-- 积分调整弹窗 -->
-    <NModal
-      v-model:show="showAddPointModal"
-      preset="card"
-      style="width: 480px; max-width: 90vw"
-      title="给予/扣除积分"
-      :bordered="false"
-      size="small"
-    >
-      <NFlex
-        vertical
-        :gap="16"
-      >
-        <NFlex
-          align="center"
-          :wrap="false"
-          :gap="8"
-        >
-          <NInputNumber
-            v-model:value="addPointCount"
-            type="number"
-            placeholder="积分数量"
-            style="flex: 1"
-          >
-            <template #prefix>
-              <NIcon :component="AddSquare24Regular" />
-            </template>
-          </NInputNumber>
+    <Dialog v-model:open="showAddPointModal">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold">给予 / 扣除积分</DialogTitle>
+        </DialogHeader>
 
-          <NTooltip>
-            <template #trigger>
-              <NIcon
-                :component="Info24Filled"
-                class="info-icon"
-              />
-            </template>
-            正数为给予，负数为扣除
-          </NTooltip>
-        </NFlex>
+        <div class="space-y-3 py-2">
+          <div class="space-y-1">
+            <div class="flex items-center gap-1.5">
+              <label class="text-xs font-medium text-foreground">积分数量</label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p class="text-xs">正数为给予，负数为扣除</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <NInputNumber
+              v-model="addPointCount"
+              placeholder="积分数量"
+              class="w-full"
+            />
+          </div>
 
-        <NInput
-          v-model:value="addPointReason"
-          placeholder="请输入备注 (可选)"
-          :maxlength="100"
-          show-count
-          clearable
-          type="textarea"
-          :autosize="{ minRows: 2, maxRows: 4 }"
-        />
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">备注说明 (可选)</label>
+            <Textarea
+              v-model="addPointReason"
+              placeholder="请输入调整备注"
+              :maxlength="100"
+              class="text-xs"
+              :rows="3"
+            />
+          </div>
+        </div>
 
-        <div style="display: flex; justify-content: flex-end">
-          <NButton
-            type="primary"
-            :loading="isLoading"
-            :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0"
+        <DialogFooter>
+          <Button
+            size="sm"
+            :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0 || isLoading"
             @click="givePoint"
           >
             {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '确认给予' : '确认扣除' }}
-          </NButton>
-        </div>
-      </NFlex>
-    </NModal>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
-
-<style scoped>
-.user-detail-container {
-  padding: 20px;
-}
-
-.user-header {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 24px;
-  margin-bottom: 16px;
-}
-
-.user-name {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.user-ids {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.info-item-static {
-  display: flex;
-  flex-direction: column;
-}
-
-.info-label {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  margin-bottom: 4px;
-}
-
-.info-value {
-  font-size: 20px; /* match NStatistic value size approximately */
-  color: var(--vtsuru-fg);
-  font-variant-numeric: tabular-nums;
-}
-
-.data-tabs {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 16px 24px;
-}
-
-.empty-container {
-  margin: 32px 0;
-  min-height: 100px;
-}
-
-.info-icon {
-  color: var(--vtsuru-fg-muted);
-  cursor: help;
-}
-</style>

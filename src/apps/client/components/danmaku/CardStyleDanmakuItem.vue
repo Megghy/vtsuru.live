@@ -3,10 +3,10 @@ import { storeToRefs } from 'pinia'
 
 import { useLiveEmoji } from '@/store/useLiveEmoji'
 import { Box24Regular, Heart24Filled, VehicleShip24Filled } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 
 import { EventDataTypes } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { useDanmakuUtils } from './danmakuUtils'
@@ -56,40 +56,44 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
           </span>
         </template>
         <template v-else-if="item.type === EventDataTypes.Gift">
-          <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
-            <template #trigger>
-              <span class="gift-box-badge">
-                <NIcon
-                  :component="Box24Regular"
-                  size="12"
-                />
-                <span v-if="giftDisplay.mysteryBoxPriceText">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
-              </span>
-            </template>
-            <div class="gift-box-tooltip">
-              <div
-                v-if="giftDisplay.mysteryBoxName"
-                class="gift-box-tooltip__row"
-              >
-                <span class="gift-box-tooltip__label">来源</span>
-                <span class="gift-box-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
-              </div>
-              <div
-                v-if="giftDisplay.mysteryBoxPriceText"
-                class="gift-box-tooltip__row"
-              >
-                <span class="gift-box-tooltip__label">盲盒价</span>
-                <span class="gift-box-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
-              </div>
-              <div
-                v-if="giftDisplay.giftPriceText"
-                class="gift-box-tooltip__row"
-              >
-                <span class="gift-box-tooltip__label">开出价</span>
-                <span class="gift-box-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
-              </div>
-            </div>
-          </NTooltip>
+          <TooltipProvider v-if="giftDisplay.hasMysteryBoxGift">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <span class="gift-box-badge">
+                  <component
+                    :is="Box24Regular"
+                    style="width: 12px; height: 12px"
+                  />
+                  <span v-if="giftDisplay.mysteryBoxPriceText">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div class="gift-box-tooltip">
+                  <div
+                    v-if="giftDisplay.mysteryBoxName"
+                    class="gift-box-tooltip__row"
+                  >
+                    <span class="gift-box-tooltip__label">来源</span>
+                    <span class="gift-box-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
+                  </div>
+                  <div
+                    v-if="giftDisplay.mysteryBoxPriceText"
+                    class="gift-box-tooltip__row"
+                  >
+                    <span class="gift-box-tooltip__label">盲盒价</span>
+                    <span class="gift-box-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+                  </div>
+                  <div
+                    v-if="giftDisplay.giftPriceText"
+                    class="gift-box-tooltip__row"
+                  >
+                    <span class="gift-box-tooltip__label">开出价</span>
+                    <span class="gift-box-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <span
             class="gift-badge"
             :isPay="giftDisplay.hasPaidGift"
@@ -147,9 +151,9 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
           class="guard-icon"
           :style="{ backgroundColor: guardColor }"
         >
-          <NIcon
-            :component="VehicleShip24Filled"
-            size="12"
+          <component
+            :is="VehicleShip24Filled"
+            style="width: 12px; height: 12px"
           />
         </span>
         <!-- 添加粉丝勋章显示 -->
@@ -170,9 +174,9 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
         </template>
         <template v-else-if="item.type === EventDataTypes.Like">
           <span class="like-badge">
-            <NIcon
-              :component="Heart24Filled"
-              style="vertical-align: -2px; margin-right: 2px"
+            <component
+              :is="Heart24Filled"
+              style="width: 12px; height: 12px; vertical-align: -2px; margin-right: 2px"
             />
             点赞了
           </span>

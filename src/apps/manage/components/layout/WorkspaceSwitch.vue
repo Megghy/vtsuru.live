@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Live24Filled, Person48Filled } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 
@@ -20,7 +19,10 @@ const { workspace, switchWorkspace } = useManageWorkspace()
       :title="collapsed ? '主播后台' : undefined"
       @click="switchWorkspace('streamer')"
     >
-      <NIcon :component="Live24Filled" />
+      <component
+        :is="Live24Filled"
+        class="h-3.5 w-3.5"
+      />
       <span v-if="!collapsed">主播</span>
     </button>
     <button
@@ -29,7 +31,10 @@ const { workspace, switchWorkspace } = useManageWorkspace()
       :title="collapsed ? '观众' : undefined"
       @click="switchWorkspace('user')"
     >
-      <NIcon :component="Person48Filled" />
+      <component
+        :is="Person48Filled"
+        class="h-3.5 w-3.5"
+      />
       <span v-if="!collapsed">观众</span>
     </button>
   </div>
@@ -64,6 +69,7 @@ const { workspace, switchWorkspace } = useManageWorkspace()
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .workspace-switch button.active {
@@ -79,5 +85,11 @@ const { workspace, switchWorkspace } = useManageWorkspace()
 .workspace-switch--collapsed {
   width: auto;
   grid-template-columns: 1fr;
+  padding: 2px;
+}
+
+.workspace-switch--collapsed button {
+  width: 28px;
+  padding: 0;
 }
 </style>

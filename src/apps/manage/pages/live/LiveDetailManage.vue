@@ -2,26 +2,10 @@
 import {
   ArrowLeft24Regular,
   Chat24Regular,
-  DocumentBulletList24Regular,
-  Mic24Regular,
-  Open24Regular,
   DataPie24Regular,
+  Mic24Regular,
 } from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NSkeleton,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTime,
-  useMessage,
-} from 'naive-ui'
+import {  useMessage  } from '@/shared/utils'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -34,6 +18,11 @@ import LiveOverviewPanel from '@/apps/manage/components/live/LiveOverviewPanel.v
 import LiveTranscriptPanel from '@/apps/manage/components/live/LiveTranscriptPanel.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useVTsuruHub } from '@/store/useVTsuruHub'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card } from '@/shared/ui/card'
+import { Skeleton } from '@/shared/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 interface ResponseLiveDetail {
   live: ResponseLiveInfoModel
@@ -119,7 +108,7 @@ function onNewDanmaku(event: DanmakuModel) {
   }
 }
 
-function handleTabChange(tab: string) {
+function handleTabChange(tab: string | number) {
   activeTab.value = tab as 'overview' | 'danmaku' | 'transcript'
   if (tab === 'transcript') {
     nextTick(() => transcriptPanelRef.value?.load())
@@ -138,202 +127,136 @@ onBeforeUnmount(async () => {
 </script>
 
 <template>
-  <div class="live-detail-view">
+  <div class="space-y-4 w-full">
     <ManagePageHeader
       :title="pageTitle"
       :subtitle="pageSubtitle"
-      :loading="isLoading"
     >
       <template #action>
-        <NButton
-          secondary
-          size="small"
-          @click="router.push({ name: 'manage-live' })"
-        >
-          <template #icon>
-            <NIcon :component="ArrowLeft24Regular" />
-          </template>
-          返回列表
-        </NButton>
+        <div class="flex items-center gap-2">
+          <Button
+            size="xs"
+            variant="outline"
+            @click="router.push({ name: 'manage-live' })"
+          >
+            <component
+              :is="ArrowLeft24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
+            返回列表
+          </Button>
 
-        <NTag
-          v-if="liveInfo"
-          size="small"
-          :bordered="false"
-          :type="isLiveFinished ? 'default' : 'error'"
-        >
-          <span
-            v-if="!isLiveFinished"
-            class="live-status-dot"
-          />
-          {{ isLiveFinished ? '历史归档' : '实时直播中' }}
-        </NTag>
+          <Badge
+            v-if="liveInfo"
+            :variant="isLiveFinished ? 'secondary' : 'destructive'"
+            class="text-[10px] px-1.5 py-0 h-5"
+          >
+            <span
+              v-if="!isLiveFinished"
+              class="w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse"
+            />
+            {{ isLiveFinished ? '历史归档' : '实时直播中' }}
+          </Badge>
+        </div>
       </template>
     </ManagePageHeader>
 
     <div
       v-if="isLoading"
-      class="loading-skeleton"
+      class="space-y-3"
     >
-      <NCard size="small">
-        <NSkeleton height="80px" />
-      </NCard>
-      <NCard size="small">
-        <NSkeleton height="320px" />
-      </NCard>
+      <Skeleton class="h-24 rounded-lg" />
+      <Skeleton class="h-80 rounded-lg" />
     </div>
 
     <template v-else-if="liveInfo">
       <!-- 场次简要信息条卡片 -->
-      <NCard
-        size="small"
-        class="live-summary-card"
-        :bordered="true"
-      >
-        <LiveInfoContainer
-          :live="liveInfo.live"
-          :show-actions="false"
-        />
-      </NCard>
+      <LiveInfoContainer
+        :live="liveInfo.live"
+        :show-actions="false"
+      />
 
       <!-- 三大工作台 Tab 切换 -->
-      <div class="tabs-container">
-        <NTabs
-          :value="activeTab"
-          type="segment"
-          size="small"
-          animated
-          class="workbench-tabs"
-          @update:value="handleTabChange"
+      <Tabs
+        :model-value="activeTab"
+        class="w-full space-y-4"
+        @update:model-value="handleTabChange"
+      >
+        <TabsList class="grid grid-cols-3 w-full sm:w-96">
+          <TabsTrigger value="overview">
+            <component
+              :is="DataPie24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
+            本场复盘
+          </TabsTrigger>
+          <TabsTrigger value="danmaku">
+            <component
+              :is="Chat24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
+            弹幕互动
+          </TabsTrigger>
+          <TabsTrigger value="transcript">
+            <component
+              :is="Mic24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
+            语音转写
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent
+          value="overview"
+          class="space-y-4"
         >
-          <NTabPane
-            name="overview"
-            tab="本场复盘"
-          >
-            <template #tab>
-              <NFlex align="center" :size="4">
-                <NIcon :component="DataPie24Regular" />
-                <span>本场复盘</span>
-              </NFlex>
-            </template>
-            <LiveOverviewPanel
-              :live="liveInfo.live"
-              :danmakus="liveInfo.danmakus"
-            />
-          </NTabPane>
+          <LiveOverviewPanel
+            :live="liveInfo.live"
+            :danmakus="liveInfo.danmakus"
+          />
+        </TabsContent>
 
-          <NTabPane
-            name="danmaku"
-            tab="弹幕与互动明细"
-          >
-            <template #tab>
-              <NFlex align="center" :size="4">
-                <NIcon :component="Chat24Regular" />
-                <span>弹幕与互动明细</span>
-              </NFlex>
-            </template>
-            <DanmakuContainer
-              ref="danmakuContainerRef"
-              :current-live="liveInfo.live"
-              :current-danmakus="liveInfo.danmakus ?? []"
-              height="640px"
-              to="userDanmakus"
-            />
-          </NTabPane>
+        <TabsContent
+          value="danmaku"
+          class="space-y-4"
+        >
+          <DanmakuContainer
+            ref="danmakuContainerRef"
+            :current-live="liveInfo.live"
+            :current-danmakus="liveInfo.danmakus ?? []"
+            height="640px"
+            to="userDanmakus"
+          />
+        </TabsContent>
 
-          <NTabPane
-            name="transcript"
-            tab="语音转写与切片"
-          >
-            <template #tab>
-              <NFlex align="center" :size="4">
-                <NIcon :component="Mic24Regular" />
-                <span>语音转写与切片</span>
-              </NFlex>
-            </template>
-            <LiveTranscriptPanel
-              ref="transcriptPanelRef"
-              :live-id="liveInfo.live.liveId"
-            />
-          </NTabPane>
-        </NTabs>
-      </div>
+        <TabsContent
+          value="transcript"
+          class="space-y-4"
+        >
+          <LiveTranscriptPanel
+            ref="transcriptPanelRef"
+            :live-id="liveInfo.live.liveId"
+          />
+        </TabsContent>
+      </Tabs>
     </template>
 
-    <div
+    <Card
       v-else
-      class="empty-state-box"
+      class="p-12 text-center"
     >
-      <NCard size="small">
-        <NEmpty description="未找到对应场次的直播数据">
-          <template #extra>
-            <NButton
-              type="primary"
-              secondary
-              @click="loadInitialData"
-            >
-              重新加载
-            </NButton>
-          </template>
-        </NEmpty>
-      </NCard>
-    </div>
+      <div class="text-muted-foreground text-sm">
+        未找到对应场次的直播数据
+      </div>
+      <div class="mt-3">
+        <Button
+          size="xs"
+          variant="brand"
+          @click="loadInitialData"
+        >
+          重新加载
+        </Button>
+      </div>
+    </Card>
   </div>
 </template>
-
-<style scoped>
-.live-detail-view {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-.live-status-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #ef4444;
-  margin-right: 6px;
-  animation: pulse-red 1.5s infinite;
-}
-
-@keyframes pulse-red {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0.9);
-    opacity: 0.7;
-  }
-}
-
-.loading-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.live-summary-card {
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-card);
-}
-
-.tabs-container {
-  margin-top: 2px;
-}
-
-.workbench-tabs {
-  margin-bottom: 8px;
-}
-
-.empty-state-box {
-  padding: 40px 0;
-}
-</style>

@@ -1,24 +1,17 @@
 <script setup lang="ts">
-import { NCard } from 'naive-ui'
-
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import ClientTranscriptionPanel from '@/apps/client/components/settings/ClientTranscriptionPanel.vue'
+import { Card, CardContent } from '@/shared/ui/card'
 </script>
 
 <template>
-  <NCard
-    size="small"
-    style="margin-bottom: 12px;"
-  >
+  <Card class="mb-3 p-3">
     <ClientPageHeader
       title="语音转写"
       description="从直播音频实时转出文字"
     />
-  </NCard>
-  <NCard
-    size="small"
-    bordered
-  >
+  </Card>
+  <Card class="p-3">
     <ClientTranscriptionPanel />
-  </NCard>
+  </Card>
 </template>

@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
-import { NAvatar, NCard, NDivider, NEmpty, NFlex, NSpin, NText } from 'naive-ui'
 import { onMounted, ref, watch } from 'vue'
 
 import type { UserBasicInfo } from '@/api/api-models'
 import { getApiUserBasicValue } from '@/api/generated/user/user'
 import { getUserAvatarUrl } from '@/shared/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Separator } from '@/shared/ui/separator'
+import { Spin } from '@/shared/ui/spin'
 
 const props = defineProps<{
   user: string | number
@@ -24,6 +28,7 @@ watch(
     deBounce(newValue)
   },
 )
+
 async function getUserInfo(user: string | number) {
   try {
     if (!props.user) {
@@ -35,7 +40,7 @@ async function getUserInfo(user: string | number) {
       code: number
       data: UserBasicInfo
     }
-    if (data.code == 200) {
+    if (data.code === 200) {
       currentUser.value = data.data
     } else {
       currentUser.value = {} as UserBasicInfo
@@ -52,26 +57,25 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpin :show="isLoading">
-    <NCard size="small">
-      <NEmpty
-        v-if="!currentUser.id"
-        :description="user ? (isLoading ? '加载中' : '未找到用户') : '未选择用户'"
-      />
-      <NFlex
-        v-else
-        align="center"
-      >
-        <NAvatar
-          round
-          :src="getUserAvatarUrl(currentUser.id)"
-          :img-props="{ referrerpolicy: 'no-referrer' }"
+  <Spin :show="isLoading">
+    <Card class="p-3">
+      <CardContent class="p-0">
+        <Empty
+          v-if="!currentUser.id"
+          size="small"
+          :description="user ? (isLoading ? '加载中' : '未找到用户') : '未选择用户'"
         />
-        <NDivider vertical />
-        <NText>
-          {{ currentUser.name }}
-        </NText>
-      </NFlex>
-    </NCard>
-  </NSpin>
+        <div v-else class="flex items-center gap-3">
+          <Avatar class="size-8">
+            <AvatarImage :src="getUserAvatarUrl(currentUser.id)" referrerpolicy="no-referrer" />
+            <AvatarFallback>{{ currentUser.name?.slice(0, 2) || '用户' }}</AvatarFallback>
+          </Avatar>
+          <Separator orientation="vertical" class="h-4" />
+          <span class="text-xs font-medium text-foreground">
+            {{ currentUser.name }}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  </Spin>
 </template>

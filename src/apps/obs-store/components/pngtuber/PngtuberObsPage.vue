@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NSpace, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -9,9 +8,13 @@ import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
 import { DEFAULT_PNGTUBER_STATE } from '@/shared/pngtuber/types'
 import type { PngtuberState } from '@/shared/pngtuber/types'
 import { usePngtuberRuntime } from '@/shared/pngtuber/usePngtuberRuntime'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 
 import PngtuberDisplay from './PngtuberDisplay.vue'
 import PngtuberMicrophone from './PngtuberMicrophone.vue'
+
 const route = useRoute()
 const channel = computed(() => resolveObsSyncChannel(route.query.channel))
 const debug = computed(() => 'debug' in route.query && firstQueryValue(route.query.debug) !== '0')
@@ -32,9 +35,9 @@ const state = computed(() => normalized.value.state)
 const live = usePngtuberRuntime(bridge.userId, channel)
 const { runtime, connected, error: runtimeError } = live
 const { isReady, errorMessage, userId } = bridge
-const localVolume = ref(0),
-  localSpeaking = ref(false),
-  assetError = ref('')
+const localVolume = ref(0)
+const localSpeaking = ref(false)
+const assetError = ref('')
 const microphone = computed(() => state.value.inputMode === 'microphone')
 function sample(volume: number, speaking: boolean) {
   localVolume.value = volume
@@ -44,6 +47,7 @@ function retry() {
   window.location.reload()
 }
 </script>
+
 <template>
   <PngtuberDisplay
     :state="state"
@@ -55,50 +59,69 @@ function retry() {
     @asset-error="assetError = $event"
   />
   <div :class="{ diagnostics: debug }">
-    <NCard
+    <Card
       v-if="debug"
-      title="PNGTuber · OBS 诊断"
-      size="small"
+      class="p-3"
     >
-      <NSpace vertical>
-        <NText>用户 {{ userId || '未指定' }} · 频道 {{ channel }} · 输入 {{ state.inputMode }}</NText>
-        <NText
-          >配置 {{ isReady ? '就绪' : '加载中' }} · 运行时 {{ connected ? '已连接' : '未连接' }} · 来源
-          {{ runtime.source || '无' }}</NText
-        >
-        <NText
-          >表情 {{ runtime.expressionId || state.defaultExpressionId }} · 音量
+      <CardHeader class="p-0 pb-2">
+        <CardTitle class="text-sm font-semibold">PNGTuber · OBS 诊断</CardTitle>
+      </CardHeader>
+      <CardContent class="p-0 space-y-2 text-xs">
+        <div>用户 {{ userId || '未指定' }} · 频道 {{ channel }} · 输入 {{ state.inputMode }}</div>
+        <div>
+          配置 {{ isReady ? '就绪' : '加载中' }} · 运行时 {{ connected ? '已连接' : '未连接' }} · 来源
+          {{ runtime.source || '无' }}
+        </div>
+        <div>
+          表情 {{ runtime.expressionId || state.defaultExpressionId }} · 音量
           {{ Math.round(microphone ? localVolume : runtime.volume) }} ·
-          {{ runtime.muted ? '静音' : runtime.away ? '暂离' : '正常' }}</NText
-        >
-        <NAlert
+          {{ runtime.muted ? '静音' : runtime.away ? '暂离' : '正常' }}
+        </div>
+        <Alert
           v-if="normalized.error || errorMessage || runtimeError || assetError"
-          type="warning"
-          >{{ normalized.error || errorMessage || runtimeError || assetError }}</NAlert
+          class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-1.5 px-2"
         >
-        <NAlert
+          <AlertDescription class="text-xs m-0">
+            {{ normalized.error || errorMessage || runtimeError || assetError }}
+          </AlertDescription>
+        </Alert>
+        <Alert
           v-if="!userId"
-          type="warning"
-          >链接缺少用户 ID，请从管理页重新复制浏览器源链接。</NAlert
+          class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-1.5 px-2"
         >
-        <NAlert
+          <AlertDescription class="text-xs m-0">
+            链接缺少用户 ID，请从管理页重新复制浏览器源链接。
+          </AlertDescription>
+        </Alert>
+        <Alert
           v-if="state.inputMode === 'client' || state.inputMode === 'obs'"
-          type="info"
-          >需要启动 VTsuru 客户端并启用同频道输入。OBS 模式还需客户端连接 OBS。</NAlert
+          class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-1.5 px-2"
         >
-        <NAlert
+          <AlertDescription class="text-xs m-0">
+            需要启动 VTsuru 客户端并启用同频道输入。OBS 模式还需客户端连接 OBS。
+          </AlertDescription>
+        </Alert>
+        <Alert
           v-if="state.inputMode === 'controller'"
-          type="info"
-          >请保持同频道管理页打开并启动麦克风。</NAlert
+          class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-1.5 px-2"
         >
-        <NButton
-          size="small"
+          <AlertDescription class="text-xs m-0">
+            请保持同频道管理页打开并启动麦克风。
+          </AlertDescription>
+        </Alert>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-7 text-xs"
           @click="retry"
-          >重新加载 / 重试连接</NButton
         >
-        <NText depth="3">通过 OBS 浏览器源「交互」选择设备；完成后移除链接的 debug 参数即可恢复透明画面。</NText>
-      </NSpace>
-    </NCard>
+          重新加载 / 重试连接
+        </Button>
+        <div class="text-[11px] text-muted-foreground">
+          通过 OBS 浏览器源「交互」选择设备；完成后移除链接的 debug 参数即可恢复透明画面。
+        </div>
+      </CardContent>
+    </Card>
     <div
       v-if="isReady && microphone && !normalized.error"
       :class="{ 'microphone-panel': debug }"
@@ -115,6 +138,7 @@ function retry() {
     </div>
   </div>
 </template>
+
 <style scoped>
 .diagnostics {
   position: fixed;

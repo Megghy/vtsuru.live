@@ -2,40 +2,25 @@
 // @ts-ignore
 import { saveAs } from 'file-saver'
 import { snapdom } from '@zumer/snapdom'
-import {
-  NButton,
-  NDivider,
-  NFlex,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NModal,
-  NSelect,
-  useThemeVars,
-  useMessage,
-} from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref, useTemplateRef } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { CURRENT_HOST } from '@/shared/config'
-import { copyToClipboard, downloadImage } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { Separator } from '@/shared/ui/separator'
+import { copyToClipboard, downloadImage, useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const show = defineModel<boolean>('show', { required: true })
 const accountInfo = useAccount()
 const useQB = useQuestionBox()
-const themeVars = useThemeVars()
 const message = useMessage()
 
 const shareCardRef = useTemplateRef<HTMLElement>('shareCardRef')
-const selectedShareTag = ref<string | null>(null)
-
-const shareCardStyleVars = computed(() => ({
-  '--share-radius': themeVars.value.borderRadius,
-  '--share-gradient-from': themeVars.value.primaryColor,
-  '--share-gradient-to': themeVars.value.infoColor,
-}))
+const selectedShareTag = ref<string>('')
 
 const modalShareUrl = computed(() => {
   const name = accountInfo.value?.name
@@ -72,203 +57,100 @@ function saveQRCode() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
-    title="分享我的提问箱"
-    style="max-width: 95vw; width: 600px; max-height: 90vh"
-    content-style="overflow-y: auto; max-height: calc(90vh - 110px);"
-  >
-    <div
-      ref="shareCardRef"
-      class="share-card-container"
-      :style="shareCardStyleVars"
-    >
-      <div class="share-card-background" />
-      <div class="share-card-content">
-        <div class="share-card-main">
-          <div class="share-card-text">
-            <div class="share-card-title">向我提问</div>
-            <div class="share-card-name">
-              {{ accountInfo?.name }}
+  <Dialog v-model:open="show">
+    <DialogContent class="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle class="text-sm font-semibold">分享我的提问箱</DialogTitle>
+      </DialogHeader>
+
+      <div class="space-y-4 py-1">
+        <!-- 分享卡片预览 -->
+        <div
+          ref="shareCardRef"
+          class="relative h-48 w-full rounded-xl overflow-hidden shadow-sm"
+        >
+          <div class="absolute inset-0 bg-gradient-to-br from-indigo-500 to-sky-500 z-1" />
+          <div class="relative z-2 flex justify-between items-stretch h-full p-5 text-white">
+            <div class="flex flex-col justify-between flex-1 pr-4">
+              <div>
+                <div class="text-xl font-bold opacity-90">向我提问</div>
+                <div class="text-3xl font-semibold leading-tight max-w-[280px] break-words line-clamp-2 mt-1">
+                  {{ accountInfo?.name }}
+                </div>
+              </div>
+              <div>
+                <div class="h-px bg-white/30 my-2 w-4/5" />
+                <div class="flex justify-between items-center text-xs opacity-80">
+                  <span class="font-medium">提问箱</span>
+                  <span>VTSURU.LIVE</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-center shrink-0 bg-white/95 p-2 rounded-lg size-24 self-center shadow">
+              <QrcodeVue
+                :value="modalShareUrl"
+                level="Q"
+                :size="80"
+                background="#FFFFFF"
+                foreground="#000000"
+                :margin="0"
+                render-as="svg"
+              />
             </div>
           </div>
-          <div class="share-card-divider" />
-          <div class="share-card-meta">
-            <div class="share-card-type">提问箱</div>
-            <div class="share-card-site">VTSURU.LIVE</div>
+        </div>
+
+        <!-- 选项设置 -->
+        <div class="space-y-1.5">
+          <label class="text-xs text-muted-foreground">附加话题 (可选)</label>
+          <select
+            v-model="selectedShareTag"
+            class="w-full h-8 rounded-md border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="">不附加话题</option>
+            <option
+              v-for="t in useQB.tags.filter((t) => t.visiable)"
+              :key="t.name"
+              :value="t.name"
+            >
+              #{{ t.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- 分享链接 -->
+        <div class="space-y-1.5">
+          <label class="text-xs text-muted-foreground">分享链接</label>
+          <div class="flex items-center gap-2">
+            <Input
+              :model-value="modalShareUrl"
+              readonly
+              class="h-8 text-xs font-mono flex-1"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="!modalShareUrl"
+              class="h-8 text-xs"
+              @click="copyToClipboard(modalShareUrl)"
+            >
+              复制
+            </Button>
           </div>
         </div>
-        <div class="share-card-qr">
-          <QrcodeVue
-            :value="modalShareUrl"
-            level="Q"
-            :size="90"
-            background="#FFFFFF"
-            foreground="#000000"
-            :margin="1"
-            render-as="svg"
-          />
+
+        <Separator />
+
+        <div class="flex items-center justify-center gap-3">
+          <Button size="sm" @click="saveShareImage">
+            保存分享图
+          </Button>
+          <Button variant="outline" size="sm" @click="saveQRCode">
+            保存二维码
+          </Button>
         </div>
       </div>
-    </div>
-
-    <NDivider style="margin-top: 20px; margin-bottom: 10px"> 分享链接设置 </NDivider>
-    <NSelect
-      v-model:value="selectedShareTag"
-      placeholder="选择要附加到链接的话题 (可选)"
-      filterable
-      clearable
-      :options="useQB.tags.filter((t) => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
-    />
-
-    <NDivider style="margin-top: 20px; margin-bottom: 10px"> 分享链接 </NDivider>
-    <NInputGroup>
-      <NInputGroupLabel>链接</NInputGroupLabel>
-      <NInput
-        :value="modalShareUrl"
-        readonly
-        placeholder="提问箱链接"
-      />
-      <NButton
-        secondary
-        :disabled="!modalShareUrl"
-        @click="copyToClipboard(modalShareUrl)"
-      >
-        复制
-      </NButton>
-    </NInputGroup>
-
-    <NDivider style="margin-top: 20px; margin-bottom: 15px" />
-    <NFlex justify="center">
-      <NButton
-        type="primary"
-        @click="saveShareImage"
-      >
-        保存分享图
-      </NButton>
-      <NButton
-        type="primary"
-        secondary
-        @click="saveQRCode"
-      >
-        保存二维码
-      </NButton>
-    </NFlex>
-  </NModal>
+    </DialogContent>
+  </Dialog>
 </template>
-
-<style scoped>
-.share-card-container {
-  position: relative;
-  height: 200px;
-  width: 100%;
-  border-radius: var(--share-radius);
-  overflow: hidden;
-}
-.share-card-background {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, var(--share-gradient-from) 0%, var(--share-gradient-to) 100%);
-  z-index: 1;
-}
-.share-card-content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-  height: 100%;
-  padding: 20px;
-  color: white;
-}
-.share-card-main {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex-grow: 1;
-  padding-right: 20px;
-}
-.share-card-title {
-  font-size: 28px;
-  font-weight: bold;
-  line-height: 1.2;
-  margin-bottom: 8px;
-  opacity: 0.9;
-}
-.share-card-name {
-  font-size: 42px;
-  font-weight: 500;
-  line-height: 1.1;
-  max-width: 350px;
-  word-wrap: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: 90px;
-}
-.share-card-divider {
-  height: 1px;
-  background-color: rgba(255, 255, 255, 0.3);
-  margin: 10px 0;
-  width: 80%;
-}
-.share-card-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.share-card-type {
-  font-size: 16px;
-  font-weight: 500;
-  opacity: 0.8;
-}
-.share-card-site {
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.7;
-}
-.share-card-qr {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 8px;
-  border-radius: var(--share-radius);
-  height: 108px;
-  width: 108px;
-  align-self: center;
-}
-.share-card-qr svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-@media (max-width: 500px) {
-  .share-card-content {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 15px;
-  }
-  .share-card-main {
-    padding-right: 0;
-    margin-bottom: 15px;
-    align-items: center;
-  }
-  .share-card-qr {
-    width: 100px;
-    height: 100px;
-  }
-  .share-card-name {
-    font-size: 36px;
-  }
-  .share-card-divider {
-    width: 100%;
-  }
-  .share-card-meta {
-    width: 100%;
-  }
-}
-</style>

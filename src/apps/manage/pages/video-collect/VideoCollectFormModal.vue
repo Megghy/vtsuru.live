@@ -1,28 +1,30 @@
 <script setup lang="ts">
 import { ChevronDown24Regular, ChevronUp24Regular, Filter24Regular } from '@vicons/fluent'
-import type { FormInst, FormItemRule, FormRules } from 'naive-ui'
-import {
-  NButton,
-  NCollapse,
-  NCollapseItem,
-  NDatePicker,
-  NDynamicTags,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSwitch,
-  NText,
-} from 'naive-ui'
+import { format } from 'date-fns'
 import { computed, ref, watch } from 'vue'
 
 import type { VideoCollectCreateModel } from '@/api/api-models'
 import { DuplicateVideoPolicy } from '@/api/api-models'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { useMessage } from '@/shared/utils'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
 
 const props = defineProps<{
   show: boolean
@@ -36,57 +38,25 @@ const emit = defineEmits<{
   submit: [value: VideoCollectCreateModel]
 }>()
 
-const formRef = ref<FormInst>()
+const message = useMessage()
 const model = ref<VideoCollectCreateModel>(createModel())
-const expandedNames = ref<string[]>([])
+const showAdvanced = ref(false)
+const partitionInput = ref('')
 
-const minDurationMinutes = computed({
-  get: () => model.value.minVideoDuration / 60,
-  set: (value: number | null) => (model.value.minVideoDuration = Math.round((value ?? 0) * 60)),
-})
-const maxDurationMinutes = computed({
-  get: () => model.value.maxVideoDuration / 60,
-  set: (value: number | null) => (model.value.maxVideoDuration = Math.round((value ?? 0) * 60)),
-})
+const startDateStr = ref('')
+const endDateStr = ref('')
 
-const rules: FormRules = {
-  name: {
-    required: true,
-    message: '请输入征集名称',
-    trigger: ['input', 'blur'],
-  },
-  startAt: {
-    required: true,
-    type: 'number',
-    message: '请选择开放时间',
-    trigger: ['change', 'blur'],
-  },
-  endAt: [
-    { required: true, type: 'number', message: '请选择截止时间' },
-    {
-      message: '截止时间至少需要在当前时间一小时后',
-      validator: (_rule: FormItemRule, value: number) => value >= Date.now() + 60 * 60 * 1000,
-      trigger: ['change', 'blur'],
-    },
-    {
-      message: '截止时间必须晚于开放时间',
-      validator: (_rule: FormItemRule, value: number) => value > model.value.startAt,
-      trigger: ['change', 'blur'],
-    },
-  ],
-  maxVideoCount: {
-    required: true,
-    type: 'number',
-    min: 1,
-    max: 10000,
-    message: '最大视频数需要在 1 到 10000 之间',
-    trigger: ['input', 'blur'],
-  },
-  minVideoDuration: {
-    message: '最短时长不能超过最长时长',
-    validator: () => model.value.maxVideoDuration === 0 || model.value.minVideoDuration <= model.value.maxVideoDuration,
-    trigger: ['input', 'blur'],
-  },
+function formatForInput(ts: number) {
+  try {
+    return format(ts, "yyyy-MM-dd'T'HH:mm")
+  } catch {
+    return ''
+  }
+}
+
+function parseFromInput(str: string) {
+  const parsed = new Date(str).getTime()
+  return isNaN(parsed) ? Date.now() : parsed
 }
 
 watch(
@@ -94,7 +64,8 @@ watch(
   (show) => {
     if (!show) return
     model.value = createModel(props.initialValue)
-    // 若初始值中包含了自定义高级限制，默认展开高级选项
+    startDateStr.value = formatForInput(model.value.startAt)
+    endDateStr.value = formatForInput(model.value.endAt)
     const hasCustomAdvanced = Boolean(
       props.initialValue?.minVideoDuration ||
       props.initialValue?.maxVideoDuration ||
@@ -104,8 +75,7 @@ watch(
       (props.initialValue?.duplicatePolicy !== undefined &&
         props.initialValue.duplicatePolicy !== DuplicateVideoPolicy.MergeRecommendations),
     )
-    expandedNames.value = hasCustomAdvanced ? ['advanced'] : []
-    formRef.value?.restoreValidation()
+    showAdvanced.value = hasCustomAdvanced
   },
 )
 
@@ -127,337 +97,284 @@ function createModel(value?: Partial<VideoCollectCreateModel>): VideoCollectCrea
   }
 }
 
+function addPartition() {
+  const p = partitionInput.value.trim()
+  if (!p) return
+  if (!model.value.allowedPartitions.includes(p)) {
+    model.value.allowedPartitions.push(p)
+  }
+  partitionInput.value = ''
+}
+
+function removePartition(p: string) {
+  model.value.allowedPartitions = model.value.allowedPartitions.filter((item) => item !== p)
+}
+
 function close() {
   emit('update:show', false)
 }
 
-async function submit() {
-  try {
-    await formRef.value?.validate()
-    emit('submit', { ...model.value, allowedPartitions: [...model.value.allowedPartitions] })
-  } catch (errors: any) {
-    // 校验失败时自动展开高级折叠面板，定位高亮未填/错误字段 (规则 #362)
-    const advancedFields = ['minVideoDuration', 'maxVideoDuration', 'allowedPartitions', 'maxVideoPerUser']
-    if (Array.isArray(errors)) {
-      const hasAdvancedError = errors.some((errArr: any) =>
-        Array.isArray(errArr)
-          ? errArr.some((err: any) => advancedFields.includes(err?.field))
-          : advancedFields.includes(errArr?.field),
-      )
-      if (hasAdvancedError && !expandedNames.value.includes('advanced')) {
-        expandedNames.value = [...expandedNames.value, 'advanced']
-      }
-    }
+function submit() {
+  const name = model.value.name.trim()
+  if (!name) {
+    message.warning('请输入征集名称')
+    return
   }
+
+  const startAt = parseFromInput(startDateStr.value)
+  const endAt = parseFromInput(endDateStr.value)
+
+  if (endAt <= startAt) {
+    message.warning('截止时间必须晚于开放时间')
+    return
+  }
+
+  model.value.startAt = startAt
+  model.value.endAt = endAt
+
+  if (model.value.maxVideoCount <= 0) {
+    message.warning('最大视频数需要在 1 到 10000 之间')
+    return
+  }
+
+  emit('submit', { ...model.value, allowedPartitions: [...model.value.allowedPartitions] })
 }
 </script>
 
 <template>
-  <NModal
-    :show="show"
-    preset="card"
-    :title="title"
-    class="collect-form-modal"
-    style="width: 680px; max-width: calc(100vw - 32px)"
-    @update:show="emit('update:show', $event)"
+  <Dialog
+    :open="show"
+    @update:open="(val) => emit('update:show', val)"
   >
-    <NScrollbar style="max-height: min(75vh, 680px); padding-right: 8px">
-      <NForm
-        ref="formRef"
-        :model="model"
-        :rules="rules"
-        label-placement="top"
-        class="collect-form"
-      >
-        <!-- 主视图：核心必填与高频配置 (规则 #362) -->
-        <section class="form-core-section">
-          <NFormItem
-            label="征集名称"
-            path="name"
-          >
-            <NInput
-              v-model:value="model.name"
-              placeholder="例如：三周年回顾视频征集"
-              maxlength="30"
-              show-count
-            />
-          </NFormItem>
+    <DialogContent class="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle>{{ title }}</DialogTitle>
+        <DialogDescription class="text-xs">
+          配置视频征集的主题、开放时间、名额与投稿过滤规则
+        </DialogDescription>
+      </DialogHeader>
 
-          <NFormItem
-            label="征集说明"
-            path="description"
-          >
-            <NInput
-              v-model:value="model.description"
-              type="textarea"
-              placeholder="填写主题、投稿要求或注意事项（选填）"
-              maxlength="300"
-              show-count
-              :autosize="{ minRows: 2, maxRows: 4 }"
-            />
-          </NFormItem>
+      <div class="space-y-4 py-2 text-xs">
+        <!-- 基础配置 -->
+        <div class="space-y-1.5">
+          <label class="font-semibold text-foreground">征集名称 <span class="text-destructive">*</span></label>
+          <Input
+            v-model="model.name"
+            placeholder="例如：三周年回顾视频征集"
+            maxlength="30"
+            class="h-8 text-xs"
+          />
+        </div>
 
-          <div class="field-grid field-grid--two">
-            <NFormItem
-              label="开放时间"
-              path="startAt"
-            >
-              <NDatePicker
-                v-model:value="model.startAt"
-                type="datetime"
-                style="width: 100%"
-              />
-            </NFormItem>
-            <NFormItem
-              label="截止时间"
-              path="endAt"
-            >
-              <NDatePicker
-                v-model:value="model.endAt"
-                type="datetime"
-                style="width: 100%"
-              />
-            </NFormItem>
+        <div class="space-y-1.5">
+          <label class="font-semibold text-foreground">征集说明</label>
+          <textarea
+            v-model="model.description"
+            rows="2"
+            placeholder="填写主题、投稿要求或注意事项（选填）"
+            maxlength="300"
+            class="w-full text-xs rounded-md border border-input bg-transparent px-3 py-2 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <label class="font-semibold text-foreground">开放时间</label>
+            <Input
+              v-model="startDateStr"
+              type="datetime-local"
+              class="h-8 text-xs"
+            />
+          </div>
+          <div class="space-y-1.5">
+            <label class="font-semibold text-foreground">截止时间</label>
+            <Input
+              v-model="endDateStr"
+              type="datetime-local"
+              class="h-8 text-xs"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <label class="font-semibold text-foreground">最大征集视频数</label>
+            <Input
+              v-model.number="model.maxVideoCount"
+              type="number"
+              min="1"
+              max="10000"
+              class="h-8 text-xs"
+            />
           </div>
 
-          <div class="field-grid field-grid--two">
-            <NFormItem
-              label="最大征集视频数"
-              path="maxVideoCount"
-            >
-              <NInputNumber
-                v-model:value="model.maxVideoCount"
-                :min="1"
-                :max="10000"
-                :precision="0"
-                style="width: 100%"
-              />
-            </NFormItem>
-
-            <div class="switch-field-box">
-              <div class="switch-field-info">
-                <strong>允许游客投稿</strong>
-                <span class="switch-field-desc">未绑定 B 站账号的用户也可提交</span>
+          <div class="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/20">
+            <div>
+              <div class="font-semibold text-foreground">
+                允许游客投稿
               </div>
-              <NSwitch v-model:value="model.allowUnregisteredUser" />
+              <div class="text-[10px] text-muted-foreground">
+                未绑定 B 站也可提交
+              </div>
             </div>
+            <Switch
+              :checked="model.allowUnregisteredUser"
+              @update:checked="(val) => (model.allowUnregisteredUser = val)"
+            />
           </div>
-        </section>
+        </div>
 
-        <!-- 低频高级限制与过滤选项 (默认折叠收纳) -->
-        <NCollapse
-          v-model:expanded-names="expandedNames"
-          arrow-placement="right"
-          class="advanced-collapse"
-        >
-          <NCollapseItem
-            name="advanced"
-            class="advanced-collapse-item"
+        <!-- 高级折叠面板 -->
+        <div class="border border-border rounded-lg overflow-hidden">
+          <button
+            type="button"
+            class="w-full flex items-center justify-between p-2.5 bg-muted/30 hover:bg-muted/50 text-left font-semibold text-foreground transition-colors"
+            @click="showAdvanced = !showAdvanced"
           >
-            <template #header>
-              <div class="advanced-header">
-                <NIcon :component="Filter24Regular" />
-                <span>高级过滤与投稿限制</span>
-                <NText
-                  depth="3"
-                  class="advanced-header-hint"
-                >
-                  （时长限制、分区白名单、重复策略、推荐人限额）
-                </NText>
-              </div>
-            </template>
+            <div class="flex items-center gap-1.5">
+              <component
+                :is="Filter24Regular"
+                class="h-3.5 w-3.5 text-brand"
+              />
+              <span>高级过滤与投稿限制</span>
+            </div>
+            <component
+              :is="showAdvanced ? ChevronUp24Regular : ChevronDown24Regular"
+              class="h-3.5 w-3.5 text-muted-foreground"
+            />
+          </button>
 
-            <div class="advanced-content">
-              <!-- 时长限制 -->
-              <div class="field-grid field-grid--two">
-                <NFormItem
-                  label="最短时长"
-                  path="minVideoDuration"
-                >
-                  <NInputNumber
-                    v-model:value="minDurationMinutes"
-                    :min="0"
-                    :max="1440"
-                    :precision="0"
-                    placeholder="0 表示不限制"
-                    style="width: 100%"
-                  >
-                    <template #suffix>分钟</template>
-                  </NInputNumber>
-                </NFormItem>
-                <NFormItem
-                  label="最长时长"
-                  path="maxVideoDuration"
-                >
-                  <NInputNumber
-                    v-model:value="maxDurationMinutes"
-                    :min="0"
-                    :max="1440"
-                    :precision="0"
-                    placeholder="0 表示不限制"
-                    style="width: 100%"
-                  >
-                    <template #suffix>分钟</template>
-                  </NInputNumber>
-                </NFormItem>
-              </div>
-
-              <!-- 分区白名单 -->
-              <NFormItem label="允许分区白名单">
-                <NDynamicTags
-                  v-model:value="model.allowedPartitions"
-                  :max="20"
+          <div
+            v-if="showAdvanced"
+            class="p-3 space-y-3 bg-card border-t border-border"
+          >
+            <!-- 时长限制 -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="text-[11px] text-muted-foreground">最短时长 (秒，0为不限)</label>
+                <Input
+                  v-model.number="model.minVideoDuration"
+                  type="number"
+                  min="0"
+                  class="h-7 text-xs"
                 />
-                <template #feedback
-                  >留空表示不限任何分区；填写 B 站视频分区名称（如：游戏、单机游戏），按 Enter 添加</template
-                >
-              </NFormItem>
-
-              <!-- 重复策略与推荐理由必填 -->
-              <div class="field-grid field-grid--two">
-                <NFormItem label="重复视频处理">
-                  <NRadioGroup v-model:value="model.duplicatePolicy">
-                    <NRadioButton :value="DuplicateVideoPolicy.MergeRecommendations">合并推荐人</NRadioButton>
-                    <NRadioButton :value="DuplicateVideoPolicy.Reject">直接拒绝</NRadioButton>
-                  </NRadioGroup>
-                </NFormItem>
-
-                <NFormItem label="每位粉丝最多推荐">
-                  <NInputNumber
-                    v-model:value="model.maxVideoPerUser"
-                    :min="0"
-                    :max="100"
-                    :precision="0"
-                    placeholder="0 为不限制"
-                    style="width: 100%"
-                  >
-                    <template #suffix>个视频</template>
-                  </NInputNumber>
-                </NFormItem>
               </div>
-
-              <div class="switch-field-box is-inline">
-                <div class="switch-field-info">
-                  <strong>推荐理由必填</strong>
-                  <span class="switch-field-desc">粉丝投稿时必须填写推荐看点与理由</span>
-                </div>
-                <NSwitch v-model:value="model.requireDescription" />
+              <div class="space-y-1">
+                <label class="text-[11px] text-muted-foreground">最长时长 (秒，0为不限)</label>
+                <Input
+                  v-model.number="model.maxVideoDuration"
+                  type="number"
+                  min="0"
+                  class="h-7 text-xs"
+                />
               </div>
             </div>
-          </NCollapseItem>
-        </NCollapse>
-      </NForm>
-    </NScrollbar>
 
-    <template #footer>
-      <div class="collect-form-modal__actions">
-        <NButton @click="close">取消</NButton>
-        <NButton
-          type="primary"
+            <!-- 分区白名单 -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] text-muted-foreground">允许分区白名单 (留空表示不限制)</label>
+              <div class="flex items-center gap-1.5">
+                <Input
+                  v-model="partitionInput"
+                  placeholder="例如：单机游戏，回车添加"
+                  class="h-7 text-xs flex-1"
+                  @keyup.enter="addPartition"
+                />
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="h-7 px-2"
+                  @click="addPartition"
+                >
+                  添加
+                </Button>
+              </div>
+              <div
+                v-if="model.allowedPartitions.length > 0"
+                class="flex flex-wrap gap-1 pt-1"
+              >
+                <Badge
+                  v-for="p in model.allowedPartitions"
+                  :key="p"
+                  variant="secondary"
+                  class="text-[10px] pr-1 flex items-center gap-1 cursor-pointer"
+                  @click="removePartition(p)"
+                >
+                  {{ p }}
+                  <span class="text-muted-foreground hover:text-foreground">×</span>
+                </Badge>
+              </div>
+            </div>
+
+            <!-- 重复策略与粉丝限额 -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="text-[11px] text-muted-foreground">重复视频策略</label>
+                <Select
+                  :model-value="String(model.duplicatePolicy)"
+                  @update:model-value="(val) => (model.duplicatePolicy = Number(val) as DuplicateVideoPolicy)"
+                >
+                  <SelectTrigger class="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem :value="String(DuplicateVideoPolicy.MergeRecommendations)">
+                      合并推荐人
+                    </SelectItem>
+                    <SelectItem :value="String(DuplicateVideoPolicy.Reject)">
+                      直接拒绝
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[11px] text-muted-foreground">每人最多推荐 (0为不限)</label>
+                <Input
+                  v-model.number="model.maxVideoPerUser"
+                  type="number"
+                  min="0"
+                  class="h-7 text-xs"
+                />
+              </div>
+            </div>
+
+            <!-- 推荐理由必填 -->
+            <div class="flex items-center justify-between p-2 rounded-md border border-border bg-muted/10">
+              <div>
+                <div class="font-semibold text-foreground">
+                  推荐理由必填
+                </div>
+                <div class="text-[10px] text-muted-foreground">
+                  投稿时必须附带推荐看点说明
+                </div>
+              </div>
+              <Switch
+                :checked="model.requireDescription"
+                @update:checked="(val) => (model.requireDescription = val)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button
+          size="xs"
+          variant="ghost"
+          @click="close"
+        >
+          取消
+        </Button>
+        <Button
+          size="xs"
+          variant="brand"
           :loading="loading"
           @click="submit"
         >
           保存
-        </NButton>
-      </div>
-    </template>
-  </NModal>
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
-
-<style scoped>
-.collect-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.form-core-section {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.field-grid {
-  display: grid;
-  gap: 14px;
-  align-items: flex-start;
-}
-
-.field-grid--two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.switch-field-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  margin-top: 4px;
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  min-height: 40px;
-}
-
-.switch-field-box.is-inline {
-  margin-top: 8px;
-}
-
-.switch-field-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.switch-field-info strong {
-  font-size: 13px;
-  color: var(--vtsuru-fg);
-}
-
-.switch-field-desc {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.advanced-collapse {
-  margin-top: 4px;
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-}
-
-.advanced-header {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.advanced-header-hint {
-  font-size: 11px;
-  font-weight: 400;
-}
-
-.advanced-content {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 8px 4px 4px;
-}
-
-.collect-form-modal__actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-@media (max-width: 600px) {
-  .field-grid--two {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-</style>

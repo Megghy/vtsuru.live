@@ -1,12 +1,5 @@
 <script setup lang="ts">
 import { Search24Regular } from '@vicons/fluent'
-import {
-  NFlex,
-  NIcon,
-  NInput,
-  NRadioButton,
-  NRadioGroup,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import {
@@ -15,6 +8,7 @@ import {
   obsComponentList,
 } from '@/apps/obs-store/registry'
 import type { ObsCategory, ObsComponentStatus } from '@/apps/obs-store/registry'
+import { Input } from '@/shared/ui/input'
 
 const props = defineProps<{
   category: ObsCategory
@@ -30,6 +24,13 @@ const emit = defineEmits<{
 
 const categoryCounts = computed(() => getCategoryCounts())
 const availableCount = computed(() => obsComponentList.filter((item) => item.status !== 'planned').length)
+
+const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
+  { label: '全部', value: 'all' },
+  { label: '已就绪', value: 'ready' },
+  { label: '内测', value: 'beta' },
+  { label: '规划中', value: 'planned' },
+]
 </script>
 
 <template>
@@ -37,33 +38,26 @@ const availableCount = computed(() => obsComponentList.filter((item) => item.sta
     <!-- 顶部标题与简要说明 -->
     <div class="header-main-row">
       <div class="title-block">
-        <NFlex
-          align="center"
-          :size="8"
-        >
+        <div class="flex items-center gap-2">
           <h1 class="page-title">
             OBS 独立组件
           </h1>
           <span class="ready-badge">{{ availableCount }} 个可用</span>
-        </NFlex>
+        </div>
         <p class="page-desc">
           收录独立 OBS 浏览器源。纯本地组件即开即用，需要同步的组件会在配置台保存并实时更新。
         </p>
       </div>
 
       <!-- 搜索框 -->
-      <div class="search-box">
-        <NInput
+      <div class="search-box relative">
+        <Search24Regular class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Input
           :value="props.search"
           placeholder="搜索组件或标签..."
-          clearable
-          size="small"
-          @update:value="emit('update:search', $event)"
-        >
-          <template #prefix>
-            <NIcon :component="Search24Regular" />
-          </template>
-        </NInput>
+          class="h-8 text-xs pl-8 w-full"
+          @input="emit('update:search', ($event.target as HTMLInputElement).value)"
+        />
       </div>
     </div>
 
@@ -79,9 +73,9 @@ const availableCount = computed(() => obsComponentList.filter((item) => item.sta
           :class="{ active: props.category === cat.id }"
           @click="emit('update:category', cat.id)"
         >
-          <NIcon
+          <component
+            :is="cat.icon"
             v-if="cat.icon"
-            :component="cat.icon"
             class="cat-icon"
           />
           <span class="cat-name">{{ cat.name }}</span>
@@ -89,26 +83,18 @@ const availableCount = computed(() => obsComponentList.filter((item) => item.sta
         </button>
       </div>
 
-      <!-- 状态单选 -->
-      <div class="status-group">
-        <NRadioGroup
-          :value="props.statusFilter"
-          size="small"
-          @update:value="emit('update:statusFilter', $event)"
+      <!-- 状态单选按钮组 -->
+      <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
+        <button
+          v-for="opt in statusOptions"
+          :key="opt.value"
+          type="button"
+          class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+          :class="props.statusFilter === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+          @click="emit('update:statusFilter', opt.value)"
         >
-          <NRadioButton value="all">
-            全部
-          </NRadioButton>
-          <NRadioButton value="ready">
-            已就绪
-          </NRadioButton>
-          <NRadioButton value="beta">
-            内测
-          </NRadioButton>
-          <NRadioButton value="planned">
-            规划中
-          </NRadioButton>
-        </NRadioGroup>
+          {{ opt.label }}
+        </button>
       </div>
     </div>
   </div>
@@ -236,9 +222,6 @@ const availableCount = computed(() => obsComponentList.filter((item) => item.sta
   .filter-bar {
     flex-direction: column;
     align-items: stretch;
-  }
-  .status-group {
-    align-self: flex-start;
   }
 }
 </style>

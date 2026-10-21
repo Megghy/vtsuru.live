@@ -1,12 +1,24 @@
 <script setup lang="ts">
-import { NButton, NCard, NFormItem, NInput, NInputNumber, NPopconfirm, NSelect, NSpace, NText } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { createExpression, IMAGE_SLOTS } from '@/shared/pngtuber/types'
 import type { ImageSlot, PngtuberExpression, PngtuberState } from '@/shared/pngtuber/types'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 import PngtuberAccessories from './PngtuberAccessories.vue'
 import PngtuberImageSlot from './PngtuberImageSlot.vue'
+
 const props = defineProps<{ state: PngtuberState; disabled: boolean; controlDisabled: boolean }>()
 const emit = defineEmits<{ change: [patch: Partial<PngtuberState>]; activate: [expression: PngtuberExpression] }>()
 const selected = ref(props.state.defaultExpressionId)
@@ -75,73 +87,132 @@ function recordKey(event: KeyboardEvent) {
   })
 }
 </script>
+
 <template>
-  <NCard
-    title="表情与配件"
-    size="small"
-  >
-    <NSpace
-      vertical
-      :size="12"
-    >
-      <NSelect
-        v-model:value="selected"
-        :options="options"
-      />
-      <NSpace
-        ><NButton
-          size="small"
+  <Card class="p-3">
+    <CardHeader class="p-0 pb-2">
+      <CardTitle class="text-sm font-semibold">表情与配件</CardTitle>
+    </CardHeader>
+    <CardContent class="p-0 space-y-3">
+      <Select v-model="selected">
+        <SelectTrigger class="h-8 text-xs w-full">
+          <SelectValue placeholder="选择表情" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="opt in options"
+            :key="opt.value"
+            :value="opt.value"
+            class="text-xs"
+          >
+            {{ opt.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 text-xs"
           :disabled="disabled || state.expressions.length >= 32"
           @click="add()"
-          >新增</NButton
-        ><NButton
-          size="small"
+        >
+          新增
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 text-xs"
           :disabled="disabled || state.expressions.length >= 32"
           @click="add(true)"
-          >复制</NButton
-        ><NPopconfirm
+        >
+          复制
+        </Button>
+        <Popconfirm
+          title="删除表情"
           :disabled="disabled || state.expressions.length <= 1"
           @positive-click="remove"
-          ><template #trigger
-            ><NButton
-              size="small"
-              type="error"
+        >
+          <template #trigger>
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
               :disabled="disabled || state.expressions.length <= 1"
-              >删除</NButton
-            ></template
-          >删除此表情及其配件？</NPopconfirm
-        ><NButton
-          size="small"
+            >
+              删除
+            </Button>
+          </template>
+          删除此表情及其配件？
+        </Popconfirm>
+        <Button
+          size="sm"
+          class="h-8 text-xs"
           :disabled="controlDisabled"
           @click="emit('activate', expression)"
-          >切换表情</NButton
-        ></NSpace
-      >
-      <NInput
+        >
+          切换表情
+        </Button>
+      </div>
+
+      <Input
         :value="expression.name"
         :disabled="disabled"
         placeholder="表情名称"
-        @update:value="patch({ name: $event })"
+        class="h-8 text-xs"
+        @input="patch({ name: ($event.target as HTMLInputElement).value })"
       />
+
       <div class="fields">
-        <NFormItem
-          label="默认表情"
-          :show-feedback="false"
-          ><NSelect
-            :value="state.defaultExpressionId"
-            :options="options"
+        <div class="space-y-1">
+          <label class="text-xs text-muted-foreground font-medium">默认表情</label>
+          <Select
+            :model-value="state.defaultExpressionId"
             :disabled="disabled"
-            @update:value="emit('change', { defaultExpressionId: $event })" /></NFormItem
-        ><NFormItem
-          label="暂离表情"
-          :show-feedback="false"
-          ><NSelect
-            :value="state.awayExpressionId"
-            :options="[{ label: '使用默认表情', value: '' }, ...options]"
+            @update:model-value="emit('change', { defaultExpressionId: String($event ?? '') })"
+          >
+            <SelectTrigger class="h-8 text-xs w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in options"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs text-muted-foreground font-medium">暂离表情</label>
+          <Select
+            :model-value="state.awayExpressionId"
             :disabled="disabled"
-            @update:value="emit('change', { awayExpressionId: $event })"
-        /></NFormItem>
+            @update:model-value="emit('change', { awayExpressionId: $event ? String($event) : undefined })"
+          >
+            <SelectTrigger class="h-8 text-xs w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="" class="text-xs">使用默认表情</SelectItem>
+              <SelectItem
+                v-for="opt in options"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
       <div class="fields">
         <PngtuberImageSlot
           v-for="slot in IMAGE_SLOTS"
@@ -152,76 +223,101 @@ function recordKey(event: KeyboardEvent) {
           @change="patch({ [slot]: $event })"
         />
       </div>
-      <NButton
-        size="small"
+
+      <Button
+        size="sm"
+        variant="outline"
+        class="h-8 text-xs"
         :disabled="disabled || !expression.idleImage"
         @click="patch({ speakingImage: expression.idleImage })"
-        >将静止立绘用于说话</NButton
       >
+        将静止立绘用于说话
+      </Button>
+
       <div class="fields">
-        <NFormItem
-          label="快捷键（按键录入，退格清除）"
-          :show-feedback="false"
-          ><NInput
+        <div class="space-y-1">
+          <label class="text-xs text-muted-foreground font-medium">快捷键（按键录入，退格清除）</label>
+          <Input
             :value="expression.hotkey"
             readonly
             :disabled="disabled"
             placeholder="点击后按快捷键"
-            @keydown="recordKey" /></NFormItem
-        ><NFormItem
-          label="快捷键模式"
-          :show-feedback="false"
-          ><NSelect
-            :value="expression.hotkeyMode"
+            class="h-8 text-xs"
+            @keydown="recordKey"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs text-muted-foreground font-medium">快捷键模式</label>
+          <Select
+            :model-value="expression.hotkeyMode"
             :disabled="disabled"
-            :options="[
-              { label: '切换', value: 'toggle' },
-              { label: '按住', value: 'hold' },
-              { label: '定时', value: 'timed' },
-            ]"
-            @update:value="patch({ hotkeyMode: $event })"
-        /></NFormItem>
+            @update:model-value="patch({ hotkeyMode: $event as any })"
+          >
+            <SelectTrigger class="h-8 text-xs w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="toggle" class="text-xs">切换</SelectItem>
+              <SelectItem value="hold" class="text-xs">按住</SelectItem>
+              <SelectItem value="timed" class="text-xs">定时</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <NInputNumber
-        v-if="expression.hotkeyMode === 'timed'"
-        :value="expression.durationMs"
-        :disabled="disabled"
-        :min="100"
-        :max="600000"
-        :step="100"
-        @update:value="(value) => value !== null && patch({ durationMs: value })"
-        ><template #suffix>ms</template></NInputNumber
-      >
-      <NText depth="3">网页快捷键在本页获得焦点时生效，编辑输入框时暂停。按住模式松开后恢复原表情。</NText>
-      <NFormItem
-        label="动图播放"
-        :show-feedback="false"
-        ><NSelect
-          :value="expression.playback"
+
+      <div v-if="expression.hotkeyMode === 'timed'" class="space-y-1">
+        <label class="text-xs text-muted-foreground font-medium">持续时长 (ms)</label>
+        <NInputNumber
+          :value="expression.durationMs"
           :disabled="disabled"
-          :options="[
-            { label: '继续播放', value: 'continue' },
-            { label: '激活时重播', value: 'restart' },
-            { label: '播放一次', value: 'once' },
-          ]"
-          @update:value="patch({ playback: $event })"
-      /></NFormItem>
+          :min="100"
+          :max="600000"
+          :step="100"
+          class="w-full"
+          @update:value="(value) => value !== null && patch({ durationMs: value })"
+        />
+      </div>
+
+      <div class="text-xs text-muted-foreground leading-relaxed">
+        网页快捷键在本页获得焦点时生效，编辑输入框时暂停。按住模式松开后恢复原表情。
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground font-medium">动图播放</label>
+        <Select
+          :model-value="expression.playback"
+          :disabled="disabled"
+          @update:model-value="patch({ playback: $event as any })"
+        >
+          <SelectTrigger class="h-8 text-xs w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="continue" class="text-xs">继续播放</SelectItem>
+            <SelectItem value="restart" class="text-xs">激活时重播</SelectItem>
+            <SelectItem value="once" class="text-xs">播放一次</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <PngtuberAccessories
         :key="expression.id"
         :accessories="expression.accessories"
         :disabled="disabled"
         @change="patch({ accessories: $event })"
       />
-    </NSpace>
-  </NCard>
+    </CardContent>
+  </Card>
 </template>
+
 <style scoped>
 .fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .fields {
     grid-template-columns: 1fr;
   }

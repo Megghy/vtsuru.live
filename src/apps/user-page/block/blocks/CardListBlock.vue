@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { NTag } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
+import { Badge } from '@/shared/ui/badge'
 
 import BlockCard from '../BlockCard.vue'
 import CardListAction from './CardListAction.vue'
@@ -84,14 +84,14 @@ const items = computed(() =>
             v-if="item.tags.length"
             class="card-tags"
           >
-            <NTag
+            <Badge
               v-for="tag in item.tags"
               :key="tag"
-              size="small"
-              :bordered="false"
+              variant="secondary"
+              class="text-[10px] px-1.5 py-0.5"
             >
               {{ tag }}
-            </NTag>
+            </Badge>
           </div>
           <div class="card-actions">
             <CardListAction

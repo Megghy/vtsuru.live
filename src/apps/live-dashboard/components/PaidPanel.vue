@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ArrowSort16Regular, CheckmarkCircle16Regular, Clock16Regular, Filter16Regular } from '@vicons/fluent'
-import { NButton, NIcon, NInputNumber, NPopover, NSwitch } from 'naive-ui'
 import { computed } from 'vue'
+
+import { Button } from '@/shared/ui/button'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Switch } from '@/shared/ui/switch'
 
 import { useLiveDashboard } from '../store/useLiveDashboard'
 import EventList from './EventList.vue'
@@ -37,40 +41,36 @@ function markAllRead() {
         :active="sort === 'price'"
         @click="sort = sort === 'price' ? 'time' : 'price'"
       />
-      <NPopover
-        v-if="panel === 'gift'"
-        trigger="click"
-        placement="bottom-end"
-      >
-        <template #trigger>
-          <NButton
-            quaternary
-            size="tiny"
+      <Popover v-if="panel === 'gift'">
+        <PopoverTrigger as-child>
+          <Button
+            variant="ghost"
+            size="icon"
+            class="h-6 w-6"
             aria-label="礼物过滤"
-            :type="dashboard.settings.giftMinPrice > 0 || dashboard.settings.showFreeGift ? 'primary' : 'default'"
+            :class="dashboard.settings.giftMinPrice > 0 || dashboard.settings.showFreeGift ? 'text-primary' : 'text-muted-foreground'"
           >
-            <template #icon>
-              <NIcon :component="Filter16Regular" />
-            </template>
-          </NButton>
-        </template>
-        <div class="gift-filter">
-          <label>最低金额（元），大航海不受影响</label>
-          <NInputNumber
-            v-model:value="dashboard.settings.giftMinPrice"
-            size="small"
-            :min="0"
-            :step="1"
-          />
-          <label class="gift-filter__row">
-            显示免费礼物
-            <NSwitch
-              v-model:value="dashboard.settings.showFreeGift"
+            <component :is="Filter16Regular" class="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent class="w-[220px] p-3 text-xs" align="end">
+          <div class="gift-filter">
+            <label class="text-muted-foreground">最低金额（元），大航海不受影响</label>
+            <NInputNumber
+              v-model="dashboard.settings.giftMinPrice"
               size="small"
+              :min="0"
+              :step="1"
             />
-          </label>
-        </div>
-      </NPopover>
+            <label class="gift-filter__row">
+              显示免费礼物
+              <Switch
+                v-model="dashboard.settings.showFreeGift"
+              />
+            </label>
+          </div>
+        </PopoverContent>
+      </Popover>
       <IconAction
         :icon="CheckmarkCircle16Regular"
         tip="全部标为已读"

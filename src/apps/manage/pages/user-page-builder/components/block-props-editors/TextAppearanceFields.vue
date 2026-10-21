@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { NFormItem, NSelect } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
@@ -31,19 +31,30 @@ const showIntensity = computed(() => {
 </script>
 
 <template>
-  <NFormItem label="文字特效">
-    <NSelect
-      v-model:value="blockProps.textEffect"
-      :options="effectOptions"
-    />
-  </NFormItem>
-  <NFormItem
-    v-if="showIntensity"
-    label="特效强度"
-  >
-    <NSelect
-      v-model:value="blockProps.effectIntensity"
-      :options="intensityOptions"
-    />
-  </NFormItem>
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">文字特效</label>
+    <Select v-model="blockProps.textEffect">
+      <SelectTrigger class="h-8 text-xs">
+        <SelectValue placeholder="选择特效" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem v-for="opt in effectOptions" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+  <div v-if="showIntensity" class="space-y-1">
+    <label class="text-xs text-muted-foreground">特效强度</label>
+    <Select v-model="blockProps.effectIntensity">
+      <SelectTrigger class="h-8 text-xs">
+        <SelectValue placeholder="选择强度" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem v-for="opt in intensityOptions" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
 </template>

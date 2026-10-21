@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { HomeOutline, PeopleOutline, PlayCircleOutline, VideocamOutline } from '@vicons/ionicons5'
-import { NAlert, NAvatar, NButton, NFlex, NIcon, NSkeleton } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Button } from '@/shared/ui/button'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 import type { BiliProfileStatus } from '../../types'
 import BlockCard from '../BlockCard.vue'
@@ -96,174 +99,134 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
   >
     <div
       v-if="displayStatus === 'idle' || displayStatus === 'loading'"
-      class="bili-loading"
+      class="bili-loading flex items-center gap-3 p-4 min-h-[92px]"
       role="status"
       aria-label="正在加载B站信息"
     >
-      <NSkeleton
-        circle
-        width="42px"
-        height="42px"
-      />
-      <div class="bili-loading__content">
-        <NSkeleton
-          text
-          style="width: 38%"
-        />
-        <NSkeleton
-          text
-          :repeat="2"
-        />
+      <Skeleton class="size-10.5 rounded-full shrink-0" />
+      <div class="bili-loading__content flex-1 grid gap-2">
+        <Skeleton class="h-4 w-2/5" />
+        <Skeleton class="h-3 w-full" />
+        <Skeleton class="h-3 w-4/5" />
       </div>
     </div>
-    <NAlert
+    <Alert
       v-else-if="displayStatus === 'error'"
-      type="error"
-      :show-icon="true"
+      variant="destructive"
+      class="text-xs py-2 m-2"
     >
-      B站信息加载失败，请稍后刷新页面重试
-    </NAlert>
-    <NAlert
+      <AlertDescription>
+        B站信息加载失败，请稍后刷新页面重试
+      </AlertDescription>
+    </Alert>
+    <Alert
       v-else-if="displayStatus === 'empty' || !hasContent"
-      type="info"
-      :show-icon="false"
+      class="text-xs py-2 m-2"
     >
-      B站信息暂不可用
-    </NAlert>
+      <AlertDescription>
+        B站信息暂不可用
+      </AlertDescription>
+    </Alert>
     <div
       v-else
       class="bili-card"
     >
       <template v-if="cfg.variant === 'compact'">
-        <div class="bili-compact">
-          <NFlex
-            align="center"
-            justify="space-between"
-            style="gap: 12px"
-            class="compact-header"
-          >
-            <NFlex
-              align="center"
-              style="gap: 10px; min-width: 0"
-            >
-              <NAvatar
+        <div class="bili-compact p-4">
+          <div class="flex items-center justify-between gap-3 compact-header">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <Avatar
                 v-if="cfg.showAvatar && model.face"
-                :src="model.face"
-                round
-                :size="34"
-                :img-props="{
-                  referrerpolicy: 'no-referrer',
-                  loading: 'lazy',
-                  decoding: 'async',
-                  alt: model.name || 'B站头像',
-                }"
-              />
-              <div class="bili-header-text">
+                class="size-8.5 rounded-full shrink-0 border border-border"
+              >
+                <AvatarImage
+                  :src="model.face"
+                  :alt="model.name || 'B站头像'"
+                  referrerpolicy="no-referrer"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <AvatarFallback>{{ (model.name || 'B').slice(0, 1) }}</AvatarFallback>
+              </Avatar>
+              <div class="bili-header-text min-w-0">
                 <strong
                   v-if="cfg.showName && model.name"
-                  class="bili-name"
+                  class="bili-name text-sm font-semibold truncate block"
                 >
                   {{ model.name }}
                 </strong>
-                <span class="bili-sub">
+                <span class="bili-sub text-xs text-muted-foreground truncate block">
                   Bilibili
                   <template v-if="model.biliId"> · @{{ model.biliId }} </template>
                 </span>
               </div>
-            </NFlex>
+            </div>
 
-            <NFlex
+            <div
               v-if="cfg.showButtons"
-              align="center"
-              style="gap: 8px; flex-shrink: 0"
-              class="compact-actions"
+              class="flex items-center gap-2 shrink-0 compact-actions"
             >
-              <NButton
+              <Button
                 v-if="model.spaceUrl"
-                size="tiny"
-                class="action compact"
-                secondary
-                tag="a"
+                as="a"
+                variant="outline"
+                size="sm"
+                class="h-7 px-2.5 text-xs font-medium"
                 target="_blank"
                 rel="noopener noreferrer"
                 :href="model.spaceUrl"
                 aria-label="打开B站主页（新窗口打开）"
               >
-                <template #icon>
-                  <NIcon><HomeOutline /></NIcon>
-                </template>
+                <component :is="HomeOutline" class="size-3.5 mr-1" />
                 主页
-              </NButton>
-              <NButton
+              </Button>
+              <Button
                 v-if="cfg.showLiveRoom && model.liveRoomUrl"
-                size="tiny"
-                class="action compact"
-                secondary
-                tag="a"
+                as="a"
+                variant="outline"
+                size="sm"
+                class="h-7 px-2.5 text-xs font-medium"
                 target="_blank"
                 rel="noopener noreferrer"
                 :href="model.liveRoomUrl"
                 aria-label="打开直播间（新窗口打开）"
               >
-                <template #icon>
-                  <NIcon><PlayCircleOutline /></NIcon>
-                </template>
+                <component :is="PlayCircleOutline" class="size-3.5 mr-1" />
                 直播间
-              </NButton>
-            </NFlex>
-          </NFlex>
+              </Button>
+            </div>
+          </div>
 
           <div
             v-if="cfg.showSign && model.sign"
-            class="bili-compact-sign"
+            class="bili-compact-sign text-xs text-muted-foreground mt-2.5 whitespace-pre-wrap"
           >
             {{ model.sign }}
           </div>
 
           <div
             v-if="cfg.showStats"
-            class="bili-stats compact"
+            class="bili-stats compact mt-3 pt-3 border-t border-border flex items-center justify-around"
           >
-            <div class="stat compact">
-              <NIcon
-                size="14"
-                class="stat-icon"
-              >
-                <PeopleOutline />
-              </NIcon>
-              <div class="stat-meta">
-                <div class="stat-k">粉丝</div>
-                <div class="stat-v">
-                  {{ model.fans ?? '--' }}
-                </div>
+            <div class="stat compact flex items-center gap-2">
+              <component :is="PeopleOutline" class="size-3.5 text-muted-foreground" />
+              <div class="stat-meta flex flex-col">
+                <div class="stat-v text-xs font-bold">{{ model.fans ?? '--' }}</div>
+                <div class="stat-k text-[11px] text-muted-foreground">粉丝</div>
               </div>
             </div>
-            <div class="stat compact">
-              <NIcon
-                size="14"
-                class="stat-icon"
-              >
-                <HomeOutline />
-              </NIcon>
-              <div class="stat-meta">
-                <div class="stat-k">关注</div>
-                <div class="stat-v">
-                  {{ model.following ?? '--' }}
-                </div>
+            <div class="stat compact flex items-center gap-2">
+              <component :is="HomeOutline" class="size-3.5 text-muted-foreground" />
+              <div class="stat-meta flex flex-col">
+                <div class="stat-v text-xs font-bold">{{ model.following ?? '--' }}</div>
+                <div class="stat-k text-[11px] text-muted-foreground">关注</div>
               </div>
             </div>
-            <div class="stat compact">
-              <NIcon
-                size="14"
-                class="stat-icon"
-              >
-                <VideocamOutline />
-              </NIcon>
-              <div class="stat-meta">
-                <div class="stat-k">视频</div>
-                <div class="stat-v">
-                  {{ model.videoCount ?? '--' }}
-                </div>
+            <div class="stat compact flex items-center gap-2">
+              <component :is="VideocamOutline" class="size-3.5 text-muted-foreground" />
+              <div class="stat-meta flex flex-col">
+                <div class="stat-v text-xs font-bold">{{ model.videoCount ?? '--' }}</div>
+                <div class="stat-k text-[11px] text-muted-foreground">视频</div>
               </div>
             </div>
           </div>
@@ -271,127 +234,102 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
       </template>
 
       <template v-else>
-        <div class="bili-header">
-          <NFlex
-            align="center"
-            style="gap: 10px; min-width: 0"
-          >
-            <NAvatar
+        <div class="bili-header p-3.5">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <Avatar
               v-if="cfg.showAvatar && model.face"
-              :src="model.face"
-              round
-              :size="40"
-              :img-props="{
-                referrerpolicy: 'no-referrer',
-                loading: 'lazy',
-                decoding: 'async',
-                alt: model.name || 'B站头像',
-              }"
-            />
-            <div class="bili-header-text">
+              class="size-10 rounded-full shrink-0 border border-border"
+            >
+              <AvatarImage
+                :src="model.face"
+                :alt="model.name || 'B站头像'"
+                referrerpolicy="no-referrer"
+                loading="lazy"
+                decoding="async"
+              />
+              <AvatarFallback>{{ (model.name || 'B').slice(0, 1) }}</AvatarFallback>
+            </Avatar>
+            <div class="bili-header-text min-w-0">
               <strong
                 v-if="cfg.showName && model.name"
-                class="bili-name"
+                class="bili-name text-base font-semibold truncate block"
               >
                 {{ model.name }}
               </strong>
-              <span class="bili-sub">
+              <span class="bili-sub text-xs text-muted-foreground truncate block">
                 Bilibili
                 <template v-if="model.biliId"> · @{{ model.biliId }} </template>
               </span>
             </div>
-          </NFlex>
+          </div>
         </div>
 
         <div
           v-if="cfg.showSign && model.sign"
-          class="bili-sign"
+          class="bili-sign px-4 pb-4 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed"
         >
           {{ model.sign }}
         </div>
 
         <div
           v-if="cfg.showStats"
-          class="bili-stats"
+          class="bili-stats grid grid-cols-3 py-2 border-y border-border"
         >
-          <div class="stat">
-            <NIcon
-              size="16"
-              class="stat-icon"
-            >
-              <PeopleOutline />
-            </NIcon>
-            <div class="stat-meta">
-              <div class="stat-k">粉丝</div>
-              <div class="stat-v">
-                {{ model.fans ?? '--' }}
-              </div>
+          <div class="stat flex flex-col items-center gap-1 p-2 text-center">
+            <component :is="PeopleOutline" class="size-4 text-muted-foreground" />
+            <div class="stat-meta flex flex-col-reverse items-center">
+              <div class="stat-k text-[11px] text-muted-foreground">粉丝</div>
+              <div class="stat-v text-sm font-bold">{{ model.fans ?? '--' }}</div>
             </div>
           </div>
-          <div class="stat">
-            <NIcon
-              size="16"
-              class="stat-icon"
-            >
-              <HomeOutline />
-            </NIcon>
-            <div class="stat-meta">
-              <div class="stat-k">关注</div>
-              <div class="stat-v">
-                {{ model.following ?? '--' }}
-              </div>
+          <div class="stat flex flex-col items-center gap-1 p-2 text-center">
+            <component :is="HomeOutline" class="size-4 text-muted-foreground" />
+            <div class="stat-meta flex flex-col-reverse items-center">
+              <div class="stat-k text-[11px] text-muted-foreground">关注</div>
+              <div class="stat-v text-sm font-bold">{{ model.following ?? '--' }}</div>
             </div>
           </div>
-          <div class="stat">
-            <NIcon
-              size="16"
-              class="stat-icon"
-            >
-              <VideocamOutline />
-            </NIcon>
-            <div class="stat-meta">
-              <div class="stat-k">视频</div>
-              <div class="stat-v">
-                {{ model.videoCount ?? '--' }}
-              </div>
+          <div class="stat flex flex-col items-center gap-1 p-2 text-center">
+            <component :is="VideocamOutline" class="size-4 text-muted-foreground" />
+            <div class="stat-meta flex flex-col-reverse items-center">
+              <div class="stat-k text-[11px] text-muted-foreground">视频</div>
+              <div class="stat-v text-sm font-bold">{{ model.videoCount ?? '--' }}</div>
             </div>
           </div>
         </div>
 
         <div
           v-if="cfg.showButtons"
-          class="bili-actions"
+          class="bili-actions p-4 grid grid-cols-2 gap-3"
         >
-          <NButton
+          <Button
             v-if="model.spaceUrl"
-            class="action"
-            secondary
-            tag="a"
+            as="a"
+            variant="outline"
+            size="sm"
+            class="h-8 text-xs font-semibold"
             target="_blank"
             rel="noopener noreferrer"
             :href="model.spaceUrl"
             aria-label="打开B站主页（新窗口打开）"
           >
-            <template #icon>
-              <NIcon><HomeOutline /></NIcon>
-            </template>
+            <component :is="HomeOutline" class="size-3.5 mr-1.5" />
             主页
-          </NButton>
-          <NButton
+          </Button>
+          <Button
             v-if="cfg.showLiveRoom && model.liveRoomUrl"
-            class="action"
-            secondary
-            tag="a"
+            as="a"
+            variant="outline"
+            size="sm"
+            class="h-8 text-xs font-semibold"
             target="_blank"
             rel="noopener noreferrer"
             :href="model.liveRoomUrl"
             aria-label="打开直播间（新窗口打开）"
           >
-            <template #icon>
-              <NIcon><PlayCircleOutline /></NIcon>
-            </template>
+            <component :is="PlayCircleOutline" class="size-3.5 mr-1.5" />
             直播间
-          </NButton>
+          </Button>
         </div>
       </template>
     </div>
@@ -403,159 +341,6 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
   container-type: inline-size;
   border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
-}
-
-.bili-loading {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  min-height: 92px;
-  padding: 16px;
-}
-
-.bili-loading__content {
-  display: grid;
-  flex: 1;
-  gap: 8px;
-}
-
-.bili-header {
-  padding: 12px 14px;
-}
-
-.bili-header-text {
-  min-width: 0;
-}
-
-.bili-name {
-  display: block;
-  font-size: 16px;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--vtsuru-block-fg);
-}
-
-.bili-sub {
-  display: block;
-  font-size: 13px;
-  line-height: 1.25;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--vtsuru-block-fg-muted);
-}
-
-.bili-compact-sign {
-  margin-top: 10px;
-  color: var(--vtsuru-block-fg-muted);
-  white-space: pre-wrap;
-}
-
-.bili-sign {
-  padding: 0 16px 16px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--vtsuru-block-fg-muted);
-  white-space: pre-wrap;
-}
-
-.bili-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 4px 0;
-  border-top: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 4px;
-  text-align: center;
-  transition: background-color 0.2s ease;
-}
-.stat:hover {
-  background-color: var(--vtsuru-block-bg-muted);
-}
-
-.stat-icon {
-  color: var(--vtsuru-block-fg-muted);
-  margin-bottom: 2px;
-}
-
-.stat-meta {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-}
-
-.stat-k {
-  font-size: 12px;
-  color: var(--vtsuru-block-fg-muted);
-}
-
-.stat-v {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--vtsuru-block-fg);
-  line-height: 1.2;
-}
-
-.bili-actions {
-  padding: 16px;
-  display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr 1fr;
-}
-
-.action {
-  border-radius: var(--vtsuru-page-radius);
-  font-weight: 600;
-}
-
-.action.compact {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-.bili-compact {
-  padding: 16px;
-}
-
-.bili-stats.compact {
-  padding: 12px 0 0;
-  border: 0;
-  gap: 0;
-}
-
-.stat.compact {
-  padding: 0;
-  flex-direction: row;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-}
-.stat.compact:hover {
-  background: transparent;
-}
-.stat.compact .stat-meta {
-  flex-direction: column;
-  align-items: flex-start;
-}
-.stat.compact .stat-icon {
-  margin-bottom: 0;
-}
-.stat.compact .stat-v {
-  font-size: 14px;
-}
-.stat.compact .stat-k {
-  font-size: 11px;
 }
 
 @container (max-width: 480px) {
@@ -571,19 +356,9 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
     flex: 1;
     min-width: 110px;
   }
-  .bili-stats.compact {
-    grid-template-columns: repeat(3, minmax(76px, 1fr));
-    overflow-x: auto;
-  }
   .bili-actions {
     grid-template-columns: 1fr;
     padding: 14px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .stat {
-    transition: none;
   }
 }
 </style>

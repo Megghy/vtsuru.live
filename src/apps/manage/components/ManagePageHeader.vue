@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { Copy24Filled, Info24Filled } from '@vicons/fluent'
-import { NButton, NCard, NFlex, NIcon, NInput, NInputGroup, NSwitch, NText, NTooltip } from 'naive-ui'
+import { Copy24Regular, Info24Filled } from '@vicons/fluent'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { FunctionTypes } from '@/api/api-models'
 import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { copyToClipboard } from '@/shared/utils'
 
 interface ManageHeaderLink {
@@ -19,7 +23,7 @@ const props = defineProps<{
   title: string
   subtitle?: string
   description?: string
-  functionType?: FunctionTypes // 如果不传，则不显示开关
+  functionType?: FunctionTypes
   links?: ManageHeaderLink[]
   loading?: boolean
 }>()
@@ -29,247 +33,130 @@ const toggle = props.functionType != null ? useFunctionToggle(props.functionType
 const links = computed(() => props.links?.filter((link) => link.value) ?? [])
 const switchLoading = computed(() => toggle?.loading.value ?? false)
 const displayedSubtitle = computed(() => props.subtitle || props.description || '')
+
+const isFunctionEnabled = computed(() => {
+  if (props.functionType == null || !accountInfo.value) return false
+  return accountInfo.value.settings?.enableFunctions?.includes(props.functionType) ?? false
+})
 </script>
 
 <template>
-  <div class="manage-page-header">
-    <NFlex
-      class="manage-page-header__top"
-      justify="space-between"
-      align="flex-start"
-      wrap
-      :size="12"
-    >
-      <div class="manage-page-header__titles">
-        <div class="manage-page-header__title-row">
-          <h1 class="manage-page-header__title">
+  <div class="flex flex-col gap-3 w-full">
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div class="flex flex-col gap-1 min-w-0">
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-xl font-bold tracking-tight text-foreground m-0">
             {{ title }}
           </h1>
-          <NFlex
+
+          <div
             v-if="functionType != null && accountInfo"
-            class="manage-page-header__function-toggle"
-            align="center"
-            :size="8"
+            class="flex items-center gap-2 pl-2 border-l border-border"
           >
-            <NText
-              depth="3"
-              class="manage-kicker"
-            >
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               功能
-            </NText>
-            <NTooltip>
-              <template #trigger>
-                <NSwitch
-                  :value="accountInfo.settings?.enableFunctions?.includes(functionType)"
-                  :loading="switchLoading"
-                  :disabled="loading || switchLoading"
-                  @update:value="toggle?.setEnable"
-                >
-                  <template #checked> 已启用 </template>
-                  <template #unchecked> 已禁用 </template>
-                </NSwitch>
-              </template>
-              关闭后不会显示在个人主页
-            </NTooltip>
-          </NFlex>
+            </span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <div class="flex items-center gap-1.5 cursor-pointer">
+                    <Switch
+                      :model-value="isFunctionEnabled"
+                      :disabled="loading || switchLoading"
+                      class="h-5 w-9"
+                      @update:model-value="(val) => toggle?.setEnable(Boolean(val))"
+                    />
+                    <span class="text-xs text-muted-foreground select-none">
+                      {{ isFunctionEnabled ? '已启用' : '已禁用' }}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent class="text-xs">
+                  关闭后不会显示在个人主页
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
-        <NText
+
+        <p
           v-if="displayedSubtitle"
-          depth="3"
-          class="manage-page-header__subtitle"
+          class="text-xs text-muted-foreground m-0 leading-relaxed max-w-3xl"
         >
           {{ displayedSubtitle }}
-        </NText>
+        </p>
       </div>
 
-      <NFlex
-        class="manage-page-header__right"
-        align="center"
-        justify="end"
-        wrap
-        :size="10"
-      >
-        <NFlex
-          class="manage-page-header__actions"
-          :wrap="true"
-        >
-          <slot name="action">
-            <slot name="actions" />
-          </slot>
-        </NFlex>
-      </NFlex>
-    </NFlex>
+      <div class="flex items-center gap-2 flex-wrap shrink-0">
+        <slot name="action">
+          <slot name="actions" />
+        </slot>
+      </div>
+    </div>
 
-    <div
-      v-if="$slots.default"
-      class="manage-page-header__below"
-    >
+    <div v-if="$slots.default">
       <slot />
     </div>
 
-    <NCard
+    <!-- 链接展示区 -->
+    <Card
       v-if="links.length > 0 || $slots['links-extra']"
-      class="manage-page-header__links"
-      size="small"
-      :bordered="true"
-      content-style="padding: 12px;"
+      class="border-border bg-card shadow-none"
     >
-      <NFlex
-        class="manage-page-header__links-content"
-        align="flex-end"
-        wrap
-        :size="12"
-      >
-        <NFlex
-          v-for="link in links"
-          :key="`${link.label}:${link.value}`"
-          class="manage-page-header__link"
-          vertical
-          :size="8"
-        >
-          <NFlex
-            align="center"
-            :size="4"
+      <CardContent class="p-3">
+        <div class="flex items-end gap-3 flex-wrap">
+          <div
+            v-for="link in links"
+            :key="`${link.label}:${link.value}`"
+            class="flex flex-col gap-1.5 flex-1 min-w-[280px]"
           >
-            <NText class="manage-kicker">
-              {{ link.label }}
-            </NText>
-            <NTooltip v-if="link.description">
-              <template #trigger>
-                <NIcon
-                  :component="Info24Filled"
-                  class="manage-page-header__link-info"
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {{ link.label }}
+              </span>
+              <TooltipProvider v-if="link.description">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <component
+                      :is="Info24Filled"
+                      class="h-3.5 w-3.5 text-muted-foreground cursor-help"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent class="text-xs max-w-xs">
+                    {{ link.description }}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <Input
+                :model-value="link.value"
+                readonly
+                class="flex-1 font-mono text-xs bg-muted/40"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                @click="copyToClipboard(link.copyValue ?? link.value)"
+              >
+                <component
+                  :is="Copy24Regular"
+                  class="h-3.5 w-3.5"
                 />
-              </template>
-              {{ link.description }}
-            </NTooltip>
-          </NFlex>
-          <NInputGroup class="manage-page-header__link-input">
-            <NInput
-              :value="link.value"
-              readonly
-              size="medium"
-            />
-            <NButton
-              secondary
-              size="medium"
-              @click="copyToClipboard(link.copyValue ?? link.value)"
-            >
-              <template #icon>
-                <NIcon :component="Copy24Filled" />
-              </template>
-              复制
-            </NButton>
-          </NInputGroup>
-        </NFlex>
-        <div
-          v-if="$slots['links-extra']"
-          class="manage-page-header__links-extra"
-        >
-          <slot name="links-extra" />
+                复制
+              </Button>
+            </div>
+          </div>
+
+          <div
+            v-if="$slots['links-extra']"
+            class="shrink-0"
+          >
+            <slot name="links-extra" />
+          </div>
         </div>
-      </NFlex>
-    </NCard>
+      </CardContent>
+    </Card>
   </div>
 </template>
-
-<style scoped>
-.manage-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.manage-page-header__titles {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 240px;
-}
-
-.manage-page-header__title-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-}
-
-.manage-page-header__title {
-  margin: 0;
-  color: var(--vtsuru-fg);
-  font-size: 20px;
-  font-weight: 650;
-  line-height: 1.2;
-  letter-spacing: 0;
-}
-
-.manage-page-header__subtitle {
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.manage-page-header__function-toggle {
-  min-height: 28px;
-}
-
-.manage-page-header__right {
-  flex: 1;
-}
-
-.manage-page-header__actions :deep(.n-button) {
-  margin-left: 0;
-}
-
-.manage-page-header__links {
-  width: max-content;
-  max-width: 100%;
-}
-
-.manage-page-header__links-content {
-  display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 12px;
-  max-width: 100%;
-}
-
-.manage-page-header__link {
-  flex: 0 1 520px;
-  width: 520px;
-  max-width: 100%;
-  min-width: 320px;
-}
-
-.manage-page-header__link-input {
-  width: 100%;
-  display: flex;
-  align-items: stretch;
-}
-
-.manage-page-header__link-input :deep(.n-input),
-.manage-page-header__link-input :deep(.n-button) {
-  height: 30px;
-}
-
-.manage-page-header__link-input :deep(.n-input .n-input__input-el) {
-  height: 100%;
-  line-height: 30px;
-}
-
-.manage-page-header__links-extra {
-  flex: 0 0 auto;
-  max-width: 100%;
-}
-
-.manage-page-header__link-info {
-  cursor: help;
-  color: var(--vtsuru-fg-muted);
-}
-
-@media (max-width: 480px) {
-  .manage-page-header__link {
-    min-width: 0;
-  }
-}
-</style>

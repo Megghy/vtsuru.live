@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ChatbubbleEllipsesOutline } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -48,7 +47,7 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
     :content-style="{ padding: 0 }"
   >
     <div class="quote-bg-icon">
-      <NIcon><ChatbubbleEllipsesOutline /></NIcon>
+      <component :is="ChatbubbleEllipsesOutline" class="size-20" />
     </div>
     <div
       class="quote"
@@ -82,15 +81,10 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
   position: relative;
 }
 
-.quote-card :deep(.n-card__content) {
-  height: 100%;
-}
-
 .quote-bg-icon {
   position: absolute;
   top: -10px;
   left: 10px;
-  font-size: 80px;
   opacity: 0.05;
   color: var(--vtsuru-fg-muted);
   pointer-events: none;

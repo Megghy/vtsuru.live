@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { useThemeVars } from 'naive-ui'
-import { computed } from 'vue'
-
 defineProps<{
   active: boolean
   title: string
@@ -9,10 +6,6 @@ defineProps<{
   badge?: string
 }>()
 defineEmits<{ (e: 'click'): void }>()
-
-const themeVars = useThemeVars()
-const activeColor = computed(() => themeVars.value.primaryColor)
-const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
 </script>
 
 <template>
@@ -27,8 +20,7 @@ const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
       <span
         v-if="badge"
         class="badge"
-        >{{ badge }}</span
-      >
+      >{{ badge }}</span>
     </div>
     <p
       v-if="description"
@@ -42,8 +34,8 @@ const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
 <style scoped>
 .provider-tile {
   appearance: none;
-  background: var(--vtsuru-bg-surface, #fff);
-  border: 1.5px solid var(--border-color, #e5e5e5);
+  background: var(--vtsuru-bg, #fff);
+  border: 1.5px solid var(--vtsuru-border, #e5e5e5);
   border-radius: 8px;
   padding: 10px 12px;
   cursor: pointer;
@@ -61,12 +53,12 @@ const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
   color: inherit;
 }
 .provider-tile:hover {
-  border-color: v-bind('activeColor');
+  border-color: var(--vtsuru-brand, hsl(var(--primary)));
 }
 .provider-tile.active {
-  border-color: v-bind('activeColor');
-  background: v-bind('activeBg');
-  box-shadow: 0 0 0 1.5px v-bind('activeColor') inset;
+  border-color: var(--vtsuru-brand, hsl(var(--primary)));
+  background: var(--vtsuru-brand-soft, rgba(56, 189, 248, 0.12));
+  box-shadow: 0 0 0 1.5px var(--vtsuru-brand, hsl(var(--primary))) inset;
 }
 .row {
   display: flex;

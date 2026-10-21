@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { Add24Regular, ArrowImport24Regular, Checkmark24Regular, Delete24Regular, Edit24Regular } from '@vicons/fluent'
-import { NAlert, NButton, NCard, NEmpty, NFlex, NIcon, NSpin, NText } from 'naive-ui'
-import { VueDraggable } from 'vue-draggable-plus'
 import { computed, reactive, ref } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
-import { newDeckTile } from '@/apps/client/store/vts/deck'
 import type { VtsDeckTile } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { newDeckTile } from '@/apps/client/store/vts/deck'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
 
 import { DECK_TYPE_META, useDeckTargets } from './deckMeta'
 import { useVtsAction } from './useVtsAction'
@@ -50,95 +53,85 @@ function addExpressions() {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="操作台"
-  >
-    <template #header-extra>
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NButton
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+      <CardTitle class="text-sm font-semibold">操作台</CardTitle>
+      <div class="flex items-center gap-2">
+        <Button
           v-if="editing"
-          size="small"
+          size="sm"
+          variant="outline"
+          class="h-7 text-xs gap-1"
           :disabled="!vts.connected || vts.expressions.length === 0"
           @click="addExpressions"
         >
-          <template #icon>
-            <NIcon :component="ArrowImport24Regular" />
-          </template>
+          <ArrowImport24Regular class="size-3.5" />
           导入当前模型表情
-        </NButton>
-        <NButton
+        </Button>
+        <Button
           v-if="editing"
-          size="small"
+          size="sm"
+          variant="outline"
+          class="h-7 text-xs gap-1"
           @click="openEditor()"
         >
-          <template #icon>
-            <NIcon :component="Add24Regular" />
-          </template>
+          <Add24Regular class="size-3.5" />
           添加格子
-        </NButton>
-        <NButton
-          size="small"
-          :type="editing ? 'primary' : 'default'"
-          secondary
+        </Button>
+        <Button
+          size="sm"
+          :variant="editing ? 'default' : 'secondary'"
+          class="h-7 text-xs gap-1"
           @click="editing = !editing"
         >
-          <template #icon>
-            <NIcon :component="editing ? Checkmark24Regular : Edit24Regular" />
-          </template>
+          <Checkmark24Regular v-if="editing" class="size-3.5" />
+          <Edit24Regular v-else class="size-3.5" />
           {{ editing ? '完成' : '编辑' }}
-        </NButton>
-      </NFlex>
-    </template>
+        </Button>
+      </div>
+    </CardHeader>
 
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NText
+    <CardContent class="p-3 space-y-3">
+      <div
         v-if="editing"
-        depth="3"
+        class="text-xs text-muted-foreground"
       >
         拖动格子调整顺序，点击格子修改动作、颜色与全局快捷键
-      </NText>
-      <NAlert
+      </div>
+      <Alert
         v-if="vts.deckShortcutError"
-        type="warning"
-        :show-icon="false"
+        class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
       >
-        全局快捷键注册失败：{{ vts.deckShortcutError }}
-      </NAlert>
+        <AlertDescription class="text-xs m-0">
+          全局快捷键注册失败：{{ vts.deckShortcutError }}
+        </AlertDescription>
+      </Alert>
 
-      <NEmpty
+      <div
         v-if="tiles.length === 0"
-        description="把常用的表情、热键、宏、机位预设放到这里，一键切换"
+        class="py-6 flex flex-col items-center justify-center"
       >
-        <template #extra>
-          <NFlex
-            justify="center"
-            :size="8"
-          >
-            <NButton
-              size="small"
-              type="primary"
+        <Empty description="把常用的表情、热键、宏、机位预设放到这里，一键切换">
+          <div class="flex items-center justify-center gap-2 mt-3">
+            <Button
+              size="sm"
+              class="h-8 text-xs"
               :disabled="!vts.connected || vts.expressions.length === 0"
               @click="addExpressions"
             >
               导入当前模型表情
-            </NButton>
-            <NButton
-              size="small"
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-8 text-xs"
               @click="openEditor()"
             >
               手动添加
-            </NButton>
-          </NFlex>
-        </template>
-      </NEmpty>
+            </Button>
+          </div>
+        </Empty>
+      </div>
 
       <VueDraggable
         v-else
@@ -165,46 +158,39 @@ function addExpressions() {
           @click="onTileClick(tile)"
           @keydown.enter.space.prevent="onTileClick(tile)"
         >
-          <NIcon
-            :component="DECK_TYPE_META[tile.type].icon"
-            size="22"
-            class="deck-tile-icon"
+          <component
+            :is="DECK_TYPE_META[tile.type].icon"
+            class="deck-tile-icon size-5"
           />
           <span class="deck-tile-label">{{ tile.label }}</span>
           <span class="deck-tile-sub">
             {{ isTargetMissing(tile.type, tile.targetId) ? '目标不存在' : DECK_TYPE_META[tile.type].label }}
           </span>
-          <NSpin
+          <div
             v-if="running.has(tile.id)"
-            size="small"
-            class="deck-tile-spin"
+            class="deck-tile-spin size-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
           />
           <kbd
             v-if="tile.shortcut"
             class="deck-tile-kbd"
           >{{ tile.shortcut.replaceAll('Digit', '').replaceAll('Key', '') }}</kbd>
-          <NButton
+          <button
             v-if="editing"
-            class="deck-tile-delete"
-            size="tiny"
-            circle
-            type="error"
-            secondary
+            type="button"
+            class="deck-tile-delete size-5 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
             @click.stop="run(() => vts.removeDeckTile(tile.id))"
           >
-            <template #icon>
-              <NIcon :component="Delete24Regular" />
-            </template>
-          </NButton>
+            <Delete24Regular class="size-3" />
+          </button>
         </div>
       </VueDraggable>
-    </NFlex>
+    </CardContent>
 
     <VtsDeckTileEditor
       v-model:show="showEditor"
       :tile="editorTile"
     />
-  </NCard>
+  </Card>
 </template>
 
 <style scoped>

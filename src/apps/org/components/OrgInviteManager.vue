@@ -1,26 +1,19 @@
 <script setup lang="ts">
-import { CopyOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NEmpty,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NSelect,
-  NSkeleton,
-  NFlex,
-  NTag,
-  NTime,
-} from 'naive-ui'
+import { Copy20Regular } from '@vicons/fluent'
+import { format } from 'date-fns'
 import { ref } from 'vue'
 
 import UserAutocompleteSelect from '@/components/common/UserAutocompleteSelect.vue'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Spin } from '@/shared/ui/spin'
 
 import { useClipboard } from '../composables/useClipboard'
 import type { OrgInviteMemberListItem, OrgInviteStreamerListItem } from '../types'
@@ -73,180 +66,165 @@ function submit() {
 </script>
 
 <template>
-  <NCollapse style="margin-bottom: 16px">
-    <NCollapseItem
-      :title="kind === 'member' ? '邀请成员' : '邀请主播'"
-      name="1"
-    >
-      <NCard
-        size="small"
-        embedded
-        :bordered="false"
-      >
-        <NFlex vertical>
-          <NFlex
-            align="center"
-            wrap
-          >
-            <NSelect
+  <div class="space-y-3 mb-4">
+    <Accordion type="single" collapsible class="border border-border/80 rounded-lg bg-card">
+      <AccordionItem value="create-invite" class="border-none">
+        <AccordionTrigger class="px-3.5 py-2.5 text-xs font-semibold hover:no-underline">
+          {{ kind === 'member' ? '邀请成员' : '邀请主播' }}
+        </AccordionTrigger>
+        <AccordionContent class="px-3.5 pb-3 pt-1 space-y-3 text-xs">
+          <div class="flex items-center gap-2 flex-wrap">
+            <Select
               v-if="withRole"
-              v-model:value="role"
-              style="width: 120px"
-              size="small"
-              :options="[
-                { label: 'Admin', value: 1 },
-                { label: 'Member', value: 2 },
-              ]"
-            />
-            <UserAutocompleteSelect
-              v-model:value="targetUserId"
-              style="min-width: 240px; flex: 1"
-              :placeholder="`输入B站UID/用户名搜索${kind === 'member' ? '成员' : '主播'}(可选)`"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NInputNumber
-              v-model:value="expireDays"
-              placeholder="有效期(天)"
-              :min="1"
-              size="small"
-            />
-            <NPopconfirm @positive-click="submit">
+              :model-value="String(role)"
+              @update:model-value="role = Number($event)"
+            >
+              <SelectTrigger class="w-28 h-8 text-xs">
+                <SelectValue placeholder="角色" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1" class="text-xs">Admin</SelectItem>
+                <SelectItem value="2" class="text-xs">Member</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div class="min-w-[240px] flex-1">
+              <UserAutocompleteSelect
+                v-model:value="targetUserId"
+                :placeholder="`输入B站UID/用户名搜索${kind === 'member' ? '成员' : '主播'}(可选)`"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="w-28">
+              <NInputNumber
+                v-model:value="expireDays"
+                placeholder="有效期(天)"
+                :min="1"
+                size="small"
+              />
+            </div>
+
+            <Popconfirm
+              title="确定要发送邀请吗？"
+              positive-text="确定"
+              negative-text="取消"
+              @positive-click="submit"
+            >
               <template #trigger>
-                <NButton
-                  type="primary"
-                  size="small"
-                  :loading="creating"
+                <Button
+                  size="sm"
+                  class="h-8 text-xs"
+                  :disabled="creating"
                 >
                   生成链接
-                </NButton>
+                </Button>
               </template>
               确定要发送邀请吗？
-            </NPopconfirm>
-          </NFlex>
-        </NFlex>
-      </NCard>
-    </NCollapseItem>
-  </NCollapse>
+            </Popconfirm>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
 
-  <NCard
-    size="small"
-    style="margin-bottom: 12px"
-    :bordered="false"
-    :segmented="{ content: true }"
-  >
-    <template #header> 已发出邀请 </template>
-    <template #header-extra>
-      <NButton
-        size="small"
-        :loading="loading"
-        @click="emit('refresh')"
-      >
-        刷新邀请
-      </NButton>
-    </template>
-
-    <NSkeleton
-      v-if="loading"
-      text
-      :repeat="4"
-    />
-    <NEmpty
-      v-else-if="invites.length === 0"
-      description="暂无邀请"
-    />
-    <NList v-else>
-      <NListItem
-        v-for="inv in invites"
-        :key="inv.token"
-      >
-        <NFlex
-          vertical
-          :size="6"
-          style="width: 100%"
+    <Card class="border border-border/80">
+      <CardHeader class="pb-2.5 border-b border-border/60 flex flex-row items-center justify-between">
+        <CardTitle class="text-sm font-semibold">已发出邀请</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          class="h-7 text-xs"
+          :disabled="loading"
+          @click="emit('refresh')"
         >
-          <NFlex
-            justify="space-between"
-            align="center"
+          刷新邀请
+        </Button>
+      </CardHeader>
+
+      <CardContent class="pt-3">
+        <div v-if="loading" class="py-8 flex justify-center">
+          <Spin />
+        </div>
+        <div v-else-if="invites.length === 0" class="py-6">
+          <Empty description="暂无邀请" />
+        </div>
+        <div v-else class="divide-y divide-border/60">
+          <div
+            v-for="inv in invites"
+            :key="inv.token"
+            class="py-3 first:pt-0 last:pb-0 space-y-2 text-xs"
           >
-            <NFlex
-              align="center"
-              :size="6"
-            >
-              <NTag
-                size="small"
-                :bordered="false"
-                :type="inviteStatusTagType(inv.status)"
-              >
-                {{ inviteStatusLabel(inv.status) }}
-              </NTag>
-              <span style="font-weight: 600">{{ targetName(inv) }}</span>
-              <NTag
-                v-if="withRole && 'role' in inv"
-                size="small"
-                :bordered="false"
-                type="info"
-              >
-                {{ roleLabel(inv.role) }}
-              </NTag>
-            </NFlex>
-            <NTime
-              :time="inv.expiresAt"
-              format="yyyy-MM-dd HH:mm"
-            />
-          </NFlex>
-          <NFlex
-            justify="space-between"
-            wrap
-            style="font-size: 12px; opacity: 0.75"
-          >
-            <span>创建者: {{ inv.createdByUserName || inv.createdByUserId }}</span>
-            <span>
-              使用次数: {{ inv.usedCount }}
-              <template v-if="inv.lastUsedAt"
-                >, 最近:
-                <NTime
-                  :time="inv.lastUsedAt"
-                  format="MM-dd HH:mm"
-              /></template>
-            </span>
-          </NFlex>
-          <NFlex>
-            <NInput
-              :value="inv.joinUrl"
-              readonly
-              size="small"
-              placeholder="邀请链接"
-            />
-            <NButton
-              size="small"
-              secondary
-              type="success"
-              @click="copy(inv.joinUrl)"
-            >
-              <template #icon>
-                <NIcon :component="CopyOutline" />
-              </template>
-              复制
-            </NButton>
-            <NPopconfirm
-              v-if="!inv.isRevoked && inv.status !== 4"
-              @positive-click="emit('revoke', inv.token)"
-            >
-              <template #trigger>
-                <NButton
-                  size="small"
-                  tertiary
-                  type="error"
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <Badge
+                  variant="secondary"
+                  class="text-[10px] h-4.5 px-1.5 font-normal"
                 >
-                  撤销
-                </NButton>
-              </template>
-              确定撤销该邀请吗？撤销后链接立即失效。
-            </NPopconfirm>
-          </NFlex>
-        </NFlex>
-      </NListItem>
-    </NList>
-  </NCard>
+                  {{ inviteStatusLabel(inv.status) }}
+                </Badge>
+                <strong class="font-medium text-foreground text-xs">{{ targetName(inv) }}</strong>
+                <Badge
+                  v-if="withRole && 'role' in inv"
+                  variant="outline"
+                  class="text-[10px] h-4 px-1 text-primary border-primary/30"
+                >
+                  {{ roleLabel(inv.role) }}
+                </Badge>
+              </div>
+
+              <span class="text-[11px] text-muted-foreground font-mono">
+                过期时间: {{ format(inv.expiresAt, 'yyyy-MM-dd HH:mm') }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground flex-wrap">
+              <span>创建者: {{ inv.createdByUserName || inv.createdByUserId }}</span>
+              <span>
+                使用次数: {{ inv.usedCount }}
+                <template v-if="inv.lastUsedAt">
+                  , 最近: {{ format(inv.lastUsedAt, 'MM-dd HH:mm') }}
+                </template>
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <Input
+                :value="inv.joinUrl"
+                readonly
+                class="h-7 text-xs font-mono flex-1 bg-muted/30"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-7 text-xs gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                @click="copy(inv.joinUrl)"
+              >
+                <component :is="Copy20Regular" class="size-3.5" />
+                复制
+              </Button>
+              <Popconfirm
+                v-if="!inv.isRevoked && inv.status !== 4"
+                title="确定撤销该邀请吗？撤销后链接立即失效。"
+                positive-text="确认撤销"
+                negative-text="取消"
+                @positive-click="emit('revoke', inv.token)"
+              >
+                <template #trigger>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    class="h-7 text-xs text-destructive hover:bg-destructive/10"
+                  >
+                    撤销
+                  </Button>
+                </template>
+                确定撤销该邀请吗？撤销后链接立即失效。
+              </Popconfirm>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
 </template>

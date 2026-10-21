@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NEmpty } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
@@ -7,6 +6,7 @@ import APlayer from 'vue3-aplayer'
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { getApiSongListGetNeteaseLyric } from '@/api/generated/song-list/song-list'
+import { Empty } from '@/shared/ui/empty'
 
 const props = defineProps<{
   song: SongsInfo | undefined
@@ -31,7 +31,7 @@ watch(temp, (newV) => {
 })
 
 function OnPlayMusic(song: SongsInfo) {
-  if (song.from == SongFrom.Netease) {
+  if (song.from === SongFrom.Netease) {
     GetLyric(song)
   } else {
     aplayerMusic.value = {
@@ -43,6 +43,7 @@ function OnPlayMusic(song: SongsInfo) {
     }
   }
 }
+
 async function GetLyric(song: SongsInfo) {
   emits('update:isLrcLoading', song.key)
   ;(
@@ -52,10 +53,7 @@ async function GetLyric(song: SongsInfo) {
     }>
   )
     .then((data) => {
-      console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
-      if (data.code == 200) {
-        // props.song.value.lrc = data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric
-
+      if (data.code === 200) {
         aplayerMusic.value = {
           title: song.name,
           artist: song.author?.join('/') ?? '',
@@ -63,7 +61,6 @@ async function GetLyric(song: SongsInfo) {
           pic: '',
           lrc: data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric,
         }
-        // aplayerMusic.value.lrc = data.data.lyric
       } else {
         aplayerMusic.value = {
           title: song.name,
@@ -78,6 +75,7 @@ async function GetLyric(song: SongsInfo) {
       emits('update:isLrcLoading', undefined)
     })
 }
+
 function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
   const originalLines = originalLyrics?.split('\n') ?? []
   const translatedLines = translatedLyrics?.split('\n') ?? []
@@ -86,7 +84,7 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
 
   for (let i = 0; i < originalLines.length; i++) {
     const originalLine = originalLines[i]?.trim()
-    const originalTimeMatch = originalLine?.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配原歌词的时间字符串
+    const originalTimeMatch = originalLine?.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/)
 
     let mergedLine = originalLine
 
@@ -96,24 +94,22 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
 
       if (translatedLineIndex !== -1) {
         const translatedLine = translatedLines[translatedLineIndex]
-        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配翻译歌词的时间字符串
+        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/)
 
         if (translatedTimeMatch && translatedTimeMatch[1] === originalTime) {
           const translatedText = translatedLine.slice(translatedTimeMatch[0].length).trim()
           if (translatedText) {
             mergedLine += ` (${translatedText})`
           }
-          translatedLines.splice(translatedLineIndex, 1) // 从翻译歌词数组中移除已匹配的行
+          translatedLines.splice(translatedLineIndex, 1)
         }
       }
     }
     if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
-      // 不是空行
       mergedLyrics += `${mergedLine}\n`
     }
   }
 
-  // 将剩余的非空翻译歌词单独放在一行
   for (const translatedLine of translatedLines) {
     const translatedText = translatedLine.trim()
     if (translatedText) {
@@ -126,9 +122,10 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
 </script>
 
 <template>
-  <NEmpty
+  <Empty
     v-if="!aplayerMusic.src"
     :description="props.isLrcLoading ? '歌词加载中...' : '暂无歌曲'"
+    class="py-6"
   />
   <APlayer
     v-else

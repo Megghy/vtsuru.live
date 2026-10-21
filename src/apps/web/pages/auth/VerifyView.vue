@@ -5,13 +5,14 @@ import {
   DismissCircle24Regular,
   Mail24Regular,
 } from '@vicons/fluent'
-import { NButton, NIcon, NSpin } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ACCOUNT, GetSelfAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { getApiAccountVerify } from '@/api/generated/account/account'
+import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 
 type Phase = 'checking' | 'success' | 'need-login' | 'error'
 const PHASES: readonly Phase[] = ['checking', 'success', 'need-login', 'error']
@@ -118,14 +119,14 @@ onUnmounted(() => {
         class="verify-icon"
         :class="`verify-icon--${phase}`"
       >
-        <NSpin
+        <Spin
           v-if="phase === 'checking'"
-          size="small"
+          class="size-6"
         />
-        <NIcon
+        <component
+          :is="phase === 'error' ? DismissCircle24Regular : CheckmarkCircle24Regular"
           v-else
-          :component="phase === 'error' ? DismissCircle24Regular : CheckmarkCircle24Regular"
-          :size="28"
+          class="size-7"
         />
       </div>
       <p class="verify-kicker">
@@ -136,46 +137,42 @@ onUnmounted(() => {
         {{ copy.summary }}
       </p>
       <div class="verify-actions">
-        <NButton
+        <Button
           v-if="phase === 'success'"
-          type="primary"
-          block
+          class="w-full flex items-center justify-center gap-2"
           @click="goManage"
         >
           进入主播后台
-          <template #icon>
-            <NIcon :component="ArrowRight24Regular" />
-          </template>
-        </NButton>
-        <NButton
+          <component :is="ArrowRight24Regular" class="size-4" />
+        </Button>
+        <Button
           v-else-if="phase === 'need-login'"
-          type="primary"
-          block
+          class="w-full"
           @click="goHome"
         >
           去登录
-        </NButton>
+        </Button>
         <template v-else-if="phase === 'error'">
-          <NButton
-            type="primary"
-            block
+          <Button
+            class="w-full"
             @click="goHome"
           >
             返回首页
-          </NButton>
-          <NButton
-            block
+          </Button>
+          <Button
+            variant="outline"
+            class="w-full"
             @click="goManage"
           >
             打开主播后台
-          </NButton>
+          </Button>
         </template>
       </div>
       <p
         v-if="phase === 'checking'"
         class="verify-hint"
       >
-        <NIcon :component="Mail24Regular" />
+        <component :is="Mail24Regular" class="size-4" />
         来自验证邮件的一次性链接
       </p>
     </section>

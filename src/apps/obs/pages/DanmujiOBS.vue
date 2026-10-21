@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert } from 'naive-ui'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 import { isInBiliBlackList } from '@/api/account'
@@ -467,12 +467,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert
+  <Alert
     v-if="!preview && isOBS && !$route?.query?.token"
-    type="error"
+    variant="destructive"
   >
-    未携带token参数
-  </NAlert>
+    <AlertDescription>未携带token参数</AlertDescription>
+  </Alert>
   <MessageRender
     v-else
     ref="messageRender"

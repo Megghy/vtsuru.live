@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { NAutoComplete, NAvatar, NFlex, NText } from 'naive-ui'
-import type { AutoCompleteOption } from 'naive-ui'
-import { h, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { VTSURU_API_URL } from '@/shared/config'
+import { Input } from '@/shared/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Spin } from '@/shared/ui/spin'
 
 interface BiliUserInfo {
   mid: number
@@ -18,9 +19,7 @@ interface BiliApiResponse {
   }
 }
 
-type BiliUserSelectorOption = AutoCompleteOption & { userInfo?: BiliUserInfo }
-
-defineProps<{
+const props = defineProps<{
   placeholder?: string
   size?: 'small' | 'medium' | 'large'
   disabled?: boolean
@@ -30,18 +29,18 @@ const emit = defineEmits<{
   userInfoLoaded: [userInfo: BiliUserInfo | null]
 }>()
 
-// 使用 defineModel 作为外部 v-model:value 绑定
 const model = defineModel<number | undefined>('value')
 
 const inputValue = ref('')
-const options = ref<BiliUserSelectorOption[]>([])
+const currentUserInfo = ref<BiliUserInfo | null>(null)
 const loading = ref(false)
-// 输入只负责同步 UID；查询由监听器统一防抖，并取消过期请求。
+const showPopover = ref(false)
+
 watch(
   model,
   (uid, _, onCleanup) => {
     inputValue.value = uid === undefined ? '' : String(uid)
-    options.value = []
+    currentUserInfo.value = null
     loading.value = false
     emit('userInfoLoaded', null)
     if (uid === undefined) return
@@ -65,13 +64,8 @@ async function loadUserInfo(uid: number, signal: AbortSignal) {
     if (data.code !== 0 || !data.data?.card) return
 
     const userInfo = data.data.card
-    options.value = [
-      {
-        label: String(uid),
-        value: String(uid),
-        userInfo,
-      },
-    ]
+    currentUserInfo.value = userInfo
+    showPopover.value = true
     emit('userInfoLoaded', userInfo)
   } catch (error) {
     if (!signal.aborted) console.error('加载用户信息失败:', error)
@@ -80,58 +74,56 @@ async function loadUserInfo(uid: number, signal: AbortSignal) {
   }
 }
 
-function handleInput(value: string | null) {
-  inputValue.value = value ?? ''
+function handleInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  inputValue.value = target.value
   const uid = Number(inputValue.value)
   model.value = /^\d+$/.test(inputValue.value) && Number.isSafeInteger(uid) && uid > 0 ? uid : undefined
-}
-
-// 自定义渲染选项
-function renderLabel(option: BiliUserSelectorOption) {
-  const { userInfo } = option
-  if (!userInfo) {
-    return h(NText, { depth: 3 }, { default: () => '加载中...' })
-  }
-
-  return h(
-    NFlex,
-    { align: 'center', gap: 8 },
-    {
-      default: () => [
-        h(NAvatar, {
-          src: userInfo.face,
-          size: 32,
-          round: true,
-          imgProps: {
-            referrerpolicy: 'no-referrer',
-          },
-        }),
-        h(
-          NFlex,
-          { vertical: true, gap: 2 },
-          {
-            default: () => [
-              h(NText, { strong: true }, { default: () => userInfo.name }),
-              h(NText, { depth: 3, size: 'small' }, { default: () => `UID: ${userInfo.mid}` }),
-            ],
-          },
-        ),
-      ],
-    },
-  )
 }
 </script>
 
 <template>
-  <NAutoComplete
-    :value="inputValue"
-    :options="options"
-    :loading="loading"
-    :placeholder="placeholder || '请输入B站用户UID'"
-    :size="size || 'medium'"
-    :disabled="disabled"
-    clearable
-    :render-label="renderLabel"
-    @update:value="handleInput"
-  />
+  <Popover v-model:open="showPopover">
+    <PopoverTrigger as-child>
+      <div class="relative w-full">
+        <Input
+          :value="inputValue"
+          :placeholder="placeholder || '请输入B站用户UID'"
+          :disabled="disabled"
+          class="h-8 text-xs pr-7 font-mono"
+          @input="handleInput"
+          @focus="currentUserInfo && (showPopover = true)"
+        />
+        <div
+          v-if="loading"
+          class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+        >
+          <Spin size="small" />
+        </div>
+      </div>
+    </PopoverTrigger>
+
+    <PopoverContent
+      v-if="currentUserInfo"
+      class="w-64 p-2.5 text-xs"
+      align="start"
+    >
+      <div class="flex items-center gap-2.5">
+        <img
+          :src="currentUserInfo.face"
+          referrerpolicy="no-referrer"
+          class="size-8 rounded-full object-cover border border-border/80 shrink-0"
+          alt=""
+        />
+        <div class="min-w-0 flex flex-col gap-0.5">
+          <strong class="font-medium text-foreground text-xs truncate">
+            {{ currentUserInfo.name }}
+          </strong>
+          <span class="text-muted-foreground text-[11px] font-mono">
+            UID: {{ currentUserInfo.mid }}
+          </span>
+        </div>
+      </div>
+    </PopoverContent>
+  </Popover>
 </template>

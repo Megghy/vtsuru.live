@@ -1,22 +1,14 @@
 <script setup lang="ts">
 import { DownloadOutline, TrendingDown, TrendingUp } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NProgress,
-  NRadioButton,
-  NRadioGroup,
-  NSkeleton,
-  NFlex,
-  NStatistic,
-  NTag,
-  useThemeVars,
-} from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Progress } from '@/shared/ui/progress'
+import { Spin } from '@/shared/ui/spin'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { useOrgAnalyze } from '../../composables/useOrgAnalyze'
 import { useOrgContext } from '../../composables/useOrgContext'
@@ -29,7 +21,6 @@ import type { OrgAnalyzeChartMetric } from '../useOrgAnalyzeChart'
 const ctx = useOrgContext()
 const { data, loading, range, summary, hasChartData, load } = useOrgAnalyze(ctx)
 const { ranking, load: loadLives } = injectOrgLives()
-const themeVars = useThemeVars()
 
 const chartRef = ref<HTMLElement | null>(null)
 const selectedMetrics = ref<string[]>(['income', 'interactionCount'])
@@ -46,7 +37,6 @@ const { initChart, updateChartOption, disposeChart } = useOrgAnalyzeChart({
   chartRef,
   analyzeData: data,
   formatDate,
-  themeVars,
   selectedMetrics,
   chartMetrics,
 })
@@ -72,12 +62,6 @@ const topStreamers = computed(() => {
   return list.map((s) => ({ ...s, pct: Math.round((s[rankMetric.value] / max) * 100) }))
 })
 
-function trendType(v: number): 'success' | 'error' | 'default' {
-  if (v > 0) return 'success'
-  if (v < 0) return 'error'
-  return 'default'
-}
-
 function toggleMetric(value: string) {
   selectedMetrics.value = selectedMetrics.value.includes(value)
     ? selectedMetrics.value.filter((x) => x !== value)
@@ -95,6 +79,12 @@ function exportRanking() {
 }
 
 watch(selectedMetrics, updateChartOption, { deep: true })
+watch(range, () => {
+  load(() => {
+    disposeChart()
+    initChart()
+  })
+})
 
 onMounted(async () => {
   await Promise.all([
@@ -110,200 +100,164 @@ onUnmounted(disposeChart)
 </script>
 
 <template>
-  <NFlex
-    justify="end"
-    style="margin-bottom: 12px"
-  >
-    <NRadioGroup
-      v-model:value="range"
-      size="small"
-    >
-      <NRadioButton value="last7Days"> 近7日 </NRadioButton>
-      <NRadioButton value="last30Days"> 近30日 </NRadioButton>
-    </NRadioGroup>
-  </NFlex>
-
-  <NSkeleton
-    v-if="loading"
-    text
-    :repeat="4"
-  />
-  <NEmpty
-    v-else-if="!summary"
-    description="暂无分析数据"
-  />
-  <template v-else>
-    <NGrid
-      :x-gap="12"
-      :y-gap="12"
-      :cols="4"
-      item-responsive
-      responsive="screen"
-    >
-      <NGridItem
-        v-for="card in summaryCards"
-        :key="card.label"
-        span="4 m:2 l:1"
+  <div class="space-y-4 text-xs">
+    <div class="flex justify-end">
+      <Tabs
+        :model-value="range"
+        class="w-auto"
+        @update:model-value="range = $event as any"
       >
-        <NCard
-          size="small"
-          :bordered="false"
-          class="stat-card"
+        <TabsList class="h-7 p-0.5">
+          <TabsTrigger value="last7Days" class="text-xs px-2.5 h-6">近7日</TabsTrigger>
+          <TabsTrigger value="last30Days" class="text-xs px-2.5 h-6">近30日</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+
+    <div v-if="loading" class="py-12 flex justify-center">
+      <Spin />
+    </div>
+    <div v-else-if="!summary" class="py-10">
+      <Empty description="暂无分析数据" />
+    </div>
+    <template v-else>
+      <!-- 指标概览卡片 -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <Card
+          v-for="card in summaryCards"
+          :key="card.label"
+          class="border border-border/80"
         >
-          <NStatistic
-            :label="card.label"
-            :value="card.value"
-            :precision="card.precision"
-          >
-            <template
-              v-if="card.money"
-              #prefix
-            >
-              ¥
-            </template>
-            <template #suffix>
-              <span v-if="card.suffix">{{ card.suffix }}</span>
-              <NTag
-                v-else-if="card.trend != null"
-                :type="trendType(card.trend)"
-                :bordered="false"
-                size="tiny"
-                style="vertical-align: middle; margin-left: 4px"
+          <CardContent class="p-3 space-y-1">
+            <span class="text-[11px] text-muted-foreground block">{{ card.label }}</span>
+            <div class="flex items-baseline gap-1.5 flex-wrap">
+              <span v-if="card.money" class="text-xs font-semibold text-primary">¥</span>
+              <span class="text-base font-semibold font-mono text-foreground">
+                {{ typeof card.value === 'number' && card.precision ? card.value.toFixed(card.precision) : card.value }}
+              </span>
+              <span v-if="card.suffix" class="text-[11px] text-muted-foreground">{{ card.suffix }}</span>
+              <Badge
+                v-if="card.trend != null"
+                variant="outline"
+                class="text-[10px] h-4 px-1 ml-auto"
+                :class="
+                  card.trend >= 0
+                    ? 'text-emerald-600 border-emerald-500/30 bg-emerald-500/10'
+                    : 'text-destructive border-destructive/30 bg-destructive/10'
+                "
               >
-                <template #icon>
-                  <NIcon :component="card.trend >= 0 ? TrendingUp : TrendingDown" />
-                </template>
+                <component :is="card.trend >= 0 ? TrendingUp : TrendingDown" class="size-3 mr-0.5 inline" />
                 {{ Math.abs(card.trend) }}%
-              </NTag>
-            </template>
-          </NStatistic>
-        </NCard>
-      </NGridItem>
-    </NGrid>
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-    <NCard
-      title="趋势图表"
-      size="small"
-      :segmented="{ content: true }"
-      style="margin-top: 16px"
-    >
-      <template #header-extra>
-        <NFlex>
-          <NTag
-            v-for="m in chartMetrics"
-            :key="m.value"
-            clickable
-            :type="selectedMetrics.includes(m.value) ? 'primary' : 'default'"
-            @click="toggleMetric(m.value)"
-          >
-            {{ m.label }}
-          </NTag>
-        </NFlex>
-      </template>
-      <NEmpty
-        v-if="!hasChartData"
-        description="暂无图表数据"
-        style="padding: 12px"
-      />
-      <div
-        v-else
-        ref="chartRef"
-        style="height: 420px; width: 100%"
-      />
-    </NCard>
-
-    <NCard
-      size="small"
-      :segmented="{ content: true }"
-      style="margin-top: 16px"
-    >
-      <template #header> 主播排行榜 Top 10 </template>
-      <template #header-extra>
-        <NFlex align="center">
-          <NRadioGroup
-            v-model:value="rankMetric"
-            size="small"
-          >
-            <NRadioButton value="income"> 收入 </NRadioButton>
-            <NRadioButton value="danmaku"> 弹幕 </NRadioButton>
-            <NRadioButton value="interaction"> 互动 </NRadioButton>
-          </NRadioGroup>
-          <NButton
-            size="small"
-            secondary
-            :disabled="ranking.length === 0"
-            @click="exportRanking"
-          >
-            <template #icon>
-              <NIcon :component="DownloadOutline" />
-            </template>
-            导出
-          </NButton>
-        </NFlex>
-      </template>
-      <NEmpty
-        v-if="topStreamers.length === 0"
-        description="暂无主播数据"
-      />
-      <NFlex
-        v-else
-        vertical
-        :size="10"
-      >
-        <NFlex
-          v-for="(s, i) in topStreamers"
-          :key="s.id"
-          align="center"
-          :wrap="false"
-          style="gap: 10px"
-        >
-          <span
-            class="rank-no"
-            :class="{ top: i < 3 }"
-            >{{ i + 1 }}</span
-          >
-          <OrgUserAvatar
-            :face-url="s.faceUrl"
-            :size="28"
-          />
-          <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px">
-            {{ s.name }}
+      <!-- 趋势图表 -->
+      <Card class="border border-border/80">
+        <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2">
+          <CardTitle class="text-xs font-semibold">趋势图表</CardTitle>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button
+              v-for="m in chartMetrics"
+              :key="m.value"
+              type="button"
+              class="px-2 py-0.5 rounded text-[11px] transition-colors border"
+              :class="
+                selectedMetrics.includes(m.value)
+                  ? 'bg-primary/10 border-primary/40 text-primary font-medium'
+                  : 'bg-muted/40 border-border/60 text-muted-foreground hover:bg-muted/70'
+              "
+              @click="toggleMetric(m.value)"
+            >
+              {{ m.label }}
+            </button>
           </div>
-          <NProgress
-            type="line"
-            :percentage="s.pct"
-            :show-indicator="false"
-            :height="8"
-            style="flex: 1"
-          />
-          <span style="width: 90px; text-align: right; font-size: 13px; font-weight: 600">
-            {{ rankMetric === 'income' ? rankUnit.income + s.income.toFixed(0) : s[rankMetric] }}
-            <span
-              v-if="rankMetric !== 'income'"
-              style="opacity: 0.6; font-weight: 400"
-            >
-              {{ rankUnit[rankMetric] }}</span
-            >
-          </span>
-        </NFlex>
-      </NFlex>
-    </NCard>
-  </template>
-</template>
+        </CardHeader>
 
-<style scoped>
-.stat-card {
-  border: 1px solid var(--vtsuru-border);
-}
-.rank-no {
-  width: 22px;
-  text-align: center;
-  font-weight: 600;
-  opacity: 0.5;
-  flex: 0 0 auto;
-}
-.rank-no.top {
-  opacity: 1;
-  color: var(--vtsuru-primary);
-}
-</style>
+        <CardContent class="p-3">
+          <div v-if="!hasChartData" class="py-8">
+            <Empty description="暂无图表数据" />
+          </div>
+          <div
+            v-else
+            ref="chartRef"
+            class="w-full h-[400px]"
+          />
+        </CardContent>
+      </Card>
+
+      <!-- 主播排行榜 Top 10 -->
+      <Card class="border border-border/80">
+        <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2">
+          <CardTitle class="text-xs font-semibold">主播排行榜 Top 10</CardTitle>
+          <div class="flex items-center gap-2">
+            <Tabs
+              :model-value="rankMetric"
+              class="w-auto"
+              @update:model-value="rankMetric = $event as any"
+            >
+              <TabsList class="h-7 p-0.5">
+                <TabsTrigger value="income" class="text-xs px-2 h-6">收入</TabsTrigger>
+                <TabsTrigger value="danmaku" class="text-xs px-2 h-6">弹幕</TabsTrigger>
+                <TabsTrigger value="interaction" class="text-xs px-2 h-6">互动</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <Button
+              variant="outline"
+              size="sm"
+              class="h-7 text-xs gap-1"
+              :disabled="ranking.length === 0"
+              @click="exportRanking"
+            >
+              <component :is="DownloadOutline" class="size-3.5" />
+              导出
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent class="p-3">
+          <div v-if="topStreamers.length === 0" class="py-8">
+            <Empty description="暂无主播数据" />
+          </div>
+          <div v-else class="space-y-2.5">
+            <div
+              v-for="(s, i) in topStreamers"
+              :key="s.id"
+              class="flex items-center gap-2.5 text-xs"
+            >
+              <span
+                class="w-5 text-center font-mono font-semibold text-xs shrink-0"
+                :class="i < 3 ? 'text-primary' : 'text-muted-foreground/60'"
+              >
+                {{ i + 1 }}
+              </span>
+
+              <OrgUserAvatar
+                :face-url="s.faceUrl"
+                :size="26"
+              />
+
+              <span class="w-28 truncate font-medium text-foreground text-xs shrink-0">
+                {{ s.name }}
+              </span>
+
+              <div class="flex-1">
+                <Progress :value="s.pct" class="h-2" />
+              </div>
+
+              <span class="w-24 text-right font-mono font-semibold text-xs text-foreground shrink-0">
+                {{ rankMetric === 'income' ? rankUnit.income + s.income.toFixed(0) : s[rankMetric] }}
+                <span v-if="rankMetric !== 'income'" class="text-[11px] font-normal text-muted-foreground ml-0.5">
+                  {{ rankUnit[rankMetric] }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </template>
+  </div>
+</template>

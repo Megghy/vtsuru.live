@@ -1,25 +1,26 @@
 <script setup lang="ts">
 import { CopyOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NDivider,
-  NDropdown,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NModal,
-  NRadio,
-  NRadioGroup,
-  NTag,
-  NText,
-  NTooltip,
-} from 'naive-ui'
-import { computed, h, inject, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 
 import type { UserPageConfig } from '@/apps/user-page/types'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Input } from '@/shared/ui/input'
+import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
+import { Tag } from '@/shared/ui/tag'
 
 import { UserPageEditorKey } from '../context'
 import { getPageModeShortLabel, PAGE_MODE_OPTIONS } from '../editorPageConfig'
@@ -38,16 +39,6 @@ const duplicateToSlug = ref('')
 
 const deletePageModal = ref(false)
 const deletePageSlug = ref('')
-
-const pageActionOptions = [
-  { label: '复制', key: 'duplicate', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
-  {
-    label: '删除',
-    key: 'delete',
-    icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
-    props: { style: 'color: #d03050' },
-  },
-]
 
 const { pageEntries, visiblePages, hiddenPages } = usePageEntries(editor)
 const pagesCount = computed(() => pageEntries.value.length)
@@ -101,279 +92,200 @@ function confirmDuplicatePage() {
 </script>
 
 <template>
-  <div>
-    <NFlex vertical>
-      <div class="page-item">
-        <div class="page-item__row">
-          <NButton
-            :type="editor.currentKey.value === 'home' ? 'primary' : 'default'"
-            class="page-item__main"
-            @click="editor.currentKey.value = 'home'"
-          >
-            <div class="page-item__btn-content">
-              <span class="truncate-text">
-                主页 /@{{ editor.account.value.name || '...' }}
-              </span>
-              <NTag
-                size="tiny"
-                :bordered="false"
-                :type="editor.settings.value.home?.mode === 'block' ? 'success' : 'default'"
-                class="mode-badge"
-              >
-                {{ getPageModeShortLabel(editor.settings.value.home?.mode ?? 'block') }}
-              </NTag>
-            </div>
-          </NButton>
-        </div>
-      </div>
-      <NDivider style="margin: 0" />
-      <NButton
-        type="info"
-        :disabled="!canCreateMorePages"
-        @click="addPageModal = true"
-      >
-        新建子页面
-      </NButton>
-      <NFlex vertical>
-        <template
-          v-for="section in pageSections"
-          :key="section.key"
+  <div class="flex flex-col gap-2">
+    <div class="page-item">
+      <div class="page-item__row flex items-center gap-1">
+        <Button
+          :variant="editor.currentKey.value === 'home' ? 'default' : 'outline'"
+          class="page-item__main w-full justify-start h-8 px-2 text-xs"
+          @click="editor.currentKey.value = 'home'"
         >
-          <NText
-            depth="3"
-            :style="{ fontSize: '12px', marginTop: section.hidden ? '10px' : '4px' }"
-          >
-            {{ section.label }}
-          </NText>
-          <div
-            v-for="p in section.pages"
-            :key="p.slug"
-            class="page-item"
-            :class="{ 'page-item--hidden': section.hidden }"
-          >
-            <div class="page-item__row">
-              <NButton
-                :type="editor.currentKey.value === p.slug ? 'primary' : 'default'"
-                class="page-item__main"
-                @click="editor.currentKey.value = p.slug"
-              >
-                <div class="page-item__btn-content">
-                  <span class="truncate-text">
-                    {{ p.title }}
-                  </span>
-                  <NTag
-                    size="tiny"
-                    :bordered="false"
-                    :type="p.mode === 'block' ? 'success' : 'default'"
-                    class="mode-badge"
-                  >
-                    {{ getPageModeShortLabel(p.mode ?? 'block') }}
-                  </NTag>
-                </div>
-              </NButton>
-              <NTooltip>
-                <template #trigger>
-                  <NDropdown
-                    trigger="click"
-                    :options="pageActionOptions"
-                    @select="(key) => handlePageAction(String(key), p.slug)"
-                  >
-                    <NButton
-                      quaternary
-                      circle
-                      size="small"
-                      aria-label="更多页面操作"
-                    >
-                      <template #icon>
-                        <NIcon><EllipsisHorizontalOutline /></NIcon>
-                      </template>
-                    </NButton>
-                  </NDropdown>
-                </template>
-                更多页面操作
-              </NTooltip>
-            </div>
-          </div>
-        </template>
-      </NFlex>
-    </NFlex>
-
-    <NModal
-      v-model:show="addPageModal"
-      preset="card"
-      title="新建子页面"
-      style="width: 480px; max-width: 90vw"
-      :auto-focus="false"
-    >
-      <NForm
-        size="small"
-        label-placement="top"
-      >
-        <NFormItem
-          label="页面链接标识 (Slug)"
-          required
-        >
-          <NInput
-            v-model:value="newSlug"
-            placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）"
-          />
-        </NFormItem>
-        <NFormItem label="搭建模式">
-          <NRadioGroup
-            v-model:value="newMode"
-            name="new-page-mode"
-            style="width: 100%"
-          >
-            <NFlex
-              vertical
-              :size="8"
+          <div class="page-item__btn-content flex items-center justify-between w-full min-w-0 gap-1">
+            <span class="truncate text-left flex-1">
+              主页 /@{{ editor.account.value.name || '...' }}
+            </span>
+            <Tag
+              variant="outline"
+              class="text-[10px] h-4.5 px-1 shrink-0"
             >
-              <NRadio
+              {{ getPageModeShortLabel(editor.settings.value.home?.mode ?? 'block') }}
+            </Tag>
+          </div>
+        </Button>
+      </div>
+    </div>
+
+    <div class="h-px bg-border my-1" />
+
+    <Button
+      size="sm"
+      variant="outline"
+      class="w-full text-xs"
+      :disabled="!canCreateMorePages"
+      @click="addPageModal = true"
+    >
+      新建子页面
+    </Button>
+
+    <div class="flex flex-col gap-2">
+      <template
+        v-for="section in pageSections"
+        :key="section.key"
+      >
+        <span class="text-xs text-muted-foreground mt-1">
+          {{ section.label }}
+        </span>
+        <div
+          v-for="p in section.pages"
+          :key="p.slug"
+          class="page-item"
+          :class="{ 'opacity-90': section.hidden }"
+        >
+          <div class="page-item__row flex items-center gap-1">
+            <Button
+              :variant="editor.currentKey.value === p.slug ? 'default' : 'outline'"
+              class="page-item__main flex-1 min-w-0 justify-start h-8 px-2 text-xs"
+              @click="editor.currentKey.value = p.slug"
+            >
+              <div class="page-item__btn-content flex items-center justify-between w-full min-w-0 gap-1">
+                <span class="truncate text-left flex-1">
+                  {{ p.title }}
+                </span>
+                <Tag
+                  variant="outline"
+                  class="text-[10px] h-4.5 px-1 shrink-0"
+                >
+                  {{ getPageModeShortLabel(p.mode ?? 'block') }}
+                </Tag>
+              </div>
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  class="size-7 p-0"
+                  aria-label="更多页面操作"
+                >
+                  <component :is="EllipsisHorizontalOutline" class="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" class="w-28 text-xs">
+                <DropdownMenuItem @click="handlePageAction('duplicate', p.slug)">
+                  <component :is="CopyOutline" class="size-3.5 mr-2" />
+                  复制
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  class="text-destructive focus:text-destructive"
+                  @click="handlePageAction('delete', p.slug)"
+                >
+                  <component :is="TrashOutline" class="size-3.5 mr-2" />
+                  删除
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- 新建页面弹窗 -->
+    <Dialog v-model:open="addPageModal">
+      <DialogContent class="max-w-md p-4">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold">新建子页面</DialogTitle>
+        </DialogHeader>
+        <div class="flex flex-col gap-3 py-2">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-medium">页面链接标识 (Slug) <span class="text-destructive">*</span></label>
+            <Input
+              v-model="newSlug"
+              placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）"
+              class="text-xs"
+            />
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-medium">搭建模式</label>
+            <RadioGroup v-model="newMode" class="flex flex-col gap-2">
+              <label
                 v-for="opt in PAGE_MODE_OPTIONS"
                 :key="opt.value"
-                :value="opt.value"
+                class="flex items-start gap-2 p-2 rounded-lg border border-border cursor-pointer hover:bg-muted/50"
               >
-                <span style="font-weight: 500">{{ opt.label }}</span>
-                <NTag
-                  v-if="opt.tag"
-                  size="tiny"
-                  type="success"
-                  :bordered="false"
-                  style="margin-left: 6px"
-                >
-                  {{ opt.tag }}
-                </NTag>
-                <div style="font-size: 12px; color: var(--vtsuru-fg-muted); margin-top: 2px">
-                  {{ opt.description }}
+                <RadioGroupItem :value="opt.value" class="mt-0.5" />
+                <div class="flex-1 text-xs">
+                  <div class="flex items-center gap-1.5 font-medium">
+                    {{ opt.label }}
+                    <Tag v-if="opt.tag" variant="secondary" class="text-[10px] h-4 px-1">
+                      {{ opt.tag }}
+                    </Tag>
+                  </div>
+                  <div class="text-muted-foreground mt-0.5 text-[11px] leading-relaxed">
+                    {{ opt.description }}
+                  </div>
                 </div>
-              </NRadio>
-            </NFlex>
-          </NRadioGroup>
-        </NFormItem>
-        <NAlert
-          type="info"
-          :show-icon="true"
-        >
-          创建后访问地址：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
-        </NAlert>
-      </NForm>
-      <template #footer>
-        <NFlex justify="end">
-          <NButton @click="addPageModal = false"> 取消 </NButton>
-          <NButton
-            type="primary"
-            :disabled="!newSlug.trim().length"
-            @click="createPage"
-          >
-            创建
-          </NButton>
-        </NFlex>
-      </template>
-    </NModal>
+              </label>
+            </RadioGroup>
+          </div>
 
-    <NModal
-      v-model:show="duplicatePageModal"
-      preset="card"
-      title="复制子页面"
-      style="width: 420px; max-width: 90vw"
-      :auto-focus="false"
-    >
-      <NForm
-        size="small"
-        label-placement="top"
-      >
-        <NAlert
-          type="info"
-          :show-icon="true"
-        >
-          复制自：/{{ duplicateFromSlug || 'slug' }}
-        </NAlert>
-        <NFormItem
-          label="新页面标识 (Slug)"
-          required
-        >
-          <NInput
-            v-model:value="duplicateToSlug"
-            placeholder="例如 links-copy"
-          />
-        </NFormItem>
-        <NText depth="3"> 会自动为复制后的页面生成新的区块 ID，避免与原页面冲突。 </NText>
-      </NForm>
-      <template #footer>
-        <NFlex justify="end">
-          <NButton @click="duplicatePageModal = false"> 取消 </NButton>
-          <NButton
-            type="primary"
-            :disabled="!duplicateToSlug.trim().length"
-            @click="confirmDuplicatePage"
-          >
-            确定
-          </NButton>
-        </NFlex>
-      </template>
-    </NModal>
+          <Alert class="bg-primary/5 border-primary/20 text-xs py-2">
+            <AlertDescription>
+              创建后访问地址：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
+            </AlertDescription>
+          </Alert>
+        </div>
+        <DialogFooter>
+          <Button size="sm" variant="outline" @click="addPageModal = false">取消</Button>
+          <Button size="sm" :disabled="!newSlug.trim().length" @click="createPage">创建</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
-    <NModal
-      v-model:show="deletePageModal"
-      preset="dialog"
-      type="error"
-      title="删除子页面"
-      :content="`将删除 /${deletePageSlug} 及其中全部配置，此操作可通过撤销恢复。`"
-      positive-text="删除"
-      negative-text="取消"
-      @positive-click="confirmDeletePage"
-    />
+    <!-- 复制子页面弹窗 -->
+    <Dialog v-model:open="duplicatePageModal">
+      <DialogContent class="max-w-sm p-4">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold">复制子页面</DialogTitle>
+        </DialogHeader>
+        <div class="flex flex-col gap-3 py-2">
+          <Alert class="bg-primary/5 border-primary/20 text-xs py-2">
+            <AlertDescription>复制自：/{{ duplicateFromSlug || 'slug' }}</AlertDescription>
+          </Alert>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-medium">新页面标识 (Slug) <span class="text-destructive">*</span></label>
+            <Input
+              v-model="duplicateToSlug"
+              placeholder="例如 links-copy"
+              class="text-xs"
+            />
+          </div>
+          <span class="text-[11px] text-muted-foreground">会自动为复制后的页面生成新的区块 ID，避免与原页面冲突。</span>
+        </div>
+        <DialogFooter>
+          <Button size="sm" variant="outline" @click="duplicatePageModal = false">取消</Button>
+          <Button size="sm" :disabled="!duplicateToSlug.trim().length" @click="confirmDuplicatePage">确定</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 删除确认弹窗 -->
+    <Dialog v-model:open="deletePageModal">
+      <DialogContent class="max-w-sm p-4">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold text-destructive">删除子页面</DialogTitle>
+        </DialogHeader>
+        <div class="py-2 text-xs text-muted-foreground">
+          将删除 /{{ deletePageSlug }} 及其中全部配置，此操作可通过撤销恢复。
+        </div>
+        <DialogFooter>
+          <Button size="sm" variant="outline" @click="deletePageModal = false">取消</Button>
+          <Button size="sm" variant="destructive" @click="confirmDeletePage">删除</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
-
-<style scoped>
-.page-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.page-item--hidden {
-  opacity: 0.92;
-}
-
-.page-item__row {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.page-item__main {
-  flex: 1;
-  min-width: 0;
-}
-
-.page-item__main :deep(.n-button__content) {
-  width: 100%;
-}
-
-.page-item__btn-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-width: 0;
-  gap: 4px;
-}
-
-.truncate-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-  text-align: left;
-}
-
-.mode-badge {
-  flex: none;
-  font-size: 11px;
-  pointer-events: none;
-}
-</style>

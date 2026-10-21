@@ -10,10 +10,10 @@ import {
   Person24Regular,
   Question24Regular,
 } from '@vicons/fluent'
-import { NIcon, NTag } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
+import { Badge } from '@/shared/ui/badge'
 
 const props = withDefaults(
   defineProps<{
@@ -94,7 +94,7 @@ function handleCardClick() {
 
           <!-- 时长 -->
           <span class="media-badge duration-badge">
-            <NIcon :component="Clock24Regular" />
+            <component :is="Clock24Regular" class="size-3" />
             {{ formatDuration(item.video.length) }}
           </span>
 
@@ -107,7 +107,7 @@ function handleCardClick() {
             :aria-label="watched ? '标记为未看' : '标记为已看'"
             @click.stop.prevent="emit('toggleWatched')"
           >
-            <NIcon :component="watched ? CheckmarkCircle24Regular : Checkmark24Regular" />
+            <component :is="watched ? CheckmarkCircle24Regular : Checkmark24Regular" class="size-3.5" />
             <span>{{ watched ? '已看' : '未看' }}</span>
           </button>
         </div>
@@ -128,7 +128,7 @@ function handleCardClick() {
               aria-label="在哔哩哔哩打开"
               @click.stop.prevent="emit('select')"
             >
-              <NIcon :component="Open24Regular" />
+              <component :is="Open24Regular" class="size-4" />
             </button>
           </div>
 
@@ -138,7 +138,7 @@ function handleCardClick() {
               class="owner"
               :title="`UP 主: ${item.video.ownerName}`"
             >
-              <NIcon :component="Person24Regular" />
+              <component :is="Person24Regular" class="size-3.5" />
               <span class="owner-name">{{ item.video.ownerName }}</span>
             </span>
             <code class="bvid-code">{{ item.info.bvid }}</code>
@@ -151,26 +151,25 @@ function handleCardClick() {
           >
             <div class="recommend-author">
               <span class="sender-tag">
-                <NIcon :component="Heart24Regular" />
+                <component :is="Heart24Regular" class="size-3.5" />
                 <span class="sender-name">{{ primarySender.sender || '匿名粉丝' }}</span>
               </span>
-              <NTag
+              <Badge
                 v-if="otherSendersCount > 0"
-                size="tiny"
-                :bordered="false"
-                class="extra-senders-tag"
+                variant="secondary"
+                class="extra-senders-tag text-[10px] h-4.5 px-1 font-normal"
               >
                 +{{ otherSendersCount }} 人推荐
-              </NTag>
+              </Badge>
             </div>
             <p
               v-if="primarySender.description"
               class="recommend-quote"
               :title="primarySender.description"
             >
-              <NIcon
-                :component="Comment24Regular"
-                class="quote-icon"
+              <component
+                :is="Comment24Regular"
+                class="quote-icon size-3 inline-block"
               />
               <span>{{ primarySender.description }}</span>
             </p>
@@ -212,7 +211,7 @@ function handleCardClick() {
             title="重新盖上"
             @click.stop="emit('toggleReveal')"
           >
-            <NIcon :component="ArrowSwap24Regular" />
+            <component :is="ArrowSwap24Regular" class="size-3.5" />
             盖上
           </button>
         </div>
@@ -229,7 +228,7 @@ function handleCardClick() {
         <span class="mystery-number">{{ String(index + 1).padStart(2, '0') }}</span>
         <div class="mystery-center">
           <div class="mystery-icon-circle">
-            <NIcon :component="Question24Regular" />
+            <component :is="Question24Regular" class="size-6" />
           </div>
           <strong class="mystery-text">点击揭晓</strong>
           <span class="mystery-hint">TAP TO REVEAL</span>

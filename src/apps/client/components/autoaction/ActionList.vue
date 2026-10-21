@@ -1,37 +1,43 @@
 <script setup lang="ts">
 import {
+  Add16Regular,
   ArrowDown24Regular,
   ArrowUp24Regular,
-  Edit16Regular,
-  Add16Regular,
+  CheckmarkCircle16Regular,
   Copy16Regular,
   Delete16Regular,
+  DismissCircle16Regular,
+  Edit16Regular,
   MoreHorizontal24Regular,
   Search16Regular,
-  CheckmarkCircle16Regular,
-  DismissCircle16Regular,
 } from '@vicons/fluent'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NButton,
-  NDataTable,
-  NDropdown,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-  NSwitch,
-  NInput,
-  useDialog,
-} from 'naive-ui'
-import { computed, h, nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { ActionType, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Switch } from '@/shared/ui/switch'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import TimerCountdown from './TimerCountdown.vue'
 
@@ -47,8 +53,6 @@ const emit = defineEmits<{
 }>()
 
 const autoActionStore = useAutoAction()
-const message = useMessage()
-const dialog = useDialog()
 const biliCookieStore = useBiliCookie()
 
 const searchText = ref('')
@@ -88,210 +92,43 @@ function handleBatchEnable(enabled: boolean) {
   actionsToUpdate.forEach((a) => {
     autoActionStore.toggleAutoAction(a.id, enabled)
   })
-  message.success(`已${enabled ? '启用' : '禁用'} ${actionsToUpdate.length} 条操作`)
+  toast.success(`已${enabled ? '启用' : '禁用'} ${actionsToUpdate.length} 条操作`)
 }
 
-function getStatusTag(action: AutoActionItem) {
+function getStatusBadge(action: AutoActionItem) {
   const requiresLogin =
     action.actionType === ActionType.SEND_DANMAKU || action.actionType === ActionType.SEND_PRIVATE_MSG
 
   if (requiresLogin && !biliCookieStore.isCookieValid) {
-    return { type: 'error' as const, text: '需登录', tooltip: '发送弹幕或私信需要登录B站账号' }
+    return { class: 'border-destructive/40 text-destructive bg-destructive/10', text: '需登录', tooltip: '发送弹幕或私信需要登录B站账号' }
   }
 
   if (!enabledTriggerTypes.value[action.triggerType]) {
-    return { type: 'warning' as const, text: '类型禁用', tooltip: `所有${props.title}类型的操作已禁用` }
+    return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '类型禁用', tooltip: `所有${props.title}类型的操作已禁用` }
   }
 
   if (!action.enabled) {
-    return { type: 'default' as const, text: '已禁用', tooltip: '此操作已被手动禁用' }
+    return { class: 'border-border text-muted-foreground bg-muted/40', text: '已禁用', tooltip: '此操作已被手动禁用' }
   }
 
   if ([ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG, ActionType.EXECUTE_COMMAND].includes(action.actionType)) {
     if (!action.template || (typeof action.template === 'string' && action.template.trim() === '')) {
-      return { type: 'warning' as const, text: '空模板', tooltip: '请设置有效的模板内容' }
+      return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '空模板', tooltip: '请设置有效的模板内容' }
     }
   }
 
   if (action.triggerConfig.onlyDuringLive && !autoActionStore.isLive) {
-    return { type: 'warning' as const, text: '待机中', tooltip: '仅在直播时触发' }
+    return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '待机中', tooltip: '仅在直播时触发' }
   }
 
   if (action.triggerConfig.ignoreTianXuan && autoActionStore.isTianXuanActive) {
-    return { type: 'warning' as const, text: '暂停中', tooltip: '天选时刻暂停触发' }
+    return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '暂停中', tooltip: '天选时刻暂停触发' }
   }
 
-  return { type: 'success' as const, text: '运行中', tooltip: '正常运行' }
+  return { class: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10', text: '运行中', tooltip: '正常运行' }
 }
 
-const columns = computed<DataTableColumns<AutoActionItem>>(() => {
-  const base: DataTableColumns<AutoActionItem> = [
-    {
-      title: '名称',
-      key: 'name',
-      render: (row: any) => {
-        return h('div', { class: 'action-name-cell' }, [
-          h(NText, { strong: true }, { default: () => row.name || '未命名操作' }),
-          row.description
-            ? h(
-                NText,
-                { depth: 3, size: 'small', style: 'display: block; font-size: 12px;' },
-                { default: () => row.description },
-              )
-            : null,
-        ])
-      },
-    },
-    {
-      title: '状态',
-      key: 'status',
-      width: 100,
-      align: 'center',
-      render: (row: any) => {
-        const status = getStatusTag(row)
-        return h(
-          NDropdown,
-          {
-            trigger: 'click',
-            options: [
-              {
-                label: row.enabled ? '禁用' : '启用',
-                key: 'toggle',
-                props: {
-                  onClick: () => {
-                    autoActionStore.toggleAutoAction(row.id, !row.enabled)
-                    message.success(`已${!row.enabled ? '启用' : '禁用'}: ${row.name}`)
-                  },
-                },
-              },
-              {
-                label: row.triggerConfig.onlyDuringLive ? '取消"仅直播"' : '设为"仅直播"',
-                key: 'live',
-                props: {
-                  onClick: () => {
-                    row.triggerConfig.onlyDuringLive = !row.triggerConfig.onlyDuringLive
-                    message.success('已更新触发条件')
-                  },
-                },
-              },
-            ],
-          },
-          {
-            default: () =>
-              h(
-                NTooltip,
-                { trigger: 'hover' },
-                {
-                  trigger: () =>
-                    h(
-                      NTag,
-                      { type: status.type, size: 'small', round: true, style: 'cursor: pointer' },
-                      { default: () => status.text },
-                    ),
-                  default: () => status.tooltip,
-                },
-              ),
-          },
-        )
-      },
-    },
-  ]
-
-  if (props.triggerType === TriggerType.SCHEDULED) {
-    base.push({
-      title: '下次触发',
-      key: 'timer',
-      width: 120,
-      align: 'center',
-      render: (row: any) => {
-        if (!typeEnabled.value || !row.enabled) return h(NText, { depth: 3 }, { default: () => '-' })
-        return h(TimerCountdown, { actionId: row.id })
-      },
-    })
-  }
-
-  base.push({
-    title: '操作',
-    key: 'actions',
-    width: 140,
-    align: 'right',
-    render: (row: any) => {
-      const index = orderedActions.value.findIndex((a) => a.id === row.id)
-      const buttons = []
-
-      // Move buttons for Scheduled
-      if (props.triggerType === TriggerType.SCHEDULED) {
-        buttons.push(
-          h(
-            NButton,
-            {
-              size: 'tiny',
-              tertiary: true,
-              circle: true,
-              disabled: index === 0,
-              onClick: () => autoActionStore.moveAction(row.id, 'up'),
-            },
-            { icon: () => h(NIcon, { component: ArrowUp24Regular }) },
-          ),
-          h(
-            NButton,
-            {
-              size: 'tiny',
-              tertiary: true,
-              circle: true,
-              disabled: index === orderedActions.value.length - 1,
-              onClick: () => autoActionStore.moveAction(row.id, 'down'),
-            },
-            { icon: () => h(NIcon, { component: ArrowDown24Regular }) },
-          ),
-        )
-      }
-
-      buttons.push(
-        h(
-          NButton,
-          {
-            size: 'small',
-            secondary: true,
-            type: 'primary',
-            onClick: () => emit('edit', row.id),
-          },
-          { icon: () => h(NIcon, { component: Edit16Regular }), default: () => '编辑' },
-        ),
-        h(
-          NDropdown,
-          {
-            trigger: 'hover',
-            options: [
-              { label: '复制', key: 'duplicate', icon: () => h(NIcon, { component: Copy16Regular }) },
-              { label: '删除', key: 'delete', icon: () => h(NIcon, { component: Delete16Regular }) },
-            ],
-            onSelect: (key) => {
-              if (key === 'duplicate') duplicateAction(row)
-              if (key === 'delete') deleteAction(row)
-            },
-          },
-          {
-            default: () =>
-              h(
-                NButton,
-                { size: 'small', quaternary: true, circle: true },
-                { icon: () => h(NIcon, { component: MoreHorizontal24Regular }) },
-              ),
-          },
-        ),
-      )
-
-      return h(NFlex, { size: 4, align: 'center', justify: 'end' }, { default: () => buttons })
-    },
-  })
-
-  return base
-})
-
-// 智能生成克隆名称: "X" -> "X (复制)" -> "X (复制 2)" -> "X (复制 3)"
 function nextDuplicateName(sourceName: string) {
-  // 剥离已有的 "(复制)" / "(复制 N)" 后缀, 得到基础名
   const baseName = sourceName.replace(/\s*\(复制(?:\s*\d+)?\)$/, '').trim()
   const escaped = baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const re = new RegExp(`^${escaped}\\s*\\(复制(?:\\s*(\\d+))?\\)$`)
@@ -325,26 +162,18 @@ function duplicateAction(action: AutoActionItem) {
       }
     })
   }
-  message.success('已复制')
+  toast.success('已复制')
 }
 
 function deleteAction(action: AutoActionItem) {
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除操作「${action.name || '未命名操作'}」吗？此操作不可撤销。`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      autoActionStore.removeAutoAction(action.id)
-      message.success('已删除')
-    },
-  })
+  autoActionStore.removeAutoAction(action.id)
+  toast.success('已删除')
 }
 
 function exportActions() {
   const actionsToExport = filteredActions.value
   if (actionsToExport.length === 0) {
-    message.warning('没有可导出的操作')
+    toast.warning('没有可导出的操作')
     return
   }
   const data = JSON.stringify(actionsToExport, null, 2)
@@ -355,7 +184,7 @@ function exportActions() {
   a.download = `autoaction-${props.triggerType}-${Date.now()}.json`
   a.click()
   URL.revokeObjectURL(url)
-  message.success(`已导出 ${actionsToExport.length} 条操作`)
+  toast.success(`已导出 ${actionsToExport.length} 条操作`)
 }
 
 function importActions() {
@@ -376,9 +205,9 @@ function importActions() {
         autoActionStore.autoActions.push(item)
         count++
       }
-      message.success(`已导入 ${count} 条操作`)
+      toast.success(`已导入 ${count} 条操作`)
     } catch (err) {
-      message.error(`导入失败: ${(err as Error).message}`)
+      toast.error(`导入失败: ${(err as Error).message}`)
     }
   }
   input.click()
@@ -386,156 +215,285 @@ function importActions() {
 </script>
 
 <template>
-  <div class="action-list">
-    <div class="action-list-header">
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
-        <NFlex
-          align="center"
-          :size="16"
+  <div class="action-list flex flex-col h-full">
+    <div class="action-list-header flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="flex items-center gap-2 cursor-pointer select-none">
+          <Switch
+            v-model:checked="typeEnabled"
+          />
+          <span
+            class="text-xs font-semibold"
+            :class="typeEnabled ? 'text-foreground' : 'text-muted-foreground'"
+          >
+            {{ typeEnabled ? '已启用' : '已禁用' }}{{ title }}
+          </span>
+        </div>
+
+        <div
+          v-if="filteredActions.length > 0"
+          class="batch-actions flex items-center gap-1.5"
         >
-          <NFlex align="center">
-            <NSwitch
-              v-model:value="typeEnabled"
-              size="small"
-            >
-              <template #checked> 已启用 </template>
-              <template #unchecked> 已禁用 </template>
-            </NSwitch>
-            <NText
-              :depth="typeEnabled ? 1 : 3"
-              strong
-            >
-              {{ typeEnabled ? '已启用' : '已禁用' }}{{ title }}
-            </NText>
-          </NFlex>
-
-          <div
-            v-if="filteredActions.length > 0"
-            class="batch-actions"
+          <Button
+            size="xs"
+            variant="ghost"
+            class="h-6 text-[11px] gap-1"
+            @click="handleBatchEnable(true)"
           >
-            <NButton
-              size="tiny"
-              quaternary
-              @click="handleBatchEnable(true)"
-            >
-              <template #icon>
-                <NIcon :component="CheckmarkCircle16Regular" />
-              </template>
-              全部启用
-            </NButton>
-            <NButton
-              size="tiny"
-              quaternary
-              @click="handleBatchEnable(false)"
-            >
-              <template #icon>
-                <NIcon :component="DismissCircle16Regular" />
-              </template>
-              全部禁用
-            </NButton>
-          </div>
-        </NFlex>
+            <CheckmarkCircle16Regular class="size-3" />
+            全部启用
+          </Button>
+          <Button
+            size="xs"
+            variant="ghost"
+            class="h-6 text-[11px] gap-1"
+            @click="handleBatchEnable(false)"
+          >
+            <DismissCircle16Regular class="size-3" />
+            全部禁用
+          </Button>
+        </div>
+      </div>
 
-        <NFlex align="center">
-          <NInput
-            v-model:value="searchText"
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="relative w-[180px]">
+          <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          <Input
+            v-model="searchText"
             placeholder="搜索操作..."
-            size="small"
-            style="width: 180px"
-            clearable
-          >
-            <template #prefix>
-              <NIcon :component="Search16Regular" />
-            </template>
-          </NInput>
-          <slot name="extra-actions" />
-          <NDropdown
-            trigger="hover"
-            :options="[
-              { label: '导出配置', key: 'export' },
-              { label: '导入配置', key: 'import' },
-            ]"
-            @select="(key: string) => (key === 'export' ? exportActions() : importActions())"
-          >
-            <NButton
-              size="small"
-              quaternary
+            class="h-8 text-xs pl-8 pr-2"
+          />
+        </div>
+
+        <slot name="extra-actions" />
+
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-8 w-8 p-0"
             >
-              <template #icon>
-                <NIcon :component="MoreHorizontal24Regular" />
-              </template>
-            </NButton>
-          </NDropdown>
-          <NButton
-            size="small"
-            secondary
-            type="warning"
-            @click="$emit('test')"
-          >
-            测试
-          </NButton>
-          <NButton
-            size="small"
-            type="primary"
-            @click="$emit('add')"
-          >
-            <template #icon>
-              <NIcon :component="Add16Regular" />
-            </template>
-            添加{{ title }}
-          </NButton>
-        </NFlex>
-      </NFlex>
+              <MoreHorizontal24Regular class="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem class="text-xs" @select="exportActions">
+              导出配置
+            </DropdownMenuItem>
+            <DropdownMenuItem class="text-xs" @select="importActions">
+              导入配置
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-8 text-xs text-amber-600 dark:text-amber-400"
+          @click="$emit('test')"
+        >
+          测试
+        </Button>
+
+        <Button
+          size="sm"
+          class="h-8 text-xs gap-1.5"
+          @click="$emit('add')"
+        >
+          <Add16Regular class="size-3.5" />
+          添加{{ title }}
+        </Button>
+      </div>
     </div>
 
     <slot name="header-content" />
 
-    <div class="action-list-content">
-      <transition
-        name="fade"
-        mode="out-in"
+    <div class="action-list-content flex-1 pt-3">
+      <div
+        v-if="filteredActions.length === 0"
+        class="py-12 flex flex-col items-center justify-center"
       >
-        <NEmpty
-          v-if="filteredActions.length === 0"
-          :description="searchText ? '没有匹配的搜索结果' : '暂无操作'"
-          style="margin-top: 60px"
-        >
-          <template #extra>
-            <NButton
+        <Empty :description="searchText ? '没有匹配的搜索结果' : '暂无操作'">
+          <div class="mt-3">
+            <Button
               v-if="!searchText"
-              type="primary"
-              dashed
+              size="sm"
+              class="h-8 text-xs"
               @click="$emit('add')"
             >
               创建第一个{{ title }}
-            </NButton>
-            <NButton
+            </Button>
+            <Button
               v-else
-              quaternary
+              size="sm"
+              variant="secondary"
+              class="h-8 text-xs"
               @click="searchText = ''"
             >
               重置搜索
-            </NButton>
-          </template>
-        </NEmpty>
+            </Button>
+          </div>
+        </Empty>
+      </div>
 
-        <NDataTable
-          v-else
-          :key="triggerType"
-          :columns="columns"
-          :data="filteredActions"
-          :row-key="(row) => row.id"
-          :bordered="false"
-          :virtual-scroll="filteredActions.length > 20"
-          :max-height="filteredActions.length > 20 ? 600 : undefined"
-          class="action-table"
-          size="small"
-          striped
-        />
-      </transition>
+      <div
+        v-else
+        class="border rounded-md overflow-hidden bg-card"
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead class="text-xs">名称</TableHead>
+              <TableHead class="text-xs text-center w-[100px]">状态</TableHead>
+              <TableHead
+                v-if="triggerType === TriggerType.SCHEDULED"
+                class="text-xs text-center w-[120px]"
+              >
+                下次触发
+              </TableHead>
+              <TableHead class="text-xs text-right w-[160px]">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow
+              v-for="row in filteredActions"
+              :key="row.id"
+            >
+              <TableCell class="text-xs">
+                <div class="flex flex-col gap-0.5">
+                  <span class="font-medium text-foreground">{{ row.name || '未命名操作' }}</span>
+                  <span
+                    v-if="row.description"
+                    class="text-[11px] text-muted-foreground"
+                  >
+                    {{ row.description }}
+                  </span>
+                </div>
+              </TableCell>
+
+              <TableCell class="text-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger as-child>
+                    <div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <Badge
+                              variant="outline"
+                              class="text-[10px] h-5 px-2 cursor-pointer"
+                              :class="getStatusBadge(row).class"
+                            >
+                              {{ getStatusBadge(row).text }}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>{{ getStatusBadge(row).tooltip }}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    <DropdownMenuItem
+                      class="text-xs"
+                      @select="
+                        () => {
+                          autoActionStore.toggleAutoAction(row.id, !row.enabled)
+                          toast.success(`已${!row.enabled ? '启用' : '禁用'}: ${row.name}`)
+                        }
+                      "
+                    >
+                      {{ row.enabled ? '禁用' : '启用' }}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      class="text-xs"
+                      @select="
+                        () => {
+                          row.triggerConfig.onlyDuringLive = !row.triggerConfig.onlyDuringLive
+                          toast.success('已更新触发条件')
+                        }
+                      "
+                    >
+                      {{ row.triggerConfig.onlyDuringLive ? '取消"仅直播"' : '设为"仅直播"' }}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+
+              <TableCell
+                v-if="triggerType === TriggerType.SCHEDULED"
+                class="text-center text-xs"
+              >
+                <template v-if="!typeEnabled || !row.enabled">-</template>
+                <TimerCountdown v-else :action-id="row.id" />
+              </TableCell>
+
+              <TableCell class="text-right">
+                <div class="flex items-center justify-end gap-1.5">
+                  <!-- 上下移动排序 (仅定时) -->
+                  <template v-if="triggerType === TriggerType.SCHEDULED">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="h-6 w-6 p-0"
+                      :disabled="orderedActions.findIndex((a) => a.id === row.id) === 0"
+                      @click="autoActionStore.moveAction(row.id, 'up')"
+                    >
+                      <ArrowUp24Regular class="size-3.5" />
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="h-6 w-6 p-0"
+                      :disabled="orderedActions.findIndex((a) => a.id === row.id) === orderedActions.length - 1"
+                      @click="autoActionStore.moveAction(row.id, 'down')"
+                    >
+                      <ArrowDown24Regular class="size-3.5" />
+                    </Button>
+                  </template>
+
+                  <Button
+                    size="xs"
+                    variant="secondary"
+                    class="h-7 text-xs gap-1"
+                    @click="$emit('edit', row.id)"
+                  >
+                    <Edit16Regular class="size-3" />
+                    编辑
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="h-7 w-7 p-0"
+                      >
+                        <MoreHorizontal24Regular class="size-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        class="text-xs gap-1.5"
+                        @select="duplicateAction(row)"
+                      >
+                        <Copy16Regular class="size-3.5" />
+                        复制
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        class="text-xs gap-1.5 text-destructive focus:text-destructive"
+                        @select="deleteAction(row)"
+                      >
+                        <Delete16Regular class="size-3.5" />
+                        删除
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
     </div>
   </div>
 </template>
@@ -543,46 +501,17 @@ function importActions() {
 <style scoped>
 .action-list {
   height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
 .action-list-header {
-  padding: 12px 16px;
-  background-color: var(--vtsuru-bg-inset);
+  padding: 10px 14px;
+  background-color: var(--vtsuru-bg-inset, var(--vtsuru-bg-muted));
   border-radius: var(--vtsuru-radius);
-  margin-bottom: 12px;
-}
-
-.action-table :deep(.n-data-table-td) {
-  padding: 10px 8px;
-}
-
-.action-table :deep(.n-data-table-tr:hover) {
-  background-color: var(--vtsuru-bg-muted);
-}
-
-.action-name-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  border: 1px solid var(--vtsuru-border);
 }
 
 .batch-actions {
-  display: flex;
-  gap: 4px;
   border-left: 1px solid var(--vtsuru-border);
   padding-left: 12px;
-  margin-left: 4px;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.15s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>

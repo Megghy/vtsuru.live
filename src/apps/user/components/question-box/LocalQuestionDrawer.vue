@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { Delete24Regular, History24Regular, Image24Regular, LockClosed24Regular } from '@vicons/fluent'
-import { useWindowSize } from '@vueuse/core'
-import { NButton, NDrawer, NDrawerContent, NEmpty, NIcon, NPopconfirm, NTag, NTime } from 'naive-ui'
-import { computed } from 'vue'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 
 import type { LocalQuestion } from './questionBoxHistory'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 
 defineProps<{
   questions: LocalQuestion[]
@@ -14,184 +18,115 @@ const emit = defineEmits<{
   remove: [id: string]
 }>()
 const show = defineModel<boolean>('show', { required: true })
-const { width } = useWindowSize()
-const drawerWidth = computed(() => Math.min(440, width.value))
+
+function formatRelativeTime(time: number) {
+  try {
+    return formatDistanceToNow(new Date(time), { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(time)
+  }
+}
 </script>
 
 <template>
-  <NDrawer
-    v-model:show="show"
-    :width="drawerWidth"
-    placement="right"
+  <Sheet
+    :open="show"
+    @update:open="show = $event"
   >
-    <NDrawerContent closable>
-      <template #header>
-        <div class="drawer-heading">
-          <span class="drawer-icon"><NIcon :component="History24Regular" /></span>
+    <SheetContent side="right" class="w-full sm:max-w-md p-0 flex flex-col">
+      <SheetHeader class="px-5 py-4 border-b border-border/80">
+        <div class="drawer-heading flex items-center gap-3">
+          <span class="drawer-icon size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <component :is="History24Regular" class="size-5" />
+          </span>
           <div>
-            <strong>本地提问记录</strong>
-            <span>仅保存在当前浏览器</span>
+            <SheetTitle class="text-base font-semibold">本地提问记录</SheetTitle>
+            <span class="text-xs text-muted-foreground">仅保存在当前浏览器</span>
           </div>
         </div>
-      </template>
+      </SheetHeader>
 
-      <div
-        v-if="questions.length"
-        class="history-list"
-      >
-        <article
-          v-for="item in questions"
-          :key="item.id"
-          class="history-item"
+      <div class="flex-1 min-h-0 overflow-y-auto p-5">
+        <div
+          v-if="questions.length"
+          class="history-list space-y-3"
         >
-          <div class="history-meta">
-            <span>提给 {{ item.targetUserName }}</span>
-            <NTime
-              :time="item.sendAt"
-              type="relative"
-            />
-          </div>
-          <p>{{ item.message }}</p>
-          <div class="history-tags">
-            <NTag
-              v-if="item.tag"
-              size="small"
-              :bordered="false"
-            >
-              {{ item.tag }}
-            </NTag>
-            <span v-if="item.hasImage"><NIcon :component="Image24Regular" />包含图片</span>
-            <span v-if="item.anonymousName"><NIcon :component="LockClosed24Regular" />{{ item.anonymousName }}</span>
-          </div>
-          <NButton
-            quaternary
-            circle
-            size="small"
-            class="delete-action"
-            aria-label="删除这条本地记录"
-            title="删除这条本地记录"
-            @click="emit('remove', item.id)"
+          <article
+            v-for="item in questions"
+            :key="item.id"
+            class="history-item relative p-3.5 rounded-xl border border-border/80 bg-muted/20 space-y-2 group"
           >
-            <template #icon><NIcon :component="Delete24Regular" /></template>
-          </NButton>
-        </article>
+            <div class="history-meta flex items-center justify-between text-xs text-muted-foreground">
+              <span>提给 {{ item.targetUserName }}</span>
+              <span class="text-[11px]">{{ formatRelativeTime(item.sendAt) }}</span>
+            </div>
+            <p class="text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words pr-6">{{ item.message }}</p>
+            <div class="history-tags flex items-center gap-2 text-xs flex-wrap">
+              <Badge
+                v-if="item.tag"
+                variant="secondary"
+                class="text-[10px] h-4.5 px-1.5 font-normal"
+              >
+                {{ item.tag }}
+              </Badge>
+              <span v-if="item.hasImage" class="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                <component :is="Image24Regular" class="size-3" />
+                包含图片
+              </span>
+              <span v-if="item.anonymousName" class="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                <component :is="LockClosed24Regular" class="size-3" />
+                {{ item.anonymousName }}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="delete-action absolute top-2 right-2 size-6 rounded-full text-muted-foreground opacity-60 hover:opacity-100 hover:text-destructive hover:bg-destructive/10"
+              aria-label="删除这条本地记录"
+              title="删除这条本地记录"
+              @click="emit('remove', item.id)"
+            >
+              <component :is="Delete24Regular" class="size-3.5" />
+            </Button>
+          </article>
+        </div>
+
+        <Empty
+          v-else
+          class="history-empty py-16"
+          description="还没有本地提问记录"
+        />
       </div>
 
-      <NEmpty
-        v-else
-        class="history-empty"
-        description="还没有本地提问记录"
-      />
-
-      <template
+      <SheetFooter
         v-if="questions.length"
-        #footer
+        class="px-5 py-3 border-t border-border/80 flex items-center justify-end"
       >
-        <NPopconfirm @positive-click="emit('clear')">
+        <Popconfirm
+          title="清空后无法恢复，确定要清空全部记录吗？"
+          positive-text="确认清空"
+          negative-text="取消"
+          @positive-click="emit('clear')"
+        >
           <template #trigger>
-            <NButton
-              secondary
-              type="error"
+            <Button
+              variant="destructive"
+              size="sm"
+              class="text-xs flex items-center gap-1.5"
             >
-              <template #icon><NIcon :component="Delete24Regular" /></template>
+              <component :is="Delete24Regular" class="size-3.5" />
               清空本地记录
-            </NButton>
+            </Button>
           </template>
           清空后无法恢复
-        </NPopconfirm>
-      </template>
-    </NDrawerContent>
-  </NDrawer>
+        </Popconfirm>
+      </SheetFooter>
+    </SheetContent>
+  </Sheet>
 </template>
 
 <style scoped>
-.drawer-heading {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-.drawer-icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
-  background: var(--vtsuru-page-primary-soft);
-  border-radius: 50%;
-  place-items: center;
-}
-
-.drawer-heading > div {
-  display: grid;
-}
-
-.drawer-heading strong {
-  font-size: 15px;
-}
-
-.drawer-heading span:last-child {
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
-  font-size: 11px;
-}
-
-.history-list {
-  display: grid;
-  gap: 10px;
-}
-
 .history-item {
-  position: relative;
-  min-width: 0;
-  padding: 14px 44px 14px 14px;
-  background: var(--user-page-theme-surface-bg, var(--vtsuru-page-card-bg));
-  border: var(--vtsuru-page-border);
-  border-radius: var(--vtsuru-page-radius, 8px);
-}
-
-.history-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 10px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
-  font-size: 11px;
-}
-
-.history-meta span:first-child {
-  color: var(--vtsuru-surface-fg, var(--vtsuru-fg));
-  font-weight: 600;
-}
-
-.history-item p {
-  margin: 9px 0 10px;
-  overflow-wrap: anywhere;
-  color: var(--vtsuru-surface-fg, var(--vtsuru-fg));
-  font-size: 13px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-}
-
-.history-tags {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
-  font-size: 11px;
-}
-
-.history-tags > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.delete-action {
-  position: absolute;
-  top: 10px;
-  right: 9px;
-}
-
-.history-empty {
-  padding: 64px 16px;
+  transition: all 0.15s ease;
 }
 </style>

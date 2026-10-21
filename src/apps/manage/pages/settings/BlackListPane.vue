@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NEmpty, NFlex, NInput, NInputNumber, NList, NListItem, NText, useMessage } from 'naive-ui'
+import {  useMessage  } from '@/shared/utils'
 import { ref } from 'vue'
 
 import { AddBiliBlackList, DelBiliBlackList, DelBlackList, useAccount } from '@/api/account'
 import { GuidUtils } from '@/shared/utils'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -49,7 +53,7 @@ function unblockBiliUser(ouid: string) {
         message.error(data.message)
       }
     })
-    .catch((err) => message.error(err))
+    .catch((err) => message.error(String(err)))
 }
 
 function unblockUser(id: number) {
@@ -62,156 +66,126 @@ function unblockUser(id: number) {
         message.error(data.message)
       }
     })
-    .catch((err) => message.error(err))
+    .catch((err) => message.error(String(err)))
 }
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-  >
-    <NAlert
-      type="info"
-      size="small"
-      :bordered="false"
-    >
-      黑名单用于限制互动：B 站 UID 黑名单主要影响弹幕相关互动；站内黑名单限制本站注册用户（提问箱等）。
-    </NAlert>
+  <div class="flex flex-col gap-3">
+    <Alert class="border-border bg-muted/30">
+      <AlertDescription class="text-xs text-muted-foreground">
+        黑名单用于限制互动：B 站 UID 黑名单主要影响弹幕相关互动；站内黑名单限制本站注册用户（提问箱等）。
+      </AlertDescription>
+    </Alert>
 
-    <NCard
-      title="B 站黑名单"
-      size="small"
-      bordered
-      :segmented="{ content: true }"
-    >
-      <NFlex
-        vertical
-        :size="10"
-      >
-        <NFlex
-          align="center"
-          :wrap="true"
-          :size="8"
-        >
-          <NInputNumber
-            v-model:value="biliId"
+    <!-- B 站黑名单 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+          B 站黑名单
+        </CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 space-y-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <Input
+            v-model="biliId"
+            type="number"
             placeholder="B 站 UID"
-            :show-button="false"
-            :min="1"
-            style="width: 160px"
+            class="w-40 font-mono text-xs"
           />
-          <NInput
-            v-model:value="biliName"
+          <Input
+            v-model="biliName"
             placeholder="备注名（可选）"
-            style="width: 180px"
-            clearable
+            class="w-48 text-xs"
           />
-          <NButton
-            type="primary"
-            size="small"
+          <Button
+            size="xs"
+            variant="brand"
             :loading="isAdding"
             @click="addBiliUser"
           >
             添加
-          </NButton>
-        </NFlex>
+          </Button>
+        </div>
 
-        <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
-          <NListItem
+        <ul
+          v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0"
+          class="divide-y divide-border rounded-md border border-border"
+        >
+          <li
             v-for="item in Object.entries(accountInfo.biliBlackList)"
             :key="item[0]"
+            class="flex items-center justify-between p-2.5 text-xs hover:bg-muted/30 transition-colors"
           >
-            <NFlex
-              align="center"
-              justify="space-between"
-              :wrap="true"
-              :size="12"
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-foreground">{{ item[1] }}</span>
+              <code class="px-1.5 py-0.5 rounded bg-muted text-[11px] text-muted-foreground font-mono">
+                {{ displayOuid(item[0]) }}
+              </code>
+            </div>
+            <Button
+              size="xs"
+              variant="ghost"
+              class="text-destructive hover:bg-destructive/10"
+              @click="unblockBiliUser(item[0])"
             >
-              <NFlex
-                align="center"
-                :wrap="true"
-                :size="8"
-              >
-                <NText>{{ item[1] }}</NText>
-                <NText
-                  depth="3"
-                  code
-                >
-                  {{ displayOuid(item[0]) }}
-                </NText>
-              </NFlex>
-              <NButton
-                type="error"
-                size="small"
-                secondary
-                @click="unblockBiliUser(item[0])"
-              >
-                移除
-              </NButton>
-            </NFlex>
-          </NListItem>
-        </NList>
-        <NEmpty
+              移除
+            </Button>
+          </li>
+        </ul>
+        <div
           v-else
-          size="small"
-          description="暂无 B 站黑名单"
-        />
-      </NFlex>
-    </NCard>
-
-    <NCard
-      title="站内黑名单"
-      size="small"
-      bordered
-      :segmented="{ content: true }"
-    >
-      <NText
-        depth="3"
-        style="display: block; margin-bottom: 8px; font-size: 12px"
-      >
-        站内用户通常在提问箱等场景操作时加入；此处支持移除。
-      </NText>
-      <NList v-if="accountInfo.blackList && accountInfo.blackList.length > 0">
-        <NListItem
-          v-for="item in accountInfo.blackList"
-          :key="item.id"
+          class="text-xs text-muted-foreground py-4 text-center border border-dashed rounded-md"
         >
-          <NFlex
-            align="center"
-            justify="space-between"
-            :wrap="true"
-            :size="12"
+          暂无 B 站黑名单
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- 站内黑名单 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+          站内黑名单
+        </CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 space-y-3">
+        <div class="text-xs text-muted-foreground">
+          站内用户通常在提问箱等场景操作时加入；此处支持移除。
+        </div>
+
+        <ul
+          v-if="accountInfo.blackList && accountInfo.blackList.length > 0"
+          class="divide-y divide-border rounded-md border border-border"
+        >
+          <li
+            v-for="item in accountInfo.blackList"
+            :key="item.id"
+            class="flex items-center justify-between p-2.5 text-xs hover:bg-muted/30 transition-colors"
           >
-            <NFlex
-              align="center"
-              :wrap="true"
-              :size="8"
-            >
-              <NText>{{ item.name }}</NText>
-              <NText
-                depth="3"
-                code
-              >
-                {{ item.id }}
-              </NText>
-            </NFlex>
-            <NButton
-              type="error"
-              size="small"
-              secondary
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-foreground">{{ item.name }}</span>
+              <code class="px-1.5 py-0.5 rounded bg-muted text-[11px] text-muted-foreground font-mono">
+                #{{ item.id }}
+              </code>
+            </div>
+            <Button
+              size="xs"
+              variant="ghost"
+              class="text-destructive hover:bg-destructive/10"
               @click="unblockUser(item.id)"
             >
               移除
-            </NButton>
-          </NFlex>
-        </NListItem>
-      </NList>
-      <NEmpty
-        v-else
-        size="small"
-        description="暂无站内黑名单"
-      />
-    </NCard>
-  </NFlex>
+            </Button>
+          </li>
+        </ul>
+        <div
+          v-else
+          class="text-xs text-muted-foreground py-4 text-center border border-dashed rounded-md"
+        >
+          暂无站内黑名单
+        </div>
+      </CardContent>
+    </Card>
+  </div>
 </template>

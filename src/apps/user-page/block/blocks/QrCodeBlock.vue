@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { DownloadOutline, OpenOutline } from '@vicons/ionicons5'
-import { NButton, NFlex, NIcon } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
+
+import { Button } from '@/shared/ui/button'
 
 import BlockCard from '../BlockCard.vue'
 import { hasQrCodeCapacity } from '../qrcode'
@@ -93,35 +94,31 @@ function downloadPng() {
           {{ config.content ? '内容超出当前纠错等级容量' : '请填写二维码内容' }}
         </span>
       </div>
-      <NFlex
-        justify="center"
-        :wrap="true"
-        :size="8"
-      >
-        <NButton
+      <div class="flex justify-center flex-wrap gap-2">
+        <Button
           v-if="linkUrl"
-          tag="a"
+          as="a"
           :href="linkUrl"
           target="_blank"
           rel="noopener noreferrer"
-          secondary
+          variant="outline"
+          size="sm"
+          class="h-8 text-xs font-medium"
         >
-          <template #icon>
-            <NIcon><OpenOutline /></NIcon>
-          </template>
+          <component :is="OpenOutline" class="size-3.5 mr-1.5" />
           打开链接
-        </NButton>
-        <NButton
-          secondary
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          class="h-8 text-xs font-medium"
           :disabled="!canRender"
           @click="downloadPng"
         >
-          <template #icon>
-            <NIcon><DownloadOutline /></NIcon>
-          </template>
+          <component :is="DownloadOutline" class="size-3.5 mr-1.5" />
           下载 PNG
-        </NButton>
-      </NFlex>
+        </Button>
+      </div>
     </div>
   </BlockCard>
 </template>

@@ -1,5 +1,5 @@
 import EasySpeech from 'easy-speech'
-import { useMessage } from 'naive-ui'
+import { useMessage } from '@/shared/utils'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { clearInterval, clearTimeout, setInterval, setTimeout } from 'worker-timers'
 

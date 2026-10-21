@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { NTag } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { SongRequestOption } from '@/api/api-models'
+import { Badge } from '@/shared/ui/badge'
 
 import { getSongOptionBadges } from '../utils/songOptionBadges'
 
 const props = withDefaults(
   defineProps<{
     options?: SongRequestOption | null
-    /** semantic: NTag type；guard: 舰长色；compact: tiny 标签 */
+    /** semantic: Badge type；guard: 舰长色；compact: tiny 标签 */
     variant?: 'semantic' | 'guard'
     size?: 'tiny' | 'small'
     emptyText?: string
@@ -29,41 +29,25 @@ const badges = computed(() => getSongOptionBadges(props.options))
 <template>
   <div
     v-if="badges.length || emptyText"
-    class="song-option-badges"
+    class="song-option-badges flex flex-wrap gap-1"
   >
     <template v-if="badges.length">
-      <NTag
+      <Badge
         v-for="badge in badges"
         :key="badge.key"
-        :size="size"
-        :type="variant === 'semantic' ? badge.type : 'default'"
-        :color="variant === 'guard' && badge.color ? { color: badge.color } : undefined"
-        :bordered="bordered"
-        round
+        variant="secondary"
+        class="font-normal rounded-full"
+        :class="size === 'tiny' ? 'text-[10px] h-4 px-1.5' : 'text-[11px] h-5 px-2'"
+        :style="variant === 'guard' && badge.color ? { backgroundColor: `${badge.color}20`, color: badge.color, borderColor: `${badge.color}40` } : undefined"
       >
         {{ badge.label }}
-      </NTag>
+      </Badge>
     </template>
     <span
       v-else
-      class="song-option-badges__empty"
+      class="song-option-badges__empty text-xs text-muted-foreground"
     >
       {{ emptyText }}
     </span>
   </div>
 </template>
-
-<style scoped>
-.song-option-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-}
-
-.song-option-badges__empty {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg, inherit));
-  opacity: 0.65;
-  font-size: 12px;
-}
-</style>

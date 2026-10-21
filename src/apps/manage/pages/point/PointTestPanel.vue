@@ -1,23 +1,5 @@
 <script setup lang="ts">
-import {
-  NCard,
-  NButton,
-  NForm,
-  NFormItem,
-  NInputNumber,
-  NInput,
-  NSelect,
-  NFlex,
-  NAlert,
-  NStatistic,
-  NPopconfirm,
-  useMessage,
-  NSpin,
-  NTag,
-  NDivider,
-} from 'naive-ui'
-import type { SelectOption } from 'naive-ui'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
@@ -30,6 +12,21 @@ import {
   postApiPointResetTestAccount,
   postApiPointTestPoint,
 } from '@/api/generated/point/point'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Separator } from '@/shared/ui/separator'
+import { Spin } from '@/shared/ui/spin'
+import { Tag } from '@/shared/ui/tag'
+import { useMessage } from '@/shared/utils'
+
+interface SelectOption {
+  label: string
+  value: any
+}
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -189,7 +186,6 @@ async function runTest() {
     if (res.code === 200 && res.data) {
       if (res.data.success) {
         message.success(res.data.message)
-        // 刷新测试账户积分
         await fetchTestAccountPoint()
       } else {
         message.warning(res.data.message)
@@ -224,7 +220,6 @@ async function resetTestAccount() {
   }
 }
 
-// 初始化时获取积分
 fetchTestAccountPoint()
 
 async function loadEligibilityOptions() {
@@ -314,309 +309,201 @@ async function checkEligibility() {
 </script>
 
 <template>
-  <NCard
-    title="积分测试系统"
-    size="small"
-  >
-    <template #header-extra>
-      <NTag
-        type="info"
-        size="small"
-        :bordered="false"
-      >
+  <Card class="border border-border">
+    <CardHeader class="p-4 flex flex-row items-center justify-between space-y-0 border-b">
+      <CardTitle class="text-sm font-semibold">积分测试系统</CardTitle>
+      <Tag type="info" size="small" :bordered="false">
         测试账户 OUId: 00000000-0000-0000-0000-000000000000
-      </NTag>
-    </template>
+      </Tag>
+    </CardHeader>
 
-    <NSpin :show="isLoading">
-      <NFlex
-        vertical
-        :gap="24"
-      >
-        <NAlert
-          type="info"
-          closable
-          :bordered="false"
-        >
+    <CardContent class="p-4 space-y-6">
+      <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+        <AlertDescription class="text-xs">
           此功能用于测试积分系统的配置，所有测试事件将记录到一个专用的 mock
           账户（OUId=0）。你可以在这里测试不同类型事件的积分获取情况。
-        </NAlert>
+        </AlertDescription>
+      </Alert>
 
-        <!-- 测试账户积分显示 -->
-        <div class="section-container">
-          <NFlex
-            justify="space-between"
-            align="center"
-          >
-            <div>
-              <NStatistic
-                label="测试账户当前积分"
-                :value="testAccountPoint"
-              >
-                <template #suffix>
-                  <span style="font-size: 16px">分</span>
-                </template>
-              </NStatistic>
-            </div>
-            <NPopconfirm @positive-click="resetTestAccount">
-              <template #trigger>
-                <NButton
-                  type="error"
-                  :loading="isLoading"
-                  secondary
-                  size="small"
-                >
-                  重置积分
-                </NButton>
-              </template>
-              确定要重置测试账户的积分吗？
-            </NPopconfirm>
-          </NFlex>
+      <!-- 测试账户积分显示 -->
+      <div class="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
+        <div>
+          <span class="text-xs text-muted-foreground block">测试账户当前积分</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span class="text-2xl font-bold text-foreground font-mono">{{ testAccountPoint }}</span>
+            <span class="text-xs text-muted-foreground">分</span>
+          </div>
         </div>
 
-        <NDivider
-          title-placement="left"
-          style="margin: 0"
+        <Popconfirm
+          positive-text="确定重置"
+          negative-text="取消"
+          @positive-click="resetTestAccount"
         >
-          测试事件模拟
-        </NDivider>
+          <template #trigger>
+            <Button variant="destructive" size="sm" :disabled="isLoading">
+              重置积分
+            </Button>
+          </template>
+          确定要重置测试账户的积分吗？
+        </Popconfirm>
+      </div>
 
-        <!-- 测试表单 -->
-        <NForm
-          label-placement="left"
-          label-width="100"
-          style="max-width: 600px"
-        >
-          <NFormItem
-            label="事件类型"
-            required
-          >
-            <NSelect
-              v-model:value="testForm.type"
-              :options="eventTypeOptions"
-              placeholder="选择事件类型"
-            />
-          </NFormItem>
+      <div>
+        <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">测试事件模拟</h4>
+        <div class="space-y-3 max-w-lg">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">事件类型 <span class="text-destructive">*</span></label>
+            <select
+              v-model="testForm.type"
+              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option v-for="opt in eventTypeOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
 
           <!-- 礼物相关字段 -->
           <template v-if="showGiftFields">
-            <NFormItem
-              label="礼物名称"
-              required
-            >
-              <NInput
-                v-model:value="testForm.giftName"
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-foreground">礼物名称 <span class="text-destructive">*</span></label>
+              <Input
+                v-model="testForm.giftName"
                 placeholder="例如: 小心心、辣条"
-                clearable
+                class="h-8 text-xs"
               />
-            </NFormItem>
+            </div>
 
-            <NFormItem
-              label="礼物价格"
-              required
-            >
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-foreground">礼物价格（元） <span class="text-destructive">*</span></label>
               <NInputNumber
-                v-model:value="testForm.giftPrice"
-                placeholder="礼物价格（元）"
+                v-model="testForm.giftPrice"
                 :min="0"
-                :precision="2"
-                style="width: 100%"
+                class="w-full"
               />
-            </NFormItem>
+            </div>
 
-            <NFormItem label="礼物数量">
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-foreground">礼物数量</label>
               <NInputNumber
-                v-model:value="testForm.giftCount"
-                placeholder="礼物数量"
+                v-model="testForm.giftCount"
                 :min="1"
-                style="width: 100%"
+                class="w-full"
               />
-            </NFormItem>
+            </div>
           </template>
 
           <!-- 上舰相关字段 -->
-          <NFormItem
-            v-if="showGuardFields"
-            label="舰长等级"
-            required
-          >
-            <NSelect
-              v-model:value="testForm.guardLevel"
-              :options="guardLevelOptions"
-              placeholder="选择舰长等级"
-            />
-          </NFormItem>
+          <div v-if="showGuardFields" class="space-y-1">
+            <label class="text-xs font-medium text-foreground">舰长等级 <span class="text-destructive">*</span></label>
+            <select
+              v-model="testForm.guardLevel"
+              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option v-for="opt in guardLevelOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
 
           <!-- SC 价格字段 -->
-          <NFormItem
-            v-if="testForm.type === EventDataTypes.SC"
-            label="SC价格"
-            required
-          >
+          <div v-if="testForm.type === EventDataTypes.SC" class="space-y-1">
+            <label class="text-xs font-medium text-foreground">SC价格（元） <span class="text-destructive">*</span></label>
             <NInputNumber
-              v-model:value="testForm.giftPrice"
-              placeholder="SC价格（元）"
+              v-model="testForm.giftPrice"
               :min="0.01"
-              :precision="2"
-              style="width: 100%"
+              class="w-full"
             />
-          </NFormItem>
+          </div>
 
-          <NFormItem>
-            <NFlex
-              justify="end"
-              style="width: 100%"
-            >
-              <NButton
-                type="primary"
-                :loading="isTesting"
-                @click="runTest"
-              >
-                执行测试
-              </NButton>
-            </NFlex>
-          </NFormItem>
-        </NForm>
-
-        <NAlert
-          v-if="!accountInfo?.settings?.point"
-          type="warning"
-          :bordered="false"
-        >
-          请先配置积分设置
-        </NAlert>
-
-        <NDivider
-          title-placement="left"
-          style="margin: 0"
-        >
-          兑换资格查询
-        </NDivider>
-
-        <div class="section-container">
-          <NSpin :show="isCheckingEligibility || isLoadingEligibilityOptions">
-            <NForm
-              label-placement="left"
-              label-width="100"
-              style="max-width: 600px"
-            >
-              <NFormItem
-                label="目标用户"
-                required
-              >
-                <NSelect
-                  v-model:value="selectedUserKey"
-                  :options="userOptions"
-                  placeholder="请选择用户"
-                  filterable
-                  clearable
-                />
-              </NFormItem>
-
-              <NFormItem
-                label="礼物"
-                required
-              >
-                <NSelect
-                  v-model:value="selectedGoodsId"
-                  :options="goodsOptions"
-                  placeholder="请选择礼物"
-                  filterable
-                  clearable
-                />
-              </NFormItem>
-
-              <NFormItem
-                label="兑换数量"
-                required
-              >
-                <NInputNumber
-                  v-model:value="eligibilityForm.count"
-                  placeholder="兑换数量"
-                  :min="1"
-                  style="width: 100%"
-                />
-              </NFormItem>
-
-              <NAlert
-                v-if="selectedGoods"
-                type="info"
-                :bordered="false"
-                style="margin-bottom: 24px"
-              >
-                当前选择: {{ selectedGoods.name }} (ID: {{ selectedGoods.id }})
-              </NAlert>
-
-              <NFormItem>
-                <NFlex
-                  justify="end"
-                  style="width: 100%"
-                >
-                  <NButton
-                    type="primary"
-                    :loading="isCheckingEligibility"
-                    :disabled="!selectedUserKey || !selectedGoodsId"
-                    @click="checkEligibility"
-                  >
-                    查询
-                  </NButton>
-                </NFlex>
-              </NFormItem>
-            </NForm>
-
-            <NAlert
-              v-if="eligibilityResult"
-              :type="eligibilityResult.eligible ? 'success' : 'error'"
-              style="margin-top: 12px"
-              :bordered="false"
-            >
-              <template #header>
-                {{ eligibilityResult.eligible ? '可兑换' : '不可兑换' }}
-              </template>
-              <div v-if="!eligibilityResult.eligible">原因: {{ eligibilityResult.reason || '未知原因' }}</div>
-              <NFlex
-                :wrap="true"
-                :gap="12"
-                style="margin-top: 8px"
-              >
-                <NTag
-                  :type="eligibilityResult.canFreeBuy ? 'success' : 'default'"
-                  :bordered="false"
-                >
-                  {{ eligibilityResult.canFreeBuy ? '可免费兑换' : '非免费兑换' }}
-                </NTag>
-                <NTag
-                  type="info"
-                  :bordered="false"
-                >
-                  当前积分: {{ eligibilityResult.userPoint }}
-                </NTag>
-                <NTag
-                  type="info"
-                  :bordered="false"
-                >
-                  已兑换次数: {{ eligibilityResult.purchasedCount }}
-                </NTag>
-                <NTag
-                  type="warning"
-                  :bordered="false"
-                >
-                  需要积分: {{ eligibilityResult.needPoint }}
-                </NTag>
-              </NFlex>
-            </NAlert>
-          </NSpin>
+          <div class="flex justify-end pt-2">
+            <Button size="sm" :disabled="isTesting" @click="runTest">
+              {{ isTesting ? '执行中...' : '执行测试' }}
+            </Button>
+          </div>
         </div>
-      </NFlex>
-    </NSpin>
-  </NCard>
-</template>
+      </div>
 
-<style scoped>
-.section-container {
-  background-color: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 16px;
-}
-</style>
+      <Separator />
+
+      <!-- 兑换资格查询 -->
+      <div>
+        <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">兑换资格查询</h4>
+        <div class="rounded-lg border border-border bg-card p-4 max-w-lg space-y-3">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">目标用户 <span class="text-destructive">*</span></label>
+            <select
+              v-model="selectedUserKey"
+              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option :value="null">请选择用户</option>
+              <option v-for="opt in userOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">礼物 <span class="text-destructive">*</span></label>
+            <select
+              v-model="selectedGoodsId"
+              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option :value="null">请选择礼物</option>
+              <option v-for="opt in goodsOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-foreground">兑换数量 <span class="text-destructive">*</span></label>
+            <NInputNumber
+              v-model="eligibilityForm.count"
+              :min="1"
+              class="w-full"
+            />
+          </div>
+
+          <div v-if="selectedGoods" class="text-xs text-muted-foreground bg-muted/40 p-2 rounded">
+            当前选择: <strong class="text-foreground">{{ selectedGoods.name }}</strong> (ID: {{ selectedGoods.id }})
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <Button
+              size="sm"
+              :disabled="!selectedUserKey || !selectedGoodsId || isCheckingEligibility"
+              @click="checkEligibility"
+            >
+              {{ isCheckingEligibility ? '查询中...' : '查询' }}
+            </Button>
+          </div>
+
+          <Alert
+            v-if="eligibilityResult"
+            :variant="eligibilityResult.eligible ? 'default' : 'destructive'"
+            class="mt-3"
+          >
+            <AlertTitle class="text-xs font-semibold">
+              {{ eligibilityResult.eligible ? '可兑换' : '不可兑换' }}
+            </AlertTitle>
+            <AlertDescription class="text-xs space-y-2">
+              <div v-if="!eligibilityResult.eligible">
+                原因: {{ eligibilityResult.reason || '未知原因' }}
+              </div>
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                <Tag :type="eligibilityResult.canFreeBuy ? 'success' : 'default'">
+                  {{ eligibilityResult.canFreeBuy ? '可免费兑换' : '非免费兑换' }}
+                </Tag>
+                <Tag type="info">当前积分: {{ eligibilityResult.userPoint }}</Tag>
+                <Tag type="info">已兑换次数: {{ eligibilityResult.purchasedCount }}</Tag>
+                <Tag type="warning">需要积分: {{ eligibilityResult.needPoint }}</Tag>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+</template>

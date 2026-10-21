@@ -3,45 +3,11 @@ import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoImport from 'unplugin-auto-import/vite'
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import Markdown from 'unplugin-vue-markdown/vite'
 import { defineConfig, type Plugin } from 'vite'
 import svgLoader from 'vite-svg-loader'
-
-const nInputNumberFrom = '@/shared/ui/NInputNumber.vue'
-
-function rewriteNInputNumberImports(): Plugin {
-  return {
-    name: 'rewrite-n-input-number-imports',
-    // naive-ui 2.45 仍用 document mouseup 停长按，丢失后会连加；业务侧统一换包装组件。
-    enforce: 'pre',
-    transform(code, id) {
-      const file = id.split('?')[0].replaceAll('\\', '/')
-      if (!/\.(vue|ts|tsx|js|mjs)$/.test(file)) return
-      if (file.includes('/node_modules/')) return
-      if (file.endsWith('/shared/ui/NInputNumber.vue')) return
-      if (!code.includes('NInputNumber') || !code.includes('naive-ui')) return
-
-      const next = code.replace(
-        /import\s*\{([^}]*)\}\s*from\s*(['"])naive-ui\2/g,
-        (full, spec: string, quote: string) => {
-          const names = spec
-            .split(',')
-            .map((item) => item.trim())
-            .filter(Boolean)
-          if (!names.some((name) => name === 'NInputNumber' || name.startsWith('NInputNumber '))) return full
-          const rest = names.filter((name) => name !== 'NInputNumber' && !name.startsWith('NInputNumber '))
-          const local = `import NInputNumber from ${quote}${nInputNumberFrom}${quote}`
-          if (rest.length === 0) return local
-          return `import { ${rest.join(', ')} } from ${quote}naive-ui${quote}\n${local}`
-        },
-      )
-      if (next === code) return
-      return { code: next, map: null }
-    },
-  }
-}
+import UnoCSS from 'unocss/vite'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
 const removeSodipodiInkscape = {
@@ -65,6 +31,7 @@ const removeSodipodiInkscape = {
 export default defineConfig({
   appType: 'spa',
   plugins: [
+    UnoCSS(),
     {
       name: 'drop-ort-wasm',
       generateBundle(_, bundle) {
@@ -75,7 +42,6 @@ export default defineConfig({
         }
       },
     },
-    rewriteNInputNumberImports(),
     vue({
       script: { propsDestructure: true, defineModel: true },
       include: [/\.vue$/, /\.md$/],
@@ -124,19 +90,11 @@ export default defineConfig({
         '@vueuse/core',
         'pinia',
         'date-fns',
-        {
-          'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'],
-        },
       ],
       dts: 'src/auto-imports.d.ts',
     }),
     Components({
-      resolvers: [
-        (name) => {
-          if (name === 'NInputNumber') return { from: nInputNumberFrom }
-        },
-        NaiveUiResolver(),
-      ],
+      resolvers: [],
       dts: 'src/components.d.ts',
       extensions: ['vue', 'md'],
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],

@@ -1,8 +1,11 @@
-import { NButton, NFlex, NInput, NInputGroup, NInputGroupLabel, NTag } from 'naive-ui'
+import { Dismiss12Regular } from '@vicons/fluent'
 import { h, ref } from 'vue'
 
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 
 /** 配置面板输入态：放在 render 外，避免每次重渲染丢失 */
 const pendingLink = ref({ name: '', url: '' })
@@ -43,36 +46,48 @@ export const Config = defineTemplateConfig([
     key: 'links',
     default: [{ name: '哔哩哔哩', url: 'https://www.bilibili.com/' }],
     render: (config) =>
-      h(NFlex, { align: 'center', wrap: true }, () => [
+      h('div', { class: 'flex flex-wrap items-center gap-2' }, [
         config.links?.map((link: { name: string; url: string }) =>
           h(
-            NTag,
+            Badge,
             {
-              closable: true,
-              onClose: () => {
-                config.links = config.links.filter((item: { name: string }) => item.name !== link.name)
-              },
+              variant: 'secondary',
+              class: 'flex items-center gap-1 text-xs h-6 px-2 font-normal',
             },
-            () => link.name,
+            () => [
+              link.name,
+              h(
+                'button',
+                {
+                  type: 'button',
+                  class: 'hover:text-destructive transition cursor-pointer p-0.5 ml-0.5',
+                  onClick: () => {
+                    config.links = config.links.filter((item: { name: string }) => item.name !== link.name)
+                  },
+                },
+                [h(Dismiss12Regular, { class: 'size-3' })],
+              ),
+            ],
           ),
         ),
-        h(NInputGroup, { size: 'small', style: { flex: '1 1 300px' } }, () => [
-          h(NInputGroupLabel, null, () => '名称'),
-          h(NInput, {
-            value: pendingLink.value.name,
+        h('div', { class: 'flex items-center gap-1.5 flex-1 min-w-[300px]' }, [
+          h(Input, {
+            modelValue: pendingLink.value.name,
             placeholder: '链接名称',
-            onUpdateValue: (value) => (pendingLink.value.name = value),
+            class: 'h-8 text-xs w-28',
+            'onUpdate:modelValue': (value: string) => (pendingLink.value.name = value),
           }),
-          h(NInputGroupLabel, null, () => '地址'),
-          h(NInput, {
-            value: pendingLink.value.url,
+          h(Input, {
+            modelValue: pendingLink.value.url,
             placeholder: 'https://...',
-            onUpdateValue: (value) => (pendingLink.value.url = value),
+            class: 'h-8 text-xs flex-1',
+            'onUpdate:modelValue': (value: string) => (pendingLink.value.url = value),
           }),
           h(
-            NButton,
+            Button,
             {
-              type: 'primary',
+              size: 'sm',
+              class: 'h-8 text-xs',
               disabled: !pendingLink.value.name || !pendingLink.value.url,
               onClick: () => {
                 config.links ??= []

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NEmpty } from 'naive-ui'
+import { Empty } from '@/shared/ui/empty'
 import { computed, toRef } from 'vue'
 
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
@@ -115,7 +115,7 @@ const topSubtitle = computed(() => {
           </TransitionGroup>
         </div>
       </template>
-      <NEmpty
+      <Empty
         v-else
         class="obs-minimal-empty"
         :description="emptyText"

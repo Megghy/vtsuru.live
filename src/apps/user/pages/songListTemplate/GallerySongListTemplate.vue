@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { Play24Filled, Search24Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NSelect, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import SongOptionBadges from './components/SongOptionBadges.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
@@ -55,180 +59,195 @@ function requestSong(song: SongsInfo) {
 </script>
 
 <template>
-  <div class="gallery-template">
-    <header class="gallery-heading">
-      <div>
-        <span class="heading-kicker">COVER ARCHIVE</span>
-        <h2>封面曲库</h2>
-      </div>
-      <span
-        :key="listKey"
-        class="count is-pulsing"
-      >
-        {{ filteredSongs.length }} 首
-      </span>
-    </header>
-
-    <div class="toolbar">
-      <NInput
-        v-model:value="searchKeyword"
-        class="search"
-        clearable
-        placeholder="搜索歌曲 / 歌手 / 标签…"
-      >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
-        </template>
-      </NInput>
-      <NSelect
-        v-model:value="selectedTag"
-        class="tag-select"
-        clearable
-        placeholder="标签"
-        :options="tagOptions"
-      />
-    </div>
-
-    <SongPlayer
-      v-if="previewSong"
-      v-model:is-lrc-loading="isLrcLoading"
-      :song="previewSong"
-      class="preview-player"
-    />
-
-    <Transition
-      name="gallery-swap"
-      mode="out-in"
-    >
-      <NEmpty
-        v-if="filteredSongs.length === 0"
-        :key="`empty-${listKey}`"
-        description="暂无曲目"
-        style="margin-top: 48px"
-      />
-
-      <div
-        v-else
-        :key="listKey"
-        class="grid"
-      >
-        <div
-          v-for="(song, index) in visibleItems"
-          :key="song.key"
-          class="cover-card"
-          :class="{
-            'is-singing': singingSongKeySet.has(song.key),
-            'is-queued': queuedSongKeySet.has(song.key),
-          }"
+  <TooltipProvider>
+    <div class="gallery-template">
+      <header class="gallery-heading">
+        <div>
+          <span class="heading-kicker">COVER ARCHIVE</span>
+          <h2>封面曲库</h2>
+        </div>
+        <span
+          :key="listKey"
+          class="count is-pulsing"
         >
-          <div class="cover">
-            <img
-              v-if="song.cover"
-              :src="song.cover"
-              :alt="song.name"
-              loading="lazy"
-              referrerpolicy="no-referrer"
-            />
-            <div
-              v-else
-              class="cover-placeholder"
+          {{ filteredSongs.length }} 首
+        </span>
+      </header>
+
+      <div class="toolbar flex flex-wrap gap-2.5 items-center mb-4">
+        <div class="relative search flex-1 min-w-48">
+          <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            v-model="searchKeyword"
+            class="h-8 pl-8 text-xs w-full"
+            placeholder="搜索歌曲 / 歌手 / 标签…"
+          />
+        </div>
+        <Select
+          :model-value="selectedTag || 'all'"
+          @update:model-value="selectedTag = $event === 'all' ? null : String($event)"
+        >
+          <SelectTrigger class="w-36 h-8 text-xs">
+            <SelectValue placeholder="标签" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" class="text-xs">全部标签</SelectItem>
+            <SelectItem
+              v-for="opt in tagOptions"
+              :key="opt.value"
+              :value="opt.value"
+              class="text-xs"
             >
-              <span>{{ song.name.charAt(0) }}</span>
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <SongPlayer
+        v-if="previewSong"
+        v-model:is-lrc-loading="isLrcLoading"
+        :song="previewSong"
+        class="preview-player mb-4"
+      />
+
+      <Transition
+        name="gallery-swap"
+        mode="out-in"
+      >
+        <Empty
+          v-if="filteredSongs.length === 0"
+          :key="`empty-${listKey}`"
+          description="暂无曲目"
+          class="mt-12 py-8"
+        />
+
+        <div
+          v-else
+          :key="listKey"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5"
+        >
+          <div
+            v-for="(song, index) in visibleItems"
+            :key="song.key"
+            class="cover-card flex flex-col gap-2 rounded-lg border border-border/80 bg-card p-2 transition hover:border-primary/50"
+            :class="{
+              'is-singing': singingSongKeySet.has(song.key),
+              'is-queued': queuedSongKeySet.has(song.key),
+            }"
+          >
+            <div class="cover relative aspect-square w-full rounded-md overflow-hidden bg-muted/60 group">
+              <img
+                v-if="song.cover"
+                :src="song.cover"
+                :alt="song.name"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                class="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+              />
+              <div
+                v-else
+                class="cover-placeholder w-full h-full flex items-center justify-center font-bold text-lg text-muted-foreground"
+              >
+                <span>{{ song.name.charAt(0) }}</span>
+              </div>
+
+              <span class="cover-index absolute top-1.5 left-1.5 text-[10px] font-mono px-1 py-0.5 rounded bg-black/60 text-white">
+                {{ String(index + 1).padStart(2, '0') }}
+              </span>
+
+              <SongStatusBadge
+                class="status-overlay absolute top-1.5 right-1.5"
+                :song-key="song.key"
+                :singing-keys="singingSongKeySet"
+                :queued-keys="queuedSongKeySet"
+                variant="text"
+              />
+              <span
+                v-if="song.options?.scMinPrice"
+                class="status-flag flag-sc absolute bottom-1.5 left-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/80 text-white"
+              >
+                SC ¥{{ song.options.scMinPrice }}
+              </span>
+
+              <div class="cover-overlay absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                <Tooltip v-if="song.url">
+                  <TooltipTrigger as-child>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      class="size-9 rounded-full bg-background/90 text-foreground hover:bg-background"
+                      :aria-label="`试听：${song.name}`"
+                      :disabled="isLrcLoading === song.key"
+                      @click="previewSong = song"
+                    >
+                      <component :is="Play24Filled" class="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>试听</TooltipContent>
+                </Tooltip>
+                <SongRequestButton
+                  v-if="!isSelf"
+                  :song="song"
+                  :live-request-settings="liveRequestSettings"
+                  :auth-state="requestAuthState"
+                  :loading="requestingKey === song.key"
+                  :circle="true"
+                  size="large"
+                  @request="requestSong"
+                />
+              </div>
             </div>
 
-            <span class="cover-index">{{ String(index + 1).padStart(2, '0') }}</span>
+            <div class="info flex flex-col gap-0.5 text-xs">
+              <div
+                class="title font-medium truncate text-foreground"
+                :title="song.name"
+              >
+                {{ song.name }}
+              </div>
+              <div
+                v-if="song.translateName"
+                class="translate text-[11px] text-muted-foreground truncate"
+                :title="song.translateName"
+              >
+                {{ song.translateName }}
+              </div>
+              <div
+                v-if="song.author?.length"
+                class="author text-[11px] text-muted-foreground truncate"
+                :title="song.author.join(' / ')"
+              >
+                {{ song.author.join(' / ') }}
+              </div>
 
-            <SongStatusBadge
-              class="status-overlay"
-              :song-key="song.key"
-              :singing-keys="singingSongKeySet"
-              :queued-keys="queuedSongKeySet"
-              variant="text"
-            />
-            <span
-              v-if="song.options?.scMinPrice"
-              class="status-flag flag-sc"
-              >SC ¥{{ song.options.scMinPrice }}</span
-            >
-
-            <div class="cover-overlay">
-              <NTooltip v-if="song.url">
-                <template #trigger>
-                  <NButton
-                    circle
-                    size="large"
-                    :aria-label="`试听：${song.name}`"
-                    :loading="isLrcLoading === song.key"
-                    @click="previewSong = song"
-                  >
-                    <template #icon>
-                      <NIcon :component="Play24Filled" />
-                    </template>
-                  </NButton>
-                </template>
-                试听
-              </NTooltip>
-              <SongRequestButton
-                v-if="!isSelf"
-                :song="song"
-                :live-request-settings="liveRequestSettings"
-                :auth-state="requestAuthState"
-                :loading="requestingKey === song.key"
-                :circle="true"
-                size="large"
-                @request="requestSong"
+              <SongOptionBadges
+                :options="song.options"
+                variant="guard"
+                class="mt-1"
               />
             </div>
           </div>
 
-          <div class="info">
-            <div
-              class="title"
-              :title="song.name"
-            >
-              {{ song.name }}
-            </div>
-            <div
-              v-if="song.translateName"
-              class="translate"
-              :title="song.translateName"
-            >
-              {{ song.translateName }}
-            </div>
-            <div
-              v-if="song.author?.length"
-              class="author"
-              :title="song.author.join(' / ')"
-            >
-              {{ song.author.join(' / ') }}
-            </div>
-
-            <SongOptionBadges
-              :options="song.options"
-              variant="guard"
-            />
-          </div>
+          <button
+            v-if="hasMore"
+            ref="loadMoreTrigger"
+            type="button"
+            class="load-more-trigger col-span-full py-4 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+            @click="loadMore"
+          >
+            加载更多
+          </button>
         </div>
-
-        <button
-          v-if="hasMore"
-          ref="loadMoreTrigger"
-          type="button"
-          class="load-more-trigger"
-          @click="loadMore"
-        >
-          加载更多
-        </button>
-      </div>
-    </Transition>
-  </div>
+      </Transition>
+    </div>
+  </TooltipProvider>
 </template>
 
 <style scoped>
 .gallery-template {
   width: 100%;
   max-width: var(--vtsuru-page-max-width, 1180px);
-  min-width: 0;
   margin: 0 auto;
   padding: clamp(12px, 2vw, 24px);
 }
@@ -244,7 +263,7 @@ function requestSong(song: SongsInfo) {
 .heading-kicker {
   display: block;
   margin-bottom: 3px;
-  color: var(--song-accent);
+  color: var(--song-accent, #23ade5);
   font-size: 10px;
   font-weight: 750;
 }
@@ -256,335 +275,9 @@ function requestSong(song: SongsInfo) {
   line-height: 1.15;
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border: var(--vtsuru-page-border, 1px solid var(--song-border));
-  border-radius: var(--vtsuru-page-radius, 8px);
-  background: var(--song-panel);
-  box-shadow: var(--vtsuru-page-shadow, none);
-  gap: 8px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.search {
-  flex: 1;
-  min-width: 200px;
-  max-width: 420px;
-}
-
-.tag-select {
-  width: 160px;
-}
-
 .count {
-  flex: 0 0 auto;
-  font-size: 13px;
-  color: var(--song-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.count.is-pulsing {
-  animation: count-pop 0.38s cubic-bezier(0.22, 1.4, 0.36, 1);
-}
-
-.gallery-swap-enter-active,
-.gallery-swap-leave-active {
-  transition:
-    opacity 0.28s ease,
-    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.28s ease;
-}
-
-.gallery-swap-enter-from {
-  opacity: 0;
-  filter: blur(5px);
-  transform: translateY(18px) scale(0.97);
-}
-
-.gallery-swap-leave-to {
-  opacity: 0;
-  filter: blur(4px);
-  transform: translateY(-12px) scale(0.97);
-}
-
-.preview-player {
-  margin-bottom: 16px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr));
-  gap: clamp(12px, 2vw, 20px);
-}
-
-.cover-card {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  border-radius: var(--vtsuru-page-radius);
-  content-visibility: auto;
-  contain-intrinsic-size: auto 290px;
-  transition:
-    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.22s ease;
-}
-
-.cover-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 14px 28px color-mix(in srgb, var(--song-fg) 12%, transparent);
-}
-
-.cover {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  border-radius: var(--vtsuru-page-radius);
-  overflow: hidden;
-  background: var(--song-panel-strong);
-  border: var(--vtsuru-page-border, 1px solid var(--song-border));
-  box-shadow: var(--vtsuru-page-shadow);
-}
-
-.cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.cover-card:hover .cover img {
-  transform: scale(1.06);
-}
-
-.cover-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--song-accent) 14%, var(--song-panel-strong));
-}
-
-.cover-placeholder span {
-  font-size: 48px;
-  font-weight: 800;
-  color: color-mix(in srgb, var(--song-accent) 72%, var(--song-fg));
-  user-select: none;
-}
-
-.cover-index {
-  position: absolute;
-  top: 9px;
-  right: 10px;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 10px;
-  font-weight: 750;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
-}
-
-.status-overlay :deep(.text) {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  height: 20px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  backdrop-filter: blur(4px);
-}
-
-.status-overlay :deep(.text.singing) {
-  background: color-mix(in srgb, var(--song-warning) 90%, transparent);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.status-overlay :deep(.text.queued) {
-  background: color-mix(in srgb, var(--song-success) 90%, transparent);
-}
-
-.status-flag {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  height: 20px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 999px;
-  color: #fff;
-  backdrop-filter: blur(4px);
-}
-
-.flag-singing {
-  background: color-mix(in srgb, var(--song-warning) 90%, transparent);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.flag-queued {
-  background: color-mix(in srgb, var(--song-success) 90%, transparent);
-}
-
-.flag-sc {
-  top: auto;
-  bottom: 8px;
-  left: 8px;
-  background: color-mix(in srgb, var(--song-danger) 90%, transparent);
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.65;
-  }
-}
-
-.cover-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: color-mix(in srgb, #000 48%, transparent);
-  opacity: 0;
-  transition: opacity 0.18s ease;
-}
-
-.cover:hover .cover-overlay,
-.cover:focus-within .cover-overlay {
-  opacity: 1;
-}
-
-.cover-card.is-singing .cover {
-  outline: 2px solid color-mix(in srgb, var(--song-warning) 72%, transparent);
-  outline-offset: -2px;
-}
-
-.cover-card.is-queued .cover {
-  outline: 2px solid color-mix(in srgb, var(--song-success) 66%, transparent);
-  outline-offset: -2px;
-}
-
-.info {
-  padding: 8px 4px 0;
-}
-
-.title {
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--song-fg);
-}
-
-.author {
-  margin-top: 2px;
   font-size: 12px;
-  color: var(--song-subtle);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.translate {
-  margin-top: 2px;
-  font-size: 12px;
-  color: var(--song-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.load-more-trigger {
-  grid-column: 1 / -1;
-  min-height: 36px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--song-muted);
-  font: inherit;
-  cursor: pointer;
-}
-
-.load-more-trigger:hover {
-  color: var(--song-accent);
-}
-
-@media (max-width: 520px) {
-  .gallery-template {
-    padding: 8px 0 16px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 10px;
-  }
-
-  .cover-placeholder span {
-    font-size: 36px;
-  }
-}
-
-@media (hover: none) {
-  .cover-overlay {
-    inset: auto 8px 8px auto;
-    justify-content: flex-end;
-    background: transparent;
-    opacity: 1;
-  }
-}
-
-@keyframes gallery-enter {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.94);
-  }
-}
-
-@keyframes count-pop {
-  0% {
-    transform: scale(0.9);
-    color: var(--song-accent);
-  }
-  55% {
-    transform: scale(1.08);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cover-card,
-  .count.is-pulsing {
-    animation: none;
-  }
-
-  .gallery-swap-enter-active,
-  .gallery-swap-leave-active,
-  .cover-card,
-  .cover img {
-    transition: none;
-  }
-
-  .cover-card:hover,
-  .cover-card:hover .cover img {
-    transform: none;
-  }
+  font-family: monospace;
+  color: var(--song-muted, #888);
 }
 </style>

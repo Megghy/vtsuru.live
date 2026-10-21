@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { NAlert, NInput, NSelect, NText } from 'naive-ui'
-
 import { OPENAI_PRESET_VOICES } from '@/apps/open-live/voice-providers/openai'
 import { useSpeechService } from '@/store/useSpeechService'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
@@ -21,40 +28,37 @@ const formatOptions = [
 
 <template>
   <div class="form">
-    <NAlert
-      type="info"
-      :bordered="false"
-      size="small"
-    >
-      <NText style="font-size: 12px"> 请求由浏览器直连 API 服务方, 不经过 VTsuru 后端 (避免 IP 暴露和延迟) </NText>
-    </NAlert>
+    <Alert class="py-2 px-3 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+      <AlertDescription class="text-xs text-current m-0">
+        请求由浏览器直连 API 服务方，不经过 VTsuru 后端（避免 IP 暴露和延迟）
+      </AlertDescription>
+    </Alert>
 
     <SectionField
       label="Base URL"
       hint="OpenAI 兼容服务的根路径，会自动追加 /v1/audio/speech"
     >
-      <NInput
-        v-model:value="settings.providers.openai.baseUrl"
+      <Input
+        v-model="settings.providers.openai.baseUrl"
         placeholder="https://api.openai.com"
-        size="small"
+        class="h-8 text-xs"
       />
     </SectionField>
 
     <SectionField label="API Key">
-      <NInput
-        v-model:value="settings.providers.openai.apiKey"
+      <Input
+        v-model="settings.providers.openai.apiKey"
         type="password"
-        show-password-on="click"
         placeholder="sk-xxxx"
-        size="small"
+        class="h-8 text-xs"
       />
     </SectionField>
 
     <SectionField label="模型">
-      <NInput
-        v-model:value="settings.providers.openai.model"
+      <Input
+        v-model="settings.providers.openai.model"
         placeholder="tts-1"
-        size="small"
+        class="h-8 text-xs"
       />
     </SectionField>
 
@@ -67,11 +71,21 @@ const formatOptions = [
     </SectionField>
 
     <SectionField label="音频格式">
-      <NSelect
-        v-model:value="settings.providers.openai.format"
-        :options="formatOptions"
-        size="small"
-      />
+      <Select v-model="settings.providers.openai.format">
+        <SelectTrigger class="h-8 text-xs w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="opt in formatOptions"
+            :key="opt.value"
+            :value="opt.value"
+            class="text-xs"
+          >
+            {{ opt.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </SectionField>
   </div>
 </template>

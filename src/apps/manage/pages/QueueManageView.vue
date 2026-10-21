@@ -2,10 +2,8 @@
 import {
   Add24Regular,
   Checkmark12Regular,
-  CheckmarkCircle24Regular,
   Color24Regular,
   Copy24Regular,
-  Delete24Filled,
   Desktop24Regular,
   Eye24Regular,
   Flash24Regular,
@@ -16,57 +14,56 @@ import {
   Search24Regular,
   Settings24Regular,
   ShieldCheckmark24Regular,
-  Sparkle24Regular,
 } from '@vicons/fluent'
-import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { isSameDay } from 'date-fns'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDataTable,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGi,
-  NGrid,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSpin,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
-import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useMessage } from '@/shared/utils'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { OpenLiveInfo, ResponseQueueModel } from '@/api/api-models'
-import { FunctionTypes, QueueFrom, QueueSortType, QueueStatus } from '@/api/api-models'
+import { FunctionTypes, QueueFrom, QueueStatus } from '@/api/api-models'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QueueOBS from '@/apps/obs/pages/QueueOBS.vue'
 import QueueItem from '@/apps/open-live/components/queue/QueueItem.vue'
 import QueueSettingsTab from '@/apps/open-live/components/queue/QueueSettingsTab.vue'
-import { getQueuePaymentMeta, getQueueSourceText, STATUS_MAP, useQueue } from '@/composables/useQueue'
+import { getQueueSourceText, useQueue } from '@/composables/useQueue'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { Separator } from '@/shared/ui/separator'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableEmpty,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { copyToClipboard } from '@/shared/utils'
 import { formatListForCopy } from '@/shared/utils/queue'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
+
+defineProps<{
+  roomInfo?: OpenLiveInfo
+  code?: string | undefined
+  isOpenLive?: boolean
+}>()
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -132,70 +129,35 @@ function injectMockUser() {
   store.newQueueName = ''
 }
 
-// 表格列定义
-const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
-  {
-    title: '用户名',
-    key: 'user.name',
-    render: (data) =>
-      h(
-        NTooltip,
-        { trigger: 'hover' },
-        {
-          trigger: () => data.user?.name || '未知用户',
-          default: () => (data.from === QueueFrom.Manual ? '手动添加' : `UID: ${data.user?.uid ?? 'N/A'}`),
-        },
-      ),
-  },
-  {
-    title: '来源',
-    key: 'from',
-    width: 140,
-    render(data) {
-      const fromType =
-        (
-          {
-            [QueueFrom.Danmaku]: 'info',
-            [QueueFrom.Gift]: 'error',
-            [QueueFrom.Web]: 'success',
-            [QueueFrom.Manual]: 'default',
-          } as const
-        )[data.from] ?? 'default'
-      return h(NTag, { size: 'small', type: fromType, bordered: false }, () => getQueueSourceText(data))
-    },
-  },
-  {
-    title: '加入时间',
-    key: 'createAt',
-    width: 160,
-    render: (data) => h(NTime, { time: data.createAt, format: 'MM-dd HH:mm:ss' }),
-  },
-  {
-    title: '操作',
-    key: 'action',
-    width: 130,
-    render: (data) =>
-      h(NFlex, { size: 6 }, () => [
-        h(
-          NButton,
-          {
-            size: 'tiny',
-            type: 'info',
-            onClick: () => store.updateStatus(data, QueueStatus.Waiting),
-          },
-          { default: () => '重置' },
-        ),
-        h(
-          NPopconfirm,
-          { onPositiveClick: () => store.deleteQueue([data]) },
-          {
-            trigger: () => h(NButton, { size: 'tiny', type: 'error' }, { default: () => '删除' }),
-            default: () => `确定删除 ${data.user?.name} 吗？`,
-          },
-        ),
-      ]),
-  },
-])
+// 历史分页状态
+const historyPage = ref(1)
+const historyPageSize = 8
+const totalHistoryPages = computed(() => Math.ceil(store.historySongs.length / historyPageSize) || 1)
+const paginatedHistory = computed(() => {
+  const start = (historyPage.value - 1) * historyPageSize
+  return store.historySongs.slice(start, start + historyPageSize)
+})
+
+function formatTime(timestamp?: number) {
+  if (!timestamp) return '-'
+  const ts = typeof timestamp === 'number' && timestamp < 1e12 ? timestamp * 1000 : timestamp
+  const d = new Date(ts)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+}
+
+function getFromBadgeVariant(from: QueueFrom) {
+  switch (from) {
+    case QueueFrom.Danmaku:
+      return 'brand' as const
+    case QueueFrom.Gift:
+      return 'destructive' as const
+    case QueueFrom.Web:
+      return 'success' as const
+    default:
+      return 'outline' as const
+  }
+}
 
 onMounted(() => {
   if (accountInfo.value?.id) {
@@ -221,7 +183,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="queue-manage-view">
+  <div class="space-y-4 w-full">
     <ManagePageHeader
       title="弹幕排队系统"
       subtitle="观众通过发送指定弹幕或赠送礼物加入等待队列，支持多策略排序、过滤合并与 1080P OBS 动态呈现"
@@ -235,135 +197,227 @@ onUnmounted(() => {
       ]"
     >
       <template #action>
-        <NButton size="small" secondary @click="copyQueueList">
-          <template #icon><NIcon :component="Copy24Regular" /></template>
+        <Button
+          size="xs"
+          variant="outline"
+          @click="copyQueueList"
+        >
+          <component
+            :is="Copy24Regular"
+            class="h-3.5 w-3.5 mr-1"
+          />
           复制队列名单
-        </NButton>
+        </Button>
       </template>
     </ManagePageHeader>
 
-    <NTabs
-      v-model:value="activeMainTab"
-      type="segment"
-      animated
-      class="main-nav-tabs"
-      style="margin-top: 14px"
+    <Tabs
+      v-model="activeMainTab"
+      class="w-full"
     >
-      <!-- ================= Tab 1: 当前队列与处理 ================= -->
-      <NTabPane name="queue">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="PeopleQueue24Regular" />
-            <span>当前排队队列</span>
-          </NFlex>
-        </template>
-        <NFlex vertical :size="14" style="margin-top: 14px">
-          <NCard size="small">
-            <NFlex justify="space-between" align="center" wrap>
-              <!-- 统计指示 -->
-              <NFlex align="center" :size="8">
-                <NTag type="info" :bordered="false" round>
-                  <template #icon><NIcon :component="PeopleQueue24Filled" /></template>
-                  等待中: {{ waitingCount }} 人
-                </NTag>
-                <NTag type="success" :bordered="false" round>
-                  <template #icon><NIcon :component="Checkmark12Regular" /></template>
-                  今日已完成: {{ todayFinishedCount }} 人
-                </NTag>
-              </NFlex>
+      <TabsList class="grid w-full grid-cols-3 max-w-md h-8 p-0.5 bg-muted">
+        <TabsTrigger
+          value="queue"
+          class="text-xs h-7 gap-1"
+        >
+          <component
+            :is="PeopleQueue24Regular"
+            class="h-3.5 w-3.5"
+          />
+          当前排队队列
+        </TabsTrigger>
+        <TabsTrigger
+          value="preview"
+          class="text-xs h-7 gap-1"
+        >
+          <component
+            :is="Desktop24Regular"
+            class="h-3.5 w-3.5"
+          />
+          OBS 舞台预览
+        </TabsTrigger>
+        <TabsTrigger
+          value="settings"
+          class="text-xs h-7 gap-1"
+        >
+          <component
+            :is="Settings24Regular"
+            class="h-3.5 w-3.5"
+          />
+          规则设置与历史
+        </TabsTrigger>
+      </TabsList>
 
-              <!-- 快速搜索与手动添加 -->
-              <NFlex align="center" :size="8">
-                <NInputGroup style="width: 200px">
-                  <NInput
-                    v-model:value="store.activeFilterName"
-                    size="small"
-                    placeholder="搜索队列用户"
-                    clearable
-                  >
-                    <template #prefix><NIcon :component="Search24Regular" /></template>
-                  </NInput>
-                </NInputGroup>
+      <!-- Tab 1: 当前队列 -->
+      <TabsContent
+        value="queue"
+        class="mt-3 space-y-3"
+      >
+        <Card>
+          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2">
+              <Badge
+                variant="brand"
+                class="text-xs gap-1"
+              >
+                <component
+                  :is="PeopleQueue24Filled"
+                  class="h-3.5 w-3.5"
+                />
+                等待中: {{ waitingCount }} 人
+              </Badge>
+              <Badge
+                variant="success"
+                class="text-xs gap-1"
+              >
+                <component
+                  :is="Checkmark12Regular"
+                  class="h-3.5 w-3.5"
+                />
+                今日已完成: {{ todayFinishedCount }} 人
+              </Badge>
+            </div>
 
-                <NInputGroup style="width: 220px">
-                  <NInput
-                    v-model:value="store.newQueueName"
-                    size="small"
-                    placeholder="手动输入用户名"
-                    clearable
-                    @keyup.enter="store.addManual"
-                  />
-                  <NButton size="small" type="primary" @click="store.addManual">
-                    <template #icon><NIcon :component="Add24Regular" /></template>
-                    添加
-                  </NButton>
-                </NInputGroup>
-
-                <NPopconfirm @positive-click="store.deleteQueue(store.queue)">
-                  <template #trigger>
-                    <NButton size="small" secondary type="error">清空当前</NButton>
-                  </template>
-                  确定要清空全部等待中的排队记录吗？
-                </NPopconfirm>
-              </NFlex>
-            </NFlex>
-          </NCard>
-
-          <!-- 列表卡片 -->
-          <NCard size="small" :bordered="false">
-            <NSpin :show="store.isLoading && store.originQueue.length === 0">
-              <div v-if="store.queue.length > 0" class="queue-list-container">
-                <TransitionGroup name="list">
-                  <div
-                    v-for="(queueData, index) in store.queue"
-                    :key="queueData.id"
-                    class="queue-item-wrapper"
-                  >
-                    <QueueItem :queue-data="queueData" :index="index + 1" />
-                  </div>
-                </TransitionGroup>
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="relative w-44">
+                <component
+                  :is="Search24Regular"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
+                />
+                <Input
+                  v-model="store.activeFilterName"
+                  placeholder="搜索队列用户"
+                  class="pl-8 text-xs h-8"
+                />
               </div>
-              <NEmpty
-                v-else
-                description="当前排队队列为空，等待观众发送弹幕或送礼加入"
-                style="padding: 60px 0"
+
+              <div class="flex items-center gap-1.5">
+                <Input
+                  v-model="store.newQueueName"
+                  placeholder="手动输入用户名"
+                  class="w-40 text-xs h-8"
+                  @keyup.enter="store.addManual"
+                />
+                <Button
+                  size="xs"
+                  variant="brand"
+                  @click="store.addManual"
+                >
+                  <component
+                    :is="Add24Regular"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
+                  添加
+                </Button>
+              </div>
+
+              <AlertDialog>
+                <AlertDialogTrigger as-child>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    :disabled="store.queue.length === 0"
+                  >
+                    清空当前
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent class="sm:max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>清空排队队列？</AlertDialogTitle>
+                    <AlertDialogDescription class="text-xs">
+                      确定要清空全部当前正在等待中的排队记录吗？
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction
+                      class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      @click="store.deleteQueue(store.queue)"
+                    >
+                      确认清空
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent class="p-3">
+            <div
+              v-if="store.queue.length > 0"
+              class="space-y-2"
+            >
+              <QueueItem
+                v-for="(queueData, index) in store.queue"
+                :key="queueData.id"
+                :queue-data="queueData"
+                :index="index + 1"
               />
-            </NSpin>
-          </NCard>
-        </NFlex>
-      </NTabPane>
+            </div>
+            <div
+              v-else
+              class="text-center py-12 text-xs text-muted-foreground"
+            >
+              当前排队队列为空，等待观众发送弹幕或送礼加入
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
 
-      <!-- ================= Tab 2: OBS 1080P 舞台预览与仿真调试 ================= -->
-      <NTabPane name="preview">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="Desktop24Regular" />
-            <span>OBS 舞台预览与仿真</span>
-          </NFlex>
-        </template>
-        <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen" style="margin-top: 14px">
-          <!-- 舞台视口 (占 8 列) -->
-          <NGi :span="8">
-            <NCard size="small">
-              <template #header>
-                <NFlex justify="space-between" align="center">
-                  <NFlex align="center" :size="8">
-                    <NIcon :component="Eye24Regular" />
-                    <NText strong>OBS 画布实时预览 (1080P 比例视口)</NText>
-                  </NFlex>
+      <!-- Tab 2: OBS 舞台预览 -->
+      <TabsContent
+        value="preview"
+        class="mt-3"
+      >
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- 舞台视口 (8 列) -->
+          <Card class="lg:col-span-8 flex flex-col">
+            <CardHeader class="p-3.5 pb-2">
+              <div class="flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2">
+                  <component
+                    :is="Eye24Regular"
+                    class="h-4 w-4 text-muted-foreground"
+                  />
+                  <CardTitle class="text-xs font-semibold">
+                    OBS 画布实时预览 (1080P 比例视口)
+                  </CardTitle>
+                </div>
 
-                  <NRadioGroup v-model:value="previewBg" size="small">
-                    <NRadioButton value="checker">透明网格</NRadioButton>
-                    <NRadioButton value="dark">纯黑背景</NRadioButton>
-                    <NRadioButton value="light">浅色背景</NRadioButton>
-                    <NRadioButton value="game">游戏场景</NRadioButton>
-                  </NRadioGroup>
-                </NFlex>
-              </template>
+                <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
+                  <Button
+                    v-for="bg in [
+                      { key: 'checker', label: '网格' },
+                      { key: 'dark', label: '纯黑' },
+                      { key: 'light', label: '浅色' },
+                      { key: 'game', label: '模拟游戏' },
+                    ]"
+                    :key="bg.key"
+                    size="xs"
+                    :variant="previewBg === bg.key ? 'default' : 'ghost'"
+                    class="h-6 text-xs px-2"
+                    @click="previewBg = bg.key as any"
+                  >
+                    {{ bg.label }}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
 
-              <!-- 舞台视口 -->
-              <div class="stage-viewport" :class="[`bg-${previewBg}`]">
-                <div class="stage-canvas">
+            <CardContent class="p-4 flex-1 flex flex-col justify-between space-y-4">
+              <div
+                class="rounded-lg border border-border p-6 flex items-center justify-center min-h-[460px] transition-colors"
+                :class="{
+                  'bg-[#121214]': previewBg === 'dark',
+                  'bg-[#f4f4f5]': previewBg === 'light',
+                  'bg-[#0b132b]': previewBg === 'game',
+                  'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]': previewBg === 'checker',
+                }"
+              >
+                <div class="w-[380px] max-w-full">
                   <QueueOBS
                     :id="accountInfo?.id"
                     :key="`${accountInfo?.id}-${obsStyleType}-${obsScrollSpeed}`"
@@ -373,215 +427,271 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <template #action>
-                <NFlex justify="space-between" align="center">
-                  <NText depth="3" style="font-size: 12px">
-                    推荐 OBS 来源尺寸：宽 360px ~ 420px，高 540px ~ 680px。
-                  </NText>
-                  <NButton size="small" type="primary" @click="copyObsLink">
-                    <template #icon><NIcon :component="Copy24Regular" /></template>
-                    复制当前样式 OBS 链接
-                  </NButton>
-                </NFlex>
-              </template>
-            </NCard>
-          </NGi>
+              <div class="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-border/60">
+                <span class="text-xs text-muted-foreground">推荐 OBS 来源尺寸：宽 360px ~ 420px，高 540px ~ 680px。</span>
+                <Button
+                  size="xs"
+                  variant="brand"
+                  @click="copyObsLink"
+                >
+                  <component
+                    :is="Copy24Regular"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
+                  复制当前样式 OBS 链接
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-          <!-- 样式与仿真控制器 (占 4 列) -->
-          <NGi :span="4">
-            <NFlex vertical :size="16">
-              <!-- 样式预设选择 -->
-              <NCard size="small">
-                <template #header>
-                  <NFlex align="center" :size="6">
-                    <NIcon :component="Color24Regular" />
-                    <span>OBS 视觉预设</span>
-                  </NFlex>
-                </template>
-                <NFlex vertical :size="12">
-                  <NRadioGroup v-model:value="obsStyleType" size="small">
-                    <NFlex vertical :size="8">
-                      <NRadioButton value="glass" style="width: 100%">
-                        毛玻璃质感 (Modern Glass)
-                      </NRadioButton>
-                      <NRadioButton value="transparent" style="width: 100%">
-                        纯透明无底壳 (Transparent - 贴图专用)
-                      </NRadioButton>
-                      <NRadioButton value="minimal" style="width: 100%">
-                        极简通透流 (Minimal Text)
-                      </NRadioButton>
-                      <NRadioButton value="classic" style="width: 100%">
-                        经典卡片 (Classic Dark)
-                      </NRadioButton>
-                      <NRadioButton value="fresh" style="width: 100%">
-                        清新自然 (Fresh Light)
-                      </NRadioButton>
-                    </NFlex>
-                  </NRadioGroup>
+          <!-- 样式与仿真控制器 (4 列) -->
+          <div class="lg:col-span-4 space-y-4">
+            <!-- 样式预设 -->
+            <Card>
+              <CardHeader class="p-3.5 pb-2">
+                <div class="flex items-center gap-2">
+                  <component
+                    :is="Color24Regular"
+                    class="h-4 w-4 text-muted-foreground"
+                  />
+                  <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+                    OBS 视觉预设
+                  </CardTitle>
+                </div>
+              </CardHeader>
 
-                  <NDivider style="margin: 4px 0" />
-
-                  <NFlex justify="space-between" align="center">
-                    <span style="font-size: 12px; color: var(--vtsuru-fg-muted)">滚动轮播速度：</span>
-                    <NInputNumber
-                      v-model:value="obsScrollSpeed"
-                      :min="0.5"
-                      :max="3"
-                      :step="0.2"
-                      size="tiny"
-                      style="width: 100px"
-                    >
-                      <template #suffix>x</template>
-                    </NInputNumber>
-                  </NFlex>
-                </NFlex>
-              </NCard>
-
-              <!-- 仿真调试工具 -->
-              <NCard size="small">
-                <template #header>
-                  <NFlex align="center" :size="6">
-                    <NIcon :component="Flash24Regular" />
-                    <span>舞台仿真调试</span>
-                  </NFlex>
-                </template>
-                <NFlex vertical :size="10">
-                  <NButton size="small" block secondary @click="injectMockUser">
-                    <template #icon><NIcon :component="PersonAdd24Regular" /></template>
-                    注入一个测试观众 (+1)
-                  </NButton>
-
-                  <NButton
-                    v-if="store.queue.length > 0"
-                    size="small"
-                    block
-                    type="success"
-                    secondary
-                    @click="store.updateStatus(store.queue[0], QueueStatus.Finish)"
+              <CardContent class="p-3.5 space-y-3.5">
+                <div class="grid grid-cols-1 gap-1.5">
+                  <Button
+                    v-for="st in [
+                      { key: 'glass', label: '毛玻璃质感 (Modern Glass)' },
+                      { key: 'transparent', label: '纯透明无底壳 (Transparent)' },
+                      { key: 'minimal', label: '极简通透流 (Minimal Text)' },
+                      { key: 'classic', label: '经典卡片 (Classic Dark)' },
+                      { key: 'fresh', label: '清新自然 (Fresh Light)' },
+                    ]"
+                    :key="st.key"
+                    size="sm"
+                    :variant="obsStyleType === st.key ? 'default' : 'outline'"
+                    class="w-full justify-start text-xs font-normal"
+                    @click="obsStyleType = st.key as any"
                   >
-                    <template #icon><NIcon :component="CheckmarkCircle24Regular" /></template>
-                    完成当前首位观众
-                  </NButton>
-                </NFlex>
-              </NCard>
-            </NFlex>
-          </NGi>
-        </NGrid>
-      </NTabPane>
+                    {{ st.label }}
+                  </Button>
+                </div>
 
-      <!-- ================= Tab 3: 历史排队与规则设置 ================= -->
-      <NTabPane name="settings">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="Settings24Regular" />
-            <span>规则设置与历史</span>
-          </NFlex>
-        </template>
-        <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen" style="margin-top: 14px">
-          <!-- 左侧：历史记录 (占 7 列) -->
-          <NGi :span="7">
-            <NCard size="small">
-              <template #header>
-                <NFlex align="center" :size="6">
-                  <NIcon :component="History24Regular" />
-                  <span>历史处理记录</span>
-                </NFlex>
-              </template>
-              <NDataTable
-                :columns="columns"
-                :data="store.historySongs"
-                :loading="store.isLoading"
-                size="small"
-                :pagination="{ pageSize: 8 }"
-              />
-            </NCard>
-          </NGi>
+                <Separator />
 
-          <!-- 右侧：规则配置面板 (占 5 列) -->
-          <NGi :span="5">
-            <NCard size="small">
-              <template #header>
-                <NFlex align="center" :size="6">
-                  <NIcon :component="ShieldCheckmark24Regular" />
-                  <span>触发条件与防刷规则</span>
-                </NFlex>
-              </template>
-              <QueueSettingsTab
-                :is-loading="store.isLoading"
-                :settings="accountInfo.settings.queue"
-                @change="store.saveSettings"
-              />
-            </NCard>
-          </NGi>
-        </NGrid>
-      </NTabPane>
-    </NTabs>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs text-muted-foreground">滚动轮播速度</span>
+                  <div class="flex items-center gap-1.5">
+                    <Input
+                      v-model.number="obsScrollSpeed"
+                      type="number"
+                      step="0.2"
+                      min="0.5"
+                      max="3"
+                      class="w-20 h-7 text-xs font-mono"
+                    />
+                    <span class="text-xs text-muted-foreground">x</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <!-- 仿真调试工具 -->
+            <Card>
+              <CardHeader class="p-3.5 pb-2">
+                <div class="flex items-center gap-2">
+                  <component
+                    :is="Flash24Regular"
+                    class="h-4 w-4 text-muted-foreground"
+                  />
+                  <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+                    舞台仿真调试
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent class="p-3.5 space-y-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="w-full justify-center text-xs"
+                  @click="injectMockUser"
+                >
+                  <component
+                    :is="PersonAdd24Regular"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
+                  注入测试观众 (+1)
+                </Button>
+
+                <Button
+                  v-if="store.queue.length > 0"
+                  size="sm"
+                  variant="brand"
+                  class="w-full justify-center text-xs"
+                  @click="store.updateStatus(store.queue[0], QueueStatus.Finish)"
+                >
+                  <component
+                    :is="Checkmark12Regular"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
+                  完成当前首位观众
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </TabsContent>
+
+      <!-- Tab 3: 规则设置与历史 -->
+      <TabsContent
+        value="settings"
+        class="mt-3"
+      >
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- 历史处理记录 (7 列) -->
+          <div class="lg:col-span-7">
+            <Card>
+              <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <component
+                    :is="History24Regular"
+                    class="h-4 w-4 text-muted-foreground"
+                  />
+                  <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+                    历史处理记录
+                  </CardTitle>
+                </div>
+                <span class="text-xs text-muted-foreground">共 {{ store.historySongs.length }} 条</span>
+              </CardHeader>
+
+              <CardContent class="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead class="text-xs">
+                        用户名
+                      </TableHead>
+                      <TableHead class="text-xs w-28">
+                        来源
+                      </TableHead>
+                      <TableHead class="text-xs w-36">
+                        加入时间
+                      </TableHead>
+                      <TableHead class="text-xs w-28 text-right">
+                        操作
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <template v-if="paginatedHistory.length > 0">
+                      <TableRow
+                        v-for="item in paginatedHistory"
+                        :key="item.id"
+                        class="text-xs"
+                      >
+                        <TableCell class="font-medium">
+                          {{ item.user?.name || '未知用户' }}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            :variant="getFromBadgeVariant(item.from)"
+                            class="text-[10px] px-1.5 py-0 h-4"
+                          >
+                            {{ getQueueSourceText(item) }}
+                          </Badge>
+                        </TableCell>
+                        <TableCell class="font-mono text-muted-foreground text-[11px]">
+                          {{ formatTime(item.createAt) }}
+                        </TableCell>
+                        <TableCell class="text-right space-x-1">
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            class="text-primary hover:bg-primary/10"
+                            title="重置为等待状态"
+                            @click="store.updateStatus(item, QueueStatus.Waiting)"
+                          >
+                            重置
+                          </Button>
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            class="text-destructive hover:bg-destructive/10"
+                            title="删除"
+                            @click="store.deleteQueue([item])"
+                          >
+                            删除
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    </template>
+                    <TableEmpty
+                      v-else
+                      :colspan="4"
+                      class="text-xs text-muted-foreground py-8 text-center"
+                    >
+                      暂无历史排队记录
+                    </TableEmpty>
+                  </TableBody>
+                </Table>
+
+                <!-- 分页 -->
+                <div
+                  v-if="totalHistoryPages > 1"
+                  class="flex items-center justify-between p-3 border-t border-border"
+                >
+                  <span class="text-xs text-muted-foreground">页码 {{ historyPage }} / {{ totalHistoryPages }}</span>
+                  <div class="flex items-center gap-1">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      :disabled="historyPage <= 1"
+                      @click="historyPage--"
+                    >
+                      上一页
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      :disabled="historyPage >= totalHistoryPages"
+                      @click="historyPage++"
+                    >
+                      下一页
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <!-- 规则配置 (5 列) -->
+          <div class="lg:col-span-5">
+            <Card>
+              <CardHeader class="p-3.5 pb-2">
+                <div class="flex items-center gap-2">
+                  <component
+                    :is="ShieldCheckmark24Regular"
+                    class="h-4 w-4 text-muted-foreground"
+                  />
+                  <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+                    触发条件与防刷规则
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent class="p-3.5">
+                <QueueSettingsTab
+                  :is-loading="store.isLoading"
+                  :settings="accountInfo.settings.queue"
+                  @change="store.saveSettings"
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>
-
-<style scoped>
-.queue-manage-view {
-  width: 100%;
-}
-
-.main-nav-tabs {
-  --n-tab-padding: 6px 16px !important;
-}
-
-.main-nav-tabs :deep(.n-tabs-rail) {
-  width: fit-content;
-  max-width: 100%;
-}
-
-.main-nav-tabs :deep(.n-tabs-tab) {
-  white-space: nowrap;
-  font-weight: 500;
-}
-
-.queue-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.queue-item-wrapper {
-  min-width: 0;
-}
-
-/* 1080P 舞台视口 */
-.stage-viewport {
-  width: 100%;
-  height: 520px;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid var(--vtsuru-border);
-}
-
-.stage-viewport.bg-checker {
-  background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%),
-    linear-gradient(-45deg, #1e293b 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #1e293b 75%),
-    linear-gradient(-45deg, transparent 75%, #1e293b 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-  background-color: #0f172a;
-}
-
-.stage-viewport.bg-dark { background-color: #000000; }
-.stage-viewport.bg-light { background-color: #f1f5f9; }
-.stage-viewport.bg-game {
-  background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)),
-    radial-gradient(circle at 80% 20%, #3b82f6 0%, transparent 40%),
-    radial-gradient(circle at 20% 80%, #ec4899 0%, transparent 40%), #090d16;
-}
-
-.stage-canvas {
-  width: 380px;
-  height: 480px;
-  position: relative;
-}
-</style>

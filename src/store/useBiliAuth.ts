@@ -1,4 +1,4 @@
-import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
+
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
@@ -195,7 +195,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     return null
   }
 
-  async function GetGoods(id: number | undefined = undefined, message?: MessageApiInjection) {
+  async function GetGoods(id: number | undefined = undefined, message?: any) {
     if (!id) {
       return []
     }

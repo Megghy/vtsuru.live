@@ -9,26 +9,9 @@ import {
   SunnyOutline,
 } from '@vicons/ionicons5'
 import { watchDebounced } from '@vueuse/core'
-import {
-  NButton,
-  NButtonGroup,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NModal,
-  NScrollbar,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useDialog,
-} from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
 
 import type { APIFileModel } from '@/api/api-models'
-import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
 import {
   CUSTOM_CSS_MAX_BYTES,
@@ -47,7 +30,14 @@ import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
 import { resolveUserPageReadableAccent } from '@/apps/user-page/theme'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
-import { isDarkMode } from '@/shared/utils'
+import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tag } from '@/shared/ui/tag'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { isDarkMode, useDialog } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
 import { deepCloneJson } from '../editorHelpers'
@@ -250,433 +240,202 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
 </script>
 
 <template>
-  <NModal
-    :show="show"
-    preset="card"
-    title="自定义 HTML/CSS"
-    class="custom-code-modal"
-    :style="{ width: 'min(1600px, 96vw)', height: 'min(920px, 94dvh)' }"
-    content-style="padding: 0; min-height: 0; overflow: hidden"
-    :auto-focus="false"
-    :mask-closable="false"
-    @update:show="updateShow"
-  >
-    <template #header-extra>
-      <NFlex
-        align="center"
-        :wrap="false"
-        size="small"
-      >
-        <NTag
-          v-if="codeIssues.length"
-          type="error"
-          size="small"
-        >
-          {{ codeIssues.length }} 个问题
-        </NTag>
-        <NButton
-          size="small"
-          secondary
-          @click="closeEditor"
-        >
-          取消
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
-          @click="applyChanges"
-        >
-          应用
-        </NButton>
-      </NFlex>
-    </template>
+  <Dialog :open="show" @update:open="updateShow">
+    <DialogContent class="max-w-[min(1600px,96vw)] h-[min(920px,94dvh)] p-0 flex flex-col gap-0 overflow-hidden">
+      <DialogHeader class="p-3.5 border-b flex flex-row items-center justify-between shrink-0">
+        <DialogTitle class="text-base font-semibold"> 自定义 HTML/CSS </DialogTitle>
+        <div class="flex items-center gap-2 pr-6">
+          <Tag v-if="codeIssues.length" variant="destructive" class="text-xs">
+            {{ codeIssues.length }} 个问题
+          </Tag>
+          <Button size="sm" variant="outline" @click="closeEditor"> 取消 </Button>
+          <Button size="sm" @click="applyChanges"> 应用 </Button>
+        </div>
+      </DialogHeader>
 
-    <div
-      class="workspace"
-      :class="{ 'resources-hidden': !resourcesVisible }"
-    >
-      <aside
-        v-if="resourcesVisible"
-        class="resources-pane"
-      >
-        <NFlex
-          vertical
-          size="small"
-          class="resources-toolbar"
-        >
-          <NFlex
-            justify="space-between"
-            align="center"
-            :wrap="false"
-          >
-            <NText strong> 图片资源 </NText>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  secondary
-                  size="small"
-                  :loading="uploading"
-                  aria-label="上传图片"
-                  @click="uploadInput?.click()"
-                >
-                  <template #icon>
-                    <NIcon><CloudUploadOutline /></NIcon>
-                  </template>
-                </NButton>
-              </template>
-              上传图片
-            </NTooltip>
-          </NFlex>
-          <NInput
-            v-model:value="resourceSearch"
-            size="small"
-            clearable
-            placeholder="搜索文件"
-          />
-          <input
-            ref="uploadInput"
-            type="file"
-            accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
-            hidden
-            @change="handleUpload"
-          />
-        </NFlex>
-        <NScrollbar class="resource-scroll">
-          <div
-            v-if="filteredResources.length"
-            class="resource-list"
-          >
-            <button
-              v-for="file in filteredResources"
-              :key="file.id"
-              type="button"
-              class="resource-row"
-              @click="attachResource(file)"
-            >
-              <img
-                :src="file.path"
-                alt=""
-                loading="lazy"
-                decoding="async"
-                referrerpolicy="no-referrer"
-              />
-              <span class="resource-copy">
-                <strong>{{ file.name || `资源 #${file.id}` }}</strong>
-                <small>#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small>
-              </span>
-            </button>
+      <div class="workspace flex-1 min-h-0" :class="{ 'resources-hidden': !resourcesVisible }">
+        <aside v-if="resourcesVisible" class="resources-pane flex flex-col border-r bg-muted/20">
+          <div class="p-3 border-b flex flex-col gap-2 shrink-0">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-semibold text-foreground">图片资源</span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      :disabled="uploading"
+                      aria-label="上传图片"
+                      @click="uploadInput?.click()"
+                    >
+                      <CloudUploadOutline class="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent> 上传图片 </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <Input v-model="resourceSearch" class="h-7 text-xs" placeholder="搜索文件" />
+            <input
+              ref="uploadInput"
+              type="file"
+              accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
+              hidden
+              @change="handleUpload"
+            />
           </div>
-          <NEmpty
-            v-else-if="!resources.isLoading.value"
-            size="small"
-            description="没有可用图片"
-          />
-        </NScrollbar>
-      </aside>
-
-      <section class="code-pane">
-        <div class="pane-toolbar">
-          <NFlex
-            justify="space-between"
-            align="center"
-            :wrap="false"
-          >
-            <NTabs
-              v-model:value="activeLanguage"
-              type="segment"
-              size="small"
-              style="width: 190px"
-            >
-              <NTabPane
-                name="html"
-                tab="HTML"
-              />
-              <NTabPane
-                name="css"
-                tab="CSS"
-              />
-            </NTabs>
-            <NFlex
-              :wrap="false"
-              size="small"
-            >
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    circle
-                    secondary
-                    size="small"
-                    aria-label="切换资源栏"
-                    @click="resourcesVisible = !resourcesVisible"
-                  >
-                    <template #icon>
-                      <NIcon><FolderOpenOutline /></NIcon>
-                    </template>
-                  </NButton>
-                </template>
-                {{ resourcesVisible ? '收起资源栏' : '展开资源栏' }}
-              </NTooltip>
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    circle
-                    secondary
-                    size="small"
-                    aria-label="格式化代码"
-                    @click="codeEditor?.formatDocument()"
-                  >
-                    <template #icon>
-                      <NIcon><CodeWorkingOutline /></NIcon>
-                    </template>
-                  </NButton>
-                </template>
-                格式化代码
-              </NTooltip>
-            </NFlex>
-          </NFlex>
-          <NText
-            depth="3"
-            class="byte-count"
-          >
-            HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes
-          </NText>
-        </div>
-        <CustomHtmlCodeEditor
-          ref="codeEditor"
-          :html="draft.html"
-          :css="draft.css"
-          :active-language="activeLanguage"
-          :theme="monacoTheme"
-          :assets="draft.assets"
-          :resources="imageResources"
-          :issues="codeIssues"
-          @update:html="draft.html = $event"
-          @update:css="draft.css = $event"
-        />
-      </section>
-
-      <section class="preview-pane">
-        <div class="pane-toolbar preview-toolbar">
-          <NText strong> 实时预览 </NText>
-          <NFlex
-            :wrap="false"
-            size="small"
-          >
-            <NButtonGroup size="small">
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    :type="previewDevice === 'desktop' ? 'primary' : 'default'"
-                    secondary
-                    aria-label="桌面预览"
-                    @click="previewDevice = 'desktop'"
-                  >
-                    <template #icon>
-                      <NIcon><DesktopOutline /></NIcon>
-                    </template>
-                  </NButton>
-                </template>
-                桌面预览
-              </NTooltip>
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    :type="previewDevice === 'mobile' ? 'primary' : 'default'"
-                    secondary
-                    aria-label="移动预览"
-                    @click="previewDevice = 'mobile'"
-                  >
-                    <template #icon>
-                      <NIcon><PhonePortraitOutline /></NIcon>
-                    </template>
-                  </NButton>
-                </template>
-                移动预览
-              </NTooltip>
-            </NButtonGroup>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  secondary
-                  size="small"
-                  :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
-                  @click="previewDark = !previewDark"
-                >
-                  <template #icon>
-                    <NIcon><SunnyOutline v-if="previewDark" /><MoonOutline v-else /></NIcon>
-                  </template>
-                </NButton>
-              </template>
-              {{ previewDark ? '亮色预览' : '暗色预览' }}
-            </NTooltip>
-          </NFlex>
-        </div>
-        <NScrollbar class="preview-scroll">
-          <div
-            class="preview-stage"
-            :class="{ dark: previewDark }"
-          >
-            <div
-              class="preview-content"
-              :style="previewStyle"
-            >
-              <CustomHtmlBlock
-                :block-props="draft"
-                :theme="previewTheme"
-              />
+          <div class="flex-1 min-h-0 overflow-y-auto p-2">
+            <div v-if="filteredResources.length" class="resource-list space-y-1">
+              <button
+                v-for="file in filteredResources"
+                :key="file.id"
+                type="button"
+                class="resource-row w-full flex items-center gap-2 p-1.5 rounded text-left hover:bg-muted text-xs transition-colors"
+                @click="attachResource(file)"
+              >
+                <img
+                  :src="file.path"
+                  alt=""
+                  class="size-8 rounded object-cover shrink-0"
+                  loading="lazy"
+                  decoding="async"
+                  referrerpolicy="no-referrer"
+                />
+                <span class="resource-copy flex-1 min-w-0">
+                  <strong class="block truncate text-foreground">{{ file.name || `资源 #${file.id}` }}</strong>
+                  <small class="text-muted-foreground">#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small>
+                </span>
+              </button>
+            </div>
+            <div v-else-if="!resources.isLoading.value" class="py-8 text-center text-xs text-muted-foreground">
+              没有可用图片
             </div>
           </div>
-        </NScrollbar>
-      </section>
-    </div>
-  </NModal>
+        </aside>
+
+        <section class="code-pane flex flex-col min-h-0 border-r">
+          <div class="pane-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0">
+            <Tabs :model-value="activeLanguage" class="w-auto" @update:model-value="(val) => (activeLanguage = val as any)">
+              <TabsList class="h-7">
+                <TabsTrigger value="html" class="h-6 text-xs px-3"> HTML </TabsTrigger>
+                <TabsTrigger value="css" class="h-6 text-xs px-3"> CSS </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div class="flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="切换资源栏"
+                      @click="resourcesVisible = !resourcesVisible"
+                    >
+                      <FolderOpenOutline class="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent> {{ resourcesVisible ? '收起资源栏' : '展开资源栏' }} </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="格式化代码"
+                      @click="codeEditor?.formatDocument()"
+                    >
+                      <CodeWorkingOutline class="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent> 格式化代码 </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+          <div class="px-3 py-1 bg-muted/30 border-b text-[11px] text-muted-foreground shrink-0">
+            HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes
+          </div>
+          <div class="flex-1 min-h-0">
+            <CustomHtmlCodeEditor
+              ref="codeEditor"
+              :html="draft.html"
+              :css="draft.css"
+              :active-language="activeLanguage"
+              :theme="monacoTheme"
+              :assets="draft.assets"
+              :resources="imageResources"
+              :issues="codeIssues"
+              @update:html="draft.html = $event"
+              @update:css="draft.css = $event"
+            />
+          </div>
+        </section>
+
+        <section class="preview-pane flex flex-col min-h-0 bg-muted/10">
+          <div class="pane-toolbar preview-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0">
+            <span class="text-xs font-semibold text-foreground"> 实时预览 </span>
+            <div class="flex items-center gap-1.5">
+              <div class="inline-flex rounded-md border p-0.5 bg-muted">
+                <Button
+                  size="icon"
+                  :variant="previewDevice === 'desktop' ? 'default' : 'ghost'"
+                  class="size-6"
+                  aria-label="桌面预览"
+                  @click="previewDevice = 'desktop'"
+                >
+                  <DesktopOutline class="size-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  :variant="previewDevice === 'mobile' ? 'default' : 'ghost'"
+                  class="size-6"
+                  aria-label="移动预览"
+                  @click="previewDevice = 'mobile'"
+                >
+                  <PhonePortraitOutline class="size-3.5" />
+                </Button>
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-7"
+                :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
+                @click="previewDark = !previewDark"
+              >
+                <SunnyOutline v-if="previewDark" class="size-4" />
+                <MoonOutline v-else class="size-4" />
+              </Button>
+            </div>
+          </div>
+          <div class="flex-1 min-h-0 overflow-y-auto">
+            <div class="preview-stage min-h-full p-4 flex justify-center" :class="{ dark: previewDark }">
+              <div class="preview-content" :style="previewStyle">
+                <CustomHtmlBlock :block-props="draft" :theme="previewTheme" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <style scoped>
 .workspace {
   display: grid;
   grid-template-columns: 240px minmax(420px, 1.35fr) minmax(340px, 1fr);
-  height: calc(min(920px, 94dvh) - 66px);
-  min-height: 0;
+  height: 100%;
 }
 
 .workspace.resources-hidden {
-  grid-template-columns: minmax(420px, 1.35fr) minmax(340px, 1fr);
+  grid-template-columns: minmax(480px, 1.45fr) minmax(340px, 1fr);
 }
 
-.resources-pane,
-.code-pane,
-.preview-pane {
-  min-width: 0;
+.code-pane :deep(.code-editor) {
+  height: 100%;
   min-height: 0;
-  border-right: 1px solid var(--vtsuru-border);
-}
-
-.resources-pane,
-.code-pane,
-.preview-pane {
-  display: flex;
-  flex-direction: column;
-}
-
-.preview-pane {
-  border-right: 0;
-}
-.resources-toolbar,
-.pane-toolbar {
-  flex: 0 0 auto;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--vtsuru-border);
-}
-.byte-count {
-  display: block;
-  margin-top: 6px;
-  font-size: 11px;
-}
-.resource-scroll,
-.preview-scroll {
-  flex: 1;
-  min-height: 0;
-}
-.resource-list {
-  padding: 6px;
-}
-.resource-row {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 9px;
-  padding: 7px;
-  border: 0;
-  border-radius: 6px;
-  color: var(--vtsuru-fg);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.resource-row:hover {
-  background: var(--vtsuru-bg-muted);
-}
-.resource-row:focus-visible {
-  outline: 2px solid var(--vtsuru-brand);
-  outline-offset: -2px;
-}
-.resource-row img {
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 4px;
-  object-fit: cover;
-}
-.resource-copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-.resource-copy strong,
-.resource-copy small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.resource-copy strong {
-  font-size: 12px;
-  font-weight: 600;
-}
-.resource-copy small {
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
-}
-.preview-toolbar {
-  display: flex;
-  min-height: 53px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.preview-stage {
-  min-height: 100%;
-  padding: 24px;
-  background: #f4f4f5;
-}
-.preview-stage.dark {
-  background: #18181b;
-}
-.preview-content {
-  margin: 0 auto;
-  padding: 16px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg);
-  transition: width 160ms ease;
-}
-
-@media (max-width: 980px) {
-  .workspace,
-  .workspace.resources-hidden {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(380px, 1fr) minmax(300px, 0.8fr);
-    overflow: auto;
-  }
-  .workspace.resources-hidden {
-    grid-template-rows: minmax(380px, 1fr) minmax(300px, 0.8fr);
-  }
-  .resources-pane {
-    max-height: 220px;
-  }
-  .resources-pane,
-  .code-pane {
-    border-right: 0;
-    border-bottom: 1px solid var(--vtsuru-border);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .preview-content {
-    transition: none;
-  }
 }
 </style>

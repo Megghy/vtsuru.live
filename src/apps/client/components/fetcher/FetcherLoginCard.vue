@@ -11,18 +11,25 @@ import {
   LogOutOutline,
 } from '@vicons/ionicons5'
 import { intervalToDuration } from 'date-fns'
-import { useMessage } from 'naive-ui'
+import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { getLoginInfoAsync, getLoginUrlDataAsync } from '@/apps/client/data/biliLogin'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useSettings } from '@/apps/client/store/useSettings'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Spin } from '@/shared/ui/spin'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import FetcherCookieCloudCard from './FetcherCookieCloudCard.vue'
 
 const biliCookie = useBiliCookie()
 const settings = useSettings()
-const message = useMessage()
 
 // 登录状态
 const isQRCodeLogining = ref(false)
@@ -87,17 +94,17 @@ async function startLogin() {
         biliCookie.setBiliCookie(login.cookie, login.refresh_token)
         cookie.value = login.cookie
         logInfo(`扫码登录成功`)
-        message.success('登录成功')
+        toast.success('登录成功')
         finishLogin()
         await biliCookie.check()
       } else if (login.status === 'expired') {
         finishLogin()
-        message.error('二维码已过期')
+        toast.error('二维码已过期')
       }
     }, 2000)
   } catch (err: any) {
     logError(err.toString())
-    message.error('获取登录二维码失败')
+    toast.error('获取登录二维码失败')
     isQRCodeLogining.value = false
     loginStatus.value = undefined
   }
@@ -123,7 +130,7 @@ function formatTimeDifference(startUnix: number, endUnix: number) {
 
 async function logout() {
   await biliCookie.logout()
-  message.info('已退出登录')
+  toast.info('已退出登录')
 }
 
 onMounted(async () => {
@@ -137,196 +144,177 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard
-    title="凭据 & 账户"
-    size="small"
-    bordered
-    style="width: 100%"
-  >
-    <template #header-extra>
-      <NTag
+  <Card class="border bg-card w-full">
+    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+      <CardTitle class="text-sm font-semibold">凭据 & 账户</CardTitle>
+      <Badge
         v-if="biliCookie.isCookieValid"
-        type="success"
-        size="small"
+        variant="outline"
+        class="h-5 text-[10px] gap-1 border-emerald-500/40 text-emerald-600 bg-emerald-500/10"
       >
-        <template #icon>
-          <NIcon :component="CheckmarkCircleOutline" />
-        </template>
+        <CheckmarkCircleOutline class="size-3" />
         已登录
-      </NTag>
-      <NTag
+      </Badge>
+      <Badge
         v-else
-        type="error"
-        size="small"
+        variant="outline"
+        class="h-5 text-[10px] gap-1 border-destructive/40 text-destructive bg-destructive/10"
       >
-        <template #icon>
-          <NIcon :component="CloseCircleOutline" />
-        </template>
+        <CloseCircleOutline class="size-3" />
         未登录
-      </NTag>
-    </template>
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NDescriptions
-        label-placement="left"
-        bordered
-        size="small"
-        :columns="1"
-      >
-        <NDescriptionsItem
+      </Badge>
+    </CardHeader>
+    <CardContent class="p-3 space-y-3">
+      <!-- 描述列表 -->
+      <div class="border rounded-md divide-y text-xs">
+        <div
           v-if="biliCookie.isCookieValid"
-          label="B站用户名"
+          class="flex items-center px-3 py-2 bg-muted/10"
         >
-          <NSpin
-            :show="biliCookie.isCookieValid && !biliCookie.userInfo"
-            size="small"
-            style="display: inline-block; width: 100%"
-          >
-            <NText>{{ biliCookie.userInfo?.name ?? '未登录或加载中...' }}</NText>
-          </NSpin>
-        </NDescriptionsItem>
-        <NDescriptionsItem
+          <span class="w-24 text-muted-foreground shrink-0">B站用户名</span>
+          <span class="font-medium text-foreground">
+            {{ biliCookie.userInfo?.name ?? '未登录或加载中...' }}
+          </span>
+        </div>
+        <div
           v-if="biliCookie.isCookieValid"
-          label="用户UID"
+          class="flex items-center px-3 py-2 bg-muted/10"
         >
-          <NSpin
-            :show="biliCookie.isCookieValid && !biliCookie.userInfo"
-            size="small"
-            style="display: inline-block"
-          >
-            <NText>{{ biliCookie.userInfo?.mid ?? 'N/A' }}</NText>
-          </NSpin>
-        </NDescriptionsItem>
-        <NDescriptionsItem label="登录状态">
-          {{ loginStatusString ?? (biliCookie.isCookieValid ? '已登录' : '未登录') }}
-          <NTag
-            v-if="loginStatus === 'waiting' || loginStatus === 'scanned'"
-            :key="countdownKey"
-            class="ml-1"
-            :bordered="false"
-            type="info"
-            size="small"
-          >
-            {{ formatTimeDifference(Date.now(), startAt + QRCODE_EXPIRE_MS) }}
-          </NTag>
-        </NDescriptionsItem>
-      </NDescriptions>
+          <span class="w-24 text-muted-foreground shrink-0">用户UID</span>
+          <span class="font-medium text-foreground">
+            {{ biliCookie.userInfo?.mid ?? 'N/A' }}
+          </span>
+        </div>
+        <div class="flex items-center px-3 py-2 bg-muted/10">
+          <span class="w-24 text-muted-foreground shrink-0">登录状态</span>
+          <div class="flex items-center gap-1.5 font-medium text-foreground">
+            <span>{{ loginStatusString ?? (biliCookie.isCookieValid ? '已登录' : '未登录') }}</span>
+            <Badge
+              v-if="loginStatus === 'waiting' || loginStatus === 'scanned'"
+              :key="countdownKey"
+              variant="outline"
+              class="h-4.5 px-1.5 text-[10px] border-sky-500/40 text-sky-600 bg-sky-500/10"
+            >
+              {{ formatTimeDifference(Date.now(), startAt + QRCODE_EXPIRE_MS) }}
+            </Badge>
+          </div>
+        </div>
+      </div>
 
-      <div v-if="biliCookie.isCookieValid">
-        <NFlex
-          align="center"
-          justify="space-between"
-          style="margin-bottom: 4px"
-        >
-          <NText
-            small
-            depth="3"
-          >
-            登录凭据 (Cookie - 敏感信息)
-          </NText>
-          <NButton
-            text
-            size="tiny"
+      <!-- Cookie 展示与操作 -->
+      <div v-if="biliCookie.isCookieValid" class="space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-muted-foreground">登录凭据 (Cookie - 敏感信息)</span>
+          <Button
+            size="xs"
+            variant="ghost"
+            class="h-6 text-[11px] gap-1"
             @click="showCookie = !showCookie"
           >
-            <template #icon>
-              <NIcon :component="showCookie ? EyeOffOutline : EyeOutline" />
-            </template>
+            <EyeOffOutline v-if="showCookie" class="size-3.5" />
+            <EyeOutline v-else class="size-3.5" />
             {{ showCookie ? '隐藏' : '显示' }}
-          </NButton>
-        </NFlex>
-        <NInput
-          type="textarea"
+          </Button>
+        </div>
+
+        <Textarea
           :value="showCookie ? cookie : maskedCookie"
           placeholder="已登录"
           readonly
-          autosize
-          :min-rows="1"
-          :max-rows="3"
-          style="max-height: 150px"
+          class="text-xs font-mono resize-none h-16"
         />
-        <NButton
-          type="error"
-          ghost
-          size="small"
-          style="margin-top: 8px"
+
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 text-xs gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
           @click="logout"
         >
-          <template #icon>
-            <NIcon :component="LogOutOutline" />
-          </template>
+          <LogOutOutline class="size-3.5" />
           退出登录
-        </NButton>
+        </Button>
       </div>
-      <NDivider style="margin: 0"> 登录方式 </NDivider>
-      <NTabs
-        v-model:value="settings.settings.loginType"
-        type="segment"
-        size="small"
-        @update-value="settings.save()"
+
+      <div class="relative py-1">
+        <div class="absolute inset-0 flex items-center">
+          <span class="w-full border-t" />
+        </div>
+        <div class="relative flex justify-center text-[10px] uppercase">
+          <span class="bg-card px-2 text-muted-foreground font-medium">登录方式</span>
+        </div>
+      </div>
+
+      <Tabs
+        v-model="settings.settings.loginType"
+        class="w-full"
+        @update:model-value="settings.save()"
       >
-        <NTabPane
-          name="qrcode"
-          tab="扫码登录"
-        >
-          <NFlex
+        <TabsList class="grid w-full grid-cols-2 h-8">
+          <TabsTrigger value="qrcode" class="text-xs">
+            扫码登录
+          </TabsTrigger>
+          <TabsTrigger value="cookiecloud" class="text-xs">
+            Cookie Cloud
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="qrcode" class="pt-3">
+          <div
             v-if="!isQRCodeLogining || loginStatus === 'expired'"
-            align="center"
-            :size="8"
+            class="flex items-center gap-2"
           >
-            <NButton
+            <Button
               id="bilibili-login"
+              size="sm"
+              class="h-8 text-xs gap-1.5"
               @click="startLogin"
             >
-              <template #icon>
-                <NIcon :component="LogInOutline" />
-              </template>
+              <LogInOutline class="size-4" />
               {{ loginStatus === 'expired' ? '重新获取二维码' : '获取二维码' }}
-            </NButton>
-            <NTooltip trigger="hover">
-              <template #trigger>
-                <NIcon :component="HelpCircle" />
-              </template>
-              <div>
-                <p>所有关于Cookie的操作都将在本地进行, 不会上传到任何服务器。</p>
-                <p>
-                  相关代码开源于
-                  <NButton
-                    text
-                    type="info"
-                    @click="openUrl('https://github.com/Megghy/vtsuru.live/tree/master/src/client')"
-                  >
-                    GitHub
-                  </NButton>
-                </p>
-              </div>
-            </NTooltip>
-          </NFlex>
-          <NFlex
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <HelpCircle class="size-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent class="text-xs max-w-[260px]">
+                  <p class="mb-1">所有关于Cookie的操作都将在本地进行, 不会上传到任何服务器。</p>
+                  <p>
+                    相关代码开源于
+                    <a
+                      href="javascript:;"
+                      class="text-sky-500 hover:underline"
+                      @click="openUrl('https://github.com/Megghy/vtsuru.live/tree/master/src/client')"
+                    >
+                      GitHub
+                    </a>
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div
             v-else
-            align="center"
-            justify="center"
-            :size="16"
+            class="flex items-center justify-center py-4"
           >
-            <NSpin v-if="!loginUrl" />
-            <NQrCode
+            <Spin v-if="!loginUrl" :show="true" size="medium" />
+            <div
               v-else
-              type="image/png"
-              :value="loginUrl"
-              error-level="H"
-              :size="180"
-            />
-          </NFlex>
-        </NTabPane>
-        <NTabPane
-          name="cookiecloud"
-          tab="Cookie Cloud"
-        >
+              class="p-2.5 bg-white rounded-lg border shadow-sm flex items-center justify-center"
+            >
+              <QrcodeVue
+                :value="loginUrl"
+                level="H"
+                :size="180"
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="cookiecloud" class="pt-2">
           <FetcherCookieCloudCard />
-        </NTabPane>
-      </NTabs>
-    </NFlex>
-  </NCard>
+        </TabsContent>
+      </Tabs>
+    </CardContent>
+  </Card>
 </template>

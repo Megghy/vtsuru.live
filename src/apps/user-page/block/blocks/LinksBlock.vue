@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -25,41 +24,29 @@ const backgrounded = computed(() =>
     :framed="framed"
     :backgrounded="backgrounded"
   >
-    <NFlex
-      justify="center"
-      wrap
-      style="gap: 10px"
-    >
-      <NButton
+    <div class="flex justify-center flex-wrap gap-2.5">
+      <a
         v-for="(it, idx) in items"
         :key="idx"
-        tag="a"
-        type="info"
-        secondary
         target="_blank"
         rel="noopener noreferrer"
         :href="it.url"
-        class="vtsuru-link-tag"
+        class="vtsuru-link-tag inline-flex items-center justify-center text-xs h-8 px-4 font-medium transition-all"
         :aria-label="`${it.label || '打开链接'}（新窗口打开）`"
       >
         {{ it.label }}
-      </NButton>
-    </NFlex>
+      </a>
+    </div>
   </BlockCard>
 </template>
 
 <style scoped>
 .vtsuru-link-tag {
   border-radius: var(--vtsuru-page-radius);
-  padding: 0 16px;
-  font-weight: 500;
   border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
   background: var(--vtsuru-bg-elevated);
   color: var(--vtsuru-block-fg);
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+  text-decoration: none;
 }
 
 .vtsuru-link-tag:hover {

@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { PersonCircleOutline } from '@vicons/ionicons5'
-import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import RichTextEditor from '@/apps/user-page/editor/RichTextEditor.vue'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Textarea } from '@/shared/ui/textarea'
 
 import PropsGrid from '../PropsGrid.vue'
 import TextAppearanceFields from './TextAppearanceFields.vue'
@@ -14,167 +19,155 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
-  <NForm
+  <div
     v-if="props.block.type === 'profile'"
-    label-placement="top"
-    size="small"
+    class="space-y-3"
   >
     <PropsGrid>
-      <NFormItem label="显示名称">
-        <NInput
-          v-model:value="blockProps.displayName"
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">显示名称</label>
+        <Input
+          v-model="blockProps.displayName"
           placeholder="为空则显示账号名"
+          class="h-8 text-xs"
         />
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="头像图片"
-      >
-        <NFlex align="center">
-          <NButton
-            size="small"
-            :loading="editor.isUploading.value"
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">头像图片</label>
+        <div class="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            class="h-8 text-xs gap-1.5"
+            :disabled="editor.isUploading.value"
             @click="editor.triggerUpload(props.block, 'avatarFile')"
           >
-            <template #icon>
-              <NIcon><PersonCircleOutline /></NIcon>
-            </template>
+            <PersonCircleOutline class="size-4" />
             上传头像
-          </NButton>
-          <NButton
-            size="small"
-            secondary
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            class="h-8 text-xs"
             :disabled="!blockProps.avatarFile"
             @click="editor.clearUploadedFile(props.block, 'avatarFile')"
           >
             清除
-          </NButton>
-          <NText depth="3">
+          </Button>
+          <span class="text-xs text-muted-foreground truncate max-w-[200px]">
             {{ blockProps.avatarFile?.name || blockProps.avatarFile?.path || '' }}
-          </NText>
-        </NFlex>
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="个人简介"
-      >
-        <NInput
-          v-model:value="blockProps.bio"
-          type="textarea"
-          :autosize="{ minRows: 2, maxRows: 6 }"
+          </span>
+        </div>
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">个人简介</label>
+        <Textarea
+          v-model="blockProps.bio"
+          class="text-xs min-h-[60px]"
+          placeholder="个人简介"
         />
-      </NFormItem>
+      </div>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
     v-else-if="props.block.type === 'heading'"
-    label-placement="top"
-    size="small"
+    class="space-y-3"
   >
     <PropsGrid>
-      <NFormItem label="标题文字">
-        <NInput
-          v-model:value="blockProps.text"
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">标题文字</label>
+        <Input
+          v-model="blockProps.text"
           placeholder="请输入标题"
+          class="h-8 text-xs"
         />
-      </NFormItem>
-      <NFormItem label="标题级别 1/2/3">
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">标题级别 1/2/3</label>
         <NInputNumber
           v-model:value="blockProps.level"
           :min="1"
           :max="3"
-          style="width: 100%"
+          class="w-full"
         />
-      </NFormItem>
+      </div>
       <TextAppearanceFields :block="props.block" />
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
     v-else-if="props.block.type === 'text'"
-    label-placement="top"
-    size="small"
+    class="space-y-3"
   >
     <PropsGrid>
-      <NFormItem
-        class="span-full"
-        label="文本内容"
-      >
-        <NInput
-          v-model:value="blockProps.text"
-          type="textarea"
-          :autosize="{ minRows: 6, maxRows: 14 }"
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">文本内容</label>
+        <Textarea
+          v-model="blockProps.text"
+          class="text-xs min-h-[120px]"
+          placeholder="请输入文本"
         />
-      </NFormItem>
+      </div>
       <TextAppearanceFields :block="props.block" />
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
     v-else-if="props.block.type === 'richText'"
-    label-placement="top"
-    size="small"
+    class="space-y-2"
   >
-    <NFormItem label="富文本内容">
-      <RichTextEditor
-        v-model:html="editor.ensureRichTextProps(props.block).html"
-        v-model:images-file="editor.ensureRichTextProps(props.block).imagesFile"
-      />
-    </NFormItem>
-  </NForm>
+    <label class="text-xs text-muted-foreground font-medium">富文本内容</label>
+    <RichTextEditor
+      v-model:html="editor.ensureRichTextProps(props.block).html"
+      v-model:images-file="editor.ensureRichTextProps(props.block).imagesFile"
+    />
+  </div>
 
-  <NForm
+  <div
     v-else-if="props.block.type === 'alert'"
-    label-placement="top"
-    size="small"
+    class="space-y-3"
   >
     <PropsGrid>
-      <NFormItem label="提示类型">
-        <NSelect
-          v-model:value="blockProps.type"
-          :options="[
-            { label: '信息', value: 'info' },
-            { label: '成功', value: 'success' },
-            { label: '警告', value: 'warning' },
-            { label: '错误', value: 'error' },
-            { label: '默认', value: 'default' },
-          ]"
-        />
-      </NFormItem>
-      <NFormItem label="标题">
-        <NInput
-          v-model:value="blockProps.title"
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">提示类型</label>
+        <Select v-model="blockProps.type">
+          <SelectTrigger class="h-8 text-xs">
+            <SelectValue placeholder="提示类型" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="info">信息</SelectItem>
+            <SelectItem value="success">成功</SelectItem>
+            <SelectItem value="warning">警告</SelectItem>
+            <SelectItem value="error">错误</SelectItem>
+            <SelectItem value="default">默认</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">标题</label>
+        <Input
+          v-model="blockProps.title"
           placeholder="可选"
+          class="h-8 text-xs"
         />
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="内容"
-      >
-        <NInput
-          v-model:value="blockProps.text"
-          type="textarea"
-          :autosize="{ minRows: 3, maxRows: 8 }"
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">内容</label>
+        <Textarea
+          v-model="blockProps.text"
           placeholder="请输入提示内容"
+          class="text-xs min-h-[70px]"
         />
-      </NFormItem>
-      <NFormItem label="显示图标">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showIcon"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示边框">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.bordered"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
+      </div>
+      <div class="flex items-center justify-between py-1">
+        <label class="text-xs text-muted-foreground">显示图标</label>
+        <Switch v-model:checked="blockProps.showIcon" />
+      </div>
+      <div class="flex items-center justify-between py-1">
+        <label class="text-xs text-muted-foreground">显示边框</label>
+        <Switch v-model:checked="blockProps.bordered" />
+      </div>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

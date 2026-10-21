@@ -1,9 +1,18 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { useMessage } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 const message = useMessage()
 
@@ -47,141 +56,142 @@ async function copyResult() {
 </script>
 
 <template>
-  <NCard title="翻译工具">
-    <template #header-extra>
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NSelect
-          v-model:value="mode"
-          :options="modeOptions"
-          size="small"
-          style="width: 130px"
-        />
-        <NButton
-          size="small"
-          type="primary"
+  <Card>
+    <CardHeader class="flex flex-row items-center justify-between pb-4">
+      <CardTitle class="text-base font-semibold">翻译工具</CardTitle>
+      <div class="flex items-center gap-2">
+        <Select v-model="mode">
+          <SelectTrigger class="h-8 w-[130px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in modeOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          size="sm"
+          class="h-8 text-xs"
           :loading="translating"
           @click="doTranslate"
         >
           翻译
-        </NButton>
-      </NFlex>
-    </template>
-
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NText
-        v-if="!browserApiAvailable"
-        depth="3"
-        style="font-size: 12px"
-      >
-        当前浏览器不支持内置翻译 API (需要 Chrome 138+)，已自动切换到云端翻译
-      </NText>
-      <NText
-        depth="3"
-        style="font-size: 12px"
-      >
-        浏览器翻译：使用 Chrome 内置翻译引擎，速度快且无字数限制，需要 Chrome 138+；云端翻译：使用本站提供的
-        DeepSeek-V4-Flash 模型，限制 5000 字
-      </NText>
-
-      <div class="lang-bar">
-        <NText
-          depth="3"
-          style="font-size: 12px"
-        >
-          源语言
-        </NText>
-        <NSelect
-          v-model:value="sourceLang"
-          :options="sourceLangOptions"
-          size="small"
-          style="width: 150px"
-        />
-        <NButton
-          quaternary
-          circle
-          size="small"
-          title="交换原文和译文"
-          @click="swapTexts"
-        >
-          ⇄
-        </NButton>
-        <NText
-          depth="3"
-          style="font-size: 12px"
-        >
-          目标语言
-        </NText>
-        <NSelect
-          v-model:value="targetLang"
-          :options="LANG_OPTIONS"
-          size="small"
-          style="width: 150px"
-        />
+        </Button>
       </div>
+    </CardHeader>
 
-      <div class="translate-layout">
-        <div class="translate-column">
-          <div class="panel-header">
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              原文
-            </NText>
-            <NText
-              depth="3"
-              style="font-size: 11px"
-              :type="charLimitExceeded ? 'error' : undefined"
-            >
-              {{ charCount }}{{ mode === 'cloud' ? ' / 5000' : '' }}
-            </NText>
-          </div>
-          <textarea
-            v-model="sourceText"
-            class="translate-textarea"
-            placeholder="输入要翻译的文本..."
-          />
+    <CardContent class="pt-0">
+      <div class="flex flex-col gap-3">
+        <span
+          v-if="!browserApiAvailable"
+          class="text-xs text-muted-foreground"
+        >
+          当前浏览器不支持内置翻译 API (需要 Chrome 138+)，已自动切换到云端翻译
+        </span>
+        <span class="text-xs text-muted-foreground">
+          浏览器翻译：使用 Chrome 内置翻译引擎，速度快且无字数限制，需要 Chrome 138+；云端翻译：使用本站提供的
+          DeepSeek-V4-Flash 模型，限制 5000 字
+        </span>
+
+        <div class="lang-bar">
+          <span class="text-xs text-muted-foreground"> 源语言 </span>
+          <Select v-model="sourceLang">
+            <SelectTrigger class="h-8 w-[150px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in sourceLangOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            class="h-8 w-8 rounded-full"
+            title="交换原文和译文"
+            @click="swapTexts"
+          >
+            ⇄
+          </Button>
+
+          <span class="text-xs text-muted-foreground"> 目标语言 </span>
+          <Select v-model="targetLang">
+            <SelectTrigger class="h-8 w-[150px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in LANG_OPTIONS"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div class="translate-column">
-          <div class="panel-header">
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              译文
-            </NText>
-            <NButton
-              v-if="resultText"
-              text
-              size="tiny"
-              @click="copyResult"
-            >
-              复制
-            </NButton>
+        <div class="translate-layout">
+          <div class="translate-column">
+            <div class="panel-header">
+              <span class="text-xs text-muted-foreground"> 原文 </span>
+              <span
+                class="text-[11px]"
+                :class="charLimitExceeded ? 'text-destructive font-medium' : 'text-muted-foreground'"
+              >
+                {{ charCount }}{{ mode === 'cloud' ? ' / 5000' : '' }}
+              </span>
+            </div>
+            <textarea
+              v-model="sourceText"
+              class="translate-textarea"
+              placeholder="输入要翻译的文本..."
+            />
           </div>
-          <textarea
-            v-model="resultText"
-            class="translate-textarea"
-            placeholder="翻译结果..."
-            readonly
-          />
+
+          <div class="translate-column">
+            <div class="panel-header">
+              <span class="text-xs text-muted-foreground"> 译文 </span>
+              <Button
+                v-if="resultText"
+                variant="link"
+                size="sm"
+                class="h-auto p-0 text-xs text-primary"
+                @click="copyResult"
+              >
+                复制
+              </Button>
+            </div>
+            <textarea
+              v-model="resultText"
+              class="translate-textarea"
+              placeholder="翻译结果..."
+              readonly
+            />
+          </div>
         </div>
       </div>
-    </NFlex>
-  </NCard>
+    </CardContent>
+  </Card>
 </template>
+
 <style scoped>
 .lang-bar {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .translate-layout {

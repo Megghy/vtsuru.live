@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { Copy16Regular, Add16Regular, Search16Regular } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NInput, NScrollbar, useMessage } from 'naive-ui'
+import { Add16Regular, Copy16Regular, Search16Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
+
+import { Input } from '@/shared/ui/input'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps({
   placeholders: {
@@ -42,80 +45,59 @@ function handleInsert(text: string) {
 </script>
 
 <template>
-  <div class="template-helper">
-    <NFlex
-      vertical
-      :size="8"
-    >
-      <NInput
-        v-model:value="searchText"
+  <div class="template-helper flex flex-col gap-2">
+    <div class="relative">
+      <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+      <Input
+        v-model="searchText"
         placeholder="搜索变量..."
-        size="small"
-        clearable
-      >
-        <template #prefix>
-          <NIcon :component="Search16Regular" />
-        </template>
-      </NInput>
+        class="h-8 pl-8 text-xs"
+      />
+    </div>
 
-      <NScrollbar style="max-height: 200px">
-        <NFlex
-          vertical
-          :size="4"
+    <ScrollArea class="h-[200px]">
+      <div class="flex flex-col gap-1 pr-2">
+        <div
+          v-for="item in filteredPlaceholders"
+          :key="item.name"
+          class="variable-item flex items-center justify-between"
+          @click="handleInsert(item.name)"
         >
-          <div
-            v-for="item in filteredPlaceholders"
-            :key="item.name"
-            class="variable-item"
-            @click="handleInsert(item.name)"
-          >
-            <NFlex
-              justify="space-between"
-              align="center"
+          <div class="variable-info min-w-0 pr-2">
+            <div class="variable-code truncate">
+              {{ item.name }}
+            </div>
+            <div class="variable-desc truncate">
+              {{ item.description }}
+            </div>
+          </div>
+          <div class="variable-actions flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              title="复制"
+              @click.stop="copyToClipboard(item.name)"
             >
-              <div class="variable-info">
-                <div class="variable-code">
-                  {{ item.name }}
-                </div>
-                <div class="variable-desc">
-                  {{ item.description }}
-                </div>
-              </div>
-              <div class="variable-actions">
-                <NButton
-                  size="tiny"
-                  quaternary
-                  circle
-                  title="复制"
-                  @click.stop="copyToClipboard(item.name)"
-                >
-                  <template #icon>
-                    <NIcon :component="Copy16Regular" />
-                  </template>
-                </NButton>
-                <NButton
-                  size="tiny"
-                  quaternary
-                  circle
-                  title="插入"
-                  @click.stop="handleInsert(item.name)"
-                >
-                  <template #icon>
-                    <NIcon :component="Add16Regular" />
-                  </template>
-                </NButton>
-              </div>
-            </NFlex>
+              <Copy16Regular class="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              title="插入"
+              @click.stop="handleInsert(item.name)"
+            >
+              <Add16Regular class="h-4 w-4" />
+            </button>
           </div>
-          <div
-            v-if="filteredPlaceholders.length === 0"
-            class="no-results"
-          >
-            无匹配变量
-          </div>
-        </NFlex>
-      </NScrollbar>
-    </NFlex>
+        </div>
+        <div
+          v-if="filteredPlaceholders.length === 0"
+          class="no-results"
+        >
+          无匹配变量
+        </div>
+      </div>
+    </ScrollArea>
   </div>
 </template>
 
@@ -154,8 +136,6 @@ function handleInsert(text: string) {
 .variable-actions {
   opacity: 0.35;
   transition: opacity 0.2s;
-  display: flex;
-  gap: 2px;
 }
 
 .variable-item:hover .variable-actions {

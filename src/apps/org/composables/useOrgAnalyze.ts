@@ -1,14 +1,13 @@
-import { useMessage } from 'naive-ui'
 import { computed, nextTick, ref } from 'vue'
 
 import { getApiOrgOrgIdAnalyze } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
+import { toast } from '@/shared/utils'
 
 import type { AnalyzeData, SummaryRange } from '../types'
 import type { OrgContext } from './useOrgContext'
 
 export function useOrgAnalyze(ctx: OrgContext) {
-  const message = useMessage()
   const data = ref<AnalyzeData | null>(null)
   const loading = ref(true)
   const range = ref<SummaryRange>('last7Days')
@@ -27,7 +26,7 @@ export function useOrgAnalyze(ctx: OrgContext) {
       await nextTick()
       await onLoaded?.()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载分析数据失败')
+      toast.error(err instanceof Error ? err.message : '加载分析数据失败')
     } finally {
       loading.value = false
     }

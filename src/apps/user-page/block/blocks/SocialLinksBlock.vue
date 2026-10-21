@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { GlobeOutline, LinkOutline } from '@vicons/ionicons5'
-import { NFlex, NIcon } from 'naive-ui'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 
@@ -151,10 +150,10 @@ const sizePx = computed(() => {
   return 44
 })
 
-const iconSize = computed(() => {
-  if (cfg.value.size === 'sm') return 18
-  if (cfg.value.size === 'lg') return 24
-  return 20
+const iconSizeClass = computed(() => {
+  if (cfg.value.size === 'sm') return 'size-4.5'
+  if (cfg.value.size === 'lg') return 'size-6'
+  return 'size-5'
 })
 </script>
 
@@ -163,11 +162,7 @@ const iconSize = computed(() => {
     :framed="cfg.framed"
     :backgrounded="cfg.backgrounded"
   >
-    <NFlex
-      justify="center"
-      wrap
-      style="gap: 10px"
-    >
+    <div class="flex justify-center flex-wrap gap-2.5">
       <a
         v-for="(it, idx) in items"
         :key="idx"
@@ -184,21 +179,20 @@ const iconSize = computed(() => {
           '--social-radius': cfg.variant === 'round' ? '999px' : 'var(--vtsuru-page-radius)',
         }"
       >
-        <NIcon
-          :size="iconSize"
-          class="social-icon"
+        <component
+          :is="platformIcons[it.platform]"
+          :class="iconSizeClass"
+          class="social-icon shrink-0"
           aria-hidden="true"
-        >
-          <component :is="platformIcons[it.platform]" />
-        </NIcon>
+        />
         <span
           v-if="cfg.showLabel"
-          class="social-label"
+          class="social-label text-xs"
         >
           {{ it.label || SOCIAL_PLATFORM_NAMES[it.platform] }}
         </span>
       </a>
-    </NFlex>
+    </div>
   </BlockCard>
 </template>
 

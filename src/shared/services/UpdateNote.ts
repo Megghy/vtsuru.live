@@ -1,5 +1,16 @@
-import { NButton, NImage } from 'naive-ui'
 import { h, type VNode } from 'vue'
+
+const NImage = (props: any) => h('img', { ...props, class: 'rounded-md max-w-full my-2 border border-border' })
+const NButton = (props: any, context: any) =>
+  h(
+    'button',
+    {
+      ...props,
+      class:
+        'inline-flex items-center justify-center px-2 py-1 text-xs rounded border border-border bg-background hover:bg-muted text-foreground transition-colors cursor-pointer',
+    },
+    context?.default ? context.default() : [],
+  )
 
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'

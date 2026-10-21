@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ReOrderDotsVertical16Regular } from '@vicons/fluent'
-import { NButton, NIcon, NSwitch } from 'naive-ui'
+import { Button } from '@/shared/ui/button'
+import { Switch } from '@/shared/ui/switch'
 import { VueDraggable } from 'vue-draggable-plus'
 import { computed } from 'vue'
 
@@ -33,48 +34,44 @@ function toggle(id: PanelId, visible: boolean) {
         :key="id"
         class="layout-menu__item"
       >
-        <NIcon
-          class="layout-menu__handle"
-          :component="ReOrderDotsVertical16Regular"
+        <component
+          :is="ReOrderDotsVertical16Regular"
+          class="layout-menu__handle h-4 w-4"
         />
         <span>{{ PANEL_TITLES[id] }}</span>
         <span class="layout-menu__key">Alt+{{ PANEL_IDS.indexOf(id) + 1 }}</span>
-        <NSwitch
-          size="small"
-          :value="!layout.hidden.includes(id)"
-          @update:value="(v: boolean) => toggle(id, v)"
+        <Switch
+          :model-value="!layout.hidden.includes(id)"
+          @update:model-value="(v: boolean) => toggle(id, v)"
         />
       </div>
     </VueDraggable>
     <label class="layout-menu__row">
       竖屏布局（上下排列）
-      <NSwitch
-        v-model:value="layout.vertical"
-        size="small"
+      <Switch
+        v-model="layout.vertical"
       />
     </label>
     <label class="layout-menu__row">
       互动区在弹幕上方
-      <NSwitch
-        v-model:value="layout.interactionOnTop"
-        size="small"
+      <Switch
+        v-model="layout.interactionOnTop"
       />
     </label>
     <label class="layout-menu__row">
       专注模式（隐藏面板原地虚化）
-      <NSwitch
-        v-model:value="layout.focusMode"
-        size="small"
+      <Switch
+        v-model="layout.focusMode"
       />
     </label>
-    <NButton
-      size="small"
-      block
-      secondary
+    <Button
+      variant="secondary"
+      size="sm"
+      class="w-full"
       @click="resetLayout(dashboard.settings)"
     >
       重置布局
-    </NButton>
+    </Button>
   </div>
 </template>
 

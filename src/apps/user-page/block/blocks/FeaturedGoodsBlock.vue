@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { OpenOutline, RefreshOutline, StorefrontOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NEmpty, NIcon, NImage, NSpin, NTag } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -9,6 +8,11 @@ import { FunctionTypes, GoodsStatus } from '@/api/api-models'
 import { fetchPublicPointGoods } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -93,216 +97,127 @@ watch(
     :backgrounded="values.backgrounded !== false"
   >
     <template #header>
-      <div class="goods-header">
-        <span class="goods-heading"
-          ><NIcon><StorefrontOutline /></NIcon>精选积分礼物</span
-        >
+      <div class="goods-header flex items-center justify-between w-full">
+        <span class="goods-heading flex items-center gap-1.5 font-semibold text-sm">
+          <component :is="StorefrontOutline" class="size-4" />
+          精选积分礼物
+        </span>
         <RouterLink
           v-if="props.userInfo?.name"
           v-slot="{ navigate }"
           :to="{ name: 'user-goods', params: { id: props.userInfo.name } }"
           custom
         >
-          <NButton
-            text
-            type="primary"
-            size="small"
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 text-xs text-primary font-medium p-0"
             @click="navigate"
           >
-            全部商品<template #icon>
-              <NIcon><OpenOutline /></NIcon>
-            </template>
-          </NButton>
+            全部商品
+            <component :is="OpenOutline" class="size-3.5 ml-1" />
+          </Button>
         </RouterLink>
       </div>
     </template>
 
-    <NAlert
+    <Alert
       v-if="!enabled"
-      type="info"
-      :show-icon="false"
+      class="text-xs py-2"
     >
-      积分兑换未开放
-    </NAlert>
-    <NAlert
+      <AlertDescription>
+        积分兑换未开放
+      </AlertDescription>
+    </Alert>
+    <Alert
       v-else-if="query.status.value === 'error'"
-      type="error"
-      :show-icon="true"
+      variant="destructive"
+      class="text-xs py-2"
     >
-      <div class="error-row">
-        <span>积分商品加载失败</span
-        ><NButton
-          size="small"
-          secondary
+      <AlertDescription class="flex items-center justify-between w-full">
+        <span>积分商品加载失败</span>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-6 px-2 text-xs"
           @click="load(true)"
         >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon> </template
-          >重试
-        </NButton>
-      </div>
-    </NAlert>
-    <NSpin
-      v-else
-      :show="query.status.value === 'loading' || query.status.value === 'idle'"
-      size="small"
+          <component :is="RefreshOutline" class="size-3 mr-1" />
+          重试
+        </Button>
+      </AlertDescription>
+    </Alert>
+    <div
+      v-else-if="query.status.value === 'loading' || query.status.value === 'idle'"
+      class="py-6 flex justify-center"
     >
-      <NEmpty
-        v-if="query.status.value === 'success' && !goods.length"
-        size="small"
+      <Spin />
+    </div>
+    <div v-else>
+      <Empty
+        v-if="!goods.length"
         description="暂无可展示商品"
+        class="py-4 text-xs"
       />
       <div
         v-else
-        class="goods-grid"
+        class="goods-grid grid grid-cols-3 gap-2.5"
       >
         <RouterLink
           v-for="item in goods"
           :key="item.id"
           :to="{ name: 'user-goods', params: { id: props.userInfo?.name } }"
-          class="goods-item"
+          class="goods-item border border-border rounded-lg bg-muted/40 overflow-hidden text-foreground no-underline transition hover:border-primary hover:bg-card"
         >
-          <div class="cover-wrap">
-            <NImage
+          <div class="cover-wrap relative aspect-video overflow-hidden bg-muted">
+            <img
               v-if="item.cover?.path"
               :src="item.cover.path"
-              object-fit="cover"
-              preview-disabled
-              lazy
-              class="cover"
+              alt=""
+              loading="lazy"
+              class="w-full h-full object-cover"
             />
             <div
               v-else
-              class="cover-empty"
+              class="cover-empty h-full flex items-center justify-center text-muted-foreground text-2xl"
             >
-              <NIcon><StorefrontOutline /></NIcon>
+              <component :is="StorefrontOutline" class="size-8" />
             </div>
-            <NTag
+            <Badge
               v-if="isSoldOut(item)"
-              class="stock-tag"
-              type="default"
-              size="small"
-              :bordered="false"
+              variant="secondary"
+              class="stock-tag absolute right-1.5 bottom-1.5 text-[10px] h-4 px-1"
             >
               已售罄
-            </NTag>
+            </Badge>
           </div>
-          <div class="goods-copy">
-            <strong>{{ item.name }}</strong>
-            <p v-if="showDescription && item.description">
+          <div class="goods-copy p-2.5 grid gap-1">
+            <strong class="text-xs font-semibold truncate">{{ item.name }}</strong>
+            <p
+              v-if="showDescription && item.description"
+              class="text-[11px] text-muted-foreground line-clamp-2 m-0 leading-normal"
+            >
               {{ item.description }}
             </p>
-            <div class="goods-meta">
-              <span class="price">{{ price(item) }}</span
-              ><span
+            <div class="goods-meta flex items-center justify-between text-xs mt-1">
+              <span class="price font-bold text-primary">{{ price(item) }}</span>
+              <span
                 v-if="showStock && !isSoldOut(item)"
-                class="stock"
-                >{{ item.count == null || item.subItems?.length ? '有库存' : `剩余 ${item.count}` }}</span
+                class="stock text-[10px] text-muted-foreground"
               >
+                {{ item.count == null || item.subItems?.length ? '有库存' : `剩余 ${item.count}` }}
+              </span>
             </div>
           </div>
         </RouterLink>
       </div>
-    </NSpin>
+    </div>
   </BlockCard>
 </template>
 
 <style scoped>
-.goods-header,
-.goods-heading,
-.error-row,
-.goods-meta {
-  display: flex;
-  align-items: center;
-}
-.goods-header,
-.error-row,
-.goods-meta {
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-}
-.goods-heading {
-  gap: 7px;
-  font-weight: 600;
-}
 .goods-grid {
   container-type: inline-size;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.goods-item {
-  min-width: 0;
-  overflow: hidden;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
-  border-radius: var(--vtsuru-page-radius);
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg-muted);
-  text-decoration: none;
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
-}
-.goods-item:hover {
-  border-color: var(--vtsuru-primary, #18a058);
-  background: var(--vtsuru-bg-elevated);
-}
-.cover-wrap {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: var(--vtsuru-bg-elevated);
-}
-.cover,
-.cover :deep(img) {
-  width: 100%;
-  height: 100%;
-}
-.cover :deep(img) {
-  object-fit: cover;
-}
-.cover-empty {
-  display: grid;
-  place-items: center;
-  height: 100%;
-  color: var(--vtsuru-fg-muted);
-  font-size: 30px;
-}
-.stock-tag {
-  position: absolute;
-  right: 7px;
-  bottom: 7px;
-}
-.goods-copy {
-  display: grid;
-  gap: 6px;
-  padding: 10px;
-}
-.goods-copy strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-}
-.goods-copy p {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 0;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  line-height: 1.5;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-.price {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-primary, #18a058));
-  font-size: 13px;
-  font-weight: 700;
-}
-.stock {
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
 }
 @container (max-width: 640px) {
   .goods-grid {

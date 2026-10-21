@@ -11,21 +11,6 @@ import {
 } from '@vicons/fluent'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
 import { useDebounceFn, useElementSize } from '@vueuse/core'
-import {
-  NButton,
-  NCheckbox,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSpin,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTooltip,
-  useDialog,
-  useMessage,
-} from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
@@ -44,13 +29,20 @@ import {
 } from '@/shared/questionDisplay'
 import { createDefaultQuestionDisplaySetting } from '@/shared/questionDisplayPresets'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { copyToClipboard } from '@/shared/utils'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Spin } from '@/shared/ui/spin'
+import { Switch } from '@/shared/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { copyToClipboard, toast } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { useWebRTC } from '@/store/useRTC'
 
 const router = useRouter()
-const message = useMessage()
-const dialog = useDialog()
 const accountInfo = useAccount()
 const questionBox = useQuestionBox()
 const rtc = useWebRTC()
@@ -80,7 +72,6 @@ const obsUrl = computed(() =>
 const autoFitScale = computed(() => {
   const cardW = Math.max(100, savedCardSize.value.width)
   const cardH = Math.max(100, savedCardSize.value.height)
-  // 留出 48px padding 安全间隙
   const availW = Math.max(120, viewportWidth.value - 48)
   const availH = Math.max(120, viewportHeight.value - 48)
   const ratio = Math.min(availW / cardW, availH / cardH)
@@ -163,8 +154,6 @@ const syncScroll = useDebounceFn((progress: number) => {
 
 function resizePreview(event: PointerEvent) {
   if (!resizeStart) return
-  // 卡片在视口中央对称居中，把手位于右下角。从中心点到鼠标的水平/垂直距离即为半宽/半高。
-  // (event.clientX - centerX) * 2 / scale 精确实现 1:1 跟手，彻底消除居中展开导致的减半迟滞。
   const halfWOnScreen = Math.max(30, event.clientX - resizeStart.centerX)
   const halfHOnScreen = Math.max(30, event.clientY - resizeStart.centerY)
 
@@ -198,18 +187,8 @@ function startPreviewResize(event: PointerEvent) {
   window.addEventListener('pointerup', stopPreviewResize, { once: true })
 }
 
-function confirmLeave(): Promise<boolean> {
-  return new Promise((resolve) => {
-    dialog.warning({
-      title: '离开提问展示',
-      content: '有未保存的展示设置，离开后会丢失。',
-      positiveText: '离开',
-      negativeText: '继续编辑',
-      onPositiveClick: () => resolve(true),
-      onNegativeClick: () => resolve(false),
-      onClose: () => resolve(false),
-    })
-  })
+function confirmLeave(): boolean {
+  return window.confirm('有未保存的展示设置，离开后会丢失，确定要离开吗？')
 }
 
 function goBack() {
@@ -231,9 +210,9 @@ async function saveSettings() {
     if (response.code !== 200) throw new Error(response.message)
     settingDraft.value = payload
     accountInfo.value.settings.questionDisplay = structuredClone(toRaw(payload))
-    message.success('展示设置已保存并同步')
+    toast.success('展示设置已保存并同步')
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '保存失败')
+    toast.error(error instanceof Error ? error.message : '保存失败')
   } finally {
     saving.value = false
   }
@@ -260,7 +239,7 @@ function nextUnread() {
   if (next) {
     void showQuestion(next)
   } else {
-    message.info('当前筛选范围内没有更多未读提问')
+    toast.info('当前筛选范围内没有更多未读提问')
   }
 }
 
@@ -279,11 +258,11 @@ function toggleCurrentFavorite() {
 
 async function copyObsUrl() {
   if (!obsUrl.value) {
-    message.error('请先登录后再复制 OBS 链接')
+    toast.error('请先登录后再复制 OBS 链接')
     return
   }
   await copyToClipboard(obsUrl.value)
-  message.success('OBS 链接已复制')
+  toast.success('OBS 链接已复制')
 }
 
 // 键盘快捷键监听
@@ -293,8 +272,7 @@ function handleKeydown(event: KeyboardEvent) {
     target &&
     (target.tagName === 'INPUT' ||
       target.tagName === 'TEXTAREA' ||
-      target.isContentEditable ||
-      target.classList.contains('n-input__input-el'))
+      target.isContentEditable)
 
   if (isInput) return
 
@@ -367,541 +345,338 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main
-    class="display-workbench"
-    :class="{ 'is-settings-collapsed': isSettingsCollapsed }"
-  >
-    <QuestionDisplayQueue
-      v-model:search="searchKeyword"
-      v-model:tag="displayTag"
-      v-model:only-unread="onlyUnread"
-      v-model:only-favorite="onlyFavorite"
-      v-model:only-unreplied="onlyUnreplied"
-      :questions="filteredQuestions"
-      :current-id="questionBox.displayQuestion?.id"
-      :tags="questionBox.tags.map((item) => item.name)"
-      :loading="questionBox.isLoading"
-      @refresh="questionBox.GetRecieveQAInfo"
-      @show="showQuestion"
-      @clear="questionBox.clearCurrentQuestion"
-      @read="questionBox.read($event, true)"
-      @favorite="questionBox.favorite"
-    />
+  <TooltipProvider>
+    <main
+      class="display-workbench grid grid-cols-[minmax(300px,340px)_minmax(420px,1fr)_minmax(310px,350px)] w-full h-[100dvh] min-h-0 overflow-hidden text-foreground bg-background transition-all duration-200"
+      :class="{ 'grid-cols-[minmax(300px,340px)_minmax(420px,1fr)_0px]!': isSettingsCollapsed }"
+    >
+      <QuestionDisplayQueue
+        v-model:search="searchKeyword"
+        v-model:tag="displayTag"
+        v-model:only-unread="onlyUnread"
+        v-model:only-favorite="onlyFavorite"
+        v-model:only-unreplied="onlyUnreplied"
+        :questions="filteredQuestions"
+        :current-id="questionBox.displayQuestion?.id"
+        :tags="questionBox.tags.map((item) => item.name)"
+        :loading="questionBox.isLoading"
+        @refresh="questionBox.GetRecieveQAInfo"
+        @show="showQuestion"
+        @clear="questionBox.clearCurrentQuestion"
+        @read="questionBox.read($event, true)"
+        @favorite="questionBox.favorite"
+      />
 
-    <section class="stage-panel">
-      <header class="stage-toolbar">
-        <div class="stage-title">
-          <NButton
-            quaternary
-            circle
-            aria-label="返回提问箱管理"
-            @click="goBack"
-          >
-            <template #icon><NIcon :component="ArrowLeft24Regular" /></template>
-          </NButton>
-          <div>
-            <strong>展示展板</strong>
-            <span class="stage-meta-dims">
-              {{ savedCardSize.width }} × {{ savedCardSize.height }}
-              <em class="scale-hint">(自适应 {{ Math.round(autoFitScale * 100) }}%)</em>
-            </span>
+      <section class="stage-panel grid grid-rows-[auto_minmax(0,1fr)_auto] min-w-0 min-h-0">
+        <header class="stage-toolbar flex items-center justify-between min-h-14 px-4 bg-card border-b border-border">
+          <div class="stage-title flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-8"
+              aria-label="返回提问箱管理"
+              @click="goBack"
+            >
+              <component :is="ArrowLeft24Regular" class="size-4" />
+            </Button>
+            <div class="flex flex-col">
+              <strong class="text-sm font-semibold">展示展板</strong>
+              <span class="stage-meta-dims text-xs text-muted-foreground font-mono">
+                {{ savedCardSize.width }} × {{ savedCardSize.height }}
+                <em class="scale-hint not-italic opacity-80">(自适应 {{ Math.round(autoFitScale * 100) }}%)</em>
+              </span>
+            </div>
           </div>
-        </div>
 
-        <div class="stage-toolbar-actions">
-          <NButton
-            secondary
-            size="small"
-            aria-label="复制 OBS 浏览器源链接"
-            @click="copyObsUrl"
-          >
-            <template #icon><NIcon :component="Copy24Regular" /></template>
-            复制 OBS 链接
-          </NButton>
+          <div class="stage-toolbar-actions flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              class="text-xs flex items-center gap-1.5 h-8"
+              aria-label="复制 OBS 浏览器源链接"
+              @click="copyObsUrl"
+            >
+              <component :is="Copy24Regular" class="size-3.5" />
+              复制 OBS 链接
+            </Button>
 
-          <NTag
-            :type="questionBox.displayQuestion ? 'success' : 'default'"
-            :bordered="false"
-            size="small"
-          >
-            {{ questionBox.displayQuestion ? '正在展示' : '画面已清空' }}
-          </NTag>
+            <Badge
+              :variant="questionBox.displayQuestion ? 'default' : 'secondary'"
+              class="text-xs h-6 px-2"
+            >
+              {{ questionBox.displayQuestion ? '正在展示' : '画面已清空' }}
+            </Badge>
 
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                circle
-                quaternary
-                size="small"
-                :aria-label="isSettingsCollapsed ? '展开设置面板' : '折叠设置面板'"
-                @click="isSettingsCollapsed = !isSettingsCollapsed"
-              >
-                <template #icon>
-                  <NIcon :component="isSettingsCollapsed ? PanelRight24Regular : PanelRightContract24Regular" />
-                </template>
-              </NButton>
-            </template>
-            {{ isSettingsCollapsed ? '展开展示设置' : '折叠展示设置' }}
-          </NTooltip>
-        </div>
-      </header>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="size-8"
+                  :aria-label="isSettingsCollapsed ? '展开设置面板' : '折叠设置面板'"
+                  @click="isSettingsCollapsed = !isSettingsCollapsed"
+                >
+                  <component :is="isSettingsCollapsed ? PanelRight24Regular : PanelRightContract24Regular" class="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{{ isSettingsCollapsed ? '展开展示设置' : '折叠展示设置' }}</TooltipContent>
+            </Tooltip>
+          </div>
+        </header>
 
-      <div
-        ref="stageViewportRef"
-        class="stage-viewport"
-      >
         <div
-          class="preview-frame-shell"
-          :style="previewShellStyle"
+          ref="stageViewportRef"
+          class="stage-viewport relative flex-1 min-h-0 p-6 flex items-center justify-center overflow-hidden bg-muted/20"
         >
           <div
-            class="preview-frame"
-            :style="previewStyle"
+            class="preview-frame-shell relative flex items-center justify-center transition-all duration-75"
+            :style="previewShellStyle"
           >
-            <QuestionDisplayCard
-              :question="questionBox.displayQuestion"
-              :setting="previewSetting"
-              :status="questionBox.displayQuestion ? 'ready' : 'empty'"
-              @scroll="syncScroll"
-            />
-          </div>
-          <NTooltip>
-            <template #trigger>
-              <button
-                type="button"
-                class="preview-resize-handle"
-                aria-label="拖动调整 OBS 画布大小"
-                @pointerdown="startPreviewResize"
-              />
-            </template>
-            拖动调整 OBS 画布大小
-          </NTooltip>
-        </div>
-      </div>
-
-      <footer class="stage-actions">
-        <div class="actions-left">
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                circle
-                secondary
-                aria-label="上一条提问 (快捷键 ← / K)"
-                @click="adjacentQuestion(-1)"
-              >
-                <template #icon><NIcon :component="ArrowLeft24Regular" /></template>
-              </NButton>
-            </template>
-            上一条提问 (快捷键 ← / K)
-          </NTooltip>
-
-          <NButton
-            type="error"
-            secondary
-            :disabled="!questionBox.displayQuestion"
-            @click="questionBox.clearCurrentQuestion"
-          >
-            <template #icon><NIcon :component="Dismiss24Regular" /></template>
-            清空 (Space)
-          </NButton>
-
-          <NButton
-            type="primary"
-            @click="nextUnread"
-          >
-            下一条未读 (N)
-            <template #icon><NIcon :component="ArrowRight24Regular" /></template>
-          </NButton>
-
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                circle
-                secondary
-                aria-label="下一条提问 (快捷键 → / J)"
-                @click="adjacentQuestion(1)"
-              >
-                <template #icon><NIcon :component="ArrowRight24Regular" /></template>
-              </NButton>
-            </template>
-            下一条提问 (快捷键 → / J)
-          </NTooltip>
-
-          <span class="action-separator" />
-
-          <NButton
-            secondary
-            :disabled="!questionBox.displayQuestion || questionBox.displayQuestion.isReaded"
-            @click="markCurrentRead"
-          >
-            <template #icon><NIcon :component="Checkmark24Regular" /></template>
-            标已读 (R)
-          </NButton>
-
-          <NButton
-            secondary
-            :disabled="!questionBox.displayQuestion"
-            @click="toggleCurrentFavorite"
-          >
-            <template #icon>
-              <NIcon :component="questionBox.displayQuestion?.isFavorite ? Heart : HeartOutline" />
-            </template>
-            {{ questionBox.displayQuestion?.isFavorite ? '已收藏' : '收藏' }} (F)
-          </NButton>
-        </div>
-
-        <div class="actions-right">
-          <NCheckbox v-model:checked="autoMarkRead">
-            展示时自动标已读
-          </NCheckbox>
-        </div>
-      </footer>
-    </section>
-
-    <aside
-      v-show="!isSettingsCollapsed"
-      class="settings-panel"
-    >
-      <header class="settings-heading">
-        <div>
-          <strong>展示设置</strong>
-          <span :class="{ 'has-unsaved': hasUnsavedChanges }">
-            {{ hasUnsavedChanges ? '有未保存修改' : '已同步' }}
-          </span>
-        </div>
-        <NButton
-          type="primary"
-          size="small"
-          :loading="saving"
-          :disabled="!hasUnsavedChanges"
-          @click="saveSettings"
-        >
-          <template #icon><NIcon :component="Save24Regular" /></template>
-          保存 (Ctrl+S)
-        </NButton>
-      </header>
-
-      <div class="settings-scroll">
-        <NSpin :show="!settingsReady">
-          <NTabs
-            type="line"
-            animated
-            pane-style="padding: 14px 0 0;"
-          >
-            <NTabPane
-              name="style"
-              tab="外观"
+            <div
+              class="preview-frame origin-center transition-transform duration-75"
+              :style="previewStyle"
             >
+              <QuestionDisplayCard
+                :question="questionBox.displayQuestion"
+                :setting="previewSetting"
+                :status="questionBox.displayQuestion ? 'ready' : 'empty'"
+                @scroll="syncScroll"
+              />
+            </div>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <button
+                  type="button"
+                  class="preview-resize-handle absolute -right-2 -bottom-2 size-4 rounded-full bg-primary border-2 border-background shadow-xs cursor-nwse-resize z-30 transition hover:scale-125"
+                  aria-label="拖动调整 OBS 画布大小"
+                  @pointerdown="startPreviewResize"
+                />
+              </TooltipTrigger>
+              <TooltipContent>拖动调整 OBS 画布大小</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        <footer class="stage-actions flex items-center justify-between p-3 bg-card border-t border-border text-xs">
+          <div class="actions-left flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  class="size-8"
+                  aria-label="上一条提问 (快捷键 ← / K)"
+                  @click="adjacentQuestion(-1)"
+                >
+                  <component :is="ArrowLeft24Regular" class="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>上一条提问 (快捷键 ← / K)</TooltipContent>
+            </Tooltip>
+
+            <Button
+              variant="outline"
+              size="sm"
+              class="h-8 text-xs text-destructive hover:bg-destructive/10 flex items-center gap-1"
+              :disabled="!questionBox.displayQuestion"
+              @click="questionBox.clearCurrentQuestion"
+            >
+              <component :is="Dismiss24Regular" class="size-3.5" />
+              清空 (Space)
+            </Button>
+
+            <Button
+              size="sm"
+              class="h-8 text-xs flex items-center gap-1"
+              @click="nextUnread"
+            >
+              下一条未读 (N)
+              <component :is="ArrowRight24Regular" class="size-3.5" />
+            </Button>
+
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  class="size-8"
+                  aria-label="下一条提问 (快捷键 → / J)"
+                  @click="adjacentQuestion(1)"
+                >
+                  <component :is="ArrowRight24Regular" class="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>下一条提问 (快捷键 → / J)</TooltipContent>
+            </Tooltip>
+
+            <span class="w-px h-4 bg-border mx-1" />
+
+            <Button
+              variant="outline"
+              size="sm"
+              class="h-8 text-xs flex items-center gap-1"
+              :disabled="!questionBox.displayQuestion || questionBox.displayQuestion.isReaded"
+              @click="markCurrentRead"
+            >
+              <component :is="Checkmark24Regular" class="size-3.5" />
+              标已读 (R)
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              class="h-8 text-xs flex items-center gap-1"
+              :class="{ 'text-destructive': questionBox.displayQuestion?.isFavorite }"
+              :disabled="!questionBox.displayQuestion"
+              @click="toggleCurrentFavorite"
+            >
+              <component :is="questionBox.displayQuestion?.isFavorite ? Heart : HeartOutline" class="size-3.5" />
+              {{ questionBox.displayQuestion?.isFavorite ? '已收藏' : '收藏' }} (F)
+            </Button>
+          </div>
+
+          <div class="actions-right flex items-center gap-2">
+            <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+              <Checkbox v-model:checked="autoMarkRead" />
+              <span>展示时自动标已读</span>
+            </label>
+          </div>
+        </footer>
+      </section>
+
+      <aside
+        v-show="!isSettingsCollapsed"
+        class="settings-panel flex flex-col h-full min-h-0 bg-card border-l border-border"
+      >
+        <header class="settings-heading flex items-center justify-between min-h-14 px-4 border-b border-border">
+          <div class="flex items-center gap-2">
+            <strong class="text-sm font-semibold">展示设置</strong>
+            <span
+              class="text-[11px] font-mono px-1.5 py-0.5 rounded"
+              :class="hasUnsavedChanges ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground'"
+            >
+              {{ hasUnsavedChanges ? '未保存' : '已同步' }}
+            </span>
+          </div>
+          <Button
+            size="sm"
+            class="h-7 text-xs flex items-center gap-1"
+            :disabled="!hasUnsavedChanges || saving"
+            @click="saveSettings"
+          >
+            <component :is="Save24Regular" class="size-3.5" />
+            保存 (Ctrl+S)
+          </Button>
+        </header>
+
+        <div class="settings-scroll flex-1 min-h-0 overflow-y-auto p-4">
+          <div v-if="!settingsReady" class="py-16 flex justify-center">
+            <Spin />
+          </div>
+          <Tabs
+            v-else
+            default-value="style"
+            class="w-full"
+          >
+            <TabsList class="w-full grid grid-cols-2">
+              <TabsTrigger value="style" class="text-xs">外观</TabsTrigger>
+              <TabsTrigger value="obs" class="text-xs">OBS</TabsTrigger>
+            </TabsList>
+            <TabsContent value="style" class="pt-3">
               <QuestionDisplayStylePanel
                 v-if="settingDraft"
                 v-model="settingDraft"
               />
-            </NTabPane>
-            <NTabPane
-              name="obs"
-              tab="OBS"
-            >
-              <div class="obs-settings">
-                <label>
-                  <span>OBS 浏览器源链接</span>
-                  <NInput
+            </TabsContent>
+            <TabsContent value="obs" class="pt-3 space-y-4 text-xs">
+              <div class="space-y-1.5">
+                <label class="font-medium text-foreground">OBS 浏览器源链接</label>
+                <div class="flex gap-1.5">
+                  <Input
                     readonly
-                    :value="obsUrl"
+                    :model-value="obsUrl"
                     placeholder="登录后可复制 OBS 链接"
+                    class="h-8 text-xs font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    class="size-8 shrink-0"
+                    aria-label="复制 OBS 链接"
+                    @click="copyObsUrl"
                   >
-                    <template #suffix>
-                      <NButton
-                        text
-                        aria-label="复制 OBS 链接"
-                        @click="copyObsUrl"
-                      >
-                        <template #icon><NIcon :component="Copy24Regular" /></template>
-                      </NButton>
-                    </template>
-                  </NInput>
-                </label>
-
-                <div class="size-fields">
-                  <label>
-                    <span>画布宽度 (px)</span>
-                    <NInputNumber
-                      v-model:value="savedCardSize.width"
-                      :min="240"
-                      :max="3840"
-                    />
-                  </label>
-                  <label>
-                    <span>画布高度 (px)</span>
-                    <NInputNumber
-                      v-model:value="savedCardSize.height"
-                      :min="180"
-                      :max="2160"
-                    />
-                  </label>
-                </div>
-
-                <div class="size-presets">
-                  <NButton
-                    size="small"
-                    secondary
-                    @click="savedCardSize = { width: 720, height: 480 }"
-                  >
-                    3:2 (720×480)
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
-                    @click="savedCardSize = { width: 800, height: 450 }"
-                  >
-                    16:9 (800×450)
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
-                    @click="savedCardSize = { width: 600, height: 600 }"
-                  >
-                    1:1 (600×600)
-                  </NButton>
-                </div>
-
-                <div
-                  v-if="settingDraft"
-                  class="sync-setting"
-                >
-                  <span>
-                    <strong>实时滚动同步 (WebRTC)</strong>
-                    <small>{{ rtcStatusText }}</small>
-                  </span>
-                  <NSwitch v-model:value="settingDraft.syncScroll" />
+                    <component :is="Copy24Regular" class="size-3.5" />
+                  </Button>
                 </div>
               </div>
-            </NTabPane>
-          </NTabs>
-        </NSpin>
-      </div>
-    </aside>
-  </main>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <label class="font-medium text-foreground">画布宽度 (px)</label>
+                  <NInputNumber
+                    v-model:value="savedCardSize.width"
+                    :min="240"
+                    :max="3840"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="font-medium text-foreground">画布高度 (px)</label>
+                  <NInputNumber
+                    v-model:value="savedCardSize.height"
+                    :min="180"
+                    :max="2160"
+                  />
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-7 text-[11px]"
+                  @click="savedCardSize = { width: 720, height: 480 }"
+                >
+                  3:2 (720×480)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-7 text-[11px]"
+                  @click="savedCardSize = { width: 800, height: 450 }"
+                >
+                  16:9 (800×450)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-7 text-[11px]"
+                  @click="savedCardSize = { width: 600, height: 600 }"
+                >
+                  1:1 (600×600)
+                </Button>
+              </div>
+
+              <div
+                v-if="settingDraft"
+                class="flex items-center justify-between p-3 rounded-lg border border-border/80 bg-muted/30"
+              >
+                <div class="flex flex-col">
+                  <strong class="text-xs">实时滚动同步 (WebRTC)</strong>
+                  <small class="text-[11px] text-muted-foreground">{{ rtcStatusText }}</small>
+                </div>
+                <Switch v-model:checked="settingDraft.syncScroll" />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </aside>
+    </main>
+  </TooltipProvider>
 </template>
 
 <style scoped>
 .display-workbench {
-  display: grid;
-  grid-template-columns: minmax(300px, 340px) minmax(420px, 1fr) minmax(310px, 350px);
-  grid-template-rows: minmax(0, 1fr);
   width: 100%;
   height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg);
-  transition: grid-template-columns 0.2s ease;
-}
-
-.display-workbench.is-settings-collapsed {
-  grid-template-columns: minmax(300px, 340px) minmax(420px, 1fr) 0px;
-}
-
-.stage-panel {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  min-width: 0;
-  min-height: 0;
-}
-
-.stage-toolbar,
-.settings-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-width: 0;
-  min-height: 56px;
-  padding: 8px 16px;
-  background: var(--vtsuru-bg-elevated);
-  border-bottom: 1px solid var(--vtsuru-border);
-}
-
-.stage-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stage-title div {
-  display: flex;
-  flex-direction: column;
-}
-
-.stage-title strong {
-  font-size: 14px;
-}
-
-.stage-meta-dims {
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
-}
-
-.scale-hint {
-  margin-left: 4px;
-  font-style: normal;
-  opacity: 0.8;
-}
-
-.stage-toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.stage-viewport {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  overflow: hidden;
-  background-image: radial-gradient(color-mix(in srgb, var(--vtsuru-fg) 8%, transparent) 1px, transparent 1px);
-  background-size: 16px 16px;
-}
-
-.preview-frame-shell {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-
-.preview-frame {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: top left;
-  box-shadow: 0 12px 36px rgb(0 0 0 / 25%);
-}
-
-.preview-resize-handle {
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 14px;
-  height: 14px;
-  padding: 0;
-  background: var(--vtsuru-brand);
-  border: 2px solid var(--vtsuru-bg);
-  border-radius: 50%;
-  cursor: se-resize;
-  transition: transform 0.15s ease;
-}
-
-.preview-resize-handle:hover {
-  transform: scale(1.3);
-}
-
-.stage-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  background: var(--vtsuru-bg-elevated);
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.actions-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.actions-right {
-  display: flex;
-  align-items: center;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.action-separator {
-  width: 1px;
-  height: 20px;
-  margin: 0 4px;
-  background: var(--vtsuru-border);
-}
-
-.settings-panel {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  min-width: 0;
-  min-height: 0;
-  background: var(--vtsuru-bg-elevated);
-  border-left: 1px solid var(--vtsuru-border);
-}
-
-.settings-heading div {
-  display: flex;
-  flex-direction: column;
-}
-
-.settings-heading strong {
-  font-size: 14px;
-}
-
-.settings-heading span {
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
-}
-
-.settings-heading span.has-unsaved {
-  color: #eab308;
-}
-
-.settings-scroll {
-  padding: 14px 16px;
-  overflow-y: auto;
-}
-
-.obs-settings {
-  display: grid;
-  gap: 16px;
-}
-
-.obs-settings label {
-  display: grid;
-  gap: 6px;
-  color: var(--vtsuru-fg);
-  font-size: 12px;
-}
-
-.size-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.size-presets {
-  display: flex;
-  gap: 6px;
-}
-
-.sync-setting {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px;
-  background: var(--vtsuru-bg-muted);
-  border-radius: 8px;
-}
-
-.sync-setting span {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.sync-setting strong {
-  font-size: 13px;
-}
-
-.sync-setting small {
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
 }
 </style>

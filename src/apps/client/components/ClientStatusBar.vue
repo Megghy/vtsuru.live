@@ -9,12 +9,12 @@ import {
   PlugConnected20Regular,
   ThumbLike20Regular,
 } from '@vicons/fluent'
-import { NButton, NDivider, NFlex, NIcon, NTag, NText, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -86,69 +86,74 @@ function toggleGiftWindow() {
   <footer class="client-status-bar">
     <!-- 左侧：连接与采集源状态 -->
     <div class="status-bar-section status-bar-section--left">
-      <!-- 弹幕源连接状态 -->
-      <NTooltip placement="top-start">
-        <template #trigger>
-          <div
-            class="status-badge"
-            :class="{ 'is-connected': isDanmakuConnected, 'is-disconnected': !isDanmakuConnected }"
-            @click="goToFetcher"
-          >
-            <span
-              class="status-indicator-dot"
-              :class="{ pulse: isDanmakuConnected }"
-            />
-            <span class="status-badge-text">{{ danmakuStatusText }}</span>
-          </div>
-        </template>
-        <div>
-          <div>
-            <strong>弹幕连接状态：{{ danmakuClient.connectionStatus }}</strong>
-          </div>
-          <div style="font-size: 11px; opacity: 0.85">
-            {{ isDanmakuConnected ? '正在实时接收直播间事件流' : '点击前往 EventFetcher / 弹幕设置' }}
-          </div>
-        </div>
-      </NTooltip>
+      <TooltipProvider>
+        <!-- 弹幕源连接状态 -->
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div
+              class="status-badge"
+              :class="{ 'is-connected': isDanmakuConnected, 'is-disconnected': !isDanmakuConnected }"
+              @click="goToFetcher"
+            >
+              <span
+                class="status-indicator-dot"
+                :class="{ pulse: isDanmakuConnected }"
+              />
+              <span class="status-badge-text">{{ danmakuStatusText }}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" align="start">
+            <div>
+              <div>
+                <strong>弹幕连接状态：{{ danmakuClient.connectionStatus }}</strong>
+              </div>
+              <div style="font-size: 11px; opacity: 0.85">
+                {{ isDanmakuConnected ? '正在实时接收直播间事件流' : '点击前往 EventFetcher / 弹幕设置' }}
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
 
-      <!-- EventFetcher 服务状态 -->
-      <NTooltip placement="top">
-        <template #trigger>
-          <div
-            class="status-item-clickable"
-            @click="goToFetcher"
-          >
-            <span
-              class="mini-dot"
-              :style="{
-                background:
-                  webfetcher.state === 'connected'
-                    ? 'var(--vtsuru-success, #10b981)'
-                    : 'var(--vtsuru-fg-muted, #9ca3af)',
-              }"
-            />
-            <span class="status-text-subtle">上报服务</span>
-          </div>
-        </template>
-        <div>EventFetcher 服务：{{ webfetcher.state === 'connected' ? '运行中' : '未连接' }}</div>
-      </NTooltip>
+        <!-- EventFetcher 服务状态 -->
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div
+              class="status-item-clickable"
+              @click="goToFetcher"
+            >
+              <span
+                class="mini-dot"
+                :style="{
+                  background:
+                    webfetcher.state === 'connected'
+                      ? 'var(--vtsuru-success, #10b981)'
+                      : 'var(--vtsuru-fg-muted, #9ca3af)',
+                }"
+              />
+              <span class="status-text-subtle">上报服务</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <div>EventFetcher 服务：{{ webfetcher.state === 'connected' ? '运行中' : '未连接' }}</div>
+          </TooltipContent>
+        </Tooltip>
 
-      <!-- 本地 RPC 外部接入状态 -->
-      <NTooltip
-        v-if="rpcServer.running && rpcServer.connectionCount > 0"
-        placement="top"
-      >
-        <template #trigger>
-          <div class="status-badge status-badge--rpc">
-            <NIcon
-              :component="PlugConnected20Regular"
-              class="badge-icon"
-            />
-            <span>{{ rpcServer.connectionCount }} 外部接入</span>
-          </div>
-        </template>
-        <div>已有 {{ rpcServer.connectionCount }} 个外部网页/OBS 正在通过本地 RPC 订阅弹幕</div>
-      </NTooltip>
+        <!-- 本地 RPC 外部接入状态 -->
+        <Tooltip v-if="rpcServer.running && rpcServer.connectionCount > 0">
+          <TooltipTrigger as-child>
+            <div class="status-badge status-badge--rpc">
+              <component
+                :is="PlugConnected20Regular"
+                class="badge-icon w-3.5 h-3.5"
+              />
+              <span>{{ rpcServer.connectionCount }} 外部接入</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <div>已有 {{ rpcServer.connectionCount }} 个外部网页/OBS 正在通过本地 RPC 订阅弹幕</div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
 
     <!-- 中间：实时直播互动数据指标 (点击可一键前往中控台) -->
@@ -157,19 +162,15 @@ function toggleGiftWindow() {
       title="点击前往「中控台」查看全景大盘"
       @click="goToDashboard"
     >
-      <NFlex
-        align="center"
-        :size="14"
-        class="stats-flex"
-      >
+      <div class="stats-flex flex items-center gap-3.5">
         <!-- 观看/在看人数 -->
         <div
           class="stat-chip"
           title="累计观看人次"
         >
-          <NIcon
-            :component="Eye20Regular"
-            class="stat-chip-icon"
+          <component
+            :is="Eye20Regular"
+            class="stat-chip-icon w-3.5 h-3.5"
           />
           <span class="stat-chip-value">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
         </div>
@@ -179,9 +180,9 @@ function toggleGiftWindow() {
           class="stat-chip"
           title="本场累计点赞数"
         >
-          <NIcon
-            :component="ThumbLike20Regular"
-            class="stat-chip-icon"
+          <component
+            :is="ThumbLike20Regular"
+            class="stat-chip-icon w-3.5 h-3.5"
           />
           <span class="stat-chip-value">{{ formatStatCount(liveStats.likeCount) }}</span>
         </div>
@@ -191,9 +192,9 @@ function toggleGiftWindow() {
           class="stat-chip"
           title="在线观众人数"
         >
-          <NIcon
-            :component="PeopleCommunity20Regular"
-            class="stat-chip-icon"
+          <component
+            :is="PeopleCommunity20Regular"
+            class="stat-chip-icon w-3.5 h-3.5"
           />
           <span class="stat-chip-value">{{ formatStatCount(liveStats.onlineCount) }} 在线</span>
         </div>
@@ -203,19 +204,19 @@ function toggleGiftWindow() {
           class="stat-chip stat-chip--income"
           title="本场总收益（打赏 + SC + 大航海）"
         >
-          <NIcon
-            :component="Payment20Regular"
-            class="stat-chip-icon"
+          <component
+            :is="Payment20Regular"
+            class="stat-chip-icon w-3.5 h-3.5"
           />
           <span class="stat-chip-value">¥ {{ isIncomeHidden ? '***' : formatIncome(liveStats.totalIncome) }}</span>
         </div>
 
-        <NIcon
-          :component="Board20Regular"
-          class="stat-jump-icon"
+        <component
+          :is="Board20Regular"
+          class="stat-jump-icon w-3.5 h-3.5"
           title="进入中控台"
         />
-      </NFlex>
+      </div>
     </div>
 
     <!-- 右侧：浮窗快捷状态与一键开关 -->
@@ -228,9 +229,9 @@ function toggleGiftWindow() {
         :title="danmakuWindow.isDanmakuWindowOpen ? '弹幕浮窗运行中 (点击关闭)' : '弹幕浮窗已关闭 (点击打开)'"
         @click="toggleDanmakuWindow"
       >
-        <NIcon
-          :component="Chat20Regular"
-          class="toggle-btn-icon"
+        <component
+          :is="Chat20Regular"
+          class="toggle-btn-icon w-3.5 h-3.5"
         />
         <span class="toggle-btn-text">弹幕浮窗</span>
         <span
@@ -249,9 +250,9 @@ function toggleGiftWindow() {
         :title="giftWindow.isGiftWindowOpen ? '礼物与排行浮窗运行中 (点击关闭)' : '礼物与排行浮窗已关闭 (点击打开)'"
         @click="toggleGiftWindow"
       >
-        <NIcon
-          :component="Gift20Regular"
-          class="toggle-btn-icon"
+        <component
+          :is="Gift20Regular"
+          class="toggle-btn-icon w-3.5 h-3.5"
         />
         <span class="toggle-btn-text">礼物排行</span>
         <span

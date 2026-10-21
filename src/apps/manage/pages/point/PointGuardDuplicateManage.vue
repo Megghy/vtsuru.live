@@ -1,27 +1,6 @@
 <script setup lang="ts">
 import { ArrowSync24Regular, Delete24Regular, Eye24Regular } from '@vicons/fluent'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDataTable,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSpin,
-  NSwitch,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type {
@@ -40,6 +19,26 @@ import {
 } from '@/api/generated/point/point'
 import { unwrapOk } from '@/api/query'
 import { formatPoints, formatTime } from '@/apps/manage/composables/formatters'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Spin } from '@/shared/ui/spin'
+import { Switch } from '@/shared/ui/switch'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/table'
+import { Tag } from '@/shared/ui/tag'
+import { useMessage } from '@/shared/utils'
 
 interface DuplicateUserRow extends ResponsePointGuardDuplicateUserModel {
   previewPoints: number
@@ -73,6 +72,10 @@ const scanResult = ref<ResponsePointGuardDuplicateScanModel | null>(null)
 const detailResult = ref<ResponsePointGuardDuplicateDetailModel | null>(null)
 const applyResult = ref<ResponsePointGuardDuplicateApplyResult | null>(null)
 const selectedRowKeys = ref<string[]>([])
+
+// 分页
+const currentPage = ref(1)
+const pageSize = 10
 
 const currentPointValues = computed<RequestPointGuardDuplicatePointValues>(() => ({
   jianzhang: accountInfo.value?.settings?.point?.jianzhangPoint ?? 0,
@@ -114,6 +117,34 @@ const rows = computed<DuplicateUserRow[]>(() =>
     previewPoints: calcEstimatedPoints(user.levelCounts),
   })),
 )
+
+const paginatedRows = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return rows.value.slice(start, start + pageSize)
+})
+
+const totalPages = computed(() => Math.ceil(rows.value.length / pageSize) || 1)
+
+const isAllSelected = computed(() => {
+  if (rows.value.length === 0) return false
+  return rows.value.every((r) => selectedRowKeys.value.includes(r.guardOUId))
+})
+
+function toggleSelectAll(checked: boolean) {
+  if (checked) {
+    selectedRowKeys.value = rows.value.map((r) => r.guardOUId)
+  } else {
+    selectedRowKeys.value = []
+  }
+}
+
+function toggleSelectRow(key: string, checked: boolean) {
+  if (checked) {
+    if (!selectedRowKeys.value.includes(key)) selectedRowKeys.value.push(key)
+  } else {
+    selectedRowKeys.value = selectedRowKeys.value.filter((k) => k !== key)
+  }
+}
 
 const selectedUsers = computed(() => {
   const selected = new Set(selectedRowKeys.value)
@@ -161,6 +192,7 @@ async function scanDuplicates() {
     )
     scanResult.value = result
     selectedRowKeys.value = result.users.map((user) => user.guardOUId)
+    currentPage.value = 1
     message.success(`扫描完成，共 ${result.duplicatedUserCount} 位用户存在重复上舰`)
   } catch (error) {
     console.error(error)
@@ -243,420 +275,332 @@ async function applyCleanup(applyAll: boolean) {
     applyLoading.value = false
   }
 }
-
-const columns: DataTableColumns<DuplicateUserRow> = [
-  {
-    type: 'selection',
-  },
-  {
-    title: '用户',
-    key: 'user',
-    render: (row) =>
-      h(
-        NFlex,
-        { vertical: true, size: 2 },
-        {
-          default: () => [
-            h(NText, { strong: true }, { default: () => row.info?.name || '未知用户' }),
-            h(NText, { depth: 3 }, { default: () => getUserSecondaryText(row) }),
-          ],
-        },
-      ),
-  },
-  {
-    title: '组数',
-    key: 'duplicateGroups',
-    width: 80,
-  },
-  {
-    title: '事件重复',
-    key: 'duplicateEventCount',
-    width: 100,
-  },
-  {
-    title: 'Live 重复',
-    key: 'duplicateLiveCount',
-    width: 100,
-  },
-  {
-    title: '影响场次',
-    key: 'affectedLiveCount',
-    width: 100,
-  },
-  {
-    title: '预计扣分',
-    key: 'previewPoints',
-    width: 120,
-    render: (row) => formatPoints(row.previewPoints),
-  },
-  {
-    title: '时间范围',
-    key: 'timeRange',
-    width: 260,
-    render: (row) => `${formatTime(row.firstEventAt)} ~ ${formatTime(row.lastEventAt)}`,
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 90,
-    render: (row) =>
-      h(
-        NButton,
-        {
-          size: 'small',
-          type: 'info',
-          onClick: () => openDetail(row),
-        },
-        {
-          icon: () => h(NIcon, { component: Eye24Regular }),
-          default: () => '详情',
-        },
-      ),
-  },
-]
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="16"
-  >
-    <NAlert
-      type="info"
-      :show-icon="false"
-    >
-      默认会同时扣除重复积分、删除重复事件，并清理 live
-      历史里的重复上舰。你可以在执行前取消其中任意动作，也可以切换为手动三档积分值预览和执行。
-    </NAlert>
+  <div class="flex flex-col gap-4">
+    <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+      <AlertDescription class="text-xs">
+        默认会同时扣除重复积分、删除重复事件，并清理 live
+        历史里的重复上舰。你可以在执行前取消其中任意动作，也可以切换为手动三档积分值预览和执行。
+      </AlertDescription>
+    </Alert>
 
-    <NCard
-      size="small"
-      title="扫描条件"
-    >
-      <NFlex
-        wrap
-        :size="12"
-        align="center"
-      >
-        <NText depth="3"> 最近 </NText>
-        <NInputNumber
-          v-model:value="dayCount"
-          :min="1"
-          :max="90"
-          style="width: 110px"
-        />
-        <NText depth="3"> 天 </NText>
-        <NText depth="3"> 窗口 </NText>
-        <NInputNumber
-          v-model:value="windowSeconds"
-          :min="1"
-          :max="30"
-          style="width: 110px"
-        />
-        <NText depth="3"> 秒 </NText>
-        <NSwitch v-model:value="includeLiving" />
-        <NText depth="3"> 包含正在直播 </NText>
-        <NSwitch v-model:value="includeFinished" />
-        <NText depth="3"> 包含历史直播 </NText>
-        <NSwitch v-model:value="excludeFixed" />
-        <NText depth="3"> 排除已处理 </NText>
-        <NButton
-          type="primary"
-          :loading="scanLoading"
-          @click="scanDuplicates"
-        >
-          <template #icon>
-            <NIcon :component="ArrowSync24Regular" />
-          </template>
-          扫描重复上舰
-        </NButton>
-      </NFlex>
-    </NCard>
+    <!-- 扫描条件 -->
+    <Card class="border border-border">
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">扫描条件</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-0">
+        <div class="flex items-center gap-3 flex-wrap text-xs">
+          <span class="text-muted-foreground">最近</span>
+          <NInputNumber v-model="dayCount" :min="1" :max="90" class="w-20" />
+          <span class="text-muted-foreground">天</span>
+          <span class="text-muted-foreground ml-2">窗口</span>
+          <NInputNumber v-model="windowSeconds" :min="1" :max="30" class="w-20" />
+          <span class="text-muted-foreground">秒</span>
 
-    <NCard
-      size="small"
-      title="扣分设置"
-    >
-      <NFlex
-        vertical
-        :size="12"
-      >
-        <NRadioGroup
-          v-model:value="pointMode"
-          name="point-mode"
-        >
-          <NRadioButton value="current"> 按当前积分设置 </NRadioButton>
-          <NRadioButton value="manual"> 手动三档设置 </NRadioButton>
-        </NRadioGroup>
-        <NFlex
-          wrap
-          :size="12"
-          align="center"
-        >
-          <NText depth="3"> 舰长 </NText>
+          <div class="flex items-center gap-1.5 ml-2">
+            <Switch v-model:checked="includeLiving" />
+            <span class="text-muted-foreground">包含正在直播</span>
+          </div>
+          <div class="flex items-center gap-1.5 ml-2">
+            <Switch v-model:checked="includeFinished" />
+            <span class="text-muted-foreground">包含历史直播</span>
+          </div>
+          <div class="flex items-center gap-1.5 ml-2">
+            <Switch v-model:checked="excludeFixed" />
+            <span class="text-muted-foreground">排除已处理</span>
+          </div>
+
+          <Button size="sm" class="ml-auto gap-1.5" :disabled="scanLoading" @click="scanDuplicates">
+            <ArrowSync24Regular class="size-3.5" :class="{ 'animate-spin': scanLoading }" />
+            {{ scanLoading ? '扫描中...' : '扫描重复上舰' }}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- 扣分设置 -->
+    <Card class="border border-border">
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">扣分设置</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-0 space-y-3">
+        <div class="flex items-center gap-2">
+          <Button
+            size="xs"
+            :variant="pointMode === 'current' ? 'default' : 'outline'"
+            @click="pointMode = 'current'"
+          >
+            按当前积分设置
+          </Button>
+          <Button
+            size="xs"
+            :variant="pointMode === 'manual' ? 'default' : 'outline'"
+            @click="pointMode = 'manual'"
+          >
+            手动三档设置
+          </Button>
+        </div>
+
+        <div class="flex items-center gap-3 flex-wrap text-xs">
+          <span class="text-muted-foreground">舰长</span>
           <NInputNumber
-            v-model:value="manualPointValues.jianzhang"
+            v-model="manualPointValues.jianzhang"
             :min="0"
-            :precision="2"
             :disabled="pointMode !== 'manual'"
-            style="width: 120px"
+            class="w-24"
           />
-          <NText depth="3"> 提督 </NText>
+          <span class="text-muted-foreground">提督</span>
           <NInputNumber
-            v-model:value="manualPointValues.tidu"
+            v-model="manualPointValues.tidu"
             :min="0"
-            :precision="2"
             :disabled="pointMode !== 'manual'"
-            style="width: 120px"
+            class="w-24"
           />
-          <NText depth="3"> 总督 </NText>
+          <span class="text-muted-foreground">总督</span>
           <NInputNumber
-            v-model:value="manualPointValues.zongdu"
+            v-model="manualPointValues.zongdu"
             :min="0"
-            :precision="2"
             :disabled="pointMode !== 'manual'"
-            style="width: 120px"
+            class="w-24"
           />
-          <NButton
-            secondary
+          <Button
+            size="xs"
+            variant="outline"
             :disabled="pointMode !== 'manual'"
             @click="resetManualPointValues"
           >
             恢复当前设置
-          </NButton>
-        </NFlex>
-        <NText depth="3">
+          </Button>
+        </div>
+
+        <p class="text-[11px] text-muted-foreground">
           当前生效：舰长 {{ formatPoints(effectivePointValues.jianzhang) }} / 提督
           {{ formatPoints(effectivePointValues.tidu) }} / 总督 {{ formatPoints(effectivePointValues.zongdu) }}
-        </NText>
-      </NFlex>
-    </NCard>
+        </p>
+      </CardContent>
+    </Card>
 
-    <NCard
-      size="small"
-      title="执行选项"
-    >
-      <NFlex
-        wrap
-        :size="12"
-        align="center"
-      >
-        <NSwitch v-model:value="deductPoints" />
-        <NText>扣除重复积分</NText>
-        <NSwitch v-model:value="deleteEvents" />
-        <NText>删除重复事件</NText>
-        <NSwitch v-model:value="cleanLiveData" />
-        <NText>清理 Live 数据</NText>
-      </NFlex>
-      <NFlex
-        wrap
-        :size="12"
-        align="center"
-        style="margin-top: 12px"
-      >
-        <NTag
-          type="warning"
-          :bordered="false"
-        >
-          已选 {{ selectedUsers.length }} 人
-        </NTag>
-        <NTag
-          type="error"
-          :bordered="false"
-        >
-          预计扣分 {{ formatPoints(selectedPreviewPoints) }}
-        </NTag>
-        <NTag
-          type="warning"
-          :bordered="false"
-        >
-          事件重复 {{ selectedEventDuplicates }}
-        </NTag>
-        <NTag
-          type="warning"
-          :bordered="false"
-        >
-          Live 重复 {{ selectedLiveDuplicates }}
-        </NTag>
-        <NPopconfirm @positive-click="applyCleanup(true)">
-          <template #trigger>
-            <NButton
-              type="error"
-              :loading="applyLoading"
-            >
-              <template #icon>
-                <NIcon :component="Delete24Regular" />
+    <!-- 执行选项 -->
+    <Card class="border border-border">
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">执行选项</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-0 space-y-3">
+        <div class="flex items-center gap-4 flex-wrap text-xs">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <Switch v-model:checked="deductPoints" />
+            <span>扣除重复积分</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <Switch v-model:checked="deleteEvents" />
+            <span>删除重复事件</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <Switch v-model:checked="cleanLiveData" />
+            <span>清理 Live 数据</span>
+          </label>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap pt-2 border-t">
+          <Tag type="warning">已选 {{ selectedUsers.length }} 人</Tag>
+          <Tag type="error">预计扣分 {{ formatPoints(selectedPreviewPoints) }}</Tag>
+          <Tag type="warning">事件重复 {{ selectedEventDuplicates }}</Tag>
+          <Tag type="warning">Live 重复 {{ selectedLiveDuplicates }}</Tag>
+
+          <div class="flex items-center gap-2 ml-auto">
+            <Popconfirm positive-text="确认清理" negative-text="取消" @positive-click="applyCleanup(true)">
+              <template #trigger>
+                <Button variant="destructive" size="sm" :disabled="applyLoading" class="gap-1.5">
+                  <Delete24Regular class="size-3.5" />
+                  一键清理全部
+                </Button>
               </template>
-              一键清理全部重复数据
-            </NButton>
-          </template>
-          确认按当前筛选条件清理全部重复上舰数据？
-        </NPopconfirm>
-        <NPopconfirm @positive-click="applyCleanup(false)">
-          <template #trigger>
-            <NButton
-              type="primary"
-              :loading="applyLoading"
-              :disabled="selectedRowKeys.length === 0"
-            >
-              清理已选用户
-            </NButton>
-          </template>
-          确认仅清理已选中的重复上舰用户？
-        </NPopconfirm>
-      </NFlex>
-    </NCard>
+              确认按当前筛选条件清理全部重复上舰数据？
+            </Popconfirm>
 
-    <NAlert
-      v-if="scanResult"
-      type="success"
-      :show-icon="false"
-    >
-      扫描结果：{{ scanResult.duplicatedUserCount }} 位用户，{{ scanResult.duplicateGroupCount }} 组重复，事件重复
-      {{ scanResult.duplicateEventCount }} 条，Live 重复 {{ scanResult.duplicateLiveCount }} 条。
-    </NAlert>
+            <Popconfirm positive-text="确认清理" negative-text="取消" @positive-click="applyCleanup(false)">
+              <template #trigger>
+                <Button size="sm" :disabled="applyLoading || selectedRowKeys.length === 0">
+                  清理已选用户 ({{ selectedRowKeys.length }})
+                </Button>
+              </template>
+              确认仅清理已选中的重复上舰用户？
+            </Popconfirm>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
 
-    <NAlert
-      v-if="applyResult"
-      type="warning"
-      :show-icon="true"
-    >
-      本次执行：扣除 {{ formatPoints(applyResult.totalPointsDeducted) }} 积分，删除事件
-      {{ applyResult.eventRowsDeleted }} 条，删除临时 Live 记录 {{ applyResult.tempEventRowsDeleted }} 条，更新 Live
-      {{ applyResult.liveRowsUpdated }} 场，清理 Live 重复 {{ applyResult.liveDuplicateRowsRemoved }} 条。
-    </NAlert>
+    <Alert v-if="scanResult" variant="default" class="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+      <AlertDescription class="text-xs">
+        扫描结果：{{ scanResult.duplicatedUserCount }} 位用户，{{ scanResult.duplicateGroupCount }} 组重复，事件重复
+        {{ scanResult.duplicateEventCount }} 条，Live 重复 {{ scanResult.duplicateLiveCount }} 条。
+      </AlertDescription>
+    </Alert>
 
-    <NCard
-      size="small"
-      title="重复用户列表"
-    >
-      <NSpin :show="scanLoading">
-        <NEmpty
-          v-if="!scanResult"
-          description="先扫描重复上舰数据"
-        />
-        <NEmpty
-          v-else-if="rows.length === 0"
-          description="当前筛选条件下没有重复上舰"
-        />
-        <NDataTable
-          v-else
-          v-model:checked-row-keys="selectedRowKeys"
-          :columns="columns"
-          :data="rows"
-          :pagination="{ pageSize: 10 }"
-          :row-key="(row) => row.guardOUId"
-          max-height="620"
-        />
-      </NSpin>
-    </NCard>
-  </NFlex>
+    <Alert v-if="applyResult" variant="default" class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+      <AlertDescription class="text-xs">
+        本次执行：扣除 {{ formatPoints(applyResult.totalPointsDeducted) }} 积分，删除事件
+        {{ applyResult.eventRowsDeleted }} 条，删除临时 Live 记录 {{ applyResult.tempEventRowsDeleted }} 条，更新 Live
+        {{ applyResult.liveRowsUpdated }} 场，清理 Live 重复 {{ applyResult.liveDuplicateRowsRemoved }} 条。
+      </AlertDescription>
+    </Alert>
 
-  <NModal
-    v-model:show="showDetailModal"
-    preset="card"
-    style="width: 920px; max-width: 96vw"
-    title="重复上舰详情"
-  >
-    <NSpin :show="detailLoading">
-      <NEmpty
-        v-if="!detailResult && !detailLoading"
-        description="暂无详情"
-      />
-      <template v-else-if="detailResult">
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <NAlert
-            type="info"
-            :show-icon="false"
-          >
-            {{ detailResult.user.info?.name || '未知用户' }}：{{ detailResult.user.duplicateGroups }} 组重复，事件重复
-            {{ detailResult.user.duplicateEventCount }} 条，Live 重复 {{ detailResult.user.duplicateLiveCount }} 条。
-          </NAlert>
-          <NScrollbar style="max-height: 70vh">
-            <NFlex
-              vertical
-              :size="12"
-            >
-              <NCard
+    <!-- 重复用户列表 -->
+    <Card class="border border-border">
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">重复用户列表</CardTitle>
+      </CardHeader>
+      <CardContent class="p-0">
+        <Empty v-if="!scanResult" description="先扫描重复上舰数据" class="py-8" />
+        <Empty v-else-if="rows.length === 0" description="当前筛选条件下没有重复上舰" class="py-8" />
+        <div v-else>
+          <div class="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead class="w-10">
+                    <Checkbox :checked="isAllSelected" @update:checked="toggleSelectAll" />
+                  </TableHead>
+                  <TableHead>用户</TableHead>
+                  <TableHead class="w-20">组数</TableHead>
+                  <TableHead class="w-24">事件重复</TableHead>
+                  <TableHead class="w-24">Live 重复</TableHead>
+                  <TableHead class="w-24">影响场次</TableHead>
+                  <TableHead class="w-28">预计扣分</TableHead>
+                  <TableHead class="w-56">时间范围</TableHead>
+                  <TableHead class="w-20 text-right">操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-for="row in paginatedRows" :key="row.guardOUId">
+                  <TableCell>
+                    <Checkbox
+                      :checked="selectedRowKeys.includes(row.guardOUId)"
+                      @update:checked="toggleSelectRow(row.guardOUId, $event)"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div class="flex flex-col text-xs">
+                      <span class="font-medium text-foreground">{{ row.info?.name || '未知用户' }}</span>
+                      <span class="text-[11px] text-muted-foreground">{{ getUserSecondaryText(row) }}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell class="text-xs">{{ row.duplicateGroups }}</TableCell>
+                  <TableCell class="text-xs">{{ row.duplicateEventCount }}</TableCell>
+                  <TableCell class="text-xs">{{ row.duplicateLiveCount }}</TableCell>
+                  <TableCell class="text-xs">{{ row.affectedLiveCount }}</TableCell>
+                  <TableCell class="text-xs font-mono font-medium text-destructive">
+                    {{ formatPoints(row.previewPoints) }}
+                  </TableCell>
+                  <TableCell class="text-[11px] text-muted-foreground">
+                    {{ formatTime(row.firstEventAt) }} ~ {{ formatTime(row.lastEventAt) }}
+                  </TableCell>
+                  <TableCell class="text-right">
+                    <Button variant="ghost" size="xs" class="gap-1 h-7 text-xs" @click="openDetail(row)">
+                      <Eye24Regular class="size-3.5" />
+                      详情
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+
+          <!-- 分页栏 -->
+          <div v-if="totalPages > 1" class="flex items-center justify-between px-4 py-3 border-t text-xs">
+            <span class="text-muted-foreground">
+              共 {{ rows.length }} 条，第 {{ currentPage }} / {{ totalPages }} 页
+            </span>
+            <div class="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="xs"
+                :disabled="currentPage <= 1"
+                @click="currentPage--"
+              >
+                上一页
+              </Button>
+              <Button
+                variant="outline"
+                size="xs"
+                :disabled="currentPage >= totalPages"
+                @click="currentPage++"
+              >
+                下一页
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+
+  <!-- 详情弹窗 -->
+  <Dialog v-model:open="showDetailModal">
+    <DialogContent class="max-w-3xl max-h-[85vh] flex flex-col">
+      <DialogHeader>
+        <DialogTitle class="text-sm font-semibold">重复上舰详情</DialogTitle>
+      </DialogHeader>
+
+      <div class="flex-1 overflow-y-auto py-2 space-y-3">
+        <Spin :show="detailLoading">
+          <Empty v-if="!detailResult && !detailLoading" description="暂无详情" />
+          <template v-else-if="detailResult">
+            <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <AlertDescription class="text-xs">
+                {{ detailResult.user.info?.name || '未知用户' }}：{{ detailResult.user.duplicateGroups }} 组重复，事件重复
+                {{ detailResult.user.duplicateEventCount }} 条，Live 重复 {{ detailResult.user.duplicateLiveCount }} 条。
+              </AlertDescription>
+            </Alert>
+
+            <div class="space-y-3">
+              <Card
                 v-for="(group, index) in detailResult.groups"
                 :key="`${group.sourceType}-${group.liveId || 'none'}-${group.anchorAt}-${index}`"
-                size="small"
+                class="border border-border p-3 space-y-2"
               >
-                <NFlex
-                  justify="space-between"
-                  align="center"
-                  wrap
-                >
-                  <NFlex
-                    align="center"
-                    :size="8"
-                  >
-                    <NTag
-                      :bordered="false"
-                      type="warning"
-                    >
-                      {{ sourceTypeLabel(group.sourceType) }}
-                    </NTag>
-                    <NTag
-                      :bordered="false"
-                      type="info"
-                    >
-                      重复 {{ group.duplicateCount }} 条
-                    </NTag>
-                    <NText v-if="group.liveTitle">
+                <div class="flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <Tag type="warning">{{ sourceTypeLabel(group.sourceType) }}</Tag>
+                    <Tag type="info">重复 {{ group.duplicateCount }} 条</Tag>
+                    <span v-if="group.liveTitle" class="font-medium text-foreground">
                       {{ group.liveTitle }}
-                    </NText>
-                  </NFlex>
-                  <NText depth="3"> {{ formatTime(group.anchorAt) }} ~ {{ formatTime(group.lastAt) }} </NText>
-                </NFlex>
-                <NFlex
-                  vertical
-                  :size="8"
-                  style="margin-top: 12px"
-                >
-                  <NFlex
+                    </span>
+                  </div>
+                  <span class="text-[11px] text-muted-foreground">
+                    {{ formatTime(group.anchorAt) }} ~ {{ formatTime(group.lastAt) }}
+                  </span>
+                </div>
+
+                <div class="space-y-1.5 pt-1">
+                  <div
                     v-for="entry in group.entries"
                     :key="`${entry.eventId}-${entry.time}-${entry.isDuplicate ? 'dup' : 'keep'}`"
-                    justify="space-between"
-                    align="center"
-                    wrap
-                    style="padding: 10px 12px; border-radius: 10px; background: rgba(127, 127, 127, 0.08)"
+                    class="flex items-center justify-between p-2 rounded bg-muted/40 text-xs"
                   >
-                    <NFlex
-                      align="center"
-                      :size="8"
-                      wrap
-                    >
-                      <NTag
-                        :type="entry.isDuplicate ? 'warning' : 'success'"
-                        :bordered="false"
-                      >
+                    <div class="flex items-center gap-2">
+                      <Tag :type="entry.isDuplicate ? 'warning' : 'success'">
                         {{ entry.isDuplicate ? '重复' : '保留' }}
-                      </NTag>
-                      <NText>{{ formatTime(entry.time) }}</NText>
-                      <NText depth="3">
-                        {{ entry.message }}
-                      </NText>
-                    </NFlex>
-                    <NFlex
-                      align="center"
-                      :size="12"
-                      wrap
-                    >
-                      <NText depth="3"> 数量 {{ entry.num }} </NText>
-                      <NText depth="3"> 价格 {{ formatPoints(entry.price) }} </NText>
-                      <NText depth="3"> 等级 {{ entry.guardLevel }} </NText>
-                    </NFlex>
-                  </NFlex>
-                </NFlex>
-              </NCard>
-            </NFlex>
-          </NScrollbar>
-        </NFlex>
-      </template>
-    </NSpin>
-  </NModal>
+                      </Tag>
+                      <span class="font-mono text-[11px]">{{ formatTime(entry.time) }}</span>
+                      <span class="text-muted-foreground">{{ entry.message }}</span>
+                    </div>
+                    <div class="flex items-center gap-2.5 text-muted-foreground text-[11px]">
+                      <span>数量 {{ entry.num }}</span>
+                      <span>价格 {{ formatPoints(entry.price) }}</span>
+                      <span>等级 {{ entry.guardLevel }}</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </template>
+        </Spin>
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>

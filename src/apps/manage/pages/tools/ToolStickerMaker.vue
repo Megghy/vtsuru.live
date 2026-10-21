@@ -2,19 +2,6 @@
 import { ImageOutline, TextOutline, TrashOutline } from '@vicons/ionicons5'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import {
-  NButton,
-  NButtonGroup,
-  NCard,
-  NColorPicker,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSlider,
-  NText,
-} from 'naive-ui'
 import { computed, onMounted, reactive, ref } from 'vue'
 
 import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
@@ -22,6 +9,20 @@ import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/component
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { useMessage } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
 
 const message = useMessage()
 const editorRef = ref<InstanceType<typeof CanvasEditor>>()
@@ -111,330 +112,323 @@ async function onRemoveBgConfirm(blob: Blob) {
 </script>
 
 <template>
-  <NCard title="表情包制作">
-    <template #header-extra>
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NText
+  <Card>
+    <CardHeader class="flex flex-row items-center justify-between pb-4">
+      <CardTitle class="text-base font-semibold">表情包制作</CardTitle>
+      <div class="flex items-center gap-2">
+        <span
           v-if="blobSize"
-          :type="sizeExceeded ? 'error' : 'success'"
-          style="font-size: 12px"
+          class="text-xs"
+          :class="sizeExceeded ? 'text-destructive font-medium' : 'text-emerald-600'"
         >
           {{ (blobSize / 1024).toFixed(1) }} KB
-        </NText>
-        <NButton
-          type="primary"
+        </span>
+        <Button
+          size="sm"
+          class="h-8 text-xs"
           :disabled="!opts.bgImageUrl"
           @click="download"
         >
           下载
-        </NButton>
-      </NFlex>
-    </template>
+        </Button>
+      </div>
+    </CardHeader>
 
-    <!-- Upload or Canvas -->
-    <div
-      v-if="!opts.bgImageUrl"
-      ref="dropRef"
-      class="drop-zone"
-      :class="{ active: isOverDropZone }"
-      @click="() => openBgPicker()"
-    >
-      <NFlex
-        vertical
-        align="center"
-        :size="8"
+    <CardContent class="pt-0">
+      <!-- Upload or Canvas -->
+      <div
+        v-if="!opts.bgImageUrl"
+        ref="dropRef"
+        class="drop-zone"
+        :class="{ active: isOverDropZone }"
+        @click="() => openBgPicker()"
       >
-        <NIcon
-          :component="ImageOutline"
-          size="36"
-        />
-        <NText>拖拽或点击上传源图片</NText>
-        <NText
-          depth="3"
-          style="font-size: 12px"
-        >
-          将作为表情包背景
-        </NText>
-      </NFlex>
-    </div>
-
-    <template v-else>
-      <CanvasEditor
-        ref="editorRef"
-        :width="opts.size"
-        :height="opts.size"
-        :background-color="opts.bgColor"
-        :background-image="opts.bgImageUrl"
-        storage-key="tool-sticker-maker"
-      />
-
-      <!-- Panels -->
-      <div class="panels">
-        <!-- Settings -->
-        <div class="panel">
-          <NText
-            strong
-            class="panel-title"
-          >
-            设置
-          </NText>
-          <div class="prop-row">
-            <span>尺寸</span
-            ><NInputNumber
-              v-model:value="opts.size"
-              :min="64"
-              :max="512"
-              :step="32"
-              size="small"
-              style="flex: 1"
-            />
-          </div>
-          <div class="prop-row">
-            <span>格式</span
-            ><NSelect
-              v-model:value="opts.format"
-              :options="formatOptions"
-              size="small"
-              style="flex: 1"
-            />
-          </div>
-          <div
-            v-if="opts.format === 'jpeg'"
-            class="prop-row"
-          >
-            <span>质量</span
-            ><NSlider
-              v-model:value="opts.quality"
-              :min="0.1"
-              :max="1"
-              :step="0.05"
-              style="flex: 1"
-            />
-          </div>
-          <NButton
-            size="small"
-            tertiary
-            block
-            @click="() => openBgPicker()"
-          >
-            更换背景图
-          </NButton>
-        </div>
-
-        <!-- Layers -->
-        <div class="panel">
-          <NFlex
-            justify="space-between"
-            align="center"
-            class="panel-title"
-          >
-            <NText strong> 图层 </NText>
-            <NFlex :size="4">
-              <NButton
-                size="tiny"
-                @click="editorRef?.addTextLayer()"
-              >
-                <template #icon>
-                  <NIcon
-                    :component="TextOutline"
-                    size="14"
-                  />
-                </template>
-              </NButton>
-              <NButton
-                size="tiny"
-                @click="() => openImgPicker()"
-              >
-                <template #icon>
-                  <NIcon
-                    :component="ImageOutline"
-                    size="14"
-                  />
-                </template>
-              </NButton>
-            </NFlex>
-          </NFlex>
-          <div class="layer-list">
-            <div
-              v-for="layer in [...(editorRef?.layers ?? [])].reverse()"
-              :key="layer.id"
-              class="layer-item"
-              :class="{ active: editorRef?.selectedId === layer.id, dragging: dragLayerId === layer.id }"
-              draggable="true"
-              @dragstart="onDragStart(layer.id)"
-              @dragover="onDragOver($event)"
-              @drop="onDrop(layer.id)"
-              @click="
-                () => {
-                  if (editorRef) editorRef.selectedId = layer.id
-                }
-              "
-            >
-              <NIcon
-                :component="layer.type === 'text' ? TextOutline : ImageOutline"
-                size="13"
-              />
-              <NText style="font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
-                {{ layer.name }}
-              </NText>
-              <NButton
-                size="tiny"
-                quaternary
-                type="error"
-                @click.stop="editorRef?.removeLayer(layer.id)"
-              >
-                <template #icon>
-                  <NIcon
-                    :component="TrashOutline"
-                    size="12"
-                  />
-                </template>
-              </NButton>
-            </div>
-          </div>
-        </div>
-
-        <!-- Properties -->
-        <div class="panel">
-          <NText
-            strong
-            class="panel-title"
-          >
-            属性
-          </NText>
-          <div
-            v-if="!selectedLayer"
-            class="props-empty"
-          >
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              选中图层编辑
-            </NText>
-          </div>
-          <template v-if="selectedLayer?.type === 'text'">
-            <NInput
-              v-model:value="(selectedLayer as TextLayer).text"
-              size="small"
-            />
-            <div class="prop-row">
-              <span>字号</span
-              ><NInputNumber
-                v-model:value="(selectedLayer as TextLayer).fontSize"
-                :min="8"
-                :max="120"
-                size="small"
-                style="width: 70px"
-              />
-            </div>
-            <div class="prop-row">
-              <span>字体</span
-              ><NSelect
-                :value="(selectedLayer as TextLayer).fontFamily"
-                :options="fontOptions"
-                :loading="fontsLoading"
-                filterable
-                size="small"
-                style="flex: 1"
-                @update:value="onFontChange"
-              />
-            </div>
-            <div class="prop-row">
-              <span>样式</span>
-              <NButtonGroup size="small">
-                <NButton
-                  :type="(selectedLayer as TextLayer).bold ? 'primary' : 'default'"
-                  style="font-weight: bold"
-                  @click="(selectedLayer as TextLayer).bold = !(selectedLayer as TextLayer).bold"
-                >
-                  B
-                </NButton>
-                <NButton
-                  :type="(selectedLayer as TextLayer).italic ? 'primary' : 'default'"
-                  style="font-style: italic"
-                  @click="(selectedLayer as TextLayer).italic = !(selectedLayer as TextLayer).italic"
-                >
-                  I
-                </NButton>
-                <NButton
-                  :type="(selectedLayer as TextLayer).underline ? 'primary' : 'default'"
-                  style="text-decoration: underline"
-                  @click="(selectedLayer as TextLayer).underline = !(selectedLayer as TextLayer).underline"
-                >
-                  U
-                </NButton>
-              </NButtonGroup>
-            </div>
-            <div class="prop-row">
-              <span>颜色</span
-              ><NColorPicker
-                v-model:value="(selectedLayer as TextLayer).fill"
-                size="small"
-                style="flex: 1"
-              />
-            </div>
-            <div class="prop-row">
-              <span>描边</span
-              ><NColorPicker
-                v-model:value="(selectedLayer as TextLayer).stroke"
-                size="small"
-                style="flex: 1"
-              />
-            </div>
-            <div class="prop-row">
-              <span>描边宽</span
-              ><NSlider
-                v-model:value="(selectedLayer as TextLayer).strokeWidth"
-                :min="0"
-                :max="10"
-                style="flex: 1"
-              />
-            </div>
-          </template>
-          <template v-if="selectedLayer?.type === 'image'">
-            <div class="prop-row">
-              <span>透明度</span
-              ><NSlider
-                v-model:value="(selectedLayer as ImageLayer).opacity"
-                :min="0"
-                :max="1"
-                :step="0.05"
-                style="flex: 1"
-              />
-            </div>
-            <div class="prop-row">
-              <span>描边</span
-              ><NColorPicker
-                v-model:value="(selectedLayer as ImageLayer).stroke"
-                size="small"
-                style="flex: 1"
-              />
-            </div>
-            <div class="prop-row">
-              <span>描边宽</span
-              ><NSlider
-                v-model:value="(selectedLayer as ImageLayer).strokeWidth"
-                :min="0"
-                :max="10"
-                style="flex: 1"
-              />
-            </div>
-            <NButton
-              size="small"
-              block
-              @click="showRemoveBg = true"
-            >
-              去背景
-            </NButton>
-          </template>
+        <div class="flex flex-col items-center gap-2">
+          <ImageOutline class="w-9 h-9 text-muted-foreground" />
+          <span class="text-sm font-medium">拖拽或点击上传源图片</span>
+          <span class="text-xs text-muted-foreground">
+            将作为表情包背景
+          </span>
         </div>
       </div>
-    </template>
-  </NCard>
+
+      <template v-else>
+        <CanvasEditor
+          ref="editorRef"
+          :width="opts.size"
+          :height="opts.size"
+          :background-color="opts.bgColor"
+          :background-image="opts.bgImageUrl"
+          storage-key="tool-sticker-maker"
+        />
+
+        <!-- Panels -->
+        <div class="panels">
+          <!-- Settings -->
+          <div class="panel">
+            <span class="font-medium text-foreground text-sm panel-title">
+              设置
+            </span>
+            <div class="prop-row">
+              <span>尺寸</span>
+              <NInputNumber
+                v-model="opts.size"
+                :min="64"
+                :max="512"
+                :step="32"
+                size="small"
+                class="flex-1"
+              />
+            </div>
+            <div class="prop-row">
+              <span>格式</span>
+              <Select v-model="opts.format">
+                <SelectTrigger class="h-8 flex-1 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="item in formatOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div
+              v-if="opts.format === 'jpeg'"
+              class="prop-row"
+            >
+              <span>质量</span>
+              <Slider
+                :model-value="[opts.quality]"
+                :min="0.1"
+                :max="1"
+                :step="0.05"
+                class="flex-1"
+                @update:model-value="(val) => { if (val?.[0] !== undefined) opts.quality = val[0] }"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              class="w-full h-8 text-xs mt-1"
+              @click="() => openBgPicker()"
+            >
+              更换背景图
+            </Button>
+          </div>
+
+          <!-- Layers -->
+          <div class="panel">
+            <div class="flex justify-between items-center panel-title">
+              <span class="font-medium text-foreground text-sm"> 图层 </span>
+              <div class="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  class="h-6 w-6"
+                  @click="editorRef?.addTextLayer()"
+                >
+                  <TextOutline class="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  class="h-6 w-6"
+                  @click="() => openImgPicker()"
+                >
+                  <ImageOutline class="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div class="layer-list">
+              <div
+                v-for="layer in [...(editorRef?.layers ?? [])].reverse()"
+                :key="layer.id"
+                class="layer-item"
+                :class="{ active: editorRef?.selectedId === layer.id, dragging: dragLayerId === layer.id }"
+                draggable="true"
+                @dragstart="onDragStart(layer.id)"
+                @dragover="onDragOver($event)"
+                @drop="onDrop(layer.id)"
+                @click="
+                  () => {
+                    if (editorRef) editorRef.selectedId = layer.id
+                  }
+                "
+              >
+                <TextOutline
+                  v-if="layer.type === 'text'"
+                  class="w-3.5 h-3.5 shrink-0"
+                />
+                <ImageOutline
+                  v-else
+                  class="w-3.5 h-3.5 shrink-0"
+                />
+                <span class="text-xs flex-1 truncate">
+                  {{ layer.name }}
+                </span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  class="h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  @click.stop="editorRef?.removeLayer(layer.id)"
+                >
+                  <TrashOutline class="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Properties -->
+          <div class="panel">
+            <span class="font-medium text-foreground text-sm panel-title">
+              属性
+            </span>
+            <div
+              v-if="!selectedLayer"
+              class="props-empty"
+            >
+              <span class="text-xs text-muted-foreground">
+                选中图层编辑
+              </span>
+            </div>
+            <template v-if="selectedLayer?.type === 'text'">
+              <Input
+                v-model="(selectedLayer as TextLayer).text"
+                class="h-8 text-xs"
+              />
+              <div class="prop-row">
+                <span>字号</span>
+                <NInputNumber
+                  v-model="(selectedLayer as TextLayer).fontSize"
+                  :min="8"
+                  :max="120"
+                  size="small"
+                  class="w-[70px]"
+                />
+              </div>
+              <div class="prop-row">
+                <span>字体</span>
+                <Select
+                  :model-value="(selectedLayer as TextLayer).fontFamily"
+                  @update:model-value="onFontChange"
+                >
+                  <SelectTrigger class="h-8 flex-1 text-xs">
+                    <SelectValue :placeholder="fontsLoading ? '加载字体中...' : '选择字体'" />
+                  </SelectTrigger>
+                  <SelectContent class="max-h-60">
+                    <SelectItem
+                      v-for="opt in fontOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
+                      {{ opt.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div class="prop-row">
+                <span>样式</span>
+                <div class="inline-flex rounded-md shadow-xs border border-input overflow-hidden">
+                  <button
+                    type="button"
+                    class="h-7 px-2.5 text-xs font-bold transition-colors border-r border-input last:border-r-0 cursor-pointer"
+                    :class="(selectedLayer as TextLayer).bold ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'"
+                    @click="(selectedLayer as TextLayer).bold = !(selectedLayer as TextLayer).bold"
+                  >
+                    B
+                  </button>
+                  <button
+                    type="button"
+                    class="h-7 px-2.5 text-xs italic transition-colors border-r border-input last:border-r-0 cursor-pointer"
+                    :class="(selectedLayer as TextLayer).italic ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'"
+                    @click="(selectedLayer as TextLayer).italic = !(selectedLayer as TextLayer).italic"
+                  >
+                    I
+                  </button>
+                  <button
+                    type="button"
+                    class="h-7 px-2.5 text-xs underline transition-colors cursor-pointer"
+                    :class="(selectedLayer as TextLayer).underline ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'"
+                    @click="(selectedLayer as TextLayer).underline = !(selectedLayer as TextLayer).underline"
+                  >
+                    U
+                  </button>
+                </div>
+              </div>
+              <div class="prop-row">
+                <span>颜色</span>
+                <ColorPicker
+                  v-model="(selectedLayer as TextLayer).fill"
+                  class="flex-1"
+                />
+              </div>
+              <div class="prop-row">
+                <span>描边</span>
+                <ColorPicker
+                  v-model="(selectedLayer as TextLayer).stroke"
+                  class="flex-1"
+                />
+              </div>
+              <div class="prop-row">
+                <span>描边宽</span>
+                <Slider
+                  :model-value="[(selectedLayer as TextLayer).strokeWidth]"
+                  :min="0"
+                  :max="10"
+                  class="flex-1"
+                  @update:model-value="(val) => { if (val?.[0] !== undefined) (selectedLayer as TextLayer).strokeWidth = val[0] }"
+                />
+              </div>
+            </template>
+            <template v-if="selectedLayer?.type === 'image'">
+              <div class="prop-row">
+                <span>透明度</span>
+                <Slider
+                  :model-value="[(selectedLayer as ImageLayer).opacity]"
+                  :min="0"
+                  :max="1"
+                  :step="0.05"
+                  class="flex-1"
+                  @update:model-value="(val) => { if (val?.[0] !== undefined) (selectedLayer as ImageLayer).opacity = val[0] }"
+                />
+              </div>
+              <div class="prop-row">
+                <span>描边</span>
+                <ColorPicker
+                  v-model="(selectedLayer as ImageLayer).stroke"
+                  class="flex-1"
+                />
+              </div>
+              <div class="prop-row">
+                <span>描边宽</span>
+                <Slider
+                  :model-value="[(selectedLayer as ImageLayer).strokeWidth]"
+                  :min="0"
+                  :max="10"
+                  class="flex-1"
+                  @update:model-value="(val) => { if (val?.[0] !== undefined) (selectedLayer as ImageLayer).strokeWidth = val[0] }"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                class="w-full h-8 text-xs mt-1"
+                @click="showRemoveBg = true"
+              >
+                去背景
+              </Button>
+            </template>
+          </div>
+        </div>
+      </template>
+    </CardContent>
+  </Card>
+
   <RemoveBgDialog
     :show="showRemoveBg"
     :source-url="removeBgSourceUrl"
@@ -481,7 +475,6 @@ async function onRemoveBgConfirm(blob: Blob) {
   background: var(--vtsuru-bg-inset);
 }
 .panel-title {
-  font-size: 13px;
   margin-bottom: 2px;
 }
 

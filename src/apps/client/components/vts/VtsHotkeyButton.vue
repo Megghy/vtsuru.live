@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { NButton, NFlex, NPopover } from 'naive-ui'
-
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
 import type { VtsHotkeyCustomization } from '@/apps/client/store/useVtsStore'
+import { Button } from '@/shared/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 defineProps<{
   hk: VtsHotkeyInfo
@@ -21,16 +21,12 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <NPopover
-    trigger="hover"
-    :delay="400"
-  >
-    <template #trigger>
-      <NButton
-        block
-        size="small"
+  <Popover>
+    <PopoverTrigger as-child>
+      <Button
+        class="w-full h-8 text-xs justify-start px-2.5 truncate"
         :disabled="disabled"
-        :type="armed ? 'warning' : 'default'"
+        :variant="armed ? 'destructive' : 'outline'"
         @click="emit('trigger')"
       >
         <span
@@ -44,47 +40,54 @@ const emit = defineEmits<{
           :src="custom.iconDataUrl"
           alt=""
         />
-        <span class="hotkey-label">{{ armed ? '再次点击触发' : custom?.displayName || hk.name || hk.hotkeyID }}</span>
-      </NButton>
-    </template>
-    <NFlex
-      vertical
-      :size="8"
-      style="max-width: 320px"
-    >
+        <span class="hotkey-label truncate">{{ armed ? '再次点击触发' : custom?.displayName || hk.name || hk.hotkeyID }}</span>
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent class="w-72 p-3 text-xs flex flex-col gap-2">
       <div>
-        <div>{{ hk.name }}</div>
-        <div v-if="hk.description">
+        <div class="font-semibold text-sm">{{ hk.name }}</div>
+        <div
+          v-if="hk.description"
+          class="text-[var(--vtsuru-fg-muted)] mt-0.5"
+        >
           {{ hk.description }}
         </div>
-        <div v-if="hk.type">类型: {{ hk.type }}</div>
+        <div
+          v-if="hk.type"
+          class="text-[var(--vtsuru-fg-muted)] mt-0.5"
+        >
+          类型: {{ hk.type }}
+        </div>
       </div>
-      <NFlex
-        :wrap="true"
-        :size="8"
-      >
-        <NButton
-          size="tiny"
+      <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[var(--vtsuru-border)]">
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-6 text-[11px] px-2"
           :disabled="onDeck"
           @click="emit('add-to-deck')"
         >
           {{ onDeck ? '已在操作台' : '加入操作台' }}
-        </NButton>
-        <NButton
-          size="tiny"
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-6 text-[11px] px-2"
           @click="emit('toggle-pinned')"
         >
           {{ custom?.pinned ? '取消置顶' : '置顶' }}
-        </NButton>
-        <NButton
-          size="tiny"
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-6 text-[11px] px-2"
           @click="emit('edit')"
         >
           自定义外观
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NPopover>
+        </Button>
+      </div>
+    </PopoverContent>
+  </Popover>
 </template>
 
 <style scoped>

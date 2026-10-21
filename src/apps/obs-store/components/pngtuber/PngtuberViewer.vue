@@ -2,9 +2,9 @@
 import { useClipboard } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import { ArrowLeft24Regular } from '@vicons/fluent'
-import { NAlert, NButton, NCard, NIcon, NInput, NInputGroup, NSelect, NSpace, NTag, NText, useMessage } from 'naive-ui'
 import { computed, onActivated, onDeactivated, onScopeDispose, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
@@ -14,6 +14,18 @@ import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
 import { DEFAULT_PNGTUBER_STATE } from '@/shared/pngtuber/types'
 import type { PngtuberExpression, PngtuberRuntime, PngtuberState } from '@/shared/pngtuber/types'
 import { usePngtuberRuntime } from '@/shared/pngtuber/usePngtuberRuntime'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 import PngtuberAppearance from './PngtuberAppearance.vue'
 import PngtuberDisplay from './PngtuberDisplay.vue'
@@ -21,7 +33,7 @@ import PngtuberExpressions from './PngtuberExpressions.vue'
 import PngtuberInputSettings from './PngtuberInputSettings.vue'
 import PngtuberMicrophone from './PngtuberMicrophone.vue'
 import { usePngtuberHotkeys } from './usePngtuberHotkeys'
-const message = useMessage()
+
 const account = useAccount()
 const route = useRoute()
 const router = useRouter()
@@ -78,8 +90,9 @@ const obsUrl = computed(() =>
     params: { channel: channel.value },
   }),
 )
+
 function failed(error: unknown) {
-  message.error(error instanceof Error ? error.message : String(error))
+  toast.error(error instanceof Error ? error.message : String(error))
 }
 async function setState(next: PngtuberState) {
   if (!writable.value) throw new Error('请登录并等待配置加载完成')
@@ -189,7 +202,7 @@ async function importPackage(event: Event) {
     const validated = normalizePngtuberState(await importPngtuberPackage(file))
     if (owner !== session.value) throw new Error('频道或登录用户已变化，请重新导入')
     await setState(validated)
-    if (!lastSyncError.value) message.success('模型包已导入')
+    if (!lastSyncError.value) toast.success('模型包已导入')
   } catch (error) {
     failed(error)
   } finally {
@@ -198,12 +211,12 @@ async function importPackage(event: Event) {
 }
 async function copyUrl() {
   if (!isCopySupported.value) {
-    message.warning('当前环境不支持直接写入剪贴板，请手动复制')
+    toast.warning('当前环境不支持直接写入剪贴板，请手动复制')
     return
   }
   try {
     await copy(obsUrl.value)
-    message.success('已复制 OBS 链接')
+    toast.success('已复制 OBS 链接')
   } catch (error) {
     failed(error)
   }
@@ -211,7 +224,7 @@ async function copyUrl() {
 function changeChannel() {
   const next = parseObsSyncChannel(channelDraft.value)
   if (!next) {
-    message.error(OBS_SYNC_CHANNEL_HINT)
+    toast.error(OBS_SYNC_CHANNEL_HINT)
     return
   }
   if (next === channel.value) return
@@ -220,233 +233,302 @@ function changeChannel() {
   channel.value = next
 }
 </script>
+
 <template>
   <div
     class="pngtuber-page"
     :class="{ standalone }"
   >
-    <NButton
-      quaternary
-      size="small"
+    <Button
+      variant="ghost"
+      size="sm"
+      class="w-fit gap-1.5 h-8 text-xs"
       @click="goBack"
     >
-      <template #icon>
-        <NIcon :component="ArrowLeft24Regular" />
-      </template>
+      <ArrowLeft24Regular class="size-4" />
       返回
-    </NButton>
-    <NSpace
-      vertical
-      :size="12"
-    >
-    <NAlert
-      v-if="!userId"
-      type="warning"
-      >请登录后编辑立绘配置。</NAlert
-    >
-    <NAlert
-      v-else-if="lastSyncError || !isReady || runtimeError || !connected || normalized.error"
-      type="warning"
-    >
-      {{ normalized.error || errorMessage || runtimeError || (!isReady ? '配置尚未加载完成' : '立绘控制连接尚未就绪') }}
-      <NButton
-        size="tiny"
-        secondary
-        @click="retry"
-        >重试连接</NButton
+    </Button>
+
+    <div class="flex flex-col gap-3">
+      <Alert
+        v-if="!userId"
+        class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2.5 px-3"
       >
-    </NAlert>
-    <div class="workbench">
-      <div class="settings">
-        <NCard
-          title="声音输入"
-          size="small"
-          ><NSpace
-            vertical
-            :size="12"
+        <AlertDescription class="text-xs text-current m-0">
+          请登录后编辑立绘配置。
+        </AlertDescription>
+      </Alert>
+      <Alert
+        v-else-if="lastSyncError || !isReady || runtimeError || !connected || normalized.error"
+        class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2.5 px-3"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <AlertDescription class="text-xs text-current m-0">
+            {{ normalized.error || errorMessage || runtimeError || (!isReady ? '配置尚未加载完成' : '立绘控制连接尚未就绪') }}
+          </AlertDescription>
+          <Button
+            size="xs"
+            variant="outline"
+            class="h-6 text-[11px] shrink-0"
+            @click="retry"
           >
-            <PngtuberInputSettings
-              :state="state"
-              :disabled="!writable || busy"
-              @change="patch"
-            />
-            <PngtuberMicrophone
-              v-if="localInput"
-              :key="session"
-              :state="state"
-              :muted="runtime.muted || runtime.away"
-              :disabled="!writable || busy"
-              @sample="sample"
-              @change="patch"
-              @error="failed"
-            /> </NSpace
-        ></NCard>
-        <PngtuberExpressions
-          :key="session"
-          :state="state"
-          :disabled="!writable || busy"
-          :control-disabled="controlDisabled"
-          @change="patch"
-          @activate="activate"
-        />
-        <PngtuberAppearance
-          :state="state"
-          :disabled="!writable || busy"
-          @change="patch"
-        />
-      </div>
-      <div class="stage">
-        <NCard
-          title="实时预览"
-          size="small"
-          ><NSpace
-            vertical
-            :size="12"
-          >
-            <NSpace align="center"
-              ><NTag
-                size="small"
-                :type="previewSpeaking ? 'success' : 'default'"
-                >{{ runtime.away ? '暂离' : runtime.muted ? '静音' : previewSpeaking ? '说话中' : '待机' }}</NTag
-              ><NTag size="small">{{
-                isSyncing ? '保存中' : lastSyncError ? '保存失败' : isReady ? '配置已就绪' : '加载中'
-              }}</NTag
-              ><NText depth="3">音量 {{ Math.round(previewVolume) }}%</NText></NSpace
-            >
-            <NSelect
-              v-model:value="bg"
-              size="small"
-              :options="[
-                { label: '透明棋盘', value: 'checker' },
-                { label: '暗色', value: 'dark' },
-                { label: '绿幕', value: 'green' },
-                { label: '透明', value: 'transparent' },
-              ]"
-            />
-            <div
-              class="preview"
-              :class="`bg-${bg}`"
-            >
-              <PngtuberDisplay
+            重试连接
+          </Button>
+        </div>
+      </Alert>
+
+      <div class="workbench">
+        <div class="settings flex flex-col gap-4">
+          <Card class="p-3">
+            <CardHeader class="p-0 pb-2">
+              <CardTitle class="text-sm font-semibold">声音输入</CardTitle>
+            </CardHeader>
+            <CardContent class="p-0 space-y-3">
+              <PngtuberInputSettings
                 :state="state"
-                :is-speaking="previewSpeaking"
-                :volume="previewVolume"
-                :expression-id="runtime.expressionId"
-                :muted="runtime.muted"
-                :away="runtime.away"
-                inline-mode
-                @asset-error="assetError = $event"
+                :disabled="!writable || busy"
+                @change="patch"
               />
-            </div>
-            <NAlert
-              v-if="assetError"
-              type="warning"
-              >{{ assetError }}</NAlert
-            >
-            <NSpace
-              ><NButton
-                size="small"
-                :disabled="controlDisabled"
-                @click="control({ muted: !runtime.muted })"
-                >{{ runtime.muted ? '取消静音' : '静音' }}</NButton
-              ><NButton
-                size="small"
-                :disabled="controlDisabled"
-                @click="control({ away: !runtime.away })"
-                >{{ runtime.away ? '结束暂离' : '暂离' }}</NButton
-              ><NButton
-                size="small"
-                :disabled="controlDisabled"
-                @click="control({ expressionId: '' })"
-                >默认表情</NButton
-              ></NSpace
-            >
-          </NSpace></NCard
-        >
-        <NCard
-          title="OBS 浏览器源"
-          size="small"
-          ><NSpace
-            vertical
-            :size="12"
-          >
-            <NInputGroup
-              ><NInput
-                v-model:value="channelDraft"
-                placeholder="频道"
-                :maxlength="64"
-                :disabled="busy"
-                @keyup.enter="changeChannel"
-              /><NButton
-                :disabled="busy"
-                @click="changeChannel"
-                >切换频道</NButton
-              ></NInputGroup
-            >
-            <NInput
-              :value="obsUrl"
-              readonly
-              placeholder="登录后生成链接"
-            />
-            <NSpace
-              ><NButton
-                size="small"
-                :disabled="!obsUrl"
-                @click="copyUrl"
-                >复制链接</NButton
-              ><NButton
-                tag="a"
-                :href="obsUrl || undefined"
-                target="_blank"
-                rel="noopener"
-                size="small"
-                :disabled="!obsUrl"
-                >打开画面</NButton
-              ><NButton
-                tag="a"
-                :href="obsUrl ? `${obsUrl}&debug=1` : undefined"
-                target="_blank"
-                rel="noopener"
-                size="small"
-                :disabled="!obsUrl"
-                >OBS 诊断</NButton
-              ></NSpace
-            >
-            <NText depth="3"
-              >浏览器源尺寸：{{ state.canvasWidth }} × {{ state.canvasHeight }}。麦克风模式请在 OBS「交互」窗口访问带
-              debug=1 的链接选择设备，完成后移除 debug 参数。</NText
-            >
-          </NSpace></NCard
-        >
-        <NCard
-          title="模型包"
-          size="small"
-          ><NSpace
-            ><NButton
-              size="small"
-              :loading="busy"
-              :disabled="!writable || busy"
-              @click="packageInput?.click()"
-              >导入模型包</NButton
-            ><NButton
-              size="small"
-              :loading="busy"
-              :disabled="busy || !isReady || !!normalized.error"
-              @click="exportPackage"
-              >导出模型包</NButton
-            ><input
-              ref="packageInput"
-              hidden
-              type="file"
-              accept=".zip,application/zip"
-              @change="importPackage" /></NSpace
-          ><NText depth="3">导入会校验模型包并替换当前频道配置。</NText></NCard
-        >
+              <PngtuberMicrophone
+                v-if="localInput"
+                :key="session"
+                :state="state"
+                :muted="runtime.muted || runtime.away"
+                :disabled="!writable || busy"
+                @sample="sample"
+                @change="patch"
+                @error="failed"
+              />
+            </CardContent>
+          </Card>
+
+          <PngtuberExpressions
+            :key="session"
+            :state="state"
+            :disabled="!writable || busy"
+            :control-disabled="controlDisabled"
+            @change="patch"
+            @activate="activate"
+          />
+
+          <PngtuberAppearance
+            :state="state"
+            :disabled="!writable || busy"
+            @change="patch"
+          />
+        </div>
+
+        <div class="stage flex flex-col gap-4">
+          <Card class="p-3">
+            <CardHeader class="p-0 pb-2">
+              <CardTitle class="text-sm font-semibold">实时预览</CardTitle>
+            </CardHeader>
+            <CardContent class="p-0 space-y-3">
+              <div class="flex items-center gap-2 flex-wrap">
+                <Badge
+                  :variant="previewSpeaking ? 'default' : 'secondary'"
+                  class="text-xs"
+                >
+                  {{ runtime.away ? '暂离' : runtime.muted ? '静音' : previewSpeaking ? '说话中' : '待机' }}
+                </Badge>
+                <Badge variant="outline" class="text-xs">
+                  {{ isSyncing ? '保存中' : lastSyncError ? '保存失败' : isReady ? '配置已就绪' : '加载中' }}
+                </Badge>
+                <span class="text-xs text-muted-foreground">音量 {{ Math.round(previewVolume) }}%</span>
+              </div>
+
+              <Select v-model="bg">
+                <SelectTrigger class="h-8 text-xs w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="checker" class="text-xs">透明棋盘</SelectItem>
+                  <SelectItem value="dark" class="text-xs">暗色</SelectItem>
+                  <SelectItem value="green" class="text-xs">绿幕</SelectItem>
+                  <SelectItem value="transparent" class="text-xs">透明</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div
+                class="preview"
+                :class="`bg-${bg}`"
+              >
+                <PngtuberDisplay
+                  :state="state"
+                  :is-speaking="previewSpeaking"
+                  :volume="previewVolume"
+                  :expression-id="runtime.expressionId"
+                  :muted="runtime.muted"
+                  :away="runtime.away"
+                  inline-mode
+                  @asset-error="assetError = $event"
+                />
+              </div>
+
+              <Alert
+                v-if="assetError"
+                class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
+              >
+                <AlertDescription class="text-xs m-0">
+                  {{ assetError }}
+                </AlertDescription>
+              </Alert>
+
+              <div class="flex items-center gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-8 text-xs"
+                  :disabled="controlDisabled"
+                  @click="control({ muted: !runtime.muted })"
+                >
+                  {{ runtime.muted ? '取消静音' : '静音' }}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-8 text-xs"
+                  :disabled="controlDisabled"
+                  @click="control({ away: !runtime.away })"
+                >
+                  {{ runtime.away ? '结束暂离' : '暂离' }}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-8 text-xs"
+                  :disabled="controlDisabled"
+                  @click="control({ expressionId: '' })"
+                >
+                  默认表情
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card class="p-3">
+            <CardHeader class="p-0 pb-2">
+              <CardTitle class="text-sm font-semibold">OBS 浏览器源</CardTitle>
+            </CardHeader>
+            <CardContent class="p-0 space-y-3">
+              <div class="flex items-center gap-1.5">
+                <Input
+                  v-model="channelDraft"
+                  placeholder="频道"
+                  maxlength="64"
+                  :disabled="busy"
+                  class="h-8 text-xs flex-1"
+                  @keyup.enter="changeChannel"
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  class="h-8 text-xs"
+                  :disabled="busy"
+                  @click="changeChannel"
+                >
+                  切换频道
+                </Button>
+              </div>
+
+              <Input
+                :value="obsUrl"
+                readonly
+                placeholder="登录后生成链接"
+                class="h-8 text-xs"
+              />
+
+              <div class="flex items-center gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  class="h-8 text-xs"
+                  :disabled="!obsUrl"
+                  @click="copyUrl"
+                >
+                  复制链接
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-8 text-xs"
+                  as-child
+                  :disabled="!obsUrl"
+                >
+                  <a
+                    :href="obsUrl || undefined"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    打开画面
+                  </a>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-8 text-xs"
+                  as-child
+                  :disabled="!obsUrl"
+                >
+                  <a
+                    :href="obsUrl ? `${obsUrl}&debug=1` : undefined"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    OBS 诊断
+                  </a>
+                </Button>
+              </div>
+
+              <div class="text-xs text-muted-foreground leading-relaxed">
+                浏览器源尺寸：{{ state.canvasWidth }} × {{ state.canvasHeight }}。麦克风模式请在 OBS「交互」窗口访问带
+                debug=1 的链接选择设备，完成后移除 debug 参数。
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card class="p-3">
+            <CardHeader class="p-0 pb-2">
+              <CardTitle class="text-sm font-semibold">模型包</CardTitle>
+            </CardHeader>
+            <CardContent class="p-0 space-y-2">
+              <div class="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-8 text-xs"
+                  :disabled="!writable || busy"
+                  @click="packageInput?.click()"
+                >
+                  导入模型包
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="h-8 text-xs"
+                  :disabled="busy || !isReady || !!normalized.error"
+                  @click="exportPackage"
+                >
+                  导出模型包
+                </Button>
+                <input
+                  ref="packageInput"
+                  hidden
+                  type="file"
+                  accept=".zip,application/zip"
+                  @change="importPackage"
+                />
+              </div>
+              <div class="text-xs text-muted-foreground">
+                导入会校验模型包并替换当前频道配置。
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-    </NSpace>
   </div>
 </template>
+
 <style scoped>
 .pngtuber-page {
   display: flex;
@@ -466,51 +548,39 @@ function changeChannel() {
   gap: 16px;
   color: var(--vtsuru-fg);
 }
-.settings,
-.stage {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-}
-.stage {
-  position: sticky;
-  top: 16px;
-  align-self: start;
-}
-.preview {
-  position: relative;
-  height: 340px;
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-}
-.bg-checker {
-  background-color: var(--vtsuru-bg);
-  background-image: conic-gradient(
-    var(--vtsuru-bg-muted) 25%,
-    transparent 0 50%,
-    var(--vtsuru-bg-muted) 0 75%,
-    transparent 0
-  );
-  background-size: 20px 20px;
-}
-.bg-dark {
-  background: #18181b;
-}
-.bg-green {
-  background: #00b140;
-}
 @media (max-width: 900px) {
   .workbench {
     grid-template-columns: 1fr;
   }
-  .stage {
-    position: static;
-    grid-row: 1;
-  }
-  .preview {
-    height: 280px;
-  }
+}
+.preview {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  border-radius: 8px;
+  border: 1px dashed var(--vtsuru-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bg-checker {
+  background-color: #1e1e24;
+  background-image:
+    linear-gradient(45deg, #2b2b36 25%, transparent 25%),
+    linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b36 75%),
+    linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+.bg-dark {
+  background: #09090b;
+}
+.bg-green {
+  background: #00ff00;
+}
+.bg-transparent {
+  background: transparent;
 }
 </style>

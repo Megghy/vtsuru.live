@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { useClipboard, useDropZone, useEventListener, useFileDialog } from '@vueuse/core'
-import { NButton, NCard, NFlex, NSelect, NSpin, NText } from 'naive-ui'
 import * as ort from 'onnxruntime-web'
 import { nextTick, ref } from 'vue'
 
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { useMessage } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Spin } from '@/shared/ui/spin'
 
 ort.env.wasm.numThreads = 1
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
@@ -235,215 +245,218 @@ async function translateTask(task: ImageTask) {
 </script>
 
 <template>
-  <NCard title="文字识别 (OCR)">
-    <template #header-extra>
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NButton
-          size="small"
+  <Card>
+    <CardHeader class="flex flex-row items-center justify-between pb-4">
+      <CardTitle class="text-base font-semibold">文字识别 (OCR)</CardTitle>
+      <div class="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 text-xs"
           :disabled="tasks.every((t) => !t.lines.length)"
           @click="copyAll"
         >
           复制全部
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
+        </Button>
+        <Button
+          size="sm"
+          class="h-8 text-xs"
           :loading="tasks.some((t) => t.processing)"
           @click="recognizeAll"
         >
           {{ modelLoading ? '加载模型中...' : '全部识别' }}
-        </NButton>
-      </NFlex>
-    </template>
-
-    <NFlex
-      vertical
-      :size="14"
-    >
-      <!-- Upload bar -->
-      <div
-        ref="dropZoneRef"
-        class="upload-bar"
-        @click="openFileDialog()"
-      >
-        <NText
-          depth="3"
-          style="font-size: 12px"
-        >
-          {{ tasks.length ? '+ 添加更多图片' : '拖拽图片、点击选择或 Ctrl+V 粘贴截图' }}
-        </NText>
-        <NText
-          v-if="!tasks.length"
-          depth="3"
-          style="font-size: 11px"
-        >
-          基于 PP-OCRv5，支持中英日韩，首次加载模型约 21MB
-        </NText>
+        </Button>
       </div>
+    </CardHeader>
 
-      <!-- Image tabs -->
-      <div
-        v-if="tasks.length > 1"
-        class="tab-bar"
-      >
-        <button
+    <CardContent class="pt-0">
+      <div class="flex flex-col gap-3.5">
+        <!-- Upload bar -->
+        <div
+          ref="dropZoneRef"
+          class="upload-bar"
+          @click="openFileDialog()"
+        >
+          <span class="text-xs text-muted-foreground">
+            {{ tasks.length ? '+ 添加更多图片' : '拖拽图片、点击选择或 Ctrl+V 粘贴截图' }}
+          </span>
+          <span
+            v-if="!tasks.length"
+            class="text-[11px] text-muted-foreground"
+          >
+            基于 PP-OCRv5，支持中英日韩，首次加载模型约 21MB
+          </span>
+        </div>
+
+        <!-- Image tabs -->
+        <div
+          v-if="tasks.length > 1"
+          class="tab-bar"
+        >
+          <button
+            v-for="task in tasks"
+            :key="task.id"
+            class="tab-btn"
+            :class="{ active: task.id === activeTaskId }"
+            type="button"
+            @click="activeTaskId = task.id"
+          >
+            <span class="tab-name">{{ task.file.name.slice(0, 14) }}</span>
+            <span
+              v-if="task.lines.length"
+              class="tab-badge"
+            >
+              ✓
+            </span>
+          </button>
+        </div>
+
+        <!-- Active task content -->
+        <template
           v-for="task in tasks"
           :key="task.id"
-          class="tab-btn"
-          :class="{ active: task.id === activeTaskId }"
-          @click="activeTaskId = task.id"
         >
-          <span class="tab-name">{{ task.file.name.slice(0, 14) }}</span>
-          <span
-            v-if="task.lines.length"
-            class="tab-badge"
-            >✓</span
+          <div
+            v-show="task.id === activeTaskId"
+            class="task-panel"
           >
-        </button>
-      </div>
+            <div class="flex items-center gap-2 task-toolbar">
+              <Button
+                size="sm"
+                class="h-8 text-xs"
+                :loading="task.processing"
+                @click="recognizeOne(task)"
+              >
+                {{ task.processing ? (modelLoading ? '加载模型...' : '识别中...') : '开始识别' }}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-8 text-xs"
+                :disabled="!task.fullText"
+                @click="copyOne(task)"
+              >
+                复制文字
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                class="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                @click="removeTask(task.id)"
+              >
+                移除
+              </Button>
+            </div>
 
-      <!-- Active task content -->
-      <template
-        v-for="task in tasks"
-        :key="task.id"
-      >
-        <div
-          v-show="task.id === activeTaskId"
-          class="task-panel"
-        >
-          <NFlex
-            :size="8"
-            align="center"
-            class="task-toolbar"
-          >
-            <NButton
-              size="small"
-              type="primary"
-              :loading="task.processing"
-              @click="recognizeOne(task)"
+            <Spin
+              :show="task.processing"
+              :description="modelLoading ? '正在加载模型...' : '正在识别...'"
             >
-              {{ task.processing ? (modelLoading ? '加载模型...' : '识别中...') : '开始识别' }}
-            </NButton>
-            <NButton
-              size="small"
-              :disabled="!task.fullText"
-              @click="copyOne(task)"
-            >
-              复制文字
-            </NButton>
-            <NButton
-              size="small"
-              quaternary
-              type="error"
-              @click="removeTask(task.id)"
-            >
-              移除
-            </NButton>
-          </NFlex>
-
-          <NSpin
-            :show="task.processing"
-            :description="modelLoading ? '正在加载模型...' : '正在识别...'"
-          >
-            <div class="split-layout">
-              <div class="split-left">
-                <div class="img-container">
-                  <img
-                    :ref="(el) => setImgRef(task.id, el)"
-                    :src="task.url"
-                    class="preview-img"
-                    @load="
-                      () => {
-                        if (task.lines.length) drawOverlay(task.id)
-                      }
-                    "
+              <div class="split-layout">
+                <div class="split-left">
+                  <div class="img-container">
+                    <img
+                      :ref="(el) => setImgRef(task.id, el)"
+                      :src="task.url"
+                      class="preview-img"
+                      @load="
+                        () => {
+                          if (task.lines.length) drawOverlay(task.id)
+                        }
+                      "
+                    />
+                    <canvas
+                      :ref="(el) => setCanvasRef(task.id, el)"
+                      class="overlay-canvas"
+                    />
+                  </div>
+                </div>
+                <div
+                  v-if="task.lines.length"
+                  class="split-right"
+                >
+                  <textarea
+                    v-model="task.fullText"
+                    class="result-textarea"
+                    placeholder="识别结果（可编辑）"
                   />
-                  <canvas
-                    :ref="(el) => setCanvasRef(task.id, el)"
-                    class="overlay-canvas"
+                  <div class="flex items-center gap-1.5 translate-bar flex-wrap">
+                    <span class="text-[11px] text-muted-foreground">
+                      翻译为
+                    </span>
+                    <Select v-model="targetLang">
+                      <SelectTrigger class="h-7 w-[100px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in LANG_OPTIONS"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span class="text-[11px] text-muted-foreground">
+                      使用
+                    </span>
+                    <Select v-model="mode">
+                      <SelectTrigger class="h-7 w-[110px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in modeOptions"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="h-7 px-2 text-xs"
+                      :loading="translating"
+                      :disabled="!task.fullText"
+                      @click="translateTask(task)"
+                    >
+                      翻译
+                    </Button>
+                  </div>
+                  <textarea
+                    v-if="task.translatedText"
+                    v-model="task.translatedText"
+                    class="result-textarea translated"
+                    readonly
+                    placeholder="翻译结果"
                   />
+                  <details class="line-details">
+                    <summary class="line-summary">逐行结果（{{ task.lines.length }} 行，悬停可高亮原图区域）</summary>
+                    <div class="line-list">
+                      <div
+                        v-for="(line, idx) in task.lines"
+                        :key="idx"
+                        class="line-item"
+                        :class="{ active: hoveredLineIdx === idx && activeTaskId === task.id }"
+                        @mouseenter="onLineHover(task.id, idx)"
+                        @mouseleave="onLineHover(task.id, null)"
+                      >
+                        <span class="line-text">{{ line.text }}</span>
+                        <span class="line-conf">{{ (line.confidence * 100).toFixed(0) }}%</span>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </div>
-              <div
-                v-if="task.lines.length"
-                class="split-right"
-              >
-                <textarea
-                  v-model="task.fullText"
-                  class="result-textarea"
-                  placeholder="识别结果（可编辑）"
-                />
-                <NFlex
-                  :size="6"
-                  align="center"
-                  class="translate-bar"
-                >
-                  <NText
-                    depth="3"
-                    style="font-size: 11px"
-                  >
-                    翻译为
-                  </NText>
-                  <NSelect
-                    v-model:value="targetLang"
-                    :options="LANG_OPTIONS"
-                    size="tiny"
-                    style="width: 100px"
-                  />
-                  <NText
-                    depth="3"
-                    style="font-size: 11px"
-                  >
-                    使用
-                  </NText>
-                  <NSelect
-                    v-model:value="mode"
-                    :options="modeOptions"
-                    size="tiny"
-                    style="width: 110px"
-                  />
-                  <NButton
-                    size="tiny"
-                    :loading="translating"
-                    :disabled="!task.fullText"
-                    @click="translateTask(task)"
-                  >
-                    翻译
-                  </NButton>
-                </NFlex>
-                <textarea
-                  v-if="task.translatedText"
-                  v-model="task.translatedText"
-                  class="result-textarea translated"
-                  readonly
-                  placeholder="翻译结果"
-                />
-                <details class="line-details">
-                  <summary class="line-summary">逐行结果（{{ task.lines.length }} 行，悬停可高亮原图区域）</summary>
-                  <div class="line-list">
-                    <div
-                      v-for="(line, idx) in task.lines"
-                      :key="idx"
-                      class="line-item"
-                      :class="{ active: hoveredLineIdx === idx && activeTaskId === task.id }"
-                      @mouseenter="onLineHover(task.id, idx)"
-                      @mouseleave="onLineHover(task.id, null)"
-                    >
-                      <span class="line-text">{{ line.text }}</span>
-                      <span class="line-conf">{{ (line.confidence * 100).toFixed(0) }}%</span>
-                    </div>
-                  </div>
-                </details>
-              </div>
-            </div>
-          </NSpin>
-        </div>
-      </template>
-    </NFlex>
-  </NCard>
+            </Spin>
+          </div>
+        </template>
+      </div>
+    </CardContent>
+  </Card>
 </template>
 
 <style scoped>

@@ -1,24 +1,17 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NColorPicker,
-  NForm,
-  NFormItem,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NFlex,
-  NSwitch,
-  NText,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import type { ConfigItemDefinition, RGBAColor, TemplateConfigFileItem } from '@/shared/types/VTsuruConfigTypes'
 import { isValidRGBAColor, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Input } from '@/shared/ui/input'
+import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { Switch } from '@/shared/ui/switch'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   config: ConfigItemDefinition[]
@@ -118,108 +111,106 @@ function removeUploadedFile(key: string, idx: number) {
 </script>
 
 <template>
-  <NAlert
-    type="info"
-    :show-icon="true"
-  >
-    此处仅编辑 `contrib.config`（跟随“保存草稿/发布”写入 user-pages），不会单独提交到其他配置接口。
-  </NAlert>
-  <NForm
-    label-placement="top"
-    style="margin-top: 12px"
-  >
-    <template
+  <Alert class="text-xs">
+    <AlertDescription>
+      此处仅编辑 <code>contrib.config</code>（跟随“保存草稿/发布”写入 user-pages），不会单独提交到其他配置接口。
+    </AlertDescription>
+  </Alert>
+
+  <div class="space-y-4 mt-3 text-xs">
+    <div
       v-for="item in visibleItems"
       :key="item.key"
+      class="space-y-1.5"
     >
-      <NFormItem :label="item.name.toString()">
-        <template v-if="item.type === 'string'">
-          <NInput
-            v-model:value="configData[item.key]"
-            :placeholder="item.placeholder"
-            :type="item.inputType"
-          />
-        </template>
-        <template v-else-if="item.type === 'number'">
-          <NInputNumber
-            v-model:value="configData[item.key]"
-            :min="item.min"
-            :max="item.max"
-            style="width: 100%"
-          />
-        </template>
-        <template v-else-if="item.type === 'sliderNumber'">
-          <NInputNumber
-            v-model:value="configData[item.key]"
-            :min="item.min"
-            :max="item.max"
-            style="width: 100%"
-          />
-        </template>
-        <template v-else-if="item.type === 'boolean'">
-          <NSwitch v-model:value="configData[item.key]" />
-        </template>
-        <template v-else-if="item.type === 'select'">
-          <NSelect
-            v-model:value="configData[item.key]"
-            :options="typeof item.options === 'function' ? item.options(configData) : item.options"
-            :placeholder="item.placeholder"
-            :clearable="item.clearable"
-          />
-        </template>
-        <template v-else-if="item.type === 'color'">
-          <NColorPicker
-            :value="safeRgbaString(configData[item.key])"
-            :show-alpha="item.showAlpha ?? false"
-            @update:value="configData[item.key] = toRgba($event)"
-          />
-        </template>
-        <template v-else-if="item.type === 'file'">
-          <NFlex
-            vertical
-            style="width: 100%"
+      <label class="text-xs font-medium text-foreground block">{{ item.name }}</label>
+
+      <template v-if="item.type === 'string'">
+        <Input
+          v-model="configData[item.key]"
+          :placeholder="item.placeholder"
+          :type="item.inputType || 'text'"
+          class="h-8 text-xs"
+        />
+      </template>
+
+      <template v-else-if="item.type === 'number' || item.type === 'sliderNumber'">
+        <NInputNumber
+          v-model="configData[item.key]"
+          :min="item.min"
+          :max="item.max"
+        />
+      </template>
+
+      <template v-else-if="item.type === 'boolean'">
+        <Switch v-model:checked="configData[item.key]" />
+      </template>
+
+      <template v-else-if="item.type === 'select'">
+        <select
+          v-model="configData[item.key]"
+          class="w-full h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option
+            v-for="opt in (typeof item.options === 'function' ? item.options(configData) : item.options)"
+            :key="opt.value"
+            :value="opt.value"
           >
-            <NFlex>
-              <NButton
-                size="small"
-                @click="triggerUpload(item.key)"
-              >
-                上传
-              </NButton>
-              <NText depth="3">
-                {{ typeof item.fileLimit === 'number' && item.fileLimit > 0 ? `限制 ${item.fileLimit} 个` : '' }}
-              </NText>
-            </NFlex>
-            <div v-if="ensureArrayValue(item.key).length === 0">
-              <NText depth="3"> 暂无文件 </NText>
-            </div>
-            <div
-              v-for="(f, idx) in ensureArrayValue(item.key)"
-              :key="`${f.id}-${idx}`"
-              style="display: flex; gap: 8px; align-items: center"
+            {{ opt.label }}
+          </option>
+        </select>
+      </template>
+
+      <template v-else-if="item.type === 'color'">
+        <ColorPicker
+          :model-value="safeRgbaString(configData[item.key])"
+          @update:model-value="configData[item.key] = toRgba($event)"
+        />
+      </template>
+
+      <template v-else-if="item.type === 'file'">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              class="h-7 text-xs"
+              @click="triggerUpload(item.key)"
             >
-              <NText> #{{ f.id }} </NText>
-              <NText
-                depth="3"
-                style="flex: 1"
-              >
-                {{ f.path }}
-              </NText>
-              <NButton
-                size="tiny"
-                type="error"
-                @click="removeUploadedFile(item.key, idx)"
-              >
-                删除
-              </NButton>
-            </div>
-          </NFlex>
-        </template>
-        <template v-else>
-          <NText depth="3"> 不支持的配置项类型：{{ item.type }} </NText>
-        </template>
-      </NFormItem>
-    </template>
+              上传
+            </Button>
+            <span class="text-xs text-muted-foreground">
+              {{ typeof item.fileLimit === 'number' && item.fileLimit > 0 ? `限制 ${item.fileLimit} 个` : '' }}
+            </span>
+          </div>
+
+          <div v-if="ensureArrayValue(item.key).length === 0" class="text-xs text-muted-foreground">
+            暂无文件
+          </div>
+
+          <div
+            v-for="(f, idx) in ensureArrayValue(item.key)"
+            :key="`${f.id}-${idx}`"
+            class="flex items-center gap-2 p-1.5 rounded border border-border bg-card text-xs"
+          >
+            <span class="font-mono text-muted-foreground">#{{ f.id }}</span>
+            <span class="flex-1 truncate text-foreground">{{ f.path }}</span>
+            <Button
+              size="xs"
+              variant="destructive"
+              @click="removeUploadedFile(item.key, idx)"
+            >
+              删除
+            </Button>
+          </div>
+        </div>
+      </template>
+
+      <template v-else>
+        <span class="text-xs text-muted-foreground">不支持的配置项类型：{{ item.type }}</span>
+      </template>
+    </div>
+
     <input
       ref="uploadInput"
       type="file"
@@ -227,5 +218,5 @@ function removeUploadedFile(key: string, idx: number) {
       multiple
       @change="onUploadChange"
     />
-  </NForm>
+  </div>
 </template>

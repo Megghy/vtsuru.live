@@ -6,36 +6,36 @@ import {
   Person24Regular,
   Star24Regular,
 } from '@vicons/fluent'
-import type { DataTableColumns, TagProps } from 'naive-ui'
-import {
-  NButton,
-  NDataTable,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NModal,
-  NPagination,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
+import { format, formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import type { Component } from 'vue'
-import { computed, h, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { EventDataTypes, PointFrom } from '@/api/api-models'
 import { formatDanmakuPrice, getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Pagination } from '@/shared/ui/pagination'
+import { Separator } from '@/shared/ui/separator'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/table'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import PointGoodsItem from './PointGoodsItem.vue'
 
 const props = defineProps<{
   histories: ResponsePointHisrotyModel[]
 }>()
-
-type TagType = NonNullable<TagProps['type']>
 
 const page = ref(1)
 const pageSize = 10
@@ -50,30 +50,22 @@ watch(
   () => (page.value = 1),
 )
 
-const sourceOptions = [
-  { label: '直播互动', value: PointFrom.Danmaku },
-  { label: '主播调整', value: PointFrom.Manual },
-  { label: '礼物兑换', value: PointFrom.Use },
-  { label: '签到', value: PointFrom.CheckIn },
-  { label: '首次互动', value: PointFrom.DailyFirstInteraction },
-]
-
-function sourceMeta(row: ResponsePointHisrotyModel): { label: string; type: TagType; icon: Component } {
+function sourceMeta(row: ResponsePointHisrotyModel): { label: string; badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: Component } {
   switch (row.from) {
     case PointFrom.Danmaku:
-      return { label: '直播互动', type: 'info', icon: Chat24Regular }
+      return { label: '直播互动', badgeVariant: 'secondary', icon: Chat24Regular }
     case PointFrom.Manual:
       return {
         label: row.point >= 0 ? '主播赠予' : '主播扣除',
-        type: row.point >= 0 ? 'success' : 'error',
+        badgeVariant: row.point >= 0 ? 'default' : 'destructive',
         icon: Person24Regular,
       }
     case PointFrom.Use:
-      return { label: '礼物兑换', type: 'warning', icon: Gift24Regular }
+      return { label: '礼物兑换', badgeVariant: 'secondary', icon: Gift24Regular }
     case PointFrom.CheckIn:
-      return { label: '签到', type: 'success', icon: CalendarCheckmark24Regular }
+      return { label: '签到', badgeVariant: 'default', icon: CalendarCheckmark24Regular }
     case PointFrom.DailyFirstInteraction:
-      return { label: '首次互动', type: 'info', icon: Star24Regular }
+      return { label: '首次互动', badgeVariant: 'secondary', icon: Star24Regular }
   }
 }
 
@@ -117,326 +109,253 @@ function openGoods(row: ResponsePointHisrotyModel) {
   showGoodsModal.value = true
 }
 
-function renderSource(row: ResponsePointHisrotyModel) {
-  const source = sourceMeta(row)
-  return h(NFlex, { align: 'center', gap: 6, wrap: false }, () => [
-    h(
-      NTag,
-      { type: source.type, bordered: false, size: 'small' },
-      {
-        default: () => source.label,
-        icon: () => h(NIcon, { component: source.icon }),
-      },
-    ),
-    row.extra?.user?.name
-      ? h(
-          NButton,
-          { text: true, type: 'primary', tag: 'a', href: `/@${row.extra.user.name}`, target: '_blank' },
-          () => row.extra?.user?.name,
-        )
-      : null,
-  ])
-}
-
-function renderDetail(row: ResponsePointHisrotyModel) {
-  const content = detailText(row)
-  if (row.from === PointFrom.Use && row.extra?.goods) {
-    return h(NFlex, { vertical: true, gap: 2, align: 'start' }, () => [
-      h(NButton, { text: true, type: 'primary', onClick: () => openGoods(row) }, () => row.extra?.goods?.name),
-      content !== row.extra.goods.name ? h(NText, { depth: 3, style: { fontSize: '12px' } }, () => content) : null,
-    ])
+function formatRelativeTime(time: number) {
+  try {
+    return formatDistanceToNow(new Date(time), { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(time)
   }
-  return h(NTooltip, null, {
-    trigger: () => h('span', { class: 'history-detail-cell' }, content),
-    default: () => content,
-  })
 }
 
-const columns: DataTableColumns<ResponsePointHisrotyModel> = [
-  {
-    title: '时间',
-    key: 'createAt',
-    width: 130,
-    sorter: (left, right) => left.createAt - right.createAt,
-    render: (row) => h(NTime, { time: row.createAt, type: 'relative' }),
-  },
-  {
-    title: '积分变动',
-    key: 'point',
-    width: 104,
-    sorter: (left, right) => left.point - right.point,
-    render: (row) => {
-      const point = Number(row.point.toFixed(1))
-      return h(
-        'strong',
-        { class: point < 0 ? 'point-value point-value--out' : 'point-value point-value--in' },
-        `${point > 0 ? '+' : ''}${point}`,
-      )
-    },
-  },
-  {
-    title: '来源',
-    key: 'from',
-    width: 190,
-    filter: (value, row) => row.from === value,
-    filterOptions: sourceOptions,
-    render: renderSource,
-  },
-  { title: '详情', key: 'detail', minWidth: 220, render: renderDetail },
-]
+function formatFullTime(time: number) {
+  try {
+    return format(new Date(time), 'yyyy-MM-dd HH:mm:ss')
+  } catch {
+    return String(time)
+  }
+}
 </script>
 
 <template>
-  <div
-    v-if="histories.length === 0"
-    class="history-empty-state"
-  >
-    <NEmpty
-      description="暂无积分明细记录"
-      size="medium"
+  <TooltipProvider>
+    <div
+      v-if="histories.length === 0"
+      class="history-empty-state rounded-lg border border-dashed border-border p-12 text-center"
     >
-      <template #extra>
-        <span class="empty-tip">在已开通积分的主播直播间互动、签到或进行礼物兑换后，每笔流水变动都会详细记录在此。</span>
-      </template>
-    </NEmpty>
-  </div>
-
-  <template v-else>
-    <NDataTable
-      class="desktop-history-table"
-      :columns="columns"
-      :data="histories"
-      :pagination="{ defaultPageSize: 10, showSizePicker: true, pageSizes: [10, 25, 50, 100] }"
-      size="small"
-    />
-
-    <div class="mobile-history-list">
-      <article
-        v-for="item in pagedHistories"
-        :key="`${item.ouId}-${item.createAt}-${item.from}`"
-        class="mobile-history-card"
+      <Empty
+        description="暂无积分明细记录"
+        class="py-6"
       >
-        <div class="mobile-history-card__topline">
-          <NTag
-            :type="sourceMeta(item).type"
-            size="small"
-            :bordered="false"
-          >
-            <template #icon>
-              <NIcon :component="sourceMeta(item).icon" />
-            </template>
-            {{ sourceMeta(item).label }}
-          </NTag>
-          <strong :class="item.point < 0 ? 'point-value--out' : 'point-value--in'">
-            {{ item.point > 0 ? '+' : '' }}{{ Number(item.point.toFixed(1)) }}
-          </strong>
-        </div>
-        <div class="mobile-history-card__detail">{{ detailText(item) }}</div>
-        <div class="mobile-history-card__meta">
-          <NButton
-            v-if="item.extra?.user?.name"
-            text
-            type="primary"
-            tag="a"
-            :href="`/@${item.extra.user.name}`"
-            target="_blank"
-          >
-            {{ item.extra.user.name }}
-          </NButton>
-          <span v-else />
-          <NTime
-            :time="item.createAt"
-            type="relative"
-          />
-        </div>
-        <NButton
-          v-if="item.from === PointFrom.Use && item.extra?.goods"
-          size="small"
-          secondary
-          @click="openGoods(item)"
-        >
-          查看礼物快照
-        </NButton>
-      </article>
-
-      <NPagination
-        v-if="histories.length > pageSize"
-        v-model:page="page"
-        :page-size="pageSize"
-        :item-count="histories.length"
-        simple
-      />
+        <template #extra>
+          <span class="empty-tip text-xs text-muted-foreground block mt-2">
+            在已开通积分的主播直播间互动、签到或进行礼物兑换后，每笔流水变动都会详细记录在此。
+          </span>
+        </template>
+      </Empty>
     </div>
-  </template>
 
-  <NModal
-    v-if="currentHistory"
-    v-model:show="showGoodsModal"
-    preset="card"
-    title="礼物快照"
-    class="history-goods-modal"
-  >
-    <NFlex
-      vertical
-      :gap="12"
+    <div
+      v-else
+      class="space-y-3"
     >
-      <PointGoodsItem
-        v-if="currentGoods"
-        :goods="currentGoods"
-        :show-footer="false"
-      />
-
-      <template v-if="selectedSubItems.length">
-        <NDivider>已选款式</NDivider>
-        <div class="history-variant-grid">
-          <div
-            v-for="item in selectedSubItems"
-            :key="item.subItemId"
-            class="history-variant"
-          >
-            <strong>{{ item.nameSnapshot }}</strong>
-            <span>x {{ item.quantity }}</span>
-            <NTag
-              size="tiny"
-              type="info"
-              :bordered="false"
+      <!-- 桌面端表格 -->
+      <div class="hidden md:block rounded-lg border border-border/80 overflow-hidden bg-card text-xs">
+        <Table>
+          <TableHeader>
+            <TableRow class="hover:bg-transparent border-b border-border/80">
+              <TableHead class="w-32 py-2.5">时间</TableHead>
+              <TableHead class="w-28 py-2.5">积分变动</TableHead>
+              <TableHead class="w-48 py-2.5">来源</TableHead>
+              <TableHead class="py-2.5">详情</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow
+              v-for="row in pagedHistories"
+              :key="`${row.ouId}-${row.createAt}-${row.from}`"
+              class="hover:bg-muted/30"
             >
-              {{ item.priceSnapshot }} 积分
-            </NTag>
+              <TableCell class="py-2.5 text-muted-foreground whitespace-nowrap">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <span class="cursor-help hover:text-foreground">
+                      {{ formatRelativeTime(row.createAt) }}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent class="text-xs">
+                    {{ formatFullTime(row.createAt) }}
+                  </TooltipContent>
+                </Tooltip>
+              </TableCell>
+
+              <TableCell class="py-2.5 whitespace-nowrap font-mono font-bold">
+                <span :class="row.point < 0 ? 'text-destructive' : 'text-emerald-600'">
+                  {{ row.point > 0 ? '+' : '' }}{{ Number(row.point.toFixed(1)) }}
+                </span>
+              </TableCell>
+
+              <TableCell class="py-2.5">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <Badge
+                    :variant="sourceMeta(row).badgeVariant"
+                    class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1"
+                  >
+                    <component :is="sourceMeta(row).icon" class="size-3" />
+                    <span>{{ sourceMeta(row).label }}</span>
+                  </Badge>
+                  <a
+                    v-if="row.extra?.user?.name"
+                    :href="`/@${row.extra.user.name}`"
+                    target="_blank"
+                    class="text-primary hover:underline text-xs"
+                  >
+                    {{ row.extra.user.name }}
+                  </a>
+                </div>
+              </TableCell>
+
+              <TableCell class="py-2.5">
+                <div v-if="row.from === PointFrom.Use && row.extra?.goods" class="space-y-0.5">
+                  <button
+                    type="button"
+                    class="text-primary hover:underline font-medium cursor-pointer text-left block"
+                    @click="openGoods(row)"
+                  >
+                    {{ row.extra.goods.name }}
+                  </button>
+                  <span
+                    v-if="detailText(row) !== row.extra.goods.name"
+                    class="text-[11px] text-muted-foreground block"
+                  >
+                    {{ detailText(row) }}
+                  </span>
+                </div>
+                <span
+                  v-else
+                  class="text-muted-foreground break-words"
+                >
+                  {{ detailText(row) }}
+                </span>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+
+      <!-- 移动端卡片列表 -->
+      <div class="md:hidden space-y-2.5">
+        <article
+          v-for="item in pagedHistories"
+          :key="`${item.ouId}-${item.createAt}-${item.from}`"
+          class="p-3 rounded-lg border border-border/80 bg-card space-y-2 text-xs"
+        >
+          <div class="flex items-center justify-between">
+            <Badge
+              :variant="sourceMeta(item).badgeVariant"
+              class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1"
+            >
+              <component :is="sourceMeta(item).icon" class="size-3" />
+              <span>{{ sourceMeta(item).label }}</span>
+            </Badge>
+            <strong
+              class="font-mono"
+              :class="item.point < 0 ? 'text-destructive' : 'text-emerald-600'"
+            >
+              {{ item.point > 0 ? '+' : '' }}{{ Number(item.point.toFixed(1)) }}
+            </strong>
           </div>
-        </div>
-      </template>
 
-      <template v-if="currentGoods?.content">
-        <NDivider>礼物内容</NDivider>
-        <NInput
-          :value="currentGoods.content"
-          type="textarea"
-          readonly
-          :autosize="{ minRows: 2, maxRows: 8 }"
+          <p class="text-xs text-foreground m-0 break-words">{{ detailText(item) }}</p>
+
+          <div class="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+            <a
+              v-if="item.extra?.user?.name"
+              :href="`/@${item.extra.user.name}`"
+              target="_blank"
+              class="text-primary hover:underline"
+            >
+              {{ item.extra.user.name }}
+            </a>
+            <span v-else />
+            <span>{{ formatRelativeTime(item.createAt) }}</span>
+          </div>
+
+          <Button
+            v-if="item.from === PointFrom.Use && item.extra?.goods"
+            variant="outline"
+            size="sm"
+            class="w-full text-xs h-7 mt-1"
+            @click="openGoods(item)"
+          >
+            查看礼物快照
+          </Button>
+        </article>
+      </div>
+
+      <!-- 分页栏 -->
+      <div
+        v-if="histories.length > pageSize"
+        class="flex justify-center pt-2"
+      >
+        <Pagination
+          :total="histories.length"
+          :items-per-page="pageSize"
+          :page="page"
+          @update:page="page = $event"
         />
-      </template>
+      </div>
+    </div>
 
-      <template v-if="currentHistory.extra?.remark">
-        <NDivider>兑换留言</NDivider>
-        <NText>{{ currentHistory.extra.remark }}</NText>
-      </template>
-    </NFlex>
-  </NModal>
+    <!-- 礼物快照弹窗 -->
+    <Dialog
+      v-if="currentHistory"
+      v-model:open="showGoodsModal"
+    >
+      <DialogContent class="sm:max-w-md p-4">
+        <DialogHeader class="pb-2 border-b border-border/60">
+          <DialogTitle class="text-sm font-semibold">礼物快照</DialogTitle>
+        </DialogHeader>
+
+        <div class="space-y-3 pt-2 text-xs">
+          <PointGoodsItem
+            v-if="currentGoods"
+            :goods="currentGoods"
+          />
+
+          <template v-if="selectedSubItems.length">
+            <Separator />
+            <div class="space-y-1.5">
+              <span class="text-[11px] font-medium text-muted-foreground block">已选款式</span>
+              <div class="space-y-1">
+                <div
+                  v-for="item in selectedSubItems"
+                  :key="item.subItemId"
+                  class="flex items-center justify-between p-1.5 rounded bg-muted/40 text-xs"
+                >
+                  <strong class="font-medium text-foreground">{{ item.nameSnapshot }}</strong>
+                  <div class="flex items-center gap-2">
+                    <span class="text-muted-foreground">x {{ item.quantity }}</span>
+                    <Badge variant="secondary" class="text-[10px] h-4.5 px-1 font-normal font-mono">
+                      {{ item.priceSnapshot }} 积分
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template v-if="currentGoods?.content">
+            <Separator />
+            <div class="space-y-1">
+              <span class="text-[11px] font-medium text-muted-foreground block">礼物内容</span>
+              <Textarea
+                :model-value="currentGoods.content"
+                readonly
+                rows="3"
+                class="text-xs resize-none bg-muted/20"
+              />
+            </div>
+          </template>
+
+          <template v-if="currentHistory.extra?.remark">
+            <Separator />
+            <div class="space-y-1">
+              <span class="text-[11px] font-medium text-muted-foreground block">兑换留言</span>
+              <p class="text-xs text-foreground bg-muted/30 p-2 rounded m-0">{{ currentHistory.extra.remark }}</p>
+            </div>
+          </template>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </TooltipProvider>
 </template>
-
-<style scoped>
-.history-empty-state {
-  padding: 48px 16px;
-  border: 1px dashed var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-surface);
-}
-
-.empty-tip {
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-:deep(.point-value),
-.mobile-history-card strong {
-  font-variant-numeric: tabular-nums;
-}
-
-:deep(.point-value--in),
-.point-value--in {
-  color: var(--vtsuru-success);
-}
-
-:deep(.point-value--out),
-.point-value--out {
-  color: var(--vtsuru-error);
-}
-
-:deep(.history-detail-cell) {
-  display: block;
-  overflow: hidden;
-  max-width: 100%;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mobile-history-list {
-  display: none;
-}
-
-:global(.history-goods-modal) {
-  width: min(520px, calc(100vw - 24px));
-  max-width: calc(100vw - 24px);
-}
-
-.history-variant-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.history-variant {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 5px 8px;
-  padding: 10px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-elevated);
-}
-
-.history-variant .n-tag {
-  grid-column: 1 / -1;
-  justify-self: start;
-}
-
-@media (max-width: 768px) {
-  .desktop-history-table {
-    display: none;
-  }
-
-  .mobile-history-list {
-    display: grid;
-    gap: 8px;
-  }
-
-  .mobile-history-card {
-    display: grid;
-    min-width: 0;
-    gap: 8px;
-    padding: 12px;
-    border: 1px solid var(--vtsuru-border);
-    border-radius: var(--vtsuru-radius);
-    background: var(--vtsuru-bg-surface);
-  }
-
-  .mobile-history-card__topline,
-  .mobile-history-card__meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .mobile-history-card__detail {
-    overflow-wrap: anywhere;
-    color: var(--vtsuru-fg);
-    line-height: 1.55;
-  }
-
-  .mobile-history-card__meta {
-    color: var(--vtsuru-fg-muted);
-    font-size: 12px;
-  }
-
-  :global(.history-goods-modal) {
-    width: calc(100vw - 16px);
-    max-width: calc(100vw - 16px);
-  }
-
-  .history-variant-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

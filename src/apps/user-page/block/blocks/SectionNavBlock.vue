@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
-import { NEmpty } from 'naive-ui'
 import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
+import { Empty } from '@/shared/ui/empty'
 
 import BlockCard from '../BlockCard.vue'
 import { PageSectionsKey } from '../sectionNavigation'
@@ -70,10 +71,10 @@ onBeforeUnmount(() => observer?.disconnect())
       :class="`section-nav--${layout}`"
       aria-label="页面目录"
     >
-      <NEmpty
+      <Empty
         v-if="!sections.length"
-        size="small"
         description="当前页面没有匹配的标题"
+        class="py-2 text-xs"
       />
       <a
         v-for="(section, index) in sections"

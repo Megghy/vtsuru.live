@@ -6,20 +6,16 @@ import {
   Open24Regular,
   Settings24Regular,
 } from '@vicons/fluent'
-import {
-  NButton,
-  NFlex,
-  NIcon,
-  NTag,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { getCategoryMeta } from '@/apps/obs-store/registry'
 import type { ObsComponentDefinition } from '@/apps/obs-store/registry'
 import { useAccount } from '@/api/account'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
   item: ObsComponentDefinition
@@ -29,7 +25,6 @@ const emit = defineEmits<{
   configure: [item: ObsComponentDefinition]
 }>()
 
-const message = useMessage()
 const account = useAccount()
 const { copy, isSupported: isCopySupported } = useClipboard()
 const copied = ref(false)
@@ -51,24 +46,24 @@ const absoluteObsUrl = computed(() => {
 
 async function handleCopy() {
   if (!absoluteObsUrl.value) {
-    message.warning(props.item.requiresAccount ? '请登录后生成 OBS 浏览器源链接' : '当前组件暂不可用')
+    toast.warning(props.item.requiresAccount ? '请登录后生成 OBS 浏览器源链接' : '当前组件暂不可用')
     return
   }
 
-  if (!isCopySupported) {
-    message.warning('当前环境不支持直接写入剪贴板，请手动复制')
+  if (!isCopySupported.value) {
+    toast.warning('当前环境不支持直接写入剪贴板，请手动复制')
     return
   }
 
   try {
     await copy(absoluteObsUrl.value)
     copied.value = true
-    message.success(`已复制 ${props.item.name} 的 OBS 浏览器源链接`)
+    toast.success(`已复制 ${props.item.name} 的 OBS 浏览器源链接`)
     setTimeout(() => {
       copied.value = false
     }, 2000)
   } catch {
-    message.error('复制失败，请手动复制')
+    toast.error('复制失败，请手动复制')
   }
 }
 </script>
@@ -81,22 +76,27 @@ async function handleCopy() {
     <!-- 卡片头部 -->
     <div class="card-header">
       <div class="icon-box">
-        <NIcon
-          :component="item.icon"
-          class="comp-icon"
+        <component
+          :is="item.icon"
+          class="size-5"
         />
       </div>
       <div class="header-main">
         <div class="title-row">
           <span class="card-title">{{ item.name }}</span>
-          <NTag
-            size="tiny"
-            :type="props.item.status === 'beta' ? 'warning' : isReady ? 'success' : 'default'"
-            :bordered="false"
-            class="status-tag"
+          <Badge
+            variant="outline"
+            :class="[
+              'text-[10px] h-4.5 px-1.5',
+              props.item.status === 'beta'
+                ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                : isReady
+                  ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                  : 'text-muted-foreground'
+            ]"
           >
             {{ statusLabel }}
-          </NTag>
+          </Badge>
         </div>
         <div class="meta-row">
           <span
@@ -116,7 +116,7 @@ async function handleCopy() {
     </div>
 
     <!-- 卡片内容 -->
-      <div class="card-body">
+    <div class="card-body">
       <p class="card-desc">
         {{ item.shortDescription }}
       </p>
@@ -154,8 +154,8 @@ async function handleCopy() {
       </div>
 
       <!-- 推荐尺寸规格 -->
-        <div
-          v-if="item.defaultResolution"
+      <div
+        v-if="item.defaultResolution"
         class="resolution-info"
       >
         <span class="res-label">推荐尺寸:</span>
@@ -166,60 +166,59 @@ async function handleCopy() {
     <!-- 卡片底部操作栏 -->
     <div class="card-footer">
       <template v-if="isReady">
-            <NButton
-          type="primary"
-          size="small"
-          class="action-btn config-btn"
+        <Button
+          size="sm"
+          class="flex-1 h-8 text-xs gap-1.5"
           @click="emit('configure', item)"
         >
-          <template #icon>
-            <NIcon :component="Settings24Regular" />
-          </template>
+          <Settings24Regular class="size-4" />
           配置与调试
-        </NButton>
+        </Button>
 
-        <NFlex
-          :size="6"
-          align="center"
-        >
-          <NTooltip trigger="hover">
-            <template #trigger>
-              <NButton
-                size="small"
-                secondary
-                class="action-icon-btn"
-                @click="handleCopy"
-              >
-                <template #icon>
-                  <NIcon :component="copied ? Checkmark24Regular : Copy24Regular" />
-                </template>
-              </NButton>
-            </template>
-            复制默认 OBS 浏览器源链接
-          </NTooltip>
+        <div class="flex items-center gap-1.5">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  class="h-8 w-8 p-0"
+                  @click="handleCopy"
+                >
+                  <Checkmark24Regular v-if="copied" class="size-4" />
+                  <Copy24Regular v-else class="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                复制默认 OBS 浏览器源链接
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-          <NTooltip
-            v-if="item.obsPath"
-            trigger="hover"
-          >
-            <template #trigger>
-              <NButton
-                size="small"
-                secondary
-                tag="a"
-                :href="absoluteObsUrl || undefined"
-                :disabled="!absoluteObsUrl"
-                target="_blank"
-                class="action-icon-btn"
-              >
-                <template #icon>
-                  <NIcon :component="Open24Regular" />
-                </template>
-              </NButton>
-            </template>
-            在新标签页预览 OBS 源
-          </NTooltip>
-        </NFlex>
+          <TooltipProvider v-if="item.obsPath">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  class="h-8 w-8 p-0"
+                  as-child
+                  :disabled="!absoluteObsUrl"
+                >
+                  <a
+                    :href="absoluteObsUrl || undefined"
+                    target="_blank"
+                  >
+                    <Open24Regular class="size-4" />
+                  </a>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                在新标签页预览 OBS 源
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </template>
 
       <template v-else>
@@ -285,10 +284,6 @@ async function handleCopy() {
   flex-shrink: 0;
 }
 
-.comp-icon {
-  font-size: 20px;
-}
-
 .header-main {
   flex: 1;
   min-width: 0;
@@ -308,11 +303,6 @@ async function handleCopy() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.status-tag {
-  font-size: 11px;
-  flex-shrink: 0;
 }
 
 .meta-row {
@@ -450,14 +440,6 @@ async function handleCopy() {
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--vtsuru-border);
-}
-
-.action-btn {
-  flex: 1;
-}
-
-.action-icon-btn {
-  padding: 0 8px;
 }
 
 .planned-footer {

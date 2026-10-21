@@ -16,33 +16,7 @@ import {
   Timer24Regular,
   Trophy24Regular,
 } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NButtonGroup,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NProgress,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSpin,
-  NSwitch,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
+import { useMessage } from '@/shared/utils'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 
@@ -65,13 +39,48 @@ import {
 } from '@/api/generated/bullet-vote/bullet-vote'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
-import { getVoteStandings, voteOutcomeLabel } from '@/shared/utils/voteStandings'
-import { createVotePreviewScene, type VotePreviewScene } from './votePreview'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
+import { Switch } from '@/shared/ui/switch'
+import { Textarea } from '@/shared/ui/textarea'
 import { copyToClipboard } from '@/shared/utils'
 import { formatCountdown, remainingMs } from '@/shared/utils/countdown'
-import { useVoteTemplates, VOTE_QUICK_PRESETS, type VotePreset } from '@/shared/utils/votePresets'
+import { type VotePreset, VOTE_QUICK_PRESETS, useVoteTemplates } from '@/shared/utils/votePresets'
+import { getVoteStandings, voteOutcomeLabel } from '@/shared/utils/voteStandings'
+import { createVotePreviewScene, type VotePreviewScene } from './votePreview'
 
 // 账号与消息
 const message = useMessage()
@@ -237,12 +246,10 @@ const previewPosition = ref('center')
 const previewMaxDisplay = ref(6)
 const previewMode = ref<'live' | 'mock'>('mock')
 
-// Mock 场景时间基准：后端 endTime 为毫秒时间戳，这里保持同单位
 function mockTime(offsetSeconds: number): number {
   return Date.now() + offsetSeconds * 1000
 }
 
-// 模拟调试数据源
 const mockData = ref<VoteOBSData>({
   sessionId: 9999,
   title: '本局英雄出装选择',
@@ -263,7 +270,6 @@ const mockData = ref<VoteOBSData>({
   ],
 })
 
-// 重新计算 Mock 数据的百分比
 function recalculateMockPercentages() {
   const total = mockData.value.options.reduce((sum, opt) => sum + opt.count, 0)
   mockData.value.totalVotes = total
@@ -272,7 +278,6 @@ function recalculateMockPercentages() {
   })
 }
 
-// 模拟加票
 function mockAddVote(optionIndex: number, delta = 1) {
   const target = mockData.value.options.find((o) => o.index === optionIndex)
   if (target) {
@@ -282,14 +287,13 @@ function mockAddVote(optionIndex: number, delta = 1) {
   }
 }
 
-// 模拟后方反超
 function mockOvertake(targetIdx: number) {
   const leader = [...mockData.value.options].sort((a, b) => b.count - a.count)[0]
   const target = mockData.value.options.find((o) => o.index === targetIdx)
   if (target && leader) {
     target.count = leader.count + 3
     recalculateMockPercentages()
-    message.success(`「${target.text}」已反超成为第 1 名！观察赛跑换位动效`)
+    message.success(`「${target.text}」已反超成为第 1 名！`)
   }
 }
 
@@ -312,12 +316,11 @@ function setMockBalance(mode: 'close' | 'tie' | 'empty') {
   recalculateMockPercentages()
 }
 
-// 模拟状态切换
 function toggleMockUrgent() {
   mockData.value.isActive = true
   mockData.value.isEnding = false
   mockData.value.winnerOption = undefined
-  mockData.value.endTime = mockTime(8) // 8 秒倒计时，触发紧急呼吸
+  mockData.value.endTime = mockTime(8)
   message.info('已切换至最后 8s 紧急倒计时状态')
 }
 
@@ -330,7 +333,6 @@ function toggleMockWinner() {
   message.success(voteOutcomeLabel(standings, true))
 }
 
-// 当前送往 Card 组件的数据
 const activePreviewCardData = computed<VoteOBSData | null>(() => {
   if (previewMode.value === 'live') {
     if (!currentVote.value) return null
@@ -357,7 +359,6 @@ const activePreviewCardData = computed<VoteOBSData | null>(() => {
   return mockData.value
 })
 
-// API 操作
 async function fetchVoteConfig() {
   try {
     const res = (await getApiVoteGetConfig()) as unknown as {
@@ -401,7 +402,7 @@ async function fetchActiveVote() {
       currentVote.value = res.data
     }
   } catch (err) {
-    // 静默处理轮询异常
+    // 静默
   }
 }
 
@@ -569,852 +570,964 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="vote-manage-container">
+  <div class="space-y-4 w-full">
     <ManagePageHeader
-      title="弹幕投票"
-      description="观众可通过直播间弹幕发送选项序号或文字参与投票，实时统计并投屏到 OBS 画面"
+      title="弹幕投票系统"
+      subtitle="观众可通过直播间弹幕发送选项序号或文字参与投票，实时统计并投屏到 OBS 画面"
     >
       <template #action>
-        <NFlex align="center" :size="8">
-          <NRadioGroup v-model:value="activeTab" size="small">
-            <NRadioButton value="console">
-              <NFlex align="center" :size="4">
-                <NIcon><Clock24Regular /></NIcon>
-                <span>工作台</span>
-              </NFlex>
-            </NRadioButton>
-            <NRadioButton value="preview">
-              <NFlex align="center" :size="4">
-                <NIcon><Desktop24Regular /></NIcon>
-                <span>OBS 预览与调试</span>
-              </NFlex>
-            </NRadioButton>
-          </NRadioGroup>
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
+            <Button
+              size="xs"
+              :variant="activeTab === 'console' ? 'default' : 'ghost'"
+              class="h-7 text-xs px-2.5 gap-1"
+              @click="activeTab = 'console'"
+            >
+              <component
+                :is="Clock24Regular"
+                class="h-3.5 w-3.5"
+              />
+              工作台
+            </Button>
+            <Button
+              size="xs"
+              :variant="activeTab === 'preview' ? 'default' : 'ghost'"
+              class="h-7 text-xs px-2.5 gap-1"
+              @click="activeTab = 'preview'"
+            >
+              <component
+                :is="Desktop24Regular"
+                class="h-3.5 w-3.5"
+              />
+              OBS 预览与调试
+            </Button>
+          </div>
 
-          <NButton secondary size="small" @click="showSettingsModal = true">
-            <template #icon>
-              <NIcon><Settings24Regular /></NIcon>
-            </template>
+          <Button
+            size="xs"
+            variant="outline"
+            @click="showSettingsModal = true"
+          >
+            <component
+              :is="Settings24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
             全局设置
-          </NButton>
-          <NButton type="primary" size="small" @click="copyObsLink(voteConfig.theme, voteConfig.displayPosition)">
-            <template #icon>
-              <NIcon><Copy24Regular /></NIcon>
-            </template>
+          </Button>
+
+          <Button
+            size="xs"
+            variant="brand"
+            @click="copyObsLink(voteConfig.theme, voteConfig.displayPosition)"
+          >
+            <component
+              :is="Copy24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
             复制 OBS 链接
-          </NButton>
-        </NFlex>
+          </Button>
+        </div>
       </template>
     </ManagePageHeader>
 
     <!-- 视图 1：工作台 (发起与监控) -->
-    <div v-show="activeTab === 'console'" style="margin-top: 16px">
-      <NGrid cols="1 m:3" :x-gap="16" :y-gap="16">
-        <!-- 左侧：实时控制看板 + 发起投票 (占 2 列) -->
-        <NGridItem :span="2">
-          <NFlex vertical :size="16">
-            <!-- 1. 进行中的投票监控卡片 -->
-            <NCard
-              v-if="currentVote && currentVote.isActive"
-              size="small"
-              class="active-vote-card"
-              :segmented="{ content: true }"
-            >
-              <template #header>
-                <NFlex align="center" justify="space-between">
-                  <NFlex align="center" :size="8">
-                    <span class="pulse-dot"></span>
-                    <NText strong style="font-size: 16px">{{ currentVote.title }}</NText>
-                    <NTag type="warning" size="small" :bordered="false">
-                      剩余：{{ formatTime(timeLeftMs) }}
-                    </NTag>
-                  </NFlex>
-                  <NText depth="3" style="font-size: 13px">
-                    总票数：<strong>{{ currentVote.totalVotes }}</strong> 票
-                  </NText>
-                </NFlex>
-              </template>
-
-              <!-- 动态选项统计条 -->
-              <div class="active-options-list">
-                <div
-                  v-for="(opt, idx) in currentVote.options ?? []"
-                  :key="idx"
-                  class="active-option-row"
-                  :class="{ 'is-leading': idx === leadingOptionIndex }"
+    <div
+      v-show="activeTab === 'console'"
+      class="grid grid-cols-1 lg:grid-cols-12 gap-4"
+    >
+      <!-- 左侧：实时控制看板 + 发起投票 (8 列) -->
+      <div class="lg:col-span-8 space-y-4">
+        <!-- 1. 进行中的投票监控卡片 -->
+        <Card
+          v-if="currentVote && currentVote.isActive"
+          class="border-l-4 border-l-amber-500 bg-amber-500/5 shadow-sm"
+        >
+          <CardHeader class="p-3.5 pb-2">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500 animate-pulse" />
+                <CardTitle class="text-sm font-semibold">
+                  {{ currentVote.title }}
+                </CardTitle>
+                <Badge
+                  variant="warning"
+                  class="text-xs"
                 >
-                  <NFlex justify="space-between" align="center" style="margin-bottom: 4px">
-                    <NText :strong="idx === leadingOptionIndex">
-                      <span class="idx-badge">{{ idx + 1 }}</span>
-                      {{ opt.text }}
-                      <NTag v-if="idx === leadingOptionIndex" type="warning" size="tiny" :bordered="false">
-                        领先
-                      </NTag>
-                    </NText>
-                    <NFlex align="center" :size="6">
-                      <span class="opt-count">{{ opt.count }} 票</span>
-                      <span class="opt-pct">{{ calcPercentage(opt.count, currentVote.totalVotes) }}%</span>
-                    </NFlex>
-                  </NFlex>
-                  <NProgress
-                    type="line"
-                    :percentage="calcPercentage(opt.count, currentVote.totalVotes)"
-                    :height="10"
-                    :status="idx === leadingOptionIndex ? 'warning' : 'default'"
+                  剩余：{{ formatTime(timeLeftMs) }}
+                </Badge>
+              </div>
+
+              <span class="text-xs text-muted-foreground">
+                总票数：<strong class="text-foreground text-sm font-bold">{{ currentVote.totalVotes }}</strong> 票
+              </span>
+            </div>
+          </CardHeader>
+
+          <CardContent class="p-3.5 space-y-3">
+            <!-- 动态选项统计条 -->
+            <div class="space-y-2.5">
+              <div
+                v-for="(opt, idx) in currentVote.options ?? []"
+                :key="idx"
+                class="p-2.5 rounded-md border border-border bg-card/60 transition-colors"
+                :class="{ 'border-amber-500/40 bg-amber-500/10': idx === leadingOptionIndex }"
+              >
+                <div class="flex justify-between items-center text-xs mb-1.5">
+                  <div class="flex items-center gap-1.5 font-medium">
+                    <span class="font-mono text-muted-foreground">#{{ idx + 1 }}</span>
+                    <span>{{ opt.text }}</span>
+                    <Badge
+                      v-if="idx === leadingOptionIndex"
+                      variant="warning"
+                      class="text-[10px] px-1 py-0 h-4"
+                    >
+                      领先
+                    </Badge>
+                  </div>
+                  <div class="flex items-center gap-2 font-mono">
+                    <span class="text-muted-foreground">{{ opt.count }} 票</span>
+                    <span class="font-bold text-amber-500">{{ calcPercentage(opt.count, currentVote.totalVotes) }}%</span>
+                  </div>
+                </div>
+
+                <!-- 进度条 -->
+                <div class="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-300"
+                    :class="idx === leadingOptionIndex ? 'bg-amber-500' : 'bg-primary'"
+                    :style="{ width: `${calcPercentage(opt.count, currentVote.totalVotes)}%` }"
                   />
                 </div>
               </div>
+            </div>
 
-              <template #action>
-                <NFlex justify="space-between" align="center">
-                  <NFlex align="center" :size="8">
-                    <NText depth="3" style="font-size: 12px">加时：</NText>
-                    <NButtonGroup size="small">
-                      <NButton secondary @click="extendDuration(30)">+30s</NButton>
-                      <NButton secondary @click="extendDuration(60)">+60s</NButton>
-                      <NButton secondary @click="extendDuration(120)">+2m</NButton>
-                    </NButtonGroup>
-                  </NFlex>
+            <Separator />
 
-                  <NPopconfirm @positive-click="endVote">
-                    <template #trigger>
-                      <NButton type="warning" size="small">
-                        <template #icon>
-                          <NIcon><Pause24Regular /></NIcon>
-                        </template>
-                        提前结束
-                      </NButton>
-                    </template>
-                    确定要提前结束当前投票并进入结算展示吗？
-                  </NPopconfirm>
-                </NFlex>
-              </template>
-            </NCard>
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs text-muted-foreground">加时:</span>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="extendDuration(30)"
+                >
+                  +30s
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="extendDuration(60)"
+                >
+                  +60s
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="extendDuration(120)"
+                >
+                  +2m
+                </Button>
+              </div>
 
-            <!-- 2. 发起新投票卡片 -->
-            <NCard size="small" title="发起投票">
-              <NSpin :show="isLoading">
-                <NFlex vertical :size="14">
-                  <!-- 快捷预设芯片 -->
-                  <NFlex align="center" :size="8">
-                    <NText depth="3" style="font-size: 12px">快捷预设：</NText>
-                    <NButton
-                      v-for="p in VOTE_QUICK_PRESETS"
-                      :key="p.name"
-                      size="tiny"
-                      secondary
-                      @click="applyPreset(p)"
+              <AlertDialog>
+                <AlertDialogTrigger as-child>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                  >
+                    <component
+                      :is="Pause24Regular"
+                      class="h-3.5 w-3.5 mr-1"
+                    />
+                    提前结束
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent class="sm:max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>提前结束当前投票？</AlertDialogTitle>
+                    <AlertDialogDescription class="text-xs">
+                      提前结束后将锁定投票结果并进入结算展示状态。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction
+                      class="bg-amber-500 text-white hover:bg-amber-600"
+                      @click="endVote"
                     >
-                      <template #icon>
-                        <NIcon><Sparkle24Regular /></NIcon>
-                      </template>
-                      {{ p.name }}
-                    </NButton>
-                  </NFlex>
+                      确认结束
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
 
-                  <!-- 标题 -->
-                  <NInput
-                    v-model:value="formTitle"
-                    placeholder="输入投票主题 (例如: 本局出装选择 / 下一把玩什么)"
-                    size="small"
-                    maxlength="50"
-                    show-count
+        <!-- 2. 发起新投票卡片 -->
+        <Card>
+          <CardHeader class="p-3.5 pb-2">
+            <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+              发起投票
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent class="p-3.5 space-y-3.5">
+            <!-- 快捷预设芯片 -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs text-muted-foreground">快捷预设:</span>
+              <Button
+                v-for="p in VOTE_QUICK_PRESETS"
+                :key="p.name"
+                size="xs"
+                variant="outline"
+                class="h-6 text-xs gap-1"
+                @click="applyPreset(p)"
+              >
+                <component
+                  :is="Sparkle24Regular"
+                  class="h-3 w-3 text-brand"
+                />
+                {{ p.name }}
+              </Button>
+            </div>
+
+            <!-- 投票主题 -->
+            <Input
+              v-model="formTitle"
+              placeholder="输入投票主题 (例如: 本局出装选择 / 下一把玩什么)"
+              class="text-xs h-8"
+              maxlength="50"
+            />
+
+            <!-- 选项编辑列表 -->
+            <div class="space-y-2">
+              <div
+                v-for="(opt, idx) in formOptions"
+                :key="opt.id"
+                class="flex items-center gap-2"
+              >
+                <span class="font-mono text-xs text-muted-foreground w-5 text-right shrink-0">{{ idx + 1 }}.</span>
+                <Input
+                  v-model="opt.text"
+                  placeholder="选项文字"
+                  class="text-xs h-8 flex-1"
+                  maxlength="30"
+                />
+                <Button
+                  v-if="formOptions.length > 2"
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-muted-foreground hover:text-destructive"
+                  @click="removeOption(idx)"
+                >
+                  <component
+                    :is="Delete24Regular"
+                    class="h-3.5 w-3.5"
                   />
+                </Button>
+              </div>
+            </div>
 
-                  <!-- 选项列表 -->
-                  <div class="form-options-editor">
-                    <div v-for="(opt, idx) in formOptions" :key="opt.id" class="form-option-row">
-                      <span class="form-option-idx">{{ idx + 1 }}</span>
-                      <NInput
-                        v-model:value="opt.text"
-                        placeholder="选项文字"
-                        size="small"
-                        maxlength="30"
-                        class="form-option-input"
-                      />
-                      <NButton
-                        v-if="formOptions.length > 2"
-                        size="tiny"
-                        quaternary
-                        type="error"
-                        @click="removeOption(idx)"
+            <div class="flex items-center gap-2">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="addOption"
+              >
+                <component
+                  :is="Add24Filled"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                添加选项
+              </Button>
+              <Button
+                size="xs"
+                variant="outline"
+                @click="openBatchModal"
+              >
+                批量粘贴/导入
+              </Button>
+              <Button
+                v-if="formOptions.length > 2"
+                size="xs"
+                variant="ghost"
+                class="text-muted-foreground"
+                @click="formOptions = [createFormOption('选项1'), createFormOption('选项2')]"
+              >
+                重置为 2 项
+              </Button>
+            </div>
+
+            <Separator />
+
+            <!-- 时长与规则 -->
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex items-center gap-4 flex-wrap">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-muted-foreground">时长:</span>
+                  <Input
+                    v-model.number="formDuration"
+                    type="number"
+                    min="0"
+                    max="3600"
+                    step="30"
+                    class="w-20 h-8 text-xs font-mono"
+                  />
+                  <span class="text-xs text-muted-foreground">秒</span>
+                </div>
+
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+                  <Checkbox v-model="formAllowMultiple" />
+                  <span>每人允许多次投票</span>
+                </label>
+              </div>
+
+              <Button
+                size="sm"
+                variant="brand"
+                :loading="isLoading"
+                @click="createVote"
+              >
+                <component
+                  :is="Play24Regular"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                {{ currentVote?.isActive ? '覆盖并重新发起' : '立即发起投票' }}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <!-- 右侧：模板库与历史记录 (4 列) -->
+      <div class="lg:col-span-4 space-y-4">
+        <!-- 模板库卡片 -->
+        <Card>
+          <CardHeader class="p-3.5 pb-2">
+            <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+              我的模板库
+            </CardTitle>
+          </CardHeader>
+          <CardContent class="p-3.5 space-y-2.5">
+            <div class="flex gap-1.5">
+              <Input
+                v-model="newTemplateName"
+                placeholder="存为新模板..."
+                class="text-xs h-8 flex-1"
+              />
+              <Button
+                size="xs"
+                variant="outline"
+                @click="saveCustomTemplate"
+              >
+                保存
+              </Button>
+            </div>
+
+            <div
+              v-if="savedTemplates.length === 0"
+              class="text-xs text-muted-foreground py-4 text-center border border-dashed rounded-md"
+            >
+              暂无保存的模板
+            </div>
+            <div
+              v-else
+              class="space-y-1.5 max-h-48 overflow-y-auto"
+            >
+              <div
+                v-for="(tpl, idx) in savedTemplates"
+                :key="idx"
+                class="flex items-center justify-between p-2 rounded border border-border bg-muted/20 hover:bg-muted/40 transition-colors text-xs cursor-pointer"
+                @click="applyPreset(tpl)"
+              >
+                <div class="min-w-0 pr-2">
+                  <div class="font-medium truncate text-foreground">
+                    {{ tpl.name }}
+                  </div>
+                  <div class="text-[11px] text-muted-foreground truncate">
+                    {{ tpl.options.join(' / ') }}
+                  </div>
+                </div>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-muted-foreground hover:text-destructive shrink-0"
+                  @click.stop="deleteCustomTemplate(idx)"
+                >
+                  <component
+                    :is="Delete24Regular"
+                    class="h-3.5 w-3.5"
+                  />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- 历史记录卡片 -->
+        <Card>
+          <CardHeader class="p-3.5 pb-2">
+            <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+              历史投票记录
+            </CardTitle>
+          </CardHeader>
+          <CardContent class="p-3.5">
+            <div
+              v-if="voteHistory.length === 0"
+              class="text-xs text-muted-foreground py-4 text-center border border-dashed rounded-md"
+            >
+              暂无历史记录
+            </div>
+            <div
+              v-else
+              class="space-y-1.5 max-h-64 overflow-y-auto"
+            >
+              <div
+                v-for="item in voteHistory"
+                :key="item.id"
+                class="flex items-center justify-between p-2 rounded border border-border bg-muted/20 text-xs"
+              >
+                <div class="min-w-0 pr-2">
+                  <div class="font-medium truncate text-foreground">
+                    {{ item.title }}
+                  </div>
+                  <div class="text-[11px] text-muted-foreground flex items-center gap-2">
+                    <span>总票数：{{ item.totalVotes }}</span>
+                    <span>{{ item.options.length }} 个选项</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1 shrink-0">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    @click="reuseHistory(item)"
+                  >
+                    复刻
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger as-child>
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        class="text-muted-foreground hover:text-destructive"
                       >
-                        <template #icon>
-                          <NIcon><Delete24Regular /></NIcon>
-                        </template>
-                      </NButton>
-                    </div>
-                  </div>
-
-                  <NFlex align="center" :size="10">
-                    <NButton size="small" secondary @click="addOption">
-                      <template #icon>
-                        <NIcon><Add24Filled /></NIcon>
-                      </template>
-                      添加选项
-                    </NButton>
-                    <NButton size="small" secondary @click="openBatchModal">
-                      批量粘贴/导入
-                    </NButton>
-                    <NButton
-                      v-if="formOptions.length > 2"
-                      size="small"
-                      quaternary
-                      @click="formOptions = [createFormOption('选项1'), createFormOption('选项2')]"
-                    >
-                      重置为 2 项
-                    </NButton>
-                  </NFlex>
-
-                  <NDivider style="margin: 4px 0" />
-
-                  <!-- 时长与规则 -->
-                  <NFlex align="center" justify="space-between" :wrap="true">
-                    <NFlex align="center" :size="12">
-                      <NInputGroup style="width: 170px">
-                        <NInputGroupLabel size="small">时长</NInputGroupLabel>
-                        <NInputNumber
-                          v-model:value="formDuration"
-                          size="small"
-                          :min="0"
-                          :max="3600"
-                          :step="30"
-                          placeholder="秒"
+                        <component
+                          :is="Delete24Regular"
+                          class="h-3.5 w-3.5"
                         />
-                        <NInputGroupLabel size="small">秒</NInputGroupLabel>
-                      </NInputGroup>
-
-                      <NCheckbox v-model:checked="formAllowMultiple">
-                        每人允许多次投票
-                      </NCheckbox>
-                    </NFlex>
-
-                    <NButton type="primary" size="small" @click="createVote">
-                      <template #icon>
-                        <NIcon><Play24Regular /></NIcon>
-                      </template>
-                      {{ currentVote?.isActive ? '覆盖并重新发起' : '立即发起投票' }}
-                    </NButton>
-                  </NFlex>
-                </NFlex>
-              </NSpin>
-            </NCard>
-          </NFlex>
-        </NGridItem>
-
-        <!-- 右侧：模板库与历史记录 (占 1 列) -->
-        <NGridItem :span="1">
-          <NFlex vertical :size="16">
-            <!-- 模板库卡片 -->
-            <NCard size="small" title="我的模板库">
-              <NFlex vertical :size="10">
-                <NFlex :size="8">
-                  <NInput
-                    v-model:value="newTemplateName"
-                    placeholder="当前选项存为模板..."
-                    size="small"
-                    style="flex: 1"
-                  />
-                  <NButton size="small" secondary @click="saveCustomTemplate">
-                    保存
-                  </NButton>
-                </NFlex>
-
-                <div v-if="savedTemplates.length === 0" class="empty-hint">
-                  暂无保存的模板，可将上方表单存入模板库
-                </div>
-                <div v-else class="template-list">
-                  <div v-for="(tpl, idx) in savedTemplates" :key="idx" class="template-item">
-                    <div class="template-info" @click="applyPreset(tpl)">
-                      <div class="template-name">{{ tpl.name }}</div>
-                      <div class="template-preview">
-                        {{ tpl.options.join(' / ') }}
-                      </div>
-                    </div>
-                    <NButton size="tiny" quaternary type="error" @click.stop="deleteCustomTemplate(idx)">
-                      <template #icon>
-                        <NIcon><Delete24Regular /></NIcon>
-                      </template>
-                    </NButton>
-                  </div>
-                </div>
-              </NFlex>
-            </NCard>
-
-            <!-- 历史记录卡片 -->
-            <NCard size="small" title="历史投票记录">
-              <div v-if="voteHistory.length === 0" class="empty-hint">
-                暂无历史记录
-              </div>
-              <div v-else class="history-list">
-                <div v-for="item in voteHistory" :key="item.id" class="history-item">
-                  <div class="history-main">
-                    <div class="history-title">{{ item.title }}</div>
-                    <div class="history-meta">
-                      <span>总票数：{{ item.totalVotes }}</span>
-                      <span>{{ item.options.length }} 个选项</span>
-                    </div>
-                  </div>
-                  <NFlex align="center" :size="4">
-                    <NButton size="tiny" secondary @click="reuseHistory(item)">
-                      复刻
-                    </NButton>
-                    <NPopconfirm @positive-click="deleteHistoryVote(item.id)">
-                      <template #trigger>
-                        <NButton size="tiny" quaternary type="error">
-                          <template #icon>
-                            <NIcon><Delete24Regular /></NIcon>
-                          </template>
-                        </NButton>
-                      </template>
-                      确定要删除这条记录吗？
-                    </NPopconfirm>
-                  </NFlex>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent class="sm:max-w-md">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>删除此记录？</AlertDialogTitle>
+                        <AlertDialogDescription class="text-xs">
+                          删除后将从历史记录中移除。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction
+                          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          @click="deleteHistoryVote(item.id)"
+                        >
+                          确认删除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
-            </NCard>
-          </NFlex>
-        </NGridItem>
-      </NGrid>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
 
     <!-- 视图 2：OBS 实时预览舞台与仿真调试控制台 -->
-    <div v-show="activeTab === 'preview'" style="margin-top: 16px">
-      <NGrid cols="1 m:3" :x-gap="16" :y-gap="16">
-        <!-- 左侧：OBS 预览舞台 (占 2 列) -->
-        <NGridItem :span="2">
-          <NCard size="small" class="preview-stage-card">
-            <template #header>
-              <NFlex justify="space-between" align="center">
-                <NFlex align="center" :size="8">
-                  <NIcon><Eye24Regular /></NIcon>
-                  <NText strong>OBS 画布实时预览 (1080P 比例视口)</NText>
-                  <NTag :type="previewMode === 'live' ? 'success' : 'info'" size="tiny" :bordered="false">
-                    {{ previewMode === 'live' ? '真实数据源' : '模拟仿真模式' }}
-                  </NTag>
-                </NFlex>
+    <div
+      v-show="activeTab === 'preview'"
+      class="grid grid-cols-1 lg:grid-cols-12 gap-4"
+    >
+      <!-- 左侧：OBS 预览舞台 (8 列) -->
+      <Card class="lg:col-span-8 flex flex-col">
+        <CardHeader class="p-3.5 pb-2">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2">
+              <component
+                :is="Eye24Regular"
+                class="h-4 w-4 text-muted-foreground"
+              />
+              <CardTitle class="text-xs font-semibold">
+                OBS 画布实时预览 (1080P 比例视口)
+              </CardTitle>
+              <Badge
+                :variant="previewMode === 'live' ? 'success' : 'outline'"
+                class="text-[10px] px-1.5 py-0 h-4"
+              >
+                {{ previewMode === 'live' ? '真实数据源' : '模拟仿真模式' }}
+              </Badge>
+            </div>
 
-                <NFlex align="center" :size="8">
-                  <NRadioGroup v-model:value="previewBg" size="small">
-                    <NRadioButton value="checker">透明网格</NRadioButton>
-                    <NRadioButton value="dark">纯黑背景</NRadioButton>
-                    <NRadioButton value="light">浅色背景</NRadioButton>
-                    <NRadioButton value="game">直播场景</NRadioButton>
-                  </NRadioGroup>
-                </NFlex>
-              </NFlex>
-            </template>
+            <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
+              <Button
+                v-for="bg in [
+                  { key: 'checker', label: '网格' },
+                  { key: 'dark', label: '纯黑' },
+                  { key: 'light', label: '浅色' },
+                  { key: 'game', label: '直播场景' },
+                ]"
+                :key="bg.key"
+                size="xs"
+                :variant="previewBg === bg.key ? 'default' : 'ghost'"
+                class="h-6 text-xs px-2"
+                @click="previewBg = bg.key as any"
+              >
+                {{ bg.label }}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
 
-            <!-- 仿真舞台视口 -->
-            <div class="obs-stage-viewport" :class="[`bg-${previewBg}`]">
-              <div class="obs-stage-canvas">
-                <DanmakuVoteCard
-                  :data="activePreviewCardData"
-                  :theme="previewTheme"
-                  :position="previewPosition"
-                  :max-display="previewMaxDisplay"
-                  :current-time-ms="nowMs"
-                />
+        <CardContent class="p-4 flex-1 flex flex-col justify-between space-y-4">
+          <div
+            class="rounded-lg border border-border p-6 flex items-center justify-center min-h-[460px] transition-colors"
+            :class="{
+              'bg-[#121214]': previewBg === 'dark',
+              'bg-[#f4f4f5]': previewBg === 'light',
+              'bg-[#0b132b]': previewBg === 'game',
+              'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]': previewBg === 'checker',
+            }"
+          >
+            <div class="w-[380px] max-w-full">
+              <DanmakuVoteCard
+                :data="activePreviewCardData"
+                :theme="previewTheme"
+                :position="previewPosition"
+                :max-display="previewMaxDisplay"
+                :current-time-ms="nowMs"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-border/60">
+            <span class="text-xs text-muted-foreground font-mono">
+              参数: ?theme={{ previewTheme }}&position={{ previewPosition }}&max={{ previewMaxDisplay }}
+            </span>
+            <Button
+              size="xs"
+              variant="brand"
+              @click="copyObsLink(previewTheme, previewPosition, previewMaxDisplay)"
+            >
+              <component
+                :is="Copy24Regular"
+                class="h-3.5 w-3.5 mr-1"
+              />
+              复制当前调试参数 OBS 链接
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- 右侧：仿真调试控制台 (4 列) -->
+      <div class="lg:col-span-4 space-y-4">
+        <!-- 视觉与场景调试 -->
+        <Card>
+          <CardHeader class="p-3.5 pb-2">
+            <div class="flex items-center gap-2">
+              <component
+                :is="Color24Regular"
+                class="h-4 w-4 text-muted-foreground"
+              />
+              <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+                视觉与场景调试
+              </CardTitle>
+            </div>
+          </CardHeader>
+
+          <CardContent class="p-3.5 space-y-3.5">
+            <div>
+              <span class="text-xs text-muted-foreground block mb-2">一键载入场景:</span>
+              <div class="flex flex-wrap gap-1.5">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="loadMockScene('duel-top')"
+                >
+                  红蓝顶栏
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="loadMockScene('duel')"
+                >
+                  红蓝卡片
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="loadMockScene('standard')"
+                >
+                  四选一
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="loadMockScene('leaderboard')"
+                >
+                  10人排行榜
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  @click="setMockBalance('close')"
+                >
+                  差1票
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  @click="setMockBalance('tie')"
+                >
+                  平票
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  @click="setMockBalance('empty')"
+                >
+                  零票
+                </Button>
               </div>
             </div>
 
-            <template #action>
-              <NFlex justify="space-between" align="center">
-                <NText depth="3" style="font-size: 12px">
-                  当前生成的 OBS URL 参数：<code>?theme={{ previewTheme }}&position={{ previewPosition }}&max={{ previewMaxDisplay }}</code>
-                </NText>
-                <NButton
-                  size="small"
-                  type="primary"
-                  @click="copyObsLink(previewTheme, previewPosition, previewMaxDisplay)"
+            <Separator />
+
+            <div>
+              <span class="text-xs text-muted-foreground block mb-1.5">预设主题:</span>
+              <div class="grid grid-cols-2 gap-1.5">
+                <Button
+                  v-for="th in [
+                    { key: 'glass', label: '毛玻璃 Glass' },
+                    { key: 'duel', label: '对决 Duel' },
+                    { key: 'minimal', label: '极简 Minimal' },
+                    { key: 'transparent', label: '无背景/纯透明' },
+                  ]"
+                  :key="th.key"
+                  size="xs"
+                  :variant="previewTheme === th.key ? 'default' : 'outline'"
+                  class="text-xs justify-start"
+                  @click="previewTheme = th.key as any"
                 >
-                  <template #icon>
-                    <NIcon><Copy24Regular /></NIcon>
-                  </template>
-                  复制当前调试参数的 OBS 链接
-                </NButton>
-              </NFlex>
-            </template>
-          </NCard>
-        </NGridItem>
+                  {{ th.label }}
+                </Button>
+              </div>
+            </div>
 
-        <!-- 右侧：仿真调试控制台 (占 1 列) -->
-        <NGridItem :span="1">
-          <NFlex vertical :size="16">
-            <!-- 场景与主题控制 -->
-            <NCard size="small">
-              <template #header>
-                <NFlex align="center" :size="6">
-                  <NIcon :component="Color24Regular" />
-                  <span>视觉与场景调试</span>
-                </NFlex>
-              </template>
-              <NFlex vertical :size="12">
-                <div>
-                  <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                    一键载入仿真场景：
-                  </NText>
-                  <NFlex :size="8">
-                    <NButton size="tiny" secondary @click="loadMockScene('duel-top')">
-                      红蓝顶栏长条
-                    </NButton>
-                    <NButton size="tiny" secondary @click="loadMockScene('duel')">
-                      红蓝卡片
-                    </NButton>
-                    <NButton size="tiny" secondary @click="loadMockScene('standard')">
-                      四选一投票
-                    </NButton>
-                    <NButton size="tiny" secondary @click="loadMockScene('leaderboard')">
-                      10人排行榜赛跑
-                    </NButton>
-                    <NButton size="tiny" secondary @click="setMockBalance('close')">仅差 1 票</NButton>
-                    <NButton size="tiny" secondary @click="setMockBalance('tie')">平票</NButton>
-                    <NButton size="tiny" secondary @click="setMockBalance('empty')">零票</NButton>
-                  </NFlex>
-                </div>
+            <div class="space-y-1.5">
+              <span class="text-xs text-muted-foreground block">屏幕对齐位置:</span>
+              <Select v-model="previewPosition">
+                <SelectTrigger class="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="center">
+                    正中心 (默认)
+                  </SelectItem>
+                  <SelectItem value="top-center">
+                    顶部居中 (推荐长条对决)
+                  </SelectItem>
+                  <SelectItem value="bottom-right">
+                    右下角
+                  </SelectItem>
+                  <SelectItem value="bottom-left">
+                    左下角
+                  </SelectItem>
+                  <SelectItem value="top-right">
+                    右上角
+                  </SelectItem>
+                  <SelectItem value="top-left">
+                    左上角
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                <NDivider style="margin: 4px 0" />
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-muted-foreground">排行榜最大显示行数:</span>
+              <Input
+                v-model.number="previewMaxDisplay"
+                type="number"
+                min="2"
+                max="20"
+                class="w-20 h-8 text-xs font-mono"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-                <div>
-                  <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                    预设主题：
-                  </NText>
-                  <NRadioGroup v-model:value="previewTheme" size="small">
-                    <NRadioButton value="glass">毛玻璃 Glass</NRadioButton>
-                    <NRadioButton value="duel">对决 Duel</NRadioButton>
-                    <NRadioButton value="minimal">极简 Minimal</NRadioButton>
-                    <NRadioButton value="transparent">无背景/纯透明 (贴素材)</NRadioButton>
-                  </NRadioGroup>
-                </div>
+        <!-- 实时互动模拟 -->
+        <Card>
+          <CardHeader class="p-3.5 pb-2">
+            <div class="flex items-center gap-2">
+              <component
+                :is="Flash24Regular"
+                class="h-4 w-4 text-muted-foreground"
+              />
+              <CardTitle class="text-xs font-semibold uppercase tracking-wide">
+                实时互动模拟
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent class="p-3.5 space-y-3">
+            <span class="text-xs text-muted-foreground block">
+              点击模拟观众弹幕投票，观察顺位赛跑换位：
+            </span>
 
-                <div>
-                  <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                    屏幕对齐位置：
-                  </NText>
-                  <NSelect
-                    v-model:value="previewPosition"
-                    size="small"
-                    :options="[
-                      { label: '正中心 (默认)', value: 'center' },
-                      { label: '顶部居中 (推荐长条对决)', value: 'top-center' },
-                      { label: '右下角', value: 'bottom-right' },
-                      { label: '左下角', value: 'bottom-left' },
-                      { label: '右上角', value: 'top-right' },
-                      { label: '左上角', value: 'top-left' },
-                    ]"
-                  />
-                </div>
-
-                <div>
-                  <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                    排行榜最大显示行数：
-                  </NText>
-                  <NInputNumber
-                    v-model:value="previewMaxDisplay"
-                    size="small"
-                    :min="2"
-                    :max="20"
-                  />
-                </div>
-              </NFlex>
-            </NCard>
-
-            <!-- 互动模拟控制 -->
-            <NCard size="small">
-              <template #header>
-                <NFlex align="center" :size="6">
-                  <NIcon :component="Flash24Regular" />
-                  <span>实时互动模拟</span>
-                </NFlex>
-              </template>
-              <NFlex vertical :size="12">
-                <NText depth="3" style="font-size: 12px">
-                  点击按钮模拟观众弹幕投票，观察实时进度变化与 FLIP 顺位赛跑换位：
-                </NText>
-
-                <div class="mock-vote-buttons">
-                  <div
-                    v-for="opt in mockData.options.slice(0, 6)"
-                    :key="opt.index"
-                    class="mock-vote-row"
+            <div class="space-y-1.5">
+              <div
+                v-for="opt in mockData.options.slice(0, 6)"
+                :key="opt.index"
+                class="flex items-center justify-between p-1.5 rounded bg-muted/30 text-xs"
+              >
+                <span class="font-medium truncate max-w-[140px]">{{ opt.index }}. {{ opt.text }}</span>
+                <div class="flex items-center gap-1">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="h-6 px-1.5 text-xs"
+                    @click="mockAddVote(opt.index, 1)"
                   >
-                    <span class="mock-opt-name">{{ opt.index }}. {{ opt.text }}</span>
-                    <NFlex align="center" :size="4">
-                      <NButton size="tiny" secondary @click="mockAddVote(opt.index, 1)">
-                        +1
-                      </NButton>
-                      <NButton size="tiny" secondary @click="mockAddVote(opt.index, 10)">
-                        +10
-                      </NButton>
-                      <NButton size="tiny" quaternary type="warning" @click="mockOvertake(opt.index)">
-                        <template #icon>
-                          <NIcon><ArrowTrending24Filled /></NIcon>
-                        </template>
-                        反超
-                      </NButton>
-                    </NFlex>
-                  </div>
+                    +1
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="h-6 px-1.5 text-xs"
+                    @click="mockAddVote(opt.index, 10)"
+                  >
+                    +10
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="h-6 px-1.5 text-xs text-amber-500 hover:bg-amber-500/10"
+                    @click="mockOvertake(opt.index)"
+                  >
+                    <component
+                      :is="ArrowTrending24Filled"
+                      class="h-3 w-3 mr-0.5"
+                    />
+                    反超
+                  </Button>
                 </div>
+              </div>
+            </div>
 
-                <NDivider style="margin: 4px 0" />
+            <Separator />
 
-                <div>
-                  <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                    模拟倒计时与状态：
-                  </NText>
-                  <NFlex :size="8">
-                    <NButton size="tiny" type="warning" secondary @click="toggleMockUrgent">
-                      <template #icon><NIcon :component="Timer24Regular" /></template>
-                      剩余 8s (呼吸警告)
-                    </NButton>
-                    <NButton size="tiny" type="success" secondary @click="toggleMockWinner">
-                      <template #icon><NIcon :component="Trophy24Regular" /></template>
-                      胜出结算 (Reveal)
-                    </NButton>
-                  </NFlex>
-                </div>
-              </NFlex>
-            </NCard>
-          </NFlex>
-        </NGridItem>
-      </NGrid>
+            <div class="flex gap-2">
+              <Button
+                size="xs"
+                variant="outline"
+                class="flex-1 text-amber-500 border-amber-500/30"
+                @click="toggleMockUrgent"
+              >
+                <component
+                  :is="Timer24Regular"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                剩余 8s (呼吸警告)
+              </Button>
+              <Button
+                size="xs"
+                variant="brand"
+                class="flex-1"
+                @click="toggleMockWinner"
+              >
+                <component
+                  :is="Trophy24Regular"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                胜出结算 (Reveal)
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
 
     <!-- 批量导入选项弹窗 -->
-    <NModal
-      v-model:show="showBatchModal"
-      preset="card"
-      title="批量导入选项 (一行一个)"
-      style="width: 480px; max-width: 95vw"
-    >
-      <NFlex vertical :size="12">
-        <NText depth="3" style="font-size: 12px">
-          请粘贴或输入候选选项，每行一个（适合 5~30 项的大规模投票，如歌单点播、全英雄选择、活动评选等）：
-        </NText>
-        <NInput
-          v-model:value="batchInputText"
-          type="textarea"
-          :rows="8"
-          placeholder="选项A&#10;选项B&#10;选项C&#10;选项D..."
-        />
-      </NFlex>
-      <template #footer>
-        <NFlex justify="end" :size="10">
-          <NButton secondary @click="showBatchModal = false">取消</NButton>
-          <NButton type="primary" @click="applyBatchOptions">确认导入</NButton>
-        </NFlex>
-      </template>
-    </NModal>
+    <Dialog v-model:open="showBatchModal">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            批量导入选项 (一行一个)
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            粘贴或输入候选选项，每行一个（适合 5~30 项的大规模投票，如歌单点播、全英雄选择等）：
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="py-2">
+          <Textarea
+            v-model="batchInputText"
+            :rows="8"
+            placeholder="选项A&#10;选项B&#10;选项C&#10;选项D..."
+            class="text-xs font-mono"
+          />
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showBatchModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            @click="applyBatchOptions"
+          >
+            确认导入
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     <!-- 全局设置弹窗 -->
-    <NModal
-      v-model:show="showSettingsModal"
-      preset="card"
-      title="弹幕投票全局设置"
-      style="width: 540px; max-width: 95vw"
-    >
-      <NSpin :show="isLoading">
-        <NFlex vertical :size="14">
-          <NAlert type="info" :show-icon="false" style="font-size: 12px">
+    <Dialog v-model:open="showSettingsModal">
+      <DialogContent class="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            弹幕投票全局设置
+          </DialogTitle>
+          <DialogDescription class="text-xs">
             此处设置将作为默认参数应用于新发起的投票和 OBS 渲染。
-          </NAlert>
+          </DialogDescription>
+        </DialogHeader>
 
-          <NFlex justify="space-between" align="center">
+        <div class="space-y-4 py-2">
+          <div class="flex items-center justify-between gap-3">
             <div>
-              <div style="font-weight: 600; font-size: 13px">启用弹幕投票功能</div>
-              <NText depth="3" style="font-size: 11px">关闭后将忽略直播间发送的投票弹幕</NText>
+              <div class="font-medium text-xs text-foreground">
+                启用弹幕投票功能
+              </div>
+              <div class="text-[11px] text-muted-foreground">
+                关闭后将忽略直播间发送的投票弹幕
+              </div>
             </div>
-            <NSwitch v-model:value="voteConfig.isEnabled" />
-          </NFlex>
-
-          <NFlex justify="space-between" align="center">
-            <div>
-              <div style="font-weight: 600; font-size: 13px">实时显示票数与进度</div>
-              <NText depth="3" style="font-size: 11px">OBS 挂件实时渲染各选项得票比率</NText>
-            </div>
-            <NSwitch v-model:value="voteConfig.showResults" />
-          </NFlex>
-
-          <NFlex justify="space-between" align="center">
-            <div>
-              <div style="font-weight: 600; font-size: 13px">允许观众自由提名</div>
-              <NText depth="3" style="font-size: 11px">观众发送未在列表中的词条将自动追加为新选项</NText>
-            </div>
-            <NSwitch v-model:value="voteConfig.allowCustomOptions" />
-          </NFlex>
-
-          <NFlex justify="space-between" align="center">
-            <div>
-              <div style="font-weight: 600; font-size: 13px">送礼按金额计票</div>
-              <NText depth="3" style="font-size: 11px">观众送礼时按电池金额折算追加票数</NText>
-            </div>
-            <NSwitch v-model:value="voteConfig.allowGiftVoting" />
-          </NFlex>
-
-          <NDivider style="margin: 4px 0" />
-
-          <div>
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 6px">默认主题风格</div>
-            <NRadioGroup v-model:value="voteConfig.theme" size="small">
-              <NRadioButton value="glass">毛玻璃 Modern Glass</NRadioButton>
-              <NRadioButton value="duel">对决 Duel VS</NRadioButton>
-              <NRadioButton value="minimal">极简 Minimal</NRadioButton>
-              <NRadioButton value="transparent">无背景/纯透明 (贴素材)</NRadioButton>
-            </NRadioGroup>
+            <Switch v-model="voteConfig.isEnabled" />
           </div>
 
-          <div>
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 6px">OBS 画面停靠位置</div>
-            <NSelect
-              v-model:value="voteConfig.displayPosition"
-              size="small"
-              :options="[
-                { label: '正中心 (默认)', value: 'center' },
-                { label: '顶部居中 (推荐长条对决)', value: 'top-center' },
-                { label: '右下角', value: 'bottom-right' },
-                { label: '左下角', value: 'bottom-left' },
-                { label: '右上角', value: 'top-right' },
-                { label: '左上角', value: 'top-left' },
-              ]"
-            />
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="font-medium text-xs text-foreground">
+                实时显示票数与进度
+              </div>
+              <div class="text-[11px] text-muted-foreground">
+                OBS 挂件实时渲染各选项得票比率
+              </div>
+            </div>
+            <Switch v-model="voteConfig.showResults" />
           </div>
-        </NFlex>
-      </NSpin>
-      <template #footer>
-        <NFlex justify="end" :size="10">
-          <NButton secondary @click="showSettingsModal = false">取消</NButton>
-          <NButton type="primary" :loading="isLoading" @click="saveVoteConfig">保存设置</NButton>
-        </NFlex>
-      </template>
-    </NModal>
+
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="font-medium text-xs text-foreground">
+                允许观众自由提名
+              </div>
+              <div class="text-[11px] text-muted-foreground">
+                观众发送未在列表中的词条将自动追加为新选项
+              </div>
+            </div>
+            <Switch v-model="voteConfig.allowCustomOptions" />
+          </div>
+
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="font-medium text-xs text-foreground">
+                送礼按金额计票
+              </div>
+              <div class="text-[11px] text-muted-foreground">
+                观众送礼时按电池金额折算追加票数
+              </div>
+            </div>
+            <Switch v-model="voteConfig.allowGiftVoting" />
+          </div>
+
+          <Separator />
+
+          <div class="space-y-1.5">
+            <span class="text-xs text-muted-foreground block">默认主题风格</span>
+            <div class="grid grid-cols-2 gap-2">
+              <Button
+                v-for="th in [
+                  { key: 'glass', label: '毛玻璃 Modern Glass' },
+                  { key: 'duel', label: '对决 Duel VS' },
+                  { key: 'minimal', label: '极简 Minimal' },
+                  { key: 'transparent', label: '无背景/纯透明' },
+                ]"
+                :key="th.key"
+                size="xs"
+                :variant="voteConfig.theme === th.key ? 'default' : 'outline'"
+                class="text-xs justify-start"
+                @click="voteConfig.theme = th.key"
+              >
+                {{ th.label }}
+              </Button>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <span class="text-xs text-muted-foreground block">OBS 画面停靠位置</span>
+            <Select v-model="voteConfig.displayPosition">
+              <SelectTrigger class="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="center">
+                  正中心 (默认)
+                </SelectItem>
+                <SelectItem value="top-center">
+                  顶部居中 (推荐长条对决)
+                </SelectItem>
+                <SelectItem value="bottom-right">
+                  右下角
+                </SelectItem>
+                <SelectItem value="bottom-left">
+                  左下角
+                </SelectItem>
+                <SelectItem value="top-right">
+                  右上角
+                </SelectItem>
+                <SelectItem value="top-left">
+                  左上角
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showSettingsModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
+            :loading="isLoading"
+            @click="saveVoteConfig"
+          >
+            保存设置
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
-
-<style scoped>
-.vote-manage-container {
-  max-width: 1380px;
-  margin: 0 auto;
-}
-
-/* 活跃投票监控 */
-.active-vote-card {
-  border-left: 3px solid #f59e0b;
-}
-
-.pulse-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-  animation: pulse-dot-anim 1.5s infinite;
-}
-
-@keyframes pulse-dot-anim {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
-}
-
-.active-options-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.active-option-row {
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--vtsuru-bg-muted, rgba(0, 0, 0, 0.02));
-  border: 1px solid var(--vtsuru-border, rgba(0, 0, 0, 0.06));
-}
-
-.active-option-row.is-leading {
-  background: rgba(245, 158, 11, 0.05);
-  border-color: rgba(245, 158, 11, 0.3);
-}
-
-.idx-badge {
-  font-weight: 800;
-  margin-right: 6px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.opt-count {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.opt-pct {
-  font-size: 13px;
-  font-weight: 700;
-  color: #f59e0b;
-  font-family: monospace;
-}
-
-/* 发起表单 */
-.form-options-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 280px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.form-option-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.form-option-idx {
-  font-size: 12px;
-  font-weight: 700;
-  width: 18px;
-  text-align: center;
-  color: var(--vtsuru-fg-muted);
-}
-
-.form-option-input {
-  flex: 1;
-}
-
-/* 模板列表 */
-.empty-hint {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  text-align: center;
-  padding: 16px 0;
-}
-
-.template-list, .history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 320px;
-  overflow-y: auto;
-}
-
-.template-item, .history-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--vtsuru-bg-muted, rgba(0, 0, 0, 0.02));
-  border: 1px solid var(--vtsuru-border, rgba(0, 0, 0, 0.06));
-}
-
-.template-info {
-  flex: 1;
-  cursor: pointer;
-}
-
-.template-name {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.template-preview {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 180px;
-}
-
-.history-main {
-  flex: 1;
-}
-
-.history-title {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.history-meta {
-  display: flex;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-/* ================= OBS 预览舞台 ================= */
-.preview-stage-card {
-  overflow: hidden;
-}
-
-.obs-stage-viewport {
-  width: 100%;
-  height: 480px;
-  border-radius: 12px;
-  border: 1px solid var(--vtsuru-border, rgba(255, 255, 255, 0.1));
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s ease;
-}
-
-.obs-stage-viewport.bg-checker {
-  background-color: #18181b;
-  background-image:
-    linear-gradient(45deg, #27272a 25%, transparent 25%),
-    linear-gradient(-45deg, #27272a 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #27272a 75%),
-    linear-gradient(-45deg, transparent 75%, #27272a 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-}
-
-.obs-stage-viewport.bg-dark {
-  background-color: #09090b;
-}
-
-.obs-stage-viewport.bg-light {
-  background-color: #f4f4f5;
-}
-
-.obs-stage-viewport.bg-game {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.6)), radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
-  background-size: cover;
-  background-position: center;
-}
-
-.obs-stage-canvas {
-  width: 100%;
-  height: 100%;
-  padding: 24px;
-  box-sizing: border-box;
-}
-
-/* 互动模拟按钮列表 */
-.mock-vote-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 240px;
-  overflow-y: auto;
-}
-
-.mock-vote-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: var(--vtsuru-bg-muted, rgba(0, 0, 0, 0.02));
-  border: 1px solid var(--vtsuru-border, rgba(0, 0, 0, 0.06));
-}
-
-.mock-opt-name {
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 110px;
-}
-</style>

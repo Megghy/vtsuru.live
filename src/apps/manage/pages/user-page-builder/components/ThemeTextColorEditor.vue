@@ -1,19 +1,14 @@
 <script setup lang="ts">
 import { Info16Regular } from '@vicons/fluent'
-import {
-  NColorPicker,
-  NFlex,
-  NFormItem,
-  NIcon,
-  NSwitch,
-  NTag,
-  NTooltip,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserPageTextTheme } from '@/apps/user-page/theme'
 import { resolveUserPageTextColor } from '@/apps/user-page/theme'
 import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Switch } from '@/shared/ui/switch'
+import { Tag } from '@/shared/ui/tag'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import PropsGrid from './PropsGrid.vue'
 
@@ -72,95 +67,73 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
 </script>
 
 <template>
-  <div class="text-color-editor">
-    <NFormItem label="字体">
+  <div class="text-color-editor flex flex-col gap-3">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs text-muted-foreground">字体</label>
       <GoogleFontPicker
         v-model="fontFamily"
         placeholder="使用上级或站点默认字体"
       />
-    </NFormItem>
+    </div>
+
     <PropsGrid :min-item-width="220">
-      <NFormItem label="基础文字颜色">
-        <NColorPicker
-          v-model:value="textColor"
-          :show-alpha="false"
-          :modes="['hex']"
-          :actions="['clear']"
-        />
-      </NFormItem>
-      <NFormItem>
-        <template #label>
-          <NFlex
-            align="center"
-            :size="4"
-          >
-            <span>自动保证对比度</span>
-            <NTooltip trigger="hover">
-              <template #trigger>
-                <NIcon
-                  :component="Info16Regular"
-                  :size="15"
-                  class="contrast-help"
-                  tabindex="0"
-                  aria-label="自动对比度说明"
-                />
-              </template>
-              根据亮色或暗色模式下最不利的页面背景微调最终显示颜色，至少保持 4.5:1
-              对比度。不会修改已选择的颜色，亮色或暗色覆盖色会优先于基础文字颜色。
-            </NTooltip>
-          </NFlex>
-        </template>
-        <NSwitch v-model:value="autoTextContrast" />
-      </NFormItem>
-      <NFormItem
-        v-if="showLightColor"
-        label="亮色模式覆盖"
-      >
-        <NColorPicker
-          v-model:value="textColorLight"
-          :show-alpha="false"
-          :modes="['hex']"
-          :actions="['clear']"
-        />
-      </NFormItem>
-      <NFormItem
-        v-if="showDarkColor"
-        label="暗色模式覆盖"
-      >
-        <NColorPicker
-          v-model:value="textColorDark"
-          :show-alpha="false"
-          :modes="['hex']"
-          :actions="['clear']"
-        />
-      </NFormItem>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs text-muted-foreground">基础文字颜色</label>
+        <ColorPicker v-model="textColor" />
+      </div>
+
+      <div class="flex flex-col gap-1.5 justify-center">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-muted-foreground">自动保证对比度</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <component :is="Info16Regular" class="size-3.5 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent class="max-w-xs text-xs">
+                根据亮色或暗色模式下最不利的页面背景微调最终显示颜色，至少保持 4.5:1
+                对比度。不会修改已选择的颜色，亮色或暗色覆盖色会优先于基础文字颜色。
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div class="pt-1">
+          <Switch :checked="autoTextContrast" @update:checked="autoTextContrast = $event" />
+        </div>
+      </div>
+
+      <div v-if="showLightColor" class="flex flex-col gap-1.5">
+        <label class="text-xs text-muted-foreground">亮色模式覆盖</label>
+        <ColorPicker v-model="textColorLight" />
+      </div>
+
+      <div v-if="showDarkColor" class="flex flex-col gap-1.5">
+        <label class="text-xs text-muted-foreground">暗色模式覆盖</label>
+        <ColorPicker v-model="textColorDark" />
+      </div>
     </PropsGrid>
-    <NFlex size="small">
-      <NTag
+
+    <div class="flex flex-wrap gap-2 pt-1">
+      <Tag
         v-if="showLightColor"
-        :type="lightResult.contrast >= 4.5 ? 'success' : 'warning'"
-        size="small"
+        :variant="lightResult.contrast >= 4.5 ? 'secondary' : 'destructive'"
+        class="text-xs"
       >
         亮色 {{ lightResult.contrast.toFixed(2) }}:1{{ lightResult.adjusted ? ' · 已微调' : '' }}
-      </NTag>
-      <NTag
+      </Tag>
+      <Tag
         v-if="showDarkColor"
-        :type="darkResult.contrast >= 4.5 ? 'success' : 'warning'"
-        size="small"
+        :variant="darkResult.contrast >= 4.5 ? 'secondary' : 'destructive'"
+        class="text-xs"
       >
         暗色 {{ darkResult.contrast.toFixed(2) }}:1{{ darkResult.adjusted ? ' · 已微调' : '' }}
-      </NTag>
-    </NFlex>
+      </Tag>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .text-color-editor {
   width: 100%;
-}
-
-.contrast-help {
-  color: var(--vtsuru-fg-muted);
-  cursor: help;
 }
 </style>
