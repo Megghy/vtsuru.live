@@ -47,9 +47,9 @@ const { workspace, switchWorkspace } = useManageWorkspace()
   gap: 3px;
   width: 148px;
   padding: 3px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 9px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   box-sizing: border-box;
 }
 
@@ -60,7 +60,7 @@ const { workspace, switchWorkspace } = useManageWorkspace()
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -73,9 +73,9 @@ const { workspace, switchWorkspace } = useManageWorkspace()
 }
 
 .workspace-switch button.active {
-  background: var(--vtsuru-bg-elevated);
-  color: var(--vtsuru-fg);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--vtsuru-fg) 12%, transparent);
+  background: var(--popover);
+  color: var(--foreground);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--foreground) 12%, transparent);
 }
 
 .workspace-switch--block {

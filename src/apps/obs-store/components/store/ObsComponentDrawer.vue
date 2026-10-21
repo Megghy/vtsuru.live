@@ -155,8 +155,8 @@ const statusLabel = computed(() => props.component?.status === 'beta' ? '内测'
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
+  background: var(--brand-soft);
+  color: var(--brand);
   border-radius: 8px;
   flex-shrink: 0;
 }
@@ -164,7 +164,7 @@ const statusLabel = computed(() => props.component?.status === 'beta' ? '内测'
 .header-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .header-desc {

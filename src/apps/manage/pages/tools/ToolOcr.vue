@@ -467,7 +467,7 @@ async function translateTask(task: ImageTask) {
   justify-content: center;
   gap: 4px;
   padding: 14px;
-  border: 2px dashed var(--vtsuru-border);
+  border: 2px dashed var(--border);
   border-radius: 8px;
   cursor: pointer;
   transition:
@@ -484,7 +484,7 @@ async function translateTask(task: ImageTask) {
   gap: 4px;
   flex-wrap: wrap;
   padding: 4px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
   border-radius: 6px;
 }
 .tab-btn {
@@ -524,7 +524,7 @@ async function translateTask(task: ImageTask) {
 }
 .task-toolbar {
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .split-layout {
@@ -560,8 +560,8 @@ async function translateTask(task: ImageTask) {
   object-fit: contain;
   display: block;
   border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-inset);
+  border: 1px solid var(--border);
+  background: var(--muted);
 }
 .overlay-canvas {
   position: absolute;
@@ -581,8 +581,8 @@ async function translateTask(task: ImageTask) {
   border-radius: 6px;
   font-size: 14px;
   line-height: 1.8;
-  border: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-inset);
+  border: 1px solid var(--border);
+  background: var(--muted);
   font-family: inherit;
   color: inherit;
   outline: none;
@@ -593,14 +593,14 @@ async function translateTask(task: ImageTask) {
 
 .line-details {
   border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
 }
 .line-summary {
   padding: 8px 12px;
   font-size: 12px;
   cursor: pointer;
   user-select: none;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   list-style: none;
 }
 .line-summary::-webkit-details-marker {

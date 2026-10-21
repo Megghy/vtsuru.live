@@ -443,7 +443,7 @@ async function onRemoveBgConfirm(blob: Blob) {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed var(--vtsuru-border);
+  border: 2px dashed var(--border);
   border-radius: 12px;
   cursor: pointer;
   transition: border-color 0.2s;
@@ -470,9 +470,9 @@ async function onRemoveBgConfirm(blob: Blob) {
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 .panel-title {
   margin-bottom: 2px;
@@ -513,7 +513,7 @@ async function onRemoveBgConfirm(blob: Blob) {
 }
 .prop-row > span {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   width: 40px;
   flex-shrink: 0;
 }

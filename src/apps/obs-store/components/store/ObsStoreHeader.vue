@@ -123,16 +123,16 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
 .page-title {
   font-size: 18px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   margin: 0;
   line-height: 1.2;
 }
 
 .ready-badge {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  color: var(--muted-foreground);
+  background: var(--muted);
+  border: 1px solid var(--border);
   padding: 1px 7px;
   border-radius: 9999px;
   font-weight: 500;
@@ -140,7 +140,7 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
 
 .page-desc {
   font-size: 13px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin: 6px 0 0;
   line-height: 1.4;
 }
@@ -158,7 +158,7 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
   flex-wrap: wrap;
   gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .category-tabs {
@@ -173,7 +173,7 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
   gap: 5px;
   background: transparent;
   border: 1px solid transparent;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 12px;
@@ -183,14 +183,14 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
 }
 
 .category-tab-btn:hover {
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg);
+  background: var(--muted);
+  color: var(--foreground);
 }
 
 .category-tab-btn.active {
-  background: var(--vtsuru-bg-elevated);
-  border-color: var(--vtsuru-border);
-  color: var(--vtsuru-fg);
+  background: var(--popover);
+  border-color: var(--border);
+  color: var(--foreground);
   font-weight: 600;
 }
 
@@ -200,15 +200,15 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
 
 .cat-count {
   font-size: 11px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   padding: 0 5px;
   border-radius: 9999px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .category-tab-btn.active .cat-count {
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 @media (max-width: 768px) {

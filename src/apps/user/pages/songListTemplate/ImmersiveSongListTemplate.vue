@@ -309,7 +309,7 @@ const stageRequestLabel = computed(() => {
   aspect-ratio: 1;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
+  background: var(--muted, rgba(128, 128, 128, 0.08));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -373,7 +373,7 @@ const stageRequestLabel = computed(() => {
 
 .lib-row:hover,
 .lib-row.active {
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.06));
+  background: var(--muted, rgba(128, 128, 128, 0.06));
 }
 
 .lib-select {
@@ -394,7 +394,7 @@ const stageRequestLabel = computed(() => {
   height: 36px;
   border-radius: 6px;
   overflow: hidden;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
+  background: var(--muted, rgba(128, 128, 128, 0.08));
   display: flex;
   align-items: center;
   justify-content: center;

@@ -438,7 +438,7 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
 }
 
 .gift-box-tooltip__label {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .gift-box-tooltip__value {

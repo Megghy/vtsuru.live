@@ -510,17 +510,17 @@ function handleVariableInsert(text: string) {
 <style scoped>
 .live-preview-container {
   margin-top: 8px;
-  background-color: var(--vtsuru-bg-inset);
-  border-radius: var(--vtsuru-radius);
-  border: 1px solid var(--vtsuru-border);
+  background-color: var(--muted);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
   overflow: hidden;
 }
 
 .live-preview-label {
   padding: 4px 8px;
-  background-color: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg);
-  border-bottom: 1px solid var(--vtsuru-border);
+  background-color: var(--muted);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
 }
 
 .live-preview-content {
@@ -530,9 +530,9 @@ function handleVariableInsert(text: string) {
 }
 
 .function-list code {
-  background-color: var(--vtsuru-bg-inset);
+  background-color: var(--muted);
   padding: 1px 4px;
-  border-radius: var(--vtsuru-radius);
+  border-radius: var(--radius);
   font-family: monospace;
   margin-right: 4px;
 }

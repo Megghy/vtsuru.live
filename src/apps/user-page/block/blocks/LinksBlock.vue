@@ -43,15 +43,15 @@ const backgrounded = computed(() =>
 <style scoped>
 .vtsuru-link-tag {
   border-radius: var(--vtsuru-page-radius);
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
-  background: var(--vtsuru-bg-elevated);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
+  background: var(--popover);
   color: var(--vtsuru-block-fg);
   text-decoration: none;
 }
 
 .vtsuru-link-tag:hover {
-  background: var(--vtsuru-bg-muted);
-  border-color: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  background: var(--muted);
+  border-color: var(--vtsuru-page-primary, var(--brand));
   transform: translateY(-1px);
 }
 

@@ -234,7 +234,7 @@ function handleTitleClick() {
               :class="
                 currentTab === item.key
                   ? 'bg-primary text-primary-foreground font-semibold'
-                  : 'text-[var(--vtsuru-fg)] hover:bg-[var(--vtsuru-bg-elevated)]'
+                  : 'text-[var(--foreground)] hover:bg-[var(--popover)]'
               "
               @click="currentTab = item.key"
             >
@@ -252,7 +252,7 @@ function handleTitleClick() {
       <div class="md:col-span-3">
         <div
           v-if="isLoading"
-          class="flex items-center justify-center p-8 text-xs text-[var(--vtsuru-fg-muted)] gap-2"
+          class="flex items-center justify-center p-8 text-xs text-[var(--muted-foreground)] gap-2"
         >
           <Spin class="w-4 h-4" />
           <span>正在加载设置...</span>
@@ -324,7 +324,7 @@ function handleTitleClick() {
                     </CardHeader>
                     <CardContent class="px-4 pb-4 pt-0">
                       <div class="flex items-center justify-between">
-                        <span class="text-xs font-medium text-[var(--vtsuru-fg)]">主题模式</span>
+                        <span class="text-xs font-medium text-[var(--foreground)]">主题模式</span>
                         <RadioGroup
                           :model-value="themeType"
                           class="flex items-center gap-3"
@@ -381,7 +381,7 @@ function handleTitleClick() {
                   <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3.5">
                     <div class="notification-master-row">
                       <div>
-                        <span class="font-bold text-xs text-[var(--vtsuru-fg)]">桌面通知总开关</span>
+                        <span class="font-bold text-xs text-[var(--foreground)]">桌面通知总开关</span>
                         <div class="setting-hint">
                           开启后，选中的事件将在 Windows 桌面右下角推送通知
                         </div>
@@ -404,7 +404,7 @@ function handleTitleClick() {
                         class="notification-row"
                       >
                         <div class="notification-text">
-                          <span class="font-bold text-xs text-[var(--vtsuru-fg)]">{{ item.title }}</span>
+                          <span class="font-bold text-xs text-[var(--foreground)]">{{ item.title }}</span>
                           <div class="setting-hint">
                             {{ item.desc }}
                           </div>
@@ -418,7 +418,7 @@ function handleTitleClick() {
 
                     <span
                       v-else
-                      class="text-center py-3 text-xs text-[var(--vtsuru-fg-muted)]"
+                      class="text-center py-3 text-xs text-[var(--muted-foreground)]"
                     >
                       桌面通知已全局关闭
                     </span>
@@ -447,21 +447,21 @@ function handleTitleClick() {
                   <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3.5">
                     <div class="about-hero">
                       <div class="about-title-row">
-                        <span class="font-bold text-base text-[var(--vtsuru-fg)]">
+                        <span class="font-bold text-base text-[var(--foreground)]">
                           VTsuru EventFetcher
                         </span>
                         <Tag variant="secondary">
                           v{{ currentVersion }}
                         </Tag>
                       </div>
-                      <span class="text-xs text-[var(--vtsuru-fg-muted)]">
+                      <span class="text-xs text-[var(--muted-foreground)]">
                         专为 Bilibili 主播打造的现代化全功能直播辅助与事件采集桌面客户端
                       </span>
                     </div>
 
                     <div class="about-meta-list">
                       <div class="about-meta-item">
-                        <span class="text-xs text-[var(--vtsuru-fg-muted)]">作者</span>
+                        <span class="text-xs text-[var(--muted-foreground)]">作者</span>
                         <a
                           href="https://space.bilibili.com/10021741"
                           target="_blank"
@@ -472,7 +472,7 @@ function handleTitleClick() {
                       </div>
 
                       <div class="about-meta-item">
-                        <span class="text-xs text-[var(--vtsuru-fg-muted)]">开源仓库</span>
+                        <span class="text-xs text-[var(--muted-foreground)]">开源仓库</span>
                         <div class="flex items-center gap-2">
                           <a
                             href="https://github.com/Megghy/vtsuru.live"
@@ -493,8 +493,8 @@ function handleTitleClick() {
                       </div>
 
                       <div class="about-meta-item">
-                        <span class="text-xs text-[var(--vtsuru-fg-muted)]">交流与反馈群</span>
-                        <span class="font-bold text-xs text-[var(--vtsuru-fg)]">873260337</span>
+                        <span class="text-xs text-[var(--muted-foreground)]">交流与反馈群</span>
+                        <span class="font-bold text-xs text-[var(--foreground)]">873260337</span>
                       </div>
                     </div>
 
@@ -502,7 +502,7 @@ function handleTitleClick() {
 
                     <div class="flex items-center justify-between">
                       <div>
-                        <span class="font-bold text-xs text-[var(--vtsuru-fg)]">在线检查更新</span>
+                        <span class="font-bold text-xs text-[var(--foreground)]">在线检查更新</span>
                         <div class="setting-hint">
                           查询服务端最新客户端版本并自动更新
                         </div>
@@ -542,7 +542,7 @@ function handleTitleClick() {
 
 .setting-hint {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin-top: 2px;
 }
 
@@ -557,9 +557,9 @@ function handleTitleClick() {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: var(--muted, rgba(128, 128, 128, 0.03));
 }
 
 .notification-text {
@@ -590,7 +590,7 @@ function handleTitleClick() {
   align-items: center;
   justify-content: space-between;
   padding: 6px 0;
-  border-bottom: 1px dashed var(--vtsuru-border);
+  border-bottom: 1px dashed var(--border);
 }
 
 .fade-enter-active,

@@ -520,7 +520,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--vtsuru-bg);
+  background-color: var(--background);
 }
 
 .login-container {
@@ -529,7 +529,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--vtsuru-bg-surface);
+  background-color: var(--card);
 }
 
 .login-card {
@@ -543,7 +543,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--vtsuru-bg-surface);
+  background: var(--card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -558,7 +558,7 @@ onMounted(() => {
 }
 
 .init-stage {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 13px;
 }
 </style>

@@ -483,7 +483,7 @@ async function onRemoveBgConfirm(blob: Blob) {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 .editor-body {
@@ -496,17 +496,17 @@ async function onRemoveBgConfirm(blob: Blob) {
   width: 220px;
   flex-shrink: 0;
   overflow-y: auto;
-  border-color: var(--vtsuru-border);
+  border-color: var(--border);
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 .panel-left {
-  border-right: 1px solid var(--vtsuru-border);
+  border-right: 1px solid var(--border);
 }
 .panel-right {
-  border-left: 1px solid var(--vtsuru-border);
+  border-left: 1px solid var(--border);
 }
 .editor-canvas {
   flex: 1;
@@ -519,7 +519,7 @@ async function onRemoveBgConfirm(blob: Blob) {
   flex-direction: column;
   gap: 8px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid var(--border);
   margin-bottom: 8px;
 }
 .panel-section:last-child {

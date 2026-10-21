@@ -113,7 +113,7 @@ async function give(sign: 1 | -1) {
   display: grid;
   gap: 6px;
   padding: 8px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
@@ -125,7 +125,7 @@ async function give(sign: 1 | -1) {
 }
 
 .user-points__label {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .user-points__value {

@@ -110,7 +110,7 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
   border-radius: 4px;
 }
 .item:hover {
-  background: var(--vtsuru-bg-muted, rgba(0, 0, 0, 0.03));
+  background: var(--muted, rgba(0, 0, 0, 0.03));
 }
 .uname {
   font-weight: 500;
@@ -138,6 +138,6 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
 .time {
   flex-shrink: 0;
   font-size: 10px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 </style>

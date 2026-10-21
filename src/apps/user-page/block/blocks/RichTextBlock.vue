@@ -62,7 +62,7 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
   margin-bottom: 0.25em;
 }
 .rich-text :deep(a) {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--brand)));
   border-bottom: 1px solid transparent;
   font-weight: 500;
   text-decoration: none;
@@ -71,11 +71,11 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
     opacity 0.2s ease;
 }
 .rich-text :deep(a:hover) {
-  border-bottom-color: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  border-bottom-color: var(--vtsuru-page-primary, var(--brand));
   opacity: 0.8;
 }
 .rich-text :deep(a:focus-visible) {
-  outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
+  outline: 2px solid var(--vtsuru-page-primary, var(--brand));
   outline-offset: 2px;
 }
 .rich-text :deep(img) {

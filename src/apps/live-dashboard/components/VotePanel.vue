@@ -257,7 +257,7 @@ function openManage() {
   margin-left: auto;
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
 
@@ -269,19 +269,19 @@ function openManage() {
   height: 28px;
   padding: 0 8px;
   overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .vote__bar {
   position: absolute;
   inset: 0 auto 0 0;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   transition: width 0.4s ease;
 }
 
 .vote__option--lead .vote__bar {
-  background: color-mix(in srgb, var(--vtsuru-primary) 22%, transparent);
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
 }
 
 .vote__index,
@@ -292,7 +292,7 @@ function openManage() {
 
 .vote__index {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .vote__text {
@@ -318,7 +318,7 @@ function openManage() {
 .vote__outcome {
   margin-right: auto;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .vote__presets {
@@ -329,7 +329,7 @@ function openManage() {
 
 .vote__hint {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 @keyframes pulse {

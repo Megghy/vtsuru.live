@@ -261,21 +261,21 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
 
 <style scoped>
 .question-feed {
-  --feed-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
+  --feed-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))));
   --feed-muted: var(
     --vtsuru-block-fg-muted,
-    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)))
+    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--muted-foreground)))
   );
-  --feed-subtle: var(--vtsuru-block-fg-subtle, var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted)));
+  --feed-subtle: var(--vtsuru-block-fg-subtle, var(--vtsuru-surface-fg-subtle, var(--muted-foreground)));
   --feed-bg: var(
     --vtsuru-block-bg-muted,
-    var(--user-page-theme-surface-bg, var(--vtsuru-page-card-bg, var(--vtsuru-bg-elevated)))
+    var(--user-page-theme-surface-bg, var(--vtsuru-page-card-bg, var(--popover)))
   );
   --feed-border: var(
     --vtsuru-block-border,
-    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)))
   );
-  --feed-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --feed-accent: var(--vtsuru-page-primary, var(--brand));
   min-width: 0;
   color: var(--feed-fg);
   container-type: inline-size;

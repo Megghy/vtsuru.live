@@ -744,7 +744,7 @@
   margin: 0;
   font-size: 0.98rem;
   font-weight: 700;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   line-height: 1.35;
   word-break: break-word;
 }
@@ -755,7 +755,7 @@
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
 
@@ -775,5 +775,5 @@
   align-items: center;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid var(--vtsuru-border);
+  border-top: 1px solid var(--border);
 }

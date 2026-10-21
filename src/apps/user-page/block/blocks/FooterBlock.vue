@@ -38,6 +38,6 @@ const backgrounded = computed(() =>
 }
 
 .footer-text {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 </style>

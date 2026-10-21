@@ -85,8 +85,8 @@ watchEffect(() => {
 html,
 body {
   margin: 0;
-  color: var(--vtsuru-fg);
-  background-color: var(--vtsuru-bg);
+  color: var(--foreground);
+  background-color: var(--background);
 }
 
 :root {
@@ -99,7 +99,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--vtsuru-fg) 22%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--foreground) 22%, transparent) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -119,27 +119,27 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--vtsuru-fg) 22%, transparent);
+  background-color: color-mix(in srgb, var(--foreground) 22%, transparent);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--vtsuru-fg) 40%, transparent);
+  background-color: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
 /* 全局选区与文本链接：使用品牌色作低饱和度 tint */
 ::selection {
-  background: var(--vtsuru-brand-tint);
-  color: var(--vtsuru-fg);
+  background: var(--brand-tint);
+  color: var(--foreground);
 }
 
 a {
-  color: var(--vtsuru-brand);
+  color: var(--brand);
   text-decoration: none;
   transition: color 0.15s ease;
 }
 a:hover {
-  color: var(--vtsuru-brand-hover);
+  color: var(--brand);
 }
 
 @supports (font-variation-settings: normal) {

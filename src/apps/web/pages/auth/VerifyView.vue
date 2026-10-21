@@ -184,7 +184,7 @@ onUnmounted(() => {
   display: grid;
   min-height: 100svh;
   padding: 32px 16px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   place-items: center;
 }
 
@@ -192,9 +192,9 @@ onUnmounted(() => {
   display: grid;
   width: min(100%, 420px);
   padding: 32px 28px 28px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
   justify-items: center;
   text-align: center;
   gap: 8px;
@@ -210,8 +210,8 @@ onUnmounted(() => {
 }
 
 .verify-icon--checking {
-  color: var(--vtsuru-brand);
-  background: var(--vtsuru-brand-soft);
+  color: var(--brand);
+  background: var(--brand-soft);
 }
 
 .verify-icon--success,
@@ -227,13 +227,13 @@ onUnmounted(() => {
 
 .verify-kicker {
   margin: 0;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 
 h1 {
   margin: 0;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-size: 22px;
   font-weight: 600;
   line-height: 1.3;
@@ -241,7 +241,7 @@ h1 {
 
 .verify-summary {
   margin: 0 0 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -257,7 +257,7 @@ h1 {
   gap: 6px;
   align-items: center;
   margin: 8px 0 0;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 </style>

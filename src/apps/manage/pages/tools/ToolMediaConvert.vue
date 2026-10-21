@@ -1327,7 +1327,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 4px;
   padding: 28px;
-  border: 2px dashed var(--vtsuru-border, #e0e0e0);
+  border: 2px dashed var(--border, #e0e0e0);
   border-radius: 10px;
   cursor: pointer;
   transition:
@@ -1360,7 +1360,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 .item-list {
@@ -1373,7 +1373,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
 
@@ -1389,7 +1389,7 @@ onBeforeUnmount(() => {
 }
 
 .item-thumb.audio {
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 .item-thumb img {

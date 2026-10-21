@@ -741,15 +741,15 @@ async function handleRemoveAccount(id: string) {
 
 .routing-control-panel {
   padding: 12px 14px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
 }
 
 .routing-label {
   font-size: 12px;
   font-weight: 500;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   margin-bottom: 4px;
 }
 
@@ -768,15 +768,15 @@ async function handleRemoveAccount(id: string) {
 }
 
 .account-card.is-danmaku {
-  border-right: 3px solid var(--vtsuru-primary, #10b981);
+  border-right: 3px solid var(--primary, #10b981);
 }
 
 .empty-box {
   padding: 40px 0;
   text-align: center;
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
   border-radius: 8px;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
 }
 
 .qrcode-wrapper {

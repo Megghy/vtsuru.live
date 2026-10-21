@@ -260,7 +260,7 @@ onBeforeUnmount(() => recognition?.abort())
   flex: 0 0 auto;
 }
 .composer__mic--on {
-  color: var(--vtsuru-brand, #23ade5);
+  color: var(--brand, #23ade5);
   animation: composer-mic-pulse 1.4s ease-in-out infinite;
 }
 @keyframes composer-mic-pulse {
@@ -287,7 +287,7 @@ onBeforeUnmount(() => recognition?.abort())
   height: 56px;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
 }
 .composer__preview img {
   width: 100%;

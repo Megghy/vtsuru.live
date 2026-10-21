@@ -366,7 +366,7 @@ const hasCover = computed(
   background: currentcolor;
 }
 .status.online {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--brand)));
 }
 .status.reserve {
   color: #fb7299;

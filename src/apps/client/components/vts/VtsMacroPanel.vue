@@ -616,7 +616,7 @@ function runMacro(macroId: string) {
   justify-content: center;
   width: 24px;
   height: 24px;
-  border-radius: var(--vtsuru-radius);
+  border-radius: var(--radius);
   cursor: grab;
   user-select: none;
 }

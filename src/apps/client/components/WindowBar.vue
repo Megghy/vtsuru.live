@@ -157,11 +157,11 @@ const closeWindow = () => appWindow.hide()
   width: 100%;
   flex: 0 0 30px;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid var(--border);
   user-select: none;
   padding: 0 4px;
   box-sizing: border-box;
-  background-color: var(--vtsuru-bg-surface);
+  background-color: var(--card);
   z-index: 1000;
 }
 
@@ -206,7 +206,7 @@ const closeWindow = () => appWindow.hide()
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--vtsuru-fg-muted, #9ca3af);
+  background: var(--muted-foreground, #9ca3af);
   margin-right: 4px;
 }
 

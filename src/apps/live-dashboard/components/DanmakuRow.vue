@@ -120,7 +120,7 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
 }
 
 .dm-avatar--empty {
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 
 .dm-main {
@@ -148,17 +148,17 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
 }
 
 .dm-name--note {
-  color: var(--vtsuru-brand);
+  color: var(--brand);
 }
 
 .dm-action {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .dm-time {
   margin-left: auto;
   font-size: 0.8em;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
 
@@ -167,8 +167,8 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
   margin-top: 2px;
   padding: 4px 12px;
   border-radius: 4px 14px 14px 14px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--popover);
+  border: 1px solid var(--border);
   font-weight: 500;
   overflow-wrap: anywhere;
   max-width: 100%;
@@ -178,9 +178,9 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
 .dm-translation {
   margin-top: 2px;
   padding-top: 2px;
-  border-top: 1px dashed var(--vtsuru-border);
+  border-top: 1px dashed var(--border);
   font-size: 0.9em;
   font-weight: 400;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 </style>

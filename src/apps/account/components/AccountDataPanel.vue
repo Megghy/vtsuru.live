@@ -58,45 +58,45 @@ defineProps<{
   justify-content: space-between;
   min-width: 0;
   padding: 12px 14px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-surface);
-  box-shadow: var(--vtsuru-shadow-1, 0 1px 2px rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.03));
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .account-stat:hover {
-  border-color: var(--vtsuru-border-hover, color-mix(in srgb, var(--vtsuru-fg) 20%, var(--vtsuru-border)));
+  border-color: var(--input, color-mix(in srgb, var(--foreground) 20%, var(--border)));
 }
 
 .account-stat--primary {
-  border-color: color-mix(in srgb, var(--vtsuru-primary) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-primary) 4%, var(--vtsuru-bg-surface));
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+  background: color-mix(in srgb, var(--primary) 4%, var(--card));
 }
 
 .account-stat--success {
-  border-color: color-mix(in srgb, var(--vtsuru-success) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-success) 4%, var(--vtsuru-bg-surface));
+  border-color: color-mix(in srgb, var(--vtsuru-success) 32%, var(--border));
+  background: color-mix(in srgb, var(--vtsuru-success) 4%, var(--card));
 }
 
 .account-stat--warning {
-  border-color: color-mix(in srgb, var(--vtsuru-warning) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-warning) 4%, var(--vtsuru-bg-surface));
+  border-color: color-mix(in srgb, var(--vtsuru-warning) 32%, var(--border));
+  background: color-mix(in srgb, var(--vtsuru-warning) 4%, var(--card));
 }
 
 .account-stat--error {
-  border-color: color-mix(in srgb, var(--vtsuru-error) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-error) 4%, var(--vtsuru-bg-surface));
+  border-color: color-mix(in srgb, var(--vtsuru-error) 32%, var(--border));
+  background: color-mix(in srgb, var(--vtsuru-error) 4%, var(--card));
 }
 
 .account-stat--info {
-  border-color: color-mix(in srgb, var(--vtsuru-info) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-info) 4%, var(--vtsuru-bg-surface));
+  border-color: color-mix(in srgb, var(--vtsuru-info) 32%, var(--border));
+  background: color-mix(in srgb, var(--vtsuru-info) 4%, var(--card));
 }
 
 .account-stat__label {
   display: block;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
@@ -108,7 +108,7 @@ defineProps<{
 .account-stat__value {
   display: block;
   margin-top: 4px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-size: 20px;
   font-weight: 700;
   line-height: 1.25;
@@ -119,7 +119,7 @@ defineProps<{
 }
 
 .account-stat__value--primary {
-  color: var(--vtsuru-primary);
+  color: var(--primary);
 }
 
 .account-stat__value--success {
@@ -140,10 +140,10 @@ defineProps<{
 
 .account-data-toolbar {
   padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-surface);
-  box-shadow: var(--vtsuru-shadow-1, 0 1px 2px rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.03));
 }
 
 @media (max-width: 640px) {

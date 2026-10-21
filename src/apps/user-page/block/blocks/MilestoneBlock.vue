@@ -140,7 +140,7 @@ const items = computed(() => {
 }
 
 .empty {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .timeline {
@@ -161,7 +161,7 @@ const items = computed(() => {
   bottom: -2px;
   left: 5px;
   width: 1px;
-  background: var(--vtsuru-border);
+  background: var(--border);
 }
 
 .timeline-marker {
@@ -170,9 +170,9 @@ const items = computed(() => {
   left: 0;
   width: 11px;
   height: 11px;
-  border: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
+  border: 2px solid var(--vtsuru-page-primary, var(--brand));
   border-radius: 50%;
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
 }
 
 .list {
@@ -183,9 +183,9 @@ const items = computed(() => {
 
 .list-item {
   padding: 12px 14px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
   border-radius: max(0px, calc(var(--vtsuru-page-radius) - 2px));
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 
 .meta {
@@ -197,7 +197,7 @@ const items = computed(() => {
 
 .date {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .title {
@@ -210,7 +210,7 @@ const items = computed(() => {
   margin-top: 6px;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   white-space: pre-wrap;
 }
 </style>

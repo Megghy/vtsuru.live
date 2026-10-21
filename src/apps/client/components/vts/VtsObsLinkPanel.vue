@@ -67,7 +67,7 @@ function removeMapping(scene: string) {
             class="w-24 h-8 text-xs"
             @update:model-value="(val) => setDebounceMs((val ?? 0) as number)"
           />
-          <span class="text-[var(--vtsuru-fg-muted)]">防抖 (ms)</span>
+          <span class="text-[var(--muted-foreground)]">防抖 (ms)</span>
         </div>
 
         <Button
@@ -79,14 +79,14 @@ function removeMapping(scene: string) {
         >
           刷新场景
         </Button>
-        <span class="text-[var(--vtsuru-fg-muted)]">当前: {{ obs.currentObsScene || '未知' }}</span>
+        <span class="text-[var(--muted-foreground)]">当前: {{ obs.currentObsScene || '未知' }}</span>
       </div>
 
       <Separator />
 
       <p
         v-if="sceneOptions.length === 0"
-        class="text-xs text-[var(--vtsuru-fg-muted)]"
+        class="text-xs text-[var(--muted-foreground)]"
       >
         未获取到 OBS 场景列表，请先连接 OBS 后点击"刷新场景"
       </p>

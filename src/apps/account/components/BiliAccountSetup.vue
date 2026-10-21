@@ -143,14 +143,14 @@ async function submit() {
 <style scoped>
 .account-setup {
   margin-block: 20px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 .account-setup h3 {
   font-size: 16px;
   margin: 0 0 12px;
 }
 .account-setup p {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   line-height: 1.6;
 }
 </style>

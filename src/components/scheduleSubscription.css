@@ -1,25 +1,25 @@
 .schedule-subscription {
   --schedule-subscription-fg: var(
     --vtsuru-block-fg,
-    var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg)))
+    var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground)))
   );
   --schedule-subscription-muted: var(
     --vtsuru-block-fg-muted,
-    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)))
+    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--muted-foreground)))
   );
   --schedule-subscription-bg: var(
     --vtsuru-block-bg-muted,
-    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted)))
+    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--muted)))
   );
   --schedule-subscription-control-bg: var(
     --user-page-theme-surface-bg-hover,
-    var(--vtsuru-block-bg-muted, var(--vtsuru-bg-muted))
+    var(--vtsuru-block-bg-muted, var(--muted))
   );
   --schedule-subscription-border: var(
     --vtsuru-block-border,
-    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)))
   );
-  --schedule-subscription-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --schedule-subscription-accent: var(--vtsuru-page-primary, var(--brand));
   --schedule-subscription-accent-readable: var(--vtsuru-page-primary-readable, var(--schedule-subscription-accent));
   display: flex;
   flex-wrap: wrap;

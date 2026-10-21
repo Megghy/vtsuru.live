@@ -53,9 +53,9 @@ useGoogleFont(fontFamily)
   height: 46px;
   padding: 0 10px;
   border: 0;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid var(--border);
   background: transparent;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -66,11 +66,11 @@ useGoogleFont(fontFamily)
 
 .font-row:hover,
 .font-row.active {
-  background: var(--vtsuru-brand-soft);
+  background: var(--brand-soft);
 }
 
 .font-row.active {
-  color: var(--vtsuru-brand);
+  color: var(--brand);
 }
 
 .font-row__name {
@@ -82,7 +82,7 @@ useGoogleFont(fontFamily)
 
 .font-row__category {
   flex: 0 0 auto;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 </style>

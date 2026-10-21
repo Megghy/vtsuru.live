@@ -192,8 +192,8 @@ const contentClass = computed(() => ({
 
 .bg-host::before {
   content: '';
-  position: absolute;
-  inset: calc(-24px - var(--user-page-bg-blur, 0px));
+  position: fixed;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   background-color: var(--user-page-bg-color, transparent);
@@ -201,6 +201,7 @@ const contentClass = computed(() => ({
   background-repeat: no-repeat;
   background-position: center;
   background-size: var(--user-page-bg-size, cover);
+  background-attachment: fixed;
 }
 
 .bg-host::after {
@@ -223,14 +224,14 @@ const contentClass = computed(() => ({
 
 .glass-surface {
   padding: 12px 0;
-  background: var(--glass-surface-bg, color-mix(in srgb, var(--vtsuru-bg-elevated) 70%, transparent));
+  background: var(--glass-surface-bg, color-mix(in srgb, var(--popover) 70%, transparent));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
 }
 
 @media (prefers-reduced-transparency: reduce) {
   .glass-surface {
-    background: var(--vtsuru-bg-elevated);
+    background: var(--popover);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }

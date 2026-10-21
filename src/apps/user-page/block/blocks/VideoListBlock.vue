@@ -258,7 +258,7 @@ const containerStyle = computed(() => {
   gap: 12px;
   align-items: center;
   padding: 12px 14px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
   border-radius: var(--vtsuru-page-radius);
   text-decoration: none;
   transition:
@@ -268,8 +268,8 @@ const containerStyle = computed(() => {
   background: transparent;
 }
 .manual-item:hover {
-  background: var(--vtsuru-bg-muted);
-  border-color: var(--vtsuru-border);
+  background: var(--muted);
+  border-color: var(--border);
   transform: translateX(4px);
 }
 .manual-icon {
@@ -279,8 +279,8 @@ const containerStyle = computed(() => {
   align-items: center;
   justify-content: center;
   border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg-muted);
+  background: var(--muted);
+  color: var(--muted-foreground);
   font-size: 20px;
   flex-shrink: 0;
 }
@@ -292,7 +292,7 @@ const containerStyle = computed(() => {
   display: block;
   font-size: 14px;
   line-height: 1.4;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 .manual-url {
   display: block;
@@ -301,10 +301,10 @@ const containerStyle = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 .manual-item:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
+  outline: 2px solid var(--vtsuru-page-primary, var(--brand));
   outline-offset: 2px;
 }
 @container (max-width: 520px) {

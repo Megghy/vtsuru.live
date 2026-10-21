@@ -39,7 +39,7 @@ const pagedHistory = computed(() => {
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="border-b border-[var(--vtsuru-border)] text-[var(--vtsuru-fg-muted)]">
+            <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
               <th class="py-2 px-2 font-medium w-24">时间</th>
               <th class="py-2 px-2 font-medium w-28">操作</th>
               <th class="py-2 px-2 font-medium w-20">状态</th>
@@ -52,11 +52,11 @@ const pagedHistory = computed(() => {
           <tbody>
             <tr
               v-if="pagedHistory.length === 0"
-              class="border-b border-[var(--vtsuru-border)]"
+              class="border-b border-[var(--border)]"
             >
               <td
                 colspan="7"
-                class="py-6 text-center text-[var(--vtsuru-fg-muted)]"
+                class="py-6 text-center text-[var(--muted-foreground)]"
               >
                 暂无记录
               </td>
@@ -64,7 +64,7 @@ const pagedHistory = computed(() => {
             <tr
               v-for="row in pagedHistory"
               :key="row.id"
-              class="border-b border-[var(--vtsuru-border)] hover:bg-[var(--vtsuru-bg-elevated)]"
+              class="border-b border-[var(--border)] hover:bg-[var(--popover)]"
             >
               <td class="py-2 px-2 whitespace-nowrap">{{ new Date(row.ts).toLocaleTimeString() }}</td>
               <td class="py-2 px-2 font-medium whitespace-nowrap">{{ row.kind }}</td>
@@ -119,7 +119,7 @@ const pagedHistory = computed(() => {
         >
           上一页
         </Button>
-        <span class="text-[var(--vtsuru-fg-muted)]">{{ currentPage }} / {{ totalPages }}</span>
+        <span class="text-[var(--muted-foreground)]">{{ currentPage }} / {{ totalPages }}</span>
         <Button
           size="sm"
           variant="outline"

@@ -189,7 +189,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
     <span
       v-else-if="danmaku.type === EventDataTypes.Gift"
       class="gift-line text-xs flex items-center gap-1.5"
-      :style="`color: ${(danmaku.price ?? 0) > 0 ? 'var(--vtsuru-error, #f43f5e)' : 'var(--vtsuru-fg-muted)'}`"
+      :style="`color: ${(danmaku.price ?? 0) > 0 ? 'var(--vtsuru-error, #f43f5e)' : 'var(--muted-foreground)'}`"
     >
       <TooltipProvider v-if="giftDisplay.hasMysteryBoxGift">
         <Tooltip>
@@ -278,7 +278,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
 }
 
 .danmaku-time-text {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 11px;
   font-family: monospace;
 }

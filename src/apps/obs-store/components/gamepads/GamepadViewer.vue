@@ -470,7 +470,7 @@ async function copyObsUrl() {
 .gp-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .gp-stage-wrapper {
@@ -478,7 +478,7 @@ async function copyObsUrl() {
   width: 100%;
   height: 280px;
   border-radius: 8px;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -497,15 +497,15 @@ async function copyObsUrl() {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
   padding: 4px;
   border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
 }
 
 .gp-obs-guide {
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
   font-size: 12px;
@@ -513,7 +513,7 @@ async function copyObsUrl() {
 
 .gp-guide-step {
   margin-bottom: 4px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .bg-checker {

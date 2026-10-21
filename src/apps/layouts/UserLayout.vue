@@ -945,8 +945,8 @@ function scrollToTop() {
 .page-root.bg-host .layout-header {
   height: var(--vtsuru-header-height);
   padding: 0 12px;
-  background-color: var(--vtsuru-bg-elevated, var(--background));
-  border-bottom: 1px solid var(--vtsuru-border, var(--border));
+  background-color: var(--popover, var(--background));
+  border-bottom: 1px solid var(--border, var(--border));
   position: sticky !important;
   top: 0 !important;
   z-index: 100 !important;
@@ -1022,7 +1022,7 @@ function scrollToTop() {
 
 .page-root.bg-host .layout-header,
 .page-root.bg-host .user-sider {
-  background-color: var(--user-page-theme-surface-bg, var(--vtsuru-bg-elevated));
+  background-color: var(--user-page-theme-surface-bg, var(--popover));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -1082,8 +1082,8 @@ function scrollToTop() {
   position: sticky;
   top: var(--vtsuru-header-height);
   height: calc(100vh - var(--vtsuru-header-height));
-  background-color: var(--vtsuru-bg-elevated, var(--background));
-  border-right: 1px solid var(--vtsuru-border, var(--border));
+  background-color: var(--popover, var(--background));
+  border-right: 1px solid var(--border, var(--border));
   transition: width 0.2s ease;
   z-index: 90;
   flex-shrink: 0;
@@ -1107,14 +1107,14 @@ function scrollToTop() {
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  color: var(--vtsuru-fg-muted, var(--muted-foreground));
+  color: var(--muted-foreground, var(--muted-foreground));
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .sider-collapse-btn:hover {
-  background-color: var(--vtsuru-brand-soft, var(--accent));
+  background-color: var(--brand-soft, var(--accent));
 }
 
 .sider-collapse-icon {
@@ -1168,7 +1168,7 @@ function scrollToTop() {
 .nav-group__header {
   padding: 4px 8px;
   font-size: 11px;
-  color: var(--vtsuru-fg-muted, var(--muted-foreground));
+  color: var(--muted-foreground, var(--muted-foreground));
 }
 
 .nav-item {
@@ -1178,19 +1178,19 @@ function scrollToTop() {
   padding: 8px 10px;
   border-radius: 6px;
   text-decoration: none;
-  color: var(--vtsuru-fg-muted, var(--muted-foreground));
+  color: var(--muted-foreground, var(--muted-foreground));
   font-size: 13px;
   transition: all 0.15s ease;
 }
 
 .nav-item:hover {
-  background-color: var(--vtsuru-brand-soft, var(--accent));
-  color: var(--vtsuru-fg, var(--foreground));
+  background-color: var(--brand-soft, var(--accent));
+  color: var(--foreground, var(--foreground));
 }
 
 .nav-item.active {
-  background-color: var(--vtsuru-brand-soft, var(--accent));
-  color: var(--vtsuru-brand, var(--primary));
+  background-color: var(--brand-soft, var(--accent));
+  color: var(--brand, var(--primary));
   font-weight: 500;
 }
 
@@ -1231,7 +1231,7 @@ function scrollToTop() {
 
 .sider-footer {
   padding: 8px;
-  border-top: 1px solid var(--vtsuru-border, var(--border));
+  border-top: 1px solid var(--border, var(--border));
 }
 
 .content-layout-container {

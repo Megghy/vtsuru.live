@@ -351,9 +351,9 @@ function download() {
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 .setting-item {
   display: flex;
@@ -365,7 +365,7 @@ function download() {
   justify-content: center;
   align-items: center;
   height: 200px;
-  border: 2px dashed var(--vtsuru-border);
+  border: 2px dashed var(--border);
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.2s;
@@ -390,6 +390,6 @@ function download() {
   max-height: 400px;
   object-fit: contain;
   border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
 }
 </style>

@@ -69,8 +69,8 @@ const badgeVariant = computed(() => {
   width: 100%;
   padding: 12px 14px;
   border: 0;
-  border-bottom: 1px solid var(--vtsuru-border);
-  color: var(--vtsuru-fg);
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
   background: transparent;
   text-align: left;
   cursor: pointer;
@@ -79,11 +79,11 @@ const badgeVariant = computed(() => {
 
 .ticket-item:hover,
 .ticket-item.active {
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 
 .ticket-item.active {
-  box-shadow: inset 3px 0 var(--vtsuru-brand);
+  box-shadow: inset 3px 0 var(--brand);
 }
 
 .ticket-item__heading,
@@ -105,7 +105,7 @@ const badgeVariant = computed(() => {
 
 .ticket-item__meta {
   justify-content: space-between;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 
@@ -114,6 +114,6 @@ const badgeVariant = computed(() => {
   height: 7px;
   flex: 0 0 7px;
   border-radius: 50%;
-  background: var(--vtsuru-brand);
+  background: var(--brand);
 }
 </style>

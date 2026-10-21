@@ -579,7 +579,7 @@ function toggleGiftWindow() {
 
 /* 主播横幅 */
 .hero-card {
-  background: var(--vtsuru-bg-surface);
+  background: var(--card);
 }
 
 .hero-wrapper {
@@ -609,8 +609,8 @@ function toggleGiftWindow() {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: var(--vtsuru-fg-muted);
-  border: 2px solid var(--vtsuru-bg-surface);
+  background-color: var(--muted-foreground);
+  border: 2px solid var(--card);
 }
 
 .status-pulse-dot--live {
@@ -657,7 +657,7 @@ function toggleGiftWindow() {
 }
 
 .dot-divider {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   opacity: 0.5;
 }
 
@@ -688,7 +688,7 @@ function toggleGiftWindow() {
 .health-icon {
   width: 28px;
   height: 28px;
-  border-radius: var(--vtsuru-radius, 6px);
+  border-radius: var(--radius, 6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -718,9 +718,9 @@ function toggleGiftWindow() {
 /* 直播浮窗控制盒 */
 .float-window-box {
   padding: 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.04));
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: var(--muted, rgba(128, 128, 128, 0.04));
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -742,7 +742,7 @@ function toggleGiftWindow() {
 
 .float-window-desc {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   line-height: 1.4;
   flex-grow: 1;
 }
@@ -763,10 +763,10 @@ function toggleGiftWindow() {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: var(--vtsuru-radius, 6px);
+  border-radius: var(--radius, 6px);
   overflow: hidden;
   cursor: pointer;
-  background-color: var(--vtsuru-bg-muted, #1e1e20);
+  background-color: var(--muted, #1e1e20);
 }
 
 .client-index-cover__media {
@@ -862,16 +862,16 @@ function toggleGiftWindow() {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: var(--card);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .launchpad-item:hover {
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
-  border-color: var(--vtsuru-brand);
+  background: var(--muted, rgba(128, 128, 128, 0.08));
+  border-color: var(--brand);
   transform: translateY(-1px);
 }
 
@@ -903,7 +903,7 @@ function toggleGiftWindow() {
 
 .launchpad-icon--settings {
   background: rgba(107, 114, 128, 0.1);
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .launchpad-text {
@@ -918,7 +918,7 @@ function toggleGiftWindow() {
 
 .launchpad-sub {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin-top: 2px;
   overflow: hidden;
   white-space: nowrap;

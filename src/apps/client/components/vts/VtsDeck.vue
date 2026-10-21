@@ -201,7 +201,7 @@ function addExpressions() {
 }
 
 .deck-tile {
-  --tile-color: var(--vtsuru-primary, #18a058);
+  --tile-color: var(--primary, #18a058);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -211,10 +211,10 @@ function addExpressions() {
   min-width: 0;
   aspect-ratio: 5 / 4;
   padding: 8px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-top: 3px solid var(--tile-color);
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-elevated);
+  border-radius: var(--radius, 6px);
+  background: var(--popover);
   cursor: pointer;
   user-select: none;
   transition:
@@ -238,7 +238,7 @@ function addExpressions() {
 }
 
 .deck-tile.is-active {
-  background: color-mix(in srgb, var(--tile-color) 18%, var(--vtsuru-bg-elevated));
+  background: color-mix(in srgb, var(--tile-color) 18%, var(--popover));
   box-shadow: 0 0 0 2px var(--tile-color);
 }
 
@@ -273,7 +273,7 @@ function addExpressions() {
 
 .deck-tile-sub {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .deck-tile-kbd {
@@ -281,11 +281,11 @@ function addExpressions() {
   right: 4px;
   bottom: 4px;
   padding: 0 4px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 3px;
   font-family: inherit;
   font-size: 10px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .deck-tile-delete {

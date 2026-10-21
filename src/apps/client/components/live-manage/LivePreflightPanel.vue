@@ -126,11 +126,11 @@ h2 {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 p {
   margin: 3px 0 0;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 .preflight-summary {
@@ -139,10 +139,10 @@ p {
   gap: 4px 16px;
   margin: 12px 0 6px;
   font-size: 12px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 .preflight-summary span {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 .preflight-list {
   list-style: none;
@@ -154,7 +154,7 @@ p {
   align-items: center;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid var(--border);
 }
 .preflight-list li:last-child {
   border: 0;
@@ -168,7 +168,7 @@ p {
 .preflight-copy strong {
   font-size: 13px;
   font-weight: 500;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 @media (max-width: 480px) {
   .preflight-heading {

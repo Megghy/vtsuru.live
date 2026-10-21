@@ -121,8 +121,8 @@ function createGroupLabel(label: string, key: string): MenuOption {
     key: `divider:${key}`,
     label: () =>
       h('div', { style: 'display:flex; align-items:center; gap: 10px; width: 100%;' }, [
-        h('span', { style: 'font-size: 12px; font-weight: 700; color: var(--vtsuru-fg-muted);' }, label),
-        h('div', { style: 'height: 1px; flex: 1; background: var(--vtsuru-border);' }),
+        h('span', { style: 'font-size: 12px; font-weight: 700; color: var(--muted-foreground);' }, label),
+        h('div', { style: 'height: 1px; flex: 1; background: var(--border);' }),
       ]),
     disabled: true,
   }

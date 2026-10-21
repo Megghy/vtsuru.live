@@ -109,7 +109,7 @@ function onDragEnd() {
   gap: 4px;
 }
 .drop-target {
-  border-top: 2px solid var(--vtsuru-primary);
+  border-top: 2px solid var(--primary);
   padding-top: 2px;
 }
 </style>

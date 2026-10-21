@@ -776,7 +776,7 @@ onBeforeUnmount(clearAll)
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed var(--vtsuru-border);
+  border: 2px dashed var(--border);
   border-radius: 14px;
   cursor: pointer;
   transition:
@@ -826,7 +826,7 @@ onBeforeUnmount(clearAll)
   place-items: center;
   overflow: auto;
   padding: 16px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 12px;
 }
 
@@ -843,9 +843,9 @@ onBeforeUnmount(clearAll)
 
 .panel-block {
   padding: 12px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--vtsuru-bg-surface);
+  background: var(--card);
 }
 
 .preset-grid {
@@ -862,8 +862,8 @@ onBeforeUnmount(clearAll)
   padding: 8px;
   text-align: left;
   color: inherit;
-  background: var(--vtsuru-bg-surface);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
 }
@@ -875,7 +875,7 @@ onBeforeUnmount(clearAll)
 
 .preset-card small {
   grid-column: 2;
-  color: var(--vtsuru-fg-disabled);
+  color: var(--muted-foreground);
 }
 
 .preset-visual {
@@ -911,7 +911,7 @@ onBeforeUnmount(clearAll)
   flex-direction: column;
   gap: 6px;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .quality-field {
@@ -942,7 +942,7 @@ onBeforeUnmount(clearAll)
   gap: 8px;
   align-items: center;
   padding: 8px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
 }
@@ -958,8 +958,8 @@ onBeforeUnmount(clearAll)
   display: grid;
   place-items: center;
   border-radius: 8px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-inset);
+  color: var(--muted-foreground);
+  background: var(--muted);
   cursor: grab;
   user-select: none;
 }
@@ -969,7 +969,7 @@ onBeforeUnmount(clearAll)
   height: 48px;
   object-fit: cover;
   border-radius: 8px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 .image-row__body {
@@ -991,7 +991,7 @@ onBeforeUnmount(clearAll)
   gap: 8px;
   padding: 10px;
   border-radius: 10px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 @media (max-width: 960px) {

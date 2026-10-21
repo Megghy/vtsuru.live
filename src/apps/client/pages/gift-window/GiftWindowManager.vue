@@ -1052,7 +1052,7 @@ function toggleFilterType(val: string, checked: boolean) {
 .thank-section-title {
   font-weight: 600;
   font-size: 13px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .thank-scroll-box {
@@ -1069,14 +1069,14 @@ function toggleFilterType(val: string, checked: boolean) {
 
 .thank-item {
   padding: 8px 12px;
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--radius, 6px);
+  background: var(--popover);
+  border: 1px solid var(--border);
   transition: all 0.15s ease;
 }
 
 .thank-item:hover {
-  border-color: var(--vtsuru-brand);
+  border-color: var(--brand);
 }
 
 .thank-item--top {
@@ -1094,7 +1094,7 @@ function toggleFilterType(val: string, checked: boolean) {
   font-weight: 700;
   font-size: 12px;
   text-align: center;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .thank-idx--1 {
@@ -1124,7 +1124,7 @@ function toggleFilterType(val: string, checked: boolean) {
   height: 7px;
   border-radius: 50%;
   background: #94a3b8;
-  border: 1.5px solid var(--vtsuru-bg-elevated);
+  border: 1.5px solid var(--popover);
 }
 
 .thank-online-dot.online {
@@ -1135,9 +1135,9 @@ function toggleFilterType(val: string, checked: boolean) {
 /* 预设卡片 */
 .preset-card {
   padding: 14px;
-  border-radius: var(--vtsuru-radius, 6px);
+  border-radius: var(--radius, 6px);
   cursor: pointer;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
@@ -1147,9 +1147,9 @@ function toggleFilterType(val: string, checked: boolean) {
 }
 
 .preset-card:hover {
-  border-color: var(--vtsuru-brand);
+  border-color: var(--brand);
   transform: translateY(-2px);
-  box-shadow: var(--vtsuru-shadow-1);
+  box-shadow: var(--shadow-sm);
 }
 
 .preset-card--dark {
@@ -1181,9 +1181,9 @@ function toggleFilterType(val: string, checked: boolean) {
 /* 历史榜单单项 */
 .history-rank-item {
   padding: 8px 12px;
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--radius, 6px);
+  background: var(--popover);
+  border: 1px solid var(--border);
 }
 
 .rank-num {
@@ -1191,7 +1191,7 @@ function toggleFilterType(val: string, checked: boolean) {
   width: 22px;
   text-align: center;
   font-size: 13px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .rank-num--top1 {

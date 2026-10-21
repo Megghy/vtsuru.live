@@ -196,7 +196,7 @@ async function download() {
   justify-content: center;
   align-items: center;
   padding: 24px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 .color-picker-wrap {

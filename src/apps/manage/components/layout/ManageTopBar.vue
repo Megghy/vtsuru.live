@@ -139,8 +139,8 @@ async function goToUserPage(accountName?: string) {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background-color: var(--vtsuru-bg-surface);
-  border-bottom: 1px solid var(--vtsuru-border);
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
   box-sizing: border-box;
 }
 
@@ -162,14 +162,14 @@ async function goToUserPage(accountName?: string) {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   white-space: nowrap;
 }
 
 .manage-header__account {
   font-size: 12px;
   line-height: 1.2;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -178,8 +178,8 @@ async function goToUserPage(accountName?: string) {
 .manage-header__workspace {
   padding: 3px 7px;
   border-radius: 6px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
+  background: var(--brand-soft);
+  color: var(--brand);
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
@@ -190,7 +190,7 @@ async function goToUserPage(accountName?: string) {
   font-size: 12px;
   line-height: 1.2;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -198,7 +198,7 @@ async function goToUserPage(accountName?: string) {
 
 .manage-header__page-sep {
   margin-right: 6px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-weight: 400;
 }
 
@@ -213,9 +213,9 @@ async function goToUserPage(accountName?: string) {
   height: 26px;
   padding: 0 10px;
   border-radius: 8px;
-  border: 1px solid var(--vtsuru-brand);
-  background: var(--vtsuru-brand);
-  color: var(--vtsuru-brand-fg);
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: var(--brand-foreground);
   font-size: 12px;
   font-weight: 600;
   display: inline-flex;
@@ -245,9 +245,9 @@ async function goToUserPage(accountName?: string) {
   width: 32px;
   padding: 0;
   border-radius: 10px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   background: transparent;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -286,9 +286,9 @@ async function goToUserPage(accountName?: string) {
   height: 32px;
   padding: 0 10px;
   border-radius: 10px;
-  border: 1px solid var(--vtsuru-border-hover);
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg);
+  border: 1px solid var(--input);
+  background: var(--muted);
+  color: var(--foreground);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;

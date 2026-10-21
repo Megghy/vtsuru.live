@@ -37,7 +37,7 @@ const palette = computed(() => {
     subtle: isUnbackgrounded.value
       ? 'color-mix(in srgb, var(--vtsuru-page-text) 55%, transparent)'
       : 'var(--vtsuru-surface-fg-subtle)',
-    mutedBackground: isUnbackgrounded.value ? 'var(--vtsuru-bg-muted)' : 'var(--user-page-ui-surface-bg-hover)',
+    mutedBackground: isUnbackgrounded.value ? 'var(--muted)' : 'var(--user-page-ui-surface-bg-hover)',
   }
 })
 
@@ -49,10 +49,8 @@ const cardStyle = computed<ThemeStyle>(() => ({
   '--vtsuru-block-fg-muted': palette.value.muted,
   '--vtsuru-block-fg-subtle': palette.value.subtle,
   '--vtsuru-block-bg-muted': palette.value.mutedBackground,
-  '--vtsuru-block-border': 'var(--user-page-border-color, var(--vtsuru-border))',
-  '--vtsuru-fg': palette.value.foreground,
-  '--vtsuru-fg-muted': palette.value.muted,
-  '--vtsuru-border': 'var(--user-page-border-color)',
+  '--vtsuru-block-border': 'var(--user-page-border-color, var(--border))',
+  '--border': 'var(--user-page-border-color)',
 }))
 
 provideThemeScope(computed(() => ({
@@ -173,9 +171,9 @@ const borderTitleAlignClass = computed(() => {
   flex-direction: column;
   border-radius: var(--vtsuru-page-radius);
   color: var(--vtsuru-block-fg);
-  background: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--vtsuru-bg-muted)));
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--muted)));
+  backdrop-filter: blur(var(--user-page-bg-blur, 6px));
+  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 6px));
   border: var(--vtsuru-page-border);
   box-shadow: var(--vtsuru-page-shadow);
   overflow: hidden;

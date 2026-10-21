@@ -163,8 +163,8 @@ watch(
 
 <style scoped>
 .rank {
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-elevated);
+  color: var(--muted-foreground);
+  background: var(--popover);
 }
 .rank--1 {
   color: #6b4d00;

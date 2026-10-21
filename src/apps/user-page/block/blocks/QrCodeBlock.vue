@@ -134,7 +134,7 @@ function downloadPng() {
   margin: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-size: 18px;
   line-height: 1.4;
   letter-spacing: 0;
@@ -154,7 +154,7 @@ function downloadPng() {
   place-items: center;
   min-height: 128px;
   padding: 16px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   text-align: center;
 }
 

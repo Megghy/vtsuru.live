@@ -25,9 +25,9 @@ const c = props.control
         v-if="c.faceAuthQrCode.value"
         style="
           padding: 16px;
-          background: var(--vtsuru-bg-surface);
-          border: 1px solid var(--vtsuru-border);
-          border-radius: var(--vtsuru-radius);
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
         "
       >
         <img

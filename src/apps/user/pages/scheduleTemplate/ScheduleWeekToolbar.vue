@@ -172,23 +172,23 @@ async function saveScheduleImage() {
 .schedule-week-toolbar {
   --schedule-toolbar-resolved-fg: var(
     --schedule-toolbar-fg,
-    var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))))
+    var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))))
   );
   --schedule-toolbar-resolved-muted: var(
     --schedule-toolbar-muted,
-    var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted))))
+    var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--muted-foreground))))
   );
   --schedule-toolbar-resolved-bg: var(
     --schedule-toolbar-bg,
-    var(--vtsuru-block-bg-muted, var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--vtsuru-bg-muted))))
+    var(--vtsuru-block-bg-muted, var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--muted))))
   );
   --schedule-toolbar-resolved-border: var(
     --schedule-toolbar-border,
-    var(--vtsuru-block-border, var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border))))
+    var(--vtsuru-block-border, var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border))))
   );
   --schedule-toolbar-resolved-accent: var(
     --schedule-toolbar-accent,
-    var(--vtsuru-page-primary, var(--vtsuru-brand))
+    var(--vtsuru-page-primary, var(--brand))
   );
   --schedule-toolbar-resolved-control-bg: var(
     --schedule-toolbar-control-bg,

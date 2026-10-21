@@ -647,7 +647,7 @@ function fireMock() {
   gap: 8px;
 }
 .rule-card {
-  border: 1px solid var(--vtsuru-border, #e0e0e0);
+  border: 1px solid var(--border, #e0e0e0);
   border-radius: 6px;
   padding: 8px;
   display: flex;

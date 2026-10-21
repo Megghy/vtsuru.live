@@ -63,9 +63,9 @@ const GROUPS = [
 
 kbd {
   padding: 0 6px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   font-family: inherit;
   font-size: 12px;
 }
@@ -73,6 +73,6 @@ kbd {
 .shortcuts__hint {
   margin-top: 6px;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 </style>

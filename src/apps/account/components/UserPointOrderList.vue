@@ -420,13 +420,13 @@ function formatDateTime(ts: number) {
 <style scoped>
 .orders-empty-state {
   padding: 48px 16px;
-  border: 1px dashed var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
 }
 
 .empty-tip {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 

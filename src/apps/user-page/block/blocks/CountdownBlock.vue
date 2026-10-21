@@ -182,7 +182,7 @@ const breakdown = computed(() => {
 }
 
 .countdown-card.bold-mode.has-bg {
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
 }
 
 .countdown-inner {
@@ -206,11 +206,11 @@ const breakdown = computed(() => {
   align-items: center;
   gap: 6px;
   margin-bottom: 20px;
-  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
+  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
   padding-bottom: 4px;
   padding-left: 8px;
   padding-right: 8px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .cd-title {
@@ -222,7 +222,7 @@ const breakdown = computed(() => {
 
 .cd-placeholder {
   padding: 20px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .cd-digits-wrapper {
@@ -255,7 +255,7 @@ const breakdown = computed(() => {
 }
 
 .digit-box .lbl {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 10px;
   font-weight: 600;
   margin-top: 6px;
@@ -265,13 +265,13 @@ const breakdown = computed(() => {
 .sep {
   font-size: 28px;
   font-weight: 300;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin-top: 2px;
   user-select: none;
 }
 
 .digit-box.highlight .val {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
+  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--brand)));
 }
 
 .done-display {
@@ -319,7 +319,7 @@ const breakdown = computed(() => {
   color: var(--vtsuru-block-fg);
 }
 .inline-time.bold small {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
   margin-right: 8px;
   text-transform: uppercase;

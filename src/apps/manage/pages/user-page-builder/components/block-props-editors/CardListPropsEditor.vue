@@ -191,7 +191,7 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
   width: 56px;
   height: 40px;
   object-fit: cover;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 4px;
 }
 </style>

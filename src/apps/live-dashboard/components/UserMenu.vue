@@ -240,7 +240,7 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .user-menu__actions {

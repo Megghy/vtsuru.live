@@ -53,7 +53,7 @@ function goToPage() {
           :class="{
             'text-emerald-500': speechState.isSpeaking,
             'text-amber-500': isPaused,
-            'text-[var(--vtsuru-fg)]': !speechState.isSpeaking && !isPaused
+            'text-[var(--foreground)]': !speechState.isSpeaking && !isPaused
           }"
         >
           {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停' : '待机' }}
@@ -112,8 +112,8 @@ function goToPage() {
   bottom: 16px;
   right: 16px;
   z-index: 9999;
-  background: var(--vtsuru-bg-elevated, #242428);
-  border: 1px solid var(--vtsuru-border, rgba(255, 255, 255, 0.1));
+  background: var(--popover, #242428);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   padding: 6px 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
@@ -132,8 +132,8 @@ function goToPage() {
 }
 .queue-badge {
   font-size: 11px;
-  background: var(--vtsuru-bg-muted, rgba(255, 255, 255, 0.08));
-  color: var(--vtsuru-fg-muted, #9ca3af);
+  background: var(--muted, rgba(255, 255, 255, 0.08));
+  color: var(--muted-foreground, #9ca3af);
   border-radius: 10px;
   padding: 0 6px;
   min-width: 18px;

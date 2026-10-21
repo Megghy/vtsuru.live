@@ -122,16 +122,16 @@ const items = computed(() =>
 .card-item {
   min-width: 0;
   overflow: hidden;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
   border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .card-image {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .card-content {
   display: grid;
@@ -148,7 +148,7 @@ const items = computed(() =>
   line-height: 1.4;
 }
 .card-content p {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 13px;
   line-height: 1.55;
   white-space: pre-wrap;

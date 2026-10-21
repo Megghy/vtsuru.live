@@ -67,7 +67,7 @@ const model = computed(() => {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .embed-frame {
   position: absolute;
@@ -85,8 +85,8 @@ const model = computed(() => {
   justify-content: center;
   gap: 6px;
   padding: 12px 14px;
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg-muted);
+  color: var(--foreground);
+  background: var(--muted);
 }
 
 .embed-placeholder__title {

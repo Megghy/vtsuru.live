@@ -747,9 +747,9 @@ function toggleFilterType(val: string, checked: boolean) {
 /* 预设卡片 */
 .preset-card {
   padding: 14px;
-  border-radius: var(--vtsuru-radius, 6px);
+  border-radius: var(--radius, 6px);
   cursor: pointer;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
@@ -759,9 +759,9 @@ function toggleFilterType(val: string, checked: boolean) {
 }
 
 .preset-card:hover {
-  border-color: var(--vtsuru-brand);
+  border-color: var(--brand);
   transform: translateY(-2px);
-  box-shadow: var(--vtsuru-shadow-1);
+  box-shadow: var(--shadow-sm);
 }
 
 .preset-card--dark {
@@ -777,7 +777,7 @@ function toggleFilterType(val: string, checked: boolean) {
 .preset-card--transparent {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
   backdrop-filter: blur(4px);
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .preset-name {

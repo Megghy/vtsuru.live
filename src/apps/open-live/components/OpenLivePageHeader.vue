@@ -39,7 +39,7 @@ defineProps<{
 .open-live-page-header__description {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .open-live-page-header__actions {

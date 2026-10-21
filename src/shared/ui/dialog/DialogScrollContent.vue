@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useThemeScope } from '@/shared/config/theme/scope'
 import type { DialogContentEmits, DialogContentProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
@@ -19,7 +18,6 @@ const emits = defineEmits<DialogContentEmits>()
 const delegatedProps = reactiveOmit(props, "class")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
-const themeStyle = useThemeScope()
 </script>
 
 <template>
@@ -27,7 +25,7 @@ const themeStyle = useThemeScope()
     <DialogOverlay
       class="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
     >
-      <DialogContent :style="themeStyle"
+      <DialogContent
         :class="
           cn(
             'relative z-50 grid w-full max-w-lg my-8 gap-4 border-[length:var(--ui-border-width,1px)] [border-style:var(--ui-border-style,solid)] border-border bg-background p-6 shadow-[var(--ui-shadow,0_4px_12px_rgb(0_0_0/0.12))] duration-200 sm:rounded-lg md:w-full',

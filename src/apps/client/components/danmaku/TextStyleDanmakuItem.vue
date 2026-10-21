@@ -257,7 +257,7 @@ const {
 }
 
 .mystery-box-text-tooltip__label {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .mystery-box-text-tooltip__value {

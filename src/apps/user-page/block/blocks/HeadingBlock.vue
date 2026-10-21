@@ -76,7 +76,7 @@ const anchorId = computed(() => (props.blockId ? getHeadingAnchorId(props.blockI
 .heading-text {
   display: block;
   margin: 0;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0;
@@ -91,7 +91,7 @@ const anchorId = computed(() => (props.blockId ? getHeadingAnchorId(props.blockI
   top: 4px;
   bottom: 4px;
   width: 4px;
-  background: var(--vtsuru-page-primary-soft, var(--vtsuru-brand-soft));
+  background: var(--vtsuru-page-primary-soft, var(--brand-soft));
   border-radius: 99px;
   opacity: 0.8;
 }

@@ -194,9 +194,9 @@ function handleSelect(action: string) {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--vtsuru-bg-surface);
+  background: var(--card);
   font-size: 12px;
   cursor: grab;
   user-select: none;
@@ -205,13 +205,13 @@ function handleSelect(action: string) {
     background 120ms ease;
 }
 .queue-item:hover {
-  border-color: var(--vtsuru-primary);
+  border-color: var(--primary);
 }
 .queue-item:active {
   cursor: grabbing;
 }
 .drag-handle {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   display: flex;
   align-items: center;
 }
@@ -236,7 +236,7 @@ function handleSelect(action: string) {
 }
 .time {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }

@@ -89,14 +89,14 @@ async function onImportFileChange(ev: Event) {
             @change="onImportFileChange"
           />
         </label>
-        <span class="text-[var(--vtsuru-fg-muted)]">保存/恢复 VTS 控制配置 (不含连接信息)</span>
+        <span class="text-[var(--muted-foreground)]">保存/恢复 VTS 控制配置 (不含连接信息)</span>
       </div>
 
       <div class="flex flex-col gap-2">
         <div
           v-for="p in vts.profiles"
           :key="p.id"
-          class="flex items-center justify-between gap-3 flex-wrap py-1.5 border-b border-[var(--vtsuru-border)] last:border-0"
+          class="flex items-center justify-between gap-3 flex-wrap py-1.5 border-b border-[var(--border)] last:border-0"
         >
           <div class="flex items-center gap-2 flex-wrap">
             <Tag
@@ -111,7 +111,7 @@ async function onImportFileChange(ev: Event) {
               class="w-48 h-8 text-xs"
               @blur="renameProfile({ ...p })"
             />
-            <span class="text-xs text-[var(--vtsuru-fg-muted)]">
+            <span class="text-xs text-[var(--muted-foreground)]">
               预设={{ p.data.presets.length }} 宏={{ p.data.macros.length }} 参数={{ p.data.paramSlots.length }}
             </span>
           </div>

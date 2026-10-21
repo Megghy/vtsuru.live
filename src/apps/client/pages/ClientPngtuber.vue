@@ -97,7 +97,7 @@ onMounted(() => {
       <CardContent class="px-4 pb-4 pt-0 space-y-4">
         <div class="input-grid">
           <div class="space-y-1.5">
-            <label class="text-xs font-medium text-[var(--vtsuru-fg-muted)]">频道</label>
+            <label class="text-xs font-medium text-[var(--muted-foreground)]">频道</label>
             <Input
               v-model="driver.channel"
               placeholder="default"
@@ -105,7 +105,7 @@ onMounted(() => {
             />
           </div>
           <div class="space-y-1.5">
-            <label class="text-xs font-medium text-[var(--vtsuru-fg-muted)]">音频来源</label>
+            <label class="text-xs font-medium text-[var(--muted-foreground)]">音频来源</label>
             <Select
               v-model="driver.audioMode"
               :disabled="locked"
@@ -123,7 +123,7 @@ onMounted(() => {
             v-if="driver.audioMode === 'microphone'"
             class="space-y-1.5"
           >
-            <label class="text-xs font-medium text-[var(--vtsuru-fg-muted)]">麦克风设备</label>
+            <label class="text-xs font-medium text-[var(--muted-foreground)]">麦克风设备</label>
             <Select
               v-model="driver.deviceId"
               :disabled="locked"
@@ -146,7 +146,7 @@ onMounted(() => {
             v-else
             class="space-y-1.5"
           >
-            <label class="text-xs font-medium text-[var(--vtsuru-fg-muted)]">OBS 输入源</label>
+            <label class="text-xs font-medium text-[var(--muted-foreground)]">OBS 输入源</label>
             <Select
               v-model="driver.obsInput"
               :disabled="locked"
@@ -197,7 +197,7 @@ onMounted(() => {
           </RouterLink>
         </div>
 
-        <p class="text-xs text-[var(--vtsuru-fg-muted)]">
+        <p class="text-xs text-[var(--muted-foreground)]">
           启动时申请音频权限。更换频道或音频来源前请停止驱动。展示页输入模式请选择客户端或 OBS。
         </p>
       </CardContent>
@@ -212,10 +212,10 @@ onMounted(() => {
           <Tag :variant="driver.speaking ? 'default' : 'secondary'">
             {{ driver.speaking ? '说话中' : '静默' }}
           </Tag>
-          <span class="text-xs text-[var(--vtsuru-fg-muted)]">
+          <span class="text-xs text-[var(--muted-foreground)]">
             {{ driver.inputMuted ? 'OBS 输入已静音' : `音量 ${Math.round(driver.volume)}` }}
           </span>
-          <span class="text-xs text-[var(--vtsuru-fg-muted)]">
+          <span class="text-xs text-[var(--muted-foreground)]">
             {{ driver.connected ? '控制连接正常' : '控制未连接' }}
           </span>
         </div>
@@ -230,7 +230,7 @@ onMounted(() => {
           :class="{ 'opacity-50 pointer-events-none': !driver.running || !driver.connected }"
         >
           <div class="flex items-center gap-4">
-            <span class="text-xs font-medium w-16 text-[var(--vtsuru-fg-muted)]">表情</span>
+            <span class="text-xs font-medium w-16 text-[var(--muted-foreground)]">表情</span>
             <div class="flex-1 max-w-xs">
               <Select
                 :model-value="driver.runtime.expressionId || driver.config.defaultExpressionId"
@@ -253,7 +253,7 @@ onMounted(() => {
           </div>
 
           <div class="flex items-center gap-4">
-            <span class="text-xs font-medium w-16 text-[var(--vtsuru-fg-muted)]">静音</span>
+            <span class="text-xs font-medium w-16 text-[var(--muted-foreground)]">静音</span>
             <Switch
               :checked="driver.runtime.muted"
               @update:checked="(value) => control({ muted: value })"
@@ -261,7 +261,7 @@ onMounted(() => {
           </div>
 
           <div class="flex items-center gap-4">
-            <span class="text-xs font-medium w-16 text-[var(--vtsuru-fg-muted)]">暂离</span>
+            <span class="text-xs font-medium w-16 text-[var(--muted-foreground)]">暂离</span>
             <Switch
               :checked="driver.runtime.away"
               @update:checked="(value) => control({ away: value })"

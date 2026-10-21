@@ -1,11 +1,11 @@
 .index-template {
-  --index-fg: var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg)));
-  --index-muted: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
-  --index-subtle: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
-  --index-bg: var(--vtsuru-page-content-color, var(--vtsuru-bg));
+  --index-fg: var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground)));
+  --index-muted: var(--vtsuru-surface-fg-muted, var(--muted-foreground));
+  --index-subtle: var(--vtsuru-surface-fg-subtle, var(--muted-foreground));
+  --index-bg: var(--vtsuru-page-content-color, var(--background));
   --index-card: var(--vtsuru-page-card-bg, color-mix(in srgb, var(--index-bg) 90%, var(--vtsuru-page-primary) 10%));
-  --index-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
-  --index-border: var(--vtsuru-card-border-color, var(--vtsuru-border));
+  --index-accent: var(--vtsuru-page-primary, var(--brand));
+  --index-border: var(--vtsuru-card-border-color, var(--border));
   width: 100%;
   min-width: 0;
   margin: 0;
@@ -110,13 +110,82 @@
   min-width: 0;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 12px;
   padding-bottom: 12px;
 }
+
+.profile-action {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  border-radius: calc(var(--vtsuru-page-radius, 6px) + 4px);
+}
+
+.profile-action::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.profile-action:hover::before {
+  opacity: 1;
+}
+
+.profile-action:active {
+  transform: scale(0.95);
+}
+
+.profile-action--secondary :deep(.n-button) {
+  border-color: color-mix(in srgb, #fb7299 30%, transparent);
+  background: color-mix(in srgb, #fb7299 8%, var(--index-bg));
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.profile-action--secondary:hover :deep(.n-button) {
+  border-color: color-mix(in srgb, #fb7299 50%, transparent);
+  background: color-mix(in srgb, #fb7299 16%, var(--index-bg));
+  box-shadow: 0 8px 16px color-mix(in srgb, #fb7299 20%, transparent);
+}
+
 .profile-action--secondary :deep(svg) {
   color: #fb7299;
   fill: #fb7299;
+  transition: all 0.3s ease;
 }
+
+.profile-action--secondary:hover :deep(svg) {
+  filter: brightness(1.2);
+}
+
+.profile-action--primary :deep(.n-button) {
+  background: linear-gradient(135deg, var(--index-accent), color-mix(in srgb, var(--index-accent) 80%, #fb7299));
+  border: none;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--index-accent) 30%, transparent);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.profile-action--primary:hover :deep(.n-button) {
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--index-accent) 40%, transparent);
+  transform: translateY(-2px);
+}
+
+.profile-action--primary:active :deep(.n-button) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--index-accent) 25%, transparent);
+}
+
+.profile-action--primary :deep(svg) {
+  transition: all 0.3s ease;
+}
+
+.profile-action--primary:hover :deep(svg) {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+}
+
 .bili-action__label {
   color: #fb7299;
 }

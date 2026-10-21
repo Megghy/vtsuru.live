@@ -133,8 +133,8 @@ function cancelImport() {
             @change="onImportFileChange"
           />
         </label>
-        <span class="text-[var(--vtsuru-fg-muted)]">wsUrl: {{ vts.wsUrl || '未设置' }}</span>
-        <span class="text-[var(--vtsuru-fg-muted)]">Token: {{ vts.authToken ? '已保存' : '无' }}</span>
+        <span class="text-[var(--muted-foreground)]">wsUrl: {{ vts.wsUrl || '未设置' }}</span>
+        <span class="text-[var(--muted-foreground)]">Token: {{ vts.authToken ? '已保存' : '无' }}</span>
       </div>
     </CardContent>
   </Card>
@@ -151,7 +151,7 @@ function cancelImport() {
         <span
           v-for="line in previewLines"
           :key="line"
-          class="text-xs text-[var(--vtsuru-fg-muted)]"
+          class="text-xs text-[var(--muted-foreground)]"
         >
           {{ line }}
         </span>

@@ -93,7 +93,7 @@ function save() {
 
       <div class="space-y-3 py-2 text-xs">
         <div class="flex items-center gap-3">
-          <label class="w-16 font-medium text-[var(--vtsuru-fg-muted)]">动作</label>
+          <label class="w-16 font-medium text-[var(--muted-foreground)]">动作</label>
           <div class="flex-1">
             <Select
               :model-value="form.type"
@@ -119,7 +119,7 @@ function save() {
           v-if="meta.needsTarget"
           class="flex items-center gap-3"
         >
-          <label class="w-16 font-medium text-[var(--vtsuru-fg-muted)]">目标</label>
+          <label class="w-16 font-medium text-[var(--muted-foreground)]">目标</label>
           <div class="flex-1">
             <Select
               :model-value="form.targetId || '__none__'"
@@ -143,7 +143,7 @@ function save() {
         </div>
 
         <div class="flex items-center gap-3">
-          <label class="w-16 font-medium text-[var(--vtsuru-fg-muted)]">名称</label>
+          <label class="w-16 font-medium text-[var(--muted-foreground)]">名称</label>
           <Input
             v-model="form.label"
             class="flex-1 h-8 text-xs"
@@ -153,7 +153,7 @@ function save() {
         </div>
 
         <div class="flex items-center gap-3">
-          <label class="w-16 font-medium text-[var(--vtsuru-fg-muted)]">颜色</label>
+          <label class="w-16 font-medium text-[var(--muted-foreground)]">颜色</label>
           <div class="flex items-center gap-2 flex-1">
             <ColorPicker
               :model-value="form.color ?? ''"
@@ -172,7 +172,7 @@ function save() {
         </div>
 
         <div class="flex items-start gap-3">
-          <label class="w-16 font-medium text-[var(--vtsuru-fg-muted)] pt-1.5">快捷键</label>
+          <label class="w-16 font-medium text-[var(--muted-foreground)] pt-1.5">快捷键</label>
           <div class="flex flex-col gap-1 flex-1">
             <Input
               :value="recording ? '请按下组合键…（Esc 清除）' : form.shortcut ?? ''"
@@ -184,7 +184,7 @@ function save() {
               @blur="recording = false"
               @keydown="onShortcutKeydown"
             />
-            <span class="text-[11px] text-[var(--vtsuru-fg-muted)]">
+            <span class="text-[11px] text-[var(--muted-foreground)]">
               全局生效，客户端在后台时也能触发
             </span>
           </div>

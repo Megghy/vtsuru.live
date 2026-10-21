@@ -109,7 +109,7 @@ provideThemeScope(previewStyle)
 .screen {
   position: relative;
   font-family: var(--vtsuru-page-font-family);
-  background: var(--vtsuru-bg);
+  background: var(--background);
   border-radius: 16px;
   overflow: hidden;
   padding: 0;

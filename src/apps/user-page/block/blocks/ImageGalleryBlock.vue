@@ -374,9 +374,9 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
   border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .media.masonry {
   aspect-ratio: auto;
@@ -394,8 +394,8 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
   place-items: center;
   min-height: 120px;
   padding: 16px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
+  color: var(--muted-foreground);
+  background: var(--muted);
   font-size: 13px;
   text-align: center;
 }
@@ -405,7 +405,7 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
 .caption,
 .carousel-caption {
   margin: 8px 0 0;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 13px;
   line-height: 1.5;
   text-align: center;

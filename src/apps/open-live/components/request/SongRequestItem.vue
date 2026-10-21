@@ -73,9 +73,9 @@ function getIndexStyle(status: SongRequestStatus): CSSProperties {
     case SongRequestStatus.Finish:
       return {
         ...style,
-        backgroundColor: 'var(--vtsuru-bg-muted, #f3f4f6)',
-        color: 'var(--vtsuru-fg, #111827)',
-        border: '1px solid var(--vtsuru-border, #e5e7eb)',
+        backgroundColor: 'var(--muted, #f3f4f6)',
+        color: 'var(--foreground, #111827)',
+        border: '1px solid var(--border, #e5e7eb)',
       }
     case SongRequestStatus.Cancel:
       return { ...style, backgroundColor: 'var(--vtsuru-error, #ef4444)' }

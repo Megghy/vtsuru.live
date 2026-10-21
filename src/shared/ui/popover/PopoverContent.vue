@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useThemeScope } from '@/shared/config/theme/scope'
 import type { PopoverContentEmits, PopoverContentProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
@@ -26,12 +25,11 @@ const emits = defineEmits<PopoverContentEmits>()
 const delegatedProps = reactiveOmit(props, "class")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
-const themeStyle = useThemeScope()
 </script>
 
 <template>
   <PopoverPortal>
-    <PopoverContent :style="themeStyle"
+    <PopoverContent
       v-bind="{ ...forwarded, ...$attrs }"
       :class="
         cn(

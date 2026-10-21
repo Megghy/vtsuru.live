@@ -1,20 +1,20 @@
 .song-list-surface {
   --vtsuru-page-max-width: 1440px;
-  --song-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
-  --song-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted)));
+  --song-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))));
+  --song-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--muted-foreground)));
   --song-subtle: var(--vtsuru-block-fg-subtle, var(--vtsuru-surface-fg-subtle, var(--song-muted)));
   --song-bg: var(
     --vtsuru-block-bg-muted,
-    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--vtsuru-bg-muted)))
+    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--muted)))
   );
   --song-bg-hover: var(--user-page-theme-surface-bg-hover, color-mix(in srgb, var(--song-bg) 88%, var(--song-fg) 12%));
   --song-panel: var(--vtsuru-page-card-bg, color-mix(in srgb, var(--song-bg) 88%, transparent));
   --song-panel-strong: var(--vtsuru-page-card-bg-embedded, color-mix(in srgb, var(--song-bg) 94%, var(--song-fg) 6%));
   --song-border: var(
     --vtsuru-block-border,
-    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)))
   );
-  --song-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --song-accent: var(--vtsuru-page-primary, var(--brand));
   --song-accent-soft: var(--vtsuru-page-primary-soft, color-mix(in srgb, var(--song-accent) 14%, transparent));
   --song-accent-readable: var(--vtsuru-page-primary-readable, var(--song-fg));
   --song-success: var(--vtsuru-success, #22c55e);
@@ -68,7 +68,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: color-mix(in srgb, var(--vtsuru-bg, #ffffff) 60%, transparent);
+  background: color-mix(in srgb, var(--background, #ffffff) 60%, transparent);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   transition: background-color 0.3s ease;

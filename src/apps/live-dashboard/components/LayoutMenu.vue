@@ -85,7 +85,7 @@ function toggle(id: PanelId, visible: boolean) {
 
 .layout-menu__label {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .layout-menu__list {
@@ -98,19 +98,19 @@ function toggle(id: PanelId, visible: boolean) {
   align-items: center;
   gap: 6px;
   padding: 4px 6px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .layout-menu__handle {
   cursor: grab;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .layout-menu__key {
   margin-left: auto;
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .layout-menu__row {

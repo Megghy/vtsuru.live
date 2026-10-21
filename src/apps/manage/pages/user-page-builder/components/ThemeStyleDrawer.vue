@@ -596,8 +596,8 @@ function clearCurrentTheme() {
 
 <style scoped>
 .scope-control-box {
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 14px;
 }
@@ -616,14 +616,14 @@ function clearCurrentTheme() {
 .scope-desc {
   display: block;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin-top: 4px;
   line-height: 1.4;
 }
 
 .smart-extract-card {
-  background: var(--vtsuru-brand-tint, rgba(99, 102, 241, 0.05));
-  border: 1px dashed var(--vtsuru-border);
+  background: var(--brand-tint, rgba(99, 102, 241, 0.05));
+  border: 1px dashed var(--border);
   border-radius: 8px;
   padding: 10px 14px;
 }
@@ -631,7 +631,7 @@ function clearCurrentTheme() {
 .extract-result {
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px solid var(--vtsuru-border);
+  border-top: 1px solid var(--border);
 }
 
 .color-dot {
@@ -666,7 +666,7 @@ function clearCurrentTheme() {
 .section-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin-bottom: 8px;
 }
 
@@ -679,8 +679,8 @@ function clearCurrentTheme() {
 .preset-card {
   display: flex;
   flex-direction: column;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--popover);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 6px;
   cursor: pointer;
@@ -689,7 +689,7 @@ function clearCurrentTheme() {
 }
 
 .preset-card:hover {
-  border-color: var(--vtsuru-primary);
+  border-color: var(--primary);
   transform: translateY(-1px);
 }
 
@@ -718,7 +718,7 @@ function clearCurrentTheme() {
 
 .preset-name {
   font-size: 11px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   text-align: center;
   font-weight: 500;
 }

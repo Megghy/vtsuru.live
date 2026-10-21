@@ -36,7 +36,7 @@ defineSlots<{ actions?: () => unknown; default: () => unknown }>()
   height: 100%;
   min-width: 0;
   min-height: 0;
-  background: var(--vtsuru-bg);
+  background: var(--background);
 }
 
 .panel--blurred {
@@ -53,13 +53,13 @@ defineSlots<{ actions?: () => unknown; default: () => unknown }>()
   padding: 0 8px;
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  border-bottom: 1px solid var(--vtsuru-border);
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
 }
 
 .panel__title {
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .panel__count {
@@ -69,8 +69,8 @@ defineSlots<{ actions?: () => unknown; default: () => unknown }>()
 .panel__unread {
   padding: 0 6px;
   border-radius: 999px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
+  background: var(--brand-soft);
+  color: var(--brand);
   font-variant-numeric: tabular-nums;
 }
 

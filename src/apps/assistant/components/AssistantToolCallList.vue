@@ -101,7 +101,7 @@ function formatDuration(ms?: number): string {
 .tool-line {
   min-width: 0;
   border-radius: 7px;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.055));
+  background: var(--muted, rgba(128, 128, 128, 0.055));
 }
 
 .tool-line__head {
@@ -130,11 +130,11 @@ function formatDuration(ms?: number): string {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .tool-line--running .tool-line__state {
-  color: var(--vtsuru-brand, #23ade5);
+  color: var(--brand, #23ade5);
   animation: tool-pulse 1.2s ease-in-out infinite;
 }
 
@@ -156,13 +156,13 @@ function formatDuration(ms?: number): string {
 }
 
 .tool-line__meta {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 11px;
   white-space: nowrap;
 }
 
 .tool-line__chevron {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .tool-line__body {

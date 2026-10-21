@@ -34,8 +34,8 @@ defineEmits<{ (e: 'click'): void }>()
 <style scoped>
 .provider-tile {
   appearance: none;
-  background: var(--vtsuru-bg, #fff);
-  border: 1.5px solid var(--vtsuru-border, #e5e5e5);
+  background: var(--background, #fff);
+  border: 1.5px solid var(--border, #e5e5e5);
   border-radius: 8px;
   padding: 10px 12px;
   cursor: pointer;
@@ -53,12 +53,12 @@ defineEmits<{ (e: 'click'): void }>()
   color: inherit;
 }
 .provider-tile:hover {
-  border-color: var(--vtsuru-brand, var(--primary));
+  border-color: var(--brand, var(--primary));
 }
 .provider-tile.active {
-  border-color: var(--vtsuru-brand, var(--primary));
-  background: var(--vtsuru-brand-soft, rgba(56, 189, 248, 0.12));
-  box-shadow: 0 0 0 1.5px var(--vtsuru-brand, var(--primary)) inset;
+  border-color: var(--brand, var(--primary));
+  background: var(--brand-soft, rgba(56, 189, 248, 0.12));
+  box-shadow: 0 0 0 1.5px var(--brand, var(--primary)) inset;
 }
 .row {
   display: flex;
@@ -75,13 +75,13 @@ defineEmits<{ (e: 'click'): void }>()
   font-size: 11px;
   padding: 1px 6px;
   border-radius: 4px;
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
 }
 .desc {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin: 0;
   line-height: 1.4;
 }

@@ -346,11 +346,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 }
 
 .setting-section {
-  background: var(--vtsuru-bg-surface);
-  border-radius: var(--vtsuru-radius);
+  background: var(--card);
+  border-radius: var(--radius);
   padding: 16px;
   height: 100%;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   box-sizing: border-box;
 }
 
@@ -361,8 +361,8 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--vtsuru-fg);
-  border-bottom: 1px dashed var(--vtsuru-border);
+  color: var(--foreground);
+  border-bottom: 1px dashed var(--border);
   padding-bottom: 10px;
 }
 
@@ -379,9 +379,9 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
   align-items: center;
   justify-content: center;
   padding: 10px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--card);
   cursor: pointer;
   text-align: center;
   gap: 6px;
@@ -389,39 +389,39 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 }
 
 .mode-icon {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .mode-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .mode-desc {
   font-size: 10px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   line-height: 1.3;
 }
 
 .mode-card:hover:not(.disabled) {
-  border-color: var(--vtsuru-brand);
-  background-color: var(--vtsuru-brand-soft);
+  border-color: var(--brand);
+  background-color: var(--brand-soft);
 }
 
 .mode-card:hover:not(.disabled) .mode-icon,
 .mode-card:hover:not(.disabled) .mode-title {
-  color: var(--vtsuru-brand);
+  color: var(--brand);
 }
 
 .mode-card.active {
-  border-color: var(--vtsuru-brand);
-  background-color: var(--vtsuru-brand-soft);
+  border-color: var(--brand);
+  background-color: var(--brand-soft);
 }
 
 .mode-card.active .mode-icon,
 .mode-card.active .mode-title {
-  color: var(--vtsuru-brand);
+  color: var(--brand);
 }
 
 .mode-card.disabled {

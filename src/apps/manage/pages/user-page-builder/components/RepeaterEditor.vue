@@ -203,16 +203,16 @@ function duplicateItem(index: number) {
   align-items: center;
   justify-content: center;
   padding: 14px;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
   border-radius: 6px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .repeater-item {
   margin-bottom: 8px;
   overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
 }
 .repeater-header {
   display: flex;
@@ -236,7 +236,7 @@ function duplicateItem(index: number) {
 }
 .repeater-content {
   padding: 10px;
-  border-top: 1px solid var(--vtsuru-border);
+  border-top: 1px solid var(--border);
 }
 
 @media (max-width: 520px) {

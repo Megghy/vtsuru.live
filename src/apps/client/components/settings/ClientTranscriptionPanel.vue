@@ -631,7 +631,7 @@ function removeHotword(index: number) {
 
 .section-description {
   margin-top: 2px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 
@@ -657,7 +657,7 @@ function removeHotword(index: number) {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--vtsuru-fg-muted);
+  background: var(--muted-foreground);
   flex: none;
 }
 
@@ -673,13 +673,13 @@ function removeHotword(index: number) {
   max-height: 320px;
   overflow: auto;
   padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 
 .transcript-empty {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 13px;
 }
 
@@ -692,13 +692,13 @@ function removeHotword(index: number) {
 }
 
 .transcript-line--partial {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .transcript-time {
   flex: none;
   width: 42px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
 </style>

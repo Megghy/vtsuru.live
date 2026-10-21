@@ -109,7 +109,7 @@ watch(
   min-width: min(100%, 280px);
   min-height: 160px;
   overflow: hidden;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .image-wrap img {
   position: relative;
@@ -130,7 +130,7 @@ watch(
   place-items: center;
   min-height: 160px;
   padding: 16px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   text-align: center;
 }
 @media (prefers-reduced-motion: reduce) {

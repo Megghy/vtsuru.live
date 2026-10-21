@@ -407,17 +407,17 @@ function formatTokens(value?: number): string {
   bottom: 6px;
   width: 2px;
   border-radius: 1px;
-  background: var(--vtsuru-border, rgba(128, 128, 128, 0.2));
+  background: var(--border, rgba(128, 128, 128, 0.2));
 }
 .msg-process.is-thinking::before {
-  background: linear-gradient(var(--vtsuru-brand, #23ade5), var(--vtsuru-border, rgba(128, 128, 128, 0.2)));
+  background: linear-gradient(var(--brand, #23ade5), var(--border, rgba(128, 128, 128, 0.2)));
 }
 .msg-process.is-thinking .msg-think__icon {
-  color: var(--vtsuru-brand, #23ade5);
+  color: var(--brand, #23ade5);
   animation: msg-think-pulse 1.6s ease-in-out infinite;
 }
 .msg-process.is-thinking .msg-think__title {
-  color: var(--vtsuru-brand, #23ade5);
+  color: var(--brand, #23ade5);
 }
 @keyframes msg-think-pulse {
   0%,

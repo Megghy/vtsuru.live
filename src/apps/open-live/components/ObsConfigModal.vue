@@ -260,7 +260,7 @@ const obsUrl = computed(() =>
 .obs-config-modal__section-title {
   font-size: 13px;
   font-weight: 500;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .obs-config-modal__side {
@@ -272,17 +272,17 @@ const obsUrl = computed(() =>
 
 .obs-config-modal__preview-label {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .obs-config-modal__preview {
   height: 500px;
   width: 280px;
   position: relative;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 
 .obs-config-modal__empty {

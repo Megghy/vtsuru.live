@@ -48,18 +48,18 @@ const emit = defineEmits<{
         <div class="font-semibold text-sm">{{ hk.name }}</div>
         <div
           v-if="hk.description"
-          class="text-[var(--vtsuru-fg-muted)] mt-0.5"
+          class="text-[var(--muted-foreground)] mt-0.5"
         >
           {{ hk.description }}
         </div>
         <div
           v-if="hk.type"
-          class="text-[var(--vtsuru-fg-muted)] mt-0.5"
+          class="text-[var(--muted-foreground)] mt-0.5"
         >
           类型: {{ hk.type }}
         </div>
       </div>
-      <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[var(--vtsuru-border)]">
+      <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[var(--border)]">
         <Button
           size="sm"
           variant="secondary"

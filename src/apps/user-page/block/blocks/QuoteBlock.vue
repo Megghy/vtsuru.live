@@ -86,7 +86,7 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
   top: -10px;
   left: 10px;
   opacity: 0.05;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   pointer-events: none;
   z-index: 0;
 }
@@ -117,7 +117,7 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
   font-style: normal;
   font-weight: 400;
   font-size: 14px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .quote-author {
@@ -125,7 +125,7 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
   margin-top: 16px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .quote-text.vtsuru-text-fx--typewriter {

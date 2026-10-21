@@ -327,13 +327,13 @@ watch(
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  border: 1px solid var(--vtsuru-border, #e5e5e5);
+  border: 1px solid var(--border, #e5e5e5);
   border-radius: 6px;
   font-size: 12px;
   transition: border-color 120ms ease;
 }
 .voice-item.active {
-  border-color: var(--vtsuru-primary, #18a058);
+  border-color: var(--primary, #18a058);
   background: rgba(24, 160, 88, 0.05);
 }
 .voice-name {

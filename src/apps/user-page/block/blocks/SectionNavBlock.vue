@@ -118,7 +118,7 @@ onBeforeUnmount(() => observer?.disconnect())
   min-width: 0;
   padding: 6px 2px;
   border-bottom: 2px solid transparent;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 13px;
   line-height: 1.35;
   text-decoration: none;
@@ -131,17 +131,17 @@ onBeforeUnmount(() => observer?.disconnect())
 .section-nav--vertical .section-link {
   padding-left: calc(8px + var(--section-indent));
   border-bottom: 0;
-  border-left: 2px solid var(--vtsuru-border);
+  border-left: 2px solid var(--border);
 }
 .section-nav--vertical .section-link:hover,
 .section-nav--vertical .section-link.active {
   border-left-color: var(--vtsuru-page-primary);
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .section-number {
   flex: none;
   margin-right: 5px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
 .section-text {

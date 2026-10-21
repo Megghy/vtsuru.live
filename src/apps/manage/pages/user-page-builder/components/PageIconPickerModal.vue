@@ -182,9 +182,9 @@ watch(show, (visible) => {
 .icon-grid-host {
   min-width: 0;
   height: min(58vh, 528px);
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 .icon-grid-row {

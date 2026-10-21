@@ -160,7 +160,7 @@ useSvgGamepadRenderer({
 }
 
 .gp-error-tip {
-  color: var(--vtsuru-fg-muted, #999);
+  color: var(--muted-foreground, #999);
   font-size: 14px;
 }
 </style>

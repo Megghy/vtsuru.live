@@ -64,9 +64,9 @@ export function useOrgAnalyzeChart(options: {
 
   function getThemeColors() {
     return {
-      textColor: options.themeVars?.value?.textColor2 || 'var(--vtsuru-fg-muted, #71717a)',
-      axisLineColor: options.themeVars?.value?.borderColor || 'var(--vtsuru-border, #e4e4e7)',
-      splitLineColor: options.themeVars?.value?.dividerColor || 'var(--vtsuru-border, rgba(228, 228, 231, 0.4))',
+      textColor: options.themeVars?.value?.textColor2 || 'var(--muted-foreground, #71717a)',
+      axisLineColor: options.themeVars?.value?.borderColor || 'var(--border, #e4e4e7)',
+      splitLineColor: options.themeVars?.value?.dividerColor || 'var(--border, rgba(228, 228, 231, 0.4))',
     }
   }
 

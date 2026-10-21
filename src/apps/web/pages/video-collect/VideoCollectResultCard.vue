@@ -240,21 +240,21 @@ function handleCardClick() {
 
 <style scoped>
 .video-result-card {
-  --result-card-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
+  --result-card-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))));
   --result-card-muted: var(
     --vtsuru-block-fg-muted,
     --vtsuru-surface-fg-muted,
-    var(--text-color-2, var(--vtsuru-fg-muted))
+    var(--text-color-2, var(--muted-foreground))
   );
   --result-card-bg: var(
     --vtsuru-block-bg-muted,
-    var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--vtsuru-bg-muted)))
+    var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--muted)))
   );
   --result-card-border: var(
     --vtsuru-block-border,
-    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
+    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)))
   );
-  --result-card-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --result-card-accent: var(--vtsuru-page-primary, var(--brand));
 
   display: flex;
   flex-direction: column;

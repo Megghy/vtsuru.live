@@ -7,17 +7,15 @@ describe('getThemeCssVars', () => {
     const light = getThemeCssVars(buildSiteTokens(false))
     const dark = getThemeCssVars(buildSiteTokens(true))
 
-    expect(light['--vtsuru-bg']).toBe('#ffffff')
     expect(light['--background']).toBe('#ffffff')
     expect(light['--card']).toBe('#ffffff')
     expect(light['--primary']).toBe('#18181b')
+    expect(light['--foreground']).toBe('#09090b')
+    expect(light['--brand-foreground']).toBe('#03202d')
     expect(dark['--background']).toBe('#09090b')
-    expect(light['--vtsuru-fg']).toBe('#09090b')
-    expect(light['--vtsuru-brand-fg']).toBe('#03202d')
-    expect(light['--vtsuru-primary']).toBe('#18181b')
-    expect(light['--vtsuru-primary-rgb']).toBe('24, 24, 27')
-    expect(dark['--vtsuru-bg']).toBe('#09090b')
-    expect(dark['--vtsuru-fg']).toBe('#fafafa')
+    expect(dark['--foreground']).toBe('#fafafa')
+
+    // 不应该有旧的 Naive UI 变量
     expect(Object.keys(light).some((key) => key.startsWith('--n-'))).toBe(false)
   })
 
@@ -27,16 +25,18 @@ describe('getThemeCssVars', () => {
     const light = getThemeCssVars(lightTokens)
     const dark = getThemeCssVars(darkTokens)
 
-    expect([light['--vtsuru-bg'], light['--vtsuru-bg-surface'], light['--vtsuru-bg-inset']]).toEqual([
+    // Manage light: canvas=#f4f4f5, surface=#ffffff, muted(surfaceHover)=#f4f4f5
+    expect([light['--background'], light['--card'], light['--muted']]).toEqual([
       '#f4f4f5',
       '#ffffff',
-      '#e4e4e7',
+      '#f4f4f5',
     ])
-    expect(light['--vtsuru-bg-muted']).toBe('#f4f4f5')
-    expect([dark['--vtsuru-bg'], dark['--vtsuru-bg-surface'], dark['--vtsuru-bg-inset']]).toEqual([
+
+    // Manage dark: canvas=#18181b, surface=#27272a, muted(surfaceHover)=#3f3f46
+    expect([dark['--background'], dark['--card'], dark['--muted']]).toEqual([
       '#18181b',
       '#27272a',
-      '#09090b',
+      '#3f3f46',
     ])
 
     // 暗色控件边框必须比 manage surface/control(800) 更亮，placeholder 不能过暗

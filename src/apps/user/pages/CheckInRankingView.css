@@ -1,14 +1,14 @@
 .ranking-card {
-  --ranking-fg: var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg)));
-  --ranking-muted: var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted));
-  --ranking-subtle: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-subtle));
-  --ranking-bg: var(--user-page-theme-surface-bg, var(--vtsuru-page-card-bg, var(--vtsuru-bg-muted)));
+  --ranking-fg: var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground)));
+  --ranking-muted: var(--vtsuru-surface-fg-muted, var(--muted-foreground));
+  --ranking-subtle: var(--vtsuru-surface-fg-subtle, var(--foreground-subtle));
+  --ranking-bg: var(--user-page-theme-surface-bg, var(--vtsuru-page-card-bg, var(--muted)));
   --ranking-bg-hover: var(
     --user-page-theme-surface-bg-hover,
-    var(--vtsuru-page-card-bg-embedded, var(--vtsuru-bg-elevated))
+    var(--vtsuru-page-card-bg-embedded, var(--popover))
   );
-  --ranking-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)));
-  --ranking-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  --ranking-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)));
+  --ranking-accent: var(--vtsuru-page-primary, var(--brand));
   min-width: 0;
   color: var(--ranking-fg);
 }

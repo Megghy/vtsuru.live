@@ -64,10 +64,10 @@ const badgeVariant = computed(() => {
   min-height: 96px;
   overflow: hidden;
   padding: 0;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg);
+  color: var(--foreground);
+  background: var(--background);
   text-align: left;
   cursor: pointer;
   transition:
@@ -76,8 +76,8 @@ const badgeVariant = computed(() => {
 }
 
 .public-ticket-card:hover {
-  border-color: var(--vtsuru-brand);
-  background: var(--vtsuru-bg-muted);
+  border-color: var(--brand);
+  background: var(--muted);
 }
 
 .public-ticket-card__image {
@@ -86,7 +86,7 @@ const badgeVariant = computed(() => {
   flex: 0 0 96px;
   align-self: center;
   object-fit: cover;
-  border-right: 1px solid var(--vtsuru-border);
+  border-right: 1px solid var(--border);
 }
 
 .public-ticket-card__body {
@@ -104,7 +104,7 @@ const badgeVariant = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 
@@ -112,7 +112,7 @@ const badgeVariant = computed(() => {
   display: -webkit-box;
   overflow: hidden;
   margin: 0;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.5;

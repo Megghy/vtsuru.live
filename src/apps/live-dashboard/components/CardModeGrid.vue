@@ -102,9 +102,9 @@ const victim = computed(() => grid.value.nextVictim())
 }
 
 .card-slot {
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
   padding: 6px 8px;
   transition: opacity 0.3s ease;
   min-width: 0;
@@ -124,7 +124,7 @@ const victim = computed(() => grid.value.nextVictim())
   align-items: center;
   gap: 4px;
   font-size: 0.8em;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .card-slot__name {
@@ -142,8 +142,8 @@ const victim = computed(() => grid.value.nextVictim())
   margin-left: auto;
   padding: 0 6px;
   border-radius: 999px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
+  background: var(--brand-soft);
+  color: var(--brand);
   font-weight: 600;
 }
 
@@ -177,7 +177,7 @@ const victim = computed(() => grid.value.nextVictim())
   margin-top: 2px;
   font-size: 0.85em;
   font-weight: 400;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .card-users {

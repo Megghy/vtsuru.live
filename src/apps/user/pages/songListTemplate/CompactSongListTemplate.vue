@@ -305,11 +305,11 @@ function requestSong(song: SongsInfo) {
 }
 
 .row:hover {
-  background-color: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.04));
+  background-color: var(--muted, rgba(128, 128, 128, 0.04));
 }
 
 .row.is-odd {
-  background-color: var(--vtsuru-bg-subtle, rgba(128, 128, 128, 0.02));
+  background-color: var(--background-subtle, rgba(128, 128, 128, 0.02));
 }
 
 .row-index {
@@ -324,7 +324,7 @@ function requestSong(song: SongsInfo) {
   height: 40px;
   border-radius: 6px;
   overflow: hidden;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
+  background: var(--muted, rgba(128, 128, 128, 0.08));
 }
 
 .row-cover img {
@@ -386,7 +386,7 @@ function requestSong(song: SongsInfo) {
   border-radius: 4px;
   font-size: 10px;
   color: var(--song-muted, #888);
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
+  background: var(--muted, rgba(128, 128, 128, 0.08));
   border: none;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -395,7 +395,7 @@ function requestSong(song: SongsInfo) {
 .clickable-tag:hover,
 .clickable-tag.is-active {
   color: var(--song-accent, #23ade5);
-  background: var(--vtsuru-brand-soft, rgba(35, 173, 229, 0.12));
+  background: var(--brand-soft, rgba(35, 173, 229, 0.12));
 }
 
 .count {

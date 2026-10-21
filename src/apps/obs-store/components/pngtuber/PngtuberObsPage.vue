@@ -147,9 +147,9 @@ function retry() {
   width: min(440px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
   overflow: auto;
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  color: var(--foreground);
+  background: var(--popover);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 .microphone-panel {

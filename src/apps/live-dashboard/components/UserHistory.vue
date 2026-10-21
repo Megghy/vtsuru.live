@@ -145,11 +145,11 @@ function describe(e: DashboardEvent) {
 .history__summary {
   display: flex;
   justify-content: space-between;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .history__meta {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   overflow-wrap: anywhere;
 }
 
@@ -173,7 +173,7 @@ function describe(e: DashboardEvent) {
 
 .history__time,
 .history__type {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
@@ -190,7 +190,7 @@ function describe(e: DashboardEvent) {
 }
 
 .history__empty {
-  color: var(--vtsuru-fg-disabled);
+  color: var(--muted-foreground);
   text-align: center;
   padding: 8px 0;
 }

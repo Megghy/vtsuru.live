@@ -505,8 +505,8 @@ const SEARCH_HELP = [
   gap: 12px;
   height: 44px;
   padding: 0 10px;
-  border-bottom: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-surface);
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
   flex-shrink: 0;
   min-width: 0;
 }
@@ -539,8 +539,8 @@ const SEARCH_HELP = [
   display: flex;
   flex-direction: column;
   padding: 2px 8px;
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-muted);
+  border-radius: var(--radius);
+  background: var(--muted);
   flex-shrink: 0;
   cursor: grab;
   user-select: none;
@@ -556,12 +556,12 @@ const SEARCH_HELP = [
   text-align: left;
 }
 .stat--button:hover {
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
 }
 
 .stat__label {
   font-size: 10px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -569,7 +569,7 @@ const SEARCH_HELP = [
 .stat__value {
   font-size: 12px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-feature-settings: 'tnum';
   white-space: nowrap;
 }
@@ -579,8 +579,8 @@ const SEARCH_HELP = [
   align-items: center;
   gap: 6px;
   padding: 2px 8px;
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-muted);
+  border-radius: var(--radius);
+  background: var(--muted);
   flex-shrink: 0;
   cursor: grab;
   user-select: none;
@@ -623,7 +623,7 @@ const SEARCH_HELP = [
   bottom: 0;
   right: 0;
   height: 2px;
-  background: var(--vtsuru-brand);
+  background: var(--brand);
   animation: progress 1s infinite linear;
 }
 

@@ -700,8 +700,8 @@ onMounted(() => {
     position: relative;
     min-height: 100vh;
     box-sizing: border-box;
-    background-color: var(--vtsuru-bg);
-    color: var(--vtsuru-fg);
+    background-color: var(--background);
+    color: var(--foreground);
     isolation: isolate;
     overflow-x: hidden;
 
@@ -720,7 +720,7 @@ onMounted(() => {
 
 .hero-section
     padding: 24px 0 36px;
-    border-bottom: 1px solid var(--vtsuru-border);
+    border-bottom: 1px solid var(--border);
 
 .hero-layout
     display: flex;
@@ -738,7 +738,7 @@ onMounted(() => {
 .brand-title
     position: relative;
     margin: 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: clamp(2.5rem, 5vw, 4rem);
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -755,7 +755,7 @@ onMounted(() => {
 
 .hero-tagline
     margin: 18px 0 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: clamp(1.1rem, 2vw, 1.35rem);
     font-weight: 500;
 
@@ -780,11 +780,11 @@ onMounted(() => {
     gap: 9px;
     min-height: 152px;
     padding: 22px 16px;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     border-bottom: 3px solid var(--card-accent);
     border-radius: 8px;
-    background: var(--vtsuru-bg-elevated);
-    color: var(--vtsuru-fg);
+    background: var(--popover);
+    color: var(--foreground);
     cursor: pointer;
     font: inherit;
     transition: transform 160ms var(--vtsuru-bezier), border-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
@@ -838,11 +838,11 @@ onMounted(() => {
     align-items: baseline;
     gap: 10px;
     margin-top: 22px;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     font-size: 0.85rem;
 
 .hero-stat strong
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 1.2rem;
 
 .section-header
@@ -854,17 +854,17 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     margin: 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 1.35rem;
     font-weight: 650;
 
 .section-subtitle
     margin: 8px 0 0;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     font-size: 0.92rem;
 
 .section-info-icon
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
 
 .feature-grid,
 .client-grid
@@ -884,11 +884,11 @@ onMounted(() => {
     gap: 16px;
     min-width: 0;
     padding: 18px;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     border-bottom: 3px solid var(--card-accent);
     border-radius: 8px;
-    background: var(--vtsuru-bg-elevated);
-    color: var(--vtsuru-fg);
+    background: var(--popover);
+    color: var(--foreground);
     cursor: pointer;
     font: inherit;
     text-align: left;
@@ -917,7 +917,7 @@ article.feature-card
     justify-content: center;
     width: 36px;
     height: 36px;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--card-soft);
     color: var(--card-accent);
@@ -925,7 +925,7 @@ article.feature-card
 .feature-card-title
     min-width: 0;
     overflow: hidden;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 1.06rem;
     font-weight: 600;
     text-overflow: ellipsis;
@@ -933,7 +933,7 @@ article.feature-card
 
 .feature-card-desc
     margin: 0;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     font-size: 0.9rem;
     line-height: 1.6;
 
@@ -942,7 +942,7 @@ article.feature-card
     align-items: center;
     height: 18px;
     padding: 0 7px;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     border-radius: 999px;
     background: var(--card-soft);
     color: var(--card-accent);
@@ -960,12 +960,12 @@ article.feature-card
 
 .userpage-intro-copy h3
     margin: 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 1.18rem;
 
 .userpage-intro-copy p
     margin: 12px 0 0;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     line-height: 1.7;
 
 .userpage-intro-list
@@ -973,7 +973,7 @@ article.feature-card
     gap: 7px;
     margin: 16px 0 20px;
     padding: 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 0.92rem;
     line-height: 1.5;
     list-style: none;
@@ -990,9 +990,9 @@ article.feature-card
     width: 100%;
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--vtsuru-bg-muted);
+    background: var(--muted);
 
 .userpage-intro-image img
     display: block;
@@ -1035,7 +1035,7 @@ article.feature-card
     justify-content: center;
     gap: 8px;
     margin-top: 16px;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     font-size: 0.8rem;
     text-align: center;
 
@@ -1050,7 +1050,7 @@ article.feature-card
     display: flex;
     justify-content: center;
     padding: 0 0 24px;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
 
 @media (prefers-reduced-motion: reduce)
     .hero-icon
@@ -1143,7 +1143,7 @@ article.feature-card
     scroll-snap-type: x proximity;
     scroll-padding-inline: 28px;
     scrollbar-width: thin;
-    scrollbar-color: var(--vtsuru-border) transparent;
+    scrollbar-color: var(--border) transparent;
     -webkit-overflow-scrolling: touch;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
@@ -1173,7 +1173,7 @@ article.feature-card
     flex: 0 0 auto;
     scroll-snap-align: start;
     border-radius: 8px;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     overflow: hidden;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.28);

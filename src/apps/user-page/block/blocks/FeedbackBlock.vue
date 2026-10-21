@@ -207,15 +207,15 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
   margin-bottom: 12px;
   white-space: pre-wrap;
   line-height: 1.6;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .iframe-container {
   width: 100%;
   overflow: hidden;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
   border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .iframe-container iframe {
   display: block;

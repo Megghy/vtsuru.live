@@ -44,7 +44,7 @@
 }
 
 .manage-muted {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .manage-kicker {
@@ -52,5 +52,5 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }

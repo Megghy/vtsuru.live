@@ -402,9 +402,9 @@ function clearAll() {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
   border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
@@ -412,8 +412,8 @@ function clearAll() {
 }
 
 .upload-dropzone:hover {
-  border-color: var(--vtsuru-primary, #3b82f6);
-  background: var(--vtsuru-bg-elevated);
+  border-color: var(--primary, #3b82f6);
+  background: var(--popover);
 }
 
 .image-preview-bar {
@@ -421,9 +421,9 @@ function clearAll() {
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   width: 100%;
   box-sizing: border-box;
 }
@@ -433,7 +433,7 @@ function clearAll() {
   height: 40px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -448,11 +448,11 @@ function clearAll() {
 .image-filename {
   font-size: 13px;
   font-weight: 500;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .image-sub {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 </style>

@@ -42,16 +42,16 @@ function readTheme() {
   const read = (primary: string, fallback: string) =>
     style.getPropertyValue(primary).trim() || style.getPropertyValue(fallback).trim()
   const nextTheme: CustomHtmlTheme = {
-    fg: read('--vtsuru-block-fg', '--vtsuru-fg') || '#18181b',
-    fgMuted: read('--vtsuru-block-fg-muted', '--vtsuru-fg-muted') || '#71717a',
-    bg: read('--vtsuru-block-bg', '--vtsuru-bg') || '#ffffff',
-    bgElevated: read('--vtsuru-block-bg-elevated', '--vtsuru-bg-elevated') || '#ffffff',
-    border: read('--vtsuru-block-border', '--vtsuru-border') || '#e4e4e7',
-    primary: read('--vtsuru-page-primary', '--vtsuru-brand') || '#18a058',
-    primaryReadable: read('--vtsuru-page-primary-readable', '--vtsuru-brand') || '#166534',
-    radius: read('--vtsuru-page-radius', '--vtsuru-radius') || '8px',
-    borderWidth: read('--vtsuru-page-border-width', '--vtsuru-border-width') || '1px',
-    borderStyle: read('--vtsuru-page-border-style', '--vtsuru-border-style') || 'solid',
+    fg: read('--vtsuru-block-fg', '--foreground') || '#18181b',
+    fgMuted: read('--vtsuru-block-fg-muted', '--muted-foreground') || '#71717a',
+    bg: read('--vtsuru-block-bg', '--background') || '#ffffff',
+    bgElevated: read('--vtsuru-block-bg-elevated', '--popover') || '#ffffff',
+    border: read('--vtsuru-block-border', '--border') || '#e4e4e7',
+    primary: read('--vtsuru-page-primary', '--brand') || '#18a058',
+    primaryReadable: read('--vtsuru-page-primary-readable', '--brand') || '#166534',
+    radius: read('--vtsuru-page-radius', '--radius') || '8px',
+    borderWidth: read('--vtsuru-page-border-width', '--border-width') || '1px',
+    borderStyle: read('--vtsuru-page-border-style', '--border-style') || 'solid',
     shadow: read('--vtsuru-page-shadow', '--vtsuru-shadow') || 'none',
     colorScheme: style.colorScheme || 'light',
   }

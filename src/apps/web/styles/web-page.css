@@ -25,7 +25,7 @@
 
 /* shadcn-like card rhythm */
 .web-page .n-card {
-  border-radius: var(--vtsuru-radius);
+  border-radius: var(--radius);
 }
 
 .web-page .n-card .n-card-header {

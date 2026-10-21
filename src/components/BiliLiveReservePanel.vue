@@ -122,9 +122,9 @@ const fetchedLabel = computed(() => {
   gap: 10px;
   min-width: 0;
   padding: 14px 16px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius, 10px);
-  background: var(--vtsuru-bg-elevated, var(--vtsuru-bg));
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  background: var(--popover, var(--background));
 }
 .bili-reserve__head {
   display: flex;
@@ -160,18 +160,18 @@ const fetchedLabel = computed(() => {
   gap: 10px;
   padding: 8px 10px;
   border-radius: 6px;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.05));
+  background: var(--muted, rgba(128, 128, 128, 0.05));
   text-decoration: none;
   color: inherit;
 }
 .bili-reserve__list a:hover {
-  background: var(--vtsuru-bg-hover, rgba(128, 128, 128, 0.1));
+  background: var(--background-hover, rgba(128, 128, 128, 0.1));
 }
 .bili-reserve__time {
   display: flex;
   align-items: center;
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 .bili-reserve__list strong {
   font-size: 13px;

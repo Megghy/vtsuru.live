@@ -30,7 +30,7 @@ describe('getUserPageThemeCssVars 主色', () => {
 
     expect(contrast(vars, '--vtsuru-page-primary', DARK_SURFACE)).toBeGreaterThanOrEqual(4.5)
     expect(sameColor(vars['--vtsuru-page-primary-readable'], vars['--vtsuru-page-primary'])).toBe(true)
-    expect(sameColor(vars['--vtsuru-brand'], vars['--vtsuru-page-primary'])).toBe(true)
+    expect(sameColor(vars['--brand'], vars['--vtsuru-page-primary'])).toBe(true)
     expect(vars['--vtsuru-page-canvas-accent']).not.toBe('')
   })
 
@@ -52,10 +52,10 @@ describe('getUserPageThemeCssVars 主色', () => {
     const dark = getUserPageThemeCssVars({}, true)
 
     expect(
-      wcagContrast(parseRgb(light['--vtsuru-primary-fg'])!, parseRgb(light['--vtsuru-primary'])!),
+      wcagContrast(parseRgb(light['--primary-foreground'])!, parseRgb(light['--primary'])!),
     ).toBeGreaterThanOrEqual(4.5)
     expect(
-      wcagContrast(parseRgb(dark['--vtsuru-primary-fg'])!, parseRgb(dark['--vtsuru-page-primary'])!),
+      wcagContrast(parseRgb(dark['--primary-foreground'])!, parseRgb(dark['--vtsuru-page-primary'])!),
     ).toBeGreaterThanOrEqual(4.5)
   })
 })

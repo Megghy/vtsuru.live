@@ -109,9 +109,9 @@ const timeText = computed(() => {
 }
 
 .paid--plain {
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  color: var(--foreground);
+  background: var(--popover);
+  border: 1px solid var(--border);
 }
 
 .paid--read {

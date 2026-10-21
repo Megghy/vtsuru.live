@@ -35,7 +35,7 @@ defineProps<{
   gap: 16px;
   min-height: 44px;
   padding: 2px 0 6px;
-  border-bottom: 1px solid var(--vtsuru-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .account-page-header__titles {
@@ -50,14 +50,14 @@ defineProps<{
   font-size: 20px;
   font-weight: 700;
   line-height: 1.3;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   letter-spacing: -0.01em;
 }
 
 .account-page-header__subtitle {
   margin: 0;
   font-size: 13px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   line-height: 1.4;
 }
 

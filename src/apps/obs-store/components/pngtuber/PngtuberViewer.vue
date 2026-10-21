@@ -534,8 +534,8 @@ function changeChannel() {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg);
+  color: var(--foreground);
+  background: var(--background);
 }
 .pngtuber-page.standalone {
   box-sizing: border-box;
@@ -546,7 +546,7 @@ function changeChannel() {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(300px, 1fr);
   gap: 16px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 @media (max-width: 900px) {
   .workbench {
@@ -558,7 +558,7 @@ function changeChannel() {
   width: 100%;
   height: 280px;
   border-radius: 8px;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
   overflow: hidden;
   display: flex;
   align-items: center;

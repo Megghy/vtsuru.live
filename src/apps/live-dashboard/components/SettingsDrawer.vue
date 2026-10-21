@@ -325,7 +325,7 @@ function resetToolbarOrder() {
 
 .settings__hint {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .settings__counts {
@@ -349,13 +349,13 @@ function resetToolbarOrder() {
 
 .settings__stat-item {
   padding: 4px 6px;
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-elevated);
+  border-radius: var(--radius);
+  background: var(--popover);
   transition: background 0.15s ease;
 }
 
 .settings__stat-item:hover {
-  background: var(--vtsuru-bg-hover, rgba(255, 255, 255, 0.06));
+  background: var(--background-hover, rgba(255, 255, 255, 0.06));
 }
 
 .settings__stat-label {
@@ -369,7 +369,7 @@ function resetToolbarOrder() {
   display: inline-flex;
   align-items: center;
   cursor: grab;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 14px;
 }
 
@@ -379,7 +379,7 @@ function resetToolbarOrder() {
 
 .settings__stat-ghost {
   opacity: 0.4;
-  background: var(--vtsuru-brand-soft, rgba(59, 130, 246, 0.15));
+  background: var(--brand-soft, rgba(59, 130, 246, 0.15));
 }
 
 .settings :deep(.n-divider) {

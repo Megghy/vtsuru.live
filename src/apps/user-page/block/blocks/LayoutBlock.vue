@@ -331,9 +331,9 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   font-size: 11px;
   line-height: 16px;
   border-radius: 999px;
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
   border: 1px solid var(--vtsuru-page-primary);
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   pointer-events: none;
   user-select: none;
 }

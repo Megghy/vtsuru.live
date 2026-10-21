@@ -285,7 +285,7 @@ function onPickSuggestion(text: string) {
   flex: 0 0 auto;
   padding-top: 10px;
   margin-top: 6px;
-  border-top: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.18));
 }
 
 .chat-window__welcome {
@@ -303,18 +303,18 @@ function onPickSuggestion(text: string) {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: var(--vtsuru-brand-soft, rgba(35, 173, 229, 0.12));
-  color: var(--vtsuru-brand, #23ade5);
+  background: var(--brand-soft, rgba(35, 173, 229, 0.12));
+  color: var(--brand, #23ade5);
   margin-bottom: 4px;
 }
 .chat-window__welcome-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 .chat-window__welcome-sub {
   font-size: 13px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   max-width: 380px;
 }
 .chat-window__digest {
@@ -331,17 +331,17 @@ function onPickSuggestion(text: string) {
   gap: 8px;
   padding: 8px 12px;
   border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
-  color: var(--vtsuru-fg);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  color: var(--foreground);
   font-size: 12px;
   text-align: left;
   cursor: pointer;
   transition: all 0.18s;
 }
 .chat-window__digest-item:hover:not(:disabled) {
-  border-color: var(--vtsuru-brand);
-  background: var(--vtsuru-brand-soft);
+  border-color: var(--brand);
+  background: var(--brand-soft);
 }
 .chat-window__suggestions {
   display: flex;
@@ -354,24 +354,24 @@ function onPickSuggestion(text: string) {
 .chat-window__chip {
   padding: 6px 12px;
   border-radius: 16px;
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
-  color: var(--vtsuru-fg);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  color: var(--foreground);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.18s;
 }
 .chat-window__chip:hover:not(:disabled) {
-  border-color: var(--vtsuru-brand);
-  color: var(--vtsuru-brand);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 .chat-window__chip--roll {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 .chat-window__chip--roll:hover:not(:disabled) {
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 </style>

@@ -160,8 +160,8 @@ onUnmounted(() => void dashboard.stop())
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
-  background: var(--vtsuru-bg);
-  color: var(--vtsuru-fg);
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .live-dashboard__center {
@@ -187,7 +187,7 @@ onUnmounted(() => void dashboard.stop())
 .dash-split > .splitpanes__splitter {
   position: relative;
   flex-shrink: 0;
-  background: var(--vtsuru-border);
+  background: var(--border);
   transition: background 0.15s ease;
 }
 
@@ -209,7 +209,7 @@ onUnmounted(() => void dashboard.stop())
 }
 
 .dash-split > .splitpanes__splitter:hover {
-  background: var(--vtsuru-primary);
+  background: var(--primary);
 }
 
 .dash-split > .splitpanes__pane {

@@ -254,7 +254,7 @@ const previewBoxStyle = computed(() => {
 .lottery-obs-modal__section-title {
   font-size: 13px;
   font-weight: 500;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .lottery-segmented-grid {
@@ -270,9 +270,9 @@ const previewBoxStyle = computed(() => {
   justify-content: space-between;
   padding: 6px 10px;
   border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg);
-  color: var(--vtsuru-fg);
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
   cursor: pointer;
   outline: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -280,14 +280,14 @@ const previewBoxStyle = computed(() => {
 }
 
 .lottery-segmented-btn:hover {
-  background: var(--vtsuru-bg-elevated);
-  border-color: var(--vtsuru-brand-tint, rgba(56, 189, 248, 0.4));
+  background: var(--popover);
+  border-color: var(--brand-tint, rgba(56, 189, 248, 0.4));
 }
 
 .lottery-segmented-btn.is-active {
-  background: var(--vtsuru-brand-soft, rgba(56, 189, 248, 0.12));
-  border-color: var(--vtsuru-brand, #38bdf8);
-  color: var(--vtsuru-brand, #38bdf8);
+  background: var(--brand-soft, rgba(56, 189, 248, 0.12));
+  border-color: var(--brand, #38bdf8);
+  color: var(--brand, #38bdf8);
   font-weight: 600;
 }
 
@@ -297,14 +297,14 @@ const previewBoxStyle = computed(() => {
 
 .btn-desc {
   font-size: 10px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
+  color: var(--muted-foreground);
+  background: var(--muted);
   padding: 1px 5px;
   border-radius: 4px;
 }
 
 .lottery-segmented-btn.is-active .btn-desc {
-  color: var(--vtsuru-brand, #38bdf8);
+  color: var(--brand, #38bdf8);
   background: rgba(56, 189, 248, 0.18);
 }
 
@@ -317,7 +317,7 @@ const previewBoxStyle = computed(() => {
 
 .lottery-obs-modal__preview-label {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   text-align: center;
 }
 
@@ -327,9 +327,9 @@ const previewBoxStyle = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
   border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   padding: 12px;
   box-sizing: border-box;
 }

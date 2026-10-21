@@ -239,9 +239,9 @@ async function handleCopy() {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 16px;
   box-sizing: border-box;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -250,7 +250,7 @@ async function handleCopy() {
 
 .obs-card:hover {
   transform: translateY(-2px);
-  border-color: var(--vtsuru-brand);
+  border-color: var(--brand);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -260,7 +260,7 @@ async function handleCopy() {
 
 .obs-card.is-planned:hover {
   transform: none;
-  border-color: var(--vtsuru-border);
+  border-color: var(--border);
   box-shadow: none;
 }
 
@@ -278,8 +278,8 @@ async function handleCopy() {
   justify-content: center;
   width: 38px;
   height: 38px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
+  background: var(--brand-soft);
+  color: var(--brand);
   border-radius: 8px;
   flex-shrink: 0;
 }
@@ -299,7 +299,7 @@ async function handleCopy() {
 .card-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -314,12 +314,12 @@ async function handleCopy() {
 
 .cat-label {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .ver-label {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   opacity: 0.8;
 }
 
@@ -333,7 +333,7 @@ async function handleCopy() {
 
 .card-desc {
   font-size: 13px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   line-height: 1.5;
   margin: 0;
   display: -webkit-box;
@@ -353,14 +353,14 @@ async function handleCopy() {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .feature-dot {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--vtsuru-brand);
+  background: var(--brand);
   flex-shrink: 0;
 }
 
@@ -379,15 +379,15 @@ async function handleCopy() {
 
 .tag-pill {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
+  color: var(--muted-foreground);
+  background: var(--muted);
   padding: 1px 6px;
   border-radius: 4px;
 }
 
 .tag-more {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   padding: 1px 4px;
 }
 
@@ -396,10 +396,10 @@ async function handleCopy() {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
   padding: 4px 8px;
   border-radius: 4px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin-top: auto;
 }
 
@@ -408,14 +408,14 @@ async function handleCopy() {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .requirement-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--vtsuru-brand);
+  background: var(--brand);
 }
 
 .requirement-dot.local {
@@ -428,7 +428,7 @@ async function handleCopy() {
 
 .res-val {
   font-weight: 500;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 /* 底部操作 */
@@ -439,7 +439,7 @@ async function handleCopy() {
   gap: 8px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid var(--vtsuru-border);
+  border-top: 1px solid var(--border);
 }
 
 .planned-footer {
@@ -450,6 +450,6 @@ async function handleCopy() {
 
 .planned-text {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 </style>

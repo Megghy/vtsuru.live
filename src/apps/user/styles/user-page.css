@@ -1,7 +1,7 @@
 .user-page {
-  --vtsuru-page-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-fg)));
-  --vtsuru-page-fg-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--vtsuru-fg-muted)));
-  --vtsuru-page-border: var(--vtsuru-block-border, var(--vtsuru-border));
+  --vtsuru-page-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--foreground)));
+  --vtsuru-page-fg-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--muted-foreground)));
+  --vtsuru-page-border: var(--vtsuru-block-border, var(--border));
   width: 100%;
   max-width: var(--vtsuru-page-max-width, 820px);
   margin: 0 auto;
@@ -20,7 +20,7 @@
 
 /* shadcn-like card rhythm */
 .user-page .n-card {
-  border-radius: var(--vtsuru-page-radius, var(--vtsuru-radius));
+  border-radius: var(--vtsuru-page-radius, var(--radius));
   box-shadow: var(--vtsuru-page-shadow, none);
 }
 
@@ -42,7 +42,7 @@
 }
 
 .user-muted {
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--vtsuru-surface-fg-subtle, var(--muted-foreground));
 }
 
 .user-kicker {
@@ -50,7 +50,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted));
+  color: var(--vtsuru-surface-fg-subtle, var(--muted-foreground));
 }
 
 /* 展示页卡片统一质感：磨砂半透明背景、圆角与边框对齐公开页主题体系 */
@@ -58,9 +58,9 @@
 .page-root.bg-host .viewer-page-content .bg-card,
 .page-root.bg-host .viewer-page-content .goods-card,
 .page-root.bg-host .viewer-page-content .ranking-card {
-  background-color: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--vtsuru-bg-elevated, var(--card)))) !important;
+  background-color: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--popover, var(--card)))) !important;
   backdrop-filter: blur(var(--user-page-card-blur, 12px));
   -webkit-backdrop-filter: blur(var(--user-page-card-blur, 12px));
-  border-color: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border, var(--border)))) !important;
+  border-color: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border, var(--border)))) !important;
 }
 

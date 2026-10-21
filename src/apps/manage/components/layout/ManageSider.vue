@@ -741,8 +741,8 @@ async function go(name: string, query?: Record<string, string>) {
 <style scoped>
 .manage-sider {
   height: 100%;
-  border-right: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-surface);
+  border-right: 1px solid var(--border);
+  background: var(--card);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -863,7 +863,7 @@ async function go(name: string, query?: Record<string, string>) {
 .nav-group__toggle {
   border: none;
   background: transparent;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.06em;
@@ -890,9 +890,9 @@ async function go(name: string, query?: Record<string, string>) {
   height: 22px;
   width: 22px;
   border-radius: 7px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   background: transparent;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -924,11 +924,11 @@ async function go(name: string, query?: Record<string, string>) {
 .danmaku-tooltip__body {
   font-size: 12px;
   line-height: 1.55;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .danmaku-tooltip__body a {
-  color: var(--vtsuru-primary);
+  color: var(--primary);
   text-decoration: none;
 }
 
@@ -950,7 +950,7 @@ async function go(name: string, query?: Record<string, string>) {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   border: 1px solid transparent;
   background: transparent;
   transition:
@@ -1044,7 +1044,7 @@ async function go(name: string, query?: Record<string, string>) {
 
 .nav-item__fav-icon {
   font-size: 16px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   transition: color 120ms ease;
 }
 
@@ -1058,7 +1058,7 @@ async function go(name: string, query?: Record<string, string>) {
 }
 
 .manage-sider__footer {
-  border-top: 1px solid var(--vtsuru-border);
+  border-top: 1px solid var(--border);
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -1068,7 +1068,7 @@ async function go(name: string, query?: Record<string, string>) {
 
 .footer-line {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   text-align: center;
 }
 </style>

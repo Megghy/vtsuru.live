@@ -1,5 +1,4 @@
 import 'virtual:uno.css'
-import '@/shared/styles/shadcn-theme.css'
 
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'

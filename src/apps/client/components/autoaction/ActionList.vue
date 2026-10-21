@@ -505,13 +505,13 @@ function importActions() {
 
 .action-list-header {
   padding: 10px 14px;
-  background-color: var(--vtsuru-bg-inset, var(--vtsuru-bg-muted));
-  border-radius: var(--vtsuru-radius);
-  border: 1px solid var(--vtsuru-border);
+  background-color: var(--muted, var(--muted));
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .batch-actions {
-  border-left: 1px solid var(--vtsuru-border);
+  border-left: 1px solid var(--border);
   padding-left: 12px;
 }
 </style>

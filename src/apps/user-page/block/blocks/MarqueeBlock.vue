@@ -125,10 +125,10 @@ watch(
 
 <style scoped>
 .row {
-  --marquee-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
+  --marquee-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))));
   --marquee-fg-muted: var(
     --vtsuru-block-fg-muted,
-    var(--vtsuru-surface-fg-muted, var(--vtsuru-page-text-muted, var(--vtsuru-fg-muted)))
+    var(--vtsuru-surface-fg-muted, var(--vtsuru-page-text-muted, var(--muted-foreground)))
   );
   display: flex;
   align-items: center;

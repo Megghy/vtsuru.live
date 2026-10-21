@@ -204,7 +204,7 @@ const copy = () =>
   overflow: auto;
   padding: 12px;
   border-radius: 6px;
-  background: repeating-conic-gradient(var(--vtsuru-bg-muted) 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+  background: repeating-conic-gradient(var(--muted) 0% 25%, transparent 0% 50%) 50% / 16px 16px;
 }
 
 .image-target {
@@ -237,7 +237,7 @@ const copy = () =>
   margin-top: 6px;
   padding: 0 6px;
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .image-dialog__options {

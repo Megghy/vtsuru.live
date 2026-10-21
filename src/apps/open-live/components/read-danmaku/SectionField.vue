@@ -54,12 +54,12 @@ defineProps<{
 .label {
   font-size: 12px;
   font-weight: 500;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 .value {
   margin-left: auto;
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
 .body {

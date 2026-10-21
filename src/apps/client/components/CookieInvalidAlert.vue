@@ -77,6 +77,6 @@ const goToSettings = () => {
 .cookie-invalid-alert__content {
   font-size: 13px;
   line-height: 1.6;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 </style>

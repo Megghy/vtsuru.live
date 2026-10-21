@@ -103,33 +103,33 @@ function handleInsert(text: string) {
 
 <style scoped>
 .template-helper {
-  background-color: var(--vtsuru-bg-inset);
-  border-radius: var(--vtsuru-radius);
+  background-color: var(--muted);
+  border-radius: var(--radius);
   padding: 8px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
 }
 
 .variable-item {
   padding: 6px 8px;
-  border-radius: var(--vtsuru-radius);
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .variable-item:hover {
-  background-color: var(--vtsuru-bg-muted);
+  background-color: var(--muted);
 }
 
 .variable-code {
   font-family: monospace;
   font-size: 12px;
   font-weight: bold;
-  color: var(--vtsuru-primary);
+  color: var(--primary);
 }
 
 .variable-desc {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin-top: 2px;
 }
 
@@ -144,7 +144,7 @@ function handleInsert(text: string) {
 
 .no-results {
   text-align: center;
-  color: var(--vtsuru-fg-disabled);
+  color: var(--muted-foreground);
   font-size: 12px;
   padding: 12px 0;
 }

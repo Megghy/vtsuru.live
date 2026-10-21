@@ -467,27 +467,27 @@ activateKeyboard()
 }
 
 .counter-viewer-card {
-  border-radius: var(--vtsuru-radius);
-  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .card-header-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .version-tag {
   font-size: 10px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
+  color: var(--muted-foreground);
+  background: var(--muted);
   padding: 1px 5px;
   border-radius: 4px;
 }
 
 .sync-meta-text {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -519,17 +519,17 @@ activateKeyboard()
 .deck-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .keyboard-tip {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .operator-deck-box {
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px;
   display: flex;
@@ -544,8 +544,8 @@ activateKeyboard()
 }
 
 .count-hero-block {
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--background);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 16px;
   display: flex;
@@ -557,7 +557,7 @@ activateKeyboard()
 .hero-tag {
   font-size: 12px;
   font-weight: 700;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -572,14 +572,14 @@ activateKeyboard()
   font-size: 38px;
   font-weight: 900;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: var(--vtsuru-brand);
+  color: var(--brand);
   line-height: 1;
 }
 
 .hero-target-denom {
   font-size: 18px;
   font-weight: 600;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .action-button-grid {
@@ -594,21 +594,21 @@ activateKeyboard()
   justify-content: center;
   gap: 6px;
   height: 44px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
-  background: var(--vtsuru-bg);
-  color: var(--vtsuru-fg);
+  background: var(--background);
+  color: var(--foreground);
   user-select: none;
 }
 
 .btn-action:hover:not(:disabled) {
-  background: var(--vtsuru-bg-elevated);
-  border-color: var(--vtsuru-brand);
-  color: var(--vtsuru-brand);
+  background: var(--popover);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
 .btn-action:active:not(:disabled) {
@@ -621,15 +621,15 @@ activateKeyboard()
 }
 
 .btn-main-plus {
-  background: var(--vtsuru-brand);
+  background: var(--brand);
   color: #fff;
-  border-color: var(--vtsuru-brand);
+  border-color: var(--brand);
 }
 
 .btn-main-plus:hover:not(:disabled) {
-  background: var(--vtsuru-brand-hover, #0284c7);
+  background: var(--brand, #0284c7);
   color: #fff;
-  border-color: var(--vtsuru-brand-hover, #0284c7);
+  border-color: var(--brand, #0284c7);
 }
 
 .btn-icon {
@@ -638,8 +638,8 @@ activateKeyboard()
 }
 
 .monitor-panel-box {
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
   display: flex;
@@ -655,7 +655,7 @@ activateKeyboard()
   justify-content: center;
   position: relative;
   overflow: hidden;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
 }
 
 .bg-checker {
@@ -679,7 +679,7 @@ activateKeyboard()
 
 .monitor-tip {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   margin-top: 8px;
   text-align: center;
 }

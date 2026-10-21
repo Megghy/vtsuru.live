@@ -132,7 +132,7 @@ function onClick() {
 
 <style scoped>
 .is-clickable:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary-focus, var(--vtsuru-brand));
+  outline: 2px solid var(--vtsuru-page-primary-focus, var(--brand));
   outline-offset: 3px;
 }
 </style>

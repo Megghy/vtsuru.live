@@ -109,10 +109,10 @@ const availableFeatures = computed(() =>
   min-width: 0;
   min-height: 44px;
   padding: 9px 12px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
+  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
   border-radius: var(--vtsuru-page-radius);
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg-muted);
+  color: var(--foreground);
+  background: var(--muted);
   text-decoration: none;
   transition:
     border-color 140ms ease,
@@ -121,7 +121,7 @@ const availableFeatures = computed(() =>
 
 .feature-link:hover {
   border-color: var(--vtsuru-page-primary);
-  background: var(--vtsuru-page-primary-soft, var(--vtsuru-brand-tint));
+  background: var(--vtsuru-page-primary-soft, var(--brand-tint));
 }
 
 .feature-link span {

@@ -39,7 +39,7 @@ function handleConnect() {
       <CardTitle class="text-sm font-semibold">VTS 连接</CardTitle>
     </CardHeader>
     <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
-      <p class="text-xs text-[var(--vtsuru-fg-muted)]">
+      <p class="text-xs text-[var(--muted-foreground)]">
         在 VTube Studio 设置中开启「启动 API」（默认端口 8001）。首次连接时需在 VTS 弹窗中点击「允许」，授权会自动保存，之后启动客户端时自动连接。
       </p>
 
@@ -49,7 +49,7 @@ function handleConnect() {
         <Tag v-else variant="destructive">未连接</Tag>
         <span
           v-if="vts.apiVersion"
-          class="text-xs text-[var(--vtsuru-fg-muted)]"
+          class="text-xs text-[var(--muted-foreground)]"
         >
           VTS v{{ vts.apiVersion }}
         </span>
@@ -61,7 +61,7 @@ function handleConnect() {
         </Tag>
         <span
           v-if="handText"
-          class="text-xs text-[var(--vtsuru-fg-muted)]"
+          class="text-xs text-[var(--muted-foreground)]"
         >
           {{ handText }}
         </span>

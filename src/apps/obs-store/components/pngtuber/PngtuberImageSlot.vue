@@ -148,12 +148,12 @@ function apply() {
   display: grid;
   gap: 8px;
   padding: 10px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   min-width: 0;
 }
 .dragging {
-  background: var(--vtsuru-brand-soft);
+  background: var(--brand-soft);
 }
 .slot-heading {
   display: flex;
@@ -164,8 +164,8 @@ function apply() {
 .image-preview {
   border: 0;
   border-radius: 4px;
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg-muted);
+  background: var(--muted);
+  color: var(--muted-foreground);
   height: 100px;
   cursor: pointer;
 }

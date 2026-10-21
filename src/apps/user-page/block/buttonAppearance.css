@@ -1,7 +1,7 @@
 .vtsuru-btn {
   --btn-radius: var(--vtsuru-page-radius, 8px);
   --btn-border-width: 0px;
-  --btn-border-color: var(--vtsuru-page-primary-border, var(--vtsuru-brand));
+  --btn-border-color: var(--vtsuru-page-primary-border, var(--brand));
   --btn-opacity: 1;
   --btn-effect-scale: 1.03;
   --btn-effect-glow: 0.42;
@@ -162,12 +162,12 @@
 @keyframes vtsuru-btn-breathe {
   0%,
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 0%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--brand)) 0%, transparent);
     filter: brightness(1);
   }
   50% {
     box-shadow: 0 0 0 8px
-      color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) calc(var(--btn-effect-glow) * 100%), transparent);
+      color-mix(in srgb, var(--btn-border-color, var(--brand)) calc(var(--btn-effect-glow) * 100%), transparent);
     filter: brightness(1.05);
   }
 }
@@ -208,13 +208,13 @@
   0%,
   100% {
     box-shadow:
-      0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 0%, transparent),
-      0 0 12px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 18%, transparent);
+      0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--brand)) 0%, transparent),
+      0 0 12px color-mix(in srgb, var(--btn-border-color, var(--brand)) 18%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 4px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 16%, transparent),
-      0 0 22px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) calc(var(--btn-effect-glow) * 90%), transparent);
+      0 0 0 4px color-mix(in srgb, var(--btn-border-color, var(--brand)) 16%, transparent),
+      0 0 22px color-mix(in srgb, var(--btn-border-color, var(--brand)) calc(var(--btn-effect-glow) * 90%), transparent);
   }
 }
 
@@ -250,6 +250,6 @@
 
   .vtsuru-btn--effect-glow,
   .vtsuru-btn--effect-breathe {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 22%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-border-color, var(--brand)) 22%, transparent);
   }
 }

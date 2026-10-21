@@ -66,7 +66,7 @@ const items = computed(() => {
 
 function getContrastColor(color: string) {
   const value = color.match(/^#([\da-f]{3}|[\da-f]{6})$/i)?.[1]
-  if (!value) return 'var(--vtsuru-fg)'
+  if (!value) return 'var(--foreground)'
   const hex = value.length === 3 ? [...value].map((char) => char + char).join('') : value
   const [red, green, blue] = [0, 2, 4].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16))
   const luminance = (red * 299 + green * 587 + blue * 114) / 1000

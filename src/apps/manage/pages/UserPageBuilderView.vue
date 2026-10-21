@@ -801,7 +801,7 @@ onBeforeRouteLeave(() => {
   left: 5px;
   width: 2px;
   border-radius: 1px;
-  background: var(--vtsuru-border);
+  background: var(--border);
   content: '';
   transition: background-color 140ms ease;
 }
@@ -809,7 +809,7 @@ onBeforeRouteLeave(() => {
 .builder-column-resizer:hover::after,
 .builder-column-resizer:focus-visible::after,
 .builder-column-resizer:active::after {
-  background: var(--vtsuru-brand-soft);
+  background: var(--brand-soft);
 }
 
 :global(html.builder-column-resizing),

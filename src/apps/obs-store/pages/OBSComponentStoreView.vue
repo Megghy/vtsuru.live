@@ -146,12 +146,12 @@ watch(
   justify-content: space-between;
   gap: 12px;
   margin: -4px 0 14px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 
 .result-count {
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-weight: 600;
 }
 
@@ -170,9 +170,9 @@ watch(
   min-height: 280px;
   display: grid;
   place-items: center;
-  border: 1px dashed var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-elevated);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
 }
 
 @media (max-width: 640px) {

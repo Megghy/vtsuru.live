@@ -182,8 +182,8 @@ async function switchToBackupAPI() {
   overflow-x: hidden;
   padding: 48px 20px;
   isolation: isolate;
-  background: var(--vtsuru-bg);
-  color: var(--vtsuru-fg);
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .auth-shell,
@@ -207,12 +207,12 @@ async function switchToBackupAPI() {
   width: 72px;
   height: 72px;
   margin: 0 auto;
-  color: var(--vtsuru-brand);
+  color: var(--brand);
 }
 
 .auth-eyebrow {
   margin: 12px 0 5px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0;
@@ -220,7 +220,7 @@ async function switchToBackupAPI() {
 
 .auth-header h1 {
   margin: 0;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-size: 28px;
   font-weight: 750;
   line-height: 1.2;
@@ -229,7 +229,7 @@ async function switchToBackupAPI() {
 
 .auth-lead {
   margin: 8px 0 0;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 14px;
   line-height: 1.6;
   text-align: center;
@@ -246,10 +246,10 @@ async function switchToBackupAPI() {
   min-width: 0;
   padding: 20px;
   box-sizing: border-box;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--vtsuru-bg-elevated) 94%, transparent);
-  box-shadow: 0 18px 52px color-mix(in srgb, var(--vtsuru-fg) 10%, transparent);
+  background: color-mix(in srgb, var(--popover) 94%, transparent);
+  box-shadow: 0 18px 52px color-mix(in srgb, var(--foreground) 10%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -264,10 +264,10 @@ async function switchToBackupAPI() {
   gap: 20px;
   padding: 28px;
   box-sizing: border-box;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--vtsuru-bg-elevated) 94%, transparent);
-  box-shadow: 0 18px 52px color-mix(in srgb, var(--vtsuru-fg) 10%, transparent);
+  background: color-mix(in srgb, var(--popover) 94%, transparent);
+  box-shadow: 0 18px 52px color-mix(in srgb, var(--foreground) 10%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }

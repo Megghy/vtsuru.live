@@ -671,9 +671,9 @@ await loadIndexInfo()
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 .index-template-picker__copy {
   display: flex;
@@ -682,12 +682,12 @@ await loadIndexInfo()
   gap: 4px;
 }
 .index-template-picker__title {
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   font-size: 14px;
   font-weight: 600;
 }
 .index-template-picker__desc {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.5;
 }

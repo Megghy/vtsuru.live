@@ -657,8 +657,8 @@ function groupSelection() {
 .editing-block-banner {
   padding: 8px 10px;
   border-radius: 6px;
-  background: var(--vtsuru-brand-tint, rgba(0, 150, 255, 0.08));
-  border: 1px solid var(--vtsuru-brand-soft, rgba(0, 150, 255, 0.2));
+  background: var(--brand-tint, rgba(0, 150, 255, 0.08));
+  border: 1px solid var(--brand-soft, rgba(0, 150, 255, 0.2));
 }
 
 .page-mode-section {
@@ -676,8 +676,8 @@ function groupSelection() {
 .mode-card {
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-muted);
+  border: 1px solid var(--border);
+  background: var(--muted);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -686,14 +686,14 @@ function groupSelection() {
 }
 
 .mode-card:hover {
-  border-color: var(--vtsuru-primary);
-  background: var(--vtsuru-bg-elevated);
+  border-color: var(--primary);
+  background: var(--popover);
 }
 
 .mode-card.is-active {
-  border-color: var(--vtsuru-primary);
-  background: var(--vtsuru-brand-tint, rgba(0, 150, 255, 0.08));
-  box-shadow: 0 0 0 1px var(--vtsuru-primary);
+  border-color: var(--primary);
+  background: var(--brand-tint, rgba(0, 150, 255, 0.08));
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
 .mode-card__header {
@@ -705,20 +705,20 @@ function groupSelection() {
 .mode-card__title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .mode-card__desc {
   font-size: 12px;
   line-height: 1.45;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .page-overview-workbench {
   padding: 12px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 
 .workbench-stats {
@@ -729,7 +729,7 @@ function groupSelection() {
 
 .workbench-hint {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   line-height: 1.5;
 }
 
@@ -738,8 +738,8 @@ function groupSelection() {
   gap: 8px;
   margin-top: 8px;
   padding: 10px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--vtsuru-bg-muted);
+  background: var(--muted);
 }
 </style>

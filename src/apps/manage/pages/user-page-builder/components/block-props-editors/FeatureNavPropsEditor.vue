@@ -70,9 +70,9 @@ function setVisible(item: { hidden?: boolean }, visible: boolean) {
   gap: 8px;
   min-height: 40px;
   padding: 5px 8px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--vtsuru-bg-elevated);
+  background: var(--popover);
 }
 
 .feature-drag-handle {

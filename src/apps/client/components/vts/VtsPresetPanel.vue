@@ -101,11 +101,11 @@ function addFromCurrent() {
         <div
           v-for="p in vts.presets"
           :key="p.id"
-          class="flex items-center justify-between gap-2 flex-wrap py-1 border-b border-[var(--vtsuru-border)] last:border-0"
+          class="flex items-center justify-between gap-2 flex-wrap py-1 border-b border-[var(--border)] last:border-0"
         >
           <div class="flex items-center gap-2 flex-wrap text-xs">
-            <span class="font-bold text-[var(--vtsuru-fg)]">{{ p.name }}</span>
-            <span class="text-[var(--vtsuru-fg-muted)]">
+            <span class="font-bold text-[var(--foreground)]">{{ p.name }}</span>
+            <span class="text-[var(--muted-foreground)]">
               x={{ p.positionX.toFixed(2) }} y={{ p.positionY.toFixed(2) }} rot={{ p.rotation.toFixed(1) }} size={{ p.size.toFixed(1) }} t={{ p.timeInSeconds }}s
             </span>
           </div>
@@ -170,12 +170,12 @@ function addFromCurrent() {
           >
             填入当前位置
           </Button>
-          <span class="text-[11px] text-[var(--vtsuru-fg-muted)]">需要 VTS 已鉴权且模型有移动事件</span>
+          <span class="text-[11px] text-[var(--muted-foreground)]">需要 VTS 已鉴权且模型有移动事件</span>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5">
           <div class="space-y-1">
-            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">过渡时间 (s)</label>
+            <label class="text-[11px] text-[var(--muted-foreground)]">过渡时间 (s)</label>
             <NInputNumber
               v-model="form.timeInSeconds"
               :min="0"
@@ -185,7 +185,7 @@ function addFromCurrent() {
             />
           </div>
           <div class="space-y-1">
-            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">X 坐标</label>
+            <label class="text-[11px] text-[var(--muted-foreground)]">X 坐标</label>
             <NInputNumber
               v-model="form.positionX"
               :step="0.01"
@@ -194,7 +194,7 @@ function addFromCurrent() {
             />
           </div>
           <div class="space-y-1">
-            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">Y 坐标</label>
+            <label class="text-[11px] text-[var(--muted-foreground)]">Y 坐标</label>
             <NInputNumber
               v-model="form.positionY"
               :step="0.01"
@@ -203,7 +203,7 @@ function addFromCurrent() {
             />
           </div>
           <div class="space-y-1">
-            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">旋转</label>
+            <label class="text-[11px] text-[var(--muted-foreground)]">旋转</label>
             <NInputNumber
               v-model="form.rotation"
               :step="0.1"
@@ -212,7 +212,7 @@ function addFromCurrent() {
             />
           </div>
           <div class="space-y-1">
-            <label class="text-[11px] text-[var(--vtsuru-fg-muted)]">缩放大小</label>
+            <label class="text-[11px] text-[var(--muted-foreground)]">缩放大小</label>
             <NInputNumber
               v-model="form.size"
               :step="0.5"

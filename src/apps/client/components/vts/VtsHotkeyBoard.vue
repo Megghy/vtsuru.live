@@ -376,6 +376,6 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
   height: 24px;
   border-radius: 4px;
   object-fit: cover;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
 }
 </style>

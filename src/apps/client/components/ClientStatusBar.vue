@@ -127,7 +127,7 @@ function toggleGiftWindow() {
                   background:
                     webfetcher.state === 'connected'
                       ? 'var(--vtsuru-success, #10b981)'
-                      : 'var(--vtsuru-fg-muted, #9ca3af)',
+                      : 'var(--muted-foreground, #9ca3af)',
                 }"
               />
               <span class="status-text-subtle">上报服务</span>
@@ -274,11 +274,11 @@ function toggleGiftWindow() {
   height: 26px;
   min-height: 26px;
   padding: 0 10px;
-  background: var(--vtsuru-bg-surface, #18181c);
-  border-top: 1px solid var(--vtsuru-border, rgba(255, 255, 255, 0.08));
+  background: var(--card, #18181c);
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
   font-size: 11px;
   line-height: 1;
-  color: var(--vtsuru-fg-muted, #9ca3af);
+  color: var(--muted-foreground, #9ca3af);
   user-select: none;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -307,8 +307,8 @@ function toggleGiftWindow() {
 }
 
 .status-bar-section--center:hover {
-  background: var(--vtsuru-bg-elevated, rgba(255, 255, 255, 0.04));
-  color: var(--vtsuru-fg, #ffffff);
+  background: var(--popover, rgba(255, 255, 255, 0.04));
+  color: var(--foreground, #ffffff);
 }
 
 .status-bar-section--center:hover .stat-jump-icon {
@@ -347,7 +347,7 @@ function toggleGiftWindow() {
 }
 
 .status-badge--rpc {
-  color: var(--vtsuru-brand, #6366f1);
+  color: var(--brand, #6366f1);
   background: rgba(99, 102, 241, 0.1);
 }
 
@@ -414,7 +414,7 @@ function toggleGiftWindow() {
 }
 
 .stat-chip-value {
-  color: var(--vtsuru-fg, #e5e7eb);
+  color: var(--foreground, #e5e7eb);
 }
 
 .stat-chip--income .stat-chip-value {
@@ -435,10 +435,10 @@ function toggleGiftWindow() {
   gap: 5px;
   height: 20px;
   padding: 0 6px;
-  border: 1px solid var(--vtsuru-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.03);
-  color: var(--vtsuru-fg-muted, #9ca3af);
+  color: var(--muted-foreground, #9ca3af);
   font-size: 11px;
   line-height: 1;
   cursor: pointer;
@@ -448,13 +448,13 @@ function toggleGiftWindow() {
 
 .float-window-toggle-btn:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--vtsuru-fg, #ffffff);
+  color: var(--foreground, #ffffff);
 }
 
 .float-window-toggle-btn.is-active {
   border-color: rgba(16, 185, 129, 0.35);
   background: rgba(16, 185, 129, 0.1);
-  color: var(--vtsuru-fg, #ffffff);
+  color: var(--foreground, #ffffff);
 }
 
 .toggle-btn-icon {
@@ -494,6 +494,6 @@ function toggleGiftWindow() {
 
 .window-state-pill.is-off {
   background: rgba(255, 255, 255, 0.12);
-  color: var(--vtsuru-fg-muted, #9ca3af);
+  color: var(--muted-foreground, #9ca3af);
 }
 </style>

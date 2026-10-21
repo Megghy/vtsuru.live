@@ -127,7 +127,7 @@ watch(
   inset: 0;
   display: grid;
   place-items: center;
-  color: var(--vtsuru-fg-disabled);
+  color: var(--muted-foreground);
   font-size: 13px;
   pointer-events: none;
 }

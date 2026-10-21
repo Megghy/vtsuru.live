@@ -594,8 +594,8 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 }
 
 .clock-viewer-card {
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--popover);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
@@ -606,21 +606,21 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 .card-header-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .version-tag {
   font-size: 11px;
   font-weight: 600;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
+  color: var(--muted-foreground);
+  background: var(--muted);
   padding: 1px 6px;
   border-radius: 4px;
 }
 
 .sync-meta-text {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -650,8 +650,8 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 }
 
 .operator-deck-box {
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
 }
@@ -666,12 +666,12 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 .deck-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .status-tip {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .quick-time-row {
@@ -684,24 +684,24 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
 .quick-label {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .btn-quick {
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--background);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 3px 8px;
   font-size: 12px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-quick:hover {
-  background: var(--vtsuru-bg-elevated);
-  border-color: var(--vtsuru-brand);
-  color: var(--vtsuru-brand);
+  background: var(--popover);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
 .action-button-grid {
@@ -717,27 +717,27 @@ const modeOptions: { label: string; value: ClockMode }[] = [
   justify-content: center;
   gap: 6px;
   height: 40px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
-  background: var(--vtsuru-bg);
-  color: var(--vtsuru-fg);
+  background: var(--background);
+  color: var(--foreground);
   user-select: none;
 }
 
 .btn-action:hover {
-  background: var(--vtsuru-bg-elevated);
-  border-color: var(--vtsuru-brand);
-  color: var(--vtsuru-brand);
+  background: var(--popover);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
 .btn-action.btn-main {
-  background: var(--vtsuru-brand);
+  background: var(--brand);
   color: #fff;
-  border-color: var(--vtsuru-brand);
+  border-color: var(--brand);
 }
 
 .btn-action.btn-main.is-running {
@@ -764,8 +764,8 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 }
 
 .theme-preset-card {
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--background);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px;
   text-align: left;
@@ -777,12 +777,12 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 }
 
 .theme-preset-card:hover {
-  border-color: var(--vtsuru-brand);
+  border-color: var(--brand);
 }
 
 .theme-preset-card.active {
-  border-color: var(--vtsuru-brand);
-  background: var(--vtsuru-brand-soft);
+  border-color: var(--brand);
+  background: var(--brand-soft);
 }
 
 .preset-card-top {
@@ -794,20 +794,20 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 .preset-name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .preset-tag {
   font-size: 9px;
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg-muted);
+  background: var(--muted);
+  color: var(--muted-foreground);
   padding: 0 4px;
   border-radius: 3px;
 }
 
 .preset-archetype {
   font-size: 10px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .color-control-grid {
@@ -825,7 +825,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
 .color-label {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .slider-header {
@@ -836,7 +836,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
 .slider-val {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-family: monospace;
 }
 
@@ -856,26 +856,26 @@ const modeOptions: { label: string; value: ClockMode }[] = [
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--background);
+  border: 1px solid var(--border);
   border-radius: 9999px;
   padding: 3px 10px;
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 }
 
 .toggle-chip:hover {
-  border-color: var(--vtsuru-brand);
-  color: var(--vtsuru-fg);
+  border-color: var(--brand);
+  color: var(--foreground);
 }
 
 .toggle-chip.active {
-  background: var(--vtsuru-brand-soft);
-  border-color: var(--vtsuru-brand);
-  color: var(--vtsuru-brand);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
   font-weight: 600;
 }
 
@@ -887,8 +887,8 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 }
 
 .monitor-panel-box {
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
   display: flex;
@@ -904,7 +904,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
   justify-content: center;
   position: relative;
   overflow: hidden;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
   margin-bottom: 10px;
 }
 
@@ -928,8 +928,8 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 }
 
 .obs-source-meta-card {
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--background);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px 12px;
   display: flex;
@@ -946,19 +946,19 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 }
 
 .meta-label {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   flex-shrink: 0;
 }
 
 .meta-code {
   font-family: monospace;
-  color: var(--vtsuru-brand);
+  color: var(--brand);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .meta-val {
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 </style>

@@ -47,7 +47,7 @@ withDefaults(
 
 .label-item__label {
   font-size: 12px;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .label-item--left .label-item__value {

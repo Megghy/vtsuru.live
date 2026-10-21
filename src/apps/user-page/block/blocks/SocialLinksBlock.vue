@@ -235,7 +235,7 @@ const iconSizeClass = computed(() => {
 }
 
 .social:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
+  outline: 2px solid var(--vtsuru-page-primary, var(--brand));
   outline-offset: 3px;
 }
 </style>
